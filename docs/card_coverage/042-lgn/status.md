@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 1 | 5.9% |
-| Works (untested) | 9 | 52.9% |
+| Tested | 2 | 11.8% |
+| Works (untested) | 8 | 47.1% |
 | Partial (unaudited) | 2 | 11.8% |
 | Not working | 5 | 29.4% |
 
@@ -36,7 +36,6 @@
 | Akroma, Angel of Wrath | handled | Flying | machines/combat.py | Y/-/- | not_tested |
 | Enormous Baloth | handled |  |  | Y/-/- | not_tested |
 | Flamewave Invoker | handled | {7}{R}: This creature deals 5 damage to target player or planeswalker. | the engine reads this text and performs it | Y/-/- | not_tested |
-| Fugitive Wizard | handled |  |  | Y/Y/- | not_tested |
 | Merchant of Secrets | handled | When this creature enters, draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Starlight Invoker | handled | {7}{W}: You gain 5 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Willbender | handled | When this creature is turned face up, change the target of target spell or ability with a single target. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -46,8 +45,9 @@
 ## Fully supported
 
 <details>
-<summary>1 cards</summary>
+<summary>2 cards</summary>
 
+- Fugitive Wizard
 - Lavaborn Muse
 
 </details>

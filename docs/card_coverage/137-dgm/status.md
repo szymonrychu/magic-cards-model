@@ -17,16 +17,15 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 19 | 13.3% |
-| Works (untested) | 73 | 51.0% |
-| Partial (unaudited) | 5 | 3.5% |
-| Not working | 46 | 32.2% |
+| Tested | 22 | 15.4% |
+| Works (untested) | 74 | 51.7% |
+| Partial (unaudited) | 2 | 1.4% |
+| Not working | 45 | 31.5% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
-| Armed // Dangerous | silent | All creatures able to block target creature this turn do so. Fuse (You may cast one or both halves of this card from your hand.) | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Awe for the Guilds | silent | Monocolored creatures can't block this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Battering Krasis | silent | Evolve | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Boros Battleshaper | silent | At the beginning of each combat, up to one target creature attacks or blocks this combat if able and up to one target creature can't attack or block this combat | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -72,13 +71,11 @@
 | Wake the Reflections | silent | Populate. (Create a token that's a copy of a creature token you control.) | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Weapon Surge | silent | Overload | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Pontiff of Blight | notice | Other creatures you control have extort. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Blood Scrivener | unaudited | If you would draw a card while you have no cards in hand, instead you draw two cards and you lose 1 life. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Council of the Absolute | unaudited | As this creature enters, choose a noncreature, nonland card name. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Emmara Tandris | unaudited | Prevent all damage that would be dealt to creature tokens you control. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Melek, Izzet Paragon | unaudited | Play with the top card of your library revealed. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
+| Council of the Absolute | unaudited | Your opponents can't cast spells with the chosen name. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Varolz, the Scar-Striped | unaudited | Each creature card in your graveyard has scavenge. The scavenge cost is equal to its mana cost. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Advent of the Wurm | handled | Create a 5/5 green Wurm creature token with trample. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Alive // Well | handled | Create a 3/3 green Centaur creature token. Fuse (You may cast one or both halves of this card from your hand.) | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Armed // Dangerous | handled | Target creature gets +1/+1 and gains double strike until end of turn. Fuse (You may cast one or both halves of this card from your hand.) | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Armored Wolf-Rider | handled |  |  | Y/Y/- | not_tested |
 | Ascended Lawmage | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
 | Azorius Cluestone | handled | {W}{U}, {T}, Sacrifice this artifact: Draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -154,17 +151,20 @@
 ## Fully supported
 
 <details>
-<summary>19 cards</summary>
+<summary>22 cards</summary>
 
 - Aetherling
 - Beck // Call
 - Blast of Genius
 - Blood Baron of Vizkopa
+- Blood Scrivener
 - Drown in Filth
+- Emmara Tandris
 - Gleam of Battle
 - Korozda Gorgon
 - Master of Cruelties
 - Maze's End
+- Melek, Izzet Paragon
 - Notion Thief
 - Plasm Capture
 - Possibility Storm
@@ -183,8 +183,6 @@
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
 | unleash | 2 | Exava, Rakdos Blood Witch, Rakdos Drake | dgm |
-| all creatures able to block target creature ~ do so. fuse (you may cast one or both halves of ~ from your hand.) | 1 | Armed // Dangerous | dgm |
-| as ~ enters, choose a noncreature, nonland card name. | 1 | Council of the Absolute | dgm |
 | at the beginning of each combat, up to one target creature attacks or blocks ~ if able and up to one target creature can't attack or block ~. | 1 | Boros Battleshaper | dgm |
 | at the beginning of your upkeep, choose a card at random in your graveyard. if it's a creature card, put it onto the battlefield. otherwise, put it into your ha | 1 | Deadbridge Chant | dgm |
 | at the beginning of your upkeep, return a creature you control to its owner's hand. | 1 | Species Gorger | dgm |
@@ -198,7 +196,6 @@
 | each player sacrifices an artifact, a creature, an enchantment, a land, and a planeswalker of their choice. fuse (you may cast one or both halves of ~ from your | 1 | Catch // Release | dgm |
 | evolve | 1 | Battering Krasis | dgm |
 | exile target creature card from a graveyard. put N +N/+N counters on target creature, where N is the power of the card you exiled. fuse (you may cast one or bot | 1 | Flesh // Blood | dgm |
-| if you would draw a card while you have no cards in hand, instead you draw two cards and you lose N life. | 1 | Blood Scrivener | dgm |
 | monocolored creatures can't block ~. | 1 | Awe for the Guilds | dgm |
 | multicolored creatures you control have deathtouch. | 1 | Maze Abomination | dgm |
 | multicolored creatures you control have flying. | 1 | Maze Glider | dgm |
@@ -207,9 +204,7 @@
 | multicolored creatures you control have vigilance. | 1 | Maze Sentinel | dgm |
 | other creatures you control have extort. | 1 | Pontiff of Blight | dgm |
 | overload | 1 | Weapon Surge | dgm |
-| play with the top card of your library revealed. | 1 | Melek, Izzet Paragon | dgm |
 | populate. (create a token that's a copy of a creature token you control.) | 1 | Wake the Reflections | dgm |
-| prevent all damage that would be dealt to creature tokens you control. | 1 | Emmara Tandris | dgm |
 | put a creature card from a graveyard onto the battlefield under your control. it gains haste until end of turn. fuse (you may cast one or both halves of ~ from  | 1 | Breaking // Entering | dgm |
 | red creatures you control get +N/+N. | 1 | Legion's Initiative | dgm |
 | return each creature that dealt damage ~ to its owner's hand. | 1 | Restore the Peace | dgm |
@@ -228,6 +223,7 @@
 | whenever you cast an instant or sorcery spell, ~ gets +N/+N until end of turn and can attack ~ as though it didn't have defender. | 1 | Nivix Cyclops | dgm |
 | whenever ~ attacks, other attacking creatures get +N/+N until end of turn. | 1 | Jelenn Sphinx | dgm |
 | whenever ~ evolves, put a +N/+N counter on each other creature you control with a +N/+N counter on it. | 1 | Renegade Krasis | dgm |
+| your opponents can't cast spells with the chosen name. | 1 | Council of the Absolute | dgm |
 | {M}{M}, {M}: double the number of each kind of counter on target artifact, creature, or land. | 1 | Vorel of the Hull Clade | dgm |
 | {M}{M}, {M}: target opponent loses N life, then reveals a card at random from their hand. | 1 | Hired Torturer | dgm |
 | {M}{M}{M}, return ~ to its owner's hand: put two +N/+N counters on enchanted creature. | 1 | Krasis Incubation | dgm |

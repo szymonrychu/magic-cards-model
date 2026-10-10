@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 14 | 7.8% |
-| Works (untested) | 129 | 71.7% |
-| Partial (unaudited) | 2 | 1.1% |
-| Not working | 35 | 19.4% |
+| Tested | 15 | 8.3% |
+| Works (untested) | 130 | 72.2% |
+| Partial (unaudited) | 1 | 0.6% |
+| Not working | 34 | 18.9% |
 
 ## Cards needing work
 
@@ -46,7 +46,6 @@
 | Militia Bugler | silent | When this creature enters, look at the top four cards of your library. You may reveal a creature card with power 2 or less from among them and put it into your  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Novice Knight | silent | As long as this creature is enchanted or equipped, it can attack as though it didn't have defender. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Patient Rebuilding | silent | At the beginning of your upkeep, target opponent mills three cards, then you draw a card for each land card put into their graveyard this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Psychic Corrosion | silent | Whenever you draw a card, each opponent mills two cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sarkhan's Whelp | silent | Whenever you activate an ability of a Sarkhan planeswalker, this creature deals 1 damage to any target. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Sarkhan, Dragonsoul | silent | +2: Sarkhan deals 1 damage to each opponent and each creature your opponents control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sigiled Sword of Valeron | silent | Whenever equipped creature attacks, create a 2/2 white Knight creature token with vigilance that's attacking. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -61,8 +60,7 @@
 | Declare Dominance | notice | Target creature gets +3/+3 until end of turn. All creatures able to block it this turn do so. | unparsed remainder: All creatures able to block it this turn do so. | Y/Y/- | not_working |
 | Palladia-Mors, the Ruiner | notice | Palladia-Mors has hexproof as long as it hasn't dealt damage yet. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Vaevictis Asmadi, the Dire | notice | Whenever Vaevictis Asmadi attacks, for each player, choose target permanent that player controls. Those players sacrifice those permanents. Each player who sacr | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Ghastbark Twins | unaudited | This creature can block an additional creature each combat. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Metamorphic Alteration | unaudited | As this Aura enters, choose a creature. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
+| Metamorphic Alteration | unaudited | Enchanted creature is a copy of the chosen creature. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Abnormal Endurance | handled | Until end of turn, target creature gets +2/+0 and gains "When this creature dies, return it to the battlefield tapped under its owner's control." | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Aegis of the Heavens | handled | Target creature gets +1/+7 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Aethershield Artificer | handled | At the beginning of combat on your turn, target artifact creature you control gets +2/+2 and gains indestructible until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -139,6 +137,7 @@
 | Plague Mare | handled | This creature can't be blocked by white creatures. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Poison-Tip Archer | handled | Whenever another creature dies, each opponent loses 1 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Prodigious Growth | handled | Enchanted creature gets +7/+7 and has trample. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Psychic Corrosion | handled | Whenever you draw a card, each opponent mills two cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Psychic Symbiont | handled | When this creature enters, target opponent discards a card and you draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ravenous Harpy | handled | {1}, Sacrifice another creature: Put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Regal Bloodlord | handled | At the beginning of each end step, if you gained life this turn, create a 1/1 black Bat creature token with flying. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -196,11 +195,12 @@
 ## Fully supported
 
 <details>
-<summary>14 cards</summary>
+<summary>15 cards</summary>
 
 - Alpine Moon
 - Arisen Gorgon
 - Doublecast
+- Ghastbark Twins
 - Hungering Hydra
 - Lena, Selfless Champion
 - Liliana's Contract
@@ -224,13 +224,13 @@
 | N: until your next turn, target artifact you control becomes a N/N creature in addition to its other types. | 1 | Tezzeret, Cruel Machinist | m19 |
 | as long as you control an artifact, ~ gets +N/+N and has flying. | 1 | Aerial Engineer | m19 |
 | as long as ~ is enchanted or equipped, it can attack as though it didn't have defender. | 1 | Novice Knight | m19 |
-| as ~ enters, choose a creature. | 1 | Metamorphic Alteration | m19 |
 | at the beginning of each end step, if ~ attacked or blocked ~, its owner shuffles it into their library. | 1 | Inferno Hellion | m19 |
 | at the beginning of your upkeep, target opponent mills three cards, then you draw a card for each land card put into their graveyard ~. | 1 | Patient Rebuilding | m19 |
 | discard a card: until end of turn, chromium becomes a human with base power and toughness N/N, loses all abilities, and gains hexproof. it can't be blocked ~. | 1 | Chromium, the Mutable | m19 |
 | each creature you control with defender assigns combat damage equal to its toughness rather than its power and can attack as though it didn't have defender. | 1 | Arcades, the Strategist | m19 |
 | each player loses half their life, then discards half the cards in their hand, then sacrifices half the creatures they control of their choice. round up each ti | 1 | Fraying Omnipotence | m19 |
 | enchanted creature gets +N/+N and can't be blocked. | 1 | Aether Tunnel | m19 |
+| enchanted creature is a copy of the chosen creature. | 1 | Metamorphic Alteration | m19 |
 | exile target colorless creature. you gain life equal to its power. | 1 | Infernal Reckoning | m19 |
 | exile the top seven cards of your library. until end of turn, you may cast spells from among them. if ~ was cast from your hand, add ten mana of any one color. | 1 | Apex of Power | m19 |
 | look at the top seven cards of your library. you may put a creature card from among them onto the battlefield. put the rest on the bottom of your library in a r | 1 | Vivien's Invocation | m19 |
@@ -245,7 +245,6 @@
 | whenever vaevictis asmadi attacks, for each player, choose target permanent that player controls. those players sacrifice those permanents. each player who sacr | 1 | Vaevictis Asmadi, the Dire | m19 |
 | whenever you activate an ability of a sarkhan planeswalker, ~ deals N damage to any target. | 1 | Sarkhan's Whelp | m19 |
 | whenever you become the target of a spell or ability an opponent controls, counter that spell or ability unless its controller pays {M}. | 1 | Amulet of Safekeeping | m19 |
-| whenever you draw a card, each opponent mills two cards. | 1 | Psychic Corrosion | m19 |
 | {M}, {M}: target opponent exiles cards from the top of their library until they exile an instant or sorcery card. you may cast that card without paying its mana | 1 | Chaos Wand | m19 |
 | {M}, {M}: until end of turn, your opponents and creatures your opponents control with hexproof can be the targets of spells and abilities you control as though  | 1 | Detection Tower | m19 |
 | {M}: look at the top card of your library. if it's a land card, you may reveal it and put it into your hand. | 1 | Dryad Greenseeker | m19 |
@@ -253,7 +252,6 @@
 | {M}{M}: another target creature you control can't be blocked ~ except by spirits. | 1 | Departed Deckhand | m19 |
 | {M}{M}: ~ gets +N/+N and becomes a bear berserker until end of turn. activate only once each turn. | 1 | Ursine Champion | m19 |
 | {M}{M}{M}, {M}: search your library for a card named ~, put it onto the battlefield, then shuffle. | 1 | Elvish Clancaller | m19 |
-| ~ can block an additional creature each combat. | 1 | Ghastbark Twins | m19 |
 | ~ gets +N/+N as long as you control an ajani planeswalker. | 1 | Court Cleric | m19 |
 | −N: destroy up to two target creatures. put up to two creature cards from graveyards onto the battlefield under your control. | 1 | Liliana, the Necromancer | m19 |
 

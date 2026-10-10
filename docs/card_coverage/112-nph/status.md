@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 27 | 16.7% |
-| Works (untested) | 77 | 47.5% |
-| Partial (unaudited) | 11 | 6.8% |
-| Not working | 47 | 29.0% |
+| Tested | 29 | 17.9% |
+| Works (untested) | 78 | 48.1% |
+| Partial (unaudited) | 9 | 5.6% |
+| Not working | 46 | 28.4% |
 
 ## Cards needing work
 
@@ -56,7 +56,6 @@
 | Shrine of Limitless Power | silent | {4}, {T}, Sacrifice this artifact: Target player discards a card for each charge counter on this artifact. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Shrine of Loyal Legions | silent | {3}, {T}, Sacrifice this artifact: Create a 1/1 colorless Phyrexian Myr artifact creature token for each charge counter on this artifact. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sickleslicer | silent | Living weapon | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Slag Fiend | silent | Slag Fiend's power and toughness are each equal to the number of artifact cards in all graveyards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Soul Conduit | silent | {6}, {T}: Two target players exchange life totals. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Suture Priest | silent | Whenever a creature an opponent controls enters, you may have that player lose 1 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sword of War and Peace | silent | Whenever equipped creature deals combat damage to a player, this Equipment deals damage to that player equal to the number of cards in their hand and you gain 1 | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -74,12 +73,10 @@
 | Phyrexian Ingester | notice | This creature gets +X/+Y, where X is the exiled creature card's power and Y is its toughness. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Viridian Betrayers | notice | This creature has infect as long as an opponent is poisoned. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Bludgeon Brawl | unaudited | Each noncreature, non-Equipment artifact is an Equipment with equip {X} and "Equipped creature gets +X/+0," where X is that artifact's mana value. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Chained Throatseeker | unaudited | This creature can't attack unless defending player is poisoned. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Exclusion Ritual | unaudited | Players can't cast spells with the same name as the exiled card. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Jin-Gitaxias, Core Augur | unaudited | Each opponent's maximum hand size is reduced by seven. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Melira, Sylvok Outcast | unaudited | You can't get poison counters. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Myr Superion | unaudited | Spend only mana produced by creatures to cast this spell. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Norn's Annex | unaudited | Creatures can't attack you or planeswalkers you control unless their controller pays {W/P} for each of those creatures. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Phyrexian Unlife | unaudited | You don't lose the game for having 0 or less life. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Puresteel Paladin | unaudited | Metalcraft — Equipment you control have equip {0} as long as you control three or more artifacts. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Spinebiter | unaudited | You may have this creature assign its combat damage as though it weren't blocked. | a static ability no support check audits - not verified either way | Y/-/- | partial |
@@ -144,6 +141,7 @@
 | Shrine of Boundless Growth | handled | At the beginning of your upkeep and whenever you cast a green spell, put a charge counter on this artifact. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Shrine of Burning Rage | handled | At the beginning of your upkeep and whenever you cast a red spell, put a charge counter on this artifact. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Shrine of Piercing Vision | handled | At the beginning of your upkeep and whenever you cast a blue spell, put a charge counter on this artifact. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Slag Fiend | handled | Slag Fiend's power and toughness are each equal to the number of artifact cards in all graveyards. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Slash Panther | handled | Haste | machines/combat.py | Y/-/- | not_tested |
 | Spined Thopter | handled | Flying | machines/combat.py | Y/-/- | not_tested |
 | Spire Monitor | handled | Flying | machines/combat.py | Y/-/- | not_tested |
@@ -165,12 +163,13 @@
 ## Fully supported
 
 <details>
-<summary>27 cards</summary>
+<summary>29 cards</summary>
 
 - Argent Mutation
 - Arm with Aether
 - Caged Sun
 - Cathedral Membrane
+- Chained Throatseeker
 - Chancellor of the Forge
 - Darksteel Relic
 - Dismember
@@ -184,6 +183,7 @@
 - Mindcrank
 - Mutagenic Growth
 - Mycosynth Fiend
+- Norn's Annex
 - Phyrexian Swarmlord
 - Postmortem Lunge
 - Sheoldred, Whispering One
@@ -212,7 +212,6 @@
 | at the beginning of your upkeep, put a -N/-N counter on enchanted creature. | 1 | Glistening Oil | nph |
 | counter target spell if its controller is poisoned. | 1 | Corrupted Resolve | nph |
 | create a N/N green beast creature token for each creature put into your graveyard from the battlefield ~. | 1 | Fresh Meat | nph |
-| creatures can't attack you or planeswalkers you control unless their controller pays {M} for each of those creatures. | 1 | Norn's Annex | nph |
 | destroy all creatures, then search target opponent's library for up to three creature cards and put them into their graveyard. then that player shuffles. | 1 | Life's Finale | nph |
 | each creature you control is the chosen type in addition to its other types. | 1 | Xenograft | nph |
 | each noncreature, non-equipment artifact is an equipment with equip {M} and "..." where N is that artifact's mana value. | 1 | Bludgeon Brawl | nph |
@@ -252,10 +251,8 @@
 | {M}: return ~ to its owner's hand. | 1 | Batterskull | nph |
 | {M}{M}: remove up to N counters from target permanent. for each counter removed ~, ~ gets +N/+N until end of turn. | 1 | Hex Parasite | nph |
 | {M}{M}: return ~ to its owner's hand. | 1 | Forced Worship | nph |
-| ~ can't attack unless defending player is poisoned. | 1 | Chained Throatseeker | nph |
 | ~ gets +N/+y, where N is the exiled creature card's power and y is its toughness. | 1 | Phyrexian Ingester | nph |
 | ~ has infect as long as an opponent is poisoned. | 1 | Viridian Betrayers | nph |
-| ~'s power and toughness are each equal to the number of artifact cards in all graveyards. | 1 | Slag Fiend | nph |
 
 ## Notes
 

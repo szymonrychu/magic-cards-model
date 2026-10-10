@@ -17,9 +17,9 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 21 | 9.4% |
+| Tested | 24 | 10.8% |
 | Works (untested) | 143 | 64.1% |
-| Partial (unaudited) | 7 | 3.1% |
+| Partial (unaudited) | 4 | 1.8% |
 | Not working | 52 | 23.3% |
 
 ## Cards needing work
@@ -78,11 +78,8 @@
 | Sigil Blessing | notice | Until end of turn, target creature you control gets +3/+3 and other creatures you control get +1/+1. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Wild Nacatl | notice | This creature gets +1/+1 as long as you control a Mountain. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Windwright Mage | notice | This creature has flying as long as an artifact card is in your graveyard. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Empyrial Archangel | unaudited | All damage that would be dealt to you is dealt to this creature instead. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Ethersworn Canonist | unaudited | Each player who has cast a nonartifact spell this turn can't cast additional nonartifact spells. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Goblin Assault | unaudited | Goblin creatures attack each combat if able. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Mindlock Orb | unaudited | Players can't search libraries. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Qasali Ambusher | unaudited | If a creature is attacking you and you control a Forest and a Plains, you may cast this creature without paying its mana cost and as though it had flash. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Sedris, the Traitor King | unaudited | Each creature card in your graveyard has unearth {2}{B}. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Stoic Angel | unaudited | Players can't untap more than one creature during their untap steps. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Agony Warp | handled | Target creature gets -3/-0 until end of turn. Target creature gets -0/-3 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -232,20 +229,23 @@
 ## Fully supported
 
 <details>
-<summary>21 cards</summary>
+<summary>24 cards</summary>
 
 - Angelsong
 - Blightning
 - Bone Splinters
 - Deft Duelist
+- Empyrial Archangel
 - Esper Battlemage
 - Fatestitcher
 - Gather Specimens
+- Goblin Assault
 - Godtoucher
 - Gustrider Exuberant
 - Invincible Hymn
 - Lich's Mirror
 - Punish Ignorance
+- Qasali Ambusher
 - Relic of Progenitus
 - Rockcaster Platoon
 - Salvage Titan
@@ -265,7 +265,6 @@
 | exalted | 12 | Akrasan Squire, Angelic Benediction, Battlegrace Angel, Court Archers, Dawnray Archer | ala |
 | Choose one | 1 | Bant Charm | ala |
 | +N: target permanent doesn"..."s next untap step. | 1 | Ajani Vengeant | ala |
-| all damage that would be dealt to you is dealt to ~ instead. | 1 | Empyrial Archangel | ala |
 | as long as the top card of your library is an artifact or creature card, ~ has all activated abilities of that card. | 1 | Skill Borrower | ala |
 | at the beginning of your upkeep, create a N/N green saproling creature token for each +N/+N counter on ~. | 1 | Mycoloth | ala |
 | choose five permanents you control. for each of those permanents, you may search your library for a card with the same name as that permanent. put those cards o | 1 | Clarion Ultimatum | ala |
@@ -275,8 +274,6 @@
 | enchanted land is a mountain, forest, and plains. | 1 | Lush Growth | ala |
 | equipped creature gets +N/+N for each charge counter on ~. | 1 | Sigil of Distinction | ala |
 | exile the top five cards of your library. an opponent separates those cards into two piles. you may play lands and cast spells from one of those piles. if you c | 1 | Brilliant Ultimatum | ala |
-| goblin creatures attack each combat if able. | 1 | Goblin Assault | ala |
-| if a creature is attacking you and you control a forest and a plains, you may cast ~ without paying its mana cost and as though it had flash. | 1 | Qasali Ambusher | ala |
 | players can't search libraries. | 1 | Mindlock Orb | ala |
 | players can't untap more than one creature during their untap steps. | 1 | Stoic Angel | ala |
 | put N +N/+N counters on target creature, where N is that creature's power. | 1 | Soul's Might | ala |

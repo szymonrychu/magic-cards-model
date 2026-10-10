@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 14 | 8.5% |
-| Works (untested) | 60 | 36.4% |
-| Partial (unaudited) | 11 | 6.7% |
-| Not working | 80 | 48.5% |
+| Tested | 19 | 11.5% |
+| Works (untested) | 62 | 37.6% |
+| Partial (unaudited) | 7 | 4.2% |
+| Not working | 77 | 46.7% |
 
 ## Cards needing work
 
@@ -47,7 +47,6 @@
 | Elder Pine of Jukai | silent | Soulshift | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Endless Swarm | silent | Create a 1/1 green Snake creature token for each card in your hand. Epic (For the rest of the game, you can't cast spells. At the beginning of each of your upke | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Enduring Ideal | silent | Epic | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Erayo, Soratami Ascendant // Erayo's Essence | silent | Whenever the fourth spell of a turn is cast, flip Erayo. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Eternal Dominion | silent | Search target opponent's library for an artifact, creature, enchantment, or land card. Put that card onto the battlefield under your control. Then that player s | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Freed from the Real | silent | {U}: Untap enchanted creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Ghost-Lit Warder | silent | {3}{U}, {T}: Counter target spell unless its controller pays {2}. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -64,7 +63,6 @@
 | Kashi-Tribe Elite | silent | Whenever this creature deals combat damage to a creature, tap that creature and it doesn't untap during its controller's next untap step. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Kitsune Dawnblade | silent | Bushido | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Kiyomaro, First to Stand | silent | Kiyomaro's power and toughness are each equal to the number of cards in your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Kuon, Ogre Ascendant // Kuon's Essence | silent | At the beginning of the end step, if three or more creatures died this turn, flip Kuon. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Kuro's Taken | silent | Bushido | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Masumaro, First to Live | silent | Masumaro's power and toughness are each equal to twice the number of cards in your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Matsu-Tribe Birdstalker | silent | Whenever this creature deals combat damage to a creature, tap that creature and it doesn't untap during its controller's next untap step. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -88,7 +86,6 @@
 | Sasaya, Orochi Ascendant // Sasaya's Essence | silent | Reveal your hand: If you have seven or more land cards in your hand, flip Sasaya. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Secretkeeper | silent | As long as you have more cards in hand than each opponent, this creature gets +2/+2 and has flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Seed the Land | silent | Whenever a land enters, its controller creates a 1/1 green Snake creature token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Shinen of Life's Roar | silent | Channel — {2}{G}{G}, Discard this card: All creatures able to block target creature this turn do so. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sink into Takenuma | silent | Sweep — Return any number of Swamps you control to their owner's hand. Target player discards a card for each Swamp returned this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Skull Collector | silent | At the beginning of your upkeep, return a black creature you control to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Skyfire Kirin | silent | Whenever you cast a Spirit or Arcane spell, you may gain control of target creature with that spell's mana value until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -106,8 +103,6 @@
 | Charge Across the Araba | notice | Sweep — Return any number of Plains you control to their owner's hand. Creatures you control get +1/+1 until end of turn for each Plains returned this way. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Ideas Unbound | notice | Draw three cards. Discard three cards at the beginning of the next end step. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Plow Through Reito | notice | Sweep — Return any number of Plains you control to their owner's hand. Target creature gets +1/+1 until end of turn for each Plains returned this way. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Cowed by Wisdom | unaudited | Enchanted creature can't attack or block unless its controller pays {1} for each card in your hand. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Dense Canopy | unaudited | Creatures with flying can block only creatures with flying. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Gnat Miser | unaudited | Each opponent's maximum hand size is reduced by one. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Kagemaro's Clutch | unaudited | Enchanted creature gets -X/-X, where X is the number of cards in your hand. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Kataki, War's Wage | unaudited | All artifacts have "At the beginning of your upkeep, sacrifice this artifact unless you pay {1}." | a static ability no support check audits - not verified either way | Y/-/- | partial |
@@ -115,8 +110,6 @@
 | Meishin, the Mind Cage | unaudited | All creatures get -X/-0, where X is the number of cards in your hand. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Minamo Scrollkeeper | unaudited | Your maximum hand size is increased by one. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | O-Naginata | unaudited | This Equipment can be attached only to a creature with power 3 or greater. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Razorjaw Oni | unaudited | Black creatures can't block. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Sekki, Seasons' Guide | unaudited | If damage would be dealt to Sekki, prevent that damage, remove that many +1/+1 counters from Sekki, and create that many 1/1 colorless Spirit creature tokens. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Akki Drillmaster | handled | {T}: Target creature gains haste until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Arashi, the Sky Asunder | handled | {X}{G}, {T}: Arashi deals X damage to target creature with flying. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Briarknit Kami | handled | Whenever you cast a Spirit or Arcane spell, put a +1/+1 counter on target creature. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -127,6 +120,7 @@
 | Dosan's Oldest Chant | handled | You gain 6 life. Draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Dreamcatcher | handled | Whenever you cast a Spirit or Arcane spell, you may sacrifice this creature. If you do, draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ebony Owl Netsuke | handled | At the beginning of each opponent's upkeep, if that player has seven or more cards in hand, this artifact deals 4 damage to that player. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Erayo, Soratami Ascendant // Erayo's Essence | handled | Whenever the fourth spell of a turn is cast, flip Erayo. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Exile into Darkness | handled | Target player sacrifices a creature of their choice with mana value 3 or less. At the beginning of your upkeep, if you have more cards in hand than each opponen | the engine reads this text and performs it | Y/-/- | not_tested |
 | Fiddlehead Kami | handled | Whenever you cast a Spirit or Arcane spell, regenerate this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Footsteps of the Goryo | handled | Return target creature card from your graveyard to the battlefield. Sacrifice that creature at the beginning of the next end step. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -149,6 +143,7 @@
 | Kiku's Shadow | handled | Target creature deals damage to itself equal to its power. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Kiri-Onna | handled | When this creature enters, return target creature to its owner's hand. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Kitsune Loreweaver | handled | {1}{W}: This creature gets +0/+X until end of turn, where X is the number of cards in your hand. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Kuon, Ogre Ascendant // Kuon's Essence | handled | At the beginning of the end step, if three or more creatures died this turn, flip Kuon. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Maga, Traitor to Mortals | handled | Maga enters with X +1/+1 counters on it. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Manriki-Gusari | handled | Equipped creature gets +1/+2 and has "{T}: Destroy target Equipment." | the engine reads this text and performs it | Y/-/- | not_tested |
 | Michiko Konda, Truth Seeker | handled | Whenever a source an opponent controls deals damage to you, that player sacrifices a permanent of their choice. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -181,9 +176,11 @@
 ## Fully supported
 
 <details>
-<summary>14 cards</summary>
+<summary>19 cards</summary>
 
 - Burning-Eye Zubera
+- Cowed by Wisdom
+- Dense Canopy
 - Evermind
 - Feral Lightning
 - Hidetsugu's Second Rite
@@ -192,9 +189,12 @@
 - Miren, the Moaning Well
 - Pithing Needle
 - Promise of Bunrei
+- Razorjaw Oni
 - Reverence
 - Rushing-Tide Zubera
 - Sakura-Tribe Scout
+- Sekki, Seasons' Guide
+- Shinen of Life's Roar
 - Soratami Cloud Chariot
 - Tomb of Urami
 
@@ -208,7 +208,6 @@
 | soulshift | 6 | Deathknell Kami, Elder Pine of Jukai, Kami of Empty Graves, Nightsoil Kami, Promised Kannushi | sok |
 | Sweep | 4 | Barrel Down Sokenzan, Charge Across the Araba, Plow Through Reito, Sink into Takenuma | sok |
 | whenever ~ deals combat damage to a creature, tap that creature and it doesn"..."s next untap step. | 2 | Kashi-Tribe Elite, Matsu-Tribe Birdstalker | sok |
-| Channel | 1 | Shinen of Life's Roar | sok |
 | Choose one | 1 | Aether Shockwave | sok |
 | adamaro's power and toughness are each equal to the number of cards in the hand of the opponent with the most cards in hand. | 1 | Adamaro, First to Desire | sok |
 | add {M} for each card in your hand. | 1 | Inner Fire | sok |
@@ -220,7 +219,6 @@
 | as long as you have seven or more cards in hand, ~ gets +N/+N and has fear. | 1 | Deathmask Nezumi | sok |
 | as long as you have seven or more cards in hand, ~ gets +N/+N and has first strike. | 1 | Akki Underling | sok |
 | at the beginning of each player"..."s hand unless they pay N life. | 1 | Blood Clock | sok |
-| at the beginning of the end step, if three or more creatures died ~, flip kuon. | 1 | Kuon, Ogre Ascendant // Kuon's Essence | sok |
 | at the beginning of your upkeep, if a player has more cards in hand than each other player, the player who has the most cards in hand gains control of ~. | 1 | Sokenzan Renegade | sok |
 | at the beginning of your upkeep, if you have more cards in hand than each opponent, you may sacrifice a swamp. if you do, return akuta from your graveyard to th | 1 | Akuta, Born of Ash | sok |
 | at the beginning of your upkeep, put a +N/+N counter on ~ for each card in your hand, then remove a +N/+N counter from ~ for each card in target opponent's hand | 1 | Descendant of Masumaro | sok |
@@ -230,12 +228,10 @@
 | at the beginning of your upkeep, return a red creature you control to its owner's hand. | 1 | Oni of Wild Places | sok |
 | at the beginning of your upkeep, return a white creature you control to its owner's hand. | 1 | Eiganjo Free-Riders | sok |
 | at the beginning of your upkeep, sacrifice ~ unless you pay {M}. | 1 | Kami of the Tended Garden | sok |
-| black creatures can't block. | 1 | Razorjaw Oni | sok |
 | cast ~ only during combat after blockers are declared. target unblocked attacking creature becomes blocked. (~ works on creatures that can't be blocked.) draw a | 1 | Curtain of Light | sok |
 | counter target creature spell. draw cards equal to that spell's mana value. | 1 | Overwhelming Intellect | sok |
 | counter target spell unless its controller pays {M} for each card in your hand. | 1 | Oppressive Will | sok |
 | create a N/N green snake creature token for each card in your hand. epic (for the rest of the game, you can't cast spells. at the beginning of each of your upke | 1 | Endless Swarm | sok |
-| creatures with flying can block only creatures with flying. | 1 | Dense Canopy | sok |
 | destroy target artifact or enchantment if its mana value is less than or equal to the number of cards in your hand. draw a card. | 1 | Rending Vines | sok |
 | draw three cards. discard three cards at the beginning of the next end step. | 1 | Ideas Unbound | sok |
 | each creature card in your graveyard has the chosen creature type in addition to its other types. | 1 | Ashes of the Fallen | sok |
@@ -243,12 +239,10 @@
 | each opponent's maximum hand size is reduced by two. | 1 | Locust Miser | sok |
 | each player may bid life. you start the bidding with a bid of any number. in turn order, each player may top the high bid. the bidding ends if the high bid stan | 1 | Pain's Reward | sok |
 | each player sacrifices a land of their choice for each card in your hand. | 1 | Thoughts of Ruin | sok |
-| enchanted creature can't attack or block unless its controller pays {M} for each card in your hand. | 1 | Cowed by Wisdom | sok |
 | enchanted creature gets -N/-N, where N is the number of cards in your hand. | 1 | Kagemaro's Clutch | sok |
 | epic | 1 | Enduring Ideal | sok |
 | exile cards from the top of your library until you exile a nonland card. ~ deals damage to any target equal to that card"..."t cast spells. at the beginning of  | 1 | Undying Flames | sok |
 | exile the top card of your library. exile the top card of your library. exile the top card of your library. if the last card exiled isn't a land card, repeat ~. | 1 | Rally the Horde | sok |
-| if damage would be dealt to sekki, prevent that damage, remove that many +N/+N counters from sekki, and create that many N/N colorless spirit creature tokens. | 1 | Sekki, Seasons' Guide | sok |
 | kagemaro's power and toughness are each equal to the number of cards in your hand. | 1 | Kagemaro, First to Suffer | sok |
 | kiyomaro's power and toughness are each equal to the number of cards in your hand. | 1 | Kiyomaro, First to Stand | sok |
 | legendary landwalk | 1 | Ayumi, the Last Visitor | sok |
@@ -264,7 +258,6 @@
 | whenever a land enters, its controller creates a N/N green snake creature token. | 1 | Seed the Land | sok |
 | whenever a spell or ability an opponent controls causes you to discard cards ~, return those cards from your graveyard to your hand. when a spell or ability an  | 1 | Pure Intentions | sok |
 | whenever another card is put into your graveyard from anywhere, target opponent gains control of ~. | 1 | Measure of Wickedness | sok |
-| whenever the fourth spell of a turn is cast, flip erayo. | 1 | Erayo, Soratami Ascendant // Erayo's Essence | sok |
 | whenever you cast a spirit or arcane spell, destroy all permanents with that spell's mana value. | 1 | Celestial Kirin | sok |
 | whenever you cast a spirit or arcane spell, target player reveals their hand and discards all cards with that spell's mana value. | 1 | Infernal Kirin | sok |
 | whenever you cast a spirit or arcane spell, you may gain control of target creature with that spell's mana value until end of turn. | 1 | Skyfire Kirin | sok |

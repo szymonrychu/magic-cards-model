@@ -17,27 +17,18 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 12 | 7.4% |
-| Works (untested) | 81 | 50.0% |
-| Partial (unaudited) | 10 | 6.2% |
-| Not working | 59 | 36.4% |
+| Tested | 16 | 9.9% |
+| Works (untested) | 90 | 55.6% |
+| Partial (unaudited) | 6 | 3.7% |
+| Not working | 50 | 30.9% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
 | Aether Vial | silent | {T}: You may put a creature card with mana value equal to the number of charge counters on this artifact from your hand onto the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Arcbound Bruiser | silent | Modular | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Arcbound Crusher | silent | Modular | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Arcbound Fiend | silent | At the beginning of your upkeep, you may move a +1/+1 counter from target creature onto this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Arcbound Hybrid | silent | Modular | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Arcbound Lancer | silent | Modular | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Arcbound Overseer | silent | At the beginning of your upkeep, put a +1/+1 counter on each creature you control with modular. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Arcbound Ravager | silent | Modular | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Arcbound Reclaimer | silent | Modular | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Arcbound Slith | silent | Modular | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Arcbound Stinger | silent | Modular | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Arcbound Worker | silent | Modular | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Auriok Glaivemaster | silent | As long as this creature is equipped, it gets +1/+1 and has first strike. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Auriok Siege Sled | silent | {1}: Target artifact creature can't block this creature this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Carry Away | silent | When this Aura enters, unattach enchanted Equipment. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -85,19 +76,22 @@
 | Shriveling Rot | notice | Choose one — • Until end of turn, whenever a creature is dealt damage, destroy it. • Until end of turn, whenever a creature dies, that creature's controller los | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Tears of Rage | notice | Cast this spell only during the declare attackers step. Attacking creatures you control get +X/+0 until end of turn, where X is the number of attacking creature | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Unforge | notice | Destroy target Equipment. If that Equipment was attached to a creature, Unforge deals 2 damage to that creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Darksteel Colossus | unaudited | If Darksteel Colossus would be put into a graveyard from anywhere, reveal Darksteel Colossus and shuffle it into its owner's library instead. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Darksteel Forge | unaudited | Artifacts you control have indestructible. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Hoverguard Observer | unaudited | This creature can block only creatures with flying. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Leonin Shikari | unaudited | You may activate equip abilities any time you could cast an instant. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Nemesis Mask | unaudited | All creatures able to block equipped creature do so. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Pristine Angel | unaudited | As long as this creature is untapped, it has protection from artifacts and from each color. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Psychic Overload | unaudited | Enchanted permanent has "Discard two artifact cards: Untap this permanent." | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Serum Powder | unaudited | Any time you could mulligan and this card is in your hand, you may exile all the cards from your hand, then draw that many cards. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Shield of Kaldra | unaudited | Equipment named Sword of Kaldra, Shield of Kaldra, and Helm of Kaldra have indestructible. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Whispersilk Cloak | unaudited | Equipped creature can't be blocked and has shroud. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Ageless Entity | handled | Whenever you gain life, put that many +1/+1 counters on this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Angel's Feather | handled | Whenever a player casts a white spell, you may gain 1 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Arcane Spyglass | handled | {2}, {T}, Sacrifice a land: Draw a card and put a charge counter on this artifact. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Arcbound Bruiser | handled | Modular | machines/keywords.py | Y/-/- | not_tested |
+| Arcbound Crusher | handled | Whenever another artifact enters, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Arcbound Hybrid | handled | Modular | machines/keywords.py | Y/-/- | not_tested |
+| Arcbound Lancer | handled | First strike | machines/combat.py | Y/-/- | not_tested |
+| Arcbound Reclaimer | handled | Remove a +1/+1 counter from this creature: Put target artifact card from your graveyard on top of your library. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Arcbound Slith | handled | Whenever this creature deals combat damage to a player, put a +1/+1 counter on it. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Arcbound Stinger | handled | Flying | machines/combat.py | Y/-/- | not_tested |
 | Barbed Lightning | handled | Choose one — • Barbed Lightning deals 3 damage to target creature. • Barbed Lightning deals 3 damage to target player or planeswalker. Entwine {2} (Choose both  | the engine reads this text and performs it | Y/-/- | not_tested |
 | Blinkmoth Nexus | handled | {1}: This land becomes a 1/1 Blinkmoth artifact creature with flying until end of turn. It's still a land. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Burden of Greed | handled | Target player loses 1 life for each tapped artifact they control. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -107,6 +101,7 @@
 | Crazed Goblin | handled | This creature attacks each combat if able. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Darksteel Brute | handled | {3}: This artifact becomes a 2/2 Beast artifact creature until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Darksteel Citadel | handled | Indestructible | machines/keywords.py | Y/Y/- | not_tested |
+| Darksteel Colossus | handled | If Darksteel Colossus would be put into a graveyard from anywhere, reveal Darksteel Colossus and shuffle it into its owner's library instead. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Darksteel Ingot | handled | Indestructible | machines/keywords.py | Y/Y/- | not_tested |
 | Darksteel Pendant | handled | {1}, {T}: Scry 1. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Demon's Horn | handled | Whenever a player casts a black spell, you may gain 1 life. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -138,6 +133,7 @@
 | Nourish | handled | You gain 6 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Oxidda Golem | handled | Affinity | models/game.py (Game.cost_reduction_for, CR 702.41a) | Y/-/- | not_tested |
 | Oxidize | handled | Destroy target artifact. It can't be regenerated. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Psychic Overload | handled | When this Aura enters, tap enchanted permanent. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Pteron Ghost | handled | Sacrifice this creature: Regenerate target artifact. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Purge | handled | Destroy target artifact creature or black creature. It can't be regenerated. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Quicksilver Behemoth | handled | When this creature attacks or blocks, return it to its owner's hand at end of combat. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -180,15 +176,19 @@
 ## Fully supported
 
 <details>
-<summary>12 cards</summary>
+<summary>16 cards</summary>
 
 - Aether Snap
+- Arcbound Ravager
+- Arcbound Worker
 - Darksteel Gargoyle
 - Echoing Courage
 - Echoing Truth
 - Flamebreak
 - Furnace Dragon
 - Hallow
+- Hoverguard Observer
+- Nemesis Mask
 - Sword of Fire and Ice
 - Tanglewalker
 - Test of Faith
@@ -201,10 +201,8 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| modular | 9 | Arcbound Bruiser, Arcbound Crusher, Arcbound Hybrid, Arcbound Lancer, Arcbound Ravager | dst |
 | Choose one | 2 | Second Sight, Shriveling Rot | dst |
 | Imprint | 1 | Panoptic Mirror | dst |
-| all creatures able to block equipped creature do so. | 1 | Nemesis Mask | dst |
 | all permanents are artifacts in addition to their other types. | 1 | Mycosynth Lattice | dst |
 | any time you could mulligan and ~ is in your hand, you may exile all the cards from your hand, then draw that many cards. | 1 | Serum Powder | dst |
 | artifacts you control have indestructible. | 1 | Darksteel Forge | dst |
@@ -223,10 +221,8 @@
 | destroy target nonblack creature. it can't be regenerated. you gain control of all equipment that were attached to it. (~ lasts indefinitely.) | 1 | Murderous Spoils | dst |
 | draw two cards, then discard a card. then if an opponent has more cards in hand than you, return ~ to its owner's hand. | 1 | Pulse of the Grid | dst |
 | each player loses N life, discards N cards, sacrifices N creatures of their choice, then sacrifices N lands of their choice. | 1 | Death Cloud | dst |
-| enchanted permanent has "..." | 1 | Psychic Overload | dst |
 | equipment named sword of kaldra, ~, and helm of kaldra have indestructible. | 1 | Shield of Kaldra | dst |
 | equipped creature can't be blocked and has shroud. | 1 | Whispersilk Cloak | dst |
-| if ~ would be put into a graveyard from anywhere, reveal ~ and shuffle it into its owner's library instead. | 1 | Darksteel Colossus | dst |
 | myr creatures get +N/+N. | 1 | Myr Matrix | dst |
 | put two +N/+N counters on target creature and two +N/+N counters on another target creature. | 1 | Stand Together | dst |
 | put two target artifacts on top of their owners' libraries. | 1 | Rebuking Ceremony | dst |
@@ -258,7 +254,6 @@
 | {M}: until end of turn, target artifact creature becomes blue and isn't an artifact. | 1 | Neurok Transmuter | dst |
 | {M}: you may put a creature card with mana value equal to the number of charge counters on ~ from your hand onto the battlefield. | 1 | Aether Vial | dst |
 | {M}{M}{M}: target permanent becomes an artifact in addition to its other types. | 1 | Memnarch | dst |
-| ~ can block only creatures with flying. | 1 | Hoverguard Observer | dst |
 | ~ deals N damage to target player or planeswalker. then if that player or that planeswalker"..."s hand. | 1 | Pulse of the Forge | dst |
 | ~ has shroud as long as you control another artifact creature. | 1 | Drill-Skimmer | dst |
 

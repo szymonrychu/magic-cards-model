@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 35 | 13.5% |
-| Works (untested) | 129 | 49.8% |
-| Partial (unaudited) | 7 | 2.7% |
-| Not working | 88 | 34.0% |
+| Tested | 40 | 15.4% |
+| Works (untested) | 130 | 50.2% |
+| Partial (unaudited) | 2 | 0.8% |
+| Not working | 87 | 33.6% |
 
 ## Cards needing work
 
@@ -42,7 +42,6 @@
 | Bucolic Ranch | silent | {3}, {T}: Look at the top card of your library. If it's a Mount card, you may reveal it and put it into your hand. If you don't put it into your hand, you may p | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Caustic Bronco | silent | Whenever this creature attacks, reveal the top card of your library and put it into your hand. You lose life equal to that card's mana value if this creature is | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Claim Jumper | silent | When this creature enters, if an opponent controls more lands than you, you may search your library for a Plains card and put it onto the battlefield tapped. Th | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Deepmuck Desperado | silent | Whenever you commit a crime, each opponent mills three cards. This ability triggers only once each turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Emergent Haunting | silent | At the beginning of your end step, if you haven't cast a spell from your hand this turn and this enchantment isn't a creature, it becomes a 3/3 Spirit creature  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Eriette, the Beguiler | silent | Whenever an Aura you control becomes attached to a nonland permanent an opponent controls with mana value less than or equal to that Aura's mana value, gain con | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
 | Ertha Jo, Frontier Mentor | silent | Whenever you activate an ability that targets a creature or player, copy that ability. You may choose new targets for the copy. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
@@ -114,13 +113,8 @@
 | Take the Fall | notice | Target creature gets -1/-0 until end of turn. It gets -4/-0 until end of turn instead if you control an outlaw. (Assassins, Mercenaries, Pirates, Rogues, and Wa | unparsed remainder: It gets -4/-0 until end of turn instead if you control an outlaw. Draw a card. | Y/Y/Y | not_working |
 | The Gitrog, Ravenous Ride | notice | Whenever The Gitrog deals combat damage to a player, you may sacrifice a creature that saddled it this turn. If you do, draw X cards, then put up to X land card | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Trash the Town | notice | Spree (Choose one or more additional costs.) + {2} — Put two +1/+1 counters on target creature. + {1} — Target creature gains trample until end of turn. + {1} — | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Doc Aurlock, Grizzled Genius | unaudited | Spells you cast from your graveyard or from exile cost {2} less to cast. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Duelist of the Mind | unaudited | Duelist of the Mind's power is equal to the number of cards you've drawn this turn. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Dust Animus | unaudited | If you control five or more untapped lands, this creature enters with two +1/+1 counters and a lifelink counter on it. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Freestrider Commando | unaudited | This creature enters with two +1/+1 counters on it if it wasn't cast or no mana was spent to cast it. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Jace Reawakened | unaudited | You can't cast Jace Reawakened during your first, second, or third turns of the game. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Miriam, Herd Whisperer | unaudited | During your turn, Mounts and Vehicles you control have hexproof. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Sheriff of Safe Passage | unaudited | This creature enters with a +1/+1 counter on it plus an additional +1/+1 counter on it for each other creature you control. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Abraded Bluffs | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Akul the Unrepentant | handled | Sacrifice three other creatures: You may put a creature card from your hand onto the battlefield. Activate only as a sorcery and only once each turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Ambush Gigapede | handled | When this creature enters, target creature an opponent controls gets -2/-2 until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -148,6 +142,7 @@
 | Dance of the Tumbleweeds | handled | Spree (Choose one or more additional costs.) + {1} — Search your library for a basic land card or a Desert card, put it onto the battlefield, then shuffle. + {3 | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Daring Thunder-Thief | handled | This creature enters tapped. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Deadeye Duelist | handled | {1}, {T}: This creature deals 1 damage to target opponent. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Deepmuck Desperado | handled | Whenever you commit a crime, each opponent mills three cards. This ability triggers only once each turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Demonic Ruckus | handled | Enchanted creature gets +1/+1 and has menace and trample. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Desperate Bloodseeker | handled | When this creature enters, target player mills two cards. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Discerning Peddler | handled | When this creature enters, you may discard a card. If you do, draw a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -254,13 +249,17 @@
 ## Fully supported
 
 <details>
-<summary>35 cards</summary>
+<summary>40 cards</summary>
 
 - Armored Armadillo
 - Betrayal at the Vault
+- Doc Aurlock, Grizzled Genius
 - Drover Grizzly
+- Duelist of the Mind
+- Dust Animus
 - Final Showdown
 - Forsaken Miner
+- Freestrider Commando
 - Giant Beaver
 - Gisa, the Hellraiser
 - Goldvein Hydra
@@ -282,6 +281,7 @@
 - Prairie Dog
 - Satoru, the Infiltrator
 - Servant of the Stinger
+- Sheriff of Safe Passage
 - Shoot the Sheriff
 - Slickshot Show-Off
 - Slickshot Vault-Buster
@@ -308,14 +308,12 @@
 | during your turn, outlaws you control have first strike. | 1 | At Knifepoint | otj |
 | exile any number of creatures you control, then return them to the battlefield under their owner's control. then repeat ~ N more times. | 1 | Another Round | otj |
 | exile target creature. if it had mana value N or less, surveil N. (look at the top two cards of your library, then put any number of them into your graveyard an | 1 | Consuming Ashes | otj |
-| if you control five or more untapped lands, ~ enters with two +N/+N counters and a lifelink counter on it. | 1 | Dust Animus | otj |
 | look at the top three cards of your library. you may exile a nonland card from among them. if you do, it becomes plotted. put the rest into your hand. (you may  | 1 | Make Your Own Luck | otj |
 | nontoken creatures you control have "..." | 1 | Ghired, Mirror of the Wilds | otj |
 | other outlaws you control have haste. | 1 | Hellspur Posse Boss | otj |
 | plot | 1 | Fblthp, Lost on the Range | otj |
 | sacrifice any number of permanents you control, then draw that many cards. plot {M}{M}{M} (you may pay {M}{M}{M} and exile ~ from your hand. cast it as a sorcer | 1 | Pitiless Carnage | otj |
 | search your library for up to two basic land cards and/or desert cards, put them onto the battlefield tapped, then shuffle. | 1 | Map the Frontier | otj |
-| spells you cast from your graveyard or from exile cost {M} less to cast. | 1 | Doc Aurlock, Grizzled Genius | otj |
 | spree (choose one or more additional costs.) + {M} — copy target instant spell, sorcery spell, activated ability, or triggered ability. you may choose new targe | 1 | Return the Favor | otj |
 | spree (choose one or more additional costs.) + {M} — exchange control of two target creatures. + {M} — exchange control of two target artifacts. + {M} — exchang | 1 | Shifting Grift | otj |
 | spree (choose one or more additional costs.) + {M} — exile target nontoken creature. return it to the battlefield under its owner's control at the beginning of  | 1 | Getaway Glamer | otj |
@@ -365,7 +363,6 @@
 | whenever you cast your second spell each turn, choose target creature an opponent controls. if it's tapped, put a stun counter on it. otherwise, tap it. | 1 | Shackle Slinger | otj |
 | whenever you cast your second spell each turn, you may sacrifice an artifact. if you do, flip a coin. when you win the flip, copy that spell. you may choose new | 1 | Breeches, the Blastmaker | otj |
 | whenever you commit a crime during your turn, ~ gains indestructible until end of turn. | 1 | Overzealous Muscle | otj |
-| whenever you commit a crime, each opponent mills three cards. ~ triggers only once each turn. | 1 | Deepmuck Desperado | otj |
 | whenever you commit a crime, exile up to one target black card from your graveyard and copy it. you may cast the copy. if you do, you lose N life. | 1 | Kaervek, the Punisher | otj |
 | whenever you commit a crime, put a +N/+N counter on lazav. then you may exile a card from a graveyard. if a creature card was exiled ~, you may have lazav becom | 1 | Lazav, Familiar Stranger | otj |
 | whenever you commit a crime, target creature you control gains your choice of menace or lifelink until end of turn. | 1 | Rattleback Apothecary | otj |
@@ -384,14 +381,11 @@
 | {M}, {M}: put a +N/+N counter on each creature you control that entered ~. | 1 | Raucous Entertainer | otj |
 | {M}: ~ can't be blocked ~ except by creatures with haste. | 1 | Resilient Roadrunner | otj |
 | {M}{M}, sacrifice another creature: put a +N/+N counter on ~. if an outlaw was sacrificed ~, create a treasure token. | 1 | Boneyard Desecrator | otj |
-| ~ enters with a +N/+N counter on it plus an additional +N/+N counter on it for each other creature you control. | 1 | Sheriff of Safe Passage | otj |
-| ~ enters with two +N/+N counters on it if it wasn't cast or no mana was spent to cast it. | 1 | Freestrider Commando | otj |
 | ~ gets -N/-N for each card in your hand. | 1 | Stingerback Terror | otj |
 | ~ has flash as long as you control a desert. | 1 | Colossal Rattlewurm | otj |
 | ~ has flash as long as you've committed a crime ~. (targeting opponents, anything they control, and/or cards in their graveyards is a crime.) gain control of ta | 1 | Take for a Ride | otj |
 | ~ has haste as long as you control a mount. | 1 | Mobile Homestead | otj |
 | ~ has hexproof as long as you haven't cast a spell ~. | 1 | Stoic Sphinx | otj |
-| ~"..."ve drawn ~. | 1 | Duelist of the Mind | otj |
 | −N: for each other nonland permanent you control, create a token that's a copy of that permanent. | 1 | Oko, the Ringleader | otj |
 
 ## Notes

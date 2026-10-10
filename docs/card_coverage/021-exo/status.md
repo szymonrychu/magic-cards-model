@@ -17,9 +17,9 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 4 | 17.4% |
+| Tested | 5 | 21.7% |
 | Works (untested) | 13 | 56.5% |
-| Partial (unaudited) | 1 | 4.3% |
+| Partial (unaudited) | 0 | 0.0% |
 | Not working | 5 | 21.7% |
 
 ## Cards needing work
@@ -31,7 +31,6 @@
 | Maniacal Rage | silent | Enchanted creature gets +2/+2 and can't block. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Pandemonium | silent | Whenever a creature enters, that creature's controller may have it deal damage equal to its power to any target of their choice. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Thrull Surgeon | notice | {1}{B}, Sacrifice this creature: Look at target player's hand and choose a card from it. That player discards that card. Activate only as a sorcery. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| High Ground | unaudited | Each creature you control can block an additional creature each combat. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Anarchist | handled | When this creature enters, you may return target sorcery card from your graveyard to your hand. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Curiosity | handled | Whenever enchanted creature deals damage to an opponent, you may draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Mindless Automaton | handled | This creature enters with two +1/+1 counters on it. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -49,8 +48,9 @@
 ## Fully supported
 
 <details>
-<summary>4 cards</summary>
+<summary>5 cards</summary>
 
+- High Ground
 - Merfolk Looter
 - Paladin en-Vec
 - Reconnaissance
@@ -63,7 +63,6 @@
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
 | each creature gets +N/+N for each other creature on the battlefield that shares at least one creature type with it. | 1 | Coat of Arms | exo |
-| each creature you control can block an additional creature each combat. | 1 | High Ground | exo |
 | enchanted creature gets +N/+N and can't block. | 1 | Maniacal Rage | exo |
 | whenever a creature enters, that creature's controller may have it deal damage equal to its power to any target of their choice. | 1 | Pandemonium | exo |
 | whenever ~ becomes blocked, it gets +N/+N until end of turn for each creature blocking it. | 1 | Elvish Berserker | exo |

@@ -17,9 +17,9 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 19 | 17.1% |
+| Tested | 25 | 22.5% |
 | Works (untested) | 65 | 58.6% |
-| Partial (unaudited) | 8 | 7.2% |
+| Partial (unaudited) | 2 | 1.8% |
 | Not working | 19 | 17.1% |
 
 ## Cards needing work
@@ -46,13 +46,7 @@
 | Rise from the Grave | notice | Put target creature card from a graveyard onto the battlefield under your control. That creature is a black Zombie in addition to its other colors and types. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Xathrid Demon | notice | At the beginning of your upkeep, sacrifice a creature other than this creature, then each opponent loses life equal to the sacrificed creature's power. If you c | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Convincing Mirage | unaudited | Enchanted land is the chosen type. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Dread Warlock | unaudited | This creature can't be blocked except by black creatures. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Guardian Seraph | unaudited | If a source an opponent controls would deal damage to you, prevent 1 of that damage. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Indestructibility | unaudited | Enchanted permanent has indestructible. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Jackal Familiar | unaudited | This creature can't attack or block alone. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Palace Guard | unaudited | This creature can block any number of creatures. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Prized Unicorn | unaudited | All creatures able to block this creature do so. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Serpent of the Endless Sea | unaudited | This creature can't attack unless defending player controls an Island. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Acolyte of Xathrid | handled | {1}{B}, {T}: Target player loses 1 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Angel's Mercy | handled | You gain 7 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ant Queen | handled | {1}{G}: Create a 1/1 green Insect creature token. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -122,7 +116,7 @@
 ## Fully supported
 
 <details>
-<summary>19 cards</summary>
+<summary>25 cards</summary>
 
 - Acidic Slime
 - Act of Treason
@@ -130,15 +124,21 @@
 - Burning Inquiry
 - Child of Night
 - Divination
+- Dread Warlock
 - Elite Vanguard
 - Essence Scatter
 - Goblin Artillery
 - Great Sable Stag
+- Guardian Seraph
 - Harm's Way
 - Inferno Elemental
+- Jackal Familiar
 - Lifelink
+- Palace Guard
+- Prized Unicorn
 - Runeclaw Bear
 - Safe Passage
+- Serpent of the Endless Sea
 - Sign in Blood
 - Silence
 - Sleep
@@ -150,14 +150,12 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| all creatures able to block ~ do so. | 1 | Prized Unicorn | m10 |
 | as long as the top card of your library is black, ~ and other vampire creatures you control get +N/+N and have flying. | 1 | Vampire Nocturnus | m10 |
 | at the beginning of your upkeep, choose target nonland permanent you control and up to two target nonland permanents you don't control. destroy one of them at r | 1 | Capricious Efreet | m10 |
 | at the beginning of your upkeep, sacrifice a creature other than ~, then each opponent loses life equal to the sacrificed creature"..."t sacrifice a creature, t | 1 | Xathrid Demon | m10 |
 | enchanted land is the chosen type. | 1 | Convincing Mirage | m10 |
 | enchanted permanent has indestructible. | 1 | Indestructibility | m10 |
 | equipped creature gets +N/+N and loses flying. | 1 | Magebane Armor | m10 |
-| if a source an opponent controls would deal damage to you, prevent N of that damage. | 1 | Guardian Seraph | m10 |
 | other goblin creatures you control get +N/+N and have haste. | 1 | Goblin Chieftain | m10 |
 | other soldier creatures you control get +N/+N and have vigilance. | 1 | Captain of the Watch | m10 |
 | other soldier creatures you control have first strike. | 1 | Rhox Pikemaster | m10 |
@@ -173,10 +171,6 @@
 | {M}: tap all untapped wolf creatures you control. each wolf tapped ~ deals damage equal to its power to target creature. that creature deals damage equal to its | 1 | Master of the Wild Hunt | m10 |
 | {M}: target creature an opponent controls attacks you ~ if able. | 1 | Alluring Siren | m10 |
 | {M}{M}{M}, remove a wish counter from ~: reveal the top card of your library. you may play that card without paying its mana cost. if you don't, exile it. | 1 | Djinn of Wishes | m10 |
-| ~ can block any number of creatures. | 1 | Palace Guard | m10 |
-| ~ can't attack or block alone. | 1 | Jackal Familiar | m10 |
-| ~ can't attack unless defending player controls an island. | 1 | Serpent of the Endless Sea | m10 |
-| ~ can't be blocked except by black creatures. | 1 | Dread Warlock | m10 |
 
 ## Notes
 

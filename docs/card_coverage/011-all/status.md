@@ -17,9 +17,9 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 1 | 11.1% |
+| Tested | 2 | 22.2% |
 | Works (untested) | 6 | 66.7% |
-| Partial (unaudited) | 1 | 11.1% |
+| Partial (unaudited) | 0 | 0.0% |
 | Not working | 1 | 11.1% |
 
 ## Cards needing work
@@ -27,7 +27,6 @@
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
 | Swamp Mosquito | silent | Whenever this creature attacks and isn't blocked, defending player gets a poison counter. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Elvish Bard | unaudited | All creatures able to block this creature do so. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Aesthir Glider | handled | This creature can't block. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Gorilla Shaman | handled | {X}{X}{1}: Destroy target noncreature artifact with mana value X. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Guerrilla Tactics | handled | Guerrilla Tactics deals 2 damage to any target. When a spell or ability an opponent controls causes you to discard this card, it deals 4 damage to any target. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -38,8 +37,9 @@
 ## Fully supported
 
 <details>
-<summary>1 cards</summary>
+<summary>2 cards</summary>
 
+- Elvish Bard
 - Hail Storm
 
 </details>
@@ -48,7 +48,6 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| all creatures able to block ~ do so. | 1 | Elvish Bard | all |
 | whenever ~ attacks and isn't blocked, defending player gets a poison counter. | 1 | Swamp Mosquito | all |
 
 ## Notes

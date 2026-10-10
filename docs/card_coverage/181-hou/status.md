@@ -17,9 +17,9 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 20 | 10.9% |
+| Tested | 24 | 13.1% |
 | Works (untested) | 97 | 53.0% |
-| Partial (unaudited) | 5 | 2.7% |
+| Partial (unaudited) | 1 | 0.5% |
 | Not working | 61 | 33.3% |
 
 ## Cards needing work
@@ -29,7 +29,7 @@
 | Act of Heroism | silent | Untap target creature. It gets +2/+2 until end of turn and can block an additional creature this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Adorned Pouncer | silent | Eternalize | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Ammit Eternal | silent | Whenever this creature deals combat damage to a player, remove all -1/-1 counters from it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Apocalypse Demon | silent | Apocalypse Demon's power and toughness are each equal to the number of cards in your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
+| Apocalypse Demon | silent | At the beginning of your upkeep, tap this creature unless you sacrifice another creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Champion of Wits | silent | Eternalize | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Countervailing Winds | silent | Counter target spell unless its controller pays {1} for each card in your graveyard. Cycling {2} ({2}, Discard this card: Draw a card.) | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Cunning Survivor | silent | Whenever you cycle or discard a card, this creature gets +1/+0 until end of turn and can't be blocked this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -87,10 +87,6 @@
 | Solitary Camel | notice | This creature has lifelink as long as you control a Desert or there is a Desert card in your graveyard. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Thorned Moloch | notice | This creature has first strike as long as it's attacking. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Vile Manifestation | notice | This creature gets +1/+0 for each card with cycling in your graveyard. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Abandoned Sarcophagus | unaudited | You may cast spells that have a cycling ability from your graveyard. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Desert's Hold | unaudited | Enchanted creature can't attack or block, and its activated abilities can't be activated. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Djeru, With Eyes Open | unaudited | If a source would deal damage to a planeswalker you control, prevent 1 of that damage. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Oketra's Avenger | unaudited | You may exert this creature as it attacks. When you do, prevent all combat damage that would be dealt to it this turn. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Overwhelming Splendor | unaudited | Creatures enchanted player controls lose all abilities and have base power and toughness 1/1. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Accursed Horde | handled | {1}{B}: Target attacking Zombie gains indestructible until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Aerial Guide | handled | Whenever this creature attacks, another target attacking creature gains flying until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -193,20 +189,24 @@
 ## Fully supported
 
 <details>
-<summary>20 cards</summary>
+<summary>24 cards</summary>
 
+- Abandoned Sarcophagus
 - Abrade
 - Blur of Blades
 - Chandra's Defeat
 - Chaos Maw
 - Claim // Fame
 - Desert of the True
+- Desert's Hold
+- Djeru, With Eyes Open
 - Driven // Despair
 - Endless Sands
 - Hollow One
 - Hour of Devastation
 - Liliana's Defeat
 - Nissa's Defeat
+- Oketra's Avenger
 - Oketra's Last Mercy
 - Pride Sovereign
 - Refuse // Cooperate
@@ -234,18 +234,17 @@
 | at the beginning of each end step, enchanted player mills N cards, where N is the number of cards put into their graveyard from anywhere ~. | 1 | Fraying Sanity | hou |
 | at the beginning of each of your postcombat main phases, add {M} for each N life your opponents have lost ~. | 1 | Neheb, the Eternal | hou |
 | at the beginning of enchanted player's upkeep, that player loses N life unless they sacrifice a nonland permanent of their choice or discard a card. | 1 | Torment of Scarabs | hou |
+| at the beginning of your upkeep, tap ~ unless you sacrifice another creature. | 1 | Apocalypse Demon | hou |
 | counter target blue spell. if it was a jace planeswalker spell, scry N. | 1 | Jace's Defeat | hou |
 | counter target spell unless its controller pays {M} for each card in your graveyard. cycling {M} ({M}, discard ~: draw a card.) | 1 | Countervailing Winds | hou |
 | creatures enchanted player controls lose all abilities and have base power and toughness N/N. | 1 | Overwhelming Splendor | hou |
 | creatures target opponent controls attack ~ if able. during that player"..."t untap. cycling {M} ({M}, discard ~: draw a card.) | 1 | Imaginary Threats | hou |
 | draw two cards. then discard a card unless you return a land you control to its owner's hand. | 1 | Tragic Lesson | hou |
-| enchanted creature can"..."t be activated. | 1 | Desert's Hold | hou |
 | equipped creature gets +N/+N and has afflict N. | 1 | Dagger of the Worthy | hou |
 | exile N target creature cards from your graveyard. for each card exiled ~, create a token that"..."s a N/N black zombie. | 1 | Hour of Eternity | hou |
 | exile target creature. if that creature was a god, its controller reveals their hand and exiles all cards from it with the same name as that creature. | 1 | Hour of Glory | hou |
 | exile target white creature that's attacking or blocking. if it was a gideon planeswalker, you gain N life. | 1 | Gideon's Defeat | hou |
 | gain control of target artifact, creature, or enchantment. lands you control don't untap during your next untap step. | 1 | Kefnet's Last Word | hou |
-| if a source would deal damage to a planeswalker you control, prevent N of that damage. | 1 | Djeru, With Eyes Open | hou |
 | put three -N/-N counters on target creature. its controller loses N life unless they sacrifice another nonland permanent of their choice or discard a card. | 1 | Torment of Venom | hou |
 | repeat the following process N times. each opponent loses N life unless that player sacrifices a nonland permanent of their choice or discards a card. | 1 | Torment of Hailfire | hou |
 | search your library and graveyard for a card named forest, a card named brambleweft behemoth, and a card named nissa, genesis mage. reveal those cards, put them | 1 | Nissa's Encouragement | hou |
@@ -269,15 +268,12 @@
 | whenever ~ attacks, exile target card from defending player's graveyard. | 1 | Graven Abomination | hou |
 | whenever ~ deals combat damage to a player, remove all -N/-N counters from it. | 1 | Ammit Eternal | hou |
 | whenever ~ deals combat damage to a player, that player discards that many cards. | 1 | Dreamstealer | hou |
-| you may cast spells that have a cycling ability from your graveyard. | 1 | Abandoned Sarcophagus | hou |
 | you may exert ~ as it attacks. when you do, it gets +N/+N until end of turn and can't be blocked by creatures with power N or less ~. | 1 | Rhonas's Stalwart | hou |
 | you may exert ~ as it attacks. when you do, it gets +N/+N until end of turn. | 1 | Khenra Scrapper | hou |
-| you may exert ~ as it attacks. when you do, prevent all combat damage that would be dealt to it ~. | 1 | Oketra's Avenger | hou |
 | ~ gets +N/+N as long as you control a desert. | 1 | Ramunap Hydra | hou |
 | ~ gets +N/+N for each card with cycling in your graveyard. | 1 | Vile Manifestation | hou |
 | ~ has first strike as long as it's attacking. | 1 | Thorned Moloch | hou |
 | ~ has lifelink as long as you control a desert or there is a desert card in your graveyard. | 1 | Solitary Camel | hou |
-| ~'s power and toughness are each equal to the number of cards in your graveyard. | 1 | Apocalypse Demon | hou |
 | ~'s power and toughness are each equal to twice the number of creatures you control. | 1 | Majestic Myriarch | hou |
 | −N: search your library for up to two creature and/or planeswalker cards, put them onto the battlefield, then shuffle. | 1 | Samut, the Tested | hou |
 

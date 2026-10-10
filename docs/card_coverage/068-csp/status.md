@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 19 | 13.3% |
-| Works (untested) | 63 | 44.1% |
-| Partial (unaudited) | 12 | 8.4% |
-| Not working | 49 | 34.3% |
+| Tested | 27 | 18.9% |
+| Works (untested) | 64 | 44.8% |
+| Partial (unaudited) | 4 | 2.8% |
+| Not working | 48 | 33.6% |
 
 ## Cards needing work
 
@@ -49,7 +49,6 @@
 | Jokulmorder | silent | When this creature enters, sacrifice it unless you sacrifice five lands. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Karplusan Minotaur | silent | Whenever you win a coin flip, this creature deals 1 damage to any target. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Kjeldoran Gargoyle | silent | Whenever this creature deals damage, you gain that much life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Krovikan Mist | silent | Krovikan Mist's power and toughness are each equal to the number of Illusions on the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Krovikan Rot | silent | Recover | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Lightning Storm | silent | Lightning Storm deals X damage to any target, where X is 3 plus the number of charge counters on Lightning Storm. Discard a land card: Put two charge counters o | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Magmatic Core | silent | At the beginning of your end step, this enchantment deals X damage divided as you choose among any number of target creatures, where X is the number of age coun | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -75,18 +74,10 @@
 | Ohran Viper | notice | Whenever this creature deals combat damage to a creature, destroy that creature at end of combat. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Thermal Flux | notice | Choose one — • Target nonsnow permanent becomes snow until end of turn. • Target snow permanent isn't snow until end of turn. Draw a card at the beginning of th | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Vanish into Memory | notice | Exile target creature. You draw cards equal to that creature's power. At the beginning of your next upkeep, return that card to the battlefield under its owner' | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Cover of Winter | unaudited | If a creature would deal combat damage to you and/or one or more creatures you control, prevent X of that damage, where X is the number of age counters on this  | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Freyalise's Radiance | unaudited | Snow permanents don't untap during their controllers' untap steps. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Gelid Shackles | unaudited | Enchanted creature can't block, and its activated abilities can't be activated. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Goblin Furrier | unaudited | Prevent all damage that this creature would deal to snow creatures. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Haakon, Stromgald Scourge | unaudited | You may cast this card from your graveyard, but not from anywhere else. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Karplusan Strider | unaudited | This creature can't be the target of blue or black spells. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Panglacial Wurm | unaudited | While you're searching your library, you may cast this card from your library. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Rimescale Dragon | unaudited | Creatures with ice counters on them don't untap during their controllers' untap steps. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Thrumming Stone | unaudited | Spells you cast have ripple 4. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Tresserhorn Skyknight | unaudited | Prevent all damage that would be dealt to this creature by creatures with first strike. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Void Maw | unaudited | If another creature would die, exile it instead. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Wilderness Elemental | unaudited | Wilderness Elemental's power is equal to the number of nonbasic lands your opponents control. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Arctic Flats | handled | This land enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Aurochs Herd | handled | When this creature enters, you may search your library for an Aurochs card, reveal it, put it into your hand, then shuffle. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Boreal Centaur | handled | {S}: This creature gets +1/+1 until end of turn. Activate only once each turn. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -107,6 +98,7 @@
 | Frost Marsh | handled | This land enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Frost Raptor | handled | {S}{S}: This creature gains shroud until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Garza Zol, Plague Queen | handled | Whenever a creature dealt damage by Garza Zol this turn dies, put a +1/+1 counter on Garza Zol. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Gelid Shackles | handled | Enchanted creature can't block, and its activated abilities can't be activated. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Goblin Rimerunner | handled | {T}: Target creature can't block this turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Greater Stone Spirit | handled | This creature can't be blocked by creatures with flying. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Gristle Grinner | handled | Whenever a creature dies, this creature gets +2/+2 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -117,7 +109,7 @@
 | Jötun Grunt | handled | Cumulative upkeep | machines/keywords.py | Y/-/- | not_tested |
 | Jötun Owl Keeper | handled | When this creature dies, create a 1/1 white Bird creature token with flying for each age counter on it. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Kjeldoran Outrider | handled | {W}: This creature gets +0/+1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
-| Krovikan Scoundrel | handled |  |  | Y/-/- | not_tested |
+| Krovikan Mist | handled | Krovikan Mist's power and toughness are each equal to the number of Illusions on the battlefield. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Krovikan Whispers | handled | You control enchanted creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Lightning Serpent | handled | This creature enters with X +1/+0 counters on it. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Martyr of Bones | handled | {1}, Reveal X black cards from your hand, Sacrifice this creature: Exile up to X target cards from a single graveyard. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -154,27 +146,35 @@
 ## Fully supported
 
 <details>
-<summary>19 cards</summary>
+<summary>27 cards</summary>
 
 - Adarkar Windform
 - Allosaurus Rider
 - Balduvian Warlord
 - Braid of Fire
+- Cover of Winter
 - Feast of Flesh
+- Goblin Furrier
+- Haakon, Stromgald Scourge
 - Kjeldoran Javelineer
 - Kjeldoran War Cry
+- Krovikan Scoundrel
 - Luminesce
 - Martyr of Ashes
 - Martyr of Sands
 - Mishra's Bauble
 - Mystic Melting
+- Panglacial Wurm
 - Rimewind Cryomancer
 - Ronom Hulk
 - Skred
 - Soul Spike
 - Stalking Yeti
 - Swift Maneuver
+- Tresserhorn Skyknight
 - Vexing Sphinx
+- Void Maw
+- Wilderness Elemental
 
 </details>
 
@@ -191,14 +191,9 @@
 | at the beginning of your end step, ~ deals N damage divided as you choose among any number of target creatures, where N is the number of age counters on it. | 1 | Magmatic Core | csp |
 | counter target spell unless its controller pays {M} plus an additional {M} for each card named ~ in each graveyard. | 1 | Rune Snag | csp |
 | creatures with ice counters on them don"..." untap steps. | 1 | Rimescale Dragon | csp |
-| enchanted creature can"..."t be activated. | 1 | Gelid Shackles | csp |
 | enchanted creature gets +N/+N for each age counter on ~. | 1 | Glacial Plating | csp |
 | exile target creature. you draw cards equal to that creature"..."s control. if you do, discard cards equal to that creature's toughness. | 1 | Vanish into Memory | csp |
-| if a creature would deal combat damage to you and/or one or more creatures you control, prevent N of that damage, where N is the number of age counters on ~. | 1 | Cover of Winter | csp |
-| if another creature would die, exile it instead. | 1 | Void Maw | csp |
 | other soldier creatures get +N/+N and have first strike. | 1 | Field Marshal | csp |
-| prevent all damage that would be dealt to ~ by creatures with first strike. | 1 | Tresserhorn Skyknight | csp |
-| prevent all damage that ~ would deal to snow creatures. | 1 | Goblin Furrier | csp |
 | remove a healing counter from ~: prevent the next N damage that would be dealt to ~ ~. | 1 | Ursine Fylgja | csp |
 | snow permanents don"..." untap steps. | 1 | Freyalise's Radiance | csp |
 | spells you cast have ripple N. | 1 | Thrumming Stone | csp |
@@ -218,8 +213,6 @@
 | whenever ~ deals combat damage to a creature, destroy that creature at end of combat. | 1 | Ohran Viper | csp |
 | whenever ~ deals combat damage to a player, choose one — • that player returns a permanent they control to its owner's hand. • that player discards a card. | 1 | Blizzard Specter | csp |
 | whenever ~ deals damage, you gain that much life. | 1 | Kjeldoran Gargoyle | csp |
-| while you're searching your library, you may cast ~ from your library. | 1 | Panglacial Wurm | csp |
-| you may cast ~ from your graveyard, but not from anywhere else. | 1 | Haakon, Stromgald Scourge | csp |
 | you may exile two blue cards from your hand rather than pay ~ mana cost. gain control of target noncreature spell. you may choose new targets for it. (if that s | 1 | Commandeer | csp |
 | you may exile two red cards from your hand rather than pay ~ mana cost. untap all creatures that attacked ~. after ~ phase, there is an additional combat phase  | 1 | Fury of the Horde | csp |
 | {M}, {M}: target snow land becomes a N/N blue elemental creature with flying. it's still a land. | 1 | Balduvian Frostwaker | csp |
@@ -230,9 +223,7 @@
 | {M}{M}: target creature blocks target creature ~ if able. | 1 | Rimehorn Aurochs | csp |
 | ~ can't be the target of blue or black spells. | 1 | Karplusan Strider | csp |
 | ~ deals N damage to any target, where N is N plus the number of charge counters on ~. discard a land card: put two charge counters on ~. you may choose a new ta | 1 | Lightning Storm | csp |
-| ~'s power and toughness are each equal to the number of illusions on the battlefield. | 1 | Krovikan Mist | csp |
 | ~'s power and toughness are each equal to the number of snow permanents on the battlefield. | 1 | Rimefeather Owl | csp |
-| ~'s power is equal to the number of nonbasic lands your opponents control. | 1 | Wilderness Elemental | csp |
 
 ## Notes
 

@@ -17,9 +17,9 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 36 | 31.0% |
+| Tested | 38 | 32.8% |
 | Works (untested) | 59 | 50.9% |
-| Partial (unaudited) | 3 | 2.6% |
+| Partial (unaudited) | 1 | 0.9% |
 | Not working | 18 | 15.5% |
 
 ## Cards needing work
@@ -45,8 +45,6 @@
 | Dragon Whelp | notice | {R}: This creature gets +1/+0 until end of turn. If this ability has been activated four or more times this turn, sacrifice this creature at the beginning of th | unparsed remainder: If this ability has been activated four or more times this turn, sacrifice this creature at the beginning of the next end step. | Y/Y/- | not_working |
 | Stone Giant | notice | {T}: Target creature you control with toughness less than this creature's power gains flying until end of turn. Destroy that creature at the beginning of the ne | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Consecrate Land | unaudited | Enchanted land has indestructible and can't be enchanted by other Auras. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Invisibility | unaudited | Enchanted creature can't be blocked except by Walls. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Lure | unaudited | All creatures able to block enchanted creature do so. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Air Elemental | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
 | Bog Wraith | handled | Landwalk | no code needed | Y/-/- | not_tested |
 | Circle of Protection: Blue | handled | {1}: The next time a blue source of your choice would deal damage to you this turn, prevent that damage. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -110,7 +108,7 @@
 ## Fully supported
 
 <details>
-<summary>36 cards</summary>
+<summary>38 cards</summary>
 
 - Birds of Paradise
 - Black Knight
@@ -130,12 +128,14 @@
 - Hill Giant
 - Hurricane
 - Icy Manipulator
+- Invisibility
 - Island
 - Juggernaut
 - Karma
 - Lightning Bolt
 - Llanowar Elves
 - Lord of the Pit
+- Lure
 - Mountain
 - Plains
 - Psionic Blast
@@ -156,12 +156,10 @@
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
 | {M}: enchanted creature gets +N/+N until end of turn. | 2 | Blessing, Firebreathing | lea |
-| all creatures able to block enchanted creature do so. | 1 | Lure | lea |
 | as long as ~ isn't attacking, its power and toughness are each equal to the number of forests you control. as long as ~ is attacking, its power and toughness ar | 1 | Gaea's Liege | lea |
 | at the beginning of your upkeep, ~ deals N damage to you unless you pay {M}{M}{M}{M}. | 1 | Force of Nature | lea |
 | black creatures get +N/+N. | 1 | Bad Moon | lea |
 | destroy all plains. | 1 | Flashfires | lea |
-| enchanted creature can't be blocked except by walls. | 1 | Invisibility | lea |
 | enchanted land has indestructible and can't be enchanted by other auras. | 1 | Consecrate Land | lea |
 | enchanted land is a swamp. | 1 | Evil Presence | lea |
 | other goblins get +N/+N and have mountainwalk. | 1 | Goblin King | lea |

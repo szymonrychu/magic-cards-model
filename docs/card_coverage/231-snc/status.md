@@ -17,9 +17,9 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 37 | 14.6% |
+| Tested | 44 | 17.4% |
 | Works (untested) | 140 | 55.3% |
-| Partial (unaudited) | 10 | 4.0% |
+| Partial (unaudited) | 3 | 1.2% |
 | Not working | 66 | 26.1% |
 
 ## Cards needing work
@@ -92,15 +92,8 @@
 | Undercover Operative | notice | You may have this creature enter as a copy of any creature on the battlefield, except it enters with a shield counter on it if you control that creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Unleash the Inferno | notice | Unleash the Inferno deals 7 damage to target creature or planeswalker. When it deals excess damage this way, destroy target artifact or enchantment an opponent  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Venom Connoisseur | notice | Alliance — Whenever another creature you control enters, this creature gains deathtouch until end of turn. If this is the second time this ability has resolved  | unparsed remainder: If this is the second time this ability has resolved this turn, all creatures you control gain deathtouch until end of turn. | Y/Y/Y | not_working |
-| Falco Spara, Pactweaver | unaudited | You may cast spells from the top of your library by removing a counter from a creature you control in addition to paying their other costs. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Giada, Font of Hope | unaudited | Each other Angel you control enters with an additional +1/+1 counter on it for each Angel you already control. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Hold for Ransom | unaudited | Enchanted creature can't attack or block and has "{7}: Hold for Ransom's controller sacrifices it and draws a card. Activate only as a sorcery." | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Jinnie Fay, Jetmir's Second | unaudited | If you would create one or more tokens, you may instead create that many 2/2 green Cat creature tokens with haste or that many 3/1 green Dog creature tokens wit | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Maestros Ascendancy | unaudited | Once during each of your turns, you may cast an instant or sorcery spell from your graveyard by sacrificing a creature in addition to paying its other costs. If | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Public Enemy | unaudited | All creatures attack enchanted creature's controller each combat if able. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Raffine's Guidance | unaudited | You may cast this card from your graveyard by paying {2}{W} rather than paying its mana cost. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Scheming Fence | unaudited | As this creature enters, you may choose a nonland permanent. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Security Rhox | unaudited | You may pay {R}{G} rather than pay this spell's mana cost. Spend only mana produced by Treasures to cast it this way. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
+| Scheming Fence | unaudited | Activated abilities of the chosen permanent can't be activated. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Witness Protection | unaudited | Enchanted creature loses all abilities and is a green and white Citizen creature with base power and toughness 1/1 named Legitimate Businessperson. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | A Little Chat | handled | Casualty 1 (As you cast this spell, you may sacrifice a creature with power 1 or greater. When you do, copy this spell.) Look at the top two cards of your libra | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Angelic Observer | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
@@ -246,7 +239,7 @@
 ## Fully supported
 
 <details>
-<summary>37 cards</summary>
+<summary>44 cards</summary>
 
 - An Offer You Can't Refuse
 - Angel of Suffering
@@ -256,17 +249,22 @@
 - Caldaia Strongarm
 - Dusk Mangler
 - Expendable Lackey
+- Falco Spara, Pactweaver
 - Fight Rigging
 - For the Family
 - Gala Greeters
 - Getaway Car
+- Giada, Font of Hope
 - Girder Goons
+- Hold for Ransom
 - Hostile Takeover
 - Hypnotic Grifter
 - Incandescent Aria
 - Jetmir's Fixer
+- Jinnie Fay, Jetmir's Second
 - Join the Maestros
 - Lagrella, the Magpie
+- Maestros Ascendancy
 - Maestros Diabolist
 - Mayhem Patrol
 - Night Clubber
@@ -275,10 +273,12 @@
 - Psionic Snoop
 - Pugnacious Pugilist
 - Quick-Draw Dagger
+- Raffine's Guidance
 - Riveteers Charm
 - Sanctuary Warden
 - Sanguine Spy
 - Scuttling Butler
+- Security Rhox
 - Shadow of Mortality
 - Structural Assault
 - Take to the Streets
@@ -296,6 +296,7 @@
 | Choose one | 1 | Extract the Truth | snc |
 | +N: choose up to one target creature. put a +N/+N counter and a counter from among flying, first strike, lifelink, or vigilance on it. | 1 | Elspeth Resplendent | snc |
 | +N: each opponent loses N life unless they discard a card. if you control a demon or devil, you gain N life. | 1 | Ob Nixilis, the Adversary | snc |
+| activated abilities of the chosen permanent can't be activated. | 1 | Scheming Fence | snc |
 | all creatures attack enchanted creature's controller each combat if able. | 1 | Public Enemy | snc |
 | as an additional cost to cast ~, exile a creature card from your graveyard. ~ deals damage equal to the exiled card's power to each creature and each planeswalk | 1 | Corpse Explosion | snc |
 | as an additional cost to cast ~, sacrifice a nonland permanent. each opponent chooses a permanent they control that shares a card type with the sacrificed perma | 1 | Fatal Grudge | snc |
@@ -303,7 +304,6 @@
 | as long as there are five or more mana values among cards in your graveyard, ~ gets +N/+N and has lifelink. | 1 | Snooping Newsie | snc |
 | as long as there are five or more mana values among cards in your graveyard, ~ gets +N/+N. | 1 | Syndicate Infiltrator | snc |
 | as long as there are two or more counters among creatures you control, ~ can attack as though it didn't have defender. | 1 | Backstreet Bruiser | snc |
-| as ~ enters, you may choose a nonland permanent. | 1 | Scheming Fence | snc |
 | at the beginning of each combat, if ~ is untapped, any opponent may tap an untapped creature they control. if they do, tap ~ and create a N/N blue fish creature | 1 | Reservoir Kraken | snc |
 | at the beginning of your end step, put a +N/+N counter on each creature you control and a loyalty counter on each planeswalker you control. | 1 | Brokers Ascendancy | snc |
 | at the beginning of your upkeep, look at the top card of your library. if it"..."t put the card into your hand, you may put it on the bottom of your library. | 1 | Cabaretti Ascendancy | snc |
@@ -317,15 +317,11 @@
 | creatures you control also get +N/+N and have trample as long as you control six or more creatures. | 1 | Jetmir, Nexus of Revels | snc |
 | draw two cards, then look at the top card of each player's library. | 1 | Case the Joint | snc |
 | during your turn, ~ gets +N/+N. | 1 | Dapper Shieldmate | snc |
-| each other angel you control enters with an additional +N/+N counter on it for each angel you already control. | 1 | Giada, Font of Hope | snc |
 | each player who controls a multicolored creature draws a card. then destroy all creatures. | 1 | Depopulate | snc |
-| enchanted creature can"..."s controller sacrifices it and draws a card. activate only as a sorcery." | 1 | Hold for Ransom | snc |
 | enchanted creature loses all abilities and is a green and white citizen creature with base power and toughness N/N named legitimate businessperson. | 1 | Witness Protection | snc |
 | equipped creature gets +N/+N for each counter on it. | 1 | Luxior, Giada's Gift | snc |
 | exile the top ten cards of your library. you may cast spells with exactly three colors from among them ~. add {M}{M}{M}{M}{M}{M}{M}{M}{M}{M}. spend ~ only to ca | 1 | Meeting of the Five | snc |
 | for each color, return up to one target creature card of that color from your graveyard to your hand. | 1 | Rogues' Gallery | snc |
-| if you would create one or more tokens, you may instead create that many N/N green cat creature tokens with haste or that many N/N green dog creature tokens wit | 1 | Jinnie Fay, Jetmir's Second | snc |
-| once during each of your turns, you may cast an instant or sorcery spell from your graveyard by sacrificing a creature in addition to paying its other costs. if | 1 | Maestros Ascendancy | snc |
 | put a +N/+N counter on target creature. it phases out. (treat it and anything attached to it as though they don"..."s next turn.) | 1 | Slip Out the Back | snc |
 | until end of turn, target artifact or creature becomes a N/N angel artifact creature and gains flying. draw a card. | 1 | Majestic Metamorphosis | snc |
 | when lord xander enters, target opponent discards half the cards in their hand, rounded down. | 1 | Lord Xander, the Collector | snc |
@@ -352,10 +348,7 @@
 | whenever ~ attacks, ~ and up to one other target creature you control both gain your choice of first strike or lifelink until end of turn. | 1 | Ballroom Brawlers | snc |
 | whenever ~ deals combat damage to a player, look at the top card of your library. you may play a land from the top of your library or cast a spell with mana val | 1 | Ziatora's Envoy | snc |
 | whenever ~ enters or attacks, exile up to one other target creature until ~ leaves the battlefield. if a creature is put into exile ~, return each other card ex | 1 | Mysterious Limousine | snc |
-| you may cast spells from the top of your library by removing a counter from a creature you control in addition to paying their other costs. | 1 | Falco Spara, Pactweaver | snc |
-| you may cast ~ from your graveyard by paying {M}{M} rather than paying its mana cost. | 1 | Raffine's Guidance | snc |
 | you may have ~ enter as a copy of any creature on the battlefield, except it enters with a shield counter on it if you control that creature. | 1 | Undercover Operative | snc |
-| you may pay {M}{M} rather than pay ~ mana cost. spend only mana produced by treasures to cast it ~. | 1 | Security Rhox | snc |
 | {M}, {M}, discard a card: create a token that's a copy of another target creature you control. it gains haste and "..." sacrifice it at the beginning of the nex | 1 | Jaxis, the Troublemaker | snc |
 | {M}, {M}, sacrifice a creature: count the colors of the sacrificed creature, then search your library for a creature card that's exactly that many colors plus o | 1 | Evolving Door | snc |
 | {M}{M}, {M}: copy target spell you control that wasn't cast. you may choose new targets for the copy. | 1 | Errant, Street Artist | snc |

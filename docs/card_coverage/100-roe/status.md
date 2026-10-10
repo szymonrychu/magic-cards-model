@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 33 | 15.0% |
+| Tested | 38 | 17.3% |
 | Works (untested) | 124 | 56.4% |
-| Partial (unaudited) | 11 | 5.0% |
-| Not working | 52 | 23.6% |
+| Partial (unaudited) | 5 | 2.3% |
+| Not working | 53 | 24.1% |
 
 ## Cards needing work
 
@@ -73,22 +73,17 @@
 | Warmonger's Chariot | silent | As long as equipped creature has defender, it can attack as though it didn't have defender. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | World at War | silent | After the second main phase this turn, there's an additional combat phase followed by an additional main phase. At the beginning of that combat, untap all creat | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Arrogant Bloodlord | notice | Whenever this creature blocks or becomes blocked by a creature with power 1 or less, destroy this creature at end of combat. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
+| Aura Gnarlid | notice | This creature gets +1/+1 for each Aura on the battlefield. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Champion's Drake | notice | This creature gets +3/+3 as long as you control a creature with three or more level counters on it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Consuming Vapors | notice | Target player sacrifices a creature of their choice. You gain life equal to that creature's toughness. Rebound (If you cast this spell from your hand, exile it  | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Distortion Strike | notice | Target creature gets +1/+0 until end of turn and can't be blocked this turn. Rebound (If you cast this spell from your hand, exile it as it resolves. At the beg | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Drana, Kalastria Bloodchief | notice | {X}{B}{B}: Target creature gets -0/-X until end of turn and Drana gets +X/+0 until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Induce Despair | notice | As an additional cost to cast this spell, reveal a creature card from your hand. Target creature gets -X/-X until end of turn, where X is the revealed card's ma | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Aura Gnarlid | unaudited | Creatures with power less than this creature's power can't block it. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Cast Through Time | unaudited | Instant and sorcery spells you control have rebound. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Hedron Matrix | unaudited | Equipped creature gets +X/+X, where X is its mana value. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Hedron-Field Purists | unaudited | If a source would deal damage to you or a creature you control, prevent 1 of that damage. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Joraga Treespeaker | unaudited | Elves you control have "{T}: Add {G}{G}." | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Khalni Hydra | unaudited | This spell costs {G} less to cast for each green creature you control. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Lust for War | unaudited | Enchanted creature attacks each combat if able. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Pathrazer of Ulamog | unaudited | This creature can't be blocked except by three or more creatures. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Tajuru Preserver | unaudited | Spells and abilities your opponents control can't cause you to sacrifice permanents. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Umbra Mystic | unaudited | Auras attached to permanents you control have umbra armor. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Zulaport Enforcer | unaudited | This creature can't be blocked except by black creatures. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Affa Guard Hound | handled | When this creature enters, target creature gets +0/+3 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Akoum Boulderfoot | handled | When this creature enters, it deals 1 damage to any target. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Artisan of Kozilek | handled | When you cast this spell, you may return target creature card from your graveyard to the battlefield. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -217,7 +212,7 @@
 ## Fully supported
 
 <details>
-<summary>33 cards</summary>
+<summary>38 cards</summary>
 
 - All Is Dust
 - Ancient Stirrings
@@ -231,16 +226,20 @@
 - Gravity Well
 - Harmless Assault
 - Haze Frog
+- Hedron-Field Purists
 - Hyena Umbra
 - Inquisition of Kozilek
+- Khalni Hydra
 - Living Destiny
 - Lord of Shatterskull Pass
+- Lust for War
 - Merfolk Observer
 - Might of the Masses
 - Momentous Fall
 - Near-Death Experience
 - Nirkana Revenant
 - Overgrown Battlement
+- Pathrazer of Ulamog
 - Pestilence Demon
 - Prophetic Prism
 - Recurring Insight
@@ -252,6 +251,7 @@
 - Vengevine
 - Wall of Omens
 - Wrap in Flames
+- Zulaport Enforcer
 
 </details>
 
@@ -276,17 +276,14 @@
 | counter target spell or ability that targets a permanent you control. ~ costs {M} less to cast if it targets a spell or ability that targets a creature you cont | 1 | Not of This World | roe |
 | counter target spell. look at its controller's hand. | 1 | Lay Bare | roe |
 | creatures with flying get +N/+N. | 1 | Gravitational Shift | roe |
-| creatures with power less than ~ power can't block it. | 1 | Aura Gnarlid | roe |
 | draw two cards, then shuffle a card from your hand into your library. | 1 | See Beyond | roe |
 | each creature you control with a level counter on it gets +N/+N. | 1 | Time of Heroes | roe |
 | eldrazi spawn creatures you control get +N/+N. | 1 | Broodwarden | roe |
 | elves you control have "..." | 1 | Joraga Treespeaker | roe |
-| enchanted creature attacks each combat if able. | 1 | Lust for War | roe |
 | enchanted creature gets +N/+N and has trample and annihilator N. | 1 | Eldrazi Conscription | roe |
 | enchanted land is a swamp. | 1 | Contaminated Ground | roe |
 | equipped creature gets +N/+N, where N is its mana value. | 1 | Hedron Matrix | roe |
 | exile N target cards from target player's graveyard. for each card exiled ~, that player loses N life and you gain N life. | 1 | Suffer the Past | roe |
-| if a source would deal damage to you or a creature you control, prevent N of that damage. | 1 | Hedron-Field Purists | roe |
 | if you control an eldrazi spawn, create three N/N colorless eldrazi spawn creature tokens. they have "..." otherwise, create one of those tokens. | 1 | Brood Birthing | roe |
 | instant and sorcery spells you control have rebound. | 1 | Cast Through Time | roe |
 | other creatures you control with defender get +N/+N. | 1 | Stalwart Shield-Bearers | roe |
@@ -318,10 +315,8 @@
 | {M}{M}, {M}: ~ deals damage to target player or planeswalker equal to the number of creatures you control with defender. | 1 | Vent Sentinel | roe |
 | {M}{M}: untap enchanted creature. | 1 | Crab Umbra | roe |
 | {M}{M}{M}: target creature gets -N/-N until end of turn and drana gets +N/+N until end of turn. | 1 | Drana, Kalastria Bloodchief | roe |
-| ~ can't be blocked except by black creatures. | 1 | Zulaport Enforcer | roe |
-| ~ can't be blocked except by three or more creatures. | 1 | Pathrazer of Ulamog | roe |
-| ~ costs {M} less to cast for each green creature you control. | 1 | Khalni Hydra | roe |
 | ~ gets +N/+N as long as you control a creature with three or more level counters on it. | 1 | Champion's Drake | roe |
+| ~ gets +N/+N for each aura on the battlefield. | 1 | Aura Gnarlid | roe |
 
 ## Notes
 

@@ -17,9 +17,9 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 40 | 16.1% |
-| Works (untested) | 126 | 50.6% |
-| Partial (unaudited) | 15 | 6.0% |
+| Tested | 48 | 19.3% |
+| Works (untested) | 127 | 51.0% |
+| Partial (unaudited) | 6 | 2.4% |
 | Not working | 68 | 27.3% |
 
 ## Cards needing work
@@ -94,21 +94,12 @@
 | Voldaren Stinger | notice | This creature has first strike as long as it's attacking. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Wake to Slaughter | notice | Choose up to two target creature cards in your graveyard. An opponent chooses one of them. Return that card to your hand. Return the other to the battlefield un | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Winterthorn Blessing | notice | Put a +1/+1 counter on up to one target creature you control. Tap up to one target creature you don't control, and that creature doesn't untap during its contro | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Augur of Autumn | unaudited | Coven — As long as you control three or more creatures with different powers, you may cast creature spells from the top of your library. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Candletrap | unaudited | Prevent all combat damage that would be dealt by enchanted creature. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Consuming Blob | unaudited | Consuming Blob's power is equal to the number of card types among cards in your graveyard and its toughness is equal to that number plus 1. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Curse of Leeches // Leeching Lurker | unaudited | As this permanent transforms into Curse of Leeches, attach it to a player. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Grizzly Ghoul | unaudited | This creature enters with a +1/+1 counter on it for each creature that died this turn. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Katilda, Dawnhart Prime | unaudited | Human creatures you control have "{T}: Add one mana of any of this creature's colors." | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Lier, Disciple of the Drowned | unaudited | Spells can't be countered. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Mounted Dreadknight | unaudited | This creature enters with a +1/+1 counter on it if an opponent lost life this turn. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Poppet Stitcher // Poppet Factory | unaudited | Creature tokens you control lose all abilities and have base power and toughness 3/3. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Rem Karolus, Stalwart Slayer | unaudited | If a spell would deal damage to you or another permanent you control, prevent that damage. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Saryth, the Viper's Fang | unaudited | Other untapped creatures you control have hexproof. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Search Party Captain | unaudited | This spell costs {1} less to cast for each creature you attacked with this turn. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Sludge Monster | unaudited | Non-Horror creatures with slime counters on them lose all abilities and have base power and toughness 2/2. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Vadrik, Astral Archmage | unaudited | Instant and sorcery spells you cast cost {X} less to cast, where X is Vadrik's power. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Vampire Socialite | unaudited | As long as an opponent lost life this turn, each other Vampire you control enters with an additional +1/+1 counter on it. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Ambitious Farmhand // Seasoned Cathar | handled | When this creature enters, you may search your library for a basic Plains card, reveal it, put it into your hand, then shuffle. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Angelfire Ignition | handled | Put two +1/+1 counters on target creature. It gains vigilance, trample, lifelink, indestructible, and haste until end of turn. Flashback {2}{R}{W} (You may cast | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Arcane Infusion | handled | Look at the top four cards of your library. You may reveal an instant or sorcery card from among them and put it into your hand. Put the rest on the bottom of y | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -233,20 +224,24 @@
 | Tovolar's Huntmaster // Tovolar's Packleader | handled | When this creature enters, create two 2/2 green Wolf creature tokens. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Triskaidekaphile | handled | You have no maximum hand size. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Unblinking Observer | handled |  |  | Y/Y/- | not_tested |
+| Vadrik, Astral Archmage | handled | If it's neither day nor night, it becomes day as Vadrik enters. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Vanquish the Horde | handled | This spell costs {1} less to cast for each creature on the battlefield. Destroy all creatures. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Voldaren Ambusher | handled | When this creature enters, if an opponent lost life this turn, it deals X damage to up to one target creature or planeswalker, where X is the number of Vampires | the engine reads this text and performs it | Y/Y/- | not_tested |
 
 ## Fully supported
 
 <details>
-<summary>40 cards</summary>
+<summary>48 cards</summary>
 
+- Augur of Autumn
 - Blood Pact
 - Bounding Wolf
 - Brimstone Vandal
 - Brutal Cathar // Moonrage Brute
 - Burn Down the House
 - Candlelit Cavalry
+- Candletrap
+- Consuming Blob
 - Corpse Cobble
 - Croaking Counterpart
 - Dawnhart Wardens
@@ -259,12 +254,14 @@
 - Gavony Dawnguard
 - Geistflame Reservoir
 - Graveyard Trespasser // Graveyard Glutton
+- Grizzly Ghoul
 - Haunted Ridge
 - Hedgewitch's Mask
 - Hungry for More
 - Jadar, Ghoulcaller of Nephalia
 - Moonrager's Slash
 - Moonsilver Key
+- Mounted Dreadknight
 - Neonate's Rush
 - Old Stickfingers
 - Olivia's Midnight Ambush
@@ -273,13 +270,16 @@
 - Play with Fire
 - Purifying Dragon
 - Reckless Stormseeker // Storm-Charged Slasher
+- Rem Karolus, Stalwart Slayer
 - Rite of Harmony
 - Rockfall Vale
+- Search Party Captain
 - Secrets of the Key
 - Shipwreck Marsh
 - Silver Bolt
 - Sunset Revelry
 - Tavern Ruffian // Tavern Smasher
+- Vampire Socialite
 - Wrenn and Seven
 
 </details>
@@ -289,11 +289,10 @@
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
 | disturb | 10 | Baithook Angler // Hook-Haunt Drifter, Beloved Beggar // Generous Soul, Chaplain of Alms // Chapel Shieldgeist, Covert Cutpurse // Covetous Geist, Covetous Castaway // Ghostly Castigator | mid |
-| Coven | 3 | Augur of Autumn, Harvesttide Sentry, Sungold Sentinel | mid |
+| Coven | 2 | Harvesttide Sentry, Sungold Sentinel | mid |
 | Choose one | 1 | Bloodline Culling | mid |
 | +N: choose up to one target artifact, up to one target creature, and up to one target land. untap the chosen permanents you control. tap the chosen permanents y | 1 | Teferi, Who Slows the Sunset | mid |
 | +N: until your next turn, you may cast creature spells as though they had flash, and each creature you control enters with an additional +N/+N counter on it. | 1 | Arlinn, the Pack's Hope // Arlinn, the Moon's Fury | mid |
-| as long as an opponent lost life ~, each other vampire you control enters with an additional +N/+N counter on it. | 1 | Vampire Socialite | mid |
 | as long as you control a token, ~ gets +N/+N. | 1 | Briarbridge Tracker | mid |
 | as ~ transforms into olag, ludevic"..."s hubris, it"..."s a legendary blue and black zombie in addition to its other colors and types. put a number of +N/+N cou | 1 | Ludevic, Necrogenius // Olag, Ludevic's Hubris | mid |
 | as ~ transforms into ~, attach it to a player. | 1 | Curse of Leeches // Leeching Lurker | mid |
@@ -312,14 +311,11 @@
 | destroy target creature or planeswalker. its controller investigates. (they create a clue token. it's an artifact with "...") | 1 | Fateful Absence | mid |
 | exile target nonlegendary creature, then return it to the battlefield under its owner's control. if it entered under your control, put a +N/+N counter on it. ot | 1 | Hallowed Respite | mid |
 | human creatures you control have "..." | 1 | Katilda, Dawnhart Prime | mid |
-| if a spell would deal damage to you or another permanent you control, prevent that damage. | 1 | Rem Karolus, Stalwart Slayer | mid |
-| instant and sorcery spells you cast cost {M} less to cast, where N is vadrik's power. | 1 | Vadrik, Astral Archmage | mid |
 | it becomes night. until end of turn, target creature gets +N/+N and gains trample and "..." flashback {M}{M}{M} (you may cast ~ from your graveyard for its flas | 1 | Unnatural Moonrise | mid |
 | look at the top three cards of your library. you may reveal a creature card from among them and put it into your hand. put the rest into your graveyard. flashba | 1 | Tapping at the Window | mid |
 | look at the top two cards of target opponent's library. exile one of them face down and put the other on the bottom of that library. you may play the exiled car | 1 | Siphon Insight | mid |
 | non-horror creatures with slime counters on them lose all abilities and have base power and toughness N/N. | 1 | Sludge Monster | mid |
 | other untapped creatures you control have hexproof. | 1 | Saryth, the Viper's Fang | mid |
-| prevent all combat damage that would be dealt by enchanted creature. | 1 | Candletrap | mid |
 | put a +N/+N counter on up to one target creature you control. tap up to one target creature you don"..."t untap during its controller's next untap step. flashba | 1 | Winterthorn Blessing | mid |
 | return target creature to its owner's hand. if its mana value was N or less, scry N. (look at the top card of your library. you may put that card on the bottom. | 1 | Fading Hope | mid |
 | search your library for a basic land card, put that card onto the battlefield tapped, then shuffle. then if there are three or more basic land types among lands | 1 | Path to the Festival | mid |
@@ -354,12 +350,8 @@
 | {M}, sacrifice ~: counter target noncreature spell unless its controller pays {M}. | 1 | Malevolent Hermit // Benevolent Geist | mid |
 | {M}, {M}, pay N life, discard a card: draw a card, mill a card, then put a ritual counter on ~. then if it has three or more ritual counters on it, remove them  | 1 | Heirloom Mirror // Inherited Fiend | mid |
 | {M}, {M}: if it's night, it becomes day. otherwise, it becomes night. activate only as a sorcery. | 1 | The Celestus | mid |
-| ~ costs {M} less to cast for each creature you attacked with ~. | 1 | Search Party Captain | mid |
 | ~ deals N damage to any target. it deals N plus N damage instead if that target is a creature or planeswalker. flashback—{M}{M}, remove N loyalty counters from  | 1 | Light Up the Night | mid |
-| ~ enters with a +N/+N counter on it for each creature that died ~. | 1 | Grizzly Ghoul | mid |
-| ~ enters with a +N/+N counter on it if an opponent lost life ~. | 1 | Mounted Dreadknight | mid |
 | ~ has first strike as long as it's attacking. | 1 | Voldaren Stinger | mid |
-| ~'s power is equal to the number of card types among cards in your graveyard and its toughness is equal to that number plus N. | 1 | Consuming Blob | mid |
 
 ## Notes
 

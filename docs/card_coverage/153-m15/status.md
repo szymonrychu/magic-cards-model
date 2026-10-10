@@ -17,9 +17,9 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 12 | 8.4% |
+| Tested | 15 | 10.5% |
 | Works (untested) | 74 | 51.7% |
-| Partial (unaudited) | 6 | 4.2% |
+| Partial (unaudited) | 3 | 2.1% |
 | Not working | 51 | 35.7% |
 
 ## Cards needing work
@@ -79,10 +79,7 @@
 | Warden of the Beyond | notice | This creature gets +2/+2 as long as an opponent owns a card in exile. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Aggressive Mining | unaudited | You can't play lands. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Constricting Sliver | unaudited | Sliver creatures you control have "When this creature enters, you may exile target creature an opponent controls until this creature leaves the battlefield." | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Goblin Rabblemaster | unaudited | Other Goblin creatures you control attack each combat if able. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Shield of the Avatar | unaudited | If a source would deal damage to equipped creature, prevent X of that damage, where X is the number of creatures you control. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Sliver Hivelord | unaudited | Sliver creatures you control have indestructible. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Undergrowth Scavenger | unaudited | This creature enters with a number of +1/+1 counters on it equal to the number of creature cards in all graveyards. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Act on Impulse | handled | Exile the top three cards of your library. Until end of turn, you may play those cards. (If you cast a spell this way, you still pay its costs. You can play a l | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Aeronaut Tinkerer | handled | This creature has flying as long as you control an artifact. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Altac Bloodseeker | handled | Whenever a creature an opponent controls dies, this creature gets +2/+0 and gains first strike and haste until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -161,20 +158,23 @@
 ## Fully supported
 
 <details>
-<summary>12 cards</summary>
+<summary>15 cards</summary>
 
 - Ensoul Artifact
 - Feast on the Fallen
 - First Response
 - Genesis Hydra
 - Goblin Kaboomist
+- Goblin Rabblemaster
 - Hunter's Ambush
 - Hushwing Gryff
 - Might Makes Right
 - Ob Nixilis, Unshackled
 - Resolute Archangel
 - Sanctified Charge
+- Shield of the Avatar
 - Soul of Shandalar
+- Undergrowth Scavenger
 
 </details>
 
@@ -191,11 +191,9 @@
 | destroy all creatures you don"..."t control. | 1 | In Garruk's Wake | m15 |
 | enchanted creature gets +N/+N and has protection from each color. ~ doesn't remove auras. | 1 | Spectra Ward | m15 |
 | for each attacking creature, its owner puts it on their choice of the top or bottom of their library. | 1 | Aetherspouts | m15 |
-| if a source would deal damage to equipped creature, prevent N of that damage, where N is the number of creatures you control. | 1 | Shield of the Avatar | m15 |
 | nonblack creatures get -N/-N until end of turn. | 1 | Festergloom | m15 |
 | other black creatures you control get +N/+N. | 1 | Paragon of Open Graves | m15 |
 | other blue creatures you control get +N/+N. | 1 | Paragon of Gathering Mists | m15 |
-| other goblin creatures you control attack each combat if able. | 1 | Goblin Rabblemaster | m15 |
 | other green creatures you control get +N/+N. | 1 | Paragon of Eternal Wilds | m15 |
 | other red creatures you control get +N/+N. | 1 | Paragon of Fierce Defiance | m15 |
 | other white creatures you control get +N/+N. | 1 | Paragon of New Dawns | m15 |
@@ -230,7 +228,6 @@
 | {M}{M}: until end of turn, ~ loses hexproof and gains first strike and deathtouch. | 1 | Xathrid Slyblade | m15 |
 | ~ can't attack unless there is a mountain on the battlefield. | 1 | Glacial Crasher | m15 |
 | ~ deals N damage to target creature. destroy all equipment attached to that creature. | 1 | Blastfire Bolt | m15 |
-| ~ enters with a number of +N/+N counters on it equal to the number of creature cards in all graveyards. | 1 | Undergrowth Scavenger | m15 |
 | ~ gets +N/+N as long as an opponent owns a card in exile. | 1 | Warden of the Beyond | m15 |
 | ~ gets +N/+N as long as you control a forest. | 1 | Kird Chieftain | m15 |
 | ~ gets +N/+N as long as you control a mountain. | 1 | Nightfire Giant | m15 |

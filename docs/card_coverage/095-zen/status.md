@@ -17,9 +17,9 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 32 | 14.5% |
-| Works (untested) | 122 | 55.5% |
-| Partial (unaudited) | 7 | 3.2% |
+| Tested | 36 | 16.4% |
+| Works (untested) | 123 | 55.9% |
+| Partial (unaudited) | 2 | 0.9% |
 | Not working | 59 | 26.8% |
 
 ## Cards needing work
@@ -85,13 +85,8 @@
 | Guul Draz Specter | notice | This creature gets +3/+3 as long as an opponent has no cards in hand. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Kalitas, Bloodchief of Ghet | notice | {B}{B}{B}, {T}: Destroy target creature. If that creature dies this way, create a black Vampire creature token. Its power is equal to that creature's power and  | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Obsidian Fireheart | notice | {1}{R}{R}: Put a blaze counter on target land without a blaze counter on it. For as long as that land has a blaze counter on it, it has "At the beginning of you | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Aether Figment | unaudited | If this creature was kicked, it enters with two +1/+1 counters on it. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Archmage Ascension | unaudited | As long as this enchantment has six or more quest counters on it, if you would draw a card, you may instead search your library for a card, put that card into y | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Iona, Shield of Emeria | unaudited | Your opponents can't cast spells of the chosen color. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Nissa's Chosen | unaudited | If this creature would die, put it on the bottom of its owner's library instead. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Oracle of Mul Daya | unaudited | Play with the top card of your library revealed. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Trailblazer's Boots | unaudited | Equipped creature has nonbasic landwalk. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Welkin Tern | unaudited | This creature can block only creatures with flying. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Akoum Refuge | handled | This land enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Arrow Volley Trap | handled | If four or more creatures are attacking, you may pay {1}{W} rather than pay this spell's mana cost. Arrow Volley Trap deals 5 damage divided as you choose among | the engine reads this text and performs it | Y/-/- | not_tested |
 | Baloth Cage Trap | handled | If an opponent had an artifact enter the battlefield under their control this turn, you may pay {1}{G} rather than pay this spell's mana cost. Create a 4/4 gree | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -155,6 +150,7 @@
 | Nimana Sell-Sword | handled | Whenever this creature or another Ally you control enters, you may put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Nimbus Wings | handled | Enchanted creature gets +1/+2 and has flying. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Noble Vestige | handled | {T}: Prevent the next 1 damage that would be dealt to target player or planeswalker this turn. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Oracle of Mul Daya | handled | You may play an additional land on each of your turns. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Oran-Rief Recluse | handled | When this creature enters, if it was kicked, destroy target creature with flying. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Oran-Rief Survivalist | handled | Whenever this creature or another Ally you control enters, you may put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Paralyzing Grasp | handled | Enchanted creature doesn't untap during its controller's untap step. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -218,9 +214,11 @@
 ## Fully supported
 
 <details>
-<summary>32 cards</summary>
+<summary>36 cards</summary>
 
+- Aether Figment
 - Archive Trap
+- Archmage Ascension
 - Arid Mesa
 - Blade of the Bloodchief
 - Bladetusk Boar
@@ -242,6 +240,7 @@
 - Mindbreak Trap
 - Misty Rainforest
 - Mold Shambler
+- Nissa's Chosen
 - Scalding Tarn
 - Sorin Markov
 - Spell Pierce
@@ -252,6 +251,7 @@
 - Vampire Nighthawk
 - Verdant Catacombs
 - Warren Instigator
+- Welkin Tern
 
 </details>
 
@@ -262,7 +262,6 @@
 | Landfall | 5 | Adventuring Gear, Eternity Vessel, Ob Nixilis, the Fallen, Roil Elemental, Turntimber Basilisk | zen |
 | +N: search your library for a card named nissa's chosen, put it onto the battlefield, then shuffle. | 1 | Nissa Revane | zen |
 | as long as ~ has seven or more quest counters on it, creatures you control get +N/+N. | 1 | Beastmaster Ascension | zen |
-| as long as ~ has six or more quest counters on it, if you would draw a card, you may instead search your library for a card, put that card into your hand, then  | 1 | Archmage Ascension | zen |
 | as long as ~ is equipped, it has double strike. | 1 | Kor Duelist | zen |
 | at the beginning of your upkeep, sacrifice ~ unless you return a land you control to its owner's hand. | 1 | Living Tsunami | zen |
 | at the beginning of your upkeep, you lose N life unless an opponent has N or less life. | 1 | Vampire Lacerator | zen |
@@ -274,8 +273,6 @@
 | enchanted land is an island. | 1 | Spreading Seas | zen |
 | equipped creature has nonbasic landwalk. | 1 | Trailblazer's Boots | zen |
 | if three or more creatures are attacking, you may pay {M} rather than pay ~ mana cost. attacking creatures get -N/-N until end of turn. | 1 | Lethargy Trap | zen |
-| if ~ was kicked, it enters with two +N/+N counters on it. | 1 | Aether Figment | zen |
-| if ~ would die, put it on the bottom of its owner's library instead. | 1 | Nissa's Chosen | zen |
 | kicker {M} (you may pay an additional {M} as you cast ~.) create a N/N red elemental creature token with trample and haste. exile it at the beginning of the nex | 1 | Elemental Appeal | zen |
 | kicker {M} (you may pay an additional {M} as you cast ~.) create a token that's a copy of target creature. if ~ was kicked, create five of those tokens instead. | 1 | Rite of Replication | zen |
 | kicker {M} (you may pay an additional {M} as you cast ~.) create six N/N white kor soldier creature tokens. if ~ was kicked, create twelve of those tokens inste | 1 | Conqueror's Pledge | zen |
@@ -284,7 +281,6 @@
 | kicker {M} (you may pay an additional {M} as you cast ~.) target creature can't be the target of spells or abilities your opponents control ~. if ~ was kicked,  | 1 | Vines of Vastwood | zen |
 | kicker—tap an untapped vampire you control. (you may tap a vampire you control in addition to any other costs as you cast ~.) target opponent loses half their l | 1 | Blood Tribute | zen |
 | other kor creatures you control get +N/+N for each equipment attached to ~. | 1 | Armament Master | zen |
-| play with the top card of your library revealed. | 1 | Oracle of Mul Daya | zen |
 | remove five quest counters from ~ and sacrifice it: search your library for an equipment card, put it onto the battlefield, attach it to a creature you control, | 1 | Quest for the Holy Relic | zen |
 | remove four quest counters from ~ and sacrifice it: if any source you control would deal damage to a permanent or player ~, it deals double that damage to that  | 1 | Quest for Pure Flame | zen |
 | target player reveals their hand and discards all trap cards. | 1 | Trapfinder's Trick | zen |
@@ -318,7 +314,6 @@
 | {M}: put ~ and each creature it"..." libraries, then those players shuffle. | 1 | Gomazoa | zen |
 | {M}{M}{M}, {M}: destroy target creature. if that creature dies ~, create a black vampire creature token. its power is equal to that creature"..."s toughness. | 1 | Kalitas, Bloodchief of Ghet | zen |
 | {M}{M}{M}: put a blaze counter on target land without a blaze counter on it. for as long as that land has a blaze counter on it, it has "..." | 1 | Obsidian Fireheart | zen |
-| ~ can block only creatures with flying. | 1 | Welkin Tern | zen |
 | ~ gets +N/+N as long as an opponent has no cards in hand. | 1 | Guul Draz Specter | zen |
 | −N: cast any number of red instant and/or sorcery cards from your graveyard without paying their mana costs. | 1 | Chandra Ablaze | zen |
 

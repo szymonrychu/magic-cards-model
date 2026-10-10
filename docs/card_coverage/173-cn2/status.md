@@ -27,7 +27,7 @@
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
 | Recruiter of the Guard | silent | When this creature enters, you may search your library for a creature card with toughness 2 or less, reveal it, put it into your hand, then shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Sanctum Prelate | unaudited | As this creature enters, choose a number. | a static ability no support check audits - not verified either way | Y/-/- | partial |
+| Sanctum Prelate | unaudited | Noncreature spells with mana value equal to the chosen number can't be cast. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 
 ## Fully supported
 
@@ -41,7 +41,7 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| as ~ enters, choose a number. | 1 | Sanctum Prelate | cn2 |
+| noncreature spells with mana value equal to the chosen number can't be cast. | 1 | Sanctum Prelate | cn2 |
 | when ~ enters, you may search your library for a creature card with toughness N or less, reveal it, put it into your hand, then shuffle. | 1 | Recruiter of the Guard | cn2 |
 
 ## Notes

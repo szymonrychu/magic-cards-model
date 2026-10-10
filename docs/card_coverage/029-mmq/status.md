@@ -17,9 +17,9 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 4 | 8.7% |
+| Tested | 7 | 15.2% |
 | Works (untested) | 26 | 56.5% |
-| Partial (unaudited) | 4 | 8.7% |
+| Partial (unaudited) | 1 | 2.2% |
 | Not working | 12 | 26.1% |
 
 ## Cards needing work
@@ -38,10 +38,7 @@
 | Deathgazer | notice | Whenever this creature blocks or becomes blocked by a nonblack creature, destroy that creature at end of combat. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Sever Soul | notice | Destroy target nonblack creature. It can't be regenerated. You gain life equal to its toughness. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Vendetta | notice | Destroy target nonblack creature. It can't be regenerated. You lose life equal to that creature's toughness. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Arrest | unaudited | Enchanted creature can't attack or block, and its activated abilities can't be activated. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Cloud Sprite | unaudited | This creature can block only creatures with flying. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Conspiracy | unaudited | Creatures you control are the chosen type. The same is true for creature spells you control and creature cards you own that aren't on the battlefield. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Two-Headed Dragon | unaudited | This creature can block an additional creature each combat. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Arms Dealer | handled | {1}{R}, Sacrifice a Goblin: This creature deals 4 damage to target creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ballista Squad | handled | {X}{W}, {T}: This creature deals X damage to target attacking or blocking creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Battle Rampart | handled | {T}: Target creature gains haste until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -72,12 +69,15 @@
 ## Fully supported
 
 <details>
-<summary>4 cards</summary>
+<summary>7 cards</summary>
 
+- Arrest
 - Cho-Manno, Revolutionary
+- Cloud Sprite
 - Distorting Lens
 - Ivory Mask
 - Last Breath
+- Two-Headed Dragon
 
 </details>
 
@@ -90,7 +90,6 @@
 | creatures you control are the chosen type. the same is true for creature spells you control and creature cards you own that aren't on the battlefield. | 1 | Conspiracy | mmq |
 | destroy target nonblack creature. it can"..."s toughness. | 1 | Vendetta | mmq |
 | destroy target nonblack creature. it can't be regenerated. you gain life equal to its toughness. | 1 | Sever Soul | mmq |
-| enchanted creature can"..."t be activated. | 1 | Arrest | mmq |
 | exile N target creature cards from your graveyard. for each creature card exiled ~, create a N/N black zombie creature token. | 1 | Midnight Ritual | mmq |
 | exile all nontoken permanents. starting with you, each player chooses one of the exiled cards and puts it onto the battlefield tapped under their control. repea | 1 | Thieves' Auction | mmq |
 | search target opponent's library for a creature card and put that card onto the battlefield under your control. then that player shuffles. | 1 | Bribery | mmq |
@@ -99,8 +98,6 @@
 | whenever a creature you control deals combat damage, you gain that much life. | 1 | Noble Purpose | mmq |
 | whenever ~ blocks or becomes blocked by a nonblack creature, destroy that creature at end of combat. | 1 | Deathgazer | mmq |
 | {M}: the next time a source of your choice of the chosen color would deal damage to you ~, prevent that damage. | 1 | Story Circle | mmq |
-| ~ can block an additional creature each combat. | 1 | Two-Headed Dragon | mmq |
-| ~ can block only creatures with flying. | 1 | Cloud Sprite | mmq |
 
 ## Notes
 

@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 15 | 10.1% |
-| Works (untested) | 57 | 38.5% |
-| Partial (unaudited) | 7 | 4.7% |
-| Not working | 69 | 46.6% |
+| Tested | 21 | 14.2% |
+| Works (untested) | 62 | 41.9% |
+| Partial (unaudited) | 0 | 0.0% |
+| Not working | 65 | 43.9% |
 
 ## Cards needing work
 
@@ -88,24 +88,15 @@
 | Waterspout Weavers | silent | Kinship — At the beginning of your upkeep, you may look at the top card of your library. If it shares a creature type with this creature, you may reveal it. If  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Winnower Patrol | silent | Kinship — At the beginning of your upkeep, you may look at the top card of your library. If it shares a creature type with this creature, you may reveal it. If  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Wolf-Skull Shaman | silent | Kinship — At the beginning of your upkeep, you may look at the top card of your library. If it shares a creature type with this creature, you may reveal it. If  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Ballyrush Banneret | notice | Kithkin spells and Soldier spells you cast cost {1} less to cast. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Bosk Banneret | notice | Treefolk spells and Shaman spells you cast cost {1} less to cast. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Frogtosser Banneret | notice | Goblin spells and Rogue spells you cast cost {1} less to cast. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Pack's Disdain | notice | Choose a creature type. Target creature gets -1/-1 until end of turn for each permanent of the chosen type you control. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Stonybrook Banneret | notice | Merfolk spells and Wizard spells you cast cost {1} less to cast. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Vendilion Clique | notice | When Vendilion Clique enters, look at target player's hand. You may choose a nonland card from it. If you do, that player reveals the chosen card, puts it on th | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Vengeful Firebrand | notice | This creature has haste as long as a Warrior card is in your graveyard. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Battletide Alchemist | unaudited | If a source would deal damage to a player, you may prevent X of that damage, where X is the number of Clerics you control. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Bramblewood Paragon | unaudited | Each other Warrior creature you control enters with an additional +1/+1 counter on it. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Cenn's Tactician | unaudited | Each creature you control with a +1/+1 counter on it can block an additional creature each combat. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Hostile Realm | unaudited | Enchanted land has "{T}: Target creature can't block this turn." | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Oona's Blackguard | unaudited | Each other Rogue creature you control enters with an additional +1/+1 counter on it. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Sage of Fables | unaudited | Each other Wizard creature you control enters with an additional +1/+1 counter on it. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Weight of Conscience | unaudited | Enchanted creature can't attack. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Ambassador Oak | handled | When this creature enters, create a 1/1 green Elf Warrior creature token. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Ballyrush Banneret | handled | Kithkin spells and Soldier spells you cast cost {1} less to cast. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Bitterblossom | handled | At the beginning of your upkeep, you lose 1 life and create a 1/1 black Faerie Rogue creature token with flying. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Blightsoil Druid | handled |  |  | Y/-/- | not_tested |
 | Borderland Behemoth | handled | This creature gets +4/+4 for each other Giant you control. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Bosk Banneret | handled | Treefolk spells and Shaman spells you cast cost {1} less to cast. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Burrenton Shield-Bearers | handled | Whenever this creature attacks, target creature gets +0/+3 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Chameleon Colossus | handled | {2}{G}{G}: This creature gets +X/+X until end of turn, where X is its power. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Changeling Sentinel | handled | Vigilance | machines/combat.py | Y/-/- | not_tested |
@@ -119,9 +110,11 @@
 | Festercreep | handled | This creature enters with a +1/+1 counter on it. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Feudkiller's Verdict | handled | You gain 10 life. Then if you have more life than an opponent, create a 5/5 white Giant Warrior creature token. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Final-Sting Faerie | handled | When this creature enters, destroy target creature that was dealt damage this turn. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Frogtosser Banneret | handled | Goblin spells and Rogue spells you cast cost {1} less to cast. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Game-Trail Changeling | handled | Trample | machines/combat.py | Y/-/- | not_tested |
 | Gilt-Leaf Archdruid | handled | Whenever you cast a Druid spell, you may draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Heritage Druid | handled |  |  | Y/-/- | not_tested |
+| Hostile Realm | handled | Enchanted land has "{T}: Target creature can't block this turn." | the engine reads this text and performs it | Y/-/- | not_tested |
 | Idyllic Tutor | handled | Search your library for an enchantment card, reveal it, put it into your hand, then shuffle. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Inspired Sprite | handled | Whenever you cast a Wizard spell, you may untap this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Kindled Fury | handled | Target creature gets +1/+0 and gains first strike until end of turn. (It deals combat damage before creatures without first strike.) | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -149,6 +142,7 @@
 | Spitebellows | handled | When this creature leaves the battlefield, it deals 6 damage to target creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Stingmoggie | handled | This creature enters with two +1/+1 counters on it. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Stinkdrinker Bandit | handled | Whenever a Rogue you control attacks and isn't blocked, it gets +2/+1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Stonybrook Banneret | handled | Merfolk spells and Wizard spells you cast cost {1} less to cast. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Stonybrook Schoolmaster | handled | Whenever this creature becomes tapped, you may create a 1/1 blue Merfolk Wizard creature token. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Stream of Unconsciousness | handled | Target creature gets -4/-0 until end of turn. If you control a Wizard, draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Taurean Mauler | handled | Whenever an opponent casts a spell, you may put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -163,8 +157,11 @@
 ## Fully supported
 
 <details>
-<summary>15 cards</summary>
+<summary>21 cards</summary>
 
+- Battletide Alchemist
+- Bramblewood Paragon
+- Cenn's Tactician
 - Deglamer
 - Distant Melody
 - Forfend
@@ -177,9 +174,12 @@
 - Mutavault
 - Negate
 - Obsidian Battle-Axe
+- Oona's Blackguard
+- Sage of Fables
 - Scapeshift
 - Stenchskipper
 - Thieves' Fortune
+- Weight of Conscience
 
 </details>
 
@@ -201,17 +201,7 @@
 | clash with an opponent. if you win, target player discards two cards. otherwise, that player discards a card. (each clashing player reveals the top card of thei | 1 | Pulling Teeth | mor |
 | creatures you control of the chosen type get +N/+N for each charge counter on ~. | 1 | Door of Destinies | mor |
 | draw a card. clash with an opponent. if you win, return ~ to its owner's hand. (each clashing player reveals the top card of their library, then puts that card  | 1 | Research the Deep | mor |
-| each creature you control with a +N/+N counter on it can block an additional creature each combat. | 1 | Cenn's Tactician | mor |
-| each other rogue creature you control enters with an additional +N/+N counter on it. | 1 | Oona's Blackguard | mor |
-| each other warrior creature you control enters with an additional +N/+N counter on it. | 1 | Bramblewood Paragon | mor |
-| each other wizard creature you control enters with an additional +N/+N counter on it. | 1 | Sage of Fables | mor |
-| enchanted creature can't attack. | 1 | Weight of Conscience | mor |
-| enchanted land has "..." | 1 | Hostile Realm | mor |
-| goblin spells and rogue spells you cast cost {M} less to cast. | 1 | Frogtosser Banneret | mor |
-| if a source would deal damage to a player, you may prevent N of that damage, where N is the number of clerics you control. | 1 | Battletide Alchemist | mor |
-| kithkin spells and soldier spells you cast cost {M} less to cast. | 1 | Ballyrush Banneret | mor |
 | knight creatures you control have double strike. | 1 | Kinsbaile Cavalier | mor |
-| merfolk spells and wizard spells you cast cost {M} less to cast. | 1 | Stonybrook Banneret | mor |
 | prowl {M}{M} (you may cast ~ its prowl cost if you dealt combat damage to a player ~ with a rogue.) create N N/N black faerie rogue creature tokens with flying, | 1 | Notorious Throng | mor |
 | prowl {M}{M} (you may cast ~ its prowl cost if you dealt combat damage to a player ~ with a rogue.) search target opponent's library for an instant or sorcery c | 1 | Knowledge Exploitation | mor |
 | prowl {M}{M} (you may cast ~ its prowl cost if you dealt combat damage to a player ~ with a rogue.) target player reveals three cards from their hand. you choos | 1 | Noggin Whack | mor |
@@ -220,7 +210,6 @@
 | reveal the top seven cards of your library, then put those cards on the bottom of your library in any order. if a card named ~ was revealed ~, ~ deals N damage  | 1 | Stomping Slabs | mor |
 | target player discards N cards at random. | 1 | Mind Shatter | mor |
 | target player sacrifices a creature of their choice. if a goblin is sacrificed ~, that player creates two N/N black goblin rogue creature tokens, and those toke | 1 | Warren Weirding | mor |
-| treefolk spells and shaman spells you cast cost {M} less to cast. | 1 | Bosk Banneret | mor |
 | when enchanted creature dies, you may return ~ from your graveyard to the battlefield attached to a creature that shares a creature type with that creature. | 1 | Reins of the Vinesteed | mor |
 | when target creature dies ~, return that card to the battlefield under its owner's control. | 1 | Graceful Reprieve | mor |
 | when ~ dies, create a N/N white kithkin soldier creature token for each counter on it. | 1 | Kinsbaile Borderguard | mor |

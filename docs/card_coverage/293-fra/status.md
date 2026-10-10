@@ -17,16 +17,15 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 218 | 81.3% |
+| Tested | 219 | 81.7% |
 | Works (untested) | 47 | 17.5% |
-| Partial (unaudited) | 3 | 1.1% |
+| Partial (unaudited) | 2 | 0.7% |
 | Not working | 0 | 0.0% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
-| Null Summoner | unaudited | Threshold — As long as there are seven or more cards in your graveyard, you may cast the exiled card, and mana of any type can be spent to cast that spell. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Proft, Sinister Mastermind | unaudited | Threshold — You can't cast this spell unless there are seven or more cards in your graveyard. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Sanctum Lurker | unaudited | Planeswalkers you control aren't put into their owners' graveyards for having 0 loyalty. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Afterthought Sentry | handled | {2}: This creature gains flying until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -80,7 +79,7 @@
 ## Fully supported
 
 <details>
-<summary>218 cards</summary>
+<summary>219 cards</summary>
 
 - Academic Ascent
 - Aerid Konstrari
@@ -204,6 +203,7 @@
 - Mindseeker Oculus
 - Multiply by Zero
 - No Admittance
+- Null Summoner
 - Omnipresence
 - Overwrite the Multiverse
 - Paradox Shaper // Omit Variables
@@ -307,7 +307,7 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| Threshold | 2 | Null Summoner, Proft, Sinister Mastermind | fra |
+| Threshold | 1 | Proft, Sinister Mastermind | fra |
 | planeswalkers you control aren"..." graveyards for having N loyalty. | 1 | Sanctum Lurker | fra |
 
 ## Notes

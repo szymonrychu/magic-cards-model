@@ -17,16 +17,15 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 30 | 13.0% |
-| Works (untested) | 129 | 56.1% |
-| Partial (unaudited) | 20 | 8.7% |
-| Not working | 51 | 22.2% |
+| Tested | 45 | 19.6% |
+| Works (untested) | 131 | 57.0% |
+| Partial (unaudited) | 6 | 2.6% |
+| Not working | 48 | 20.9% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
-| Darigaaz Reincarnated | silent | At the beginning of your upkeep, if this card is exiled with an egg counter on it, remove an egg counter from it. Then if this card has no egg counters on it, r | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Dauntless Bodyguard | silent | Sacrifice this creature: The chosen creature gains indestructible until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Deep Freeze | silent | Enchanted creature has base power and toughness 0/4, has defender, loses all other abilities, and is a blue Wall in addition to its other colors and types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Demonlord Belzenlok | silent | When Demonlord Belzenlok enters, exile cards from the top of your library until you exile a nonland card, then put that card into your hand. If the card's mana  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -70,33 +69,17 @@
 | Champion of the Flame | notice | This creature gets +2/+2 for each Aura and Equipment attached to it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Chandra's Outburst | notice | Chandra's Outburst deals 4 damage to target player or planeswalker. Search your library and/or graveyard for a card named Chandra, Bold Pyromancer, reveal it, a | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Corrosive Ooze | notice | Whenever this creature blocks or becomes blocked by an equipped creature, destroy all Equipment attached to that creature at end of combat. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Danitha Capashen, Paragon | notice | Aura and Equipment spells you cast cost {1} less to cast. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Jhoira's Familiar | notice | Historic spells you cast cost {1} less to cast. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Merfolk Trickster | notice | When this creature enters, tap target creature an opponent controls. It loses all abilities until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Rampaging Cyclops | notice | This creature gets -2/-0 as long as two or more creatures are blocking it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Tempest Djinn | notice | This creature gets +1/+0 for each basic Island you control. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Thallid Omnivore | notice | {1}, Sacrifice another creature: This creature gets +2/+2 until end of turn. If a Saproling was sacrificed this way, you gain 2 life. | unparsed remainder: If a Saproling was sacrificed this way, you gain 2 life. | Y/Y/- | not_working |
 | Valduk, Keeper of the Flame | notice | At the beginning of combat on your turn, for each Aura and Equipment attached to Valduk, create a 3/1 red Elemental creature token with trample and haste. Exile | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Academy Drake | unaudited | If this creature was kicked, it enters with two +1/+1 counters on it. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Baird, Steward of Argive | unaudited | Creatures can't attack you or planeswalkers you control unless their controller pays {1} for each of those creatures. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Baloth Gorger | unaudited | If this creature was kicked, it enters with three +1/+1 counters on it. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Curator's Ward | unaudited | Enchanted permanent has hexproof. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Grunn, the Lonely King | unaudited | If Grunn was kicked, it enters with five +1/+1 counters on it. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | In Bolas's Clutches | unaudited | Enchanted permanent is legendary. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Jodah, Archmage Eternal | unaudited | You may pay {W}{U}{B}{R}{G} rather than pay the mana cost for spells you cast. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Muldrotha, the Gravetide | unaudited | During each of your turns, you may play a land and cast a permanent spell of each permanent type from your graveyard. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Oath of Teferi | unaudited | You may activate the loyalty abilities of planeswalkers you control twice each turn rather than only once. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Precognition Field | unaudited | You may cast instant and sorcery spells from the top of your library. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Raff Capashen, Ship's Mage | unaudited | You may cast historic spells as though they had flash. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Rat Colony | unaudited | A deck can have any number of cards named Rat Colony. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Shalai, Voice of Plenty | unaudited | You, planeswalkers you control, and other creatures you control have hexproof. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Shanna, Sisay's Legacy | unaudited | Shanna can't be the target of abilities your opponents control. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Shield of the Realm | unaudited | If a source would deal damage to equipped creature, prevent 2 of that damage. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Squee, the Immortal | unaudited | You may cast this card from your graveyard or from exile. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Stronghold Confessor | unaudited | If this creature was kicked, it enters with two +1/+1 counters on it. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Traxos, Scourge of Kroog | unaudited | Traxos enters tapped and doesn't untap during your untap step. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Untamed Kavu | unaudited | If this creature was kicked, it enters with three +1/+1 counters on it. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Zahid, Djinn of the Lamp | unaudited | You may pay {3}{U} and tap an untapped artifact you control rather than pay this spell's mana cost. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Academy Journeymage | handled | This spell costs {1} less to cast if you control a Wizard. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Adeliz, the Cinder Wind | handled | Whenever you cast an instant or sorcery spell, Wizards you control get +1/+1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Amaranthine Wall | handled | {2}: This creature gains indestructible until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -124,6 +107,7 @@
 | Cloudreader Sphinx | handled | When this creature enters, scry 2. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Cold-Water Snapper | handled | Hexproof | machines/casting.py (target legality) | Y/Y/- | not_tested |
 | D'Avenant Trapper | handled | Whenever you cast a historic spell, tap target creature an opponent controls. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Danitha Capashen, Paragon | handled | Aura and Equipment spells you cast cost {1} less to cast. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Daring Archaeologist | handled | When this creature enters, you may return target artifact card from your graveyard to your hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Dark Bargain | handled | Look at the top three cards of your library. Put two of them into your hand and the other into your graveyard. Dark Bargain deals 2 damage to you. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Deathbloom Thallid | handled | When this creature dies, create a 1/1 green Saproling creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -154,6 +138,7 @@
 | Howling Golem | handled | Whenever this creature attacks or blocks, each player draws a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Invoke the Divine | handled | Destroy target artifact or enchantment. You gain 4 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Jaya's Immolating Inferno | handled | (You may cast a legendary sorcery only if you control a legendary creature or planeswalker.) Jaya's Immolating Inferno deals X damage to each of up to three tar | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Jhoira's Familiar | handled | Historic spells you cast cost {1} less to cast. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Jhoira, Weatherlight Captain | handled | Whenever you cast a historic spell, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Karplusan Hound | handled | Whenever this creature attacks, if you control a Chandra planeswalker, this creature deals 2 damage to any target. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Kazarov, Sengir Pureblood | handled | Whenever a creature an opponent controls is dealt damage, put a +1/+1 counter on Kazarov. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -230,38 +215,53 @@
 ## Fully supported
 
 <details>
-<summary>30 cards</summary>
+<summary>45 cards</summary>
 
+- Academy Drake
 - Adamant Will
 - Adventurous Impulse
 - Ancient Animus
 - Arvad the Cursed
+- Baird, Steward of Argive
+- Baloth Gorger
 - Blessing of Belzenlok
 - Bloodstone Goblin
 - Cabal Stronghold
 - Damping Sphere
+- Darigaaz Reincarnated
 - Gaea's Protector
 - Grand Warlord Radha
+- Grunn, the Lonely King
 - Hallar, the Firefletcher
 - Healing Grace
 - History of Benalia
 - Jaya Ballard
+- Jodah, Archmage Eternal
 - Josu Vess, Lich Knight
 - Knight of Grace
 - Knight of Malice
 - Lich's Mastery
 - Marwyn, the Nurturer
 - Mox Amber
+- Muldrotha, the Gravetide
 - Naban, Dean of Iteration
 - Powerstone Shard
+- Precognition Field
 - Radiating Lightning
+- Raff Capashen, Ship's Mage
 - Rona, Disciple of Gix
 - Sentinel of the Pearl Trident
+- Shield of the Realm
+- Squee, the Immortal
+- Stronghold Confessor
 - Teferi, Timebender
 - Tetsuko Umezawa, Fugitive
 - The First Eruption
 - The Flame of Keld
 - Torgaar, Famine Incarnate
+- Traxos, Scourge of Kroog
+- Untamed Kavu
+- Zahid, Djinn of the Lamp
 
 </details>
 
@@ -269,8 +269,6 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| if ~ was kicked, it enters with three +N/+N counters on it. | 2 | Baloth Gorger, Untamed Kavu | dom |
-| if ~ was kicked, it enters with two +N/+N counters on it. | 2 | Academy Drake, Stronghold Confessor | dom |
 | (you may cast a legendary sorcery only if you control a legendary creature or planeswalker.) exile all nonland permanents that aren't legendary. | 1 | Urza's Ruinous Blast | dom |
 | (you may cast a legendary sorcery only if you control a legendary creature or planeswalker.) look at the top N cards of your library. you may put any number of  | 1 | Kamahl's Druidic Vow | dom |
 | (you may cast a legendary sorcery only if you control a legendary creature or planeswalker.) return all legendary permanent cards from your graveyard to the bat | 1 | Primevals' Glorious Rebirth | dom |
@@ -281,13 +279,9 @@
 | as long as you control a teferi planeswalker, ~ gets +N/+N. | 1 | Teferi's Sentinel | dom |
 | at the beginning of combat on your turn, create a token that"..."t legendary. that token gains haste. | 1 | Helm of the Host | dom |
 | at the beginning of combat on your turn, for each aura and equipment attached to valduk, create a N/N red elemental creature token with trample and haste. exile | 1 | Valduk, Keeper of the Flame | dom |
-| at the beginning of your upkeep, if ~ is exiled with an egg counter on it, remove an egg counter from it. then if ~ has no egg counters on it, return it to the  | 1 | Darigaaz Reincarnated | dom |
-| aura and equipment spells you cast cost {M} less to cast. | 1 | Danitha Capashen, Paragon | dom |
 | counter target noncreature spell. untap up to three lands. | 1 | Unwind | dom |
-| creatures can't attack you or planeswalkers you control unless their controller pays {M} for each of those creatures. | 1 | Baird, Steward of Argive | dom |
 | creatures you control with first strike have double strike. | 1 | Kwende, Pride of Femeref | dom |
 | destroy target land. up to two target creatures can't block ~. | 1 | Seismic Shift | dom |
-| during each of your turns, you may play a land and cast a permanent spell of each permanent type from your graveyard. | 1 | Muldrotha, the Gravetide | dom |
 | during your turn, equipped creature has first strike. | 1 | Jousting Lance | dom |
 | each player returns two land cards from their graveyard to the battlefield. | 1 | Fall of the Thran | dom |
 | enchanted creature has base power and toughness N/N, has defender, loses all other abilities, and is a blue wall in addition to its other colors and types. | 1 | Deep Freeze | dom |
@@ -296,9 +290,6 @@
 | enchanted permanent is legendary. | 1 | In Bolas's Clutches | dom |
 | exile all opponents' graveyards. | 1 | Phyrexian Scriptures | dom |
 | exile target creature. put two loyalty counters on a planeswalker you control. | 1 | Settle the Score | dom |
-| historic spells you cast cost {M} less to cast. | 1 | Jhoira's Familiar | dom |
-| if a source would deal damage to equipped creature, prevent N of that damage. | 1 | Shield of the Realm | dom |
-| if grunn was kicked, it enters with five +N/+N counters on it. | 1 | Grunn, the Lonely King | dom |
 | kicker {M} (you may pay an additional {M} as you cast ~.) create two N/N green saproling creature tokens. if ~ was kicked, create four of those tokens instead. | 1 | Saproling Migration | dom |
 | kicker {M} (you may pay an additional {M} as you cast ~.) untap target creature. it gets +N/+N until end of turn. if ~ was kicked, that creature gets +N/+N unti | 1 | Gift of Growth | dom |
 | return all tapped creatures to their owners' hands. | 1 | Time of Ice | dom |
@@ -306,7 +297,6 @@
 | search your library for two cards. put one into your hand and the other into your graveyard. then shuffle. | 1 | Final Parting | dom |
 | shanna can't be the target of abilities your opponents control. | 1 | Shanna, Sisay's Legacy | dom |
 | target creature you control with the greatest power gains flying, first strike, and lifelink until end of turn. | 1 | Triumph of Gerrard | dom |
-| traxos enters tapped and doesn't untap during your untap step. | 1 | Traxos, Scourge of Kroog | dom |
 | until your next turn, all lands you control become N/N elemental creatures with reach, indestructible, and haste. they're still lands. | 1 | Sylvan Awakening | dom |
 | until your next turn, creatures you control gain "..." | 1 | Song of Freyalise | dom |
 | when garna enters, return to your hand all creature cards in your graveyard that were put there from anywhere ~. | 1 | Garna, the Bloodflame | dom |
@@ -320,11 +310,6 @@
 | whenever ~ attacks, flip two coins. if both coins come up heads, ~ gains double strike until end of turn. if both coins come up tails, ~ gains menace until end  | 1 | Two-Headed Giant | dom |
 | whenever ~ blocks or becomes blocked by an equipped creature, destroy all equipment attached to that creature at end of combat. | 1 | Corrosive Ooze | dom |
 | you may activate the loyalty abilities of planeswalkers you control twice each turn rather than only once. | 1 | Oath of Teferi | dom |
-| you may cast historic spells as though they had flash. | 1 | Raff Capashen, Ship's Mage | dom |
-| you may cast instant and sorcery spells from the top of your library. | 1 | Precognition Field | dom |
-| you may cast ~ from your graveyard or from exile. | 1 | Squee, the Immortal | dom |
-| you may pay {M}{M} and tap an untapped artifact you control rather than pay ~ mana cost. | 1 | Zahid, Djinn of the Lamp | dom |
-| you may pay {M}{M}{M}{M}{M} rather than pay the mana cost for spells you cast. | 1 | Jodah, Archmage Eternal | dom |
 | you, planeswalkers you control, and other creatures you control have hexproof. | 1 | Shalai, Voice of Plenty | dom |
 | {M}, sacrifice another creature: ~ gets +N/+N until end of turn. if a saproling was sacrificed ~, you gain N life. | 1 | Thallid Omnivore | dom |
 | {M}, {M}: draw a card. then discard a card unless you exile a historic card from your graveyard. | 1 | Urza's Tome | dom |

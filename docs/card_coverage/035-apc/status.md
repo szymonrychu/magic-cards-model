@@ -17,9 +17,9 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 5 | 22.7% |
+| Tested | 6 | 27.3% |
 | Works (untested) | 13 | 59.1% |
-| Partial (unaudited) | 2 | 9.1% |
+| Partial (unaudited) | 1 | 4.5% |
 | Not working | 2 | 9.1% |
 
 ## Cards needing work
@@ -29,7 +29,6 @@
 | Brass Herald | silent | When this creature enters, reveal the top four cards of your library. Put all creature cards of the chosen type revealed this way into your hand and the rest on | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Desolation Giant | silent | When this creature enters, destroy all other creatures you control. If it was kicked, destroy all other creatures instead. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Dodecapod | unaudited | If a spell or ability an opponent controls causes you to discard this card, put it onto the battlefield with two +1/+1 counters on it instead of putting it into | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Legacy Weapon | unaudited | If Legacy Weapon would be put into a graveyard from anywhere, reveal Legacy Weapon and shuffle it into its owner's library instead. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Battlefield Forge | handled |  |  | Y/Y/- | not_tested |
 | Bloodfire Colossus | handled | {R}, Sacrifice this creature: It deals 6 damage to each creature and each player. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Goblin Ringleader | handled | When this creature enters, reveal the top four cards of your library. Put all Goblin cards revealed this way into your hand and the rest on the bottom of your l | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -47,11 +46,12 @@
 ## Fully supported
 
 <details>
-<summary>5 cards</summary>
+<summary>6 cards</summary>
 
 - Caves of Koilos
 - Fire // Ice
 - Index
+- Legacy Weapon
 - Llanowar Wastes
 - Shivan Reef
 
@@ -62,7 +62,6 @@
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
 | if a spell or ability an opponent controls causes you to discard ~, put it onto the battlefield with two +N/+N counters on it instead of putting it into your gr | 1 | Dodecapod | apc |
-| if ~ would be put into a graveyard from anywhere, reveal ~ and shuffle it into its owner's library instead. | 1 | Legacy Weapon | apc |
 | when ~ enters, destroy all other creatures you control. if it was kicked, destroy all other creatures instead. | 1 | Desolation Giant | apc |
 | when ~ enters, reveal the top four cards of your library. put all creature cards of the chosen type revealed ~ into your hand and the rest on the bottom of your | 1 | Brass Herald | apc |
 

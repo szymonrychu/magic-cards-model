@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 41 | 15.4% |
-| Works (untested) | 142 | 53.4% |
-| Partial (unaudited) | 8 | 3.0% |
-| Not working | 75 | 28.2% |
+| Tested | 49 | 18.4% |
+| Works (untested) | 144 | 54.1% |
+| Partial (unaudited) | 1 | 0.4% |
+| Not working | 72 | 27.1% |
 
 ## Cards needing work
 
@@ -29,7 +29,6 @@
 | A Tale for the Ages | silent | Enchanted creatures you control get +2/+2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Archon of the Wild Rose | silent | Other creatures you control that are enchanted by Auras you control have base power and toughness 4/4 and have flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Armory Mice | silent | Celebration — This creature gets +0/+2 as long as two or more nonland permanents entered the battlefield under your control this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Ashiok, Wicked Manipulator | silent | +1: Look at the top two cards of your library. Exile one of them and put the other into your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Asinine Antics | silent | You may cast this spell as though it had flash if you pay {2} more to cast it. For each creature your opponents control, create a Cursed Role token attached to  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Bellowing Bruiser // Beat a Path | silent | Up to two target creatures can't block this turn. (Then exile this card. You may cast the creature later from exile.) | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Beluna Grandsquall // Seek Thrills | silent | Mill seven cards. Then put all cards that have an Adventure from among the milled cards into your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -39,7 +38,6 @@
 | Break the Spell | silent | Destroy target enchantment. If a permanent you controlled or a token was destroyed this way, draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Charging Hooligan | silent | Whenever this creature attacks, it gets +1/+0 until end of turn for each attacking creature. If a Rat is attacking, this creature gains trample until end of tur | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Charmed Clothier | silent | When this creature enters, create a Royal Role token attached to another target creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Cruel Somnophage // Can't Wake Up | silent | Cruel Somnophage's power and toughness are each equal to the number of creature cards in all graveyards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Devouring Sugarmaw // Have for Dinner | silent | At the beginning of your upkeep, you may sacrifice an artifact, enchantment, or token. If you don't, tap this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Discerning Financier | silent | {2}{W}: Choose another player. That player gains control of target Treasure you control. You draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Ego Drain | silent | Target opponent reveals their hand. You choose a nonland card from it. That player discards that card. If you don't control a Faerie, exile a card from your han | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -61,7 +59,6 @@
 | Mosswood Dreadknight // Dread Whispers | silent | When this creature dies, you may cast it from your graveyard as an Adventure until the end of your next turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Questing Druid // Seek the Beast | silent | Whenever you cast a spell that's white, blue, black, or red, put a +1/+1 counter on this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Redtooth Genealogist | silent | When this creature enters, create a Royal Role token attached to another target creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Regal Bunnicorn | silent | Regal Bunnicorn's power and toughness are each equal to the number of nonland permanents you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Restless Fortress | silent | Whenever this land attacks, defending player loses 2 life and you gain 2 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Rowan's Grim Search | silent | Bargain (You may sacrifice an artifact, enchantment, or token as you cast this spell.) If this spell was bargained, look at the top four cards of your library,  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Rowan, Scion of War | silent | {T}: Spells you cast this turn that are black and/or red cost {X} less to cast, where X is the amount of life you lost this turn. Activate only as a sorcery. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -101,14 +98,7 @@
 | Specter of Mortality | notice | When this creature enters, you may exile one or more creature cards from your graveyard. When you do, each other creature gets -X/-X until end of turn, where X  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | The Huntsman's Redemption | notice | II — You may sacrifice a creature. If you do, search your library for a creature or basic land card, reveal it, put it into your hand, then shuffle. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Water Wings | notice | Until end of turn, target creature you control has base power and toughness 4/4 and gains flying and hexproof. (It can't be the target of spells or abilities yo | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Agatha of the Vile Cauldron | unaudited | Activated abilities of creatures you control cost {X} less to activate, where X is Agatha's power. This effect can't reduce the mana in that cost to less than o | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Elusive Otter // Grove's Bounty | unaudited | Creatures with power less than this creature's power can't block it. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Eriette of the Charmed Apple | unaudited | Each creature that's enchanted by an Aura you control can't attack you or planeswalkers you control. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Hamlet Glutton | unaudited | This spell costs {2} less to cast if it's bargained. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Johann, Apprentice Sorcerer | unaudited | Once each turn, you may cast an instant or sorcery spell from the top of your library. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Night of the Sweets' Revenge | unaudited | Foods you control have "{T}: Add {G}." | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Raging Battle Mouse | unaudited | The second spell you cast each turn costs {1} less to cast. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Sleep-Cursed Faerie | unaudited | This creature enters tapped with three stun counters on it. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Aquatic Alchemist // Bubble Up | handled | Put target instant or sorcery card from your graveyard on top of your library. (Then exile this card. You may cast the creature later from exile.) | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Archon's Glory | handled | Bargain (You may sacrifice an artifact, enchantment, or token as you cast this spell.) Target creature gets +2/+2 until end of turn. If this spell was bargained | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Ash, Party Crasher | handled | Celebration — Whenever Ash attacks, if two or more nonland permanents entered the battlefield under your control this turn, put a +1/+1 counter on Ash. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -127,6 +117,7 @@
 | Collector's Vault | handled | {2}, {T}: Draw a card, then discard a card. Create a Treasure token. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Conceited Witch // Price of Beauty | handled | Create a Wicked Role token attached to target creature you control. (Then exile this card. You may cast the creature later from exile.) | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Cooped Up | handled | Enchanted creature can't attack or block. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Cruel Somnophage // Can't Wake Up | handled | Target player mills four cards. (Then exile this card. You may cast the creature later from exile.) | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Cursed Courtier | handled | When this creature enters, create a Cursed Role token attached to it. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Diminisher Witch | handled | When this creature enters, if it was bargained, create a Cursed Role token attached to target creature an opponent controls. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Dream Spoilers | handled | Whenever you cast a spell during an opponent's turn, up to one target creature an opponent controls gets -1/-1 until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -191,6 +182,7 @@
 | Redcap Gutter-Dweller | handled | When this creature enters, create two 1/1 black Rat creature tokens with "This token can't block." | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Redcap Thief | handled | When this creature enters, create a Treasure token. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Redtooth Vanguard | handled | Whenever an enchantment you control enters, you may pay {2}. If you do, return this card from your graveyard to your hand. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Regal Bunnicorn | handled | Regal Bunnicorn's power and toughness are each equal to the number of nonland permanents you control. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Restless Bivouac | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Restless Spire | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Restless Vinestalk | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -255,11 +247,13 @@
 ## Fully supported
 
 <details>
-<summary>41 cards</summary>
+<summary>49 cards</summary>
 
+- Agatha of the Vile Cauldron
 - Agatha's Champion
 - Agatha's Soul Cauldron
 - Archive Dragon
+- Ashiok, Wicked Manipulator
 - Boundary Lands Ranger
 - Bramble Familiar // Fetch Quest
 - Callous Sell-Sword // Burn Together
@@ -269,6 +263,8 @@
 - Decadent Dragon // Expensive Taste
 - Edgewall Inn
 - Eerie Interference
+- Elusive Otter // Grove's Bounty
+- Eriette of the Charmed Apple
 - Extraordinary Journey
 - Faerie Fencing
 - Fell Horseman // Deathly Ride
@@ -276,10 +272,12 @@
 - Gnawing Crescendo
 - Graceful Takedown
 - Gruff Triplets
+- Hamlet Glutton
 - Hearth Elemental // Stoke Genius
 - Horned Loch-Whale // Lagoon Breach
 - Imodane, the Pyrohammer
 - Into the Fae Court
+- Johann, Apprentice Sorcerer
 - Korvold and the Noble Thief
 - Lady of Laughter
 - Lord Skitter's Blessing
@@ -288,9 +286,11 @@
 - Ogre Chitterlord
 - Pests of Honor
 - Protective Parents
+- Raging Battle Mouse
 - Restless Cottage
 - Ruby, Daring Tracker
 - Shatter the Oath
+- Sleep-Cursed Faerie
 - Song of Totentanz
 - Spiteful Hexmage
 - Stonesplitter Bolt
@@ -307,8 +307,6 @@
 |---|---|---|---|
 | Celebration | 6 | Armory Mice, Bespoke Battlegarb, Gallant Pie-Wielder, Goddric, Cloaked Reveler, Grand Ball Guest | woe |
 | when ~ enters, create a royal role token attached to another target creature you control. | 2 | Charmed Clothier, Redtooth Genealogist | woe |
-| +N: look at the top two cards of your library. exile one of them and put the other into your hand. | 1 | Ashiok, Wicked Manipulator | woe |
-| activated abilities of creatures you control cost {M} less to activate, where N is agatha"..."t reduce the mana in that cost to less than one mana. | 1 | Agatha of the Vile Cauldron | woe |
 | at the beginning of combat on your turn, if you control a creature with power N or greater, ~ gets +N/+N until end of turn and can attack ~ as though it didn't  | 1 | Territorial Witchstalker | woe |
 | at the beginning of your end step, put a +N/+N counter on each creature you control. untap those creatures. | 1 | Virtue of Loyalty // Ardenvale Fealty | woe |
 | at the beginning of your upkeep, you may sacrifice an artifact, enchantment, or token. if you don't, tap ~. | 1 | Devouring Sugarmaw // Have for Dinner | woe |
@@ -322,15 +320,12 @@
 | choose target nontoken creature you control that doesn"..."s a copy of it, except it isn't legendary, is a reflection in addition to its other types, and has ha | 1 | The Apprentice's Folly | woe |
 | copy target activated or triggered ability you control. you may choose new targets for the copy. | 1 | Virtue of Knowledge // Vantress Visions | woe |
 | counter target spell unless its controller pays {M} plus an additional {M} for each faerie you control. | 1 | Spell Stutter | woe |
-| creatures with power less than ~ power can't block it. | 1 | Elusive Otter // Grove's Bounty | woe |
 | destroy target enchantment. if a permanent you controlled or a token was destroyed ~, draw a card. | 1 | Break the Spell | woe |
-| each creature that"..."t attack you or planeswalkers you control. | 1 | Eriette of the Charmed Apple | woe |
 | enchanted creatures you control get +N/+N. | 1 | A Tale for the Ages | woe |
 | foods you control have "..." | 1 | Night of the Sweets' Revenge | woe |
 | instant and sorcery spells you control have lifelink. | 1 | Heartflame Duelist // Heartflame Slash | woe |
 | look at the top five cards of your library. you may exile a creature card from among them. put the rest on the bottom of your library in a random order. you may | 1 | Feral Encounter | woe |
 | mill seven cards. then put all cards that have an adventure from among the milled cards into your hand. | 1 | Beluna Grandsquall // Seek Thrills | woe |
-| once each turn, you may cast an instant or sorcery spell from the top of your library. | 1 | Johann, Apprentice Sorcerer | woe |
 | one or two target creatures each gain haste until end of turn. for each of those creatures, create a monster role token attached to it. (if you control another  | 1 | Become Brutes | woe |
 | other creatures you control get +N/+N for each aura and equipment attached to kellan. | 1 | Kellan, the Fae-Blooded // Birthright Boon | woe |
 | other creatures you control that are enchanted by auras you control have base power and toughness N/N and have flying. | 1 | Archon of the Wild Rose | woe |
@@ -339,7 +334,6 @@
 | sacrifice any number of artifacts, enchantments, and/or tokens. return that many creature cards from your graveyard to the battlefield. | 1 | Lich-Knights' Conquest | woe |
 | target creature you control gets +N/+N until end of turn. it can't be blocked by creatures with power N or greater ~. | 1 | Cheeky House-Mouse // Squeak By | woe |
 | target opponent reveals their hand. you choose a nonland card from it. that player discards that card. if you don't control a faerie, exile a card from your han | 1 | Ego Drain | woe |
-| the second spell you cast each turn costs {M} less to cast. | 1 | Raging Battle Mouse | woe |
 | until end of turn, target creature you control gains "..." (enchanted creature gets +N/+N. when ~ is put into a graveyard, each opponent loses N life.) | 1 | Not Dead After All | woe |
 | until end of turn, target creature you control has base power and toughness N/N and gains flying and hexproof. (it can't be the target of spells or abilities yo | 1 | Water Wings | woe |
 | up to two target creatures can't block ~. (then exile ~. you may cast the creature later from exile.) | 1 | Bellowing Bruiser // Beat a Path | woe |
@@ -376,12 +370,8 @@
 | {M}{M}: choose another player. that player gains control of target treasure you control. you draw a card. | 1 | Discerning Financier | woe |
 | {M}{M}: ~ can't be blocked by creatures with power N or less ~. | 1 | Verdant Outrider | woe |
 | {M}{M}: ~ gets +N/+N until end of turn for each enchantment you control. | 1 | Slumbering Keepguard | woe |
-| ~ costs {M} less to cast if it's bargained. | 1 | Hamlet Glutton | woe |
 | ~ costs {M} less to cast if your life total is N or less. exile target creature or planeswalker. search its controller's graveyard, hand, and library for any nu | 1 | The End | woe |
-| ~ enters tapped with three stun counters on it. | 1 | Sleep-Cursed Faerie | woe |
 | ~ has haste as long as you own a card in exile that has an adventure. | 1 | Howling Galefang | woe |
-| ~'s power and toughness are each equal to the number of creature cards in all graveyards. | 1 | Cruel Somnophage // Can't Wake Up | woe |
-| ~'s power and toughness are each equal to the number of nonland permanents you control. | 1 | Regal Bunnicorn | woe |
 
 ## Notes
 

@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 28 | 13.3% |
-| Works (untested) | 133 | 63.0% |
-| Partial (unaudited) | 7 | 3.3% |
-| Not working | 43 | 20.4% |
+| Tested | 31 | 14.7% |
+| Works (untested) | 134 | 63.5% |
+| Partial (unaudited) | 4 | 1.9% |
+| Not working | 42 | 19.9% |
 
 ## Cards needing work
 
@@ -44,7 +44,6 @@
 | Hundred-Handed One | silent | As long as this creature is monstrous, it has reach and can block an additional ninety-nine creatures each combat. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Hythonia the Cruel | silent | When Hythonia becomes monstrous, destroy all non-Gorgon creatures. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Kragma Warcaller | silent | Minotaur creatures you control have haste. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Loathsome Catoblepas | silent | {2}{G}: This creature must be blocked this turn if able. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Master of Waves | silent | When this creature enters, create a number of 1/0 blue Elemental creature tokens equal to your devotion to blue. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Meletis Charlatan | silent | {2}{U}, {T}: The controller of target instant or sorcery spell copies it. That player may choose new targets for the copy. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Mogis's Marauder | silent | When this creature enters, up to X target creatures each gain intimidate and haste until end of turn, where X is your devotion to black. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -72,10 +71,7 @@
 | Medomai the Ageless | unaudited | Medomai can't attack during extra turns. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Nighthowler | unaudited | This creature and enchanted creature each get +X/+X, where X is the number of creature cards in all graveyards. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Prophet of Kruphix | unaudited | Untap all creatures and lands you control during each other player's untap step. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Prowler's Helm | unaudited | Equipped creature can't be blocked except by Walls. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Spellheart Chimera | unaudited | Spellheart Chimera's power is equal to the number of instant and sorcery cards in your graveyard. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Titan of Eternal Fire | unaudited | Each Human creature you control has "{R}, {T}: This creature deals 1 damage to any target." | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Vaporkin | unaudited | This creature can block only creatures with flying. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Agent of Horizons | handled | {2}{U}: This creature can't be blocked this turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Agent of the Fates | handled | Heroic — Whenever you cast a spell that targets this creature, each opponent sacrifices a creature of their choice. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Akroan Crusader | handled | Heroic — Whenever you cast a spell that targets this creature, create a 1/1 red Soldier creature token with haste. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -136,6 +132,7 @@
 | Leafcrown Dryad | handled | Enchanted creature gets +2/+2 and has reach. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Leonin Snarecaster | handled | When this creature enters, you may tap target creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Lightning Strike | handled | Lightning Strike deals 3 damage to any target. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Loathsome Catoblepas | handled | {2}{G}: This creature must be blocked this turn if able. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Lost in a Labyrinth | handled | Target creature gets -3/-0 until end of turn. Scry 1. (Look at the top card of your library. You may put that card on the bottom.) | the engine reads this text and performs it | Y/Y/- | not_tested |
 | March of the Returned | handled | Return up to two target creature cards from your graveyard to your hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Messenger's Speed | handled | Enchanted creature has trample and haste. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -213,7 +210,7 @@
 ## Fully supported
 
 <details>
-<summary>28 cards</summary>
+<summary>31 cards</summary>
 
 - Akroan Hoplite
 - Anger of the Gods
@@ -234,12 +231,15 @@
 - Nessian Asp
 - Nykthos, Shrine to Nyx
 - Polis Crusher
+- Prowler's Helm
 - Purphoros, God of the Forge
 - Pyxis of Pandemonium
 - Reverent Hunter
+- Spellheart Chimera
 - Stormbreath Dragon
 - Swan Song
 - Time to Feed
+- Vaporkin
 - Warriors' Lesson
 - Whip of Erebos
 - Xenagos, the Reveler
@@ -258,7 +258,6 @@
 | each human creature you control has "..." | 1 | Titan of Eternal Fire | ths |
 | enchanted creature gets -N/-N, and its activated abilities can't be activated. | 1 | Viper's Kiss | ths |
 | enchanted land is every basic land type in addition to its other types. | 1 | Nylea's Presence | ths |
-| equipped creature can't be blocked except by walls. | 1 | Prowler's Helm | ths |
 | exile N target creatures. for each creature exiled ~, its controller creates a N/N green boar creature token. | 1 | Curse of the Swine | ths |
 | medomai can't attack during extra turns. | 1 | Medomai the Ageless | ths |
 | minotaur creatures you control have haste. | 1 | Kragma Warcaller | ths |
@@ -290,13 +289,10 @@
 | {M}{M}: target creature must be blocked ~ if able. | 1 | Satyr Piper | ths |
 | {M}{M}: ~ can attack ~ as though it didn't have defender. | 1 | Returned Phalanx | ths |
 | {M}{M}: ~ can block an additional creature ~. | 1 | Coastline Chimera | ths |
-| {M}{M}: ~ must be blocked ~ if able. | 1 | Loathsome Catoblepas | ths |
 | {M}{M}{M}: create a N/N white cleric enchantment creature token. | 1 | Heliod, God of the Sun | ths |
 | {M}{M}{M}: monstrosity N. ~ costs {M} less to activate for each creature card in your graveyard. | 1 | Nemesis of Mortals | ths |
 | ~ and enchanted creature each get +N/+N, where N is the number of creature cards in all graveyards. | 1 | Nighthowler | ths |
-| ~ can block only creatures with flying. | 1 | Vaporkin | ths |
 | ~ deals N damage to target creature. it can't be regenerated ~. scry N. (look at the top card of your library. you may put that card on the bottom.) | 1 | Rage of Purphoros | ths |
-| ~'s power is equal to the number of instant and sorcery cards in your graveyard. | 1 | Spellheart Chimera | ths |
 | −N: put a creature card with mana value N exiled with ashiok onto the battlefield under your control. that creature is a nightmare in addition to its other type | 1 | Ashiok, Nightmare Weaver | ths |
 
 ## Notes

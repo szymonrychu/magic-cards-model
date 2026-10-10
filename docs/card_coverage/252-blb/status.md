@@ -17,9 +17,9 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 46 | 17.8% |
-| Works (untested) | 117 | 45.3% |
-| Partial (unaudited) | 7 | 2.7% |
+| Tested | 50 | 19.4% |
+| Works (untested) | 118 | 45.7% |
+| Partial (unaudited) | 2 | 0.8% |
 | Not working | 88 | 34.1% |
 
 ## Cards needing work
@@ -114,13 +114,8 @@
 | Warren Warleader | notice | Whenever you attack, choose one — • Create a 1/1 white Rabbit creature token that's tapped and attacking. • Attacking creatures you control get +1/+1 until end  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Wick's Patrol | notice | When this creature enters, mill three cards. When you do, target creature an opponent controls gets -X/-X until end of turn, where X is the greatest mana value  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Wishing Well | notice | {T}: Put a coin counter on this artifact. When you do, you may cast target instant or sorcery card with mana value equal to the number of coin counters on this  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Cindering Cutthroat | unaudited | This creature enters with a +1/+1 counter on it if an opponent lost life this turn. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Clement, the Worrywort | unaudited | Frogs you control have "{T}: Add {G} or {U}. Spend this mana only to cast a creature spell." | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Frilled Sparkshooter | unaudited | This creature enters with a +1/+1 counter on it if an opponent lost life this turn. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Gev, Scaled Scorch | unaudited | Other creatures you control enter with an additional +1/+1 counter on them for each opponent who lost life this turn. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Huskburster Swarm | unaudited | This spell costs {1} less to cast for each creature card you own in exile and in your graveyard. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Sugar Coat | unaudited | Enchanted permanent is a colorless Food artifact with "{2}, {T}, Sacrifice this artifact: You gain 3 life" and loses all other card types and abilities. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Valley Flamecaller | unaudited | If a Lizard, Mouse, Otter, or Raccoon you control would deal damage to a permanent or player, it deals that much damage plus 1 instead. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Agate Assault | handled | Choose one — • Agate Assault deals 4 damage to target creature. If that creature would die this turn, exile it instead. • Exile target artifact. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Alania's Pathmaker | handled | When this creature enters, exile the top card of your library. Until the end of your next turn, you may play that card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Barkform Harvester | handled | {2}: Put target card from your graveyard on the bottom of your library. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -163,6 +158,7 @@
 | Hivespine Wolverine | handled | When this creature enters, choose one — • Put a +1/+1 counter on target creature you control. • This creature fights target creature token. • Destroy target art | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Hugs, Grisly Guardian | handled | When Hugs enters, exile the top X cards of your library. Until the end of your next turn, you may play those cards. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Hunter's Talent | handled | When this Class enters, target creature you control deals damage equal to its power to target creature you don't control. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Huskburster Swarm | handled | This spell costs {1} less to cast for each creature card you own in exile and in your graveyard. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Intrepid Rabbit | handled | When this creature enters, target creature you control gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Iridescent Vinelasher | handled | Landfall — Whenever a land you control enters, this creature deals 1 damage to target opponent. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Kindlespark Duo | handled | {T}: This creature deals 1 damage to target opponent. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -242,7 +238,7 @@
 ## Fully supported
 
 <details>
-<summary>46 cards</summary>
+<summary>50 cards</summary>
 
 - Alania, Divergent Storm
 - Artist's Talent
@@ -251,6 +247,7 @@
 - Brambleguard Captain
 - Cache Grab
 - Caretaker's Talent
+- Cindering Cutthroat
 - Consumed by Greed
 - Crumb and Get It
 - Darkstar Augur
@@ -262,6 +259,8 @@
 - Essence Channeler
 - Fecund Greenshell
 - Fountainport
+- Frilled Sparkshooter
+- Gev, Scaled Scorch
 - Heartfire Hero
 - Helga, Skittish Seer
 - Hop to It
@@ -286,6 +285,7 @@
 - Sunspine Lynx
 - Take Out the Trash
 - Thundertrap Trainer
+- Valley Flamecaller
 - Vinereap Mentor
 - Wildfire Howl
 - Ygra, Eater of All
@@ -301,7 +301,6 @@
 | Threshold | 3 | Mindwhisker, Nightwhorl Hermit, Persistent Marshstalker | blb |
 | Valiant | 2 | Veteran Guardmouse, Whiskervale Forerunner | blb |
 | whenever you expend N, ~ gets +N/+N until end of turn. | 2 | Bakersbane Duo, Junkblade Bruiser | blb |
-| ~ enters with a +N/+N counter on it if an opponent lost life ~. | 2 | Cindering Cutthroat, Frilled Sparkshooter | blb |
 | Choose one | 1 | Early Winter | blb |
 | as long as you control a token, ~ gets +N/+N and has trample. | 1 | Druid of the Spade | blb |
 | at the beginning of combat on your turn, target mouse you control gains your choice of double strike or trample until end of turn. | 1 | Manifold Mouse | blb |
@@ -331,9 +330,7 @@
 | gift a food (you may promise an opponent a gift as you cast ~. if you do, they create a food token before its other effects. it"..."t promised, you lose N life. | 1 | Nocturnal Hunger | blb |
 | gift a tapped fish (you may promise an opponent a gift as you cast ~. if you do, they create a tapped N/N blue fish creature token before its other effects.) as | 1 | Sazacap's Brew | blb |
 | gift a tapped fish (you may promise an opponent a gift as you cast ~. if you do, they create a tapped N/N blue fish creature token before its other effects.) ex | 1 | Parting Gust | blb |
-| if a lizard, mouse, otter, or raccoon you control would deal damage to a permanent or player, it deals that much damage plus N instead. | 1 | Valley Flamecaller | blb |
 | look at twice N cards from the top of your library. put N cards from among them into your hand and the rest into your graveyard. you lose N life. | 1 | Stargaze | blb |
-| other creatures you control enter with an additional +N/+N counter on them for each opponent who lost life ~. | 1 | Gev, Scaled Scorch | blb |
 | when mabel enters, create cragflame, a legendary colorless equipment artifact token with "..." and equip {M}. | 1 | Mabel, Heir to Cragflame | blb |
 | when ~ enters and whenever you expend N, put a stash counter on it. | 1 | Hoarder's Overflow | blb |
 | when ~ enters, choose target creature. if that creature's power is N or less or if you control another lizard, gain control of that creature until end of turn,  | 1 | Reptilian Recruiter | blb |
@@ -383,7 +380,6 @@
 | {M}, {M}: put a +N/+N counter on each frog, rabbit, raccoon, or squirrel you control that entered the battlefield ~. | 1 | Oakhollow Village | blb |
 | {M}: put a coin counter on ~. when you do, you may cast target instant or sorcery card with mana value equal to the number of coin counters on ~ from your grave | 1 | Wishing Well | blb |
 | {M}: until end of turn, you may cast creature spells from your graveyard by foraging in addition to paying their other costs. if you cast a spell ~, that creatu | 1 | Osteomancer Adept | blb |
-| ~ costs {M} less to cast for each creature card you own in exile and in your graveyard. | 1 | Huskburster Swarm | blb |
 
 ## Notes
 

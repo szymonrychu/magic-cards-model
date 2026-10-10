@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 47 | 18.7% |
+| Tested | 54 | 21.4% |
 | Works (untested) | 109 | 43.3% |
-| Partial (unaudited) | 9 | 3.6% |
-| Not working | 87 | 34.5% |
+| Partial (unaudited) | 3 | 1.2% |
+| Not working | 86 | 34.1% |
 
 ## Cards needing work
 
@@ -68,7 +68,6 @@
 | Lukka, Bound to Ruin | silent | −4: Lukka deals X damage divided as you choose among any number of target creatures and/or planeswalkers, where X is the greatest power among creatures you cont | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Magmatic Sprinter | silent | At the beginning of your end step, return this creature to its owner's hand unless you remove two oil counters from it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Meldweb Strider | silent | Remove an oil counter from this Vehicle: It becomes an artifact creature until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Melira, the Living Cure | silent | Exile Melira: Choose another target creature or artifact. When it's put into a graveyard this turn, return that card to the battlefield under its owner's contro | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Mercurial Spelldancer | silent | Whenever this creature deals combat damage to a player, you may remove two oil counters from it. If you do, when you next cast an instant or sorcery spell this  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Mirran Bardiche | silent | For Mirrodin! | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Mite Overseer | silent | During your turn, creature tokens you control get +1/+0 and have first strike. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -113,13 +112,7 @@
 | Resistance Reunited | notice | Target creature gets +2/+2 until end of turn. Equipped creatures you control gain indestructible until end of turn. (Damage and effects that say "destroy" don't | unparsed remainder: Equipped creatures you control gain indestructible until end of turn. | Y/Y/- | not_working |
 | Serum Snare | notice | Return target nonland permanent to its owner's hand. If that permanent had mana value 3 or less, proliferate. (Choose any number of permanents and/or players, t | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Urabrask's Forge | notice | At the beginning of combat on your turn, put an oil counter on this artifact, then create an X/1 red Phyrexian Horror creature token with trample and haste, whe | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Bladegraft Aspirant | unaudited | Activated abilities of Equipment you control that target this creature cost {1} less to activate. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Cinderslash Ravager | unaudited | This spell costs {1} less to cast for each permanent you control with oil counters on it. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Drivnod, Carnage Dominus | unaudited | If a creature dying causes a triggered ability of a permanent you control to trigger, that ability triggers an additional time. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Graaz, Unstoppable Juggernaut | unaudited | Juggernauts you control attack each combat if able. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Phyrexian Vindicator | unaudited | If damage would be dealt to this creature, prevent that damage. When damage is prevented this way, this creature deals that much damage to any other target. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Planar Disruption | unaudited | Enchanted permanent can't attack or block, and its activated abilities can't be activated. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Tekuthal, Inquiry Dominus | unaudited | If you would proliferate, proliferate twice instead. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | The Eternal Wanderer | unaudited | No more than one creature can attack The Eternal Wanderer each combat. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Thrun, Breaker of Silence | unaudited | Thrun can't be the target of nongreen spells your opponents control or abilities from nongreen sources your opponents control. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Adaptive Sporesinger | handled | When this creature enters, choose one — • Target creature gets +2/+2 and gains vigilance until end of turn. • Proliferate. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -235,7 +228,7 @@
 ## Fully supported
 
 <details>
-<summary>47 cards</summary>
+<summary>54 cards</summary>
 
 - Ambulatory Edifice
 - Annihilating Glare
@@ -243,15 +236,18 @@
 - Atraxa, Grand Unifier
 - Basilica Shepherd
 - Bilious Skulldweller
+- Bladegraft Aspirant
 - Blazing Crescendo
 - Charforger
 - Charge of the Mites
 - Churning Reservoir
+- Cinderslash Ravager
 - Cruel Grimnarch
 - Elesh Norn, Mother of Machines
 - Evolving Adaptive
 - Exuberant Fuseling
 - Geth, Thane of Contracts
+- Graaz, Unstoppable Juggernaut
 - Hazardous Blast
 - Hexgold Slash
 - Infectious Bite
@@ -260,12 +256,15 @@
 - Koth, Fire of Resistance
 - Kuldotha Cackler
 - Malcator, Purity Overseer
+- Melira, the Living Cure
 - Mindsplice Apparatus
 - Myr Convert
 - Nahiri, the Unforgiving
 - Nissa, Ascended Animist
 - Noxious Assault
+- Phyrexian Vindicator
 - Plague Nurse
+- Planar Disruption
 - Prologue to Phyresis
 - Prosthetic Injector
 - Rebel Salvo
@@ -277,6 +276,7 @@
 - Stinging Hivemaster
 - Swooping Lookout
 - Tablet of Compleation
+- Tekuthal, Inquiry Dominus
 - The Filigree Sylex
 - The Mycosynth Gardens
 - Tyvar, Jubilant Brawler
@@ -295,7 +295,6 @@
 | Corrupted | 6 | Apostle of Invasion, Bonepicker Skirge, Goliath Hatchery, Phyrexian Atlas, The Seedcore | one |
 | +N: until your next turn, up to one target creature gets -N/-N. | 1 | Jace, the Perfected Mind | one |
 | N: you draw two cards. then each opponent may scry N. | 1 | Kaya, Intangible Slayer | one |
-| activated abilities of equipment you control that target ~ cost {M} less to activate. | 1 | Bladegraft Aspirant | one |
 | as long as ~ has four or more oil counters on it, it gets +N/+N and can't be blocked. | 1 | Ichor Synthesizer | one |
 | as long as ~ is equipped, it gets +N/+N. | 1 | Leonin Lightbringer | one |
 | at the beginning of combat on your turn, put an oil counter on ~, then create an N/N red phyrexian horror creature token with trample and haste, where N is the  | 1 | Urabrask's Forge | one |
@@ -318,15 +317,10 @@
 | destroy up to N target artifacts. if N is N or more, for each artifact destroyed ~, create a token that's a copy of it. those tokens gain haste. exile them at t | 1 | Red Sun's Twilight | one |
 | during your turn, creature tokens you control get +N/+N and have first strike. | 1 | Mite Overseer | one |
 | during your turn, equipped creature has first strike and trample. | 1 | Hexgold Halberd | one |
-| enchanted permanent can"..."t be activated. | 1 | Planar Disruption | one |
-| exile melira: choose another target creature or artifact. when it"..."s control. | 1 | Melira, the Living Cure | one |
 | exile target creature if it has mana value N or less. corrupted — exile that creature instead if its controller has three or more poison counters. | 1 | Anoint with Affliction | one |
 | gain control of target creature until end of turn. untap that creature. it gains haste until end of turn. if it's equipped, you may destroy all equipment attach | 1 | Awaken the Sleeper | one |
 | gain control of target creature with mana value N or less. if N is N or more, create a token that's a copy of that creature. | 1 | Blue Sun's Twilight | one |
 | if a creature dying causes a triggered ability of a permanent you control to trigger, that ability triggers an additional time. | 1 | Drivnod, Carnage Dominus | one |
-| if damage would be dealt to ~, prevent that damage. when damage is prevented ~, ~ deals that much damage to any other target. | 1 | Phyrexian Vindicator | one |
-| if you would proliferate, proliferate twice instead. | 1 | Tekuthal, Inquiry Dominus | one |
-| juggernauts you control attack each combat if able. | 1 | Graaz, Unstoppable Juggernaut | one |
 | look at the top six cards of your library. put up to two land cards from among them onto the battlefield tapped and the rest on the bottom of your library in a  | 1 | Expand the Sphere | one |
 | no more than one creature can attack ~ each combat. | 1 | The Eternal Wanderer | one |
 | nonland permanents you control are artifacts in addition to their other types. the same is true for permanent spells you control and nonland permanent cards you | 1 | Encroaching Mycosynth | one |
@@ -369,7 +363,6 @@
 | {M}: choose target nonland permanent card in your graveyard. if you haven"..."t cast additional spells ~. activate only as a sorcery. | 1 | Conduit of Worlds | one |
 | {M}: until end of turn, target creature you control becomes a blue artifact in addition to its other colors and types. activate only as a sorcery. | 1 | Unctus, Grand Metatect | one |
 | {M}: ~ becomes a N/N phyrexian construct artifact creature, loses all abilities, and gains indestructible and toxic N. activate only if there are nine or more l | 1 | Monument to Perfection | one |
-| ~ costs {M} less to cast for each permanent you control with oil counters on it. | 1 | Cinderslash Ravager | one |
 | ~ costs {M} more to cast if it targets a creature. exile target nonland permanent. | 1 | Vanish into Eternity | one |
 | ~ gets +N/+N as long as it has three or more oil counters on it. | 1 | Armored Scrapgorger | one |
 | ~ gets +N/+N as long as you control two or more artifacts. | 1 | Orthodoxy Enforcer | one |

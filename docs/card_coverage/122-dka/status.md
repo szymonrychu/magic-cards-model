@@ -17,9 +17,9 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 29 | 18.8% |
+| Tested | 32 | 20.8% |
 | Works (untested) | 80 | 51.9% |
-| Partial (unaudited) | 6 | 3.9% |
+| Partial (unaudited) | 3 | 1.9% |
 | Not working | 39 | 25.3% |
 
 ## Cards needing work
@@ -65,11 +65,8 @@
 | Loyal Cathar // Unhallowed Cathar | notice | When this creature dies, return it to the battlefield transformed under your control at the beginning of the next end step. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Sudden Disappearance | notice | Exile all nonland permanents target player controls. Return the exiled cards to the battlefield under their owner's control at the beginning of the next end ste | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Séance | notice | At the beginning of each upkeep, you may exile target creature card from your graveyard. If you do, create a token that's a copy of that card, except it's a Spi | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Curse of Bloodletting | unaudited | If a source would deal damage to enchanted player, it deals double that damage to that player instead. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Gravecrawler | unaudited | You may cast this card from your graveyard as long as you control a Zombie. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Heavy Mattock | unaudited | As long as equipped creature is a Human, it gets an additional +1/+1. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Immerwolf | unaudited | Non-Human Werewolves you control can't transform. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Stormbound Geist | unaudited | This creature can block only creatures with flying. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Warden of the Wall | unaudited | During turns other than yours, this artifact is a 2/3 Gargoyle artifact creature with flying. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Altar of the Lost | handled | This artifact enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Artful Dodge | handled | Target creature can't be blocked this turn. Flashback {U} (You may cast this card from your graveyard for its flashback cost. Then exile it.) | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -155,13 +152,14 @@
 ## Fully supported
 
 <details>
-<summary>29 cards</summary>
+<summary>32 cards</summary>
 
 - Alpha Brawl
 - Avacyn's Collar
 - Break of Day
 - Chalice of Life // Chalice of Death
 - Clinging Mists
+- Curse of Bloodletting
 - Curse of Exhaustion
 - Dungeon Geists
 - Faithless Looting
@@ -169,6 +167,7 @@
 - Forge Devil
 - Geralf's Messenger
 - Grafdigger's Cage
+- Gravecrawler
 - Gruesome Discovery
 - Heckling Fiends
 - Hellrider
@@ -181,6 +180,7 @@
 - Shattered Perception
 - Soul Seizer // Ghastly Haunting
 - Spiteful Shadows
+- Stormbound Geist
 - Strangleroot Geist
 - Thalia, Guardian of Thraben
 - Thought Scour
@@ -207,7 +207,6 @@
 | destroy target land. ~ deals N damage to each human creature. | 1 | Scorch the Fields | dka |
 | during turns other than yours, ~ is a N/N gargoyle artifact creature with flying. | 1 | Warden of the Wall | dka |
 | exile all nonland permanents target player controls. return the exiled cards to the battlefield under their owner's control at the beginning of the next end ste | 1 | Sudden Disappearance | dka |
-| if a source would deal damage to enchanted player, it deals double that damage to that player instead. | 1 | Curse of Bloodletting | dka |
 | non-human werewolves you control can't transform. | 1 | Immerwolf | dka |
 | other spirit creatures you control get +N/+N and have hexproof. | 1 | Drogskol Captain | dka |
 | other vampire creatures you control get +N/+N and have first strike. | 1 | Stromkirk Captain | dka |
@@ -228,13 +227,11 @@
 | whenever ~ deals combat damage to a player, that player exiles a card from their hand. you may play that card for as long as it remains exiled. | 1 | Fiend of the Shadows | dka |
 | whenever ~ transforms into werewolf ransacker, you may destroy target artifact. if that artifact is put into a graveyard ~, ~ deals N damage to that artifact's  | 1 | Afflicted Deserter // Werewolf Ransacker | dka |
 | you gain N life for each card in your graveyard, then shuffle your graveyard into your library. | 1 | Archangel's Light | dka |
-| you may cast ~ from your graveyard as long as you control a zombie. | 1 | Gravecrawler | dka |
 | {M}, {M}, remove all eyeball counters from ~: look at the top N cards of your library, where N is the number of eyeball counters removed ~. put one of them into | 1 | Jar of Eyeballs | dka |
 | {M}, {M}, sacrifice ~: return a creature card at random from your graveyard to your hand. | 1 | Haunted Fengraf | dka |
 | {M}: gain control of target creature with power less than or equal to the number of creatures you control. | 1 | Beguiler of Wills | dka |
 | {M}: you may cast target creature card in a graveyard ~. when you cast it ~, ~ gains all activated abilities of that card until end of turn. | 1 | Havengul Lich | dka |
 | {M}{M}, {M}, exile a creature card from your graveyard: create a N/N black zombie creature token, then put a +N/+N counter on each zombie creature you control. | 1 | Havengul Runebinder | dka |
-| ~ can block only creatures with flying. | 1 | Stormbound Geist | dka |
 | −N: destroy up to three target creatures and/or other planeswalkers. return each card put into a graveyard ~ to the battlefield under your control. | 1 | Sorin, Lord of Innistrad | dka |
 
 ## Notes

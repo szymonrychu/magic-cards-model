@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 20 | 13.9% |
+| Tested | 21 | 14.6% |
 | Works (untested) | 88 | 61.1% |
-| Partial (unaudited) | 2 | 1.4% |
-| Not working | 34 | 23.6% |
+| Partial (unaudited) | 0 | 0.0% |
+| Not working | 35 | 24.3% |
 
 ## Cards needing work
 
@@ -57,11 +57,10 @@
 | Abyssal Harvester | notice | {T}: Exile target creature card from a graveyard that was put there this turn. Create a token that's a copy of it, except it's a Nightmare in addition to its ot | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Chandra, Flameshaper | notice | +2: Add {R}{R}{R}. Exile the top three cards of your library. Choose one. You may play that card this turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Divine Resilience | notice | Kicker {2}{W} (You may pay an additional {2}{W} as you cast this spell.) Target creature you control gains indestructible until end of turn. If this spell was k | unparsed remainder: If this spell was kicked, instead any number of target creatures you control gain indestructible until end of turn. | Y/Y/Y | not_working |
+| Nine-Lives Familiar | notice | When this creature dies, if it had a revival counter on it, return it to the battlefield with one fewer revival counter on it at the beginning of the next end s | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Strongbox Raider | notice | Raid — When this creature enters, if you attacked this turn, exile the top two cards of your library. Choose one of them. Until the end of your next turn, you m | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Tragic Banshee | notice | Morbid — When this creature enters, target creature an opponent controls gets -1/-1 until end of turn. If a creature died this turn, that creature gets -13/-13  | unparsed remainder: If a creature died this turn, that creature gets -13/-13 until end of turn instead. | Y/Y/Y | not_working |
 | Vampire Gourmand | notice | Whenever this creature attacks, you may sacrifice another creature. If you do, draw a card and this creature can't be blocked this turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Goblin Boarders | unaudited | Raid — This creature enters with a +1/+1 counter on it if you attacked this turn. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Nine-Lives Familiar | unaudited | This creature enters with eight revival counters on it if you cast it. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Ambush Wolf | handled | When this creature enters, exile up to one target card from a graveyard. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Anthem of Champions | handled | Creatures you control get +1/+1. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Apothecary Stomper | handled | When this creature enters, choose one — • Put two +1/+1 counters on target creature you control. • You gain 4 life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -154,7 +153,7 @@
 ## Fully supported
 
 <details>
-<summary>20 cards</summary>
+<summary>21 cards</summary>
 
 - Arbiter of Woe
 - Crossway Troublemakers
@@ -162,6 +161,7 @@
 - Curator of Destinies
 - Elenda, Saint of Dusk
 - Fleeting Flight
+- Goblin Boarders
 - Goblin Negotiation
 - Herald of Eternal Dawn
 - High Fae Trickster
@@ -183,7 +183,7 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| Raid | 3 | Alesha, Who Laughs at Fate, Goblin Boarders, Strongbox Raider | fdn |
+| Raid | 2 | Alesha, Who Laughs at Fate, Strongbox Raider | fdn |
 | Morbid | 1 | Tragic Banshee | fdn |
 | +N: add {M}{M}{M}. exile the top three cards of your library. choose one. you may play that card ~. | 1 | Chandra, Flameshaper | fdn |
 | as long as ~ has three or more +N/+N counters on it, it has flying and is a knight in addition to its other types. | 1 | Skyknight Squire | fdn |
@@ -195,6 +195,7 @@
 | during your turn, equipped creature gets +N/+N and has first strike. | 1 | Quick-Draw Katana | fdn |
 | each player mills N cards. for each creature card put into a graveyard ~, you create a tapped N/N black zombie creature token. (to mill a card, a player puts th | 1 | Dread Summons | fdn |
 | kicker {M}{M} (you may pay an additional {M}{M} as you cast ~.) target creature you control gains indestructible until end of turn. if ~ was kicked, instead any | 1 | Divine Resilience | fdn |
+| when ~ dies, if it had a revival counter on it, return it to the battlefield with one fewer revival counter on it at the beginning of the next end step. | 1 | Nine-Lives Familiar | fdn |
 | when ~ dies, if it wasn"..."s control with two +N/+N counters on it. it's a demon in addition to its other types. | 1 | Infernal Vessel | fdn |
 | when ~ dies, return another target non-bear creature card with mana value less than or equal to ~ power from your graveyard to the battlefield. | 1 | Fiendish Panda | fdn |
 | when ~ enters, create a number of N/N white rabbit creature tokens equal to the number of other creatures you control named ~. | 1 | Hare Apparent | fdn |
@@ -216,7 +217,6 @@
 | {M}{M}: if kellan is a scout, it becomes a human faerie detective and gains "..." | 1 | Kellan, Planar Trailblazer | fdn |
 | {M}{M}: look at the top four cards of your library. you may reveal a creature card with power N or less from among them and put it into your hand. put the rest  | 1 | Squad Rallier | fdn |
 | {M}{M}{M}, {M}: look at the top six cards of your library. you may reveal a creature card with mana value less than or equal to the number of lands you control  | 1 | Loot, Exuberant Explorer | fdn |
-| ~ enters with eight revival counters on it if you cast it. | 1 | Nine-Lives Familiar | fdn |
 
 ## Notes
 

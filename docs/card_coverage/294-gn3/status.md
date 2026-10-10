@@ -17,30 +17,27 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 0 | 0.0% |
+| Tested | 1 | 100.0% |
 | Works (untested) | 0 | 0.0% |
-| Partial (unaudited) | 1 | 100.0% |
+| Partial (unaudited) | 0 | 0.0% |
 | Not working | 0 | 0.0% |
 
 ## Cards needing work
 
-| Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
-|---|---|---|---|---|---|
-| Angler Turtle | unaudited | Creatures your opponents control attack each combat if able. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
+None - every card in scope is fully supported.
 
 ## Fully supported
 
 <details>
-<summary>0 cards</summary>
+<summary>1 cards</summary>
 
+- Angler Turtle
 
 </details>
 
 ## Missing mechanics
 
-| Mechanic (label / template) | Count | Example cards | Sets |
-|---|---|---|---|
-| creatures your opponents control attack each combat if able. | 1 | Angler Turtle | gn3 |
+None.
 
 ## Notes
 

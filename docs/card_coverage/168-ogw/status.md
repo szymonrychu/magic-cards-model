@@ -17,9 +17,9 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 26 | 14.8% |
+| Tested | 29 | 16.5% |
 | Works (untested) | 115 | 65.3% |
-| Partial (unaudited) | 4 | 2.3% |
+| Partial (unaudited) | 1 | 0.6% |
 | Not working | 31 | 17.6% |
 
 ## Cards needing work
@@ -58,9 +58,6 @@
 | Walker of the Wastes | notice | This creature gets +1/+1 for each land you control named Wastes. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Weapons Trainer | notice | Other creatures you control get +1/+0 as long as you control an Equipment. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Endbringer | unaudited | Untap this creature during each other player's untap step. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Kalitas, Traitor of Ghet | unaudited | If a nontoken creature an opponent controls would die, instead exile that card and create a 2/2 black Zombie creature token. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Oath of Gideon | unaudited | Each planeswalker you control enters with an additional loyalty counter on it. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Oath of Nissa | unaudited | You may spend mana as though it were mana of any color to cast planeswalker spells. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Abstruse Interference | handled | Devoid (This card has no color.) Counter target spell unless its controller pays {1}. You create a 1/1 colorless Eldrazi Scion creature token. It has "Sacrifice | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Affa Protector | handled | Vigilance | machines/combat.py | Y/Y/- | not_tested |
 | Akoum Flameseeker | handled | Cohort — {T}, Tap an untapped Ally you control: Discard a card. If you do, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -180,7 +177,7 @@
 ## Fully supported
 
 <details>
-<summary>26 cards</summary>
+<summary>29 cards</summary>
 
 - Ayli, Eternal Pilgrim
 - Crumbling Vestige
@@ -189,11 +186,14 @@
 - Eldrazi Obligator
 - Expedition Raptor
 - Flaying Tendrils
+- Kalitas, Traitor of Ghet
 - Kozilek, the Great Distortion
 - Matter Reshaper
 - Mirrorpool
 - Nissa's Judgment
+- Oath of Gideon
 - Oath of Jace
+- Oath of Nissa
 - Reality Smasher
 - Reckless Bushwhacker
 - Ruins of Oran-Rief
@@ -223,11 +223,9 @@
 | devoid (~ has no color.) search your library for a basic land card and reveal it. you may put that card onto the battlefield tapped if you control a land named  | 1 | Ruin in Their Wake | ogw |
 | devoid (~ has no color.) target creature gets +N/+N until end of turn. regenerate it. | 1 | Unnatural Endurance | ogw |
 | devoid (~ has no color.) ~ deals N damage to each creature. whenever you cast an eldrazi creature spell with mana value N or greater, you may exile ~ from your  | 1 | Kozilek's Return | ogw |
-| each planeswalker you control enters with an additional loyalty counter on it. | 1 | Oath of Gideon | ogw |
 | enchanted creature gets +N/+N, has vigilance, and can block an additional creature each combat. | 1 | Iona's Blessing | ogw |
 | equipped creature gets +N/+N for each other creature you control that shares a creature type with it. | 1 | Stoneforge Masterwork | ogw |
 | equipped creatures you control get +N/+N. | 1 | Stone Haven Outfitter | ogw |
-| if a nontoken creature an opponent controls would die, instead exile that card and create a N/N black zombie creature token. | 1 | Kalitas, Traitor of Ghet | ogw |
 | other creatures you control get +N/+N as long as you control an equipment. | 1 | Weapons Trainer | ogw |
 | return target creature to its owner"..."s library instead. | 1 | Sweep Away | ogw |
 | support N. (put a +N/+N counter on each of up to two target creatures.) untap each creature you control with a +N/+N counter on it. | 1 | Unity of Purpose | ogw |
@@ -238,7 +236,6 @@
 | when ~ enters, return target creature an opponent controls to its owner"..."s owner can't cast spells with the same name as that creature until your next turn. | 1 | Reflector Mage | ogw |
 | when ~ enters, you may cast target instant or sorcery card with mana value N or less from your graveyard without paying its mana cost. if that spell would be pu | 1 | Goblin Dark-Dwellers | ogw |
 | whenever enchanted creature deals damage, its controller loses that much life. | 1 | Visions of Brutality | ogw |
-| you may spend mana as though it were mana of any color to cast planeswalker spells. | 1 | Oath of Nissa | ogw |
 | {M}: target creature can't block ~ ~. | 1 | Kozilek's Pathfinder | ogw |
 | {M}{M}, exile a creature card from your graveyard: target opponent loses life equal to the exiled card's power. | 1 | Dread Defiler | ogw |
 | {M}{M}: each creature with toughness greater than its power can't block ~. | 1 | Immobilizer Eldrazi | ogw |

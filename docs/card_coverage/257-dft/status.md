@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 30 | 11.7% |
+| Tested | 43 | 16.8% |
 | Works (untested) | 127 | 49.6% |
-| Partial (unaudited) | 19 | 7.4% |
-| Not working | 80 | 31.2% |
+| Partial (unaudited) | 5 | 2.0% |
+| Not working | 81 | 31.6% |
 
 ## Cards needing work
 
@@ -28,7 +28,6 @@
 |---|---|---|---|---|---|
 | Aatchik, Emerald Radian | silent | When Aatchik enters, create a 1/1 green Insect creature token for each artifact and/or creature card in your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Adrenaline Jockey | silent | Whenever you activate an exhaust ability, put a +1/+1 counter on this creature. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
-| Aether Syphon | silent | Max speed — Whenever you draw a card, each opponent mills two cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Afterburner Expert | silent | Whenever you activate an exhaust ability, return this card from your graveyard to the battlefield. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
 | Alacrian Armory | silent | At the beginning of combat on your turn, choose up to one target Mount or Vehicle you control. Until end of turn, that permanent becomes saddled if it's a Mount | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Ancient Vendetta | silent | Choose a card name. Search target opponent's graveyard, hand, and library for up to four cards with that name and exile them. Then that player shuffles. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -103,28 +102,17 @@
 | Push the Limit | notice | Return all Mount and Vehicle cards from your graveyard to the battlefield. Sacrifice them at the beginning of the next end step. Vehicles you control become art | unparsed remainder: Return all Mount and Vehicle cards from your graveyard to the battlefield. Sacrifice them at the beginning of the next end step. Vehicles you control become artifact creatures until end of turn. | Y/Y/Y | not_working |
 | Racers' Scoreboard | notice | Max speed — Spells you cast cost {1} less to cast. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Riptide Gearhulk | notice | When this creature enters, for each opponent, put up to one target nonland permanent that player controls into its owner's library third from the top. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
+| Sab-Sunen, Luxa Embodied | notice | At the beginning of your first main phase, put a +1/+1 counter on Sab-Sunen. Then if it has an odd number of counters on it, draw two cards. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
+| Samut, the Driving Force | notice | Other creatures you control get +X/+0, where X is your speed. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Spire Mechcycle | notice | Exhaust — Tap another untapped Mount or Vehicle you control: This Vehicle becomes an artifact creature. Put a +1/+1 counter on it for each Mount and/or Vehicle  | unparsed remainder: Put a +1/+1 counter on it for each Mount and/or Vehicle you control other than this Vehicle. | Y/Y/Y | not_working |
 | The Last Ride | notice | The Last Ride gets -X/-X, where X is your life total. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Tune Up | notice | Return target artifact card from your graveyard to the battlefield. If it's a Vehicle, it becomes an artifact creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Caradora, Heart of Alacria | unaudited | If one or more +1/+1 counters would be put on a creature or Vehicle you control, that many plus one +1/+1 counters are put on it instead. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Chitin Gravestalker | unaudited | This spell costs {1} less to cast for each artifact and/or creature card in your graveyard. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Cloudspire Captain | unaudited | This creature saddles Mounts and crews Vehicles as though its power were 2 greater. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Country Roads | unaudited | This land enters tapped unless you control a Mount or Vehicle. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Deathless Pilot | unaudited | This creature saddles Mounts and crews Vehicles as though its power were 2 greater. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Dynamite Diver | unaudited | This creature saddles Mounts and crews Vehicles as though its power were 2 greater. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Elvish Refueler | unaudited | During your turn, as long as you haven't activated an exhaust ability this turn, you may activate exhaust abilities as though they haven't been activated. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Foul Roads | unaudited | This land enters tapped unless you control a Mount or Vehicle. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Hazoret, Godseeker | unaudited | Hazoret can't attack or block unless you have max speed. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Interface Ace | unaudited | This creature saddles Mounts and crews Vehicles using its toughness rather than its power. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Mimeoplasm, Revered One | unaudited | As Mimeoplasm enters, exile up to X creature cards from your graveyard. It enters with three +1/+1 counters on it for each creature card exiled this way. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Reef Roads | unaudited | This land enters tapped unless you control a Mount or Vehicle. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Rocky Roads | unaudited | This land enters tapped unless you control a Mount or Vehicle. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Sab-Sunen, Luxa Embodied | unaudited | Sab-Sunen can't attack or block unless it has an even number of counters on it. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Samut, the Driving Force | unaudited | Noncreature spells you cast cost {X} less to cast, where X is your speed. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Skyseer's Chariot | unaudited | Activated abilities of sources with the chosen name cost {2} more to activate. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Thunderous Velocipede | unaudited | Each other Vehicle and creature you control enters with an additional +1/+1 counter on it if its mana value is 4 or less. Otherwise, it enters with three additi | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Wickerfolk Indomitable | unaudited | You may cast this card from your graveyard by paying 2 life and sacrificing an artifact or creature in addition to paying its other costs. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Wild Roads | unaudited | This land enters tapped unless you control a Mount or Vehicle. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
+| Aether Syphon | handled | {2}, {T}: Draw a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Aetherjacket | handled | {2}, {T}, Sacrifice this creature: Destroy another target artifact. Activate only as a sorcery. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Agonasaur Rex | handled | When you cycle this card, put two +1/+1 counters on up to one target creature or Vehicle. It gains trample and indestructible until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Air Response Unit | handled | Flying | machines/combat.py | Y/Y/Y | not_tested |
@@ -201,7 +189,6 @@
 | Mutant Surveyor | handled | {2}: This creature gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Night Market | handled | This land enters tapped. As it enters, choose a color. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Nimble Thopterist | handled | When this creature enters, create a 1/1 colorless Thopter artifact creature token with flying. | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Pacesetter Paragon | handled | Exhaust — {2}{R}: Put a +1/+1 counter on this creature. It gains double strike until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Pactdoll Terror | handled | Whenever this creature or another artifact you control enters, each opponent loses 1 life and you gain 1 life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Pedal to the Metal | handled | Target creature gets +X/+0 and gains first strike until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Plow Through | handled | Choose one — • Target creature you control fights target creature an opponent controls. (Each deals damage equal to its power to the other.) • Destroy target Ve | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -256,38 +243,51 @@
 ## Fully supported
 
 <details>
-<summary>30 cards</summary>
+<summary>43 cards</summary>
 
 - Bleachbone Verge
 - Boommobile
 - Bulwark Ox
 - Captain Howler, Sea Scourge
+- Caradora, Heart of Alacria
+- Chitin Gravestalker
 - Collision Course
+- Country Roads
 - Endrider Catalyzer
 - Fang-Druid Summoner
 - Fearless Swashbuckler
+- Foul Roads
 - Gloryheath Lynx
 - Greenbelt Guardian
 - Guardian Sunmare
+- Hazoret, Godseeker
 - Ketramose, the New Dawn
 - Lumbering Worldwagon
 - Magmakin Artillerist
 - Marauding Mako
 - March of the World Ooze
+- Mimeoplasm, Revered One
 - Monument to Endurance
+- Pacesetter Paragon
 - Perilous Snare
 - Radiant Lotus
+- Reef Roads
 - Repurposing Bay
 - Riverpyre Verge
 - Road Rage
+- Rocky Roads
 - Shefet Archfiend
+- Skyseer's Chariot
 - Skyserpent Seeker
 - Stock Up
 - Sunbillow Verge
 - Thundering Broodwagon
+- Thunderous Velocipede
 - Ticket Tortoise
 - Venomsac Lagac
 - Wastewood Verge
+- Wickerfolk Indomitable
+- Wild Roads
 
 </details>
 
@@ -295,39 +295,33 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| Max speed | 11 | Aether Syphon, Burnout Bashtronaut, Gastal Raider, Gastal Thrillseeker, Kickoff Celebrations | dft |
+| Max speed | 10 | Burnout Bashtronaut, Gastal Raider, Gastal Thrillseeker, Kickoff Celebrations, Mendicant Core, Guidelight | dft |
 | Exhaust | 5 | Boom Scholar, Mindspring Merfolk, Sita Varma, Masked Racer, Spire Mechcycle, Winter, Cursed Rider | dft |
-| ~ enters tapped unless you control a mount or vehicle. | 5 | Country Roads, Foul Roads, Reef Roads, Rocky Roads, Wild Roads | dft |
 | ~ saddles mounts and crews vehicles as though its power were N greater. | 3 | Cloudspire Captain, Deathless Pilot, Dynamite Diver | dft |
 | Choose one | 1 | Crash and Burn | dft |
 | +N: attach ~ to up to one target creature you control. put a +N/+N counter on that creature. | 1 | The Aetherspark | dft |
-| activated abilities of sources with the chosen name cost {M} more to activate. | 1 | Skyseer's Chariot | dft |
 | after ~ phase, there are two additional combat phases. at the beginning of each combat ~, untap all creatures that attacked ~. | 1 | Full Throttle | dft |
 | all creatures and vehicles lose indestructible until end of turn, then destroy all creatures and vehicles. cycling {M} ({M}, discard ~: draw a card.) | 1 | Spectacular Pileup | dft |
-| as mimeoplasm enters, exile up to N creature cards from your graveyard. it enters with three +N/+N counters on it for each creature card exiled ~. | 1 | Mimeoplasm, Revered One | dft |
 | at the beginning of combat on your turn, choose up to one target mount or vehicle you control. until end of turn, that permanent becomes saddled if it"..."s a v | 1 | Alacrian Armory | dft |
 | at the beginning of combat on your turn, choose up to one target vehicle you control. until end of turn, it becomes an artifact creature and gains haste. | 1 | Chandra, Spark Hunter | dft |
 | at the beginning of combat on your turn, create a N/N red goblin creature token. that token attacks ~ if able. | 1 | Howlsquad Heavy | dft |
 | at the beginning of your end step, untap each creature you control. | 1 | Veteran Beastrider | dft |
 | at the beginning of your end step, you draw N cards and lose N life, where N is your speed. | 1 | The Speed Demon | dft |
+| at the beginning of your first main phase, put a +N/+N counter on sab-sunen. then if it has an odd number of counters on it, draw two cards. | 1 | Sab-Sunen, Luxa Embodied | dft |
 | choose a card name. search target opponent's graveyard, hand, and library for up to four cards with that name and exile them. then that player shuffles. | 1 | Ancient Vendetta | dft |
 | choose target creature, planeswalker, or vehicle. mill two cards, then destroy the chosen permanent if its mana value is less than or equal to the number of car | 1 | Quag Feast | dft |
 | choose target opponent. create two N/N colorless thopter artifact creature tokens with flying. then the chosen player loses N life and you gain N life, where N  | 1 | Haunt the Network | dft |
 | during turns other than yours, ~ is an artifact creature. | 1 | Midnight Mangler | dft |
 | during your turn, as long as you haven"..."t been activated. | 1 | Elvish Refueler | dft |
 | each creature that's attacking one of your opponents has trample. | 1 | Oviya, Automech Artisan | dft |
-| each other vehicle and creature you control enters with an additional +N/+N counter on it if its mana value is N or less. otherwise, it enters with three additi | 1 | Thunderous Velocipede | dft |
 | enchanted permanent gets +N/+N and has lifelink. | 1 | Roadside Assistance | dft |
 | enchanted permanent gets +N/+N and has vigilance. | 1 | Lightwheel Enhancements | dft |
 | exchange control of target artifact or creature you control and target artifact or creature an opponent controls. cycling {M} ({M}, discard ~: draw a card.) | 1 | Trade the Helm | dft |
-| hazoret can't attack or block unless you have max speed. | 1 | Hazoret, Godseeker | dft |
-| if one or more +N/+N counters would be put on a creature or vehicle you control, that many plus one +N/+N counters are put on it instead. | 1 | Caradora, Heart of Alacria | dft |
 | mounts and vehicles you control have haste. | 1 | Kolodin, Triumph Caster | dft |
-| noncreature spells you cast cost {M} less to cast, where N is your speed. | 1 | Samut, the Driving Force | dft |
+| other creatures you control get +N/+N, where N is your speed. | 1 | Samut, the Driving Force | dft |
 | return all mount and vehicle cards from your graveyard to the battlefield. sacrifice them at the beginning of the next end step. vehicles you control become art | 1 | Push the Limit | dft |
 | return target artifact card from your graveyard to the battlefield. if it's a vehicle, it becomes an artifact creature. | 1 | Tune Up | dft |
 | return up to one target creature card, up to one target mount card, up to one target vehicle card, and up to one target creature card with no abilities from you | 1 | Rise from the Wreck | dft |
-| sab-sunen can't attack or block unless it has an even number of counters on it. | 1 | Sab-Sunen, Luxa Embodied | dft |
 | tap three other untapped creatures you control: until end of turn, ~ becomes an artifact creature and gains flying. put a +N/+N counter on it. | 1 | Voyager Glidecar | dft |
 | vehicle creatures you control are the chosen creature type in addition to their other types. | 1 | Lifecraft Engine | dft |
 | when aatchik enters, create a N/N green insect creature token for each artifact and/or creature card in your graveyard. | 1 | Aatchik, Emerald Radian | dft |
@@ -361,7 +355,6 @@
 | whenever ~ attacks while saddled, untap it and put a +N/+N counter on it. | 1 | Brightfield Mustang | dft |
 | whenever ~ saddles a mount or crews a vehicle during your main phase, that mount or vehicle gains flying until end of turn. | 1 | Canyon Vaulter | dft |
 | whenever ~ saddles a mount or crews a vehicle during your main phase, that mount or vehicle gets +N/+N and gains trample until end of turn. | 1 | Reckless Velocitaur | dft |
-| you may cast ~ from your graveyard by paying N life and sacrificing an artifact or creature in addition to paying its other costs. | 1 | Wickerfolk Indomitable | dft |
 | you may have ~ enter as a copy of an artifact or creature you control. | 1 | Waxen Shapethief | dft |
 | {M}, sacrifice ~: counter target instant or sorcery spell unless its controller pays {M}. | 1 | Diversion Unit | dft |
 | {M}, sacrifice ~: it deals N damage to each player who doesn't have max speed. | 1 | Outpace Oblivion | dft |
@@ -371,7 +364,6 @@
 | {M}: create N N/N colorless pilot creature tokens, where N is the number of mounts and/or vehicles that entered the battlefield under your control ~. the tokens | 1 | Cloudspire Coordinator | dft |
 | {M}: target creature card in your graveyard gains embalm until end of turn. the embalm cost is equal to its mana cost. | 1 | Cursecloth Wrappings | dft |
 | {M}{M}, sacrifice ~: search your library for up to N basic land cards, where N is your speed. put those cards onto the battlefield tapped, then shuffle. | 1 | Point the Way | dft |
-| ~ costs {M} less to cast for each artifact and/or creature card in your graveyard. | 1 | Chitin Gravestalker | dft |
 | ~ gets -N/-N, where N is your life total. | 1 | The Last Ride | dft |
 | ~ saddles mounts and crews vehicles using its toughness rather than its power. | 1 | Interface Ace | dft |
 

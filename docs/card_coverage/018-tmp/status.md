@@ -17,9 +17,9 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 11 | 19.3% |
-| Works (untested) | 31 | 54.4% |
-| Partial (unaudited) | 4 | 7.0% |
+| Tested | 12 | 21.1% |
+| Works (untested) | 32 | 56.1% |
+| Partial (unaudited) | 2 | 3.5% |
 | Not working | 11 | 19.3% |
 
 ## Cards needing work
@@ -39,8 +39,6 @@
 | Altar of Dementia | notice | Sacrifice a creature: Target player mills cards equal to the sacrificed creature's power. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Choke | unaudited | Islands don't untap during their controllers' untap steps. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Marble Titan | unaudited | Creatures with power 3 or greater don't untap during their controllers' untap steps. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Root Maze | unaudited | Artifacts and lands enter tapped. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Sea Monster | unaudited | This creature can't attack unless defending player controls an Island. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Auratog | handled | Sacrifice an enchantment: This creature gets +2/+2 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Bottle Gnomes | handled | Sacrifice this creature: You gain 3 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Canopy Spider | handled | Reach | machines/combat.py | Y/Y/- | not_tested |
@@ -65,6 +63,7 @@
 | Sandstone Warrior | handled | {R}: This creature gets +1/+0 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Sapphire Medallion | handled | Blue spells you cast cost {1} less to cast. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Scragnoth | handled | This spell can't be countered. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Sea Monster | handled | This creature can't attack unless defending player controls an Island. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Skyshroud Ranger | handled | {T}: You may put a land card from your hand onto the battlefield. Activate only as a sorcery. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Soltari Priest | handled | Shadow | machines/combat.py | Y/-/- | not_tested |
 | Staunch Defenders | handled | When this creature enters, you gain 4 life. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -76,7 +75,7 @@
 ## Fully supported
 
 <details>
-<summary>11 cards</summary>
+<summary>12 cards</summary>
 
 - Booby Trap
 - Dauthi Slayer
@@ -86,6 +85,7 @@
 - Knight of Dusk
 - Mogg Fanatic
 - Reflecting Pool
+- Root Maze
 - Ruby Medallion
 - Stalking Stones
 - Sudden Impact
@@ -97,7 +97,6 @@
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
 | buyback | 2 | Elvish Fury, Whispers of the Muse | tmp |
-| artifacts and lands enter tapped. | 1 | Root Maze | tmp |
 | creatures with power N or greater don"..." untap steps. | 1 | Marble Titan | tmp |
 | destroy all islands. | 1 | Boil | tmp |
 | islands don"..." untap steps. | 1 | Choke | tmp |
@@ -109,7 +108,6 @@
 | {M}: gain control of target creature for as long as that creature is enchanted. | 1 | Rootwater Matriarch | tmp |
 | {M}: return ~ to its owner's hand. | 1 | Shimmering Wings | tmp |
 | {M}: until end of turn, target creature has base power N or base toughness N. | 1 | Vhati il-Dal | tmp |
-| ~ can't attack unless defending player controls an island. | 1 | Sea Monster | tmp |
 
 ## Notes
 

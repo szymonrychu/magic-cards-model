@@ -17,9 +17,9 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 54 | 21.4% |
+| Tested | 59 | 23.4% |
 | Works (untested) | 135 | 53.6% |
-| Partial (unaudited) | 7 | 2.8% |
+| Partial (unaudited) | 2 | 0.8% |
 | Not working | 56 | 22.2% |
 
 ## Cards needing work
@@ -82,13 +82,8 @@
 | Systems Override | notice | Gain control of target artifact or creature until end of turn. Untap that permanent. It gains haste until end of turn. If it's a Spacecraft, put ten charge coun | unparsed remainder: Untap that permanent. It gains haste until end of turn. If it's a Spacecraft, put ten charge counters on it. If you do, remove ten charge counters from it at the beginning of the next end step. | Y/Y/Y | not_working |
 | Tezzeret, Cruel Captain | notice | 0: Untap target artifact or creature. If it's an artifact creature, put a +1/+1 counter on it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Xu-Ifit, Osteoharmonist | notice | {T}: Return target creature card from your graveyard to the battlefield. It's a Skeleton in addition to its other types and has no abilities. Activate only as a | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Bioengineered Future | unaudited | Each creature you control enters with an additional +1/+1 counter on it for each land that entered the battlefield under your control this turn. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Cosmogoyf | unaudited | Cosmogoyf's power is equal to the number of cards you own in exile and its toughness is equal to that number plus 1. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Hardlight Containment | unaudited | Enchanted permanent has ward {1}. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Loading Zone | unaudited | If one or more counters would be put on a creature, Spacecraft, or Planet you control, twice that many of each of those kinds of counters are put on it instead. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Luxknight Breacher | unaudited | This creature enters with a +1/+1 counter on it for each other creature and/or artifact you control. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Tapestry Warden | unaudited | Each creature you control with toughness greater than its power stations permanents using its toughness rather than its power. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Uthros Psionicist | unaudited | The second spell you cast each turn costs {2} less to cast. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | All-Fates Scroll | handled | {7}, {T}, Sacrifice this artifact: Draw X cards, where X is the number of differently named lands you control. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | All-Fates Stalker | handled | When this creature enters, exile up to one target non-Assassin creature until this creature leaves the battlefield. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Alpharael, Dreaming Acolyte | handled | When Alpharael enters, draw two cards. Then discard two cards unless you discard an artifact card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -228,14 +223,16 @@
 ## Fully supported
 
 <details>
-<summary>54 cards</summary>
+<summary>59 cards</summary>
 
 - Archenemy's Charm
+- Bioengineered Future
 - Biotech Specialist
 - Bygone Colossus
 - Cerebral Download
 - Codecracker Hound
 - Consult the Star Charts
+- Cosmogoyf
 - Cryogen Relic
 - Cut Propulsion
 - Dockworker Drone
@@ -254,7 +251,9 @@
 - Kavaron Harrier
 - Kavaron Skywarden
 - Lithobraking
+- Loading Zone
 - Lumen-Class Frigate
+- Luxknight Breacher
 - Meltstrider's Resolve
 - Mightform Harmonizer
 - Moonlit Meditation
@@ -279,6 +278,7 @@
 - The Endstone
 - The Seriema
 - Umbral Collar Zealot
+- Uthros Psionicist
 - Uthros, Titanic Godcore
 - Voidforged Titan
 - Weapons Manufacturing
@@ -305,19 +305,16 @@
 | destroy all creatures with toughness N or less. you lose N life. if N is N or more, return a creature card put into a graveyard ~ to the battlefield under your  | 1 | Zero Point Ballad | eoe |
 | destroy all creatures, then any number of target players each mill half their library, rounded down. | 1 | Singularity Rupture | eoe |
 | during your turn, other creatures you control get +N/+N. | 1 | Memorial Team Leader | eoe |
-| each creature you control enters with an additional +N/+N counter on it for each land that entered the battlefield under your control ~. | 1 | Bioengineered Future | eoe |
 | each creature you control with toughness greater than its power stations permanents using its toughness rather than its power. | 1 | Tapestry Warden | eoe |
 | enchanted permanent has ward {M}. | 1 | Hardlight Containment | eoe |
 | exile all creatures and spacecraft. | 1 | Beyond the Quiet | eoe |
 | gain control of target artifact or creature until end of turn. untap that permanent. it gains haste until end of turn. if it's a spacecraft, put ten charge coun | 1 | Systems Override | eoe |
-| if one or more counters would be put on a creature, spacecraft, or planet you control, twice that many of each of those kinds of counters are put on it instead. | 1 | Loading Zone | eoe |
 | return target nonland permanent to its owner's hand. if it was attacking, create a N/N colorless drone artifact creature token with flying and "..." | 1 | Desculpting Blast | eoe |
 | surveil N, then you draw a card and lose N life. (to surveil N, look at the top card of your library. you may put it into your graveyard.) void — if a nonland p | 1 | Hymn of the Faller | eoe |
 | target creature gets -N/-N until end of turn. then if that creature's power is N or less, destroy it. | 1 | Depressurize | eoe |
 | target creature you control gains double strike until end of turn. if it has a +N/+N counter on it, draw a card. | 1 | Dual-Sun Technique | eoe |
 | target creature you control gets +N/+N until end of turn. if that creature was cast for its warp cost, it also gains trample and haste until end of turn. | 1 | Full Bore | eoe |
 | target player mills cards equal to your life total. | 1 | Space-Time Anomaly | eoe |
-| the second spell you cast each turn costs {M} less to cast. | 1 | Uthros Psionicist | eoe |
 | when enchanted creature becomes tapped or is dealt damage, destroy it. | 1 | Cryoshatter | eoe |
 | when ~ enters, choose one — • put two +N/+N counters on ~. • put target exiled card with warp on the bottom of its owner's library. | 1 | Blade of the Swarm | eoe |
 | when ~ enters, create a N/N colorless robot artifact creature token and attach ~ to it. | 1 | Auxiliary Boosters | eoe |
@@ -350,10 +347,8 @@
 | {M}{M}, {M}: create a token that"..."s legendary. activate only as a sorcery. | 1 | Adagia, Windswept Bastion | eoe |
 | {M}{M}: ~ gets +N/+N until end of turn. | 1 | Debris Field Crusher | eoe |
 | ~ deals N damage to target creature. if excess damage was dealt ~, create a lander token. (it's an artifact with "...") | 1 | Orbital Plunge | eoe |
-| ~ enters with a +N/+N counter on it for each other creature and/or artifact you control. | 1 | Luxknight Breacher | eoe |
 | ~ gets +N/+N as long as you've cast two or more spells ~. | 1 | Brightspear Zealot | eoe |
 | ~ gets +N/+N, where N is the greatest mana value among other artifacts you control. | 1 | Emissary Escort | eoe |
-| ~'s power is equal to the number of cards you own in exile and its toughness is equal to that number plus N. | 1 | Cosmogoyf | eoe |
 
 ## Notes
 

@@ -17,9 +17,9 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 34 | 13.4% |
+| Tested | 41 | 16.2% |
 | Works (untested) | 99 | 39.1% |
-| Partial (unaudited) | 10 | 4.0% |
+| Partial (unaudited) | 3 | 1.2% |
 | Not working | 110 | 43.5% |
 
 ## Cards needing work
@@ -136,16 +136,9 @@
 | Oakshade Stalker // Moonlit Ambusher | notice | You may cast this spell as though it had flash if you pay {2} more to cast it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Reclusive Taxidermist | notice | This creature gets +3/+2 as long as there are four or more creature cards in your graveyard. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Undying Malice | notice | Until end of turn, target creature gains "When this creature dies, return it to the battlefield tapped under its owner's control with a +1/+1 counter on it." | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Ascendant Packleader | unaudited | This creature enters with a +1/+1 counter on it if you control a permanent with mana value 4 or greater. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Avabruck Caretaker // Hollowhenge Huntmaster | unaudited | Other permanents you control have hexproof. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Eruth, Tormented Prophet | unaudited | If you would draw a card, exile the top two cards of your library instead. You may play those cards this turn. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Fear of Death | unaudited | Enchanted creature gets -X/-0, where X is the number of cards in your graveyard. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Hamlet Vanguard | unaudited | This creature enters with two +1/+1 counters on it for each other nontoken Human you control. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Investigator's Journal | unaudited | This artifact enters with a number of suspect counters on it equal to the greatest number of creatures a player controls. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Magma Pummeler | unaudited | If damage would be dealt to this creature while it has a +1/+1 counter on it, prevent that damage and remove that many +1/+1 counters from it. When one or more  | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Militia Rallier | unaudited | This creature can't attack alone. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Supernatural Rescue | unaudited | This spell has flash as long as you control a Spirit. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Wanderlight Spirit | unaudited | This creature can block only creatures with flying. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Ancestral Anger | handled | Target creature gains trample and gets +X/+0 until end of turn, where X is 1 plus the number of cards named Ancestral Anger in your graveyard. Draw a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Angelic Quartermaster | handled | When this creature enters, put a +1/+1 counter on each of up to two other target creatures. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Anje, Maid of Dishonor | handled | Whenever Anje and/or one or more other Vampires you control enter, create a Blood token. This ability triggers only once each turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -249,10 +242,11 @@
 ## Fully supported
 
 <details>
-<summary>34 cards</summary>
+<summary>41 cards</summary>
 
 - Aim for the Head
 - Ancient Lumberknot
+- Ascendant Packleader
 - Ballista Watcher // Ballista Wielder
 - Bleed Dry
 - Bloodvial Purveyor
@@ -265,11 +259,16 @@
 - Dreadlight Monstrosity
 - Edgar's Awakening
 - End the Festivities
+- Eruth, Tormented Prophet
 - Fleeting Spirit
+- Hamlet Vanguard
 - Honeymoon Hearse
 - Infestation Expert // Infested Werewolf
+- Investigator's Journal
 - Lacerate Flesh
+- Magma Pummeler
 - Markov Retribution
+- Militia Rallier
 - Patchwork Crawler
 - Reckless Impulse
 - Rending Flame
@@ -283,6 +282,7 @@
 - Sundown Pass
 - Volatile Arsonist // Dire-Strain Anarchist
 - Voltaic Visionary // Volt-Charged Berserker
+- Wanderlight Spirit
 - Welcoming Vampire
 - Wolf Strike
 
@@ -328,8 +328,6 @@
 | enchanted creature gets +N/+N as long as it's a vampire. otherwise, it gets -N/-N. | 1 | Gift of Fangs | vow |
 | enchanted creature gets -N/-N, where N is the number of cards in your graveyard. | 1 | Fear of Death | vow |
 | exile the top thirteen cards of your library, then search your library for a card. put that card into your hand, then shuffle. | 1 | Demonic Bargain | vow |
-| if damage would be dealt to ~ while it has a +N/+N counter on it, prevent that damage and remove that many +N/+N counters from it. when one or more counters are | 1 | Magma Pummeler | vow |
-| if you would draw a card, exile the top two cards of your library instead. you may play those cards ~. | 1 | Eruth, Tormented Prophet | vow |
 | it becomes night. discard any number of cards, then draw that many cards plus one. | 1 | Into the Night | vow |
 | katilda's power and toughness are each equal to the number of permanents you control that are spirits and/or enchantments. | 1 | Katilda, Dawnhart Martyr // Katilda's Rising Dawn | vow |
 | other permanents you control have hexproof. | 1 | Avabruck Caretaker // Hollowhenge Huntmaster | vow |
@@ -380,12 +378,7 @@
 | {M}: draw a card, then exile a card from your hand face down. you may look at that card for as long as it remains exiled. you may pay {M}{M}{M}. if you do, tran | 1 | Jacob Hauken, Inspector // Hauken's Insight | vow |
 | {M}{M}, {M}: look at the top two cards of your library. put one of them into your graveyard. | 1 | Soulcipher Board // Cipherbound Spirit | vow |
 | {M}{M}{M}: each creature you control with flying, deathtouch, and/or lifelink gets +N/+N until end of turn. | 1 | Henrika Domnathi // Henrika, Infernal Seer | vow |
-| ~ can block only creatures with flying. | 1 | Wanderlight Spirit | vow |
-| ~ can't attack alone. | 1 | Militia Rallier | vow |
 | ~ costs {M} less to cast if you control a spirit. it also costs {M} less to cast if you control an enchantment. counter target spell unless its controller pays  | 1 | Geistlight Snare | vow |
-| ~ enters with a +N/+N counter on it if you control a permanent with mana value N or greater. | 1 | Ascendant Packleader | vow |
-| ~ enters with a number of suspect counters on it equal to the greatest number of creatures a player controls. | 1 | Investigator's Journal | vow |
-| ~ enters with two +N/+N counters on it for each other nontoken human you control. | 1 | Hamlet Vanguard | vow |
 | ~ gets +N/+N as long as there are four or more creature cards in your graveyard. | 1 | Reclusive Taxidermist | vow |
 | ~ has first strike as long as it's attacking. | 1 | Blood Petal Celebrant | vow |
 | ~ has flash as long as you control a spirit. | 1 | Supernatural Rescue | vow |

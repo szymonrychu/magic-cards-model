@@ -17,16 +17,15 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 17 | 9.5% |
-| Works (untested) | 93 | 52.0% |
-| Partial (unaudited) | 4 | 2.2% |
-| Not working | 65 | 36.3% |
+| Tested | 19 | 10.6% |
+| Works (untested) | 94 | 52.5% |
+| Partial (unaudited) | 2 | 1.1% |
+| Not working | 64 | 35.8% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
-| Altar Golem | silent | Altar Golem's power and toughness are each equal to the number of creatures on the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Balefire Liege | silent | Other red creatures you control get +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Bloom Tender | silent | Vivid — {T}: For each color among permanents you control, add one mana of that color. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Cache Raiders | silent | At the beginning of your upkeep, return a permanent you control to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -91,11 +90,10 @@
 | Soul Reap | notice | Destroy target nongreen creature. Its controller loses 3 life if you've cast another black spell this turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Thunderblust | notice | This creature has trample as long as it has a -1/-1 counter on it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Unwilling Recruit | notice | Gain control of target creature until end of turn. Untap that creature. It gets +X/+0 and gains haste until end of turn. | unparsed remainder: Untap that creature. It gets +X/+0 and gains haste until end of turn. | Y/-/- | not_working |
-| Canker Abomination | unaudited | As this creature enters, choose an opponent. This creature enters with a -1/-1 counter on it for each creature that player controls. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Hotheaded Giant | unaudited | This creature enters with two -1/-1 counters on it unless you've cast another red spell this turn. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Talara's Battalion | unaudited | Cast this spell only if you've cast another green spell this turn. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Ward of Bones | unaudited | Each opponent who controls more creatures than you can't cast creature spells. The same is true for artifacts and enchantments. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Aerie Ouphes | handled | Sacrifice this creature: It deals damage equal to its power to target creature with flying. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Altar Golem | handled | Altar Golem's power and toughness are each equal to the number of creatures on the battlefield. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Archon of Justice | handled | When this creature dies, exile target permanent. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ballynock Trapper | handled | {T}: Tap target creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Battlegate Mimic | handled | Whenever you cast a spell that's both red and white, this creature has base power and toughness 4/2 until end of turn and gains first strike until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -192,11 +190,12 @@
 ## Fully supported
 
 <details>
-<summary>17 cards</summary>
+<summary>19 cards</summary>
 
 - Antler Skulkin
 - Batwing Brume
 - Belligerent Hatchling
+- Canker Abomination
 - Chaotic Backlash
 - Divinity of Pride
 - Duergar Hedge-Mage
@@ -206,6 +205,7 @@
 - Flooded Grove
 - Heartlash Cinder
 - Helix Pinnacle
+- Hotheaded Giant
 - Kithkin Zealot
 - Merrow Bonegnawer
 - Outrage Shaman
@@ -226,7 +226,6 @@
 | as long as enchanted creature is green, it gets +N/+N and has vigilance. | 1 | Favor of the Overbeing | eve |
 | as long as enchanted creature is red, it gets +N/+N and has "..." | 1 | Scourge of the Nobilis | eve |
 | as long as enchanted creature is white, it gets +N/+N. | 1 | Edge of the Divinity | eve |
-| as ~ enters, choose an opponent. ~ enters with a -N/-N counter on it for each creature that player controls. | 1 | Canker Abomination | eve |
 | at the beginning of your upkeep, return a permanent you control to its owner's hand. | 1 | Cache Raiders | eve |
 | at the beginning of your upkeep, sacrifice a creature. you gain life equal to that creature's toughness. | 1 | Doomgape | eve |
 | at the beginning of your upkeep, you may gain control of target permanent until end of turn. if you do, untap it and it gains haste until end of turn. | 1 | Dominus of Fealty | eve |
@@ -269,10 +268,8 @@
 | {M}{M}: target creature you control becomes the color or colors of your choice until end of turn. | 1 | Swirling Spriggan | eve |
 | {M}{M}{M}: copy target instant or sorcery spell that targets you. you may choose new targets for the copy. | 1 | Mirror Sheen | eve |
 | {M}{M}{M}: return ~ from your graveyard to the battlefield. you may put an aura card with mana value N or less from your hand onto the battlefield attached to i | 1 | Evershrike | eve |
-| ~ enters with two -N/-N counters on it unless you've cast another red spell ~. | 1 | Hotheaded Giant | eve |
 | ~ has trample as long as it has a -N/-N counter on it. | 1 | Thunderblust | eve |
 | ~'s power and toughness are each equal to the number of cards in your hand. | 1 | Overbeing of Myth | eve |
-| ~'s power and toughness are each equal to the number of creatures on the battlefield. | 1 | Altar Golem | eve |
 
 ## Notes
 

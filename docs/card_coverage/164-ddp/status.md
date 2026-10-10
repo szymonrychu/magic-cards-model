@@ -18,15 +18,15 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 2 | 33.3% |
-| Works (untested) | 3 | 50.0% |
+| Works (untested) | 4 | 66.7% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 1 | 16.7% |
+| Not working | 0 | 0.0% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
-| Dominator Drone | silent | Ingest | no machine in the engine executes this keyword | Y/Y/- | not_working |
+| Dominator Drone | handled | When this creature enters, if you control another colorless creature, each opponent loses 2 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Retreat to Kazandu | handled | Landfall — Whenever a land you control enters, choose one — • Put a +1/+1 counter on target creature. • You gain 2 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Sheer Drop | handled | Destroy target tapped creature. Awaken 3—{5}{W} (If you cast this spell for {5}{W}, also put three +1/+1 counters on target land you control and it becomes a 0/ | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Veteran Warleader | handled | Veteran Warleader's power and toughness are each equal to the number of creatures you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -43,9 +43,7 @@
 
 ## Missing mechanics
 
-| Mechanic (label / template) | Count | Example cards | Sets |
-|---|---|---|---|
-| ingest | 1 | Dominator Drone | ddp |
+None.
 
 ## Notes
 

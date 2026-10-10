@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 53 | 19.8% |
+| Tested | 62 | 23.1% |
 | Works (untested) | 111 | 41.4% |
-| Partial (unaudited) | 10 | 3.7% |
-| Not working | 94 | 35.1% |
+| Partial (unaudited) | 3 | 1.1% |
+| Not working | 92 | 34.3% |
 
 ## Cards needing work
 
@@ -36,7 +36,6 @@
 | Aurelia's Vindicator | silent | When this creature leaves the battlefield, return the exiled cards to their owners' hands. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Burden of Proof | silent | Enchanted creature gets +2/+2 as long as it's a Detective you control. Otherwise, it has base power and toughness 1/1 and can't block Detectives. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Call a Surprise Witness | silent | Return target creature card with mana value 3 or less from your graveyard to the battlefield. Put a flying counter on it. It's a Spirit in addition to its other | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Case File Auditor | silent | When this creature enters and whenever you solve a Case, look at the top six cards of your library. You may reveal an enchantment card from among them and put i | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
 | Case of the Gorgon's Kiss | silent | Solved — This Case is a 4/4 Gorgon creature with deathtouch and lifelink in addition to its other types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Case of the Trampled Garden | silent | Solved — Whenever you attack, put a +1/+1 counter on target attacking creature. It gains trample until end of turn. | this trigger's condition can never be satisfied - it never triggers | Y/Y/Y | not_working |
 | Chalk Outline | silent | Whenever one or more creature cards leave your graveyard, create a 2/2 white and blue Detective creature token, then investigate. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
@@ -72,7 +71,6 @@
 | Kylox, Visionary Inventor | silent | Whenever Kylox attacks, sacrifice any number of other creatures, then exile the top X cards of your library, where X is their total power. You may cast any numb | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Lamplight Phoenix | silent | When this creature dies, you may exile it and collect evidence 4. If you do, return this card to the battlefield tapped. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Lazav, Wearer of Faces | silent | Whenever you sacrifice a Clue, you may have Lazav become a copy of a creature card exiled with it until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Living Conundrum | silent | As long as there are no cards in your library, this creature has base power and toughness 10/10 and has flying and vigilance. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Lost in the Maze | silent | When this enchantment enters, tap X target creatures. Put a stun counter on each of those creatures you don't control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Lumbering Laundry | silent | {2}: Until end of turn, you may look at face-down creatures you don't control any time. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Magnetic Snuffler | silent | When this creature enters, return target Equipment card from your graveyard to the battlefield attached to this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -120,16 +118,9 @@
 | Sanctuary Wall | notice | {2}{W}, {T}: Tap target creature. You may put a stun counter on it. If you do, put a stun counter on this creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Torch the Witness | notice | Torch the Witness deals twice X damage to target creature. If excess damage was dealt to that creature this way, investigate. (Create a Clue token. It's an arti | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Unyielding Gatekeeper | notice | When this creature is turned face up, exile another target nonland permanent. If you controlled it, return it to the battlefield tapped. Otherwise, its controll | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Assemble the Players | unaudited | Once each turn, you may cast a creature spell with power 2 or less from the top of your library. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Bubble Smuggler | unaudited | As this creature is turned face up, put four +1/+1 counters on it. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Case of the Locked Hothouse | unaudited | Solved — You may look at the top card of your library any time, and you may play lands and cast creature and enchantment spells from the top of your library. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Case of the Pilfered Proof | unaudited | Solved — If one or more tokens would be created under your control, those tokens plus a Clue token are created instead. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Conspiracy Unraveler | unaudited | You may collect evidence 10 rather than pay the mana cost for spells you cast. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Crimestopper Sprite | unaudited | As an additional cost to cast this spell, you may collect evidence 6. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Crowd-Control Warden | unaudited | As this creature enters or is turned face up, put X +1/+1 counters on it, where X is the number of other creatures you control. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Delney, Streetwise Lookout | unaudited | Creatures you control with power 2 or less can't be blocked by creatures with power 3 or greater. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Pompous Gadabout | unaudited | This creature can't be blocked by creatures that don't have a name. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Vitu-Ghazi Inspector | unaudited | As an additional cost to cast this spell, you may collect evidence 6. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
+| Delney, Streetwise Lookout | unaudited | If a triggered ability of a creature you control with power 2 or less triggers, that ability triggers an additional time. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Agency Coroner | handled | {2}{B}, Sacrifice another creature: Draw a card. If the sacrificed creature was suspected, draw two cards instead. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Alquist Proft, Master Sleuth | handled | When Alquist Proft enters, investigate. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Auspicious Arrival | handled | Target creature gets +2/+2 until end of turn. Investigate. (Create a Clue token. It's an artifact with "{2}, Sacrifice this token: Draw a card.") | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -245,22 +236,28 @@
 ## Fully supported
 
 <details>
-<summary>53 cards</summary>
+<summary>62 cards</summary>
 
 - Absolving Lammasu
 - Aftermath Analyst
 - Alley Assailant
+- Assemble the Players
 - Aurelia, the Law Above
 - Barbed Servitor
 - Bolrac-Clan Basher
 - Break Out
+- Case File Auditor
 - Case of the Crimson Pulse
 - Case of the Gateway Express
+- Case of the Locked Hothouse
 - Case of the Stashed Skeleton
 - Case of the Uneaten Feast
 - Clandestine Meddler
 - Commercial District
+- Conspiracy Unraveler
 - Convenient Target
+- Crimestopper Sprite
+- Crowd-Control Warden
 - Deadly Cover-Up
 - Detective's Satchel
 - Elegant Parlor
@@ -274,6 +271,7 @@
 - Judith, Carnage Connoisseur
 - Karlov Watchdog
 - Leyline of the Guildpact
+- Living Conundrum
 - Lush Portico
 - Macabre Reconstruction
 - Massacre Girl, Known Killer
@@ -284,6 +282,7 @@
 - No More Lies
 - Person of Interest
 - Pick Your Poison
+- Pompous Gadabout
 - Proft's Eidetic Memory
 - Pyrotechnic Performer
 - Raucous Theater
@@ -299,6 +298,7 @@
 - Undercity Sewers
 - Underground Mortuary
 - Vein Ripper
+- Vitu-Ghazi Inspector
 - Warleader's Call
 
 </details>
@@ -307,16 +307,13 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| Solved | 6 | Case of the Burning Masks, Case of the Filched Falcon, Case of the Gorgon's Kiss, Case of the Locked Hothouse, Case of the Pilfered Proof | mkm |
-| as an additional cost to cast ~, you may collect evidence N. | 2 | Crimestopper Sprite, Vitu-Ghazi Inspector | mkm |
+| Solved | 5 | Case of the Burning Masks, Case of the Filched Falcon, Case of the Gorgon's Kiss, Case of the Pilfered Proof, Case of the Trampled Garden | mkm |
 | cloak | 2 | Expose the Culprit, Vannifar, Evolved Enigma | mkm |
 | Choose one | 1 | Archdruid's Charm | mkm |
 | Choose one or both | 1 | Deadly Complication | mkm |
 | as an additional cost to cast ~, collect evidence N, where N is the total mana value of the permanents ~ targets. destroy up to one target artifact, up to one t | 1 | Urgent Necropsy | mkm |
 | as an additional cost to cast ~, you may collect evidence N. (exile cards with total mana value N or greater from your graveyard.) search your library for a bas | 1 | Analyze the Pollen | mkm |
 | as an additional cost to cast ~, you may collect evidence N. (exile cards with total mana value N or greater from your graveyard.) until end of turn, target art | 1 | Behind the Mask | mkm |
-| as long as there are no cards in your library, ~ has base power and toughness N/N and has flying and vigilance. | 1 | Living Conundrum | mkm |
-| as ~ enters or is turned face up, put N +N/+N counters on it, where N is the number of other creatures you control. | 1 | Crowd-Control Warden | mkm |
 | as ~ is turned face up, put four +N/+N counters on it. | 1 | Bubble Smuggler | mkm |
 | at the beginning of combat on your turn, create a N/N colorless thopter artifact creature token with flying. it gains haste until end of turn. sacrifice it at t | 1 | Harried Dronesmith | mkm |
 | at the beginning of combat on your turn, you may collect evidence N. | 1 | Evidence Examiner | mkm |
@@ -325,7 +322,6 @@
 | create a N/N green ooze creature token with trample. put N +N/+N counters on it, where N is two plus the total number of cards you own in exile and in your grav | 1 | Slime Against Humanity | mkm |
 | create a N/N green plant creature token, then draw cards equal to the number of differently named creature tokens you control. | 1 | Audience with Trostani | mkm |
 | creatures you control get +N/+N and gain trample until end of turn. you may turn a creature you control face up. | 1 | Hustle // Bustle | mkm |
-| creatures you control with power N or less can't be blocked by creatures with power N or greater. | 1 | Delney, Streetwise Lookout | mkm |
 | destroy all artifacts you don't control, then exile the top N cards of your library, where N is the number of artifacts that were put into graveyards from the b | 1 | Anzrag's Rampage | mkm |
 | disguise | 1 | Fugitive Codebreaker | mkm |
 | during your turn, equipped creature gets +N/+N and has first strike. | 1 | Knife | mkm |
@@ -335,9 +331,9 @@
 | enchanted creature has base power and toughness N/N, has deathtouch, and is an assassin in addition to its other types. | 1 | Coerced to Kill | mkm |
 | exile target nonland card in a graveyard that was put there from anywhere ~. copy it. you may cast the copy without paying its mana cost. | 1 | Reenact the Crime | mkm |
 | for each of N target permanents, create N tokens that are copies of that permanent. | 1 | Doppelgang | mkm |
+| if a triggered ability of a creature you control with power N or less triggers, that ability triggers an additional time. | 1 | Delney, Streetwise Lookout | mkm |
 | investigate. creatures your opponents control get -N/-N until end of turn. if any of them are suspected, they"..."s an artifact with "...") | 1 | Eliminate the Impossible | mkm |
 | look at the top five cards of your library, cloak two of them, and put the rest on the bottom of your library in a random order. (to cloak a card, put it onto t | 1 | Hide in Plain Sight | mkm |
-| once each turn, you may cast a creature spell with power N or less from the top of your library. | 1 | Assemble the Players | mkm |
 | put N +N/+N counters on target creature you control. then counter up to one target spell unless its controller pays mana equal to the greatest power among creat | 1 | Repulsive Mutation | mkm |
 | put a +N/+N counter on each attacking creature you control. | 1 | Fuss // Bother | mkm |
 | put up to two target creature cards from a single graveyard onto the battlefield under your control. they gain haste until end of turn. sacrifice them at the be | 1 | Push // Pull | mkm |
@@ -349,7 +345,6 @@
 | target opponent exiles the top N cards of their library face down. you may look at and play those cards for as long as they remain exiled. if you cast a spell ~ | 1 | Outrageous Robbery | mkm |
 | target opponent reveals their hand. you choose a nonland card from it. exile that card. if the card's mana value is N or less, create a N/N white and black spir | 1 | Soul Search | mkm |
 | when ~ dies, you may exile it and collect evidence N. if you do, return ~ to the battlefield tapped. | 1 | Lamplight Phoenix | mkm |
-| when ~ enters and whenever you solve a case, look at the top six cards of your library. you may reveal an enchantment card from among them and put it into your  | 1 | Case File Auditor | mkm |
 | when ~ enters, choose one — • destroy up to one target artifact. • sacrifice an artifact. if you do, put two +N/+N counters on ~. | 1 | Gearbane Orangutan | mkm |
 | when ~ enters, cloak the top card of your library, then attach ~ to it. | 1 | Cryptic Coat | mkm |
 | when ~ enters, create a N/N white human creature token, a N/N blue merfolk creature token, and a N/N red goblin creature token. then secretly choose human, merf | 1 | A Killer Among Us | mkm |
@@ -391,7 +386,6 @@
 | whenever ~ attacks, you may collect evidence N. when you do, put a +N/+N counter on target creature you control. | 1 | Sample Collector | mkm |
 | whenever ~ deals combat damage to a player, you may collect evidence N. when you do, ~ deals N damage to each creature and planeswalker that player controls. | 1 | Incinerator of the Guilty | mkm |
 | whenever ~ is dealt N or more damage, investigate. | 1 | Innocent Bystander | mkm |
-| you may collect evidence N rather than pay the mana cost for spells you cast. | 1 | Conspiracy Unraveler | mkm |
 | {M}, {M}, collect evidence N: each opponent loses N life unless they discard a card or sacrifice a creature. | 1 | Polygraph Orb | mkm |
 | {M}: until end of turn, you may look at face-down creatures you don't control any time. | 1 | Lumbering Laundry | mkm |
 | {M}{M}, collect evidence N: if ~ is a detective, it becomes a legendary creature named mileva, the stalwart, it has base power and toughness N/N, and it gains " | 1 | Tenth District Hero | mkm |
@@ -400,7 +394,6 @@
 | {M}{M}: shuffle enchanted creature into its owner's library. | 1 | Dramatic Accusation | mkm |
 | {M}{M}{M}: until end of turn, target creature you control gets +N/+N, gains "..." and can attack as though it didn't have defender. | 1 | The Pride of Hull Clade | mkm |
 | ~ can"..."t block.) | 1 | Caught Red-Handed | mkm |
-| ~ can"..."t have a name. | 1 | Pompous Gadabout | mkm |
 | ~ costs {M}{M} more to cast for each target beyond the first. choose any number of target players. investigate N times, where N is the total number of creatures | 1 | Officious Interrogation | mkm |
 | ~ deals N damage to any target. put up to N land cards from your hand and/or graveyard onto the battlefield tapped. | 1 | Worldsoul's Rage | mkm |
 | ~ deals twice N damage to target creature. if excess damage was dealt to that creature ~, investigate. (create a clue token. it's an artifact with "...") | 1 | Torch the Witness | mkm |

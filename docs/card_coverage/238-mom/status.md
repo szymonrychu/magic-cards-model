@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 68 | 25.0% |
+| Tested | 73 | 26.8% |
 | Works (untested) | 98 | 36.0% |
-| Partial (unaudited) | 6 | 2.2% |
-| Not working | 100 | 36.8% |
+| Partial (unaudited) | 2 | 0.7% |
+| Not working | 99 | 36.4% |
 
 ## Cards needing work
 
@@ -78,7 +78,6 @@
 | Moment of Truth | silent | Look at the top three cards of your library. Put one of those cards into your hand, one into your graveyard, and one on the bottom of your library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Nahiri's Warcrafting | silent | Nahiri's Warcrafting deals 5 damage to target creature, planeswalker, or battle. Look at the top X cards of your library, where X is the excess damage dealt thi | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Norn's Inquisitor | silent | When this creature enters, incubate 2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Overgrown Pest | silent | When this creature enters, look at the top five cards of your library. You may reveal a land or double-faced card from among them and put that card into your ha | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Phyrexian Awakening | silent | When this enchantment enters, incubate 4. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Portent Tracker | silent | {T}: Choose target battle. If an opponent protects it, remove a defense counter from it. Otherwise, put a defense counter on it. Activate only as a sorcery. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Progenitor Exarch | silent | When this creature enters, incubate 3 X times. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -126,12 +125,8 @@
 | Terror of Towashi | notice | Whenever this creature attacks, you may pay {3}{B}. When you do, return target creature card from your graveyard to the battlefield. It's a Phyrexian in additio | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | War Historian | notice | This creature has indestructible as long as it attacked a battle this turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Wicked Slumber | notice | Convoke (Your creatures can help cast this spell. Each creature you tap while casting this spell pays for {1} or one mana of that creature's color.) Tap up to t | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Ancient Imperiosaur | unaudited | This creature enters with two +1/+1 counters on it for each creature that convoked it. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Disturbing Conversion | unaudited | Enchanted creature gets -X/-0, where X is the number of cards in its controller's graveyard. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Errant and Giada | unaudited | You may cast spells with flash or flying from the top of your library. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Oculus Whelp | unaudited | As long as you control a transformed permanent, this creature has "When this creature dies, draw a card." | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Phyrexian Censor | unaudited | Non-Phyrexian creatures enter tapped. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Realmbreaker's Grasp | unaudited | Enchanted permanent can't attack or block, and its activated abilities can't be activated unless they're mana abilities. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Aerial Boost | handled | Convoke (Your creatures can help cast this spell. Each creature you tap while casting this spell pays for {1} or one mana of that creature's color.) Target crea | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Aetherblade Agent // Gitaxian Mindstinger | handled | {4}{U/P}: Transform this creature. Activate only as a sorcery. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Akki Scrapchomper | handled | {1}{R}, {T}, Sacrifice an artifact or land: Draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -176,7 +171,6 @@
 | Interdisciplinary Mascot | handled | When this creature enters, look at the top four cards of your library. Put one of them into your hand and the rest on the bottom of your library in a random ord | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Iridescent Blademaster | handled | {3}{G}: This creature gets +2/+2 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Khenra Spellspear // Gitaxian Spellstalker | handled | {3}{U/P}: Transform this creature. Activate only as a sorcery. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Kithkin Billyrider | handled | Double strike | machines/combat.py | Y/Y/- | not_tested |
 | Knight of the New Coalition | handled | When this creature enters, create a 2/2 white and blue Knight creature token with vigilance. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Kor Halberd | handled | Equipped creature gets +1/+1 and has vigilance. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Marshal of Zhalfir | handled | Other Knights you control get +1/+1. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -188,6 +182,7 @@
 | Omen Hawker | handled |  |  | Y/Y/- | not_tested |
 | Onakke Javelineer | handled | {T}: This creature deals 2 damage to target player or battle. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Order of the Mirror // Order of the Alabaster Host | handled | {3}{W/P}: Transform this creature. Activate only as a sorcery. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Overgrown Pest | handled | When this creature enters, look at the top five cards of your library. You may reveal a land or double-faced card from among them and put that card into your ha | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ozolith, the Shattered Spire | handled | If one or more +1/+1 counters would be put on an artifact or creature you control, that many plus one +1/+1 counters are put on it instead. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Phyrexian Archivist | handled | {2}, {T}: Put target card from a graveyard on the bottom of its owner's library. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Phyrexian Pegasus | handled | Whenever this creature attacks, another target attacking creature without flying gains flying until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -234,14 +229,16 @@
 ## Fully supported
 
 <details>
-<summary>68 cards</summary>
+<summary>73 cards</summary>
 
+- Ancient Imperiosaur
 - Angelic Intervention
 - Archangel Elspeth
 - Borborygmos and Fblthp
 - Botanical Brawler
 - Cosmic Hunger
 - Drana and Linvala
+- Errant and Giada
 - Etali, Primal Conqueror // Etali, Primal Sickness
 - Faerie Mastermind
 - Flywheel Racer
@@ -286,12 +283,15 @@
 - Invasion of Xerex // Vertex Paladin
 - Invasion of Zendikar // Awakened Skyclave
 - Kami of Whispered Hopes
+- Kithkin Billyrider
 - Lithomantic Barrage
 - Omnath, Locus of All
 - Orthion, Hero of Lavabrink
+- Phyrexian Censor
 - Rampaging Geoderm
 - Rampaging Raptor
 - Rankle and Torbran
+- Realmbreaker's Grasp
 - Sandstalker Moloch
 - See Double
 - Seed of Hope
@@ -330,13 +330,11 @@
 | each player mills three cards. then you return up to two creature cards from your graveyard to your hand. (to mill three cards, a player puts the top three card | 1 | Unseal the Necropolis | mom |
 | enchanted creature gets -N/-N, where N is the number of cards in its controller's graveyard. | 1 | Disturbing Conversion | mom |
 | enchanted creature has base power and toughness N/N, has defender, and loses all other abilities. | 1 | Stasis Field | mom |
-| enchanted permanent can"..."t be activated unless they're mana abilities. | 1 | Realmbreaker's Grasp | mom |
 | exile all creatures. incubate N, where N is the number of creatures exiled ~. (create an incubator token with N +N/+N counters on it and "..." it transforms int | 1 | Sunfall | mom |
 | exile target creature. incubate N. (create an incubator token with three +N/+N counters on it and "..." it transforms into a N/N phyrexian artifact creature.) | 1 | Merciless Repurposing | mom |
 | incubate N twice, where N is the number of lands you control. (to incubate N, create an incubator token with N +N/+N counters on it and "..." it transforms into | 1 | Glistening Dawn | mom |
 | incubate N. (create an incubator token with three +N/+N counters on it and "..." it transforms into a N/N phyrexian artifact creature.) draw a card. | 1 | Eyes of Gitaxias | mom |
 | look at the top three cards of your library. put one of those cards into your hand, one into your graveyard, and one on the bottom of your library. | 1 | Moment of Truth | mom |
-| non-phyrexian creatures enter tapped. | 1 | Phyrexian Censor | mom |
 | put all creature cards from all graveyards onto the battlefield under your control. exile ~, then return it to the battlefield . | 1 | Sheoldred // The True Scriptures | mom |
 | spells you cast cost {M} less to cast for each card your opponents have drawn ~. | 1 | Heliod, the Radiant Dawn // Heliod, the Warped Eclipse | mom |
 | target creature or land you control becomes a N/N elemental creature with haste in addition to its other types until end of turn. it must be blocked ~ if able. | 1 | Vengeant Earth | mom |
@@ -350,7 +348,6 @@
 | when ~ enters, choose one — • target opponent loses N life and you gain N life. • choose target battle. if an opponent protects it, remove three defense counter | 1 | Etched Host Doombringer | mom |
 | when ~ enters, each player mills two cards. then you may put an instant, sorcery, or battle card from your graveyard on top of your library. | 1 | Halo-Charged Skaab | mom |
 | when ~ enters, incubate N N times. | 1 | Progenitor Exarch | mom |
-| when ~ enters, look at the top five cards of your library. you may reveal a land or double-faced card from among them and put that card into your hand. put the  | 1 | Overgrown Pest | mom |
 | when ~ enters, look at the top six cards of your library. you may reveal up to two creature cards with mana value N or less from among them, where N is the numb | 1 | Knight-Errant of Eos | mom |
 | when ~ enters, put a flying counter on each creature that convoked it. | 1 | Zephyr Singer | mom |
 | when ~ enters, search your library for a card, exile it face down, then shuffle. for as long as that card remains exiled, you may play it. | 1 | Hoarding Broodlord | mom |
@@ -373,7 +370,6 @@
 | whenever ~ deals combat damage to a player or battle, transform up to one target incubator token you control. | 1 | Attentive Skywarden | mom |
 | whenever ~ enters or attacks, you may exile five cards from your graveyard. when you do, return target creature card from your graveyard to the battlefield. | 1 | Kroxa and Kunoros | mom |
 | whenever ~ or another phyrexian you control enters, incubate N. | 1 | Essence of Orthodoxy | mom |
-| you may cast spells with flash or flying from the top of your library. | 1 | Errant and Giada | mom |
 | {M}, exile ~ from your graveyard: incubate N. activate only as a sorcery. | 1 | Ichor Drinker | mom |
 | {M}, sacrifice another creature or artifact: ayara deals N damage to target opponent or battle and you gain N life, where N is the sacrificed permanent's mana v | 1 | Ayara, Widow of the Realm // Ayara, Furnace Queen | mom |
 | {M}, sacrifice another creature: draw a card. you may put a land card from your hand onto the battlefield tapped. if you control eight or more lands, repeat ~ o | 1 | Zimone and Dina | mom |
@@ -383,7 +379,6 @@
 | {M}{M}{M}, discard ~: destroy up to one target artifact or enchantment. shuffle ~ into your library from your graveyard, then draw a card. | 1 | Kogla and Yidaro | mom |
 | {M}{M}{M}, {M}, sacrifice a spirit: choose target card exiled with quintorius. you may cast that card ~ without paying its mana cost. if that spell would be put | 1 | Quintorius, Loremaster | mom |
 | ~ deals N damage to target creature, planeswalker, or battle. look at the top N cards of your library, where N is the excess damage dealt ~. you may exile one o | 1 | Nahiri's Warcrafting | mom |
-| ~ enters with two +N/+N counters on it for each creature that convoked it. | 1 | Ancient Imperiosaur | mom |
 | ~ gets +N/+N for each transformed permanent you control. | 1 | Mutagen Connoisseur | mom |
 | ~ has first strike as long as another knight entered the battlefield under your control ~. | 1 | Swordsworn Cavalier | mom |
 | ~ has indestructible as long as it attacked a battle ~. | 1 | War Historian | mom |

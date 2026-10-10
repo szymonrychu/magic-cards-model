@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 30 | 14.0% |
+| Tested | 31 | 14.4% |
 | Works (untested) | 127 | 59.1% |
-| Partial (unaudited) | 8 | 3.7% |
-| Not working | 50 | 23.3% |
+| Partial (unaudited) | 6 | 2.8% |
+| Not working | 51 | 23.7% |
 
 ## Cards needing work
 
@@ -75,15 +75,14 @@
 | Viridian Revel | silent | Whenever an artifact is put into an opponent's graveyard from the battlefield, you may draw a card. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Flesh Allergy | notice | As an additional cost to cast this spell, sacrifice a creature. Destroy target creature. Its controller loses life equal to the number of creatures that died th | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Quicksilver Gargantuan | notice | You may have this creature enter as a copy of any creature on the battlefield, except it's 7/7. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
+| Semblance Anvil | notice | Imprint — When this artifact enters, you may exile a nonland card from your hand. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Turn to Slag | notice | Turn to Slag deals 5 damage to target creature. Destroy all Equipment attached to that creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Echo Circlet | unaudited | Equipped creature can block an additional creature each combat. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Etched Champion | unaudited | Metalcraft — This creature has protection from each color as long as you control three or more artifacts. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Indomitable Archangel | unaudited | Metalcraft — Artifacts you control have shroud as long as you control three or more artifacts. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Leonin Arbiter | unaudited | Players can't search libraries. Any player may pay {2} for that player to ignore this effect until end of turn. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Platinum Emperion | unaudited | Your life total can't change. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Rust Tick | unaudited | You may choose not to untap this creature during your untap step. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Rusted Relic | unaudited | Metalcraft — This artifact is a 5/5 Golem artifact creature as long as you control three or more artifacts. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Semblance Anvil | unaudited | Spells you cast that share a card type with the exiled card cost {2} less to cast. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Abuna Acolyte | handled | {T}: Prevent the next 1 damage that would be dealt to any target this turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Accorder's Shield | handled | Equipped creature gets +0/+3 and has vigilance. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Acid Web Spider | handled | When this creature enters, you may destroy target Equipment. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -215,7 +214,7 @@
 ## Fully supported
 
 <details>
-<summary>30 cards</summary>
+<summary>31 cards</summary>
 
 - Arc Trail
 - Argent Sphinx
@@ -224,6 +223,7 @@
 - Carrion Call
 - Darkslick Shores
 - Darksteel Myr
+- Echo Circlet
 - Ezuri, Renegade Leader
 - Galvanic Blast
 - Koth of the Hammer
@@ -255,7 +255,7 @@
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
 | Metalcraft | 8 | Auriok Sunchaser, Carapace Forger, Chrome Steed, Etched Champion, Ezuri's Brigade | som |
-| Imprint | 1 | Clone Shell | som |
+| Imprint | 2 | Clone Shell, Semblance Anvil | som |
 | as an additional cost to cast ~, sacrifice a creature. destroy target creature. its controller loses life equal to the number of creatures that died ~. | 1 | Flesh Allergy | som |
 | as long as ~ is equipped, it has first strike and lifelink. | 1 | Sunspear Shikari | som |
 | at the beginning of your upkeep, create a N/N white cat creature token for each equipment attached to kemba. | 1 | Kemba, Kha Regent | som |
@@ -264,7 +264,6 @@
 | choose two target creatures. tap those creatures, then unattach all equipment from them. | 1 | Fulgent Distraction | som |
 | counter target spell that targets a permanent you control. | 1 | Turn Aside | som |
 | each opponent loses N life. you gain life equal to the life lost ~. | 1 | Exsanguinate | som |
-| equipped creature can block an additional creature each combat. | 1 | Echo Circlet | som |
 | equipped creature gets +N/+N for each land on the battlefield with the same name as the exiled card. | 1 | Strata Scythe | som |
 | equipped creature gets +N/+N, has intimidate, and is a black zombie. | 1 | Nim Deathmantle | som |
 | other blue creatures you control get +N/+N. | 1 | Grand Architect | som |
@@ -272,7 +271,6 @@
 | other green creatures you control have intimidate. | 1 | Bellowing Tanglewurm | som |
 | players can't search libraries. any player may pay {M} for that player to ignore ~ until end of turn. | 1 | Leonin Arbiter | som |
 | reveal the top N cards of your library. you may put any number of permanent cards with mana value N or less from among them onto the battlefield. then put all c | 1 | Genesis Wave | som |
-| spells you cast that share a card type with the exiled card cost {M} less to cast. | 1 | Semblance Anvil | som |
 | target opponent reveals the top card of their library. ~ deals damage equal to the revealed card"..."s hand. | 1 | Cerebral Eruption | som |
 | target player discards a card. if a land card is discarded ~, return ~ to its owner's hand. | 1 | Psychic Miasma | som |
 | the controller of target artifact sacrifices it, then reveals cards from the top of their library until they reveal an artifact card. that player puts that card | 1 | Shape Anew | som |

@@ -17,9 +17,9 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 14 | 13.2% |
+| Tested | 17 | 16.0% |
 | Works (untested) | 35 | 33.0% |
-| Partial (unaudited) | 6 | 5.7% |
+| Partial (unaudited) | 3 | 2.8% |
 | Not working | 51 | 48.1% |
 
 ## Cards needing work
@@ -77,9 +77,6 @@
 | Battlefield Improvisation | notice | Target creature gets +2/+2 until end of turn. If that creature is attacking, you may attach any number of Equipment you control to it. | unparsed remainder: If that creature is attacking, you may attach any number of Equipment you control to it. | Y/-/- | not_working |
 | Havi, the All-Father | notice | Havi has indestructible as long as there are four or more historic cards in your graveyard. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | What Must Be Done | notice | Choose one — • Let the World Burn — Destroy all artifacts and creatures. • Release Juno — Return target historic permanent card from your graveyard to the battl | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Bureau Headmaster | unaudited | Equip abilities you activate cost {1} less to activate. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Crystal Skull, Isu Spyglass | unaudited | You may play historic lands and cast historic spells from the top of your library. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Excalibur, Sword of Eden | unaudited | This spell costs {X} less to cast, where X is the total mana value of historic permanents you control. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Ezio Auditore da Firenze | unaudited | Assassin spells you cast have freerunning {B}{B}. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Ratonhnhaké꞉ton | unaudited | As long as Ratonhnhaké꞉ton hasn't dealt damage yet, it has hexproof and can't be blocked. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Templar Knight | unaudited | A deck can have any number of cards named Templar Knight. | a static ability no support check audits - not verified either way | Y/-/- | partial |
@@ -122,14 +119,17 @@
 ## Fully supported
 
 <details>
-<summary>14 cards</summary>
+<summary>17 cards</summary>
 
 - Abstergo Entertainment
 - Adrestia
 - Ballad of the Black Flag
 - Bleeding Effect
+- Bureau Headmaster
+- Crystal Skull, Isu Spyglass
 - Eivor, Battle-Ready
 - Evie Frye
+- Excalibur, Sword of Eden
 - Haystack
 - Hidden Blade
 - Hunter's Bow
@@ -161,7 +161,6 @@
 | during your turn, equipped creature has flying. | 1 | Hookblade | acr |
 | during your turn, other historic creatures you control have double strike. | 1 | Bayek of Siwa | acr |
 | each player chooses three nonland permanents they control. destroy all other nonland permanents. | 1 | Fall of the First Civilization | acr |
-| equip abilities you activate cost {M} less to activate. | 1 | Bureau Headmaster | acr |
 | equipped creature has ward {M}, is an assassin in addition to its other types, and can't be blocked. | 1 | Brotherhood Regalia | acr |
 | exile a permanent card from your graveyard. you gain life equal to its mana value. | 1 | The Aesir Escape Valhalla | acr |
 | exile target nontoken creature you own and the top two cards of your library in a face-down pile, shuffle that pile, then cloak those cards. they enter tapped.  | 1 | Become Anonymous | acr |
@@ -191,11 +190,9 @@
 | whenever eivor deals combat damage to a player, you mill that many cards. you may put a saga card and/or a land card from among them onto the battlefield. | 1 | Eivor, Wolf-Kissed | acr |
 | whenever you discard an island, pirate, or vehicle card, create a tapped treasure token. | 1 | Mary Read and Anne Bonny | acr |
 | whenever ~ deals combat damage to a player, surveil N, where N is the amount of damage it dealt to that player. | 1 | Desmond Miles | acr |
-| you may play historic lands and cast historic spells from the top of your library. | 1 | Crystal Skull, Isu Spyglass | acr |
 | {M}, pay N life, sacrifice apple of eden: look at target opponent"..."s hand. activate only as a sorcery. | 1 | Apple of Eden, Isu Relic | acr |
 | {M}, {M}, sacrifice ~: each equipped creature and equipment you control gains deathtouch until end of turn. | 1 | Hemlock Vial | acr |
 | {M}{M}{M}: until end of turn, thopters you control have base power and toughness N/N, where N is the number of cards in your hand. | 1 | Leonardo da Vinci | acr |
-| ~ costs {M} less to cast, where N is the total mana value of historic permanents you control. | 1 | Excalibur, Sword of Eden | acr |
 
 ## Notes
 

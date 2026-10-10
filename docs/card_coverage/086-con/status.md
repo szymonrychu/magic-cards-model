@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 18 | 12.8% |
+| Tested | 21 | 14.9% |
 | Works (untested) | 77 | 54.6% |
-| Partial (unaudited) | 4 | 2.8% |
-| Not working | 42 | 29.8% |
+| Partial (unaudited) | 0 | 0.0% |
+| Not working | 43 | 30.5% |
 
 ## Cards needing work
 
@@ -64,14 +64,11 @@
 | Court Homunculus | notice | This creature gets +1/+1 as long as you control another artifact. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Filigree Fracture | notice | Destroy target artifact or enchantment. If that permanent was blue or black, draw a card. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Hellkite Hatchling | notice | This creature has flying and trample if it devoured a creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
+| Progenitus | notice | Protection | protection from a quality the engine does not read: everything | Y/Y/Y | not_working |
 | Quenchable Fire | notice | Quenchable Fire deals 3 damage to target player or planeswalker. It deals an additional 3 damage to that player or planeswalker at the beginning of your next up | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Sphinx Summoner | notice | When this creature enters, you may search your library for an artifact creature card, reveal it, put it into your hand, then shuffle. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Toxic Iguanar | notice | This creature has deathtouch as long as you control a green permanent. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | View from Above | notice | Target creature gains flying until end of turn. If you control a white permanent, return View from Above to its owner's hand. | unparsed remainder: If you control a white permanent, return View from Above to its owner's hand. | Y/-/- | not_working |
-| Apocalypse Hydra | unaudited | This creature enters with X +1/+1 counters on it. If X is 5 or more, it enters with an additional X +1/+1 counters on it. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Aven Trailblazer | unaudited | Domain — Aven Trailblazer's toughness is equal to the number of basic land types among lands you control. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Progenitus | unaudited | If Progenitus would be put into a graveyard from anywhere, reveal Progenitus and shuffle it into its owner's library instead. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Worldheart Phoenix | unaudited | You may cast this card from your graveyard by paying {W}{U}{B}{R}{G} rather than paying its mana cost. If you do, it enters with two +1/+1 counters on it. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Absorb Vis | handled | Target player loses 4 life and you gain 4 life. Basic landcycling {1}{B} ({1}{B}, Discard this card: Search your library for a basic land card, reveal it, put i | the engine reads this text and performs it | Y/-/- | not_tested |
 | Armillary Sphere | handled | {2}, {T}, Sacrifice this artifact: Search your library for up to two basic land cards, reveal them, put them into your hand, then shuffle. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Asha's Favor | handled | Enchanted creature has flying, first strike, and vigilance. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -153,10 +150,12 @@
 ## Fully supported
 
 <details>
-<summary>18 cards</summary>
+<summary>21 cards</summary>
 
 - Aerie Mystics
 - Ancient Ziggurat
+- Apocalypse Hydra
+- Aven Trailblazer
 - Banefire
 - Canyon Minotaur
 - Celestial Purge
@@ -173,6 +172,7 @@
 - Thornling
 - Volcanic Fallout
 - Voracious Dragon
+- Worldheart Phoenix
 
 </details>
 
@@ -181,7 +181,7 @@
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
 | exalted | 5 | Aven Squire, Frontline Sage, Giltspire Avenger, Noble Hierarch, Rhox Bodyguard | con |
-| Domain | 4 | Aven Trailblazer, Manaforce Mace, Voices from the Void, Wandering Goblins | con |
+| Domain | 3 | Manaforce Mace, Voices from the Void, Wandering Goblins | con |
 | {M}: target land you control becomes the basic land type of your choice until end of turn. | 2 | Grixis Illusionist, Unstable Frontier | con |
 | as long as you control a red permanent, ~ gets +N/+N and has first strike. | 1 | Ember Weaver | con |
 | at the beginning of your end step, you may gain life equal to the power of target creature you control. | 1 | Wall of Reverence | con |
@@ -192,7 +192,7 @@
 | destroy target artifact or enchantment. if that permanent was blue or black, draw a card. | 1 | Filigree Fracture | con |
 | destroy target creature if it has the least power or is tied for least power among creatures on the battlefield. | 1 | Wretched Banquet | con |
 | draw cards equal to the power of target creature you control. | 1 | Soul's Majesty | con |
-| if ~ would be put into a graveyard from anywhere, reveal ~ and shuffle it into its owner's library instead. | 1 | Progenitus | con |
+| protection | 1 | Progenitus | con |
 | search your library for a plains card, an island card, a swamp card, and a mountain card. reveal those cards, put them into your hand, then shuffle. | 1 | Shard Convergence | con |
 | search your library for a white card, a blue card, a black card, a red card, and a green card. reveal those cards, put them into your hand, then shuffle. | 1 | Conflux | con |
 | target creature gains flying until end of turn. if you control a white permanent, return ~ to its owner's hand. | 1 | View from Above | con |
@@ -205,14 +205,12 @@
 | whenever another creature leaves the battlefield, you may have target player mill two cards. | 1 | Extractor Demon | con |
 | whenever enchanted land becomes tapped, its controller loses N life. | 1 | Corrupted Roots | con |
 | whenever ~ deals combat damage to a player, you may cast a spell from your hand without paying its mana cost. | 1 | Maelstrom Archangel | con |
-| you may cast ~ from your graveyard by paying {M}{M}{M}{M}{M} rather than paying its mana cost. if you do, it enters with two +N/+N counters on it. | 1 | Worldheart Phoenix | con |
 | {M}{M}, {M}: put a bribery counter on target creature you don't control. its controller draws a card. | 1 | Gwafa Hazid, Profiteer | con |
 | {M}{M}: ~ gets -N/-N until end of turn and can't be blocked ~. | 1 | Vectis Agents | con |
 | {M}{M}{M}: ~ and each other creature with the same name as it get +N/+N until end of turn. | 1 | Cylian Sunsinger | con |
 | {M}{M}{M}{M}{M}: until end of turn, ~ becomes a dragon, gets +N/+N, and gains flying and trample. | 1 | Dragonsoul Knight | con |
 | {M}{M}{M}{M}{M}: until end of turn, ~ becomes an angel, gets +N/+N, and gains flying and lifelink. | 1 | Paragon of the Amesha | con |
 | ~ deals N damage to target player or planeswalker. it deals an additional N damage to that player or planeswalker at the beginning of your next upkeep step unle | 1 | Quenchable Fire | con |
-| ~ enters with N +N/+N counters on it. if N is N or more, it enters with an additional N +N/+N counters on it. | 1 | Apocalypse Hydra | con |
 | ~ gets +N/+N as long as you control another artifact. | 1 | Court Homunculus | con |
 | ~ has deathtouch as long as you control a green permanent. | 1 | Toxic Iguanar | con |
 | ~ has flying and trample if it devoured a creature. | 1 | Hellkite Hatchling | con |

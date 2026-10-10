@@ -17,9 +17,9 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 15 | 22.7% |
+| Tested | 21 | 31.8% |
 | Works (untested) | 34 | 51.5% |
-| Partial (unaudited) | 7 | 10.6% |
+| Partial (unaudited) | 1 | 1.5% |
 | Not working | 10 | 15.2% |
 
 ## Cards needing work
@@ -36,13 +36,7 @@
 | Sleeper Agent | silent | When this creature enters, target opponent gains control of it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Spreading Algae | silent | When enchanted land becomes tapped, destroy it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Victimize | silent | Choose two target creature cards in your graveyard. Sacrifice a creature. If you do, return the chosen cards to the battlefield tapped. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Abundance | unaudited | If you would draw a card, you may instead choose land or nonland and reveal cards from the top of your library until you reveal a card of the chosen kind. Put t | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Okk | unaudited | This creature can't attack unless a creature with greater power also attacks. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Pariah | unaudited | All damage that would be dealt to you is dealt to enchanted creature instead. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Phyrexian Colossus | unaudited | This creature can't be blocked except by three or more creatures. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Telepathy | unaudited | Your opponents play with their hands revealed. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Urza's Armor | unaudited | If a source would deal damage to you, prevent 1 of that damage. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Worship | unaudited | If you control a creature, damage that would reduce your life total to less than 1 reduces it to 1 instead. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Angelic Chorus | handled | Whenever a creature you control enters, you gain life equal to its toughness. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Angelic Page | handled | {T}: Target attacking or blocking creature gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Annul | handled | Counter target artifact or enchantment spell. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -81,8 +75,9 @@
 ## Fully supported
 
 <details>
-<summary>15 cards</summary>
+<summary>21 cards</summary>
 
+- Abundance
 - Arc Lightning
 - Claws of Gix
 - Corrupt
@@ -93,11 +88,16 @@
 - Greater Good
 - Imaginary Pet
 - Meltdown
+- Okk
+- Pariah
+- Phyrexian Colossus
 - Priest of Titania
 - Redeem
 - Reflexes
 - Sanctum Guardian
+- Urza's Armor
 - Vernal Bloom
+- Worship
 
 </details>
 
@@ -105,13 +105,9 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| all damage that would be dealt to you is dealt to enchanted creature instead. | 1 | Pariah | usg |
 | choose a color. target player reveals their hand and discards all cards of that color. | 1 | Persecute | usg |
 | choose two target creature cards in your graveyard. sacrifice a creature. if you do, return the chosen cards to the battlefield tapped. | 1 | Victimize | usg |
 | counter target spell. untap up to four lands. | 1 | Rewind | usg |
-| if a source would deal damage to you, prevent N of that damage. | 1 | Urza's Armor | usg |
-| if you control a creature, damage that would reduce your life total to less than N reduces it to N instead. | 1 | Worship | usg |
-| if you would draw a card, you may instead choose land or nonland and reveal cards from the top of your library until you reveal a card of the chosen kind. put t | 1 | Abundance | usg |
 | return all green permanents to their owners' hands. | 1 | Hibernation | usg |
 | sacrifice ~: return to your hand all creature cards in your graveyard that were put there from the battlefield ~. | 1 | No Rest for the Wicked | usg |
 | when enchanted land becomes tapped, destroy it. | 1 | Spreading Algae | usg |
@@ -120,8 +116,6 @@
 | whenever a creature dies, that creature's controller may draw a card. | 1 | Fecundity | usg |
 | your opponents play with their hands revealed. | 1 | Telepathy | usg |
 | {M}: enchanted creature gets +N/+N until end of turn. | 1 | Shiv's Embrace | usg |
-| ~ can't attack unless a creature with greater power also attacks. | 1 | Okk | usg |
-| ~ can't be blocked except by three or more creatures. | 1 | Phyrexian Colossus | usg |
 
 ## Notes
 

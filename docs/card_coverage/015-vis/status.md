@@ -17,9 +17,9 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 3 | 12.5% |
+| Tested | 4 | 16.7% |
 | Works (untested) | 15 | 62.5% |
-| Partial (unaudited) | 1 | 4.2% |
+| Partial (unaudited) | 0 | 0.0% |
 | Not working | 5 | 20.8% |
 
 ## Cards needing work
@@ -31,7 +31,6 @@
 | Stampeding Wildebeests | silent | At the beginning of your upkeep, return a green creature you control to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Summer Bloom | silent | You may play up to three additional lands this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Teferi's Puzzle Box | silent | At the beginning of each player's draw step, that player puts the cards in their hand on the bottom of their library in any order, then draws that many cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Cloud Elemental | unaudited | This creature can block only creatures with flying. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Archangel | handled | Flying | machines/combat.py | Y/-/- | not_tested |
 | Coercion | handled | Target opponent reveals their hand. You choose a card from it. That player discards that card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Creeping Mold | handled | Destroy target artifact, enchantment, or land. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -51,8 +50,9 @@
 ## Fully supported
 
 <details>
-<summary>3 cards</summary>
+<summary>4 cards</summary>
 
+- Cloud Elemental
 - Crypt Rats
 - Honorable Passage
 - Suq'Ata Lancer
@@ -68,7 +68,6 @@
 | untap all creatures that attacked ~. after ~ phase, there is an additional combat phase followed by an additional main phase. | 1 | Relentless Assault | vis |
 | when ~ enters, return a creature you control to its owner's hand. | 1 | Shrieking Drake | vis |
 | you may play up to three additional lands ~. | 1 | Summer Bloom | vis |
-| ~ can block only creatures with flying. | 1 | Cloud Elemental | vis |
 
 ## Notes
 

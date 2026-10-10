@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 21 | 13.1% |
-| Works (untested) | 89 | 55.6% |
-| Partial (unaudited) | 8 | 5.0% |
-| Not working | 42 | 26.2% |
+| Tested | 27 | 16.9% |
+| Works (untested) | 90 | 56.2% |
+| Partial (unaudited) | 2 | 1.2% |
+| Not working | 41 | 25.6% |
 
 ## Cards needing work
 
@@ -53,7 +53,6 @@
 | Sanguimancy | silent | You draw X cards and you lose X life, where X is your devotion to black. (Each {B} in the mana costs of permanents you control counts toward your devotion to bl | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Satyr Nyx-Smith | silent | Inspired — Whenever this creature becomes untapped, you may pay {2}{R}. If you do, create a 3/1 red Elemental enchantment creature token with haste. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Servant of Tymaret | silent | Inspired — Whenever this creature becomes untapped, each opponent loses 1 life. You gain life equal to the life lost this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Siren of the Silent Song | silent | Inspired — Whenever this creature becomes untapped, each opponent discards a card, then each opponent mills a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Spiteful Returned | silent | Whenever this creature or enchanted creature attacks, defending player loses 2 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sudden Storm | silent | Tap up to two target creatures. Those creatures don't untap during their controllers' next untap steps. Scry 1. (Look at the top card of your library. You may p | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Thassa's Rebuff | silent | Counter target spell unless its controller pays {X}, where X is your devotion to blue. (Each {U} in the mana costs of permanents you control counts toward your  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -69,12 +68,6 @@
 | Ragemonger | notice | Minotaur spells you cast cost {B}{R} less to cast. This effect reduces only the amount of colored mana you pay. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Retraction Helix | notice | Until end of turn, target creature gains "{T}: Return target nonland permanent to its owner's hand." | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Archetype of Endurance | unaudited | Creatures your opponents control lose hexproof and can't have or gain hexproof. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Courser of Kruphix | unaudited | Play with the top card of your library revealed. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Floodtide Serpent | unaudited | This creature can't attack unless you return an enchantment you control to its owner's hand. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Kraken of the Straits | unaudited | Creatures with power less than the number of Islands you control can't block this creature. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Loyal Pegasus | unaudited | This creature can't attack or block alone. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Noble Quarry | unaudited | All creatures able to block this creature or enchanted creature do so. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Stratus Walk | unaudited | Enchanted creature can block only creatures with flying. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Tromokratis | unaudited | Tromokratis can't be blocked unless all creatures defending player controls block it. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Akroan Conscriptor | handled | Heroic — Whenever you cast a spell that targets this creature, gain control of another target creature until end of turn. Untap that creature. It gains haste un | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Akroan Phalanx | handled | {2}{R}: Creatures you control get +1/+0 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -154,6 +147,7 @@
 | Silent Sentinel | handled | Whenever this creature attacks, you may return target enchantment card from your graveyard to the battlefield. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Siren Song Lyre | handled | Equipped creature has "{2}, {T}: Tap target creature." | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Siren of the Fanged Coast | handled | When this creature enters, if tribute wasn't paid, gain control of target creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Siren of the Silent Song | handled | Inspired — Whenever this creature becomes untapped, each opponent discards a card, then each opponent mills a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Sphinx's Disciple | handled | Inspired — Whenever this creature becomes untapped, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Stormcaller of Keranos | handled | {1}{U}: Scry 1. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Sunbond | handled | Enchanted creature has "Whenever you gain life, put that many +1/+1 counters on this creature." | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -169,19 +163,24 @@
 ## Fully supported
 
 <details>
-<summary>21 cards</summary>
+<summary>27 cards</summary>
 
 - Acolyte's Reward
+- Courser of Kruphix
 - Deepwater Hypnotist
 - Ephara, God of the Polis
 - Fall of the Hammer
 - Fate Unraveler
 - Felhide Brawler
+- Floodtide Serpent
 - Forgestoker Dragon
 - Heroes' Podium
 - Kiora's Follower
+- Kraken of the Straits
 - Lightning Volley
+- Loyal Pegasus
 - Nessian Wilds Ravager
+- Noble Quarry
 - Ornitharch
 - Pain Seer
 - Satyr Firedancer
@@ -190,6 +189,7 @@
 - Skyreaping
 - Snake of the Golden Grove
 - Spirit of the Labyrinth
+- Stratus Walk
 - Temple of Enlightenment
 - Xenagos, God of Revels
 
@@ -199,26 +199,22 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| Inspired | 8 | Aerie Worshippers, Arbiter of the Ideal, Forlorn Pseudamma, God-Favored General, Pheres-Band Raiders | bng |
+| Inspired | 7 | Aerie Worshippers, Arbiter of the Ideal, Forlorn Pseudamma, God-Favored General, Pheres-Band Raiders | bng |
 | Heroic | 1 | Hero of Leina Tower | bng |
 | +N: until your next turn, prevent all damage that would be dealt to and dealt by target permanent an opponent controls. | 1 | Kiora, the Crashing Wave | bng |
-| all creatures able to block ~ or enchanted creature do so. | 1 | Noble Quarry | bng |
 | as long as ~ is enchanted, it can attack as though it didn't have defender. | 1 | Pillar of War | bng |
 | at the beginning of each opponent's upkeep, mogis deals N damage to that player unless they sacrifice a creature of their choice. | 1 | Mogis, God of Slaughter | bng |
 | counter target spell unless its controller pays {M}, where N is your devotion to blue. (each {M} in the mana costs of permanents you control counts toward your  | 1 | Thassa's Rebuff | bng |
 | create two N/N green centaur enchantment creature tokens. if it's your turn, scry N. | 1 | Fated Intervention | bng |
-| creatures with power less than the number of islands you control can't block ~. | 1 | Kraken of the Straits | bng |
 | creatures your opponents control lose deathtouch and can't have or gain deathtouch. | 1 | Archetype of Finality | bng |
 | creatures your opponents control lose first strike and can't have or gain first strike. | 1 | Archetype of Courage | bng |
 | creatures your opponents control lose flying and can't have or gain flying. | 1 | Archetype of Imagination | bng |
 | creatures your opponents control lose hexproof and can't have or gain hexproof. | 1 | Archetype of Endurance | bng |
 | creatures your opponents control lose trample and can't have or gain trample. | 1 | Archetype of Aggression | bng |
 | destroy all creatures and planeswalkers. if it's your turn, scry N. | 1 | Fated Retribution | bng |
-| enchanted creature can block only creatures with flying. | 1 | Stratus Walk | bng |
 | enchanted creature gets +N/+N and can't be blocked. | 1 | Flitterstep Eidolon | bng |
 | exile target creature. create a gold token. (it's an artifact with "...") | 1 | Gild | bng |
 | minotaur spells you cast cost {M}{M} less to cast. ~ reduces only the amount of colored mana you pay. | 1 | Ragemonger | bng |
-| play with the top card of your library revealed. | 1 | Courser of Kruphix | bng |
 | put target creature card from a graveyard onto the battlefield under your control. it gains indestructible. if it's your turn, scry N. | 1 | Fated Return | bng |
 | return all creatures to their owners' hands except for krakens, leviathans, octopuses, and serpents. | 1 | Whelming Wave | bng |
 | search your library for up to two basic land cards, reveal those cards, and put one onto the battlefield tapped and the other into your hand. shuffle, then scry | 1 | Peregrination | bng |
@@ -239,8 +235,6 @@
 | {M}: put ~ and each creature blocking or blocked by it on top of their owners' libraries, then those players shuffle. | 1 | Vortex Elemental | bng |
 | {M}: ~ gets +N/+N until end of turn. if it's an aura, enchanted creature gets +N/+N until end of turn instead. | 1 | Everflame Eidolon | bng |
 | ~ and enchanted creature each get +N/+N for each creature you control and +N/+N for each aura you control. | 1 | Eidolon of Countless Battles | bng |
-| ~ can"..."s hand. | 1 | Floodtide Serpent | bng |
-| ~ can't attack or block alone. | 1 | Loyal Pegasus | bng |
 | ~ can't be blocked unless all creatures defending player controls block it. | 1 | Tromokratis | bng |
 
 ## Notes

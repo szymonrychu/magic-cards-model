@@ -17,9 +17,9 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 22 | 12.2% |
+| Tested | 28 | 15.5% |
 | Works (untested) | 103 | 56.9% |
-| Partial (unaudited) | 7 | 3.9% |
+| Partial (unaudited) | 1 | 0.6% |
 | Not working | 49 | 27.1% |
 
 ## Cards needing work
@@ -75,13 +75,7 @@
 | Necromantic Summons | notice | Put target creature card from a graveyard onto the battlefield under your control. Spell mastery — If there are two or more instant and/or sorcery cards in your | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Ramroller | notice | This creature gets +2/+0 as long as you control another artifact. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Woodland Bellower | notice | When this creature enters, you may search your library for a nonlegendary green creature card with mana value 3 or less, put it onto the battlefield, then shuff | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Alhammarret, High Arbiter | unaudited | As Alhammarret enters, each opponent reveals their hand. You choose the name of a nonland card revealed this way. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Archangel of Tithes | unaudited | As long as this creature is untapped, creatures can't attack you or planeswalkers you control unless their controller pays {1} for each of those creatures. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Bonded Construct | unaudited | This creature can't attack alone. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Embermaw Hellion | unaudited | If another red source you control would deal damage to a permanent or player, it deals that much damage plus 1 to that permanent or player instead. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Orbs of Warding | unaudited | If a creature would deal damage to you, prevent 1 of that damage. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Suppression Bonds | unaudited | Enchanted permanent can't attack or block, and its activated abilities can't be activated. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Tainted Remedy | unaudited | If an opponent would gain life, that player loses that much life instead. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
+| Alhammarret, High Arbiter | unaudited | Your opponents can't cast spells with the chosen name . | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Abbot of Keral Keep | handled | When this creature enters, exile the top card of your library. Until end of turn, you may play that card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Aerial Volley | handled | Aerial Volley deals 3 damage divided as you choose among one, two, or three target creatures with flying. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Akroan Jailer | handled | {2}{W}, {T}: Tap target creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -189,14 +183,17 @@
 ## Fully supported
 
 <details>
-<summary>22 cards</summary>
+<summary>28 cards</summary>
 
 - Acolyte of the Inferno
 - Alhammarret's Archive
+- Archangel of Tithes
 - Boggart Brute
+- Bonded Construct
 - Chandra's Ignition
 - Day's Undoing
 - Deep-Sea Terror
+- Embermaw Hellion
 - Enshrouding Mist
 - Evolutionary Leap
 - Exquisite Firecraft
@@ -207,8 +204,11 @@
 - Jace, Vryn's Prodigy // Jace, Telepath Unbound
 - Kytheon's Tactics
 - Mage-Ring Network
+- Orbs of Warding
 - Scab-Clan Berserker
 - Sigil of Valor
+- Suppression Bonds
+- Tainted Remedy
 - Unholy Hunger
 - Vine Snare
 - Wild Instincts
@@ -222,12 +222,10 @@
 |---|---|---|---|
 | Spell mastery | 1 | Swift Reckoning | ori |
 | +N: up to one target creature an opponent controls attacks gideon during its controller's next turn if able. | 1 | Kytheon, Hero of Akros // Gideon, Battle-Forged | ori |
-| as alhammarret enters, each opponent reveals their hand. you choose the name of a nonland card revealed ~. | 1 | Alhammarret, High Arbiter | ori |
 | as long as you control an enchantment, ~ gets +N/+N and has lifelink. | 1 | Blood-Cursed Knight | ori |
 | as long as you control five or more enchantments, each other non-aura enchantment you control is a creature in addition to its other types and has base power an | 1 | Starfield of Nyx | ori |
 | as long as ~ is renowned, it has menace. | 1 | Goblin Glory Chaser | ori |
 | as long as ~ is renowned, it has vigilance and "..." | 1 | Honored Hierarch | ori |
-| as long as ~ is untapped, creatures can't attack you or planeswalkers you control unless their controller pays {M} for each of those creatures. | 1 | Archangel of Tithes | ori |
 | at the beginning of your upkeep, choose one that hasn't been chosen — • ~ deals N damage to any target and you gain N life. • target opponent discards two cards | 1 | Demonic Pact | ori |
 | attacking creatures get -N/-N until end of turn. draw a card. | 1 | Hydrolash | ori |
 | attacking creatures you control get +N/+N. | 1 | War Horn | ori |
@@ -236,11 +234,7 @@
 | during your turn, ~ gets +N/+N and has first strike. | 1 | Prickleboar | ori |
 | each player shuffles all cards from their hand and all permanents they own into their library, then draws that many cards. each player may put any number of lan | 1 | The Great Aurora | ori |
 | enchanted creature gets +N/+N, has haste, and attacks each combat if able. | 1 | Infectious Bloodlust | ori |
-| enchanted permanent can"..."t be activated. | 1 | Suppression Bonds | ori |
 | for each player, you choose from among the permanents that player controls an artifact, a creature, an enchantment, and a planeswalker. then each player sacrifi | 1 | Tragic Arrogance | ori |
-| if a creature would deal damage to you, prevent N of that damage. | 1 | Orbs of Warding | ori |
-| if an opponent would gain life, that player loses that much life instead. | 1 | Tainted Remedy | ori |
-| if another red source you control would deal damage to a permanent or player, it deals that much damage plus N to that permanent or player instead. | 1 | Embermaw Hellion | ori |
 | non-elf creatures get -N/-N until end of turn. | 1 | Eyeblight Massacre | ori |
 | other creatures you control with flying get +N/+N. | 1 | Thunderclap Wyvern | ori |
 | put target creature card from a graveyard onto the battlefield under your control. spell mastery — if there are two or more instant and/or sorcery cards in your | 1 | Necromantic Summons | ori |
@@ -272,7 +266,7 @@
 | whenever ~ attacks, if it's renowned, other attacking creatures you control get +N/+N until end of turn. | 1 | Consul's Lieutenant | ori |
 | whenever ~ deals combat damage to a player, that player loses life equal to the number of creature cards in your graveyard. | 1 | Graveblade Marauder | ori |
 | you may cast ~ as though it had flash if you pay {M} more to cast it. | 1 | Harbinger of the Tides | ori |
-| ~ can't attack alone. | 1 | Bonded Construct | ori |
+| your opponents can't cast spells with the chosen name . | 1 | Alhammarret, High Arbiter | ori |
 | ~ gets +N/+N as long as you control another artifact. | 1 | Ramroller | ori |
 | −N: chandra deals N damage to each opponent. each player dealt damage ~ gets an emblem with "..." | 1 | Chandra, Fire of Kaladesh // Chandra, Roaring Flame | ori |
 | −N: create ashaya, the awoken world, a legendary N/N green elemental creature token. | 1 | Nissa, Vastwood Seer // Nissa, Sage Animist | ori |

@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 65 | 23.6% |
+| Tested | 74 | 26.9% |
 | Works (untested) | 137 | 49.8% |
-| Partial (unaudited) | 13 | 4.7% |
-| Not working | 60 | 21.8% |
+| Partial (unaudited) | 5 | 1.8% |
+| Not working | 59 | 21.5% |
 
 ## Cards needing work
 
@@ -72,7 +72,6 @@
 | The Everflowing Well // The Myriad Pools | silent | Whenever you cast a permanent spell using mana produced by The Myriad Pools, up to one other target permanent you control becomes a copy of that spell until end | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | The Skullspore Nexus | silent | Whenever one or more nontoken creatures you control die, create a green Fungus Dinosaur creature token with base power and toughness each equal to the total pow | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Throne of the Grim Captain // The Grim Captain | silent | Whenever The Grim Captain attacks, each opponent sacrifices a nonland permanent of their choice. Then you may put an exiled creature card used to craft The Grim | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Twists and Turns // Mycoid Maze | silent | {3}{G}, {T}: Look at the top four cards of your library. You may reveal a creature card from among them and put that card into your hand. Put the rest on the bo | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Unstable Glyphbridge // Sandswirl Wanderglyph | silent | When this artifact enters, if you cast it, for each player, choose a creature with power 2 or less that player controls. Then destroy all creatures except creat | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Wail of the Forgotten | silent | Descend 8 — Choose one. If there are eight or more permanent cards in your graveyard as you cast this spell, choose one or more instead. • Return target nonland | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Warden of the Inner Sky | silent | As long as this creature has three or more counters on it, it has flying and vigilance. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -87,16 +86,8 @@
 | Scampering Surveyor | notice | When this creature enters, search your library for a basic land card or Cave card, put it onto the battlefield tapped, then shuffle. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | The Enigma Jewel // Locus of Enlightenment | notice | Locus of Enlightenment has each activated ability of the exiled cards used to craft it. You may activate each of those abilities only once each turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Bedrock Tortoise | unaudited | During your turn, creatures you control have hexproof. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Bloodletter of Aclazotz | unaudited | If an opponent would lose life during your turn, they lose twice that much life instead. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Forgotten Monument | unaudited | Other Caves you control have "{T}, Pay 1 life: Add one mana of any color." | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Guardian of the Great Door | unaudited | As an additional cost to cast this spell, tap four untapped artifacts, creatures, and/or lands you control. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Intrepid Paleontologist | unaudited | You may cast Dinosaur creature spells from among cards you own exiled with this creature. If you cast a spell this way, that creature enters with a finality cou | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Ojer Axonil, Deepest Might // Temple of Power | unaudited | If a red source you control would deal an amount of noncombat damage less than Ojer Axonil's power to an opponent, that source deals damage equal to Ojer Axonil | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Petrify | unaudited | Enchanted permanent can't attack or block, and its activated abilities can't be activated. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Rampaging Ceratops | unaudited | This creature can't be blocked except by three or more creatures. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Saheeli's Lattice // Mastercraft Raptor | unaudited | Mastercraft Raptor's power is equal to the total power of the exiled cards used to craft it. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Song of Stupefaction | unaudited | Fathomless descent — Enchanted permanent gets -X/-0, where X is the number of permanent cards in your graveyard. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Souls of the Lost | unaudited | As an additional cost to cast this spell, discard a card or sacrifice a permanent. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Thousand Moons Infantry | unaudited | Untap this creature during each other player's untap step. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Waterlogged Hulk // Watertight Gondola | unaudited | Descend 8 — This Vehicle can't be blocked as long as there are eight or more permanent cards in your graveyard. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Abuelo, Ancestral Echo | handled | {1}{W}{U}: Exile another target creature or artifact you control. Return it to the battlefield under its owner's control at the beginning of the next end step. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -240,13 +231,14 @@
 ## Fully supported
 
 <details>
-<summary>65 cards</summary>
+<summary>74 cards</summary>
 
 - Abuelo's Awakening
 - Akawalli, the Seething Tower
 - Amalia Benavides Aguirre
 - Basking Capybara
 - Bitter Triumph
+- Bloodletter of Aclazotz
 - Braided Net // Braided Quipu
 - Bringer of the Last Gift
 - Broodrage Mycoid
@@ -271,6 +263,8 @@
 - Ghalta, Stampede Tyrant
 - Glimpse the Core
 - Greedy Freebooter
+- Guardian of the Great Door
+- Intrepid Paleontologist
 - Itzquinth, Firstborn of Gishath
 - Malamet Battle Glyph
 - Malicious Eclipse
@@ -278,18 +272,23 @@
 - Master's Guide-Mural // Master's Manufactory
 - Miner's Guidewing
 - Molten Collapse
+- Ojer Axonil, Deepest Might // Temple of Power
 - Ojer Pakpatiq, Deepest Epoch // Temple of Cyclical Time
 - Ojer Taq, Deepest Foundation // Temple of Civilization
 - Out of Air
 - Over the Edge
+- Petrify
 - Preacher of the Schism
 - Promising Vein
 - Pugnacious Hammerskull
+- Rampaging Ceratops
 - Restless Anchorage
 - Restless Reef
 - Ruin-Lurker Bat
+- Saheeli's Lattice // Mastercraft Raptor
 - Scytheclaw Raptor
 - Sentinel of the Nameless City
+- Souls of the Lost
 - Spelunking
 - Spring-Loaded Sawblades // Bladewheel Chariot
 - Spyglass Siren
@@ -303,6 +302,7 @@
 - Tithing Blade // Consuming Sepulcher
 - Triumphant Chomp
 - Trumpeting Carnosaur
+- Twists and Turns // Mycoid Maze
 - Vanguard of the Rose
 - Visage of Dread // Dread Osseosaur
 - Vito, Fanatic of Aclazotz
@@ -316,8 +316,6 @@
 |---|---|---|---|
 | Fathomless descent | 4 | Chupacabra Echo, Song of Stupefaction, Squirming Emergence, Terror Tide | lci |
 | explore | 3 | Deepfathom Echo, Defossilize, Glowcap Lantern | lci |
-| as an additional cost to cast ~, discard a card or sacrifice a permanent. | 1 | Souls of the Lost | lci |
-| as an additional cost to cast ~, tap four untapped artifacts, creatures, and/or lands you control. | 1 | Guardian of the Great Door | lci |
 | as long as an artifact entered the battlefield under your control ~, ~ can attack as though it didn't have defender. | 1 | Shipwreck Sentry | lci |
 | as long as you control an artifact, ~ gets +N/+N and has haste. | 1 | Goblin Tomb Raider | lci |
 | as long as ~ has three or more counters on it, it has flying and vigilance. | 1 | Warden of the Inner Sky | lci |
@@ -329,13 +327,9 @@
 | descend N — ~ can't be blocked as long as there are eight or more permanent cards in your graveyard. | 1 | Waterlogged Hulk // Watertight Gondola | lci |
 | discover N. if the discovered card's mana value is less than N, create a number of tapped treasure tokens equal to the difference. (to discover N, exile cards f | 1 | Hit the Mother Lode | lci |
 | during your turn, creatures you control have hexproof. | 1 | Bedrock Tortoise | lci |
-| enchanted permanent can"..."t be activated. | 1 | Petrify | lci |
 | equipped creature has deathtouch during your turn. otherwise, it has reach. | 1 | Hunter's Blowgun | lci |
 | equipped creature has reach, "..." and "..." | 1 | Swashbuckler's Whip | lci |
-| if a red source you control would deal an amount of noncombat damage less than ojer axonil"..."s power instead. | 1 | Ojer Axonil, Deepest Might // Temple of Power | lci |
-| if an opponent would lose life during your turn, they lose twice that much life instead. | 1 | Bloodletter of Aclazotz | lci |
 | locus of enlightenment has each activated ability of the exiled cards used to craft it. you may activate each of those abilities only once each turn. | 1 | The Enigma Jewel // Locus of Enlightenment | lci |
-| mastercraft raptor's power is equal to the total power of the exiled cards used to craft it. | 1 | Saheeli's Lattice // Mastercraft Raptor | lci |
 | other caves you control have "..." | 1 | Forgotten Monument | lci |
 | return target creature to its owner"..."s an artifact with "...") | 1 | Brackish Blunder | lci |
 | sunbird effigy's power and toughness are each equal to the number of colors among the exiled cards used to craft it. | 1 | Sunbird Standard // Sunbird Effigy | lci |
@@ -372,14 +366,11 @@
 | whenever ~ attacks, create a treasure token. until end of turn, you may look at the top card of your library any time, and you may play lands and cast spells fr | 1 | The Belligerent | lci |
 | whenever ~ attacks, for each creature you control with power greater than that creature's base power, put a number of +N/+N counters on that creature equal to t | 1 | Sovereign Okinec Ahau | lci |
 | whenever ~ attacks, target creature that crewed it ~ explores. | 1 | Subterranean Schooner | lci |
-| you may cast dinosaur creature spells from among cards you own exiled with ~. if you cast a spell ~, that creature enters with a finality counter on it. | 1 | Intrepid Paleontologist | lci |
 | you may mill two cards. then return up to two creature cards from your graveyard to your hand. (to mill two cards, put the top two cards of your library into yo | 1 | Another Chance | lci |
 | {M}: add one mana of any of the exiled cards' colors. | 1 | Pit of Offerings | lci |
 | {M}: you may cast a creature spell from your graveyard ~. if you do, it enters with a finality counter on it and is a vampire in addition to its other types. | 1 | Tarrian's Journal // The Tomb of Aclazotz | lci |
-| {M}{M}, {M}: look at the top four cards of your library. you may reveal a creature card from among them and put that card into your hand. put the rest on the bo | 1 | Twists and Turns // Mycoid Maze | lci |
 | {M}{M}: ~ can't be blocked by creatures with power N or less ~. | 1 | Cavern Stomper | lci |
 | {M}{M}{M}: draw a card, then discard a card. when you discard a card ~, target player mills cards equal to its mana value. | 1 | The Ancient One | lci |
-| ~ can't be blocked except by three or more creatures. | 1 | Rampaging Ceratops | lci |
 | ~ is the chosen type in addition to its other types. | 1 | Roaming Throne | lci |
 | −N: exile any number of target cards from your graveyard. add {M} for each card exiled ~. you may play those cards ~. | 1 | Quintorius Kand | lci |
 

@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 15 | 9.3% |
-| Works (untested) | 97 | 59.9% |
-| Partial (unaudited) | 12 | 7.4% |
-| Not working | 38 | 23.5% |
+| Tested | 18 | 11.1% |
+| Works (untested) | 99 | 61.1% |
+| Partial (unaudited) | 8 | 4.9% |
+| Not working | 37 | 22.8% |
 
 ## Cards needing work
 
@@ -28,7 +28,6 @@
 |---|---|---|---|---|---|
 | Acquire | silent | Search target opponent's library for an artifact card and put that card onto the battlefield under your control. Then that player shuffles. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | All Suns' Dawn | silent | For each color, return up to one target card of that color from your graveyard to your hand. Exile All Suns' Dawn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Arcbound Wanderer | silent | Modular | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Avarice Totem | silent | {5}: Exchange control of this artifact and target nonland permanent. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Beacon of Immortality | silent | Double target player's life total. Shuffle Beacon of Immortality into its owner's library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Beacon of Tomorrows | silent | Target player takes an extra turn after this one. Shuffle Beacon of Tomorrows into its owner's library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -64,22 +63,19 @@
 | Rude Awakening | notice | Choose one — • Untap all lands you control. • Until end of turn, lands you control become 2/2 creatures that are still lands. Entwine {2}{G} (Choose both if you | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Spectral Shift | notice | Choose one — • Change the text of target spell or permanent by replacing all instances of one basic land type with another. (This effect lasts indefinitely.) •  | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Tangle Asp | notice | Whenever this creature blocks or becomes blocked by a creature, destroy that creature at end of combat. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Disruption Aura | unaudited | Enchanted artifact has "At the beginning of your upkeep, sacrifice this artifact unless you pay its mana cost." | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Endless Whispers | unaudited | Each creature has "When this creature dies, choose target opponent. That player puts this card from its owner's graveyard onto the battlefield under their contr | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Eon Hub | unaudited | Players skip their upkeep steps. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Fist of Suns | unaudited | You may pay {W}{U}{B}{R}{G} rather than pay the mana cost for spells you cast. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Goblin Brawler | unaudited | This creature can't be equipped. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Lantern of Insight | unaudited | Players play with the top card of their libraries revealed. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Mycosynth Golem | unaudited | Artifact creature spells you cast have affinity for artifacts. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Razorgrass Screen | unaudited | This creature blocks each combat if able. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Relentless Rats | unaudited | A deck can have any number of cards named Relentless Rats. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Silent Arbiter | unaudited | No more than one creature can attack each combat. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Stasis Cocoon | unaudited | Enchanted artifact can't attack or block, and its activated abilities can't be activated. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Tornado Elemental | unaudited | You may have this creature assign its combat damage as though it weren't blocked. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Abuna's Chant | handled | Choose one — • You gain 5 life. • Prevent the next 5 damage that would be dealt to target creature this turn. Entwine {2} (Choose both if you pay the entwine co | the engine reads this text and performs it | Y/-/- | not_tested |
 | Advanced Hoverguard | handled | {U}: This creature gains shroud until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Anodet Lurker | handled | When this creature dies, you gain 3 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Arachnoid | handled | Reach | machines/combat.py | Y/-/- | not_tested |
+| Arcbound Wanderer | handled | Modular | machines/keywords.py | Y/-/- | not_tested |
 | Armed Response | handled | Armed Response deals damage to target attacking creature equal to the number of Equipment you control. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Artificer's Intuition | handled | {U}, Discard an artifact card: Search your library for an artifact card with mana value 1 or less, reveal it, put it into your hand, then shuffle. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Auriok Champion | handled | Whenever another creature enters, you may gain 1 life. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -104,6 +100,7 @@
 | Conjurer's Bauble | handled | {T}, Sacrifice this artifact: Put up to one target card from your graveyard on the bottom of your library. Draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Dawn's Reflection | handled | Whenever enchanted land is tapped for mana, its controller adds an additional two mana in any combination of colors. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Desecration Elemental | handled | Whenever a player casts a spell, sacrifice a creature. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Disruption Aura | handled | Enchanted artifact has "At the beginning of your upkeep, sacrifice this artifact unless you pay its mana cost." | the engine reads this text and performs it | Y/-/- | not_tested |
 | Dross Crocodile | handled |  |  | Y/-/- | not_tested |
 | Early Frost | handled | Tap up to three target lands. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ebon Drake | handled | Whenever a player casts a spell, you lose 1 life. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -177,20 +174,23 @@
 ## Fully supported
 
 <details>
-<summary>15 cards</summary>
+<summary>18 cards</summary>
 
 - Beacon of Unrest
 - Cranial Plating
 - Crucible of Worlds
 - Engineered Explosives
 - Eternal Witness
+- Fist of Suns
 - Grinding Station
 - Magma Jet
 - Night's Whisper
 - Opaline Bracers
 - Paradise Mantle
 - Rite of Passage
+- Silent Arbiter
 - Solarion
+- Stasis Cocoon
 - Trinket Mage
 - Vicious Betrayal
 - Viridian Lorebearers
@@ -221,11 +221,7 @@
 | each creature has "..." | 1 | Endless Whispers | 5dn |
 | each creature you control is a vampire in addition to its other creature types and has "..." | 1 | Mephidross Vampire | 5dn |
 | each player returns all artifact cards from their graveyard to the battlefield. | 1 | Roar of Reclamation | 5dn |
-| enchanted artifact can"..."t be activated. | 1 | Stasis Cocoon | 5dn |
-| enchanted artifact has "..." | 1 | Disruption Aura | 5dn |
 | for each color, return up to one target card of that color from your graveyard to your hand. exile ~. | 1 | All Suns' Dawn | 5dn |
-| modular | 1 | Arcbound Wanderer | 5dn |
-| no more than one creature can attack each combat. | 1 | Silent Arbiter | 5dn |
 | players play with the top card of their libraries revealed. | 1 | Lantern of Insight | 5dn |
 | players skip their upkeep steps. | 1 | Eon Hub | 5dn |
 | remove two +N/+N counters from ~: remove a counter from target permanent. | 1 | Spinal Parasite | 5dn |
@@ -238,7 +234,6 @@
 | whenever ~ blocks or becomes blocked by a creature, destroy that creature at end of combat. | 1 | Tangle Asp | 5dn |
 | whenever ~ deals combat damage to a player, you may remove a counter from target permanent. | 1 | Ferropede | 5dn |
 | you may have ~ assign its combat damage as though it weren't blocked. | 1 | Tornado Elemental | 5dn |
-| you may pay {M}{M}{M}{M}{M} rather than pay the mana cost for spells you cast. | 1 | Fist of Suns | 5dn |
 | {M}, sacrifice ~: counter target activated ability from an artifact source and destroy that artifact if it's on the battlefield. | 1 | Ouphe Vandals | 5dn |
 | {M}, {M}: double the amount of each type of unspent mana you have. | 1 | Doubling Cube | 5dn |
 | {M}, {M}: gain control of target creature with power less than or equal to the number of islands you control for as long as ~ remains tapped. | 1 | Vedalken Shackles | 5dn |

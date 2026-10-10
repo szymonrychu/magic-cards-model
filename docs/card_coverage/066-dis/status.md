@@ -17,9 +17,9 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 30 | 17.8% |
-| Works (untested) | 61 | 36.1% |
-| Partial (unaudited) | 4 | 2.4% |
+| Tested | 31 | 18.3% |
+| Works (untested) | 62 | 36.7% |
+| Partial (unaudited) | 2 | 1.2% |
 | Not working | 74 | 43.8% |
 
 ## Cards needing work
@@ -100,8 +100,6 @@
 | Ignorant Bliss | notice | Exile all cards from your hand face down. At the beginning of the next end step, return those cards to your hand, then draw a card. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Infernal Tutor | notice | Reveal a card from your hand. Search your library for a card with the same name as that card, reveal it, put it into your hand, then shuffle. Hellbent — If you  | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Might of the Nephilim | notice | Target creature gets +2/+2 until end of turn for each of its colors. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Leafdrake Roost | unaudited | Enchanted land has "{G}{U}, {T}: Create a 2/2 green and blue Drake creature token with flying." | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Rain of Gore | unaudited | If a spell or ability would cause its controller to gain life, that player loses that much life instead. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Shielding Plax | unaudited | Enchanted creature can't be the target of spells or abilities your opponents control. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Taste for Mayhem | unaudited | Hellbent — Enchanted creature gets an additional +2/+0 as long as you have no cards in hand. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Assault Zeppelid | handled | Flying | machines/combat.py | Y/-/- | not_tested |
@@ -120,6 +118,7 @@
 | Entropic Eidolon | handled | {B}, Sacrifice this creature: Target player loses 1 life and you gain 1 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Gnat Alley Creeper | handled | This creature can't be blocked by creatures with flying. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Haazda Exonerator | handled | {T}, Sacrifice this creature: Destroy target Aura. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Leafdrake Roost | handled | Enchanted land has "{G}{U}, {T}: Create a 2/2 green and blue Drake creature token with flying." | the engine reads this text and performs it | Y/-/- | not_tested |
 | Lyzolda, the Blood Witch | handled | {2}, Sacrifice a creature: Lyzolda deals 2 damage to any target if the sacrificed creature was red. Draw a card if the sacrificed creature was black. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Macabre Waltz | handled | Return up to two target creature cards from your graveyard to your hand, then discard a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Magewright's Stone | handled | {1}, {T}: Untap target creature that has an activated ability with {T} in its cost. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -169,7 +168,7 @@
 ## Fully supported
 
 <details>
-<summary>30 cards</summary>
+<summary>31 cards</summary>
 
 - Anthem of Rakdos
 - Azorius Aethermage
@@ -195,6 +194,7 @@
 - Psychic Possession
 - Psychotic Fury
 - Ragamuffyn
+- Rain of Gore
 - Rakdos Signet
 - Simic Growth Chamber
 - Spell Snare
@@ -226,12 +226,10 @@
 | enchanted creature can't be the target of spells or abilities your opponents control. | 1 | Shielding Plax | dis |
 | enchanted creature gets +N/+N and can block creatures with landwalk abilities as though they didn't have those abilities. | 1 | Street Savvy | dis |
 | enchanted creature gets +N/+N for each of its colors. | 1 | Blessing of the Nephilim | dis |
-| enchanted land has "..." | 1 | Leafdrake Roost | dis |
 | equipped creature gets +N/+N for each blood counter on ~ and has "..." | 1 | Rakdos Riteknife | dis |
 | exile all cards from your hand face down. at the beginning of the next end step, return those cards to your hand, then draw a card. | 1 | Ignorant Bliss | dis |
 | flip a coin. if it comes up heads, counter target instant or sorcery spell. if it comes up tails, copy that spell and you may choose new targets for the copy. | 1 | Odds // Ends | dis |
 | gain control of target monocolored creature. forecast — {M}{M}, reveal ~ from your hand: target creature becomes the color or colors of your choice until end of | 1 | Govern the Guildless | dis |
-| if a spell or ability would cause its controller to gain life, that player loses that much life instead. | 1 | Rain of Gore | dis |
 | put target artifact or enchantment on the bottom of its owner's library. | 1 | Hide // Seek | dis |
 | put target attacking creature on the bottom of its owner's library. its controller gains life equal to its toughness. | 1 | Condemn | dis |
 | return all creatures blocking or blocked by target creature to their owner's hand. | 1 | Trial // Error | dis |

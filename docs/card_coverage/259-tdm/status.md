@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 55 | 21.8% |
-| Works (untested) | 128 | 50.8% |
-| Partial (unaudited) | 12 | 4.8% |
-| Not working | 57 | 22.6% |
+| Tested | 64 | 25.4% |
+| Works (untested) | 130 | 51.6% |
+| Partial (unaudited) | 4 | 1.6% |
+| Not working | 54 | 21.4% |
 
 ## Cards needing work
 
@@ -40,16 +40,14 @@
 | Embermouth Sentinel | silent | When this creature enters, you may search your library for a basic land card, reveal it, then shuffle and put that card on top. If you control a Dragon, put tha | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Formation Breaker | silent | As long as you control a creature with a counter on it, this creature gets +1/+2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Fresh Start | silent | Enchanted creature gets -5/-0 and loses all abilities. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Frostcliff Siege | silent | • Temur — Creatures you control get +1/+0 and have trample and haste. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Gurmag Rakshasa | silent | When this creature enters, target creature an opponent controls gets -2/-2 until end of turn and target creature you control gets +2/+2 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Herd Heirloom | silent | {T}: Until end of turn, target creature you control with power 4 or greater gains trample and "Whenever this creature deals combat damage to a player, draw a ca | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Hollowmurk Siege | silent | • Abzan — Whenever you attack, put a +1/+1 counter on target attacking creature. It gains menace until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
+| Hollowmurk Siege | silent | Whenever a counter is put on a creature you control, draw a card. This ability triggers only once each turn. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
 | Hundred-Battle Veteran | silent | As long as there are three or more different kinds of counters among creatures you control, this creature gets +2/+4. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Kheru Goldkeeper | silent | Whenever one or more cards leave your graveyard during your turn, create a Treasure token. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
 | Kishla Skimmer | silent | Whenever a card leaves your graveyard during your turn, draw a card. This ability triggers only once each turn. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
 | Kotis, the Fangkeeper | silent | Whenever Kotis deals combat damage to a player, exile the top X cards of their library, where X is the amount of damage dealt. You may cast any number of spells | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Krotiq Nestguard | silent | {2}{G}: This creature can attack this turn as though it didn't have defender. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Lasyd Prowler | silent | When this creature enters, you may mill cards equal to the number of lands you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Lotuslight Dancers | silent | When this creature enters, search your library for a black card, a green card, and a blue card. Put those cards into your graveyard, then shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Mardu Siegebreaker | silent | Whenever this creature attacks, for each opponent, create a tapped token that's a copy of the exiled card attacking that opponent. At the beginning of your next | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Molten Exhale | silent | You may cast this spell as though it had flash if you behold a Dragon as an additional cost to cast it. (To behold a Dragon, choose a Dragon you control or reve | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -73,7 +71,6 @@
 | Traveling Botanist | silent | Whenever this creature becomes tapped, look at the top card of your library. If it's a land card, you may reveal it and put it into your hand. If you don't put  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Veteran Ice Climber | silent | Whenever this creature attacks, up to one target player mills cards equal to this creature's power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Warden of the Grove | silent | Whenever another nontoken creature you control enters, it endures X, where X is the number of counters on this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Windcrag Siege | silent | • Jeskai — At the beginning of your upkeep, create a 1/1 red Goblin creature token. It gains lifelink and haste until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Wingspan Stride | silent | {2}{U}: Return this Aura to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Desperate Measures | notice | Target creature gets +1/-1 until end of turn. When it dies under your control this turn, draw two cards. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Karakyk Guardian | notice | This creature has hexproof as long as it hasn't dealt damage yet. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
@@ -83,17 +80,9 @@
 | Shiko, Paragon of the Way | notice | When Shiko enters, exile target nonland card with mana value 3 or less from your graveyard. Copy it, then you may cast the copy without paying its mana cost. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Synchronized Charge | notice | Distribute two +1/+1 counters among one or two target creatures you control. Creatures you control with counters on them gain vigilance and trample until end of | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Temur Battlecrier | notice | During your turn, spells you cast cost {1} less to cast for each creature you control with power 4 or greater. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Barrensteppe Siege | unaudited | As this enchantment enters, choose Abzan or Mardu. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Dracogenesis | unaudited | You may cast Dragon spells without paying their mana costs. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Dragonologist | unaudited | Untapped Dragons you control have hexproof. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Dragonstorm Globe | unaudited | Each Dragon you control enters with an additional +1/+1 counter on it. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Effortless Master | unaudited | This creature enters with two +1/+1 counters on it if you've cast two or more spells this turn. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Glacierwood Siege | unaudited | As this enchantment enters, choose Temur or Sultai. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Highspire Bell-Ringer | unaudited | The second spell you cast each turn costs {1} less to cast. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Neriv, Heart of the Storm | unaudited | If a creature you control that entered this turn would deal damage, it deals twice that much damage instead. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Snowmelt Stag | unaudited | During your turn, this creature has base power and toughness 5/2. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Static Snare | unaudited | This spell costs {1} less to cast for each attacking creature. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Whirlwing Stormbrood // Dynamic Soar | unaudited | You may cast sorcery spells and Dragon spells as though they had flash. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
+| Windcrag Siege | unaudited | • Mardu — If a creature attacking causes a triggered ability of a permanent you control to trigger, that ability triggers an additional time. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Zurgo, Thunder's Decree | unaudited | During your end step, Warrior tokens you control have "This token can't be sacrificed." | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Abzan Devotee | handled | {2}{B}: Return this card from your graveyard to your hand. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Abzan Monument | handled | When this artifact enters, search your library for a basic Plains, Swamp, or Forest card, reveal it, put it into your hand, then shuffle. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -138,6 +127,7 @@
 | Furious Forebear | handled | Whenever a creature you control dies while this card is in your graveyard, you may pay {1}{W}. If you do, return this card from your graveyard to your hand. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Great Arashin City | handled | This land enters tapped unless you control a Forest or a Plains. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Gurmag Nightwatch | handled | When this creature enters, look at the top three cards of your library. You may put one of those cards back on top of your library. Put the rest into your grave | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Highspire Bell-Ringer | handled | The second spell you cast each turn costs {1} less to cast. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Host of the Hereafter | handled | This creature enters with two +1/+1 counters on it. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Humbling Elder | handled | When this creature enters, target creature an opponent controls gets -2/-0 until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Iceridge Serpent | handled | When this creature enters, return target creature an opponent controls to its owner's hand. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -152,6 +142,7 @@
 | Kin-Tree Severance | handled | Exile target permanent with mana value 3 or greater. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Kishla Village | handled | This land enters tapped unless you control an Island or a Swamp. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Knockout Maneuver | handled | Put a +1/+1 counter on target creature you control, then it deals damage equal to its power to target creature an opponent controls. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Lasyd Prowler | handled | When this creature enters, you may mill cards equal to the number of lands you control. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Lightfoot Technique | handled | Put a +1/+1 counter on target creature. It gains flying and indestructible until end of turn. (Damage and effects that say "destroy" don't destroy it.) | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Loxodon Battle Priest | handled | At the beginning of combat on your turn, put a +1/+1 counter on another target creature you control. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Mammoth Bellow | handled | Create a 5/5 green Elephant creature token. Harmonize {5}{G}{U}{R} (You may cast this card from your graveyard for its harmonize cost. You may tap a creature yo | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -227,12 +218,13 @@
 ## Fully supported
 
 <details>
-<summary>55 cards</summary>
+<summary>64 cards</summary>
 
 - Aegis Sculptor
 - Agent of Kotis
 - Ainok Wayfarer
 - Avenger of the Fallen
+- Barrensteppe Siege
 - Breaching Dragonstorm
 - Caustic Exhale
 - Clarion Conqueror
@@ -241,15 +233,20 @@
 - Dalkovan Encampment
 - Delta Bloodflies
 - Dispelling Exhale
+- Dracogenesis
 - Dragonback Lancer
 - Dragonclaw Strike
 - Dragonfire Blade
+- Dragonstorm Globe
+- Effortless Master
 - Eshki Dragonclaw
 - Essence Anchor
 - Flamehold Grappler
 - Fortress Kin-Guard
 - Frontline Rush
+- Frostcliff Siege
 - Glacial Dragonhunt
+- Glacierwood Siege
 - Hardened Tactician
 - Heritage Reclamation
 - Inevitable Defeat
@@ -260,6 +257,7 @@
 - Marang River Regent // Coil and Catch
 - Mistrise Village
 - Nature's Rhythm
+- Neriv, Heart of the Storm
 - New Way Forward
 - Purging Stormbrood // Absorb Essence
 - Roamer's Routine
@@ -271,6 +269,7 @@
 - Stadium Headliner
 - Stalwart Successor
 - Starry-Eyed Skyrider
+- Static Snare
 - Stormscale Scion
 - Strategic Betrayal
 - Surrak, Elusive Hunter
@@ -281,6 +280,7 @@
 - Ureni, the Song Unending
 - Voice of Victory
 - Wail of War
+- Whirlwing Stormbrood // Dynamic Soar
 - Winternight Stories
 - Yathan Roadwatcher
 - Yathan Tombguard
@@ -295,8 +295,6 @@
 | Renew | 1 | Naga Fleshcrafter | tdm |
 | as long as there are three or more different kinds of counters among creatures you control, ~ gets +N/+N. | 1 | Hundred-Battle Veteran | tdm |
 | as long as you control a creature with a counter on it, ~ gets +N/+N. | 1 | Formation Breaker | tdm |
-| as ~ enters, choose abzan or mardu. | 1 | Barrensteppe Siege | tdm |
-| as ~ enters, choose temur or sultai. | 1 | Glacierwood Siege | tdm |
 | at the beginning of each combat, if you've cast two or more spells ~, ~ becomes a N/N monk creature with haste in addition to its other types until end of turn. | 1 | Reverberating Summons | tdm |
 | at the beginning of your end step, if creatures you control have total toughness N or greater, draw a card. then if creatures you control have total toughness N | 1 | Betor, Kin to All | tdm |
 | at the beginning of your upkeep, for each color, put a +N/+N counter on a dragon you control of that color. if you put +N/+N counters on five dragons ~, you win | 1 | Call the Spirit Dragons | tdm |
@@ -308,18 +306,15 @@
 | during your end step, warrior tokens you control have "..." | 1 | Zurgo, Thunder's Decree | tdm |
 | during your turn, spells you cast cost {M} less to cast for each creature you control with power N or greater. | 1 | Temur Battlecrier | tdm |
 | during your turn, ~ has base power and toughness N/N. | 1 | Snowmelt Stag | tdm |
-| each dragon you control enters with an additional +N/+N counter on it. | 1 | Dragonstorm Globe | tdm |
 | each non-dragon creature gets -N/-N until end of turn. (then shuffle ~ into its owner's library.) | 1 | Scavenger Regent // Exude Toxin | tdm |
 | enchanted creature gets -N/-N and loses all abilities. | 1 | Fresh Start | tdm |
 | endure | 1 | Anafenza, Unyielding Lineage | tdm |
-| if a creature you control that entered ~ would deal damage, it deals twice that much damage instead. | 1 | Neriv, Heart of the Storm | tdm |
 | return target creature card from your graveyard to your hand. ~ deals damage equal to that card's power to target creature. | 1 | Lie in Wait | tdm |
 | return target permanent card from your graveyard to the battlefield with a hexproof counter and an indestructible counter on it. | 1 | Perennation | tdm |
 | return up to two target permanent cards from your graveyard to your hand. target player shuffles up to four target cards from their graveyard into their library | 1 | Rite of Renewal | tdm |
 | search your library for up to two basic forest cards, reveal them, put one onto the battlefield tapped and the other into your hand, then shuffle. (also shuffle | 1 | Bloomvine Regent // Claim Territory | tdm |
 | tap target creature. put three stun counters on it. (if a permanent with a stun counter would become untapped, remove one from it instead.) exile the top two ca | 1 | Riverwheel Sweep | tdm |
 | target creature gets +N/-N until end of turn. when it dies under your control ~, draw two cards. | 1 | Desperate Measures | tdm |
-| the second spell you cast each turn costs {M} less to cast. | 1 | Highspire Bell-Ringer | tdm |
 | untapped dragons you control have hexproof. | 1 | Dragonologist | tdm |
 | when shiko enters, exile target nonland card with mana value N or less from your graveyard. copy it, then you may cast the copy without paying its mana cost. | 1 | Shiko, Paragon of the Way | tdm |
 | when ~ enters, draw a card if you control a creature with a counter on it. if you don't draw a card ~, put a +N/+N counter on ~. | 1 | Trade Route Envoy | tdm |
@@ -329,9 +324,9 @@
 | when ~ enters, target instant or sorcery card in your graveyard gains harmonize until end of turn. its harmonize cost is equal to its mana cost. | 1 | Songcrafter Mage | tdm |
 | when ~ enters, target opponent reveals their hand. you may choose a nonland card from it. if you do, exile that card. | 1 | Severance Priest | tdm |
 | when ~ enters, you may exile a creature card from your graveyard. when you do, return target instant or sorcery card from your graveyard to your hand. | 1 | Kishla Trawlers | tdm |
-| when ~ enters, you may mill cards equal to the number of lands you control. | 1 | Lasyd Prowler | tdm |
 | when ~ enters, you may search your library for a basic land card, reveal it, then shuffle and put that card on top. if you control a dragon, put that card onto  | 1 | Embermouth Sentinel | tdm |
 | whenever a card leaves your graveyard during your turn, draw a card. ~ triggers only once each turn. | 1 | Kishla Skimmer | tdm |
+| whenever a counter is put on a creature you control, draw a card. ~ triggers only once each turn. | 1 | Hollowmurk Siege | tdm |
 | whenever a creature you control enters, if you cast it, destroy that creature, then create a N/N black zombie druid creature token. | 1 | The Sibsig Ceremony | tdm |
 | whenever another nontoken creature you control enters, it endures N, where N is the number of counters on ~. | 1 | Warden of the Grove | tdm |
 | whenever kotis deals combat damage to a player, exile the top N cards of their library, where N is the amount of damage dealt. you may cast any number of spells | 1 | Kotis, the Fangkeeper | tdm |
@@ -344,22 +339,16 @@
 | whenever ~ attacks, you may pay {M}{M}. if you do, it endures N. | 1 | Descendant of Storms | tdm |
 | whenever ~ becomes tapped, look at the top card of your library. if it"..."t put the card into your hand, you may put it into your graveyard. | 1 | Traveling Botanist | tdm |
 | whenever ~ deals combat damage to a player, you may search your library for a card named ~, reveal it, put it into your hand, then shuffle. | 1 | Tempest Hawk | tdm |
-| you may cast dragon spells without paying their mana costs. | 1 | Dracogenesis | tdm |
-| you may cast sorcery spells and dragon spells as though they had flash. | 1 | Whirlwing Stormbrood // Dynamic Soar | tdm |
 | you may cast ~ as though it had flash if you behold a dragon as an additional cost to cast it. (to behold a dragon, choose a dragon you control or reveal a drag | 1 | Molten Exhale | tdm |
 | {M}, {M}: search your library for a card named dragonstorm globe or boulderborn dragon, reveal it, put it into your hand, then shuffle. | 1 | Dragonstorm Forecaster | tdm |
 | {M}: until end of turn, target creature you control with power N or greater gains trample and "..." | 1 | Herd Heirloom | tdm |
 | {M}{M}: return ~ to its owner's hand. | 1 | Wingspan Stride | tdm |
 | {M}{M}: ~ can attack ~ as though it didn't have defender. | 1 | Krotiq Nestguard | tdm |
 | {M}{M}{M}{M}{M}{M}, sacrifice ~: create a N/N dragon creature token named reliquary dragon that's all colors. it has flying, lifelink, and "..." activate only a | 1 | Dragonbroods' Relic | tdm |
-| ~ costs {M} less to cast for each attacking creature. | 1 | Static Snare | tdm |
 | ~ costs {M} more to cast if it targets a dragon. destroy target creature. | 1 | Dragon's Prey | tdm |
 | ~ deals N damage to target creature. add {M}{M}{M}. if that creature would die ~, exile it instead. | 1 | Narset's Rebuke | tdm |
-| ~ enters with two +N/+N counters on it if you've cast two or more spells ~. | 1 | Effortless Master | tdm |
 | ~ has hexproof as long as it hasn't dealt damage yet. | 1 | Karakyk Guardian | tdm |
-| • abzan — whenever you attack, put a +N/+N counter on target attacking creature. it gains menace until end of turn. | 1 | Hollowmurk Siege | tdm |
-| • jeskai — at the beginning of your upkeep, create a N/N red goblin creature token. it gains lifelink and haste until end of turn. | 1 | Windcrag Siege | tdm |
-| • temur — creatures you control get +N/+N and have trample and haste. | 1 | Frostcliff Siege | tdm |
+| • mardu — if a creature attacking causes a triggered ability of a permanent you control to trigger, that ability triggers an additional time. | 1 | Windcrag Siege | tdm |
 
 ## Notes
 

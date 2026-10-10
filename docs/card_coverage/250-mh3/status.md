@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 73 | 27.9% |
-| Works (untested) | 93 | 35.5% |
-| Partial (unaudited) | 17 | 6.5% |
-| Not working | 79 | 30.2% |
+| Tested | 80 | 30.5% |
+| Works (untested) | 94 | 35.9% |
+| Partial (unaudited) | 10 | 3.8% |
+| Not working | 78 | 29.8% |
 
 ## Cards needing work
 
@@ -29,7 +29,6 @@
 | Aether Spike | silent | Choose target spell. You get {E}{E} (two energy counters), then you may pay any amount of {E}. Counter that spell unless its controller pays {1} for each {E} pa | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Ajani Fells the Godsire | silent | II — Create a 2/1 white Cat Warrior creature token, then put a vigilance counter on a creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Amped Raptor | silent | When this creature enters, you get {E}{E} . Then if you cast it from your hand, exile cards from the top of your library until you exile a nonland card. You may | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Arcbound Condor | silent | Modular | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Arna Kennerüd, Skycaptain | silent | Whenever a modified creature you control attacks, double the number of each kind of counter on it. Then for each nontoken permanent attached to it, create a tok | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Bloodsoaked Insight // Sanguine Morass | silent | This spell costs {1} less to cast for each 1 life your opponents have lost this turn. Target opponent exiles the top three cards of their library. Until the end | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Breathe Your Last | silent | Destroy target creature or planeswalker. You gain 1 life for each of its colors. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -105,26 +104,20 @@
 | Obstinate Gargoyle | notice | This creature has flying as long as it's modified. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Propagator Drone | notice | Creature tokens you control have evolve. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Pyretic Rebirth | notice | Return target artifact or creature card from your graveyard to your hand. Pyretic Rebirth deals damage equal to that card's mana value to up to one target creat | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Corrupted Shapeshifter | unaudited | As this creature enters, it becomes your choice of a 3/3 creature with flying, a 2/5 creature with vigilance, or a 0/12 creature with defender. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Cursed Wombat | unaudited | Permanents you control have "Whenever one or more +1/+1 counters are put on this permanent, put an additional +1/+1 counter on it. This ability triggers only on | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Dog Umbra | unaudited | As long as another player controls enchanted creature, it can't attack or block. Otherwise, this Aura has umbra armor. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Echoes of Eternity | unaudited | If a triggered ability of a colorless spell you control or another colorless permanent you control triggers, that ability triggers an additional time. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Etherium Pteramander | unaudited | This creature can block only creatures with flying. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Hydra Trainer | unaudited | You may exert this creature as it attacks. When you do, target creature gets +X/+X until end of turn, where X is the number of counters on permanents you contro | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| It That Heralds the End | unaudited | Colorless spells you cast with mana value 7 or greater cost {1} less to cast. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Nethergoyf | unaudited | Nethergoyf's power is equal to the number of card types among cards in your graveyard and its toughness is equal to that number plus 1. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Party Thrasher | unaudited | Noncreature spells you cast from exile have convoke. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Path of Annihilation | unaudited | Eldrazi you control have "{T}: Add one mana of any color." | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Pearl-Ear, Imperial Advisor | unaudited | Enchantment spells you cast have affinity for Auras. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Primal Prayers | unaudited | You may cast creature spells with mana value 3 or less by paying {E} rather than paying their mana costs. If you cast a spell this way, you may cast it as thoug | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Six | unaudited | During your turn, nonland permanent cards in your graveyard have retrace. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | The Necrobloom | unaudited | Land cards in your graveyard have dredge 2. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Utter Insignificance | unaudited | Enchanted creature loses all abilities and has base power and toughness 1/1. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Voidpouncer | unaudited | If this creature was kicked, it enters with two +1/+1 counters and a trample counter on it and with haste. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Winter Moon | unaudited | Players can't untap more than one nonbasic land during their untap steps. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Accursed Marauder | handled | When this creature enters, each player sacrifices a nontoken creature of their choice. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Aerie Auxiliary | handled | When this creature enters, support 2. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Amphibian Downpour | handled | Enchanted creature loses all abilities and is a blue Frog creature with base power and toughness 1/1. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Arcbound Condor | handled | Whenever another artifact you control enters, target creature an opponent controls gets -1/-1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Argent Dais | handled | This artifact enters with two oil counters on it. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ashling, Flame Dancer | handled | You don't lose unspent red mana as steps and phases end. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Bespoke Battlewagon | handled | {T}: You get {E}{E} . | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -219,7 +212,7 @@
 ## Fully supported
 
 <details>
-<summary>73 cards</summary>
+<summary>80 cards</summary>
 
 - Aether Revolt
 - Ajani, Nacatl Pariah // Ajani, Nacatl Avenger
@@ -232,16 +225,19 @@
 - Bridgeworks Battle // Tanglespan Bridgeworks
 - Conduit Goblin
 - Consign to Memory
+- Corrupted Shapeshifter
 - Cyclops Superconductor
 - Deem Inferior
 - Detective's Phoenix
 - Devourer of Destiny
 - Disciple of Freyalise // Garden of Freyalise
 - Disruptor Flute
+- Dog Umbra
 - Drowner of Truth // Drowned Jungle
 - Eldrazi Repurposer
 - Emperor of Bones
 - Emrakul, the World Anew
+- Etherium Pteramander
 - Fanatic of Rhonas
 - Fell the Profane // Fell Mire
 - Galvanic Discharge
@@ -253,6 +249,7 @@
 - Hope-Ender Coatl
 - Hydroelectric Specimen // Hydroelectric Laboratory
 - Idol of False Gods
+- It That Heralds the End
 - Izzet Generatorium
 - Kappa Cannoneer
 - Kozilek's Command
@@ -260,11 +257,13 @@
 - Malevolent Rumble
 - Monumental Henge
 - Necrodominance
+- Nethergoyf
 - Null Elemental Blast
 - Ocelot Pride
 - Petrifying Meddler
 - Phelia, Exuberant Shepherd
 - Planar Genesis
+- Primal Prayers
 - Psychic Frog
 - Ral, Monsoon Mage // Ral, Leyline Prodigy
 - Refurbished Familiar
@@ -287,6 +286,7 @@
 - Ugin's Labyrinth
 - Ulamog, the Defiler
 - Vexing Bauble
+- Voidpouncer
 - Voltstorm Angel
 - Wastescape Battlemage
 - Waterlogged Teachings // Inundated Archive
@@ -305,16 +305,13 @@
 | Landfall | 3 | Reckless Pyrosurfer, Springheart Nantuko, Territory Culler | mh3 |
 | Morbid | 1 | Muster the Departed | mh3 |
 | as an additional cost to cast ~, sacrifice a creature or sacrifice a modified creature. (equipment, auras you control, and counters are modifications.) destroy  | 1 | Lethal Throwdown | mh3 |
-| as long as another player controls enchanted creature, it can't attack or block. otherwise, ~ has umbra armor. | 1 | Dog Umbra | mh3 |
 | as long as ~ is a creature, it has prowess. | 1 | Triton Wavebreaker | mh3 |
-| as ~ enters, it becomes your choice of a N/N creature with flying, a N/N creature with vigilance, or a N/N creature with defender. | 1 | Corrupted Shapeshifter | mh3 |
 | at the beginning of each of enchanted player's postcombat main phases, there is an additional beginning phase after ~. | 1 | Shadow of the Second Sun | mh3 |
 | at the beginning of your first main phase, mill three cards. then you may pay {M} and N life. if you do, put a card from among those cards into your hand. | 1 | Ripples of Undeath | mh3 |
 | at the beginning of your first main phase, tap ~ unless you pay {M}. | 1 | Electrozoa | mh3 |
 | choose target spell, then flip a coin. if you win the flip, gain control of that spell and you may choose new targets for it. if you lose the flip, counter that | 1 | Invert Polarity | mh3 |
 | choose target spell. you get {M}{M} (two energy counters), then you may pay any amount of {M}. counter that spell unless its controller pays {M} for each {M} pa | 1 | Aether Spike | mh3 |
 | choose up to one target artifact or creature card in your graveyard. you get {M}{M} (two energy counters). then you may pay an amount of {M} equal to that card' | 1 | Jolted Awake | mh3 |
-| colorless spells you cast with mana value N or greater cost {M} less to cast. | 1 | It That Heralds the End | mh3 |
 | connive | 1 | Copycrook | mh3 |
 | create a N/N white cat warrior creature token, then put a vigilance counter on a creature you control. | 1 | Ajani Fells the Godsire | mh3 |
 | create a spellgorger weird token. | 1 | Ral and the Implicit Maze | mh3 |
@@ -336,12 +333,10 @@
 | exile the top three cards of your library. you may play those cards ~. at the beginning of the next end step, if any of those cards remain exiled, put them into | 1 | Glimpse the Impossible | mh3 |
 | fabricate | 1 | Marionette Apprentice | mh3 |
 | if a triggered ability of a colorless spell you control or another colorless permanent you control triggers, that ability triggers an additional time. | 1 | Echoes of Eternity | mh3 |
-| if ~ was kicked, it enters with two +N/+N counters and a trample counter on it and with haste. | 1 | Voidpouncer | mh3 |
 | kicker {M}{M} (you may pay an additional {M}{M} as you cast ~.) choose target creature with mana value N or less. if ~ was kicked, instead choose target creatur | 1 | Expel the Unworthy | mh3 |
 | land cards in your graveyard have dredge N. | 1 | The Necrobloom | mh3 |
 | modified creatures you control have lifelink. | 1 | Envoy of the Ancestors | mh3 |
 | modified creatures you control have trample. | 1 | Temperamental Oozewagg | mh3 |
-| modular | 1 | Arcbound Condor | mh3 |
 | noncreature spells you cast from exile have convoke. | 1 | Party Thrasher | mh3 |
 | other creatures have base power and toughness N/N and are bears in addition to their other types. | 1 | Kudo, King Among Bears | mh3 |
 | overload | 1 | Fangs of Kalonia | mh3 |
@@ -375,7 +370,6 @@
 | whenever ~ attacks, you may draw cards equal to its power. if you do, discard that many cards. | 1 | Horrid Shadowspinner | mh3 |
 | whenever ~ deals combat damage to a player, put a +N/+N counter on it. when you do, you may remove a counter from another target permanent or opponent. | 1 | Etched Slith | mh3 |
 | you get {M}{M}{M} (three energy counters), then you may pay any amount of {M}. each player may exile their hand and draw a number of cards equal to the amount o | 1 | Wheel of Potential | mh3 |
-| you may cast creature spells with mana value N or less by paying {M} rather than paying their mana costs. if you cast a spell ~, you may cast it as though it ha | 1 | Primal Prayers | mh3 |
 | you may exert ~ as it attacks. when you do, target creature gets +N/+N until end of turn, where N is the number of counters on permanents you control. | 1 | Hydra Trainer | mh3 |
 | you may have ~ enter as a copy of an enchantment you control, except it has "..." | 1 | Estrid's Invocation | mh3 |
 | you may sacrifice a nontoken black creature rather than pay ~ mana cost. each opponent sacrifices a creature or planeswalker with the greatest mana value among  | 1 | Flare of Malice | mh3 |
@@ -388,10 +382,8 @@
 | {M}: return another target permanent you control and all auras you control attached to it to their owner's hand. activate only during your turn. | 1 | Essence Reliquary | mh3 |
 | {M}{M}, sacrifice an artifact: imskir deals damage equal to the sacrificed artifact's mana value to any target. | 1 | Imskir Iron-Eater | mh3 |
 | {M}{M}: each opponent loses N life and you gain N life. ~ costs {M}{M} less to activate if you've drawn three or more cards ~. activate only once each turn. | 1 | Kami of Jealous Thirst | mh3 |
-| ~ can block only creatures with flying. | 1 | Etherium Pteramander | mh3 |
 | ~ costs {M} less to cast for each N life your opponents have lost ~. target opponent exiles the top three cards of their library. until the end of your next tur | 1 | Bloodsoaked Insight // Sanguine Morass | mh3 |
 | ~ has flying as long as it's modified. | 1 | Obstinate Gargoyle | mh3 |
-| ~'s power is equal to the number of card types among cards in your graveyard and its toughness is equal to that number plus N. | 1 | Nethergoyf | mh3 |
 
 ## Notes
 

@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 38 | 14.2% |
-| Works (untested) | 128 | 47.9% |
-| Partial (unaudited) | 12 | 4.5% |
-| Not working | 89 | 33.3% |
+| Tested | 43 | 16.1% |
+| Works (untested) | 129 | 48.3% |
+| Partial (unaudited) | 7 | 2.6% |
+| Not working | 88 | 33.0% |
 
 ## Cards needing work
 
@@ -60,7 +60,6 @@
 | Kaito's Pursuit | silent | Target player discards two cards. Ninjas and Rogues you control gain menace until end of turn. (They can't be blocked except by two or more creatures.) | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Kodama of the West Tree | silent | Modified creatures you control have trample. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Kotose, the Silent Spider | silent | When Kotose enters, exile target card other than a basic land card from an opponent's graveyard. Search that player's graveyard, hand, and library for any numbe | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Kumano Faces Kakkazan // Etching of Kumano | silent | II — When you next cast a creature spell this turn, that creature enters with an additional +1/+1 counter on it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Light-Paws, Emperor's Voice | silent | Whenever an Aura you control enters, if you cast it, you may search your library for an Aura card with mana value less than or equal to that Aura and with a dif | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Lion Sash | silent | Equipped creature gets +1/+1 for each +1/+1 counter on this Equipment. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | March of Burgeoning Life | silent | As an additional cost to cast this spell, you may exile any number of green cards from your hand. This spell costs {2} less to cast for each card exiled this wa | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -117,16 +116,11 @@
 | Upriser Renegade | notice | This creature gets +2/+0 for each other modified creature you control. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Crackling Emergence | unaudited | Enchanted land is a 3/3 red Spirit creature with haste. It's still a land. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Futurist Operative | unaudited | As long as this creature is tapped, it's a Human Citizen with base power and toughness 1/1 and can't be blocked. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Grafted Growth | unaudited | Enchanted land has "{T}: Add two mana of any one color." | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Harmonious Emergence | unaudited | Enchanted land is a 4/5 green Spirit creature with vigilance and haste. It's still a land. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Heir of the Ancient Fang | unaudited | This creature enters with a +1/+1 counter on it if you control a modified creature. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Hotshot Mechanic | unaudited | This creature crews Vehicles as though its power were 2 greater. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Intercessor's Arrest | unaudited | Enchanted permanent can't attack, block, or crew Vehicles. Its activated abilities can't be activated unless they're mana abilities. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Isshin, Two Heavens as One | unaudited | If a creature attacking causes a triggered ability of a permanent you control to trigger, that ability triggers an additional time. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Orochi Merge-Keeper | unaudited | As long as this creature is modified, it has "{T}: Add {G}{G}." | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Silver-Fur Master | unaudited | Ninjutsu abilities you activate cost {1} less to activate. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| The Reality Chip | unaudited | As long as The Reality Chip is attached to a creature, you may play lands and cast spells from the top of your library. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Walking Skyscraper | unaudited | This spell costs {1} less to cast for each modified creature you control. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Acquisition Octopus | handled | Whenever this creature or equipped creature deals combat damage to a player, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Akki Ember-Keeper | handled | Whenever a nontoken modified creature you control dies, create a 1/1 colorless Spirit creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Akki Ronin | handled | Whenever a Samurai or Warrior you control attacks alone, you may discard a card. If you do, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -166,6 +160,7 @@
 | Go-Shintai of Hidden Cruelty | handled | At the beginning of your end step, you may pay {1}. When you do, destroy target creature with toughness X or less, where X is the number of Shrines you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Go-Shintai of Shared Purpose | handled | At the beginning of your end step, you may pay {1}. If you do, create a 1/1 colorless Spirit creature token for each Shrine you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Golden-Tail Disciple | handled | Lifelink | machines/combat.py | Y/Y/- | not_tested |
+| Grafted Growth | handled | When this Aura enters, put a +1/+1 counter on target creature or Vehicle you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Gravelighter | handled | When this creature enters, draw a card if a creature died this turn. Otherwise, each player sacrifices a creature of their choice. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Greater Tanuki | handled | Channel — {2}{G}, Discard this card: Search your library for a basic land card, put it onto the battlefield tapped, then shuffle. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Heiko Yamazaki, the General | handled | Whenever a Samurai or Warrior you control attacks alone, you may cast target artifact card from your graveyard this turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -259,7 +254,7 @@
 ## Fully supported
 
 <details>
-<summary>38 cards</summary>
+<summary>43 cards</summary>
 
 - Boseiju, Who Endures
 - Brilliant Restoration
@@ -273,11 +268,13 @@
 - Go-Shintai of Boundless Vigor
 - Goro-Goro, Disciple of Ryusei
 - Greasefang, Okiba Boss
+- Heir of the Ancient Fang
 - Hidetsugu Consumes All // Vessel of the All-Consuming
 - Iron Apprentice
 - Jin-Gitaxias, Progress Tyrant
 - Kami of Transience
 - Kami's Flare
+- Kumano Faces Kakkazan // Etching of Kumano
 - Lizard Blades
 - Malicious Malfunction
 - March of Otherworldly Light
@@ -290,15 +287,18 @@
 - Otawara, Soaring City
 - Reality Heist
 - Roaring Earth
+- Silver-Fur Master
 - Simian Sling
 - Spinning Wheel Kick
 - Takenuma, Abandoned Mire
 - Tameshi, Reality Architect
 - Tamiyo, Compleated Sage
+- The Reality Chip
 - The Wandering Emperor
 - Thousand-Faced Shadow
 - Thundering Raiju
 - Touch the Spirit Realm
+- Walking Skyscraper
 
 </details>
 
@@ -320,7 +320,6 @@
 | as long as enchanted permanent is a creature, it gets -N/-N and can't block. | 1 | Clawing Torment | neo |
 | as long as enchanted permanent is a creature, it gets -N/-N and loses flying. | 1 | Short Circuit | neo |
 | as long as you control five or more modified creatures, ~ gets +N/+N and has trample. | 1 | Jugan Defends the Temple // Remnant of the Rising Star | neo |
-| as long as ~ is attached to a creature, you may play lands and cast spells from the top of your library. | 1 | The Reality Chip | neo |
 | as long as ~ is modified, it has "..." | 1 | Orochi Merge-Keeper | neo |
 | as long as ~ is tapped, it"..."t be blocked. | 1 | Futurist Operative | neo |
 | at the beginning of combat on your turn, you may pay {M} and sacrifice an artifact. if you do, create a N/N red construct artifact creature token with haste. | 1 | Sokenzan Smelter | neo |
@@ -333,7 +332,6 @@
 | destroy up to one target artifact, enchantment, or tapped creature. then if you control an artifact and an enchantment, create a N/N white samurai creature toke | 1 | Banishing Slash | neo |
 | each opponent sacrifices a creature of their choice unless they discard a card. | 1 | The Long Reach of Night // Animus of Night's Reach | neo |
 | each player gains control of all permanents they own. | 1 | The Fall of Lord Konda // Fragment of Konda | neo |
-| enchanted land has "..." | 1 | Grafted Growth | neo |
 | enchanted land is a N/N green spirit creature with vigilance and haste. it's still a land. | 1 | Harmonious Emergence | neo |
 | enchanted land is a N/N red spirit creature with haste. it's still a land. | 1 | Crackling Emergence | neo |
 | enchanted permanent can"..."t be activated unless they're mana abilities. | 1 | Intercessor's Arrest | neo |
@@ -345,7 +343,6 @@
 | modified creatures you control can attack as though they didn't have defender. | 1 | Guardians of Oboro | neo |
 | modified creatures you control have haste. | 1 | Invigorating Hot Spring | neo |
 | modified creatures you control have trample. | 1 | Kodama of the West Tree | neo |
-| ninjutsu abilities you activate cost {M} less to activate. | 1 | Silver-Fur Master | neo |
 | other enchantment creatures you control get +N/+N. | 1 | Weaver of Harmony | neo |
 | return an artifact card from your graveyard to your hand. if you can't, draw a card. | 1 | Inventive Iteration // Living Breakthrough | neo |
 | return target creature or vehicle card from your graveyard to the battlefield. then put two +N/+N counters on that permanent if you control an artifact and an e | 1 | Okiba Salvage | neo |
@@ -362,7 +359,6 @@
 | when ao dies, choose one — • look at the top seven cards of your library. put any number of nonland permanent cards with total mana value N or less from among t | 1 | Ao, the Dawn Sky | neo |
 | when kairi dies, choose one — • return any number of target nonland permanents with total mana value N or less to their owners' hands. • mill six cards, then re | 1 | Kairi, the Swirling Sky | neo |
 | when kotose enters, exile target card other than a basic land card from an opponent"..."s graveyard, hand, and library for any number of cards with the same nam | 1 | Kotose, the Silent Spider | neo |
-| when you next cast a creature spell ~, that creature enters with an additional +N/+N counter on it. | 1 | Kumano Faces Kakkazan // Etching of Kumano | neo |
 | when ~ enters, for each kind of counter on target permanent, put another counter of that kind on it or remove one from it. | 1 | Dramatist's Puppet | neo |
 | when ~ enters, gain control of all rat tokens. | 1 | Tribute to Horobi // Echo of Death's Wail | neo |
 | when ~ enters, look at the top five cards of your library. you may reveal a creature or enchantment card from among them and put it into your hand. put the rest | 1 | Blossom Prancer | neo |
@@ -398,9 +394,7 @@
 | {M}{M}, {M}, return shigeki to its owner's hand: reveal the top four cards of your library. you may put a land card from among them onto the battlefield tapped. | 1 | Shigeki, Jukai Visionary | neo |
 | {M}{M}, {M}: exile the top card of your library. you may play that card ~. when you exile a nonland card ~, hidetsugu deals damage equal to the exiled card's ma | 1 | Hidetsugu, Devouring Chaos | neo |
 | {M}{M}: tatsunari and target frog you control can't be blocked ~ except by creatures with flying or reach. | 1 | Tatsunari, Toad Rider | neo |
-| ~ costs {M} less to cast for each modified creature you control. | 1 | Walking Skyscraper | neo |
 | ~ crews vehicles as though its power were N greater. | 1 | Hotshot Mechanic | neo |
-| ~ enters with a +N/+N counter on it if you control a modified creature. | 1 | Heir of the Ancient Fang | neo |
 | ~ gets +N/+N for each artifact and/or enchantment card in your graveyard. | 1 | Runaway Trash-Bot | neo |
 | ~ gets +N/+N for each other modified creature you control. | 1 | Upriser Renegade | neo |
 | −N: target artifact becomes an artifact creature. if it isn't a vehicle, it has base power and toughness N/N. | 1 | Tezzeret, Betrayer of Flesh | neo |

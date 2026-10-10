@@ -17,9 +17,9 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 66 | 23.8% |
+| Tested | 74 | 26.7% |
 | Works (untested) | 129 | 46.6% |
-| Partial (unaudited) | 12 | 4.3% |
+| Partial (unaudited) | 4 | 1.4% |
 | Not working | 70 | 25.3% |
 
 ## Cards needing work
@@ -97,17 +97,9 @@
 | Zuko's Conviction | notice | Kicker {4} (You may pay an additional {4} as you cast this spell.) Return target creature card from your graveyard to your hand. If this spell was kicked, inste | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Zuko, Conflicted | notice | At the beginning of your first main phase, choose one that hasn't been chosen and you lose 2 life — • Draw a card. • Put a +1/+1 counter on Zuko. • Add {R}. • E | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Bender's Waterskin | unaudited | Untap this artifact during each other player's untap step. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Cruel Administrator | unaudited | Raid — This creature enters with a +1/+1 counter on it if you attacked this turn. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Dragonfly Swarm | unaudited | This creature's power is equal to the number of noncreature, nonland cards in your graveyard. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Fated Firepower | unaudited | If a source you control would deal damage to an opponent or a permanent an opponent controls, it deals that much damage plus an amount of damage equal to the nu | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Great Divide Guide | unaudited | Each land and Ally you control has "{T}: Add one mana of any color." | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Honest Work | unaudited | Enchanted creature loses all abilities and is a Citizen with base power and toughness 1/1 and "{T}: Add {C}" named Humble Merchant. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Serpent of the Pass | unaudited | If there are three or more Lesson cards in your graveyard, you may cast this spell as though it had flash. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Swampsnare Trap | unaudited | This spell costs {1} less to cast if it targets a creature with flying. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| The Lion-Turtle | unaudited | The Lion-Turtle can't attack or block unless there are three or more Lesson cards in your graveyard. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | The Walls of Ba Sing Se | unaudited | Other permanents you control have indestructible. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Tiger-Dillo | unaudited | This creature can't attack or block unless you control another creature with power 4 or greater. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Toph, the Blind Bandit | unaudited | Toph's power is equal to the number of +1/+1 counters on lands you control. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Aang, the Last Airbender | handled | When Aang enters, airbend up to one other target nonland permanent. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Abandoned Air Temple | handled | This land enters tapped unless you control a basic land. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Airbender Ascension | handled | When this enchantment enters, airbend up to one target creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -241,7 +233,7 @@
 ## Fully supported
 
 <details>
-<summary>66 cards</summary>
+<summary>74 cards</summary>
 
 - Aang's Iceberg
 - Aang, Swift Savior // Aang and La, Ocean's Fury
@@ -259,14 +251,17 @@
 - Boomerang Basics
 - Callous Inspector
 - Combustion Technique
+- Cruel Administrator
 - Curious Farm Animals
 - Day of Black Sun
 - Deadly Precision
+- Dragonfly Swarm
 - Earthbender Ascension
 - Earthen Ally
 - Ember Island Production
 - Enter the Avatar State
 - Fatal Fissure
+- Fated Firepower
 - Fire Lord Azula
 - Fire Navy Trebuchet
 - Firebending Lesson
@@ -295,14 +290,19 @@
 - Redirect Lightning
 - Rockalanche
 - Ruinous Waterbending
+- Serpent of the Pass
 - Shared Roots
 - Solstice Revelations
 - Spirit Water Revival
+- Swampsnare Trap
 - Team Avatar
 - Teo, Spirited Glider
 - The Earth King
 - The Last Agni Kai
 - The Legend of Roku // Avatar Roku
+- The Lion-Turtle
+- Tiger-Dillo
+- Toph, the Blind Bandit
 - Toph, the First Metalbender
 - Ty Lee, Chi Blocker
 - Walltop Sentries
@@ -319,7 +319,6 @@
 | waterbend | 3 | Benevolent River Spirit, Foggy Swamp Visions, North Pole Patrol | tla |
 | Exhaust | 2 | Jeong Jeong, the Deserter, Mai, Jaded Edge | tla |
 | Landfall | 1 | Rabaroo Troop | tla |
-| Raid | 1 | Cruel Administrator | tla |
 | as an additional cost to cast ~, waterbend {M}. (while paying a waterbend cost, you can tap your artifacts and creatures to help. each one pays for {M}.) tap up | 1 | Crashing Wave | tla |
 | as an additional cost to cast ~, you may waterbend {M}. you control target opponent during their next combat phase. if ~ additional cost was paid, you control t | 1 | Secret of Bloodbending | tla |
 | as long as there is a lesson card in your graveyard, ~ can attack as though it didn't have defender. | 1 | Platypus-Bear | tla |
@@ -341,8 +340,6 @@
 | enchanted creature gets +N/+N for each creature card in your graveyard and is an avatar in addition to its other types. | 1 | Avatar Destiny | tla |
 | enchanted creature loses all abilities and is a citizen with base power and toughness N/N and "..." named humble merchant. | 1 | Honest Work | tla |
 | exile target creature. if it was dealt damage ~, create a clue token. (it's an artifact with "...") | 1 | Sold Out | tla |
-| if a source you control would deal damage to an opponent or a permanent an opponent controls, it deals that much damage plus an amount of damage equal to the nu | 1 | Fated Firepower | tla |
-| if there are three or more lesson cards in your graveyard, you may cast ~ as though it had flash. | 1 | Serpent of the Pass | tla |
 | kicker {M} (you may pay an additional {M} as you cast ~.) return target creature card from your graveyard to your hand. if ~ was kicked, instead put that card o | 1 | Zuko's Conviction | tla |
 | kicker {M} (you may pay an additional {M} as you cast ~.) search your library for a basic land card. if ~ was kicked, instead search your library for a basic la | 1 | Aang's Journey | tla |
 | kicker {M} (you may pay an additional {M} as you cast ~.) target creature can"..."s an artifact with "...") | 1 | Jet's Brainwashing | tla |
@@ -354,7 +351,6 @@
 | search your library for up to four land cards with different names and reveal them. an opponent chooses two of those cards. put the chosen cards into your grave | 1 | Elemental Teachings | tla |
 | starting with you, each player chooses up to one permanent with mana value N or greater from among permanents your opponents control. exile those permanents. | 1 | The Legend of Yangchen // Avatar Yangchen | tla |
 | target creature you control gets +N/+N until end of turn. if that creature is an ally, it also gains flying until end of turn. | 1 | Yip Yip! | tla |
-| toph's power is equal to the number of +N/+N counters on lands you control. | 1 | Toph, the Blind Bandit | tla |
 | untap one or two target creatures. they each get +N/+N until end of turn. | 1 | Fancy Footwork | tla |
 | untap ~ during each other player's untap step. | 1 | Bender's Waterskin | tla |
 | waterbend {M}, {M}: you may cast a noncreature spell from your hand without paying its mana cost. | 1 | Yue, the Moon Spirit | tla |
@@ -387,14 +383,10 @@
 | {M}: mill a card. you may put a land card milled ~ into your hand. you gain N life if a lesson card is milled ~. | 1 | Sparring Dummy | tla |
 | {M}: until end of turn, ~ has base power N and gains trample. | 1 | Turtle-Duck | tla |
 | {M}{M}, {M}: target creature you control gains firebending N until end of turn. | 1 | Fire Nation Palace | tla |
-| ~ can't attack or block unless there are three or more lesson cards in your graveyard. | 1 | The Lion-Turtle | tla |
-| ~ can't attack or block unless you control another creature with power N or greater. | 1 | Tiger-Dillo | tla |
-| ~ costs {M} less to cast if it targets a creature with flying. | 1 | Swampsnare Trap | tla |
 | ~ gets +N/+N and has trample as long as you control a land creature or a land entered the battlefield under your control ~. | 1 | Earth Rumble Wrestlers | tla |
 | ~ gets +N/+N as long as there's a lesson card in your graveyard. | 1 | First-Time Flyer | tla |
 | ~ gets +N/+N as long as you've drawn two or more cards ~. | 1 | Messenger Hawk | tla |
 | ~ has firebending N as long as there's a lesson card in your graveyard. | 1 | Fire Nation Cadets | tla |
-| ~ power is equal to the number of noncreature, nonland cards in your graveyard. | 1 | Dragonfly Swarm | tla |
 
 ## Notes
 

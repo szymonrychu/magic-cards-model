@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 27 | 10.5% |
-| Works (untested) | 119 | 46.3% |
-| Partial (unaudited) | 17 | 6.6% |
-| Not working | 94 | 36.6% |
+| Tested | 36 | 14.0% |
+| Works (untested) | 122 | 47.5% |
+| Partial (unaudited) | 8 | 3.1% |
+| Not working | 91 | 35.4% |
 
 ## Cards needing work
 
@@ -30,12 +30,9 @@
 | Acererak the Archlich | silent | Whenever Acererak attacks, for each opponent, you create a 2/2 black Zombie creature token unless that player sacrifices a creature of their choice. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Arcane Investigator | silent | Search the Room — {5}{U}: Roll a d20. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Armory Veteran | silent | As long as this creature is equipped, it has menace. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Asmodeus the Archfiend | silent | {B}: Return all cards exiled with Asmodeus to their owner's hand and you lose that much life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Barbarian Class | silent | Whenever you roll one or more dice, target creature you control gets +2/+0 and gains menace until end of turn. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Barrowin of Clan Undurr | silent | Whenever Barrowin attacks, return up to one creature card with mana value 3 or less from your graveyard to the battlefield if you've completed a dungeon. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Blink Dog | silent | Teleport — {3}{W}: This creature phases out. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Blue Dragon | silent | Lightning Breath — When this creature enters, until your next turn, target creature an opponent controls gets -3/-0, up to one other target creature gets -2/-0, | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Brazen Dwarf | silent | Whenever you roll one or more dice, this creature deals 1 damage to each opponent. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Chaos Channeler | silent | Wild Magic Surge — Whenever this creature attacks, roll a d20. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Check for Traps | silent | Target opponent reveals their hand. You choose a nonland card from it. Exile that card. If an instant card or a card with flash is exiled this way, they lose 1  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Cloister Gargoyle | silent | As long as you've completed a dungeon, this creature gets +3/+0 and has flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -50,8 +47,6 @@
 | Earth-Cult Elemental | silent | Siege Monster — When this creature enters, roll a d20. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ellywick Tumblestrum | silent | −2: Look at the top six cards of your library. You may reveal a creature card from among them and put it into your hand. If it's legendary, you gain 3 life. Put | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Farideh's Fireball | silent | Farideh's Fireball deals 5 damage to target creature or planeswalker. Roll a d20. 1—9 \| Farideh's Fireball deals 2 damage to each player. 10—20 \| Farideh's Fi | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Farideh, Devil's Chosen | silent | Dark One's Own Luck — Whenever you roll one or more dice, Farideh gains flying and menace until end of turn. If any of those results was 10 or higher, draw a ca | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
-| Feywild Trickster | silent | Whenever you roll one or more dice, create a 1/1 blue Faerie Dragon creature token with flying. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Fifty Feet of Rope | silent | Tie Up — {3}, {T}: Target creature doesn't untap during its controller's next untap step. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Fighter Class | silent | Whenever a creature you control attacks, up to one target creature blocks it this combat if able. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Flameskull | silent | Rejuvenation — When this creature dies, exile it. If you do, exile the top card of your library. Until the end of your next turn, you may play one of those card | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -103,11 +98,13 @@
 | Wight | silent | Life Drain — Whenever a creature dealt damage by this creature this turn dies, create a tapped 2/2 black Zombie creature token and exile that card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Wizard's Spellbook | silent | {T}: Exile target instant or sorcery card from a graveyard. Roll a d20. Activate only as a sorcery. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Xanathar, Guild Kingpin | silent | At the beginning of your upkeep, choose target opponent. Until end of turn, that player can't cast spells, you may look at the top card of their library any tim | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
+| Bard Class | notice | Legendary spells you cast cost {R}{G} less to cast. This effect reduces only the amount of colored mana you pay. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Bruenor Battlehammer | notice | Each creature you control gets +2/+0 for each Equipment attached to it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Cleric Class | notice | When this Class becomes level 3, return target creature card from your graveyard to the battlefield. You gain life equal to that creature's toughness. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Compelled Duel | notice | Target creature gets +3/+3 until end of turn and must be blocked this turn if able. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Divine Smite | notice | Target creature or planeswalker an opponent controls phases out. If that permanent is black, exile it instead. (If it phases out, treat it and anything attached | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Dragon's Fire | notice | As an additional cost to cast this spell, you may reveal a Dragon card from your hand or choose a Dragon you control. Dragon's Fire deals 3 damage to target cre | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
+| Farideh, Devil's Chosen | notice | Dark One's Own Luck — Whenever you roll one or more dice, Farideh gains flying and menace until end of turn. If any of those results was 10 or higher, draw a ca | unparsed remainder: If any of those results was 10 or higher, draw a card. | Y/Y/- | not_working |
 | Feign Death | notice | Until end of turn, target creature gains "When this creature dies, return it to the battlefield tapped under its owner's control with a +1/+1 counter on it." | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Iymrith, Desert Doom | notice | Iymrith has ward {4} as long as it's untapped. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Nadaar, Selfless Paladin | notice | Other creatures you control get +1/+1 as long as you've completed a dungeon. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -120,22 +117,13 @@
 | You Come to a River | notice | Choose one — • Fight the Current — Return target nonland permanent to its owner's hand. • Find a Crossing — Target creature gets +1/+0 until end of turn and can | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | You Come to the Gnoll Camp | notice | Choose one — • Intimidate Them — Up to two target creatures can't block this turn. • Fend Them Off — Target creature gets +3/+1 until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | You Find Some Prisoners | notice | Choose one — • Break Their Chains — Destroy target artifact. • Interrogate Them — Exile the top three cards of target opponent's library. Choose one of them. Un | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Bard Class | unaudited | Legendary creatures you control enter with an additional +1/+1 counter on them. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Circle of the Moon Druid | unaudited | Bear Form — During your turn, this creature is a Bear with base power and toughness 4/2. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Demilich | unaudited | This spell costs {U} less to cast for each instant and sorcery spell you've cast this turn. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Dragon's Disciple | unaudited | As this creature enters, you may reveal a Dragon card from your hand. If you do or if you control a Dragon, this creature enters with a +1/+1 counter on it. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Ebondeath, Dracolich | unaudited | You may cast this card from your graveyard if a creature not named Ebondeath, Dracolich died this turn. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Find the Path | unaudited | Enchanted land has "{T}: Add {G}{G}." | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Grim Wanderer | unaudited | Tragic Backstory — Cast this spell only if a creature died this turn. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Hama Pashar, Ruin Seeker | unaudited | Room abilities of dungeons you own trigger an additional time. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Iron Golem | unaudited | This creature attacks or blocks each combat if able. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Kalain, Reclusive Painter | unaudited | Other creatures you control enter with an additional +1/+1 counter on them for each mana from a Treasure spent to cast them. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Keen-Eared Sentry | unaudited | Each opponent can't venture into the dungeon more than once each turn. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Leather Armor | unaudited | Equip {0}. Activate only once each turn. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Minimus Containment | unaudited | Enchanted permanent is a Treasure artifact with "{T}, Sacrifice this artifact: Add one mana of any color," and it loses all other abilities. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Pixie Guide | unaudited | Grant an Advantage — If you would roll one or more dice, instead roll that many dice plus one and ignore the lowest roll. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Temple of the Dragon Queen | unaudited | As this land enters, you may reveal a Dragon card from your hand. This land enters tapped unless you revealed a Dragon card this way or you control a Dragon. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Xorn | unaudited | If you would create one or more Treasure tokens, instead create those tokens plus an additional Treasure token. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Yuan-Ti Malison | unaudited | This creature can't be blocked as long as it's attacking alone. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | +2 Mace | handled | Equipped creature gets +2/+2. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Adult Gold Dragon | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
@@ -144,6 +132,7 @@
 | Baleful Beholder | handled | When this creature enters, choose one — • Antimagic Cone — Each opponent sacrifices an enchantment of their choice. • Fear Ray — Creatures you control gain mena | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Battle Cry Goblin | handled | {1}{R}: Goblins you control get +1/+0 and gain haste until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Black Dragon | handled | Acid Breath — When this creature enters, target creature an opponent controls gets -3/-3 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Brazen Dwarf | handled | Whenever you roll one or more dice, this creature deals 1 damage to each opponent. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Bulette | handled | At the beginning of your end step, if a creature died this turn, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Bull's Strength | handled | Target creature gets +2/+2 and gains trample until end of turn. Untap it. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Cave of the Frost Dragon | handled | If you control two or more other lands, this land enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -167,6 +156,8 @@
 | Eye of Vecna | handled | When Eye of Vecna enters, you draw a card and you lose 2 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Eyes of the Beholder | handled | Target creature gets -11/-11 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Fates' Reversal | handled | Return up to one target creature card from your graveyard to your hand. Venture into the dungeon. (Enter the first room or advance to the next room.) | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Feywild Trickster | handled | Whenever you roll one or more dice, create a 1/1 blue Faerie Dragon creature token with flying. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Find the Path | handled | When this Aura enters, venture into the dungeon. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Flumph | handled | Whenever this creature is dealt damage, you and target opponent each draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Fly | handled | Enchanted creature has flying and "Whenever this creature deals combat damage to a player, venture into the dungeon." | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Forsworn Paladin | handled | {1}{B}, {T}, Pay 1 life: Create a Treasure token. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -260,34 +251,43 @@
 ## Fully supported
 
 <details>
-<summary>27 cards</summary>
+<summary>36 cards</summary>
 
+- Asmodeus the Archfiend
 - Bar the Gate
+- Barbarian Class
 - Boots of Speed
 - Burning Hands
 - Choose Your Weapon
+- Demilich
 - Den of the Bugbear
 - Devour Intellect
+- Dragon's Disciple
 - Drizzt Do'Urden
 - Dungeon Map
+- Ebondeath, Dracolich
 - Eccentric Apprentice
 - Gnoll Hunter
 - Hall of Storm Giants
 - Hired Hexblade
 - Hive of the Eye Tyrant
+- Kalain, Reclusive Painter
 - Minsc, Beloved Ranger
 - Mordenkainen's Polymorph
 - Ochre Jelly
 - Orb of Dragonkind
+- Pixie Guide
 - Price of Loyalty
 - Sorcerer Class
 - Spoils of the Hunt
 - Tasha's Hideous Laughter
+- Temple of the Dragon Queen
 - Thieves' Tools
 - Tiger-Tribe Hunter
 - Veteran Dungeoneer
 - Wish
 - Wizard Class
+- Xorn
 - You Find the Villains' Lair
 
 </details>
@@ -307,7 +307,6 @@
 | Dark One's Own Luck | 1 | Farideh, Devil's Chosen | afr |
 | Dissolve | 1 | Gelatinous Cube | afr |
 | Drag Below | 1 | Dragon Turtle | afr |
-| Grant an Advantage | 1 | Pixie Guide | afr |
 | Life Drain | 1 | Wight | afr |
 | Lightning Breath | 1 | Blue Dragon | afr |
 | Poison Breath | 1 | Green Dragon | afr |
@@ -326,8 +325,6 @@
 | as long as you've completed a dungeon, ~ has double strike. | 1 | Gloom Stalker | afr |
 | as long as ~ is equipped, it gets +N/+N. | 1 | Dwarfhold Champion | afr |
 | as long as ~ is equipped, it has menace. | 1 | Armory Veteran | afr |
-| as ~ enters, you may reveal a dragon card from your hand. if you do or if you control a dragon, ~ enters with a +N/+N counter on it. | 1 | Dragon's Disciple | afr |
-| as ~ enters, you may reveal a dragon card from your hand. ~ enters tapped unless you revealed a dragon card ~ or you control a dragon. | 1 | Temple of the Dragon Queen | afr |
 | at the beginning of combat on your turn, equipped creature or a creature you control named vecna gets +N/+N until end of turn, where N is the number of cards in | 1 | Hand of Vecna | afr |
 | at the beginning of your end step, each opponent loses life equal to the life they lost ~. | 1 | Warlock Class | afr |
 | at the beginning of your upkeep, choose target opponent. until end of turn, that player can't cast spells, you may look at the top card of their library any tim | 1 | Xanathar, Guild Kingpin | afr |
@@ -341,13 +338,10 @@
 | each creature you control gets +N/+N for each equipment attached to it. | 1 | Bruenor Battlehammer | afr |
 | each opponent can't venture into the dungeon more than once each turn. | 1 | Keen-Eared Sentry | afr |
 | each skeleton you control has trample, attacks each combat if able, and gets +N/+N, where N is the number of other skeletons you control. | 1 | Skeletal Swarming | afr |
-| enchanted land has "..." | 1 | Find the Path | afr |
 | enchanted permanent is a treasure artifact with "..." and it loses all other abilities. | 1 | Minimus Containment | afr |
 | equip {M}. activate only once each turn. | 1 | Leather Armor | afr |
-| if you would create one or more treasure tokens, instead create those tokens plus an additional treasure token. | 1 | Xorn | afr |
 | iymrith has ward {M} as long as it's untapped. | 1 | Iymrith, Desert Doom | afr |
-| legendary creatures you control enter with an additional +N/+N counter on them. | 1 | Bard Class | afr |
-| other creatures you control enter with an additional +N/+N counter on them for each mana from a treasure spent to cast them. | 1 | Kalain, Reclusive Painter | afr |
+| legendary spells you cast cost {M}{M} less to cast. ~ reduces only the amount of colored mana you pay. | 1 | Bard Class | afr |
 | other creatures you control get +N/+N as long as you've completed a dungeon. | 1 | Nadaar, Selfless Paladin | afr |
 | put a +N/+N counter on target creature. that creature gains haste until end of turn and can't be blocked by walls ~. venture into the dungeon. (enter the first  | 1 | Kick in the Door | afr |
 | return N target cards with different mana values from your graveyard to your hand. if eight or more cards were returned to your hand ~, your life total becomes  | 1 | Long Rest | afr |
@@ -376,18 +370,13 @@
 | whenever equipped creature attacks alone, defending player loses N life and you gain N life. | 1 | Reaper's Talisman | afr |
 | whenever you complete a dungeon, create a N/N green wolf creature token. | 1 | Varis, Silverymoon Ranger | afr |
 | whenever you complete a dungeon, you may return ~ from your graveyard to your hand. | 1 | Dungeon Crawler | afr |
-| whenever you roll one or more dice, create a N/N blue faerie dragon creature token with flying. | 1 | Feywild Trickster | afr |
-| whenever you roll one or more dice, target creature you control gets +N/+N and gains menace until end of turn. | 1 | Barbarian Class | afr |
-| whenever you roll one or more dice, ~ deals N damage to each opponent. | 1 | Brazen Dwarf | afr |
 | whenever ~ deals combat damage to a player, exile up to that many target cards from their graveyard. put a +N/+N counter on ~ for each creature card exiled ~. y | 1 | Froghemoth | afr |
-| you may cast ~ from your graveyard if a creature not named ~ died ~. | 1 | Ebondeath, Dracolich | afr |
 | {M}, exile ~ and artifacts you control named eye of vecna and hand of vecna: create vecna, a legendary N/N black zombie god creature token with indestructible a | 1 | The Book of Vile Darkness | afr |
 | {M}, sacrifice ~: roll a dN. | 1 | Treasure Chest | afr |
 | {M}, {M}, sacrifice ~: choose target creature, then roll a dN. | 1 | Spiked Pit Trap | afr |
 | {M}, {M}: roll a dN and subtract the number of cards in your hand. if the result is N or less, discard your hand. | 1 | The Deck of Many Things | afr |
 | {M}, {M}: ~ deals damage equal to the number of goblins that entered the battlefield under your control ~ to any target. | 1 | Hobgoblin Bandit Lord | afr |
 | {M}: exile target instant or sorcery card from a graveyard. roll a dN. activate only as a sorcery. | 1 | Wizard's Spellbook | afr |
-| {M}: return all cards exiled with asmodeus to their owner's hand and you lose that much life. | 1 | Asmodeus the Archfiend | afr |
 | {M}: ~ becomes a shapeshifter artifact creature with base power and toughness N/N until end of turn. | 1 | Mimic | afr |
 | {M}{M}, {M}: search your library for a creature card with mana value equal to the number of harmony counters on ~, reveal it, and put it into your hand. if that | 1 | Instrument of the Bards | afr |
 | {M}{M}: roll a dN. activate only if ~ is in your graveyard. | 1 | Loathsome Troll | afr |
@@ -396,7 +385,6 @@
 | {M}{M}{M}{M}: until end of turn, ~ gains "..." | 1 | Vorpal Sword | afr |
 | ~ attacks or blocks each combat if able. | 1 | Iron Golem | afr |
 | ~ can"..."s attacking alone. | 1 | Yuan-Ti Malison | afr |
-| ~ costs {M} less to cast for each instant and sorcery spell you've cast ~. | 1 | Demilich | afr |
 | ~ deals N damage to target creature or planeswalker. roll a dN. N—N \| ~ deals N damage to each player. N—N \| ~ deals N damage to each opponent. | 1 | Farideh's Fireball | afr |
 | ~ has haste and ward {M} as long as it was cast. | 1 | The Tarrasque | afr |
 | −N: exchange your hand and library, then shuffle. you get an emblem with "..." | 1 | Mordenkainen | afr |

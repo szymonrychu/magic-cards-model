@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 46 | 15.1% |
-| Works (untested) | 129 | 42.4% |
-| Partial (unaudited) | 15 | 4.9% |
-| Not working | 114 | 37.5% |
+| Tested | 55 | 18.1% |
+| Works (untested) | 130 | 42.8% |
+| Partial (unaudited) | 7 | 2.3% |
+| Not working | 112 | 36.8% |
 
 ## Cards needing work
 
@@ -94,7 +94,6 @@
 | Stiltzkin, Moogle Merchant | silent | {2}, {T}: Target opponent gains control of another target permanent you control. If they do, you draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Stolen Uniform | silent | Choose target creature you control and target Equipment. Gain control of that Equipment until end of turn. Attach it to the chosen creature. When you lose contr | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Summon: Brynhildr | silent | I — Chain — Exile the top card of your library. During any turn you put a lore counter on this Saga, you may play that card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Summon: Fenrir | silent | II — Heavenward Howl — When you next cast a creature spell this turn, that creature enters with an additional +1/+1 counter on it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Summon: G.F. Cerberus | silent | III — Triple — When you next cast an instant or sorcery spell this turn, copy it twice. You may choose new targets for the copies. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Summon: Leviathan | silent | I — Return each creature that isn't a Kraken, Leviathan, Merfolk, Octopus, or Serpent to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Summoner's Grimoire | silent | Equipped creature is a Shaman in addition to its other types and has "Whenever this creature attacks, you may put a creature card from your hand onto the battle | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -104,7 +103,6 @@
 | The Gold Saucer | silent | {2}, {T}: Flip a coin. If you win the flip, create a Treasure token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | The Masamune | silent | As long as equipped creature is attacking, it has first strike and must be blocked if able. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | The Wandering Minstrel | silent | The Minstrel's Ballad — At the beginning of combat on your turn, if you control five or more Towns, create a 2/2 Elemental creature token that's all colors. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| The Water Crystal | silent | {4}{U}{U}, {T}: Each opponent mills cards equal to the number of cards in your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Thief's Knife | silent | Equipped creature gets +1/+1, has "Whenever this creature deals combat damage to a player, draw a card," and is a Rogue in addition to its other types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Tifa Lockhart | silent | Landfall — Whenever a land you control enters, double Tifa Lockhart's power until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Tifa's Limit Break | silent | Triple | no machine in the engine executes this keyword | Y/Y/Y | not_working |
@@ -146,15 +144,7 @@
 | Ancient Adamantoise | unaudited | Damage isn't removed from this creature during cleanup steps. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Cloud, Midgar Mercenary | unaudited | As long as Cloud is equipped, if a triggered ability of Cloud or an Equipment attached to it triggers, that ability triggers an additional time. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Edgar, King of Figaro | unaudited | Two-Headed Coin — The first time you flip one or more coins each turn, those coins come up heads and you win those flips. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Emet-Selch, Unsundered // Hades, Sorcerer of Eld | unaudited | Echo of the Lost — During your turn, you may play cards from your graveyard. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Exdeath, Void Warlock // Neo Exdeath, Dimension's End | unaudited | Neo Exdeath's power is equal to the number of permanent cards in your graveyard. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Kuja, Genome Sorcerer // Trance Kuja, Fate Defied | unaudited | Flare Star — If a Wizard you control would deal damage to a permanent or player, it deals double that damage instead. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Relentless X-ATM092 | unaudited | This creature can't be blocked except by three or more creatures. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Serah Farron // Crystallized Serah | unaudited | The first legendary creature spell you cast each turn costs {2} less to cast. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Stuck in Summoner's Sanctum | unaudited | Enchanted permanent doesn't untap during its controller's untap step and its activated abilities can't be activated. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| The Darkness Crystal | unaudited | If a nontoken creature an opponent controls would die, instead exile it and you gain 2 life. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| The Lunar Whale | unaudited | As long as The Lunar Whale attacked this turn, you may play the top card of your library. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Tonberry | unaudited | This creature enters tapped with a stun counter on it. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Adelbert Steiner | handled | Adelbert Steiner gets +1/+1 for each Equipment you control. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Adventurer's Airship | handled | Whenever this Vehicle attacks, draw a card, then discard a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Adventurer's Inn | handled | When this land enters, you gain 2 life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -259,6 +249,7 @@
 | Squall, SeeD Mercenary | handled | Rough Divide — Whenever a creature you control attacks alone, it gains double strike until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Summon: Anima | handled | I, II, III — Pain — You draw a card and you lose 1 life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Summon: Choco/Mog | handled | I, II, III, IV — Stampede! — Other creatures you control get +1/+0 until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Summon: Fenrir | handled | I — Crescent Fang — Search your library for a basic land card, put it onto the battlefield tapped, then shuffle. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Summon: G.F. Ifrit | handled | I, II — You may discard a card. If you do, draw a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Summon: Primal Odin | handled | I — Gungnir — Destroy target creature an opponent controls. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Summon: Shiva | handled | I, II — Heavenly Strike — Tap target creature an opponent controls. Put a stun counter on it. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -288,7 +279,7 @@
 ## Fully supported
 
 <details>
-<summary>46 cards</summary>
+<summary>55 cards</summary>
 
 - Barret Wallace
 - Bartz and Boko
@@ -300,24 +291,29 @@
 - Clash of the Eikons
 - Clive, Ifrit's Dominant // Ifrit, Warden of Inferno
 - Coliseum Behemoth
+- Emet-Selch, Unsundered // Hades, Sorcerer of Eld
 - Esper Origins // Summon: Esper Maduin
+- Exdeath, Void Warlock // Neo Exdeath, Dimension's End
 - Fire Magic
 - Giott, King of the Dwarves
 - Haste Magic
 - Jill, Shiva's Dominant // Shiva, Warden of Ice
 - Joshua, Phoenix's Dominant // Phoenix, Warden of Fire
 - Judgment Bolt
+- Kuja, Genome Sorcerer // Trance Kuja, Fate Defied
 - Matoya, Archon Elder
 - Noctis, Prince of Lucis
 - Prompto Argentum
 - Qiqirn Merchant
 - Quina, Qu Gourmet
 - Raubahn, Bull of Ala Mhigo
+- Relentless X-ATM092
 - Retrieve the Esper
 - Rufus Shinra
 - Sazh's Chocobo
 - Self-Destruct
 - Sephiroth, Fabled SOLDIER // Sephiroth, One-Winged Angel
+- Serah Farron // Crystallized Serah
 - Shantotto, Tactician Magician
 - Sidequest: Hunt the Mark // Yiazmat, Ultimate Mark
 - Sidequest: Play Blitzball // World Champion, Celestial Weapon
@@ -330,9 +326,13 @@
 - Summon: Knights of Round
 - Summon: Primal Garuda
 - Tellah, Great Sage
+- The Darkness Crystal
 - The Emperor of Palamecia // The Lord Master of Hell
 - The Fire Crystal
+- The Lunar Whale
+- The Water Crystal
 - Thunder Magic
+- Tonberry
 - Traveling Chocobo
 - Vivi Ornitier
 - You're Not Alone
@@ -352,9 +352,7 @@
 | Blue Magic | 1 | Quistis Trepe | fin |
 | Choose one | 1 | Aerith Rescue Mission | fin |
 | Dragonfire Dive | 1 | Dion, Bahamut's Dominant // Bahamut, Warden of Light | fin |
-| Echo of the Lost | 1 | Emet-Selch, Unsundered // Hades, Sorcerer of Eld | fin |
 | Fire Cross | 1 | Seifer Almasy | fin |
-| Flare Star | 1 | Kuja, Genome Sorcerer // Trance Kuja, Fate Defied | fin |
 | Landfall | 1 | Tifa Lockhart | fin |
 | My First Friend | 1 | Zenos yae Galvus // Shinryu, Transcendent Rival | fin |
 | Particle Beam | 1 | Cloud of Darkness | fin |
@@ -370,7 +368,6 @@
 | as long as cloud is equipped, if a triggered ability of cloud or an equipment attached to it triggers, that ability triggers an additional time. | 1 | Cloud, Midgar Mercenary | fin |
 | as long as equipped creature is attacking, it has first strike and must be blocked if able. | 1 | The Masamune | fin |
 | as long as you control two or more artifacts, ~ gets +N/+N. | 1 | Gaelicat | fin |
-| as long as ~ attacked ~, you may play the top card of your library. | 1 | The Lunar Whale | fin |
 | as long as ~ has a counter on it, it can attack as though it didn't have defender. | 1 | Demon Wall | fin |
 | at the beginning of combat on your turn, if you control an equipment, you may pay {M}. when you do, attach target equipment you control to target creature you c | 1 | Weapons Vendor | fin |
 | at the beginning of combat on your turn, put a number of +N/+N counters equal to jenova's power on up to one other target creature. that creature becomes a muta | 1 | Jenova, Ancient Calamity | fin |
@@ -407,11 +404,8 @@
 | equipped creatures you control have haste. | 1 | Firion, Wild Rose Warrior | fin |
 | for each creature you control, create a N/N white moogle creature token with lifelink. then creatures you control gain indestructible until end of turn. | 1 | Moogles' Valor | fin |
 | gain control of target creature until end of turn. untap that creature. it gains haste until end of turn. you may attach an equipment you control to that creatu | 1 | Unexpected Request | fin |
-| heavenward howl — when you next cast a creature spell ~, that creature enters with an additional +N/+N counter on it. | 1 | Summon: Fenrir | fin |
 | i've come up with a new recipe! — {M}{M}{M}, {M}: exile target card from a graveyard. if a creature card was exiled ~, create a food token. | 1 | Ignis Scientia | fin |
-| if a nontoken creature an opponent controls would die, instead exile it and you gain N life. | 1 | The Darkness Crystal | fin |
 | kicker—return a land you control to its owner"..."s hand in addition to any other costs as you cast ~.) target creature you control deals damage equal to its po | 1 | Chocobo Kick | fin |
-| neo exdeath's power is equal to the number of permanent cards in your graveyard. | 1 | Exdeath, Void Warlock // Neo Exdeath, Dimension's End | fin |
 | other permanents you control have "..." | 1 | A Realm Reborn | fin |
 | return each creature that isn"..."s hand. | 1 | Summon: Leviathan | fin |
 | return target creature card from your graveyard to the battlefield with two additional +N/+N counters on it. | 1 | Evil Reawakened | fin |
@@ -421,7 +415,6 @@
 | search your library for a vehicle card, reveal it, and put it into your hand. if ~ was cast from a graveyard, put that card onto the battlefield instead. then s | 1 | From Father to Son | fin |
 | search your library for up to two basic land cards and/or town cards with different names, put them onto the battlefield tapped, then shuffle. | 1 | Reach the Horizon | fin |
 | shuffle your library, then mill four cards. put each creature card milled ~ onto the battlefield. they gain haste. at the beginning of the next end step, return | 1 | Random Encounter | fin |
-| the first legendary creature spell you cast each turn costs {M} less to cast. | 1 | Serah Farron // Crystallized Serah | fin |
 | tiered (choose one additional cost.) until end of turn, target creature you control gains "..." and has the chosen base power and toughness. • galian beast — {M | 1 | Vincent's Limit Break | fin |
 | tiered (choose one additional cost.) • blizzard — {M} — return target creature to its owner"..."s owner puts it on their choice of the top or bottom of their li | 1 | Ice Magic | fin |
 | triple | 1 | Tifa's Limit Break | fin |
@@ -459,12 +452,9 @@
 | {M}: until end of turn, ~ gets +N/+N for each permanent card in your graveyard. | 1 | Gran Pulse Ochu | fin |
 | {M}{M}, {M}: copy target activated or triggered ability you control N times. you may choose new targets for the copies. ~ can"..."t be N. | 1 | Gogo, Master of Mimicry | fin |
 | {M}{M}: search your library for a card named ~, put it onto the battlefield tapped, then shuffle. | 1 | Magitek Infantry | fin |
-| {M}{M}{M}, {M}: each opponent mills cards equal to the number of cards in your hand. | 1 | The Water Crystal | fin |
 | {M}{M}{M}: ~ becomes a N/N beast creature in addition to its other types. | 1 | Ride the Shoopuf | fin |
 | {M}{M}{M}{M}{M}: return ~ from your graveyard to the battlefield transformed. activate only as a sorcery. | 1 | Garland, Knight of Cornelia // Chaos, the Endless | fin |
-| ~ can't be blocked except by three or more creatures. | 1 | Relentless X-ATM092 | fin |
 | ~ deals N damage to target creature. destroy up to one equipment attached to that creature. | 1 | Light of Judgment | fin |
-| ~ enters tapped with a stun counter on it. | 1 | Tonberry | fin |
 
 ## Notes
 

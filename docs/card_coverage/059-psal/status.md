@@ -17,9 +17,9 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 4 | 5.1% |
-| Works (untested) | 51 | 64.6% |
-| Partial (unaudited) | 4 | 5.1% |
+| Tested | 5 | 6.3% |
+| Works (untested) | 52 | 65.8% |
+| Partial (unaudited) | 2 | 2.5% |
 | Not working | 20 | 25.3% |
 
 ## Cards needing work
@@ -32,7 +32,6 @@
 | Burning-Tree Bloodscale | silent | {2}{R}: Target creature can't block this creature this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Clutch of the Undercity | silent | Return target permanent to its owner's hand. Its controller loses 3 life. Transmute {1}{U}{B} ({1}{U}{B}, Discard this card: Search your library for a card with | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Fertile Imagination | silent | Choose a card type. Target opponent reveals their hand. Create two 1/1 green Saproling creature tokens for each card of the chosen type revealed this way. (Arti | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Guardian's Magemark | silent | Creatures you control that are enchanted get +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Infiltrator's Magemark | silent | Creatures you control that are enchanted get +1/+1 and can't be blocked except by creatures with defender. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Jedit Ojanen of Efrava | silent | Whenever Jedit Ojanen attacks or blocks, create a 2/2 green Cat Warrior creature token with forestwalk. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Leyline of the Meek | silent | Creature tokens get +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -45,11 +44,10 @@
 | Undying Rage | silent | Enchanted creature gets +2/+2 and can't block. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Whitemane Lion | silent | When this creature enters, return a creature you control to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Wojek Apothecary | silent | Radiance — {T}: Prevent the next 1 damage that would be dealt to target creature and each other creature that shares a color with it this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Nacatl War-Pride | notice | Whenever this creature attacks, create X tokens that are copies of it and that are tapped and attacking, where X is the number of creatures defending player con | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Skyrider Trainee | notice | This creature has flying as long as it's enchanted. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Detainment Spell | unaudited | Enchanted creature's activated abilities can't be activated. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Freewind Equenaut | unaudited | As long as this creature is enchanted, it has "{T}: This creature deals 2 damage to target attacking or blocking creature." | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Grifter's Blade | unaudited | As this Equipment enters, choose a creature you control it could be attached to. If you do, it enters attached to that creature. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Nacatl War-Pride | unaudited | This creature must be blocked by exactly one creature if able. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Balduvian Rage | handled | Target attacking creature gets +X/+0 until end of turn. Draw a card at the beginning of the next turn's upkeep. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Carrion Howler | handled | Pay 1 life: This creature gets +2/-1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Dimir Guildmage | handled | {3}{U}: Target player draws a card. Activate only as a sorcery. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -60,6 +58,7 @@
 | Golgari Guildmage | handled | {4}{B}, Sacrifice a creature: Return target creature card from your graveyard to your hand. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Gruul Nodorog | handled | {R}: This creature gains menace until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Gruul Scrapper | handled | When this creature enters, if {R} was spent to cast it, it gains haste until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Guardian's Magemark | handled | Creatures you control that are enchanted get +1/+1. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Helldozer | handled | {B}{B}{B}, {T}: Destroy target land. If that land was nonbasic, untap this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Herd Gnarr | handled | Whenever another creature you control enters, this creature gets +2/+2 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Indrik Stomphowler | handled | When this creature enters, destroy target artifact or enchantment. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -105,10 +104,11 @@
 ## Fully supported
 
 <details>
-<summary>4 cards</summary>
+<summary>5 cards</summary>
 
 - Arctic Nishoba
 - Frenzied Goblin
+- Grifter's Blade
 - Selesnya Sanctuary
 - Stalking Vengeance
 
@@ -121,11 +121,9 @@
 | Radiance | 1 | Wojek Apothecary | psal |
 | all saprolings get +N/+N. | 1 | Thelonite Hermit | psal |
 | as long as ~ is enchanted, it has "..." | 1 | Freewind Equenaut | psal |
-| as ~ enters, choose a creature you control it could be attached to. if you do, it enters attached to that creature. | 1 | Grifter's Blade | psal |
 | choose a card type. target opponent reveals their hand. create two N/N green saproling creature tokens for each card of the chosen type revealed ~. (artifact, b | 1 | Fertile Imagination | psal |
 | creature tokens get +N/+N. | 1 | Leyline of the Meek | psal |
 | creatures you control that are enchanted get +N/+N and can't be blocked except by creatures with defender. | 1 | Infiltrator's Magemark | psal |
-| creatures you control that are enchanted get +N/+N. | 1 | Guardian's Magemark | psal |
 | each creature that's a barbarian, a warrior, or a berserker gets +N/+N and has haste. | 1 | Lovisa Coldeyes | psal |
 | enchanted creature gets +N/+N and can't block. | 1 | Undying Rage | psal |
 | enchanted creature"..."t be activated. | 1 | Detainment Spell | psal |
@@ -137,11 +135,11 @@
 | whenever a source deals damage to ~, that source's controller mills that many cards. | 1 | Belltower Sphinx | psal |
 | whenever an aura becomes attached to ~, create two N/N green saproling creature tokens. | 1 | Bramble Elemental | psal |
 | whenever jedit ojanen attacks or blocks, create a N/N green cat warrior creature token with forestwalk. | 1 | Jedit Ojanen of Efrava | psal |
+| whenever ~ attacks, create N tokens that are copies of it and that are tapped and attacking, where N is the number of creatures defending player controls. exile | 1 | Nacatl War-Pride | psal |
 | {M}, reveal N blue cards from your hand, sacrifice ~: counter target spell unless its controller pays {M}. | 1 | Martyr of Frost | psal |
 | {M}, sacrifice a creature: destroy each creature with the same mana value as the sacrificed creature. | 1 | Sanguine Praetor | psal |
 | {M}{M}: target creature can't block ~ ~. | 1 | Burning-Tree Bloodscale | psal |
 | ~ has flying as long as it's enchanted. | 1 | Skyrider Trainee | psal |
-| ~ must be blocked by exactly one creature if able. | 1 | Nacatl War-Pride | psal |
 
 ## Notes
 

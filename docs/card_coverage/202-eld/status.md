@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 48 | 17.8% |
-| Works (untested) | 139 | 51.7% |
-| Partial (unaudited) | 24 | 8.9% |
-| Not working | 58 | 21.6% |
+| Tested | 67 | 24.9% |
+| Works (untested) | 140 | 52.0% |
+| Partial (unaudited) | 5 | 1.9% |
+| Not working | 57 | 21.2% |
 
 ## Cards needing work
 
@@ -57,7 +57,6 @@
 | Once and Future | silent | Return target card from your graveyard to your hand. Put up to one other target card from your graveyard on top of your library. Exile Once and Future. Adamant  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Opportunistic Dragon | silent | When this creature enters, choose target Human or artifact an opponent controls. For as long as this creature remains on the battlefield, gain control of that p | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Outlaws' Merriment | silent | At the beginning of your upkeep, choose one at random. Create a red and white creature token with those characteristics. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Overwhelmed Apprentice | silent | When this creature enters, each opponent mills two cards. Then you scry 2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Queen of Ice // Rage of Winter | silent | Whenever this creature deals combat damage to a creature, tap that creature. It doesn't untap during its controller's next untap step. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Realm-Cloaked Giant // Cast Off | silent | Destroy all non-Giant creatures. (Then exile this card. You may cast the creature later from exile.) | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Revenge of Ravens | silent | Whenever a creature attacks you or a planeswalker you control, that creature's controller loses 1 life and you gain 1 life. | this trigger's condition can never be satisfied - it never triggers | Y/Y/- | not_working |
@@ -84,30 +83,11 @@
 | Syr Elenora, the Discerning | notice | Spells your opponents cast that target Syr Elenora cost {2} more to cast. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Wildborn Preserver | notice | Whenever another non-Human creature you control enters, you may pay {X}. When you do, put X +1/+1 counters on this creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Yorvo, Lord of Garenbrig | notice | Whenever another green creature you control enters, put a +1/+1 counter on Yorvo. Then if that creature's power is greater than Yorvo's power, put another +1/+1 | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Archon of Absolution | unaudited | Creatures can't attack you or planeswalkers you control unless their controller pays {1} for each of those creatures. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Ardenvale Paladin | unaudited | Adamant — If at least three white mana was spent to cast this spell, this creature enters with a +1/+1 counter on it. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Brazen Borrower // Petty Theft | unaudited | This creature can block only creatures with flying. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Embercleave | unaudited | This spell costs {1} less to cast for each attacking creature you control. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Embereth Paladin | unaudited | Adamant — If at least three red mana was spent to cast this spell, this creature enters with a +1/+1 counter on it. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Fires of Invention | unaudited | You may cast spells with mana value less than or equal to the number of lands you control without paying their mana costs. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Garenbrig Paladin | unaudited | Adamant — If at least three green mana was spent to cast this spell, this creature enters with a +1/+1 counter on it. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Grumgully, the Generous | unaudited | Each other non-Human creature you control enters with an additional +1/+1 counter on it. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Harmonious Archon | unaudited | Non-Archon creatures have base power and toughness 3/3. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Henge Walker | unaudited | Adamant — If at least three mana of the same color was spent to cast this spell, this creature enters with a +1/+1 counter on it. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Hushbringer | unaudited | Creatures entering or dying don't cause abilities to trigger. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Locthwain Paladin | unaudited | Adamant — If at least three black mana was spent to cast this spell, this creature enters with a +1/+1 counter on it. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Lovestruck Beast // Heart's Desire | unaudited | This creature can't attack unless you control a 1/1 creature. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Mysterious Pathlighter | unaudited | Each creature you control that has an Adventure enters with an additional +1/+1 counter on it. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Oathsworn Knight | unaudited | If damage would be dealt to this creature while it has a +1/+1 counter on it, prevent that damage and remove a +1/+1 counter from it. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Questing Beast | unaudited | Combat damage that would be dealt by creatures you control can't be prevented. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Seven Dwarves | unaudited | A deck can have up to seven cards named Seven Dwarves. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Shambling Suit | unaudited | Shambling Suit's power is equal to the number of artifacts and/or enchantments you control. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Shimmer Dragon | unaudited | As long as you control four or more artifacts, this creature has hexproof. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Syr Gwyn, Hero of Ashvale | unaudited | Equipment you control have equip Knight {0}. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Trapped in the Tower | unaudited | Enchanted creature can't attack or block, and its activated abilities can't be activated. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Vantress Gargoyle | unaudited | This creature can't attack unless defending player has seven or more cards in their graveyard. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Vantress Paladin | unaudited | Adamant — If at least three blue mana was spent to cast this spell, this creature enters with a +1/+1 counter on it. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Wintermoor Commander | unaudited | Wintermoor Commander's toughness is equal to the number of Knights you control. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Acclaimed Contender | handled | When this creature enters, if you control another Knight, look at the top five cards of your library. You may reveal a Knight, Aura, Equipment, or legendary art | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Arcane Signet | handled |  |  | Y/Y/- | not_tested |
 | Arcanist's Owl | handled | When this creature enters, look at the top four cards of your library. You may reveal an artifact or enchantment card from among them and put it into your hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -191,6 +171,7 @@
 | Oko's Accomplices | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
 | Order of Midnight // Alter Fate | handled | Return target creature card from your graveyard to your hand. (Then exile this card. You may cast the creature later from exile.) | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Outflank | handled | Outflank deals damage to target attacking or blocking creature equal to the number of creatures you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Overwhelmed Apprentice | handled | When this creature enters, each opponent mills two cards. Then you scry 2. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Piper of the Swarm | handled | Rats you control have menace. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Prized Griffin | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
 | Prophet of the Peak | handled | When this creature enters, scry 2. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -251,11 +232,14 @@
 ## Fully supported
 
 <details>
-<summary>48 cards</summary>
+<summary>67 cards</summary>
 
+- Archon of Absolution
+- Ardenvale Paladin
 - Banish into Fable
 - Bartered Cow
 - Bonecrusher Giant // Stomp
+- Brazen Borrower // Petty Theft
 - Castle Ardenvale
 - Castle Locthwain
 - Cauldron Familiar
@@ -266,25 +250,36 @@
 - Deafening Silence
 - Drown in the Loch
 - Dwarven Mine
+- Embercleave
+- Embereth Paladin
 - Emry, Lurker of the Loch
 - Fabled Passage
 - Fae of Wishes // Granted
 - Faerie Vandal
 - Fervent Champion
+- Fires of Invention
 - Flutterfox
 - Foulmire Knight // Profane Insight
+- Garenbrig Paladin
 - Gilded Goose
+- Grumgully, the Generous
 - Happily Ever After
+- Henge Walker
 - Heraldic Banner
 - Idyllic Grange
 - Joust
 - Kenrith's Transformation
+- Locthwain Paladin
+- Lovestruck Beast // Heart's Desire
 - Moonlit Scavengers
 - Murderous Rider // Swift End
+- Mysterious Pathlighter
 - Mystical Dispute
+- Oathsworn Knight
 - Oko's Hospitality
 - Oko, the Trickster
 - Outmuscle
+- Questing Beast
 - Rally for the Throne
 - Rankle, Master of Pranks
 - Reaper of Night // Harvest Fear
@@ -294,12 +289,17 @@
 - Run Away Together
 - Scorching Dragonfire
 - Searing Barrage
+- Shambling Suit
 - Slaying Fire
 - Steelclaw Lance
 - Sundering Stroke
 - Tall as a Beanstalk
 - Torbran, Thane of Red Fell
 - Tournament Grounds
+- Trapped in the Tower
+- Vantress Gargoyle
+- Vantress Paladin
+- Wintermoor Commander
 - Witch's Oven
 
 </details>
@@ -308,7 +308,7 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| Adamant | 7 | Ardenvale Paladin, Cauldron's Gift, Embereth Paladin, Garenbrig Paladin, Henge Walker | eld |
+| Adamant | 1 | Cauldron's Gift | eld |
 | Choose one | 1 | Return of the Wildspeaker | eld |
 | a deck can have up to seven cards named ~. | 1 | Seven Dwarves | eld |
 | add one mana of any color. (then exile ~. you may cast the creature later from exile.) | 1 | Rosethorn Acolyte // Seasonal Ritual | eld |
@@ -320,20 +320,14 @@
 | at the beginning of each player"..."t, they discard a card, they lose N life, you draw a card, you gain N life, you create a N/N white knight creature token wit | 1 | Doom Foretold | eld |
 | at the beginning of your upkeep, choose one at random. create a red and white creature token with those characteristics. | 1 | Outlaws' Merriment | eld |
 | attacking non-human creatures you control get +N/+N and have trample. | 1 | Ferocity of the Wilds | eld |
-| combat damage that would be dealt by creatures you control can't be prevented. | 1 | Questing Beast | eld |
 | counter target spell. its controller mills three cards. | 1 | Didn't Say Please | eld |
-| creatures can't attack you or planeswalkers you control unless their controller pays {M} for each of those creatures. | 1 | Archon of Absolution | eld |
 | creatures entering or dying don't cause abilities to trigger. | 1 | Hushbringer | eld |
 | creatures of the creature type of your choice get -N/-N until end of turn. | 1 | Witch's Vengeance | eld |
 | destroy all non-giant creatures. (then exile ~. you may cast the creature later from exile.) | 1 | Realm-Cloaked Giant // Cast Off | eld |
-| each creature you control that has an adventure enters with an additional +N/+N counter on it. | 1 | Mysterious Pathlighter | eld |
-| each other non-human creature you control enters with an additional +N/+N counter on it. | 1 | Grumgully, the Generous | eld |
-| enchanted creature can"..."t be activated. | 1 | Trapped in the Tower | eld |
 | enchanted creature gets +N/+N for each artifact and/or enchantment you control. | 1 | All That Glitters | eld |
 | equipment you control have equip knight {M}. | 1 | Syr Gwyn, Hero of Ashvale | eld |
 | equipped creature gets +N/+N for each charge counter on ~ and has vigilance. | 1 | Mace of the Valiant | eld |
 | exile the top five cards of your library. you may play cards exiled ~ until the end of your next turn. you may play an additional land ~. | 1 | Escape to the Wilds | eld |
-| if damage would be dealt to ~ while it has a +N/+N counter on it, prevent that damage and remove a +N/+N counter from it. | 1 | Oathsworn Knight | eld |
 | if ~ is the first spell you've cast ~, you may cast it without paying its mana cost. look at the top five cards of your library. you may reveal a creature or la | 1 | Once Upon a Time | eld |
 | non-archon creatures have base power and toughness N/N. | 1 | Harmonious Archon | eld |
 | other creatures you control with flying get +N/+N. | 1 | Alela, Artful Provocateur | eld |
@@ -351,7 +345,6 @@
 | when ~ enters, choose target human or artifact an opponent controls. for as long as ~ remains on the battlefield, gain control of that permanent, it loses all a | 1 | Opportunistic Dragon | eld |
 | when ~ enters, create a number of N/N black rat creature tokens equal to the number of opponents you have. | 1 | Chittering Witch | eld |
 | when ~ enters, create a number of food tokens equal to the number of opponents you have. | 1 | Gluttonous Troll | eld |
-| when ~ enters, each opponent mills two cards. then you scry N. | 1 | Overwhelmed Apprentice | eld |
 | when ~ enters, target knight gains deathtouch and lifelink until end of turn. | 1 | Blacklance Paragon | eld |
 | when ~ enters, you may have it deal N damage to another creature you control. if you do, draw a card. | 1 | Wicked Guardian | eld |
 | when ~ enters, you may search your library and/or graveyard for a card named rowan, fearless sparkmage, reveal it, and put it into your hand. if you search your | 1 | Rowan's Stalwarts | eld |
@@ -366,7 +359,6 @@
 | whenever ~ deals combat damage to a player, you may sacrifice it. when you do, destroy target artifact or enchantment. | 1 | Flaxen Intruder // Welcome Home | eld |
 | whenever ~ deals damage to an opponent, that player discards a card at random. if the player does, they draw a card. | 1 | Skullknocker Ogre | eld |
 | you gain N life and each opponent loses N life, where N is the number of knights you control. | 1 | Smitten Swordmaster // Curry Favor | eld |
-| you may cast spells with mana value less than or equal to the number of lands you control without paying their mana costs. | 1 | Fires of Invention | eld |
 | you may have ~ enter as a copy of any artifact or enchantment on the battlefield. | 1 | Mirrormade | eld |
 | you may sacrifice a food. if you do, target creature gets +N/+N until end of turn. otherwise, that creature gets +N/+N until end of turn. | 1 | Insatiable Appetite | eld |
 | you may sacrifice two foods. if you do, create a N/N green giant creature token. otherwise, create three food tokens. (they're artifacts with "...") | 1 | Giant Opportunity | eld |
@@ -377,12 +369,6 @@
 | {M}{M}, {M}: each opponent mills cards equal to the number of cards in their hand. | 1 | Folio of Fancies | eld |
 | {M}{M}: ~ loses defender and becomes a human until end of turn. | 1 | Wishful Merfolk | eld |
 | {M}{M}{M}, sacrifice ~: return all knight creature cards from your graveyard to the battlefield. | 1 | Knights' Charge | eld |
-| ~ can block only creatures with flying. | 1 | Brazen Borrower // Petty Theft | eld |
-| ~ can't attack unless defending player has seven or more cards in their graveyard. | 1 | Vantress Gargoyle | eld |
-| ~ can't attack unless you control a N/N creature. | 1 | Lovestruck Beast // Heart's Desire | eld |
-| ~ costs {M} less to cast for each attacking creature you control. | 1 | Embercleave | eld |
-| ~'s power is equal to the number of artifacts and/or enchantments you control. | 1 | Shambling Suit | eld |
-| ~'s toughness is equal to the number of knights you control. | 1 | Wintermoor Commander | eld |
 | −N: exchange control of target artifact or creature you control and target creature an opponent controls with power N or less. | 1 | Oko, Thief of Crowns | eld |
 
 ## Notes

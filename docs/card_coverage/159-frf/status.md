@@ -17,9 +17,9 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 21 | 13.0% |
+| Tested | 30 | 18.6% |
 | Works (untested) | 78 | 48.4% |
-| Partial (unaudited) | 11 | 6.8% |
+| Partial (unaudited) | 2 | 1.2% |
 | Not working | 51 | 31.7% |
 
 ## Cards needing work
@@ -77,16 +77,7 @@
 | Rally the Ancestors | notice | Return each creature card with mana value X or less from your graveyard to the battlefield. Exile those creatures at the beginning of your next upkeep. Exile Ra | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Reality Shift | notice | Exile target creature. Its controller manifests the top card of their library. (That player puts the top card of their library onto the battlefield face down as | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Supplant Form | notice | Return target creature to its owner's hand. You create a token that's a copy of that creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Battlefront Krushok | unaudited | Each creature you control with a +1/+1 counter on it can't be blocked by more than one creature. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Citadel Siege | unaudited | As this enchantment enters, choose Khans or Dragons. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Frontier Mastodon | unaudited | Ferocious — This creature enters with a +1/+1 counter on it if you control a creature with power 4 or greater. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Frontier Siege | unaudited | As this enchantment enters, choose Khans or Dragons. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Hewed Stone Retainers | unaudited | Cast this spell only if you've cast another spell this turn. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Hungering Yeti | unaudited | As long as you control a green or blue permanent, you may cast this spell as though it had flash. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Marang River Prowler | unaudited | You may cast this card from your graveyard as long as you control a black or green permanent. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Monastery Siege | unaudited | As this enchantment enters, choose Khans or Dragons. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Outpost Siege | unaudited | As this enchantment enters, choose Khans or Dragons. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Palace Siege | unaudited | As this enchantment enters, choose Khans or Dragons. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Wardscale Dragon | unaudited | As long as this creature is attacking, defending player can't cast spells. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Abzan Beastmaster | handled | At the beginning of your upkeep, draw a card if you control the creature with the greatest toughness or tied for the greatest toughness. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Abzan Runemark | handled | Enchanted creature gets +2/+2. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -170,20 +161,29 @@
 ## Fully supported
 
 <details>
-<summary>21 cards</summary>
+<summary>30 cards</summary>
 
 - Ainok Guide
 - Arcbond
+- Battlefront Krushok
 - Break Through the Line
 - Channel Harm
+- Citadel Siege
 - Crucible of the Spirit Dragon
 - Dark Deal
 - Ethereal Ambush
 - Flamerush Rider
+- Frontier Mastodon
+- Frontier Siege
 - Grim Contest
+- Hungering Yeti
+- Marang River Prowler
 - Mardu Woe-Reaper
 - Mastery of the Unseen
 - Mob Rule
+- Monastery Siege
+- Outpost Siege
+- Palace Siege
 - Shifting Loyalties
 - Shockmaw Dragon
 - Temur Battle Rage
@@ -200,13 +200,10 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| as ~ enters, choose khans or dragons. | 5 | Citadel Siege, Frontier Siege, Monastery Siege, Outpost Siege, Palace Siege | frf |
 | when ~ enters, it becomes an aura with enchant creature. manifest the top card of your library and attach ~ to it. | 3 | Cloudform, Lightform, Rageform | frf |
 | when ~ enters, bolster N. | 2 | Elite Scaleguard, Sandsteppe Mastodon | frf |
 | Choose one | 1 | Crux of Fate | frf |
-| Ferocious | 1 | Frontier Mastodon | frf |
 | add {M} for each attacking creature you control. until end of turn, attacking creatures you control gain "..." | 1 | Dragonrage | frf |
-| as long as you control a green or blue permanent, you may cast ~ as though it had flash. | 1 | Hungering Yeti | frf |
 | as long as you control a red or white permanent, ~ gets +N/+N and has first strike. | 1 | Battle Brawler | frf |
 | as long as ~ is attacking, defending player can't cast spells. | 1 | Wardscale Dragon | frf |
 | at the beginning of combat on your turn, you may pay {M}{M}{M}. if you do, gain control of target creature an opponent controls with power less than ~'s power u | 1 | Yasova Dragonclaw | frf |
@@ -216,7 +213,6 @@
 | cast ~ only if you've cast another spell ~. | 1 | Hewed Stone Retainers | frf |
 | counter target spell unless its controller pays {M} for each card in your graveyard. | 1 | Rakshasa's Disdain | frf |
 | delve (each card you exile from your graveyard while casting ~ pays for {M}.) return target nonland permanent you control and target nonland permanent you don". | 1 | Rite of Undoing | frf |
-| each creature you control with a +N/+N counter on it can't be blocked by more than one creature. | 1 | Battlefront Krushok | frf |
 | exile all creature cards from target player"..."s a creature card.) | 1 | Ghastly Conscription | frf |
 | exile target creature. its controller manifests the top card of their library. (that player puts the top card of their library onto the battlefield face down as | 1 | Reality Shift | frf |
 | if a creature card with flying was exiled with ~ delve ability, ~ has flying. the same is true for first strike, double strike, deathtouch, haste, hexproof, ind | 1 | Soulflayer | frf |
@@ -245,7 +241,6 @@
 | whenever alesha attacks, you may pay {M}{M}. if you do, return target creature card with power N or less from your graveyard to the battlefield tapped and attac | 1 | Alesha, Who Smiles at Death | frf |
 | whenever ~ attacks, tap all creatures defending player controls. | 1 | Torrent Elemental | frf |
 | you gain N life. bolster N. (choose a creature with the least toughness among creatures you control and put two +N/+N counters on it.) | 1 | Honor's Reward | frf |
-| you may cast ~ from your graveyard as long as you control a black or green permanent. | 1 | Marang River Prowler | frf |
 | {M}, {M}: search your library for a card named heart-piercer bow or vial of dragonfire, reveal it, put it into your hand, then shuffle. | 1 | Renowned Weaponsmith | frf |
 | {M}, {M}: target creature you control gets +N/+N until end of turn for each lore counter on ~. | 1 | Scroll of the Masters | frf |
 | {M}: draw two cards. target opponent gains control of ~. activate only during your turn. | 1 | Humble Defector | frf |

@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 42 | 15.3% |
-| Works (untested) | 152 | 55.5% |
-| Partial (unaudited) | 5 | 1.8% |
-| Not working | 75 | 27.4% |
+| Tested | 45 | 16.4% |
+| Works (untested) | 154 | 56.2% |
+| Partial (unaudited) | 3 | 1.1% |
+| Not working | 72 | 26.3% |
 
 ## Cards needing work
 
@@ -59,13 +59,11 @@
 | Mila, Crafty Companion // Lukka, Wayward Bonder | silent | +1: You may discard a card. If you do, draw a card. If a creature card was discarded this way, draw two cards instead. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Multiple Choice | silent | If X is 1, scry 1, then draw a card. If X is 2, you may choose a player. They return a creature they control to its owner's hand. If X is 3, create a 4/4 blue a | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Oriq Loremage | silent | {T}: Search your library for a card, put it into your graveyard, then shuffle. If it's an instant or sorcery card, put a +1/+1 counter on this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Pestilent Cauldron // Restorative Burst | silent | {1}, {T}: Each opponent mills cards equal to the amount of life you gained this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Plargg, Dean of Chaos // Augusta, Dean of Order | silent | Other tapped creatures you control get +1/+0. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Plumb the Forbidden | silent | As an additional cost to cast this spell, you may sacrifice one or more creatures. When you do, copy this spell for each creature sacrificed this way. You draw  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Practical Research | silent | Draw four cards. Then discard two cards unless you discard an instant or sorcery card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Prismari Pledgemage | silent | Magecraft — Whenever you cast or copy an instant or sorcery spell, this creature can attack this turn as though it didn't have defender. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Professor Onyx | silent | −8: Each opponent may discard a card. If they don't, they lose 3 life. Repeat this process six more times. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Quandrix Apprentice | silent | Magecraft — Whenever you cast or copy an instant or sorcery spell, look at the top three cards of your library. You may reveal a land card from among them and p | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Radiant Scrollwielder | silent | Instant and sorcery spells you control have lifelink. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Reckless Amplimancer | silent | {4}{G}: Double this creature's power and toughness until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Reconstruct History | silent | Return up to one target artifact card, up to one target enchantment card, up to one target instant card, up to one target sorcery card, and up to one target pla | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -85,7 +83,6 @@
 | The Biblioplex | silent | {2}, {T}: Look at the top card of your library. If it's an instant or sorcery card, you may reveal it and put it into your hand. If you don't put the card into  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Thunderous Orator | silent | Whenever this creature attacks, it gains flying until end of turn if you control a creature with flying. The same is true for first strike, double strike, death | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Uvilda, Dean of Perfection // Nassari, Dean of Expression | silent | At the beginning of your upkeep, exile the top card of each opponent's library. Until end of turn, you may cast spells from among those exiled cards, and you ma | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Valentin, Dean of the Vein // Lisette, Dean of the Root | silent | Whenever you gain life, you may pay {1}. If you do, put a +1/+1 counter on each creature you control and those creatures gain trample until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Velomachus Lorehold | silent | Whenever Velomachus Lorehold attacks, look at the top seven cards of your library. You may cast an instant or sorcery spell with mana value less than or equal t | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Verdant Mastery | silent | You may pay {3}{G} rather than pay this spell's mana cost. Search your library for up to four basic land cards and reveal them. Put one of them onto the battlef | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Vortex Runner | silent | As long as you control eight or more lands, this creature gets +1/+0 and can't be blocked. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -103,9 +100,7 @@
 | Tend the Pests | notice | As an additional cost to cast this spell, sacrifice a creature. Create X 1/1 black and green Pest creature tokens with "When this token dies, you gain 1 life,"  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Codie, Vociferous Codex | unaudited | You can't cast permanent spells. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Kasmina, Enigma Sage | unaudited | Each other planeswalker you control has the loyalty abilities of Kasmina. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Killian, Ink Duelist | unaudited | Spells you cast that target a creature cost {2} less to cast. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Retriever Phoenix | unaudited | As long as this card is in your graveyard, if you would learn, you may instead return this card to the battlefield. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Spectacle Mage | unaudited | Instant and sorcery spells you cast with mana value 5 or greater cost {1} less to cast. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Access Tunnel | handled | {3}, {T}: Target creature with power 3 or less can't be blocked this turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Accomplished Alchemist | handled |  |  | Y/Y/- | not_tested |
 | Aether Helix | handled | Return target permanent to its owner's hand. Return target permanent card from your graveyard to your hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -196,6 +191,7 @@
 | Overgrown Arch | handled | {T}: You gain 1 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Owlin Shieldmage | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
 | Pest Summoning | handled | Create two 1/1 black and green Pest creature tokens with "When this token dies, you gain 1 life." | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Pestilent Cauldron // Restorative Burst | handled | Return up to two target creature, land, and/or planeswalker cards from your graveyard to your hand. Each player gains 4 life. Exile Restorative Burst. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Pilgrim of the Ages | handled | When this creature enters, you may search your library for a basic Plains card, reveal it, put it into your hand, then shuffle. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Pillardrop Rescuer | handled | When this creature enters, return target creature card with mana value 3 or less from your graveyard to your hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Pillardrop Warden | handled | {2}, {T}, Sacrifice this creature: Return target instant or sorcery card from your graveyard to your hand. Activate only as a sorcery. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -204,6 +200,7 @@
 | Prismari Campus | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Professor of Zoomancy | handled | When this creature enters, create a 1/1 black and green Pest creature token with "When this token dies, you gain 1 life." | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Professor's Warning | handled | Choose one — • Put a +1/+1 counter on target creature. • Target creature gains indestructible until end of turn. (Damage and effects that say "destroy" don't de | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Quandrix Apprentice | handled | Magecraft — Whenever you cast or copy an instant or sorcery spell, look at the top three cards of your library. You may reveal a land card from among them and p | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Quandrix Campus | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Quandrix Cultivator | handled | When this creature enters, you may search your library for a basic Forest or Island card, put it onto the battlefield, then shuffle. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Quandrix Pledgemage | handled | Magecraft — Whenever you cast or copy an instant or sorcery spell, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -262,7 +259,7 @@
 ## Fully supported
 
 <details>
-<summary>42 cards</summary>
+<summary>45 cards</summary>
 
 - Academic Dispute
 - Bayou Groff
@@ -290,6 +287,7 @@
 - Infuse with Vitality
 - Introduction to Annihilation
 - Kelpie Guide
+- Killian, Ink Duelist
 - Lorehold Command
 - Lorehold Excavation
 - Make Your Mark
@@ -301,8 +299,10 @@
 - Secret Rendezvous
 - Show of Confidence
 - Snow Day
+- Spectacle Mage
 - Thrilling Discovery
 - Torrent Sculptor // Flamethrower Sonata
+- Valentin, Dean of the Vein // Lisette, Dean of the Root
 - Vanishing Verse
 - Witherbloom Command
 - Zimone, Quandrix Prodigy
@@ -313,7 +313,7 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| Magecraft | 5 | Elemental Expressionist, Prismari Apprentice, Prismari Pledgemage, Quandrix Apprentice, Symmetry Sage | stx |
+| Magecraft | 4 | Elemental Expressionist, Prismari Apprentice, Prismari Pledgemage, Symmetry Sage | stx |
 | Choose one | 2 | Academic Probation, Confront the Past | stx |
 | Choose two | 1 | Quandrix Command | stx |
 | +N: you may discard a card. if you do, draw a card. if a creature card was discarded ~, draw two cards instead. | 1 | Mila, Crafty Companion // Lukka, Wayward Bonder | stx |
@@ -343,14 +343,12 @@
 | for each opponent, gain control of up to one target creature or planeswalker that player controls with mana value N or less. | 1 | Tempted by the Oriq | stx |
 | if N is N, scry N, then draw a card. if N is N, you may choose a player. they return a creature they control to its owner's hand. if N is N, create a N/N blue a | 1 | Multiple Choice | stx |
 | if an opponent has more cards in hand than you, draw two cards. draw three cards instead if an opponent has at least four more cards in hand than you. | 1 | Teachings of the Archaics | stx |
-| instant and sorcery spells you cast with mana value N or greater cost {M} less to cast. | 1 | Spectacle Mage | stx |
 | instant and sorcery spells you control have lifelink. | 1 | Radiant Scrollwielder | stx |
 | look at the top five cards of your library. you may put any number of them into your hand and the rest into your graveyard. you lose N life for each card you pu | 1 | Blex, Vexing Pest // Search for Blex | stx |
 | other tapped creatures you control get +N/+N. | 1 | Plargg, Dean of Chaos // Augusta, Dean of Order | stx |
 | return up to one target artifact card, up to one target enchantment card, up to one target instant card, up to one target sorcery card, and up to one target pla | 1 | Reconstruct History | stx |
 | search your library and graveyard for up to four creature cards with different names that each have mana value N or less and reveal them. an opponent chooses tw | 1 | Ecological Appreciation | stx |
 | search your library for a basic land card, put it onto the battlefield tapped, then shuffle. that land becomes a N/N green and blue fractal creature that's stil | 1 | Emergent Sequence | stx |
-| spells you cast that target a creature cost {M} less to cast. | 1 | Killian, Ink Duelist | stx |
 | target creature gets -N/-N until end of turn, where N is N minus the number of cards in that creature"..."s hand. | 1 | Flunk | stx |
 | target opponent reveals their hand. you choose a nonland card from it. that player discards that card. put a +N/+N counter on a creature you control. | 1 | Humiliate | stx |
 | until end of turn, double target creature's power N times. | 1 | Exponential Growth | stx |
@@ -361,7 +359,6 @@
 | whenever a permanent entering causes a triggered ability to trigger, counter that ability unless its controller pays {M}. | 1 | Strict Proctor | stx |
 | whenever another nontoken creature you control dies, exile it. if you do, create a token that"..."s a spirit in addition to its other types and it has "..." | 1 | Hofri Ghostforge | stx |
 | whenever one or more cards are put into exile during your turn, put a +N/+N counter on ~. ~ triggers only once each turn. | 1 | Stonebinder's Familiar | stx |
-| whenever you gain life, you may pay {M}. if you do, put a +N/+N counter on each creature you control and those creatures gain trample until end of turn. | 1 | Valentin, Dean of the Vein // Lisette, Dean of the Root | stx |
 | whenever ~ attacks, it gains flying until end of turn if you control a creature with flying. the same is true for first strike, double strike, deathtouch, indes | 1 | Thunderous Orator | stx |
 | whenever ~ attacks, look at the top seven cards of your library. you may cast an instant or sorcery spell with mana value less than or equal to ~'s power from a | 1 | Velomachus Lorehold | stx |
 | whenever ~ attacks, the next instant or sorcery spell you cast ~ costs {M} less to cast, where N is ~ power as ~ resolves. | 1 | Maelstrom Muse | stx |
@@ -375,7 +372,6 @@
 | you may pay {M}{M}{M} rather than pay ~ mana cost. if the {M}{M}{M} cost was paid, an opponent discards any number of cards, then draws that many cards. search  | 1 | Fervent Mastery | stx |
 | you may put any number of land cards from your hand onto the battlefield. then if you control eight or more lands, you may discard a card. if you do, return jou | 1 | Jadzi, Oracle of Arcavios // Journey to the Oracle | stx |
 | {M}, sacrifice another creature: dina gets +N/+N until end of turn, where N is the sacrificed creature's power. | 1 | Dina, Soul Steeper | stx |
-| {M}, {M}: each opponent mills cards equal to the amount of life you gained ~. | 1 | Pestilent Cauldron // Restorative Burst | stx |
 | {M}, {M}: look at the top card of your library. if it"..."t put the card into your hand, you may put it into your graveyard. activate only if you have exactly z | 1 | The Biblioplex | stx |
 | {M}: attacking spirits get +N/+N until end of turn. | 1 | Blood Age General | stx |
 | {M}: destroy ~. only your opponents may activate ~ and only as a sorcery. | 1 | Detention Vortex | stx |

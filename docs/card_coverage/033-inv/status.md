@@ -17,9 +17,9 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 5 | 11.4% |
+| Tested | 6 | 13.6% |
 | Works (untested) | 32 | 72.7% |
-| Partial (unaudited) | 2 | 4.5% |
+| Partial (unaudited) | 1 | 2.3% |
 | Not working | 5 | 11.4% |
 
 ## Cards needing work
@@ -32,7 +32,6 @@
 | Verdeloth the Ancient | silent | Saproling creatures and other Treefolk creatures get +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Void | silent | Choose a number. Destroy all artifacts and creatures with mana value equal to that number. Then target player reveals their hand and discards all nonland cards  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sterling Grove | unaudited | Other enchantments you control have shroud. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Teferi's Moat | unaudited | Creatures of the chosen color without flying can't attack you. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Absorb | handled | Counter target spell. You gain 3 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Aggressive Urge | handled | Target creature gets +1/+1 until end of turn. Draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Assault // Battery | handled | Assault deals 2 damage to any target. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -69,12 +68,13 @@
 ## Fully supported
 
 <details>
-<summary>5 cards</summary>
+<summary>6 cards</summary>
 
 - Chromatic Sphere
 - Coalition Victory
 - Opt
 - Skizzik
+- Teferi's Moat
 - Tribal Flames
 
 </details>
@@ -84,7 +84,6 @@
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
 | choose a number. destroy all artifacts and creatures with mana value equal to that number. then target player reveals their hand and discards all nonland cards  | 1 | Void | inv |
-| creatures of the chosen color without flying can't attack you. | 1 | Teferi's Moat | inv |
 | other elf creatures get +N/+N and have forestwalk. | 1 | Elvish Champion | inv |
 | other enchantments you control have shroud. | 1 | Sterling Grove | inv |
 | reveal the top five cards of your library. an opponent separates those cards into two piles. put one pile into your hand and the other into your graveyard. | 1 | Fact or Fiction | inv |

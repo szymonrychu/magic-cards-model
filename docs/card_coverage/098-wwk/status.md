@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 24 | 16.9% |
-| Works (untested) | 62 | 43.7% |
+| Tested | 27 | 19.0% |
+| Works (untested) | 60 | 42.3% |
 | Partial (unaudited) | 9 | 6.3% |
-| Not working | 47 | 33.1% |
+| Not working | 46 | 32.4% |
 
 ## Cards needing work
 
@@ -63,7 +63,6 @@
 | Wrexial, the Risen Deep | silent | Whenever Wrexial deals combat damage to a player, you may cast target instant or sorcery card from that player's graveyard without paying its mana cost. If that | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Dead Reckoning | notice | You may put target creature card from your graveyard on top of your library. If you do, Dead Reckoning deals damage equal to that card's power to target creatur | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Death's Shadow | notice | This creature gets -X/-X, where X is your life total. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Eye of Ugin | notice | Colorless Eldrazi spells you cast cost {2} less to cast. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Feral Contest | notice | Put a +1/+1 counter on target creature you control. Another target creature blocks it this turn if able. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Jace, the Mind Sculptor | notice | +2: Look at the top card of target player's library. You may put that card on the bottom of that player's library. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Loam Lion | notice | This creature gets +1/+2 as long as you control a Forest. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
@@ -74,7 +73,7 @@
 | Tuktuk Scrapper | notice | Whenever this creature or another Ally you control enters, you may destroy target artifact. If that artifact is put into a graveyard this way, this creature dea | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Urge to Feed | notice | Target creature gets -3/-3 until end of turn. You may tap any number of untapped Vampire creatures you control. If you do, put a +1/+1 counter on each of those  | unparsed remainder: You may tap any number of untapped Vampire creatures you control. If you do, put a +1/+1 counter on each of those Vampires. | Y/-/- | not_working |
 | Abyssal Persecutor | unaudited | You can't win the game and your opponents can't lose the game. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Canopy Cover | unaudited | Enchanted creature can't be blocked except by creatures with flying or reach. | a static ability no support check audits - not verified either way | Y/-/- | partial |
+| Canopy Cover | unaudited | Enchanted creature can't be the target of spells or abilities your opponents control. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Corrupted Zendikon | unaudited | Enchanted land is a 3/3 black Ooze creature. It's still a land. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Crusher Zendikon | unaudited | Enchanted land is a 4/2 red Beast creature with trample. It's still a land. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Guardian Zendikon | unaudited | Enchanted land is a 2/6 white Wall creature with defender. It's still a land. | a static ability no support check audits - not verified either way | Y/-/- | partial |
@@ -94,7 +93,7 @@
 | Dispel | handled | Counter target instant spell. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Dragonmaster Outcast | handled | At the beginning of your upkeep, if you control six or more lands, create a 5/5 red Dragon creature token with flying. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Dread Statuary | handled | {4}: This land becomes a 4/2 Golem artifact creature until end of turn. It's still a land. | the engine reads this text and performs it | Y/-/- | not_tested |
-| Enclave Elite | handled | This creature enters with a +1/+1 counter on it for each time it was kicked. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Eye of Ugin | handled | Colorless Eldrazi spells you cast cost {2} less to cast. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Fledgling Griffin | handled | Landfall — Whenever a land you control enters, this creature gains flying until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Goblin Roughrider | handled |  |  | Y/Y/- | not_tested |
 | Goliath Sphinx | handled | Flying | machines/combat.py | Y/-/- | not_tested |
@@ -122,7 +121,6 @@
 | Permafrost Trap | handled | If an opponent had a green creature enter the battlefield under their control this turn, you may pay {U} rather than pay this spell's mana cost. Tap up to two t | the engine reads this text and performs it | Y/-/- | not_tested |
 | Pilgrim's Eye | handled | When this creature enters, you may search your library for a basic land card, reveal it, put it into your hand, then shuffle. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Pulse Tracker | handled | Whenever this creature attacks, each opponent loses 1 life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Quag Vampires | handled | This creature enters with a +1/+1 counter on it for each time it was kicked. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Raging Ravine | handled | This land enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Razor Boomerang | handled | Equipped creature has "{T}, Unattach Razor Boomerang: It deals 1 damage to any target. Return Razor Boomerang to its owner's hand." | the engine reads this text and performs it | Y/-/- | not_tested |
 | Rest for the Weary | handled | Target player gains 4 life. Landfall — If you had a land enter the battlefield under your control this turn, that player gains 8 life instead. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -132,7 +130,6 @@
 | Sejiri Merfolk | handled | As long as you control a Plains, this creature has first strike and lifelink. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Sejiri Steppe | handled | This land enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Shoreline Salvager | handled | Whenever this creature deals combat damage to a player, if you control an Island, you may draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
-| Skitter of Lizards | handled | This creature enters with a +1/+1 counter on it for each time it was kicked. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Slingbow Trap | handled | If a black creature with flying is attacking, you may pay {G} rather than pay this spell's mana cost. Destroy target attacking creature with flying. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Smoldering Spires | handled | This land enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Snapping Creeper | handled | Landfall — Whenever a land you control enters, this creature gains vigilance until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -148,7 +145,7 @@
 ## Fully supported
 
 <details>
-<summary>24 cards</summary>
+<summary>27 cards</summary>
 
 - Amulet of Vigor
 - Apex Hawks
@@ -159,6 +156,7 @@
 - Chain Reaction
 - Comet Storm
 - Deathforge Shaman
+- Enclave Elite
 - Everflowing Chalice
 - Explore
 - Gnarlid Pack
@@ -168,10 +166,12 @@
 - Mordant Dragon
 - Nature's Claim
 - Omnath, Locus of Mana
+- Quag Vampires
 - Refraction Trap
 - Ricochet Trap
 - Ruthless Cullblade
 - Searing Blaze
+- Skitter of Lizards
 - Strength of the Tajuru
 - Tectonic Edge
 
@@ -190,9 +190,8 @@
 | at the beginning of each opponent's upkeep, if that player has no cards in hand and ~ has two or more quest counters on it, you may have that player lose N life | 1 | Quest for the Nihil Stone | wwk |
 | at the beginning of your upkeep, sacrifice ~ unless you return a land you control to its owner's hand. | 1 | Vapor Snare | wwk |
 | at the beginning of your upkeep, you may look at the top card of your library. if it's a creature card, you may reveal it and put a quest counter on ~. | 1 | Quest for Ula's Temple | wwk |
-| colorless eldrazi spells you cast cost {M} less to cast. | 1 | Eye of Ugin | wwk |
 | destroy target land, then ~ deals damage to that land"..."s graveyard. | 1 | Roiling Terrain | wwk |
-| enchanted creature can't be blocked except by creatures with flying or reach. | 1 | Canopy Cover | wwk |
+| enchanted creature can't be the target of spells or abilities your opponents control. | 1 | Canopy Cover | wwk |
 | enchanted creature gets +N/+N for each mountain you control and has first strike. | 1 | Claws of Valakut | wwk |
 | enchanted land is a N/N black ooze creature. it's still a land. | 1 | Corrupted Zendikon | wwk |
 | enchanted land is a N/N blue elemental creature with flying. it's still a land. | 1 | Wind Zendikon | wwk |

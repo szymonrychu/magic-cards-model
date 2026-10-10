@@ -17,9 +17,9 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 20 | 8.6% |
+| Tested | 25 | 10.7% |
 | Works (untested) | 135 | 57.9% |
-| Partial (unaudited) | 6 | 2.6% |
+| Partial (unaudited) | 1 | 0.4% |
 | Not working | 72 | 30.9% |
 
 ## Cards needing work
@@ -98,12 +98,7 @@
 | Find // Finality | notice | You may put two +1/+1 counters on a creature you control. Then all creatures get -4/-4 until end of turn. | unparsed remainder: You may put two +1/+1 counters on a creature you control. | Y/Y/- | not_working |
 | Leapfrog | notice | This creature has flying as long as you've cast an instant or sorcery spell this turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Mnemonic Betrayal | notice | Exile all opponents' graveyards. You may cast spells from among those cards this turn, and mana of any type can be spent to cast them. At the beginning of the n | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Crackling Drake | unaudited | Crackling Drake's power is equal to the total number of instant and sorcery cards you own in exile and in your graveyard. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Demotion | unaudited | Enchanted creature can't block, and its activated abilities can't be activated. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Enhanced Surveillance | unaudited | You may look at an additional two cards each time you surveil. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Ochran Assassin | unaudited | All creatures able to block this creature do so. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Underrealm Lich | unaudited | If you would draw a card, instead look at the top three cards of your library, then put one into your hand and the rest into your graveyard. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Urban Utopia | unaudited | Enchanted land has "{T}: Add one mana of any color." | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Arboretum Elemental | handled | Hexproof | machines/casting.py (target legality) | Y/Y/- | not_tested |
 | Artful Takedown | handled | Choose one or both — • Tap target creature. • Target creature gets -2/-4 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Assure // Assemble | handled | Put a +1/+1 counter on target creature. That creature gains indestructible until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -130,6 +125,7 @@
 | Dawn of Hope | handled | Whenever you gain life, you may pay {2}. If you do, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Dazzling Lights | handled | Target creature gets -3/-0 until end of turn. Surveil 2. (Look at the top two cards of your library, then put any number of them into your graveyard and the res | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Deadly Visit | handled | Destroy target creature. Surveil 2. (Look at the top two cards of your library, then put any number of them into your graveyard and the rest on top of your libr | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Demotion | handled | Enchanted creature can't block, and its activated abilities can't be activated. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Devious Cover-Up | handled | Counter target spell. If that spell is countered this way, exile it instead of putting it into its owner's graveyard. You may shuffle up to four target cards fr | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Devkarin Dissident | handled | {4}{G}: This creature gets +2/+2 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Dimir Informant | handled | When this creature enters, surveil 2. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -149,13 +145,11 @@
 | Flower // Flourish | handled | Search your library for a basic Forest or Plains card, reveal it, put it into your hand, then shuffle. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Fresh-Faced Recruit | handled | During your turn, this creature has first strike. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Garrison Sergeant | handled | This creature has double strike as long as you control a Gate. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Gatekeeper Gargoyle | handled | This creature enters with a +1/+1 counter on it for each Gate you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Generous Stray | handled | When this creature enters, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Gird for Battle | handled | Put a +1/+1 counter on each of up to two target creatures. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Goblin Cratermaker | handled | {1}, Sacrifice this creature: Choose one — • This creature deals 2 damage to target creature. • Destroy target colorless nonland permanent. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Golgari Findbroker | handled | When this creature enters, return target permanent card from your graveyard to your hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Golgari Locket | handled | {B/G}{B/G}{B/G}{B/G}, {T}, Sacrifice this artifact: Draw two cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Golgari Raiders | handled | Undergrowth — This creature enters with a +1/+1 counter on it for each creature card in your graveyard. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Grappling Sundew | handled | {4}{G}: This creature gains indestructible until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Guildmages' Forum | handled |  |  | Y/Y/- | not_tested |
 | Haazda Marshal | handled | Whenever this creature and at least two other creatures attack, create a 1/1 white Soldier creature token with lifelink. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -225,6 +219,7 @@
 | Undercity Necrolisk | handled | {1}, Sacrifice another creature: Put a +1/+1 counter on this creature. It gains menace until end of turn. Activate only as a sorcery. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Undercity Uprising | handled | Creatures you control gain deathtouch until end of turn. Then target creature you control fights target creature you don't control. (Each deals damage equal to  | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Unexplained Disappearance | handled | Return target creature to its owner's hand. Surveil 1. (Look at the top card of your library. You may put that card into your graveyard.) | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Urban Utopia | handled | When this Aura enters, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Vedalken Mesmerist | handled | Whenever this creature attacks, target creature an opponent controls gets -2/-0 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Veiled Shade | handled | {1}{B}: This creature gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Vernadi Shieldmate | handled | Vigilance | machines/combat.py | Y/Y/- | not_tested |
@@ -243,7 +238,7 @@
 ## Fully supported
 
 <details>
-<summary>20 cards</summary>
+<summary>25 cards</summary>
 
 - Affectionate Indrik
 - Arclight Phoenix
@@ -251,8 +246,11 @@
 - Chamber Sentry
 - Conclave Tribunal
 - Cosmotronic Wave
+- Crackling Drake
 - Deafening Clarion
 - Divine Visitation
+- Gatekeeper Gargoyle
+- Golgari Raiders
 - Hatchery Spider
 - Hellkite Whelp
 - Hired Poisoner
@@ -260,10 +258,12 @@
 - Kraul Harpooner
 - Lazav, the Multifarious
 - Lotleth Giant
+- Ochran Assassin
 - Ornery Goblin
 - Rhizome Lurcher
 - Skyline Scout
 - Swathcutter Giant
+- Underrealm Lich
 - Wand of Vertebrae
 
 </details>
@@ -275,7 +275,6 @@
 | mentor | 11 | Barging Sergeant, Blade Instructor, Boros Challenger, Goblin Banneret, Hammer Dropper | grn |
 | jump | 8 | Chemister's Insight, Direct Current, Gravitic Punch, Maximize Altitude, Maximize Velocity | grn |
 | Undergrowth | 1 | Mausoleum Secrets | grn |
-| all creatures able to block ~ do so. | 1 | Ochran Assassin | grn |
 | as long as you"..."t have defender. | 1 | Piston-Fist Cyclops | grn |
 | as long as you've surveilled ~, ~ has deathtouch and "..." | 1 | Darkblade Agent | grn |
 | as long as ~ has three or more +N/+N counters on it, it can attack as though it didn't have defender. | 1 | Thoughtbound Phantasm | grn |
@@ -292,12 +291,9 @@
 | destroy target creature. you gain life equal to its toughness. you may search your library and/or graveyard for a card named vraska, regal gorgon, reveal it, an | 1 | Vraska's Stoneglare | grn |
 | during your turn, creatures you control get +N/+N and have trample. | 1 | Street Riot | grn |
 | each opponent returns a nonland permanent they control with the greatest mana value among permanents they control to its owner's hand, then discards a card. | 1 | Discovery // Dispersal | grn |
-| enchanted creature can"..."t be activated. | 1 | Demotion | grn |
-| enchanted land has "..." | 1 | Urban Utopia | grn |
 | equipped creature gets +N/+N for each gate you control and has vigilance and menace. | 1 | Glaive of the Guildpact | grn |
 | exile all opponents"..." graveyards. exile ~. | 1 | Mnemonic Betrayal | grn |
 | gain control of target creature with power N or less. | 1 | Connive // Concoct | grn |
-| if you would draw a card, instead look at the top three cards of your library, then put one into your hand and the rest into your graveyard. | 1 | Underrealm Lich | grn |
 | return N target creatures of the creature type of your choice to their owner's hand. | 1 | Selective Snare | grn |
 | search your library for up to two basic land cards and/or gate cards, put them onto the battlefield tapped, then shuffle. | 1 | Circuitous Route | grn |
 | surveil N, then choose an instant or sorcery card in your graveyard. you may cast it ~. if that spell would be put into your graveyard, exile it instead. (to su | 1 | Mission Briefing | grn |
@@ -330,7 +326,6 @@
 | ~ deals N damage to each opponent and you gain N life. when ~ is put into your graveyard from your library, you may exile it. if you do, ~ deals N damage to eac | 1 | Creeping Chill | grn |
 | ~ deals damage to target creature equal to the total number of instant and sorcery cards you own in exile and in your graveyard. jump-start (you may cast ~ from | 1 | Beacon Bolt | grn |
 | ~ has flying as long as you've cast an instant or sorcery spell ~. | 1 | Leapfrog | grn |
-| ~'s power is equal to the total number of instant and sorcery cards you own in exile and in your graveyard. | 1 | Crackling Drake | grn |
 | −N: for each creature card in your graveyard, put a +N/+N counter on each creature you control. | 1 | Vraska, Regal Gorgon | grn |
 | −N: ral deals damage to target creature equal to the total number of instant and sorcery cards you own in exile and in your graveyard. | 1 | Ral, Izzet Viceroy | grn |
 

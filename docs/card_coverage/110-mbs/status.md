@@ -17,9 +17,9 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 13 | 9.2% |
+| Tested | 20 | 14.1% |
 | Works (untested) | 91 | 64.1% |
-| Partial (unaudited) | 7 | 4.9% |
+| Partial (unaudited) | 0 | 0.0% |
 | Not working | 31 | 21.8% |
 
 ## Cards needing work
@@ -57,13 +57,6 @@
 | Gore Vassal | notice | Sacrifice this creature: Put a -1/-1 counter on target creature. Then if that creature's toughness is 1 or greater, regenerate it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Pistus Strike | notice | Destroy target creature with flying. Its controller gets a poison counter. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Vedalken Anatomist | notice | {2}{U}, {T}: Put a -1/-1 counter on target creature. You may tap or untap that creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Blightsteel Colossus | unaudited | If Blightsteel Colossus would be put into a graveyard from anywhere, reveal Blightsteel Colossus and shuffle it into its owner's library instead. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Kemba's Legion | unaudited | This creature can block an additional creature each combat for each Equipment attached to this creature. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Phyrexian Hydra | unaudited | If damage would be dealt to this creature, prevent that damage. Put a -1/-1 counter on this creature for each 1 damage prevented this way. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Shimmer Myr | unaudited | You may cast artifact spells as though they had flash. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Signal Pest | unaudited | This creature can't be blocked except by creatures with flying or reach. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Sphere of the Suns | unaudited | This artifact enters tapped and with three charge counters on it. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Training Drone | unaudited | This creature can't attack or block unless it's equipped. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Banishment Decree | handled | Put target artifact, creature, or enchantment on top of its owner's library. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Black Sun's Zenith | handled | Put X -1/-1 counters on each creature. Shuffle Black Sun's Zenith into its owner's library. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Bladed Sentinel | handled | {W}: This creature gains vigilance until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -159,21 +152,28 @@
 ## Fully supported
 
 <details>
-<summary>13 cards</summary>
+<summary>20 cards</summary>
 
 - Accorder Paladin
+- Blightsteel Colossus
 - Burn the Impure
 - Concussive Bolt
 - Fuel for the Cause
 - Green Sun's Zenith
 - Ichor Wellspring
+- Kemba's Legion
 - Knowledge Pool
 - Lead the Stampede
 - Melira's Keepers
+- Phyrexian Hydra
 - Phyrexian Revoker
 - Septic Rats
+- Shimmer Myr
+- Signal Pest
+- Sphere of the Suns
 - Sword of Feast and Famine
 - Thopter Assembly
+- Training Drone
 
 </details>
 
@@ -190,8 +190,6 @@
 | destroy target creature with flying. its controller gets a poison counter. | 1 | Pistus Strike | mbs |
 | equipped creature gets +N/+N and can't block. | 1 | Copper Carapace | mbs |
 | equipped creature gets +N/+N and is an artifact in addition to its other types. | 1 | Silverskin Armor | mbs |
-| if damage would be dealt to ~, prevent that damage. put a -N/-N counter on ~ for each N damage prevented ~. | 1 | Phyrexian Hydra | mbs |
-| if ~ would be put into a graveyard from anywhere, reveal ~ and shuffle it into its owner's library instead. | 1 | Blightsteel Colossus | mbs |
 | look at the top seven cards of your library. you may put one of those cards onto the battlefield if it has the same name as a permanent. put the rest on the bot | 1 | Mitotic Manipulation | mbs |
 | put a -N/-N counter on each attacking creature. | 1 | Choking Fumes | mbs |
 | return all cards from your graveyard to your hand. exile ~. you have no maximum hand size for the rest of the game. | 1 | Praetor's Counsel | mbs |
@@ -203,14 +201,9 @@
 | whenever another nontoken artifact you control enters, you may pay {M}. if you do, create a token that's a copy of that artifact. | 1 | Mirrorworks | mbs |
 | whenever ~ attacks, attacking creatures gain flying and lifelink until end of turn. | 1 | Victory's Herald | mbs |
 | whenever ~ attacks, creatures with power N or less can't block ~. | 1 | Hero of Oxid Ridge | mbs |
-| you may cast artifact spells as though they had flash. | 1 | Shimmer Myr | mbs |
 | {M}, {M}: target opponent loses N life, gets a poison counter, then mills six cards. | 1 | Decimator Web | mbs |
 | {M}: target creature can't block ~ ~. | 1 | Spin Engine | mbs |
 | {M}{M}, {M}: put a -N/-N counter on target creature. you may tap or untap that creature. | 1 | Vedalken Anatomist | mbs |
-| ~ can block an additional creature each combat for each equipment attached to ~. | 1 | Kemba's Legion | mbs |
-| ~ can"..."s equipped. | 1 | Training Drone | mbs |
-| ~ can't be blocked except by creatures with flying or reach. | 1 | Signal Pest | mbs |
-| ~ enters tapped and with three charge counters on it. | 1 | Sphere of the Suns | mbs |
 | ~'s power and toughness are each equal to the number of cards in your hand. | 1 | Psychosis Crawler | mbs |
 | −N: target artifact becomes an artifact creature with base power and toughness N/N. | 1 | Tezzeret, Agent of Bolas | mbs |
 

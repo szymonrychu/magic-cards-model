@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 16 | 11.2% |
-| Works (untested) | 74 | 51.7% |
-| Partial (unaudited) | 9 | 6.3% |
-| Not working | 44 | 30.8% |
+| Tested | 20 | 14.0% |
+| Works (untested) | 79 | 55.2% |
+| Partial (unaudited) | 2 | 1.4% |
+| Not working | 42 | 29.4% |
 
 ## Cards needing work
 
@@ -33,7 +33,6 @@
 | Double Negative | silent | Counter up to two target spells. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Dragon Broodmother | silent | At the beginning of each upkeep, create a 1/1 red and green Dragon creature token with flying and devour 2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Drastic Revelation | silent | Discard your hand. Draw seven cards, then discard three cards at random. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Enigma Sphinx | silent | When this creature is put into your graveyard from the battlefield, put it into your library third from the top. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Esper Stormblade | silent | As long as you control another multicolored permanent, this creature gets +1/+1 and has flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Ethercaste Knight | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Fight to the Death | silent | Destroy all blocking creatures and all blocked creatures. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -46,7 +45,6 @@
 | Karrthus, Tyrant of Jund | silent | When Karrthus enters, gain control of all Dragons, then untap all Dragons. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Knight of New Alara | silent | Each other multicolored creature you control gets +1/+1 for each of its colors. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Lich Lord of Unx | silent | {U}{U}{B}{B}: Target player loses X life and mills X cards, where X is the number of Zombies you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Lord of Extinction | silent | Lord of Extinction's power and toughness are each equal to the number of cards in all graveyards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Mind Funeral | silent | Target opponent reveals cards from the top of their library until four land cards are revealed. That player puts all cards revealed this way into their graveyar | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Morbid Bloom | silent | Exile target creature card from a graveyard, then create X 1/1 green Saproling creature tokens, where X is the exiled card's toughness. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Naya Hushblade | silent | As long as you control another multicolored permanent, this creature gets +1/+1 and has shroud. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -70,15 +68,8 @@
 | Slave of Bolas | notice | Gain control of target creature. Untap that creature. It gains haste until end of turn. Sacrifice it at the beginning of the next end step. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Vengeful Rebirth | notice | Return target card from your graveyard to your hand. If you return a nonland card to your hand this way, Vengeful Rebirth deals damage equal to that card's mana | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Zealous Persecution | notice | Until end of turn, creatures you control get +1/+1 and creatures your opponents control get -1/-1. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Arsenal Thresher | unaudited | As this creature enters, you may reveal any number of other artifact cards from your hand. This creature enters with a +1/+1 counter on it for each card reveale | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Fieldmist Borderpost | unaudited | You may pay {1} and return a basic land you control to its owner's hand rather than pay this spell's mana cost. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Firewild Borderpost | unaudited | You may pay {1} and return a basic land you control to its owner's hand rather than pay this spell's mana cost. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Mistvein Borderpost | unaudited | You may pay {1} and return a basic land you control to its owner's hand rather than pay this spell's mana cost. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Sages of the Anima | unaudited | If you would draw a card, instead reveal the top three cards of your library. Put all creature cards revealed this way into your hand and the rest on the bottom | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Spellbreaker Behemoth | unaudited | Creature spells you control with power 5 or greater can't be countered. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Trace of Abundance | unaudited | Enchanted land has shroud. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Veinfire Borderpost | unaudited | You may pay {1} and return a basic land you control to its owner's hand rather than pay this spell's mana cost. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Wildfield Borderpost | unaudited | You may pay {1} and return a basic land you control to its owner's hand rather than pay this spell's mana cost. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Bant Sojourners | handled | When you cycle this card and when this creature dies, you may create a 1/1 white Soldier creature token. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Behemoth Sledge | handled | Equipped creature gets +2/+2 and has trample and lifelink. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Bituminous Blast | handled | Cascade (When you cast this spell, exile cards from the top of your library until you exile a nonland card that costs less. You may cast it without paying its m | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -95,6 +86,7 @@
 | Defiler of Souls | handled | At the beginning of each player's upkeep, that player sacrifices a monocolored creature of their choice. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Demonic Dread | handled | Cascade (When you cast this spell, exile cards from the top of your library until you exile a nonland card that costs less. You may cast it without paying its m | the engine reads this text and performs it | Y/-/- | not_tested |
 | Deny Reality | handled | Cascade (When you cast this spell, exile cards from the top of your library until you exile a nonland card that costs less. You may cast it without paying its m | the engine reads this text and performs it | Y/-/- | not_tested |
+| Enigma Sphinx | handled | When this creature is put into your graveyard from the battlefield, put it into your library third from the top. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Enlisted Wurm | handled | Cascade | machines/keywords.py | Y/-/- | not_tested |
 | Esper Sojourners | handled | When you cycle this card and when this creature dies, you may tap or untap target permanent. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Etherium Abomination | handled | Unearth | machines/keywords.py (off_zone_abilities: unearth) | Y/-/- | not_tested |
@@ -117,6 +109,7 @@
 | Lavalanche | handled | Lavalanche deals X damage to target player or planeswalker and each creature that player or that planeswalker's controller controls. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Leonin Armorguard | handled | When this creature enters, creatures you control get +1/+1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Lightning Reaver | handled | Whenever this creature deals combat damage to a player, put a charge counter on it. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Lord of Extinction | handled | Lord of Extinction's power and toughness are each equal to the number of cards in all graveyards. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Lorescale Coatl | handled | Whenever you draw a card, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Madrush Cyclops | handled | Creatures you control have haste. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Magefire Wings | handled | Enchanted creature gets +2/+0 and has flying. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -124,6 +117,7 @@
 | Mask of Riddles | handled | Equipped creature has fear. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Mayael's Aria | handled | At the beginning of your upkeep, put a +1/+1 counter on each creature you control if you control a creature with power 5 or greater. Then you gain 10 life if yo | the engine reads this text and performs it | Y/-/- | not_tested |
 | Messenger Falcons | handled | When this creature enters, draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Mistvein Borderpost | handled | You may pay {1} and return a basic land you control to its owner's hand rather than pay this spell's mana cost. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Monstrous Carabid | handled | This creature attacks each combat if able. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Mycoid Shepherd | handled | Whenever this creature or another creature you control with power 5 or greater dies, you may gain 5 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Naya Sojourners | handled | When you cycle this card and when this creature dies, you may put a +1/+1 counter on target creature. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -149,21 +143,26 @@
 | Valley Rannet | handled | Mountaincycling | machines/keywords.py (off_zone_abilities: cycling) | Y/-/- | not_tested |
 | Vectis Dominator | handled | {T}: Tap target creature unless its controller pays 2 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Vedalken Heretic | handled | Whenever this creature deals damage to an opponent, you may draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Veinfire Borderpost | handled | You may pay {1} and return a basic land you control to its owner's hand rather than pay this spell's mana cost. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Vithian Renegades | handled | When this creature enters, destroy target artifact. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Wall of Denial | handled | Flying | machines/combat.py | Y/-/- | not_tested |
 | Wargate | handled | Search your library for a permanent card with mana value X or less, put it onto the battlefield, then shuffle. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Wildfield Borderpost | handled | You may pay {1} and return a basic land you control to its owner's hand rather than pay this spell's mana cost. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Winged Coatl | handled | Deathtouch | machines/combat.py | Y/-/- | not_tested |
 
 ## Fully supported
 
 <details>
-<summary>16 cards</summary>
+<summary>20 cards</summary>
 
 - Anathemancer
 - Architects of Will
+- Arsenal Thresher
 - Bloodbraid Elf
 - Dragon Appeasement
 - Ethersworn Shieldmage
+- Fieldmist Borderpost
+- Firewild Borderpost
 - Identity Crisis
 - Intimidation Bolt
 - Maelstrom Nexus
@@ -172,6 +171,7 @@
 - Marrow Chomper
 - Predatory Advantage
 - Putrid Leech
+- Sages of the Anima
 - Sigil Captain
 - Spellbound Dragon
 - Violent Outburst
@@ -182,14 +182,12 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| you may pay {M} and return a basic land you control to its owner's hand rather than pay ~ mana cost. | 5 | Fieldmist Borderpost, Firewild Borderpost, Mistvein Borderpost, Veinfire Borderpost, Wildfield Borderpost | arb |
 | exalted | 4 | Ardent Plea, Ethercaste Knight, Qasali Pridemage, Sigiled Behemoth | arb |
 | as long as you control another multicolored permanent, ~ gets +N/+N and has deathtouch. | 1 | Grixis Grimblade | arb |
 | as long as you control another multicolored permanent, ~ gets +N/+N and has first strike. | 1 | Bant Sureblade | arb |
 | as long as you control another multicolored permanent, ~ gets +N/+N and has flying. | 1 | Esper Stormblade | arb |
 | as long as you control another multicolored permanent, ~ gets +N/+N and has haste. | 1 | Jund Hackblade | arb |
 | as long as you control another multicolored permanent, ~ gets +N/+N and has shroud. | 1 | Naya Hushblade | arb |
-| as ~ enters, you may reveal any number of other artifact cards from your hand. ~ enters with a +N/+N counter on it for each card revealed ~. | 1 | Arsenal Thresher | arb |
 | at the beginning of each upkeep, create a N/N red and green dragon creature token with flying and devour N. | 1 | Dragon Broodmother | arb |
 | at the beginning of your upkeep, choose target opponent. ~, that player can"..."s hand ~. | 1 | Sen Triplets | arb |
 | at the beginning of your upkeep, you may put a feather counter on target creature. if you do, that creature has base power and toughness N/N and has flying for  | 1 | Aven Mimeomancer | arb |
@@ -203,7 +201,6 @@
 | enchanted land has shroud. | 1 | Trace of Abundance | arb |
 | exile target creature card from a graveyard, then create N N/N green saproling creature tokens, where N is the exiled card's toughness. | 1 | Morbid Bloom | arb |
 | gain control of target creature. untap that creature. it gains haste until end of turn. sacrifice it at the beginning of the next end step. | 1 | Slave of Bolas | arb |
-| if you would draw a card, instead reveal the top three cards of your library. put all creature cards revealed ~ into your hand and the rest on the bottom of you | 1 | Sages of the Anima | arb |
 | return all creatures on the battlefield and all creature cards in graveyards to their owners' hands. | 1 | Soulquake | arb |
 | return target card from your graveyard to your hand. if you return a nonland card to your hand ~, ~ deals damage equal to that card's mana value to any target.  | 1 | Vengeful Rebirth | arb |
 | target opponent reveals cards from the top of their library until four land cards are revealed. that player puts all cards revealed ~ into their graveyard. | 1 | Mind Funeral | arb |
@@ -215,7 +212,6 @@
 | when ~ enters, target player discards a card at random. | 1 | Sanity Gnawers | arb |
 | when ~ enters, target player reveals a card at random from their hand, then loses life equal to that card's mana value. | 1 | Singe-Mind Ogre | arb |
 | when ~ enters, you may have target creature block it ~ if able. | 1 | Giant Ambush Beetle | arb |
-| when ~ is put into your graveyard from the battlefield, put it into your library third from the top. | 1 | Enigma Sphinx | arb |
 | whenever a creature dealt damage by equipped creature ~ dies, you may exile that card. if you do, create a N/N black zombie creature token. | 1 | Unscythe, Killer of Kings | arb |
 | whenever a creature you control attacks alone, if it's the first combat phase of the turn, untap that creature. after ~, there is an additional combat phase. | 1 | Finest Hour | arb |
 | whenever a creature you control attacks alone, you may search your library for an aura card that could enchant that creature, put it onto the battlefield attach | 1 | Sovereigns of Lost Alara | arb |
@@ -227,7 +223,6 @@
 | {M}, sacrifice ~: you gain life equal to the total life lost by all players ~. | 1 | Tainted Sigil | arb |
 | {M}: equipped creature gets +N/+N until end of turn. | 1 | Demonspine Whip | arb |
 | {M}{M}{M}{M}: target player loses N life and mills N cards, where N is the number of zombies you control. | 1 | Lich Lord of Unx | arb |
-| ~'s power and toughness are each equal to the number of cards in all graveyards. | 1 | Lord of Extinction | arb |
 
 ## Notes
 

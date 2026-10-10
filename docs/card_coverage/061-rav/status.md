@@ -17,9 +17,9 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 36 | 14.6% |
+| Tested | 49 | 19.8% |
 | Works (untested) | 124 | 50.2% |
-| Partial (unaudited) | 17 | 6.9% |
+| Partial (unaudited) | 4 | 1.6% |
 | Not working | 70 | 28.3% |
 
 ## Cards needing work
@@ -96,22 +96,9 @@
 | Twisted Justice | notice | Target player sacrifices a creature of their choice. You draw cards equal to that creature's power. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Vigor Mortis | notice | Return target creature card from your graveyard to the battlefield. If {G} was spent to cast this spell, that creature enters with an additional +1/+1 counter o | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Voyager Staff | notice | {2}, Sacrifice this artifact: Exile target creature. Return the exiled card to the battlefield under its owner's control at the beginning of the next end step. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Chorus of the Conclave | unaudited | As an additional cost to cast creature spells, you may pay any amount of mana. If you do, that creature enters with that many additional +1/+1 counters on it. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Circu, Dimir Lobotomist | unaudited | Your opponents can't cast spells with the same name as a card exiled with Circu. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Dream Leash | unaudited | You can't choose an untapped permanent as this spell's target as you cast it. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Excruciator | unaudited | Damage that would be dealt by this creature can't be prevented. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Faith's Fetters | unaudited | Enchanted permanent can't attack or block, and its activated abilities can't be activated unless they're mana abilities. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Ghosts of the Innocent | unaudited | If a source would deal damage to a permanent or player, it deals half that damage, rounded down, to that permanent or player instead. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Indentured Oaf | unaudited | Prevent all damage that this creature would deal to red creatures. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Light of Sanction | unaudited | Prevent all damage that would be dealt to creatures you control by sources you control. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Loxodon Gatekeeper | unaudited | Artifacts, creatures, and lands your opponents control enter tapped. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Molten Sentry | unaudited | As this creature enters, flip a coin. If the coin comes up heads, this creature enters as a 5/2 creature with haste. If it comes up tails, this creature enters  | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Pariah's Shield | unaudited | All damage that would be dealt to you is dealt to equipped creature instead. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Phytohydra | unaudited | If damage would be dealt to this creature, put that many +1/+1 counters on it instead. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Privileged Position | unaudited | Other permanents you control have hexproof. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Selesnya Sagittars | unaudited | This creature can block an additional creature each combat. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Suppression Field | unaudited | Activated abilities cost {2} more to activate unless they're mana abilities. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Szadek, Lord of Secrets | unaudited | If Szadek would deal combat damage to a player, instead put that many +1/+1 counters on Szadek and that player mills that many cards. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Wizened Snitches | unaudited | Players play with the top card of their libraries revealed. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Autochthon Wurm | handled | Trample | machines/combat.py | Y/-/- | not_tested |
 | Barbarian Riftcutter | handled | {R}, Sacrifice this creature: Destroy target land. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -241,7 +228,7 @@
 ## Fully supported
 
 <details>
-<summary>36 cards</summary>
+<summary>49 cards</summary>
 
 - Blazing Archon
 - Boros Fury-Shield
@@ -249,32 +236,45 @@
 - Cerulean Sphinx
 - Chant of Vitu-Ghazi
 - Char
+- Chorus of the Conclave
 - Cleansing Beam
 - Coalhauler Swine
 - Concerted Effort
 - Dark Confidant
 - Doubling Season
 - Dryad's Caress
+- Excruciator
+- Faith's Fetters
 - Festival of the Guildpact
 - Firemane Angel
 - Flame Fusillade
+- Ghosts of the Innocent
 - Golgari Thug
 - Greater Mossdog
 - Hammerfist Giant
 - Hunted Horror
+- Indentured Oaf
 - Instill Furor
 - Life from the Loam
+- Light of Sanction
 - Lightning Helix
+- Loxodon Gatekeeper
 - Mausoleum Turnkey
 - Mnemonic Nexus
+- Molten Sentry
 - Muddle the Mixture
 - Netherborn Phalanx
 - Overgrown Tomb
+- Pariah's Shield
+- Phytohydra
 - Rain of Embers
 - Razia, Boros Archangel
 - Rolling Spoil
 - Sacred Foundry
+- Selesnya Sagittars
 - Sisters of Stone Death
+- Suppression Field
+- Szadek, Lord of Secrets
 - Temple Garden
 - Watchwolf
 - Watery Grave
@@ -289,12 +289,7 @@
 | Radiance | 6 | Bathe in Light, Incite Hysteria, Leave No Trace, Rally the Righteous, Surge of Zeal | rav |
 | ({M} can be paid with either {M} or {M}.) players can't search libraries ~. draw a card. | 1 | Shadow of Doubt | rav |
 | ({M} can be paid with either {M} or {M}.) regenerate target creature. at ~ next end of combat, destroy all creatures that blocked or were blocked by it ~. | 1 | Gaze of the Gorgon | rav |
-| activated abilities cost {M} more to activate unless they're mana abilities. | 1 | Suppression Field | rav |
-| all damage that would be dealt to you is dealt to equipped creature instead. | 1 | Pariah's Shield | rav |
-| artifacts, creatures, and lands your opponents control enter tapped. | 1 | Loxodon Gatekeeper | rav |
-| as an additional cost to cast creature spells, you may pay any amount of mana. if you do, that creature enters with that many additional +N/+N counters on it. | 1 | Chorus of the Conclave | rav |
 | as long as the top card of your library is a creature card, creatures you control that share a color with that card get +N/+N. | 1 | Crown of Convergence | rav |
-| as ~ enters, flip a coin. if the coin comes up heads, ~ enters as a N/N creature with haste. if it comes up tails, ~ enters as a N/N creature with defender. | 1 | Molten Sentry | rav |
 | at the beginning of each opponent's upkeep, exile all cards from your hand face down. | 1 | Bottled Cloister | rav |
 | at the beginning of each player"..."t, sacrifice ~. | 1 | Woebringer Demon | rav |
 | at the beginning of your end step, destroy each creature with mana value equal to the number of +N/+N counters on ~. | 1 | Necroplasm | rav |
@@ -307,21 +302,14 @@
 | counter target spell. if that spell is countered ~, put it into its owner"..."s graveyard. draw a card. | 1 | Remand | rav |
 | counter target spell. if {M} was spent to cast ~, that spell"..."s mana value. | 1 | Induce Paranoia | rav |
 | creatures you control have vigilance as long as ~ is enchanted. | 1 | Gate Hound | rav |
-| damage that would be dealt by ~ can't be prevented. | 1 | Excruciator | rav |
 | each player chooses three permanents they control, then sacrifices the rest. | 1 | Razia's Purification | rav |
 | each player returns all creature cards from their graveyard to their hand. | 1 | Empty the Catacombs | rav |
 | each player shuffles all permanents they own into their library, then reveals that many cards from the top of their library. each player puts all artifact, crea | 1 | Warp World | rav |
-| enchanted permanent can"..."t be activated unless they're mana abilities. | 1 | Faith's Fetters | rav |
-| if a source would deal damage to a permanent or player, it deals half that damage, rounded down, to that permanent or player instead. | 1 | Ghosts of the Innocent | rav |
-| if damage would be dealt to ~, put that many +N/+N counters on it instead. | 1 | Phytohydra | rav |
-| if szadek would deal combat damage to a player, instead put that many +N/+N counters on szadek and that player mills that many cards. | 1 | Szadek, Lord of Secrets | rav |
 | look at the top five cards of your library. for each card, put that card into your graveyard unless you pay N life. then put the rest into your hand. | 1 | Moonlight Bargain | rav |
 | look at the top three cards of target player's library. exile any number of those cards, then put the rest back in any order. transmute {M}{M}{M} ({M}{M}{M}, di | 1 | Dimir Machinations | rav |
 | look at the top three cards of your library. put one of those cards into your hand, one on top of your library, and one on the bottom of your library. | 1 | Telling Time | rav |
 | other permanents you control have hexproof. | 1 | Privileged Position | rav |
 | players play with the top card of their libraries revealed. | 1 | Wizened Snitches | rav |
-| prevent all damage that would be dealt to creatures you control by sources you control. | 1 | Light of Sanction | rav |
-| prevent all damage that ~ would deal to red creatures. | 1 | Indentured Oaf | rav |
 | return target creature card from your graveyard to the battlefield. if {M} was spent to cast ~, that creature enters with an additional +N/+N counter on it. | 1 | Vigor Mortis | rav |
 | return target creature you control and target creature you don"..." hands. | 1 | Peel from Reality | rav |
 | search your library for up to three creature cards, reveal them, then shuffle and put those cards on top in any order. | 1 | Congregation at Dawn | rav |
@@ -367,7 +355,6 @@
 | {M}{M}{M}: exile target creature card from a graveyard. ~ becomes a copy of that card, except it has ~. | 1 | Dimir Doppelganger | rav |
 | {M}{M}{M}: put a plague counter on ~ or remove a plague counter from it. | 1 | Plague Boiler | rav |
 | {M}{M}{M}: until end of turn, ~ becomes a black and green plant zombie creature with "..." it's still a land. | 1 | Svogthos, the Restless Tomb | rav |
-| ~ can block an additional creature each combat. | 1 | Selesnya Sagittars | rav |
 
 ## Notes
 

@@ -17,9 +17,9 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 28 | 11.4% |
+| Tested | 32 | 13.0% |
 | Works (untested) | 150 | 61.0% |
-| Partial (unaudited) | 7 | 2.8% |
+| Partial (unaudited) | 3 | 1.2% |
 | Not working | 61 | 24.8% |
 
 ## Cards needing work
@@ -87,13 +87,9 @@
 | Built to Smash | notice | Target attacking creature gets +3/+3 until end of turn. If it's an artifact creature, it gains trample until end of turn. | unparsed remainder: If it's an artifact creature, it gains trample until end of turn. | Y/Y/- | not_working |
 | Insidious Will | notice | Choose one — • Counter target spell. • You may choose new targets for target spell. • Copy target instant or sorcery spell. You may choose new targets for the c | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Nissa, Vital Force | notice | +1: Untap target land you control. Until your next turn, it becomes a 5/5 Elemental creature with haste. It's still a land. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Demolition Stomper | unaudited | This Vehicle can't be blocked by creatures with power 2 or less. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Ghirapur Orrery | unaudited | Each player may play an additional land on each of their turns. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Long-Finned Skywhale | unaudited | This creature can block only creatures with flying. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Metalwork Colossus | unaudited | This spell costs {X} less to cast, where X is the total mana value of noncreature artifacts you control. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Padeem, Consul of Innovation | unaudited | Artifacts you control have hexproof. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Revoke Privileges | unaudited | Enchanted creature can't attack, block, or crew Vehicles. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Trusty Companion | unaudited | This creature can't attack alone. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Acrobatic Maneuver | handled | Exile target creature you control, then return that card to the battlefield under its owner's control. Draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Aerial Responder | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
 | Aether Hub | handled | When this land enters, you get {E} . | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -248,7 +244,7 @@
 ## Fully supported
 
 <details>
-<summary>28 cards</summary>
+<summary>32 cards</summary>
 
 - Aetherstorm Roc
 - Armorcraft Judge
@@ -260,6 +256,7 @@
 - Concealed Courtyard
 - Consul's Shieldguard
 - Cultivator's Caravan
+- Demolition Stomper
 - Dramatic Reversal
 - Eddytrail Hawk
 - Fabrication Module
@@ -268,7 +265,9 @@
 - Harnessed Lightning
 - Hijack
 - Inspiring Vantage
+- Long-Finned Skywhale
 - Maulfist Doorbuster
+- Metalwork Colossus
 - Panharmonicon
 - Riparian Tiger
 - Scrapheap Scrounger
@@ -277,6 +276,7 @@
 - Smuggler's Copter
 - Spirebluff Canal
 - Territorial Gorger
+- Trusty Companion
 - Voltaic Brawler
 
 </details>
@@ -336,10 +336,6 @@
 | {M}, pay {M}: tap target creature or planeswalker. its activated abilities can't be activated ~. | 1 | Deadlock Trap | kld |
 | {M}, {M}: choose a counter on target permanent or player. give that permanent or player another counter of that kind. | 1 | Animation Module | kld |
 | {M}{M}: target creature you control can't be blocked by creatures with power N or less ~. | 1 | Ghirapur Guide | kld |
-| ~ can block only creatures with flying. | 1 | Long-Finned Skywhale | kld |
-| ~ can't attack alone. | 1 | Trusty Companion | kld |
-| ~ can't be blocked by creatures with power N or less. | 1 | Demolition Stomper | kld |
-| ~ costs {M} less to cast, where N is the total mana value of noncreature artifacts you control. | 1 | Metalwork Colossus | kld |
 | −N: reveal the top two cards of your library. put all land cards from among them onto the battlefield and the rest into your hand. | 1 | Nissa, Nature's Artisan | kld |
 
 ## Notes

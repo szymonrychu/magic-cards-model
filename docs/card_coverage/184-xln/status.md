@@ -17,9 +17,9 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 28 | 11.4% |
+| Tested | 37 | 15.1% |
 | Works (untested) | 158 | 64.5% |
-| Partial (unaudited) | 14 | 5.7% |
+| Partial (unaudited) | 5 | 2.0% |
 | Not working | 45 | 18.4% |
 
 ## Cards needing work
@@ -73,17 +73,8 @@
 | Verdant Rebirth | notice | Until end of turn, target creature gains "When this creature dies, return it to its owner's hand." Draw a card. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Ashes of the Abhorrent | unaudited | Players can't cast spells from graveyards or activate abilities of cards in graveyards. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Belligerent Brontodon | unaudited | Each creature you control assigns combat damage equal to its toughness rather than its power. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Bloodcrazed Paladin | unaudited | This creature enters with a +1/+1 counter on it for each creature that died this turn. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Bonded Horncrest | unaudited | This creature can't attack or block alone. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Dreamcaller Siren | unaudited | This creature can block only creatures with flying. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Herald of Secret Streams | unaudited | Creatures you control with +1/+1 counters on them can't be blocked. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Ixalan's Binding | unaudited | Your opponents can't cast spells with the same name as the exiled card. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Kopala, Warden of Waves | unaudited | Abilities your opponents activate that target a Merfolk you control cost {2} more to activate. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| New Horizons | unaudited | Enchanted land has "{T}: Add two mana of any one color." | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Rigging Runner | unaudited | Raid — This creature enters with a +1/+1 counter on it if you attacked this turn. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Sorcerous Spyglass | unaudited | As this artifact enters, look at an opponent's hand, then choose any card name. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Spike-Tailed Ceratops | unaudited | This creature can block an additional creature each combat. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Storm Fleet Aerialist | unaudited | Raid — This creature enters with a +1/+1 counter on it if you attacked this turn. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Trove of Temptation | unaudited | Each opponent must attack you or a planeswalker you control with at least one creature each combat if able. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Ancient Brontodon | handled |  |  | Y/Y/- | not_tested |
 | Angrath's Marauders | handled | If a source you control would deal damage to a permanent or player, it deals double that damage to that permanent or player instead. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -167,6 +158,7 @@
 | Mavren Fein, Dusk Apostle | handled | Whenever one or more nontoken Vampires you control attack, create a 1/1 white Vampire creature token with lifelink. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Navigator's Ruin | handled | Raid — At the beginning of your end step, if you attacked this turn, target opponent mills four cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Nest Robber | handled | Haste | machines/combat.py | Y/Y/- | not_tested |
+| New Horizons | handled | When this Aura enters, put a +1/+1 counter on target creature you control. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | One With the Wind | handled | Enchanted creature gets +2/+2 and has flying. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Otepec Huntmaster | handled | Dinosaur spells you cast cost {1} less to cast. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Overflowing Insight | handled | Target player draws seven cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -184,7 +176,6 @@
 | Queen's Bay Soldier | handled |  |  | Y/Y/- | not_tested |
 | Queen's Commission | handled | Create two 1/1 white Vampire creature tokens with lifelink. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Raiders' Wake | handled | Whenever an opponent discards a card, that player loses 2 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Raptor Companion | handled |  |  | Y/Y/- | not_tested |
 | Raptor Hatchling | handled | Enrage — Whenever this creature is dealt damage, create a 3/3 green Dinosaur creature token with trample. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ravenous Daggertooth | handled | Enrage — Whenever this creature is dealt damage, you gain 2 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Regisaur Alpha | handled | Other Dinosaurs you control have haste. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -247,31 +238,40 @@
 ## Fully supported
 
 <details>
-<summary>28 cards</summary>
+<summary>37 cards</summary>
 
 - Admiral Beckett Brass
 - Arguel's Blood Fast // Temple of Aclazotz
 - Atzocan Archer
 - Bellowing Aegisaur
 - Blinding Fog
+- Bloodcrazed Paladin
+- Bonded Horncrest
 - Captivating Crew
 - Carnage Tyrant
 - Colossal Dreadmaw
+- Dreamcaller Siren
 - Field of Ruin
 - Fiery Cannonade
 - Hostage Taker
 - Huatli, Warrior Poet
 - Kinjalli's Sunwing
 - Kitesail Freebooter
+- Kopala, Warden of Waves
 - Merfolk Branchwalker
 - Raging Swordtooth
 - Rallying Roar
 - Rampaging Ferocidon
 - Ranging Raptors
+- Raptor Companion
+- Rigging Runner
 - Search for Azcanta // Azcanta, the Sunken Ruin
 - Settle the Wreckage
 - Siren Stormtamer
 - Snapping Sailback
+- Sorcerous Spyglass
+- Spike-Tailed Ceratops
+- Storm Fleet Aerialist
 - Treasure Map // Treasure Cove
 - Unclaimed Territory
 - Vraska's Contempt
@@ -284,13 +284,11 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| Raid | 3 | Rigging Runner, Ruin Raider, Storm Fleet Aerialist | xln |
+| Raid | 1 | Ruin Raider | xln |
 | +N: whenever one or more creatures you control deal combat damage to a player ~, draw a card, then discard a card. | 1 | Jace, Cunning Castaway | xln |
-| abilities your opponents activate that target a merfolk you control cost {M} more to activate. | 1 | Kopala, Warden of Waves | xln |
 | as long as you control a jace planeswalker, ~ gets +N/+N and can't be blocked. | 1 | Jace's Sentinel | xln |
 | as long as you control another dinosaur, ~ gets +N/+N and has trample. | 1 | Thrash of Raptors | xln |
 | as long as ~ is attacking, it gets +N/+N. | 1 | Adanto Vanguard | xln |
-| as ~ enters, look at an opponent's hand, then choose any card name. | 1 | Sorcerous Spyglass | xln |
 | at the beginning of combat on your turn, you may have target vampire get +N/+N until end of turn. | 1 | Anointed Deacon | xln |
 | at the beginning of your upkeep, exile the top card of your library. if it's a nonland card, you may cast that card ~. | 1 | Vance's Blasting Cannons // Spitfire Bastion | xln |
 | at the beginning of your upkeep, you may have two target players exchange life totals. | 1 | Axis of Mortality | xln |
@@ -301,7 +299,6 @@
 | creatures you control with +N/+N counters on them can't be blocked. | 1 | Herald of Secret Streams | xln |
 | each creature you control assigns combat damage equal to its toughness rather than its power. | 1 | Belligerent Brontodon | xln |
 | each opponent must attack you or a planeswalker you control with at least one creature each combat if able. | 1 | Trove of Temptation | xln |
-| enchanted land has "..." | 1 | New Horizons | xln |
 | exile target creature you control, then return that card to the battlefield under its owner's control. if a pirate was exiled ~, draw a card. | 1 | Siren's Ruse | xln |
 | exile up to five target creature cards from graveyards. an opponent separates those cards into two piles. put all cards from the pile of your choice onto the ba | 1 | Boneyard Parley | xln |
 | explore | 1 | Deadeye Tracker | xln |
@@ -335,10 +332,6 @@
 | you gain twice N life. put ~ on the bottom of its owner's library. | 1 | Sanguine Sacrament | xln |
 | your opponents can't cast spells with the same name as the exiled card. | 1 | Ixalan's Binding | xln |
 | {M}: untap target attacking creature an opponent controls and remove it from combat. | 1 | Thaumatic Compass // Spires of Orazca | xln |
-| ~ can block an additional creature each combat. | 1 | Spike-Tailed Ceratops | xln |
-| ~ can block only creatures with flying. | 1 | Dreamcaller Siren | xln |
-| ~ can't attack or block alone. | 1 | Bonded Horncrest | xln |
-| ~ enters with a +N/+N counter on it for each creature that died ~. | 1 | Bloodcrazed Paladin | xln |
 | ~ gets +N/+N as long as you control a dinosaur. | 1 | Drover of the Mighty | xln |
 | ~ gets +N/+N as long as you control another merfolk or an island. | 1 | Kumena's Speaker | xln |
 

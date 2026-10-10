@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 24 | 10.0% |
-| Works (untested) | 137 | 56.8% |
-| Partial (unaudited) | 19 | 7.9% |
-| Not working | 61 | 25.3% |
+| Tested | 33 | 13.7% |
+| Works (untested) | 144 | 59.8% |
+| Partial (unaudited) | 4 | 1.7% |
+| Not working | 60 | 24.9% |
 
 ## Cards needing work
 
@@ -38,7 +38,6 @@
 | Commit // Memory | silent | Put target spell or nonland permanent into its owner's library second from the top. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Cruel Reality | silent | At the beginning of enchanted player's upkeep, that player sacrifices a creature or planeswalker of their choice. If the player can't, they lose 5 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Defiant Greatmaw | silent | Whenever you put one or more -1/-1 counters on this creature, remove a -1/-1 counter from another target creature you control. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
-| Destined // Lead | silent | Aftermath (Cast this spell only from your graveyard. Then exile it.) All creatures able to block target creature this turn do so. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Dispossess | silent | Choose an artifact card name. Search target opponent's graveyard, hand, and library for any number of cards with the chosen name and exile them. Then that playe | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Dusk // Dawn | silent | Aftermath (Cast this spell only from your graveyard. Then exile it.) Return all creature cards with power 2 or less from your graveyard to your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Emberhorn Minotaur | silent | You may exert this creature as it attacks. When you do, it gets +1/+1 and gains menace until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -88,24 +87,10 @@
 | Thresher Lizard | notice | This creature gets +1/+2 as long as you have one or fewer cards in hand. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Vizier of Deferment | notice | When this creature enters, you may exile target creature if it attacked or blocked this turn. Return that card to the battlefield under its owner's control at t | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Ahn-Crop Champion | unaudited | You may exert this creature as it attacks. When you do, untap all other creatures you control. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Ahn-Crop Crasher | unaudited | You may exert this creature as it attacks. When you do, target creature can't block this turn. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| As Foretold | unaudited | Once each turn, you may pay {0} rather than pay the mana cost for a spell you cast with mana value X or less, where X is the number of time counters on this enc | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Bontu the Glorified | unaudited | Bontu can't attack or block unless a creature died under your control this turn. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Champion of Rhonas | unaudited | You may exert this creature as it attacks. When you do, you may put a creature card from your hand onto the battlefield. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Combat Celebrant | unaudited | If this creature hasn't been exerted this turn, you may exert it as it attacks. When you do, untap all other creatures you control and after this phase, there i | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Devoted Crop-Mate | unaudited | You may exert this creature as it attacks. When you do, return target creature card with mana value 2 or less from your graveyard to the battlefield. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Embalmer's Tools | unaudited | Activated abilities of creature cards in your graveyard cost {1} less to activate. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Enigma Drake | unaudited | Enigma Drake's power is equal to the number of instant and sorcery cards in your graveyard. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Gideon's Intervention | unaudited | Your opponents can't cast spells with the chosen name. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Gift of Paradise | unaudited | Enchanted land has "{T}: Add two mana of any one color." | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Glorybringer | unaudited | You may exert this creature as it attacks. When you do, it deals 4 damage to target non-Dragon creature an opponent controls. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Hazoret the Fervent | unaudited | Hazoret can't attack or block unless you have one or fewer cards in hand. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| New Perspectives | unaudited | As long as you have seven or more cards in hand, you may pay {0} rather than pay cycling costs. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Oketra the True | unaudited | Oketra can't attack or block unless you control at least three other creatures. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Protection of the Hekma | unaudited | If a source an opponent controls would deal damage to you, prevent 1 of that damage. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Rhonas the Indomitable | unaudited | Rhonas can't attack or block unless you control another creature with power 4 or greater. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Vizier of the Menagerie | unaudited | You can spend mana of any type to cast creature spells. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Watchful Naga | unaudited | You may exert this creature as it attacks. When you do, draw a card. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
+| Ahn-Crop Crasher | handled | You may exert this creature as it attacks. When you do, target creature can't block this turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Anointed Procession | handled | If an effect would create one or more tokens under your control, it creates twice that many of those tokens instead. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Baleful Ammit | handled | When this creature enters, put a -1/-1 counter on target creature you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Benefaction of Rhonas | handled | Reveal the top five cards of your library. You may put a creature card and/or an enchantment card from among them into your hand. Put the rest into your graveya | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -123,6 +108,7 @@
 | Cartouche of Solidarity | handled | When this Aura enters, create a 1/1 white Warrior creature token with vigilance. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Cartouche of Zeal | handled | When this Aura enters, target creature can't block this turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Cast Out | handled | When this enchantment enters, exile target nonland permanent an opponent controls until this enchantment leaves the battlefield. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Champion of Rhonas | handled | You may exert this creature as it attacks. When you do, you may put a creature card from your hand onto the battlefield. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Channeler Initiate | handled | When this creature enters, put three -1/-1 counters on target creature you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Colossapede | handled |  |  | Y/Y/- | not_tested |
 | Companion of the Trials | handled | {1}{W}: Untap target creature. Activate only if you control a Gideon planeswalker. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -138,6 +124,8 @@
 | Deem Worthy | handled | Deem Worthy deals 7 damage to target creature. Cycling {3}{R} ({3}{R}, Discard this card: Draw a card.) When you cycle this card, you may have it deal 2 damage  | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Desert Cerodon | handled | Cycling | machines/keywords.py (off_zone_abilities: cycling) | Y/Y/- | not_tested |
 | Desiccated Naga | handled | {3}{B}: Target opponent loses 2 life and you gain 2 life. Activate only if you control a Liliana planeswalker. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Destined // Lead | handled | Target creature gets +1/+0 and gains indestructible until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Devoted Crop-Mate | handled | You may exert this creature as it attacks. When you do, return target creature card with mana value 2 or less from your graveyard to the battlefield. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Dissenter's Deliverance | handled | Destroy target artifact. Cycling {G} ({G}, Discard this card: Draw a card.) | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Doomed Dissenter | handled | When this creature dies, create a 2/2 black Zombie creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Drake Haven | handled | Whenever you cycle or discard a card, you may pay {1}. If you do, create a 2/2 blue Drake creature token with flying. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -154,6 +142,8 @@
 | Floodwaters | handled | Return up to two target creatures to their owners' hands. Cycling {2} ({2}, Discard this card: Draw a card.) | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Forsake the Worldly | handled | Exile target artifact or enchantment. Cycling {2} ({2}, Discard this card: Draw a card.) | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Galestrike | handled | Return target tapped creature to its owner's hand. Draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Gift of Paradise | handled | When this Aura enters, you gain 3 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Glorybringer | handled | You may exert this creature as it attacks. When you do, it deals 4 damage to target non-Dragon creature an opponent controls. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Graceful Cat | handled | Whenever this creature attacks, it gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Grasping Dunes | handled | {1}, {T}, Sacrifice this land: Put a -1/-1 counter on target creature. Activate only as a sorcery. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Greater Sandwurm | handled | This creature can't be blocked by creatures with power 2 or less. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -238,6 +228,7 @@
 | Wander in Death | handled | Return up to two target creature cards from your graveyard to your hand. Cycling {2} ({2}, Discard this card: Draw a card.) | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Warfire Javelineer | handled | When this creature enters, it deals X damage to target creature an opponent controls, where X is the number of instant and sorcery cards in your graveyard. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Wasteland Scorpion | handled | Cycling | machines/keywords.py (off_zone_abilities: cycling) | Y/Y/- | not_tested |
+| Watchful Naga | handled | You may exert this creature as it attacks. When you do, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Wayward Servant | handled | Whenever another Zombie you control enters, each opponent loses 1 life and you gain 1 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Weaver of Currents | handled |  |  | Y/Y/- | not_tested |
 | Winds of Rebuke | handled | Return target nonland permanent to its owner's hand. Each player mills two cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -247,23 +238,32 @@
 ## Fully supported
 
 <details>
-<summary>24 cards</summary>
+<summary>33 cards</summary>
 
 - Angler Drake
 - Archfiend of Ifnir
+- As Foretold
+- Bontu the Glorified
 - Cascading Cataracts
 - Censor
 - Curator of Mysteries
 - Decimator Beetle
 - Djeru's Resolve
 - Edifice of Authority
+- Embalmer's Tools
+- Enigma Drake
 - Gideon of the Trials
 - Harsh Mentor
 - Harvest Season
+- Hazoret the Fervent
 - Insult // Injury
 - Luxa River Shrine
+- New Perspectives
+- Oketra the True
 - Open into Wonder
 - Oracle's Vault
+- Protection of the Hekma
+- Rhonas the Indomitable
 - Sacred Excavation
 - Sandwurm Convergence
 - Soul-Scar Mage
@@ -284,34 +284,24 @@
 | you may exert ~ as it attacks. when you do, it gets +N/+N until end of turn. | 2 | Hooded Brawler, Nef-Crop Entangler | akh |
 | +N: untap all creatures you control. those creatures get +N/+N until end of turn. | 1 | Gideon, Martial Paragon | akh |
 | N: look at the top card of your library. if it's a land card or a creature card with mana value less than or equal to the number of loyalty counters on nissa, y | 1 | Nissa, Steward of Elements | akh |
-| activated abilities of creature cards in your graveyard cost {M} less to activate. | 1 | Embalmer's Tools | akh |
-| aftermath (cast ~ only from your graveyard. then exile it.) all creatures able to block target creature ~ do so. | 1 | Destined // Lead | akh |
 | aftermath (cast ~ only from your graveyard. then exile it.) choose a card name. until your next turn, your opponents can't cast spells with the chosen name. | 1 | Failure // Comply | akh |
 | aftermath (cast ~ only from your graveyard. then exile it.) each opponent chooses a creature they control. you gain control of those creatures. | 1 | Rags // Riches | akh |
 | aftermath (cast ~ only from your graveyard. then exile it.) return all creature cards with power N or less from your graveyard to your hand. | 1 | Dusk // Dawn | akh |
 | aftermath (cast ~ only from your graveyard. then exile it.) up to three target lands don"..."s next untap step. | 1 | Reduce // Rubble | akh |
 | as long as you have one or fewer cards in hand, minotaurs you control get +N/+N. | 1 | Neheb, the Worthy | akh |
-| as long as you have seven or more cards in hand, you may pay {M} rather than pay cycling costs. | 1 | New Perspectives | akh |
 | at the beginning of combat on your turn, target creature token you control gets +N/+N until end of turn and can't be blocked ~. | 1 | Temmet, Vizier of Naktamun | akh |
 | at the beginning of combat on your turn, you may have target creature you control get +N/+N and gain haste until end of turn. if you do, sacrifice it at the beg | 1 | Hazoret's Favor | akh |
 | at the beginning of enchanted player"..."t, they lose N life. | 1 | Cruel Reality | akh |
 | at the beginning of your first main phase, remove all flood counters from ~. if no counters were removed ~, put a flood counter on ~ and draw a card. otherwise, | 1 | Bounty of the Luxa | akh |
 | attacking creatures get +N/+N until end of turn. cycling {M} ({M}, discard ~: draw a card.) | 1 | Pursue Glory | akh |
-| bontu can't attack or block unless a creature died under your control ~. | 1 | Bontu the Glorified | akh |
 | choose an artifact card name. search target opponent's graveyard, hand, and library for any number of cards with the chosen name and exile them. then that playe | 1 | Dispossess | akh |
-| enchanted land has "..." | 1 | Gift of Paradise | akh |
 | end the turn. (exile all spells and abilities from the stack, including ~. the player whose turn it is discards down to their maximum hand size. damage wears of | 1 | Glorious End | akh |
 | exile ~: each opponent chooses two cards in their graveyard and exiles the rest. | 1 | Watchers of the Dead | akh |
-| hazoret can't attack or block unless you have one or fewer cards in hand. | 1 | Hazoret the Fervent | akh |
-| if a source an opponent controls would deal damage to you, prevent N of that damage. | 1 | Protection of the Hekma | akh |
 | if ~ hasn't been exerted ~, you may exert it as it attacks. when you do, untap all other creatures you control and after ~, there is an additional combat phase. | 1 | Combat Celebrant | akh |
 | if ~ was cast from your hand and you"..."s library seventh from the top and you gain N life. | 1 | Approach of the Second Sun | akh |
-| oketra can't attack or block unless you control at least three other creatures. | 1 | Oketra the True | akh |
-| once each turn, you may pay {M} rather than pay the mana cost for a spell you cast with mana value N or less, where N is the number of time counters on ~. | 1 | As Foretold | akh |
 | put a -N/-N counter on each creature you don't control. you may search your library and/or graveyard for a card named liliana, death wielder, reveal it, and put | 1 | Liliana's Influence | akh |
 | put target spell or nonland permanent into its owner's library second from the top. | 1 | Commit // Memory | akh |
 | return to your hand all cards in your graveyard that you cycled or discarded ~. | 1 | Shadow of the Grave | akh |
-| rhonas can't attack or block unless you control another creature with power N or greater. | 1 | Rhonas the Indomitable | akh |
 | target creature gets +N/+N until end of turn, where N is its power. | 1 | Onward // Victory | akh |
 | target creature gets +N/+N until end of turn. you may remove a -N/-N counter from it. | 1 | Shed Weakness | akh |
 | untap up to two target creatures. they each get +N/+N until end of turn. | 1 | Synchronized Strike | akh |
@@ -328,24 +318,18 @@
 | whenever ~ becomes the target of a spell or ability for the first time each turn, counter that spell or ability. | 1 | Glyph Keeper | akh |
 | you can spend mana of any type to cast creature spells. | 1 | Vizier of the Menagerie | akh |
 | you may exert ~ as it attacks. when you do, creatures you control get +N/+N until end of turn. | 1 | Tah-Crop Elite | akh |
-| you may exert ~ as it attacks. when you do, draw a card. | 1 | Watchful Naga | akh |
-| you may exert ~ as it attacks. when you do, it deals N damage to target non-dragon creature an opponent controls. | 1 | Glorybringer | akh |
 | you may exert ~ as it attacks. when you do, it gets +N/+N and gains deathtouch until end of turn. | 1 | Bitterblade Warrior | akh |
 | you may exert ~ as it attacks. when you do, it gets +N/+N and gains first strike until end of turn. | 1 | Rhet-Crop Spearmaster | akh |
 | you may exert ~ as it attacks. when you do, it gets +N/+N and gains flying until end of turn. | 1 | Gust Walker | akh |
 | you may exert ~ as it attacks. when you do, it gets +N/+N and gains lifelink until end of turn. | 1 | Glory-Bound Initiate | akh |
 | you may exert ~ as it attacks. when you do, it gets +N/+N and gains menace until end of turn. | 1 | Emberhorn Minotaur | akh |
-| you may exert ~ as it attacks. when you do, return target creature card with mana value N or less from your graveyard to the battlefield. | 1 | Devoted Crop-Mate | akh |
-| you may exert ~ as it attacks. when you do, target creature can't block ~. | 1 | Ahn-Crop Crasher | akh |
 | you may exert ~ as it attacks. when you do, untap all other creatures you control. | 1 | Ahn-Crop Champion | akh |
-| you may exert ~ as it attacks. when you do, you may put a creature card from your hand onto the battlefield. | 1 | Champion of Rhonas | akh |
 | your opponents can't cast spells with the chosen name. | 1 | Gideon's Intervention | akh |
 | {M}, {M}, sacrifice ~: search your graveyard, hand, and/or library for a card named god-pharaoh's gift and put it onto the battlefield. if you search your libra | 1 | Gate to the Afterlife | akh |
 | {M}{M}, {M}: all zombies gain menace until end of turn. | 1 | Lord of the Accursed | akh |
 | {M}{M}: draw a card, then you may return a land you control to its owner's hand. | 1 | Kefnet the Mindful | akh |
 | ~ gets +N/+N as long as you have one or fewer cards in hand. | 1 | Thresher Lizard | akh |
 | ~ gets -N/-N for each card in your hand. | 1 | Grim Strider | akh |
-| ~'s power is equal to the number of instant and sorcery cards in your graveyard. | 1 | Enigma Drake | akh |
 | −N: destroy all non-zombie creatures. | 1 | Liliana, Death's Majesty | akh |
 
 ## Notes

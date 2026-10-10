@@ -17,9 +17,9 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 41 | 14.6% |
+| Tested | 54 | 19.2% |
 | Works (untested) | 134 | 47.7% |
-| Partial (unaudited) | 19 | 6.8% |
+| Partial (unaudited) | 6 | 2.1% |
 | Not working | 87 | 31.0% |
 
 ## Cards needing work
@@ -113,25 +113,12 @@
 | Strider, Ranger of the North | notice | Landfall — Whenever a land you control enters, target creature gets +1/+1 until end of turn. Then if that creature has power 4 or greater, it gains first strike | unparsed remainder: Then if that creature has power 4 or greater, it gains first strike until end of turn. | Y/-/- | not_working |
 | Uglúk of the White Hand | notice | Whenever another creature you control dies, put a +1/+1 counter on Uglúk. If that creature was a Goblin or Orc, put two +1/+1 counters on Uglúk instead. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Éowyn, Fearless Knight | notice | When Éowyn enters, exile target creature an opponent controls with greater power. Legendary creatures you control gain protection from each of that creature's c | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Barad-dûr | unaudited | Barad-dûr enters tapped unless you control a legendary creature. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Bilbo's Ring | unaudited | During your turn, equipped creature has hexproof and can't be blocked. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Fog on the Barrow-Downs | unaudited | Enchanted creature is a Spirit and can't attack or block. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Forge Anew | unaudited | During your turn, you may activate equip abilities any time you could cast an instant. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Frodo Baggins | unaudited | As long as Frodo Baggins is your Ring-bearer, it must be blocked if able. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Gandalf the White | unaudited | You may cast legendary spells and artifact spells as though they had flash. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Gandalf, Friend of the Shire | unaudited | You may cast sorcery spells as though they had flash. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Mauhúr, Uruk-hai Captain | unaudited | If one or more +1/+1 counters would be put on an Army, Goblin, or Orc you control, that many plus one +1/+1 counters are put on it instead. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Minas Tirith | unaudited | Minas Tirith enters tapped unless you control a legendary creature. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Mines of Moria | unaudited | Mines of Moria enters tapped unless you control a legendary creature. | a static ability no support check audits - not verified either way | Y/-/- | partial |
+| Gandalf the White | unaudited | If a legendary permanent or an artifact entering or leaving the battlefield causes a triggered ability of a permanent you control to trigger, that ability trigg | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Nazgûl | unaudited | A deck can have up to nine cards named Nazgûl. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Peregrin Took | unaudited | If one or more tokens would be created under your control, those tokens plus an additional Food token are created instead. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Phial of Galadriel | unaudited | If you would draw a card while you have no cards in hand, draw two cards instead. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Rivendell | unaudited | Rivendell enters tapped unless you control a legendary creature. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Sharkey, Tyrant of the Shire | unaudited | Mana of any type can be spent to activate Sharkey's abilities. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | The Balrog, Durin's Bane | unaudited | This spell costs {1} less to cast for each permanent sacrificed this turn. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| The Shire | unaudited | The Shire enters tapped unless you control a legendary creature. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| The Watcher in the Water | unaudited | The Watcher in the Water enters tapped with nine stun counters on it. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Troll of Khazad-dûm | unaudited | This creature can't be blocked except by three or more creatures. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Aragorn and Arwen, Wed | handled | Whenever Aragorn and Arwen enters or attacks, put a +1/+1 counter on each other creature you control. You gain 1 life for each other creature you control. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Aragorn, the Uniter | handled | Whenever you cast a white spell, create a 1/1 white Human Soldier creature token. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Arwen Undómiel | handled | Whenever you scry, put a +1/+1 counter on target creature. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -270,9 +257,10 @@
 ## Fully supported
 
 <details>
-<summary>41 cards</summary>
+<summary>54 cards</summary>
 
 - Arwen, Mortal Queen
+- Barad-dûr
 - Battle-Scarred Goblin
 - Bill the Pony
 - Breaking of the Fellowship
@@ -286,9 +274,12 @@
 - Esquire of the King
 - Fear, Fire, Foes!
 - Flame of Anor
+- Fog on the Barrow-Downs
 - Friendly Rivalry
+- Frodo Baggins
 - Galadhrim Bow
 - Gandalf's Sanction
+- Gandalf, Friend of the Shire
 - Generous Ent
 - Gimli's Fury
 - Gimli, Counter of Kills
@@ -300,16 +291,25 @@
 - Last March of the Ents
 - Legolas, Master Archer
 - Lórien Revealed
+- Mauhúr, Uruk-hai Captain
+- Minas Tirith
+- Mines of Moria
 - Oliphaunt
 - Orcish Bowmasters
+- Peregrin Took
+- Phial of Galadriel
 - Rangers of Ithilien
 - Riders of the Mark
 - Rise of the Witch-king
+- Rivendell
 - Shagrat, Loot Bearer
 - Smite the Deathless
 - Stern Scolding
 - The Battle of Bywater
+- The Shire
+- The Watcher in the Water
 - Took Reaper
+- Troll of Khazad-dûm
 - Warg Rider
 - Wizard's Rockets
 - Éomer of the Riddermark
@@ -320,7 +320,6 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| ~ enters tapped unless you control a legendary creature. | 5 | Barad-dûr, Minas Tirith, Mines of Moria, Rivendell, The Shire | ltr |
 | Landfall | 1 | Strider, Ranger of the North | ltr |
 | (you may cast a legendary instant only if you control a legendary creature or planeswalker.) destroy target creature. if its controller has more than four cards | 1 | Isildur's Fateful Strike | ltr |
 | a deck can have up to nine cards named ~. | 1 | Nazgûl | ltr |
@@ -329,7 +328,6 @@
 | amass orcs N. when you do, ~ deals N damage to target creature an opponent controls, where N is the amassed army"..."s also an orc. if you don't control an army | 1 | Foray of Orcs | ltr |
 | as long as equipped creature is legendary, it has menace. | 1 | Gimli's Axe | ltr |
 | as long as you control a goblin or orc, ~ gets +N/+N. | 1 | Snarling Warg | ltr |
-| as long as ~ is your ring-bearer, it must be blocked if able. | 1 | Frodo Baggins | ltr |
 | at the beginning of combat on your turn, target creature gains your choice of first strike or vigilance until end of turn. if that creature is equipped, it gain | 1 | Éowyn, Lady of Rohan | ltr |
 | at the beginning of combat on your turn, target elf you control gains trample and gets +N/+N until end of turn, where N is the number of forests you control. | 1 | Mirkwood Channeler | ltr |
 | at the beginning of each combat, untap equipped creature. | 1 | Sting, the Glinting Dagger | ltr |
@@ -342,13 +340,10 @@
 | draw a card. whenever you scry, if you control an island, you may exile ~ from your graveyard. if you do, draw a card. | 1 | Council's Deliberation | ltr |
 | during your turn, equipped creature has hexproof and can't be blocked. | 1 | Bilbo's Ring | ltr |
 | during your turn, you may activate equip abilities any time you could cast an instant. | 1 | Forge Anew | ltr |
-| enchanted creature is a spirit and can't attack or block. | 1 | Fog on the Barrow-Downs | ltr |
 | equipped creature has first strike and gets +N/+N for each instant and sorcery card in your graveyard. | 1 | Glamdring | ltr |
 | exile all creature cards from target player's graveyard. you may cast spells from among those cards for as long as they remain exiled, and mana of any type can  | 1 | Shadow of the Enemy | ltr |
 | gain control of up to one target artifact for as long as you control ~. the ring tempts you. | 1 | Scroll of Isildur | ltr |
-| if one or more +N/+N counters would be put on an army, goblin, or orc you control, that many plus one +N/+N counters are put on it instead. | 1 | Mauhúr, Uruk-hai Captain | ltr |
-| if one or more tokens would be created under your control, those tokens plus an additional food token are created instead. | 1 | Peregrin Took | ltr |
-| if you would draw a card while you have no cards in hand, draw two cards instead. | 1 | Phial of Galadriel | ltr |
+| if a legendary permanent or an artifact entering or leaving the battlefield causes a triggered ability of a permanent you control to trigger, that ability trigg | 1 | Gandalf the White | ltr |
 | legendary creatures you control get +N/+N and have ward {M}. | 1 | Flowering of the White Tree | ltr |
 | mana of any type can be spent to activate sharkey's abilities. | 1 | Sharkey, Tyrant of the Shire | ltr |
 | merry has first strike as long as it's equipped. | 1 | Merry, Esquire of Rohan | ltr |
@@ -410,18 +405,14 @@
 | whenever ~ deals damage to a goblin or orc, destroy that creature. | 1 | East-Mark Cavalier | ltr |
 | whenever ~ or another spirit you control becomes the target of a spell, it phases out. | 1 | King of the Oathbreakers | ltr |
 | you and target opponent each create a food token. | 1 | Oath of the Grey Host | ltr |
-| you may cast legendary spells and artifact spells as though they had flash. | 1 | Gandalf the White | ltr |
-| you may cast sorcery spells as though they had flash. | 1 | Gandalf, Friend of the Shire | ltr |
 | you may cast spells ~ as though they had flash. draw a card. | 1 | Borne Upon a Wind | ltr |
 | you may sacrifice a food. if you do, target creature gets +N/+N until end of turn. otherwise, that creature gets +N/+N until end of turn. | 1 | Pippin's Bravery | ltr |
 | {M}: another target creature you control gains protection from the card type of your choice until end of turn. | 1 | Pippin, Guard of the Citadel | ltr |
 | {M}: move a counter of each kind not on goldberry from another target permanent you control onto goldberry. | 1 | Goldberry, River-Daughter | ltr |
 | {M}{M}{M}, {M}, sacrifice ~ and a legendary artifact: choose up to two creatures, then destroy the rest. activate only as a sorcery. | 1 | Mount Doom | ltr |
 | {M}{M}{M}: if frodo is a scout, it becomes a halfling rogue with "..." | 1 | Frodo, Sauron's Bane | ltr |
-| ~ can't be blocked except by three or more creatures. | 1 | Troll of Khazad-dûm | ltr |
 | ~ can't be copied. copy any number of target instant and/or sorcery spells. you may choose new targets for the copies. | 1 | Display of Power | ltr |
 | ~ costs {M} less to cast for each permanent sacrificed ~. | 1 | The Balrog, Durin's Bane | ltr |
-| ~ enters tapped with nine stun counters on it. | 1 | The Watcher in the Water | ltr |
 
 ## Notes
 

@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 28 | 11.5% |
+| Tested | 44 | 18.0% |
 | Works (untested) | 119 | 48.8% |
-| Partial (unaudited) | 17 | 7.0% |
-| Not working | 80 | 32.8% |
+| Partial (unaudited) | 2 | 0.8% |
+| Not working | 79 | 32.4% |
 
 ## Cards needing work
 
@@ -49,7 +49,6 @@
 | Llanowar Loamspeaker | silent | {T}: Target land you control becomes a 3/3 Elemental creature with haste until end of turn. It's still a land. Activate only as a sorcery. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Love Song of Night and Day | silent | Read Ahead | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Micromancer | silent | When this creature enters, you may search your library for an instant or sorcery card with mana value 1, reveal it, put it into your hand, then shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Monstrous War-Leech | silent | Monstrous War-Leech's power and toughness are each equal to the greatest mana value among cards in your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Nael, Avizoa Aeronaut | silent | Domain — Whenever Nael deals combat damage to a player, look at the top X cards of your library, where X is the number of basic land types among lands you contr | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Najal, the Storm Runner | silent | Whenever Najal attacks, you may pay {2}. If you do, when you next cast an instant or sorcery spell this turn, copy it. You may choose new targets for the copy. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Phoenix Chick | silent | Whenever you attack with three or more creatures, you may pay {R}{R}. If you do, return this card from your graveyard to the battlefield tapped and attacking wi | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -79,7 +78,6 @@
 | Thran Portal | silent | This land is the chosen type in addition to its other types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Threats Undetected | silent | Search your library for up to four creature cards with different powers and reveal them. An opponent chooses two of those cards. Shuffle the chosen cards into y | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Tori D'Avenant, Fury Rider | silent | Whenever Tori D'Avenant attacks, all other attacking creatures you control get +1/+1 until end of turn. Other red attacking creatures you control gain trample u | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Tyrannical Pitlord | silent | The chosen creature gets +3/+3 and has flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Urza Assembles the Titans | silent | I — Scry 4, then you may reveal the top card of your library. If a planeswalker card is revealed this way, put it into your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Vesuvan Duplimancy | silent | Whenever you cast a spell that targets only a single artifact or creature you control, create a token that's a copy of that artifact or creature, except it's no | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Voda Sea Scavenger | silent | Domain — When this creature enters, look at the top X cards of your library, where X is the number of basic land types among lands you control. You may put one  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -90,6 +88,7 @@
 | Yotia Declares War | silent | III — Up to one target artifact you control becomes an artifact creature with base power and toughness 4/4 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Zar Ojanen, Scion of Efrava | silent | Domain — Whenever Zar Ojanen becomes tapped, put a +1/+1 counter on each creature you control with toughness less than the number of basic land types among land | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Zur, Eternal Schemer | silent | Enchantment creatures you control have deathtouch, lifelink, and hexproof. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
+| Anointed Peacekeeper | notice | Spells your opponents cast with the chosen name cost {2} more to cast. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Braids, Arisen Nightmare | notice | At the beginning of your end step, you may sacrifice an artifact, creature, enchantment, land, or planeswalker. If you do, each opponent may sacrifice a permane | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Choking Miasma | notice | Kicker {G} (You may pay an additional {G} as you cast this spell.) If this spell was kicked, put a +1/+1 counter on a creature you control. All creatures get -2 | unparsed remainder: If this spell was kicked, put a +1/+1 counter on a creature you control. | Y/Y/- | not_working |
 | Djinn of the Fountain | notice | Whenever you cast an instant or sorcery spell, choose one — • This creature gets +1/+1 until end of turn. • Exile this creature. Return it to the battlefield un | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -106,23 +105,8 @@
 | Tribute to Urborg | notice | Kicker {1}{U} (You may pay an additional {1}{U} as you cast this spell.) Target creature gets -2/-2 until end of turn. If this spell was kicked, that creature g | unparsed remainder: If this spell was kicked, that creature gets an additional -1/-1 until end of turn for each instant and sorcery card in your graveyard. | Y/Y/- | not_working |
 | Twinferno | notice | Choose one — • When you cast your next instant or sorcery spell this turn, copy that spell. You may choose new targets for the copy. • Target creature you contr | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Weatherlight Compleated | notice | Whenever a creature you control dies, put a phyresis counter on Weatherlight Compleated. Then draw a card if it has seven or more phyresis counters on it. If it | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Anointed Peacekeeper | unaudited | As this creature enters, look at an opponent's hand, then choose any card name. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Astor, Bearer of Blades | unaudited | Equipment you control have equip {1}. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Defiler of Dreams | unaudited | As an additional cost to cast blue permanent spells, you may pay 2 life. Those spells cost {U} less to cast if you paid life this way. This effect reduces only  | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Defiler of Faith | unaudited | As an additional cost to cast white permanent spells, you may pay 2 life. Those spells cost {W} less to cast if you paid life this way. This effect reduces only | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Defiler of Flesh | unaudited | As an additional cost to cast black permanent spells, you may pay 2 life. Those spells cost {B} less to cast if you paid life this way. This effect reduces only | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Defiler of Instinct | unaudited | As an additional cost to cast red permanent spells, you may pay 2 life. Those spells cost {R} less to cast if you paid life this way. This effect reduces only t | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Defiler of Vigor | unaudited | As an additional cost to cast green permanent spells, you may pay 2 life. Those spells cost {G} less to cast if you paid life this way. This effect reduces only | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Haughty Djinn | unaudited | Haughty Djinn's power is equal to the number of instant and sorcery cards in your graveyard. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Karn's Sylex | unaudited | Players can't pay life to cast spells or to activate abilities that aren't mana abilities. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Rona, Sheoldred's Faithful | unaudited | You may cast this card from your graveyard by discarding two cards in addition to paying its other costs. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Serra Paragon | unaudited | Once during each of your turns, you may play a land from your graveyard or cast a permanent spell with mana value 3 or less from your graveyard. If you do, it g | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Shalai's Acolyte | unaudited | If this creature was kicked, it enters with two +1/+1 counters on it. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Squee, Dubious Monarch | unaudited | You may cast this card from your graveyard by paying {3}{R} and exiling four other cards from your graveyard rather than paying its mana cost. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Stenn, Paranoid Partisan | unaudited | As Stenn enters, choose a card type other than creature or land. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Urborg Lhurgoyf | unaudited | As this creature enters, mill three cards for each time it was kicked. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Uurg, Spawn of Turg | unaudited | Uurg's power is equal to the number of land cards in your graveyard. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Viashino Branchrider | unaudited | If this creature was kicked, it enters with two +1/+1 counters on it. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Academy Wall | handled | Whenever you cast an instant or sorcery spell, you may draw a card. If you do, discard a card. This ability triggers only once each turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Aether Channeler | handled | When this creature enters, choose one — • Create a 1/1 white Bird creature token with flying. • Return another target nonland permanent to its owner's hand. • D | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Argivian Phalanx | handled | Affinity | models/game.py (Game.cost_reduction_for, CR 702.41a) | Y/Y/- | not_tested |
@@ -246,7 +230,7 @@
 ## Fully supported
 
 <details>
-<summary>28 cards</summary>
+<summary>44 cards</summary>
 
 - Aggressive Sabotage
 - Ajani, Sleeper Agent
@@ -256,24 +240,40 @@
 - Colossal Growth
 - Cosmic Epiphany
 - Cult Conscript
+- Defiler of Dreams
+- Defiler of Faith
+- Defiler of Flesh
+- Defiler of Instinct
+- Defiler of Vigor
 - Extinguish the Light
 - Guardian of New Benalia
+- Haughty Djinn
 - Heroic Charge
 - Ivy, Gleeful Spellthief
 - Knight of Dusk's Shadow
 - Lagomos, Hand of Hatred
 - Leyline Binding
 - Meria's Outrider
+- Monstrous War-Leech
 - Nemata, Primeval Warden
 - Nishoba Brawler
 - Prayer of Binding
 - Raff, Weatherlight Stalwart
 - Rith, Liberated Primeval
 - Rivaz of the Claw
+- Rona, Sheoldred's Faithful
+- Serra Paragon
+- Shalai's Acolyte
 - Sheoldred, the Apocalypse
+- Squee, Dubious Monarch
+- Stenn, Paranoid Partisan
 - Tail Swipe
 - Temporal Firestorm
 - The Raven Man
+- Tyrannical Pitlord
+- Urborg Lhurgoyf
+- Uurg, Spawn of Turg
+- Viashino Branchrider
 - Vohar, Vodalian Desecrator
 - Warhost's Frenzy
 
@@ -285,19 +285,10 @@
 |---|---|---|---|
 | Domain | 11 | Bortuk Bonerattle, Drag to the Bottom, Llanowar Greenwidow, Nael, Avizoa Aeronaut, Shadow Prophecy | dmu |
 | read ahead | 4 | Love Song of Night and Day, The Cruelty of Gix, The Elder Dragon War, The Weatherseed Treaty | dmu |
-| if ~ was kicked, it enters with two +N/+N counters on it. | 2 | Shalai's Acolyte, Viashino Branchrider | dmu |
 | Choose one | 1 | Twinferno | dmu |
-| as an additional cost to cast black permanent spells, you may pay N life. those spells cost {M} less to cast if you paid life ~. ~ reduces only the amount of bl | 1 | Defiler of Flesh | dmu |
-| as an additional cost to cast blue permanent spells, you may pay N life. those spells cost {M} less to cast if you paid life ~. ~ reduces only the amount of blu | 1 | Defiler of Dreams | dmu |
-| as an additional cost to cast green permanent spells, you may pay N life. those spells cost {M} less to cast if you paid life ~. ~ reduces only the amount of gr | 1 | Defiler of Vigor | dmu |
-| as an additional cost to cast red permanent spells, you may pay N life. those spells cost {M} less to cast if you paid life ~. ~ reduces only the amount of red  | 1 | Defiler of Instinct | dmu |
-| as an additional cost to cast white permanent spells, you may pay N life. those spells cost {M} less to cast if you paid life ~. ~ reduces only the amount of wh | 1 | Defiler of Faith | dmu |
 | as long as enchanted creature is legendary, it gets +N/+N and has ward {M}. | 1 | Combat Research | dmu |
 | as long as equipped creature is legendary, it has trample and haste. | 1 | Hero's Heirloom | dmu |
 | as long as ~ entered ~, creatures you control have haste. | 1 | Keldon Strike Team | dmu |
-| as stenn enters, choose a card type other than creature or land. | 1 | Stenn, Paranoid Partisan | dmu |
-| as ~ enters, look at an opponent's hand, then choose any card name. | 1 | Anointed Peacekeeper | dmu |
-| as ~ enters, mill three cards for each time it was kicked. | 1 | Urborg Lhurgoyf | dmu |
 | at the beginning of each player's draw step, that player may draw an additional card. if they do, spells they cast ~ cost {M} more to cast. | 1 | Academy Loremaster | dmu |
 | at the beginning of your end step, choose one that hasn"..."kanar deals N damage to up to one other target creature or planeswalker. • exile sol"..."s control. | 1 | Sol'Kanar the Tainted | dmu |
 | at the beginning of your end step, you may pay {M}. if you do, draw N cards. N can't be greater than the amount of life you gained ~. | 1 | Shanna, Purifying Blade | dmu |
@@ -316,17 +307,15 @@
 | kicker {M}{M} (you may pay an additional {M}{M} as you cast ~.) target creature gets -N/-N until end of turn. if ~ was kicked, that creature blocks ~ if able. d | 1 | Timely Interference | dmu |
 | kicker {M}{M} (you may pay an additional {M}{M} as you cast ~.) target creature gets -N/-N until end of turn. if ~ was kicked, that creature gets an additional  | 1 | Tribute to Urborg | dmu |
 | legendary creatures you control get +N/+N, where N is the number of legendary creatures you control. | 1 | Jodah, the Unifier | dmu |
-| once during each of your turns, you may play a land from your graveyard or cast a permanent spell with mana value N or less from your graveyard. if you do, it g | 1 | Serra Paragon | dmu |
 | players can"..."t mana abilities. | 1 | Karn's Sylex | dmu |
 | put up to two non-saga permanent cards from your hand onto the battlefield. | 1 | The World Spell | dmu |
 | sacrifice a merfolk: counter target noncreature spell unless its controller pays {M}. | 1 | Vodalian Hexcatcher | dmu |
 | scry N, then you may reveal the top card of your library. if a planeswalker card is revealed ~, put it into your hand. | 1 | Urza Assembles the Titans | dmu |
 | search your library for up to four creature cards with different powers and reveal them. an opponent chooses two of those cards. shuffle the chosen cards into y | 1 | Threats Undetected | dmu |
+| spells your opponents cast with the chosen name cost {M} more to cast. | 1 | Anointed Peacekeeper | dmu |
 | target opponent may sacrifice a nonland, nontoken permanent of their choice. if they don't, they lose N life and you draw a card. | 1 | Braids's Frightful Return | dmu |
-| the chosen creature gets +N/+N and has flying. | 1 | Tyrannical Pitlord | dmu |
 | untap up to two target creatures. they each get +N/+N until end of turn. | 1 | Join Forces | dmu |
 | up to one target artifact you control becomes an artifact creature with base power and toughness N/N until end of turn. | 1 | Yotia Declares War | dmu |
-| uurg's power is equal to the number of land cards in your graveyard. | 1 | Uurg, Spawn of Turg | dmu |
 | when danitha enters, you may put an aura or equipment card from your hand or graveyard onto the battlefield attached to danitha. | 1 | Danitha, Benalia's Hope | dmu |
 | when ~ dies, distribute N +N/+N counters among any number of target creatures you control, where N is the number of +N/+N counters on ~. | 1 | Quirion Beastcaller | dmu |
 | when ~ enters, choose up to one — • counter target spell, activated ability, or triggered ability. its controller draws a card. • destroy another target creatur | 1 | Ertai Resurrected | dmu |
@@ -350,8 +339,6 @@
 | whenever ~ or another goblin you control dies, exile the top card of your library. if it's a goblin creature card, you may cast that card until the end of your  | 1 | Rundvelt Hordemaster | dmu |
 | you may cast an instant or sorcery spell with mana value N or N from your hand without paying its mana cost. | 1 | Founding the Third Path | dmu |
 | you may cast ~ as though it had flash if N is N or less. draw N cards. | 1 | Silver Scrutiny | dmu |
-| you may cast ~ from your graveyard by discarding two cards in addition to paying its other costs. | 1 | Rona, Sheoldred's Faithful | dmu |
-| you may cast ~ from your graveyard by paying {M}{M} and exiling four other cards from your graveyard rather than paying its mana cost. | 1 | Squee, Dubious Monarch | dmu |
 | {M}, {M}, sacrifice ~: reveal the top five cards of your library. put a land card from among them into your hand and the rest on the bottom of your library in a | 1 | Inscribed Tablet | dmu |
 | {M}: put two ingenuity counters on jhoira, then you may put an artifact card with mana value N or less from your hand onto the battlefield, where N is the numbe | 1 | Jhoira, Ageless Innovator | dmu |
 | {M}: target land you control becomes a N/N elemental creature with haste until end of turn. it's still a land. activate only as a sorcery. | 1 | Llanowar Loamspeaker | dmu |
@@ -362,8 +349,6 @@
 | {M}{M}: if ~ is a cleric, put a deathtouch counter on it and it becomes a phyrexian human cleric with base power and toughness N/N. | 1 | Evolved Sleeper | dmu |
 | {M}{M}{M}: put a +N/+N counter on king darien and create a N/N white soldier creature token. | 1 | King Darien XLVIII | dmu |
 | ~ is the chosen type in addition to its other types. | 1 | Thran Portal | dmu |
-| ~'s power and toughness are each equal to the greatest mana value among cards in your graveyard. | 1 | Monstrous War-Leech | dmu |
-| ~'s power is equal to the number of instant and sorcery cards in your graveyard. | 1 | Haughty Djinn | dmu |
 | −N: choose target creature an opponent controls. whenever you attack ~, jaya deals damage equal to the number of attacking creatures to that creature. | 1 | Jaya, Fiery Negotiator | dmu |
 | −N: pay any amount of mana. look at that many cards from the top of your library, then put one of those cards into your hand and the rest on the bottom of your  | 1 | Karn, Living Legacy | dmu |
 

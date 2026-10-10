@@ -17,17 +17,16 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 27 | 9.5% |
-| Works (untested) | 133 | 47.0% |
-| Partial (unaudited) | 15 | 5.3% |
-| Not working | 108 | 38.2% |
+| Tested | 28 | 9.9% |
+| Works (untested) | 135 | 47.7% |
+| Partial (unaudited) | 9 | 3.2% |
+| Not working | 111 | 39.2% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
 | Akki Coalflinger | silent | {R}, {T}: Attacking creatures gain first strike until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Akki Lavarunner // Tok-Tok, Volcano Born | silent | Whenever this creature deals damage to an opponent, flip it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Ashen-Skin Zubera | silent | When this creature dies, target opponent discards a card for each Zubera that died this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Aura of Dominion | silent | {1}, Tap an untapped creature you control: Untap enchanted creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Battle-Mad Ronin | silent | Bushido | no machine in the engine executes this keyword | Y/-/- | not_working |
@@ -36,7 +35,7 @@
 | Brutal Deceiver | silent | {2}: Reveal the top card of your library. If it's a land card, this creature gets +1/+0 and gains first strike until end of turn. Activate only once each turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Budoka Gardener // Dokai, Weaver of Life | silent | {T}: You may put a land card from your hand onto the battlefield. If you control ten or more lands, flip this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Burr Grafter | silent | Soulshift | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Bushi Tenderfoot // Kenzo the Hardhearted | silent | When a creature dealt damage by this creature this turn dies, flip this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Bushi Tenderfoot // Kenzo the Hardhearted | silent | Bushido | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Cage of Hands | silent | {1}{W}: Return this Aura to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Callous Deceiver | silent | {2}: Reveal the top card of your library. If it's a land card, this creature gets +1/+0 and gains flying until end of turn. Activate only once each turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Cranial Extraction | silent | Choose a nonland card name. Search target player's graveyard, hand, and library for all cards with that name and exile them. Then that player shuffles. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -67,7 +66,7 @@
 | Kashi-Tribe Reaver | silent | Whenever this creature deals combat damage to a creature, tap that creature and it doesn't untap during its controller's next untap step. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Kashi-Tribe Warriors | silent | Whenever this creature deals combat damage to a creature, tap that creature and it doesn't untap during its controller's next untap step. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Kitsune Blademaster | silent | Bushido | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Kitsune Mystic // Autumn-Tail, Kitsune Sage | silent | At the beginning of the end step, if this creature is enchanted by two or more Auras, flip it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Kitsune Mystic // Autumn-Tail, Kitsune Sage | silent | {1}: Attach target Aura attached to a creature to another creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Kokusho, the Evening Star | silent | When Kokusho dies, each opponent loses 5 life. You gain life equal to the life lost this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Konda's Banner | silent | Creatures that share a color with equipped creature get +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Konda's Hatamoto | silent | As long as you control a legendary Samurai, this creature gets +1/+2 and has vigilance. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -125,29 +124,27 @@
 | Vine Kami | silent | Soulshift | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Wicked Akuba | silent | {B}: Target player dealt damage by this creature this turn loses 1 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Zo-Zu the Punisher | silent | Whenever a land enters, Zo-Zu deals 2 damage to that land's controller. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Akki Lavarunner // Tok-Tok, Volcano Born | notice | Protection | protection from a quality the engine does not read | Y/-/- | not_working |
 | Blind with Anger | notice | Untap target nonlegendary creature and gain control of it until end of turn. That creature gains haste until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Devouring Rage | notice | As an additional cost to cast this spell, you may sacrifice any number of Spirits. Target creature gets +3/+0 until end of turn. For each Spirit sacrificed this | unparsed remainder: As an additional cost to cast this spell, you may sacrifice any number of Spirits. For each Spirit sacrificed this way, that creature gets an additional +3/+0 until end of turn. | Y/-/- | not_working |
 | Feast of Worms | notice | Destroy target land. If that land was legendary, its controller sacrifices another land of their choice. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Hikari, Twilight Guardian | notice | Whenever you cast a Spirit or Arcane spell, you may exile Hikari. If you do, return it to the battlefield under its owner's control at the beginning of the next | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Hinder | notice | Counter target spell. If that spell is countered this way, put that card on your choice of the top or bottom of its owner's library instead of into that player' | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Junkyo Bell | notice | At the beginning of your upkeep, you may have target creature you control get +X/+X until end of turn, where X is the number of creatures you control. If you do | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
+| Myojin of Infinite Rage | notice | Myojin of Infinite Rage has indestructible as long as it has a divinity counter on it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
+| Myojin of Life's Web | notice | Myojin of Life's Web has indestructible as long as it has a divinity counter on it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
+| Myojin of Seeing Winds | notice | Myojin of Seeing Winds has indestructible as long as it has a divinity counter on it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Otherworldly Journey | notice | Exile target creature. At the beginning of the next end step, return that card to the battlefield under its owner's control with a +1/+1 counter on it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Sosuke, Son of Seshiro | notice | Whenever a Warrior you control deals combat damage to a creature, destroy that creature at end of combat. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Yosei, the Morning Star | notice | When Yosei dies, target player skips their next untap step. Tap up to five target permanents that player controls. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Dosan the Falling Leaf | unaudited | Players can cast spells only during their own turns. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Frostwielder | unaudited | If a creature dealt damage by this creature this turn would die, exile it instead. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Imi Statue | unaudited | Players can't untap more than one artifact during their untap steps. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Kumano's Pupils | unaudited | If a creature dealt damage by this creature this turn would die, exile it instead. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Kumano, Master Yamabushi | unaudited | If a creature dealt damage by Kumano this turn would die, exile it instead. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Marrow-Gnawer | unaudited | All Rats have fear. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Masako the Humorless | unaudited | Tapped creatures you control can block as though they were untapped. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Myojin of Infinite Rage | unaudited | Myojin of Infinite Rage enters with a divinity counter on it if you cast it from your hand. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Myojin of Life's Web | unaudited | Myojin of Life's Web enters with a divinity counter on it if you cast it from your hand. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Myojin of Seeing Winds | unaudited | Myojin of Seeing Winds enters with a divinity counter on it if you cast it from your hand. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Oni Possession | unaudited | Enchanted creature is a Demon Spirit. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Sachi, Daughter of Seshiro | unaudited | Shamans you control have "{T}: Add {G}{G}." | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Swirl the Mists | unaudited | As this enchantment enters, choose a color word. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Uba Mask | unaudited | If a player would draw a card, that player exiles that card face up instead. | a static ability no support check audits - not verified either way | Y/-/- | partial |
+| Swirl the Mists | unaudited | All instances of color words in the text of spells and permanents are changed to the chosen color word. | a static ability no support check audits - not verified either way | Y/-/- | partial |
+| Uba Mask | unaudited | Each player may play lands and cast spells from among cards they exiled with this artifact this turn. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Villainous Ogre | unaudited | As long as you control a Demon, this creature has "{B}: Regenerate this creature." | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Akki Avalanchers | handled | Sacrifice a land: This creature gets +2/+0 until end of turn. Activate only once each turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Akki Rockspeaker | handled | When this creature enters, add {R}. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -213,6 +210,8 @@
 | Kodama of the South Tree | handled | Whenever you cast a Spirit or Arcane spell, each other creature you control gets +1/+1 and gains trample until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Kodama's Might | handled | Target creature gets +2/+2 until end of turn. Splice onto Arcane {G} (As you cast an Arcane spell, you may reveal this card from your hand and pay its splice co | the engine reads this text and performs it | Y/-/- | not_tested |
 | Kodama's Reach | handled | Search your library for up to two basic land cards, reveal those cards, put one onto the battlefield tapped and the other into your hand, then shuffle. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Kumano's Pupils | handled | If a creature dealt damage by this creature this turn would die, exile it instead. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Kumano, Master Yamabushi | handled | {1}{R}: Kumano deals 1 damage to any target. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Lantern Kami | handled | Flying | machines/combat.py | Y/-/- | not_tested |
 | Lantern-Lit Graveyard | handled |  |  | Y/-/- | not_tested |
 | Lifted by Clouds | handled | Target creature gains flying until end of turn. Splice onto Arcane {1}{U} (As you cast an Arcane spell, you may reveal this card from your hand and pay its spli | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -286,7 +285,7 @@
 ## Fully supported
 
 <details>
-<summary>27 cards</summary>
+<summary>28 cards</summary>
 
 - Azusa, Lost but Seeking
 - Ben-Ben, Akki Hermit
@@ -296,6 +295,7 @@
 - Distress
 - Ember-Fist Zubera
 - Ethereal Haze
+- Frostwielder
 - Ghostly Prison
 - Glacial Ray
 - Honden of Cleansing Fire
@@ -322,20 +322,18 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| bushido | 13 | Battle-Mad Ronin, Cursed Ronin, Devoted Retainer, Kitsune Blademaster, Konda, Lord of Eiganjo | chk |
+| bushido | 14 | Battle-Mad Ronin, Bushi Tenderfoot // Kenzo the Hardhearted, Cursed Ronin, Devoted Retainer, Kitsune Blademaster | chk |
 | soulshift | 12 | Burr Grafter, Gibbering Kami, He Who Hungers, Hundred-Talon Kami, Kami of Lunacy | chk |
 | whenever ~ deals combat damage to a creature, tap that creature and it doesn"..."s next untap step. | 4 | Kashi-Tribe Reaver, Kashi-Tribe Warriors, Matsu-Tribe Decoy, Orochi Ranger | chk |
-| ~ enters with a divinity counter on it if you cast it from your hand. | 3 | Myojin of Infinite Rage, Myojin of Life's Web, Myojin of Seeing Winds | chk |
-| if a creature dealt damage by ~ ~ would die, exile it instead. | 2 | Frostwielder, Kumano's Pupils | chk |
+| ~ has indestructible as long as it has a divinity counter on it. | 3 | Myojin of Infinite Rage, Myojin of Life's Web, Myojin of Seeing Winds | chk |
 | {M}{M}: return ~ to its owner's hand. | 2 | Cage of Hands, Field of Reality | chk |
 | all creatures get -N/-N. | 1 | Night of Souls' Betrayal | chk |
+| all instances of color words in the text of spells and permanents are changed to the chosen color word. | 1 | Swirl the Mists | chk |
 | all rats have fear. | 1 | Marrow-Gnawer | chk |
 | as an additional cost to cast ~, you may sacrifice any number of spirits. target creature gets +N/+N until end of turn. for each spirit sacrificed ~, that creat | 1 | Devouring Rage | chk |
 | as an additional cost to cast ~, you may sacrifice any number of spirits. target player loses N life plus N life for each spirit sacrificed ~. you gain that muc | 1 | Devouring Greed | chk |
 | as long as you control a demon, ~ has "..." | 1 | Villainous Ogre | chk |
 | as long as you control a legendary samurai, ~ gets +N/+N and has vigilance. | 1 | Konda's Hatamoto | chk |
-| as ~ enters, choose a color word. | 1 | Swirl the Mists | chk |
-| at the beginning of the end step, if ~ is enchanted by two or more auras, flip it. | 1 | Kitsune Mystic // Autumn-Tail, Kitsune Sage | chk |
 | at the beginning of your upkeep, put a devotion counter on ~. then if a creature named eight-and-a-half-tails is on the battlefield, you gain N life for each de | 1 | Pious Kitsune | chk |
 | at the beginning of your upkeep, sacrifice kuro unless you pay {M}{M}{M}{M}. | 1 | Kuro, Pitlord | chk |
 | at the beginning of your upkeep, target opponent discards a card for each shrine you control. | 1 | Honden of Night's Reach | chk |
@@ -349,15 +347,15 @@
 | draw two cards, then discard a card. if you've cast a spell named peer through depths and a spell named reach through mists ~, you may search your library for a | 1 | Sift Through Sands | chk |
 | each other creature named ~ gets +N/+N and has haste. | 1 | Brothers Yamazaki | chk |
 | each other samurai creature you control gets +N/+N for each point of bushido it has. | 1 | Takeno, Samurai General | chk |
+| each player may play lands and cast spells from among cards they exiled with ~ ~. | 1 | Uba Mask | chk |
 | enchanted creature gets +N/+N and attacks each combat if able. | 1 | Uncontrollable Anger | chk |
 | enchanted creature is a demon spirit. | 1 | Oni Possession | chk |
 | exile target creature. at the beginning of the next end step, return that card to the battlefield under its owner's control with a +N/+N counter on it. | 1 | Otherworldly Journey | chk |
 | for each spirit, return it to its owner's hand unless that player pays {M}. | 1 | Cut the Tethers | chk |
-| if a creature dealt damage by kumano ~ would die, exile it instead. | 1 | Kumano, Master Yamabushi | chk |
-| if a player would draw a card, that player exiles that card face up instead. | 1 | Uba Mask | chk |
 | look at the top three cards of your library. you may put those cards on the bottom of your library in any order. if you do, return ~ to its owner's hand. otherw | 1 | Petals of Insight | chk |
 | players can cast spells only during their own turns. | 1 | Dosan the Falling Leaf | chk |
 | players can't untap more than one artifact during their untap steps. | 1 | Imi Statue | chk |
+| protection | 1 | Akki Lavarunner // Tok-Tok, Volcano Born | chk |
 | redistribute any number of players' life totals. (each of those players gets one life total back.) | 1 | Reverse the Sands | chk |
 | remove a divinity counter from ~: destroy all other creatures. | 1 | Myojin of Cleansing Fire | chk |
 | remove a divinity counter from ~: each opponent discards their hand. | 1 | Myojin of Night's Reach | chk |
@@ -371,7 +369,6 @@
 | target permanent's controller sacrifices it. if the player does, they reveal cards from the top of their library until they reveal a permanent card that shares  | 1 | Reweave | chk |
 | untap target nonlegendary creature and gain control of it until end of turn. that creature gains haste until end of turn. | 1 | Blind with Anger | chk |
 | up to three target creatures can't block ~. | 1 | Unearthly Blizzard | chk |
-| when a creature dealt damage by ~ ~ dies, flip ~. | 1 | Bushi Tenderfoot // Kenzo the Hardhearted | chk |
 | when kokusho dies, each opponent loses N life. you gain life equal to the life lost ~. | 1 | Kokusho, the Evening Star | chk |
 | when yosei dies, target player skips their next untap step. tap up to five target permanents that player controls. | 1 | Yosei, the Morning Star | chk |
 | when ~ dies, create a N/N colorless spirit creature token for each zubera that died ~. | 1 | Dripping-Tongue Zubera | chk |
@@ -392,12 +389,12 @@
 | whenever you cast a spirit or arcane spell, you may exile hikari. if you do, return it to the battlefield under its owner's control at the beginning of the next | 1 | Hikari, Twilight Guardian | chk |
 | whenever you cast a spirit or arcane spell, ~ gains protection from the color of your choice until end of turn. | 1 | Kami of the Painted Road | chk |
 | whenever you draw a card, exile the top card of your library face down. | 1 | Moonring Mirror | chk |
-| whenever ~ deals damage to an opponent, flip it. | 1 | Akki Lavarunner // Tok-Tok, Volcano Born | chk |
 | {M}, exile tatsumasa: create a N/N blue dragon spirit creature token with flying. return tatsumasa to the battlefield under its owner's control when that token  | 1 | Tatsumasa, the Dragon's Fang | chk |
 | {M}, return a land you control to its owner's hand: counter target spell unless its controller pays {M}. | 1 | Soratami Savant | chk |
 | {M}, tap an untapped creature you control: untap enchanted creature. | 1 | Aura of Dominion | chk |
 | {M}, {M}: attacking creatures gain first strike until end of turn. | 1 | Akki Coalflinger | chk |
 | {M}, {M}: create a N/N green snake creature token for each charge counter on ~. | 1 | Orochi Hatchery | chk |
+| {M}: attach target aura attached to a creature to another creature. | 1 | Kitsune Mystic // Autumn-Tail, Kitsune Sage | chk |
 | {M}: regenerate enchanted creature. | 1 | Serpent Skin | chk |
 | {M}: reveal the top card of your library. if it's a land card, untap ~ and it gets +N/+N until end of turn. activate only once each turn. | 1 | Harsh Deceiver | chk |
 | {M}: reveal the top card of your library. if it's a land card, ~ gets +N/+N and gains first strike until end of turn. activate only once each turn. | 1 | Brutal Deceiver | chk |

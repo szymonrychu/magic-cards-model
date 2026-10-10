@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 26 | 10.7% |
-| Works (untested) | 145 | 59.4% |
-| Partial (unaudited) | 15 | 6.1% |
-| Not working | 58 | 23.8% |
+| Tested | 36 | 14.8% |
+| Works (untested) | 146 | 59.8% |
+| Partial (unaudited) | 5 | 2.0% |
+| Not working | 57 | 23.4% |
 
 ## Cards needing work
 
@@ -79,26 +79,15 @@
 | Vizier of the Scorpion | silent | Zombie tokens you control have deathtouch. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Widespread Brutality | silent | Amass Zombies 2, then the Army you amassed deals damage equal to its power to each non-Army creature. (To amass Zombies 2, put two +1/+1 counters on an Army you | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Awakening of Vitu-Ghazi | notice | Put nine +1/+1 counters on target land you control. It becomes a legendary 0/0 Elemental creature with haste named Vitu-Ghazi. It's still a land. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Kasmina, Enigmatic Mentor | notice | Spells your opponents cast that target a creature or planeswalker you control cost {2} more to cast. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Planewide Celebration | notice | Choose four. You may choose the same mode more than once. • Create a 2/2 Citizen creature token that's all colors. • Return target permanent card from your grav | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Spark Double | notice | You may have this creature enter as a copy of a creature or planeswalker you control, except it enters with an additional +1/+1 counter on it if it's a creature | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Teferi's Time Twist | notice | Exile target permanent you control. Return that card to the battlefield under its owner's control at the beginning of the next end step. If it enters as a creat | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Topple the Statue | notice | Tap target permanent. If it's an artifact, destroy it. Draw a card. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Arlinn, Voice of the Pack | unaudited | Each creature you control that's a Wolf or a Werewolf enters with an additional +1/+1 counter on it. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Bioessence Hydra | unaudited | This creature enters with a +1/+1 counter on it for each loyalty counter on planeswalkers you control. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Bolas's Citadel | unaudited | You may play lands and cast spells from the top of your library. If you cast a spell this way, pay life equal to its mana value rather than pay its mana cost. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Gleaming Overseer | unaudited | Zombie tokens you control have hexproof and menace. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| God-Eternal Kefnet | unaudited | You may reveal the first card you draw each turn as you draw it. Whenever you reveal an instant or sorcery card this way, copy that card and you may cast the co | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Huatli, the Sun's Heart | unaudited | Each creature you control assigns combat damage equal to its toughness rather than its power. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Jace, Wielder of Mysteries | unaudited | If you would draw a card while your library has no cards in it, you win the game instead. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Jaya, Venerated Firemage | unaudited | If another red source you control would deal damage to a permanent or player, it deals that much damage plus 1 to that permanent or player instead. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Jiang Yanggu, Wildcrafter | unaudited | Each creature you control with a +1/+1 counter on it has "{T}: Add one mana of any color." | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Kasmina's Transmutation | unaudited | Enchanted creature loses all abilities and has base power and toughness 1/1. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Mowu, Loyal Companion | unaudited | If one or more +1/+1 counters would be put on Mowu, that many plus one +1/+1 counters are put on it instead. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Raging Kronch | unaudited | This creature can't attack alone. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Rescuer Sphinx | unaudited | As this creature enters, you may return a nonland permanent you control to its owner's hand. If you do, this creature enters with a +1/+1 counter on it. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Tomik, Distinguished Advokist | unaudited | Lands on the battlefield and land cards in graveyards can't be the targets of spells or abilities your opponents control. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Ugin's Conjurant | unaudited | If damage would be dealt to this creature while it has a +1/+1 counter on it, prevent that damage and remove that many +1/+1 counters from this creature. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Ahn-Crop Invader | handled | During your turn, this creature has first strike. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Aid the Fallen | handled | Choose one or both — • Return target creature card from your graveyard to your hand. • Return target planeswalker card from your graveyard to your hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Angrath's Rampage | handled | Choose one — • Target player sacrifices an artifact of their choice. • Target player sacrifices a creature of their choice. • Target player sacrifices a planesw | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -172,6 +161,7 @@
 | Jace's Triumph | handled | Draw two cards. If you control a Jace planeswalker, draw three cards instead. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Jaya's Greeting | handled | Jaya's Greeting deals 3 damage to target creature. Scry 1. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Karn's Bastion | handled | {4}, {T}: Proliferate. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Kasmina, Enigmatic Mentor | handled | Spells your opponents cast that target a creature or planeswalker you control cost {2} more to cast. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Kaya's Ghostform | handled | When enchanted permanent dies or is put into exile, return that card to the battlefield under your control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Kaya, Bane of the Dead | handled | Your opponents and permanents your opponents control with hexproof can be the targets of spells and abilities you control as though they didn't have hexproof. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Kiora's Dambreaker | handled | When this creature enters, proliferate. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -248,11 +238,14 @@
 ## Fully supported
 
 <details>
-<summary>26 cards</summary>
+<summary>36 cards</summary>
 
 - Arboreal Grazer
+- Arlinn, Voice of the Pack
 - Ashiok, Dream Render
 - Band Together
+- Bioessence Hydra
+- Bolas's Citadel
 - Bolt Bend
 - Command the Dreadhorde
 - Commence the Endgame
@@ -260,22 +253,29 @@
 - Enter the God-Eternals
 - Feather, the Redeemed
 - Finale of Eternity
+- God-Eternal Kefnet
 - Heartwarming Redemption
 - Ilharg, the Raze-Boar
+- Jace, Wielder of Mysteries
+- Jaya, Venerated Firemage
 - Karn, the Great Creator
 - Kronch Wrangler
 - Mayhem Devil
+- Mowu, Loyal Companion
 - Narset, Parter of Veils
 - Neoform
 - Nissa, Who Shakes the World
 - Oath of Kaya
 - Parhelion II
+- Raging Kronch
+- Rescuer Sphinx
 - Saheeli, Sublime Artificer
 - Solar Blaze
 - Sorin, Vengeful Bloodlord
 - Storm the Citadel
 - Teferi, Time Raveler
 - Turret Ogre
+- Ugin's Conjurant
 
 </details>
 
@@ -288,7 +288,6 @@
 | +N: exile the top card of your library face down and look at it. create a N/N colorless spirit creature token. when that token leaves the battlefield, put the e | 1 | Ugin, the Ineffable | war |
 | +N: until your next turn, up to one target creature gains reach and vigilance. | 1 | Vivien, Champion of the Wilds | war |
 | amass zombies N, then the army you amassed deals damage equal to its power to each non-army creature. (to amass zombies N, put two +N/+N counters on an army you | 1 | Widespread Brutality | war |
-| as ~ enters, you may return a nonland permanent you control to its owner's hand. if you do, ~ enters with a +N/+N counter on it. | 1 | Rescuer Sphinx | war |
 | choose a creature or planeswalker you control. all damage that would be dealt ~ to you and permanents you control is dealt to the chosen permanent instead (if i | 1 | Gideon's Sacrifice | war |
 | choose four. you may choose the same mode more than once. • create a N/N citizen creature token that's all colors. • return target permanent card from your grav | 1 | Planewide Celebration | war |
 | choose up to four target cards in your graveyard. if you control a bolas planeswalker, return those cards to your hand. otherwise, an opponent chooses two of th | 1 | Deliver Unto Evil | war |
@@ -297,7 +296,6 @@
 | draw N cards. if N is N or more, instead shuffle your graveyard into your library, draw N cards, untap up to five lands, and you have no maximum hand size for t | 1 | Finale of Revelation | war |
 | during your turn, creatures you control have first strike and equip abilities you activate cost {M} less to activate. | 1 | Nahiri, Storm of Stone | war |
 | each creature you control assigns combat damage equal to its toughness rather than its power. | 1 | Huatli, the Sun's Heart | war |
-| each creature you control that's a wolf or a werewolf enters with an additional +N/+N counter on it. | 1 | Arlinn, Voice of the Pack | war |
 | each creature you control with a +N/+N counter on it has "..." | 1 | Jiang Yanggu, Wildcrafter | war |
 | each opponent sacrifices a creature of their choice. if you control a liliana planeswalker, each opponent also discards a card. | 1 | Liliana's Triumph | war |
 | each player chooses a creature or planeswalker they control, then sacrifices the rest. players can't cast creature or planeswalker spells until the end of your  | 1 | Single Combat | war |
@@ -305,10 +303,6 @@
 | enchanted creature loses all abilities and has base power and toughness N/N. | 1 | Kasmina's Transmutation | war |
 | exile all multicolored permanents. | 1 | Ravnica at War | war |
 | exile target permanent you control. return that card to the battlefield under its owner's control at the beginning of the next end step. if it enters as a creat | 1 | Teferi's Time Twist | war |
-| if another red source you control would deal damage to a permanent or player, it deals that much damage plus N to that permanent or player instead. | 1 | Jaya, Venerated Firemage | war |
-| if damage would be dealt to ~ while it has a +N/+N counter on it, prevent that damage and remove that many +N/+N counters from ~. | 1 | Ugin's Conjurant | war |
-| if one or more +N/+N counters would be put on mowu, that many plus one +N/+N counters are put on it instead. | 1 | Mowu, Loyal Companion | war |
-| if you would draw a card while your library has no cards in it, you win the game instead. | 1 | Jace, Wielder of Mysteries | war |
 | lands on the battlefield and land cards in graveyards can't be the targets of spells or abilities your opponents control. | 1 | Tomik, Distinguished Advokist | war |
 | put nine +N/+N counters on target land you control. it becomes a legendary N/N elemental creature with haste named vitu-ghazi. it's still a land. | 1 | Awakening of Vitu-Ghazi | war |
 | put target creature with flying on the bottom of its owner's library. | 1 | Forced Landing | war |
@@ -317,7 +311,6 @@
 | return up to two target creatures to their owner's hand. you may search your library and/or graveyard for a card named jace, arcane strategist, reveal it, and p | 1 | Jace's Ruse | war |
 | search your library and/or graveyard for a creature card with mana value N or less and put it onto the battlefield. if you search your library ~, shuffle. if N  | 1 | Finale of Devastation | war |
 | search your library for up to two basic forest cards. if you control a nissa planeswalker, instead search your library for up to three land cards. reveal those  | 1 | Nissa's Triumph | war |
-| spells your opponents cast that target a creature or planeswalker you control cost {M} more to cast. | 1 | Kasmina, Enigmatic Mentor | war |
 | tap target permanent. if it's an artifact, destroy it. draw a card. | 1 | Topple the Statue | war |
 | target opponent sacrifices a creature of their choice that attacked or blocked ~. if you control a gideon planeswalker, that player sacrifices two of those crea | 1 | Gideon's Triumph | war |
 | when fblthp enters, draw a card. if it entered from your library or was cast from your library, draw two cards instead. | 1 | Fblthp, the Lost | war |
@@ -338,8 +331,6 @@
 | whenever ~ attacks, you may cast target instant or sorcery card with mana value less than or equal to ~ power from your graveyard without paying its mana cost.  | 1 | Dreadhorde Arcanist | war |
 | you may cast up to one target instant card and/or up to one target sorcery card from your graveyard each with mana value N or less without paying their mana cos | 1 | Finale of Promise | war |
 | you may have ~ enter as a copy of a creature or planeswalker you control, except it enters with an additional +N/+N counter on it if it"..."s a planeswalker, an | 1 | Spark Double | war |
-| you may play lands and cast spells from the top of your library. if you cast a spell ~, pay life equal to its mana value rather than pay its mana cost. | 1 | Bolas's Citadel | war |
-| you may reveal the first card you draw each turn as you draw it. whenever you reveal an instant or sorcery card ~, copy that card and you may cast the copy. tha | 1 | God-Eternal Kefnet | war |
 | zombie tokens you control have deathtouch. | 1 | Vizier of the Scorpion | war |
 | zombie tokens you control have flying. | 1 | Eternal Skylord | war |
 | zombie tokens you control have hexproof and menace. | 1 | Gleaming Overseer | war |
@@ -350,8 +341,6 @@
 | {M}: add two mana of different colors. | 1 | Firemind Vessel | war |
 | {M}: return a tapped land you control to its owner's hand. | 1 | Living Twister | war |
 | {M}{M}: look at the top card of your library. if it"..."t put the card into your hand, put it on the bottom of your library. | 1 | Vivien's Grizzly | war |
-| ~ can't attack alone. | 1 | Raging Kronch | war |
-| ~ enters with a +N/+N counter on it for each loyalty counter on planeswalkers you control. | 1 | Bioessence Hydra | war |
 | −N: creatures you control can't be blocked ~. | 1 | Jace, Arcane Strategist | war |
 | −N: each opponent chooses a permanent they control of each permanent type and sacrifices the rest. | 1 | Liliana, Dreadhorde General | war |
 | −N: put a +N/+N counter on each creature you control and a loyalty counter on each other planeswalker you control. | 1 | Ajani, the Greathearted | war |

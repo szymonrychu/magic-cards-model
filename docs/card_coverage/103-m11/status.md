@@ -17,9 +17,9 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 17 | 16.2% |
+| Tested | 20 | 19.0% |
 | Works (untested) | 63 | 60.0% |
-| Partial (unaudited) | 6 | 5.7% |
+| Partial (unaudited) | 3 | 2.9% |
 | Not working | 19 | 18.1% |
 
 ## Cards needing work
@@ -46,10 +46,7 @@
 | Stormtide Leviathan | silent | All lands are Islands in addition to their other types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Wild Evocation | silent | At the beginning of each player's upkeep, that player reveals a card at random from their hand. If it's a land card, the player puts it onto the battlefield. Ot | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Angelic Arbiter | unaudited | Each opponent who cast a spell this turn can't attack with creatures. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Bloodcrazed Goblin | unaudited | This creature can't attack unless an opponent has been dealt damage this turn. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Fire Servant | unaudited | If a red instant or sorcery spell you control would deal damage, it deals double that damage instead. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Gaea's Revenge | unaudited | This creature can't be the target of nongreen spells or abilities from nongreen sources. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Harbor Serpent | unaudited | This creature can't attack unless there are five or more Islands on the battlefield. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Obstinate Baloth | unaudited | If a spell or ability an opponent controls causes you to discard this card, put it onto the battlefield instead of putting it into your graveyard. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Air Servant | handled | {2}{U}: Tap target creature with flying. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ajani's Pridemate | handled | Whenever you gain life, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -118,16 +115,19 @@
 ## Fully supported
 
 <details>
-<summary>17 cards</summary>
+<summary>20 cards</summary>
 
 - Aether Adept
 - Ajani's Mantra
+- Bloodcrazed Goblin
 - Brittle Effigy
 - Captivating Vampire
 - Combust
 - Conundrum Sphinx
 - Cultivate
+- Fire Servant
 - Frost Titan
+- Harbor Serpent
 - Inferno Titan
 - Leyline of Punishment
 - Leyline of Sanctity
@@ -151,7 +151,6 @@
 | each opponent loses N life. you gain life equal to the life lost ~. | 1 | Blood Tithe | m11 |
 | each opponent who cast a spell ~ can't attack with creatures. | 1 | Angelic Arbiter | m11 |
 | exile all creatures you control, then reveal cards from the top of your library until you reveal that many creature cards. put all creature cards revealed ~ ont | 1 | Mass Polymorph | m11 |
-| if a red instant or sorcery spell you control would deal damage, it deals double that damage instead. | 1 | Fire Servant | m11 |
 | if a spell or ability an opponent controls causes you to discard ~, put it onto the battlefield instead of putting it into your graveyard. | 1 | Obstinate Baloth | m11 |
 | other knight creatures you control get +N/+N and have indestructible. | 1 | Knight Exemplar | m11 |
 | spells you control can"..."t be the targets of blue or black spells ~. | 1 | Autumn's Veil | m11 |
@@ -166,8 +165,6 @@
 | {M}, {M}: you gain N life. shuffle ~ and your graveyard into their owner's library. | 1 | Elixir of Immortality | m11 |
 | {M}: put a +N/+N counter on each artifact creature you control. | 1 | Steel Overseer | m11 |
 | {M}: until end of turn, ~ loses defender and gains flying. | 1 | Gargoyle Sentinel | m11 |
-| ~ can't attack unless an opponent has been dealt damage ~. | 1 | Bloodcrazed Goblin | m11 |
-| ~ can't attack unless there are five or more islands on the battlefield. | 1 | Harbor Serpent | m11 |
 | ~ can't be the target of nongreen spells or abilities from nongreen sources. | 1 | Gaea's Revenge | m11 |
 
 ## Notes

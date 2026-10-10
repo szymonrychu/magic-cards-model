@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 11 | 6.8% |
+| Tested | 16 | 9.9% |
 | Works (untested) | 97 | 60.2% |
-| Partial (unaudited) | 6 | 3.7% |
-| Not working | 47 | 29.2% |
+| Partial (unaudited) | 2 | 1.2% |
+| Not working | 46 | 28.6% |
 
 ## Cards needing work
 
@@ -63,7 +63,6 @@
 | Ritual of the Returned | silent | Exile target creature card from your graveyard. Create a black Zombie creature token. Its power is equal to that card's power and its toughness is equal to that | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sage of Hours | silent | Remove all +1/+1 counters from this creature: For each five counters removed this way, take an extra turn after this one. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Scourge of Fleets | silent | When this creature enters, return each creature your opponents control with toughness X or less to its owner's hand, where X is the number of Islands you contro | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Sightless Brawler | silent | Enchanted creature gets +3/+2 and can't attack alone. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Spirespine | silent | Enchanted creature gets +4/+1 and blocks each combat if able. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Stonewise Fortifier | silent | {4}{W}: Prevent all damage that would be dealt to this creature by target creature this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Stormchaser Chimera | silent | {2}{U}{R}: Scry 1, then reveal the top card of your library. This creature gets +X/+0 until end of turn, where X is that card's mana value. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -73,12 +72,8 @@
 | Silence the Believers | notice | Strive — This spell costs {2}{B} more to cast for each target beyond the first. Exile any number of target creatures and all Auras attached to them. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Tormented Thoughts | notice | As an additional cost to cast this spell, sacrifice a creature. Target player discards a number of cards equal to the sacrificed creature's power. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Twinflame | notice | Strive — This spell costs {2}{R} more to cast for each target beyond the first. Choose any number of target creatures you control. For each of them, create a to | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Battlefield Thaumaturge | unaudited | Each instant and sorcery spell you cast costs {1} less to cast for each creature it targets. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Deserter's Quarters | unaudited | You may choose not to untap this artifact during your untap step. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Godhunter Octopus | unaudited | This creature can't attack unless defending player controls an enchantment or an enchanted permanent. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Iroas, God of Victory | unaudited | Prevent all damage that would be dealt to attacking creatures you control. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Keranos, God of Storms | unaudited | Reveal the first card you draw on each of your turns. Whenever you reveal a land card this way, draw a card. Whenever you reveal a nonland card this way, Kerano | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Oppressive Rays | unaudited | Enchanted creature can't attack or block unless its controller pays {3}. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Agent of Erebos | handled | Constellation — Whenever this creature or another enchantment you control enters, exile target player's graveyard. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ajani's Presence | handled | Strive — This spell costs {2}{W} more to cast for each target beyond the first. Any number of target creatures each get +1/+1 and gain indestructible until end  | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ajani, Mentor of Heroes | handled | +1: Distribute three +1/+1 counters among one, two, or three target creatures you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -180,17 +175,22 @@
 ## Fully supported
 
 <details>
-<summary>11 cards</summary>
+<summary>16 cards</summary>
 
 - Aegis of the Gods
 - Aerial Formation
+- Battlefield Thaumaturge
+- Godhunter Octopus
 - Hall of Triumph
 - Heroes' Bane
+- Iroas, God of Victory
 - Kruphix, God of Horizons
 - Launch the Fleet
 - Mana Confluence
 - Master of the Feast
+- Oppressive Rays
 - Setessan Tactics
+- Sightless Brawler
 - Solidarity of Heroes
 - Temple of Epiphany
 
@@ -207,11 +207,8 @@
 | at the beginning of your upkeep, return an enchantment you control to its owner's hand. | 1 | Riptide Chimera | jou |
 | counter target spell. its controller mills four cards. | 1 | Countermand | jou |
 | create two N/N blue bird enchantment creature tokens with flying. scry N. (look at the top card of your library. you may put that card on the bottom.) | 1 | Rise of Eagles | jou |
-| each instant and sorcery spell you cast costs {M} less to cast for each creature it targets. | 1 | Battlefield Thaumaturge | jou |
-| enchanted creature can't attack or block unless its controller pays {M}. | 1 | Oppressive Rays | jou |
 | enchanted creature gets +N/+N and attacks each combat if able. | 1 | Mogis's Warhound | jou |
 | enchanted creature gets +N/+N and blocks each combat if able. | 1 | Spirespine | jou |
-| enchanted creature gets +N/+N and can't attack alone. | 1 | Sightless Brawler | jou |
 | enchanted creature gets +N/+N and can't block. | 1 | Gnarled Scarhide | jou |
 | enchanted creature gets +N/+N as long as it's an enchantment. otherwise, it gets -N/-N. | 1 | Nyx Infusion | jou |
 | enchanted creature gets -N/-N and can't block. | 1 | Cast into Darkness | jou |
@@ -220,7 +217,6 @@
 | exile target enchantment. if the exiled card is a god card, search its controller's graveyard, hand, and library for any number of cards with the same name as t | 1 | Deicide | jou |
 | other centaur creatures you control get +N/+N and have vigilance and trample. | 1 | Pheres-Band Warchief | jou |
 | other minotaur creatures you control have deathtouch. | 1 | Felhide Petrifier | jou |
-| prevent all damage that would be dealt to attacking creatures you control. | 1 | Iroas, God of Victory | jou |
 | remove all +N/+N counters from ~: for each five counters removed ~, take an extra turn after ~. | 1 | Sage of Hours | jou |
 | return target creature and all auras attached to it to their owners' hands. | 1 | Hubris | jou |
 | return up to one target instant card and up to one target sorcery card from your graveyard to your hand. exile ~. | 1 | Pull from the Deep | jou |
@@ -243,7 +239,6 @@
 | {M}{M}: exile target creature card from a graveyard. its owner creates a N/N black and green snake enchantment creature token with deathtouch. | 1 | Pharika, God of Affliction | jou |
 | {M}{M}: prevent all damage that would be dealt to ~ by target creature ~. | 1 | Stonewise Fortifier | jou |
 | {M}{M}{M}: scry N, then reveal the top card of your library. ~ gets +N/+N until end of turn, where N is that card's mana value. | 1 | Stormchaser Chimera | jou |
-| ~ can't attack unless defending player controls an enchantment or an enchanted permanent. | 1 | Godhunter Octopus | jou |
 
 ## Notes
 

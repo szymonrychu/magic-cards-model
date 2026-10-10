@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 38 | 13.6% |
-| Works (untested) | 138 | 49.3% |
-| Partial (unaudited) | 16 | 5.7% |
-| Not working | 88 | 31.4% |
+| Tested | 49 | 17.5% |
+| Works (untested) | 141 | 50.4% |
+| Partial (unaudited) | 5 | 1.8% |
+| Not working | 85 | 30.4% |
 
 ## Cards needing work
 
@@ -28,7 +28,6 @@
 |---|---|---|---|---|---|
 | Adder-Staff Boggart | silent | When this creature enters, clash with an opponent. If you win, put a +1/+1 counter on this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Ashling the Pilgrim | silent | {1}{R}: Put a +1/+1 counter on Ashling. If this is the third time this ability has resolved this turn, remove all +1/+1 counters from Ashling, and it deals that | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Ashling's Prerogative | silent | Each creature with mana value of the chosen quality has haste. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Bog Hoodlums | silent | When this creature enters, clash with an opponent. If you win, put a +1/+1 counter on this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Boggart Mob | silent | Champion | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Boggart Sprite-Chaser | silent | As long as you control a Faerie, this creature gets +1/+1 and has flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -41,7 +40,7 @@
 | Changeling Hero | silent | Champion | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Changeling Titan | silent | Champion | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Colfenor's Plans | silent | When this enchantment enters, exile the top seven cards of your library face down. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Colfenor's Urn | silent | Whenever a creature with toughness 4 or greater is put into your graveyard from the battlefield, you may exile it. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
+| Colfenor's Urn | silent | At the beginning of the end step, if three or more cards have been exiled with this artifact, sacrifice it. If you do, return those cards to the battlefield und | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Dauntless Dourbark | silent | Dauntless Dourbark's power and toughness are each equal to the number of Forests you control plus the number of Treefolk you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Deathrender | silent | Whenever equipped creature dies, you may put a creature card from your hand onto the battlefield and attach this Equipment to it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Dread | silent | Whenever a creature deals damage to you, destroy it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -62,7 +61,6 @@
 | Jagged-Scar Archers | silent | Jagged-Scar Archers's power and toughness are each equal to the number of Elves you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Kinsbaile Balloonist | silent | Whenever this creature attacks, you may have target creature gain flying until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Kithkin Greatheart | silent | As long as you control a Giant, this creature gets +1/+1 and has first strike. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Kithkin Mourncaller | silent | Whenever an attacking Kithkin or Elf is put into your graveyard from the battlefield, you may draw a card. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Lammastide Weave | silent | Choose a card name, then target player mills a card. If a card with the chosen name was milled this way, you gain life equal to its mana value. Draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Lash Out | silent | Lash Out deals 3 damage to target creature. Clash with an opponent. If you win, Lash Out deals 3 damage to that creature's controller. (Each clashing player rev | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Liliana Vess | silent | −8: Put all creature cards from all graveyards onto the battlefield under your control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -75,7 +73,6 @@
 | Oblivion Ring | silent | When this enchantment leaves the battlefield, return the exiled card to the battlefield under its owner's control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Paperfin Rascal | silent | When this creature enters, clash with an opponent. If you win, put a +1/+1 counter on this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Pollen Lullaby | silent | Prevent all combat damage that would be dealt this turn. Clash with an opponent. If you win, creatures that player controls don't untap during the player's next | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Prowess of the Fair | silent | Whenever another nontoken Elf is put into your graveyard from the battlefield, you may create a 1/1 green Elf Warrior creature token. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Quill-Slinger Boggart | silent | Whenever a player casts a Kithkin spell, you may have target player lose 1 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Rebellion of the Flamekin | silent | Whenever you clash, you may pay {1}. If you do, create a 3/1 red Elemental Shaman creature token. If you won, that token gains haste until end of turn. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Rings of Brighthearth | silent | Whenever you activate an ability, if it isn't a mana ability, you may pay {2}. If you do, copy that ability. You may choose new targets for the copy. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -114,22 +111,11 @@
 | Makeshift Mannequin | notice | Return target creature card from your graveyard to the battlefield with a mannequin counter on it. For as long as that creature has a mannequin counter on it, i | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Nameless Inversion | notice | Changeling (This card is every creature type.) Target creature gets +3/-3 and loses all creature types until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Warren Pilferers | notice | When this creature enters, return target creature card from your graveyard to your hand. If that card is a Goblin card, this creature gains haste until end of t | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Dolmen Gate | unaudited | Prevent all combat damage that would be dealt to attacking creatures you control. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Doran, the Siege Tower | unaudited | Each creature assigns combat damage equal to its toughness rather than its power. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Ethereal Whiskergill | unaudited | This creature can't attack unless defending player controls an Island. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Favor of the Mighty | unaudited | Each creature with the greatest mana value has protection from each color. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Gaddock Teeg | unaudited | Noncreature spells with mana value 4 or greater can't be cast. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Guile | unaudited | This creature can't be blocked except by three or more creatures. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Hostility | unaudited | If a spell you control would deal damage to an opponent, prevent that damage. Create a 3/1 red Elemental Shaman creature token with haste for each 1 damage prev | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Lairwatch Giant | unaudited | This creature can block an additional creature each combat. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Nettlevine Blight | unaudited | Enchanted permanent has "At the beginning of your end step, sacrifice this permanent and attach Nettlevine Blight to a creature or land you control." | a static ability no support check audits - not verified either way | Y/-/- | partial |
+| Guile | unaudited | If a spell or ability you control would counter a spell, instead exile that spell and you may play that card without paying its mana cost. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Protective Bubble | unaudited | Enchanted creature can't be blocked and has shroud. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Vigor | unaudited | If damage would be dealt to another creature you control, prevent that damage. Put a +1/+1 counter on that creature for each 1 damage prevented this way. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Vivid Crag | unaudited | This land enters tapped with two charge counters on it. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Vivid Creek | unaudited | This land enters tapped with two charge counters on it. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Vivid Grove | unaudited | This land enters tapped with two charge counters on it. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Vivid Marsh | unaudited | This land enters tapped with two charge counters on it. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Vivid Meadow | unaudited | This land enters tapped with two charge counters on it. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Aethersnipe | handled | When this creature enters, return target nonland permanent to its owner's hand. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ajani Goldmane | handled | +1: You gain 2 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ancient Amphitheater | handled | As this land enters, you may reveal a Giant card from your hand. If you don't, this land enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -206,6 +192,7 @@
 | Kithkin Daggerdare | handled | {G}, {T}: Target attacking creature gets +2/+2 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Kithkin Harbinger | handled | When this creature enters, you may search your library for a Kithkin card, reveal it, then shuffle and put that card on top. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Kithkin Healer | handled | {T}: Prevent the next 1 damage that would be dealt to any target this turn. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Kithkin Mourncaller | handled | Whenever an attacking Kithkin or Elf is put into your graveyard from the battlefield, you may draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Knight of Meadowgrain | handled | Lifelink | machines/combat.py | Y/-/- | not_tested |
 | Knucklebone Witch | handled | Whenever a Goblin you control is put into a graveyard from the battlefield, you may put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Lace with Moonglove | handled | Target creature gains deathtouch until end of turn. (Any amount of damage it deals to a creature is enough to destroy that creature.) Draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -225,12 +212,14 @@
 | Neck Snap | handled | Destroy target attacking or blocking creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Nectar Faerie | handled | {B}, {T}: Target Faerie or Elf gains lifelink until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Needle Drop | handled | Needle Drop deals 1 damage to any target that was dealt damage this turn. Draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Nettlevine Blight | handled | Enchanted permanent has "At the beginning of your end step, sacrifice this permanent and attach Nettlevine Blight to a creature or land you control." | the engine reads this text and performs it | Y/-/- | not_tested |
 | Nightshade Stinger | handled | This creature can't block. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Oakgnarl Warrior | handled | Vigilance | machines/combat.py | Y/-/- | not_tested |
 | Pestermite | handled | When this creature enters, you may tap or untap target permanent. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Plover Knights | handled | Flying | machines/combat.py | Y/-/- | not_tested |
 | Primal Command | handled | Choose two — • Target player gains 7 life. • Put target noncreature permanent on top of its owner's library. • Target player shuffles their graveyard into their | the engine reads this text and performs it | Y/-/- | not_tested |
 | Profane Command | handled | Choose two — • Target player loses X life. • Return target creature card with mana value X or less from your graveyard to the battlefield. • Target creature get | the engine reads this text and performs it | Y/-/- | not_tested |
+| Prowess of the Fair | handled | Whenever another nontoken Elf is put into your graveyard from the battlefield, you may create a 1/1 green Elf Warrior creature token. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Rootgrapple | handled | Destroy target noncreature permanent. If you control a Treefolk, draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Scarred Vinebreeder | handled | {2}{B}, Exile an Elf card from your graveyard: This creature gets +3/+3 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Scion of Oona | handled | Other Faerie creatures you control get +1/+1. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -272,11 +261,12 @@
 ## Fully supported
 
 <details>
-<summary>38 cards</summary>
+<summary>49 cards</summary>
 
 - Amoeboid Changeling
 - Aquitect's Will
 - Arbiter of Knollridge
+- Ashling's Prerogative
 - Battle Mastery
 - Ceaseless Searblades
 - Cenn's Heir
@@ -284,15 +274,19 @@
 - Crib Swap
 - Crush Underfoot
 - Cryptic Command
+- Dolmen Gate
+- Ethereal Whiskergill
 - Fire-Belly Changeling
 - Fodder Launch
 - Giant's Ire
 - Gilt-Leaf Palace
 - Goldmeadow Dodger
 - Goldmeadow Harrier
+- Hostility
 - Immaculate Magistrate
 - Jace Beleren
 - Kinsbaile Skirmisher
+- Lairwatch Giant
 - Lignify
 - Mirror Entity
 - Mosswort Bridge
@@ -310,6 +304,12 @@
 - Thoughtseize
 - Thousand-Year Elixir
 - Thundercloud Shaman
+- Vigor
+- Vivid Crag
+- Vivid Creek
+- Vivid Grove
+- Vivid Marsh
+- Vivid Meadow
 - Warren-Scourge Elf
 - Wings of Velis Vel
 
@@ -321,12 +321,12 @@
 |---|---|---|---|
 | champion | 8 | Boggart Mob, Changeling Berserker, Changeling Hero, Changeling Titan, Nova Chaser | lrw |
 | when ~ enters, clash with an opponent. if you win, put a +N/+N counter on ~. | 5 | Adder-Staff Boggart, Bog Hoodlums, Nath's Elite, Oaken Brawler, Paperfin Rascal | lrw |
-| ~ enters tapped with two charge counters on it. | 5 | Vivid Crag, Vivid Creek, Vivid Grove, Vivid Marsh, Vivid Meadow | lrw |
 | clash | 2 | Fistful of Force, Whirlpool Whelm | lrw |
 | as long as a creature card with flying is in a graveyard, ~ has flying. the same is true for fear, first strike, double strike, deathtouch, haste, landwalk, lif | 1 | Cairn Wanderer | lrw |
 | as long as you control a faerie, ~ gets +N/+N and has flying. | 1 | Boggart Sprite-Chaser | lrw |
 | as long as you control a giant, ~ gets +N/+N and has first strike. | 1 | Kithkin Greatheart | lrw |
 | at the beginning of combat on your turn, you may clash with an opponent. if you win, ~ gets +N/+N and loses defender until end of turn. | 1 | Sentry Oak | lrw |
+| at the beginning of the end step, if three or more cards have been exiled with ~, sacrifice it. if you do, return those cards to the battlefield under their own | 1 | Colfenor's Urn | lrw |
 | at the beginning of your end step, clash with an opponent. if you win, gain control of enchanted creature. otherwise, that player gains control of enchanted cre | 1 | Captivating Glance | lrw |
 | at the beginning of your end step, untap all merfolk you control. | 1 | Merrow Commerce | lrw |
 | at the beginning of your upkeep, you may have target opponent discard a card at random. | 1 | Nath of the Gilt-Leaf | lrw |
@@ -342,17 +342,13 @@
 | destroy target creature. clash with an opponent. if you win, you gain life equal to that creature's toughness. (each clashing player reveals the top card of the | 1 | Weed Strangle | lrw |
 | destroy target enchantment. clash with an opponent. if you win, destroy all enchantments your opponents control. (each clashing player reveals the top card of t | 1 | Spring Cleaning | lrw |
 | each creature assigns combat damage equal to its toughness rather than its power. | 1 | Doran, the Siege Tower | lrw |
-| each creature with mana value of the chosen quality has haste. | 1 | Ashling's Prerogative | lrw |
 | each creature with the greatest mana value has protection from each color. | 1 | Favor of the Mighty | lrw |
 | enchanted creature can't be blocked and has shroud. | 1 | Protective Bubble | lrw |
-| enchanted permanent has "..." | 1 | Nettlevine Blight | lrw |
 | equipped creature gets +N/+N and is every creature type. | 1 | Runed Stalactite | lrw |
 | goblins you control and elementals you control have menace. | 1 | Caterwauling Boggart | lrw |
-| if a spell you control would deal damage to an opponent, prevent that damage. create a N/N red elemental shaman creature token with haste for each N damage prev | 1 | Hostility | lrw |
-| if damage would be dealt to another creature you control, prevent that damage. put a +N/+N counter on that creature for each N damage prevented ~. | 1 | Vigor | lrw |
+| if a spell or ability you control would counter a spell, instead exile that spell and you may play that card without paying its mana cost. | 1 | Guile | lrw |
 | noncreature spells with mana value N or greater can't be cast. | 1 | Gaddock Teeg | lrw |
 | other giant creatures you control get +N/+N and have trample. | 1 | Sunrise Sovereign | lrw |
-| prevent all combat damage that would be dealt to attacking creatures you control. | 1 | Dolmen Gate | lrw |
 | prevent all combat damage that would be dealt ~. clash with an opponent. if you win, creatures that player controls don"..."s next untap step. (each clashing pl | 1 | Pollen Lullaby | lrw |
 | put a +N/+N counter on target creature, two +N/+N counters on another target creature, and three +N/+N counters on a third target creature. | 1 | Incremental Growth | lrw |
 | regenerate target creature. you gain life equal to that creature's toughness. | 1 | Heal the Scars | lrw |
@@ -370,10 +366,7 @@
 | when ~ enters, up to two target creatures can't block ~. | 1 | Glarewielder | lrw |
 | when ~ leaves the battlefield, return the exiled card to the battlefield under its owner's control. | 1 | Oblivion Ring | lrw |
 | whenever a creature deals damage to you, destroy it. | 1 | Dread | lrw |
-| whenever a creature with toughness N or greater is put into your graveyard from the battlefield, you may exile it. | 1 | Colfenor's Urn | lrw |
 | whenever a player casts a kithkin spell, you may have target player lose N life. | 1 | Quill-Slinger Boggart | lrw |
-| whenever an attacking kithkin or elf is put into your graveyard from the battlefield, you may draw a card. | 1 | Kithkin Mourncaller | lrw |
-| whenever another nontoken elf is put into your graveyard from the battlefield, you may create a N/N green elf warrior creature token. | 1 | Prowess of the Fair | lrw |
 | whenever equipped creature dies, you may put a creature card from your hand onto the battlefield and attach ~ to it. | 1 | Deathrender | lrw |
 | whenever you activate an ability, if it isn't a mana ability, you may pay {M}. if you do, copy that ability. you may choose new targets for the copy. | 1 | Rings of Brighthearth | lrw |
 | whenever you cast a spell during an opponent's turn, you may have each opponent lose N life. | 1 | Faerie Tauntings | lrw |
@@ -400,9 +393,6 @@
 | {M}{M}: put a +N/+N counter on ashling. if ~ the third time ~ has resolved ~, remove all +N/+N counters from ashling, and it deals that much damage to each crea | 1 | Ashling the Pilgrim | lrw |
 | {M}{M}: switch ~ power and toughness until end of turn. | 1 | Turtleshell Changeling | lrw |
 | {M}{M}{M}{M}{M}: you may play target elemental card from your graveyard without paying its mana cost. | 1 | Horde of Notions | lrw |
-| ~ can block an additional creature each combat. | 1 | Lairwatch Giant | lrw |
-| ~ can't attack unless defending player controls an island. | 1 | Ethereal Whiskergill | lrw |
-| ~ can't be blocked except by three or more creatures. | 1 | Guile | lrw |
 | ~ deals N damage to target creature. clash with an opponent. if you win, ~ deals N damage to that creature's controller. (each clashing player reveals the top c | 1 | Lash Out | lrw |
 | ~'s power and toughness are each equal to the number of elves you control. | 1 | Jagged-Scar Archers | lrw |
 | ~'s power and toughness are each equal to the number of forests you control plus the number of treefolk you control. | 1 | Dauntless Dourbark | lrw |

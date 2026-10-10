@@ -17,9 +17,9 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 13 | 13.3% |
-| Works (untested) | 57 | 58.2% |
-| Partial (unaudited) | 4 | 4.1% |
+| Tested | 15 | 15.3% |
+| Works (untested) | 58 | 59.2% |
+| Partial (unaudited) | 1 | 1.0% |
 | Not working | 24 | 24.5% |
 
 ## Cards needing work
@@ -50,10 +50,7 @@
 | Vengeful Pharaoh | silent | Whenever combat damage is dealt to you or a planeswalker you control, if this card is in your graveyard, destroy target attacking creature, then put this card o | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Visions of Beyond | silent | Draw a card. If a graveyard has twenty or more cards in it, draw three cards instead. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Primordial Hydra | notice | This creature has trample as long as it has ten or more +1/+1 counters on it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Garruk's Horde | unaudited | Play with the top card of your library revealed. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Grand Abolisher | unaudited | During your turn, your opponents can't cast spells or activate abilities of artifacts, creatures, or enchantments. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Personal Sanctuary | unaudited | During your turn, prevent all damage that would be dealt to you. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Skywinder Drake | unaudited | This creature can block only creatures with flying. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Alabaster Mage | handled | {1}{W}: Target creature you control gains lifelink until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Amphin Cutthroat | handled |  |  | Y/-/- | not_tested |
 | Armored Warhorse | handled |  |  | Y/-/- | not_tested |
@@ -76,6 +73,7 @@
 | Drifting Shade | handled | {B}: This creature gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Duskhunter Bat | handled | Flying | machines/combat.py | Y/-/- | not_tested |
 | Furyborn Hellkite | handled | Flying | machines/combat.py | Y/-/- | not_tested |
+| Garruk's Horde | handled | Play with the top card of your library revealed. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Garruk, Primal Hunter | handled | +1: Create a 3/3 green Beast creature token. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Gideon's Avenger | handled | Whenever a creature an opponent controls becomes tapped, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Gideon's Lawkeeper | handled | {W}, {T}: Tap target creature. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -115,7 +113,7 @@
 ## Fully supported
 
 <details>
-<summary>13 cards</summary>
+<summary>15 cards</summary>
 
 - Aegis Angel
 - Crown of Empires
@@ -124,8 +122,10 @@
 - Gladecover Scout
 - Gorehorn Minotaurs
 - Hunter's Insight
+- Personal Sanctuary
 - Phantasmal Image
 - Scepter of Empires
+- Skywinder Drake
 - Sundial of the Infinite
 - Throne of Empires
 - Turn to Frog
@@ -141,13 +141,11 @@
 | at the beginning of the end step, if enchanted creature's power is N or greater, destroy ~. | 1 | Arachnus Web | m12 |
 | destroy target land. creatures without flying can't block ~. | 1 | Tectonic Rift | m12 |
 | draw a card. if a graveyard has twenty or more cards in it, draw three cards instead. | 1 | Visions of Beyond | m12 |
-| during your turn, prevent all damage that would be dealt to you. | 1 | Personal Sanctuary | m12 |
 | during your turn, your opponents can't cast spells or activate abilities of artifacts, creatures, or enchantments. | 1 | Grand Abolisher | m12 |
 | for each creature you control, you may search your library for a creature card with the same name as that creature. put those cards onto the battlefield, then s | 1 | Doubling Chant | m12 |
 | for each nonland permanent, choose a player at random. then each player gains control of each permanent for which they were chosen. untap those permanents. | 1 | Scrambleverse | m12 |
 | if you have less life than an opponent, you gain N life. if you control fewer creatures than an opponent, create three N/N white soldier creature tokens. | 1 | Timely Reinforcements | m12 |
 | illusion creatures you control get +N/+N and have hexproof. | 1 | Lord of the Unreal | m12 |
-| play with the top card of your library revealed. | 1 | Garruk's Horde | m12 |
 | tap an untapped spider you control: search your graveyard and/or library for a card named arachnus web and put it onto the battlefield attached to target creatu | 1 | Arachnus Spinner | m12 |
 | target player chooses a card in their hand and discards the rest. | 1 | Monomania | m12 |
 | when enchanted creature dies, return ~ to its owner's hand. | 1 | Angelic Destiny | m12 |
@@ -161,7 +159,6 @@
 | {M}: choose one. activate only once each turn. | 1 | Skinshifter | m12 |
 | {M}: flip a coin. if you win the flip, ~ deals N damage to any target. if you lose the flip, ~ deals N damage to itself. | 1 | Goblin Bangchuckers | m12 |
 | {M}{M}, {M}: ~ deals N damage to target attacking or blocking creature. ~ doesn't untap during your next untap step. | 1 | Arbalest Elite | m12 |
-| ~ can block only creatures with flying. | 1 | Skywinder Drake | m12 |
 | ~ has trample as long as it has ten or more +N/+N counters on it. | 1 | Primordial Hydra | m12 |
 | ~ is the chosen type in addition to its other types. | 1 | Adaptive Automaton | m12 |
 | −N: any number of target players each draw twenty cards. | 1 | Jace, Memory Adept | m12 |

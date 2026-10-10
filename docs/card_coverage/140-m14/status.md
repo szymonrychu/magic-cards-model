@@ -17,9 +17,9 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 7 | 6.2% |
-| Works (untested) | 64 | 56.6% |
-| Partial (unaudited) | 8 | 7.1% |
+| Tested | 12 | 10.6% |
+| Works (untested) | 62 | 54.9% |
+| Partial (unaudited) | 5 | 4.4% |
 | Not working | 34 | 30.1% |
 
 ## Cards needing work
@@ -63,14 +63,10 @@
 | Awaken the Ancient | unaudited | Enchanted Mountain is a 7/7 red Giant creature with haste. It's still a land. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Fiendslayer Paladin | unaudited | This creature can't be the target of black or red spells your opponents control. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Manaweft Sliver | unaudited | Sliver creatures you control have "{T}: Add one mana of any color." | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Marauding Maulhorn | unaudited | This creature attacks each combat if able unless you control a creature named Advocate of the Beast. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Pyromancer's Gauntlet | unaudited | If a red instant or sorcery spell you control or a red planeswalker you control would deal damage to a permanent or player, it deals that much damage plus 2 to  | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Shadowborn Apostle | unaudited | A deck can have any number of cards named Shadowborn Apostle. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Thorncaster Sliver | unaudited | Sliver creatures you control have "Whenever this creature attacks, it deals 1 damage to any target." | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Warden of Evos Isle | unaudited | Creature spells with flying you cast cost {1} less to cast. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Academy Raider | handled | Whenever this creature deals combat damage to a player, you may discard a card. If you do, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Accursed Spirit | handled | Intimidate | machines/keywords.py | Y/Y/- | not_tested |
-| Advocate of the Beast | handled | At the beginning of your end step, put a +1/+1 counter on target Beast creature you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Archangel of Thune | handled | Whenever you gain life, put a +1/+1 counter on each creature you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Banisher Priest | handled | When this creature enters, exile target creature an opponent controls until this creature leaves the battlefield. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Barrage of Expendables | handled | {R}, Sacrifice a creature: This enchantment deals 1 damage to any target. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -126,7 +122,6 @@
 | Undead Minotaur | handled |  |  | Y/Y/- | not_tested |
 | Vampire Warlord | handled | Sacrifice another creature: Regenerate this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Vial of Poison | handled | {1}, Sacrifice this artifact: Target creature gains deathtouch until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Voracious Wurm | handled | This creature enters with X +1/+1 counters on it, where X is the amount of life you've gained this turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Windreader Sphinx | handled | Whenever a creature with flying attacks, you may draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Witchstalker | handled | Whenever an opponent casts a blue or black spell during your turn, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Xathrid Necromancer | handled | Whenever this creature or another Human creature you control dies, create a tapped 2/2 black Zombie creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -136,15 +131,20 @@
 ## Fully supported
 
 <details>
-<summary>7 cards</summary>
+<summary>12 cards</summary>
 
+- Advocate of the Beast
 - Angelic Accord
 - Elvish Mystic
 - Grim Return
 - Kalonian Hydra
+- Marauding Maulhorn
 - Path of Bravery
+- Pyromancer's Gauntlet
 - Shadowborn Demon
 - Sliver Construct
+- Voracious Wurm
+- Warden of Evos Isle
 
 </details>
 
@@ -157,11 +157,9 @@
 | as long as you control eight or more lands, ~ gets +N/+N and has trample. | 1 | Woodborn Behemoth | m14 |
 | at the beginning of your upkeep, if enchanted equipment is attached to a creature, destroy that creature. | 1 | Artificer's Hex | m14 |
 | create two N/N red elemental creature tokens, then flip a coin. if you win the flip, return ~ to its owner's hand. | 1 | Molten Birth | m14 |
-| creature spells with flying you cast cost {M} less to cast. | 1 | Warden of Evos Isle | m14 |
 | creatures without flying can't block ~. | 1 | Seismic Stomp | m14 |
 | each creature your opponents control is an illusion in addition to its other types and has "..." | 1 | Dismiss into Dream | m14 |
 | enchanted mountain is a N/N red giant creature with haste. it's still a land. | 1 | Awaken the Ancient | m14 |
-| if a red instant or sorcery spell you control or a red planeswalker you control would deal damage to a permanent or player, it deals that much damage plus N to  | 1 | Pyromancer's Gauntlet | m14 |
 | put all creature cards from all graveyards onto the battlefield under your control. | 1 | Rise of the Dark Realms | m14 |
 | sliver creatures you control have double strike. | 1 | Bonescythe Sliver | m14 |
 | sliver creatures you control have first strike. | 1 | Striking Sliver | m14 |
@@ -189,7 +187,6 @@
 | {M}: each creature attacks ~ if able. | 1 | Goblin Diplomats | m14 |
 | {M}: exile target card from a graveyard. if it was a creature card, put a +N/+N counter on ~ and you gain N life. | 1 | Scavenging Ooze | m14 |
 | {M}: until end of turn, ~ becomes a N/N spirit artifact creature that's no longer an equipment. activate only if you control no creatures. | 1 | Haunted Plate Mail | m14 |
-| ~ attacks each combat if able unless you control a creature named advocate of the beast. | 1 | Marauding Maulhorn | m14 |
 | ~ can"..."t be countered. that creature enters with an additional +N/+N counter on it. | 1 | Savage Summoning | m14 |
 | ~ can't be the target of black or red spells your opponents control. | 1 | Fiendslayer Paladin | m14 |
 | −N: exile the top ten cards of your library. choose an instant or sorcery card exiled ~ and copy it three times. you may cast the copies without paying their ma | 1 | Chandra, Pyromaster | m14 |

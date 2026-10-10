@@ -17,9 +17,9 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 36 | 15.1% |
+| Tested | 39 | 16.3% |
 | Works (untested) | 139 | 58.2% |
-| Partial (unaudited) | 9 | 3.8% |
+| Partial (unaudited) | 6 | 2.5% |
 | Not working | 55 | 23.0% |
 
 ## Cards needing work
@@ -84,12 +84,9 @@
 | Gruul Spellbreaker | unaudited | During your turn, you and this creature have hexproof. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | High Alert | unaudited | Each creature you control assigns combat damage equal to its toughness rather than its power. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Lavinia, Azorius Renegade | unaudited | Each opponent can't cast noncreature spells with mana value greater than the number of lands that player controls. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Lawmage's Binding | unaudited | Enchanted creature can't attack or block, and its activated abilities can't be activated. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Nikya of the Old Ways | unaudited | You can't cast noncreature spells. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Persistent Petitioners | unaudited | A deck can have any number of cards named Persistent Petitioners. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Rubblebelt Runner | unaudited | This creature can't be blocked by creature tokens. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Teysa Karlov | unaudited | If a creature dying causes a triggered ability of a permanent you control to trigger, that ability triggers an additional time. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Theater of Horrors | unaudited | During your turn, if an opponent lost life this turn, you may play lands and cast spells from among cards exiled with this enchantment. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Aeromunculus | handled | {2}{G}{U}: Adapt 1. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Angelic Exaltation | handled | Whenever a creature you control attacks alone, it gets +X/+X until end of turn, where X is the number of creatures you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Applied Biomancy | handled | Choose one or both — • Target creature gets +1/+1 until end of turn. • Return target creature to its owner's hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -233,7 +230,7 @@
 ## Fully supported
 
 <details>
-<summary>36 cards</summary>
+<summary>39 cards</summary>
 
 - Angel of Grace
 - Awaken the Erstwhile
@@ -253,6 +250,7 @@
 - Hydroid Krasis
 - Immolation Shaman
 - Incubation // Incongruity
+- Lawmage's Binding
 - Light Up the Stage
 - Prime Speaker Vannifar
 - Rafter Demon
@@ -260,6 +258,7 @@
 - Rally to Battle
 - Repudiate // Replicate
 - Rix Maadi Reveler
+- Rubblebelt Runner
 - Sagittars' Volley
 - Sentinel's Mark
 - Shimmer of Possibility
@@ -267,6 +266,7 @@
 - Skewer the Critics
 - Sphinx of the Guildpact
 - Spire Mangler
+- Theater of Horrors
 - Unbreakable Formation
 - Verity Circle
 - Zegana, Utopian Speaker
@@ -290,12 +290,10 @@
 | destroy all artifacts and enchantments. for each permanent destroyed ~, its controller creates a N/N green centaur creature token. | 1 | Rampage of the Clans | rna |
 | destroy all creatures. you gain life equal to the number of creatures you controlled that were destroyed ~. | 1 | Kaya's Wrath | rna |
 | distribute three +N/+N counters among one, two, or three target creatures, then double the number of +N/+N counters on each of those creatures. | 1 | Biogenic Upgrade | rna |
-| during your turn, if an opponent lost life ~, you may play lands and cast spells from among cards exiled with ~. | 1 | Theater of Horrors | rna |
 | during your turn, you and ~ have hexproof. | 1 | Gruul Spellbreaker | rna |
 | each creature you control assigns combat damage equal to its toughness rather than its power. | 1 | High Alert | rna |
 | each opponent can't cast noncreature spells with mana value greater than the number of lands that player controls. | 1 | Lavinia, Azorius Renegade | rna |
 | each player shuffles their hand and graveyard into their library, then draws seven cards. exile ~. addendum — if you cast ~ during your main phase, you may put  | 1 | Emergency Powers | rna |
-| enchanted creature can"..."t be activated. | 1 | Lawmage's Binding | rna |
 | enchanted creature has defender and loses flying. | 1 | Sky Tether | rna |
 | gain control of N target creatures and/or planeswalkers. | 1 | Mass Manipulation | rna |
 | if a creature dying causes a triggered ability of a permanent you control to trigger, that ability triggers an additional time. | 1 | Teysa Karlov | rna |
@@ -330,7 +328,6 @@
 | {M}{M}, {M}: ~, each creature you control enters with an additional +N/+N counter on it. | 1 | Combine Guildmage | rna |
 | {M}{M}: adapt N. ~ costs {M} less to activate for each instant and sorcery card in your graveyard. | 1 | Pteramander | rna |
 | {M}{M}: exchange control of ~ and target nonland permanent. activate only as a sorcery. | 1 | Eyes Everywhere | rna |
-| ~ can't be blocked by creature tokens. | 1 | Rubblebelt Runner | rna |
 | −N: tap all permanents target opponent controls. that player skips their next untap step. | 1 | Dovin, Architect of Law | rna |
 
 ## Notes

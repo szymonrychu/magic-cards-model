@@ -17,9 +17,9 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 29 | 16.3% |
-| Works (untested) | 94 | 52.8% |
-| Partial (unaudited) | 10 | 5.6% |
+| Tested | 35 | 19.7% |
+| Works (untested) | 93 | 52.2% |
+| Partial (unaudited) | 5 | 2.8% |
 | Not working | 45 | 25.3% |
 
 ## Cards needing work
@@ -72,15 +72,10 @@
 | Storm Fleet Swashbuckler | notice | This creature has double strike as long as you have the city's blessing. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Tilonalli's Summoner | notice | Whenever this creature attacks, you may pay {X}{R}. If you do, create X 1/1 red Elemental creature tokens that are tapped and attacking. At the beginning of the | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Blood Sun | unaudited | All lands lose all abilities except mana abilities. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Charging Tuskodon | unaudited | If this creature would deal combat damage to a player, it deals double that damage to that player instead. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Oathsworn Vampire | unaudited | You may cast this card from your graveyard if you gained life this turn. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Protean Raider | unaudited | Raid — If you attacked this turn, you may have this creature enter as a copy of any creature on the battlefield. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Relentless Raptor | unaudited | This creature attacks or blocks each combat if able. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Slippery Scoundrel | unaudited | As long as you have the city's blessing, this creature has hexproof and can't be blocked. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Swaggering Corsair | unaudited | Raid — This creature enters with a +1/+1 counter on it if you attacked this turn. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Temple Altisaur | unaudited | If a source would deal damage to another Dinosaur you control, prevent all but 1 of that damage. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | The Immortal Sun | unaudited | Players can't activate planeswalkers' loyalty abilities. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Wayward Swordtooth | unaudited | This creature can't attack or block unless you have the city's blessing. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Angrath's Fury | handled | Destroy target creature. Angrath's Fury deals 3 damage to target player or planeswalker. You may search your library and/or graveyard for a card named Angrath,  | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Aquatic Incursion | handled | When this enchantment enters, create two 1/1 blue Merfolk creature tokens with hexproof. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Arterial Flow | handled | Each opponent discards two cards. If you control a Vampire, each opponent loses 2 life and you gain 2 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -132,7 +127,6 @@
 | Moment of Craving | handled | Target creature gets -2/-2 until end of turn. You gain 2 life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Moment of Triumph | handled | Target creature gets +2/+2 until end of turn. You gain 2 life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Nezahal, Primal Tide | handled | This spell can't be countered. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Orazca Frillback | handled |  |  | Y/Y/- | not_tested |
 | Orazca Raptor | handled |  |  | Y/Y/- | not_tested |
 | Overgrown Armasaur | handled | Enrage — Whenever this creature is dealt damage, create a 1/1 green Saproling creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Path of Discovery | handled | Whenever a creature you control enters, it explores. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -179,9 +173,10 @@
 ## Fully supported
 
 <details>
-<summary>29 cards</summary>
+<summary>35 cards</summary>
 
 - Arch of Orazca
+- Charging Tuskodon
 - Crafty Cutpurse
 - Curious Obsession
 - Dire Fleet Daredevil
@@ -195,6 +190,8 @@
 - Mausoleum Harpy
 - Mutiny
 - Needletooth Raptor
+- Oathsworn Vampire
+- Orazca Frillback
 - Orazca Relic
 - Paladin of Atonement
 - Path of Mettle // Metzali, Tower of Triumph
@@ -208,8 +205,11 @@
 - Stampeding Horncrest
 - Sun-Collared Raptor
 - Swab Goblin
+- Swaggering Corsair
+- Temple Altisaur
 - Tilonalli's Crown
 - Vraska, Scheming Gorgon
+- Wayward Swordtooth
 
 </details>
 
@@ -217,8 +217,8 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| Raid | 3 | Admiral's Order, Protean Raider, Swaggering Corsair | rix |
 | ~ gets +N/+N as long as you have the city's blessing. | 3 | Dusk Charger, Snubhorn Sentry, Spire Winder | rix |
+| Raid | 2 | Admiral's Order, Protean Raider | rix |
 | +N: put a loyalty counter on huatli for each creature you control. | 1 | Huatli, Radiant Champion | rix |
 | all lands lose all abilities except mana abilities. | 1 | Blood Sun | rix |
 | as long as you have the city"..."t be blocked. | 1 | Slippery Scoundrel | rix |
@@ -236,8 +236,6 @@
 | equipped creature gets +N/+N, has menace, and is a pirate in addition to its other creature types. | 1 | Captain's Hook | rix |
 | exile target creature with power greater than or equal to your life total. | 1 | Blazing Hope | rix |
 | for each land you control, create a treasure token. (it's an artifact with "...") | 1 | Brass's Bounty | rix |
-| if a source would deal damage to another dinosaur you control, prevent all but N of that damage. | 1 | Temple Altisaur | rix |
-| if ~ would deal combat damage to a player, it deals double that damage to that player instead. | 1 | Charging Tuskodon | rix |
 | players can"..." loyalty abilities. | 1 | The Immortal Sun | rix |
 | saprolings you control get +N/+N as long as you have the city's blessing. | 1 | Tendershoot Dryad | rix |
 | when azor enters, each opponent can"..."s next turn. | 1 | Azor, the Lawbringer | rix |
@@ -252,13 +250,11 @@
 | whenever ~ attacks, target vampire gets +N/+N until end of turn, where N is the power of the exiled card. | 1 | Bishop of Binding | rix |
 | whenever ~ attacks, you may pay {M}{M}. if you do, create N N/N red elemental creature tokens that are tapped and attacking. at the beginning of the next end st | 1 | Tilonalli's Summoner | rix |
 | whenever ~ deals damage to a dinosaur, destroy that creature. | 1 | Dinosaur Hunter | rix |
-| you may cast ~ from your graveyard if you gained life ~. | 1 | Oathsworn Vampire | rix |
 | {M}, {M}: draw a card, then exile a card from your hand. if cards with five or more different mana values are exiled with ~, you gain N life, untap ~, and trans | 1 | Azor's Gateway // Sanctum of the Sun | rix |
 | {M}, {M}: exile ~ and all cards from all graveyards. draw a card. | 1 | Silent Gravestone | rix |
 | {M}: ~ fights another target creature you control. when ~ dies ~, return it to the battlefield transformed under your control. | 1 | Golden Guardian // Gold-Forge Garrison | rix |
 | {M}{M}{M}: exile target creature. then if there are three or more cards exiled with ~, transform it. | 1 | Profane Procession // Tomb of the Dusk Rose | rix |
 | ~ attacks or blocks each combat if able. | 1 | Relentless Raptor | rix |
-| ~ can"..."s blessing. | 1 | Wayward Swordtooth | rix |
 | ~ gets +N/+N as long as it's attacking. | 1 | Grasping Scoundrel | rix |
 | ~ gets +N/+N as long as you control an angrath planeswalker. | 1 | Angrath's Ambusher | rix |
 | ~ has double strike as long as you have the city's blessing. | 1 | Storm Fleet Swashbuckler | rix |

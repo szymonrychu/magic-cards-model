@@ -17,9 +17,9 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 4 | 20.0% |
+| Tested | 5 | 25.0% |
 | Works (untested) | 11 | 55.0% |
-| Partial (unaudited) | 2 | 10.0% |
+| Partial (unaudited) | 1 | 5.0% |
 | Not working | 3 | 15.0% |
 
 ## Cards needing work
@@ -29,8 +29,7 @@
 | Mana Clash | silent | You and target opponent each flip a coin. Mana Clash deals 1 damage to each player whose coin comes up tails. Repeat this process until both players' coins come | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Safe Haven | notice | At the beginning of your upkeep, you may sacrifice this land. If you do, return each card exiled with this land to the battlefield under its owner's control. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | War Barge | notice | {3}: Target creature gains islandwalk until end of turn. When this artifact leaves the battlefield this turn, destroy that creature. A creature destroyed this w | unparsed remainder: When this artifact leaves the battlefield this turn, destroy that creature. A creature destroyed this way can't be regenerated. | Y/-/- | not_working |
-| Leviathan | unaudited | This creature enters tapped and doesn't untap during your untap step. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Uncle Istvan | unaudited | Prevent all damage that would be dealt to this creature by creatures. | a static ability no support check audits - not verified either way | Y/-/- | partial |
+| Leviathan | unaudited | This creature can't attack unless you sacrifice two Islands. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Bog Imp | handled | Flying | machines/combat.py | Y/-/- | not_tested |
 | Dark Heart of the Wood | handled | Sacrifice a Forest: You gain 3 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Elves of Deep Shadow | handled |  |  | Y/-/- | not_tested |
@@ -46,12 +45,13 @@
 ## Fully supported
 
 <details>
-<summary>4 cards</summary>
+<summary>5 cards</summary>
 
 - Ball Lightning
 - Blood Moon
 - Inferno
 - Tormod's Crypt
+- Uncle Istvan
 
 </details>
 
@@ -60,10 +60,9 @@
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
 | at the beginning of your upkeep, you may sacrifice ~. if you do, return each card exiled with ~ to the battlefield under its owner's control. | 1 | Safe Haven | drk |
-| prevent all damage that would be dealt to ~ by creatures. | 1 | Uncle Istvan | drk |
 | you and target opponent each flip a coin. ~ deals N damage to each player whose coin comes up tails. repeat ~ until both players' coins come up heads on the sam | 1 | Mana Clash | drk |
 | {M}: target creature gains islandwalk until end of turn. when ~ leaves the battlefield ~, destroy that creature. a creature destroyed ~ can't be regenerated. | 1 | War Barge | drk |
-| ~ enters tapped and doesn't untap during your untap step. | 1 | Leviathan | drk |
+| ~ can't attack unless you sacrifice two islands. | 1 | Leviathan | drk |
 
 ## Notes
 

@@ -17,9 +17,9 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 12 | 11.2% |
+| Tested | 13 | 12.1% |
 | Works (untested) | 58 | 54.2% |
-| Partial (unaudited) | 2 | 1.9% |
+| Partial (unaudited) | 1 | 0.9% |
 | Not working | 35 | 32.7% |
 
 ## Cards needing work
@@ -62,7 +62,6 @@
 | Timberpack Wolf | notice | This creature gets +1/+1 for each other creature you control named Timberpack Wolf. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Xathrid Gorgon | notice | {2}{B}, {T}: Put a petrification counter on target creature. It gains defender and becomes a colorless artifact in addition to its other types. Its activated ab | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Encrust | unaudited | Enchanted permanent doesn't untap during its controller's untap step and its activated abilities can't be activated. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Yeva, Nature's Herald | unaudited | You may cast green creature spells as though they had flash. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Ajani's Sunstriker | handled | Lifelink | machines/combat.py | Y/-/- | not_tested |
 | Ajani, Caller of the Pride | handled | +1: Put a +1/+1 counter on up to one target creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Archaeomancer | handled | When this creature enters, return target instant or sorcery card from your graveyard to your hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -125,7 +124,7 @@
 ## Fully supported
 
 <details>
-<summary>12 cards</summary>
+<summary>13 cards</summary>
 
 - Augur of Bolas
 - Chandra's Fury
@@ -139,6 +138,7 @@
 - Thundermaw Hellkite
 - Touch of the Eternal
 - Worldfire
+- Yeva, Nature's Herald
 
 </details>
 
@@ -165,7 +165,6 @@
 | whenever a creature attacks you or a planeswalker you control, that creature's controller loses N life. | 1 | Blood Reckoning | m13 |
 | whenever nefarox attacks alone, defending player sacrifices a creature of their choice. | 1 | Nefarox, Overlord of Grixis | m13 |
 | whenever odric and at least three other creatures attack, you choose which creatures block ~ and how those creatures block. | 1 | Odric, Master Tactician | m13 |
-| you may cast green creature spells as though they had flash. | 1 | Yeva, Nature's Herald | m13 |
 | {M}, {M}, sacrifice ~: search your library for an island card, a swamp card, and a mountain card. reveal those cards, put them into your hand, then shuffle. | 1 | Gem of Becoming | m13 |
 | {M}: regenerate equipped creature. | 1 | Ring of Xathrid | m13 |
 | {M}{M}, {M}: put a petrification counter on target creature. it gains defender and becomes a colorless artifact in addition to its other types. its activated ab | 1 | Xathrid Gorgon | m13 |

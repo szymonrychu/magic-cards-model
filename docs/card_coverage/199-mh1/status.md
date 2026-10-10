@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 34 | 16.2% |
-| Works (untested) | 101 | 48.1% |
-| Partial (unaudited) | 15 | 7.1% |
-| Not working | 60 | 28.6% |
+| Tested | 38 | 18.1% |
+| Works (untested) | 102 | 48.6% |
+| Partial (unaudited) | 11 | 5.2% |
+| Not working | 59 | 28.1% |
 
 ## Cards needing work
 
@@ -54,7 +54,6 @@
 | Recruit the Worthy | silent | Buyback | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Rotwidow Pack | silent | {3}{B}{G}, Exile a creature card from your graveyard: Create a 1/2 green Spider creature token with reach, then each opponent loses 1 life for each Spider you c | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Scale Up | silent | Overload | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Scrapyard Recombiner | silent | Modular | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Silumgar Scavenger | silent | Exploit | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Smoke Shroud | silent | When a Ninja you control enters, you may return this card from your graveyard to the battlefield attached to that creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Spinehorn Minotaur | silent | As long as you've drawn two or more cards this turn, this creature has double strike. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -90,16 +89,12 @@
 | Dregscape Sliver | unaudited | Each Sliver creature card in your graveyard has unearth {2}. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Enduring Sliver | unaudited | Other Sliver creatures you control have outlast {2}. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | First Sliver's Chosen | unaudited | Sliver creatures you control have exalted. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Force of Virtue | unaudited | If it's not your turn, you may exile a white card from your hand rather than pay this spell's mana cost. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Hogaak, Arisen Necropolis | unaudited | You can't spend mana to cast this spell. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Hollowhead Sliver | unaudited | Sliver creatures you control have "{T}, Discard a card: Draw a card." | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Lavabelly Sliver | unaudited | Sliver creatures you control have "When this creature enters, it deals 1 damage to target player or planeswalker and you gain 1 life." | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Mirrodin Besieged | unaudited | As this enchantment enters, choose Mirran or Phyrexian. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Scuttling Sliver | unaudited | Sliver creatures you control have "{2}: Untap this creature." | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Spiteful Sliver | unaudited | Sliver creatures you control have "Whenever this creature is dealt damage, it deals that much damage to target player or planeswalker." | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Tectonic Reformation | unaudited | Each land card in your hand has cycling {R}. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Tempered Sliver | unaudited | Sliver creatures you control have "Whenever this creature deals combat damage to a player, put a +1/+1 counter on it." | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Valiant Changeling | unaudited | This spell costs {1} less to cast for each creature type among creatures you control. This effect can't reduce the amount of mana this spell costs by more than  | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Winter's Rest | unaudited | As long as you control another snow permanent, enchanted creature doesn't untap during its controller's untap step. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Alpine Guide | handled | When this creature enters, you may search your library for a Mountain card, put that card onto the battlefield tapped, then shuffle. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Arcum's Astrolabe | handled | When this artifact enters, draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -171,6 +166,7 @@
 | Ruination Rioter | handled | When this creature dies, you may have it deal damage to any target equal to the number of land cards in your graveyard. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Sadistic Obsession | handled | Enchanted creature has "{B}, {T}: Put a -1/-1 counter on target creature." | the engine reads this text and performs it | Y/-/- | not_tested |
 | Scour All Possibilities | handled | Scry 2, then draw a card. Flashback {4}{U} (You may cast this card from your graveyard for its flashback cost. Then exile it.) | the engine reads this text and performs it | Y/-/- | not_tested |
+| Scrapyard Recombiner | handled | {T}, Sacrifice an artifact: Search your library for a Construct card, reveal it, put it into your hand, then shuffle. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Segovian Angel | handled | Flying | machines/combat.py | Y/-/- | not_tested |
 | Serra the Benevolent | handled | +2: Creatures you control with flying get +1/+1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Settle Beyond Reality | handled | Choose one or both — • Exile target creature you don't control. • Exile target creature you control, then return it to the battlefield under its owner's control | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -206,7 +202,7 @@
 ## Fully supported
 
 <details>
-<summary>34 cards</summary>
+<summary>38 cards</summary>
 
 - Changeling Outcast
 - Collector Ouphe
@@ -218,12 +214,15 @@
 - Force of Despair
 - Force of Negation
 - Force of Vigor
+- Force of Virtue
 - Giver of Runes
 - Glacial Revelation
 - Goblin Engineer
+- Hogaak, Arisen Necropolis
 - Icehide Golem
 - Kess, Dissident Mage
 - Martyr's Soul
+- Mirrodin Besieged
 - Nurturing Peatland
 - Pondering Mage
 - Pyrophobia
@@ -237,6 +236,7 @@
 - Talisman of Curiosity
 - Talisman of Resilience
 - The First Sliver
+- Valiant Changeling
 - Watcher for Tomorrow
 - Windcaller Aven
 - Wrenn and Six
@@ -259,7 +259,6 @@
 | as long as you control another snow permanent, enchanted creature doesn"..."s untap step. | 1 | Winter's Rest | mh1 |
 | as long as you had another creature enter the battlefield under your control ~, ~ has trample and indestructible. | 1 | Bellowing Elk | mh1 |
 | as long as you've drawn two or more cards ~, ~ has double strike. | 1 | Spinehorn Minotaur | mh1 |
-| as ~ enters, choose mirran or phyrexian. | 1 | Mirrodin Besieged | mh1 |
 | at the beginning of your first main phase, you may sacrifice a creature. when you do, choose a nonland card name, then target player reveals their hand and disc | 1 | Cabal Therapist | mh1 |
 | attacking creatures you control get +N/+N. | 1 | Goblin Oriflamme | mh1 |
 | buyback | 1 | Recruit the Worthy | mh1 |
@@ -275,8 +274,6 @@
 | exile the top six cards of your library. you may cast up to two sorcery spells with mana value N or less from among them without paying their mana costs. put th | 1 | Collected Conjuring | mh1 |
 | exploit | 1 | Silumgar Scavenger | mh1 |
 | gain control of target creature until end of turn. untap that creature. it gains haste until end of turn. if that creature is a goat, it also gets +N/+N until e | 1 | Goatnap | mh1 |
-| if it's not your turn, you may exile a white card from your hand rather than pay ~ mana cost. | 1 | Force of Virtue | mh1 |
-| modular | 1 | Scrapyard Recombiner | mh1 |
 | other creatures you control of the chosen type get +N/+N. | 1 | Morophon, the Boundless | mh1 |
 | other sliver creatures you control have outlast {M}. | 1 | Enduring Sliver | mh1 |
 | protection | 1 | Hexdrinker | mh1 |
@@ -303,12 +300,10 @@
 | whenever you cycle ~ or cycle another card while ~ is on the battlefield, you may exile target creature. if you do, return that card to the battlefield under it | 1 | Astral Drift | mh1 |
 | whenever ~ deals combat damage to a creature, tap that creature and it doesn"..."s next untap step. | 1 | Frostwalk Bastion | mh1 |
 | whenever ~ deals combat damage to a player, that player exiles the top two cards of their library. until end of turn, you may play those cards without paying th | 1 | Fallen Shinobi | mh1 |
-| you can't spend mana to cast ~. | 1 | Hogaak, Arisen Necropolis | mh1 |
 | {M}: shuffle your library, then exile the top card. until end of turn, you may play that card without paying its mana cost. | 1 | Urza, Lord High Artificer | mh1 |
 | {M}: ~ can attack ~ as though it didn't have defender. | 1 | Wall of One Thousand Cuts | mh1 |
 | {M}{M}, exile ~ from your graveyard: search your library for a card named ~, reveal it, put it into your hand, then shuffle. | 1 | Trustworthy Scout | mh1 |
 | {M}{M}{M}, exile a creature card from your graveyard: create a N/N green spider creature token with reach, then each opponent loses N life for each spider you c | 1 | Rotwidow Pack | mh1 |
-| ~ costs {M} less to cast for each creature type among creatures you control. ~ can't reduce the amount of mana ~ costs by more than {M}. | 1 | Valiant Changeling | mh1 |
 | ~ costs {M} less to cast if there is a land card in your graveyard. | 1 | Igneous Elemental | mh1 |
 | ~ gets +N/+N as long as there is a land card in your graveyard. | 1 | Murasa Behemoth | mh1 |
 | ~ gets +N/+N as long as you had another creature enter the battlefield under your control ~. | 1 | Saddled Rimestag | mh1 |

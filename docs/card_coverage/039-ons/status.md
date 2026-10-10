@@ -18,8 +18,8 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 19 | 32.8% |
-| Works (untested) | 32 | 55.2% |
-| Partial (unaudited) | 2 | 3.4% |
+| Works (untested) | 33 | 56.9% |
+| Partial (unaudited) | 1 | 1.7% |
 | Not working | 5 | 8.6% |
 
 ## Cards needing work
@@ -32,7 +32,6 @@
 | Patriarch's Bidding | silent | Each player chooses a creature type. Each player returns all creature cards of a type chosen this way from their graveyard to the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sea's Claim | silent | Enchanted land is an Island. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Cover of Darkness | unaudited | Creatures of the chosen type have fear. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Future Sight | unaudited | Play with the top card of your library revealed. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Arcanis the Omnipotent | handled | {T}: Draw three cards. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Barren Moor | handled | This land enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Crafty Pathmage | handled | {T}: Target creature with power 2 or less can't be blocked this turn. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -46,6 +45,7 @@
 | Explosive Vegetation | handled | Search your library for up to two basic land cards, put them onto the battlefield tapped, then shuffle. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Festering Goblin | handled | When this creature dies, target creature gets -1/-1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Forgotten Cave | handled | This land enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Future Sight | handled | Play with the top card of your library revealed. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Glory Seeker | handled |  |  | Y/Y/- | not_tested |
 | Gluttonous Zombie | handled | Fear | machines/keywords.py | Y/-/- | not_tested |
 | Goblin Sky Raider | handled | Flying | machines/combat.py | Y/-/- | not_tested |
@@ -100,7 +100,6 @@
 | creatures of the chosen type have fear. | 1 | Cover of Darkness | ons |
 | each player chooses a creature type. each player returns all creature cards of a type chosen ~ from their graveyard to the battlefield. | 1 | Patriarch's Bidding | ons |
 | enchanted land is an island. | 1 | Sea's Claim | ons |
-| play with the top card of your library revealed. | 1 | Future Sight | ons |
 | soldier creatures have vigilance. | 1 | Mobilization | ons |
 | target opponent puts the cards from their hand on top of their library. search that player's library for that many cards. the player puts those cards into their | 1 | Head Games | ons |
 | target player reveals three cards from their hand and you choose one of them. that player discards that card. | 1 | Blackmail | ons |

@@ -17,9 +17,9 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 31 | 13.0% |
+| Tested | 40 | 16.7% |
 | Works (untested) | 144 | 60.3% |
-| Partial (unaudited) | 14 | 5.9% |
+| Partial (unaudited) | 5 | 2.1% |
 | Not working | 50 | 20.9% |
 
 ## Cards needing work
@@ -76,19 +76,10 @@
 | Scourge of Geier Reach | notice | This creature gets +1/+1 for each creature your opponents control. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Sever the Bloodline | notice | Exile target creature and all other creatures with the same name as that creature. Flashback {5}{B}{B} (You may cast this card from your graveyard for its flash | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Tribute to Hunger | notice | Target opponent sacrifices a creature of their choice. You gain life equal to that creature's toughness. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Curse of the Nightly Hunt | unaudited | Creatures enchanted player controls attack each combat if able. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Dearly Departed | unaudited | As long as this creature is in your graveyard, each Human creature you control enters with an additional +1/+1 counter on it. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Essence of the Wild | unaudited | Creatures you control enter as a copy of this creature. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Ghostly Possession | unaudited | Prevent all combat damage that would be dealt to and dealt by enchanted creature. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Grimgrin, Corpse-Born | unaudited | Grimgrin enters tapped and doesn't untap during your untap step. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Inquisitor's Flail | unaudited | If equipped creature would deal combat damage, it deals double that damage instead. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Laboratory Maniac | unaudited | If you would draw a card while your library has no cards in it, you win the game instead. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Nevermore | unaudited | Spells with the chosen name can't be cast. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Orchard Spirit | unaudited | This creature can't be blocked except by creatures with flying or reach. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Rooftop Storm | unaudited | You may pay {0} rather than pay the mana cost for Zombie creature spells you cast. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Silver-Inlaid Dagger | unaudited | As long as equipped creature is a Human, it gets an additional +1/+0. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Skaab Ruinator | unaudited | You may cast this card from your graveyard. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Unbreathing Horde | unaudited | This creature enters with a +1/+1 counter on it for each other Zombie you control and each Zombie card in your graveyard. | a static ability no support check audits - not verified either way | Y/-/- | partial |
+| Unbreathing Horde | unaudited | If this creature would be dealt damage, prevent that damage and remove a +1/+1 counter from it. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Wreath of Geists | unaudited | Enchanted creature gets +X/+X, where X is the number of creature cards in your graveyard. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Abattoir Ghoul | handled | Whenever a creature dealt damage by this creature this turn dies, you gain life equal to that creature's toughness. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Abbey Griffin | handled | Flying | machines/combat.py | Y/-/- | not_tested |
@@ -238,7 +229,7 @@
 ## Fully supported
 
 <details>
-<summary>31 cards</summary>
+<summary>40 cards</summary>
 
 - Ambush Viper
 - Army of the Damned
@@ -251,20 +242,29 @@
 - Claustrophobia
 - Cloistered Youth // Unholy Fiend
 - Curse of Oblivion
+- Curse of the Nightly Hunt
+- Dearly Departed
 - Delver of Secrets // Insectile Aberration
 - Disciple of Griselbrand
 - Elder Cathar
 - Festerhide Boar
 - Forbidden Alchemy
+- Ghostly Possession
 - Grave Bramble
+- Grimgrin, Corpse-Born
+- Inquisitor's Flail
 - Intangible Virtue
+- Laboratory Maniac
 - Liliana of the Veil
 - Ludevic's Test Subject // Ludevic's Abomination
 - Manor Skeleton
 - Moonmist
+- Orchard Spirit
 - Parallel Lives
 - Past in Flames
 - Prey Upon
+- Rooftop Storm
+- Skaab Ruinator
 - Slayer of the Wicked
 - Snapcaster Mage
 - Stony Silence
@@ -283,14 +283,12 @@
 | as long as equipped creature is a human, it gets +N/+N. | 1 | Sharpened Pitchfork | isd |
 | as long as equipped creature is a human, it gets an additional +N/+N. | 1 | Silver-Inlaid Dagger | isd |
 | as long as equipped creature is a human, it has lifelink. | 1 | Butcher's Cleaver | isd |
-| as long as ~ is in your graveyard, each human creature you control enters with an additional +N/+N counter on it. | 1 | Dearly Departed | isd |
 | at the beginning of enchanted player's upkeep, ~ deals N damage to that player or a planeswalker that player controls. | 1 | Curse of the Pierced Heart | isd |
 | at the beginning of your end step, if ~ didn't attack ~, tap ~, then transform it. | 1 | Civilized Scholar // Homicidal Brute | isd |
 | at the beginning of your upkeep, return an instant or sorcery card at random from your graveyard to your hand. | 1 | Charmbreaker Devils | isd |
 | attacking creatures you control get +N/+N. | 1 | Instigator Gang // Wildblood Pack | isd |
 | choose a permanent type. return all cards of the chosen type from your graveyard to your hand. flashback {M}{M}{M} (you may cast ~ from your graveyard for its f | 1 | Creeping Renaissance | isd |
 | counter target spell unless its controller pays {M}. that player discards a card. | 1 | Frightful Delusion | isd |
-| creatures enchanted player controls attack each combat if able. | 1 | Curse of the Nightly Hunt | isd |
 | creatures enchanted player controls get -N/-N. | 1 | Curse of Death's Hold | isd |
 | creatures with flying your opponents control get -N/-N. | 1 | One-Eyed Scarecrow | isd |
 | creatures you control enter as a copy of ~. | 1 | Essence of the Wild | isd |
@@ -304,10 +302,7 @@
 | equipped creature has first strike and gets +N/+N, where N is the number of instant and sorcery cards in your graveyard. | 1 | Runechanter's Pike | isd |
 | exile target creature and all other creatures with the same name as that creature. flashback {M}{M}{M} (you may cast ~ from your graveyard for its flashback cos | 1 | Sever the Bloodline | isd |
 | first strike, vigilance protection from vampires, from werewolves, and from zombies | 1 | Elite Inquisitor | isd |
-| grimgrin enters tapped and doesn't untap during your untap step. | 1 | Grimgrin, Corpse-Born | isd |
-| if equipped creature would deal combat damage, it deals double that damage instead. | 1 | Inquisitor's Flail | isd |
-| if you would draw a card while your library has no cards in it, you win the game instead. | 1 | Laboratory Maniac | isd |
-| prevent all combat damage that would be dealt to and dealt by enchanted creature. | 1 | Ghostly Possession | isd |
+| if ~ would be dealt damage, prevent that damage and remove a +N/+N counter from it. | 1 | Unbreathing Horde | isd |
 | return target exiled card with flashback you own to your hand. | 1 | Runic Repetition | isd |
 | return two cards at random from your graveyard to your hand. | 1 | Make a Wish | isd |
 | search your library for a basic land card, reveal it, put it into your hand, then shuffle. morbid — you may put that card onto the battlefield instead of puttin | 1 | Caravan Vigil | isd |
@@ -328,8 +323,6 @@
 | whenever ~ attacks or blocks, other humans you control get +N/+N until end of turn. | 1 | Hamlet Captain | isd |
 | whenever ~ attacks, create a N/N green wolf creature token that's tapped and attacking for each creature card in your graveyard. | 1 | Kessig Cagebreakers | isd |
 | whenever ~ deals combat damage to a creature, flip a coin. if you win the flip, destroy that creature. | 1 | Creepy Doll | isd |
-| you may cast ~ from your graveyard. | 1 | Skaab Ruinator | isd |
-| you may pay {M} rather than pay the mana cost for zombie creature spells you cast. | 1 | Rooftop Storm | isd |
 | {M}, remove three study counters from ~ and sacrifice it: put all creature cards from all graveyards onto the battlefield under your control. they're black zomb | 1 | Grimoire of the Dead | isd |
 | {M}, {M}: target player puts the bottom card of their library into their graveyard. if it's a creature card, you create a N/N black zombie creature token. | 1 | Cellar Door | isd |
 | {M}: exchange your life total with ~ toughness. | 1 | Tree of Redemption | isd |
@@ -337,8 +330,6 @@
 | {M}: until end of turn, ~ loses defender and gains flying. | 1 | Manor Gargoyle | isd |
 | {M}{M}: choose any target, then mill three cards. ~ deals damage to that permanent or player equal to the greatest mana value among the milled cards. | 1 | Heretic's Punishment | isd |
 | {M}{M}: ~ owner shuffles it into their library. if that player does, they reveal cards from the top of that library until a card named ~ is revealed. the player | 1 | Mirror-Mad Phantasm | isd |
-| ~ can't be blocked except by creatures with flying or reach. | 1 | Orchard Spirit | isd |
-| ~ enters with a +N/+N counter on it for each other zombie you control and each zombie card in your graveyard. | 1 | Unbreathing Horde | isd |
 | ~ gets +N/+N for each creature your opponents control. | 1 | Scourge of Geier Reach | isd |
 | ~ has haste as long as an opponent controls a human. | 1 | Night Revelers | isd |
 | ~'s power and toughness are each equal to the number of cards in your hand. | 1 | Sturmgeist | isd |

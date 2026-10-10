@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 24 | 9.2% |
-| Works (untested) | 174 | 66.7% |
-| Partial (unaudited) | 10 | 3.8% |
-| Not working | 53 | 20.3% |
+| Tested | 29 | 11.1% |
+| Works (untested) | 176 | 67.4% |
+| Partial (unaudited) | 4 | 1.5% |
+| Not working | 52 | 19.9% |
 
 ## Cards needing work
 
@@ -51,7 +51,6 @@
 | Invasive Surgery | silent | Counter target sorcery spell. Delirium — If there are four or more card types among cards in your graveyard, search the graveyard, hand, and library of that spe | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Kessig Dire Swine | silent | Delirium — This creature has trample as long as there are four or more card types among cards in your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Liliana's Indignation | silent | Mill X cards. Target player loses 2 life for each creature card put into your graveyard this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Manic Scribe | silent | When this creature enters, each opponent mills three cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Moldgraf Scavenger | silent | Delirium — This creature gets +3/+0 as long as there are four or more card types among cards in your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Moorland Drifter | silent | Delirium — This creature has flying as long as there are four or more card types among cards in your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Neglected Heirloom // Ashmouth Blade | silent | When equipped creature transforms, transform this Equipment. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
@@ -81,14 +80,8 @@
 | Triskaidekaphobia | notice | At the beginning of your upkeep, choose one — • Each player with exactly 13 life loses the game, then each player gains 1 life. • Each player with exactly 13 li | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Bound by Moonsilver | unaudited | Enchanted creature can't attack, block, or transform. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Falkenrath Gorger | unaudited | Each Vampire creature card you own that isn't on the battlefield has madness. The madness cost is equal to its mana cost. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Goldnight Castigator | unaudited | If a source would deal damage to you, it deals double that damage to you instead. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Lambholt Pacifist // Lambholt Butcher | unaudited | This creature can't attack unless you control a creature with power 4 or greater. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Rattlechains | unaudited | You may cast Spirit spells as though they had flash. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Sigarda, Heron's Grace | unaudited | You and Humans you control have hexproof. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Silburlind Snapper | unaudited | This creature can't attack unless you've cast a noncreature spell this turn. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | True-Faith Censer | unaudited | As long as equipped creature is a Human, it gets an additional +1/+0. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Watcher in the Web | unaudited | This creature can block an additional seven creatures each combat. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Weirding Wood | unaudited | Enchanted land has "{T}: Add two mana of any one color." | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Aberrant Researcher // Perfected Form | handled | At the beginning of your upkeep, mill a card. If an instant or sorcery card was milled this way, transform this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Aim High | handled | Untap target creature. It gets +2/+2 and gains reach until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Alms of the Vein | handled | Target opponent loses 3 life and you gain 3 life. Madness {B} (If you discard this card, discard it into exile. When you do, cast it for its madness cost or put | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -176,6 +169,7 @@
 | Lamplighter of Selhoff | handled | When this creature enters, if you control another Zombie, you may draw a card. If you do, discard a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Loam Dryad | handled |  |  | Y/Y/- | not_tested |
 | Magnifying Glass | handled | {4}, {T}: Investigate. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Manic Scribe | handled | When this creature enters, each opponent mills three cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Markov Dreadknight | handled | {2}{B}, Discard a card: Put two +1/+1 counters on this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Merciless Resolve | handled | As an additional cost to cast this spell, sacrifice a creature or land. Draw two cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Might Beyond Reason | handled | Put two +1/+1 counters on target creature. Delirium — Put three +1/+1 counters on that creature instead if there are four or more card types among cards in your | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -259,6 +253,7 @@
 | Village Messenger // Moonrise Intruder | handled | At the beginning of each upkeep, if no spells were cast last turn, transform this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Voldaren Duelist | handled | When this creature enters, target creature can't block this turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Warped Landscape | handled | {2}, {T}, Sacrifice this land: Search your library for a basic land card, put it onto the battlefield tapped, then shuffle. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Weirding Wood | handled | When this Aura enters, investigate. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Westvale Abbey // Ormendahl, Profane Prince | handled | {5}, {T}, Pay 1 life: Create a 1/1 white and black Human Cleric creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Wicker Witch | handled |  |  | Y/Y/- | not_tested |
 | Wild-Field Scarecrow | handled | {2}, Sacrifice this creature: Search your library for up to two basic land cards, reveal them, put them into your hand, then shuffle. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -267,7 +262,7 @@
 ## Fully supported
 
 <details>
-<summary>24 cards</summary>
+<summary>29 cards</summary>
 
 - Always Watching
 - Archangel Avacyn // Avacyn, the Purifier
@@ -281,18 +276,23 @@
 - Dual Shot
 - Duskwatch Recruiter // Krallenhorde Howler
 - Fevered Visions
+- Goldnight Castigator
 - Gryff's Boon
+- Lambholt Pacifist // Lambholt Butcher
 - Moonlight Hunt
 - Nahiri, the Harbinger
 - Odric, Lunarch Marshal
 - Port Town
 - Prized Amalgam
 - Rabid Bite
+- Rattlechains
+- Silburlind Snapper
 - Slayer's Plate
 - Tenacity
 - Thing in the Ice // Awoken Horror
 - Thraben Inspector
 - To the Slaughter
+- Watcher in the Web
 
 </details>
 
@@ -314,12 +314,10 @@
 | counter target sorcery spell. delirium — if there are four or more card types among cards in your graveyard, search the graveyard, hand, and library of that spe | 1 | Invasive Surgery | soi |
 | each vampire creature card you own that isn't on the battlefield has madness. the madness cost is equal to its mana cost. | 1 | Falkenrath Gorger | soi |
 | enchanted creature can't attack, block, or transform. | 1 | Bound by Moonsilver | soi |
-| enchanted land has "..." | 1 | Weirding Wood | soi |
 | exile target creature and all other creatures its controller controls with the same name as that creature. that player investigates for each nontoken creature e | 1 | Declaration in Stone | soi |
 | exile target creature you control, then return that card to the battlefield under its owner"..."s a spirit, put a +N/+N counter on it. | 1 | Essence Flux | soi |
 | for each token you control, create a token that's a copy of that permanent. | 1 | Second Harvest | soi |
 | gain control of target creature until end of turn. untap that creature. it gets +N/+N and gains haste until end of turn. madness {M}{M} (if you discard ~, disca | 1 | Malevolent Whispers | soi |
-| if a source would deal damage to you, it deals double that damage to you instead. | 1 | Goldnight Castigator | soi |
 | madness {M}{M} (if you discard ~, discard it into exile. when you do, cast it for its madness cost or put it into your graveyard.) ~ deals N damage divided as y | 1 | Avacyn's Judgment | soi |
 | madness {M}{M}{M} (if you discard ~, discard it into exile. when you do, cast it for its madness cost or put it into your graveyard.) create three tapped N/N bl | 1 | From Under the Floorboards | soi |
 | madness {M}{M}{M} (if you discard ~, discard it into exile. when you do, cast it for its madness cost or put it into your graveyard.) gain control of target cre | 1 | Welcome to the Fold | soi |
@@ -335,7 +333,6 @@
 | when enchanted creature dies, return ~ to the battlefield transformed under your control. | 1 | Skin Invasion // Skin Shedder | soi |
 | when equipped creature transforms, transform ~. | 1 | Neglected Heirloom // Ashmouth Blade | soi |
 | when ~ dies, return it to the battlefield transformed under your control attached to target opponent. | 1 | Accursed Witch // Infectious Curse | soi |
-| when ~ enters, each opponent mills three cards. | 1 | Manic Scribe | soi |
 | whenever a permanent you control transforms into a non-human creature, create a N/N green wolf creature token. | 1 | Cult of the Waxing Moon | soi |
 | whenever a source an opponent controls deals damage to you or a permanent you control, you may have ~ deal N damage to that source's controller. | 1 | Flameblade Angel | soi |
 | whenever a werewolf you control enters, you may transform it. | 1 | Geier Reach Bandit // Vildin-Pack Alpha | soi |
@@ -345,15 +342,11 @@
 | whenever ~ attacks and isn't blocked, you may pay {M}{M}. if you do, transform it. | 1 | Elusive Tormentor // Insidious Mist | soi |
 | whenever ~ attacks, you may pay {M}{M} and discard a card. if you do, ~ deals damage to target creature or planeswalker equal to the discarded card's mana value | 1 | Wolf of Devil's Breach | soi |
 | you and humans you control have hexproof. | 1 | Sigarda, Heron's Grace | soi |
-| you may cast spirit spells as though they had flash. | 1 | Rattlechains | soi |
 | you may have ~ enter as a copy of any creature on the battlefield, except it enters with N additional +N/+N counters on it. | 1 | Altered Ego | soi |
 | {M}, {M}: put a charge counter on ~, then you may cast an instant or sorcery spell with mana value equal to the number of charge counters on ~ from your hand wi | 1 | Brain in a Jar | soi |
 | {M}: choose a color of a card in your graveyard. add one mana of that color. | 1 | Corrupted Grafstone | soi |
 | {M}{M}, sacrifice ~: reveal the top four cards of your library. you may put an artifact, creature, enchantment, land, or planeswalker card from among them into  | 1 | Vessel of Nascency | soi |
 | {M}{M}{M}: put ~ from your graveyard onto the battlefield transformed. activate only as a sorcery. | 1 | Startled Awake // Persistent Nightmare | soi |
-| ~ can block an additional seven creatures each combat. | 1 | Watcher in the Web | soi |
-| ~ can"..."ve cast a noncreature spell ~. | 1 | Silburlind Snapper | soi |
-| ~ can't attack unless you control a creature with power N or greater. | 1 | Lambholt Pacifist // Lambholt Butcher | soi |
 | ~ gets -N/-N for each card in your hand. | 1 | Geralf's Masterpiece | soi |
 | ~'s power and toughness are each equal to the number of cards in your hand. | 1 | Sage of Ancient Lore // Werewolf of Ancient Hunger | soi |
 

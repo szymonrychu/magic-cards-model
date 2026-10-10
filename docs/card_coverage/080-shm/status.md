@@ -17,9 +17,9 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 35 | 12.8% |
-| Works (untested) | 124 | 45.3% |
-| Partial (unaudited) | 12 | 4.4% |
+| Tested | 43 | 15.7% |
+| Works (untested) | 123 | 44.9% |
+| Partial (unaudited) | 5 | 1.8% |
 | Not working | 103 | 37.6% |
 
 ## Cards needing work
@@ -129,18 +129,11 @@
 | Watchwing Scarecrow | notice | This creature has vigilance as long as you control a white creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Wicker Warcrawler | notice | Whenever this creature attacks or blocks, put a -1/-1 counter on it at end of combat. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Wingrattle Scarecrow | notice | This creature has flying as long as you control a blue creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Bloodshed Fever | unaudited | Enchanted creature attacks each combat if able. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Everlasting Torment | unaudited | All damage is dealt as though its source had wither. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Gloomwidow | unaudited | This creature can block only creatures with flying. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Godhead of Awe | unaudited | Other creatures have base power and toughness 1/1. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Greater Auramancy | unaudited | Other enchantments you control have shroud. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Kulrath Knight | unaudited | Creatures your opponents control with counters on them can't attack or block. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Mossbridge Troll | unaudited | If this creature would be destroyed, regenerate it. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Resplendent Mentor | unaudited | White creatures you control have "{T}: You gain 1 life." | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Runed Halo | unaudited | You have protection from the chosen card name. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Swans of Bryn Argoll | unaudited | If a source would deal damage to this creature, prevent that damage. The source's controller draws cards equal to the damage prevented this way. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Wheel of Sun and Moon | unaudited | If a card would be put into enchanted player's graveyard from anywhere, instead that card is revealed and put on the bottom of that player's library. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Whimwader | unaudited | This creature can't attack unless defending player controls a blue permanent. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Aethertow | handled | Put target attacking or blocking creature on top of its owner's library. Conspire (As you cast this spell, you may tap two untapped creatures you control that s | the engine reads this text and performs it | Y/-/- | not_tested |
 | Apothecary Initiate | handled | Whenever a player casts a white spell, you may pay {1}. If you do, you gain 1 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ashenmoor Gouger | handled | This creature can't block. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -264,14 +257,14 @@
 | Windbrisk Raptor | handled | Attacking creatures you control have lifelink. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Wooded Bastion | handled |  |  | Y/-/- | not_tested |
 | Woodfall Primus | handled | When this creature enters, destroy target noncreature permanent. | the engine reads this text and performs it | Y/-/- | not_tested |
-| Zealous Guardian | handled | Flash | machines/casting.py (timing) | Y/-/- | not_tested |
 
 ## Fully supported
 
 <details>
-<summary>35 cards</summary>
+<summary>43 cards</summary>
 
 - Beseech the Queen
+- Bloodshed Fever
 - Blowfly Infestation
 - Boggart Ram-Gang
 - Boon Reflection
@@ -284,13 +277,16 @@
 - Ember Gale
 - Faerie Macabre
 - Firespout
+- Gloomwidow
 - Hollowborn Barghest
 - Illuminated Folio
 - Jaws of Stone
 - Kitchen Finks
+- Kulrath Knight
 - Manamorphose
 - Mirrorweave
 - Mistveil Plains
+- Mossbridge Troll
 - Mystic Gate
 - Rite of Consumption
 - Rosheen Meanderer
@@ -299,13 +295,17 @@
 - Smash to Smithereens
 - Spectral Procession
 - Sunken Ruins
+- Swans of Bryn Argoll
 - Sygg, River Cutthroat
 - Tatterkite
 - Thought Reflection
 - Tower Above
 - Traitor's Roar
 - Umbral Mantle
+- Wheel of Sun and Moon
+- Whimwader
 - Wort, the Raidmother
+- Zealous Guardian
 
 </details>
 
@@ -333,20 +333,15 @@
 | counter target spell. search its controller's graveyard, hand, and library for all cards with the same name as that spell and exile them. then that player shuff | 1 | Counterbore | shm |
 | create a N/N black and red elemental creature token. target opponent sacrifices a creature of their choice for each black creature you control, then sacrifices  | 1 | Din of the Fireherd | shm |
 | create two N/N white kithkin soldier creature tokens if {M} was spent to cast ~. counter up to one target creature spell if {M} was spent to cast ~. (do both if | 1 | Repel Intruders | shm |
-| creatures your opponents control with counters on them can't attack or block. | 1 | Kulrath Knight | shm |
 | destroy all artifacts and enchantments. you gain N life for each permanent destroyed ~. | 1 | Fracturing Gust | shm |
 | destroy all auras and equipment attached to target creature. | 1 | Strip Bare | shm |
 | destroy all nonwhite creatures. | 1 | Mass Calcify | shm |
 | destroy target creature with flying. if that creature was blue or black, create a N/N green spider creature token with reach. (it can block creatures with flyin | 1 | Gloomwidow's Feast | shm |
 | destroy target creature. if that creature was green or white, its controller discards a card. | 1 | Gloomlance | shm |
 | draw cards equal to the number of cards target opponent discarded ~. | 1 | Dream Salvage | shm |
-| enchanted creature attacks each combat if able. | 1 | Bloodshed Fever | shm |
 | enchanted creature gets +N/+N for each plains you control and has flying. | 1 | Armored Ascension | shm |
 | green creatures you control have trample. | 1 | Roughshod Mentor | shm |
-| if a card would be put into enchanted player"..."s library. | 1 | Wheel of Sun and Moon | shm |
-| if a source would deal damage to ~, prevent that damage. the source's controller draws cards equal to the damage prevented ~. | 1 | Swans of Bryn Argoll | shm |
 | if {M} was spent to cast ~, return up to one target creature to its owner's hand. if {M} was spent to cast ~, target player reveals their hand, you choose a non | 1 | River's Grasp | shm |
-| if ~ would be destroyed, regenerate it. | 1 | Mossbridge Troll | shm |
 | move all counters from target creature onto another target creature. | 1 | Fate Transfer | shm |
 | other black creatures you control get +N/+N. | 1 | Ashenmoor Liege | shm |
 | other blue creatures you control get +N/+N. | 1 | Glen Elendra Liege | shm |
@@ -410,8 +405,6 @@
 | {M}{M}{M}, {M}: for each creature token you control, create a token that's a copy of that creature. | 1 | Rhys the Redeemed | shm |
 | {M}{M}{M}, {M}: target creature gains protection from the color of its controller's choice until end of turn. | 1 | Pale Wayfarer | shm |
 | {M}{M}{M}: each unblocked creature has base power and toughness N/N until end of turn. | 1 | Inkfathom Witch | shm |
-| ~ can block only creatures with flying. | 1 | Gloomwidow | shm |
-| ~ can't attack unless defending player controls a blue permanent. | 1 | Whimwader | shm |
 | ~ gets +N/+N as long as a library has twenty or fewer cards in it. | 1 | Isleback Spawn | shm |
 | ~ gets +N/+N as long as you control another black creature. | 1 | Ashenmoor Cohort | shm |
 | ~ gets +N/+N as long as you control another blue creature. | 1 | Briarberry Cohort | shm |

@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 38 | 13.2% |
-| Works (untested) | 138 | 48.1% |
-| Partial (unaudited) | 15 | 5.2% |
-| Not working | 96 | 33.4% |
+| Tested | 45 | 15.7% |
+| Works (untested) | 139 | 48.4% |
+| Partial (unaudited) | 8 | 2.8% |
+| Not working | 95 | 33.1% |
 
 ## Cards needing work
 
@@ -63,7 +63,6 @@
 | Haunting Voyage | silent | Choose a creature type. Return up to two creature cards of that type from your graveyard to the battlefield. If this spell was foretold, return all creature car | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Icebreaker Kraken | silent | When this creature enters, artifacts and creatures target opponent controls don't untap during that player's next untap step. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | In Search of Greatness | silent | At the beginning of your upkeep, you may cast a permanent spell from your hand with mana value equal to 1 plus the greatest mana value among other permanents yo | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Inga Rune-Eyes | silent | When Inga Rune-Eyes dies, draw three cards if three or more creatures died this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Invasion of the Giants | silent | III — The next Giant spell you cast this turn costs {2} less to cast. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Jorn, God of Winter // Kaldring, the Rimestaff | silent | Whenever Jorn attacks, untap each snow permanent you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Kardur, Doomscourge | silent | When Kardur enters, until your next turn, creatures your opponents control attack each combat if able and attack a player other than you if able. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -123,17 +122,10 @@
 | Surtland Flinger | notice | Whenever this creature attacks, you may sacrifice another creature. When you do, this creature deals damage equal to the sacrificed creature's power to any targ | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Thornmantle Striker | notice | When this creature enters, choose one — • Remove X counters from target permanent, where X is the number of Elves you control. • Target creature an opponent con | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Bound in Gold | unaudited | Enchanted permanent can't attack, block, or crew Vehicles, and its activated abilities can't be activated unless they're mana abilities. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Cosmos Charger | unaudited | Foretelling cards from your hand costs {1} less and can be done on any player's turn. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Dragonkin Berserker | unaudited | Boast abilities you activate cost {1} less to activate for each Dragon you control. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Draugr Necromancer | unaudited | If a nontoken creature an opponent controls would die, exile that card with an ice counter on it instead. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Giant Ox | unaudited | This creature crews Vehicles using its toughness rather than its power. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Glittering Frost | unaudited | Enchanted land is snow. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Goldspan Dragon | unaudited | Treasures you control have "{T}, Sacrifice this artifact: Add two mana of any one color." | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Maskwood Nexus | unaudited | Creatures you control are every creature type. The same is true for creature spells you control and creature cards you own that aren't on the battlefield. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Realmwalker | unaudited | You may cast creature spells of the chosen type from the top of your library. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Reidane, God of the Worthy // Valkmira, Protector's Shield | unaudited | Snow lands your opponents control enter tapped. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Runeforge Champion | unaudited | You may pay {1} rather than pay the mana cost for Rune spells you cast. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Stalwart Valkyrie | unaudited | You may pay {1}{W} and exile a creature card from your graveyard rather than pay this spell's mana cost. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | The World Tree | unaudited | As long as you control six or more lands, lands you control have "{T}: Add one mana of any color." | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Tyvar Kell | unaudited | Elves you control have "{T}: Add {B}." | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Withercrown | unaudited | Enchanted creature has base power 0 and has "At the beginning of your upkeep, you lose 1 life unless you sacrifice this creature." | a static ability no support check audits - not verified either way | Y/Y/- | partial |
@@ -213,6 +205,7 @@
 | Immersturm Raider | handled | When this creature enters, you may discard a card. If you do, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Immersturm Skullcairn | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Infernal Pet | handled | Whenever you cast your second spell each turn, put a +1/+1 counter on this creature and it gains flying until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Inga Rune-Eyes | handled | When Inga Rune-Eyes enters, scry 3. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Iron Verdict | handled | Iron Verdict deals 5 damage to target tapped creature. Foretell {W} (During your turn, you may pay {2} and exile this card from your hand face down. Cast it on  | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Jarl of the Forsaken | handled | When this creature enters, destroy target creature or planeswalker an opponent controls that was dealt damage this turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Jaspera Sentinel | handled | Reach | machines/combat.py | Y/Y/- | not_tested |
@@ -279,7 +272,7 @@
 ## Fully supported
 
 <details>
-<summary>38 cards</summary>
+<summary>45 cards</summary>
 
 - Armed and Armored
 - Axgard Braggart
@@ -290,10 +283,13 @@
 - Blizzard Brawl
 - Cleaving Reaper
 - Codespell Cleric
+- Cosmos Charger
 - Cosmos Elixir
 - Craven Hulk
 - Darkbore Pathway // Slitherbore Pathway
 - Deathknell Berserker
+- Dragonkin Berserker
+- Draugr Necromancer
 - Dual Strike
 - Duskwielder
 - Esika's Chariot
@@ -308,12 +304,16 @@
 - Quakebringer
 - Raise the Draugr
 - Raven Wings
+- Realmwalker
+- Reidane, God of the Worthy // Valkmira, Protector's Shield
 - Righteous Valkyrie
+- Runeforge Champion
 - Saw It Coming
 - Shackles of Treachery
 - Sigrid, God-Favored
 - Skemfar Shadowsage
 - Snakeskin Veil
+- Stalwart Valkyrie
 - The Trickster-God's Heist
 - Vega, the Watcher
 - Vorinclex, Monstrous Raider
@@ -344,7 +344,6 @@
 | at the beginning of your upkeep, put a night counter on ~. then if it has eight or more night counters on it, remove all of them and create eight colorless snow | 1 | Replicating Ring | khm |
 | at the beginning of your upkeep, you may cast a permanent spell from your hand with mana value equal to N plus the greatest mana value among other permanents yo | 1 | In Search of Greatness | khm |
 | at the beginning of your upkeep, you may exile cosima. if you do, it gains "..." | 1 | Cosima, God of the Voyage // The Omenkeel | khm |
-| boast abilities you activate cost {M} less to activate for each dragon you control. | 1 | Dragonkin Berserker | khm |
 | choose a creature type. creatures that aren't of the chosen type get -N/-N until end of turn. | 1 | Crippling Fear | khm |
 | choose a creature type. return up to two creature cards of that type from your graveyard to the battlefield. if ~ was foretold, return all creature cards of tha | 1 | Haunting Voyage | khm |
 | choose a creature you control. until your next turn, all damage that would be dealt to creatures you control is dealt to that creature instead. | 1 | Ascent of the Worthy | khm |
@@ -371,8 +370,6 @@
 | equipped creature gets +N/+N for each dwarf, equipment, and/or vehicle you control. | 1 | Bearded Axe | khm |
 | exile a creature with the greatest power among creatures target opponent controls. | 1 | Fall of the Impostor | khm |
 | exile target artifact, creature, or enchantment an opponent controls. that player may put a permanent card from their hand onto the battlefield. | 1 | Divine Gambit | khm |
-| foretelling cards from your hand costs {M} less and can be done on any player's turn. | 1 | Cosmos Charger | khm |
-| if a nontoken creature an opponent controls would die, exile that card with an ice counter on it instead. | 1 | Draugr Necromancer | khm |
 | look at the top three cards of your library. put one of them into your hand and the rest on the bottom of your library in any order. as long as you control a gi | 1 | Glimpse the Cosmos | khm |
 | mill three cards, then return a land card or elf card from your graveyard to your hand. if you can't, draw a card. (to mill a card, put the top card of your lib | 1 | Roots of Wisdom | khm |
 | mill three cards. you may put an elf or tyvar card from your graveyard onto the battlefield. | 1 | Harald Unites the Elves | khm |
@@ -381,7 +378,6 @@
 | return target creature to its owner's hand. you may have shapeshifters you control become copies of that creature until end of turn. | 1 | Absorb Identity | khm |
 | search your library for a card named halvar, god of battle or an equipment card, reveal it, put it into your hand, then shuffle. | 1 | Forging the Tyrite Sword | khm |
 | search your library for a snow permanent card, a legendary card, or a saga card, reveal it, put it into your hand, then shuffle. you gain N life for each {M} sp | 1 | Search for Glory | khm |
-| snow lands your opponents control enter tapped. | 1 | Reidane, God of the Worthy // Valkmira, Protector's Shield | khm |
 | target giant you control gets +N/+N and gains trample until end of turn. whenever it deals combat damage to a player ~, exile that many cards from the top of yo | 1 | Fire Giant's Fury | khm |
 | target opponent discards two cards. if fewer than two cards were discarded ~, you draw cards equal to the difference. foretell {M}{M} (during your turn, you may | 1 | Skull Raid | khm |
 | the next giant spell you cast ~ costs {M} less to cast. | 1 | Invasion of the Giants | khm |
@@ -389,7 +385,6 @@
 | until end of turn, target creature gets +N/+N for each creature you control and gains trample. it must be blocked ~ if able. | 1 | King Harald's Revenge | khm |
 | when kardur enters, until your next turn, creatures your opponents control attack each combat if able and attack a player other than you if able. | 1 | Kardur, Doomscourge | khm |
 | when valki enters, each opponent reveals their hand. for each opponent, exile a creature card they revealed ~ until valki leaves the battlefield. | 1 | Valki, God of Lies // Tibalt, Cosmic Impostor | khm |
-| when ~ dies, draw three cards if three or more creatures died ~. | 1 | Inga Rune-Eyes | khm |
 | when ~ dies, if it was a creature, return it to the battlefield. it"..."{M}: add {M}{M}"..."{M}, {M}, sacrifice ~: create a tapped N/N green troll warrior creat | 1 | Old-Growth Troll | khm |
 | when ~ dies, it deals N damage to a creature an opponent controls chosen at random. | 1 | Cinderheart Giant | khm |
 | when ~ dies, search your library for a creature card with power or toughness N or greater, reveal it, put it into your hand, then shuffle. | 1 | Rootless Yew | khm |
@@ -422,9 +417,6 @@
 | whenever ~ attacks, you may cast an instant or sorcery spell from your hand without paying its mana cost. | 1 | Surtland Elementalist | khm |
 | whenever ~ attacks, you may sacrifice another creature. when you do, ~ deals damage equal to the sacrificed creature's power to any target. if the sacrificed cr | 1 | Surtland Flinger | khm |
 | you gain N life for each foretold card you own in exile. | 1 | Niko Defies Destiny | khm |
-| you may cast creature spells of the chosen type from the top of your library. | 1 | Realmwalker | khm |
-| you may pay {M} rather than pay the mana cost for rune spells you cast. | 1 | Runeforge Champion | khm |
-| you may pay {M}{M} and exile a creature card from your graveyard rather than pay ~ mana cost. | 1 | Stalwart Valkyrie | khm |
 | {M}, {M}, sacrifice a creature: search your library for a creature card that shares a creature type with the sacrificed creature and has mana value equal to N p | 1 | Pyre of Heroes | khm |
 | {M}, {M}: create a colorless snow artifact token named icy manalith with "..." | 1 | Svella, Ice Shaper | khm |
 | {M}, {M}: look at the top card of your library. if it's a snow card, you may reveal it and put it into your hand. | 1 | Frost Augur | khm |

@@ -17,9 +17,9 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 32 | 12.5% |
+| Tested | 40 | 15.6% |
 | Works (untested) | 138 | 53.9% |
-| Partial (unaudited) | 11 | 4.3% |
+| Partial (unaudited) | 3 | 1.2% |
 | Not working | 75 | 29.3% |
 
 ## Cards needing work
@@ -101,17 +101,9 @@
 | Portal to Phyrexia | notice | At the beginning of your upkeep, put target creature card from a graveyard onto the battlefield under your control. It's a Phyrexian in addition to its other ty | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Recommission | notice | Return target artifact or creature card with mana value 3 or less from your graveyard to the battlefield. If a creature enters this way, it enters with an addit | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Urza's Command | notice | Choose two — • Creatures you don't control get -2/-0 until end of turn. • Create a tapped Powerstone token. • Create a tapped 0/0 colorless Construct artifact c | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Argoth, Sanctum of Nature | unaudited | This land enters tapped unless you control a legendary green creature. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Fortified Beachhead | unaudited | As this land enters, you may reveal a Soldier card from your hand. This land enters tapped unless you revealed a Soldier card this way or you control a Soldier. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Liberator, Urza's Battlethopter | unaudited | You may cast colorless spells and artifact spells as though they had flash. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Mechanized Warfare | unaudited | If a red or artifact source you control would deal damage to an opponent or a permanent an opponent controls, it deals that much damage plus 1 instead. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Mishra, Tamer of Mak Fawa | unaudited | Permanents you control have "Ward—Sacrifice a permanent." | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Myrel, Shield of Argive | unaudited | During your turn, your opponents can't cast spells or activate abilities of artifacts, creatures, or enchantments. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Prison Sentence | unaudited | Enchanted creature can't attack or block, and its activated abilities can't be activated. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Rescue Retriever | unaudited | Prevent all damage that would be dealt to other attacking Soldiers you control. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Sardian Cliffstomper | unaudited | As long as it's your turn and you control four or more Mountains, this creature gets +X/+0, where X is the number of Mountains you control. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Steel Exemplar | unaudited | This creature enters with two +1/+1 counters on it unless two or more colors of mana were spent to cast it. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Warlord's Elite | unaudited | As an additional cost to cast this spell, tap two untapped artifacts, creatures, and/or lands you control. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Aeronaut's Wings | handled | Equipped creature gets +1/+0 and has flying. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Air Marshal | handled | {3}: Target Soldier gains flying until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ambush Paratrooper | handled | {5}: Creatures you control get +1/+1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -254,10 +246,11 @@
 ## Fully supported
 
 <details>
-<summary>32 cards</summary>
+<summary>40 cards</summary>
 
 - Aeronaut Cavalry
 - Alloy Animist
+- Argoth, Sanctum of Nature
 - Awaken the Woods
 - Bitter Reunion
 - Brotherhood's End
@@ -266,20 +259,26 @@
 - Drafna, Founder of Lat-Nam
 - Fallaji Archaeologist
 - Fog of War
+- Fortified Beachhead
 - Gix, Yawgmoth Praetor
 - Goblin Blast-Runner
 - Haywire Mite
 - Hurkyl, Master Wizard
 - In the Trenches
+- Liberator, Urza's Battlethopter
+- Mechanized Warfare
 - Mine Worker
 - Mishra's Command
 - One with the Multiverse
 - Penregon Strongbull
 - Phyrexian Dragon Engine
 - Power Plant Worker
+- Prison Sentence
 - Recruitment Officer
+- Rescue Retriever
 - Soul Partition
 - Spectrum Sentinel
+- Steel Exemplar
 - Tawnos's Tinkering
 - The Stone Brain
 - The Temporal Anchor
@@ -287,6 +286,7 @@
 - Tocasia, Dig Site Mentor
 - Tower Worker
 - Visions of Phyrexia
+- Warlord's Elite
 - Yotian Tactician
 
 </details>
@@ -299,12 +299,10 @@
 | Choose two | 3 | Gix's Command, Kayla's Command, Urza's Command | bro |
 | +N: artifact, instant, and sorcery spells you cast ~ cost {M} less to cast. you gain N life. | 1 | Urza, Planeswalker | bro |
 | +N: scry N. you may tap an untapped artifact you control. if you do, draw a card. | 1 | Saheeli, Filigree Master | bro |
-| as an additional cost to cast ~, tap two untapped artifacts, creatures, and/or lands you control. | 1 | Warlord's Elite | bro |
 | as long as it's your turn and you control four or more mountains, ~ gets +N/+N, where N is the number of mountains you control. | 1 | Sardian Cliffstomper | bro |
 | as long as you control enchanted creature, it gets +N/+N. otherwise, it can't block. | 1 | Mishra's Domination | bro |
 | as long as you've drawn two or more cards ~, ~ gets +N/+N and has menace. | 1 | Evangel of Synthesis | bro |
 | as long as you've drawn two or more cards ~, ~ has deathtouch and lifelink. | 1 | Trench Stalker | bro |
-| as ~ enters, you may reveal a soldier card from your hand. ~ enters tapped unless you revealed a soldier card ~ or you control a soldier. | 1 | Fortified Beachhead | bro |
 | at the beginning of combat on your turn, target creature you control gains your choice of flying, vigilance, or lifelink until end of turn. | 1 | Steel Seraph | bro |
 | at the beginning of your upkeep, if there are four or more land cards in your graveyard and you both own and control ~ and a land named argoth, sanctum of natur | 1 | Titania, Voice of Gaea | bro |
 | at the beginning of your upkeep, put target creature card from a graveyard onto the battlefield under your control. it's a phyrexian in addition to its other ty | 1 | Portal to Phyrexia | bro |
@@ -316,17 +314,14 @@
 | during your turn, your opponents can't cast spells or activate abilities of artifacts, creatures, or enchantments. | 1 | Myrel, Shield of Argive | bro |
 | each player reveals a number of cards from the top of their library equal to the number of nonland permanents they control, puts all permanent cards they reveal | 1 | Over the Top | bro |
 | each player who controls an artifact or enchantment creates a N/N green bear creature token. then destroy all artifacts and enchantments. | 1 | Fade from History | bro |
-| enchanted creature can"..."t be activated. | 1 | Prison Sentence | bro |
 | enchanted creature gets +N/+N and has flying, haste, and "..." it's a dragon in addition to its other types. | 1 | Draconic Destiny | bro |
 | equipped creature gets +N/+N for each aura and equipment attached to it and has ward {M}. | 1 | Thran Power Suit | bro |
 | exile all graveyards. players can't cast noncreature spells ~. exile ~. | 1 | Calamity's Wake | bro |
 | exile target creature with mana value less than or equal to the number of plains you control. its controller gains N life. | 1 | Lay Down Arms | bro |
 | exile target nonland permanent an opponent controls and all tokens that player controls with the same name as that permanent. | 1 | Legions to Ashes | bro |
 | exile the top three cards of your library in a face-down pile, then exile the top three cards of your library in another face-down pile. look at the cards in ea | 1 | Hostile Negotiations | bro |
-| if a red or artifact source you control would deal damage to an opponent or a permanent an opponent controls, it deals that much damage plus N instead. | 1 | Mechanized Warfare | bro |
 | look at the top seven cards of your library. put up to N artifact and/or creature cards with mana value N or less from among them onto the battlefield. put the  | 1 | Kayla's Reconstruction | bro |
 | permanents you control have "..." | 1 | Mishra, Tamer of Mak Fawa | bro |
-| prevent all damage that would be dealt to other attacking soldiers you control. | 1 | Rescue Retriever | bro |
 | return target artifact or creature card with mana value N or less from your graveyard to the battlefield. if a creature enters ~, it enters with an additional + | 1 | Recommission | bro |
 | sacrifice hajar: legendary creatures you control get +N/+N and gain indestructible until end of turn. | 1 | Hajar, Loyal Bodyguard | bro |
 | target opponent reveals their hand. you choose an artifact or creature card from it, then choose an artifact or creature card from their graveyard. exile the ch | 1 | Dreams of Steel and Oil | bro |
@@ -350,7 +345,6 @@
 | whenever you discard one or more artifact cards, add {M}{M}. ~ triggers only once each turn. | 1 | Mishra, Excavation Prodigy | bro |
 | whenever you discard one or more artifact cards, create a tapped powerstone token. ~ triggers only once each turn. | 1 | Urza, Powerstone Prodigy | bro |
 | whenever ~ attacks, defending player mills half their library, rounded up. | 1 | Terisian Mindbreaker | bro |
-| you may cast colorless spells and artifact spells as though they had flash. | 1 | Liberator, Urza's Battlethopter | bro |
 | {M}, {M}, exile ~: you gain protection from everything until your next turn. | 1 | The Stasis Coffin | bro |
 | {M}, {M}, sacrifice ~: exile the top two cards of your library. choose one of them. until the end of your next turn, you may play that card. | 1 | Mishra's Research Desk | bro |
 | {M}, {M}: discard all the cards in your hand, then draw that many cards. you may choose an artifact or creature card with mana value N you discarded ~, then do  | 1 | Queen Kayla bin-Kroog | bro |
@@ -362,8 +356,6 @@
 | {M}{M}{M}, {M}, exile ~: each player chooses six lands they control. destroy all other permanents. activate only as a sorcery. | 1 | Urza's Sylex | bro |
 | {M}{M}{M}: return ~ from your graveyard to the battlefield with a +N/+N counter on it. ~ costs {M} less to activate if an opponent controls four or more nonbasi | 1 | Razorlash Transmogrant | bro |
 | ~ can't be countered. destroy target artifact. if its mana value was N or less, draw a card. | 1 | Raze to the Ground | bro |
-| ~ enters tapped unless you control a legendary green creature. | 1 | Argoth, Sanctum of Nature | bro |
-| ~ enters with two +N/+N counters on it unless two or more colors of mana were spent to cast it. | 1 | Steel Exemplar | bro |
 | ~ gets +N/+N as long as you control an island. | 1 | Coastal Bulwark | bro |
 | −N: target opponent chooses a permanent they control and returns it to its owner"..."s library. | 1 | Teferi, Temporal Pilgrim | bro |
 

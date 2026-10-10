@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 23 | 12.6% |
-| Works (untested) | 102 | 56.0% |
-| Partial (unaudited) | 11 | 6.0% |
-| Not working | 46 | 25.3% |
+| Tested | 29 | 15.9% |
+| Works (untested) | 105 | 57.7% |
+| Partial (unaudited) | 3 | 1.6% |
+| Not working | 45 | 24.7% |
 
 ## Cards needing work
 
@@ -59,7 +59,6 @@
 | Teferi's Wavecaster | silent | When this creature enters, you may search your library and/or graveyard for a card named Teferi, Timeless Voyager, reveal it, and put it into your hand. If you  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Teferi, Timeless Voyager | silent | −8: Each creature target opponent controls phases out. Until the end of your next turn, they can't phase in. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Terror of the Peaks | silent | Whenever another creature you control enters, this creature deals damage equal to that creature's power to any target. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Thieves' Guild Enforcer | silent | Whenever this creature or another Rogue you control enters, each opponent mills two cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Unleash Fury | silent | Double the power of target creature until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Warded Battlements | silent | Attacking creatures you control get +1/+0. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Alchemist's Gift | notice | Target creature gets +1/+1 and gains your choice of deathtouch or lifelink until end of turn. (Any amount of damage a creature with deathtouch deals to a creatu | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -72,17 +71,9 @@
 | Sigiled Contender | notice | This creature has lifelink as long as it has a +1/+1 counter on it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Traitorous Greed | notice | Gain control of target creature until end of turn. Untap that creature. It gains haste until end of turn. Add two mana of any one color. (The creature can attac | unparsed remainder: Untap that creature. It gains haste until end of turn. Add two mana of any one color. | Y/Y/- | not_working |
 | Transmogrify | notice | Exile target creature. That creature's controller reveals cards from the top of their library until they reveal a creature card. That player puts that card onto | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Chromatic Orrery | unaudited | You may spend mana as though it were mana of any color. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Conspicuous Snoop | unaudited | Play with the top card of your library revealed. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Demonic Embrace | unaudited | You may cast this card from your graveyard by paying 3 life and discarding a card in addition to paying its other costs. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
+| Conspicuous Snoop | unaudited | As long as the top card of your library is a Goblin card, this creature has all activated abilities of that card. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Enthralling Hold | unaudited | You can't choose an untapped creature as this spell's target as you cast it. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Kinetic Augur | unaudited | Kinetic Augur's power is equal to the number of instant and sorcery cards in your graveyard. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Nine Lives | unaudited | If a source would deal damage to you, prevent that damage and put an incarnation counter on this enchantment. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Radha, Heart of Keld | unaudited | You may look at the top card of your library any time, and you may play lands from the top of your library. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Sanctum of All | unaudited | If a triggered ability of another Shrine you control triggers while you control six or more Shrines, that ability triggers an additional time. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Shacklegeist | unaudited | This creature can block only creatures with flying. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Stormwing Entity | unaudited | This spell costs {2}{U} less to cast if you've cast an instant or sorcery spell this turn. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Watcher of the Spheres | unaudited | Creature spells with flying you cast cost {1} less to cast. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Adherent of Hope | handled | At the beginning of combat on your turn, if you control a Basri planeswalker, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Alpine Watchdog | handled | Vigilance | machines/combat.py | Y/Y/- | not_tested |
 | Angelic Ascension | handled | Exile target creature or planeswalker. Its controller creates a 4/4 white Angel creature token with flying. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -166,6 +157,7 @@
 | Sporeweb Weaver | handled | Whenever this creature is dealt damage, you gain 1 life and create a 1/1 green Saproling creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Staunch Shieldmate | handled |  |  | Y/Y/- | not_tested |
 | Storm Caller | handled | When this creature enters, it deals 2 damage to each opponent. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Stormwing Entity | handled | This spell costs {2}{U} less to cast if you've cast an instant or sorcery spell this turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Subira, Tulzidi Caravanner | handled | {1}: Another target creature with power 2 or less can't be blocked this turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Sublime Epiphany | handled | Choose one or more — • Counter target spell. • Counter target activated or triggered ability. • Return target nonland permanent to its owner's hand. • Create a  | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Swift Response | handled | Destroy target tapped creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -173,6 +165,7 @@
 | Teferi's Protege | handled | {1}{U}, {T}: Draw a card, then discard a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Teferi's Tutelage | handled | When this enchantment enters, draw a card, then discard a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Tempered Veteran | handled | {W}, {T}: Put a +1/+1 counter on target creature with a +1/+1 counter on it. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Thieves' Guild Enforcer | handled | Whenever this creature or another Rogue you control enters, each opponent mills two cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Tide Skimmer | handled | Whenever you attack with two or more creatures with flying, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Tolarian Kraken | handled | Whenever you draw a card, you may pay {1}. When you do, you may tap or untap target creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Tome Anima | handled | This creature can't be blocked as long as you've drawn two or more cards this turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -182,6 +175,7 @@
 | Village Rites | handled | As an additional cost to cast this spell, sacrifice a creature. Draw two cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Volcanic Salvo | handled | This spell costs {X} less to cast, where X is the total power of creatures you control. Volcanic Salvo deals 6 damage to each of up to two target creatures and/ | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Warden of the Woods | handled | Whenever this creature becomes the target of a spell or ability an opponent controls, you may draw two cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Watcher of the Spheres | handled | Creature spells with flying you cast cost {1} less to cast. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Wildwood Patrol | handled | Trample | machines/combat.py | Y/Y/- | not_tested |
 | Wildwood Scourge | handled | This creature enters with X +1/+1 counters on it. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Witch's Cauldron | handled | {1}{B}, {T}, Sacrifice a creature: You gain 1 life and draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -189,25 +183,31 @@
 ## Fully supported
 
 <details>
-<summary>23 cards</summary>
+<summary>29 cards</summary>
 
 - Archfiend's Vessel
 - Barrin, Tolarian Archmage
 - Basri's Lieutenant
 - Basri's Solidarity
 - Celestial Enforcer
+- Chromatic Orrery
 - Chrome Replicator
+- Demonic Embrace
 - Elder Gargaroth
 - Griffin Aerie
+- Kinetic Augur
 - Leafkin Avenger
 - Liliana's Standard Bearer
 - Liliana, Waker of the Dead
 - Mazemind Tome
+- Nine Lives
 - Pack Leader
 - Peer into the Abyss
 - Pursued Whale
+- Radha, Heart of Keld
 - Sanctum of Fruitful Harvest
 - Sanctum of Tranquil Light
+- Shacklegeist
 - Soul Sear
 - Speaker of the Heavens
 - Teferi, Master of Time
@@ -223,6 +223,7 @@
 |---|---|---|---|
 | Choose one | 1 | Pestilent Haze | m21 |
 | +N: discard your hand, then exile the top three cards of your library. until end of turn, you may play cards exiled ~. | 1 | Chandra, Heart of Fire | m21 |
+| as long as the top card of your library is a goblin card, ~ has all activated abilities of that card. | 1 | Conspicuous Snoop | m21 |
 | as long as you control a creature with power N or greater, ~ can attack as though it didn't have defender. | 1 | Drowsing Tyrannodon | m21 |
 | as long as you've drawn two or more cards ~, ~ gets +N/+N and has vigilance. | 1 | Gnarled Sage | m21 |
 | at the beginning of each end step, if a creature died ~, you may put a loyalty counter on a liliana planeswalker you control. | 1 | Liliana's Scrounger | m21 |
@@ -230,19 +231,16 @@
 | attacking creatures you control get +N/+N. | 1 | Warded Battlements | m21 |
 | choose a card name other than a basic land card name. search target opponent's graveyard, hand, and library for any number of cards with that name and exile the | 1 | Necromentia | m21 |
 | create an N/N blue and red weird creature token, where N is the number of instant and sorcery cards in your graveyard. then you may return an instant or sorcery | 1 | Experimental Overload | m21 |
-| creature spells with flying you cast cost {M} less to cast. | 1 | Watcher of the Spheres | m21 |
 | discard a card: tap ~. it gains indestructible until end of turn. | 1 | Seasoned Hallowblade | m21 |
 | double the power of target creature until end of turn. | 1 | Unleash Fury | m21 |
 | during your turn, ~ costs {M}{M}{M} less to cast. end the turn. (exile all spells and abilities from the stack, including ~. the player whose turn it is discard | 1 | Discontinuity | m21 |
 | equipped creature gets +N/+N for each soul counter on ~. | 1 | Malefic Scythe | m21 |
 | exile target creature. that creature's controller reveals cards from the top of their library until they reveal a creature card. that player puts that card onto | 1 | Transmogrify | m21 |
 | gain control of target creature until end of turn. untap that creature. it gains haste until end of turn. add two mana of any one color. (the creature can attac | 1 | Traitorous Greed | m21 |
-| if a source would deal damage to you, prevent that damage and put an incarnation counter on ~. | 1 | Nine Lives | m21 |
 | if a triggered ability of another shrine you control triggers while you control six or more shrines, that ability triggers an additional time. | 1 | Sanctum of All | m21 |
 | look at the top three cards of your library. put one of those cards into your hand and the rest on the bottom of your library in any order. if ~ was cast from a | 1 | See the Truth | m21 |
 | other cats you control get +N/+N and have protection from dogs. | 1 | Feline Sovereign | m21 |
 | other creatures get -N/-N. | 1 | Kaervek, the Spiteful | m21 |
-| play with the top card of your library revealed. | 1 | Conspicuous Snoop | m21 |
 | target creature gets +N/+N and gains your choice of deathtouch or lifelink until end of turn. (any amount of damage a creature with deathtouch deals to a creatu | 1 | Alchemist's Gift | m21 |
 | triple | 1 | Fiery Emancipation | m21 |
 | until end of turn, target creature gets +N/+N and another target creature gets -N/-N. | 1 | Rookie Mistake | m21 |
@@ -263,17 +261,10 @@
 | whenever ~ attacks, you may tap any number of untapped creatures you control. ~ gets +N/+N until end of turn for each creature tapped ~. | 1 | Siege Striker | m21 |
 | whenever ~ becomes blocked by a creature, that creature's controller loses N life and you gain N life. | 1 | Gloom Sower | m21 |
 | whenever ~ deals combat damage to a player or planeswalker, look at that many cards from the top of your library. you may reveal a creature card or garruk plane | 1 | Garruk's Harbinger | m21 |
-| whenever ~ or another rogue you control enters, each opponent mills two cards. | 1 | Thieves' Guild Enforcer | m21 |
 | you can't choose an untapped creature as ~ target as you cast it. | 1 | Enthralling Hold | m21 |
-| you may cast ~ from your graveyard by paying N life and discarding a card in addition to paying its other costs. | 1 | Demonic Embrace | m21 |
-| you may look at the top card of your library any time, and you may play lands from the top of your library. | 1 | Radha, Heart of Keld | m21 |
-| you may spend mana as though it were mana of any color. | 1 | Chromatic Orrery | m21 |
-| ~ can block only creatures with flying. | 1 | Shacklegeist | m21 |
-| ~ costs {M}{M} less to cast if you've cast an instant or sorcery spell ~. | 1 | Stormwing Entity | m21 |
 | ~ gets +N/+N as long as you control a garruk planeswalker. | 1 | Predatory Wurm | m21 |
 | ~ gets +N/+N, where N is the greatest power among creature cards in your graveyard. | 1 | Carrion Grub | m21 |
 | ~ has lifelink as long as it has a +N/+N counter on it. | 1 | Sigiled Contender | m21 |
-| ~'s power is equal to the number of instant and sorcery cards in your graveyard. | 1 | Kinetic Augur | m21 |
 | −N: discard your hand, then draw seven cards. until end of turn, you may cast spells from your hand without paying their mana costs. | 1 | Chandra, Flame's Catalyst | m21 |
 | −N: each creature target opponent controls phases out. until the end of your next turn, they can't phase in. | 1 | Teferi, Timeless Voyager | m21 |
 | −N: target opponent loses N life for each creature card in their graveyard. | 1 | Liliana, Death Mage | m21 |

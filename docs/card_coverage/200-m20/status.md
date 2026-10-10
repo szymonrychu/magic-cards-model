@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 31 | 17.6% |
-| Works (untested) | 93 | 52.8% |
-| Partial (unaudited) | 5 | 2.8% |
-| Not working | 47 | 26.7% |
+| Tested | 35 | 19.9% |
+| Works (untested) | 94 | 53.4% |
+| Partial (unaudited) | 1 | 0.6% |
+| Not working | 46 | 26.1% |
 
 ## Cards needing work
 
@@ -66,7 +66,6 @@
 | Celestial Messenger | notice | This creature gets +1/+1 as long as you control a Yanling planeswalker. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Elvish Reclaimer | notice | This creature gets +2/+2 as long as there are three or more land cards in your graveyard. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Growth Cycle | notice | Target creature gets +3/+3 until end of turn. It gets an additional +2/+2 until end of turn for each card named Growth Cycle in your graveyard. | unparsed remainder: It gets an additional +2/+2 until end of turn for each card named Growth Cycle in your graveyard. | Y/Y/- | not_working |
-| Kethis, the Hidden Hand | notice | Legendary spells you cast cost {1} less to cast. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Legion's End | notice | Exile target creature an opponent controls with mana value 2 or less and all other creatures that player controls with the same name as that creature. Then that | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Masterful Replication | notice | Choose one — • Create two 3/3 colorless Golem artifact creature tokens. • Choose target artifact you control. Each other artifact you control becomes a copy of  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Thunderkin Awakener | notice | Whenever this creature attacks, choose target Elemental creature card in your graveyard with toughness less than this creature's toughness. Return that card to  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -74,10 +73,6 @@
 | Vivien's Crocodile | notice | This creature gets +1/+1 as long as you control a Vivien planeswalker. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Voracious Hydra | notice | When this creature enters, choose one — • Double the number of +1/+1 counters on this creature. • This creature fights target creature you don't control. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Blightbeetle | unaudited | Creatures your opponents control can't have +1/+1 counters put on them. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Embodiment of Agonies | unaudited | This creature enters with a +1/+1 counter on it for each different mana cost among nonland cards in your graveyard. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Mystic Forge | unaudited | You may cast artifact spells and colorless spells from the top of your library. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Sephara, Sky's Blade | unaudited | You may pay {W} and tap four untapped creatures you control with flying rather than pay this spell's mana cost. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Squad Captain | unaudited | This creature enters with a +1/+1 counter on it for each other creature you control. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Aerial Assault | handled | Destroy target tapped creature. You gain 1 life for each creature you control with flying. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Agonizing Syphon | handled | Agonizing Syphon deals 3 damage to any target and you gain 3 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ajani, Inspiring Leader | handled | +2: You gain 2 life. Put two +1/+1 counters on up to one target creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -125,6 +120,7 @@
 | Infuriate | handled | Target creature gets +3/+2 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ironroot Warlord | handled | Ironroot Warlord's power is equal to the number of creatures you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Kaalia, Zenith Seeker | handled | When Kaalia enters, look at the top six cards of your library. You may reveal an Angel card, a Demon card, and/or a Dragon card from among them and put them int | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Kethis, the Hidden Hand | handled | Legendary spells you cast cost {1} less to cast. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Kykar, Wind's Fury | handled | Whenever you cast a noncreature spell, create a 1/1 white Spirit creature token with flying. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Lavakin Brawler | handled | Whenever this creature attacks, it gets +1/+0 until end of turn for each Elemental you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Leafkin Druid | handled |  |  | Y/Y/- | not_tested |
@@ -175,7 +171,7 @@
 ## Fully supported
 
 <details>
-<summary>31 cards</summary>
+<summary>35 cards</summary>
 
 - Aether Gust
 - Agent of Treachery
@@ -190,18 +186,22 @@
 - Chandra, Flame's Fury
 - Cryptic Caves
 - Devout Decree
+- Embodiment of Agonies
 - Flame Sweep
 - Glint-Horn Buccaneer
 - Goblin Bird-Grabber
 - Knight of the Ebon Legion
 - Leyline of Abundance
 - Lotus Field
+- Mystic Forge
 - Nightpack Ambusher
 - Omnath, Locus of the Roil
 - Risen Reef
 - Scorch Spitter
+- Sephara, Sky's Blade
 - Shifting Ceratops
 - Spectral Sailor
+- Squad Captain
 - Tomebound Lich
 - Veil of Summer
 - Vivien, Arkbow Ranger
@@ -227,7 +227,6 @@
 | enchanted creature gets +N/+N and assigns combat damage equal to its toughness rather than its power. | 1 | Gauntlets of Light | m20 |
 | equipped creature gets +N/+N and loses flying. | 1 | Colossus Hammer | m20 |
 | exile target creature an opponent controls with mana value N or less and all other creatures that player controls with the same name as that creature. then that | 1 | Legion's End | m20 |
-| legendary spells you cast cost {M} less to cast. | 1 | Kethis, the Hidden Hand | m20 |
 | other creatures you control with flying get +N/+N. | 1 | Empyrean Eagle | m20 |
 | other multicolored creatures you control get +N/+N. | 1 | Rienne, Angel of Rebirth | m20 |
 | put target creature with power N or greater on the bottom of its owner's library. | 1 | Eternal Isolation | m20 |
@@ -251,8 +250,6 @@
 | whenever you activate a loyalty ability of a chandra planeswalker, you may pay {M}. if you do, copy that ability. you may choose new targets for the copy. | 1 | Chandra's Regulator | m20 |
 | whenever you discard a card, exile that card from your graveyard. | 1 | Bag of Holding | m20 |
 | whenever ~ attacks, choose target elemental creature card in your graveyard with toughness less than ~ toughness. return that card to the battlefield tapped and | 1 | Thunderkin Awakener | m20 |
-| you may cast artifact spells and colorless spells from the top of your library. | 1 | Mystic Forge | m20 |
-| you may pay {M} and tap four untapped creatures you control with flying rather than pay ~ mana cost. | 1 | Sephara, Sky's Blade | m20 |
 | {M}, {M}: choose a card name, then reveal the top card of your library. if that card has the chosen name, sacrifice ~ and draw three cards. activate only as a s | 1 | Diviner's Lockbox | m20 |
 | {M}, {M}: look at the top three cards of your library. you may reveal a creature card of the chosen type from among them and put it into your hand. put the rest | 1 | Icon of Ancestry | m20 |
 | {M}, {M}: return target creature you control and each aura attached to it to their owners' hands. activate only during your turn. | 1 | Portal of Sanctuary | m20 |
@@ -260,8 +257,6 @@
 | {M}{M}{M}{M}{M}{M}: exile the top three cards of your library. you may play them ~ without paying their mana costs. | 1 | Golos, Tireless Pilgrim | m20 |
 | ~ can"..."s hand and graveyard. | 1 | Thought Distortion | m20 |
 | ~ deals N damage to target player and each creature that player controls. search your library and/or graveyard for a card named chandra, flame's fury, reveal it | 1 | Chandra's Flame Wave | m20 |
-| ~ enters with a +N/+N counter on it for each different mana cost among nonland cards in your graveyard. | 1 | Embodiment of Agonies | m20 |
-| ~ enters with a +N/+N counter on it for each other creature you control. | 1 | Squad Captain | m20 |
 | ~ gets +N/+N as long as it's attacking. | 1 | Unchained Berserker | m20 |
 | ~ gets +N/+N as long as there are three or more land cards in your graveyard. | 1 | Elvish Reclaimer | m20 |
 | ~ gets +N/+N as long as you control a vivien planeswalker. | 1 | Vivien's Crocodile | m20 |

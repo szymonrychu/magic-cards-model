@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 24 | 10.7% |
-| Works (untested) | 100 | 44.6% |
-| Partial (unaudited) | 10 | 4.5% |
-| Not working | 90 | 40.2% |
+| Tested | 30 | 13.4% |
+| Works (untested) | 102 | 45.5% |
+| Partial (unaudited) | 3 | 1.3% |
+| Not working | 89 | 39.7% |
 
 ## Cards needing work
 
@@ -81,7 +81,6 @@
 | New Prahv Guildmage | silent | {3}{W}{U}: Detain target nonland permanent an opponent controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ogre Jailbreaker | silent | This creature can attack as though it didn't have defender as long as you control a Gate. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Psychic Spiral | silent | Shuffle all cards from your graveyard into your library. Target player mills that many cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Racecourse Fury | silent | Enchanted land has "{T}: Target creature gains haste until end of turn." | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Rakdos Cackler | silent | Unleash | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Rakdos Ringleader | silent | Whenever this creature deals combat damage to a player, that player discards a card at random. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Righteous Authority | silent | Enchanted creature gets +1/+1 for each card in its controller's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -116,16 +115,9 @@
 | Destroy the Evidence | notice | Destroy target land. Its controller reveals cards from the top of their library until they reveal a land card, then puts those cards into their graveyard. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Grave Betrayal | notice | Whenever a creature you don't control dies, return it to the battlefield under your control with an additional +1/+1 counter on it at the beginning of the next  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Rakdos Charm | notice | Choose one — • Exile target player's graveyard. • Destroy target artifact. • Each creature deals 1 damage to its controller. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Dryad Militant | unaudited | If an instant or sorcery card would be put into a graveyard from anywhere, exile it instead. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Hypersonic Dragon | unaudited | You may cast sorcery spells as though they had flash. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Loxodon Smiter | unaudited | If a spell or ability an opponent controls causes you to discard this card, put it onto the battlefield instead of putting it into your graveyard. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Oak Street Innkeeper | unaudited | During turns other than yours, tapped creatures you control have hexproof. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Palisade Giant | unaudited | All damage that would be dealt to you and other permanents you control is dealt to this creature instead. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Rakdos, Lord of Riots | unaudited | You can't cast Rakdos unless an opponent lost life this turn. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Security Blockade | unaudited | Enchanted land has "{T}: Prevent the next 1 damage that would be dealt to you this turn." | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Sphere of Safety | unaudited | Creatures can't attack you or planeswalkers you control unless their controller pays {X} for each of those creatures, where X is the number of enchantments you  | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Underworld Connections | unaudited | Enchanted land has "{T}, Pay 1 life: Draw a card." | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Urban Burgeoning | unaudited | Enchanted land has "Untap this land during each other player's untap step." | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Aerial Predation | handled | Destroy target creature with flying. You gain 2 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Annihilating Fire | handled | Annihilating Fire deals 3 damage to any target. If a creature dealt damage this way would die this turn, exile it instead. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Aquus Steed | handled | {2}{U}, {T}: Target creature gets -2/-0 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -154,7 +146,6 @@
 | Concordia Pegasus | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
 | Corpsejack Menace | handled | If one or more +1/+1 counters would be put on a creature you control, twice that many +1/+1 counters are put on it instead. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Crosstown Courier | handled | Whenever this creature deals combat damage to a player, that player mills that many cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Cryptborn Horror | handled | This creature enters with X +1/+1 counters on it, where X is the total life lost by your opponents this turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Daggerdrome Imp | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
 | Deviant Glee | handled | Enchanted creature gets +2/+1 and has "{R}: This creature gains trample until end of turn." | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Drainpipe Vermin | handled | When this creature dies, you may pay {B}. If you do, target player discards a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -187,6 +178,7 @@
 | Phantom General | handled | Creature tokens you control get +1/+1. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Pursuit of Flight | handled | Enchanted creature gets +2/+2 and has "{U}: This creature gains flying until end of turn." | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Pyroconvergence | handled | Whenever you cast a multicolored spell, this enchantment deals 2 damage to any target. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Racecourse Fury | handled | Enchanted land has "{T}: Target creature gains haste until end of turn." | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Rakdos Keyrune | handled | {B}{R}: This artifact becomes a 3/1 black and red Devil artifact creature with first strike until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Rakdos Ragemutt | handled | Lifelink | machines/combat.py | Y/Y/- | not_tested |
 | Rakdos Shred-Freak | handled | Haste | machines/combat.py | Y/Y/- | not_tested |
@@ -220,6 +212,8 @@
 | Treasured Find | handled | Return target card from your graveyard to your hand. Exile Treasured Find. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Trestle Troll | handled | {1}{B}{G}: Regenerate this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ultimate Price | handled | Destroy target monocolored creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Underworld Connections | handled | Enchanted land has "{T}, Pay 1 life: Draw a card." | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Urban Burgeoning | handled | Enchanted land has "Untap this land during each other player's untap step." | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Utvara Hellkite | handled | Whenever a Dragon you control attacks, create a 6/6 red Dragon creature token with flying. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Vassal Soul | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
 | Viashino Racketeer | handled | When this creature enters, you may discard a card. If you do, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -230,7 +224,7 @@
 ## Fully supported
 
 <details>
-<summary>24 cards</summary>
+<summary>30 cards</summary>
 
 - Abrupt Decay
 - Ash Zealot
@@ -238,22 +232,28 @@
 - Azorius Guildgate
 - Batterhorn
 - Chromatic Lantern
+- Cryptborn Horror
 - Dark Revenant
+- Dryad Militant
 - Fencing Ace
 - Gatecreeper Vine
 - Golgari Charm
 - Golgari Guildgate
 - Grisly Salvage
 - Guttersnipe
+- Hypersonic Dragon
 - Izzet Guildgate
 - Izzet Staticaster
 - Nivix Guildmage
+- Palisade Giant
 - Precinct Captain
 - Rakdos Guildgate
 - Rakdos's Return
 - Rest in Peace
+- Security Blockade
 - Selesnya Guildgate
 - Shrieking Affliction
+- Sphere of Safety
 - Supreme Verdict
 - Wild Beastmaster
 
@@ -266,12 +266,10 @@
 | unleash | 11 | Bloodfray Giant, Carnival Hellsteed, Chaos Imps, Dead Reveler, Gore-House Chainwalker | rtr |
 | overload | 10 | Blustersquall, Counterflux, Cyclonic Rift, Downsize, Dynacharge | rtr |
 | scavenge | 9 | Deadbridge Goliath, Drudge Beetle, Golgari Decoy, Korozda Monitor, Sewer Shambler | rtr |
-| enchanted land has "..." | 4 | Racecourse Fury, Security Blockade, Underworld Connections, Urban Burgeoning | rtr |
 | when ~ enters, detain target creature an opponent controls. | 3 | Azorius Arrester, Isperia's Skywatch, Soulsworn Spirit | rtr |
 | Choose one | 1 | Rakdos Charm | rtr |
 | +N: until your next turn, whenever a creature an opponent controls attacks, it gets -N/-N until end of turn. | 1 | Jace, Architect of Thought | rtr |
 | +N: until your next turn, whenever a creature deals combat damage to vraska, destroy that creature. | 1 | Vraska the Unseen | rtr |
-| all damage that would be dealt to you and other permanents you control is dealt to ~ instead. | 1 | Palisade Giant | rtr |
 | at the beginning of each combat, any opponent may sacrifice a creature of their choice. if a player does, tap ~ and put a +N/+N counter on it. | 1 | Desecration Demon | rtr |
 | at the beginning of the upkeep of enchanted permanent's controller, that player sacrifices it unless they pay {M}, where N is its mana value. | 1 | Soul Tithe | rtr |
 | at the beginning of your upkeep, detain target creature an opponent controls. | 1 | Martial Law | rtr |
@@ -282,7 +280,6 @@
 | create a N/N green centaur creature token, then populate. (create a token that's a copy of a creature token you control.) | 1 | Coursers' Accord | rtr |
 | create a N/N green rhino creature token with trample, then populate. (create a token that's a copy of a creature token you control.) | 1 | Horncaller's Chant | rtr |
 | create a N/N white bird creature token with flying, then populate. (create a token that's a copy of a creature token you control.) | 1 | Eyes in the Skies | rtr |
-| creatures can't attack you or planeswalkers you control unless their controller pays {M} for each of those creatures, where N is the number of enchantments you  | 1 | Sphere of Safety | rtr |
 | destroy target artifact or enchantment, then populate. (create a token that's a copy of a creature token you control.) | 1 | Sundering Growth | rtr |
 | destroy target creature. its controller discards a card. | 1 | Assassin's Strike | rtr |
 | destroy target land. its controller reveals cards from the top of their library until they reveal a land card, then puts those cards into their graveyard. | 1 | Destroy the Evidence | rtr |
@@ -294,7 +291,6 @@
 | exile target creature, then populate. (create a token that's a copy of a creature token you control.) | 1 | Trostani's Judgment | rtr |
 | exile the top N cards of your library. you may cast instant and sorcery spells with mana value N or less from among them without paying their mana costs. then p | 1 | Epic Experiment | rtr |
 | if a spell or ability an opponent controls causes you to discard ~, put it onto the battlefield instead of putting it into your graveyard. | 1 | Loxodon Smiter | rtr |
-| if an instant or sorcery card would be put into a graveyard from anywhere, exile it instead. | 1 | Dryad Militant | rtr |
 | populate | 1 | Rootborn Defenses | rtr |
 | prevent all combat damage that would be dealt to you ~. populate. (create a token that's a copy of a creature token you control.) | 1 | Druid's Deliverance | rtr |
 | sacrifice ~: counter target instant or sorcery spell unless its controller pays {M}. | 1 | Judge's Familiar | rtr |
@@ -319,7 +315,6 @@
 | whenever ~ deals combat damage to a player, populate. | 1 | Wayfaring Temple | rtr |
 | whenever ~ deals combat damage to a player, that player discards a card at random. | 1 | Rakdos Ringleader | rtr |
 | you can't cast rakdos unless an opponent lost life ~. | 1 | Rakdos, Lord of Riots | rtr |
-| you may cast sorcery spells as though they had flash. | 1 | Hypersonic Dragon | rtr |
 | {M}, pay N life: flip a coin. if you win the flip, you gain N life. | 1 | Tavern Swindler | rtr |
 | {M}, {M}, discard a card: ~ deals damage to target creature equal to the discarded card's mana value. | 1 | Mercurial Chemister | rtr |
 | {M}: exile target land card from a graveyard. add one mana of any color. | 1 | Deathrite Shaman | rtr |

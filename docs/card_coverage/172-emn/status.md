@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 35 | 17.6% |
-| Works (untested) | 112 | 56.3% |
-| Partial (unaudited) | 9 | 4.5% |
-| Not working | 43 | 21.6% |
+| Tested | 39 | 19.6% |
+| Works (untested) | 113 | 56.8% |
+| Partial (unaudited) | 5 | 2.5% |
+| Not working | 42 | 21.1% |
 
 ## Cards needing work
 
@@ -63,7 +63,6 @@
 | Whispers of Emrakul | silent | Target opponent discards a card at random. Delirium — If there are four or more card types among cards in your graveyard, that player discards two cards at rand | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Collective Defiance | notice | Escalate {1} (Pay this cost for each mode chosen beyond the first.) Choose one or more — • Target player discards all the cards in their hand, then draws that m | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Drownyard Behemoth | notice | This creature has hexproof as long as it entered this turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Geist-Fueled Scarecrow | notice | Creature spells you cast cost {1} more to cast. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Give No Ground | notice | Target creature gets +2/+6 until end of turn and can block any number of creatures this turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Identity Thief | notice | Whenever this creature attacks, you may exile another target nontoken creature. If you do, this creature becomes a copy of that creature until end of turn. Retu | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Long Road Home | notice | Exile target creature. At the beginning of the next end step, return that card to the battlefield under its owner's control with a +1/+1 counter on it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -71,13 +70,9 @@
 | Waxing Moon | notice | Transform up to one target Werewolf you control. Creatures you control gain trample until end of turn. | unparsed remainder: Transform up to one target Werewolf you control. | Y/Y/- | not_working |
 | Brisela, Voice of Nightmares | unaudited | Your opponents can't cast spells with mana value 3 or less. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Imprisoned in the Moon | unaudited | Enchanted permanent is a colorless land with "{T}: Add {C}" and loses all other card types and abilities. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Lupine Prototype | unaudited | This creature can't attack or block unless a player has no cards in hand. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Nephalia Academy | unaudited | If a spell or ability an opponent controls causes you to discard a card, you may reveal that card and put it on top of your library instead of putting it anywhe | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Shrill Howler // Howling Chorus | unaudited | Creatures with power less than this creature's power can't block it. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Spontaneous Mutation | unaudited | Enchanted creature gets -X/-0, where X is the number of cards in your graveyard. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Strange Augmentation | unaudited | Delirium — Enchanted creature gets an additional +2/+2 as long as there are four or more card types among cards in your graveyard. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Tangleclaw Werewolf // Fibrous Entangler | unaudited | This creature can block an additional creature each combat. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Tattered Haunter | unaudited | This creature can block only creatures with flying. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Abandon Reason | handled | Up to two target creatures each get +1/+0 and gain first strike until end of turn. (They deal combat damage before creatures without first strike.) Madness {1}{ | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Abundant Maw | handled | When you cast this spell, target opponent loses 3 life and you gain 3 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Advanced Stitchwing | handled | {2}{U}, Discard two cards: Return this card from your graveyard to the battlefield tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -126,6 +121,7 @@
 | Furyblade Vampire | handled | At the beginning of combat on your turn, you may discard a card. If you do, this creature gets +3/+0 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Gavony Unhallowed | handled | Whenever another creature you control dies, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Geist of the Archives | handled | At the beginning of your upkeep, scry 1. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Geist-Fueled Scarecrow | handled | Creature spells you cast cost {1} more to cast. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Graf Harvest | handled | Zombies you control have menace. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Grapple with the Past | handled | Mill three cards, then you may return a creature or land card from your graveyard to your hand. (To mill three cards, put the top three cards of your library in | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Guardian of Pilgrims | handled | When this creature enters, target creature gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -194,7 +190,7 @@
 ## Fully supported
 
 <details>
-<summary>35 cards</summary>
+<summary>39 cards</summary>
 
 - Assembled Alphas
 - Blessed Alliance
@@ -217,15 +213,19 @@
 - Hanweir, the Writhing Township
 - Lashweed Lurker
 - Liliana, the Last Hope
+- Lupine Prototype
 - Midnight Scavengers
 - Nahiri's Wrath
 - Providence
 - Repel the Abominable
 - Savage Alliance
+- Shrill Howler // Howling Chorus
 - Stensia Innkeeper
 - Subjugator Angel
 - Summary Dismissal
 - Take Inventory
+- Tangleclaw Werewolf // Fibrous Entangler
+- Tattered Haunter
 - Thirsting Axe
 - Unsubstantiate
 - Vexing Scuttler
@@ -241,8 +241,6 @@
 | Delirium | 9 | Backwoods Survivalists, Crop Sigil, Desperate Sentry, Geist of the Lonely Vigil, Gnarlwood Dryad | emn |
 | +N: choose up to two target creatures. until your next turn, whenever either of those creatures deals combat damage, you draw a card. | 1 | Tamiyo, Field Researcher | emn |
 | at the beginning of your end step, if you both own and control gisela and a creature named bruna, the fading light, exile them, then meld them into brisela, voi | 1 | Gisela, the Broken Blade | emn |
-| creature spells you cast cost {M} more to cast. | 1 | Geist-Fueled Scarecrow | emn |
-| creatures with power less than ~ power can't block it. | 1 | Shrill Howler // Howling Chorus | emn |
 | enchanted creature gets -N/-N, where N is the number of cards in your graveyard. | 1 | Spontaneous Mutation | emn |
 | enchanted permanent is a colorless land with "..." and loses all other card types and abilities. | 1 | Imprisoned in the Moon | emn |
 | equipped creature gets +N/+N and must be blocked by an eldrazi if able. | 1 | Slayer's Cleaver | emn |
@@ -278,9 +276,6 @@
 | {M}, {M}, sacrifice ~: exile target creature card from your graveyard. create a token that"..."s N/N, it"..."s power and toughness equal to that card's toughnes | 1 | Soul Separator | emn |
 | {M}: creatures your opponents control attack ~ if able. | 1 | Grizzled Angler // Grisly Anglerfish | emn |
 | {M}: exchange target opponent's life total with ~ toughness. | 1 | Tree of Perdition | emn |
-| ~ can block an additional creature each combat. | 1 | Tangleclaw Werewolf // Fibrous Entangler | emn |
-| ~ can block only creatures with flying. | 1 | Tattered Haunter | emn |
-| ~ can't attack or block unless a player has no cards in hand. | 1 | Lupine Prototype | emn |
 | ~ has hexproof as long as it entered ~. | 1 | Drownyard Behemoth | emn |
 
 ## Notes

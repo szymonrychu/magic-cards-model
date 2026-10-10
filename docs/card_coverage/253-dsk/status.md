@@ -17,9 +17,9 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 46 | 17.4% |
-| Works (untested) | 107 | 40.4% |
-| Partial (unaudited) | 14 | 5.3% |
+| Tested | 52 | 19.6% |
+| Works (untested) | 108 | 40.8% |
+| Partial (unaudited) | 7 | 2.6% |
 | Not working | 98 | 37.0% |
 
 ## Cards needing work
@@ -124,19 +124,12 @@
 | Toby, Beastie Befriender | notice | As long as you control four or more creature tokens, creature tokens you control have flying. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Turn Inside Out | notice | Target creature gets +3/+0 until end of turn. When it dies this turn, manifest dread. (Look at the top two cards of your library. Put one onto the battlefield f | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Untimely Malfunction | notice | Choose one — • Destroy target artifact. • Change the target of target spell or ability with a single target. • One or two target creatures can't block this turn | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Charred Foyer // Warped Space | unaudited | Once each turn, you may pay {0} rather than pay the mana cost for a spell you cast from exile. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Dazzling Theater // Prop Room | unaudited | Untap each creature you control during each other player's untap step. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Fear of Exposure | unaudited | As an additional cost to cast this spell, tap two untapped creatures and/or lands you control. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Found Footage | unaudited | You may look at face-down creatures your opponents control any time. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Inquisitive Glimmer | unaudited | Unlock costs you pay cost {1} less. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Leyline of Mutation | unaudited | You may pay {W}{U}{B}{R}{G} rather than pay the mana cost for spells you cast. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Patched Plaything | unaudited | This creature enters with two -1/-1 counters on it if you cast it from your hand. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Patchwork Beastie | unaudited | Delirium — This creature can't attack or block unless there are four or more card types among cards in your graveyard. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Restricted Office // Lecture Hall | unaudited | Other permanents you control have hexproof. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Shardmage's Rescue | unaudited | As long as this Aura entered this turn, enchanted creature has hexproof. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | The Rollercrusher Ride | unaudited | Delirium — If a source you control would deal noncombat damage to a permanent or player while there are four or more card types among cards in your graveyard, i | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Undead Sprinter | unaudited | You may cast this card from your graveyard if a non-Zombie creature died this turn. If you do, this creature enters with a +1/+1 counter on it. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Valgavoth, Terror Eater | unaudited | If a card you didn't control would be put into an opponent's graveyard from anywhere, exile it instead. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
+| Valgavoth, Terror Eater | unaudited | During your turn, you may play cards exiled with Valgavoth. If you cast a spell this way, pay life equal to its mana value rather than pay its mana cost. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Winter, Misanthropic Guide | unaudited | Delirium — As long as there are four or more card types among cards in your graveyard, each opponent's maximum hand size is equal to seven minus the number of t | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Abandoned Campground | handled | This land enters tapped unless a player has 13 or less life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Altanak, the Thrice-Called | handled | Whenever Altanak becomes the target of a spell or ability an opponent controls, draw a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -191,6 +184,7 @@
 | Insidious Fungus | handled | {2}, Sacrifice this creature: Choose one — • Destroy target artifact. • Destroy target enchantment. • Draw a card. Then you may put a land card from your hand o | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Intruding Soulrager | handled | {T}, Sacrifice a Room: This creature deals 2 damage to each opponent. Draw a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Irreverent Gremlin | handled | Whenever another creature you control with power 2 or less enters, you may discard a card. If you do, draw a card. Do this only once each turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Leyline of Mutation | handled | If this card is in your opening hand, you may begin the game with it on the battlefield. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Leyline of Resonance | handled | If this card is in your opening hand, you may begin the game with it on the battlefield. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Lionheart Glimmer | handled | Whenever you attack, creatures you control get +1/+1 until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Live or Die | handled | Choose one — • Return target creature card from your graveyard to the battlefield. • Destroy target creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -249,7 +243,7 @@
 ## Fully supported
 
 <details>
-<summary>46 cards</summary>
+<summary>52 cards</summary>
 
 - Abhorrent Oculus
 - Arabella, Abandoned Doll
@@ -260,12 +254,14 @@
 - Cautious Survivor
 - Central Elevator // Promising Stairs
 - Chainsaw
+- Charred Foyer // Warped Space
 - Coordinated Clobbering
 - Derelict Attic // Widow's Walk
 - Doomsday Excruciator
 - Drag to the Roots
 - Enduring Curiosity
 - Enduring Innocence
+- Fear of Exposure
 - Fear of Impostors
 - Fear of Missing Out
 - Fear of the Dark
@@ -276,6 +272,7 @@
 - Glassworks // Shattered Yard
 - Gloomlake Verge
 - Grab the Prize
+- Inquisitive Glimmer
 - Kaito, Bane of Nightmares
 - Kona, Rescue Beastie
 - Lakeside Shack
@@ -286,12 +283,15 @@
 - Nowhere to Run
 - Overlord of the Balemurk
 - Overlord of the Mistmoors
+- Patched Plaything
+- Patchwork Beastie
 - Screaming Nemesis
 - Sheltered by Ghosts
 - The Mindskinner
 - Thornspire Verge
 - Tyvar, the Pummeler
 - Unable to Scream
+- Undead Sprinter
 - Unholy Annex // Ritual Chamber
 - Unidentified Hovership
 - Unwanted Remake
@@ -305,13 +305,12 @@
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
 | Eerie | 14 | Balemurk Leech, Cult Healer, Dashing Bloodsucker, Entity Tracker, Erratic Apparition | dsk |
-| Delirium | 10 | Fear of Burning Alive, Let's Play a Game, Omnivorous Flytrap, Osseous Sticktwister, Patchwork Beastie | dsk |
+| Delirium | 9 | Fear of Burning Alive, Let's Play a Game, Omnivorous Flytrap, Osseous Sticktwister, Spineseeker Centipede | dsk |
 | Survival | 5 | Acrobatic Cheerleader, Glimmer Seeker, Reluctant Role Model, Rip, Spawn Hunter, Rootwise Survivor | dsk |
 | when ~ enters, manifest dread, then attach ~ to that creature. | 4 | Conductive Machete, Cursed Windbreaker, Dissection Tools, Killer's Mask | dsk |
 | Choose one | 2 | Split Up, Untimely Malfunction | dsk |
 | when ~ enters, create a N/N white glimmer enchantment creature token. | 2 | Glimmerlight, Tunnel Surveyor | dsk |
 | as an additional cost to cast ~, choose a creature you control or reveal a creature card from your hand. ~ deals damage equal to the power of the creature you c | 1 | Monstrous Emergence | dsk |
-| as an additional cost to cast ~, tap two untapped creatures and/or lands you control. | 1 | Fear of Exposure | dsk |
 | as long as there are three or more cards exiled with ~, it gets +N/+N and has hexproof. | 1 | Veteran Survivor | dsk |
 | as long as you control four or more creature tokens, creature tokens you control have flying. | 1 | Toby, Beastie Befriender | dsk |
 | as long as ~ entered ~, enchanted creature has hexproof. | 1 | Shardmage's Rescue | dsk |
@@ -325,19 +324,17 @@
 | destroy target creature. if a creature card is put into a graveyard ~, return it to the battlefield under your control. sacrifice it at the beginning of your ne | 1 | Come Back Wrong | dsk |
 | discard your hand. then draw N cards, where N is the number of card types among cards in your graveyard. | 1 | Peer Past the Veil | dsk |
 | draw two cards. create a N/N white glimmer enchantment creature token. | 1 | Glimmerburst | dsk |
+| during your turn, you may play cards exiled with valgavoth. if you cast a spell ~, pay life equal to its mana value rather than pay its mana cost. | 1 | Valgavoth, Terror Eater | dsk |
 | enchanted creature gets -N/-N and loses all abilities. | 1 | Duskmourn's Domination | dsk |
-| if a card you didn"..."s graveyard from anywhere, exile it instead. | 1 | Valgavoth, Terror Eater | dsk |
 | manifest dread N times, then put N +N/+N counters on each of those creatures. (to manifest dread, look at the top two cards of your library, then put one onto t | 1 | Valgavoth's Onslaught | dsk |
 | manifest dread. (look at the top two cards of your library. put one onto the battlefield face down as a N/N creature and the other into your graveyard. turn it  | 1 | Under the Skin | dsk |
 | marvin has all activated abilities of creatures you control that don't have the same name as ~. | 1 | Marvin, Murderous Mimic | dsk |
 | mill three cards. then you may return a creature or land card from your graveyard to your hand. exile ~ and two other cards named ~ from your graveyard: search  | 1 | Say Its Name | dsk |
 | mill two cards. if two cards that share a card type were milled ~, draw a card and repeat ~. | 1 | The Tale of Tamiyo | dsk |
-| once each turn, you may pay {M} rather than pay the mana cost for a spell you cast from exile. | 1 | Charred Foyer // Warped Space | dsk |
 | other permanents you control have hexproof. | 1 | Restricted Office // Lecture Hall | dsk |
 | search your library for a demon card, reveal it, put it into your hand, then shuffle. delirium — if there are four or more card types among cards in your gravey | 1 | Demonic Counsel | dsk |
 | target creature gets +N/+N until end of turn. when it dies ~, manifest dread. (look at the top two cards of your library. put one onto the battlefield face down | 1 | Turn Inside Out | dsk |
 | the owner of target artifact or enchantment an opponent controls shuffles it into their library. you may shuffle up to four target cards from your graveyard int | 1 | Cathartic Parting | dsk |
-| unlock costs you pay cost {M} less. | 1 | Inquisitive Glimmer | dsk |
 | untap each creature you control during each other player's untap step. | 1 | Dazzling Theater // Prop Room | dsk |
 | until end of turn, target creature gets +N/+N, gains flying, and becomes a horror enchantment creature in addition to its other types. | 1 | Jump Scare | dsk |
 | when enchanted creature is dealt damage, destroy it. | 1 | Cracked Skull | dsk |
@@ -369,9 +366,7 @@
 | whenever ~ deals combat damage to a player, choose one that hasn't been chosen — • put two +N/+N counters on ~. • draw a card. • ~ becomes a copy of another tar | 1 | Silent Hallcreeper | dsk |
 | whenever ~ deals combat damage to a player, they lose half their life, rounded up. | 1 | Unstoppable Slasher | dsk |
 | whenever ~ deals combat damage to a player, unlock a locked door of up to one target room you control. | 1 | Ghostly Keybearer | dsk |
-| you may cast ~ from your graveyard if a non-zombie creature died ~. if you do, ~ enters with a +N/+N counter on it. | 1 | Undead Sprinter | dsk |
 | you may look at face-down creatures your opponents control any time. | 1 | Found Footage | dsk |
-| you may pay {M}{M}{M}{M}{M} rather than pay the mana cost for spells you cast. | 1 | Leyline of Mutation | dsk |
 | {M}, discard a card: put three +N/+N counters on ~ and it becomes a black demon in addition to its other colors and types. activate only once. | 1 | Possessed Goat | dsk |
 | {M}, sacrifice ~: create a N/N green spider creature token with reach for each counter on ~. activate only as a sorcery. | 1 | Twitching Doll | dsk |
 | {M}, {M}, sacrifice ~: lock or unlock a door of target room you control. activate only as a sorcery. | 1 | Keys to the House | dsk |
@@ -382,7 +377,6 @@
 | {M}{M}: reveal target face-down permanent. if it's a creature card, you may turn it face up. | 1 | Hauntwoods Shrieker | dsk |
 | {M}{M}{M}, {M}, sacrifice ~: create a number of N/N black and green insect creature tokens with flying equal to the number of card types among cards in your gra | 1 | Broodspinner | dsk |
 | {M}{M}{M}: shuffle enchanted creature into its owner's library, then manifest dread. activate only as a sorcery. | 1 | Stay Hidden, Stay Silent | dsk |
-| ~ enters with two -N/-N counters on it if you cast it from your hand. | 1 | Patched Plaything | dsk |
 | ~ gets +N/+N as long as there are two or more unlocked doors among rooms you control. | 1 | Rampaging Soulrager | dsk |
 | ~ has first strike during your turn. | 1 | Razorkin Needlehead | dsk |
 

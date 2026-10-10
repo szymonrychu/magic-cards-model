@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 37 | 20.0% |
-| Works (untested) | 111 | 60.0% |
-| Partial (unaudited) | 4 | 2.2% |
-| Not working | 33 | 17.8% |
+| Tested | 39 | 21.1% |
+| Works (untested) | 113 | 61.1% |
+| Partial (unaudited) | 1 | 0.5% |
+| Not working | 32 | 17.3% |
 
 ## Cards needing work
 
@@ -45,7 +45,6 @@
 | Natural Obsolescence | silent | Put target artifact on the bottom of its owner's library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Peacewalker Colossus | silent | {1}{W}: Another target Vehicle you control becomes an artifact creature until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Peema Aether-Seer | silent | When this creature enters, you get an amount of {E} equal to the greatest power among creatures you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Pia's Revolution | silent | Whenever a nontoken artifact is put into your graveyard from the battlefield, return that card to your hand unless target opponent has this enchantment deal 3 d | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Restoration Specialist | silent | {W}, Sacrifice this creature: Return up to one target artifact card and up to one target enchantment card from your graveyard to your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Salvage Scuttler | silent | Whenever this creature attacks, return an artifact you control to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Scrap Trawler | silent | Whenever this creature dies or another artifact you control is put into a graveyard from the battlefield, return to your hand target artifact card in your grave | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -59,10 +58,7 @@
 | Lifecraft Awakening | notice | Put X +1/+1 counters on target artifact you control. If it isn't a creature or Vehicle, it becomes a 0/0 Construct artifact creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Secret Salvage | notice | Exile target nonland card from your graveyard. Search your library for any number of cards with the same name as that card, reveal them, put them into your hand | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Treasure Keeper | notice | When this creature dies, reveal cards from the top of your library until you reveal a nonland card with mana value 3 or less. You may cast that card without pay | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Heart of Kiran | unaudited | You may remove a loyalty counter from a planeswalker you control rather than pay Heart of Kiran's crew cost. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Night Market Guard | unaudited | This creature can block an additional creature each combat. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Rishkar, Peema Renegade | unaudited | Each creature you control with a counter on it has "{T}: Add {G}." | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Unbridled Growth | unaudited | Enchanted land has "{T}: Add one mana of any color." | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Aegis Automaton | handled | {4}{W}: Return another target creature you control to its owner's hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Aeronaut Admiral | handled | Vehicles you control have flying. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Aether Herder | handled | When this creature enters, you get {E}{E} . | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -135,6 +131,7 @@
 | Pacification Array | handled | {2}, {T}: Tap target artifact or creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Pendulum of Patterns | handled | When this artifact enters, you gain 3 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Perilous Predicament | handled | Each opponent sacrifices an artifact creature and a nonartifact creature of their choice. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Pia's Revolution | handled | Whenever a nontoken artifact is put into your graveyard from the battlefield, return that card to your hand unless target opponent has this enchantment deal 3 d | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Precise Strike | handled | Target creature gets +1/+0 and gains first strike until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Prizefighter Construct | handled |  |  | Y/Y/- | not_tested |
 | Ravenous Intruder | handled | Sacrifice an artifact: This creature gets +2/+2 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -164,6 +161,7 @@
 | Tezzeret's Betrayal | handled | Destroy target creature. You may search your library and/or graveyard for a card named Tezzeret, Master of Metal, reveal it, and put it into your hand. If you s | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Tezzeret's Simulacrum | handled | {T}: Target opponent loses 1 life. If you control a Tezzeret planeswalker, that player loses 3 life instead. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Thopter Arrest | handled | When this enchantment enters, exile target artifact or creature an opponent controls until this enchantment leaves the battlefield. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Unbridled Growth | handled | Enchanted land has "{T}: Add one mana of any color." | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Universal Solvent | handled | {7}, {T}, Sacrifice this artifact: Destroy target permanent. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Untethered Express | handled | Whenever this Vehicle attacks, put a +1/+1 counter on it. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Vengeful Rebel | handled | Revolt — When this creature enters, if a permanent left the battlefield under your control this turn, target creature an opponent controls gets -3/-3 until end  | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -178,7 +176,7 @@
 ## Fully supported
 
 <details>
-<summary>37 cards</summary>
+<summary>39 cards</summary>
 
 - Aether Chaser
 - Aether Swooper
@@ -197,6 +195,7 @@
 - Fatal Push
 - Fen Hauler
 - Foundry Hornet
+- Heart of Kiran
 - Hinterland Drake
 - Hope of Ghirapur
 - Hungry Flames
@@ -206,6 +205,7 @@
 - Merchant's Dockhand
 - Metallic Rebuke
 - Monstrous Onslaught
+- Night Market Guard
 - Quicksmith Rebel
 - Quicksmith Spy
 - Renegade Rallier
@@ -233,7 +233,6 @@
 | destroy N target artifacts and/or creatures. for each permanent destroyed ~, its controller reveals cards from the top of their library until an artifact or cre | 1 | Indomitable Creativity | aer |
 | each creature you control with a counter on it has "..." | 1 | Rishkar, Peema Renegade | aer |
 | each opponent sacrifices a creature or planeswalker of their choice, then discards a card. you return a creature or planeswalker card from your graveyard to you | 1 | Dark Intimations | aer |
-| enchanted land has "..." | 1 | Unbridled Growth | aer |
 | exile target nonland card from your graveyard. search your library for any number of cards with the same name as that card, reveal them, put them into your hand | 1 | Secret Salvage | aer |
 | pay {M}: ~ gains lifelink until end of turn. | 1 | Aethersphere Harvester | aer |
 | pay {M}{M}, sacrifice ~: each opponent loses N life. you gain life equal to the life lost ~. | 1 | Gonti's Machinations | aer |
@@ -247,17 +246,14 @@
 | when ~ enters, you may have target creature get -N/-N until end of turn. | 1 | Fourth Bridge Prowler | aer |
 | when ~ enters, you may search your library and/or graveyard for a card named ajani, valiant protector, reveal it, and put it into your hand. if you search your  | 1 | Ajani's Aid | aer |
 | when ~ enters, you may search your library for an artifact card with mana value N, reveal it, put it into your hand, then shuffle. | 1 | Trophy Mage | aer |
-| whenever a nontoken artifact is put into your graveyard from the battlefield, return that card to your hand unless target opponent has ~ deal N damage to them. | 1 | Pia's Revolution | aer |
 | whenever a spell or ability you control counters a spell, you may draw a card. if you do, discard a card. | 1 | Baral, Chief of Compliance | aer |
 | whenever kari zev attacks, create ragavan, a legendary N/N red monkey creature token. ragavan enters tapped and attacking. exile that token at end of combat. | 1 | Kari Zev, Skyship Raider | aer |
 | whenever ~ attacks, return an artifact you control to its owner's hand. | 1 | Salvage Scuttler | aer |
 | whenever ~ attacks, you get {M}{M} , then you may pay eight {M}. if you pay, untap all creatures you control, and after ~, there is an additional combat phase. | 1 | Lightning Runner | aer |
 | whenever ~ dies or another artifact you control is put into a graveyard from the battlefield, return to your hand target artifact card in your graveyard with le | 1 | Scrap Trawler | aer |
 | whenever ~ enters or attacks, you get {M} for each creature you control. | 1 | Aetherwind Basker | aer |
-| you may remove a loyalty counter from a planeswalker you control rather than pay ~'s crew cost. | 1 | Heart of Kiran | aer |
 | {M}, sacrifice ~: return up to one target artifact card and up to one target enchantment card from your graveyard to your hand. | 1 | Restoration Specialist | aer |
 | {M}{M}: another target vehicle you control becomes an artifact creature until end of turn. | 1 | Peacewalker Colossus | aer |
-| ~ can block an additional creature each combat. | 1 | Night Market Guard | aer |
 | ~ is the chosen type in addition to its other types. | 1 | Metallic Mimic | aer |
 | −N: target opponent loses life equal to the number of artifacts you control. | 1 | Tezzeret, Master of Metal | aer |
 
