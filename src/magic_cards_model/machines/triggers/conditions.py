@@ -2508,7 +2508,12 @@ def _condition_matches(
             if event.subject_id != source.id:
                 return False
         elif (object_subject := _OBJECT_TARGET_SUBJECT.match(lowered.strip())) is not None:
-            if not _targeted_object_matches(
+            if event.subject_id is None and object_subject.group("you"):
+                # Reidane's "you or another permanent you control": CR 115.1
+                # lets a player be targeted, and "you" is that player.
+                if event.subject_controller != controller:
+                    return False
+            elif not _targeted_object_matches(
                 game, object_subject.group("subject"), event, source, controller
             ):
                 return False
@@ -2552,6 +2557,16 @@ def _condition_matches(
                     and event.subject_name == choice.value
                 )
             return True
+        if _DURING_AN_OPPONENTS_TURN_RE.search(lowered) is not None:
+            # The Watcher in the Water's "Whenever you draw a card during an
+            # opponent's turn" (CR 102.1): a window on the turn, not a
+            # drawer - stripped before the "an opponent" check below, which
+            # would otherwise read it as "an opponent draws".
+            turn = getattr(game, "turn", None)
+            if turn is None or turn.active_player == controller:
+                return False
+            lowered = _DURING_AN_OPPONENTS_TURN_RE.sub("", lowered)
+            condition = _DURING_AN_OPPONENTS_TURN_RE.sub("", condition)
         if "an opponent" in lowered:
             return event.player is not None and event.player != controller
         return _controller_clause_holds(condition, controller, event.player)
@@ -2861,7 +2876,7 @@ _TARGETED_OBJECT = (
     r"(?: spell)?(?: you control| an opponent controls)?"
 )
 _OBJECT_TARGET_SUBJECT = re.compile(
-    rf"^(?P<subject>{_TARGETED_OBJECT}(?: or {_TARGETED_OBJECT})*)"
+    rf"^(?P<you>you or )?(?P<subject>{_TARGETED_OBJECT}(?: or {_TARGETED_OBJECT})*)"
     r" becomes the target of (?P<by>.+)$"
 )
 
@@ -2943,8 +2958,10 @@ def _targeting_object_matches(game: "Game", condition: str, event: GameEvent) ->
 #: Botanical Brawler's "another permanent you control", Stalwart Successor's
 #: "a creature you control" - a quality (`models.game._permanent_quality`)
 #: of a permanent its controller controls, "another" excluding the source.
+#: The article is optional for the plural form (Bioessence Hydra's "planeswalkers
+#: you control").
 _COUNTERS_PUT_ON_QUALITY_SUBJECT = re.compile(
-    r"^(?P<article>another|an?) (?P<quality>[a-z -]+?) you control$"
+    r"^(?:(?P<article>another|an?) )?(?P<quality>[a-z -]+?) you control$"
 )
 
 
@@ -5760,6 +5777,9 @@ def _state_condition_holds(game: "Game", ability: TriggeredAbility, source: Card
         return False
     subject = match["subject"].strip().rstrip(".").lower()
     names = {source.name.lower(), "it", "this permanent", "this creature", "this artifact"}
+    # CR 603.8 reads the source by whichever type word the card prints for
+    # itself ("this enchantment", "this land", "this planeswalker").
+    names.update(f"this {kind.value.lower()}" for kind in game.characteristics_of(source).types)
     with contextlib.suppress(KeyError):
         names.add(game.characteristics_of(source).name.lower())
     if subject not in names:

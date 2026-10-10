@@ -876,6 +876,19 @@ class TriggersDecisionsMixin:
 
         condition_history.record_crime(self, ability.controller, ability.targets)
         for target in ability.targets:
+            if target.username is not None and not target.is_card:
+                # CR 115.1: a player can be targeted too ("you or another
+                # permanent you control becomes the target of ...").
+                self.emit(
+                    GameEvent(
+                        event=TriggerEvent.BECOMES_TARGET,
+                        subject_name=target.username,
+                        subject_controller=target.username,
+                        targeted_by=ability.id,
+                        player=ability.controller,
+                    )
+                )
+                continue
             if not target.is_card or target.card_id is None:
                 continue
             targeted = self.find_by_id(target.card_id)

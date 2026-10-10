@@ -375,7 +375,7 @@ SELF_NAME = "\x00self"
 _EXCEPT_NAME_RE = re.compile(r"^(?:his|her|its|their) name is (?P<name>.+)$", re.IGNORECASE)
 _EXCEPT_TYPE_LINE_RE = re.compile(
     r"^(?:he|she|it|they)(?:'s|’s| is|'re| are) (?:an? )?(?P<legendary>legendary\s*)?"
-    r"(?:(?P<power>\d+)/(?P<toughness>\d+) )?"
+    r"(?:(?P<power>\d+)/(?P<toughness>\d+)(?: |$))?"
     r"(?P<types>(?!in addition\b)[A-Za-z][\w'-]*(?: (?!in addition\b)[A-Za-z][\w'-]*)*)?"
     r"(?P<addition>\s*in addition to (?:his|her|its|their) other types)?$",
     re.IGNORECASE,
@@ -394,7 +394,13 @@ def _parse_become_copy_exceptions(clause: str) -> CopyExceptions | None:
     from .replacement import _granted_abilities, _split_exception_parts
 
     fields: dict[str, object] = {}
-    for part in _split_exception_parts(clause.strip()):
+    parts: list[str] = []
+    for whole in _split_exception_parts(clause.strip()):
+        # "it's 0/0 and has this ability" (Mimeoplasm): a characteristic
+        # exception and a granted ability joined by "and" are two exceptions.
+        head, *rest = re.split(r"\s+and\s+(?=has\b|have\b)", whole.strip().rstrip("."))
+        parts += [head, *(f"it {tail}" for tail in rest)]
+    for part in parts:
         part = part.strip().rstrip(".").strip()
         if match := _EXCEPT_NAME_RE.fullmatch(part):
             name = match.group("name").strip()
@@ -428,7 +434,13 @@ def _parse_become_copy_exceptions(clause: str) -> CopyExceptions | None:
             fields["types"] = tuple(types)
             fields["subtypes"] = tuple(subtypes)
             fields["add_legendary"] = match.group("legendary") is not None
-            fields["set_type_line"] = match.group("addition") is None
+            power_only = match.group("power") is not None and not (
+                types or subtypes or fields["add_legendary"]
+            )
+            # Mimeoplasm's "except it's 0/0": a bare power/toughness changes
+            # that characteristic and leaves the type line the copy's own
+            # (CR 707.9b).
+            fields["set_type_line"] = match.group("addition") is None and not power_only
             if fields["set_type_line"] and not types:
                 return None  # "he's legendary" with nothing else is not a type line
             continue

@@ -4341,7 +4341,10 @@ class Casting(EngineModel):
                     # CR 609.4b: Chromatic Orrery, Oath of Nissa, Case File
                     # Auditor - "spend mana as though it were mana of any color".
                     "any_color": self.keyword_any_color
-                    or self.game.spends_mana_as_any_color_for_spell(self.spell, self.caster),
+                    or (
+                        self.game is not None
+                        and self.game.spends_mana_as_any_color_for_spell(self.spell, self.caster)
+                    ),
                 }
             ),
         )
@@ -4958,6 +4961,19 @@ class Casting(EngineModel):
         becomes the target of ..." condition (Surrak, Elusive Hunter) watches.
         """
         for target in self.targets:
+            if target.username is not None and not target.is_card:
+                # CR 115.1: a player can be targeted too ("you or another
+                # permanent you control becomes the target of ...").
+                self.game.emit(
+                    GameEvent(
+                        event=TriggerEvent.BECOMES_TARGET,
+                        subject_name=target.username,
+                        subject_controller=target.username,
+                        targeted_by=self.spell.id,
+                        player=self.caster,
+                    )
+                )
+                continue
             if not target.is_card or target.card_id is None:
                 continue
             targeted = self.game.find_by_id(target.card_id)

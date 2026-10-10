@@ -1387,15 +1387,17 @@ _BASIC_LANDS = ("Plains", "Island", "Swamp", "Mountain", "Forest")
 
 
 @cache
-def _board_candidates() -> tuple[str, ...]:
+def _board_candidates(*, legendary: bool = False) -> tuple[str, ...]:
     """Nonlegendary single-faced permanent printings of the pool, for a
-    quality the stock board has too few of."""
+    quality the stock board has too few of - the legendary ones instead when
+    the quality is "legendary" (Rivendell's "if you control a legendary
+    creature"), which no nonlegendary printing can meet."""
     return tuple(
         card.name
         for card in _format_pool()
         if not card.card_faces
         and set(card.types) & _PERMANENT_TYPES
-        and "Legendary" not in (card.type_line or "")
+        and ("Legendary" in (card.type_line or "")) is legendary
         and not card.is_land
     )
 
@@ -1415,6 +1417,7 @@ def _board_material(card_name: str, condition: str) -> tuple[Material, ...]:
     if found is None:
         return ()
     kind, test, _amount = found
+    candidates = _board_candidates(legendary="legendary" in condition.lower())
     saved = _STAGING.variant, _STAGING.material
     _STAGING.variant = QUIET
 
@@ -1444,7 +1447,7 @@ def _board_material(card_name: str, condition: str) -> tuple[Material, ...]:
                 name = next(
                     (
                         name
-                        for name in _board_candidates()
+                        for name in candidates
                         if list(pool()[name].colors or ()) == [color]
                         and _passes(game, source, test, card_state(name))
                     ),
@@ -1453,9 +1456,7 @@ def _board_material(card_name: str, condition: str) -> tuple[Material, ...]:
                 if name is not None:
                     material.append(Material(name, ALICE, Zone.BATTLEFIELD))
             return tuple(material) if material and confirmed(tuple(material)) else ()
-        passing = [
-            name for name in _board_candidates() if _passes(game, source, test, card_state(name))
-        ]
+        passing = [name for name in candidates if _passes(game, source, test, card_state(name))]
         names = passing[:6]
         # A land quality ("seven or more Plains", Emeria): `_board_candidates`
         # leaves lands out, so the basic lands that pass the quality are tried
@@ -2144,6 +2145,9 @@ _SELF_POWER = re.compile(
 )
 
 
+_ENCHANTED_BY_AURAS = re.compile(r"\bis enchanted by (?P<count>\w+) or more auras\b", re.IGNORECASE)
+
+
 def _object_state_threshold(
     scenario: PlayedScenario, source: CardState, condition: str | None
 ) -> None:
@@ -2173,6 +2177,14 @@ def _object_state_threshold(
         missing = int(power.group("n")) - (game.characteristics_of(source).power or 0)
         if missing > 0:
             game.add_counters(source, "+1/+1", missing)
+    if (auras := _ENCHANTED_BY_AURAS.search(lowered)) is not None:
+        # "enchanted by two or more Auras" (Kitsune Mystic): that many plain
+        # Auras attached to it, on the board as CR 303.4 has them.
+        for _ in range(parse_count(auras.group("count"), article=False) or 1):
+            aura = card_state("Pacifism", Zone.BATTLEFIELD, controller=ALICE, owner=ALICE)
+            aura.bind_to_game(game)
+            aura.attachment = TargetRef.to_card(source)
+            game.battlefield.append(aura)
     if "you have the city's blessing" in lowered:
         game.player(ALICE).has_citys_blessing = True
     if "you have a full party" in lowered:
@@ -3626,9 +3638,11 @@ def _counters_you_put(case: Case, ability: TriggeredAbility) -> Iterator[Attempt
     ) or re.search(
         # The passive "one or more [<kind>] counters are put on another
         # permanent you control" / "a creature you control" (Botanical
-        # Brawler, Stalwart Successor): no kind is any kind, a +1/+1 counter.
+        # Brawler, Stalwart Successor; the plural without an article is
+        # Bioessence Hydra's "planeswalkers you control"): no kind is any
+        # kind, a +1/+1 counter.
         r"^one or more (?:(\+1/\+1|-1/-1|[a-z]+) )?counters are put on"
-        r" ((?:another|an?) [a-z ]+ you control)$",
+        r" ((?:(?:another|an?) )?[a-z ]+ you control)$",
         ability.condition,
         re.IGNORECASE,
     )
@@ -3636,7 +3650,7 @@ def _counters_you_put(case: Case, ability: TriggeredAbility) -> Iterator[Attempt
         return
     kind = match.group(1) or "+1/+1"
     partner = "Grizzly Bears"
-    if re.search(r"\bplaneswalker\b", match.group(2), re.IGNORECASE):
+    if re.search(r"\bplaneswalkers?\b", match.group(2), re.IGNORECASE):
         # "on a planeswalker" (Inspired Tethermage, loyalty counters, CR
         # 306.5b): the probe planeswalker is the permanent they go on.
         partner = _LOYALTY_PROBE
@@ -3874,11 +3888,17 @@ def _player_event(case: Case, ability: TriggeredAbility, action: str) -> Iterato
         # card is discarded out of, so the source itself is what goes.
         yield _discarding_itself(case)
         return
-    players = [BOB] if "opponent" in lowered else [ALICE, BOB]
+    # "during an opponent's turn" (The Watcher in the Water) is a window on
+    # the turn, not an opponent doing the drawing.
+    players = (
+        [BOB] if "opponent" in lowered.replace("during an opponent's turn", "") else [ALICE, BOB]
+    )
     for player in players:
 
         def happen(player: str = player) -> tuple[PlayedScenario, Any]:
-            scenario, source_id = _home(case, ability)
+            scenario, source_id = _home(
+                case, ability, **({"active": BOB} if "during an opponent's turn" in lowered else {})
+            )
             game = scenario.game
             for _ in range(3):
                 if action == "draw":
@@ -4676,6 +4696,20 @@ SWEEP_DRIVER_GAPS: tuple[DriverGap, ...] = (
         kind="cast_spell+plays_land",
         event="a card exiled with the source sharing a type with what is played",
         precondition=r"shares a card type with the exiled card",
+    ),
+    # EP01-R1 integration: a Tentacle exists only as the token The Watcher in
+    # the Water makes on a draw in an opponent's turn, and Mimeoplasm is 0/0
+    # until its as-enters exile sizes it; both are proven by
+    # tests/scenarios/test_ep01_r1_sweep_integration.py.
+    DriverGap(
+        kind="dies",
+        event="a Tentacle token, which no pool printing is",
+        precondition=r"^whenever a tentacle you control dies",
+    ),
+    DriverGap(
+        kind="activated",
+        event="a creature card exiled with the source by its own as-enters exile",
+        precondition=r"becomes a copy of target creature card exiled with it",
     ),
     # EP01-R1-T8: the cast probe casts from the hand; a spell cast from the top
     # of the library needs the source's own permission, proven by

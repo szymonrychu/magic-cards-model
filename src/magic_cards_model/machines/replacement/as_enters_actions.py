@@ -26,7 +26,8 @@ from collections.abc import Callable
 from typing import TYPE_CHECKING
 
 from ...models.card import Type
-from ...models.card_state import CardState
+from ...models.card_state import CardState, ExileAnnotation, ExileMarker
+from ...models.zone import Zone
 from ...numbers import COUNT, parse_count
 from ..decisions import Decision, DecisionKind, source_id_of
 
@@ -181,8 +182,17 @@ def _exile_up_to_x(_match: re.Match[str]) -> Action:
             card_name,
             source,
         )
-        for card in chosen:
-            game.exile_permanent(card)
+        for exiled in game.exile_cards(chosen):
+            if exiled.zone is Zone.EXILE and source is not None:
+                # CR 607.2a: exiled "with" the entering permanent, which its
+                # "target creature card exiled with it" ability reads.
+                exiled.exile_annotation = ExileAnnotation(
+                    marker=ExileMarker.LINKED,
+                    owner=exiled.owner,
+                    turn_exiled=game.turn.turns_taken if game.turn is not None else None,
+                    linked_permanent_id=source.id,
+                    linked_permanent_stamp=None,
+                )
         return len(chosen)
 
     return act
