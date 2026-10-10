@@ -5136,6 +5136,15 @@ def _prepare(scenario: PlayedScenario, source: CardState, ability: ActivatedAbil
         if named is not None and not chosen and not source.name.lower().startswith(named.strip()):
             continue  # CR 201.5: a name in its own cost is the source itself
         game.add_counters(source, match.group(1), 5)
+    if "counters from among" in cost:
+        # "Remove three counters from among other creatures you control"
+        # (Tekuthal): counters on a permanent other than the source (CR 118.3).
+        donor = next(
+            p
+            for p in game.permanents_controlled_by(ALICE)
+            if p is not source and Type.CREATURE in p.types
+        )
+        game.add_counters(donor, "+1/+1", 5)
     if ability.loyalty is not None:
         minus = re.match(r"[−-](\d+)", ability.cost.strip())
         if minus is not None:
@@ -5224,6 +5233,16 @@ def _cost_choices(
         ]
         candidates.sort(key=lambda c: c.card.is_land)
         picked = candidates[: component.required]
+        if component.minimum_total_power is not None:
+            # CR 208.1: "any number ... with total power N": the strongest
+            # creatures, one at a time, until their power reaches N.
+            candidates.sort(key=lambda c: -(game.characteristics_of(c).power or 0))
+            picked, total_power = [], 0
+            for candidate in candidates:
+                if total_power >= component.minimum_total_power:
+                    break
+                picked.append(candidate)
+                total_power += game.characteristics_of(candidate).power or 0
         taken.update(c.id for c in picked)
         chosen.setdefault(keyword, []).extend(picked)
     return chosen
@@ -5296,6 +5315,18 @@ def _cost_material_for(card_name: str, text: str) -> tuple[Material, ...]:
             if keyword is None or component.cards or component.required <= 0:
                 continue
             have = len(choices.get(keyword, []))
+            if component.minimum_total_power is not None:
+                # "Tap any number of untapped creatures ... total power 10":
+                # as many 2-power bears as the stock board lacks power for.
+                have_power = sum(
+                    game.characteristics_of(c).power or 0 for c in choices.get(keyword, [])
+                )
+                short = component.minimum_total_power - have_power
+                if short > 0:
+                    material += [Material("Grizzly Bears", ALICE, Zone.BATTLEFIELD)] * (
+                        -(-short // 2)
+                    )
+                continue
             if have >= component.required:
                 continue
             requirement = component.requirement
