@@ -8,7 +8,7 @@ negative (the condition or controller that must not apply) beside it.
 import pytest
 
 from magic_cards_model.machines import Step
-from magic_cards_model.machines.legal_actions import ActionKind, legal_actions
+from magic_cards_model.machines.legal_actions import ActionKind, Affordability, legal_actions
 from magic_cards_model.models import Zone
 from magic_cards_model.models.card_state import Counter
 from magic_cards_model.support import HANDLED, classify_clauses
@@ -639,3 +639,155 @@ def test_draugr_offers_the_exiled_card_as_an_affordable_cast_with_snow_mana():
 
     assert rows, "the exiled Grizzly Bears is offered as a cast"
     assert any(a.affordable for a in rows)
+
+
+# -- Mossbridge Troll: "Tap any number of untapped creatures ... total power 10" --
+
+
+def _troll_board(extra):
+    scenario = _board(["Mossbridge Troll", *extra], [])
+    return scenario, scenario.find("Mossbridge Troll", Zone.BATTLEFIELD, "alice")
+
+
+def test_mossbridge_troll_cost_is_built_and_classified_handled():
+    _clause_handled("Mossbridge Troll", "Tap any number of untapped creatures")
+
+
+def test_mossbridge_troll_taps_creatures_with_total_power_ten():
+    scenario, troll = _troll_board(["Grizzly Bears"] * 5)
+    bears = [
+        p for p in scenario.game.permanents_controlled_by("alice") if p.name == "Grizzly Bears"
+    ]
+
+    before = scenario.game.characteristics_of(troll).power
+    scenario.activate(troll, tapping_for_cost=bears)
+    scenario.resolve_top()
+
+    assert all(b.tapped for b in bears)
+    assert scenario.game.characteristics_of(troll).power == before + 20
+
+
+def test_mossbridge_troll_refuses_total_power_under_ten():
+    scenario, troll = _troll_board(["Grizzly Bears"] * 4)
+    bears = [
+        p for p in scenario.game.permanents_controlled_by("alice") if p.name == "Grizzly Bears"
+    ]
+
+    with pytest.raises(ValueError, match="total power 10"):
+        scenario.activate(troll, tapping_for_cost=bears)
+
+
+def test_mossbridge_troll_cannot_tap_itself_toward_the_total():
+    scenario, troll = _troll_board(["Grizzly Bears"] * 4)
+    bears = [
+        p for p in scenario.game.permanents_controlled_by("alice") if p.name == "Grizzly Bears"
+    ]
+
+    with pytest.raises(ValueError):
+        scenario.activate(troll, tapping_for_cost=[*bears, troll])
+
+
+# -- Tekuthal: "Remove three counters from among other artifacts, creatures, ..." --
+
+
+def test_tekuthal_removes_three_counters_from_other_permanents():
+    scenario = _board(
+        [
+            "Tekuthal, Inquiry Dominus",
+            "Grizzly Bears",
+            "Grizzly Bears",
+            "Island",
+            "Island",
+            "Island",
+        ]
+    )
+    tekuthal = scenario.find("Tekuthal, Inquiry Dominus", Zone.BATTLEFIELD, "alice")
+    bears = [
+        p for p in scenario.game.permanents_controlled_by("alice") if p.name == "Grizzly Bears"
+    ]
+    bears[0].add_counters(Counter.PLUS_ONE, 2)
+    bears[1].add_counters(Counter.PLUS_ONE, 1)
+
+    scenario.activate(tekuthal, index=0, auto=True)
+    scenario.resolve_top()
+
+    assert bears[0].counters[Counter.PLUS_ONE] + bears[1].counters[Counter.PLUS_ONE] == 0
+    assert tekuthal.counters["indestructible"] == 1
+
+
+def test_tekuthal_cannot_pay_with_its_own_counters():
+    scenario = _board(["Tekuthal, Inquiry Dominus", "Island", "Island", "Island"])
+    tekuthal = scenario.find("Tekuthal, Inquiry Dominus", Zone.BATTLEFIELD, "alice")
+    tekuthal.add_counters(Counter.PLUS_ONE, 3)
+
+    with pytest.raises(ValueError):
+        scenario.activate(tekuthal, index=0, auto=True)
+
+
+def test_mossbridge_troll_tap_is_not_a_teamwork_payment():
+    scenario, troll = _troll_board(["Grizzly Bears"] * 4 + ["Agent Maria Hill"])
+    tapped = [p for p in scenario.game.permanents_controlled_by("alice") if p is not troll]
+
+    scenario.activate(troll, tapping_for_cost=tapped)
+
+    assert scenario.stack_names() == ["Mossbridge Troll's activated ability"]
+
+
+# -- Void Maw: "Put a card exiled with this creature into its owner's graveyard" --
+
+
+def _void_maw_with_exiled_bear():
+    scenario = _board(["Void Maw", "Grizzly Bears"], [])
+    maw = scenario.find("Void Maw", Zone.BATTLEFIELD, "alice")
+    bear = scenario.find("Grizzly Bears", Zone.BATTLEFIELD, "alice")
+    scenario.game.destroy(bear)
+    assert bear.zone is Zone.EXILE
+    return scenario, maw, bear
+
+
+def test_void_maw_cost_is_classified_handled():
+    _clause_handled("Void Maw", "Put a card exiled with this creature")
+
+
+def test_void_maw_puts_a_card_it_exiled_into_its_owners_graveyard_as_a_cost():
+    scenario, maw, bear = _void_maw_with_exiled_bear()
+    before = scenario.game.characteristics_of(maw).power
+
+    scenario.activate(maw, exiling=[bear])
+    assert bear.zone is Zone.GRAVEYARD
+    scenario.resolve_top()
+
+    assert scenario.game.characteristics_of(maw).power == before + 2
+
+
+def test_void_maw_is_offered_as_an_activation_only_with_a_card_exiled_with_it():
+    scenario, maw, _ = _void_maw_with_exiled_bear()
+    rows = [
+        a
+        for a in legal_actions(scenario.game, "alice")
+        if a.kind is ActionKind.ACTIVATE and a.card_id == maw.id
+    ]
+    assert rows
+    assert all(a.affordable is Affordability.YES for a in rows)
+
+
+def test_void_maw_cannot_pay_with_a_card_exiled_by_something_else():
+    scenario = _board(["Void Maw"], [], bob_exile=["Grizzly Bears"])
+    maw = scenario.find("Void Maw", Zone.BATTLEFIELD, "alice")
+    stranger = scenario.find("Grizzly Bears", Zone.EXILE)
+
+    with pytest.raises(ValueError):
+        scenario.activate(maw, exiling=[stranger])
+    assert stranger.zone is Zone.EXILE
+
+
+def test_void_maw_with_nothing_exiled_with_it_is_not_affordable():
+    scenario = _board(["Void Maw"], [])
+    maw = scenario.find("Void Maw", Zone.BATTLEFIELD, "alice")
+    rows = [
+        a
+        for a in legal_actions(scenario.game, "alice")
+        if a.kind is ActionKind.ACTIVATE and a.card_id == maw.id
+    ]
+    assert rows
+    assert all(a.affordable is Affordability.NO for a in rows)

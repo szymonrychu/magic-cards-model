@@ -93,6 +93,11 @@ class CostStep(StrEnum):
 # --------------------------------------------------------------------------
 
 
+#: The description `Casting.pay_teamwork` gives its tap component: a total-power
+#: tap cost is Teamwork's only when it says so (Mossbridge Troll's is not).
+TEAMWORK_TAP = "tap for teamwork"
+
+
 class ComponentKind(StrEnum):
     """The non-mana things a cost can ask for."""
 
@@ -159,6 +164,11 @@ class ComponentKind(StrEnum):
     #: nothing moves) and untouched if it came from the battlefield (CR
     #: 701.4b: it is simply noted, not tapped, sacrificed, or exiled).
     BEHOLD = "behold"
+    #: CR 607.2a's linked pile used as a cost: "Put a card exiled with this
+    #: creature into its owner's graveyard" (Void Maw). The cards come from the
+    #: exile zone, were exiled with `link_to_permanent_id`, and leave through
+    #: `Game.put_into_graveyard`.
+    PUT_EXILED_INTO_GRAVEYARD = "put_exiled_into_graveyard"
 
 
 _OBJECT_KINDS = frozenset(
@@ -174,6 +184,7 @@ _OBJECT_KINDS = frozenset(
         ComponentKind.RETURN_TO_HAND,
         ComponentKind.REVEAL,
         ComponentKind.BEHOLD,
+        ComponentKind.PUT_EXILED_INTO_GRAVEYARD,
     }
 )
 
@@ -572,8 +583,24 @@ class CostComponent(EngineModel):
             ComponentKind.RETURN_TO_HAND: self._why_not_return_to_hand,
             ComponentKind.REVEAL: self._why_not_reveal,
             ComponentKind.BEHOLD: self._why_not_behold,
+            ComponentKind.PUT_EXILED_INTO_GRAVEYARD: self._why_not_exiled_with,
         }
         return checks[self.kind](game)
+
+    def _why_not_exiled_with(self, _game: Any) -> str | None:
+        """CR 607.2a: only a card in exile that was exiled with the linked
+        permanent pays "Put a card exiled with this creature ..."."""
+        for card in self.cards:
+            if card.zone is not Zone.EXILE:
+                return f"{card.name} is in the {card.zone.value}, not exiled"
+            annotation = card.exile_annotation
+            if (
+                self.link_to_permanent_id is None
+                or annotation is None
+                or not annotation.links_to(self.link_to_permanent_id, None)
+            ):
+                return f"{card.name} was not exiled with the source of this cost (CR 607.2a)"
+        return None
 
     def _why_not_behold(self, _game: Any) -> str | None:
         """CR 701.4a: "Reveal a [quality] card from your hand or choose a
@@ -959,7 +986,7 @@ class CostComponent(EngineModel):
                     # only by `machines/teamwork.py`'s own component, never
                     # by an ordinary tap cost.
                     game.emit_became_tapped(
-                        card, tapped_for_teamwork=self.minimum_total_power is not None
+                        card, tapped_for_teamwork=self.description.startswith(TEAMWORK_TAP)
                     )
         elif self.kind is ComponentKind.SACRIFICE:
             for card in self.cards:
@@ -1065,6 +1092,10 @@ class CostComponent(EngineModel):
             else:
                 for card in self.cards:
                     self._remember(card)
+        elif self.kind is ComponentKind.PUT_EXILED_INTO_GRAVEYARD:
+            for card in self.cards:
+                self._remember(card)
+                game.put_into_graveyard(card)
         elif self.kind is ComponentKind.UNTAP:
             for card in self.cards:
                 self._remember(card)
@@ -1657,6 +1688,23 @@ def return_to_hand_cost(
         kind=ComponentKind.RETURN_TO_HAND,
         cards=list(cards),
         required=len(cards) if required is None else required,
+        payer=payer,
+        description=description,
+    )
+
+
+def put_exiled_into_graveyard_cost(
+    *cards: CardState,
+    payer: str | None = None,
+    required: int = 1,
+    description: str = "",
+) -> CostComponent:
+    """ "Put a card exiled with this creature into its owner's graveyard" as a
+    cost (CR 607.2a, CR 118.3); `link_to_permanent_id` names "this creature"."""
+    return CostComponent(
+        kind=ComponentKind.PUT_EXILED_INTO_GRAVEYARD,
+        cards=list(cards),
+        required=required,
         payer=payer,
         description=description,
     )

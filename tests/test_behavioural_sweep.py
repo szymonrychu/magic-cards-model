@@ -5470,6 +5470,13 @@ def _needs_a_blocker(ability: ActivatedAbility) -> bool:
     return any(states) and all(CombatState.ATTACKING not in state for state in states if state)
 
 
+def _activator_for(ability: ActivatedAbility) -> str:
+    """Who activates: the opponent for "Only your opponents may activate this
+    ability" (Knight of the Holy Nimbus, CR 602.2), the controller otherwise."""
+    instructions = (ability.instructions or "").lower()
+    return BOB if "only your opponents may activate" in instructions else ALICE
+
+
 def _activate(
     scenario: PlayedScenario, source: CardState, index: int, ability: ActivatedAbility
 ) -> Any:
@@ -5477,11 +5484,14 @@ def _activate(
     the cost's chosen objects, pay mana with everything but the source, and
     put it on the stack."""
     game = scenario.game
-    refusal = game.why_cannot_activate(source, index, ALICE)
+    activator = _activator_for(ability)
+    if scenario.priority_holder != activator:
+        scenario.pass_priority(scenario.priority_holder)
+    refusal = game.why_cannot_activate(source, index, activator)
     if refusal is not None:
         raise _Unavailable(f"refused: {refusal}")
     x_value = _x_for(ability)
-    action = _action_for(scenario, ALICE, ActionKind.ACTIVATE, source.id, ability_index=index)
+    action = _action_for(scenario, activator, ActionKind.ACTIVATE, source.id, ability_index=index)
     targets = (
         _pick(scenario, action.target_slots, text=ability.effect) if action is not None else []
     )
@@ -5493,7 +5503,7 @@ def _activate(
         payment = game.begin_activating(
             source,
             index,
-            ALICE,
+            activator,
             sacrificing=sacrificing,
             discarding=choices.get("discarding"),
             exiling=choices.get("exiling"),
@@ -5502,17 +5512,17 @@ def _activate(
             x_value=x_value,
             targets=targets or None,
         )
-        payment.auto_tap([p for p in game.permanents_controlled_by(ALICE) if p is not source])
+        payment.auto_tap([p for p in game.permanents_controlled_by(activator) if p is not source])
         payment.pay()
         on_stack = game.activate_ability(
             source,
             index,
-            ALICE,
+            activator,
             x_value=x_value,
             exiled_for_cost=(choices.get("exiling") or [None])[0],
             sacrificed_for_cost=sacrificing,
         )
-        game.retain_priority(ALICE)
+        game.retain_priority(activator)
         return on_stack
     except (ValueError, AssertionError) as error:
         raise _Unavailable(f"activation refused: {error}") from error

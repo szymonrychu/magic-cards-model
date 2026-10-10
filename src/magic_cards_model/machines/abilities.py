@@ -3360,13 +3360,20 @@ def _merge_disjunctive_sacrifice_cost(parts: list[str]) -> list[str]:
     while index < total:
         part = parts[index]
         lowered = part.strip().lower()
-        if lowered.startswith(("sacrifice ", "discard ", "exile ")) and index + 1 < total:
+        from_among = lowered.startswith("remove ") and " from among " in lowered
+        if (
+            lowered.startswith(("sacrifice ", "discard ", "exile ")) or from_among
+        ) and index + 1 < total:
+            # CR 118.3: "Remove three counters from among other artifacts,
+            # creatures, and planeswalkers you control" (Tekuthal) is one cost
+            # whose list closes on "and".
+            closers = ("or ", "and ") if from_among else ("or ",)
             group = [part]
             cursor = index + 1
             closed = False
             while cursor < total:
                 candidate = parts[cursor]
-                if candidate.strip().lower().startswith("or "):
+                if candidate.strip().lower().startswith(closers):
                     group.append(candidate)
                     cursor += 1
                     closed = True

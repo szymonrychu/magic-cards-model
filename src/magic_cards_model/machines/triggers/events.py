@@ -424,8 +424,8 @@ class GameEvent(EngineModel):
     ..." asks about the *reason* she was tapped, not merely that she was,
     the same way "deals **combat** damage" narrows `combat` above rather
     than matching any damage event. Set by `machines/cost.CostComponent.
-    pay`'s own `ComponentKind.TAP` branch off `minimum_total_power is not
-    None` - the field `pay_teamwork` alone ever sets - so an equip cost, a
+    pay`'s own `ComponentKind.TAP` branch off the `TEAMWORK_TAP` description
+    `pay_teamwork` alone gives its component - so an equip cost, a
     convoke tap, or any other ordinary tap cost leaves this `False`."""
 
     step: Step | None = None

@@ -899,7 +899,18 @@ _PHRASE_DISCARD = re.compile(
 _PHRASE_TAP = re.compile(
     rf"^tap (?:(?P<another>another)|{_COST_COUNT}) (?P<other>other )?(?:untapped )?"
     r"(?P<quality>[\w ,]+?) "
-    r"you control$",
+    r"you control(?P<other_than> other than this (?:creature|permanent|artifact))?"
+    # CR 208.1: "... with total power 10 or greater" (Mossbridge Troll) - the
+    # tapped creatures' combined power is the threshold, whatever their number.
+    r"(?: with total power (?P<power>\d+) or (?:greater|more))?$",
+    re.IGNORECASE,
+)
+#: `Put a card exiled with this creature into its owner's graveyard` (Void Maw)
+#: - CR 607.2a's linked pile as a cost. "This creature" is the ability's source,
+#: filled in by `Game.activation_cost` as the component is built.
+_PHRASE_PUT_EXILED_INTO_GRAVEYARD = re.compile(
+    r"^put an? (?:card|creature card) exiled with this (?:creature|permanent|artifact|enchantment)"
+    r" into its owner's graveyard$",
     re.IGNORECASE,
 )
 #: `Return a land you control to its owner's hand` (Tameshi, Reality
@@ -962,7 +973,7 @@ _PHRASE_PLACE_COUNTERS = re.compile(
 #: (`CostComponent.from_among`).
 _PHRASE_REMOVE_COUNTERS_FROM_AMONG = re.compile(
     rf"^remov(?:e|ing) {_COST_COUNT} (?:(?P<kind>[\w+/−-]+) )?counters? from among "
-    r"(?P<group>[a-z ]+?)s you control$",
+    r"(?P<other>other )?(?P<group>[a-z ,]+?)s you control$",
     re.IGNORECASE,
 )
 _PHRASE_REMOVE_ANY_COUNTERS = re.compile(
@@ -1217,9 +1228,12 @@ def cost_component_for_phrase(phrase: str, payer: str | None = None) -> CostComp
         if read is None or read[1]:
             return None
         kind_word = from_among.group("kind")
-        requirement = _requirement(from_among.group("group"))
+        # "other artifacts, creatures, and planeswalkers" (Tekuthal): each
+        # plural in the list names one type, and "other" keeps the source out.
+        requirement = _requirement(re.sub(r"s(?=,|$)", "", from_among.group("group")))
         if requirement is None:
             return None
+        requirement.excludes_source = from_among.group("other") is not None
         component = remove_counters_cost(
             None,
             read[0],
@@ -1463,6 +1477,9 @@ def cost_component_for_phrase(phrase: str, payer: str | None = None) -> CostComp
         component.requirement = requirement
         return component
 
+    if _PHRASE_PUT_EXILED_INTO_GRAVEYARD.match(text):
+        return put_exiled_into_graveyard_cost(payer=payer, description=text)
+
     tap = _PHRASE_TAP.match(text)
     if tap is not None:
         another = tap.group("another") is not None
@@ -1470,9 +1487,14 @@ def cost_component_for_phrase(phrase: str, payer: str | None = None) -> CostComp
         requirement = _requirement(tap.group("quality"))
         if read is None or requirement is None:
             return None
-        requirement.excludes_source = another or tap.group("other") is not None
+        requirement.excludes_source = (
+            another or tap.group("other") is not None or tap.group("other_than") is not None
+        )
         component = tap_cost(payer=payer, description=text)
         component.required = read[0]
+        if tap.group("power") is not None:
+            component.minimum_total_power = int(tap.group("power"))
+            component.required = 1
         component.requirement = requirement
         component.variable_count = read[1]
         return component
@@ -1646,6 +1668,7 @@ from .components import (  # noqa: E402
     mill_cost,
     pay_life_cost,
     place_counters_cost,
+    put_exiled_into_graveyard_cost,
     remove_counters_cost,
     return_to_hand_cost,
     reveal_cost,

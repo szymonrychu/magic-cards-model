@@ -1891,7 +1891,21 @@ class ActivationMixin:
                 # "Exile X cards", "Remove X counters", "Exile one or more ...":
                 # the count announced now (CR 107.3a), or every card nominated.
                 component = announce_count(component, x_value, len(exiles))
-                if not component.cards and (
+                if component.kind is ComponentKind.PUT_EXILED_INTO_GRAVEYARD:
+                    # CR 607.2a: "this creature" names the pile's owner, not the
+                    # card paid. The cards nominated (or, none named, the first
+                    # card exiled with it) pay.
+                    pile = self.cards_exiled_with(permanent.id, permanent.zone_change_stamp)
+                    component = component.model_copy(
+                        update={
+                            "link_to_permanent_id": permanent.id,
+                            "cards": list(exiles[: component.required])
+                            if exiles
+                            else pile[: component.required],
+                        }
+                    )
+                    del exiles[: component.required]
+                elif not component.cards and (
                     _cost_refers_to_self(piece.text, permanent)
                     or _exiles_itself_by_name(piece.text, permanent)
                 ):
@@ -1919,6 +1933,10 @@ class ActivationMixin:
                     # what the `CostKind.TAP` branch above already built with
                     # `[permanent]` filled in, so this never double-fills it.
                     chosen_taps: list[CardState] = []
+                    if component.minimum_total_power is not None:
+                        # CR 208.1: "any number ... with total power N": every
+                        # creature named is tapped, and their sum must reach N.
+                        component = component.model_copy(update={"required": len(taps)})
                     while taps and len(chosen_taps) < component.required:
                         chosen_taps.append(taps.pop(0))
                     component = component.model_copy(update={"cards": chosen_taps})

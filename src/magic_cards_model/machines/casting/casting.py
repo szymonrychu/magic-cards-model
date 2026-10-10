@@ -36,6 +36,7 @@ from ..casting_restrictions import (
     zone_cast_prohibition_source,
 )
 from ..cost import (
+    TEAMWORK_TAP,
     CardRequirement,
     ComponentKind,
     CostComponent,
@@ -3246,7 +3247,7 @@ class Casting(EngineModel):
             required=len(chosen),
             minimum_total_power=threshold,
             payer=self.caster,
-            description=f"tap for teamwork (Teamwork {threshold})",
+            description=f"{TEAMWORK_TAP} (Teamwork {threshold})",
         )
         self.additional_costs.append(TotalCost(components=[component]).assign_payer(self.caster))
         self.teamwork_paid = True
