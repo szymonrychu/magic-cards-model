@@ -468,3 +468,53 @@ def test_thunderstaff_prevents_one_only_while_untapped():
     assert _hit(scenario, alice, 3, guide, combat=True) == 3
     staff.untap()
     assert _hit(scenario, alice, 3, guide) == 3  # noncombat damage
+
+
+# -- equipment and flip cards --------------------------------------------------------------------
+
+
+def test_inquisitors_flail_doubles_equipped_combat_damage_and_doubles_combat_damage_to_it():
+    """CR 614.1a, CR 701.10g: the equipped creature deals double combat damage;
+    another creature's combat damage to it is doubled (CR 614.1a).
+    Noncombat damage and unequipped creatures are untouched."""
+    scenario = _board(
+        alice=["Inquisitor's Flail", "Grizzly Bears", "Llanowar Elves"], bob=["Goblin Guide"]
+    )
+    guide = scenario.creature("Goblin Guide", "bob")
+    bears = scenario.creature("Grizzly Bears", "alice")
+    elves = scenario.creature("Llanowar Elves", "alice")
+    bob = scenario.player("bob")
+    _on(scenario, "Inquisitor's Flail").attach_to(bears)
+
+    assert _hit(scenario, bob, 2, bears, combat=True) == 4
+    assert _hit(scenario, bob, 2, bears) == 2  # noncombat
+    assert _hit(scenario, bob, 2, elves, combat=True) == 2  # not equipped
+    assert _hit(scenario, bears, 5, guide, combat=True) == 10
+    assert _hit(scenario, bears, 5, guide) == 5  # noncombat
+    assert _hit(scenario, elves, 5, guide, combat=True) == 5
+
+
+def test_akki_lavarunner_flips_on_damage_to_an_opponent_and_tok_tok_adds_one_from_red_sources():
+    """Akki Lavarunner: "Whenever this creature deals damage to an opponent,
+    flip it" (CR 710.2); flipped, Tok-Tok's "If a red source would deal damage
+    to a player, it deals that much damage plus 1" (CR 614.1a) applies."""
+    scenario = _board(alice=["Akki Lavarunner // Tok-Tok, Volcano Born", "Goblin Guide"])
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    akki = scenario.creature("Akki Lavarunner", "alice")
+    guide = scenario.creature("Goblin Guide", "alice")
+    bob = scenario.player("bob")
+
+    assert _hit(scenario, bob, 2, guide) == 2  # not flipped yet: no replacement
+    assert not akki.flipped
+    scenario.game.deal_damage(guide, 1, source=akki)
+    scenario.game.put_triggers_on_stack()
+    assert not scenario.game.stack  # damage to a creature is not damage to an opponent
+    assert not akki.flipped
+
+    scenario.game.deal_damage(bob, 1, source=akki)
+    scenario.game.put_triggers_on_stack()
+    scenario.resolve_top()
+    assert akki.flipped
+    assert akki.name == "Tok-Tok, Volcano Born"
+    assert _hit(scenario, bob, 2, guide) == 3
+    assert _hit(scenario, scenario.player("alice"), 2, guide) == 3  # "a player"

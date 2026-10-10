@@ -2230,6 +2230,26 @@ _DAMAGE_THAT_PLAYER_RE = re.compile(
 )
 
 
+#: "Whenever this creature deals damage to an opponent, flip it." (Akki
+#: Lavarunner): CR 710.2 - the source's own flip, a one-way change (CR 710.4)
+#: that `CardState.flip` makes only for a flip card still on the battlefield.
+_FLIP_SELF_RE = re.compile(r"^flip (?:it|this (?:creature|permanent))\.?$", re.IGNORECASE)
+
+
+@ABILITY_TEXT.rung("s19", for_spell=False)
+def _parse_flip_self_clause(text: str, *, for_spell: bool) -> AbilityEffect | None:
+    """`_FLIP_SELF_RE`'s shape; ability-only (a spell has no permanent to flip)."""
+    if for_spell or _FLIP_SELF_RE.fullmatch(text.strip()) is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        source = ability.source(game)
+        if source is not None:
+            source.flip()
+
+    return effect
+
+
 @ABILITY_TEXT.rung("s19", for_spell=False)
 def _parse_damage_that_player_clause(text: str, *, for_spell: bool) -> AbilityEffect | None:
     """`_DAMAGE_THAT_PLAYER_RE`'s shape; see the banner above."""
