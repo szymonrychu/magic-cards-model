@@ -35,12 +35,15 @@ to green") are read by the same expression reader. An expression it cannot
 read fails closed with a notice instead of placing a wrong number silently.
 """
 
+from uuid import NAMESPACE_OID, uuid5
+
 import pytest
 
 from magic_cards_model.machines import Step
-from magic_cards_model.machines.effects import amount_expression
+from magic_cards_model.machines.effects import UnreadableCounterAmountNotice, amount_expression
 from magic_cards_model.models import Zone
 from magic_cards_model.models.card_state import Counter
+from tests.cards import card
 from tests.scenarios.harness import Scenario
 
 
@@ -268,3 +271,41 @@ def test_the_greatest_creature_count_among_players_sizes_the_enters_with_counter
     assert journal.zone is Zone.BATTLEFIELD
     assert journal.counters["suspect"] == 1
     assert scenario.game.unreadable_counter_amount_notices == []
+
+
+def test_an_unreadable_enters_with_count_fails_closed_with_a_notice():
+    """No silent skip. Whatever card the pool has today, this one is built to
+    stay unreadable: Investigator's Journal reprinted with an "enters with a
+    number of suspect counters on it equal to ..." expression no reader
+    evaluates, so the permanent enters with no counters and a notice names the
+    unread expression. (`Card.model_copy` leaves the cached pool printing
+    alone; its own `id` keeps per-printing parse caches honest; the hand copy
+    is swapped for the reprint.)"""
+    expression = "the number of dreams you had last night"
+    reprinted = card("Investigator's Journal").model_copy(
+        update={
+            "id": uuid5(NAMESPACE_OID, expression),
+            "oracle_text": (
+                "This artifact enters with a number of suspect counters on it "
+                f"equal to {expression}."
+            ),
+        }
+    )
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Investigator's Journal"], battlefield=["Wastes", "Wastes"])
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    (in_hand,) = scenario.game.player("alice").hand
+    in_hand.card = reprinted
+
+    journal = scenario.cast_and_resolve("Investigator's Journal", auto=True)
+
+    assert journal.zone is Zone.BATTLEFIELD
+    assert journal.counters["suspect"] == 0
+    (notice,) = scenario.game.unreadable_counter_amount_notices
+    assert isinstance(notice, UnreadableCounterAmountNotice)
+    assert notice.source_name == "Investigator's Journal"
+    assert notice.expression == expression

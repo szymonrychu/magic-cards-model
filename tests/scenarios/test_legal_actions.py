@@ -18,6 +18,7 @@ pass's regression tests).
 """
 
 import json
+from uuid import NAMESPACE_OID, uuid5
 
 import pytest
 
@@ -1467,6 +1468,44 @@ def test_a_mana_ability_with_an_energy_cost_still_describes_what_it_produces():
     (mana_action,) = _of_kind(actions, ActionKind.ACTIVATE_MANA)
 
     assert mana_action.affordable is Affordability.NO
+    assert mana_action.produces == "one mana of any color"
+    assert mana_action.restriction is None
+    assert mana_action.restriction_understood is None
+
+
+def test_an_unpriceable_mana_ability_still_describes_what_it_produces():
+    """A mana ability with a cost piece `machines/cost.cost_component_for_phrase`
+    declines to read goes through `_battlefield_ability_actions`'s
+    `Affordability.UNKNOWN` fallback rather than the priced branch (CR 118.6:
+    attempting an unpayable cost is still a legal action). That fallback is
+    where a descriptor would silently go missing, so it is asserted here.
+
+    No pool card keeps such a cost for long (Servant of the Conduit's
+    "Pay {E}" was read this round), so the card is built, not named:
+    Servant of the Conduit reprinted with an unreadable cost sentence
+    ("Say your middle name", Moniker Mage's own shape) in place of "Pay {E}".
+    `Card.model_copy` leaves the cached pool printing alone; its own `id`
+    keeps `parse_abilities`' per-printing cache from answering with the
+    original text.
+    """
+    text = "{T}, Say your middle name: Add one mana of any color."
+    reprinted = pool()["Servant of the Conduit"].model_copy(
+        update={
+            "id": uuid5(NAMESPACE_OID, text),
+            "oracle_text": text,
+        }
+    )
+    scenario = (
+        Scenario().player("alice", battlefield=["Servant of the Conduit"]).player("bob").build()
+    )
+    (servant,) = scenario.game.battlefield
+    servant.card = reprinted
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    actions = legal_actions(scenario.game, "alice")
+    (mana_action,) = _of_kind(actions, ActionKind.ACTIVATE_MANA)
+
+    assert mana_action.affordable is Affordability.UNKNOWN
     assert mana_action.produces == "one mana of any color"
     assert mana_action.restriction is None
     assert mana_action.restriction_understood is None
