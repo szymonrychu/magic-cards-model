@@ -120,6 +120,7 @@
       "_parse_conditional_sacrifice_clause",
       "_parse_conditional_remove_counter_from_self_clause",
       "_parse_prevent_damage_to_it_whole_text",
+      "_parse_flip_self_clause",
       "_parse_damage_that_player_clause",
       "_parse_damage_that_much_clause",
       "_parse_damage_to_you_and_target_clause",
