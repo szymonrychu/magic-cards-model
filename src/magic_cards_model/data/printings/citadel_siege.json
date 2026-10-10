@@ -1,0 +1,130 @@
+{
+  "object": "card",
+  "id": "9c13bc7c-a536-44d0-8c89-49ff33bee326",
+  "oracle_id": "40f66e21-5b60-4e42-927d-65397e7ad544",
+  "multiverse_ids": [
+    539342
+  ],
+  "mtgo_id": 93578,
+  "tcgplayer_id": 248584,
+  "cardmarket_id": 575361,
+  "name": "Citadel Siege",
+  "lang": "en",
+  "released_at": "2021-09-24",
+  "uri": "https://api.scryfall.com/cards/9c13bc7c-a536-44d0-8c89-49ff33bee326",
+  "scryfall_uri": "https://scryfall.com/card/mic/81/citadel-siege?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T06:49:14Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/9/c/9c13bc7c-a536-44d0-8c89-49ff33bee326.jpg?1783925354",
+    "normal": "https://cards.scryfall.io/normal/front/9/c/9c13bc7c-a536-44d0-8c89-49ff33bee326.jpg?1783925354",
+    "large": "https://cards.scryfall.io/large/front/9/c/9c13bc7c-a536-44d0-8c89-49ff33bee326.jpg?1783925354",
+    "png": "https://cards.scryfall.io/png/front/9/c/9c13bc7c-a536-44d0-8c89-49ff33bee326.png?1783925354",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/9/c/9c13bc7c-a536-44d0-8c89-49ff33bee326.jpg?1783925354",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/9/c/9c13bc7c-a536-44d0-8c89-49ff33bee326.jpg?1783925354",
+    "thumb": "https://cards.scryfall.io/thumb/front/9/c/9c13bc7c-a536-44d0-8c89-49ff33bee326.webp?1783925354",
+    "grid": "https://cards.scryfall.io/grid/front/9/c/9c13bc7c-a536-44d0-8c89-49ff33bee326.webp?1783925354",
+    "display": "https://cards.scryfall.io/display/front/9/c/9c13bc7c-a536-44d0-8c89-49ff33bee326.webp?1783925354",
+    "art": "https://cards.scryfall.io/art/front/9/c/9c13bc7c-a536-44d0-8c89-49ff33bee326.webp?1783925354",
+    "crop": "https://cards.scryfall.io/crop/front/9/c/9c13bc7c-a536-44d0-8c89-49ff33bee326.webp?1783925354"
+  },
+  "mana_cost": "{2}{W}{W}",
+  "cmc": 4.0,
+  "type_line": "Enchantment",
+  "oracle_text": "As this enchantment enters, choose Khans or Dragons.\n\u2022 Khans \u2014 At the beginning of combat on your turn, put two +1/+1 counters on target creature you control.\n\u2022 Dragons \u2014 At the beginning of combat on each opponent's turn, tap target creature that player controls.",
+  "colors": [
+    "W"
+  ],
+  "color_identity": [
+    "W"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": false,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "7f9a4deb-715e-47d2-afac-3843ef92f39b",
+  "set": "mic",
+  "set_name": "Midnight Hunt Commander",
+  "set_type": "commander",
+  "set_uri": "https://api.scryfall.com/sets/7f9a4deb-715e-47d2-afac-3843ef92f39b",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Amic&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/mic?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/9c13bc7c-a536-44d0-8c89-49ff33bee326/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A40f66e21-5b60-4e42-927d-65397e7ad544&unique=prints",
+  "collector_number": "81",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Steven Belledin",
+  "artist_ids": [
+    "f07d73b9-52a0-4fe5-858b-61f7b42174a5"
+  ],
+  "illustration_id": "b911b677-c075-4d5d-9e9a-d9bf9e331493",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "edhrec_rank": 5536,
+  "penny_rank": 8261,
+  "prices": {
+    "usd": "0.25",
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": "0.21",
+    "eur_foil": null,
+    "tix": null
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=539342&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DCitadel%2BSiege",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DCitadel%2BSiege",
+    "edhrec": "https://edhrec.com/route/?cc=Citadel+Siege"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F248584%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=575361&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/93578?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

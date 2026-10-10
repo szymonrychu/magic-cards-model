@@ -3633,9 +3633,16 @@ def _acting_player_matches(who: str, controller: str, actor: str | None) -> bool
 def _step_matches(condition: str, controller: str, event: GameEvent) -> bool:
     """ "At the beginning of [whose] [step]" against the step that just began."""
     lowered = condition.lower()
-    step = next((step for phrase, step in _STEP_PHRASES if phrase in lowered), None)
-    if step is None or step is not event.step:
-        return False
+    if "main phases" in lowered:
+        # CR 505.1: "each of your main phases" is both of them - Frontier
+        # Siege's Khans half adds its mana at the start of the precombat and
+        # of the postcombat main phase alike.
+        if event.step not in (Step.PRECOMBAT_MAIN, Step.POSTCOMBAT_MAIN):
+            return False
+    else:
+        step = next((step for phrase, step in _STEP_PHRASES if phrase in lowered), None)
+        if step is None or step is not event.step:
+            return False
     if "your" in lowered:
         return event.player == controller
     if "opponent" in lowered:

@@ -1,0 +1,131 @@
+{
+  "object": "card",
+  "id": "15b137fb-3f90-4a44-a225-cff5ca153190",
+  "oracle_id": "7c48c341-1d56-4210-9d86-181ebb206098",
+  "multiverse_ids": [
+    519156
+  ],
+  "mtgo_id": 89343,
+  "tcgplayer_id": 236185,
+  "cardmarket_id": 558771,
+  "name": "Living Lore",
+  "lang": "en",
+  "released_at": "2021-04-23",
+  "uri": "https://api.scryfall.com/cards/15b137fb-3f90-4a44-a225-cff5ca153190",
+  "scryfall_uri": "https://scryfall.com/card/c21/121/living-lore?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T07:26:04Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/1/5/15b137fb-3f90-4a44-a225-cff5ca153190.jpg?1783927564",
+    "normal": "https://cards.scryfall.io/normal/front/1/5/15b137fb-3f90-4a44-a225-cff5ca153190.jpg?1783927564",
+    "large": "https://cards.scryfall.io/large/front/1/5/15b137fb-3f90-4a44-a225-cff5ca153190.jpg?1783927564",
+    "png": "https://cards.scryfall.io/png/front/1/5/15b137fb-3f90-4a44-a225-cff5ca153190.png?1783927564",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/1/5/15b137fb-3f90-4a44-a225-cff5ca153190.jpg?1783927564",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/1/5/15b137fb-3f90-4a44-a225-cff5ca153190.jpg?1783927564",
+    "thumb": "https://cards.scryfall.io/thumb/front/1/5/15b137fb-3f90-4a44-a225-cff5ca153190.webp?1783927564",
+    "grid": "https://cards.scryfall.io/grid/front/1/5/15b137fb-3f90-4a44-a225-cff5ca153190.webp?1783927564",
+    "display": "https://cards.scryfall.io/display/front/1/5/15b137fb-3f90-4a44-a225-cff5ca153190.webp?1783927564",
+    "art": "https://cards.scryfall.io/art/front/1/5/15b137fb-3f90-4a44-a225-cff5ca153190.webp?1783927564",
+    "crop": "https://cards.scryfall.io/crop/front/1/5/15b137fb-3f90-4a44-a225-cff5ca153190.webp?1783927564"
+  },
+  "mana_cost": "{3}{U}",
+  "cmc": 4.0,
+  "type_line": "Creature \u2014 Avatar",
+  "oracle_text": "As this creature enters, exile an instant or sorcery card from your graveyard.\nLiving Lore's power and toughness are each equal to the exiled card's mana value.\nWhenever this creature deals combat damage, you may sacrifice it. If you do, you may cast the exiled card without paying its mana cost.",
+  "power": "*",
+  "toughness": "*",
+  "colors": [
+    "U"
+  ],
+  "color_identity": [
+    "U"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": false,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "27bf6dbd-a9e1-4904-afa7-d28fc7745c4f",
+  "set": "c21",
+  "set_name": "Commander 2021",
+  "set_type": "commander",
+  "set_uri": "https://api.scryfall.com/sets/27bf6dbd-a9e1-4904-afa7-d28fc7745c4f",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Ac21&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/c21?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/15b137fb-3f90-4a44-a225-cff5ca153190/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A7c48c341-1d56-4210-9d86-181ebb206098&unique=prints",
+  "collector_number": "121",
+  "digital": false,
+  "rarity": "uncommon",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Jason Felix",
+  "artist_ids": [
+    "af42a44c-8ec3-47a7-9047-5d29ddad186d"
+  ],
+  "illustration_id": "0f5e5ef2-e707-49d6-bcc5-3bdfd65c2684",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "edhrec_rank": 23840,
+  "penny_rank": 4541,
+  "prices": {
+    "usd": "0.19",
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": "0.11",
+    "eur_foil": null,
+    "tix": null
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=519156&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DLiving%2BLore",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DLiving%2BLore",
+    "edhrec": "https://edhrec.com/route/?cc=Living+Lore"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F236185%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=558771&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/89343?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

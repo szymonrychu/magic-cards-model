@@ -1,0 +1,133 @@
+{
+  "object": "card",
+  "id": "52ce799e-cb9e-4d74-8b13-a5f4559e13a9",
+  "oracle_id": "8c8f93d7-d89a-401b-8764-76be71ad16e3",
+  "multiverse_ids": [
+    615395
+  ],
+  "mtgo_id": 109126,
+  "arena_id": 85058,
+  "tcgplayer_id": 495619,
+  "cardmarket_id": 710178,
+  "name": "Deification",
+  "lang": "en",
+  "released_at": "2023-05-12",
+  "uri": "https://api.scryfall.com/cards/52ce799e-cb9e-4d74-8b13-a5f4559e13a9",
+  "scryfall_uri": "https://scryfall.com/card/mat/2/deification?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T04:22:10Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/5/2/52ce799e-cb9e-4d74-8b13-a5f4559e13a9.jpg?1783916530",
+    "normal": "https://cards.scryfall.io/normal/front/5/2/52ce799e-cb9e-4d74-8b13-a5f4559e13a9.jpg?1783916530",
+    "large": "https://cards.scryfall.io/large/front/5/2/52ce799e-cb9e-4d74-8b13-a5f4559e13a9.jpg?1783916530",
+    "png": "https://cards.scryfall.io/png/front/5/2/52ce799e-cb9e-4d74-8b13-a5f4559e13a9.png?1783916530",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/5/2/52ce799e-cb9e-4d74-8b13-a5f4559e13a9.jpg?1783916530",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/5/2/52ce799e-cb9e-4d74-8b13-a5f4559e13a9.jpg?1783916530",
+    "thumb": "https://cards.scryfall.io/thumb/front/5/2/52ce799e-cb9e-4d74-8b13-a5f4559e13a9.webp?1783916530",
+    "grid": "https://cards.scryfall.io/grid/front/5/2/52ce799e-cb9e-4d74-8b13-a5f4559e13a9.webp?1783916530",
+    "display": "https://cards.scryfall.io/display/front/5/2/52ce799e-cb9e-4d74-8b13-a5f4559e13a9.webp?1783916530",
+    "art": "https://cards.scryfall.io/art/front/5/2/52ce799e-cb9e-4d74-8b13-a5f4559e13a9.webp?1783916530",
+    "crop": "https://cards.scryfall.io/crop/front/5/2/52ce799e-cb9e-4d74-8b13-a5f4559e13a9.webp?1783916530"
+  },
+  "mana_cost": "{1}{W}",
+  "cmc": 2.0,
+  "type_line": "Enchantment",
+  "oracle_text": "As this enchantment enters, choose a planeswalker type.\nPlaneswalkers you control of the chosen type have hexproof.\nAs long as you control a creature, if damage dealt to a planeswalker you control of the chosen type would result in all loyalty counters on it being removed, instead all but one of those counters are removed.",
+  "colors": [
+    "W"
+  ],
+  "color_identity": [
+    "W"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "arena",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "6727e43d-31b6-45b0-ae05-7a811ba72f70",
+  "set": "mat",
+  "set_name": "March of the Machine: The Aftermath",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/6727e43d-31b6-45b0-ae05-7a811ba72f70",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Amat&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/mat?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/52ce799e-cb9e-4d74-8b13-a5f4559e13a9/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A8c8f93d7-d89a-401b-8764-76be71ad16e3&unique=prints",
+  "collector_number": "2",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Maxime Minard",
+  "artist_ids": [
+    "a9065769-afcd-4e54-a3c0-5809e7b4108b"
+  ],
+  "illustration_id": "497d5fb4-4797-4b46-b956-c710f0ce6c94",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 9486,
+  "penny_rank": 4496,
+  "prices": {
+    "usd": "0.38",
+    "usd_foil": "0.36",
+    "usd_etched": null,
+    "eur": "0.45",
+    "eur_foil": "0.38",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=615395&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DDeification",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DDeification",
+    "edhrec": "https://edhrec.com/route/?cc=Deification"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F495619%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=710178&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/109126?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

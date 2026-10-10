@@ -2283,6 +2283,9 @@ class ActivationMixin:
                 and ability.canonical.lower() == "megamorph"
             )
             permanent.turn_face_up()
+            from ...machines.replacement.enters_choices import as_turned_face_up
+
+            as_turned_face_up(self, permanent)  # CR 614.1e, before anything triggers
             self.emit(
                 GameEvent(
                     event=TriggerEvent.TURNED_FACE_UP,

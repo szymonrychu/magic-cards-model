@@ -2423,7 +2423,9 @@ def parse_abilities(card: Card) -> list[Ability]:
             continue
         for line, threshold in station_striations(merged):
             if threshold is None:
-                face_abilities.extend(_parse_line(line, card.keywords, face_name))
+                face_abilities.extend(
+                    _parse_line_mode_gated(line, merged, card.keywords, face_name)
+                )
                 continue
             # CR 721.2a: the striation's abilities, read as the abilities the
             # permanent has at N. Scryfall's `keywords` leaves a keyword that
@@ -2558,6 +2560,43 @@ def _merge_modal_bullet_lines(lines: list[str]) -> list[str]:
         merged.append(line)
         index += 1
     return merged
+
+
+#: "• Khans — At the beginning of combat on your turn, ..." - one half of a
+#: Siege's "As this enchantment enters, choose Khans or Dragons." (CR 614.12a):
+#: a triggered ability the permanent has only while its chosen mode is the one
+#: named before the dash.
+_MODE_BULLET_RE = re.compile(
+    r"^•\s*(?P<mode>[A-Z][\w'-]*)\s+—\s+(?P<body>(?:When|Whenever|At)\b.+)$", re.DOTALL
+)
+_CHOOSES_MODE_LINE_RE = re.compile(r"\benters, choose [A-Z][\w'-]*(?:, [A-Z][\w'-]*)*,? or [A-Z]")
+
+
+def mode_gate_condition(mode: str) -> str:
+    """The `triggers_only_if` text that gates a mode bullet on the chosen mode
+    (read by `machines/conditions/choice.py`)."""
+    return f"this permanent's chosen mode is {mode}"
+
+
+def _parse_line_mode_gated(
+    line: str, lines: list[str], keywords: list[str], face: str
+) -> list[Ability]:
+    """`_parse_line`, except that a "• <Mode> — <triggered ability>" bullet under
+    an as-enters "choose <Mode> or <Mode>" line is the triggered ability gated
+    on the chosen mode instead of an orphaned static line (CR 614.12a)."""
+    match = _MODE_BULLET_RE.match(line)
+    if match is None or not any(_CHOOSES_MODE_LINE_RE.search(other) for other in lines):
+        return _parse_line(line, keywords, face)
+    parsed = _parse_line(match.group("body"), keywords, face)
+    if not parsed or not all(isinstance(ability, TriggeredAbility) for ability in parsed):
+        return _parse_line(line, keywords, face)
+    gate = mode_gate_condition(match.group("mode"))
+    for ability in parsed:
+        assert isinstance(ability, TriggeredAbility)
+        ability.triggers_only_if = (
+            gate if ability.triggers_only_if is None else f"{gate} and {ability.triggers_only_if}"
+        )
+    return parsed
 
 
 def abilities_of_kind(card: Card, kind: AbilityKind) -> list[Ability]:

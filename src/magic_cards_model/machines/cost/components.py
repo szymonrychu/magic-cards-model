@@ -2107,6 +2107,14 @@ class CostModifierKind(StrEnum):
     only when the caster is not that permanent's controller
     (`Game.static_cost_modifiers_for`, which is handed `Casting.targets`)."""
 
+    TARGETING_CONTROLLER_INCREASE = "targeting_controller_increase"
+    """"Spells your opponents cast that target you or a permanent you control
+    cost `{N}` more to cast." - Monastery Siege's Dragons half. Like
+    `TARGETING_THIS_INCREASE`, keyed on the targets announced at CR 601.2c: it
+    taxes a spell only when one of its targets is the permanent's controller or
+    a permanent that controller controls, and only when the caster is not that
+    controller."""
+
 
 class CostModifierEffect(EngineModel):
     """One static cost-modifying ability, read off a permanent's oracle text."""

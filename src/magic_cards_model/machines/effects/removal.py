@@ -10,6 +10,7 @@ from ...data.subtypes import canonical_subtype
 from ...models.card import Color, Type
 from ...models.card_state import (
     CardState,
+    ChoiceKind,
     Counter,
     ExileAnnotation,
     ExileMarker,
@@ -7279,6 +7280,39 @@ def _parse_sacrifice_self_clause(clause: str, *, for_spell: bool) -> TargetedCla
         if unless is not None and unless(game, source):
             return
         game.sacrifice(source)
+
+    return effect
+
+
+#: "sacrifice the chosen creature" - the object an as-enters choice recorded
+#: on the ability's own source (CR 614.12a), Tyrannical Pitlord's leaves-the-
+#: battlefield trigger.
+_SACRIFICE_CHOSEN_CREATURE_RE = re.compile(r"^sacrifice the chosen creature$", re.IGNORECASE)
+
+
+@MIXED_CLAUSE.rung("s26", for_spell=FORWARD)
+def _parse_sacrifice_chosen_creature_clause(
+    clause: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """ "Sacrifice the chosen creature" - CR 701.21a aimed at the permanent the
+    source recorded as it entered (`ChoiceKind.OBJECT`). The source has left the
+    battlefield by the time a leaves-the-battlefield trigger resolves, so its
+    last-known choice (CR 603.10a) is read; a chosen creature that is already
+    gone is simply not sacrificed (CR 608.2b)."""
+    if for_spell or _SACRIFICE_CHOSEN_CREATURE_RE.fullmatch(clause.strip()) is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        ability = stack_object
+        assert isinstance(ability, AbilityOnStack)
+        source = ability.source(game)
+        chosen = None if source is None else source.choice
+        if chosen is None or chosen.kind is not ChoiceKind.OBJECT:
+            return
+        for permanent in game.battlefield:
+            if str(permanent.id) == chosen.value:
+                game.sacrifice(permanent)
+                return
 
     return effect
 

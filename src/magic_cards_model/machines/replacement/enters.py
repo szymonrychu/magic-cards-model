@@ -27,6 +27,13 @@ from .as_enters_actions import Action, as_enters_action, counters_for
 if TYPE_CHECKING:
     from ...models.game import Game
     from ..effects import _SacrificeRestriction
+from .enters_choices import (
+    REVEALED_OR_CONTROL_RE,
+    compile_group_enter_tapped,
+    enters_choice_apply,
+    read_extra_enters_condition,
+    reveal_follow_up_subtype,
+)
 from .model import (
     ApplicableEffect,
     Applies,
@@ -204,7 +211,63 @@ def _try_enters_as_copy(sentence: str, names: tuple[str, ...]) -> list[Replaceme
     ]
 
 
+#: "Artifacts, creatures, and lands your opponents control enter tapped." (Frozen
+#: Aether, Loxodon Gatekeeper) - `_ENTERS_TAPPED`'s subject cannot hold a comma
+#: (its leading "If <condition>," needs that), so an unconditional comma list
+#: of objects is read here.
+_ENTERS_TAPPED_LIST = re.compile(
+    rf"^(?P<subject>[A-Z][^.]*?,[^.]+?) {_ENTERS} tapped\.?$",
+)
+#: "This creature enters tapped and doesn't untap during your untap step."
+#: (Grimgrin, Leviathan, Traxos) and "This artifact enters tapped and with
+#: three charge counters on it." (Sphere of the Suns) - CR 614.1d's tapped half
+#: plus a second clause: the untap restriction is the continuous effect
+#: `layers.parse._SELF_DOESNT_UNTAP_RE` reads off the same line, the counters an
+#: ordinary `ENTERS_WITH` (CR 614.1c).
+_ENTERS_TAPPED_AND = re.compile(
+    rf"^(?P<subject>[^,]+?) {_ENTERS} tapped and "
+    r"(?:(?P<untap>doesn'?t untap during your untap step)|with (?P<what>.+?)(?: on it)?)\.?$",
+    re.IGNORECASE,
+)
+
+
 def _try_enters_tapped(sentence: str, names: tuple[str, ...]) -> list[ReplacementEffect]:
+    both = _ENTERS_TAPPED_AND.match(sentence)
+    if both is not None:
+        subject = both.group("subject").strip()
+        tapped = _make(
+            ReplacementKind.ENTERS_TAPPED,
+            sentence,
+            subject=subject,
+            tapped=True,
+            condition=None,
+            self_replacement=_refers_to_self(subject, names),
+        )
+        if both.group("untap"):
+            return [tapped]
+        with_counters = _try_enters_with(
+            f"{subject} enters with {both.group('what')} on it.", names
+        )
+        return [
+            tapped,
+            *(
+                effect.model_copy(update={"text": sentence, "raw": sentence})
+                for effect in with_counters
+            ),
+        ]
+    listed = _ENTERS_TAPPED_LIST.match(sentence)
+    if listed is not None and not sentence.lower().startswith("if "):
+        subject = listed.group("subject").strip()
+        return [
+            _make(
+                ReplacementKind.ENTERS_TAPPED,
+                sentence,
+                subject=subject,
+                tapped=True,
+                condition=None,
+                self_replacement=_refers_to_self(subject, names),
+            )
+        ]
     match = _ENTERS_TAPPED.match(sentence)
     if not match:
         return []
@@ -566,9 +629,11 @@ def _compile_opponents_permanents_enter_tapped(
         return None
     if effect.condition:
         return None
+    if effect.replacement is not None:
+        return None
     classes = _read_opponents_permanent_classes(effect.subject or "")
     if classes is None:
-        return None
+        return compile_group_enter_tapped(effect)
 
     def applies(game: "Game", source: CardState, event: ReplaceableEvent) -> bool:
         card = event.card
@@ -807,6 +872,26 @@ def _optional_enters_payment(effect: ReplacementEffect, card_name: str) -> Apply
     ):
         return None
     return _reveal_or_tapped(phrase, card_name)
+
+
+def _or_you_control(choice: Apply, subtype: str) -> Apply:
+    """A reveal land's "...unless you revealed a <type> card this way or you
+    control a <type>" (CR 614.12a): the same optional reveal, then the land
+    stays untapped anyway when its controller already controls the subtype."""
+    controls = _controls_a_subtype(frozenset({subtype}))
+
+    def apply(game: "Game", source: CardState | None, event: ReplaceableEvent) -> None:
+        was_tapped = event.tapped
+        choice(game, source, event)
+        if (
+            not was_tapped
+            and event.tapped
+            and event.card is not None
+            and controls(game, event.card)
+        ):
+            event.tapped = False
+
+    return apply
 
 
 def _reveal_or_tapped(phrase: str, card_name: str) -> Apply:
@@ -1481,7 +1566,7 @@ def unread_self_enters_tapped_lines(card_state: CardState) -> list[str]:
         condition = (effect.condition or "").strip()
         if not condition:
             continue
-        if _IF_YOU_DONT.match(condition):
+        if _IF_YOU_DONT.match(condition) or REVEALED_OR_CONTROL_RE.match(condition.rstrip(".")):
             if pending_payments:
                 pending_payments -= 1
             else:
@@ -1553,7 +1638,7 @@ def _read_enters_condition(condition: str) -> EntersCondition | None:
     if condition.strip().lower() == NOT_ESCAPED_CONDITION:
         return lambda game, entering: not _escaped(game, entering)
 
-    return None
+    return read_extra_enters_condition(condition)
 
 
 def _revolt_clauses() -> frozenset[str]:
@@ -1594,6 +1679,9 @@ def _revolt_active(game: "Game", entering: CardState) -> bool:
 #: new type, not a card carrying its own choice) is a *targeted* clause of a
 #: different shape entirely and is never routed through here.
 _CHOOSE_A_COLOR_RE = re.compile(r"^choose a color\.?$", re.IGNORECASE)
+#: "choose a noncreature, nonland card name" (Council of the Absolute) - the
+#: comma-joined form of the two-word quality `_CHOOSE_A_CARD_NAME_RE` reads.
+_COMMA_QUALITY_RE = re.compile(r", non", re.IGNORECASE)
 #: "choose two colors" (Tablet of the Guilds) - the same CR 614.12a choice made
 #: that many times, each a color not already chosen.
 _CHOOSE_N_COLORS_RE = re.compile(rf"^choose (?P<count>{COUNT}) colors\.?$", re.IGNORECASE)
@@ -1628,7 +1716,7 @@ _COLOR_OPTIONS = tuple(
 
 def _classify_choice(replacement_text: str) -> ChoiceKind | None:
     """Which of the five "as [this] enters, choose ..." shapes this is, if any."""
-    text = replacement_text.strip()
+    text = _COMMA_QUALITY_RE.sub(" non", replacement_text.strip())
     if _CHOOSE_A_COLOR_RE.match(text):
         return ChoiceKind.COLOR
     if _CHOOSE_A_CARD_NAME_RE.match(text):
@@ -1767,7 +1855,7 @@ def card_name_quality(replacement_text: str) -> str | None:
     """The characteristics a "choose a <quality> card name" choice carries
     (CR 201.4a) - "nonland" for Phyrexian Revoker, "nonbasic land" for Alpine
     Moon - or None for a plain "choose a card name" or anything else."""
-    match = _CHOOSE_A_CARD_NAME_RE.match(replacement_text.strip())
+    match = _CHOOSE_A_CARD_NAME_RE.match(_COMMA_QUALITY_RE.sub(" non", replacement_text.strip()))
     if match is None or match.group("quality") is None:
         return None
     return match.group("quality").lower()
@@ -2492,6 +2580,9 @@ def _self_enters_modifiers(
     game: "Game",
     card_state: CardState,
     entering_as_copy: tuple[str, tuple[str, ...]] | None = None,
+    *,
+    turned_up: bool = False,
+    entering_transformed: bool = False,
 ) -> list[tuple[str, Apply, str, bool]]:
     """The card's own "enters ..." replacement effects, as things to apply.
 
@@ -2554,14 +2645,40 @@ def _self_enters_modifiers(
     # `triggers_for` and `Game.activated_abilities` for the same filter).
     # `up_face_name` is `None` for an ordinary single-faced card, which keeps
     # every one of its own lines (`effect.face` is also `None` there).
+    if card_state.face_down and not turned_up:
+        # CR 708.2: a face-down permanent has no text, so no "enters"/"as ...
+        # enters" line of the card applies to it (CR 614.12).
+        return []
     up_face_name = card_state.up_face_name
+    # CR 712.14a / CR 614.12: a transformed arrival has its back face up as it
+    # enters, so that face's "as ... enters" lines apply (its other enters
+    # lines are placed by the post-move path, `intrinsic_entering_counters`).
+    back_face_name = (
+        card_state.card.back_face.name
+        if entering_transformed and card_state.card.back_face is not None
+        else None
+    )
     key = "self"
     if entering_as_copy is None:
         parsed = [
             effect
             for effect in parse_replacement_effects(card_state.card)
-            if up_face_name is None or effect.face in (None, up_face_name)
+            if (
+                effect.face == back_face_name
+                if back_face_name is not None
+                and effect.kind is ReplacementKind.AS_ENTERS
+                and effect.face is not None
+                else up_face_name is None or effect.face in (None, up_face_name)
+            )
         ]
+        if turned_up:
+            # CR 614.1e: only the "as this is turned face up" effects, which
+            # perform exactly as their "as this enters" twins do.
+            parsed = [
+                effect.model_copy(update={"kind": ReplacementKind.AS_ENTERS})
+                for effect in parsed
+                if effect.kind is ReplacementKind.AS_TURNED_FACE_UP
+            ]
         if card_state.granted_ability_texts:
             # CR 113.10a: a granted ability text "functions exactly as if it
             # were printed on the object" - Wildgrowth Archaic's own cast
@@ -2627,12 +2744,18 @@ def _self_enters_modifiers(
                     for other, candidate in enumerate(parsed)
                     if other > index
                     and candidate.kind is ReplacementKind.ENTERS_TAPPED
-                    and _IF_YOU_DONT.match((candidate.condition or "").strip())
+                    and (
+                        _IF_YOU_DONT.match((candidate.condition or "").strip())
+                        or reveal_follow_up_subtype(candidate) is not None
+                    )
                 ),
                 None,
             )
             if follower is not None:
                 consumed.add(follower)
+                subtype = reveal_follow_up_subtype(parsed[follower])
+                if subtype is not None:
+                    choice = _or_you_control(choice, subtype)
                 performable.append(
                     (
                         f"{key}:{index}",
@@ -2742,6 +2865,11 @@ def _self_enters_modifiers(
             player_choice = _choose_a_player(effect.replacement or "", card_state.card.name)
             if player_choice is not None:
                 performable.append((f"{key}:{index}", player_choice, effect.text, False))
+                continue
+
+            extra_choice = enters_choice_apply(effect, card_state.card.name)
+            if extra_choice is not None:
+                performable.append((f"{key}:{index}", extra_choice, effect.text, False))
                 continue
 
             choice_kind = _classify_choice(effect.replacement or "")
@@ -3212,7 +3340,9 @@ def self_enters_effects_read(card: Card, effects: Sequence[ReplacementEffect]) -
                 return False
             continue
         if effect.condition is not None:
-            if _IF_YOU_DONT.match(effect.condition.strip()):
+            if _IF_YOU_DONT.match(effect.condition.strip()) or REVEALED_OR_CONTROL_RE.match(
+                effect.condition.strip().rstrip(".")
+            ):
                 paired = any(
                     other.kind is ReplacementKind.AS_ENTERS
                     and other.optional

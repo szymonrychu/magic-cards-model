@@ -1,0 +1,182 @@
+{
+  "object": "card",
+  "id": "4a708243-42a1-4fa7-8b0b-9d5163da84bb",
+  "oracle_id": "93cddbad-92ef-4b30-a0e7-981aee714bce",
+  "multiverse_ids": [
+    540864,
+    540865
+  ],
+  "mtgo_id": 94356,
+  "arena_id": 78812,
+  "tcgplayer_id": 253095,
+  "cardmarket_id": 581907,
+  "name": "Radiant Grace // Radiant Restraints",
+  "lang": "en",
+  "released_at": "2021-11-19",
+  "uri": "https://api.scryfall.com/cards/4a708243-42a1-4fa7-8b0b-9d5163da84bb",
+  "scryfall_uri": "https://scryfall.com/card/vow/31/radiant-grace-radiant-restraints?utm_source=api",
+  "layout": "transform",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T06:41:59Z",
+  "cmc": 1.0,
+  "type_line": "Enchantment \u2014 Aura // Enchantment \u2014 Aura Curse",
+  "color_identity": [
+    "W"
+  ],
+  "keywords": [
+    "Transform",
+    "Enchant"
+  ],
+  "card_faces": [
+    {
+      "object": "card_face",
+      "name": "Radiant Grace",
+      "mana_cost": "{W}",
+      "type_line": "Enchantment \u2014 Aura",
+      "oracle_text": "Enchant creature\nEnchanted creature gets +1/+0 and has vigilance.\nWhen enchanted creature dies, return this card to the battlefield transformed under your control attached to target opponent.",
+      "colors": [
+        "W"
+      ],
+      "artist": "Campbell White",
+      "artist_id": "d281eab4-463a-4ba8-9039-8943737960a0",
+      "illustration_id": "75a4140a-2cd4-4fc0-abe2-11bc55d5303a",
+      "image_uris": {
+        "small": "https://cards.scryfall.io/small/front/4/a/4a708243-42a1-4fa7-8b0b-9d5163da84bb.jpg?1783924919",
+        "normal": "https://cards.scryfall.io/normal/front/4/a/4a708243-42a1-4fa7-8b0b-9d5163da84bb.jpg?1783924919",
+        "large": "https://cards.scryfall.io/large/front/4/a/4a708243-42a1-4fa7-8b0b-9d5163da84bb.jpg?1783924919",
+        "png": "https://cards.scryfall.io/png/front/4/a/4a708243-42a1-4fa7-8b0b-9d5163da84bb.png?1783924919",
+        "art_crop": "https://cards.scryfall.io/art_crop/front/4/a/4a708243-42a1-4fa7-8b0b-9d5163da84bb.jpg?1783924919",
+        "border_crop": "https://cards.scryfall.io/border_crop/front/4/a/4a708243-42a1-4fa7-8b0b-9d5163da84bb.jpg?1783924919",
+        "thumb": "https://cards.scryfall.io/thumb/front/4/a/4a708243-42a1-4fa7-8b0b-9d5163da84bb.webp?1783924919",
+        "grid": "https://cards.scryfall.io/grid/front/4/a/4a708243-42a1-4fa7-8b0b-9d5163da84bb.webp?1783924919",
+        "display": "https://cards.scryfall.io/display/front/4/a/4a708243-42a1-4fa7-8b0b-9d5163da84bb.webp?1783924919",
+        "art": "https://cards.scryfall.io/art/front/4/a/4a708243-42a1-4fa7-8b0b-9d5163da84bb.webp?1783924919",
+        "crop": "https://cards.scryfall.io/crop/front/4/a/4a708243-42a1-4fa7-8b0b-9d5163da84bb.webp?1783924919"
+      }
+    },
+    {
+      "object": "card_face",
+      "name": "Radiant Restraints",
+      "mana_cost": "",
+      "type_line": "Enchantment \u2014 Aura Curse",
+      "oracle_text": "Enchant player\nCreatures enchanted player controls enter tapped.",
+      "colors": [
+        "W"
+      ],
+      "color_indicator": [
+        "W"
+      ],
+      "flavor_text": "\"Even in times of brutal darkness, never mistake beauty and delicacy for weakness.\"\n\u2014Thalia, Guardian of Thraben",
+      "artist": "Campbell White",
+      "artist_id": "d281eab4-463a-4ba8-9039-8943737960a0",
+      "illustration_id": "f3d95092-4dc7-4b18-a0ed-0475e8ac3ce4",
+      "image_uris": {
+        "small": "https://cards.scryfall.io/small/back/4/a/4a708243-42a1-4fa7-8b0b-9d5163da84bb.jpg?1783924919",
+        "normal": "https://cards.scryfall.io/normal/back/4/a/4a708243-42a1-4fa7-8b0b-9d5163da84bb.jpg?1783924919",
+        "large": "https://cards.scryfall.io/large/back/4/a/4a708243-42a1-4fa7-8b0b-9d5163da84bb.jpg?1783924919",
+        "png": "https://cards.scryfall.io/png/back/4/a/4a708243-42a1-4fa7-8b0b-9d5163da84bb.png?1783924919",
+        "art_crop": "https://cards.scryfall.io/art_crop/back/4/a/4a708243-42a1-4fa7-8b0b-9d5163da84bb.jpg?1783924919",
+        "border_crop": "https://cards.scryfall.io/border_crop/back/4/a/4a708243-42a1-4fa7-8b0b-9d5163da84bb.jpg?1783924919",
+        "thumb": "https://cards.scryfall.io/thumb/back/4/a/4a708243-42a1-4fa7-8b0b-9d5163da84bb.webp?1783924919",
+        "grid": "https://cards.scryfall.io/grid/back/4/a/4a708243-42a1-4fa7-8b0b-9d5163da84bb.webp?1783924919",
+        "display": "https://cards.scryfall.io/display/back/4/a/4a708243-42a1-4fa7-8b0b-9d5163da84bb.webp?1783924919",
+        "art": "https://cards.scryfall.io/art/back/4/a/4a708243-42a1-4fa7-8b0b-9d5163da84bb.webp?1783924919",
+        "crop": "https://cards.scryfall.io/crop/back/4/a/4a708243-42a1-4fa7-8b0b-9d5163da84bb.webp?1783924919"
+      }
+    }
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "arena",
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "8144b676-569f-4716-8005-bc8f0778f3fa",
+  "set": "vow",
+  "set_name": "Innistrad: Crimson Vow",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/8144b676-569f-4716-8005-bc8f0778f3fa",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Avow&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/vow?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/4a708243-42a1-4fa7-8b0b-9d5163da84bb/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A93cddbad-92ef-4b30-a0e7-981aee714bce&unique=prints",
+  "collector_number": "31",
+  "digital": false,
+  "rarity": "uncommon",
+  "artist": "Campbell White",
+  "artist_ids": [
+    "d281eab4-463a-4ba8-9039-8943737960a0"
+  ],
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "sunmoondfc"
+  ],
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 12944,
+  "penny_rank": 5252,
+  "preview": {
+    "source": "Geek Factory",
+    "source_uri": "https://www.facebook.com/GeekFactoryEden2Servon/photos/d41d8cd9/207586364830676/",
+    "previewed_at": "2021-11-01"
+  },
+  "prices": {
+    "usd": "0.29",
+    "usd_foil": "0.34",
+    "usd_etched": null,
+    "eur": "0.16",
+    "eur_foil": "0.36",
+    "tix": "0.03"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=540864&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DRadiant%2BGrace%2B%252F%252F%2BRadiant%2BRestraints",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DRadiant%2BGrace%2B%252F%252F%2BRadiant%2BRestraints",
+    "edhrec": "https://edhrec.com/route/?cc=Radiant+Grace"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F253095%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=581907&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/94356?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

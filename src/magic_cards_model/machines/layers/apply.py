@@ -723,6 +723,11 @@ class LayerContext(EngineModel):
     #: through `cards_exiled_with`.
     exile: tuple[CardState, ...] = ()
 
+    #: How many permanents on the battlefield are face down (CR 708.2) - a
+    #: face-down permanent is a creature, so Ixidron's "the number of
+    #: face-down creatures on the battlefield" is this count.
+    face_down_creatures: int = 0
+
     def cards_exiled_with(self, source: CardState) -> tuple[CardState, ...]:
         """The cards exiled with `source` - this incarnation of it (CR 607.2a,
         CR 400.7; `ExileAnnotation.links_to`)."""

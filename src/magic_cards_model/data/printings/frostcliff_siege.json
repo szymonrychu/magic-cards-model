@@ -1,0 +1,139 @@
+{
+  "object": "card",
+  "id": "a750aabb-9788-494a-841f-bf75717970a7",
+  "oracle_id": "e7af31ff-fa1b-4225-b3bc-fde80ac72d0a",
+  "multiverse_ids": [
+    693667
+  ],
+  "mtgo_id": 139335,
+  "arena_id": 95711,
+  "tcgplayer_id": 623884,
+  "cardmarket_id": 817857,
+  "name": "Frostcliff Siege",
+  "lang": "en",
+  "released_at": "2025-04-11",
+  "uri": "https://api.scryfall.com/cards/a750aabb-9788-494a-841f-bf75717970a7",
+  "scryfall_uri": "https://scryfall.com/card/tdm/187/frostcliff-siege?utm_source=api",
+  "layout": "normal",
+  "highres_image": false,
+  "image_status": "lowres",
+  "image_updated_at": "2026-07-13T01:48:37Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/a/7/a750aabb-9788-494a-841f-bf75717970a7.jpg?1783907317",
+    "normal": "https://cards.scryfall.io/normal/front/a/7/a750aabb-9788-494a-841f-bf75717970a7.jpg?1783907317",
+    "large": "https://cards.scryfall.io/large/front/a/7/a750aabb-9788-494a-841f-bf75717970a7.jpg?1783907317",
+    "png": "https://cards.scryfall.io/png/front/a/7/a750aabb-9788-494a-841f-bf75717970a7.png?1783907317",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/a/7/a750aabb-9788-494a-841f-bf75717970a7.jpg?1783907317",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/a/7/a750aabb-9788-494a-841f-bf75717970a7.jpg?1783907317",
+    "thumb": "https://cards.scryfall.io/thumb/front/a/7/a750aabb-9788-494a-841f-bf75717970a7.webp?1783907317",
+    "grid": "https://cards.scryfall.io/grid/front/a/7/a750aabb-9788-494a-841f-bf75717970a7.webp?1783907317",
+    "display": "https://cards.scryfall.io/display/front/a/7/a750aabb-9788-494a-841f-bf75717970a7.webp?1783907317",
+    "art": "https://cards.scryfall.io/art/front/a/7/a750aabb-9788-494a-841f-bf75717970a7.webp?1783907317",
+    "crop": "https://cards.scryfall.io/crop/front/a/7/a750aabb-9788-494a-841f-bf75717970a7.webp?1783907317"
+  },
+  "mana_cost": "{1}{U}{R}",
+  "cmc": 3.0,
+  "type_line": "Enchantment",
+  "oracle_text": "As this enchantment enters, choose Jeskai or Temur.\n\u2022 Jeskai \u2014 Whenever one or more creatures you control deal combat damage to a player, draw a card.\n\u2022 Temur \u2014 Creatures you control get +1/+0 and have trample and haste.",
+  "colors": [
+    "R",
+    "U"
+  ],
+  "color_identity": [
+    "R",
+    "U"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "arena",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "1361ca81-1304-49a8-b2e6-e76a4aa4a8c3",
+  "set": "tdm",
+  "set_name": "Tarkir: Dragonstorm",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/1361ca81-1304-49a8-b2e6-e76a4aa4a8c3",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Atdm&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/tdm?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/a750aabb-9788-494a-841f-bf75717970a7/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Ae7af31ff-fa1b-4225-b3bc-fde80ac72d0a&unique=prints",
+  "collector_number": "187",
+  "digital": false,
+  "rarity": "rare",
+  "flavor_text": "Differing philosophies were debated by bloodshed.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Dan Murayama Scott",
+  "artist_ids": [
+    "f852fa13-137e-40f2-bbc1-0f01df09c0e0"
+  ],
+  "illustration_id": "8888d3b7-fc1d-47d2-9b30-8845157b8c46",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "enchantment"
+  ],
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 1611,
+  "penny_rank": 5500,
+  "prices": {
+    "usd": "2.71",
+    "usd_foil": "3.05",
+    "usd_etched": null,
+    "eur": "2.25",
+    "eur_foil": "2.98",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=693667&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DFrostcliff%2BSiege",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DFrostcliff%2BSiege",
+    "edhrec": "https://edhrec.com/route/?cc=Frostcliff+Siege"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F623884%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=817857&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/139335?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}
