@@ -148,12 +148,6 @@ class KeywordCastOption(EngineModel):
     `Game.combat_damage_to_players_this_turn` - the record captured as the
     damage was dealt, so a source that has since died or changed still counts
     as it was."""
-    condition: str | None = None
-    """A condition the permission itself prints - "You may cast this card from
-    your graveyard **if a non-Zombie creature died this turn**" (Undead
-    Sprinter) - asked of the shared condition registry (`Game.condition_holds`)
-    with the caster as "you" and the spell as the source. A clause the registry
-    does not read refuses the option rather than passing it (CR 601.3)."""
     spectacle: bool = False
     """True for CR 702.137a's spectacle: the alternative cost is available
     only "if an opponent lost life this turn", checked by
@@ -215,6 +209,14 @@ class KeywordCastOption(EngineModel):
     other costs (CR 601.2f) - Noctis, Prince of Lucis's "by paying 3 life in
     addition to paying their other costs". Added by `Casting._use_keyword`
     through `add_additional_cost` when the option is claimed."""
+    any_type_mana: bool = False
+    """CR 609.4b's "mana of any type can be spent to cast that spell" (Azula,
+    Tinybones, Null Summoner): the payment is judged as one generic count."""
+    condition: str | None = None
+    """The printed condition the permission is gated on - "as long as you
+    control a Zombie", "if you gained life this turn" (Gravecrawler, Oathsworn
+    Vampire). `why_not` asks it live (`permissions.cast_condition_holds`),
+    and a condition nobody reads refuses rather than allows."""
     enters_with_counters: tuple[str, ...] = ()
     """One counter kind per counter the spell's permanent enters with because
     it was cast under this permission - "If you cast a spell this way, that
@@ -264,6 +266,15 @@ class KeywordCastOption(EngineModel):
                 f"{self.keyword} casts {spell.name} from the {self.zone.value}, "
                 f"but it is in the {where.value} ({self.rule})"
             )
+
+        if self.condition is not None and game is not None:
+            from .permissions import cast_condition_holds
+
+            if not cast_condition_holds(game, caster, self.condition, spell):
+                return (
+                    f"{self.keyword} lets {caster} cast {spell.name} only if {self.condition}, "
+                    f"and that is not so ({self.rule})"
+                )
 
         if self.marker is not None:
             annotation = spell.exile_annotation
@@ -331,15 +342,6 @@ class KeywordCastOption(EngineModel):
             return (
                 f"{caster} has not cast another spell this turn, so {spell.name} cannot be "
                 f"cast for its {self.keyword} cost ({self.rule})"
-            )
-        if (
-            self.condition is not None
-            and game is not None
-            and game.condition_holds(caster, self.condition, spell) is not True
-        ):
-            return (
-                f"{spell.name} may be cast from the {self.zone.value} only if "
-                f"{self.condition} ({self.rule})"
             )
         if self.spectacle and game is not None and not game.spectacle_condition_holds(caster):
             return (

@@ -1,0 +1,133 @@
+{
+  "object": "card",
+  "id": "20543e39-749a-40af-9320-584ac5f5346a",
+  "oracle_id": "b81eaa2f-0554-41c6-bdf6-d1cb73b8f56f",
+  "multiverse_ids": [],
+  "tcgplayer_id": 231603,
+  "cardmarket_id": 535803,
+  "name": "Realmwalker",
+  "lang": "en",
+  "released_at": "2021-02-05",
+  "uri": "https://api.scryfall.com/cards/20543e39-749a-40af-9320-584ac5f5346a",
+  "scryfall_uri": "https://scryfall.com/card/pkhm/188s/realmwalker?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T07:33:37Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/2/0/20543e39-749a-40af-9320-584ac5f5346a.jpg?1783928017",
+    "normal": "https://cards.scryfall.io/normal/front/2/0/20543e39-749a-40af-9320-584ac5f5346a.jpg?1783928017",
+    "large": "https://cards.scryfall.io/large/front/2/0/20543e39-749a-40af-9320-584ac5f5346a.jpg?1783928017",
+    "png": "https://cards.scryfall.io/png/front/2/0/20543e39-749a-40af-9320-584ac5f5346a.png?1783928017",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/2/0/20543e39-749a-40af-9320-584ac5f5346a.jpg?1783928017",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/2/0/20543e39-749a-40af-9320-584ac5f5346a.jpg?1783928017",
+    "thumb": "https://cards.scryfall.io/thumb/front/2/0/20543e39-749a-40af-9320-584ac5f5346a.webp?1783928017",
+    "grid": "https://cards.scryfall.io/grid/front/2/0/20543e39-749a-40af-9320-584ac5f5346a.webp?1783928017",
+    "display": "https://cards.scryfall.io/display/front/2/0/20543e39-749a-40af-9320-584ac5f5346a.webp?1783928017",
+    "art": "https://cards.scryfall.io/art/front/2/0/20543e39-749a-40af-9320-584ac5f5346a.webp?1783928017",
+    "crop": "https://cards.scryfall.io/crop/front/2/0/20543e39-749a-40af-9320-584ac5f5346a.webp?1783928017"
+  },
+  "mana_cost": "{2}{G}",
+  "cmc": 3.0,
+  "type_line": "Creature \u2014 Shapeshifter",
+  "oracle_text": "Changeling (This card is every creature type.)\nAs this creature enters, choose a creature type.\nYou may look at the top card of your library any time.\nYou may cast creature spells of the chosen type from the top of your library.",
+  "power": "2",
+  "toughness": "3",
+  "colors": [
+    "G"
+  ],
+  "color_identity": [
+    "G"
+  ],
+  "keywords": [
+    "Changeling"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": false,
+  "finishes": [
+    "foil"
+  ],
+  "oversized": false,
+  "promo": true,
+  "reprint": true,
+  "variation": false,
+  "set_id": "4d7b6bf0-0ded-49a0-8c0e-b1ae2bfba77c",
+  "set": "pkhm",
+  "set_name": "Kaldheim Promos",
+  "set_type": "promo",
+  "set_uri": "https://api.scryfall.com/sets/4d7b6bf0-0ded-49a0-8c0e-b1ae2bfba77c",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Apkhm&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/pkhm?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/20543e39-749a-40af-9320-584ac5f5346a/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Ab81eaa2f-0554-41c6-bdf6-d1cb73b8f56f&unique=prints",
+  "collector_number": "188s",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Zack Stella",
+  "artist_ids": [
+    "17bc7f55-958b-43f4-bb40-09746d05b3f9"
+  ],
+  "illustration_id": "3c3713dd-e54c-463a-86cc-10241bb1c7ba",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "promo_types": [
+    "prerelease",
+    "datestamped"
+  ],
+  "edhrec_rank": 607,
+  "penny_rank": 5511,
+  "prices": {
+    "usd": null,
+    "usd_foil": "8.08",
+    "usd_etched": null,
+    "eur": null,
+    "eur_foil": "3.82",
+    "tix": null
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DRealmwalker",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DRealmwalker",
+    "edhrec": "https://edhrec.com/route/?cc=Realmwalker"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F231603%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=535803&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards?affiliate_id=scryfall&data%5Bsearch%5D=Realmwalker&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

@@ -148,6 +148,12 @@ def why_cannot_cast_from(
     airbend - `marker_cast_options`) - or some effect has to have handed out a
     `PlayPermission`, and that grant's own conditions have to hold.
     """
+    only_from = printed_cast_only_zones(spell.card)
+    if only_from is not None and zone not in only_from:
+        where = " or ".join(only_zone.value for only_zone in only_from)
+        return (
+            f"{spell.name} may be cast only from the {where}, not from the {zone.value} (CR 601.3)"
+        )
     if zone is Zone.HAND:
         return None
     if usable_play_permission(game, spell, caster) is not None:
@@ -434,8 +440,10 @@ def why_cannot_cast_now(
     if Type.SORCERY in types and has_sorcery_speed_flash_grant(game, caster):
         return None  # Teferi, Time Raveler's +1
     condition = conditional_flash_condition(spell.oracle_text or "")
-    if condition is not None and game.condition_holds(caster, condition, spell) is True:
+    if condition is not None and cast_condition_holds(game, caster, condition, spell):
         return None  # Bard's Company's own conditional flash grant
+    if has_quality_flash_grant(game, caster, spell):
+        return None  # Vivien, Champion of the Wilds' "creature spells ... flash"
     if game.has_first_spell_flash_grant(caster, spell):
         return None  # Radagast of Rhosgobel's own first-creature-spell flash grant
     if not without_alternative_flash and flash_by_alternative_cost(game, spell, caster):
@@ -852,6 +860,8 @@ class Casting(EngineModel):
     """The claimed option's `KeywordCastOption.pays_life_for_mana_value`:
     `total_cost` adds the life equal to the spell's mana value."""
     keyword_once_per_turn_key: str | None = None
+    keyword_any_type_mana: bool = False
+    """The claimed option's CR 609.4b \"mana of any type can be spent\"."""
     """The once-each-turn grant the chosen option spends
     (`KeywordCastOption.once_per_turn_key`), recorded as used when `cast()`
     completes - not before, since CR 601.6 can still rewind the announcement."""
@@ -1053,18 +1063,17 @@ class Casting(EngineModel):
     `PlayPermission` recorded against the object it granted still names
     (CR 400.7h)."""
     announced_exile_annotation: ExileAnnotation | None = None
-    announced_counters: Counters | None = None
-    """The counters the card carried when the cast was proposed - CR 122.2
-    strips them as CR 601.2a moves it to the stack, and Draugr Necromancer's
-    "cards in exile ... with ice counters on them" asks about them."""
     """The exile pile the card was in before that move (CR 406.5): plot,
     foretell, madness and warp all cast out of a *particular* pile, and the
     move to the stack drops the annotation."""
-    announced_counters: dict[str, int] | None = None
-    """The counters the card had before that move (CR 122.1, CR 400.7 clears
-    them): Evelyn, the Covetous opens only exiled cards "with a collection
-    counter on it", which a grant asked about the announced card still has to
-    see."""
+    announced_counters: Counters | None = None
+    """The counters the card carried before that move (CR 122.1; CR 122.2 and
+    CR 400.7 strip them as CR 601.2a moves it to the stack): Draugr
+    Necromancer's "cards in exile ... with ice counters on them", Evelyn, the
+    Covetous's "with a collection counter on it" and Grolnok's "cards you own
+    in exile with croak counters on them" are judged as the cast is proposed
+    (CR 601.3), so a grant asked about the announced card still has to see
+    them."""
     announced_discarded_by: str | None = None
     """Who had discarded the card before that move (CR 701.9a), and"""
     announced_discarded_on_turn: int | None = None
@@ -1230,7 +1239,6 @@ class Casting(EngineModel):
         self.announced_stamp = self.spell.zone_change_stamp
         self.announced_exile_annotation = self.spell.exile_annotation
         self.announced_counters = self.spell.counters.model_copy(deep=True)
-        self.announced_counters = self.spell.counters.model_dump()
         self.announced_discarded_by = self.spell.discarded_by
         self.announced_discarded_on_turn = self.spell.discarded_on_turn
         if self.spell.zone is Zone.LIBRARY:
@@ -1320,7 +1328,6 @@ class Casting(EngineModel):
                     if self.announced_counters is not None
                     else {}
                 ),
-                "counters": Counters(self.announced_counters or {}),
                 "discarded_by": self.announced_discarded_by,
                 "discarded_on_turn": self.announced_discarded_on_turn,
             }
@@ -2087,6 +2094,7 @@ class Casting(EngineModel):
         self.keyword_snow_any_color = option.snow_any_color
         self.keyword_once_per_turn_key = option.once_per_turn_key
         self.keyword_any_color = option.any_color
+        self.keyword_any_type_mana = option.any_type_mana
         self.keyword_cost_paid = not option.pays_mana_cost
         self.keyword_pays_life_for_mana_value = option.pays_life_for_mana_value
         self.keyword_opens_window = option.timing is CastTiming.OWN_DECLARE_BLOCKERS
@@ -2123,14 +2131,16 @@ class Casting(EngineModel):
             from ..cost import fill_from_among
 
             extra = option.additional_cost.model_copy(deep=True)
-            sacrificed = list(choosing or [])
+            named = list(choosing or [])
             for component in extra.components:
-                fill_from_among(component, self.game, self.caster, list(choosing or []) or None)
-                if component.kind is ComponentKind.SACRIFICE and not component.cards:
-                    # Maestros Ascendancy: "by sacrificing a creature" - the
-                    # permanent is chosen at CR 601.2b like any announced cost.
-                    component.cards = sacrificed[: component.required]
-                    sacrificed = sacrificed[component.required :]
+                if component.from_among:
+                    fill_from_among(component, self.game, self.caster, named or None)
+                elif component.required and not component.cards:
+                    # "by discarding a card" / "by sacrificing a creature": the
+                    # cards the caster names fill the components in printed
+                    # order (CR 601.2b), the way an alternative cost's do.
+                    component.cards = named[: component.required]
+                    named = named[component.required :]
             self.add_additional_cost(extra)
         if option.pays_mana_cost:
             # Warp's second half: the card is cast from exile for its own mana
@@ -2524,6 +2534,26 @@ class Casting(EngineModel):
                     if cost
                     else 0,
                     unavailable=unavailable,
+                )
+            )
+
+        free_condition = conditional_free_cast_condition(self.spell.oracle_text or "")
+        if free_condition is not None:
+            options.append(
+                AlternativeCostOption(
+                    index=len(options),
+                    source=AlternativeCostSource.PRINTED,
+                    rule="CR 118.9",
+                    source_name=self.spell.name,
+                    description=f"nothing (if {free_condition})",
+                    cost=None,
+                    unavailable=conditional_free_cast_unavailable(
+                        self.game,
+                        self.caster,
+                        self._as_announced,
+                        self.origin_zone,
+                        free_condition,
+                    ),
                 )
             )
 
@@ -4271,10 +4301,9 @@ class Casting(EngineModel):
 
         payable_total = self.total_cost.assign_payer(self.caster)
         if (
-            self.permission_used is not None
-            and self.permission_used.any_type_mana
-            and payable_total.mana.symbols
-        ):
+            self.keyword_any_type_mana
+            or (self.permission_used is not None and self.permission_used.any_type_mana)
+        ) and payable_total.mana.symbols:
             # "... and mana of any type can be spent to cast it/that spell."
             # CR 202.3b: the spell's own printed/reduced mana cost is
             # unchanged everywhere else (`self.total_cost` itself, `Action.
@@ -4318,7 +4347,9 @@ class Casting(EngineModel):
         )
         self.payment.paying_for = "spell"
         self.payment.paying_for_keyword = (self.keyword_used or "").lower() or None
-        if self.permission_used is None or not self.permission_used.any_type_mana:
+        if not self.keyword_any_type_mana and (
+            self.permission_used is None or not self.permission_used.any_type_mana
+        ):
             # "Spend only black mana on X." (Consume Spirit): X's share of the
             # cost (`x_count * X`, CR 107.3a) is payable only with that colour,
             # unless mana of any type may be spent (CR 609.4b).
@@ -5150,12 +5181,15 @@ def static_free_cast_refusal(
     any-of-them), a mana value cap, and for "Once during each of your turns"
     whose turn it is and whether that permanent's one use this turn is gone.
     """
-    in_zone = grant.any_zone or origin_zone is grant.zone
+    in_zone = grant.any_zone or grant.zone is None or origin_zone is grant.zone
     if not in_zone and grant.also_top_of_library and origin_zone is Zone.LIBRARY:
         library = game.player(caster).library if game is not None else []
         in_zone = bool(library) and library[0] is card
     if not in_zone:
-        return f"{source_name} only applies to spells cast from your {grant.zone.value} (CR 118.9)"
+        return (
+            f"{source_name} only applies to spells cast from your "
+            f"{grant.zone.value if grant.zone else 'hand'} (CR 118.9)"
+        )
     if grant.quality_phrase:
         quality = object_quality(grant.quality_phrase)
         if quality is None or not quality(game, card):
@@ -5614,15 +5648,20 @@ from .options import (  # noqa: E402
 )
 from .permissions import (  # noqa: E402
     adventure_face,
+    cast_condition_holds,
     castable_faces,
     castable_from,
     conditional_flash_condition,
+    conditional_free_cast_condition,
+    conditional_free_cast_unavailable,
     granted_cast_options,
     has_flash,
+    has_quality_flash_grant,
     is_top_of_library,
     modal_dfc_spell_back_faces,
     once_per_turn_key,
     play_permissions_on,
+    printed_cast_only_zones,
     split_second_restriction_source,
     usable_play_permission,
 )

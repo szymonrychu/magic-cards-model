@@ -669,7 +669,7 @@ class CostsManaMixin:
         # Rogue Class's and Evelyn's "... and you may spend mana as though it
         # were mana of any color to cast those spells / it": the cards of the
         # pile the same sentence opens to play.
-        grant = linked_exile_play_grant(self, spell, caster)
+        grant = linked_exile_play_grant(self, spell, caster, land=False)
         return grant is not None and grant.line.any_color
 
     @staticmethod

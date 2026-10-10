@@ -1485,6 +1485,12 @@ class CardState(EngineModel):
     on every devour entry (empty when nothing was sacrificed), so a permanent
     that re-enters never carries an old object's record (CR 400.7)."""
 
+    crafted_with: tuple[UUID, ...] = ()
+    """CR 702.167c: "the exiled cards used to craft" this permanent - the
+    materials its craft ability exiled, by id. Written when the card returns
+    transformed (`machines/keywords._craft_effect`); Mastercraft Raptor's "total
+    power of the exiled cards used to craft it" reads them from exile."""
+
     controlled_since_upkeep: tuple[str, int] | None = None
     """`(controller, upkeeps)`: who controlled this permanent when it was last
     seen to come under someone's control, and how many upkeeps that player had

@@ -301,6 +301,8 @@ def executes(keyword: str) -> bool:
         # `machines/effects._parse_event_subject_pump_clause`'s existing
         # event-subject reader.
         "flanking",
+        # CR 702.115a: `_ingest_ability` above (`_TRIGGER_EXPANSIONS`).
+        "ingest",
         # CR 702.145b / CR 702.145e. Static abilities driven by the game's
         # day/night designation (CR 731): `apply_daybound_nightbound` below
         # transforms and sets the designation, `enters_transformed_at_night`
@@ -1691,6 +1693,19 @@ def _single(
 #: The keyword lines this module can write out as triggered abilities, by the
 #: Scryfall spelling of the keyword. A keyword missing from here is a keyword
 #: `machines/triggers.py` still cannot produce.
+def _ingest_ability(ability: KeywordAbility) -> TriggeredAbility:
+    """CR 702.115a: 'Ingest' means 'Whenever this creature deals combat damage
+    to a player, that player exiles the top card of their library.'"""
+    return _expansion(
+        ability,
+        keyword="ingest",
+        word=TriggerWord.WHENEVER,
+        condition="this creature deals combat damage to a player",
+        effect="that player exiles the top card of their library",
+        event=TriggerEvent.DEALS_DAMAGE,
+    )
+
+
 _TRIGGER_EXPANSIONS: dict[str, Callable[[KeywordAbility], list[TriggeredAbility]]] = {
     "ward": _single(_ward_ability),
     "prowess": _single(_prowess_ability),
@@ -1720,6 +1735,7 @@ _TRIGGER_EXPANSIONS: dict[str, Callable[[KeywordAbility], list[TriggeredAbility]
     "extort": _single(_extort_ability),
     "increment": _single(_increment_ability),
     "flanking": _single(_flanking_ability),
+    "ingest": _single(_ingest_ability),
     "decayed": _single(_decayed_ability),
 }
 
@@ -2029,6 +2045,10 @@ class KeywordActivation(EngineModel):
     """The permanent whose "you may pay {0} rather than pay the equip cost of
     the first equip ability you activate ..." this equip activation took
     (`free_first_equip_source`, CR 118.9), or None for the printed cost."""
+    craft_materials: tuple[UUID, ...] = ()
+    """CR 702.167a: the materials this craft activation exiles, recorded on the
+    returned card as `CardState.crafted_with` (CR 702.167c's "the exiled cards
+    used to craft it")."""
     x_value: int = 0
     """CR 107.3a's X, announced with this activation (CR 602.2b) and carried to
     the `AbilityOnStack` - Roaring Earth's Channel "{X}{G}{G}, Discard this
@@ -2858,6 +2878,7 @@ def craft_activation(
                 cost_text=f"{mana}, Exile this permanent, Exile the materials",
                 effect="Return this card to the battlefield transformed under its owner's control.",
             ),
+            craft_materials=tuple(material.id for material in materials),
             game=game,
         )
     )
@@ -2872,7 +2893,12 @@ def _craft_effect(activation: KeywordActivation) -> CardState | None:
     if game is None or card.zone is not Zone.EXILE or card.card.back_face is None:
         return None
     with game._id_allocator_scope():  # noqa: SLF001
-        return game.put_onto_battlefield(card, card.owner or activation.player, transformed=True)
+        returned = game.put_onto_battlefield(
+            card, card.owner or activation.player, transformed=True
+        )
+    # CR 702.167c: the returned card remembers what was exiled to craft it.
+    returned.crafted_with = activation.craft_materials
+    return returned
 
 
 # --------------------------------------------------------------------------

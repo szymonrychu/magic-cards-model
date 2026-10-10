@@ -1,0 +1,133 @@
+{
+  "object": "card",
+  "id": "4962bf58-74d8-4c11-b042-d054312fb8b7",
+  "oracle_id": "b391a4ce-52ce-4a8c-bbe5-6053951ee1d4",
+  "multiverse_ids": [],
+  "tcgplayer_id": 183987,
+  "cardmarket_id": 368918,
+  "name": "Theater of Horrors",
+  "lang": "en",
+  "released_at": "2019-01-25",
+  "uri": "https://api.scryfall.com/cards/4962bf58-74d8-4c11-b042-d054312fb8b7",
+  "scryfall_uri": "https://scryfall.com/card/prna/213s/theater-of-horrors?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T09:06:16Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/4/9/4962bf58-74d8-4c11-b042-d054312fb8b7.jpg?1783933576",
+    "normal": "https://cards.scryfall.io/normal/front/4/9/4962bf58-74d8-4c11-b042-d054312fb8b7.jpg?1783933576",
+    "large": "https://cards.scryfall.io/large/front/4/9/4962bf58-74d8-4c11-b042-d054312fb8b7.jpg?1783933576",
+    "png": "https://cards.scryfall.io/png/front/4/9/4962bf58-74d8-4c11-b042-d054312fb8b7.png?1783933576",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/4/9/4962bf58-74d8-4c11-b042-d054312fb8b7.jpg?1783933576",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/4/9/4962bf58-74d8-4c11-b042-d054312fb8b7.jpg?1783933576",
+    "thumb": "https://cards.scryfall.io/thumb/front/4/9/4962bf58-74d8-4c11-b042-d054312fb8b7.webp?1783933576",
+    "grid": "https://cards.scryfall.io/grid/front/4/9/4962bf58-74d8-4c11-b042-d054312fb8b7.webp?1783933576",
+    "display": "https://cards.scryfall.io/display/front/4/9/4962bf58-74d8-4c11-b042-d054312fb8b7.webp?1783933576",
+    "art": "https://cards.scryfall.io/art/front/4/9/4962bf58-74d8-4c11-b042-d054312fb8b7.webp?1783933576",
+    "crop": "https://cards.scryfall.io/crop/front/4/9/4962bf58-74d8-4c11-b042-d054312fb8b7.webp?1783933576"
+  },
+  "mana_cost": "{1}{B}{R}",
+  "cmc": 3.0,
+  "type_line": "Enchantment",
+  "oracle_text": "At the beginning of your upkeep, exile the top card of your library.\nDuring your turn, if an opponent lost life this turn, you may play lands and cast spells from among cards exiled with this enchantment.\n{3}{R}: This enchantment deals 1 damage to target opponent or planeswalker.",
+  "colors": [
+    "B",
+    "R"
+  ],
+  "color_identity": [
+    "B",
+    "R"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": false,
+  "finishes": [
+    "foil"
+  ],
+  "oversized": false,
+  "promo": true,
+  "reprint": true,
+  "variation": false,
+  "set_id": "503230ec-81e3-4f92-b847-ff435b1652e0",
+  "set": "prna",
+  "set_name": "Ravnica Allegiance Promos",
+  "set_type": "promo",
+  "set_uri": "https://api.scryfall.com/sets/503230ec-81e3-4f92-b847-ff435b1652e0",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Aprna&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/prna?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/4962bf58-74d8-4c11-b042-d054312fb8b7/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Ab391a4ce-52ce-4a8c-bbe5-6053951ee1d4&unique=prints",
+  "collector_number": "213s",
+  "digital": false,
+  "rarity": "rare",
+  "watermark": "rakdos",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Daarken",
+  "artist_ids": [
+    "e607a0d4-fc12-4c01-9e3f-501f5269b9cb"
+  ],
+  "illustration_id": "758a4536-3296-45a9-a346-37ca01d944ad",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "promo_types": [
+    "setpromo",
+    "prerelease",
+    "datestamped"
+  ],
+  "edhrec_rank": 4700,
+  "penny_rank": 4920,
+  "prices": {
+    "usd": null,
+    "usd_foil": "0.93",
+    "usd_etched": null,
+    "eur": null,
+    "eur_foil": "0.70",
+    "tix": null
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DTheater%2Bof%2BHorrors",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DTheater%2Bof%2BHorrors",
+    "edhrec": "https://edhrec.com/route/?cc=Theater+of+Horrors"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F183987%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=368918&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards?affiliate_id=scryfall&data%5Bsearch%5D=Theater+of+Horrors&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

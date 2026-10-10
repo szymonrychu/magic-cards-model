@@ -542,6 +542,15 @@ class SpendPurpose(StrEnum):
     PAY_CUMULATIVE_UPKEEP = "pay_cumulative_upkeep"
 
 
+_CANT_SPEND_MANA_RE = re.compile(r"^You can't spend mana to cast this spell\.$", re.MULTILINE)
+
+
+def reads_cant_spend_mana_line(oracle_text: str) -> bool:
+    """Whether a card's text carries "You can't spend mana to cast this spell."
+    - the line `ManaSpend.casting` turns into `no_mana`."""
+    return _CANT_SPEND_MANA_RE.search(oracle_text) is not None
+
+
 class ManaSpend(EngineModel):
     """The object mana is about to be spent on, reduced to what a restriction
     can ask about: whether it is being cast or activated, and the
@@ -607,6 +616,10 @@ class ManaSpend(EngineModel):
     is paid). `None` for an activation, which has no spell to ask about."""
     x_in_cost: bool = False
     """Whether the spell being cast has an {X} in its mana cost."""
+    no_mana: bool = False
+    """The spell says "You can't spend mana to cast this spell." (Hogaak,
+    Arisen Necropolis): no mana of any kind may pay for it, only the objects
+    convoke and delve tap and exile (CR 601.2h, CR 702.51b, CR 702.66b)."""
     class_level: bool = False
     """Whether the ability being activated is a Class's level bar - CR 716.2a's
     "[Cost]: Level N", an activated ability whose resolution is how a Class
@@ -670,6 +683,7 @@ class ManaSpend(EngineModel):
                 "mana_value": float(base) + x_count * x_value,
                 "x_in_cost": x_count > 0,
                 "snow_any_color": snow_any_color,
+                "no_mana": reads_cant_spend_mana_line(getattr(card, "oracle_text", "") or ""),
             }
         )
 
@@ -1514,6 +1528,11 @@ class ManaPool(EngineModel):
         if payment is None:
             payment = self.payment_for(cost, life_available=life_available, spend=spend)
         if payment is None:
+            if spend is not None and spend.no_mana and cost.symbols:
+                raise ValueError(
+                    f"{spend.name} says you can't spend mana to cast this spell, so {cost} "
+                    "can only be paid with convoke and delve (CR 601.2h)"
+                )
             raise ValueError(f"pool {self.floating} cannot pay {cost}")
 
         announce_mutation(self)
@@ -1639,6 +1658,8 @@ class ManaPool(EngineModel):
         indicated mana from the pool, and this mana may not be removed for
         this).
         """
+        if spend_on is not None and spend_on.no_mana:
+            return {}
         return {
             bucket: amount
             for bucket, amount in self._buckets().items()

@@ -4677,6 +4677,14 @@ SWEEP_DRIVER_GAPS: tuple[DriverGap, ...] = (
         event="a card exiled with the source sharing a type with what is played",
         precondition=r"shares a card type with the exiled card",
     ),
+    # EP01-R1-T8: the cast probe casts from the hand; a spell cast from the top
+    # of the library needs the source's own permission, proven by
+    # tests/scenarios/test_ep01_r1_static_cast_permissions.py (Melek).
+    DriverGap(
+        kind="cast_spell",
+        event="a spell cast from the library",
+        precondition=r"cast an? [a-z ]+ spell from your library",
+    ),
     DriverGap(
         kind="cast_spell",
         event="a spell cast while the named source is attacking",

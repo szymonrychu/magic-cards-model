@@ -3887,6 +3887,11 @@ class CostPayment(EngineModel):
             spend=self.spend,
         )
         if payment is None:
+            if self.spend is not None and self.spend.no_mana and owed.symbols:
+                raise ValueError(
+                    f"{self.spend.name} says you can't spend mana to cast this spell, so "
+                    f"{owed} can only be paid with convoke and delve (CR 601.2h)"
+                )
             raise ValueError(
                 f"pool {self.pool.floating} cannot pay {owed}"
                 f"{self._blocked()}{self.x_restriction_note()}"

@@ -1947,7 +1947,7 @@ class Game(
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 140
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 141
     #: 67: `machines/cost.CostComponent` gained `link_to_permanent_id` (CR
     #: 607.2q), reachable from `Game` through a pending `AbilityOnStack.
     #: keyword_activation`/`.unless_payment`'s own `CostPayment.components`.
@@ -2265,6 +2265,11 @@ class Game(
     #: untapped creatures you control with flying") and
     #: `CreaturesControlledByQuality.excluding_card_id` (its "other creatures
     #: you control with flying"), both defaulting to nothing in an older dump.
+    #: 141 (EP01-R1-T8): `CardState` gained `crafted_with` (CR 702.167c, the
+    #: exiled cards used to craft a permanent), `KeywordActivation` gained
+    #: `craft_materials` and `ManaSpend` gained `no_mana` (Hogaak); an older
+    #: dump would decode a crafted Mastercraft Raptor with no materials, so its
+    #: power would read 0.
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -3519,6 +3524,11 @@ class Game(
     #: (CR 701.20a), read fresh by `known_to` (`Game.hand_is_revealed`).
     _PLAY_WITH_HAND_REVEALED_RE: ClassVar[re.Pattern[str]] = re.compile(
         r"^play with your hand revealed\.?$", re.IGNORECASE
+    )
+    #: "Play with the top card of your library revealed." (Courser of
+    #: Kruphix, Melek, Garruk's Horde) - CR 400.2: the top card is public.
+    _TOP_CARD_REVEALED_RE: ClassVar[re.Pattern[str]] = re.compile(
+        r"^play with the top card of your library revealed\.?$", re.IGNORECASE
     )
     _LOOK_AT_TOP_CARD_ANY_TIME_RE: ClassVar[re.Pattern[str]] = re.compile(
         r"^you may look at the top card of your library any time\.?$", re.IGNORECASE

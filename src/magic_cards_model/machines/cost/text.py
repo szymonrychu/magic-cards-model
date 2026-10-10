@@ -674,7 +674,7 @@ _STATIC_FREE_CAST = re.compile(
     r"^You may cast (?P<what>[\w' -]*?spells?)"
     r"(?: with mana value (?:(?P<mv_number>\d+) or less"
     r"|less than or equal to (?P<mv_quality>.+?)))?"
-    r" from your (?P<zone>hand|graveyard) "
+    r"(?: from your (?P<zone>hand|graveyard))? "
     r"without paying (?:its|their) mana costs?\.$",
     re.IGNORECASE,
 )
@@ -814,8 +814,11 @@ def static_free_cast_grant(text: str) -> StaticFreeCastGrant | None:
     match = _STATIC_FREE_CAST.match(text.strip())
     if match is None:
         return None
-    zone = _ZONE_WORDS.get(match.group("zone").lower())
-    if zone is None:
+    # No zone words ("You may cast Dragon spells without paying their mana
+    # costs.", Dracogenesis) is every zone: CR 118.9's alternative cost of
+    # nothing applies to the spell wherever it is cast from.
+    zone = _ZONE_WORDS.get(match.group("zone").lower()) if match.group("zone") else None
+    if match.group("zone") and zone is None:
         return None
     what = match.group("what").strip().lower()
     qualifier = re.sub(r"spells?$", "", what).strip()
@@ -1017,7 +1020,8 @@ _PHRASE_DISCARD = re.compile(
 _PHRASE_TAP = re.compile(
     rf"^tap (?:(?P<another>another)|{_COST_COUNT}) (?P<other>other )?(?:untapped )?"
     r"(?P<quality>[\w ,/]+?) "
-    r"you control(?P<share> that share a creature type)?(?P<other_than> other than this (?:creature|permanent|artifact))?"
+    r"you control(?P<share> that share a creature type)?"
+    r"(?P<other_than> other than this (?:creature|permanent|artifact))?"
     r"(?: with (?P<keyword>[a-z]+))?"
     # CR 208.1: "... with total power 10 or greater" (Mossbridge Troll) - the
     # tapped creatures' combined power is the threshold, whatever their number.

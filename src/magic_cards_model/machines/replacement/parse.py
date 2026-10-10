@@ -1589,8 +1589,7 @@ def _redirect_damage_to_the_source(
 # "Fog Bank" is not entered here either: "prevent all combat damage that would
 # be dealt to and dealt by this creature" is
 # `_compile_self_prevent_combat_damage`'s shape.
-REPLACEMENTS: dict[str, list[CardReplacement]] = {
-}
+REPLACEMENTS: dict[str, list[CardReplacement]] = {}
 
 
 # --------------------------------------------------------------------------

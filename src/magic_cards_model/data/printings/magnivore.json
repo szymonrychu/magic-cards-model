@@ -1,0 +1,135 @@
+{
+  "object": "card",
+  "id": "200fa50d-5a54-47eb-a123-29c4fb55ebee",
+  "oracle_id": "882da1c6-7b86-4de0-9161-ce7c50f9c90c",
+  "multiverse_ids": [
+    30550
+  ],
+  "mtgo_id": 16651,
+  "mtgo_foil_id": 16652,
+  "tcgplayer_id": 9479,
+  "cardmarket_id": 2616,
+  "name": "Magnivore",
+  "lang": "en",
+  "released_at": "2001-10-01",
+  "uri": "https://api.scryfall.com/cards/200fa50d-5a54-47eb-a123-29c4fb55ebee",
+  "scryfall_uri": "https://scryfall.com/card/ody/204/magnivore?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T12:20:27Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/2/0/200fa50d-5a54-47eb-a123-29c4fb55ebee.jpg?1783945227",
+    "normal": "https://cards.scryfall.io/normal/front/2/0/200fa50d-5a54-47eb-a123-29c4fb55ebee.jpg?1783945227",
+    "large": "https://cards.scryfall.io/large/front/2/0/200fa50d-5a54-47eb-a123-29c4fb55ebee.jpg?1783945227",
+    "png": "https://cards.scryfall.io/png/front/2/0/200fa50d-5a54-47eb-a123-29c4fb55ebee.png?1783945227",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/2/0/200fa50d-5a54-47eb-a123-29c4fb55ebee.jpg?1783945227",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/2/0/200fa50d-5a54-47eb-a123-29c4fb55ebee.jpg?1783945227",
+    "thumb": "https://cards.scryfall.io/thumb/front/2/0/200fa50d-5a54-47eb-a123-29c4fb55ebee.webp?1783945227",
+    "grid": "https://cards.scryfall.io/grid/front/2/0/200fa50d-5a54-47eb-a123-29c4fb55ebee.webp?1783945227",
+    "display": "https://cards.scryfall.io/display/front/2/0/200fa50d-5a54-47eb-a123-29c4fb55ebee.webp?1783945227",
+    "art": "https://cards.scryfall.io/art/front/2/0/200fa50d-5a54-47eb-a123-29c4fb55ebee.webp?1783945227",
+    "crop": "https://cards.scryfall.io/crop/front/2/0/200fa50d-5a54-47eb-a123-29c4fb55ebee.webp?1783945227"
+  },
+  "mana_cost": "{2}{R}{R}",
+  "cmc": 4.0,
+  "type_line": "Creature \u2014 Lhurgoyf",
+  "oracle_text": "Haste (This creature can attack and {T} as soon as it comes under your control.)\nMagnivore's power and toughness are each equal to the number of sorcery cards in all graveyards.",
+  "power": "*",
+  "toughness": "*",
+  "colors": [
+    "R"
+  ],
+  "color_identity": [
+    "R"
+  ],
+  "keywords": [
+    "Haste"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "legal",
+    "predh": "legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "b0d90d2d-494a-4224-bfa0-36ce5ee281b1",
+  "set": "ody",
+  "set_name": "Odyssey",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/b0d90d2d-494a-4224-bfa0-36ce5ee281b1",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Aody&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/ody?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/200fa50d-5a54-47eb-a123-29c4fb55ebee/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A882da1c6-7b86-4de0-9161-ce7c50f9c90c&unique=prints",
+  "collector_number": "204",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Carl Critchlow",
+  "artist_ids": [
+    "17948f16-611a-44b8-8d10-9895a0bdfff1"
+  ],
+  "illustration_id": "314d2c8a-a99b-45f9-b17b-18843a696269",
+  "border_color": "black",
+  "frame": "1997",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 17622,
+  "penny_rank": 7277,
+  "prices": {
+    "usd": "2.80",
+    "usd_foil": "19.75",
+    "usd_etched": null,
+    "eur": "3.80",
+    "eur_foil": "24.75",
+    "tix": "0.12"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=30550&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DMagnivore",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DMagnivore",
+    "edhrec": "https://edhrec.com/route/?cc=Magnivore"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F9479%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=2616&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/16651?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

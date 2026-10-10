@@ -20,17 +20,22 @@ from ...machines.casting import (
     PlayPermission,
     _printed_alternative_total_cost,
     castable_faces,
+    conditional_free_cast_condition,
+    conditional_free_cast_unavailable,
     face_being_cast,
     granted_cast_options,
     keyword_cast_options,
+    land_quality_allows,
     life_or_mana_additional_costs,
     linked_exile_play_grant,
     marker_cast_options,
     once_per_turn_key,
     optional_additional_costs,
     play_permissions_on,
+    record_graveyard_land_use,
     static_free_cast_grants,
     static_grant_option,
+    static_permission_applies_now,
     static_zone_cast_permission,
     types_being_cast,
     usable_play_permission,
@@ -1748,11 +1753,20 @@ class CastingMixin:
             return None
         board = self.computed_board()
         for permanent in self.permanents_controlled_by(username):
-            if any(
-                self._plays_lands_from_top_of_library_line(line)
-                for line in board.of(permanent).abilities
-            ):
-                return permanent
+            for line in board.of(permanent).abilities:
+                if self._PLAYS_LANDS_FROM_TOP_OF_LIBRARY_RE.fullmatch(
+                    self._static_line_without_ability_word(line)
+                ):
+                    return permanent
+                permission = static_zone_cast_permission(line)
+                if (
+                    permission is not None
+                    and permission.plays_lands
+                    and permission.zone is Zone.LIBRARY
+                    and static_permission_applies_now(permission, self, username, permanent)
+                    and land_quality_allows(permission, land)
+                ):
+                    return permanent
         return None
 
     def why_cannot_play_land(self: "Game", username: str) -> str | None:
@@ -1862,6 +1876,22 @@ class CastingMixin:
                     if cost
                     else 0,
                     unavailable=unavailable,
+                )
+            )
+
+        free_condition = conditional_free_cast_condition(card.oracle_text or "")
+        if free_condition is not None:
+            options.append(
+                AlternativeCostOption(
+                    index=len(options),
+                    source=AlternativeCostSource.PRINTED,
+                    rule="CR 118.9",
+                    source_name=card.name,
+                    description=f"nothing (if {free_condition})",
+                    cost=None,
+                    unavailable=conditional_free_cast_unavailable(
+                        self, caster, card, origin_zone, free_condition
+                    ),
                 )
             )
 
@@ -2303,6 +2333,11 @@ class CastingMixin:
 
         if permission is not None:
             self.spend_play_permission_choice(permission)
+        gained_ability = (
+            record_graveyard_land_use(self, land, username)
+            if permission is None and land.zone is Zone.GRAVEYARD
+            else None
+        )
         # CR 406.3a: a card exiled face down "is turned face up just before
         # the player announces that they are playing the card".
         land.face_up = True
@@ -2330,6 +2365,8 @@ class CastingMixin:
         played = self._land_play_event(land, username)
         with self._id_allocator_scope():
             self.enter_the_battlefield(land, username, was_cast=False)
+            if gained_ability is not None:
+                land.granted_ability_texts = (*land.granted_ability_texts, gained_ability)
             # CR 601.1a: playing a land is playing a card - Voltaic
             # Visionary's "When you play a card exiled with this creature".
             self.emit(played)
