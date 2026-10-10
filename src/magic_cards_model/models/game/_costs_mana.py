@@ -357,9 +357,10 @@ def _claimed_by_earlier_self_reduction(line: str) -> bool:
         line
     ):
         return True
-    from ...machines.vivid import costs_less_per_color_among_reduction  # noqa: F401
+    from ...machines.vivid import COSTS_LESS_PER_COLOR_AMONG_RE
 
-    return "vivid" in line.lower()
+    # Vivid's own reduction, whether or not the "Vivid - " label was stripped.
+    return COSTS_LESS_PER_COLOR_AMONG_RE.search(line) is not None or "vivid" in line.lower()
 
 
 @cache

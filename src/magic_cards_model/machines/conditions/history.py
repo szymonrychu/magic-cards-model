@@ -826,7 +826,15 @@ def _died_under(context: "ConditionContext", match: re.Match[str]) -> bool:
         for entry in _entries(context, "to_graveyard")
         if entry.player in whose and quality(entry)
     ]
-    return len(died) >= needed
+    if len(died) >= needed:
+        return True
+    # Morbid's plain "a creature died this turn" (CR 700.4) is also the game's
+    # own running count of creature deaths, `Game.creatures_died_this_turn`.
+    return (
+        match.group("whose") is None
+        and match.group("quality").strip().lower() == "creature"
+        and context.game.creatures_died_this_turn >= needed
+    )
 
 
 def _put_into_graveyard_from_battlefield(context: "ConditionContext", match: re.Match[str]) -> bool:

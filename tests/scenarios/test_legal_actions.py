@@ -1450,16 +1450,13 @@ def test_an_unreadable_spend_restriction_is_reported_as_not_understood():
     assert mana_action.restriction_understood is False
 
 
-def test_an_unpriceable_mana_ability_still_describes_what_it_produces():
-    """Servant of the Conduit's `{T}, Pay {E}: Add one mana of any color.` has
-    a cost piece `machines/cost.cost_component_for_phrase` declines to read,
-    so `_battlefield_ability_actions` reports it through the `Affordability.
-    UNKNOWN` fallback rather than the priced branch (CR 118.6: attempting an
-    unpayable cost is still a legal action).
-
-    That fallback is exactly where a descriptor would silently go missing, so
-    it is asserted here: both construction sites fill the same three fields
-    from the same helper.
+def test_a_mana_ability_with_an_energy_cost_still_describes_what_it_produces():
+    """Servant of the Conduit's `{T}, Pay {E}: Add one mana of any color.` once
+    had a cost piece `machines/cost.cost_component_for_phrase` declined to read,
+    so `_battlefield_ability_actions` reported it through the `Affordability.
+    UNKNOWN` fallback. EP-01 round 1 made "Pay {E}" a priced cost, so with no
+    energy it is now `Affordability.NO`; the descriptor must ride on either
+    construction site, and the three fields come from the same helper.
     """
     scenario = (
         Scenario().player("alice", battlefield=["Servant of the Conduit"]).player("bob").build()
@@ -1469,7 +1466,7 @@ def test_an_unpriceable_mana_ability_still_describes_what_it_produces():
     actions = legal_actions(scenario.game, "alice")
     (mana_action,) = _of_kind(actions, ActionKind.ACTIVATE_MANA)
 
-    assert mana_action.affordable is Affordability.UNKNOWN
+    assert mana_action.affordable is Affordability.NO
     assert mana_action.produces == "one mana of any color"
     assert mana_action.restriction is None
     assert mana_action.restriction_understood is None

@@ -38,7 +38,7 @@ read fails closed with a notice instead of placing a wrong number silently.
 import pytest
 
 from magic_cards_model.machines import Step
-from magic_cards_model.machines.effects import UnreadableCounterAmountNotice, amount_expression
+from magic_cards_model.machines.effects import amount_expression
 from magic_cards_model.models import Zone
 from magic_cards_model.models.card_state import Counter
 from tests.scenarios.harness import Scenario
@@ -248,11 +248,13 @@ def test_an_unreadable_expression_is_not_claimed():
     assert amount_expression("the number of dreams you had last night") is None
 
 
-def test_an_unreadable_enters_with_count_fails_closed_with_a_notice():
-    """No silent skip. Investigator's Journal (off-pool): "enters with a number
-    of suspect counters on it equal to the greatest number of creatures a player
-    controls" - an expression this reader does not evaluate, so the permanent
-    enters with no counters and a notice names the unread expression."""
+def test_the_greatest_creature_count_among_players_sizes_the_enters_with_counters():
+    """Investigator's Journal (off-pool): "enters with a number of suspect
+    counters on it equal to the greatest number of creatures a player
+    controls". EP-01 round 1 made the reader evaluate it (it once failed
+    closed with a notice, which `test_the_expression_reader_...` and the
+    mass-counter scenarios still cover for a genuinely unreadable text): bob's
+    one creature is the greatest count, so one counter and no notice."""
     scenario = (
         Scenario()
         .player("alice", hand=["Investigator's Journal"], battlefield=["Wastes", "Wastes"])
@@ -264,8 +266,5 @@ def test_an_unreadable_enters_with_count_fails_closed_with_a_notice():
     journal = scenario.cast_and_resolve("Investigator's Journal", auto=True)
 
     assert journal.zone is Zone.BATTLEFIELD
-    assert journal.counters["suspect"] == 0
-    (notice,) = scenario.game.unreadable_counter_amount_notices
-    assert notice.source_name == "Investigator's Journal"
-    assert notice.expression == "the greatest number of creatures a player controls"
-    assert isinstance(notice, UnreadableCounterAmountNotice)
+    assert journal.counters["suspect"] == 1
+    assert scenario.game.unreadable_counter_amount_notices == []
