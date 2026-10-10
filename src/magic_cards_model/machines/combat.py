@@ -2592,6 +2592,12 @@ def block_refusal(game: "Game", blocker: CardState, attack: Attack) -> str | Non
     if group_restriction is not None:
         return group_restriction
 
+    from .block_statics import block_only_refusal
+
+    only_restriction = block_only_refusal(game, blocker, attacker)
+    if only_restriction is not None:
+        return only_restriction
+
     from .combat_statics import power_threshold_restriction_refusal
 
     self_restriction = self_block_restriction_refusal(
@@ -2675,14 +2681,18 @@ def declaration_refusal(game: "Game", declared: dict[UUID, list[CardState]]) -> 
     is menace's mirror image, checked the same way (`blocked_by_at_most_one_
     refusal`).
     """
+    from .block_statics import multi_block_refusal
+
+    multi_refusal = multi_block_refusal(game, declared)
+    if multi_refusal is not None:
+        return multi_refusal
     seen: set[UUID] = set()
     all_blockers: list[CardState] = []
     for attacker_id, blockers in declared.items():
         for blocker in blockers:
-            if blocker.id in seen:
-                return f"{blocker.name} cannot block more than one attacker"
-            seen.add(blocker.id)
-            all_blockers.append(blocker)
+            if blocker.id not in seen:
+                seen.add(blocker.id)
+                all_blockers.append(blocker)
 
         attacker = game.find_by_id(attacker_id)
         if attacker is None:
@@ -2736,6 +2746,14 @@ def declare_blockers(game: "Game", blocks: list[tuple[CardState, CardState]]) ->
     unobeyed_must_be_blocked = unobeyed_must_be_blocked_requirement(game, declared)
     if unobeyed_must_be_blocked is not None:
         raise ValueError(unobeyed_must_be_blocked)
+
+    from .block_statics import unobeyed_exact_blockers, unobeyed_lure_requirement
+
+    unobeyed_lure = unobeyed_lure_requirement(game, declared) or unobeyed_exact_blockers(
+        game, declared
+    )
+    if unobeyed_lure is not None:
+        raise ValueError(unobeyed_lure)
 
     for attack in combat.attacks:
         chosen = declared[attack.attacker_id]
@@ -2964,22 +2982,29 @@ def combat_damage_step(game: "Game") -> list[tuple["Targetable", int]]:
             if isinstance(target, CardState):
                 assigned_this_step[target.id] = assigned_this_step.get(target.id, 0) + amount
 
+    # CR 510.1d: a blocker assigns its combat damage to the creatures it is
+    # blocking - all of it to one, divided as its controller chooses among two
+    # or more ("can block an additional creature"). A blocker whose attacker
+    # has gone assigns nothing to it.
+    blocked_by_blocker: dict[UUID, list[CardState]] = {}
     for attack in combat.attacks:
         attacker = game.find_by_id(attack.attacker_id)
+        if attacker is None or attacker.zone is not Zone.BATTLEFIELD:
+            continue
         for blocker_id in attack.blockers:
-            blocker = game.find_by_id(blocker_id)
-            if blocker is None or blocker.zone is not Zone.BATTLEFIELD:
-                continue
-            if not deals_damage_this_step(blocker, first_strike_step=first_strike_step, game=game):
-                continue
-            # CR 510.1d: a blocker whose attacker has gone assigns no damage.
-            if attacker is None or attacker.zone is not Zone.BATTLEFIELD:
-                continue
-            power = _assignment_power_of(game, blocker)
-            if power is None:
-                _record_undefined_power(game, blocker)
-            elif power > 0:
-                assignments.append((blocker, attacker, power))
+            blocked_by_blocker.setdefault(blocker_id, []).append(attacker)
+    for blocker_id, blocked in blocked_by_blocker.items():
+        blocker = game.find_by_id(blocker_id)
+        if blocker is None or blocker.zone is not Zone.BATTLEFIELD:
+            continue
+        if not deals_damage_this_step(blocker, first_strike_step=first_strike_step, game=game):
+            continue
+        power = _assignment_power_of(game, blocker)
+        if power is None:
+            _record_undefined_power(game, blocker)
+        elif power > 0:
+            for target, amount in _blocker_assignment(game, blocker, blocked, power):
+                assignments.append((blocker, target, amount))
 
     recorded = len(game.combat_damage_to_players_this_turn)
     for source, target, amount in assignments:
@@ -3220,6 +3245,57 @@ def may_assign_as_though_unblocked(game: "Game", creature: CardState) -> bool:
         _grants_assign_as_though_unblocked(line, creature.name)
         for line in characteristics.abilities
     )
+
+
+def _blocker_assignment(
+    game: "Game", blocker: CardState, blocked: list[CardState], power: int
+) -> list[tuple[CardState, int]]:
+    """How one blocking creature divides its combat damage among the
+    attackers it blocks (CR 510.1d): all of it to a single one; divided as
+    its controller chooses among two or more. Unscripted and unpaused, the
+    default is lethal damage to each in declaration order, the rest on the
+    last."""
+    if len(blocked) == 1:
+        return [(blocked[0], power)]
+    lethal = [
+        power if needed is None else max(needed, 0)
+        for needed in (lethal_for(blocker, attacker, game) for attacker in blocked)
+    ]
+    default: list[tuple[CardState, int]] = []
+    remaining = power
+    for attacker, needed in zip(blocked, lethal, strict=True):
+        share = min(remaining, needed)
+        if share > 0:
+            default.append((attacker, share))
+            remaining -= share
+    if remaining > 0:
+        if default:
+            default[-1] = (default[-1][0], default[-1][1] + remaining)
+        else:
+            default.append((blocked[-1], remaining))
+    targets = [TargetRef.to_card(attacker) for attacker in blocked]
+    ref_of = {attacker.id: ref for attacker, ref in zip(blocked, targets, strict=True)}
+    decision = Decision(
+        kind=DecisionKind.ASSIGN_COMBAT_DAMAGE,
+        player=game.controller_of(blocker).username,
+        prompt=f"assign {power} combat damage from {blocker.name}",
+        source=blocker.name,
+        source_id=None,  # CR 703.4k: a turn-based action, not an object's.
+        amount=power,
+        cards=(blocker.id, *(attacker.id for attacker in blocked)),
+        targets=tuple(targets),
+        lethal_damage=tuple(lethal),
+        default_damage=tuple((ref_of[attacker.id], amount) for attacker, amount in default),
+        trample=False,
+    )
+    answer = game.ask(decision)
+    assert isinstance(answer, tuple)
+    by_id = {attacker.id: attacker for attacker in blocked}
+    return [
+        (by_id[ref.card_id], amount)
+        for ref, amount in answer
+        if ref.card_id in by_id and amount > 0
+    ]
 
 
 def _attacker_assignment(
@@ -3717,4 +3793,9 @@ def required_block_declaration(game: "Game", username: str) -> list[tuple[UUID, 
             game, username, declared
         )
     )
+
+    from .block_statics import required_exact_declaration, required_lure_declaration
+
+    pairs.extend(required_lure_declaration(game, username, declared))
+    pairs.extend(required_exact_declaration(game, username, declared))
     return pairs

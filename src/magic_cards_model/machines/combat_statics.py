@@ -146,6 +146,8 @@ def is_must_be_blocked_line(line: str, name: str) -> bool:
 def _must_be_blocked_attackers(game: "Game") -> list["Attack"]:
     """Every attack this combat whose attacker carries "must be blocked if
     able" on the computed board right now (CR 613.5)."""
+    from .block_statics import ring_bearer_must_be_blocked
+
     board = game.computed_board()
     found: list[Attack] = []
     for attack in game.combat.attacks:
@@ -153,7 +155,11 @@ def _must_be_blocked_attackers(game: "Game") -> list["Attack"]:
         if not isinstance(attacker, CardState):
             continue
         chars = board.of(attacker)
-        if any(_must_be_blocked_match(line, attacker.name) for line in chars.abilities):
+        if any(
+            _must_be_blocked_match(line, attacker.name)
+            or ring_bearer_must_be_blocked(game, attacker, line)
+            for line in chars.abilities
+        ):
             found.append(attack)
     return found
 

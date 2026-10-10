@@ -1,0 +1,166 @@
+{
+  "object": "card",
+  "id": "de1c0399-9db8-4901-b72e-0010eb9b92b0",
+  "oracle_id": "d4dd6edf-1e9e-46fa-92b5-5df9aa0e4338",
+  "multiverse_ids": [
+    617035
+  ],
+  "mtgo_id": 112320,
+  "arena_id": 84897,
+  "tcgplayer_id": 498411,
+  "cardmarket_id": 715959,
+  "name": "Frodo Baggins",
+  "lang": "en",
+  "released_at": "2023-06-23",
+  "uri": "https://api.scryfall.com/cards/de1c0399-9db8-4901-b72e-0010eb9b92b0",
+  "scryfall_uri": "https://scryfall.com/card/ltr/205/frodo-baggins?utm_source=api",
+  "layout": "normal",
+  "highres_image": false,
+  "image_status": "lowres",
+  "image_updated_at": "2026-07-13T04:17:37Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/d/e/de1c0399-9db8-4901-b72e-0010eb9b92b0.jpg?1783916257",
+    "normal": "https://cards.scryfall.io/normal/front/d/e/de1c0399-9db8-4901-b72e-0010eb9b92b0.jpg?1783916257",
+    "large": "https://cards.scryfall.io/large/front/d/e/de1c0399-9db8-4901-b72e-0010eb9b92b0.jpg?1783916257",
+    "png": "https://cards.scryfall.io/png/front/d/e/de1c0399-9db8-4901-b72e-0010eb9b92b0.png?1783916257",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/d/e/de1c0399-9db8-4901-b72e-0010eb9b92b0.jpg?1783916257",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/d/e/de1c0399-9db8-4901-b72e-0010eb9b92b0.jpg?1783916257",
+    "thumb": "https://cards.scryfall.io/thumb/front/d/e/de1c0399-9db8-4901-b72e-0010eb9b92b0.webp?1783916257",
+    "grid": "https://cards.scryfall.io/grid/front/d/e/de1c0399-9db8-4901-b72e-0010eb9b92b0.webp?1783916257",
+    "display": "https://cards.scryfall.io/display/front/d/e/de1c0399-9db8-4901-b72e-0010eb9b92b0.webp?1783916257",
+    "art": "https://cards.scryfall.io/art/front/d/e/de1c0399-9db8-4901-b72e-0010eb9b92b0.webp?1783916257",
+    "crop": "https://cards.scryfall.io/crop/front/d/e/de1c0399-9db8-4901-b72e-0010eb9b92b0.webp?1783916257"
+  },
+  "mana_cost": "{G}{W}",
+  "cmc": 2.0,
+  "type_line": "Legendary Creature \u2014 Halfling Scout",
+  "oracle_text": "Whenever Frodo Baggins or another legendary creature you control enters, the Ring tempts you.\nAs long as Frodo Baggins is your Ring-bearer, it must be blocked if able.",
+  "power": "1",
+  "toughness": "3",
+  "colors": [
+    "G",
+    "W"
+  ],
+  "color_identity": [
+    "G",
+    "W"
+  ],
+  "keywords": [],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "7215460e-8c06-47d0-94e5-d1832d0218af",
+      "component": "combo_piece",
+      "name": "The Ring // The Ring Tempts You",
+      "type_line": "Emblem // Card",
+      "uri": "https://api.scryfall.com/cards/7215460e-8c06-47d0-94e5-d1832d0218af"
+    },
+    {
+      "object": "related_card",
+      "id": "61342840-4d07-41f6-8742-929f92f94c73",
+      "component": "combo_piece",
+      "name": "Frodo Baggins",
+      "type_line": "Legendary Creature \u2014 Halfling Scout",
+      "uri": "https://api.scryfall.com/cards/61342840-4d07-41f6-8742-929f92f94c73"
+    }
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "08078706-ac5d-439b-8f01-894d38751367",
+  "set": "ltr",
+  "set_name": "The Lord of the Rings: Tales of Middle-earth",
+  "set_type": "draft_innovation",
+  "set_uri": "https://api.scryfall.com/sets/08078706-ac5d-439b-8f01-894d38751367",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Altr&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/ltr?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/de1c0399-9db8-4901-b72e-0010eb9b92b0/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Ad4dd6edf-1e9e-46fa-92b5-5df9aa0e4338&unique=prints",
+  "collector_number": "205",
+  "digital": false,
+  "rarity": "uncommon",
+  "flavor_text": "\"Few have ever come hither through greater peril or on an errand more urgent.\"\n\u2014Elrond",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Ekaterina Burmak",
+  "artist_ids": [
+    "2a9f3780-fcc8-4ec5-b403-ee1d1370d3b4"
+  ],
+  "illustration_id": "b24b059e-e96a-442b-b747-b9e83d569471",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "security_stamp": "triangle",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "promo_types": [
+    "universesbeyond"
+  ],
+  "edhrec_rank": 8914,
+  "preview": {
+    "source": "TheOneRing.net",
+    "source_uri": "https://www.theonering.net/torwp/2023/05/08/116501-lord-of-the-rings-tales-of-middle-earth-artist-talks-adapting-tolkien-for-magic-the-gathering/",
+    "previewed_at": "2023-05-29"
+  },
+  "prices": {
+    "usd": "0.18",
+    "usd_foil": "0.27",
+    "usd_etched": null,
+    "eur": "0.08",
+    "eur_foil": "0.17",
+    "tix": "0.03"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=617035&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DFrodo%2BBaggins",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DFrodo%2BBaggins",
+    "edhrec": "https://edhrec.com/route/?cc=Frodo+Baggins"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F498411%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=715959&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/112320?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

@@ -1,0 +1,135 @@
+{
+  "object": "card",
+  "id": "feacf831-a6e4-456b-b8f2-d7ec554281a1",
+  "oracle_id": "283433cb-9466-4b40-8af9-30934654d43b",
+  "multiverse_ids": [
+    132069
+  ],
+  "mtgo_id": 27328,
+  "mtgo_foil_id": 27329,
+  "tcgplayer_id": 15076,
+  "cardmarket_id": 16239,
+  "name": "Cloud Sprite",
+  "lang": "en",
+  "released_at": "2007-07-13",
+  "uri": "https://api.scryfall.com/cards/feacf831-a6e4-456b-b8f2-d7ec554281a1",
+  "scryfall_uri": "https://scryfall.com/card/10e/75/cloud-sprite?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T11:44:20Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/f/e/feacf831-a6e4-456b-b8f2-d7ec554281a1.jpg?1783943060",
+    "normal": "https://cards.scryfall.io/normal/front/f/e/feacf831-a6e4-456b-b8f2-d7ec554281a1.jpg?1783943060",
+    "large": "https://cards.scryfall.io/large/front/f/e/feacf831-a6e4-456b-b8f2-d7ec554281a1.jpg?1783943060",
+    "png": "https://cards.scryfall.io/png/front/f/e/feacf831-a6e4-456b-b8f2-d7ec554281a1.png?1783943060",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/f/e/feacf831-a6e4-456b-b8f2-d7ec554281a1.jpg?1783943060",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/f/e/feacf831-a6e4-456b-b8f2-d7ec554281a1.jpg?1783943060",
+    "thumb": "https://cards.scryfall.io/thumb/front/f/e/feacf831-a6e4-456b-b8f2-d7ec554281a1.webp?1783943060",
+    "grid": "https://cards.scryfall.io/grid/front/f/e/feacf831-a6e4-456b-b8f2-d7ec554281a1.webp?1783943060",
+    "display": "https://cards.scryfall.io/display/front/f/e/feacf831-a6e4-456b-b8f2-d7ec554281a1.webp?1783943060",
+    "art": "https://cards.scryfall.io/art/front/f/e/feacf831-a6e4-456b-b8f2-d7ec554281a1.webp?1783943060",
+    "crop": "https://cards.scryfall.io/crop/front/f/e/feacf831-a6e4-456b-b8f2-d7ec554281a1.webp?1783943060"
+  },
+  "mana_cost": "{U}",
+  "cmc": 1.0,
+  "type_line": "Creature \u2014 Faerie",
+  "oracle_text": "Flying (This creature can't be blocked except by creatures with flying or reach.)\nThis creature can block only creatures with flying.",
+  "power": "1",
+  "toughness": "1",
+  "colors": [
+    "U"
+  ],
+  "color_identity": [
+    "U"
+  ],
+  "keywords": [
+    "Flying"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "legal",
+    "predh": "legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": false,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "a66a6124-0d81-488d-b080-91f5ba7fbad0",
+  "set": "10e",
+  "set_name": "Tenth Edition",
+  "set_type": "core",
+  "set_uri": "https://api.scryfall.com/sets/a66a6124-0d81-488d-b080-91f5ba7fbad0",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3A10e&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/10e?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/feacf831-a6e4-456b-b8f2-d7ec554281a1/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A283433cb-9466-4b40-8af9-30934654d43b&unique=prints",
+  "collector_number": "75",
+  "digital": false,
+  "rarity": "common",
+  "flavor_text": "The delicate sprites carry messages for Saprazzans, but they refuse to land in Mercadia City's filthy markets.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Mark Zug",
+  "artist_ids": [
+    "48e2b98c-5467-4671-bd42-4c3746115117"
+  ],
+  "illustration_id": "c450f466-2cc3-44c2-acdf-831333b9533d",
+  "border_color": "black",
+  "frame": "2003",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 21344,
+  "penny_rank": 9072,
+  "prices": {
+    "usd": "0.13",
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": "0.06",
+    "eur_foil": null,
+    "tix": "0.03"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=132069&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DCloud%2BSprite",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DCloud%2BSprite",
+    "edhrec": "https://edhrec.com/route/?cc=Cloud+Sprite"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F15076%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=16239&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/27328?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

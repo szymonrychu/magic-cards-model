@@ -1,0 +1,133 @@
+{
+  "object": "card",
+  "id": "c64ba1c8-b93a-4169-9ba0-d3fc5bf57676",
+  "oracle_id": "dac0dc4c-acf3-40de-b6b5-963ff4176d3a",
+  "multiverse_ids": [
+    143383
+  ],
+  "mtgo_id": 28565,
+  "mtgo_foil_id": 28566,
+  "tcgplayer_id": 15556,
+  "cardmarket_id": 17770,
+  "name": "Lairwatch Giant",
+  "lang": "en",
+  "released_at": "2007-10-12",
+  "uri": "https://api.scryfall.com/cards/c64ba1c8-b93a-4169-9ba0-d3fc5bf57676",
+  "scryfall_uri": "https://scryfall.com/card/lrw/29/lairwatch-giant?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T11:41:52Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/c/6/c64ba1c8-b93a-4169-9ba0-d3fc5bf57676.jpg?1783942912",
+    "normal": "https://cards.scryfall.io/normal/front/c/6/c64ba1c8-b93a-4169-9ba0-d3fc5bf57676.jpg?1783942912",
+    "large": "https://cards.scryfall.io/large/front/c/6/c64ba1c8-b93a-4169-9ba0-d3fc5bf57676.jpg?1783942912",
+    "png": "https://cards.scryfall.io/png/front/c/6/c64ba1c8-b93a-4169-9ba0-d3fc5bf57676.png?1783942912",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/c/6/c64ba1c8-b93a-4169-9ba0-d3fc5bf57676.jpg?1783942912",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/c/6/c64ba1c8-b93a-4169-9ba0-d3fc5bf57676.jpg?1783942912",
+    "thumb": "https://cards.scryfall.io/thumb/front/c/6/c64ba1c8-b93a-4169-9ba0-d3fc5bf57676.webp?1783942912",
+    "grid": "https://cards.scryfall.io/grid/front/c/6/c64ba1c8-b93a-4169-9ba0-d3fc5bf57676.webp?1783942912",
+    "display": "https://cards.scryfall.io/display/front/c/6/c64ba1c8-b93a-4169-9ba0-d3fc5bf57676.webp?1783942912",
+    "art": "https://cards.scryfall.io/art/front/c/6/c64ba1c8-b93a-4169-9ba0-d3fc5bf57676.webp?1783942912",
+    "crop": "https://cards.scryfall.io/crop/front/c/6/c64ba1c8-b93a-4169-9ba0-d3fc5bf57676.webp?1783942912"
+  },
+  "mana_cost": "{5}{W}",
+  "cmc": 6.0,
+  "type_line": "Creature \u2014 Giant Warrior",
+  "oracle_text": "This creature can block an additional creature each combat.\nWhenever this creature blocks two or more creatures, it gains first strike until end of turn.",
+  "power": "5",
+  "toughness": "3",
+  "colors": [
+    "W"
+  ],
+  "color_identity": [
+    "W"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "30ec97cb-dca9-4bf4-a98b-310f9d8ceaff",
+  "set": "lrw",
+  "set_name": "Lorwyn",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/30ec97cb-dca9-4bf4-a98b-310f9d8ceaff",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Alrw&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/lrw?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/c64ba1c8-b93a-4169-9ba0-d3fc5bf57676/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Adac0dc4c-acf3-40de-b6b5-963ff4176d3a&unique=prints",
+  "collector_number": "29",
+  "digital": false,
+  "rarity": "common",
+  "flavor_text": "A giant can brood over a grudge for decades, and woe to those who interrupt him.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Warren Mahy",
+  "artist_ids": [
+    "002c739e-aa1f-4c1d-921b-37cb2d1b1c5b"
+  ],
+  "illustration_id": "abc084b7-25cb-4ec6-8306-92dc8414d4ad",
+  "border_color": "black",
+  "frame": "2003",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 28827,
+  "prices": {
+    "usd": "0.17",
+    "usd_foil": "0.42",
+    "usd_etched": null,
+    "eur": "0.03",
+    "eur_foil": "0.32",
+    "tix": "0.04"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=143383&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DLairwatch%2BGiant",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DLairwatch%2BGiant",
+    "edhrec": "https://edhrec.com/route/?cc=Lairwatch+Giant"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F15556%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=17770&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/28565?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}
