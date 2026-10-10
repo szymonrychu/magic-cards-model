@@ -40,6 +40,24 @@ def _effects_of_line(printing, text):
     ]
 
 
+#: "• Temur — Creatures you control get +1/+0 and have trample and haste." under
+#: an as-enters "choose Jeskai or Temur" (CR 614.12a).
+_MODE_BULLET_RE = re.compile(r"^•\s*[A-Z][\w'-]*\s+—\s+(?P<body>.+)$", re.DOTALL)
+_CHOOSES_MODE_RE = re.compile(r"\benters, choose [A-Z][\w'-]*(?:, [A-Z][\w'-]*)*,? or [A-Z]")
+
+
+def mode_bullet_body(printing, text) -> str | None:
+    """The bare static body of a "• Temur — <static>" bullet under the card's own
+    as-enters "choose Jeskai or Temur" line, else `None`. The production reader
+    is `layers.registry._mode_gated_text`, which hands exactly this body to the
+    layer parser while that mode is the recorded choice, so the caller judges
+    the body the way the battlefield sweep reads it."""
+    bullet = _MODE_BULLET_RE.match(text.strip())
+    if bullet is None or _CHOOSES_MODE_RE.search(printing.oracle_text or "") is None:
+        return None
+    return bullet.group("body").strip()
+
+
 def reads_enters_choices_line(printing, text, *, card_name=None, legendary=False) -> bool:
     lowered = text.lower()
     if "enter" not in lowered:

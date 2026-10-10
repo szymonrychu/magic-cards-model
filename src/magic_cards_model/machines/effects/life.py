@@ -816,6 +816,47 @@ def _parse_they_gain_or_lose_life_clause(clause: str, *, for_spell: bool) -> Tar
     return effect
 
 
+#: "[Then] if `<condition>`, target player/opponent loses the game." - Mirrodin
+#: Besieged's Phyrexian half ("... Then if there are fifteen or more artifact
+#: cards in your graveyard, target opponent loses the game."). CR 104.3e's
+#: stated loss on a target chosen as the ability was put on the stack (CR
+#: 601.2c via 603.3d); the condition is read by `Game.condition_holds` as the
+#: ability resolves, and an unreadable one loses nothing (the same
+#: conservative fallback the "you win the game" twin states).
+_IF_CONDITION_TARGET_LOSES_THE_GAME_RE = re.compile(
+    r"^(?:then )?if (?P<condition>.+?),\s*target (?P<who>player|opponent) loses the game\.?$",
+    re.IGNORECASE,
+)
+
+
+@MIXED_CLAUSE.rung("s26", for_spell=FORWARD)
+def _parse_if_condition_target_loses_the_game_clause(
+    clause: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`_IF_CONDITION_TARGET_LOSES_THE_GAME_RE`'s shape. Ability-only here: the
+    one printing is a triggered ability."""
+    if for_spell or "loses the game" not in clause.lower():
+        return None
+    match = _IF_CONDITION_TARGET_LOSES_THE_GAME_RE.fullmatch(clause.strip())
+    if match is None or not _targets_understood(
+        f"target {match.group('who')}", allow_player_targets=True
+    ):
+        return None
+    condition = match.group("condition").strip()
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        if not isinstance(stack_object, AbilityOnStack):
+            return
+        controller = game.controller_of(stack_object).username
+        if not game.condition_holds(controller, condition, stack_object.source(game)):
+            return
+        for target in game.resolve_targets(stack_object):
+            if isinstance(target, Player):
+                game.player_loses_the_game(target.username)
+
+    return effect
+
+
 #: "Each player loses 1 life for each attacking creature they control." (Batwing
 #: Brume) - CR 119.3's life change, one per object of the named group *that
 #: player* controls (CR 102.1's "each player", CR 101.4's turn order), so the

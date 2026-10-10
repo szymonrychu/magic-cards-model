@@ -28,6 +28,7 @@ CR numbers (looked up with `mise run rules:find`): 614.1c, 614.12a, 603.2,
 import pytest
 
 from magic_cards_model.machines import Step
+from magic_cards_model.machines.combat import has_keyword
 from magic_cards_model.machines.decisions import DecisionKind
 from magic_cards_model.models import Zone
 from magic_cards_model.models.card_state import Choice, ChoiceKind
@@ -1040,3 +1041,88 @@ def test_sarpadian_empires_refuses_a_pair_it_does_not_print():
     scenario.will_choose("green Goblin", source="Sarpadian Empires, Vol. VII")
     with pytest.raises(ValueError, match="green Goblin"):
         scenario.put_onto_battlefield("Sarpadian Empires, Vol. VII")
+
+
+# -- Mirrodin Besieged: the Phyrexian end-step loot and "loses the game" (CR 104.3e) --
+
+
+def _besieged_end_step(mode, artifacts_in_graveyard):
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Mirrodin Besieged"],
+            library=["Forest"] * 8,
+            graveyard=["Ornithopter"] * artifacts_in_graveyard,
+        )
+        .player("bob", library=["Forest"] * 8)
+        .build()
+    )
+    _enter(scenario, "Mirrodin Besieged", mode)
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    for _ in range(10):
+        if scenario.step is Step.END_STEP:
+            break
+        scenario.advance()
+    assert scenario.step is Step.END_STEP
+    if mode == "Phyrexian":
+        scenario.choose_trigger_targets("Mirrodin Besieged", ["bob"])
+    _resolve_all(scenario)
+    return scenario
+
+
+def test_mirrodin_besieged_phyrexian_loots_and_fifteen_artifacts_make_the_opponent_lose():
+    scenario = _besieged_end_step("Phyrexian", 15)
+    assert not scenario.game.is_in_game("bob")
+    assert len(scenario.player("alice").library) == 7
+
+
+def test_mirrodin_besieged_phyrexian_with_fourteen_artifacts_only_loots():
+    scenario = _besieged_end_step("Phyrexian", 14)
+    assert scenario.game.is_in_game("bob")
+    assert len(scenario.player("alice").library) == 7
+
+
+def test_mirrodin_besieged_mirran_does_not_loot_at_end_step():
+    scenario = _besieged_end_step("Mirran", 15)
+    assert scenario.game.is_in_game("bob")
+    assert len(scenario.player("alice").library) == 8
+
+
+# -- Frostcliff Siege: the Temur bullet is a mode-gated anthem (CR 614.12a, 613) --
+
+
+def _frostcliff(mode):
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Frostcliff Siege"], battlefield=["Grizzly Bears"])
+        .player("bob", battlefield=["Grizzly Bears"])
+        .build()
+    )
+    _enter(scenario, "Frostcliff Siege", mode)
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    return scenario
+
+
+def _bears(scenario, owner):
+    return scenario.find("Grizzly Bears", Zone.BATTLEFIELD, owner)
+
+
+def _has(scenario, permanent, keyword):
+    return has_keyword(permanent, keyword, scenario.game)
+
+
+def test_frostcliff_siege_temur_pumps_and_grants_trample_and_haste_to_your_creatures_only():
+    scenario = _frostcliff("Temur")
+    mine, theirs = _bears(scenario, "alice"), _bears(scenario, "bob")
+    assert scenario.game.characteristics_of(mine).power == 3
+    assert _has(scenario, mine, "Trample") and _has(scenario, mine, "Haste")
+    assert scenario.game.characteristics_of(theirs).power == 2
+    assert not _has(scenario, theirs, "Trample") and not _has(scenario, theirs, "Haste")
+
+
+def test_frostcliff_siege_jeskai_does_not_pump():
+    scenario = _frostcliff("Jeskai")
+    mine = _bears(scenario, "alice")
+    assert scenario.game.characteristics_of(mine).power == 2
+    assert not _has(scenario, mine, "Trample") and not _has(scenario, mine, "Haste")

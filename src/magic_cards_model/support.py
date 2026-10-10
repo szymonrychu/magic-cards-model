@@ -257,6 +257,7 @@ from magic_cards_model.models.game import (
 from magic_cards_model.models.player import reads_maximum_hand_size_line
 from magic_cards_model.numbers import parse_count
 from magic_cards_model.snapshot import EngineModel
+from magic_cards_model.static_audit.enters_choices import mode_bullet_body
 
 #: The package's own real Scryfall printings (`data/printings`), used only as
 #: probe material: a trigger condition naming "a Mountain" or "an artifact" is
@@ -1961,6 +1962,8 @@ def _static_ability_category(
     values, so every other caller (never checking a back face) is unaffected.
     """
     effective_name = card_name if card_name is not None else printing.name
+    # CR 614.12a: a "• Temur — <static>" bullet is judged as its bare body.
+    text = mode_bullet_body(printing, text) or text
     # `legendary=` as the battlefield sweep passes it (`effects_for`): only a
     # legend's first-word short name is a CR 201.5 self-reference, so a
     # nonlegendary Noggle the Mind's own "is a colorless Noggle" must not be
