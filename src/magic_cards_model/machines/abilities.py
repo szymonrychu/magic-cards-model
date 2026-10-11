@@ -2180,6 +2180,11 @@ class KeywordAbility(BaseAbility):
     parameter: str | None = None
     #: The number in `Suspend 3—{2}{B}{B}` or `Annihilator 2`, when there is one.
     count: int | None = None
+    #: True when the number is a variable X, announced as the ability is used
+    #: (`Suspend X—{X}{3}{U}. X can't be 0.`, CR 702.62a with CR 107.3a).
+    count_is_x: bool = False
+    #: The least X the line allows: 1 for its "X can't be 0." sentence.
+    count_minimum: int | None = None
     #: True when `cost` is nothing but mana symbols, so a caller can hand it
     #: straight to `ManaCost.parse` instead of reading a sentence.
     cost_is_mana: bool = False
@@ -2407,7 +2412,7 @@ def parse_abilities(card: Card) -> list[Ability]:
     abilities: list[Ability] = []
     for face_name, text in _faces(card):
         face_abilities: list[Ability] = []
-        merged = _merge_die_table_rows(_merge_modal_bullet_lines(text.split("\n")))
+        merged = _merge_roll_table_lines(_merge_modal_bullet_lines(text.split("\n")))
         if is_leveler_text(text):
             # CR 711.2: a level symbol and its power/toughness box are not
             # abilities; each ability in a striation is tagged with its band,
@@ -2525,24 +2530,39 @@ _MODAL_INSTRUCTION_TAIL = re.compile(
 )
 
 
-#: One row of a die results table: "1-14 | ..." or "20 | ..." (CR 706.2's own
-#: "roll a d20 ... N-M | result" layout; Scryfall prints an en or em dash).
-_DIE_TABLE_ROW = re.compile(r"^\d+(?:\s*[-\u2013\u2014]\s*\d+)?\s*\|")
+#: A die-roll result-table row as Oracle prints it ("1—9 | Copy that card.",
+#: "20 | ..."): CR 706.2's table, the lines under a "roll a dN" instruction.
+ROLL_TABLE_ROW_RE = re.compile(
+    r"^\s*(?P<low>\d+)(?:\s*[—–-]\s*(?P<high>\d+))?\s*\|\s*(?P<body>.+)$"
+)
+_ROLL_INSTRUCTION_RE = re.compile(r"\broll an? d\d+\b", re.IGNORECASE)
+_ROLL_ACTIVATION_INSTRUCTION_RE = re.compile(r"\s(?P<text>Activate only [^.]*\.)\s*$")
 
 
-def _merge_die_table_rows(lines: list[str]) -> list[str]:
-    """Fold a die results table's rows back into the line that rolls the die
-    (CR 706.2): a row is part of the ability that rolled, not an ability of
-    its own, so Delina's "...then roll a d20." and its "1-14 | ..." and
-    "15-20 | ..." rows reach `_parse_line` as one newline-joined line, the
-    way `_merge_modal_bullet_lines` does for a mode's bullets. A card with no
-    such row is untouched."""
+def _merge_roll_table_lines(lines: list[str]) -> list[str]:
+    """Fold a "... roll a dN ..." line and the result-table rows under it
+    (`ROLL_TABLE_ROW_RE`) into one newline-joined line, the way
+    `_merge_modal_bullet_lines` folds a modal header and its bullets: the rows
+    are the outcomes of that one roll (CR 706.2), never abilities of their own."""
     merged: list[str] = []
-    for line in lines:
-        if merged and _DIE_TABLE_ROW.match(line.strip()):
-            merged[-1] = f"{merged[-1]}\n{line}"
-        else:
-            merged.append(line)
+    index = 0
+    while index < len(lines):
+        line = lines[index]
+        index += 1
+        if _ROLL_INSTRUCTION_RE.search(line) and index < len(lines):
+            block = [line]
+            while index < len(lines) and ROLL_TABLE_ROW_RE.match(lines[index]):
+                block.append(lines[index])
+                index += 1
+            if len(block) > 1:
+                # CR 602.1b: an activation instruction closes the ability, so
+                # it moves from after the roll instruction to after the table.
+                instruction = _ROLL_ACTIVATION_INSTRUCTION_RE.search(block[0])
+                if instruction is not None:
+                    block[0] = block[0][: instruction.start()].rstrip()
+                    block[-1] = f"{block[-1]} {instruction.group('text')}"
+            line = "\n".join(block)
+        merged.append(line)
     return merged
 
 
@@ -3553,8 +3573,8 @@ def _parse_line(raw: str, keywords: list[str], face: str) -> list[Ability]:
 #: ability would read as a keyword cost.
 _KEYWORD_COST = re.compile(
     r"^(?P<keyword>[A-Z][A-Za-z'’-]*(?: [A-Za-z'’-]+)*?)"
-    r"(?: (?P<count>\d+))?"
-    r"—(?=\S)(?P<cost>[^:]+?)\.?$"
+    r"(?: (?P<count>\d+|X))?"
+    r"—(?=\S)(?P<cost>[^:]+?)\.?(?: (?P<minimum>X can't be 0)\.)?$"
 )
 
 
@@ -3760,7 +3780,9 @@ def _parse_keyword_cost(text: str, known: list[str], common: dict) -> KeywordAbi
         keyword=printed,
         canonical=canonical,
         cost=cost,
-        count=int(count) if count is not None else None,
+        count=int(count) if count is not None and count != "X" else None,
+        count_is_x=count == "X",
+        count_minimum=1 if match.group("minimum") else None,
         cost_is_mana=bool(_ONLY_SYMBOLS.match(cost)),
         em_dash=True,
     )

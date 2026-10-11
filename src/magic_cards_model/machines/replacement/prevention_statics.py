@@ -766,6 +766,11 @@ _EVENT_DEALT_RE = re.compile(
     r"(?: while (?P<while>.+))?$",
     re.IGNORECASE,
 )
+#: "If this creature would be dealt damage, ..." (Unbreathing Horde): the
+#: recipient first, the damage kind after the verb.
+_EVENT_RECIPIENT_DEALT_RE = re.compile(
+    r"^(?P<recipient>.+?) would be dealt (?P<kind>combat |noncombat )?damage$", re.IGNORECASE
+)
 _PREVENT_ALL_BODY_RES = (
     re.compile(r"^would be dealt to and dealt by (?P<both>.+)$", re.IGNORECASE),
     re.compile(r"^would be dealt to (?P<recipient>.+?) by (?P<source>.+)$", re.IGNORECASE),
@@ -901,14 +906,14 @@ def _read_if(
             if recipient_test is None:
                 return None
     else:
-        event_found = _EVENT_DEALT_RE.fullmatch(head)
+        event_found = _EVENT_DEALT_RE.fullmatch(head) or _EVENT_RECIPIENT_DEALT_RE.fullmatch(head)
         if event_found is None:
             return None
         kind = event_found.group("kind")
         recipient_test = _phrase_test(event_found.group("recipient"))
         if recipient_test is None:
             return None
-        if event_found.group("while"):
+        if "while" in event_found.re.groupindex and event_found.group("while"):
             counter = _WHILE_COUNTER_RE.fullmatch(event_found.group("while").strip())
             if counter is None:
                 return None

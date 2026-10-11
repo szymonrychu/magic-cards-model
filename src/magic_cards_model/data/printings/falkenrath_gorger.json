@@ -1,0 +1,138 @@
+{
+  "object": "card",
+  "id": "16c376f5-f69b-49d4-95f4-92bdd68c564c",
+  "oracle_id": "26aba6fa-830f-4a7f-8618-488d8e00215a",
+  "multiverse_ids": [
+    685988
+  ],
+  "mtgo_id": 135706,
+  "tcgplayer_id": 600486,
+  "cardmarket_id": 802809,
+  "name": "Falkenrath Gorger",
+  "lang": "en",
+  "released_at": "2025-01-24",
+  "uri": "https://api.scryfall.com/cards/16c376f5-f69b-49d4-95f4-92bdd68c564c",
+  "scryfall_uri": "https://scryfall.com/card/inr/152/falkenrath-gorger?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T02:02:01Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/1/6/16c376f5-f69b-49d4-95f4-92bdd68c564c.jpg?1783908121",
+    "normal": "https://cards.scryfall.io/normal/front/1/6/16c376f5-f69b-49d4-95f4-92bdd68c564c.jpg?1783908121",
+    "large": "https://cards.scryfall.io/large/front/1/6/16c376f5-f69b-49d4-95f4-92bdd68c564c.jpg?1783908121",
+    "png": "https://cards.scryfall.io/png/front/1/6/16c376f5-f69b-49d4-95f4-92bdd68c564c.png?1783908121",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/1/6/16c376f5-f69b-49d4-95f4-92bdd68c564c.jpg?1783908121",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/1/6/16c376f5-f69b-49d4-95f4-92bdd68c564c.jpg?1783908121",
+    "thumb": "https://cards.scryfall.io/thumb/front/1/6/16c376f5-f69b-49d4-95f4-92bdd68c564c.webp?1783908121",
+    "grid": "https://cards.scryfall.io/grid/front/1/6/16c376f5-f69b-49d4-95f4-92bdd68c564c.webp?1783908121",
+    "display": "https://cards.scryfall.io/display/front/1/6/16c376f5-f69b-49d4-95f4-92bdd68c564c.webp?1783908121",
+    "art": "https://cards.scryfall.io/art/front/1/6/16c376f5-f69b-49d4-95f4-92bdd68c564c.webp?1783908121",
+    "crop": "https://cards.scryfall.io/crop/front/1/6/16c376f5-f69b-49d4-95f4-92bdd68c564c.webp?1783908121"
+  },
+  "mana_cost": "{R}",
+  "cmc": 1.0,
+  "type_line": "Creature \u2014 Vampire Berserker",
+  "oracle_text": "Each Vampire creature card you own that isn't on the battlefield has madness. The madness cost is equal to its mana cost. (If you discard a card with madness, discard it into exile. When you do, cast it for its madness cost or put it into your graveyard.)",
+  "power": "2",
+  "toughness": "1",
+  "colors": [
+    "R"
+  ],
+  "color_identity": [
+    "R"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "b9618c8c-9f31-4b42-9798-2991893c27bf",
+  "set": "inr",
+  "set_name": "Innistrad Remastered",
+  "set_type": "masters",
+  "set_uri": "https://api.scryfall.com/sets/b9618c8c-9f31-4b42-9798-2991893c27bf",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Ainr&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/inr?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/16c376f5-f69b-49d4-95f4-92bdd68c564c/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A26aba6fa-830f-4a7f-8618-488d8e00215a&unique=prints",
+  "collector_number": "152",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Anna Steinbauer",
+  "artist_ids": [
+    "3516496c-c279-4b56-8239-720683d03ae0"
+  ],
+  "illustration_id": "fd237a0e-9aa6-4290-ba20-e31e24089bee",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 11475,
+  "penny_rank": 1302,
+  "preview": {
+    "source": "Wizards of the Coast",
+    "source_uri": "",
+    "previewed_at": "2024-12-03"
+  },
+  "prices": {
+    "usd": "0.32",
+    "usd_foil": "0.34",
+    "usd_etched": null,
+    "eur": "0.23",
+    "eur_foil": "0.24",
+    "tix": "0.03"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=685988&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DFalkenrath%2BGorger",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DFalkenrath%2BGorger",
+    "edhrec": "https://edhrec.com/route/?cc=Falkenrath+Gorger"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F600486%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=802809&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/135706?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

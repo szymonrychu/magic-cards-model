@@ -46,6 +46,7 @@ from ..casting import (
 from ..chosen_type import (
     shares_creature_type,
 )
+from ..cost import TotalCost
 from ..decisions import Decision, DecisionKind, source_id_of
 from ..delayed import (
     DelayedTrigger,
@@ -4420,6 +4421,252 @@ def _parse_imprint_clause(clause: str, *, for_spell: bool) -> TargetedClause | N
             marker=ExileMarker.IMPRINTED, owner=chosen.owner, linked_permanent_id=source_id
         )
         game.exile.append(chosen)
+
+    return effect
+
+
+_CAST_EXILED_CARD_FREE_RE = re.compile(
+    r"^you may cast the exiled card without paying its mana cost$", re.IGNORECASE
+)
+
+
+@MIXED_CLAUSE.rung("s26", for_spell=FORWARD)
+def _parse_cast_exiled_card_free_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
+    """ "You may cast the exiled card without paying its mana cost." (Living
+    Lore's "If you do" consequence): "the exiled card" is the card exiled with
+    this permanent as it entered (CR 607.2a), cast as the ability resolves
+    (CR 608.2g). The source may already be gone (it was sacrificed first), which
+    is fine - the link is by id."""
+    if for_spell or _CAST_EXILED_CARD_FREE_RE.fullmatch(clause.strip().rstrip(".")) is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        source_id, source_name = _permanent_id_and_name(stack_object, for_spell=False)
+        controller = game.controller_of(stack_object).username
+        for card in game.cards_exiled_with(source_id, None):
+            game.may_cast_during_resolution(
+                card,
+                controller,
+                prompt=f"cast {card.name} without paying its mana cost",
+                source=source_name,
+                source_id=source_id_of(stack_object),
+                source_name=source_name,
+                rule="CR 608.2g",
+            )
+
+    return effect
+
+
+#: "You may cast it from your graveyard this turn." (Skyclave Shade's landfall
+#: trigger, its source card sitting in the graveyard): CR 601.3's permission to
+#: cast the ability's own source from the graveyard, for the rest of the turn
+#: (CR 611.2a). A source that has since left the graveyard is a new object
+#: (CR 400.7) and is handed nothing.
+_CAST_SELF_FROM_GRAVEYARD_RE = re.compile(
+    r"^you may cast (?:it|this \w+) from your graveyard this turn$", re.IGNORECASE
+)
+
+
+@MIXED_CLAUSE.rung("s26", for_spell=FORWARD)
+def _parse_cast_self_from_graveyard_clause(
+    clause: str, *, for_spell: bool
+) -> TargetedClause | None:
+    if for_spell or _CAST_SELF_FROM_GRAVEYARD_RE.fullmatch(clause.strip().rstrip(".")) is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        source = stack_object.source(game)
+        if source is None or source.zone is not Zone.GRAVEYARD:
+            return
+        game.grant_play_permission(
+            source,
+            game.controller_of(stack_object).username,
+            action=PlayAction.CAST,
+            source_name=stack_object.source_name,
+            zone=Zone.GRAVEYARD,
+            rule="CR 601.3",
+        )
+
+    return effect
+
+
+#: A die-roll result table (CR 706.2): "<instructions>. Roll a dN. <low>[-<high>] | <what
+#: happens> ..." - Wizard's Spellbook's `{T}` ability and Chaos Channeler's attack trigger.
+#: `abilities._merge_roll_table_lines` keeps the rows with the roll instruction they answer;
+#: the sentences before "roll" are performed first (and what they exile is "that card"),
+#: then `Game.roll_dice` decides the row and that row's effect is performed. Each row is
+#: read by the ordinary ability pipeline, or by `_COPY_CAST_ROW_RE` for the copy rows.
+_ROLL_TABLE_RE = re.compile(
+    r"^(?P<pre>.*?)\s*\broll an? d(?P<sides>\d+)\.\s+(?P<rows>\d+(?:[-\u2013\u2014]\d+)? \| .+)$",
+    re.IGNORECASE | re.DOTALL,
+)
+_ROLL_ROW_START_RE = re.compile(r"(?:^|(?<=\s))(?P<low>\d+)(?:[-\u2013\u2014](?P<high>\d+))? \| ")
+_COPY_CAST_ROW_RE = re.compile(
+    r"^copy (?P<what>that card|each card exiled with this \w+)\.\s*"
+    r"you may cast (?P<which>the copy|any number of the copies)"
+    r"(?: by paying (?P<alt>(?:\{[^}]+\})+) rather than paying its mana cost"
+    r"| (?P<free>without paying (?:its|their) mana costs?))?\.?$",
+    re.IGNORECASE,
+)
+
+
+def _split_roll_rows(rows: str, sides: int) -> list[tuple[int, int, str]] | None:
+    """The rows of a result table as `(low, high, body)`, or None unless they
+    tile 1..`sides` exactly once each (CR 706.2: every result has one row)."""
+    starts = list(_ROLL_ROW_START_RE.finditer(rows))
+    if not starts or starts[0].start() != 0:
+        return None
+    parsed: list[tuple[int, int, str]] = []
+    for index, match in enumerate(starts):
+        end = starts[index + 1].start() if index + 1 < len(starts) else len(rows)
+        low = int(match.group("low"))
+        high = int(match.group("high") or low)
+        parsed.append((low, high, rows[match.end() : end].strip()))
+    expected = 1
+    for low, high, _ in parsed:
+        if low != expected or high < low:
+            return None
+        expected = high + 1
+    return parsed if expected == sides + 1 else None
+
+
+def _copy_cast_row(body: str):
+    """A result row "Copy <that card | each card exiled with this ...>. You may
+    cast <the copy | any number of the copies>[ by paying {cost} rather than
+    paying its mana cost | without paying its mana cost]." as a row effect
+    `(game, ability, exiled_now)`: CR 707.12's copy made in exile, cast through
+    `Game.may_cast_during_resolution` (one question per copy, CR 707.12a),
+    removed again if it was not cast (CR 707.10a)."""
+    match = _COPY_CAST_ROW_RE.fullmatch(" ".join(body.split()))
+    if match is None:
+        return None
+    each_exiled = match.group("what").lower() != "that card"
+    free = match.group("free") is not None
+    alternative = TotalCost(mana=ManaCost.parse(match.group("alt"))) if match.group("alt") else None
+
+    def effect(game: "Game", ability: AbilityOnStack, exiled_now: list[CardState]) -> None:
+        controller = game.controller_of(ability).username
+        _source_id, source_name = _permanent_id_and_name(ability, for_spell=False)
+        if each_exiled:
+            originals = [
+                card
+                for card in game.cards_exiled_with(ability.source_id, ability.source_stamp)
+                if card.zone is Zone.EXILE
+            ]
+        else:
+            originals = [card for card in exiled_now if card.zone is Zone.EXILE]
+        copies = []
+        for original in originals:
+            copy = CardState(
+                card=original.card,
+                zone=Zone.EXILE,
+                controller=controller,
+                owner=controller,  # CR 112.2a
+                is_copy=True,
+            )
+            game.exile.append(copy)
+            copies.append(copy)
+        for copy in copies:
+            game.may_cast_during_resolution(
+                copy,
+                controller,
+                prompt=f"cast the copy of {copy.name}",
+                source=source_name,
+                source_id=source_id_of(ability),
+                source_name=source_name,
+                rule="CR 707.12",
+                pays_mana_cost=not free and alternative is None,
+                alternative_cost=alternative,
+            )
+        for copy in copies:
+            if copy.zone is Zone.EXILE and copy in game.exile:
+                game.exile.remove(copy)  # CR 707.10a
+
+    return effect
+
+
+def _plain_row(body: str):
+    """A result row the ordinary ability pipeline performs, as `(game, ability, exiled_now)`."""
+    from .dispatch import _ability_effect_or_notice
+
+    inner = _ability_effect_or_notice(body)
+    if inner is None or _is_notice_only(inner):
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack, exiled_now: list[CardState]) -> None:
+        inner(game, ability)
+
+    return effect
+
+
+@ABILITY_TEXT.rung("s1")
+def _parse_roll_table_text(text: str) -> AbilityEffect | None:
+    """`_ROLL_TABLE_RE`'s shape, or None (also None when any sentence before the
+    roll or any row is one this engine does not perform - no half-run table)."""
+    if "roll a" not in text.lower() or " | " not in text:
+        return None
+    match = _ROLL_TABLE_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    sides = int(match.group("sides"))
+    rows = _split_roll_rows(match.group("rows"), sides)
+    if rows is None:
+        return None
+    pre_text = match.group("pre").strip()
+    pre = None
+    if pre_text:
+        from .dispatch import _ability_effect_or_notice
+
+        pre = _ability_effect_or_notice(pre_text)
+        if pre is None or _is_notice_only(pre):
+            return None
+    row_effects = []
+    for low, high, body in rows:
+        row = _copy_cast_row(body) or _plain_row(body)
+        if row is None:
+            return None
+        row_effects.append((low, high, row))
+    links_pile = "exiled with this" in match.group("rows").lower()
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        controller = game.controller_of(ability).username
+        before = {card.id for card in game.exile}
+        if pre is not None:
+            pre(game, ability)
+        exiled_now = [card for card in game.exile if card.id not in before]
+        if links_pile and ability.source_id is not None:
+            for card in exiled_now:
+                if card.exile_annotation is None and card.zone is Zone.EXILE:
+                    card.exile_annotation = linked_exile_annotation(game, ability, card)
+        rolled = game.roll_dice(controller, sides)
+        if not rolled:
+            return
+        for low, high, row in row_effects:
+            if low <= rolled[0] <= high:
+                row(game, ability, exiled_now)
+                return
+
+    return effect
+
+
+#: "Destroy this enchantment." (Experimental Frenzy's `{3}{R}` ability) - CR 701.8a's
+#: destroy on the ability's own source, a self-reference (CR 201.5, CR 115.1a) rather
+#: than a target. Ability-only: a spell is never a permanent on the battlefield.
+_DESTROY_SELF_RE = re.compile(r"^destroy this \w+$", re.IGNORECASE)
+
+
+@MIXED_CLAUSE.rung("s26", for_spell=FORWARD)
+def _parse_destroy_self_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
+    """`_DESTROY_SELF_RE`'s shape: destroy the ability's source if it is still
+    the permanent on the battlefield (CR 400.7: a source that already left is a
+    new object, so there is nothing to destroy)."""
+    if for_spell or _DESTROY_SELF_RE.fullmatch(clause.strip().rstrip(".")) is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        source = stack_object.source(game)
+        if source is not None and source.zone is Zone.BATTLEFIELD:
+            game.destroy(source)
 
     return effect
 
@@ -9843,4 +10090,9 @@ from .text import (  # noqa: E402
     _singular_card_type,
     _strip_non_effect_preamble,
 )
-from .tokens import _parse_generic_token_descriptor, _read_token_copy_except, amass  # noqa: E402
+from .tokens import (  # noqa: E402
+    _is_notice_only,
+    _parse_generic_token_descriptor,
+    _read_token_copy_except,
+    amass,
+)

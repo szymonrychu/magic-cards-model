@@ -1,0 +1,136 @@
+{
+  "object": "card",
+  "id": "450f741d-837e-4993-ad28-7ef23b1ac8a4",
+  "oracle_id": "5d111adc-a91a-437d-8aac-3b246e980bd8",
+  "multiverse_ids": [
+    643098
+  ],
+  "mtgo_id": 120709,
+  "tcgplayer_id": 531218,
+  "cardmarket_id": 748439,
+  "name": "Sewer Shambler",
+  "lang": "en",
+  "released_at": "2024-01-12",
+  "uri": "https://api.scryfall.com/cards/450f741d-837e-4993-ad28-7ef23b1ac8a4",
+  "scryfall_uri": "https://scryfall.com/card/rvr/91/sewer-shambler?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T03:28:40Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/4/5/450f741d-837e-4993-ad28-7ef23b1ac8a4.jpg?1783913320",
+    "normal": "https://cards.scryfall.io/normal/front/4/5/450f741d-837e-4993-ad28-7ef23b1ac8a4.jpg?1783913320",
+    "large": "https://cards.scryfall.io/large/front/4/5/450f741d-837e-4993-ad28-7ef23b1ac8a4.jpg?1783913320",
+    "png": "https://cards.scryfall.io/png/front/4/5/450f741d-837e-4993-ad28-7ef23b1ac8a4.png?1783913320",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/4/5/450f741d-837e-4993-ad28-7ef23b1ac8a4.jpg?1783913320",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/4/5/450f741d-837e-4993-ad28-7ef23b1ac8a4.jpg?1783913320",
+    "thumb": "https://cards.scryfall.io/thumb/front/4/5/450f741d-837e-4993-ad28-7ef23b1ac8a4.webp?1783913320",
+    "grid": "https://cards.scryfall.io/grid/front/4/5/450f741d-837e-4993-ad28-7ef23b1ac8a4.webp?1783913320",
+    "display": "https://cards.scryfall.io/display/front/4/5/450f741d-837e-4993-ad28-7ef23b1ac8a4.webp?1783913320",
+    "art": "https://cards.scryfall.io/art/front/4/5/450f741d-837e-4993-ad28-7ef23b1ac8a4.webp?1783913320",
+    "crop": "https://cards.scryfall.io/crop/front/4/5/450f741d-837e-4993-ad28-7ef23b1ac8a4.webp?1783913320"
+  },
+  "mana_cost": "{2}{B}",
+  "cmc": 3.0,
+  "type_line": "Creature \u2014 Zombie",
+  "oracle_text": "Swampwalk (This creature can't be blocked as long as defending player controls a Swamp.)\nScavenge {2}{B} ({2}{B}, Exile this card from your graveyard: Put a number of +1/+1 counters equal to this card's power on target creature. Scavenge only as a sorcery.)",
+  "power": "2",
+  "toughness": "1",
+  "colors": [
+    "B"
+  ],
+  "color_identity": [
+    "B"
+  ],
+  "keywords": [
+    "Scavenge",
+    "Landwalk",
+    "Swampwalk"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "fed2c8cd-ab92-44f6-808a-41e7809bcfe2",
+  "set": "rvr",
+  "set_name": "Ravnica Remastered",
+  "set_type": "masters",
+  "set_uri": "https://api.scryfall.com/sets/fed2c8cd-ab92-44f6-808a-41e7809bcfe2",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Arvr&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/rvr?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/450f741d-837e-4993-ad28-7ef23b1ac8a4/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A5d111adc-a91a-437d-8aac-3b246e980bd8&unique=prints",
+  "collector_number": "91",
+  "digital": false,
+  "rarity": "common",
+  "watermark": "golgari",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Nils Hamm",
+  "artist_ids": [
+    "c540d1fc-1500-457f-93cf-d6069ee66546"
+  ],
+  "illustration_id": "a6af01bf-ad71-43a9-a458-4f6add291a37",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 23998,
+  "prices": {
+    "usd": "0.19",
+    "usd_foil": "0.25",
+    "usd_etched": null,
+    "eur": "0.06",
+    "eur_foil": "0.21",
+    "tix": "0.04"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=643098&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DSewer%2BShambler",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DSewer%2BShambler",
+    "edhrec": "https://edhrec.com/route/?cc=Sewer+Shambler"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F531218%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=748439&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/120709?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

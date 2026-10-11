@@ -1,0 +1,139 @@
+{
+  "object": "card",
+  "id": "01bc3b04-46b7-43df-9b29-1502b9f18bbf",
+  "oracle_id": "30e4849e-c58c-4b65-9fb3-7aa40c944904",
+  "multiverse_ids": [
+    555345
+  ],
+  "mtgo_id": 98507,
+  "arena_id": 80295,
+  "tcgplayer_id": 268508,
+  "cardmarket_id": 651642,
+  "name": "Evolving Door",
+  "lang": "en",
+  "released_at": "2022-04-29",
+  "uri": "https://api.scryfall.com/cards/01bc3b04-46b7-43df-9b29-1502b9f18bbf",
+  "scryfall_uri": "https://scryfall.com/card/snc/144/evolving-door?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T06:11:44Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/0/1/01bc3b04-46b7-43df-9b29-1502b9f18bbf.jpg?1783923104",
+    "normal": "https://cards.scryfall.io/normal/front/0/1/01bc3b04-46b7-43df-9b29-1502b9f18bbf.jpg?1783923104",
+    "large": "https://cards.scryfall.io/large/front/0/1/01bc3b04-46b7-43df-9b29-1502b9f18bbf.jpg?1783923104",
+    "png": "https://cards.scryfall.io/png/front/0/1/01bc3b04-46b7-43df-9b29-1502b9f18bbf.png?1783923104",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/0/1/01bc3b04-46b7-43df-9b29-1502b9f18bbf.jpg?1783923104",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/0/1/01bc3b04-46b7-43df-9b29-1502b9f18bbf.jpg?1783923104",
+    "thumb": "https://cards.scryfall.io/thumb/front/0/1/01bc3b04-46b7-43df-9b29-1502b9f18bbf.webp?1783923104",
+    "grid": "https://cards.scryfall.io/grid/front/0/1/01bc3b04-46b7-43df-9b29-1502b9f18bbf.webp?1783923104",
+    "display": "https://cards.scryfall.io/display/front/0/1/01bc3b04-46b7-43df-9b29-1502b9f18bbf.webp?1783923104",
+    "art": "https://cards.scryfall.io/art/front/0/1/01bc3b04-46b7-43df-9b29-1502b9f18bbf.webp?1783923104",
+    "crop": "https://cards.scryfall.io/crop/front/0/1/01bc3b04-46b7-43df-9b29-1502b9f18bbf.webp?1783923104"
+  },
+  "mana_cost": "{2}{G}",
+  "cmc": 3.0,
+  "type_line": "Artifact",
+  "oracle_text": "{1}, {T}, Sacrifice a creature: Count the colors of the sacrificed creature, then search your library for a creature card that's exactly that many colors plus one. Exile that card, then shuffle. You may cast the exiled card. Activate only as a sorcery.",
+  "colors": [
+    "G"
+  ],
+  "color_identity": [
+    "G"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "df837242-8c15-42e4-b049-c933a02dc501",
+  "set": "snc",
+  "set_name": "Streets of New Capenna",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/df837242-8c15-42e4-b049-c933a02dc501",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Asnc&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/snc?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/01bc3b04-46b7-43df-9b29-1502b9f18bbf/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A30e4849e-c58c-4b65-9fb3-7aa40c944904&unique=prints",
+  "collector_number": "144",
+  "digital": false,
+  "rarity": "rare",
+  "flavor_text": "In with the old, out with the new.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Drew Baker",
+  "artist_ids": [
+    "a8c4ef83-94ad-41c7-861f-95debea16868"
+  ],
+  "illustration_id": "edd64626-1bba-4134-baf9-a82754a0b0dd",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 19869,
+  "penny_rank": 13486,
+  "preview": {
+    "source": "Corey Baumeister",
+    "source_uri": "https://twitter.com/CoreyBaumeister/status/1512867946955169802",
+    "previewed_at": "2022-04-10"
+  },
+  "prices": {
+    "usd": "0.41",
+    "usd_foil": "0.38",
+    "usd_etched": null,
+    "eur": "0.12",
+    "eur_foil": "0.17",
+    "tix": "0.01"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=555345&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DEvolving%2BDoor",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DEvolving%2BDoor",
+    "edhrec": "https://edhrec.com/route/?cc=Evolving+Door"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F268508%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=651642&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/98507?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

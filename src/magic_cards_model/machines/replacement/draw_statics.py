@@ -92,12 +92,25 @@ def _other_players(game: "Game", name: str):
     return [p for p in game.players if p.username != name]
 
 
-def _exile_top(game: "Game", owner, source: CardState, *, face_up: bool) -> CardState | None:
+def _exile_top(
+    game: "Game", owner, source: CardState, *, face_up: bool, exiler: str
+) -> CardState | None:
+    """Exile the top card of `owner`'s library for `source`'s replacement and
+    record it as exiled with `source` (CR 607.2a) by `exiler`, whose cards
+    "they exiled with this ..." a pile permission reads back."""
     if not owner.library:
         return None
     card = owner.library[0]
     game.exile_cards([card])
     card.face_up = face_up
+    if card.zone is Zone.EXILE:
+        card.exile_annotation = ExileAnnotation(
+            marker=ExileMarker.LINKED,
+            owner=exiler,
+            turn_exiled=game.turn.turns_taken if game.turn is not None else None,
+            linked_permanent_id=source.id,
+            linked_permanent_stamp=source.zone_change_stamp,
+        )
     return card
 
 
@@ -134,16 +147,7 @@ def _custom_action(clause: str, source: CardState) -> Apply | None:  # noqa: C90
 
         def exile_own(game, src, event):
             event.amount = 0
-            exiled = _exile_top(game, game.player(src.controller), src, face_up=False)
-            if exiled is not None and exiled.zone is Zone.EXILE:
-                # CR 607.2a: exiled "with" this permanent, for its other ability.
-                exiled.exile_annotation = ExileAnnotation(
-                    marker=ExileMarker.LINKED,
-                    owner=exiled.owner,
-                    turn_exiled=game.turn.turns_taken if game.turn is not None else None,
-                    linked_permanent_id=src.id,
-                    linked_permanent_stamp=src.zone_change_stamp,
-                )
+            _exile_top(game, game.player(src.controller), src, face_up=False, exiler=src.controller)
 
         return exile_own
     if text == "that player exiles the top card of one of their opponents' libraries face down":
@@ -161,14 +165,14 @@ def _custom_action(clause: str, source: CardState) -> Apply | None:  # noqa: C90
                     game, drawer.username, "Exile the top card of whose library?", names, src.name
                 )
                 target = game.player(pick)
-            _exile_top(game, target, src, face_up=False)
+            _exile_top(game, target, src, face_up=False, exiler=drawer.username)
 
         return exile_theirs
     if text == "that player exiles that card face up":
 
         def exile_that(game, src, event):
             event.amount = 0
-            _exile_top(game, event.player, src, face_up=True)
+            _exile_top(game, event.player, src, face_up=True, exiler=event.player.username)
 
         return exile_that
     if text == (

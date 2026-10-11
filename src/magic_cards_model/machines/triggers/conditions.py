@@ -3584,6 +3584,11 @@ def _unread_condition_matches(
             and event.player == controller
         )
 
+    if _TIME_COUNTER_REMOVED_WHILE_EXILED_CONDITION.match(condition):
+        return (
+            event.event is ExtraTriggerEvent.TIME_COUNTER_REMOVED and event.subject_id == source.id
+        )
+
     if _LAST_TIME_COUNTER_CONDITION.match(condition):
         # CR 702.62a's third ability ("this card") and CR 702.63a's own third
         # ability ("this permanent") - both name the source itself and
@@ -3665,6 +3670,12 @@ def _unread_condition_matches(
         if match.group("what") == "another card":
             return event.subject_id != source.id
         return True
+
+    match = _FORETELL_CONDITION.match(condition)
+    if match is not None:
+        return event.event is ExtraTriggerEvent.FORETOLD and _acting_player_matches(
+            match.group("who"), controller, event.player
+        )
 
     match = _ABILITY_ACTIVATED_CONDITION.match(condition)
     if match is not None:
@@ -5778,6 +5789,9 @@ def _typed_whose(whose: str) -> _TypedWhose | None:
     text = whose.strip()
     if text.lower() == "equipped creature":
         return _TypedWhose(equipped=True, alternatives=())
+    chosen = text.lower().endswith(" of the chosen type")
+    if chosen:
+        text = text[: -len(" of the chosen type")].strip()
     if not text.lower().endswith(" you control"):
         return None
     text = text[: -len(" you control")].strip()
@@ -5796,7 +5810,9 @@ def _typed_whose(whose: str) -> _TypedWhose | None:
         ):
             return None
         alternatives.append((match["article"].lower() == "another", words))
-    return _TypedWhose(equipped=False, alternatives=tuple(alternatives)) if alternatives else None
+    if not alternatives:
+        return None
+    return _TypedWhose(equipped=False, alternatives=tuple(alternatives), chosen=chosen)
 
 
 def _typed_source_matches(
@@ -5820,6 +5836,14 @@ def _typed_source_matches(
             | {supertype.value.lower() for supertype in source.card.supertypes}
             | {subtype.lower() for subtype in source.subtypes}
         )
+    if whose.chosen:
+        choice = multiplier.choice
+        if (
+            choice is None
+            or choice.kind is not ChoiceKind.CREATURE_TYPE
+            or choice.value.lower() not in have
+        ):
+            return False
     # Only a permanent's ability is ever multiplied (`additional_trigger_times`
     # returns early off the battlefield), so "a permanent you control" is met.
     have.add("permanent")
@@ -5913,6 +5937,7 @@ from ._common import (  # noqa: E402
     _ENTERING_CAUSE_RE,
     _EXILE_FROM_GRAVEYARD_OR_BATTLEFIELD_CONDITION,
     _FINAL_CHAPTER_RESOLVES_CONDITION,
+    _FORETELL_CONDITION,
     _LAND_ADDED_CHOSEN_MANA_CONDITION,
     _LAST_COUNTER_CONDITION,
     _LAST_TIME_COUNTER_CONDITION,
@@ -5938,6 +5963,7 @@ from ._common import (  # noqa: E402
     _SELF_PUT_INTO_GRAVEYARD_FROM_ANYWHERE_CONDITION,
     _SOLVE_A_CASE_CONDITION,
     _STATE_COUNTER_TRIGGER_RE,
+    _TIME_COUNTER_REMOVED_WHILE_EXILED_CONDITION,
     _UNTAPPED_DURING_UNTAP_STEP_CONDITION,
     _YOU_PUT_A_COUNTER_ON_QUALITY_CONDITION,
 )

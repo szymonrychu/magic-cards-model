@@ -1,0 +1,158 @@
+{
+  "object": "card",
+  "id": "9a8d57fb-abe1-483b-8b94-85d39a1c31e1",
+  "oracle_id": "3a1e85fe-7064-4df7-bc3b-24131cd15d06",
+  "multiverse_ids": [
+    509373
+  ],
+  "mtgo_id": 86379,
+  "tcgplayer_id": 233721,
+  "cardmarket_id": 542521,
+  "name": "Benalish Commander",
+  "lang": "en",
+  "released_at": "2021-03-19",
+  "uri": "https://api.scryfall.com/cards/9a8d57fb-abe1-483b-8b94-85d39a1c31e1",
+  "scryfall_uri": "https://scryfall.com/card/tsr/8/benalish-commander?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T07:31:20Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/9/a/9a8d57fb-abe1-483b-8b94-85d39a1c31e1.jpg?1783927880",
+    "normal": "https://cards.scryfall.io/normal/front/9/a/9a8d57fb-abe1-483b-8b94-85d39a1c31e1.jpg?1783927880",
+    "large": "https://cards.scryfall.io/large/front/9/a/9a8d57fb-abe1-483b-8b94-85d39a1c31e1.jpg?1783927880",
+    "png": "https://cards.scryfall.io/png/front/9/a/9a8d57fb-abe1-483b-8b94-85d39a1c31e1.png?1783927880",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/9/a/9a8d57fb-abe1-483b-8b94-85d39a1c31e1.jpg?1783927880",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/9/a/9a8d57fb-abe1-483b-8b94-85d39a1c31e1.jpg?1783927880",
+    "thumb": "https://cards.scryfall.io/thumb/front/9/a/9a8d57fb-abe1-483b-8b94-85d39a1c31e1.webp?1783927880",
+    "grid": "https://cards.scryfall.io/grid/front/9/a/9a8d57fb-abe1-483b-8b94-85d39a1c31e1.webp?1783927880",
+    "display": "https://cards.scryfall.io/display/front/9/a/9a8d57fb-abe1-483b-8b94-85d39a1c31e1.webp?1783927880",
+    "art": "https://cards.scryfall.io/art/front/9/a/9a8d57fb-abe1-483b-8b94-85d39a1c31e1.webp?1783927880",
+    "crop": "https://cards.scryfall.io/crop/front/9/a/9a8d57fb-abe1-483b-8b94-85d39a1c31e1.webp?1783927880"
+  },
+  "mana_cost": "{3}{W}",
+  "cmc": 4.0,
+  "type_line": "Creature \u2014 Human Soldier",
+  "oracle_text": "Benalish Commander's power and toughness are each equal to the number of Soldiers you control.\nSuspend X\u2014{X}{W}{W}. X can't be 0.\nWhenever a time counter is removed from this card while it's exiled, create a 1/1 white Soldier creature token.",
+  "power": "*",
+  "toughness": "*",
+  "colors": [
+    "W"
+  ],
+  "color_identity": [
+    "W"
+  ],
+  "keywords": [
+    "Suspend"
+  ],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "9a8d57fb-abe1-483b-8b94-85d39a1c31e1",
+      "component": "combo_piece",
+      "name": "Benalish Commander",
+      "type_line": "Creature \u2014 Human Soldier",
+      "uri": "https://api.scryfall.com/cards/9a8d57fb-abe1-483b-8b94-85d39a1c31e1"
+    },
+    {
+      "object": "related_card",
+      "id": "d6090f44-034f-4069-a328-5c81ab774cea",
+      "component": "token",
+      "name": "Soldier",
+      "type_line": "Token Creature \u2014 Soldier",
+      "uri": "https://api.scryfall.com/cards/d6090f44-034f-4069-a328-5c81ab774cea"
+    }
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "11e90d1b-0502-43e6-b056-e24836523c13",
+  "set": "tsr",
+  "set_name": "Time Spiral Remastered",
+  "set_type": "masters",
+  "set_uri": "https://api.scryfall.com/sets/11e90d1b-0502-43e6-b056-e24836523c13",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Atsr&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/tsr?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/9a8d57fb-abe1-483b-8b94-85d39a1c31e1/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A3a1e85fe-7064-4df7-bc3b-24131cd15d06&unique=prints",
+  "collector_number": "8",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Paolo Parente",
+  "artist_ids": [
+    "d48dd097-720d-476a-8722-6a02854ae28b"
+  ],
+  "illustration_id": "c2ca32f0-f57c-4652-b339-1277f8d91598",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 16270,
+  "penny_rank": 8251,
+  "preview": {
+    "source": "AfterOfficeTTV",
+    "source_uri": "https://twitter.com/AfterTtv/status/1365057724753596421",
+    "previewed_at": "2021-02-25"
+  },
+  "prices": {
+    "usd": "0.25",
+    "usd_foil": "0.55",
+    "usd_etched": null,
+    "eur": "0.15",
+    "eur_foil": "0.37",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=509373&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DBenalish%2BCommander",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DBenalish%2BCommander",
+    "edhrec": "https://edhrec.com/route/?cc=Benalish+Commander"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F233721%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=542521&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/86379?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

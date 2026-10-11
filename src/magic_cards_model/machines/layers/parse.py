@@ -702,6 +702,9 @@ def _singular_subtype_word(word: str) -> str | None:
     candidates = [
         _IRREGULAR_SUBTYPE_PLURALS.get(lowered, lowered),
         lowered.removesuffix("s"),
+        # "Heroes" -> "hero", "Elves" -> "elf".
+        lowered.removesuffix("es"),
+        lowered.removesuffix("ves") + "f",
     ]
     if lowered.endswith("ies"):
         # "Allies" -> "ally" (Earthen Ally's "each color among Allies").
@@ -1795,6 +1798,17 @@ _SELF_PROTECTION_FROM_CHOSEN_COLOR_RE = re.compile(
     re.IGNORECASE,
 )
 
+#: "This creature has protection from each mana value other than the chosen
+#: number." (Haktos the Unscarred) - the chosen-colour grant's twin over the
+#: number the permanent chose as it entered (CR 614.12a), as the quality
+#: "each mana value other than N" (CR 702.16a: protection from any
+#: characteristic value; `models/game/_continuous.py:_characteristic_quality`).
+_SELF_PROTECTION_FROM_OTHER_MANA_VALUE_RE = re.compile(
+    r"^this (?:creature|permanent|token) has protection from each mana value other than the "
+    r"chosen number\.?$",
+    re.IGNORECASE,
+)
+
 #: "As long as this creature is paired with another creature, both creatures
 #: have <keyword(s)>[ and get +N/+N]." (Silverblade Paladin, Nightshade
 #: Peddler, Wolfir Silverheart) - CR 702.95a's pair, read live by
@@ -2125,8 +2139,8 @@ _LEADING_GRAVEYARD_COUNT_GATED_SELF_STATIC_RE = re.compile(
 #: `CreaturesControlledByWhereToughnessExceedsPower` already checks; nothing
 #: here is a variable to capture.
 _GROUP_ASSIGNS_DAMAGE_AS_TOUGHNESS_RE = re.compile(
-    r"^each creature you control with toughness greater than its power assigns combat "
-    r"damage equal to its toughness rather than its power\.?$",
+    r"^each creature(?P<mine> you control)?(?P<gated> with toughness greater than its power)? "
+    r"assigns combat damage equal to its toughness rather than its power\.?$",
     re.IGNORECASE,
 )
 
@@ -3583,7 +3597,15 @@ def _self_type_grant_builder(
 _THIS_LAND_IS_CHOSEN_TYPE_RE = re.compile(r"^this land is the chosen type\.?$", re.IGNORECASE)
 
 
-def _self_chosen_basic_land_type_builder(line: str) -> EffectBuilder:
+#: "Enchanted land is the chosen type." (Convincing Mirage) - Multiversal
+#: Passage's setting effect (CR 305.7) aimed at the land this Aura is attached
+#: to (CR 303.4b) instead of at the source itself.
+_ENCHANTED_LAND_IS_CHOSEN_TYPE_RE = re.compile(
+    r"^enchanted land is the chosen type\.?$", re.IGNORECASE
+)
+
+
+def _self_chosen_basic_land_type_builder(line: str, *, enchanted: bool = False) -> EffectBuilder:
     """`_THIS_LAND_IS_CHOSEN_TYPE_RE`'s shape.
 
     Layer 4 (CR 613.1d), setting rather than additive (CR 305.7 - no "in
@@ -3610,17 +3632,253 @@ def _self_chosen_basic_land_type_builder(line: str) -> EffectBuilder:
     ) -> list[ContinuousEffect]:
         chosen = chosen_basic_land_type_of(source)
         mana_ability = BASIC_LAND_TYPES.get(chosen) if chosen is not None else None
-        if chosen is None or mana_ability is None:
+        target_id = source.attached_to if enchanted else source.id
+        if chosen is None or mana_ability is None or target_id is None:
             return []
         return [
             ContinuousEffect(
-                description=f"{source.name}: this land is the chosen type ({chosen})",
+                description=f"{source.name}: the land is the chosen type ({chosen})",
+                layer=Layer.TYPE,
+                timestamp=timestamp,
+                source_id=source.id,
+                source_ability=_source_line_for(source, line),
+                selector=_only(target_id),
+                modification=set_basic_land_type(chosen, mana_ability),
+            )
+        ]
+
+    return builder
+
+
+#: "This creature is the chosen type in addition to its other types." (Metallic
+#: Mimic, Roaming Throne) / "This land is the chosen type in addition to its
+#: other types." (Thran Portal) - the additive twin of Multiversal Passage's
+#: setting sentence just above (CR 205.1b / CR 305.7 contrast: nothing is
+#: lost, the choice from CR 614.12a is added).
+_SELF_CHOSEN_TYPE_IN_ADDITION_RE = re.compile(
+    r"^this (?P<kind>creature|land|permanent) is the chosen type in addition to its other "
+    r"types\.?$",
+    re.IGNORECASE,
+)
+
+
+def _self_chosen_type_in_addition_builder(kind: str, line: str) -> EffectBuilder:
+    """`_SELF_CHOSEN_TYPE_IN_ADDITION_RE`'s shape: layer 4 (CR 613.1d), adding
+    the creature type (CR 205.3m) or basic land type (CR 305.6, with its
+    intrinsic mana ability) the permanent recorded as it entered. No recorded
+    choice grants nothing rather than guessing one."""
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        if kind == "land":
+            chosen = chosen_basic_land_type_of(source)
+            mana_ability = BASIC_LAND_TYPES.get(chosen) if chosen is not None else None
+            if chosen is None or mana_ability is None:
+                return []
+            modification = add_subtype(chosen, mana_ability)
+        else:
+            choice = source.choice
+            if choice is None or choice.kind is not ChoiceKind.CREATURE_TYPE or not choice.value:
+                return []
+            chosen = choice.value
+            modification = add_subtype(chosen)
+        return [
+            ContinuousEffect(
+                description=f"{source.name}: is the chosen type ({chosen}) in addition",
                 layer=Layer.TYPE,
                 timestamp=timestamp,
                 source_id=source.id,
                 source_ability=_source_line_for(source, line),
                 selector=_only(source.id),
-                modification=set_basic_land_type(chosen, mana_ability),
+                modification=modification,
+            )
+        ]
+
+    return builder
+
+
+#: "Permanents with ice counters on them are snow." (Rimefeather Owl) -
+#: CR 205.4 supertypes are granted in layer 4 (CR 613.1d) to whoever has the
+#: counter, whoever controls it.
+_PERMANENTS_WITH_COUNTER_ARE_SUPERTYPE_RE = re.compile(
+    r"^permanents with (?P<counter>[a-z]+) counters on them are (?P<supertype>snow)\.?$",
+    re.IGNORECASE,
+)
+
+
+def _permanents_with_counter_gain_supertype_builder(
+    counter: str, supertype: Supertype, line: str
+) -> EffectBuilder:
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        return [
+            ContinuousEffect(
+                description=(
+                    f"{source.name}: permanents with {counter} counters are {supertype.value}"
+                ),
+                layer=Layer.TYPE,
+                timestamp=timestamp,
+                source_id=source.id,
+                source_ability=_source_line_for(source, line),
+                selector=PermanentsWithCounter(counter=counter),
+                modification=AddSupertype(supertype=supertype),
+            )
+        ]
+
+    return builder
+
+
+#: "<Subject> get(s) +N/+N for each <count>." where `<count>` is anything a
+#: characteristic-defining ability could count (`_cda_base_count`), a counter
+#: on the source, or a controlled-and-graveyard double count: Aura Gnarlid's
+#: "for each Aura on the battlefield", Joraga Warcaller's "Other Elf creatures
+#: you control get +1/+1 for each +1/+1 counter on this creature.", Banner of
+#: Kinship's chosen-type group, Cid's "Artifact creatures and Heroes you
+#: control ... for each Artificer you control and each Artificer card in your
+#: graveyard.". CR 613.4c: sublayer 7c, recomputed continuously (CR 611.3a).
+_PUMP_PER_COUNT_RE = re.compile(
+    r"^(?P<subject>.+?) gets? (?P<power>[+-]\d+)/(?P<toughness>[+-]\d+) for each "
+    r"(?P<each>.+?)\.?$",
+    re.IGNORECASE,
+)
+_PUMP_PER_COUNTER_ON_SOURCE_RE = re.compile(
+    r"^(?P<counter>[+\-0-9/]+|[a-z]+) counters? on (?:this|it) (?:creature|artifact|permanent|"
+    r"enchantment|land)$",
+    re.IGNORECASE,
+)
+_PUMP_PER_CONTROLLED_AND_GRAVEYARD_RE = re.compile(
+    r"^(?P<qualifier>[a-z]+) you control and each (?P=qualifier) cards? in your graveyard$",
+    re.IGNORECASE,
+)
+_PUMP_SUBJECT_SELF_RE = re.compile(r"^this (?:creature|token|permanent)$", re.IGNORECASE)
+_PUMP_SUBJECT_CHOSEN_TYPE_RE = re.compile(
+    r"^creatures you control of the chosen type$", re.IGNORECASE
+)
+_PUMP_SUBJECT_OTHER_SUBTYPE_RE = re.compile(
+    r"^other (?P<subtype>[a-z]+) creatures you control$", re.IGNORECASE
+)
+_PUMP_SUBJECT_TYPE_AND_SUBTYPE_RE = re.compile(
+    r"^(?P<card_type>[a-z]+) creatures and (?P<subtype>[a-z]+) you control$", re.IGNORECASE
+)
+
+
+def _pump_per_count_builder(sentence: str) -> EffectBuilder | None:
+    """`_PUMP_PER_COUNT_RE`'s shape, failing closed (`None`) on a subject or
+    count it cannot read."""
+    match = _PUMP_PER_COUNT_RE.fullmatch(sentence.strip())
+    if match is None:
+        return None
+    subject = match.group("subject").strip()
+    each = match.group("each").strip().lower()
+    power, toughness = int(match.group("power")), int(match.group("toughness"))
+
+    selector_for: Callable[[CardState], Selector | None]
+    if _PUMP_SUBJECT_SELF_RE.fullmatch(subject):
+
+        def selector_for(source: CardState) -> Selector | None:
+            return _only(source.id)
+
+    elif _PUMP_SUBJECT_CHOSEN_TYPE_RE.fullmatch(subject):
+
+        def selector_for(source: CardState) -> Selector | None:
+            chosen = chosen_creature_type_of(source)
+            if chosen is None:
+                return None
+            return creatures_controlled_by_with_subtype(source.controller, [chosen])
+
+    elif other := _PUMP_SUBJECT_OTHER_SUBTYPE_RE.fullmatch(subject):
+        other_subtype = _singular_subtype_word(other.group("subtype"))
+        if other_subtype is None:
+            return None
+
+        def selector_for(source: CardState) -> Selector | None:
+            return creatures_controlled_by_with_subtype(
+                source.controller, [other_subtype], other_than=source.id
+            )
+
+    elif combined := _PUMP_SUBJECT_TYPE_AND_SUBTYPE_RE.fullmatch(subject):
+        combined_type = _card_type_word(combined.group("card_type"))
+        combined_subtype = _singular_subtype_word(combined.group("subtype"))
+        if combined_type is None or combined_subtype is None:
+            return None
+
+        def selector_for(source: CardState) -> Selector | None:
+            return CreaturesControlledByWithAnyQuality(
+                username=source.controller,
+                card_types=(combined_type,),
+                subtypes=(combined_subtype,),
+            )
+
+    else:
+        return None
+
+    count_factory: Callable[[CardState, LayerContext], Count] | None
+    counter_match = _PUMP_PER_COUNTER_ON_SOURCE_RE.fullmatch(each)
+    double = _PUMP_PER_CONTROLLED_AND_GRAVEYARD_RE.fullmatch(each)
+    if counter_match is not None:
+        kind = counter_match.group("counter").lower()
+        count_factory = lambda source, context: CountCountersOnObject(  # noqa: E731
+            object_id=source.id, counter=kind
+        )
+    elif double is not None:
+        qualifier = double.group("qualifier")
+        double_type = _card_type_word(qualifier)
+        double_subtype = None if double_type is not None else _singular_subtype_word(qualifier)
+        if double_type is None and double_subtype is None:
+            return None
+
+        def count_factory(source: CardState, context: LayerContext) -> Count:
+            return CountControlledAndGraveyardCards(
+                username=source.controller,
+                card_type=double_type,
+                subtype=double_subtype,
+                graveyard_count=sum(
+                    1
+                    for state in context.graveyard_of(source.controller)
+                    if (
+                        double_type in state.types
+                        if double_type is not None
+                        else any(word.lower() == double_subtype for word in state.subtypes)
+                    )
+                ),
+            )
+    else:
+        base = _cda_base_count(f"the number of {each}")
+        if base is None:
+            return None
+        count_factory = base
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        selector = selector_for(source)
+        if selector is None:
+            return []
+        return [
+            ContinuousEffect(
+                description=(
+                    f"{source.name}: {subject} get {power:+d}/{toughness:+d} for each {each}"
+                ),
+                layer=Layer.POWER_TOUGHNESS,
+                sublayer=Sublayer.MODIFY,
+                timestamp=timestamp,
+                source_id=source.id,
+                source_ability=_source_line_for(source, sentence),
+                selector=selector,
+                modification=modify_power_toughness_per(
+                    count_factory(source, context), power, toughness
+                ),
             )
         ]
 
@@ -4351,6 +4609,35 @@ def _anthem_builder(
     return builder
 
 
+def _self_protection_from_chosen_number_builder(*, line: str) -> EffectBuilder:
+    """`_SELF_PROTECTION_FROM_OTHER_MANA_VALUE_RE`'s shape; no number recorded
+    grants nothing."""
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        chosen = source.choice
+        if chosen is None or chosen.kind is not ChoiceKind.NUMBER or not chosen.value.isdigit():
+            return []
+        ability = f"Protection from each mana value other than {chosen.value}"
+        return [
+            ContinuousEffect(
+                description=f"{source.name}: has {ability} (the chosen number)",
+                layer=Layer.ABILITY,
+                timestamp=timestamp,
+                source_id=source.id,
+                source_ability=_source_line_for(source, line),
+                selector=_only(source.id),
+                modification=grant_ability(ability),
+            )
+        ]
+
+    return builder
+
+
 def _self_protection_from_chosen_color_builder(*, line: str) -> EffectBuilder:
     """`_SELF_PROTECTION_FROM_CHOSEN_COLOR_RE`'s shape: layer 6 (CR 613.1f)
     grants the source "Protection from <colour>" for the colour recorded on it
@@ -4766,7 +5053,7 @@ def chosen_basic_land_type_of(source: CardState) -> str | None:
 #: pattern `_self_protection_from_chosen_color_builder` already gives a
 #: colour choice, just for CR 205.3m's own kind of choice instead.
 _CHOSEN_TYPE_ANTHEM_RE = re.compile(
-    r"^creatures you control of the chosen type get "
+    r"^(?P<other>other )?creatures you control of the chosen type get "
     r"(?P<power>[+-]\d+)/(?P<toughness>[+-]\d+)"
     r"(?: and have (?P<keywords>[a-z ,]+?))?\.?$",
     re.IGNORECASE,
@@ -4774,7 +5061,7 @@ _CHOSEN_TYPE_ANTHEM_RE = re.compile(
 
 
 def _chosen_type_anthem_builder(
-    power: int, toughness: int, *, keywords: Sequence[str] = (), line: str
+    power: int, toughness: int, *, keywords: Sequence[str] = (), line: str, other: bool = False
 ) -> EffectBuilder:
     """`_CHOSEN_TYPE_ANTHEM_RE`'s shape: layer 7c (CR 613.4c), timestamped
     off the source (CR 613.7a) and live (CR 611.3a) like every other anthem
@@ -4810,9 +5097,11 @@ def _chosen_type_anthem_builder(
         chosen_type = chosen_creature_type_of(source)
         if chosen_type is None:
             return []
-        selector = creatures_controlled_by_with_subtype(source.controller, [chosen_type])
+        selector = creatures_controlled_by_with_subtype(
+            source.controller, [chosen_type], other_than=source.id if other else None
+        )
         description = (
-            f"{source.name}: creatures you control of the chosen type "
+            f"{source.name}: {'other ' if other else ''}creatures you control of the chosen type "
             f"({chosen_type}) get {power:+d}/{toughness:+d}"
         )
         effects = [
@@ -6854,6 +7143,17 @@ _SELF_DURING_YOUR_TURN_KEYWORD_GRANT_RE = re.compile(
     re.IGNORECASE,
 )
 
+#: "During your turn, as long as this creature is equipped, it has double strike
+#: and indestructible." (Cloud, Planet's Champion) - the turn gate of the rung
+#: above plus Brass Knuckles' attachment test (`SelfIfAttachedCount`, CR 301.5:
+#: an Equipment attached to it makes it "equipped").
+_SELF_DURING_YOUR_TURN_IF_EQUIPPED_KEYWORD_GRANT_RE = re.compile(
+    r"^during your turn, as long as this (?:creature|permanent|token) is equipped, "
+    r"(?:it|this (?:creature|permanent|token)) (?:has|have) "
+    r"(?P<keywords>[a-z]+(?: [a-z]+)?(?:(?:,\s*| and )[a-z]+(?: [a-z]+)?)*)\.?$",
+    re.IGNORECASE,
+)
+
 #: "This creature has vigilance as long as you control a Jace planeswalker."
 #: (Mind Meanderer) - a board-only condition (does the controller control a
 #: permanent of this type/subtype), so it lives in `SelfIfControls` rather
@@ -7894,6 +8194,15 @@ _CDA_OFFSET_SUFFIX_RE = re.compile(r"^(?P<rest>.+?) (?P<op>plus|minus) (?P<n>\d+
 _CDA_GRAVEYARD_SCOPE = r"(?P<where>your graveyard|all graveyards|your opponents' graveyards)"
 _CDA_BOARD_SCOPE = r"(?P<who>you control|your opponents control|on the battlefield)"
 
+_CDA_HAND_RE = re.compile(r"^the number of cards in your hand$")
+_CDA_HALF_OPPONENT_LIFE_RE = re.compile(
+    r"^half the highest life total among your opponents, rounded (?P<direction>up|down)$"
+)
+_CDA_LIFE_LEAD_RE = re.compile(
+    r"^your life total minus the life total of an opponent with the most life$"
+)
+_CDA_SNOW_COUNT_RE = re.compile(rf"^the number of snow permanents {_CDA_BOARD_SCOPE}$")
+
 _CDA_DEVOTION_RE = re.compile(r"^your devotion to (?P<colors>[a-z, ]+?)$")
 _CDA_PARTY_RE = re.compile(r"^the number of creatures in your party$")
 _CDA_DRAWN_RE = re.compile(r"^the number of cards you've drawn this turn$")
@@ -8018,7 +8327,11 @@ def _cda_owned_exile(source: CardState, context: LayerContext) -> tuple[CardStat
 
 
 def _cda_board_count(
-    quality: _CdaQuality, who: str, measure: str, counter: str | None = None
+    quality: _CdaQuality,
+    who: str,
+    measure: str,
+    counter: str | None = None,
+    supertype: Supertype | None = None,
 ) -> CdaCountFactory:
     scope = {"you control": "you", "your opponents control": "opponents"}.get(who, "any")
     count = CountBoardWhere(
@@ -8030,6 +8343,7 @@ def _cda_board_count(
         colorless=quality.colorless,
         measure=measure,
         counter=counter,
+        supertype=supertype,
     )
     return lambda source, context: count
 
@@ -8050,6 +8364,38 @@ def _cda_base_count(phrase: str) -> CdaCountFactory | None:
     """
     if _CDA_PARTY_RE.fullmatch(phrase):
         return lambda source, context: CountParty()
+    if _CDA_HAND_RE.fullmatch(phrase):
+        # CR 402.1: the hand is where a player holds cards; it is a zone the
+        # layer engine never sees, so the size comes through the context.
+        return lambda source, context: FixedCount(
+            value=context.hand_size_by_controller.get(source.controller or "", 0)
+        )
+    if match := _CDA_HALF_OPPONENT_LIFE_RE.fullmatch(phrase):
+        # CR 107.1a rounds a half up or down as the card says.
+        round_up = match.group("direction") == "up"
+
+        def half_highest_opponent_life(source: CardState, context: LayerContext) -> Count:
+            highest = max(context.opponents_life_totals(source.controller), default=0)
+            return FixedCount(value=(highest + 1) // 2 if round_up else highest // 2)
+
+        return half_highest_opponent_life
+    if _CDA_LIFE_LEAD_RE.fullmatch(phrase):
+        # CR 119.1: each player's life total; the lead is signed, so a player
+        # behind gets a negative number (CR 208.1 allows a negative P/T).
+        def life_lead(source: CardState, context: LayerContext) -> Count:
+            own = context.life_by_controller.get(source.controller or "", 0)
+            return FixedCount(
+                value=own - max(context.opponents_life_totals(source.controller), default=0)
+            )
+
+        return life_lead
+    if match := _CDA_SNOW_COUNT_RE.fullmatch(phrase):
+        return _cda_board_count(
+            _CdaQuality((), (), (), False, False),
+            match.group("who"),
+            "count",
+            supertype=Supertype.SNOW,
+        )
     if _CDA_DRAWN_RE.fullmatch(phrase):
         return lambda source, context: FixedCount(
             value=context.cards_drawn_this_turn.get(source.controller or "", 0)
@@ -10256,12 +10602,17 @@ def _self_pump_while_controlling_subtype_builder(
     return builder
 
 
-def _group_assigns_damage_as_toughness_builder(*, line: str) -> EffectBuilder:
+def _group_assigns_damage_as_toughness_builder(
+    *, line: str, mine: bool = True, gated: bool = True
+) -> EffectBuilder:
     """Ghalta the Immovable's "Each creature you control with toughness
     greater than its power assigns combat damage equal to its toughness
     rather than its power." - the group twin of Loot, the Anomaly's self
     grant, over `creatures_controlled_by_toughness_exceeds_power` instead of
-    `SelfIfPowerNegative`.
+    `SelfIfPowerNegative`. The ungated wordings (Assault Formation: "Each
+    creature you control assigns ..."; Doran, the Siege Tower: "Each creature
+    assigns ...") drop the toughness comparison, and the second drops "you
+    control" too (CR 510.1a is what "its power" replaces).
     """
 
     def builder(
@@ -10273,14 +10624,21 @@ def _group_assigns_damage_as_toughness_builder(*, line: str) -> EffectBuilder:
         return [
             ContinuousEffect(
                 description=(
-                    f"{source.name}: creatures you control with toughness greater than "
-                    "power assign damage equal to toughness"
+                    f"{source.name}: creatures {'you control ' if mine else ''}"
+                    f"{'with toughness greater than power ' if gated else ''}"
+                    "assign damage equal to toughness"
                 ),
                 layer=Layer.ABILITY,
                 timestamp=timestamp,
                 source_id=source.id,
                 source_ability=_source_line_for(source, line),
-                selector=creatures_controlled_by_toughness_exceeds_power(source.controller),
+                selector=(
+                    creatures_controlled_by_toughness_exceeds_power(source.controller)
+                    if gated
+                    else creatures_controlled_by(source.controller)
+                    if mine
+                    else every_creature
+                ),
                 modification=grant_ability(ASSIGNS_DAMAGE_AS_TOUGHNESS_TEXT),
             )
         ]
@@ -10744,6 +11102,36 @@ def _context_gated_self_static_builder(
                 source_ability=_source_line_for(source, line),
                 selector=_only(source.id),
                 modification=grant_keyword(ability),
+            )
+            for ability in granted
+        ]
+
+    return builder
+
+
+def _during_your_turn_if_equipped_grant_builder(granted: list[str], *, line: str) -> EffectBuilder:
+    """`_SELF_DURING_YOUR_TURN_IF_EQUIPPED_KEYWORD_GRANT_RE`'s shape: the turn
+    is read at build time off `LayerContext.active_player` (the board is
+    rebuilt every CR 613.5 computation), the equipped test live off the board
+    (`SelfIfAttachedCount`, at least one Equipment attached, CR 301.5)."""
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        if context.active_player != source.controller:
+            return []
+        return [
+            ContinuousEffect(
+                description=f"{source.name}: has {ability} while equipped during your turn",
+                layer=Layer.ABILITY,
+                timestamp=timestamp,
+                source_id=source.id,
+                source_ability=_source_line_for(source, line),
+                selector=SelfIfAttachedCount(card_id=source.id, subtype="equipment", threshold=1),
+                modification=grant_ability(ability),
             )
             for ability in granted
         ]
@@ -11960,6 +12348,8 @@ def _parse_narrow_static_layer_sentence(sentence: str) -> EffectBuilder | None:
         granted = match.group("ability").strip()
         if granted:
             return _paired_quoted_grant_builder(granted, line=sentence)
+    if _SELF_PROTECTION_FROM_OTHER_MANA_VALUE_RE.fullmatch(sentence):
+        return _self_protection_from_chosen_number_builder(line=sentence)
     if match := _PAIRED_BOTH_RE.fullmatch(sentence):
         keywords = _split_and_validate_keywords(match["keywords"]) if match["keywords"] else []
         if keywords is not None:
@@ -12039,6 +12429,7 @@ def _parse_narrow_static_layer_sentence(sentence: str) -> EffectBuilder | None:
             int(match.group("toughness")),
             keywords=chosen_type_keywords,
             line=sentence,
+            other=match.group("other") is not None,
         )
     if match := _SUBTYPE_ANTHEM_AND_KEYWORD_GRANT_RE.fullmatch(sentence):
         subtypes = _subtype_list_words(match.group("subtypes"))
@@ -12528,6 +12919,11 @@ def _parse_narrow_static_layer_sentence(sentence: str) -> EffectBuilder | None:
         return _per_color_keyword_grant_builder(grants, line=sentence)
     if match := _PERMANENTS_WITH_COUNTERS_WARD_RE.fullmatch(sentence):
         return _permanents_with_counters_ward_builder(match.group("cost"), line=sentence)
+    if match := _SELF_DURING_YOUR_TURN_IF_EQUIPPED_KEYWORD_GRANT_RE.fullmatch(sentence):
+        keywords = _split_and_validate_keywords(match.group("keywords"))
+        if keywords is None:
+            return None
+        return _during_your_turn_if_equipped_grant_builder(keywords, line=sentence)
     if match := _SELF_DURING_YOUR_TURN_KEYWORD_GRANT_RE.fullmatch(sentence):
         keywords = _split_and_validate_keywords(match.group("keywords"))
         if keywords is None:
@@ -12783,8 +13179,12 @@ def _parse_narrow_static_layer_sentence(sentence: str) -> EffectBuilder | None:
             line=sentence,
             description="while another creature entered under your control this turn",
         )
-    if _GROUP_ASSIGNS_DAMAGE_AS_TOUGHNESS_RE.fullmatch(sentence):
-        return _group_assigns_damage_as_toughness_builder(line=sentence)
+    if match := _GROUP_ASSIGNS_DAMAGE_AS_TOUGHNESS_RE.fullmatch(sentence):
+        return _group_assigns_damage_as_toughness_builder(
+            line=sentence,
+            mine=match.group("mine") is not None,
+            gated=match.group("gated") is not None,
+        )
     if _EQUIPPED_ASSIGNS_DAMAGE_AS_TOUGHNESS_RE.fullmatch(sentence):
         return _equipped_assigns_damage_as_toughness_builder(line=sentence)
     if _SELF_ASSIGNS_DAMAGE_AS_THOUGH_POSITIVE_RE.fullmatch(sentence):
@@ -12890,6 +13290,16 @@ def _parse_narrow_static_layer_sentence(sentence: str) -> EffectBuilder | None:
             )
     if _THIS_LAND_IS_CHOSEN_TYPE_RE.fullmatch(sentence):
         return _self_chosen_basic_land_type_builder(line=sentence)
+    if _ENCHANTED_LAND_IS_CHOSEN_TYPE_RE.fullmatch(sentence):
+        return _self_chosen_basic_land_type_builder(line=sentence, enchanted=True)
+    if match := _SELF_CHOSEN_TYPE_IN_ADDITION_RE.fullmatch(sentence):
+        return _self_chosen_type_in_addition_builder(match.group("kind").lower(), sentence)
+    if " for each " in sentence.lower() and (built := _pump_per_count_builder(sentence)):
+        return built
+    if match := _PERMANENTS_WITH_COUNTER_ARE_SUPERTYPE_RE.fullmatch(sentence):
+        return _permanents_with_counter_gain_supertype_builder(
+            match.group("counter").lower(), Supertype(match.group("supertype").lower()), sentence
+        )
     return None
 
 
@@ -13367,6 +13777,7 @@ from .model import (  # noqa: E402
     CreatureQualifiers,
     CreaturesControlledBy,
     CreaturesControlledByQuality,
+    CreaturesControlledByWithAnyQuality,
     CreaturesControlledByWithSubtype,
     CreaturesOfManaValueParity,
     CreaturesWithSubtype,
@@ -13383,6 +13794,7 @@ from .model import (  # noqa: E402
     PairedPartners,
     PermanentsOfTypes,
     PermanentsOfTypesControlledBy,
+    PermanentsWithCounter,
     PermanentsWithName,
     RemainsOnBattlefield,
     RemainsTapped,

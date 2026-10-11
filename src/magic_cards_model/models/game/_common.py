@@ -205,7 +205,8 @@ _SPEND_AS_ANY_COLOR_TO_ACTIVATE_RE = re.compile(
 #: (CR 609.4b). An unscoped sentence reaches every spell and ability its
 #: subject pays for; `scope` narrows it to spells of a quality.
 _SPEND_AS_ANY_COLOR_STATIC_RE = re.compile(
-    r"^(?P<who>you|players) may spend mana as though it were mana of any colou?r"
+    r"^(?P<who>you|players) (?:may spend mana as though it were mana of any colou?r"
+    r"|(?P<any_type>can spend mana of any type))"
     r"(?: to cast (?P<scope>[\w' ,-]+?) spells)?\.?$",
     re.IGNORECASE,
 )

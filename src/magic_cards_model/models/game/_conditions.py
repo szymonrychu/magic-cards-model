@@ -892,6 +892,42 @@ class ConditionsMixin:
                 turn=self._turns_taken(),
                 carried=False,
             )
+        # Shared Fate (and Colfenor's Plans): a face-down card in a pile the
+        # viewer's permission lets them look at is known to them.
+        from ...machines.casting import may_look_at_linked_exile
+
+        for card in self.exile:
+            if (
+                not card.face_up
+                and card.exile_annotation is not None
+                and card.id not in found
+                and may_look_at_linked_exile(self, card, viewer)
+            ):
+                found[card.id] = KnownCard(
+                    card_id=card.id,
+                    card_name=card.card.name,
+                    owner=card.owner or "",
+                    zone=Zone.EXILE,
+                    index_from_top=None,
+                    source="a permission to look at cards exiled with a permanent",
+                    turn=self._turns_taken(),
+                    carried=False,
+                )
+        # Lens of Clarity: every face-down creature the viewer does not control
+        # is known to them while a permanent they control grants the look.
+        if self.looks_at_opposing_face_down_creatures(viewer):
+            for permanent in self.battlefield:
+                if permanent.face_down and self.controller_of(permanent).username != viewer:
+                    found[permanent.id] = KnownCard(
+                        card_id=permanent.id,
+                        card_name=permanent.card.name,
+                        owner=permanent.owner or "",
+                        zone=Zone.BATTLEFIELD,
+                        index_from_top=None,
+                        source="a static look at face-down creatures",
+                        turn=self._turns_taken(),
+                        carried=False,
+                    )
         # "Play with your hand revealed." (Enduring Renewal) - every card in a
         # revealed hand is known to every viewer (CR 701.20a), read fresh like
         # the look-at-the-top permission above.
@@ -1114,6 +1150,18 @@ class ConditionsMixin:
             return getattr(state, stat)
         power, toughness = state.last_known_power_toughness()
         return power if stat == "power" else toughness
+
+    def _last_known_color_count(self: "Game", card_id: UUID) -> int:
+        """How many colours a sacrificed permanent had (CR 105.1), the computed
+        ones while it is still on the battlefield (CR 613.5) and its own once
+        it has left; 0 for an id nothing finds (a token that has ceased to
+        exist, CR 704.5d - callers read it while the token is still there)."""
+        state = self.find_by_id(card_id)
+        if state is None:
+            return 0
+        if state.zone is Zone.BATTLEFIELD:
+            return len(self.characteristics_of(state).colors)
+        return len(state.card.colors or ())
 
     def last_known_mana_value(self: "Game", card: "CardState | UUID") -> float:
         """An object's mana value as CR 608.2h reads it (CR 202.3): the

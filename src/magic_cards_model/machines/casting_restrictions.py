@@ -1215,6 +1215,37 @@ def zone_cast_prohibition_source(
     return None
 
 
+#: "You can't play lands." (Aggressive Mining) and "You can't play lands or
+#: cast spells from your hand." (Experimental Frenzy): a CR 611.1 prohibition
+#: on its controller alone. The bare form bars every land play from any zone;
+#: the "from your hand" form bars lands and spells played out of the hand only,
+#: which is what leaves the top of the library open to Frenzy's own grant.
+_OWN_PLAY_PROHIBITION_RE = re.compile(
+    r"^you can't play lands(?P<hand> or cast spells from your hand)?\.?$", re.IGNORECASE
+)
+
+
+def own_play_prohibition_source(game: Any, player: str, *, zone: Zone, land: bool) -> str | None:
+    """The name of a permanent `player` controls whose static line says they
+    can't play this land (`land`) or cast this spell out of `zone`, or None
+    (CR 601.3, CR 305.1, CR 101.2: "can't" beats whatever permitted it).
+
+    Read off the computed board on every call, so it ends the instant its
+    source leaves the battlefield (CR 611.3a)."""
+    board = game.computed_board()
+    for source in game.permanents_controlled_by(player):
+        for line in board.of(source).abilities:
+            match = _OWN_PLAY_PROHIBITION_RE.match(line.strip())
+            if match is None:
+                continue
+            if match.group("hand") is not None:
+                if zone is Zone.HAND:
+                    return source.name
+            elif land:
+                return source.name
+    return None
+
+
 #: Narset, Parter of Veils's and Spirit of the Labyrinth's exact printed
 #: static, verified against both pool printings: "Each opponent/player can't
 #: draw more than one card each turn." Reuses `_RESTRICTED_WHO` and the same
@@ -1465,7 +1496,8 @@ def reads_player_rule_static_line(text: str) -> bool:
     """
     line = text.strip()
     if (
-        _OPPONENTS_CANT_CAST_DURING_YOUR_TURN_RE.match(line)
+        _OWN_PLAY_PROHIBITION_RE.match(line)
+        or _OPPONENTS_CANT_CAST_DURING_YOUR_TURN_RE.match(line)
         or _SORCERY_SPEED_ONLY_RE.match(line)
         or _SEARCH_PROHIBITION_RE.match(line)
         or _DURING_COMBAT_LOCKDOWN_RE.match(line)

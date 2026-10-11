@@ -1020,6 +1020,33 @@ def keyword_cast_options(card: Card) -> list[KeywordCastOption]:
     return options
 
 
+#: The exile piles whose cast option a static ability can grant, and the
+#: keyword each is cast by.
+_GRANTED_KEYWORD_MARKERS: dict[ExileMarker, str] = {
+    ExileMarker.MADNESS: "madness",
+    ExileMarker.FORETOLD: "foretell",
+}
+
+_GRANTED_COST_KEYWORD_RE = re.compile(r"^(?P<keyword>[A-Za-z]+) (?P<cost>\{.+\})$")
+
+
+def _granted_cost_keyword(line: str, keyword: str) -> KeywordAbility | None:
+    """A granted "`<Keyword>` `<mana cost>`" line (`spell_grants.
+    granted_zone_keyword_lines` writes them) read as that keyword, or None."""
+    match = _GRANTED_COST_KEYWORD_RE.fullmatch(line.strip())
+    if match is None or match.group("keyword").lower() != keyword:
+        return None
+    return KeywordAbility(
+        raw=line,
+        text=line,
+        face="",
+        keyword=match.group("keyword"),
+        canonical=match.group("keyword"),
+        cost=match.group("cost"),
+        cost_is_mana=True,
+    )
+
+
 def marker_cast_options(spell: CardState) -> list[KeywordCastOption]:
     """The cast options a card has because of the *pile of exile it is in*
     (CR 406.4), rather than because of anything printed on it.
@@ -1071,6 +1098,17 @@ def marker_cast_options(spell: CardState) -> list[KeywordCastOption]:
                 marker=ExileMarker.PLOTTED,
                 later_turn=True,
             )
+        ]
+    if annotation is not None and annotation.marker in _GRANTED_KEYWORD_MARKERS:
+        # CR 702.35a / CR 702.143a: a madness or foretell the card was granted
+        # (Falkenrath Gorger, Dream Devourer) rides on the exiled card; its
+        # printed one is `keyword_cast_options`'s.
+        keyword = _GRANTED_KEYWORD_MARKERS[annotation.marker]
+        return [
+            option
+            for line in spell.granted_ability_texts
+            if (granted := _granted_cost_keyword(line, keyword)) is not None
+            and (option := _option_from_keyword(granted)) is not None
         ]
     if annotation is None or annotation.marker is not ExileMarker.AIRBENT:
         return []

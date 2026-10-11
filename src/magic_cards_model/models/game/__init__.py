@@ -1138,9 +1138,6 @@ class Game(
     them - `emit` fills `subject_types`/`subject_subtypes` from here. Not
     persisted: it is read within the same move that wrote it."""
     _paying_cost: tuple[str, str | None, str | None] | None = PrivateAttr(default=None)
-    #: True while `machines.keywords.discard` moves a card, so a zone-change
-    #: replacement can tell a discard (CR 701.9a) from any other move to a graveyard.
-    _discarding: bool = PrivateAttr(default=False)
     """`(what, keyword, payer)` while a spell's or ability's total cost is
     being paid (`paying_cost_of`), stamped onto every event raised meanwhile.
     Not persisted: it opens and closes within one `CostPayment.pay`."""
@@ -1971,7 +1968,7 @@ class Game(
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 147
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 148
     #: 67: `machines/cost.CostComponent` gained `link_to_permanent_id` (CR
     #: 607.2q), reachable from `Game` through a pending `AbilityOnStack.
     #: keyword_activation`/`.unless_payment`'s own `CostPayment.components`.
@@ -2306,6 +2303,11 @@ class Game(
     #: `has_dealt_damage` (Karakyk Guardian's and Ratonhnhake's "hasn't dealt
     #: damage yet"); an older dump would read every creature that has dealt
     #: damage as one that has not, handing it hexproof back.
+    #: 148 (EP01-R2-T7, reserved: 141 + task 7): `ManaPool` gained `basic_land`
+    #: (CR 106.3, the part of the pool a basic land made - Imperiosaur's "Spend
+    #: only mana produced by basic lands"), `ManaPayment` gained
+    #: `basic_land_spent` and `ManaSpend` gained `only_from` / `any_type`; an
+    #: older dump would let floating nonbasic mana pay for Imperiosaur.
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -3577,6 +3579,15 @@ class Game(
     )
     _LOOK_AT_TOP_CARD_ANY_TIME_RE: ClassVar[re.Pattern[str]] = re.compile(
         r"^you may look at the top card of your library any time\.?$", re.IGNORECASE
+    )
+    #: Lens of Clarity's "You may look at the top card of your library and at
+    #: face-down creatures you don't control any time." - the top-card grant
+    #: above plus CR 708.3's controller-only look, widened to the opposing
+    #: face-down creatures on the battlefield (`Game.known_to`).
+    _LOOK_AT_TOP_AND_FACE_DOWN_ANY_TIME_RE: ClassVar[re.Pattern[str]] = re.compile(
+        r"^you may look at the top card of your library and at face-down creatures you "
+        r"don't control any time\.?$",
+        re.IGNORECASE,
     )
     #: "You may play lands from the top of your library." (Courser of
     #: Kruphix, Radha, Ka-Zar's own second static) - CR 305.1's land drop

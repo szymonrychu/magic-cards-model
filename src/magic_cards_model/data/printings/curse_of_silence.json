@@ -1,0 +1,136 @@
+{
+  "object": "card",
+  "id": "9e7819d5-12a9-4719-91b2-8dd1ba6f3800",
+  "oracle_id": "36e267c5-ea98-4e26-b2b4-3faa05493eb4",
+  "multiverse_ids": [
+    534770
+  ],
+  "resource_id": "D740B673AD0F547ACC3C8C28F39237275F2EA9D587E6FBD7907E36EE3D77BA09",
+  "mtgo_id": 92954,
+  "arena_id": 78341,
+  "tcgplayer_id": 248130,
+  "cardmarket_id": 574874,
+  "name": "Curse of Silence",
+  "lang": "en",
+  "released_at": "2021-09-24",
+  "uri": "https://api.scryfall.com/cards/9e7819d5-12a9-4719-91b2-8dd1ba6f3800",
+  "scryfall_uri": "https://scryfall.com/card/mid/15/curse-of-silence?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T06:54:20Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/9/e/9e7819d5-12a9-4719-91b2-8dd1ba6f3800.jpg?1783925660",
+    "normal": "https://cards.scryfall.io/normal/front/9/e/9e7819d5-12a9-4719-91b2-8dd1ba6f3800.jpg?1783925660",
+    "large": "https://cards.scryfall.io/large/front/9/e/9e7819d5-12a9-4719-91b2-8dd1ba6f3800.jpg?1783925660",
+    "png": "https://cards.scryfall.io/png/front/9/e/9e7819d5-12a9-4719-91b2-8dd1ba6f3800.png?1783925660",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/9/e/9e7819d5-12a9-4719-91b2-8dd1ba6f3800.jpg?1783925660",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/9/e/9e7819d5-12a9-4719-91b2-8dd1ba6f3800.jpg?1783925660",
+    "thumb": "https://cards.scryfall.io/thumb/front/9/e/9e7819d5-12a9-4719-91b2-8dd1ba6f3800.webp?1783925660",
+    "grid": "https://cards.scryfall.io/grid/front/9/e/9e7819d5-12a9-4719-91b2-8dd1ba6f3800.webp?1783925660",
+    "display": "https://cards.scryfall.io/display/front/9/e/9e7819d5-12a9-4719-91b2-8dd1ba6f3800.webp?1783925660",
+    "art": "https://cards.scryfall.io/art/front/9/e/9e7819d5-12a9-4719-91b2-8dd1ba6f3800.webp?1783925660",
+    "crop": "https://cards.scryfall.io/crop/front/9/e/9e7819d5-12a9-4719-91b2-8dd1ba6f3800.webp?1783925660"
+  },
+  "mana_cost": "{W}",
+  "cmc": 1.0,
+  "type_line": "Enchantment \u2014 Aura Curse",
+  "oracle_text": "Enchant player\nAs this Aura enters, choose a card name.\nSpells with the chosen name enchanted player casts cost {2} more to cast.\nWhenever enchanted player casts a spell with the chosen name, you may sacrifice this Aura. If you do, draw a card.",
+  "colors": [
+    "W"
+  ],
+  "color_identity": [
+    "W"
+  ],
+  "keywords": [
+    "Enchant"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "arena",
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "44b8eb8f-fa23-401a-98b5-1fbb9871128e",
+  "set": "mid",
+  "set_name": "Innistrad: Midnight Hunt",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/44b8eb8f-fa23-401a-98b5-1fbb9871128e",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Amid&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/mid?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/9e7819d5-12a9-4719-91b2-8dd1ba6f3800/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A36e267c5-ea98-4e26-b2b4-3faa05493eb4&unique=prints",
+  "collector_number": "15",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Irina Nordsol",
+  "artist_ids": [
+    "1e4cb52d-476e-4c68-ac87-2e620aede6d4"
+  ],
+  "illustration_id": "177f056f-692c-41bc-acfa-5bdf8cef3254",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 11901,
+  "penny_rank": 2170,
+  "prices": {
+    "usd": "0.37",
+    "usd_foil": "0.45",
+    "usd_etched": null,
+    "eur": "0.34",
+    "eur_foil": "0.37",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=534770&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DCurse%2Bof%2BSilence",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DCurse%2Bof%2BSilence",
+    "edhrec": "https://edhrec.com/route/?cc=Curse+of+Silence"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F248130%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=574874&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/92954?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

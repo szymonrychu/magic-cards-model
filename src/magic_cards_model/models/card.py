@@ -433,6 +433,16 @@ def subtypes_of(type_line: str) -> list[str]:
 _REMINDER_TEXT = re.compile(r"\([^)]*\)")
 
 
+#: "Mistform Ultimus is every creature type (even if this card isn't on the
+#: battlefield)." once the reminder text is gone: the card's own name or "this
+#: <thing>" as the subject, never a group ("Creatures you control are ...") or
+#: an attached one ("Enchanted creature is ...").
+_SELF_EVERY_CREATURE_TYPE = re.compile(
+    r"^(?!(?:enchanted|equipped|each|all|other|target)\b)[^.,]+? is every creature type\s*\.?$",
+    re.IGNORECASE,
+)
+
+
 @cache
 def has_changeling(oracle_text: str | None) -> bool:
     """Whether `oracle_text` carries a changeling keyword line (CR 702.73a).
@@ -445,6 +455,8 @@ def has_changeling(oracle_text: str | None) -> bool:
     """
     for line in (oracle_text or "").splitlines():
         keywords = _REMINDER_TEXT.sub("", line).strip()
+        if _SELF_EVERY_CREATURE_TYPE.fullmatch(keywords):
+            return True  # a characteristic-defining ability (CR 604.3): "~ is every creature type"
         if keywords.endswith("."):
             continue  # a sentence, not a keyword line
         if any(part.strip().lower() == "changeling" for part in keywords.split(",")):

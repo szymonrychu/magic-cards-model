@@ -24,6 +24,7 @@ from ...machines.casting import (
     conditional_free_cast_unavailable,
     face_being_cast,
     granted_cast_options,
+    granted_optional_additional_costs,
     keyword_cast_options,
     land_quality_allows,
     life_or_mana_additional_costs,
@@ -31,6 +32,7 @@ from ...machines.casting import (
     marker_cast_options,
     once_per_turn_key,
     optional_additional_costs,
+    own_play_prohibition_source,
     play_permissions_on,
     record_graveyard_land_use,
     static_free_cast_grants,
@@ -150,6 +152,25 @@ def conditional_additional_land_plays_of_line(text: str) -> tuple[int, str] | No
     if n is None:
         return None
     return n, match.group("condition").strip()
+
+
+#: Ghirapur Orrery's and Rites of Flourishing's "Each player may play an
+#: additional land on each of their turns." - the each-player twin of
+#: `machines.layers.additional_land_plays_of_line` (CR 305.2, CR 611.3d): the
+#: grant reaches every player, whoever controls its source.
+_EACH_PLAYER_ADDITIONAL_LAND_PLAYS_RE = re.compile(
+    rf"^each player may play {count_pattern('n')} additional lands? on each of their turns\.?$",
+    re.IGNORECASE,
+)
+
+
+def each_player_additional_land_plays_of_line(text: str) -> int | None:
+    """How many additional lands one static line lets *each player* play on
+    each of their turns, or `None` when the line is not that grant."""
+    match = _EACH_PLAYER_ADDITIONAL_LAND_PLAYS_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    return parse_count(match.group("n"), article=True)
 
 
 #: "spells that are one or more colors" (Emrakul, the Aeons Torn): CR 112.1's
@@ -844,6 +865,11 @@ class CastingMixin:
         from, so what a seat is *told* it may announce and what the engine
         offers a cast it makes on that seat's behalf cannot drift apart."""
         options = optional_additional_costs(card.card)
+        granted_replicates = [
+            option
+            for option in granted_optional_additional_costs(self, card, caster)
+            if option.keyword == "replicate"
+        ]
         printed = {option.keyword: option for option in options}
         kickers = [option for option in options if option.keyword == "kicker"]
         if len(kickers) > 1:
@@ -859,17 +885,21 @@ class CastingMixin:
                         which=option.cost,
                         choosing=self._choose_cost_objects(extra, caster, card, taken),
                     )
-        for keyword, pay in (
-            ("kicker", casting.pay_kicker),
-            ("multikicker", casting.pay_kicker),
-            ("replicate", casting.pay_replicate),
-        ):
-            option = printed.get(keyword)
+        announced = [
+            ("kicker", casting.pay_kicker, printed.get("kicker")),
+            ("multikicker", casting.pay_kicker, printed.get("multikicker")),
+            *(
+                ("replicate", casting.pay_replicate, option)
+                for option in [printed.get("replicate"), *granted_replicates]
+            ),
+        ]
+        for keyword, pay, option in announced:
             if option is None or (keyword == "kicker" and len(kickers) > 1):
                 continue
             # CR 702.33a's plain kicker is announced once; CR 702.33c's
             # multikicker and CR 702.56a's replicate are "any number of
-            # times", bounded so a cost of nothing cannot loop.
+            # times", bounded so a cost of nothing cannot loop. CR 702.56b:
+            # each replicate instance (printed or granted) is paid on its own.
             repeats = self.REPEATED_ADDITIONAL_COST_BOUND if option.repeatable else 1
             for _ in range(repeats):
                 extra = total_cost_for_phrase(option.cost, caster)
@@ -877,7 +907,11 @@ class CastingMixin:
                     casting, card, caster, keyword, extra, taken
                 ):
                     break
-                pay(1, choosing=self._choose_cost_objects(extra, caster, card, taken))
+                choosing = self._choose_cost_objects(extra, caster, card, taken)
+                if keyword == "replicate":
+                    pay(1, choosing=choosing, which=option.cost)
+                else:
+                    pay(1, choosing=choosing)
         offspring = printed.get("offspring")
         if offspring is not None:
             extra = total_cost_for_phrase(offspring.cost, caster)
@@ -1770,6 +1804,9 @@ class CastingMixin:
                 amount, condition = conditional
                 if self.condition_holds(username, condition, permanent):
                     total += amount
+        for permanent in self.battlefield:
+            for line in board.of(permanent).abilities:
+                total += each_player_additional_land_plays_of_line(line) or 0
         return total
 
     def _plays_lands_from_top_of_library_line(self: "Game", text: str) -> bool:
@@ -1818,7 +1855,9 @@ class CastingMixin:
                     return permanent
         return None
 
-    def why_cannot_play_land(self: "Game", username: str) -> str | None:
+    def why_cannot_play_land(
+        self: "Game", username: str, land: CardState | None = None
+    ) -> str | None:
         """Why `username` cannot play a land right now, or None (CR 305.1-305.3).
 
         The checks, in the order the rules number them:
@@ -1853,6 +1892,14 @@ class CastingMixin:
             return (
                 f"{username} cannot play a land, for any reason, if it isn't their turn "
                 f"(CR 305.3); it is {self.turn.active_player}'s turn"
+            )
+        banned_by = own_play_prohibition_source(
+            self, username, zone=land.zone if land is not None else Zone.HAND, land=True
+        )
+        if banned_by is not None:
+            return (
+                f"{username} can't play lands: {banned_by} says so, and a prohibition beats "
+                f"any permission (CR 305.1, CR 101.2)"
             )
         played = self.lands_played.get(username, 0)
         allowance = self.land_allowance(username)
@@ -2357,7 +2404,7 @@ class CastingMixin:
             land_face = chosen
         if not land.card.is_land and land_face is None:
             raise ValueError(f"{land.name} is not a land")
-        refusal = self.why_cannot_play_land(username)
+        refusal = self.why_cannot_play_land(username, land)
         if refusal is not None:
             raise ValueError(refusal)
         permission: PlayPermission | None = None

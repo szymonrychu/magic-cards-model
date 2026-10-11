@@ -97,7 +97,7 @@ from ..models.mana import ManaCost, ManaSpend
 from ..models.player import Player
 from ..models.zone import Zone
 from ..snapshot import board_snapshot
-from .abilities import printed_production
+from .abilities import keyword_ability, printed_production
 from .casting import (
     AlternativeCostSource,
     CastTiming,
@@ -583,7 +583,12 @@ def _cast_action(
     spend = ManaSpend.casting(card, zone=card.zone, snow_any_color=snow_any_color)
     if game.spends_mana_as_any_color_for_spell(card, player):
         # CR 609.4b, read here exactly as `Casting.determine_cost` reads it.
-        spend = spend.model_copy(update={"any_color": True})
+        spend = spend.model_copy(
+            update={
+                "any_color": True,
+                "any_type": game.spends_mana_of_any_type_for_spell(card, player),
+            }
+        )
     spend = spend.model_copy(update={"color_rule": game.mana_color_rule(player)})
     unpayable = (
         None if alternative_cost is not None else why_mana_cost_unpayable(card.name, total.mana)
@@ -1176,7 +1181,7 @@ def _land_actions(game: Any, player: str, card: CardState) -> list[Action]:
     `me.hand`, so a land under a live PLAY permission never appeared here at
     all even though playing it would have succeeded.
     """
-    if game.why_cannot_play_land(player) is not None:
+    if game.why_cannot_play_land(player, card) is not None:
         return []
     if (
         card.zone is not Zone.HAND
@@ -1311,8 +1316,18 @@ def _unlock_door_actions(
 # Suspend, foretell, plot (CR 116.2f/h/k) - `MarkedExile` in `casting.py`.
 # ---------------------------------------------------------------------------
 
+
+def suspend_at_its_least_x(game: Any, card: CardState, player: str) -> MarkedExile:
+    """`MarkedExile.suspend`, with the least X a "Suspend X" line allows
+    (CR 702.62a, CR 107.3a) announced so the action is listed at all: the
+    seat that takes it names the X it really wants (`x_value`)."""
+    ability = keyword_ability(card.card, "suspend")
+    least = (ability.count_minimum or 0) if ability is not None and ability.count_is_x else None
+    return MarkedExile.suspend(game, card, player, x_value=least)
+
+
 _MARKED_EXILE_BUILDERS: tuple[tuple[ActionKind, Any], ...] = (
-    (ActionKind.SUSPEND, MarkedExile.suspend),
+    (ActionKind.SUSPEND, suspend_at_its_least_x),
     (ActionKind.FORETELL, MarkedExile.foretell),
     (ActionKind.PLOT, MarkedExile.plot),
 )
@@ -1751,14 +1766,14 @@ def _off_zone_actions(
     """
     actions: list[Action] = []
     spend = ManaSpend.activating(card.card)
-    for index, entry in enumerate(off_zone_abilities(effective_card(game, card))):
+    for index, entry in enumerate(off_zone_abilities(effective_card(game, card), card, game)):
         # CR 602.2b: announced like any activation. Only a printed line can
         # target; cycling, unearth and transmute spell out untargeted effects.
         found = _target_candidates(
             game,
             player,
             card,
-            profile_for_text(entry.ability.text if entry.family == "printed" else ""),
+            profile_for_text(entry.ability.text if entry.family in ("printed", "scavenge") else ""),
             source_is_spell=False,
         )
         target_slots = _slots_from(found)

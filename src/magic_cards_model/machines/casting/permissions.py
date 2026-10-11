@@ -24,6 +24,7 @@ from ..cost import (
     total_cost_for_phrase,
 )
 from ..keywords import (
+    _keyword,
     printed_casualty_numbers,
     printed_conspire_count,
 )
@@ -34,7 +35,7 @@ from ..layers import (
     only_this_incarnation,
     plays_lands_from_graveyard_line,
 )
-from ..spell_grants import casualty_numbers, conspire_count
+from ..spell_grants import casualty_numbers, conspire_count, replicate_costs
 from ..turn import Step
 from .options import KeywordCastOption, OptionalAdditionalCost
 
@@ -484,9 +485,18 @@ def _rezoned_by_using(
 #: card's" for one and "its" for the other, English grammar rather than a
 #: rules difference.
 _COST_IS_THE_CARDS_MANA_COST = re.compile(
-    r"The (?P<keyword>[A-Za-z]+) cost is equal to (?:that card's|its) mana cost\.",
+    r"The (?P<keyword>[A-Za-z]+) cost is equal to (?:that card's|its|the card's) mana cost"
+    r"(?: plus (?P<extra>exile [a-z]+ other cards? from your graveyard))?\.",
     re.IGNORECASE,
 )
+
+
+def _completed_cost(tail: re.Match[str], mana_cost: str) -> str:
+    """The cost "The `<keyword>` cost is equal to that card's mana cost[ plus
+    exile three other cards from your graveyard]." spells out: the mana cost,
+    then the extra component the sentence adds (Underworld Breach's escape)."""
+    extra = tail.group("extra")
+    return f"{mana_cost}, {extra.capitalize()}" if extra else mana_cost
 
 
 class GrantedCastOption(EngineModel):
@@ -519,7 +529,8 @@ def _spell_matches_grant_filter(spell: CardState, what: str) -> bool:
       both, and a subtype or supertype is simply had.
 
     A `non-` prefix negates the word it is attached to ("non-Lesson instant and
-    sorcery card"): the spell must *not* match it.
+    sorcery card"), and so does the closed "non" of a card type ("nonland
+    card"): the spell must *not* match it.
     """
     types = set(spell.types)
     subtypes = {subtype.lower() for subtype in spell.subtypes}
@@ -530,8 +541,6 @@ def _spell_matches_grant_filter(spell: CardState, what: str) -> bool:
         word = raw_word.strip(",").lower()
         if not word or word in {"and", "or"}:
             continue
-        # "non-Lesson" (hyphenated before a subtype) and "nonland" (one word
-        # before a card type, CR 205.2) both negate the word after the prefix.
         negated = word.startswith("non-") or (
             word.startswith("non") and word[len("non") :].rstrip("s") in type_words
         )
@@ -1594,11 +1603,13 @@ _PILE_PERMISSION_LEADS = (
     (re.compile(r"^once each turn, ", re.IGNORECASE), "once"),
 )
 _PILE_PERMISSION_BODY_RE = re.compile(
-    r"^you may (?P<look>look at the cards exiled with this \w+, and you may )?"
+    r"^(?P<who>you|each player) may "
+    r"(?P<look>look at (?:the )?cards (?:they )?exiled with this \w+, and (?:you|they) may )?"
     r"(?P<act>"
     r"play cards exiled with this \w+"
     r"|play lands and cast spells from among (?P<pile>cards (?P<own>you own )?exiled with this \w+"
     r"|those cards"
+    r"|cards they exiled with this \w+(?P<this_turn> this turn)?"
     r"|cards you own in exile with (?P<counter>\w+) counters on them)"
     r"|play lands from among cards exiled with this \w+"
     r"|play a land or cast a spell from among the cards exiled with this \w+"
@@ -1611,7 +1622,9 @@ _PILE_PERMISSION_BODY_RE = re.compile(
     r"(?P<any1>, and mana of any type can be spent to cast (?:that|those) spells?)?"
     r"(?P<anycolor>, and you may spend mana as though it were mana of any colou?r "
     r"to cast (?:those spells|it))?"
-    r"\.(?P<any2> Mana of any type can be spent to cast those spells\.)?$",
+    r"\.(?P<any2> Mana of any type can be spent to cast those spells\.)?"
+    r"(?P<life> If you cast a spell this way, pay life equal to its mana value rather than "
+    r"pay its mana cost\.)?$",
     re.IGNORECASE,
 )
 
@@ -1649,6 +1662,17 @@ class ExilePilePermission(EngineModel):
     controls (`ExileAnnotation.linked_permanent_id`)."""
     flash: bool = False
     looks: bool = False
+    each_player: bool = False
+    """"Each player may ..." (Shared Fate, Uba Mask): the permission reaches every
+    player, not only the permanent's controller."""
+    exiled_by_player: bool = False
+    """"cards they exiled with this ..." / "those cards": only cards the player
+    themself exiled with the permanent (`ExileAnnotation.owner`)."""
+    this_turn: bool = False
+    """"... this turn": only cards exiled on the current turn."""
+    pays_life_for_mana_value: bool = False
+    """"If you cast a spell this way, pay life equal to its mana value rather
+    than pay its mana cost" (Valgavoth; CR 118.9, CR 119.4)."""
 
 
 @lru_cache(maxsize=2048)
@@ -1705,6 +1729,11 @@ def exile_pile_permission(
         exiled_by_your_ability=match.group("exiler") is not None,
         flash=match.group("flash") is not None,
         looks=match.group("look") is not None,
+        each_player=match.group("who").lower() == "each player",
+        exiled_by_player=match.group("who").lower() == "each player"
+        and (match.group("this_turn") is not None or "they exiled" in act or "those cards" in act),
+        this_turn=match.group("this_turn") is not None,
+        pays_life_for_mana_value=match.group("life") is not None,
     )
 
 
@@ -1750,6 +1779,12 @@ def _pile_membership_holds(
         annotation = card.exile_annotation
         if annotation is None or not annotation.links_to(permanent.id, permanent.zone_change_stamp):
             return False
+        if read.exiled_by_player and annotation.owner != player:
+            return False
+        if read.this_turn:
+            turn = getattr(game, "turn", None)
+            if turn is None or annotation.turn_exiled != turn.turns_taken:
+                return False
     owner = card.owner or player
     if read.own_cards_only and owner != player:
         return False
@@ -1769,11 +1804,14 @@ def _pile_permissions_for(
 
     found: list[tuple[CardState, ExilePilePermission]] = []
     board = game.computed_board()
-    for permanent in game.permanents_controlled_by(player):
+    for permanent in game.battlefield:
+        controlled = permanent.controller == player
         legendary = Supertype.LEGENDARY in permanent.card.supertypes
         for line in class_gated_lines(permanent, board.of(permanent).abilities):
             read = exile_pile_permission(permanent.name, line, legendary)
-            if read is None or not _pile_membership_holds(game, card, permanent, read, player):
+            if read is None or not (controlled or read.each_player):
+                continue
+            if not _pile_membership_holds(game, card, permanent, read, player):
                 continue
             if read.during_your_turn:
                 turn = getattr(game, "turn", None)
@@ -1807,6 +1845,13 @@ def linked_exile_play_grant(
         permanent, read = min(options, key=lambda option: option[1].once_each_turn)
         return LinkedExilePlayGrant(permanent, read)
     return None
+
+
+def may_look_at_linked_exile(game: Any, card: CardState, player: str) -> bool:
+    """Whether a pile permission of `player`'s says they "may look at" `card`
+    (Shared Fate's "Each player may look at cards they exiled with this
+    enchantment", Colfenor's Plans): it is in a pile they can read."""
+    return any(read.looks for _, read in _pile_permissions_for(game, card, player))
 
 
 def linked_exile_play_source(game: Any, card: CardState, player: str) -> CardState | None:
@@ -2091,7 +2136,8 @@ def _linked_exile_play_option(
         keyword=CAST_PERMISSION,
         rule="CR 601.3, CR 607.2a",
         zone=Zone.EXILE,
-        pays_mana_cost=not read.free,
+        pays_mana_cost=not (read.free or read.pays_life_for_mana_value),
+        pays_life_for_mana_value=read.pays_life_for_mana_value,
         timing=CastTiming.FLASH if read.flash else CastTiming.OWN,
         once_per_turn_key=once_per_turn_key(permanent) if read.once_each_turn else None,
         any_color=read.any_color,
@@ -2261,9 +2307,10 @@ def _grant_on_a_card_in_a_zone(
         tail = _COST_IS_THE_CARDS_MANA_COST.search(match.group("tail") or "")
         if tail is None or tail.group("keyword").lower() != keyword.lower():
             return None
-        printed = spell.mana_cost or spell.card.mana_cost or None
-        if printed is None:
+        mana_cost = spell.mana_cost or spell.card.mana_cost or None
+        if mana_cost is None:
             return None
+        printed = _completed_cost(tail, mana_cost)
     option = _granted_option(
         keyword, printed, zone, face, raw, "CR 611.3d, CR 400.7g", any_zone=True
     )
@@ -2306,7 +2353,7 @@ def reads_granted_zone_keyword_line(card: Card, text: str) -> bool:
         cost_tail = _COST_IS_THE_CARDS_MANA_COST.fullmatch(tail)
         if cost_tail is None or cost_tail.group("keyword").lower() != keyword.lower():
             return False
-        printed = "{0}"
+        printed = _completed_cost(cost_tail, "{0}")
     elif tail:
         return False
     option = _granted_option(keyword, printed, zone, card.name, text, "CR 611.3d", any_zone=True)
@@ -2969,6 +3016,14 @@ def granted_optional_additional_costs(
             for number in casualty_numbers(game, card, caster, card.zone)[printed:]
         ]
         + [conspire_cost_option() for _ in range(max(granted_conspire, 0))]
+        + [
+            OptionalAdditionalCost(
+                keyword="replicate", cost=cost, rule="CR 702.56a", repeatable=True
+            )
+            for cost in replicate_costs(game, card, caster, card.zone)[
+                int(_keyword(card.card, "replicate") is not None) :
+            ]
+        ]
         + [
             OptionalAdditionalCost(keyword=None, cost=f"pay {grant.life} life", rule="CR 118.8b")
             for grant in granted_life_costs(game, card, caster)

@@ -2540,6 +2540,11 @@ class StaticFreeCastGrant(EngineModel):
     count on the granting permanent is the live cap."""
     only_from_exile: bool = False
     """Charred Foyer's "a spell you cast from exile"."""
+    first_spell_each_players_turn: bool = False
+    """Weftwalking's "The first spell each player casts during each of their
+    turns may be cast without paying its mana cost.": reaches every player,
+    not only the granting permanent's controller, and only the first spell
+    that player casts in a turn of their own."""
     grants_flash: bool = False
     """Primal Prayers' "If you cast a spell this way, you may cast it as though
     it had flash": the spell may be cast at instant speed, but only by paying

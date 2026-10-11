@@ -19,6 +19,7 @@ from ...models.token import is_token
 from ...models.zone import Zone
 from ...numbers import COUNT, parse_count
 from ..chosen_type import RESTRICTED_TRIBAL_TYPES, matches_restricted_creature_type_choice
+from ..conditions import claims as conditions_claims
 from ..decisions import Decision, DecisionKind, source_id_of
 from ..delayed import ReflexiveExileCopiedCard
 from ..keyword_counters import enters_count_reader, fixed_enters_count_reader
@@ -130,7 +131,8 @@ NOT_ESCAPED_CONDITION = "this permanent didn't escape"
 #: read off the spell's cast record as the permanent enters (`_kicked_count`).
 _TIMES_KICKED_RE = re.compile(r"^times? it was kicked$", re.IGNORECASE)
 _ENTERS_AS_COPY = re.compile(
-    rf"^(?:You may have\s+)?(?P<subject>.+?) (?:{_ENTERS}|enter)(?P<tapped> tapped)?"
+    r"^(?:If (?P<condition>[^,]+?),\s*)?(?:You may have\s+)?"
+    rf"(?P<subject>.+?) (?:{_ENTERS}|enter)(?P<tapped> tapped)?"
     r" as a copy of (?P<copy_of>.+?)(?:,\s*except\s+(?P<exception>.+?))?\.?$",
     re.IGNORECASE,
 )
@@ -206,7 +208,8 @@ def _try_enters_as_copy(sentence: str, names: tuple[str, ...]) -> list[Replaceme
             copy_exception=parsed_exception,
             copy_exception_unparsed=unparsed_exception,
             tapped=bool(match.group("tapped")),
-            optional=sentence.lower().startswith("you may have"),
+            optional=bool(re.match(r"^(?:if [^,]+?,\s*)?you may have\b", sentence, re.IGNORECASE)),
+            condition=(match.group("condition") or "").strip() or None,
             self_replacement=_refers_to_self(subject, names),
         )
     ]
@@ -1057,6 +1060,17 @@ def _sacrifice_any_number_choice(effect: ReplacementEffect) -> tuple[str, bool] 
     if match is None:
         return None
     return match.group("restriction").strip(), match.group("optional") is not None
+
+
+def _action_alone(action: "Action", card_name: str) -> Apply:
+    """CR 614.12a: an "As [this] enters" action with nothing sized from it."""
+
+    def apply(game: "Game", source: CardState | None, event: ReplaceableEvent) -> None:
+        entering = event.card
+        if entering is not None and entering.controller is not None:
+            action(game, entering.controller, event, source, card_name)
+
+    return apply
 
 
 def _action_then_enter_with_counters(
@@ -2233,6 +2247,8 @@ def enters_as_copy_outcome(effect: ReplacementEffect) -> str:
     """
     if effect.copy_exception_unparsed is not None:
         return "notice"
+    if effect.condition is not None and not conditions_claims(effect.condition):
+        return "silent"
     match = _COPY_CANDIDATES_RE.match((effect.copy_of or "").strip().rstrip("."))
     if match is None:
         return "silent"
@@ -2380,6 +2396,92 @@ def _create_linked_reflexive_trigger(
     )
 
 
+def _apply_copy_of(
+    game: "Game",
+    effect: ReplacementEffect,
+    card_name: str,
+    source: CardState | None,
+    event: ReplaceableEvent,
+    entering: CardState,
+    chosen_card: CardState,
+) -> None:
+    """The part of CR 614.1c's "enters as a copy of" after the copied object is
+    known: register the layer-1 copy effect (CR 613.1a, CR 707.2) and the
+    counters, tapped state and reflexive trigger that go with it. Shared by
+    the self form (`_enters_as_copy`) and a permanent's "creatures you control
+    enter as a copy of ..." static (`group_enters_as_copy`)."""
+    from ..layers import (
+        BecomeACopy,
+        LayerContext,
+        _become_a_copy_builder,
+        copiable_characteristics,
+        printed_characteristics,
+    )
+
+    chosen = [chosen_card]
+    exception = effect.copy_exception or CopyException()
+    # CR 707.2: "as modified by other copy effects" - a battlefield
+    # candidate that is itself a copy is copied as what it copies. A
+    # graveyard card has no copy effect on it (CR 613.5 is about the
+    # battlefield), so its printed values are its copiable ones.
+    copiable = (
+        copiable_characteristics(chosen_card, game.continuous_effects.active(game))
+        if chosen_card.zone is Zone.BATTLEFIELD
+        else None
+    )
+    # CR 707.9f: a gated exception ("if it's a creature, ...") applies
+    # only when the copy would have that type without it - every other
+    # exception taken into account.
+    copied_types = set(
+        (copiable if copiable is not None else printed_characteristics(chosen_card)).types
+    ) | set(exception.added_types)
+    gate_holds = exception.if_type is None or exception.if_type in copied_types
+    added_abilities = exception.added_abilities + (
+        exception.if_type_abilities if gate_holds else ()
+    )
+    if gate_holds:
+        # CR 707.9e: "it enters with ... additional counters" is an
+        # additional effect of the replacement, not a copiable value.
+        for kind, amount in exception.enters_with_counters:
+            event.counters[kind] = event.counters.get(kind, 0) + amount
+    # CR 306.5b / CR 714.3a / CR 310.4b: a planeswalker's loyalty, a
+    # Saga's lore counter and a battle's defense are intrinsic "enters
+    # with" abilities of what is copied, read off its copiable values
+    # (CR 707.2) - never the copier's own printing, which
+    # `Game.enter_the_battlefield` leaves unread for a copy.
+    values = copiable if copiable is not None else printed_characteristics(chosen_card)
+    copied_subtypes = set(values.subtypes) | set(exception.added_subtypes)
+    for kind, amount in (
+        (Counter.LOYALTY, values.loyalty if Type.PLANESWALKER in copied_types else None),
+        (Counter.LORE, 1 if "Saga" in copied_subtypes else None),
+        (Counter.DEFENSE, values.defense if Type.BATTLE in copied_types else None),
+    ):
+        if amount:
+            event.counters[kind] = event.counters.get(kind, 0) + amount
+    built_effects = _become_a_copy_builder(
+        until_eot=False,
+        name_override=exception.name,
+        power_override=exception.power,
+        toughness_override=exception.toughness,
+        added_types=exception.added_types,
+        added_subtypes=exception.added_subtypes,
+        added_abilities=added_abilities,
+        added_supertypes=exception.added_supertypes,
+        added_colors=exception.added_colors,
+        copiable_values=copiable,
+    )(entering, game.continuous_effects.tick(), chosen, LayerContext())
+    for built in built_effects:
+        game.continuous_effects.add(built)
+        if isinstance(built.modification, BecomeACopy):
+            event.entering_as_copy = (built.modification.name, built.modification.abilities)
+    if effect.tapped:
+        # CR 614.1c: "enter tapped as a copy of" - one replacement, so the
+        # permanent is tapped exactly when the copy choice was taken.
+        event.tapped = True
+
+    _create_linked_reflexive_trigger(game, effect, card_name, entering, chosen_card)
+
+
 def _enters_as_copy(effect: ReplacementEffect, card_name: str) -> Apply:
     """CR 614.1c's "enters as a copy of", as a thing to do before it enters.
 
@@ -2398,19 +2500,14 @@ def _enters_as_copy(effect: ReplacementEffect, card_name: str) -> Apply:
     """
 
     def apply(game: "Game", source: CardState | None, event: ReplaceableEvent) -> None:
-        # Imported here rather than at module scope: `machines/layers.py` is a
-        # sibling this module is imported by, the same reason `keywords` and
-        # `casting` are imported inside `_stack_replacements`.
-        from ..layers import (
-            BecomeACopy,
-            LayerContext,
-            _become_a_copy_builder,
-            copiable_characteristics,
-            printed_characteristics,
-        )
-
         entering = event.card
         if entering is None or entering.controller is None:
+            return
+        if effect.condition is not None and not game.condition_holds(
+            entering.controller, effect.condition, entering
+        ):
+            # Protean Raider's "Raid - If you attacked this turn, you may have
+            # this creature enter as a copy": the gate is read as it enters.
             return
         if effect.copy_exception_unparsed is not None:
             game.unreadable_copy_exception_notices.append(
@@ -2451,67 +2548,7 @@ def _enters_as_copy(effect: ReplacementEffect, card_name: str) -> Apply:
         chosen = [by_id[card_id] for card_id in chosen_id if card_id in by_id]  # type: ignore[union-attr]
         if not chosen:
             return
-        exception = effect.copy_exception or CopyException()
-        # CR 707.2: "as modified by other copy effects" - a battlefield
-        # candidate that is itself a copy is copied as what it copies. A
-        # graveyard card has no copy effect on it (CR 613.5 is about the
-        # battlefield), so its printed values are its copiable ones.
-        copiable = (
-            copiable_characteristics(chosen[0], game.continuous_effects.active(game))
-            if chosen[0].zone is Zone.BATTLEFIELD
-            else None
-        )
-        # CR 707.9f: a gated exception ("if it's a creature, ...") applies
-        # only when the copy would have that type without it - every other
-        # exception taken into account.
-        copied_types = set(
-            (copiable if copiable is not None else printed_characteristics(chosen[0])).types
-        ) | set(exception.added_types)
-        gate_holds = exception.if_type is None or exception.if_type in copied_types
-        added_abilities = exception.added_abilities + (
-            exception.if_type_abilities if gate_holds else ()
-        )
-        if gate_holds:
-            # CR 707.9e: "it enters with ... additional counters" is an
-            # additional effect of the replacement, not a copiable value.
-            for kind, amount in exception.enters_with_counters:
-                event.counters[kind] = event.counters.get(kind, 0) + amount
-        # CR 306.5b / CR 714.3a / CR 310.4b: a planeswalker's loyalty, a
-        # Saga's lore counter and a battle's defense are intrinsic "enters
-        # with" abilities of what is copied, read off its copiable values
-        # (CR 707.2) - never the copier's own printing, which
-        # `Game.enter_the_battlefield` leaves unread for a copy.
-        values = copiable if copiable is not None else printed_characteristics(chosen[0])
-        copied_subtypes = set(values.subtypes) | set(exception.added_subtypes)
-        for kind, amount in (
-            (Counter.LOYALTY, values.loyalty if Type.PLANESWALKER in copied_types else None),
-            (Counter.LORE, 1 if "Saga" in copied_subtypes else None),
-            (Counter.DEFENSE, values.defense if Type.BATTLE in copied_types else None),
-        ):
-            if amount:
-                event.counters[kind] = event.counters.get(kind, 0) + amount
-        built_effects = _become_a_copy_builder(
-            until_eot=False,
-            name_override=exception.name,
-            power_override=exception.power,
-            toughness_override=exception.toughness,
-            added_types=exception.added_types,
-            added_subtypes=exception.added_subtypes,
-            added_abilities=added_abilities,
-            added_supertypes=exception.added_supertypes,
-            added_colors=exception.added_colors,
-            copiable_values=copiable,
-        )(entering, game.continuous_effects.tick(), chosen, LayerContext())
-        for built in built_effects:
-            game.continuous_effects.add(built)
-            if isinstance(built.modification, BecomeACopy):
-                event.entering_as_copy = (built.modification.name, built.modification.abilities)
-        if effect.tapped:
-            # CR 614.1c: "enter tapped as a copy of" - one replacement, so the
-            # permanent is tapped exactly when the copy choice was taken.
-            event.tapped = True
-
-        _create_linked_reflexive_trigger(game, effect, card_name, entering, chosen[0])
+        _apply_copy_of(game, effect, card_name, source, event, entering, chosen[0])
 
     return apply
 
@@ -2767,7 +2804,9 @@ def _self_enters_modifiers(
                 )
                 continue
 
-        if effect.kind is ReplacementKind.ENTERS_AS_COPY and effect.condition is None:
+        if effect.kind is ReplacementKind.ENTERS_AS_COPY and (
+            effect.condition is None or conditions_claims(effect.condition)
+        ):
             # CR 614.1c / 616.1c. `_enters_as_copy` refuses a `copy_of` phrase
             # it cannot read, so a card whose candidates this cannot work out
             # enters as itself rather than as a guess.
@@ -2802,6 +2841,18 @@ def _self_enters_modifiers(
                             counted_action, parsed[follower], card_state.card.name
                         ),
                         f"{effect.text} {parsed[follower].text}",
+                        False,
+                    )
+                )
+                continue
+            if counted_action is not None and follower is None:
+                # A bare "As [this] enters, <action>" with no sentence sizing
+                # counters from it: Dermotaxi's imprint (CR 607.2a).
+                performable.append(
+                    (
+                        f"{key}:{index}",
+                        _action_alone(counted_action, card_state.card.name),
+                        effect.text,
                         False,
                     )
                 )

@@ -379,6 +379,40 @@ def _parse_move_counter_clause(text: str) -> AbilityEffect | None:
     return effect
 
 
+#: "Put a number of `<kind>` counters equal to the power of the card you
+#: exiled on target creature." - CR 702.97a's whole scavenge effect. "The card
+#: you exiled" is the object the ability's own cost exiled, found by id
+#: wherever it is now (CR 113.7a), and its power is the one it had there
+#: (CR 208.3's printed power for a card outside the battlefield).
+_COUNTERS_EQUAL_TO_EXILED_POWER_RE = re.compile(
+    r"^put a number of (?P<kind>\+1/\+1|-1/-1|[a-z]+) counters equal to the power of the "
+    r"card you exiled on (?P<phrase>target .+?)\.?$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s36")
+def _parse_counters_equal_to_exiled_power_clause(text: str) -> AbilityEffect | None:
+    """`_COUNTERS_EQUAL_TO_EXILED_POWER_RE`'s shape, or `None`."""
+    match = _COUNTERS_EQUAL_TO_EXILED_POWER_RE.fullmatch(text.strip())
+    if match is None or not _targets_understood(match.group("phrase"), count_agnostic=False):
+        return None
+    kind = _counter_kind(match.group("kind"))
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        exiled = ability.source(game)
+        if exiled is None:
+            return
+        power = game.characteristics_of(exiled).power
+        if power is None or power <= 0:
+            return
+        for target in game.resolve_targets(ability):
+            if isinstance(target, CardState) and target.zone is Zone.BATTLEFIELD:
+                game.add_counters(target, kind, power)
+
+    return effect
+
+
 def put_counters_on_ability_targets(
     kind: Counter | str,
     amount: int,

@@ -30,6 +30,7 @@ from ..casting_restrictions import (
     CastingRuleKind,
     combat_lockdown_restriction_source,
     has_sorcery_speed_flash_grant,
+    own_play_prohibition_source,
     restricted_from_noncreature_casting,
     sorcery_speed_restriction_source,
     targeted_cant_cast_restriction,
@@ -73,7 +74,13 @@ from ..keywords import (
 )
 from ..modes import ModalProfile, Mode, modal_profile, substitute_x, x_restriction_refusal
 from ..objects_as_costs import power_of
-from ..spell_grants import casualty_numbers, conspire_count, granted_affinity_reductions
+from ..spell_grants import (
+    casualty_numbers,
+    conspire_count,
+    granted_affinity_reductions,
+    granted_zone_keyword_lines,
+    replicate_costs,
+)
 from ..targeting import (
     TargetingProfile,
     face_spell_profile,
@@ -476,6 +483,7 @@ def why_cannot_cast_now(
             _keyword_option_answers_timing(option)
             for option in [
                 *(o for o in castable_from(spell.card, spell.zone) if not o.casts_transformed),
+                *marker_cast_options(spell),
                 *(
                     granted.option
                     for granted in granted_cast_options(game, spell, caster, spell.zone)
@@ -612,6 +620,12 @@ def why_cannot_cast_restriction(
     if targeted is not None:
         which = "noncreature spells" if targeted.noncreature_only else "spells"
         return f"{targeted.source_name} says {caster} can't cast {which} this turn (CR 611.1)"
+    own_ban = own_play_prohibition_source(game, caster, zone=spell.zone, land=False)
+    if own_ban is not None:
+        return (
+            f"{own_ban} says {caster} can't cast spells from their {spell.zone.value} "
+            f"(CR 601.3, CR 101.2)"
+        )
     prohibited_from = zone_cast_prohibition_source(game, spell.card, spell.zone, types=types)
     if prohibited_from is not None:
         # Grafdigger's Cage's "Players can't cast spells from graveyards or
@@ -1123,6 +1137,10 @@ class Casting(EngineModel):
     """The exile pile the card was in before that move (CR 406.5): plot,
     foretell, madness and warp all cast out of a *particular* pile, and the
     move to the stack drops the annotation."""
+    announced_granted_ability_texts: tuple[str, ...] = ()
+    """The keyword lines the card was granted before that move (a madness it
+    was discarded with, CR 702.35a): CR 400.7 clears them on the move, and the
+    cast option they name is asked of `_as_announced`."""
     announced_counters: Counters | None = None
     """The counters the card carried before that move (CR 122.1; CR 122.2 and
     CR 400.7 strip them as CR 601.2a moves it to the stack): Draugr
@@ -1321,6 +1339,7 @@ class Casting(EngineModel):
         self.announced_stamp = self.spell.zone_change_stamp
         self.announced_exile_annotation = self.spell.exile_annotation
         self.announced_counters = self.spell.counters.model_copy(deep=True)
+        self.announced_granted_ability_texts = self.spell.granted_ability_texts
         self.announced_discarded_by = self.spell.discarded_by
         self.announced_discarded_on_turn = self.spell.discarded_on_turn
         if self.spell.zone is Zone.LIBRARY:
@@ -1409,6 +1428,7 @@ class Casting(EngineModel):
                 "zone": self.announced_zone,
                 "zone_change_stamp": self.announced_stamp,
                 "exile_annotation": self.announced_exile_annotation,
+                "granted_ability_texts": self.announced_granted_ability_texts,
                 **(
                     {"counters": self.announced_counters}
                     if self.announced_counters is not None
@@ -3519,7 +3539,11 @@ class Casting(EngineModel):
         return self.step
 
     def pay_replicate(
-        self, times: int = 1, *, choosing: list[CardState] | None = None
+        self,
+        times: int = 1,
+        *,
+        choosing: list[CardState] | None = None,
+        which: str | None = None,
     ) -> CastingStep:
         """CR 702.56a: pay this spell's replicate cost as an additional cost,
         any number of times.
@@ -3539,18 +3563,21 @@ class Casting(EngineModel):
         was paid for it" clause and by `machines/keywords._replicate_effect`,
         the same way `kicked` is read by "if it was kicked".
         """
-        ability = _keyword(self.spell.card, "replicate")
-        if ability is None:
+        costs = replicate_costs(self.game, self.spell, self.caster, self.origin_zone)
+        if not costs:
             raise ValueError(f"{self.spell.name} has no replicate ability (CR 702.56a)")
+        if which is not None and which not in costs:
+            raise ValueError(f"{self.spell.name} has no replicate cost {which!r} (CR 702.56a)")
+        replicate_cost = which if which is not None else costs[0]
         if times < 1:
             raise ValueError("replicate is paid at least once or not at all")
 
         remaining = list(choosing or [])
         for _ in range(times):
-            cost = total_cost_for_phrase(ability.cost or "", self.caster)
+            cost = total_cost_for_phrase(replicate_cost, self.caster)
             if cost is None:
                 raise ValueError(
-                    f"{self.spell.name}'s replicate cost {ability.cost!r} could not be read, "
+                    f"{self.spell.name}'s replicate cost {replicate_cost!r} could not be read, "
                     f"so it cannot be paid"
                 )
             for component in cost.components:
@@ -4456,6 +4483,8 @@ class Casting(EngineModel):
                         self.game is not None
                         and self.game.spends_mana_as_any_color_for_spell(self.spell, self.caster)
                     ),
+                    "any_type": self.game is not None
+                    and self.game.spends_mana_of_any_type_for_spell(self.spell, self.caster),
                 }
             ),
         )
@@ -5198,6 +5227,7 @@ class Casting(EngineModel):
         self.spell.zone = self.announced_zone
         self.spell.zone_change_stamp = self.announced_stamp
         self.spell.exile_annotation = self.announced_exile_annotation
+        self.spell.granted_ability_texts = self.announced_granted_ability_texts
         self.spell.discarded_by = self.announced_discarded_by
         self.spell.discarded_on_turn = self.announced_discarded_on_turn
         self.announced_zone = None
@@ -5257,7 +5287,11 @@ def static_free_cast_grants(game: Any, caster: str) -> list[tuple[str, StaticFre
     # whole battlefield every call (CR 613.5).
     board = game.computed_board()
     for permanent in getattr(game, "battlefield", []):
-        if permanent.controller != caster:
+        yours = permanent.controller == caster
+        if not yours and not any(
+            "each player casts" in line for line in board.of(permanent).abilities
+        ):
+            # Only a grant that names every player reaches past its controller.
             continue
         static_lines = {
             ability.raw.strip()
@@ -5266,7 +5300,7 @@ def static_free_cast_grants(game: Any, caster: str) -> list[tuple[str, StaticFre
         }
         for line in static_lines:
             grant = static_free_cast_grant(line)
-            if grant is not None:
+            if grant is not None and (yours or grant.first_spell_each_players_turn):
                 grant = grant.model_copy(update={"source_id": permanent.id})
                 if grant.once_each_of_your_turns or grant.once_each_turn:
                     grant = grant.model_copy(
@@ -5367,6 +5401,12 @@ def static_free_cast_refusal(
                 f"{source_name} only applies to spells with mana value {cap} or less, and "
                 f"{card.name} is {card.mana_value}"
             )
+    if grant.first_spell_each_players_turn:
+        turn = getattr(game, "turn", None)
+        if turn is None or turn.active_player != caster:
+            return f"{source_name} applies only during your own turn (CR 118.9)"
+        if game.spells_cast_this_turn.get(caster):
+            return f"{source_name} only applies to the first spell you cast this turn (CR 118.9)"
     if grant.once_each_turn:
         used = getattr(game, "once_per_turn_cast_permissions_used", {})
         if grant.once_per_turn_key in used:
@@ -5449,6 +5489,10 @@ class MarkedExile(EngineModel):
     game: Any = Field(default=None, exclude=True, repr=False)
     payment: CostPayment | None = None
     taken: bool = False
+    granted_ability_texts: tuple[str, ...] = ()
+    """Foretell only: the "Foretell {cost}" line a static ability gave the card
+    in hand (CR 702.143a - Dream Devourer's grant), stamped on it in exile so
+    the later cast finds the cost it was given."""
     time_counters: int | None = None
     """Suspend only (CR 702.62a): the N of "Suspend N-[cost]", put on the card
     as `Counter.TIME` once it reaches exile. `None` for plot and foretell,
@@ -5493,7 +5537,8 @@ class MarkedExile(EngineModel):
         CR 116.2h allows it "any time they have priority during their turn", so
         unlike plot it is not restricted to a main phase or an empty stack.
         """
-        if _keyword(card.card, "foretell") is None:
+        granted = tuple(granted_zone_keyword_lines(game, card, "foretell"))
+        if _keyword(card.card, "foretell") is None and not granted:
             raise ValueError(f"{card.name} has no foretell ability (CR 702.143a)")
         if (
             game is not None
@@ -5512,10 +5557,13 @@ class MarkedExile(EngineModel):
             rule="CR 116.2h",
             face_down=True,
             game=game,
+            granted_ability_texts=() if _keyword(card.card, "foretell") else granted[:1],
         )
 
     @classmethod
-    def suspend(cls, game: Any, card: CardState, player: str) -> "MarkedExile":
+    def suspend(
+        cls, game: Any, card: CardState, player: str, x_value: int | None = None
+    ) -> "MarkedExile":
         """CR 116.2f: exile a card with suspend from hand, paying its suspend cost.
 
         "'Suspend N-[cost]' means 'If you could begin to cast this card by
@@ -5551,11 +5599,23 @@ class MarkedExile(EngineModel):
                 f"{card.name} could not begin to be cast right now, so it cannot be "
                 f"suspended: {refusal} (CR 116.2f, CR 702.62c)"
             )
-        if ability.count is None:
+        counters = ability.count
+        if ability.count_is_x:
+            # "Suspend X—{X}{3}{U}. X can't be 0.": the player announces X as
+            # they suspend (CR 107.3a); it is the number of time counters and
+            # the X in the cost (CR 107.3b).
+            if x_value is None:
+                raise ValueError(f"announce X to suspend {card.name} (CR 107.3a, CR 702.62a)")
+            if x_value < (ability.count_minimum or 0):
+                raise ValueError(f"{card.name}'s suspend X can't be 0 (CR 702.62a)")
+            counters = x_value
+        if counters is None:
             raise ValueError(f"{card.name}'s suspend count could not be read (CR 702.62a)")
         cost = total_cost_for_phrase(ability.cost or "") if ability.cost else TotalCost()
         if cost is None:
             raise ValueError(f"{card.name}'s suspend cost could not be read (CR 702.62a)")
+        if ability.count_is_x:
+            cost = cost.model_copy(update={"mana": cost.mana.with_x(counters)})
         return cls(
             card=card,
             player=player,
@@ -5563,7 +5623,7 @@ class MarkedExile(EngineModel):
             cost=cost.assign_payer(player),
             rule="CR 116.2f",
             game=game,
-            time_counters=ability.count,
+            time_counters=counters,
         )
 
     def begin_paying(self) -> CostPayment:
@@ -5607,6 +5667,19 @@ class MarkedExile(EngineModel):
         if self.face_down:
             self.card.turn_face_down()
         annotate_exile(self.card, self.marker, self.player, self.game)
+        if self.granted_ability_texts:
+            self.card.granted_ability_texts = self.granted_ability_texts
+        if self.marker is ExileMarker.FORETOLD:
+            # CR 702.143c: "foretelling a card" is this special action.
+            self.game.emit(
+                GameEvent(
+                    event=ExtraTriggerEvent.FORETOLD,
+                    subject_id=self.card.id,
+                    subject_name=self.card.name,
+                    subject_card=self.card.card,
+                    player=self.player,
+                )
+            )
         if self.time_counters is not None:
             # CR 702.62a: "... exile it with N time counters on it."
             self.game.add_counters(self.card, Counter.TIME, self.time_counters)
@@ -5669,6 +5742,15 @@ def remove_suspend_time_counter(game: Any, card: CardState) -> int:
         return card.counter_count(Counter.TIME)
     card.remove_counters(Counter.TIME, 1)
     remaining = card.counter_count(Counter.TIME)
+    game.emit(
+        GameEvent(
+            event=ExtraTriggerEvent.TIME_COUNTER_REMOVED,
+            subject_id=card.id,
+            subject_name=card.name,
+            subject_card=card.card,
+            player=card.owner,
+        )
+    )
     if remaining == 0:
         game.emit(
             GameEvent(

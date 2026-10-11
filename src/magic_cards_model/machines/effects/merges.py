@@ -2041,6 +2041,35 @@ _DISCARD_AT_RANDOM_RE = re.compile(
     rf"^discards? (?:a card|(?P<n>{COUNT}) cards?) at random$", re.IGNORECASE
 )
 
+#: "Shuffle your hand and graveyard into your library, then draw seven cards." (Weftwalking's
+#: enters trigger) - the controller-only twin of Day's Undoing's "each player shuffles ...".
+#: CR 701.24a: the cards go to their owners' libraries, which are shuffled; CR 121.2 draws.
+_SHUFFLE_OWN_HAND_GRAVEYARD_THEN_DRAW_RE = re.compile(
+    rf"^shuffle your hand and graveyard into your library, then draw (?P<count>{COUNT}) cards?\.?$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s1")
+def _parse_shuffle_own_hand_graveyard_then_draw_text(text: str) -> "AbilityEffect | None":
+    """`_SHUFFLE_OWN_HAND_GRAVEYARD_THEN_DRAW_RE`'s shape, or `None`."""
+    match = _SHUFFLE_OWN_HAND_GRAVEYARD_THEN_DRAW_RE.fullmatch(" ".join(text.split()))
+    if match is None:
+        return None
+    count = parse_count(match.group("count"))
+    if count is None:
+        return None
+
+    def effect(game: Any, ability: Any) -> None:
+        player = game.player(game.controller_of(ability).username)
+        for card_state in list(player.hand) + list(player.graveyard):
+            player.move(card_state, Zone.LIBRARY)
+        game.shuffle_library(player)
+        game.draw_cards(player.username, count)
+
+    return effect
+
+
 #: "shuffles their hand and graveyard into their library" - Day's Undoing.
 _SHUFFLE_HAND_AND_GRAVEYARD_RE = re.compile(
     r"^shuffles? (?:their|his or her) hand and graveyard into (?:their|his or her) library$",

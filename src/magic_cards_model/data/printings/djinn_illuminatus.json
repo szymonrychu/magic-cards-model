@@ -1,0 +1,135 @@
+{
+  "object": "card",
+  "id": "7c784b00-dcef-4640-a305-5ff1baf2e6fd",
+  "oracle_id": "d7dcf1be-2779-419d-8c90-03800f9e7ea2",
+  "multiverse_ids": [
+    482838
+  ],
+  "tcgplayer_id": 212310,
+  "cardmarket_id": 454193,
+  "name": "Djinn Illuminatus",
+  "lang": "en",
+  "released_at": "2020-04-17",
+  "uri": "https://api.scryfall.com/cards/7c784b00-dcef-4640-a305-5ff1baf2e6fd",
+  "scryfall_uri": "https://scryfall.com/card/c20/210/djinn-illuminatus?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T08:25:49Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/7/c/7c784b00-dcef-4640-a305-5ff1baf2e6fd.jpg?1783931149",
+    "normal": "https://cards.scryfall.io/normal/front/7/c/7c784b00-dcef-4640-a305-5ff1baf2e6fd.jpg?1783931149",
+    "large": "https://cards.scryfall.io/large/front/7/c/7c784b00-dcef-4640-a305-5ff1baf2e6fd.jpg?1783931149",
+    "png": "https://cards.scryfall.io/png/front/7/c/7c784b00-dcef-4640-a305-5ff1baf2e6fd.png?1783931149",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/7/c/7c784b00-dcef-4640-a305-5ff1baf2e6fd.jpg?1783931149",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/7/c/7c784b00-dcef-4640-a305-5ff1baf2e6fd.jpg?1783931149",
+    "thumb": "https://cards.scryfall.io/thumb/front/7/c/7c784b00-dcef-4640-a305-5ff1baf2e6fd.webp?1783931149",
+    "grid": "https://cards.scryfall.io/grid/front/7/c/7c784b00-dcef-4640-a305-5ff1baf2e6fd.webp?1783931149",
+    "display": "https://cards.scryfall.io/display/front/7/c/7c784b00-dcef-4640-a305-5ff1baf2e6fd.webp?1783931149",
+    "art": "https://cards.scryfall.io/art/front/7/c/7c784b00-dcef-4640-a305-5ff1baf2e6fd.webp?1783931149",
+    "crop": "https://cards.scryfall.io/crop/front/7/c/7c784b00-dcef-4640-a305-5ff1baf2e6fd.webp?1783931149"
+  },
+  "mana_cost": "{5}{U/R}{U/R}",
+  "cmc": 7.0,
+  "type_line": "Creature \u2014 Djinn",
+  "oracle_text": "({U/R} can be paid with either {U} or {R}.)\nFlying\nEach instant and sorcery spell you cast has replicate. The replicate cost is equal to its mana cost. (When you cast it, copy it for each time you paid its replicate cost. You may choose new targets for the copies.)",
+  "power": "3",
+  "toughness": "5",
+  "colors": [
+    "R",
+    "U"
+  ],
+  "color_identity": [
+    "R",
+    "U"
+  ],
+  "keywords": [
+    "Flying"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": false,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "f60ec786-1f8d-42f7-9abc-0d880fe243f6",
+  "set": "c20",
+  "set_name": "Commander 2020",
+  "set_type": "commander",
+  "set_uri": "https://api.scryfall.com/sets/f60ec786-1f8d-42f7-9abc-0d880fe243f6",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Ac20&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/c20?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/7c784b00-dcef-4640-a305-5ff1baf2e6fd/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Ad7dcf1be-2779-419d-8c90-03800f9e7ea2&unique=prints",
+  "collector_number": "210",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Carl Critchlow",
+  "artist_ids": [
+    "17948f16-611a-44b8-8d10-9895a0bdfff1"
+  ],
+  "illustration_id": "19eeb116-677f-4afc-8a13-35df11b2d3e1",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "edhrec_rank": 17738,
+  "penny_rank": 15577,
+  "prices": {
+    "usd": "0.29",
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": "0.17",
+    "eur_foil": null,
+    "tix": null
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=482838&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DDjinn%2BIlluminatus",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DDjinn%2BIlluminatus",
+    "edhrec": "https://edhrec.com/route/?cc=Djinn+Illuminatus"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F212310%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=454193&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards?affiliate_id=scryfall&data%5Bsearch%5D=Djinn+Illuminatus&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

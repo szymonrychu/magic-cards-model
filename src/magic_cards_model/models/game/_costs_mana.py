@@ -695,7 +695,7 @@ class CostsManaMixin:
         return rule
 
     def _spend_as_any_color_grants(
-        self: "Game", player: str
+        self: "Game", player: str, *, any_type_only: bool = False
     ) -> Iterator[tuple[CardState, str | None]]:
         """Every battlefield permanent's CR 609.4b sentence ("You may spend
         mana as though it were mana of any color[ to cast <quality> spells].",
@@ -712,6 +712,8 @@ class CostsManaMixin:
                     if match is None:
                         continue
                     if match.group("who").lower() == "you" and not mine:
+                        continue
+                    if any_type_only and match.group("any_type") is None:
                         continue
                     if not self._still_has_static_line(source, text):
                         continue
@@ -732,6 +734,17 @@ class CostsManaMixin:
         # pile the same sentence opens to play.
         grant = linked_exile_play_grant(self, spell, caster, land=False)
         return grant is not None and grant.line.any_color
+
+    def spends_mana_of_any_type_for_spell(self: "Game", spell: CardState, caster: str) -> bool:
+        """Whether "mana of any type can be spent" to cast `spell` (CR 609.4b:
+        Vizier of the Menagerie's "You can spend mana of any type to cast
+        creature spells."), which also lets coloured mana pay a `{C}` symbol."""
+        from ...machines.next_spell import spell_has_quality
+
+        return any(
+            scope is None or spell_has_quality(spell, scope.lower())
+            for _source, scope in self._spend_as_any_color_grants(caster, any_type_only=True)
+        )
 
     @staticmethod
     def _resulting_mana_value(card: CardState, option: str | None) -> int:
@@ -2015,6 +2028,7 @@ class CostsManaMixin:
         makes tapping a source during payment an activation of its mana
         ability all the same, so the rider cannot depend on who chose it.
         """
+        self._pay_additional_mana_ability_life(controller, source)
         if rider is None:
             return
         if rider.kind == "damage_to_controller":
@@ -2034,6 +2048,25 @@ class CostsManaMixin:
                 else:
                     self.lose_life(opponent, rider.amount)
 
+    def _pay_additional_mana_ability_life(self: "Game", controller: str, source: CardState) -> None:
+        """CR 605.3a / CR 118.8: "Mana abilities of this land cost an additional
+        1 life to activate." (Thran Portal) is a static additional cost on
+        every mana ability of the permanent, paid as the ability is activated
+        - the one funnel both activation routes share. CR 119.4: a player can
+        pay life only up to their life total; the 1 life of the only card
+        printing this can never exceed it while the player is still in the
+        game, so there is nothing further to refuse."""
+        try:
+            lines = self.characteristics_of(source).abilities
+        except KeyError:
+            return
+        for line in lines:
+            if "additional" not in line.lower():
+                continue
+            amount = additional_mana_ability_life(line)
+            if amount:
+                self.lose_life(self.player(controller), amount)
+
     def why_cannot_pay_with(self: "Game", controlled: str, source: CardState) -> str | None:
         """Why this permanent cannot pay a controlled player's cost (CR 723.5a).
 
@@ -2047,6 +2080,21 @@ class CostsManaMixin:
         payment cannot disagree.
         """
         return why_payer_cannot_use(source, controlled, self)
+
+
+_ADDITIONAL_MANA_ABILITY_LIFE_RE = re.compile(
+    r"^mana abilities of (?:this|that) (?:land|creature|artifact|permanent) cost an additional "
+    r"(?P<n>\d+) life to activate\.?$",
+    re.IGNORECASE,
+)
+
+
+def additional_mana_ability_life(line: str) -> int:
+    """The life a "Mana abilities of this <permanent> cost an additional N
+    life to activate." line adds to each mana ability, or 0 for any other
+    line (CR 118.8's additional cost, here on every mana ability)."""
+    match = _ADDITIONAL_MANA_ABILITY_LIFE_RE.fullmatch(line.strip())
+    return int(match.group("n")) if match else 0
 
 
 from ._common import (  # noqa: E402

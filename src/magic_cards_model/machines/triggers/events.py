@@ -118,6 +118,11 @@ class ExtraTriggerEvent(StrEnum):
     #: and Greater Gargadon's printed "Sacrifice an artifact, creature, or
     #: land: Remove a time counter from this card" - raise it alike.
     LAST_TIME_COUNTER_REMOVED = "last_time_counter_removed"
+    #: "Whenever a time counter is removed from this card while it's exiled"
+    #: (Aeon Chronicler, Roiling Horror): every time counter a suspended card
+    #: loses, the last one included. `GameEvent.subject_id` is the card.
+    #: **Emitted by:** `machines/casting.remove_suspend_time_counter`.
+    TIME_COUNTER_REMOVED = "time_counter_removed"
     #: "When the last `<kind>` counter is removed from this permanent" for
     #: any other counter kind - a Siege's intrinsic defeat trigger (CR
     #: 310.12b) is the one that needs it. Raised by `CardState.remove_counters`
@@ -210,6 +215,12 @@ class ExtraTriggerEvent(StrEnum):
     #: `machines/keywords.KeywordActivation` once a cycling or typecycling
     #: activation is on the stack, its cost paid.
     CYCLED = "cycled"
+    #: CR 702.143c: "If an effect refers to foretelling a card, it means
+    #: performing the special action associated with a foretell ability" -
+    #: raised once that special action (CR 116.2h) has exiled the card.
+    #: `GameEvent.subject_id` is the foretold card, `GameEvent.player` who
+    #: foretold it. **Emitted by:** `MarkedExile.take` for the foretell marker.
+    FORETOLD = "foretold"
     #: CR 602.2: "To activate an ability is to put it onto the stack and pay
     #: its costs" - raised for every activated ability that does that, and
     #: so never for a mana ability (CR 605.3b: it does not use the stack).
@@ -957,6 +968,13 @@ class AbilityOnStack(EngineModel):
     token has ceased to exist (CR 704.5d), which happens before this ability
     resolves; see `CastRecord.additional_cost_mana_values`, its spell twin."""
 
+    cost_sacrificed_color_counts: tuple[int, ...] = ()
+    """`cost_sacrificed_card_ids`' colour counts, aligned by position and taken
+    by `Game.activate_ability` as this object is created, for the same reason
+    `cost_sacrificed_mana_values` is (CR 608.2h's last known information; a
+    sacrificed token has ceased to exist, CR 704.5d, by resolution) - Evolving
+    Door's "Count the colors of the sacrificed creature" (CR 105.1)."""
+
     cost_sacrificed_powers: tuple[int | None, ...] = ()
     """`cost_sacrificed_card_ids`' powers, aligned by position and taken by
     `Game.activate_ability` as this object is created - CR 608.2h's last known
@@ -1331,3 +1349,6 @@ class _TypedWhose(NamedTuple):
 
     equipped: bool
     alternatives: tuple[tuple[bool, tuple[str, ...]], ...]
+    #: "... you control of the chosen type": the source must also be the
+    #: creature type the multiplier chose as it entered (CR 614.12a, 205.3m).
+    chosen: bool = False

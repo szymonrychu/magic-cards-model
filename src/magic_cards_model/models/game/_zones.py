@@ -2930,7 +2930,7 @@ class ZonesMixin:
             return discarded
 
     def put_into_graveyard(
-        self: "Game", card_state: CardState, *, resolving: bool = False
+        self: "Game", card_state: CardState, *, resolving: bool = False, discarded: bool = False
     ) -> CardState:
         """Move a card to its owner's graveyard, replacement effects included.
 
@@ -2993,8 +2993,22 @@ class ZonesMixin:
                 origin=Zone.BATTLEFIELD if was_on_battlefield else origin,
                 destination=Zone.GRAVEYARD,
                 resolving=resolving,
+                discarded=discarded,
+                # CR 701.9a: a discard is caused by the spell or ability
+                # resolving right now, if any (a cost or cleanup has none).
+                cause_controller=(
+                    self.resolving.controller if discarded and self.resolving is not None else None
+                ),
             )
             apply_replacements(self, event)
+
+            if event.destination is Zone.BATTLEFIELD:
+                # CR 614.1a: a discard replaced by "put it onto the battlefield".
+                return self.put_onto_battlefield(
+                    card_state,
+                    self._owner_of(card_state).username,
+                    counters=dict(event.counters) or None,
+                )
 
             self._take_out_of_every_zone(card_state)
             self.combat.remove(card_state.id)  # CR 506.4
@@ -3533,6 +3547,8 @@ class ZonesMixin:
         first."""
         stripped = self._static_line_without_ability_word(text)
         if self._LOOK_AT_TOP_CARD_ANY_TIME_RE.fullmatch(stripped) is not None:
+            return True
+        if self._LOOK_AT_TOP_AND_FACE_DOWN_ANY_TIME_RE.fullmatch(stripped) is not None:
             return True
         from ...machines.casting import static_zone_cast_permission
 
