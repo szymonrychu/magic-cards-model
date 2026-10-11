@@ -3645,6 +3645,13 @@ def _unread_condition_matches(
         # solved; the event's player is that Case's controller.
         return event.event is ExtraTriggerEvent.CASE_SOLVED and event.player == controller
 
+    if _FINAL_CHAPTER_RESOLVES_CONDITION.match(condition):
+        # CR 714.2e: "a Saga you control" - the event's player is the Saga's
+        # controller, and only its final chapter ability raises the event.
+        return (
+            event.event is ExtraTriggerEvent.FINAL_CHAPTER_RESOLVED and event.player == controller
+        )
+
     if _ENLISTS_A_CREATURE_CONDITION.match(condition) and mine:
         # CR 702.154b: Guardian of New Benalia's own "Whenever this creature
         # enlists a creature, scry 2." - self-referential only (CR 700.7's
@@ -5811,6 +5818,7 @@ from ._common import (  # noqa: E402
     _ENLISTS_A_CREATURE_CONDITION,
     _ENTERING_CAUSE_RE,
     _EXILE_FROM_GRAVEYARD_OR_BATTLEFIELD_CONDITION,
+    _FINAL_CHAPTER_RESOLVES_CONDITION,
     _LAND_ADDED_CHOSEN_MANA_CONDITION,
     _LAST_COUNTER_CONDITION,
     _LAST_TIME_COUNTER_CONDITION,

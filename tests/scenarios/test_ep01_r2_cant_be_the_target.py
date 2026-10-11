@@ -601,10 +601,19 @@ def test_silent_gravestone_carries_the_ground_seal_static_line():
 
 
 def test_shadrix_mode_bullets_are_each_read_by_the_production_effect_reader():
+    """The three "* Target player ..." bullets are the modes of Shadrix's
+    beginning-of-combat trigger (CR 700.2), merged into it rather than
+    parsed as orphaned static lines, and every mode is read by the
+    production effect reader: the trigger clause is `handled`."""
+    from magic_cards_model.machines.effects.modal import modal_trigger_profile
     from magic_cards_model.support import card_support
     from tests.cards import card
 
-    support = card_support(card("Shadrix Silverquill"))
-    bullets = [clause for clause in support.clauses if clause.text.startswith("•")]
-    assert len(bullets) == 3
-    assert [clause.status for clause in bullets] == ["handled"] * 3
+    printing = card("Shadrix Silverquill")
+    support = card_support(printing)
+    assert not [clause for clause in support.clauses if clause.text.startswith("\u2022")]
+    (trigger,) = [clause for clause in support.clauses if clause.kind == "triggered"]
+    assert trigger.status == "handled"
+    effect = printing.oracle_text.split("\n", 1)[1].split(", ", 1)[1].replace("\n", " ")
+    profile = modal_trigger_profile(effect)
+    assert profile is not None and len(profile.modes) == 3

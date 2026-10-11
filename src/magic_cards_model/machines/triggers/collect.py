@@ -116,6 +116,8 @@ def _unread_trigger_events(condition: str) -> frozenset[TriggerEvent | ExtraTrig
         return frozenset({ExtraTriggerEvent.DOOR_UNLOCKED})
     if _SOLVE_A_CASE_CONDITION.match(lowered):
         return frozenset({ExtraTriggerEvent.CASE_SOLVED})
+    if _FINAL_CHAPTER_RESOLVES_CONDITION.match(lowered):
+        return frozenset({ExtraTriggerEvent.FINAL_CHAPTER_RESOLVED})
     if _SELF_PUT_INTO_GRAVEYARD_FROM_ANYWHERE_CONDITION.match(lowered):
         return frozenset({ExtraTriggerEvent.PUT_INTO_GRAVEYARD})
     if _ENLISTS_A_CREATURE_CONDITION.match(lowered):
@@ -1899,6 +1901,7 @@ from ._common import (  # noqa: E402
     _ENLISTS_A_CREATURE_CONDITION,
     _ENTERING_CAUSE_RE,
     _EXILE_FROM_GRAVEYARD_OR_BATTLEFIELD_CONDITION,
+    _FINAL_CHAPTER_RESOLVES_CONDITION,
     _LAND_ADDED_CHOSEN_MANA_CONDITION,
     _LAST_COUNTER_CONDITION,
     _LAST_TIME_COUNTER_CONDITION,

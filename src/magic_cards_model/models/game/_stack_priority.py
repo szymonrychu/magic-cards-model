@@ -1736,6 +1736,7 @@ class StackPriorityMixin:
                         # CR 607.2a: what this ability exiled is "exiled with"
                         # its source for the source's other linked ability.
                         link_cards_exiled_during(self, ability, exiled_before)
+                        self._announce_final_chapter_resolved(ability)
                     else:
                         self._note_unread_trigger(ability)
         except Exception:
@@ -1746,6 +1747,29 @@ class StackPriorityMixin:
         self.delayed_triggers.discard(ability)  # CR 608.2n: it ceases to exist
         self._before_priority()
         return ability
+
+    def _announce_final_chapter_resolved(self: "Game", ability: AbilityOnStack) -> None:
+        """Raise `FINAL_CHAPTER_RESOLVED` when `ability` is a Saga's final
+        chapter ability and has just finished resolving (CR 714.2e names the
+        final chapter ability: the chapter ability with the Saga's final
+        chapter number in its chapter symbol). The Saga is read as it was
+        (CR 608.2h's last known information) when it has since left."""
+        printed = ability.ability
+        if not isinstance(printed, TriggeredAbility) or printed.chapter is None:
+            return
+        saga = ability.source_or_last_known(self)
+        if saga is None or saga.final_chapter_number != printed.chapter:
+            return
+        self.emit(
+            GameEvent(
+                event=ExtraTriggerEvent.FINAL_CHAPTER_RESOLVED,
+                subject_id=saga.id,
+                subject_name=saga.name,
+                subject_controller=ability.controller,
+                player=ability.controller,
+                amount=printed.chapter,
+            )
+        )
 
     def _effect_of(self: "Game", ability: AbilityOnStack) -> object | None:
         """The scripted effect of an ability, or None if nobody has written one.

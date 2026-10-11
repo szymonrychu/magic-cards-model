@@ -3199,7 +3199,11 @@ def _combat_stages(
             return scenario, source.id
         game = scenario.game
         blocker = None
-        if "block" in lowered:
+        # "deals [combat] damage to a creature" (Kashi-Tribe Warriors): the
+        # damaged creature has to exist, so the defender blocks the attacker
+        # with a creature of its own (CR 510.1: a blocked attacker deals its
+        # combat damage to the creature blocking it).
+        if "block" in lowered or re.search(r"\bdamage to a creature\b", lowered):
             if source is not attacker and source.controller == defender:
                 if crew_number(source.card) is not None:
                     _crew(scenario, source)
@@ -4407,6 +4411,25 @@ def _enlisting(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
     yield enlist
 
 
+def _finishing_a_saga(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
+    """ "Whenever the final chapter ability of a Saga you control resolves"
+    (Tom Bombadil, CR 714.2e): a real three-chapter Saga of the controller's
+    gets its lore counters (CR 714.3c) until chapter III has been put on the
+    stack and resolved."""
+
+    def finish() -> tuple[PlayedScenario, Any]:
+        scenario = _board(battlefield=(case.card, "History of Benalia"))
+        source = _source(scenario, case, ability)
+        game = scenario.game
+        for _ in range(2):
+            game.saga_lore_step()
+            if _drive(scenario, case, source.id) is not None:
+                break
+        return scenario, source.id
+
+    yield finish
+
+
 def _animation_index(scenario: PlayedScenario, source: CardState) -> int | None:
     """The source's own activated ability that makes it a creature ("this
     land becomes a 2/3 ... creature"), read off the engine's parsed
@@ -4583,6 +4606,8 @@ def _attempts(case: Case) -> Iterator[Attempt]:
             yield from _to_graveyard(case, ability)
         elif kind == "enlists":
             yield from _enlisting(case, ability)
+        elif kind == "final_chapter_resolved":
+            yield from _finishing_a_saga(case, ability)
         elif kind == "attacks":
             yield from _animated_attack(case, ability)
         elif kind == TriggerEvent.ENTERS_THE_BATTLEFIELD.value:

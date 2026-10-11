@@ -77,7 +77,10 @@ BULLET = "•"
 #: and Spree's shared reminder-text instruction line.
 _BULLET_RE = re.compile(rf"^(?:{re.escape(BULLET)}|\+\s+)")
 
-_INSTRUCTION = re.compile(r"^choose\b(?P<rest>.*)$", re.IGNORECASE)
+_INSTRUCTION = re.compile(r"^(?P<optional>you may )?choose\b(?P<rest>.*)$", re.IGNORECASE)
+#: "Each mode must target a different player." (Shadrix Silverquill): the
+#: chosen modes' targets must be pairwise different players.
+_DISTINCT_PLAYERS = re.compile(r"\beach mode must target a different player\b", re.IGNORECASE)
 _REPEATABLE = re.compile(r"you may choose the same mode more than once", re.IGNORECASE)
 _UP_TO = re.compile(r"^\s*up to (?P<count>[\w]+)\b")
 #: "Choose any number -" (Rankle, Master of Pranks): zero to every mode, CR
@@ -164,6 +167,13 @@ class ModalProfile(EngineModel):
     maximum: int
     #: CR 700.2d: whether the card allows the same mode more than once.
     repeatable: bool = False
+    #: "You may choose two" (Shadrix Silverquill): the whole instruction is
+    #: optional - choosing no mode at all is legal (and removes the ability,
+    #: CR 700.2b), but choosing some of the modes is not.
+    optional: bool = False
+    #: "Each mode must target a different player": no two chosen modes may
+    #: aim at the same player.
+    distinct_targets: bool = False
     #: CR 702.42a: the entwine cost, if the card has entwine.
     entwine_cost: str | None = None
     #: CR 702.120a: the escalate cost, if the card has escalate.
@@ -504,6 +514,8 @@ def _parse(oracle_text: str, keywords: Iterable[str]) -> ModalProfile | None:
         "instruction": raw_instruction_line or "",
         "modes": modes,
         "repeatable": bool(_REPEATABLE.search(instruction_line)),
+        "optional": _INSTRUCTION.match(instruction_line).group("optional") is not None,  # type: ignore[union-attr]
+        "distinct_targets": _DISTINCT_PLAYERS.search(instruction_line) is not None,
         "entwine_cost": _keyword_cost(lines, _ENTWINE, "entwine", keyword_set),
         "escalate_cost": _keyword_cost(lines, _ESCALATE, "escalate", keyword_set),
     }

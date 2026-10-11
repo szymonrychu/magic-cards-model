@@ -1049,8 +1049,14 @@ class TriggersDecisionsMixin:
         source_id: UUID | None,
         source_name: str,
         text: str,
+        *,
+        excluding: set[TargetRef] | None = None,
     ) -> list[TargetRef] | None:
         """Ask `controller` for `profile`'s targets, addressed to `source_name` (CR 601.2c).
+
+        `excluding` is a set of targets that may not be offered at all - the
+        players an earlier mode of the same modal ability already aimed at,
+        when "each mode must target a different player" (Shadrix Silverquill).
 
         The shared machinery behind both halves of CR 602.2b/603.3d's "the
         remainder of the process ... is identical to the process for casting a
@@ -1103,6 +1109,8 @@ class TriggersDecisionsMixin:
             return []
 
         candidates = self._legal_target_candidates(profile, controller, source_id)
+        if excluding:
+            candidates = [c for c in candidates if TargetRef.coerce(c) not in excluding]
         if not candidates:
             self.targeting_notices.append(
                 TargetingNotice(

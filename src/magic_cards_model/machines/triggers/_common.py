@@ -275,6 +275,11 @@ _SELF_PUT_INTO_GRAVEYARD_FROM_ANYWHERE_CONDITION = re.compile(
 #: permanent's other door.
 _DOOR_UNLOCKED_CONDITION = re.compile(r"^you unlock this door$", re.IGNORECASE)
 _SOLVE_A_CASE_CONDITION = re.compile(r"^you solve a case$", re.IGNORECASE)
+#: CR 714.2e: "the final chapter ability of a Saga you control resolves"
+#: (Tom Bombadil).
+_FINAL_CHAPTER_RESOLVES_CONDITION = re.compile(
+    r"^the final chapter ability of a saga you control resolves$", re.IGNORECASE
+)
 
 #: CR 702.29c's "When you cycle this card" (Vizier of Tumbling Sands,
 #: Windcaller Aven, Choking Tethers), and the non-self "you cycle a card" /
