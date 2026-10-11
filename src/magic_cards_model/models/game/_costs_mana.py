@@ -1945,6 +1945,7 @@ class CostsManaMixin:
         makes tapping a source during payment an activation of its mana
         ability all the same, so the rider cannot depend on who chose it.
         """
+        self._pay_additional_mana_ability_life(controller, source)
         if rider is None:
             return
         if rider.kind == "damage_to_controller":
@@ -1964,6 +1965,25 @@ class CostsManaMixin:
                 else:
                     self.lose_life(opponent, rider.amount)
 
+    def _pay_additional_mana_ability_life(self: "Game", controller: str, source: CardState) -> None:
+        """CR 605.3a / CR 118.8: "Mana abilities of this land cost an additional
+        1 life to activate." (Thran Portal) is a static additional cost on
+        every mana ability of the permanent, paid as the ability is activated
+        - the one funnel both activation routes share. CR 119.4: a player can
+        pay life only up to their life total; the 1 life of the only card
+        printing this can never exceed it while the player is still in the
+        game, so there is nothing further to refuse."""
+        try:
+            lines = self.characteristics_of(source).abilities
+        except KeyError:
+            return
+        for line in lines:
+            if "additional" not in line.lower():
+                continue
+            amount = additional_mana_ability_life(line)
+            if amount:
+                self.lose_life(self.player(controller), amount)
+
     def why_cannot_pay_with(self: "Game", controlled: str, source: CardState) -> str | None:
         """Why this permanent cannot pay a controlled player's cost (CR 723.5a).
 
@@ -1977,6 +1997,21 @@ class CostsManaMixin:
         payment cannot disagree.
         """
         return why_payer_cannot_use(source, controlled, self)
+
+
+_ADDITIONAL_MANA_ABILITY_LIFE_RE = re.compile(
+    r"^mana abilities of (?:this|that) (?:land|creature|artifact|permanent) cost an additional "
+    r"(?P<n>\d+) life to activate\.?$",
+    re.IGNORECASE,
+)
+
+
+def additional_mana_ability_life(line: str) -> int:
+    """The life a "Mana abilities of this <permanent> cost an additional N
+    life to activate." line adds to each mana ability, or 0 for any other
+    line (CR 118.8's additional cost, here on every mana ability)."""
+    match = _ADDITIONAL_MANA_ABILITY_LIFE_RE.fullmatch(line.strip())
+    return int(match.group("n")) if match else 0
 
 
 from ._common import (  # noqa: E402

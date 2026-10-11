@@ -692,6 +692,9 @@ def _singular_subtype_word(word: str) -> str | None:
     candidates = [
         _IRREGULAR_SUBTYPE_PLURALS.get(lowered, lowered),
         lowered.removesuffix("s"),
+        # "Heroes" -> "hero", "Elves" -> "elf".
+        lowered.removesuffix("es"),
+        lowered.removesuffix("ves") + "f",
     ]
     if lowered.endswith("ies"):
         # "Allies" -> "ally" (Earthen Ally's "each color among Allies").
@@ -3568,6 +3571,155 @@ def _permanents_with_counter_gain_supertype_builder(
                 source_ability=_source_line_for(source, line),
                 selector=PermanentsWithCounter(counter=counter),
                 modification=AddSupertype(supertype=supertype),
+            )
+        ]
+
+    return builder
+
+
+#: "<Subject> get(s) +N/+N for each <count>." where `<count>` is anything a
+#: characteristic-defining ability could count (`_cda_base_count`), a counter
+#: on the source, or a controlled-and-graveyard double count: Aura Gnarlid's
+#: "for each Aura on the battlefield", Joraga Warcaller's "Other Elf creatures
+#: you control get +1/+1 for each +1/+1 counter on this creature.", Banner of
+#: Kinship's chosen-type group, Cid's "Artifact creatures and Heroes you
+#: control ... for each Artificer you control and each Artificer card in your
+#: graveyard.". CR 613.4c: sublayer 7c, recomputed continuously (CR 611.3a).
+_PUMP_PER_COUNT_RE = re.compile(
+    r"^(?P<subject>.+?) gets? (?P<power>[+-]\d+)/(?P<toughness>[+-]\d+) for each "
+    r"(?P<each>.+?)\.?$",
+    re.IGNORECASE,
+)
+_PUMP_PER_COUNTER_ON_SOURCE_RE = re.compile(
+    r"^(?P<counter>[+\-0-9/]+|[a-z]+) counters? on (?:this|it) (?:creature|artifact|permanent|"
+    r"enchantment|land)$",
+    re.IGNORECASE,
+)
+_PUMP_PER_CONTROLLED_AND_GRAVEYARD_RE = re.compile(
+    r"^(?P<qualifier>[a-z]+) you control and each (?P=qualifier) cards? in your graveyard$",
+    re.IGNORECASE,
+)
+_PUMP_SUBJECT_SELF_RE = re.compile(r"^this (?:creature|token|permanent)$", re.IGNORECASE)
+_PUMP_SUBJECT_CHOSEN_TYPE_RE = re.compile(
+    r"^creatures you control of the chosen type$", re.IGNORECASE
+)
+_PUMP_SUBJECT_OTHER_SUBTYPE_RE = re.compile(
+    r"^other (?P<subtype>[a-z]+) creatures you control$", re.IGNORECASE
+)
+_PUMP_SUBJECT_TYPE_AND_SUBTYPE_RE = re.compile(
+    r"^(?P<card_type>[a-z]+) creatures and (?P<subtype>[a-z]+) you control$", re.IGNORECASE
+)
+
+
+def _pump_per_count_builder(sentence: str) -> EffectBuilder | None:
+    """`_PUMP_PER_COUNT_RE`'s shape, failing closed (`None`) on a subject or
+    count it cannot read."""
+    match = _PUMP_PER_COUNT_RE.fullmatch(sentence.strip())
+    if match is None:
+        return None
+    subject = match.group("subject").strip()
+    each = match.group("each").strip().lower()
+    power, toughness = int(match.group("power")), int(match.group("toughness"))
+
+    selector_for: Callable[[CardState], Selector | None]
+    if _PUMP_SUBJECT_SELF_RE.fullmatch(subject):
+
+        def selector_for(source: CardState) -> Selector | None:
+            return _only(source.id)
+
+    elif _PUMP_SUBJECT_CHOSEN_TYPE_RE.fullmatch(subject):
+
+        def selector_for(source: CardState) -> Selector | None:
+            chosen = chosen_creature_type_of(source)
+            if chosen is None:
+                return None
+            return creatures_controlled_by_with_subtype(source.controller, [chosen])
+
+    elif other := _PUMP_SUBJECT_OTHER_SUBTYPE_RE.fullmatch(subject):
+        other_subtype = _singular_subtype_word(other.group("subtype"))
+        if other_subtype is None:
+            return None
+
+        def selector_for(source: CardState) -> Selector | None:
+            return creatures_controlled_by_with_subtype(
+                source.controller, [other_subtype], other_than=source.id
+            )
+
+    elif combined := _PUMP_SUBJECT_TYPE_AND_SUBTYPE_RE.fullmatch(subject):
+        combined_type = _card_type_word(combined.group("card_type"))
+        combined_subtype = _singular_subtype_word(combined.group("subtype"))
+        if combined_type is None or combined_subtype is None:
+            return None
+
+        def selector_for(source: CardState) -> Selector | None:
+            return CreaturesControlledByWithAnyQuality(
+                username=source.controller,
+                card_types=(combined_type,),
+                subtypes=(combined_subtype,),
+            )
+
+    else:
+        return None
+
+    count_factory: Callable[[CardState, LayerContext], Count] | None
+    counter_match = _PUMP_PER_COUNTER_ON_SOURCE_RE.fullmatch(each)
+    double = _PUMP_PER_CONTROLLED_AND_GRAVEYARD_RE.fullmatch(each)
+    if counter_match is not None:
+        kind = counter_match.group("counter").lower()
+        count_factory = lambda source, context: CountCountersOnObject(  # noqa: E731
+            object_id=source.id, counter=kind
+        )
+    elif double is not None:
+        qualifier = double.group("qualifier")
+        double_type = _card_type_word(qualifier)
+        double_subtype = None if double_type is not None else _singular_subtype_word(qualifier)
+        if double_type is None and double_subtype is None:
+            return None
+
+        def count_factory(source: CardState, context: LayerContext) -> Count:
+            return CountControlledAndGraveyardCards(
+                username=source.controller,
+                card_type=double_type,
+                subtype=double_subtype,
+                graveyard_count=sum(
+                    1
+                    for state in context.graveyard_of(source.controller)
+                    if (
+                        double_type in state.types
+                        if double_type is not None
+                        else any(word.lower() == double_subtype for word in state.subtypes)
+                    )
+                ),
+            )
+    else:
+        base = _cda_base_count(f"the number of {each}")
+        if base is None:
+            return None
+        count_factory = base
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        selector = selector_for(source)
+        if selector is None:
+            return []
+        return [
+            ContinuousEffect(
+                description=(
+                    f"{source.name}: {subject} get {power:+d}/{toughness:+d} for each {each}"
+                ),
+                layer=Layer.POWER_TOUGHNESS,
+                sublayer=Sublayer.MODIFY,
+                timestamp=timestamp,
+                source_id=source.id,
+                source_ability=_source_line_for(source, sentence),
+                selector=selector,
+                modification=modify_power_toughness_per(
+                    count_factory(source, context), power, toughness
+                ),
             )
         ]
 
@@ -12614,6 +12766,8 @@ def _parse_static_layer_sentence(sentence: str) -> EffectBuilder | None:
         return _self_chosen_basic_land_type_builder(line=sentence)
     if match := _SELF_CHOSEN_TYPE_IN_ADDITION_RE.fullmatch(sentence):
         return _self_chosen_type_in_addition_builder(match.group("kind").lower(), sentence)
+    if " for each " in sentence.lower() and (built := _pump_per_count_builder(sentence)):
+        return built
     if match := _PERMANENTS_WITH_COUNTER_ARE_SUPERTYPE_RE.fullmatch(sentence):
         return _permanents_with_counter_gain_supertype_builder(
             match.group("counter").lower(), Supertype(match.group("supertype").lower()), sentence
@@ -13093,6 +13247,7 @@ from .model import (  # noqa: E402
     CreatureQualifiers,
     CreaturesControlledBy,
     CreaturesControlledByQuality,
+    CreaturesControlledByWithAnyQuality,
     CreaturesControlledByWithSubtype,
     CreaturesOfManaValueParity,
     CreaturesWithSubtype,

@@ -991,6 +991,31 @@ class EveryCreature(SelectorBase):
         return chars.is_creature
 
 
+class CreaturesControlledByWithAnyQuality(SelectorBase):
+    """ "<Type> creatures and <Subtype>s you control" - a creature its
+    controller controls that has one of `card_types` or one of `subtypes`
+    (Cid, Timeless Artificer's "Artifact creatures and Heroes you control";
+    CR 205.2b's disjunction of qualities)."""
+
+    kind: Literal["creatures_controlled_by_with_any_quality"] = (
+        "creatures_controlled_by_with_any_quality"
+    )
+    username: str | None = None
+    card_types: tuple[Type, ...] = ()
+    subtypes: tuple[str, ...] = ()
+
+    def __call__(self, chars: Characteristics, board: Board) -> bool:
+        wanted = {subtype.lower() for subtype in self.subtypes}
+        return (
+            chars.is_creature
+            and chars.controller == self.username
+            and (
+                any(card_type in chars.types for card_type in self.card_types)
+                or any(subtype.lower() in wanted for subtype in chars.subtypes)
+            )
+        )
+
+
 class PermanentsWithCounter(SelectorBase):
     """Every permanent with at least one `counter` counter on it, whoever
     controls it (CR 122.1) - Rimefeather Owl's "Permanents with ice counters
@@ -1923,6 +1948,7 @@ Selector = Annotated[
     | CreatureControlledByWithId
     | EveryCreature
     | PermanentsWithCounter
+    | CreaturesControlledByWithAnyQuality
     | SameNameAs
     | CreaturesControlledBy
     | OtherCreaturesControlledBy

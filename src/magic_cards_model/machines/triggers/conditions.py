@@ -5675,6 +5675,9 @@ def _typed_whose(whose: str) -> _TypedWhose | None:
     text = whose.strip()
     if text.lower() == "equipped creature":
         return _TypedWhose(equipped=True, alternatives=())
+    chosen = text.lower().endswith(" of the chosen type")
+    if chosen:
+        text = text[: -len(" of the chosen type")].strip()
     if not text.lower().endswith(" you control"):
         return None
     text = text[: -len(" you control")].strip()
@@ -5693,7 +5696,9 @@ def _typed_whose(whose: str) -> _TypedWhose | None:
         ):
             return None
         alternatives.append((match["article"].lower() == "another", words))
-    return _TypedWhose(equipped=False, alternatives=tuple(alternatives)) if alternatives else None
+    if not alternatives:
+        return None
+    return _TypedWhose(equipped=False, alternatives=tuple(alternatives), chosen=chosen)
 
 
 def _typed_source_matches(
@@ -5717,6 +5722,14 @@ def _typed_source_matches(
             | {supertype.value.lower() for supertype in source.card.supertypes}
             | {subtype.lower() for subtype in source.subtypes}
         )
+    if whose.chosen:
+        choice = multiplier.choice
+        if (
+            choice is None
+            or choice.kind is not ChoiceKind.CREATURE_TYPE
+            or choice.value.lower() not in have
+        ):
+            return False
     # Only a permanent's ability is ever multiplied (`additional_trigger_times`
     # returns early off the battlefield), so "a permanent you control" is met.
     have.add("permanent")

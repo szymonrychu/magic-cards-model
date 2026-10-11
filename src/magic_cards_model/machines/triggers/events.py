@@ -1322,3 +1322,6 @@ class _TypedWhose(NamedTuple):
 
     equipped: bool
     alternatives: tuple[tuple[bool, tuple[str, ...]], ...]
+    #: "... you control of the chosen type": the source must also be the
+    #: creature type the multiplier chose as it entered (CR 614.12a, 205.3m).
+    chosen: bool = False
