@@ -20,6 +20,7 @@ from ...models.card_state import (
 from ...numbers import COUNT, parse_count, where_x_pattern
 from ..abilities import (
     ActivatedAbility,
+    _is_activated_mana_ability as is_activated_mana_ability,
     _split_top_level_sentences,
     layer_readable_sentences,
     leveler_lines,
@@ -45,7 +46,9 @@ from .model import DOESNT_UNTAP_TEXT
 
 #: What the effect does to one object it applies to. Pure: returns a new
 #: `Characteristics`, never edits the one it was handed.
-def activated_ability_lines(lines: Iterable[str], name: str) -> tuple[str, ...]:
+def activated_ability_lines(
+    lines: Iterable[str], name: str, *, include_mana: bool = True
+) -> tuple[str, ...]:
     """The activated abilities (CR 602.1) among an object's ability `lines`,
     each with its own name rewritten to "this permanent" (CR 201.5b) - the form
     it takes once another object has it, since the self-reference then means
@@ -58,7 +61,9 @@ def activated_ability_lines(lines: Iterable[str], name: str) -> tuple[str, ...]:
     found: list[str] = []
     for line in lines:
         if any(
-            isinstance(ability, ActivatedAbility) for ability in parse_granted_ability_lines([line])
+            isinstance(ability, ActivatedAbility)
+            and (include_mana or not is_activated_mana_ability(ability))
+            for ability in parse_granted_ability_lines([line])
         ):
             found.append(self_normalized_effect_text(name, line))
     return tuple(dict.fromkeys(found))
@@ -11408,11 +11413,13 @@ _HAS_ALL_ACTIVATED_ABILITIES_RE = re.compile(
     r"battlefield), )?"
     r"(?P<subject>this (?:creature|permanent|artifact)|it"
     r"|creatures you control with (?:an? )?(?P<counter>[+-]\d+/[+-]\d+|[a-z]+) counters? on them)"
-    r" (?:has|have) all activated abilities of all "
+    r" (?:has|have) all activated abilities of (?:all )?"
     r"(?:(?:(?P<pile_types>[a-z]+(?:,? (?:and |or )?[a-z]+)*) )?cards exiled with (?:this \w+|it)"
+    r"|(?P<the_exiled>the exiled cards?)"
     r"|(?:(?P<graveyard_types>[a-z]+(?:,? (?:and |or )?[a-z]+)*) )?cards in "
     r"(?P<graveyard_whose>your graveyard|all graveyards)"
-    r"|(?P<board_types>[a-z]+)(?P<board_whose> your opponents control| you control)?)\.?$",
+    r"|(?P<board_types>[a-z]+)(?P<board_whose> your opponents control| you control)?"
+    r"(?P<except_mana> except mana abilities)?)\.?$",
     re.IGNORECASE,
 )
 
@@ -11444,6 +11451,7 @@ def all_activated_abilities_grant(sentence: str) -> AllActivatedAbilitiesGrant |
     if match.group("subject").lower() == "it" and match.group("on_battlefield") is None:
         return None
     from_exile = match.group("board_types") is None and not from_graveyard
+    except_mana = match.group("except_mana") is not None
     exile_types = types_of(match.group("pile_types"))
     board_types = types_of(match.group("board_types"))
     if exile_types is None or board_types is None:
@@ -11478,6 +11486,7 @@ def all_activated_abilities_grant(sentence: str) -> AllActivatedAbilitiesGrant |
         graveyard_whose="you" if graveyard_whose_text == "your graveyard" else "any",
         graveyard_types=tuple(graveyard_types),
         graveyard_subtypes=tuple(graveyard_subtypes),
+        except_mana=except_mana,
     )
 
 

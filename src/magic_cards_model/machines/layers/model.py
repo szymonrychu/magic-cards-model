@@ -2560,6 +2560,9 @@ class GrantActivatedAbilitiesOf(ModificationBase):
     card_types: tuple[Type, ...] = ()
     controller: str | None = None
     whose: Literal["opponents", "you", "any"] = "any"
+    except_mana: bool = False
+    """Sharkey's "... except mana abilities" (CR 605.1a): activated mana
+    abilities of the other permanents are not copied."""
 
     def texts(self, board: Board, host_id: UUID | None) -> tuple[str, ...]:
         """Every activated ability line this grant copies onto `host_id`."""
@@ -2573,7 +2576,11 @@ class GrantActivatedAbilitiesOf(ModificationBase):
                 continue
             if self.whose == "you" and other.controller != self.controller:
                 continue
-            lines.extend(activated_ability_lines(other.abilities, other.name))
+            lines.extend(
+                activated_ability_lines(
+                    other.abilities, other.name, include_mana=not self.except_mana
+                )
+            )
         return tuple(dict.fromkeys(lines))
 
     def __call__(self, chars: Characteristics, board: Board) -> Characteristics:
@@ -3943,6 +3950,7 @@ class AllActivatedAbilitiesGrant(NamedTuple):
     graveyard_whose: Literal["you", "any"] = "any"
     graveyard_types: tuple[Type, ...] = ()
     graveyard_subtypes: tuple[str, ...] = ()
+    except_mana: bool = False
 
     def graveyard_texts(self, source: CardState, context: LayerContext) -> tuple[str, ...]:
         """The activated abilities of every matching card in the named
@@ -3989,7 +3997,10 @@ class AllActivatedAbilitiesGrant(NamedTuple):
 
     def board_modification(self, source: CardState) -> GrantActivatedAbilitiesOf:
         return GrantActivatedAbilitiesOf(
-            card_types=self.board_types, controller=source.controller, whose=self.board_whose
+            card_types=self.board_types,
+            controller=source.controller,
+            whose=self.board_whose,
+            except_mana=self.except_mana,
         )
 
     def selector(self, source: CardState) -> Selector:
