@@ -9,6 +9,7 @@ performs: each predicate stages a throwaway permanent of the printing on a real
 """
 
 from magic_cards_model.machines.combat import all_damage_has_wither, may_assign_as_though_unblocked
+from magic_cards_model.machines.mulligan_time import mulligan_time_line
 from magic_cards_model.machines.zone_grants import line_grants_off_zone
 from magic_cards_model.models.game import Game
 from magic_cards_model.models.player import Player
@@ -21,6 +22,7 @@ _GATES = (
     "mana as though it were",
     "mana of any type can be spent",
     "can be attached only to",
+    "could mulligan",
 )
 
 
@@ -97,6 +99,9 @@ def reads_anthems_grants_line(printing, text, *, card_name=None, legendary=False
         return False
     if "mana as though it were" in lowered or "mana of any type can be spent" in lowered:
         return _reads_mana_colour_rule(printing, lowered)
+    if "could mulligan" in lowered:
+        # CR 103.5b: `Game.mulligan_time_options` offers exactly the lines this reads.
+        return mulligan_time_line(card_name or printing.name, text) is not None
     if "can be attached only to" in lowered:
         return _reads_attach_restriction(printing)
     if "had wither" in lowered:

@@ -3491,6 +3491,15 @@ class Game(
             while self.turn.step is Step.MULLIGAN:
                 pending = self.awaiting_mulligan_declarations
                 for username in pending:
+                    # CR 103.5b: "any time you could mulligan" is a time a seat
+                    # owing a declaration may act, before it declares.
+                    while True:
+                        for option in self.mulligan_time_options(username):
+                            if self.ask(option):
+                                self.take_mulligan_time_action(username, option.card)
+                                break
+                        else:
+                            break
                     self.declare_mulligan(username, ask_mulligan(self.decisions, username))
                 if not pending:
                     # Every seat left is at CR 103.5's ceiling, so the round has

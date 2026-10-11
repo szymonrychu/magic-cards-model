@@ -31,6 +31,7 @@ from ...machines.layers import (
     ComputedBoard,
     Duration,
 )
+from ...machines.mulligan_time import mulligan_time_lines, perform_exile_hand_and_redraw
 from ...machines.opening_hand import (
     OpeningHandAction,
     OpeningHandActionKind,
@@ -995,6 +996,38 @@ class TurnSbaMixin:
             self.mulligan_declarations[username] = take
             self._resolve_mulligan_round_if_ready()
             return self.turn.step
+
+    def mulligan_time_options(self: "Game", username: str) -> list[Decision]:
+        """CR 103.5b: the actions a seat may take "any time [it] could mulligan"
+        right now - while it still owes a declaration, one per card in its hand
+        that allows one (Serum Powder). Read fresh off the hand every time."""
+        if username not in self.awaiting_mulligan_declarations:
+            return []
+        return [
+            Decision(
+                kind=DecisionKind.OPENING_HAND_ACTION,
+                player=username,
+                prompt=line,
+                source=card_state.name,
+                source_id=source_id_of(card_state),
+                card=card_state.id,
+            )
+            for card_state in self.player(username).hand
+            for line in mulligan_time_lines(card_state.card)
+        ]
+
+    def take_mulligan_time_action(self: "Game", username: str, card: UUID) -> None:
+        """CR 103.5b: perform the mulligan-time action of `card`, in this seat's
+        hand, and leave the seat's declaration still owed (they then declare)."""
+        self._refuse_if_over()
+        options = [d for d in self.mulligan_time_options(username) if d.card == card]
+        if not options:
+            raise ValueError(
+                f"no card in {username}'s hand allows an action at this mulligan (CR 103.5b)"
+            )
+        with self._id_allocator_scope():
+            card_state = next(c for c in self.player(username).hand if c.id == card)
+            perform_exile_hand_and_redraw(self, username, card_state)
 
     def _resolve_mulligan_round_if_ready(self: "Game") -> None:
         """Carry out one round of CR 103.5 once every declaration is in.
