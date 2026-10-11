@@ -662,7 +662,7 @@ def _restricts(who: str, source: Any, controller: str, caster: str) -> bool:
     attached to"), nobody when it is attached to none.
     """
     subject = who.lower()
-    if subject == "each player":
+    if subject in ("each player", "players"):
         return True
     if subject in ("each opponent", "your opponents"):
         return caster != controller
@@ -782,7 +782,7 @@ _OPPONENTS_CANT_CAST_DURING_YOUR_TURN_RE = re.compile(
 )
 
 #: The subject of a casting restriction, read by `_restricts`.
-_RESTRICTED_WHO = r"(?P<who>each player|each opponent|your opponents|you|enchanted player)"
+_RESTRICTED_WHO = r"(?P<who>each player|players|each opponent|your opponents|you|enchanted player)"
 
 #: A spell-count cap, CR 601.3's "no rule or effect prohibits": High Noon's
 #: and Archon of Emeria's "Each player can't cast more than one spell each
@@ -810,7 +810,7 @@ _CAST_ONLY_DURING_TURN_RE = re.compile(
 #: Where one static sentence conjoins two restrictions: "..., and you can cast
 #: no more than two spells each turn".
 _RESTRICTION_CLAUSE_SPLIT = re.compile(
-    r",? and (?=(?:each player|each opponent|your opponents|you|enchanted player) can)",
+    r",? and (?=(?:each player|players|each opponent|your opponents|you|enchanted player) can)",
     re.IGNORECASE,
 )
 

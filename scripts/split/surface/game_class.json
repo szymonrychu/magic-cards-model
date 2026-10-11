@@ -108,6 +108,7 @@
     "_advance_past_checks",
     "_affinity_count",
     "_allocate_id",
+    "_announce_activation_modes",
     "_announce_activation_targets",
     "_announce_alternative_cost_x",
     "_announce_bargain_evidence_and_reveal",

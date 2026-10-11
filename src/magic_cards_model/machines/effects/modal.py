@@ -76,6 +76,7 @@ from ..layers import (
 from ..modes import (
     ModalProfile,
     Mode,
+    instruction_rider,
     is_modal_text,
     modal_profile,
     modal_profile_from_text,
@@ -1692,6 +1693,25 @@ def mode_effect_body(mode: Mode) -> str:
     return mode_effect_text(mode).strip()
 
 
+def _run_modal_instruction_rider(game: "Game", ability: AbilityOnStack, rider: str) -> None:
+    """Run the modal instruction's own rider sentence (see
+    `modes.instruction_rider`), reading the source's printed name as the
+    source itself (CR 201.5)."""
+    text = _self_normalized_effect_text(ability.source_name, rider)
+    clause = parse_mixed_effect(text)
+    if clause is None:
+        game.mode_notices.append(
+            ModeNotice(
+                source_id=ability.source_id,
+                source_name=ability.source_name,
+                mode_number=0,
+                text=rider,
+            )
+        )
+        return
+    clause(game, ability)
+
+
 @ABILITY_TEXT.rung("s16")
 def _resolve_modal_triggered_ability_clause(text: str) -> AbilityEffect | None:
     """A modal *triggered* ability's own "choose one/one or both -" tail
@@ -1715,8 +1735,11 @@ def _resolve_modal_triggered_ability_clause(text: str) -> AbilityEffect | None:
     instruction_lower = profile.instruction.lower()
     exclusive_this_turn = "hasn't been chosen this turn" in instruction_lower
     exclusive = exclusive_this_turn or "hasn't been chosen" in instruction_lower
+    rider_text = instruction_rider(profile.instruction)
 
     def effect(game: "Game", ability: AbilityOnStack) -> None:
+        if rider_text is not None:
+            _run_modal_instruction_rider(game, ability, rider_text)
         chosen = list(ability.modes)
         slices = [list(slice_) for slice_ in ability.mode_targets]
         if not chosen:
@@ -1798,6 +1821,13 @@ def _resolve_modal_triggered_ability_clause(text: str) -> AbilityEffect | None:
                             )
                         if clause is None:
                             clause = _parse_where_x_is_continuous_effect(normalized_mode_text)
+                    if clause is None:
+                        # A whole-ability reading the clause parsers above do
+                        # not carry: Glorfindel, Dauntless Rescuer's "must be
+                        # blocked this turn if able" (CR 509.1c) and "can't be
+                        # blocked by more than one creature each combat this
+                        # turn" (CR 509.1b) modes.
+                        clause = _ability_effect_or_notice(normalized_mode_text)
                 if clause is None:
                     game.mode_notices.append(
                         ModeNotice(

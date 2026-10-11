@@ -3028,6 +3028,15 @@ _TREASURE_MANA_SPENT_EACH_RE = re.compile(
 )
 
 
+#: "1 life your opponents have lost this turn" - Rakdos, Lord of Riots's
+#: cost reduction and Neheb, the Eternal's mana: one for each point of life
+#: lost, summed over the controller's opponents.
+_LIFE_LOST_BY_OPPONENTS_EACH_RE = re.compile(
+    r"1 life (?:your opponents have|each opponent has|an opponent has) lost this turn",
+    re.IGNORECASE,
+)
+
+
 def _for_each_multiplier(phrase: str) -> Callable[["Game", str, str | None], int] | None:
     """The count of an "N `<effect>` for each `<phrase>`" tail, as a
     `(game, controller, source_id) -> int` reader, or `None` when `phrase` is
@@ -3138,6 +3147,14 @@ def _for_each_multiplier(phrase: str) -> Callable[["Game", str, str | None], int
             )
 
         return count_opponents_who_lost_life
+    if _LIFE_LOST_BY_OPPONENTS_EACH_RE.fullmatch(stripped):
+
+        def count_life_opponents_lost(game: "Game", controller: str, source_id: str | None) -> int:
+            # CR 119.3: every point of life the opponents lost this turn,
+            # damage included (CR 120.3a), summed across them.
+            return sum(opponent.life_lost_this_turn for opponent in _opponents(game, controller))
+
+        return count_life_opponents_lost
     graveyard_size_match = _GRAVEYARDS_WITH_N_OR_MORE_CARDS_RE.fullmatch(stripped)
     if graveyard_size_match is not None:
         threshold = parse_count(graveyard_size_match.group("count"))

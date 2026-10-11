@@ -928,6 +928,18 @@ class Only(SelectorBase):
         return chars.card_id == self.card_id
 
 
+class OnlyIfCreature(SelectorBase):
+    """One permanent by id, and only while it is a creature (CR 613.5, judged
+    against the characteristics computed so far): Clawing Torment's "As long as
+    enchanted permanent is a creature, it gets -1/-1 and can't block."."""
+
+    kind: Literal["only_if_creature"] = "only_if_creature"
+    card_id: UUID
+
+    def __call__(self, chars: Characteristics, board: Board) -> bool:
+        return chars.card_id == self.card_id and Type.CREATURE in chars.types
+
+
 class PairedPartners(SelectorBase):
     """The two creatures of a soulbond pair the source is in (CR 702.95a): the
     source and its partner, and only while the pair holds - both creatures,
@@ -2394,6 +2406,7 @@ class ConditionedSelector(SelectorBase):
 #: count things or say "each other" (CR 613.5).
 Selector = Annotated[
     Only
+    | OnlyIfCreature
     | PairedPartners
     | OnlyThisIncarnation
     | CreatureControlledByWithId
@@ -2994,12 +3007,21 @@ class GrantActivatedAbilitiesOf(ModificationBase):
     except_mana: bool = False
     """Sharkey's "... except mana abilities" (CR 605.1a): activated mana
     abilities of the other permanents are not copied."""
+    chosen: bool = False
+    """Only the one permanent `only_card_id` names, chosen as the source
+    entered (Scheming Fence, CR 614.12a); with no id (nothing was chosen, or it
+    is gone) nothing is copied."""
+    only_card_id: UUID | None = None
+    except_loyalty: bool = False
+    """Loyalty abilities (CR 606.2) are not copied."""
 
     def texts(self, board: Board, host_id: UUID | None) -> tuple[str, ...]:
         """Every activated ability line this grant copies onto `host_id`."""
         lines: list[str] = []
         for other in board.values():
             if other.card_id == host_id:
+                continue
+            if self.chosen and other.card_id != self.only_card_id:
                 continue
             if self.card_types and not any(kind in other.types for kind in self.card_types):
                 continue
@@ -3009,7 +3031,10 @@ class GrantActivatedAbilitiesOf(ModificationBase):
                 continue
             lines.extend(
                 activated_ability_lines(
-                    other.abilities, other.name, include_mana=not self.except_mana
+                    other.abilities,
+                    other.name,
+                    include_mana=not self.except_mana,
+                    loyalty=not self.except_loyalty,
                 )
             )
         return tuple(dict.fromkeys(lines))
@@ -4412,6 +4437,9 @@ class AllActivatedAbilitiesGrant(NamedTuple):
     graveyard_types: tuple[Type, ...] = ()
     graveyard_subtypes: tuple[str, ...] = ()
     except_mana: bool = False
+    chosen: bool = False
+    """The one permanent chosen as the source entered (Scheming Fence)."""
+    except_loyalty: bool = False
 
     def graveyard_texts(self, source: CardState, context: LayerContext) -> tuple[str, ...]:
         """The activated abilities of every matching card in the named
@@ -4457,11 +4485,20 @@ class AllActivatedAbilitiesGrant(NamedTuple):
         return tuple(dict.fromkeys(texts))
 
     def board_modification(self, source: CardState) -> GrantActivatedAbilitiesOf:
+        chosen_id = None
+        if self.chosen and source.choice is not None and source.choice.kind.value == "object":
+            try:
+                chosen_id = UUID(source.choice.value)
+            except ValueError:
+                chosen_id = None
         return GrantActivatedAbilitiesOf(
             card_types=self.board_types,
             controller=source.controller,
             whose=self.board_whose,
             except_mana=self.except_mana,
+            chosen=self.chosen,
+            only_card_id=chosen_id,
+            except_loyalty=self.except_loyalty,
         )
 
     def selector(self, source: CardState) -> Selector:

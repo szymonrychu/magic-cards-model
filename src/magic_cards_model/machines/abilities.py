@@ -2516,7 +2516,11 @@ def parse_granted_ability_lines(texts: Sequence[str]) -> list[Ability]:
 #: period, and for the same reason must pull its bullets in.
 _MODAL_INSTRUCTION_TAIL = re.compile(
     r"choose\b.*(?:[-—]|\bchoose [^.]+ instead\.|\bthat hasn'?t (?:already )?"
-    r"been chosen(?: this turn)?\.|\beach mode must target a different player\.)\s*$",
+    r"been chosen(?: this turn)?\.|\beach mode must target a different player\.)\s*$|"
+    # A rider on the instruction itself: Glorfindel, Dauntless Rescuer's
+    # "choose one and Glorfindel gets +1/+1 until end of turn." - the bullets
+    # under it are the modes, the rider happens whichever is chosen.
+    r"\bchoose (?:one|two|three) and [^.—]+\.\s*$",
     re.IGNORECASE,
 )
 

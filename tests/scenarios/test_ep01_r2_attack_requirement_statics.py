@@ -1,0 +1,1000 @@
+"""EP-01 R2 T4: attack and block restrictions and requirements a creature
+states about itself (CR 508.1c, 508.1d, 509.1b, 509.1c, 506.5, 613.1f).
+
+- "can't be blocked as long as it's attacking alone" (Yuan-Ti Malison, Dream
+  Prowler)
+- "can't attack during extra turns" (Medomai the Ageless)
+- "can't attack if defending player controls <description>" (Orgg)
+- "can't attack unless you sacrifice two Islands" (Leviathan)
+- "can't be blocked unless all creatures defending player controls block it"
+  (Tromokratis)
+- "As long as <condition>, this creature has hexproof and can't be blocked."
+  (Slippery Scoundrel's city's blessing, Ratonhnhake's "hasn't dealt damage
+  yet", Futurist Operative's tapped form) and the keyword-only twins
+  (Karakyk Guardian, Palladia-Mors), "has hexproof unless it's attacking or
+  blocking" (Tromokratis)
+- "As long as this creature has a +1/+1 counter on it, it can attack as
+  though it didn't have defender" (Skyclave Sentinel, Scuttlegator)
+- "target creature defending player controls blocks it this combat if able"
+  (Avalanche Tusker, Impetuous Devils, Fighter Class)
+- "No more than one creature can attack ~ each combat" on a planeswalker
+  (The Eternal Wanderer)
+- "can't be blocked by more than one creature each combat this turn"
+  (Glorfindel, Dauntless Rescuer's mode)
+"""
+
+import pytest
+
+from magic_cards_model.machines import Step
+from magic_cards_model.models import Zone
+from magic_cards_model.models.card_state import Counter
+
+from .harness import Scenario
+
+
+def _block(
+    attacker: str,
+    blockers: list[str],
+    *,
+    extra_attackers=(),
+    mine=(),
+    theirs=(),
+    setup=None,
+):
+    """Alice attacks bob with `attacker` (and `extra_attackers`); bob blocks
+    the first with `blockers`. The refusal message, or None when it is legal."""
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=[attacker, *extra_attackers, *mine])
+        .player("bob", battlefield=[*blockers, *theirs])
+        .build()
+    )
+    attacking = scenario.creature(attacker.split(" // ")[0], "alice")
+    if setup is not None:
+        setup(scenario, attacking)
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    others = [scenario.creature(name, "alice") for name in extra_attackers]
+    scenario.attack_with(attacking, *others, defending="bob")
+    try:
+        scenario.block(attacking, *[scenario.creature(name, "bob") for name in blockers])
+    except ValueError as error:
+        return str(error)
+    return None
+
+
+# -- "can't be blocked as long as it's attacking alone" ----------------------
+
+
+@pytest.mark.parametrize("name", ["Yuan-Ti Malison", "Dream Prowler"])
+def test_unblockable_while_attacking_alone(name):
+    refusal = _block(name, ["Hill Giant"])
+    assert refusal is not None and "can't be blocked" in refusal and "CR 509.1b" in refusal
+
+
+@pytest.mark.parametrize("name", ["Yuan-Ti Malison", "Dream Prowler"])
+def test_blockable_when_another_creature_attacks_too(name):
+    assert _block(name, ["Hill Giant"], extra_attackers=["Grizzly Bears"]) is None
+
+
+def test_the_other_attacker_is_not_unblockable_either():
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Yuan-Ti Malison", "Grizzly Bears"])
+        .player("bob", battlefield=["Hill Giant"])
+        .build()
+    )
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    malison = scenario.creature("Yuan-Ti Malison", "alice")
+    bears = scenario.creature("Grizzly Bears", "alice")
+    scenario.attack_with(malison, bears, defending="bob")
+    scenario.block(bears, scenario.creature("Hill Giant", "bob"))
+
+
+# -- Medomai: "can't attack during extra turns" ------------------------------
+
+
+def test_medomai_attacks_on_an_ordinary_turn():
+    scenario = Scenario().player("alice", battlefield=["Medomai the Ageless"]).player("bob").build()
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    medomai = scenario.creature("Medomai the Ageless", "alice")
+    assert scenario.can_attack(medomai) is True
+
+
+def test_medomai_cannot_attack_during_an_extra_turn():
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Medomai the Ageless", "Grizzly Bears"])
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    scenario.game.turn.taking_extra_turn = True
+    medomai = scenario.creature("Medomai the Ageless", "alice")
+    assert scenario.can_attack(medomai) is False
+    assert scenario.can_attack(scenario.creature("Grizzly Bears", "alice")) is True
+    with pytest.raises(ValueError, match=r"CR 508\.1c"):
+        scenario.attack_with(medomai)
+
+
+# -- Orgg: "can't attack if defending player controls ..." -------------------
+
+
+def _orgg(*theirs, tap=()):
+    scenario = Scenario().player("alice", battlefield=["Orgg"]).player("bob", battlefield=theirs)
+    played = scenario.build()
+    played.start_at(Step.DECLARE_ATTACKERS)
+    for name in tap:
+        played.creature(name, "bob").tapped = True
+    return played
+
+
+def test_orgg_cannot_attack_into_an_untapped_creature_with_power_three():
+    scenario = _orgg("Hill Giant")
+    orgg = scenario.creature("Orgg", "alice")
+    assert scenario.can_attack(orgg) is False
+    with pytest.raises(ValueError, match=r"CR 508\.1c"):
+        scenario.attack_with(orgg)
+
+
+def test_orgg_attacks_when_the_big_creature_is_tapped_or_small():
+    tapped = _orgg("Hill Giant", tap=["Hill Giant"])
+    assert tapped.can_attack(tapped.creature("Orgg", "alice")) is True
+    small = _orgg("Grizzly Bears")
+    assert small.can_attack(small.creature("Orgg", "alice")) is True
+
+
+def test_orgg_cannot_block_a_power_three_attacker_but_blocks_a_small_one():
+    scenario = (
+        Scenario().player("alice", battlefield=["Hill Giant"]).player("bob", battlefield=["Orgg"])
+    ).build()
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    scenario.attack_with(scenario.creature("Hill Giant", "alice"), defending="bob")
+    with pytest.raises(ValueError, match=r"CR 509\.1b"):
+        scenario.block(scenario.attackers()[0], scenario.creature("Orgg", "bob"))
+
+
+# -- Leviathan: "can't attack unless you sacrifice two Islands" --------------
+
+
+def _leviathan(islands: int, *, copies: int = 1):
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Leviathan"] * copies + ["Island"] * islands)
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    for leviathan in scenario.creatures(*["Leviathan"] * copies, username="alice"):
+        leviathan.tapped = False
+    return scenario
+
+
+def _islands_left(scenario) -> int:
+    return sum(1 for p in scenario.game.permanents_controlled_by("alice") if p.name == "Island")
+
+
+def test_leviathan_sacrifices_two_islands_to_attack():
+    scenario = _leviathan(3)
+    leviathan = scenario.creature("Leviathan", "alice")
+    scenario.attack_with(leviathan, defending="bob")
+    assert scenario.attackers() == [leviathan]
+    assert _islands_left(scenario) == 1
+    assert sum(1 for c in scenario.game.player("alice").graveyard if c.name == "Island") == 2
+
+
+def test_leviathan_with_one_island_cannot_attack():
+    scenario = _leviathan(1)
+    leviathan = scenario.creature("Leviathan", "alice")
+    assert scenario.can_attack(leviathan) is False
+    with pytest.raises(ValueError, match=r"CR 508\.1c"):
+        scenario.attack_with(leviathan, defending="bob")
+    assert _islands_left(scenario) == 1
+
+
+def test_leviathan_does_not_sacrifice_when_it_stays_home():
+    scenario = _leviathan(2)
+    scenario.attack_with(defending="bob")
+    assert _islands_left(scenario) == 2
+
+
+def test_two_leviathans_need_four_islands():
+    short = _leviathan(3, copies=2)
+    first, second = short.creatures("Leviathan", "Leviathan", username="alice")
+    with pytest.raises(ValueError, match=r"CR 508\.1c"):
+        short.attack_with(first, second, defending="bob")
+    enough = _leviathan(4, copies=2)
+    first, second = enough.creatures("Leviathan", "Leviathan", username="alice")
+    enough.attack_with(first, second, defending="bob")
+    assert _islands_left(enough) == 0
+
+
+# -- Tromokratis ------------------------------------------------------------
+
+
+def test_tromokratis_is_blocked_only_by_all_of_the_defenders_creatures():
+    both = ["Hill Giant", "Grizzly Bears"]
+    refusal = _block("Tromokratis", ["Hill Giant"], theirs=["Grizzly Bears"])
+    assert refusal is not None and "CR 509.1b" in refusal
+    assert _block("Tromokratis", both) is None
+
+
+def test_tromokratis_can_be_blocked_by_a_lone_defender():
+    assert _block("Tromokratis", ["Hill Giant"]) is None
+
+
+def test_tromokratis_unblocked_is_not_a_violation():
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Tromokratis"])
+        .player("bob", battlefield=["Hill Giant", "Grizzly Bears"])
+        .build()
+    )
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    scenario.attack_with(scenario.creature("Tromokratis", "alice"), defending="bob")
+    scenario.no_blocks()
+
+
+def test_tromokratis_has_hexproof_unless_attacking_or_blocking():
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Tromokratis"])
+        .player("bob", battlefield=["Grizzly Bears"])
+        .build()
+    )
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    kraken = scenario.creature("Tromokratis", "alice")
+    assert scenario.game.characteristics_of(kraken).has_ability("Hexproof")
+    scenario.attack_with(kraken, defending="bob")
+    assert not scenario.game.characteristics_of(kraken).has_ability("Hexproof")
+
+
+def test_tromokratis_loses_hexproof_while_blocking():
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Hill Giant"])
+        .player("bob", battlefield=["Tromokratis"])
+        .build()
+    )
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    kraken = scenario.creature("Tromokratis", "bob")
+    assert scenario.game.characteristics_of(kraken).has_ability("Hexproof")
+    scenario.attack_with(scenario.creature("Hill Giant", "alice"), defending="bob")
+    scenario.block(scenario.attackers()[0], kraken)
+    assert not scenario.game.characteristics_of(kraken).has_ability("Hexproof")
+
+
+# -- gated "has hexproof and can't be blocked" -------------------------------
+
+
+def test_slippery_scoundrel_with_the_citys_blessing_is_hexproof_and_unblockable():
+    def bless(scenario, attacking):
+        scenario.game.player("alice").has_citys_blessing = True
+
+    refusal = _block("Slippery Scoundrel", ["Hill Giant"], setup=bless)
+    assert refusal is not None and "can't be blocked" in refusal
+
+    scenario = Scenario().player("alice", battlefield=["Slippery Scoundrel"]).player("bob").build()
+    scoundrel = scenario.creature("Slippery Scoundrel", "alice")
+    assert not scenario.game.characteristics_of(scoundrel).has_ability("Hexproof")
+    scenario.game.player("alice").has_citys_blessing = True
+    assert scenario.game.characteristics_of(scoundrel).has_ability("Hexproof")
+
+
+def test_slippery_scoundrel_without_the_blessing_is_blockable():
+    assert _block("Slippery Scoundrel", ["Hill Giant"]) is None
+
+
+def test_the_blessing_is_the_controllers_not_the_opponents():
+    def bless_bob(scenario, attacking):
+        scenario.game.player("bob").has_citys_blessing = True
+
+    assert _block("Slippery Scoundrel", ["Hill Giant"], setup=bless_bob) is None
+
+
+def test_ratonhnhaketon_is_untouchable_until_it_deals_damage():
+    scenario = Scenario().player("alice", battlefield=["Ratonhnhaké꞉ton"]).player("bob").build()
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    assassin = scenario.creature("Ratonhnhaké꞉ton", "alice")
+    assert scenario.game.characteristics_of(assassin).has_ability("Hexproof")
+    scenario.attack_with(assassin, defending="bob")
+    scenario.no_blocks()
+    scenario.combat_damage()
+    assert not scenario.game.characteristics_of(assassin).has_ability("Hexproof")
+
+
+def test_ratonhnhaketon_cannot_be_blocked_before_it_has_dealt_damage():
+    refusal = _block("Ratonhnhaké꞉ton", ["Hill Giant"])
+    assert refusal is not None and "can't be blocked" in refusal
+
+
+@pytest.mark.parametrize("name", ["Karakyk Guardian", "Palladia-Mors, the Ruiner"])
+def test_hexproof_ends_once_the_creature_has_dealt_damage(name):
+    scenario = Scenario().player("alice", battlefield=[name]).player("bob").build()
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    dragon = scenario.creature(name, "alice")
+    assert scenario.game.characteristics_of(dragon).has_ability("Hexproof")
+    scenario.attack_with(dragon, defending="bob")
+    scenario.no_blocks()
+    scenario.combat_damage()
+    assert not scenario.game.characteristics_of(dragon).has_ability("Hexproof")
+
+
+def test_damage_dealt_by_another_creature_does_not_end_hexproof():
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Karakyk Guardian", "Grizzly Bears"])
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    guardian = scenario.creature("Karakyk Guardian", "alice")
+    scenario.attack_with(scenario.creature("Grizzly Bears", "alice"), defending="bob")
+    scenario.no_blocks()
+    scenario.combat_damage()
+    assert scenario.game.characteristics_of(guardian).has_ability("Hexproof")
+
+
+def test_hasnt_dealt_damage_survives_a_new_turn_but_not_leaving_the_battlefield():
+    scenario = Scenario().player("alice", battlefield=["Karakyk Guardian"]).player("bob").build()
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    guardian = scenario.creature("Karakyk Guardian", "alice")
+    scenario.attack_with(guardian, defending="bob")
+    scenario.no_blocks()
+    scenario.combat_damage()
+    assert guardian.has_dealt_damage is True
+    scenario.game.return_to_hand(guardian)
+    assert guardian.has_dealt_damage is False
+
+
+# -- Futurist Operative ------------------------------------------------------
+
+
+def test_futurist_operative_is_a_one_one_unblockable_human_citizen_while_tapped():
+    scenario = Scenario().player("alice", battlefield=["Futurist Operative"]).player("bob").build()
+    operative = scenario.creature("Futurist Operative", "alice")
+    untapped = scenario.game.characteristics_of(operative)
+    assert "Human" not in untapped.subtypes or "Citizen" not in untapped.subtypes
+    operative.tapped = True
+    tapped = scenario.game.characteristics_of(operative)
+    assert tapped.subtypes == ("Human", "Citizen")
+    assert (scenario.game.power_of(operative), scenario.game.toughness_of(operative)) == (1, 1)
+
+
+def test_futurist_operative_attacking_taps_it_and_so_it_cannot_be_blocked():
+    refusal = _block("Futurist Operative", ["Hill Giant"])
+    assert refusal is not None and "can't be blocked" in refusal
+
+
+# -- defender overridden by a counter ---------------------------------------
+
+
+@pytest.mark.parametrize("name", ["Skyclave Sentinel", "Scuttlegator"])
+def test_a_defender_with_a_plus_one_counter_can_attack(name):
+    scenario = Scenario().player("alice", battlefield=[name]).player("bob").build()
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    creature = scenario.creature(name, "alice")
+    assert scenario.can_attack(creature) is False
+    creature.add_counters(Counter.PLUS_ONE, 1)
+    assert scenario.can_attack(creature) is True
+    scenario.attack_with(creature, defending="bob")
+    assert scenario.attackers() == [creature]
+
+
+@pytest.mark.parametrize("name", ["Skyclave Sentinel", "Scuttlegator"])
+def test_a_different_counter_kind_does_not_lift_defender(name):
+    scenario = Scenario().player("alice", battlefield=[name]).player("bob").build()
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    creature = scenario.creature(name, "alice")
+    creature.add_counters(Counter.MINUS_ONE, 1)
+    assert scenario.can_attack(creature) is False
+
+
+# -- "target creature blocks it this combat if able" -------------------------
+
+
+def _forced_block(attacker: str, *, extra=(), hand_class_level=False):
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=[attacker, *extra])
+        .player("bob", battlefield=["Hill Giant", "Grizzly Bears"])
+        .build()
+    )
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    return scenario
+
+
+@pytest.mark.parametrize("name", ["Avalanche Tusker", "Impetuous Devils"])
+def test_the_attack_trigger_forces_the_chosen_creature_to_block_it(name):
+    scenario = _forced_block(name)
+    attacker = scenario.creature(name, "alice")
+    giant = scenario.creature("Hill Giant", "bob")
+    bears = scenario.creature("Grizzly Bears", "bob")
+    scenario.will_choose_targets(giant)
+    scenario.attack_with(attacker, defending="bob")
+    scenario.pass_until_resolved()
+    with pytest.raises(ValueError, match=r"CR 509\.1c"):
+        scenario.no_blocks()
+    scenario.block(attacker, giant)
+    assert scenario.blockers() == [giant]
+    assert bears.id not in [blocker.id for blocker in scenario.blockers()]
+
+
+@pytest.mark.parametrize("name", ["Avalanche Tusker", "Impetuous Devils"])
+def test_the_forced_creature_may_block_something_else_if_it_cannot_block_it(name):
+    scenario = _forced_block(name, extra=["Grizzly Bears"])
+    attacker = scenario.creature(name, "alice")
+    giant = scenario.creature("Hill Giant", "bob")
+    scenario.will_choose_targets(giant)
+    scenario.attack_with(attacker, scenario.creature("Grizzly Bears", "alice"), defending="bob")
+    scenario.pass_until_resolved()
+    with pytest.raises(ValueError, match=r"CR 509\.1c"):
+        scenario.block(scenario.creature("Grizzly Bears", "alice"), giant)
+
+
+def test_fighter_class_level_three_makes_the_chosen_creature_block_the_attacker():
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Fighter Class", "Grizzly Bears"])
+        .player("bob", battlefield=["Hill Giant", "Runeclaw Bear"])
+        .build()
+    )
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    scenario.find("Fighter Class", Zone.BATTLEFIELD, "alice").class_level = 3
+    bears = scenario.creature("Grizzly Bears", "alice")
+    giant = scenario.creature("Hill Giant", "bob")
+    scenario.will_choose_targets(giant)
+    scenario.attack_with(bears, defending="bob")
+    scenario.pass_until_resolved()
+    with pytest.raises(ValueError, match=r"CR 509\.1c"):
+        scenario.no_blocks()
+    scenario.block(bears, giant)
+    assert scenario.blockers() == [giant]
+
+
+# -- planeswalker attack cap -------------------------------------------------
+
+
+def test_the_eternal_wanderer_can_be_attacked_by_only_one_creature():
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Grizzly Bears", "Hill Giant"])
+        .player("bob", battlefield=["The Eternal Wanderer"])
+        .build()
+    )
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    wanderer = scenario.find("The Eternal Wanderer", Zone.BATTLEFIELD, "bob")
+    bears = scenario.creature("Grizzly Bears", "alice")
+    giant = scenario.creature("Hill Giant", "alice")
+    with pytest.raises(ValueError, match="CR 508.1c"):
+        scenario.game.declare_attackers([(bears, wanderer), (giant, wanderer)])
+    scenario.game.declare_attackers([(bears, wanderer), (giant, "bob")])
+
+
+# -- "<N> target creatures you control that share a creature type can't be
+#    blocked this turn" (Secret Tunnel) -------------------------------------
+
+
+def _tunnel(*mine):
+    scenario = (
+        Scenario()
+        .player(
+            "alice", battlefield=["Secret Tunnel", *mine, "Island", "Island", "Island", "Island"]
+        )
+        .player("bob", battlefield=["Hill Giant"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    return scenario
+
+
+def _activate_tunnel(scenario, *targets):
+    tunnel = scenario.find("Secret Tunnel", Zone.BATTLEFIELD, "alice")
+    scenario.activate(
+        tunnel,
+        *scenario.untapped_sources("Island", "Island", "Island", "Island"),
+        index=1,
+        targets=list(targets),
+    )
+    scenario.pass_until_resolved()
+
+
+def test_secret_tunnel_makes_two_creatures_that_share_a_type_unblockable():
+    scenario = _tunnel("Grizzly Bears", "Runeclaw Bear")
+    bears = scenario.creature("Grizzly Bears", "alice")
+    runeclaw = scenario.creature("Runeclaw Bear", "alice")
+    _activate_tunnel(scenario, bears, runeclaw)
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    scenario.attack_with(bears, runeclaw, defending="bob")
+    with pytest.raises(ValueError, match="CR 509.1b"):
+        scenario.block(bears, scenario.creature("Hill Giant", "bob"))
+    with pytest.raises(ValueError, match="CR 509.1b"):
+        scenario.block(runeclaw, scenario.creature("Hill Giant", "bob"))
+
+
+def test_secret_tunnel_refuses_two_creatures_that_share_no_type():
+    scenario = _tunnel("Grizzly Bears", "Serra Angel")
+    with pytest.raises(ValueError, match="share a creature type"):
+        _activate_tunnel(
+            scenario,
+            scenario.creature("Grizzly Bears", "alice"),
+            scenario.creature("Serra Angel", "alice"),
+        )
+
+
+def test_secret_tunnel_leaves_a_third_creature_blockable():
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=[
+                "Secret Tunnel",
+                "Grizzly Bears",
+                "Runeclaw Bear",
+                "Goblin Guide",
+                "Island",
+                "Island",
+                "Island",
+                "Island",
+            ],
+        )
+        .player("bob", battlefield=["Hill Giant"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.creature("Grizzly Bears", "alice")
+    runeclaw = scenario.creature("Runeclaw Bear", "alice")
+    guide = scenario.creature("Goblin Guide", "alice")
+    _activate_tunnel(scenario, bears, runeclaw)
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    scenario.attack_with(bears, guide, defending="bob")
+    scenario.block(guide, scenario.creature("Hill Giant", "bob"))
+
+
+# -- Glorfindel's mode: "can't be blocked by more than one creature each combat
+#    this turn" ------------------------------------------------------------
+
+
+def _resolve_glorfindel_mode(scenario, text):
+    """Resolve one bullet of Glorfindel's "Whenever you scry, choose one"
+    trigger as the engine's effect parser reads it (the scry trigger event
+    itself is another family's)."""
+    from magic_cards_model.machines.abilities import AbilityKind, parse_abilities
+    from magic_cards_model.machines.effects import _ability_effect_or_notice
+    from magic_cards_model.machines.triggers import AbilityOnStack
+
+    glorfindel = scenario.creature("Glorfindel, Dauntless Rescuer", "alice")
+    (trigger,) = [
+        ability
+        for ability in parse_abilities(glorfindel.card)
+        if ability.kind is AbilityKind.TRIGGERED
+    ]
+    effect = _ability_effect_or_notice(text)
+    assert effect is not None
+    with scenario.game._id_allocator_scope():
+        effect(
+            scenario.game,
+            AbilityOnStack(
+                kind=AbilityKind.TRIGGERED,
+                ability=trigger,
+                source_id=glorfindel.id,
+                source_name=glorfindel.name,
+                controller="alice",
+            ),
+        )
+    return glorfindel
+
+
+def _glorfindel_blocked(modes, blockers):
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Glorfindel, Dauntless Rescuer"])
+        .player("bob", battlefield=blockers)
+        .build()
+    )
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    for text in modes:
+        glorfindel = _resolve_glorfindel_mode(scenario, text)
+    glorfindel = scenario.creature("Glorfindel, Dauntless Rescuer", "alice")
+    scenario.attack_with(glorfindel, defending="bob")
+    try:
+        scenario.block(glorfindel, *[scenario.creature(name, "bob") for name in blockers])
+    except ValueError as error:
+        return str(error)
+    return None
+
+
+AT_MOST_ONE = "This creature can't be blocked by more than one creature each combat this turn."
+
+
+def test_glorfindel_mode_forbids_a_second_blocker_this_turn():
+    refusal = _glorfindel_blocked([AT_MOST_ONE], ["Hill Giant", "Grizzly Bears"])
+    assert refusal is not None and "more than one creature" in refusal and "CR 509.1b" in refusal
+
+
+def test_glorfindel_mode_allows_a_single_blocker():
+    assert _glorfindel_blocked([AT_MOST_ONE], ["Hill Giant"]) is None
+
+
+def test_without_the_mode_glorfindel_can_be_double_blocked():
+    assert _glorfindel_blocked([], ["Hill Giant", "Grizzly Bears"]) is None
+
+
+# -- block restrictions from permanents and creatures (CR 509.1b) -----------
+
+
+def test_bower_passage_stops_flyers_blocking_its_controllers_creatures():
+    refusal = _block("Hill Giant", ["Serra Angel"], mine=["Bower Passage"])
+    assert refusal is not None and "Bower Passage" in refusal and "CR 509.1b" in refusal
+    assert _block("Hill Giant", ["Grizzly Bears"], mine=["Bower Passage"]) is None
+
+
+def test_bower_passage_does_not_protect_the_opponents_creatures():
+    assert _block("Hill Giant", ["Serra Angel"], theirs=["Bower Passage"]) is None
+
+
+def test_silumgar_assassin_cannot_be_blocked_by_greater_power():
+    refusal = _block("Silumgar Assassin", ["Hill Giant"])
+    assert refusal is not None and "CR 509.1b" in refusal
+    assert _block("Silumgar Assassin", ["Grizzly Bears"]) is None  # equal power may block
+
+
+def test_herald_of_secret_streams_makes_countered_creatures_unblockable():
+    def counter(scenario, attacking):
+        attacking.add_counters(Counter.PLUS_ONE, 1)
+
+    refusal = _block(
+        "Grizzly Bears", ["Hill Giant"], mine=["Herald of Secret Streams"], setup=counter
+    )
+    assert refusal is not None and "can't be blocked" in refusal
+    assert _block("Grizzly Bears", ["Hill Giant"], mine=["Herald of Secret Streams"]) is None
+    assert (
+        _block("Grizzly Bears", ["Hill Giant"], theirs=["Herald of Secret Streams"], setup=counter)
+        is None
+    )
+
+
+def test_norman_osborn_cannot_be_blocked():
+    refusal = _block("Norman Osborn // Green Goblin", ["Hill Giant"])
+    assert refusal is not None and "can't be blocked" in refusal
+
+
+@pytest.mark.parametrize(
+    ("blocker", "blocked"),
+    [("Grizzly Bears", True), ("Serra Angel", False)],
+)
+def test_void_winnower_opponents_cant_block_with_even_mana_values(blocker, blocked):
+    refusal = _block("Hill Giant", [blocker], mine=["Void Winnower"])
+    assert (refusal is not None) is blocked
+    # Void Winnower's controller blocks freely
+    assert _block("Hill Giant", [blocker], theirs=["Void Winnower"]) is None
+
+
+def _make_coward(scenario, creature):
+    """What Kargan Intimidator's "Target creature becomes a Coward until end of
+    turn" mode does (CR 205.3m: the creature type is added in layer 4), put on
+    the board directly - the mode's own activation is another family's."""
+    from magic_cards_model.machines.layers import (
+        ContinuousEffect,
+        Duration,
+        Layer,
+        add_subtype,
+        only_this_incarnation,
+    )
+
+    effects = scenario.game.continuous_effects
+    with scenario.game._id_allocator_scope():
+        effects.add(
+            ContinuousEffect(
+                description=f"{creature.name} becomes a Coward",
+                layer=Layer.TYPE,
+                timestamp=effects.tick(),
+                duration=Duration.UNTIL_END_OF_TURN,
+                selector=only_this_incarnation(creature, creature.zone_change_stamp),
+                modification=add_subtype("Coward"),
+            )
+        )
+
+
+def test_cowards_cant_block_warriors():
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Kargan Intimidator"])
+        .player("bob", battlefield=["Grizzly Bears", "Serra Angel"])
+        .build()
+    )
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    kargan = scenario.creature("Kargan Intimidator", "alice")
+    bears = scenario.creature("Grizzly Bears", "bob")
+    _make_coward(scenario, bears)
+    assert "Coward" in scenario.game.characteristics_of(bears).subtypes
+    scenario.attack_with(kargan, defending="bob")
+    with pytest.raises(ValueError, match="CR 509.1b"):
+        scenario.block(kargan, bears)
+    scenario.block(kargan, scenario.creature("Serra Angel", "bob"))
+
+
+def test_a_coward_may_block_a_creature_that_is_not_a_warrior():
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Kargan Intimidator", "Hill Giant"])
+        .player("bob", battlefield=["Grizzly Bears"])
+        .build()
+    )
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    bears = scenario.creature("Grizzly Bears", "bob")
+    _make_coward(scenario, bears)
+    giant = scenario.creature("Hill Giant", "alice")
+    scenario.attack_with(giant, defending="bob")
+    scenario.block(giant, bears)
+
+
+# -- "attacks or blocks each combat if able" and "blocks each combat if able" --
+
+
+@pytest.mark.parametrize("name", ["Iron Golem", "Relentless Raptor"])
+def test_attacks_or_blocks_each_combat_requires_the_attack(name):
+    scenario = Scenario().player("alice", battlefield=[name]).player("bob").build()
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    with pytest.raises(ValueError, match=r"CR 508\.1d"):
+        scenario.attack_with()
+    scenario.attack_with(scenario.creature(name, "alice"), defending="bob")
+
+
+@pytest.mark.parametrize("name", ["Iron Golem", "Relentless Raptor", "Razorgrass Screen"])
+def test_the_blocking_requirement_forces_the_block(name):
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Hill Giant"])
+        .player("bob", battlefield=[name])
+        .build()
+    )
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    scenario.attack_with(scenario.creature("Hill Giant", "alice"), defending="bob")
+    with pytest.raises(ValueError, match=r"CR 509\.1c"):
+        scenario.no_blocks()
+    scenario.block(scenario.attackers()[0], scenario.creature(name, "bob"))
+
+
+def test_razorgrass_screen_cannot_attack_but_is_not_required_to():
+    scenario = Scenario().player("alice", battlefield=["Razorgrass Screen"]).player("bob").build()
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    scenario.attack_with(defending="bob")
+
+
+# -- Glorfindel played end to end: "Whenever you scry, choose one and ~ gets
+#    +1/+1 until end of turn" (CR 701.22a, 603.3c, 700.2) ---------------------
+
+_FEWER_THAN_TWO = "Glorfindel can't be blocked by more than one creature each combat this turn."
+_MUST_BE_BLOCKED = "Glorfindel must be blocked this turn if able."
+
+
+def _scry_with_glorfindel(mode, blockers=()):
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Glorfindel, Dauntless Rescuer"], library=["Mountain"])
+        .player("bob", battlefield=list(blockers))
+        .build()
+    )
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    scenario.scry_keeping_everything_on_top(username="alice")
+    scenario.will_choose_mode(mode, username="alice", source="Glorfindel, Dauntless Rescuer")
+    scenario.game.scry("alice", 1, source="Glorfindel, Dauntless Rescuer")
+    scenario.game.put_triggers_on_stack()
+    assert scenario.stack_names() == ["Glorfindel, Dauntless Rescuer's triggered ability"]
+    scenario.pass_until_resolved()
+    return scenario
+
+
+def test_glorfindel_scry_pumps_and_applies_the_chosen_mode():
+    scenario = _scry_with_glorfindel(_FEWER_THAN_TWO, ["Hill Giant", "Grizzly Bears"])
+    glorfindel = scenario.creature("Glorfindel, Dauntless Rescuer", "alice")
+    base = glorfindel.card.power
+    assert scenario.game.power_of(glorfindel) == int(base) + 1
+    scenario.attack_with(glorfindel, defending="bob")
+    with pytest.raises(ValueError, match="CR 509.1b"):
+        scenario.block(
+            glorfindel, *[scenario.creature(n, "bob") for n in ("Hill Giant", "Grizzly Bears")]
+        )
+
+
+def test_glorfindel_other_mode_forces_a_block_and_still_pumps():
+    scenario = _scry_with_glorfindel(_MUST_BE_BLOCKED, ["Hill Giant"])
+    glorfindel = scenario.creature("Glorfindel, Dauntless Rescuer", "alice")
+    assert scenario.game.power_of(glorfindel) == int(glorfindel.card.power) + 1
+    scenario.attack_with(glorfindel, defending="bob")
+    with pytest.raises(ValueError, match="CR 509.1c"):
+        scenario.no_blocks()
+    scenario.block(glorfindel, scenario.creature("Hill Giant", "bob"))
+
+
+def test_glorfindel_modes_do_not_apply_without_a_scry():
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Glorfindel, Dauntless Rescuer"])
+        .player("bob", battlefield=["Hill Giant", "Grizzly Bears"])
+        .build()
+    )
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    glorfindel = scenario.creature("Glorfindel, Dauntless Rescuer", "alice")
+    scenario.attack_with(glorfindel, defending="bob")
+    scenario.no_blocks()
+
+
+# -- Ratonhnhake:ton's reflexive return-and-attach (CR 603.12, CR 701.3a) -------
+
+
+def _ratonhnhaketon_hits(graveyard):
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Ratonhnhaké꞉ton"], graveyard=list(graveyard))
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    assassin = scenario.creature("Ratonhnhaké꞉ton", "alice")
+    scenario.attack_with(assassin, defending="bob")
+    scenario.no_blocks()
+    scenario.combat_damage()
+    scenario.game.put_triggers_on_stack()
+    scenario.pass_until_resolved()  # the token
+    scenario.game.put_triggers_on_stack()
+    if scenario.stack_names():
+        scenario.pass_until_resolved()  # the reflexive return-and-attach
+    return scenario
+
+
+def test_ratonhnhaketon_returns_an_equipment_and_attaches_it_to_the_new_token():
+    scenario = _ratonhnhaketon_hits(["Bonesplitter"])
+    bonesplitter = scenario.find("Bonesplitter", Zone.BATTLEFIELD, "alice")
+    token = scenario.creature("Assassin Token", "alice")
+    assert bonesplitter.attached_to == token.id
+    assert scenario.game.characteristics_of(token).has_ability("Menace")
+
+
+def test_ratonhnhaketon_without_an_equipment_in_the_graveyard_still_makes_the_token():
+    scenario = _ratonhnhaketon_hits(["Grizzly Bears"])
+    scenario.creature("Assassin Token", "alice")
+    assert scenario.find("Grizzly Bears", Zone.GRAVEYARD, "alice") is not None
+
+
+# -- The Eternal Wanderer's +1: a delayed return at the owner's next end step --
+#    (CR 603.7, CR 400.7)
+
+
+def _wanderer_exiles(giants_owner="bob"):
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["The Eternal Wanderer"], library=["Island"] * 10)
+        .player("bob", battlefield=["Hill Giant"], library=["Island"] * 10)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    wanderer = scenario.find("The Eternal Wanderer", Zone.BATTLEFIELD, "alice")
+    giant = scenario.creature("Hill Giant", "bob")
+    scenario.activate(wanderer, index=0, targets=[giant])
+    scenario.pass_until_resolved()
+    return scenario, giant
+
+
+def _advance_to_end_step_of(scenario, username):
+    for _ in range(40):
+        if scenario.step is Step.END_STEP and scenario.game.active_player.username == username:
+            return
+        scenario.advance()
+    raise AssertionError("never reached the end step")
+
+
+def test_the_eternal_wanderer_exiled_card_returns_at_its_owners_next_end_step():
+    scenario, giant = _wanderer_exiles()
+    assert giant.zone is Zone.EXILE
+    _advance_to_end_step_of(scenario, "alice")
+    scenario.game.put_triggers_on_stack()
+    assert giant.zone is Zone.EXILE  # alice's own end step is not bob's
+    _advance_to_end_step_of(scenario, "bob")
+    scenario.game.put_triggers_on_stack()
+    scenario.pass_until_resolved()
+    returned = scenario.creature("Hill Giant", "bob")
+    assert returned.zone is Zone.BATTLEFIELD
+
+
+def test_the_eternal_wanderer_with_no_target_exiles_and_returns_nothing():
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["The Eternal Wanderer"], library=["Island"] * 10)
+        .player("bob", battlefield=["Hill Giant"], library=["Island"] * 10)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    wanderer = scenario.find("The Eternal Wanderer", Zone.BATTLEFIELD, "alice")
+    scenario.activate(wanderer, index=0, targets=[])
+    scenario.pass_until_resolved()
+    assert scenario.creature("Hill Giant", "bob").zone is Zone.BATTLEFIELD
+
+
+# -- Kargan Intimidator's modal activation, driven through the engine -----------
+#    "{1}: Choose one that hasn't been chosen this turn - ..." (CR 700.2a,
+#    CR 700.2c, CR 700.2d, CR 602.2b)
+
+PUMP_MODE = "This creature gets +1/+1 until end of turn."
+COWARD_MODE = "Target creature becomes a Coward until end of turn."
+TRAMPLE_MODE = "Target Warrior gains trample until end of turn."
+
+
+def _kargan_world(bob=("Grizzly Bears", "Serra Angel"), alice_extra=()):
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=["Kargan Intimidator", *alice_extra, "Island", "Island", "Island"],
+            library=["Island"] * 10,
+        )
+        .player("bob", battlefield=list(bob), library=["Island"] * 10)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    return scenario, scenario.creature("Kargan Intimidator", "alice")
+
+
+def _kargan_activate(scenario, kargan, mode, *targets):
+    scenario.will_choose_mode(mode, username="alice", source="Kargan Intimidator")
+    scenario.activate(kargan, *scenario.untapped_sources("Island"), index=0, targets=list(targets))
+    scenario.pass_until_resolved()
+
+
+def test_kargan_pump_mode_gives_plus_one_plus_one():
+    scenario, kargan = _kargan_world()
+    base = scenario.game.power_of(kargan)
+    _kargan_activate(scenario, kargan, PUMP_MODE)
+    assert scenario.game.power_of(kargan) == base + 1
+
+
+def test_kargan_coward_mode_makes_the_target_a_coward_that_cannot_block_warriors():
+    scenario, kargan = _kargan_world()
+    bears = scenario.creature("Grizzly Bears", "bob")
+    _kargan_activate(scenario, kargan, COWARD_MODE, bears)
+    assert scenario.game.characteristics_of(bears).subtypes == ("Coward",)  # CR 205.1a
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    scenario.attack_with(kargan, defending="bob")
+    with pytest.raises(ValueError, match="CR 509.1b"):
+        scenario.block(kargan, bears)
+
+
+def test_kargan_trample_mode_targets_only_a_warrior():
+    scenario, kargan = _kargan_world(alice_extra=["Hill Giant"])
+    _kargan_activate(scenario, kargan, TRAMPLE_MODE, kargan)  # Kargan is a Warrior
+    assert scenario.game.characteristics_of(kargan).has_ability("Trample")
+
+
+def test_kargan_trample_mode_refuses_a_target_that_is_not_a_warrior():
+    scenario, kargan = _kargan_world()
+    bears = scenario.creature("Grizzly Bears", "bob")
+    with pytest.raises(ValueError, match="needs a warrior"):
+        _kargan_activate(scenario, kargan, TRAMPLE_MODE, bears)
+
+
+def test_kargan_cannot_repeat_a_mode_in_one_turn():
+    scenario, kargan = _kargan_world()
+    _kargan_activate(scenario, kargan, PUMP_MODE)
+    scenario.will_choose_mode(PUMP_MODE, username="alice", source="Kargan Intimidator")
+    with pytest.raises(ValueError, match="not among the printed modes"):
+        scenario.activate(kargan, *scenario.untapped_sources("Island"), index=0, targets=[])
+
+
+def test_each_mode_can_be_chosen_once_in_a_turn():
+    scenario, kargan = _kargan_world()
+    bears = scenario.creature("Grizzly Bears", "bob")
+    _kargan_activate(scenario, kargan, PUMP_MODE)
+    _kargan_activate(scenario, kargan, COWARD_MODE, bears)
+    _kargan_activate(scenario, kargan, TRAMPLE_MODE, kargan)
+    assert set(kargan.chosen_modal_options_this_turn) == {PUMP_MODE, COWARD_MODE, TRAMPLE_MODE}
+
+
+def test_kargan_modes_reset_on_the_next_turn():
+    scenario, kargan = _kargan_world()
+    _kargan_activate(scenario, kargan, PUMP_MODE)
+    assert PUMP_MODE in kargan.chosen_modal_options_this_turn
+    for _ in range(30):
+        scenario.advance()
+        if scenario.game.turn.turn_number > 1 and scenario.step is Step.PRECOMBAT_MAIN:
+            break
+    assert PUMP_MODE not in kargan.chosen_modal_options_this_turn

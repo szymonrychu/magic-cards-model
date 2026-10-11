@@ -1,0 +1,139 @@
+{
+  "object": "card",
+  "id": "abc8e0f8-fdb9-4f24-a3e3-439f6cc3ebdc",
+  "oracle_id": "ec3471ad-b65c-4e35-a7d1-68da9555a9ec",
+  "multiverse_ids": [
+    489687
+  ],
+  "mtgo_id": 82062,
+  "tcgplayer_id": 218801,
+  "cardmarket_id": 484429,
+  "name": "Ethersworn Canonist",
+  "lang": "en",
+  "released_at": "2020-08-07",
+  "uri": "https://api.scryfall.com/cards/abc8e0f8-fdb9-4f24-a3e3-439f6cc3ebdc",
+  "scryfall_uri": "https://scryfall.com/card/2xm/14/ethersworn-canonist?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T08:10:16Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/a/b/abc8e0f8-fdb9-4f24-a3e3-439f6cc3ebdc.jpg?1783930216",
+    "normal": "https://cards.scryfall.io/normal/front/a/b/abc8e0f8-fdb9-4f24-a3e3-439f6cc3ebdc.jpg?1783930216",
+    "large": "https://cards.scryfall.io/large/front/a/b/abc8e0f8-fdb9-4f24-a3e3-439f6cc3ebdc.jpg?1783930216",
+    "png": "https://cards.scryfall.io/png/front/a/b/abc8e0f8-fdb9-4f24-a3e3-439f6cc3ebdc.png?1783930216",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/a/b/abc8e0f8-fdb9-4f24-a3e3-439f6cc3ebdc.jpg?1783930216",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/a/b/abc8e0f8-fdb9-4f24-a3e3-439f6cc3ebdc.jpg?1783930216",
+    "thumb": "https://cards.scryfall.io/thumb/front/a/b/abc8e0f8-fdb9-4f24-a3e3-439f6cc3ebdc.webp?1783930216",
+    "grid": "https://cards.scryfall.io/grid/front/a/b/abc8e0f8-fdb9-4f24-a3e3-439f6cc3ebdc.webp?1783930216",
+    "display": "https://cards.scryfall.io/display/front/a/b/abc8e0f8-fdb9-4f24-a3e3-439f6cc3ebdc.webp?1783930216",
+    "art": "https://cards.scryfall.io/art/front/a/b/abc8e0f8-fdb9-4f24-a3e3-439f6cc3ebdc.webp?1783930216",
+    "crop": "https://cards.scryfall.io/crop/front/a/b/abc8e0f8-fdb9-4f24-a3e3-439f6cc3ebdc.webp?1783930216"
+  },
+  "mana_cost": "{1}{W}",
+  "cmc": 2.0,
+  "type_line": "Artifact Creature \u2014 Human Cleric",
+  "oracle_text": "Each player who has cast a nonartifact spell this turn can't cast additional nonartifact spells.",
+  "power": "2",
+  "toughness": "2",
+  "colors": [
+    "W"
+  ],
+  "color_identity": [
+    "W"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "372dafe8-b5d1-4b81-998f-3ae96b59498a",
+  "set": "2xm",
+  "set_name": "Double Masters",
+  "set_type": "masters",
+  "set_uri": "https://api.scryfall.com/sets/372dafe8-b5d1-4b81-998f-3ae96b59498a",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3A2xm&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/2xm?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/abc8e0f8-fdb9-4f24-a3e3-439f6cc3ebdc/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Aec3471ad-b65c-4e35-a7d1-68da9555a9ec&unique=prints",
+  "collector_number": "14",
+  "digital": false,
+  "rarity": "rare",
+  "flavor_text": "\"The noble work of our order is to infuse all life on Esper with etherium. Our goal will be reached more rapidly if new life is . . . suppressed.\"",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Izzy",
+  "artist_ids": [
+    "2c3d2473-ff5d-4309-8194-e0b2def2ab65"
+  ],
+  "illustration_id": "6f18626c-aeb9-4cef-96a4-34e2d53e1cb9",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 2807,
+  "penny_rank": 497,
+  "preview": {
+    "source": "clotaka1",
+    "source_uri": "https://www.youtube.com/watch?v=FwFNKNSigOw",
+    "previewed_at": "2020-07-24"
+  },
+  "prices": {
+    "usd": "4.74",
+    "usd_foil": "6.18",
+    "usd_etched": null,
+    "eur": "4.15",
+    "eur_foil": "7.63",
+    "tix": "0.14"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=489687&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DEthersworn%2BCanonist",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DEthersworn%2BCanonist",
+    "edhrec": "https://edhrec.com/route/?cc=Ethersworn+Canonist"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F218801%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=484429&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/82062?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

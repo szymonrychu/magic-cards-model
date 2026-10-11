@@ -1395,10 +1395,13 @@ def _self_reference_alternatives(state: CardState) -> tuple[str, ...]:
 
 def _self_reference_names(name: str) -> tuple[str, ...]:
     """`_self_reference_alternatives` for a bare name."""
-    words = name.split()
-    candidates = {"this creature", "this token", name, name.split(",")[0].strip()}
-    if len(words) > 1 and "," not in name:
-        candidates.add(words[0])
+    candidates = {"this creature", "this token", "this land", "this vehicle", "this artifact"}
+    # "Norman Osborn // Green Goblin": each face names itself (CR 201.5c).
+    for face in name.split(" // "):
+        words = face.split()
+        candidates.update({face, face.split(",")[0].strip()})
+        if len(words) > 1 and "," not in face:
+            candidates.add(words[0])
     return tuple(
         sorted((candidate for candidate in candidates if candidate), key=len, reverse=True)
     )
@@ -1438,8 +1441,33 @@ def _evasion_restriction_sentences(attacker: CardState, game: "Game | None" = No
         rf".*(?:can't be blocked\b|can't block or be blocked by\b)",
         re.IGNORECASE,
     )
-    sentences = _computed_ability_sentences(attacker, game)
-    return [sentence for sentence in sentences if subject.search(sentence)]
+    found = [
+        sentence
+        for sentence in _computed_ability_sentences(attacker, game)
+        if subject.search(sentence)
+    ]
+    if game is not None and attacker.zone is Zone.BATTLEFIELD:
+        # A gated grant ("As long as you have the city's blessing, this
+        # creature has hexproof and can't be blocked.") hands over the bare
+        # clause `_split_gated_grants` keeps verbatim, which is no sentence.
+        found.extend(
+            ability
+            for ability in game.characteristics_of(attacker).abilities
+            if ability.strip().rstrip(".").lower() == "can't be blocked"
+        )
+    return found
+
+
+@functools.cache
+def attacker_cap_pattern(short_name: str) -> "re.Pattern[str]":
+    """The sentence shape `attacker_cap_restriction` reads for a defender
+    called `short_name`; also asked by the static audit
+    (`static_audit/casting_attack_restrictions.py`)."""
+    return re.compile(
+        rf"no more than one creature can attack (?:this planeswalker|this battle|"
+        rf"{re.escape(short_name)})\b.*each combat",
+        re.IGNORECASE,
+    )
 
 
 def attacker_cap_restriction(defender: CardState, game: "Game | None" = None) -> str | None:
@@ -1459,12 +1487,7 @@ def attacker_cap_restriction(defender: CardState, game: "Game | None" = None) ->
     which is why it lives here, read by `Game.declare_attackers` over the
     whole declaration, rather than inside `attack_refusal`.
     """
-    short_name = defender.name.split(",")[0].strip()
-    subject = re.compile(
-        rf"no more than one creature can attack (?:this planeswalker|this battle|"
-        rf"{re.escape(short_name)})\b.*each combat",
-        re.IGNORECASE,
-    )
+    subject = attacker_cap_pattern(defender.name.split(",")[0].strip())
     for sentence in _computed_ability_sentences(defender, game):
         if subject.search(sentence):
             return sentence
@@ -1962,6 +1985,10 @@ def evasion_restriction_refusal(
     `looks_like_unparsed_evasion_restriction` instead of silently doing
     nothing.
     """
+    from .attached_restrictions import attached_evasion_refusal
+
+    if (attached := attached_evasion_refusal(game, attacker)) is not None:
+        return attached
     for sentence in _evasion_restriction_sentences(attacker, game):
         compound = _CANT_BLOCK_OR_BE_BLOCKED_BY_RE.search(sentence)
         if compound is not None:
@@ -3490,8 +3517,18 @@ _ATTACKS_EACH_COMBAT_RE = re.compile(
 )
 
 
+#: "This creature attacks or blocks each combat if able." (Iron Golem,
+#: Relentless Raptor): CR 508.1d's requirement on its controller's turn and
+#: CR 509.1c's on the other player's - one sentence, two requirements.
+_ATTACKS_OR_BLOCKS_EACH_COMBAT_RE = re.compile(
+    r"^(?:(?P<subject>.+?) )?attacks or blocks each combat if able\.?$", re.IGNORECASE
+)
+
+
 def _attack_requirement_match(line: str, name: str) -> "re.Match[str] | None":
-    match = _ATTACKS_EACH_COMBAT_RE.fullmatch(line.strip())
+    match = _ATTACKS_EACH_COMBAT_RE.fullmatch(line.strip()) or (
+        _ATTACKS_OR_BLOCKS_EACH_COMBAT_RE.fullmatch(line.strip())
+    )
     if match is None:
         return None
     subject = (match.group("subject") or "").strip().lower()
@@ -3512,6 +3549,12 @@ def _attack_requirement_match(line: str, name: str) -> "re.Match[str] | None":
     return match
 
 
+def reads_block_requirement_line(line: str) -> bool:
+    """Whether `line` is "This creature blocks each combat if able." (CR 509.1c),
+    the requirement `_own_block_requirements` reads off the computed board."""
+    return _BLOCKS_NAMED_EACH_COMBAT_RE.fullmatch(line.strip()) is not None
+
+
 def is_attack_requirement_line(line: str, name: str) -> bool:
     """Whether one computed ability line of a creature named `name` is its own
     "attacks [a player] each combat if able" requirement (CR 508.1d)."""
@@ -3527,7 +3570,9 @@ def _own_attack_requirements(game: "Game", creature: CardState) -> list[bool]:
     for line in characteristics.abilities:
         match = _attack_requirement_match(line, creature.name)
         if match is not None:
-            requirements.append(match.group("player") is not None)
+            requirements.append(
+                "player" in match.re.groupindex and match.group("player") is not None
+            )
     from .combat_statics import extra_attack_requirements
 
     requirements.extend(extra_attack_requirements(game, creature))
@@ -3712,6 +3757,13 @@ def _own_block_requirements(game: "Game", creature: CardState) -> list[str | Non
         if match is not None:
             attacker = match.group("attacker")
             names.append(attacker.lower() if attacker is not None else None)
+        elif _attack_requirement_match(line, creature.name) is not None and (
+            _ATTACKS_OR_BLOCKS_EACH_COMBAT_RE.fullmatch(line.strip())
+        ):
+            names.append(None)
+    from .attached_restrictions import attached_block_requirements
+
+    names.extend(attached_block_requirements(game, creature))
     return names
 
 

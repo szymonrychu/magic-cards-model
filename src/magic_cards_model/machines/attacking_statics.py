@@ -42,6 +42,7 @@ from .layers import (
     TappedCreaturesControlledBy,
     _source_line_for,
     _split_and_validate_keywords,
+    _split_gated_grants,
     grant_ability,
 )
 from .layers.model import grant_keyword
@@ -225,7 +226,8 @@ def parse_tapped_group_keyword_grant(sentence: str) -> EffectBuilder | None:
 
 _SELF_UNLESS_RE = re.compile(
     r"^(?P<subject>.+?) can't (?P<what>attack or block|attack|block)"
-    r"(?: (?P<alone>alone)| unless (?P<cond>.+?))?\.?$",
+    r"(?: (?P<alone>alone)| unless (?P<cond>.+?)| (?:if|as long as) (?P<ifcond>.+?)"
+    r"| during (?P<during>extra turns))?\.?$",
     re.IGNORECASE,
 )
 _GREATER_POWER_COND_RE = re.compile(
@@ -325,15 +327,33 @@ def _self_sentences(game, creature):
             yield sentence, match
 
 
+_EXTRA_TURNS_COND = "this turn is an extra turn"
+
+
+def _gate(match: "re.Match[str]") -> tuple[str | None, bool]:
+    """(condition, forbids_when_true) of a `_SELF_UNLESS_RE` match: "can't
+    attack unless <c>" forbids it while <c> is false, "can't attack if <c>" /
+    "as long as <c>" / "during extra turns" while it is true."""
+    if match["cond"] is not None:
+        return match["cond"], False
+    if match["ifcond"] is not None:
+        return match["ifcond"], True
+    if match["during"] is not None:
+        return _EXTRA_TURNS_COND, True
+    return None, False
+
+
 def _condition_refusal(game, creature, defender, action: str) -> str | None:
     rule = "CR 508.1c" if action == "attack" else "CR 509.1b"
     for sentence, match in _self_sentences(game, creature):
-        if action not in match["what"].lower().split(" or ") or match["cond"] is None:
+        condition, forbids_when_true = _gate(match)
+        if action not in match["what"].lower().split(" or ") or condition is None:
             continue
-        if _PAY_COND_RE.match(match["cond"]) or _GREATER_POWER_COND_RE.fullmatch(match["cond"]):
+        if _PAY_COND_RE.match(condition) or _GREATER_POWER_COND_RE.fullmatch(condition):
             continue
-        if _condition_holds(game, creature, defender, match["cond"]) is False:
-            return f'{creature.name} can\'t {action}: "{sentence}" - that is not so now ({rule})'
+        if _condition_holds(game, creature, defender, condition) is forbids_when_true:
+            reason = "so" if forbids_when_true else "not so"
+            return f'{creature.name} can\'t {action}: "{sentence}" - that is {reason} now ({rule})'
     return None
 
 
@@ -492,7 +512,7 @@ def reads_self_condition_line(printing, text: str, *, card_name: str) -> bool:
         if match := _SELF_UNLESS_RE.fullmatch(sentence):
             if match["subject"].strip().lower() not in subjects:
                 return False
-            cond = match["cond"]
+            cond, _forbids_when_true = _gate(match)
             if cond is None:
                 # A bare "can't attack or block" is `combat`'s own unconditional
                 # reader's (`_self_attack_restriction_sentence`, block twin).
@@ -563,5 +583,172 @@ def parse_keyword_filtered_group_keyword_grant(sentence: str) -> EffectBuilder |
             )
             for keyword in keywords
         ]
+
+    return builder
+
+
+# --------------------------------------------------------------------------
+# Self statics gated on the permanent's own state (CR 604.2, CR 611.3a, CR 613.1f)
+# --------------------------------------------------------------------------
+
+#: "As long as you have the city's blessing, this creature has hexproof and
+#: can't be blocked." (Slippery Scoundrel), "As long as this creature is
+#: tapped, it's a Human Citizen with base power and toughness 1/1 and can't be
+#: blocked." (Futurist Operative), "As long as this creature has a +1/+1
+#: counter on it, it can attack as though it didn't have defender."
+#: (Skyclave Sentinel), "This creature has hexproof as long as it hasn't dealt
+#: damage yet." (Karakyk Guardian), "<Name> has hexproof unless it's attacking
+#: or blocking." (Tromokratis). The condition is one of a closed list of facts
+#: about the source that `LayerContext` (or the source itself) carries, so the
+#: effect is rebuilt on every CR 613.5 computation and is on exactly while the
+#: condition holds.
+_SELF_NOUN = r"(?:this (?:creature|permanent|token)|it|they)"
+_GATED_LEADING_RE = re.compile(
+    rf"^as long as (?P<cond>[^,]+), (?P<subject>{_SELF_NOUN})(?P<rest>(?:'s| ).+?)\.?$",
+    re.IGNORECASE,
+)
+_GATED_TRAILING_RE = re.compile(
+    r"^this (?:creature|permanent|token) (?P<rest>has .+?) "
+    r"(?:(?P<positive>as long as)|(?P<negative>unless)) (?P<cond>.+?)\.?$",
+    re.IGNORECASE,
+)
+_BASE_FORM_RE = re.compile(
+    r"^'s an? (?P<types>[A-Z][A-Za-z]*(?: [A-Z][A-Za-z]*)*) with base power and toughness "
+    r"(?P<power>\d+)/(?P<toughness>\d+)(?P<tail>(?: and .+)?)$"
+)
+_NO_DEFENDER_RE = re.compile(r"^can attack as though (?:it|they) didn'?t have defender$", re.I)
+_TAPPED_COND_RE = re.compile(rf"^{_SELF_NOUN}(?:'s| is) (?P<state>tapped|untapped)$", re.I)
+_BLESSING_COND_RE = re.compile(r"^you have the city's blessing$", re.I)
+_COUNTER_COND_RE = re.compile(
+    rf"^{_SELF_NOUN} (?:has|have) an? (?P<kind>[+-]\d+/[+-]\d+|[a-z]+) counter on "
+    r"(?:it|them|this (?:creature|permanent|token))$",
+    re.I,
+)
+_NO_DAMAGE_COND_RE = re.compile(rf"^{_SELF_NOUN} (?:hasn't|haven't) dealt damage yet$", re.I)
+_COMBAT_COND_RE = re.compile(rf"^{_SELF_NOUN}(?:'s| is| are) attacking or blocking$", re.I)
+
+
+def _self_state_gate(condition: str):
+    """`(CardState, LayerContext) -> bool` for one of the closed self-state
+    conditions above, or None."""
+    text = condition.strip().rstrip(".")
+    if match := _TAPPED_COND_RE.fullmatch(text):
+        tapped = match["state"].lower() == "tapped"
+        return lambda source, context: source.tapped is tapped
+    if _BLESSING_COND_RE.fullmatch(text):
+        return lambda source, context: source.controller in context.citys_blessing_players
+    if match := _COUNTER_COND_RE.fullmatch(text):
+        kind = match["kind"]
+        return lambda source, context: source.counters[kind] > 0
+    if _NO_DAMAGE_COND_RE.fullmatch(text):
+        return lambda source, context: not source.has_dealt_damage
+    if _COMBAT_COND_RE.fullmatch(text):
+        return lambda source, context: (
+            source.id in context.attacking or source.id in context.blocking
+        )
+    return None
+
+
+def _gated_grants(rest: str) -> list[str] | None:
+    """The ability lines " has hexproof and can't be blocked" / " can attack as
+    though it didn't have defender" grant, or None."""
+    from .combat import ATTACK_WITHOUT_DEFENDER_TEXT
+
+    rest = rest.strip()
+    if _NO_DEFENDER_RE.fullmatch(rest):
+        return [ATTACK_WITHOUT_DEFENDER_TEXT]
+    if rest.lower().startswith("has "):
+        return _split_gated_grants(rest)
+    return None
+
+
+def parse_gated_self_static(sentence: str) -> EffectBuilder | None:
+    """The self statics above, or None. Tried by
+    `machines/layers._parse_layer_sentence` after its other shapes."""
+    from .layers import (
+        ContinuousEffect,
+        SetCreatureTypes,
+        Sublayer,
+        _only,
+        _subtype_word,
+        set_power_toughness,
+    )
+
+    text = " ".join(sentence.split())
+    lowered = text.lower()
+    if "as long as" not in lowered and " unless " not in lowered:
+        return None
+    negate = False
+    base: re.Match[str] | None = None
+    if match := _GATED_LEADING_RE.fullmatch(text):
+        condition, rest = match["cond"], match["rest"]
+        base = _BASE_FORM_RE.fullmatch(rest)
+        granted = _gated_grants(rest) if base is None else None
+    elif match := _GATED_TRAILING_RE.fullmatch(text):
+        condition, rest = match["cond"], " " + match["rest"]
+        negate = match["negative"] is not None
+        granted = _gated_grants(rest)
+    else:
+        return None
+    gate = _self_state_gate(condition)
+    if gate is None:
+        return None
+    subtypes: tuple[str, ...] = ()
+    if base is not None:
+        parsed = [_subtype_word(word) for word in base["types"].split()]
+        if any(word is None for word in parsed):
+            return None
+        subtypes = tuple(word for word in parsed if word is not None)
+        granted = _split_gated_grants(base["tail"]) if base["tail"] else []
+    if granted is None or (base is None and not granted):
+        return None
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        if gate(source, context) is negate:
+            return []
+        line = _source_line_for(source, sentence)
+        effects: list[ContinuousEffect] = []
+        if base is not None:
+            effects.append(
+                ContinuousEffect(
+                    description=f"{source.name}: becomes a {' '.join(subtypes)}",
+                    layer=Layer.TYPE,
+                    timestamp=timestamp,
+                    source_id=source.id,
+                    source_ability=line,
+                    selector=_only(source.id),
+                    modification=SetCreatureTypes(subtypes=subtypes),
+                )
+            )
+            effects.append(
+                ContinuousEffect(
+                    description=f"{source.name}: base P/T {base['power']}/{base['toughness']}",
+                    layer=Layer.POWER_TOUGHNESS,
+                    sublayer=Sublayer.SET,
+                    timestamp=timestamp,
+                    source_id=source.id,
+                    source_ability=line,
+                    selector=_only(source.id),
+                    modification=set_power_toughness(int(base["power"]), int(base["toughness"])),
+                )
+            )
+        effects.extend(
+            ContinuousEffect(
+                description=f"{source.name}: has {ability}",
+                layer=Layer.ABILITY,
+                timestamp=timestamp,
+                source_id=source.id,
+                source_ability=line,
+                selector=_only(source.id),
+                modification=grant_ability(ability),
+            )
+            for ability in granted
+        )
+        return effects
 
     return builder

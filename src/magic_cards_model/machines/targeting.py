@@ -2851,7 +2851,7 @@ class TargetingProfile(EngineModel):
                 )
         creature_types: frozenset[str] | None = None
         if requirement.share_a_creature_type and across is not None:
-            creature_types = _shareable_creature_types(target)
+            creature_types = _shareable_creature_types(target, game)
             common = across.get(("creature_types", id(requirement)))
             if (
                 creature_types is not None
@@ -5816,6 +5816,8 @@ def _read_phrase(prefix: str, suffix: str, *, strict: bool = False) -> TargetReq
 
     share_a_card_type, rest = _extract_share_a_card_type(rest)
 
+    share_a_creature_type_early, rest = _extract_share_a_creature_type(rest)
+
     required_keyword, rest = _extract_required_keyword(rest)
 
     attacking_alone, rest = _extract_attacking_alone(rest)
@@ -5862,7 +5864,7 @@ def _read_phrase(prefix: str, suffix: str, *, strict: bool = False) -> TargetReq
     required_name: str | None = None
     of_chosen_type = False
     distinct_names = False
-    share_a_creature_type = False
+    share_a_creature_type = share_a_creature_type_early
     chosen_by_opponent = False
     extra_excluded_subtypes: frozenset[str] = frozenset()
     event_comparison_attribute: ComparisonAttribute | None = None
@@ -5938,7 +5940,7 @@ def _read_phrase(prefix: str, suffix: str, *, strict: bool = False) -> TargetReq
             required_name = qualifiers.required_name
             of_chosen_type = qualifiers.of_chosen_type
             distinct_names = qualifiers.distinct_names
-            share_a_creature_type = qualifiers.share_a_creature_type
+            share_a_creature_type = share_a_creature_type or qualifiers.share_a_creature_type
             chosen_by_opponent = qualifiers.chosen_by_opponent
             extra_excluded_subtypes = frozenset(qualifiers.excluded_subtypes)
             required_keyword = required_keyword or qualifiers.required_keyword
@@ -6723,6 +6725,20 @@ def _extract_distinct_mana_values(rest: str) -> tuple[bool, str]:
 _SHARE_A_CARD_TYPE_RE = re.compile(r"^that share a card type\b", re.IGNORECASE)
 
 
+def _extract_share_a_creature_type(rest: str) -> tuple[bool, str]:
+    """Read a "that share a creature type" clause out of `rest` (battlefield
+    creatures: Secret Tunnel), or leave it untouched when there is none."""
+    match = _SHARE_A_CREATURE_TYPE_ANYWHERE_RE.search(rest)
+    if match is None:
+        return False, rest
+    return True, f"{rest[: match.start()]}{rest[match.end() :]}".strip()
+
+
+#: The same clause after a controller clause ("target creatures you control
+#: **that share a creature type**"), which is read out of `rest` later.
+_SHARE_A_CREATURE_TYPE_ANYWHERE_RE = re.compile(r"\s*\bthat share a creature type\b", re.IGNORECASE)
+
+
 def _extract_share_a_card_type(rest: str) -> tuple[bool, str]:
     """Read a "that share a card type" clause out of `rest`, or leave it
     untouched when there is none."""
@@ -6771,12 +6787,24 @@ def _computed_mana_value(target: Any, game: Any) -> float | None:
 _ALL_CREATURE_TYPES = "*"
 
 
-def _shareable_creature_types(target: Any) -> frozenset[str] | None:
+def _shareable_creature_types(target: Any, game: Any = None) -> frozenset[str] | None:
     """A target's creature types for `share_a_creature_type`, `{"*"}` for a
-    changeling (CR 702.73a), or `None` when they cannot be read (a bare id)."""
+    changeling (CR 702.73a), or `None` when they cannot be read (a bare id).
+    A permanent on the battlefield is read as the layers leave it (CR 613.1d):
+    Secret Tunnel's "two target creatures you control that share a creature
+    type"."""
     subtypes = getattr(target, "subtypes", None)
     if subtypes is None:
         return None
+    if game is not None and getattr(target, "zone", None) is Zone.BATTLEFIELD:
+        characteristics = game.characteristics_of(target)
+        if characteristics.has_ability("Changeling"):
+            return frozenset({_ALL_CREATURE_TYPES})
+        return frozenset(
+            str(subtype).lower()
+            for subtype in characteristics.subtypes
+            if noncreature_subtype_card_type(str(subtype)) is None
+        )
     if has_changeling(getattr(target, "oracle_text", None)):
         return frozenset({_ALL_CREATURE_TYPES})
     return frozenset(str(subtype).lower() for subtype in subtypes)

@@ -1207,7 +1207,84 @@ def _parse_linked_exile_clause(text: str) -> AbilityEffect | None:
         return _search_up_to_and_exile_effect(match)
     if _PUT_CARD_EXILED_WITH_IT_INTO_OWNERS_HAND_RE.fullmatch(stripped):
         return _put_card_exiled_with_it_into_owners_hand_effect
+    match = _EXILE_ONE_OF_THOSE_CREATURES_RE.fullmatch(stripped)
+    if match is not None:
+        return _exile_one_of_those_creatures_effect(optional=match.group("may") is not None)
     return None
+
+
+#: "you may exile one of those creatures" - the tail of a blocks / becomes
+#: blocked trigger over "one or more creatures" (Godsend): the creatures are
+#: the other half of the blocking pairs (CR 509.3e).
+_EXILE_ONE_OF_THOSE_CREATURES_RE = re.compile(
+    r"(?P<may>you may )?exile one of those creatures\.?", re.IGNORECASE
+)
+
+
+def _those_creatures_of_a_block_trigger(game: "Game", ability: AbilityOnStack) -> list[CardState]:
+    """ "Those creatures" of a trigger on a creature that blocks or becomes
+    blocked by one or more creatures (CR 509.3e): the attackers the creature
+    blocks when it is the blocker, the creatures blocking it when it is the
+    attacker - the creature being the ability's own source or the permanent
+    that source is attached to (CR 301.5a)."""
+    event = ability.event
+    if event is None or event.event is not TriggerEvent.BLOCKS:
+        return []
+    source = ability.source_or_last_known(game)
+    pair = {event.subject_id, event.related_id}
+    creature_id = (
+        source.id
+        if source.id in pair
+        else source.attached_to
+        if source.attached_to in pair
+        else None
+    )
+    if creature_id is None:
+        return []
+    if creature_id == event.subject_id:
+        ids = [a.attacker_id for a in game.combat.attacks if creature_id in a.blockers]
+    else:
+        attack = game.combat.attack_by(creature_id)
+        ids = list(attack.blockers) if attack is not None else []
+    found = (game.find_by_id(card_id) for card_id in ids)
+    return [card for card in found if isinstance(card, CardState) and card.zone is Zone.BATTLEFIELD]
+
+
+def _exile_one_of_those_creatures_effect(*, optional: bool) -> AbilityEffect:
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        candidates = _those_creatures_of_a_block_trigger(game, ability)
+        if not candidates:
+            return
+        controller = game.controller_of(ability).username
+        if optional and not game.ask(
+            Decision(
+                kind=DecisionKind.MAY,
+                player=controller,
+                prompt="exile one of those creatures",
+                source=ability.source_name,
+                source_id=source_id_of(ability),
+                cards=tuple(card.id for card in candidates),
+            )
+        ):
+            return
+        chosen = candidates[0]
+        if len(candidates) > 1:
+            answer = game.ask(
+                Decision(
+                    kind=DecisionKind.CHOOSE_CARDS,
+                    player=controller,
+                    prompt="choose one of those creatures to exile",
+                    source=ability.source_name,
+                    source_id=source_id_of(ability),
+                    amount=1,
+                    cards=tuple(card.id for card in candidates),
+                )
+            )
+            assert isinstance(answer, tuple)
+            chosen = next(card for card in candidates if card.id == answer[0])
+        game.exile_permanent(chosen)
+
+    return effect
 
 
 def _cast_from_linked_exile_effect(match: re.Match[str]) -> AbilityEffect | None:

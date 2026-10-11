@@ -2,7 +2,7 @@
   "ability": "{1}, Remove a +1/+1 counter from Ulasht: Choose one — • Ulasht deals 1 damage to target creature. • Create a 1/1 green Saproling creature token.",
   "action": {
     "controller": "alice",
-    "modes": [],
+    "modes": [1],
     "on_stack": true,
     "source": "Ulasht, the Hate Seed@alice#1",
     "targets": ["Memnite@alice#1"],
@@ -35,17 +35,7 @@
   "card": "Ulasht, the Hate Seed",
   "delta": {
     "created": {},
-    "decisions": [
-      {
-        "amount": 0,
-        "cards": [],
-        "kind": "choose_a_mode",
-        "player": "alice",
-        "players": [],
-        "prompt": "choose one",
-        "source": "Ulasht, the Hate Seed"
-      }
-    ],
+    "decisions": [],
     "fields_changed": ["creatures_died_this_turn", "damage_dealt_this_turn", "graveyard_arrivals_announced", "graveyard_arrivals_this_turn", "nontoken_creatures_died_under_control_this_turn", "permanents_left_battlefield_this_turn", "turn_history"],
     "notices": {},
     "objects": {

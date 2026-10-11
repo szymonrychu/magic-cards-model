@@ -1,0 +1,154 @@
+{
+  "object": "card",
+  "id": "0dcdad71-323e-41e0-a1b3-9fd5b753e71c",
+  "oracle_id": "ebf3fd80-9574-489b-9428-f4251834bdc4",
+  "multiverse_ids": [
+    457337
+  ],
+  "mtgo_id": 71386,
+  "arena_id": 69321,
+  "tcgplayer_id": 183216,
+  "cardmarket_id": 368350,
+  "name": "Nikya of the Old Ways",
+  "lang": "en",
+  "released_at": "2019-01-25",
+  "uri": "https://api.scryfall.com/cards/0dcdad71-323e-41e0-a1b3-9fd5b753e71c",
+  "scryfall_uri": "https://scryfall.com/card/rna/193/nikya-of-the-old-ways?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T09:07:22Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/0/d/0dcdad71-323e-41e0-a1b3-9fd5b753e71c.jpg?1783933642",
+    "normal": "https://cards.scryfall.io/normal/front/0/d/0dcdad71-323e-41e0-a1b3-9fd5b753e71c.jpg?1783933642",
+    "large": "https://cards.scryfall.io/large/front/0/d/0dcdad71-323e-41e0-a1b3-9fd5b753e71c.jpg?1783933642",
+    "png": "https://cards.scryfall.io/png/front/0/d/0dcdad71-323e-41e0-a1b3-9fd5b753e71c.png?1783933642",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/0/d/0dcdad71-323e-41e0-a1b3-9fd5b753e71c.jpg?1783933642",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/0/d/0dcdad71-323e-41e0-a1b3-9fd5b753e71c.jpg?1783933642",
+    "thumb": "https://cards.scryfall.io/thumb/front/0/d/0dcdad71-323e-41e0-a1b3-9fd5b753e71c.webp?1783933642",
+    "grid": "https://cards.scryfall.io/grid/front/0/d/0dcdad71-323e-41e0-a1b3-9fd5b753e71c.webp?1783933642",
+    "display": "https://cards.scryfall.io/display/front/0/d/0dcdad71-323e-41e0-a1b3-9fd5b753e71c.webp?1783933642",
+    "art": "https://cards.scryfall.io/art/front/0/d/0dcdad71-323e-41e0-a1b3-9fd5b753e71c.webp?1783933642",
+    "crop": "https://cards.scryfall.io/crop/front/0/d/0dcdad71-323e-41e0-a1b3-9fd5b753e71c.webp?1783933642"
+  },
+  "mana_cost": "{3}{R}{G}",
+  "cmc": 5.0,
+  "type_line": "Legendary Creature \u2014 Centaur Druid",
+  "oracle_text": "You can't cast noncreature spells.\nWhenever you tap a land for mana, add one mana of any type that land produced.",
+  "power": "5",
+  "toughness": "5",
+  "colors": [
+    "G",
+    "R"
+  ],
+  "color_identity": [
+    "G",
+    "R"
+  ],
+  "keywords": [],
+  "produced_mana": [
+    "B",
+    "G",
+    "R",
+    "U",
+    "W"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "arena",
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "97a7fd84-8d89-45a3-b48b-c951f6a3f9f1",
+  "set": "rna",
+  "set_name": "Ravnica Allegiance",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/97a7fd84-8d89-45a3-b48b-c951f6a3f9f1",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Arna&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/rna?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/0dcdad71-323e-41e0-a1b3-9fd5b753e71c/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Aebf3fd80-9574-489b-9428-f4251834bdc4&unique=prints",
+  "collector_number": "193",
+  "digital": false,
+  "rarity": "rare",
+  "watermark": "gruul",
+  "flavor_text": "\"The hooves of the Raze-Boar will trample the weak\u2014and their city\u2014to dust!\"",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Ryan Pancoast",
+  "artist_ids": [
+    "89cc9475-dda2-4d13-bf88-54b92867a25c"
+  ],
+  "illustration_id": "9091cd31-4e29-43e4-b5cb-80f6d3b1d805",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 10711,
+  "penny_rank": 10836,
+  "preview": {
+    "source": "BIG MAGIC",
+    "source_uri": "https://twitter.com/MtgBigmagic/status/1081928534514266112",
+    "previewed_at": "2019-01-06"
+  },
+  "prices": {
+    "usd": "0.34",
+    "usd_foil": "0.87",
+    "usd_etched": null,
+    "eur": "0.25",
+    "eur_foil": "0.84",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=457337&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DNikya%2Bof%2Bthe%2BOld%2BWays",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DNikya%2Bof%2Bthe%2BOld%2BWays",
+    "edhrec": "https://edhrec.com/route/?cc=Nikya+of+the+Old+Ways"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F183216%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=368350&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/71386?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

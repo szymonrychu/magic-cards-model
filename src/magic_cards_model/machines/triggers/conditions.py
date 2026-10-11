@@ -913,6 +913,26 @@ _BECOMES_BLOCKED_BY_WITHOUT_KEYWORD = re.compile(
 )
 
 
+def _equipped_blocks_or_is_blocked_once(
+    game: "Game", event: GameEvent, creature_id: UUID | None
+) -> bool:
+    """ "Whenever equipped creature blocks or becomes blocked by one or more
+    creatures" (CR 509.3a, 509.3c, 509.3e): the equipped creature blocks, or is
+    blocked, and the ability triggers once each combat for it however many
+    creatures that involves - so only the first blocking pair
+    `Game.declare_blockers` emits for the creature counts. That pair is the
+    first of the blocker's attackers in attack order when the creature blocks,
+    and the creature's first blocker (`Attack.blocked_by[0]`) when it is
+    blocked."""
+    if event.subject_id == creature_id:
+        blocked = [a for a in game.combat.attacks if creature_id in a.blocked_by]
+        return not blocked or blocked[0].attacker_id == event.related_id
+    if event.related_id == creature_id:
+        attack = game.combat.attack_by(creature_id)
+        return attack is None or not attack.blocked_by or attack.blocked_by[0] == event.subject_id
+    return False
+
+
 def _becomes_blocked_by_qualifier_holds(
     game: "Game", condition: str, blocker_id: "UUID | None"
 ) -> bool | None:
@@ -2194,6 +2214,11 @@ def _condition_matches(
             and source.attached_to is not None
             and event.related_id == source.attached_to
         )
+        if (
+            source.attached_to is not None
+            and "equipped creature blocks or becomes blocked by one or more creatures" in lowered
+        ):
+            return _equipped_blocks_or_is_blocked_once(game, event, source.attached_to)
         if mine:
             blocks = "blocks" in lowered and event.subject_id == source.id
             blocked = "becomes blocked" in lowered and (

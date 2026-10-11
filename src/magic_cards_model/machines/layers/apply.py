@@ -870,6 +870,15 @@ class LayerContext(EngineModel):
     #: (`AttackingTokensControlledBy`) reads it from here.
     attacking: frozenset[UUID] = frozenset()
 
+    #: The creatures blocking right now (CR 509.1g), by id - the twin of
+    #: `attacking` for "hexproof unless it's attacking or blocking".
+    blocking: frozenset[UUID] = frozenset()
+
+    #: The players holding the city's blessing (CR 702.131c, `Player.
+    #: has_citys_blessing`) - what "As long as you have the city's blessing,
+    #: ..." asks of its controller.
+    citys_blessing_players: frozenset[str] = frozenset()
+
     #: Every tapped permanent on the battlefield right now (CR 110.5), by id -
     #: `TappedCreaturesControlledBy`'s own reader (Adept Watershaper's "Other
     #: tapped creatures you control have indestructible."), the identical

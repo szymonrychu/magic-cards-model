@@ -411,11 +411,32 @@ _BLOCKED_BY_RE = re.compile(
     r"^(?P<subject>.+?) can't be blocked by (?P<desc>.+?)\.?$", re.IGNORECASE
 )
 _POWER_LESS_CANT_BLOCK_RE = re.compile(
-    r"^creatures with power less than (?P<bound>.+?) can't block "
+    r"^creatures with power (?P<cmp>less|greater) than (?P<bound>.+?) can't block "
     r"(?P<object>it|this creature|creatures you control)\.?$",
     re.IGNORECASE,
 )
 _GROUP_CANT_BLOCK_RE = re.compile(r"^(?P<group>.+?) can't block\.?$", re.IGNORECASE)
+#: "Creatures with flying can't block creatures you control." (Bower Passage),
+#: "Cowards can't block Warriors." (Kargan Intimidator): a blocker group and an
+#: attacker group (CR 509.1b).
+_GROUP_CANT_BLOCK_OBJECT_RE = re.compile(
+    r"^(?P<group>.+?) can't block (?P<object>(?!it\b|this creature\b).+?)\.?$", re.IGNORECASE
+)
+#: "Creatures you control with +1/+1 counters on them can't be blocked."
+#: (Herald of Secret Streams): an unconditional evasion grant to a group.
+_PLAIN_CANT_BE_BLOCKED_RE = re.compile(r"^(?P<subject>.+?) can't be blocked\.?$", re.IGNORECASE)
+#: "~ can't be blocked unless all creatures defending player controls block
+#: it." (Tromokratis): a fact about the whole declaration.
+_UNLESS_ALL_BLOCK_RE = re.compile(
+    r"^(?P<subject>.+?) can't be blocked unless all creatures defending player controls "
+    r"block (?:it|this creature)\.?$",
+    re.IGNORECASE,
+)
+#: "Your opponents can't block with creatures with even mana values." (Void
+#: Winnower): a block ban on the blockers' controller's side.
+_OPPONENTS_CANT_BLOCK_WITH_RE = re.compile(
+    r"^your opponents can't block with (?P<desc>.+?)\.?$", re.IGNORECASE
+)
 _THREE_OR_MORE_RE = re.compile(r"^(?P<count>\w+) or more creatures$", re.IGNORECASE)
 
 
@@ -443,6 +464,9 @@ def _single_description(text: str):
             str(value).lower() == "legendary"
             for value in game.characteristics_of(candidate).supertypes
         )
+    if word in {"creatures with even mana values", "creatures with odd mana values"}:
+        parity = 0 if " even " in f" {word} " else 1
+        return lambda game, candidate: int(candidate.mana_value) % 2 == parity
     if word == "enchanted creatures":
         return lambda game, candidate: _is_aura_attached(game, candidate)
     if word == "enchantment creatures":
@@ -549,9 +573,13 @@ def _attacker_subject(subject: str, source: CardState):
 
 
 #: "This Vehicle can't be blocked by ..." - the permanent naming itself by type.
-_OBJECT_NOUNS = frozenset({"this vehicle", "this permanent", "this artifact", "this creature"})
+_OBJECT_NOUNS = frozenset(
+    {"this vehicle", "this permanent", "this artifact", "this creature", "this land"}
+)
 
-_HAS_COUNTER_RE = re.compile(r"^an? (?P<kind>[+\-\d/]+ )?counters? on (?:it|them)$", re.IGNORECASE)
+_HAS_COUNTER_RE = re.compile(
+    r"^(?:an? )?(?P<kind>[+\-\d/]+ )?counters? on (?:it|them)$", re.IGNORECASE
+)
 
 
 def _block_sentences(game: "Game"):
@@ -602,7 +630,54 @@ def block_evasion_refusal(game: "Game", blocker: CardState, attacker: CardState)
             refusal = _group_cant_block(game, source, blocker, match, sentence)
             if refusal is not None:
                 return refusal
+        elif match := _OPPONENTS_CANT_BLOCK_WITH_RE.fullmatch(sentence):
+            matcher = parse_blocker_description(match["desc"])
+            if (
+                matcher is not None
+                and game.controller_of(blocker).username != game.controller_of(source).username
+                and matcher(game, blocker)
+            ):
+                return f'{blocker.name} can\'t block: {source.name} says "{sentence}" (CR 509.1b)'
+        elif (match := _GROUP_CANT_BLOCK_OBJECT_RE.fullmatch(sentence)) and (
+            refusal := _group_cant_block_object(game, source, blocker, attacker, match, sentence)
+        ):
+            return refusal
+        elif match := _PLAIN_CANT_BE_BLOCKED_RE.fullmatch(sentence):
+            applies = _attacker_subject(match["subject"], source)
+            if applies is not None and applies(game, attacker):
+                return (
+                    f"{attacker.name} can't be blocked: {source.name} says "
+                    f'"{sentence}" (CR 509.1b)'
+                )
     return None
+
+
+def _attacker_object(phrase: str, source: CardState):
+    """An attacker predicate for "creatures you control" and friends, or a bare
+    creature description of any controller ("Warriors")."""
+    applies = _attacker_subject(phrase, source)
+    if applies is not None:
+        return applies
+    matcher = parse_blocker_description(phrase)
+    return None if matcher is None else (lambda game, attacker: matcher(game, attacker))
+
+
+def _group_cant_block_object(game, source, blocker, attacker, match, sentence) -> str | None:
+    group = match["group"].strip()
+    if (
+        group.lower().startswith(("this ", "enchanted ", "equipped "))
+        or group.lower() == "creatures"
+    ):
+        return None
+    blockers = parse_blocker_description(group)
+    attackers = _attacker_object(match["object"].strip(), source)
+    if blockers is None or attackers is None or not blockers(game, blocker):
+        return None
+    if not attackers(game, attacker):
+        return None
+    return (
+        f'{blocker.name} can\'t block {attacker.name}: {source.name} says "{sentence}" (CR 509.1b)'
+    )
 
 
 def _power_less_cant_block(game, source, blocker, attacker, match, sentence) -> str | None:
@@ -625,11 +700,15 @@ def _power_less_cant_block(game, source, blocker, attacker, match, sentence) -> 
             return None
         bound = reader(game, game.controller_of(source).username or "")
     power = game.power_of(blocker)
-    if bound is None or power is None or power >= bound:
+    if bound is None or power is None:
+        return None
+    greater = match["cmp"].lower() == "greater"
+    if (power <= bound) if greater else (power >= bound):
         return None
     return (
-        f"{blocker.name} can't block {attacker.name}: its power {power} is less than "
-        f'{bound} - {source.name} says "{sentence}" (CR 509.1b)'
+        f"{blocker.name} can't block {attacker.name}: its power {power} is "
+        f'{"greater" if greater else "less"} than {bound} - {source.name} says "{sentence}" '
+        "(CR 509.1b)"
     )
 
 
@@ -647,6 +726,29 @@ def _group_cant_block(game, source, blocker, match, sentence) -> str | None:
     return f'{blocker.name} can\'t block: {source.name} says "{sentence}" (CR 509.1b)'
 
 
+def _all_must_block_refusal(game, source, attacker, blockers, match, sentence) -> str | None:
+    from .combat import defending_player
+
+    applies = _attacker_subject(match["subject"], source)
+    attack = game.combat.attack_by(attacker.id)
+    if applies is None or attack is None or not applies(game, attacker):
+        return None
+    defender = defending_player(game, attack.defender)
+    board = game.computed_board()
+    blocking = {blocker.id for blocker in blockers}
+    missing = [
+        creature
+        for creature in game.permanents_controlled_by(defender or "")
+        if board.of(creature).is_creature and creature.id not in blocking
+    ]
+    if not missing:
+        return None
+    return (
+        f"{attacker.name} can't be blocked unless all creatures {defender} controls block it, "
+        f'and {missing[0].name} does not: {source.name} says "{sentence}" (CR 509.1b)'
+    )
+
+
 def block_evasion_declaration_refusal(game: "Game", declared) -> str | None:
     """ "can't be blocked except by three or more creatures" judged on the
     whole declaration (CR 509.1b, like menace in CR 702.111b)."""
@@ -657,6 +759,11 @@ def block_evasion_declaration_refusal(game: "Game", declared) -> str | None:
         if attacker is None:
             continue
         for source, sentence in _block_sentences(game):
+            if (every := _UNLESS_ALL_BLOCK_RE.fullmatch(sentence)) is not None:
+                refusal = _all_must_block_refusal(game, source, attacker, blockers, every, sentence)
+                if refusal is not None:
+                    return refusal
+                continue
             match = _EXCEPT_BY_RE.fullmatch(sentence)
             if match is None:
                 continue
@@ -718,6 +825,24 @@ def _reads_block_sentence(sentence: str, card_name: str) -> bool:
             and group.lower() != "creatures"
             and parse_blocker_description(group) is not None
         )
+    if match := _OPPONENTS_CANT_BLOCK_WITH_RE.fullmatch(sentence):
+        return parse_blocker_description(match["desc"]) is not None
+    if match := _GROUP_CANT_BLOCK_OBJECT_RE.fullmatch(sentence):
+        group = match["group"].strip()
+        probe = _SubjectProbe(card_name)
+        return (
+            not group.lower().startswith(("this ", "enchanted ", "equipped "))
+            and group.lower() != "creatures"
+            and parse_blocker_description(group) is not None
+            and (
+                _attacker_subject(match["object"].strip(), probe) is not None
+                or parse_blocker_description(match["object"].strip()) is not None
+            )
+        )
+    if match := _PLAIN_CANT_BE_BLOCKED_RE.fullmatch(sentence):
+        return _subject_readable(match["subject"], card_name)
+    if match := _UNLESS_ALL_BLOCK_RE.fullmatch(sentence):
+        return _subject_readable(match["subject"], card_name)
     return False
 
 
@@ -745,10 +870,17 @@ class _SubjectProbe:
 
 
 def extra_attack_refusal(game: "Game", creature: CardState, defender) -> str | None:
-    from . import attached_restrictions, attack_block_costs, attacking_statics, group_attack_statics
+    from . import (
+        attached_restrictions,
+        attack_block_costs,
+        attacking_statics,
+        group_attack_statics,
+        static_cast_bans,
+    )
 
     return (
         attached_restrictions.attached_attack_refusal(game, creature)
+        or static_cast_bans.attack_ban_reason(game, creature)
         or attack_block_costs.return_cost_refusal(game, creature)
         or attacking_statics.self_attack_condition_refusal(game, creature, defender)
         or group_attack_statics.group_attack_refusal(game, creature, defender)

@@ -43,6 +43,7 @@ from ..casting import (
 from ..casting_restrictions import create_targeted_cant_cast_restriction
 from ..combat import (
     ASSIGN_AS_THOUGH_UNBLOCKED_TEXT,
+    BLOCKED_BY_AT_MOST_ONE_GRANT_TEXT,
     KEYWORDS_OUTSIDE_COMBAT,
     Keyword,
     has_keyword,
@@ -10354,7 +10355,7 @@ def _parse_put_then_grant_then_delayed_whole_text(
 #: by the time the clause gets here, like every other self-reference.
 _TARGET_BLOCKS_SELF_IF_ABLE_RE = re.compile(
     r"^(?P<phrase>(?:up to one )?target (?:[a-z' ]+ )?creature(?: [a-z' ]+?)?) blocks "
-    r"(?:this creature|this permanent|it) this turn if able\.?$",
+    r"(?P<referent>this creature|this permanent|it) this (?:turn|combat) if able\.?$",
     re.IGNORECASE,
 )
 
@@ -10393,7 +10394,19 @@ def _parse_target_blocks_self_if_able_clause(text: str) -> TargetedClause | None
         ):
             return
         controller = game.controller_of(stack_object).username
-        line = f"This creature blocks {source.name} each combat if able."
+        # "it" is whatever the trigger event names: the creature that
+        # attacked (Fighter Class: "Whenever a creature you control attacks,
+        # ... blocks it this combat if able"), which is the source itself for
+        # "Whenever this creature attacks" (Avalanche Tusker).
+        attacker = source
+        event = stack_object.event
+        if match.group("referent").lower() == "it" and event is not None:
+            named = game.find_by_id(event.subject_id) if event.subject_id is not None else None
+            if isinstance(named, CardState):
+                if named.zone is not Zone.BATTLEFIELD:
+                    return
+                attacker = named
+        line = f"This creature blocks {attacker.name} each combat if able."
         for target in game.resolve_targets(stack_object):
             if isinstance(target, CardState) and target.zone is Zone.BATTLEFIELD:
                 _grant_keywords_to(
@@ -10499,6 +10512,15 @@ _SELF_MUST_BE_BLOCKED_THIS_TURN_RE = re.compile(
     re.IGNORECASE,
 )
 
+#: "This creature can't be blocked by more than one creature each combat this
+#: turn." - Glorfindel's other mode: the source's own CR 509.1b restriction for
+#: the turn, granted as the text `combat.blocked_by_at_most_one_refusal` reads.
+_SELF_AT_MOST_ONE_BLOCKER_THIS_TURN_RE = re.compile(
+    r"^(?:[\u2022*]\s*)?(?:this creature|this permanent|it) can't be blocked by more than one "
+    r"creature(?: each combat)? this turn\.?$",
+    re.IGNORECASE,
+)
+
 
 @ABILITY_TEXT.rung("s11")
 @SPELL_TEXT.rung("s10")
@@ -10533,7 +10555,14 @@ def _parse_block_requirement_grant_clause(text: str) -> TargetedClause | None:
                     )
 
         return lure_effect
-    if _SELF_MUST_BE_BLOCKED_THIS_TURN_RE.fullmatch(flat) is None:
+    grant = (
+        "This creature must be blocked if able."
+        if _SELF_MUST_BE_BLOCKED_THIS_TURN_RE.fullmatch(flat) is not None
+        else BLOCKED_BY_AT_MOST_ONE_GRANT_TEXT
+        if _SELF_AT_MOST_ONE_BLOCKER_THIS_TURN_RE.fullmatch(flat) is not None
+        else None
+    )
+    if grant is None:
         return None
 
     def self_effect(game: "Game", stack_object: "StackObject") -> None:
@@ -10554,7 +10583,7 @@ def _parse_block_requirement_grant_clause(text: str) -> TargetedClause | None:
         _grant_keywords_to(
             game,
             source,
-            ["This creature must be blocked if able."],
+            [grant],
             "until end of turn",
             controller=game.controller_of(stack_object).username,
             source_name=stack_object.source_name,
@@ -10745,7 +10774,8 @@ def _double_power_and_toughness(game: "Game", target: CardState, source_name: st
 #: (CR 613.1f, CR 113.10) until cleanup. The single "target creature" form
 #: stays with `dispatch.py`'s own `_TARGET_CANT_BE_BLOCKED_RE`.
 _COUNTED_TARGETS_CANT_BE_BLOCKED_RE = re.compile(
-    r"^(?P<phrase>(?:up to |one or )?(?:x|\w+) target .*?creatures) can'?t be blocked this turn"
+    r"^(?P<phrase>(?:up to |one or )?(?:x|\w+) target .*?creatures(?: [a-z' ]+?)?) "
+    r"can'?t be blocked this turn"
     r"(?:\.\s*until end of turn, those creatures gain "
     r"(?:(?P<keywords>[a-z][a-z0-9 ,]*?),? and )?\"(?P<granted>[^\"]+)\")?\.?$",
     re.IGNORECASE,
@@ -10815,6 +10845,68 @@ def _parse_counted_targets_cant_be_blocked_whole_text(
     if '"' not in whole:
         return None
     return _counted_targets_cant_be_blocked(whole)
+
+
+#: "`<target phrase>` can't be blocked this turn except by `<description>`."
+#: (Departed Deckhand: "except by Spirits"): CR 509.1b's evasion restriction
+#: with a creature description for the exception, granted as the self
+#: sentence `combat_statics.block_evasion_refusal` reads. A keyword exception
+#: ("except by creatures with haste") is `dispatch._TARGET_CANT_BE_BLOCKED_RE`'s.
+_TARGET_CANT_BE_BLOCKED_EXCEPT_BY_RE = re.compile(
+    r"^(?P<phrase>(?:another )?target .+?) can'?t be blocked this turn except by "
+    r"(?P<desc>(?!creatures with ).+?)\.?$",
+    re.IGNORECASE,
+)
+
+
+def _target_cant_be_blocked_except_by(text: str) -> TargetedClause | None:
+    """`_TARGET_CANT_BE_BLOCKED_EXCEPT_BY_RE`'s shape, or `None`."""
+    match = _TARGET_CANT_BE_BLOCKED_EXCEPT_BY_RE.fullmatch(" ".join(text.strip().split()))
+    if match is None:
+        return None
+    from ..combat_statics import parse_blocker_description
+
+    description = match.group("desc").strip()
+    if parse_blocker_description(description) is None:
+        return None
+    if not _targets_understood(match.group("phrase"), count_agnostic=True):
+        return None
+    granted = f"This creature can't be blocked except by {description}."
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        effects = game.continuous_effects
+        for target in game.resolve_targets(stack_object):
+            if not isinstance(target, CardState) or target.zone is not Zone.BATTLEFIELD:
+                continue
+            effects.add(
+                ContinuousEffect(
+                    description=f"{target.name} can't be blocked except by {description} this turn",
+                    layer=Layer.ABILITY,
+                    timestamp=effects.tick(),
+                    duration=Duration.UNTIL_END_OF_TURN,
+                    selector=only_this_incarnation(target, target.zone_change_stamp),
+                    modification=grant_ability(granted),
+                )
+            )
+
+    return effect
+
+
+@MIXED_CLAUSE.rung("s11", for_spell=FORWARD)
+def _parse_target_cant_be_blocked_except_by_clause(
+    clause: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`_target_cant_be_blocked_except_by` as one clause."""
+    return _target_cant_be_blocked_except_by(clause)
+
+
+@ABILITY_TEXT.rung("s41", for_spell=False)
+@SPELL_TEXT.rung("s25", for_spell=True)
+def _parse_target_cant_be_blocked_except_by_text(
+    text: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`_target_cant_be_blocked_except_by` over a whole ability or spell text."""
+    return _target_cant_be_blocked_except_by(_strip_non_effect_preamble(text).strip())
 
 
 #: "`<target phrase>` gains `<keywords>` until end of turn and can't be

@@ -139,6 +139,7 @@ from ...numbers import QuantitySource as QuantitySource
 from random import Random as Random
 from ..delayed import (
     ReflexiveAttachSubjectToTargetConsequence as ReflexiveAttachSubjectToTargetConsequence,
+    ReflexiveReturnThenAttachToSubjectConsequence as ReflexiveReturnThenAttachToSubjectConsequence,
 )
 from ..delayed import ReflexiveConsequence as ReflexiveConsequence
 from ..delayed import ReflexiveCounterCountConsequence as ReflexiveCounterCountConsequence

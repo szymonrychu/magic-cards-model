@@ -1039,6 +1039,14 @@ class ContinuousMixin:
             # CR 508.1k: "Attacking tokens you control have flying" reads who
             # is attacking, which is combat state, not a characteristic.
             attacking=frozenset(self.combat.attacker_ids),
+            # CR 509.1g's blocking status, the twin of the line above
+            # (Tromokratis' "hexproof unless it's attacking or blocking").
+            blocking=frozenset(self.combat.blocker_ids),
+            # CR 702.131c's designation: "As long as you have the city's
+            # blessing, ..." (Slippery Scoundrel).
+            citys_blessing_players=frozenset(
+                player.username for player in self.players_in_game if player.has_citys_blessing
+            ),
             # CR 110.5: "Other tapped creatures you control have
             # indestructible." (Adept Watershaper) reads tapped status,
             # which is a permanent's physical state, not a characteristic.
@@ -1723,6 +1731,24 @@ class ContinuousMixin:
                         continue
                     if chosen.value == spell.name or chosen.value == spell.card.name:
                         increases.append(ManaCost.parse(f"{{{effect.amount}}}"))
+                elif effect.kind is CostModifierKind.NAMED_DECREASE:
+                    # Council of the Absolute: the discount twin of
+                    # `NAMED_INCREASE`, for the permanent's controller's own
+                    # spells ("you cast").
+                    if permanent.controller != caster:
+                        continue
+                    chosen = permanent.choice
+                    if chosen is None or chosen.kind is not ChoiceKind.CARD_NAME:
+                        if permanent.id not in already_noticed:
+                            already_noticed.add(permanent.id)
+                            self.cost_modifier_notices.append(
+                                CostModifierNotice(
+                                    source_id=permanent.id, source_name=permanent.name, text=text
+                                )
+                            )
+                        continue
+                    if chosen.value == spell.name or chosen.value == spell.card.name:
+                        decreases.append(ManaCost.parse(f"{{{effect.amount}}}"))
                 elif effect.kind is CostModifierKind.CHOSEN_TYPE_DECREASE:
                     # Gathering Stone: "Spells you cast of the chosen type
                     # cost {1} less to cast." `NAMED_INCREASE`'s own mirror -

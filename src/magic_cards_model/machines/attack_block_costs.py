@@ -12,8 +12,10 @@ you" wording (`combat.attack_costs_against`):
 - "Enchanted creature can't attack or block unless its controller pays <cost>"
   (Oppressive Rays, Cowed by Wisdom's "{1} for each card in your hand")
 - "This creature can't attack unless you return <a permanent> you control to
-  its owner's hand." (Floodtide Serpent) - a non-mana cost, chosen and paid
-  with the declaration by `Game._pay_attack_costs`.
+  its owner's hand." (Floodtide Serpent) and "This creature can't attack unless
+  you sacrifice two Islands." (Leviathan) - non-mana costs, chosen with the
+  declaration by `Game._pay_attack_costs` and paid by
+  `Game._return_attack_cost_permanents` once every attacker is registered.
 
 CR 508.1d: the player "is not required to pay" such a cost, so an attack the
 cost makes unaffordable is refused whole by `Game._pay_attack_costs` (CR
@@ -45,9 +47,12 @@ _SELF_COST_RE = re.compile(
     rf"(?P<cost>{_COST}.*?)\.?$",
     re.IGNORECASE,
 )
-_RETURN_COST_RE = re.compile(
-    r"^(?P<subject>.+?) can't attack unless you return an? (?P<kind>[a-z]+) you control "
-    r"to its owner's hand\.?$",
+_COUNT_WORDS = {"a": 1, "an": 1, "one": 1, "two": 2, "three": 3, "four": 4, "five": 5}
+_PERMANENT_COST_RE = re.compile(
+    r"^(?P<subject>.+?) can't attack unless you (?:"
+    r"(?P<return>return) an? (?P<kind>[a-z]+) you control to its owner's hand"
+    r"|(?P<sacrifice>sacrifice) (?P<count>an?|one|two|three|four|five) (?P<skind>[a-z]+?)s?"
+    r"(?: you control)?)\.?$",
     re.IGNORECASE,
 )
 _AMOUNT_RE = re.compile(
@@ -193,14 +198,44 @@ def block_costs(game: "Game", blocker: CardState) -> "list[AttackCost]":
     return _charges(game, blocker, "block", None)
 
 
-# -- "unless you return <a permanent> you control" (Floodtide Serpent) --------
+# -- "unless you return/sacrifice <permanents> you control" -----------------
+# (Floodtide Serpent, Leviathan)
 
 
-def _return_sentences(game: "Game", creature: CardState):
+def _is_kind(game: "Game", permanent: CardState, kind: str) -> bool:
+    """Whether `permanent` is of the card type or subtype named `kind`
+    (lowercase, singular), as the computed board has it (CR 613.5)."""
+    chars = game.characteristics_of(permanent)
+    wanted = next((t for t in Type if t.value.lower() == kind), None)
+    if wanted is not None:
+        return wanted in chars.types
+    return kind in {subtype.lower() for subtype in chars.subtypes}
+
+
+def _kind_readable(kind: str) -> bool:
+    from ..data.subtypes import subtype_vocabulary
+
+    return any(t.value.lower() == kind for t in Type) or kind in {
+        subtype.lower() for subtype in subtype_vocabulary()
+    }
+
+
+def _permanent_costs(game: "Game", creature: CardState):
+    """(sentence, kind, count, verb) for each of `creature`'s own "can't attack
+    unless you return/sacrifice ..." sentences."""
     for sentence in _creature_sentences(game, creature):
-        match = _RETURN_COST_RE.fullmatch(sentence)
-        if match is not None and _is_self(match["subject"], creature):
-            yield sentence, match["kind"].lower()
+        match = _PERMANENT_COST_RE.fullmatch(sentence)
+        if match is None or not _is_self(match["subject"], creature):
+            continue
+        if match["return"]:
+            yield sentence, match["kind"].lower(), 1, "return"
+        else:
+            yield (
+                sentence,
+                match["skind"].lower(),
+                _COUNT_WORDS[match["count"].lower()],
+                "sacrifice",
+            )
 
 
 def _creature_sentences(game: "Game", creature: CardState):
@@ -211,51 +246,51 @@ def _creature_sentences(game: "Game", creature: CardState):
 
 def _return_candidates(game: "Game", creature: CardState, kind: str) -> list[CardState]:
     controller = game.controller_of(creature).username or ""
-    wanted = next((t for t in Type if t.value.lower() == kind), None)
-    if wanted is None:
-        return []
     return [
         permanent
         for permanent in game.permanents_controlled_by(controller)
-        if wanted in game.characteristics_of(permanent).types
+        if _is_kind(game, permanent, kind)
     ]
 
 
-def return_costs(game: "Game", creature: CardState) -> "list[tuple[str, list[CardState]]]":
-    """(sentence, permanents that could be returned) for each "unless you
-    return ..." cost `creature` carries."""
+def return_costs(
+    game: "Game", creature: CardState
+) -> "list[tuple[str, list[CardState], int, str]]":
+    """(sentence, permanents that could be paid, how many, "return" or
+    "sacrifice") for each such cost `creature` carries."""
     return [
-        (sentence, _return_candidates(game, creature, kind))
-        for sentence, kind in _return_sentences(game, creature)
+        (sentence, _return_candidates(game, creature, kind), count, verb)
+        for sentence, kind, count, verb in _permanent_costs(game, creature)
     ]
 
 
 def return_cost_refusal(game: "Game", creature: CardState) -> str | None:
-    """Why `creature` can't attack for want of a permanent to return (CR
-    508.1c: it can't attack unless the cost can be paid, CR 118.3)."""
-    for sentence, candidates in return_costs(game, creature):
-        if not candidates:
+    """Why `creature` can't attack for want of permanents to return or
+    sacrifice (CR 508.1c: it can't attack unless the cost can be paid, CR
+    118.3)."""
+    for sentence, candidates, count, verb in return_costs(game, creature):
+        if len(candidates) < count:
             return (
-                f'{creature.name} can\'t attack: "{sentence}" and there is nothing to return '
-                "(CR 508.1c)"
+                f'{creature.name} can\'t attack: "{sentence}" and there is not enough to '
+                f"{verb} (CR 508.1c)"
             )
     return None
 
 
 def return_cost_declaration_refusal(game: "Game", attacks) -> str | None:
-    """Each returned permanent is a different one: the declaration needs as
-    many as it has return costs per kind (CR 118.3, CR 508.1c)."""
+    """Each permanent paid is a different one: the declaration needs as many
+    as it has return and sacrifice costs per kind (CR 118.3, CR 508.1c)."""
     owed: dict[str, int] = {}
     pool: dict[str, set] = {}
     for creature, _defender in attacks:
-        for _sentence, kind in _return_sentences(game, creature):
-            owed[kind] = owed.get(kind, 0) + 1
+        for _sentence, kind, count, _verb in _permanent_costs(game, creature):
+            owed[kind] = owed.get(kind, 0) + count
             pool.setdefault(kind, {c.id for c in _return_candidates(game, creature, kind)})
     for kind, count in owed.items():
         if len(pool[kind]) < count:
             return (
-                f"the declaration needs {count} {kind}s returned to hand to pay for attacking, "
-                f"and only {len(pool[kind])} can be (CR 508.1c, CR 118.3)"
+                f"the declaration needs {count} {kind}s returned or sacrificed to pay for "
+                f"attacking, and only {len(pool[kind])} can be (CR 508.1c, CR 118.3)"
             )
     return None
 
@@ -287,9 +322,9 @@ def reads_attack_block_cost_line(printing: "Card", text: str, *, card_name: str)
         elif match := _SELF_COST_RE.fullmatch(sentence):
             if match["subject"].strip().lower() not in names or not _amount_readable(match["cost"]):
                 return False
-        elif match := _RETURN_COST_RE.fullmatch(sentence):
-            kinds = {t.value.lower() for t in Type}
-            if match["subject"].strip().lower() not in names or match["kind"].lower() not in kinds:
+        elif match := _PERMANENT_COST_RE.fullmatch(sentence):
+            kind = (match["kind"] or match["skind"]).lower()
+            if match["subject"].strip().lower() not in names or not _kind_readable(kind):
                 return False
         else:
             found = parse_attached(sentence)

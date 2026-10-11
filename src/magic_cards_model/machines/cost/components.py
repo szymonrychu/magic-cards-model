@@ -2151,6 +2151,12 @@ class CostModifierKind(StrEnum):
     `Game.static_cost_modifiers_for` reads the chosen name off the permanent
     and compares it to the spell's own name."""
 
+    NAMED_DECREASE = "named_decrease"
+    """"Spells with the chosen name you cast cost {2} less to cast." - Council
+    of the Absolute. `NAMED_INCREASE`'s discount twin: the CR 614.12a name
+    (`CardState.choice`, `ChoiceKind.CARD_NAME`) picks the spells, "you cast"
+    scopes it to the source's controller."""
+
     FLOOR = "floor"
     """"Each spell that would cost less than [N] mana to cast costs [N] mana
     to cast." - Trinisphere."""

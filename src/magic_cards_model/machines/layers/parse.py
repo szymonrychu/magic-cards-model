@@ -49,7 +49,7 @@ from .model import DOESNT_UNTAP_TEXT
 #: What the effect does to one object it applies to. Pure: returns a new
 #: `Characteristics`, never edits the one it was handed.
 def activated_ability_lines(
-    lines: Iterable[str], name: str, *, include_mana: bool = True
+    lines: Iterable[str], name: str, *, include_mana: bool = True, loyalty: bool = True
 ) -> tuple[str, ...]:
     """The activated abilities (CR 602.1) among an object's ability `lines`,
     each with its own name rewritten to "this permanent" (CR 201.5b) - the form
@@ -58,13 +58,16 @@ def activated_ability_lines(
 
     What "has all activated abilities of ..." (CR 613.1f) copies: the whole
     ability, cost and effect together, and nothing that is not an activated
-    ability (a static, a triggered ability, a keyword line).
+    ability (a static, a triggered ability, a keyword line). `loyalty=False`
+    leaves out loyalty abilities (CR 606.2): Scheming Fence's "except for
+    loyalty abilities".
     """
     found: list[str] = []
     for line in lines:
         if any(
             isinstance(ability, ActivatedAbility)
             and (include_mana or not is_activated_mana_ability(ability))
+            and (loyalty or ability.loyalty is None)
             for ability in parse_granted_ability_lines([line])
         ):
             found.append(self_normalized_effect_text(name, line))
@@ -2503,6 +2506,20 @@ _BECOMES_TYPE_IN_ADDITION_RE = re.compile(
 _BECOMES_SUBTYPE_IN_ADDITION_RE = re.compile(
     rf"^{_SUBJECT} becomes an? (?P<subtypes>[A-Za-z][A-Za-z' ]*?) in addition to "
     r"(?:its|his|her|their) other types(?: and gains (?P<keywords>[a-z][a-z ,]*?))?"
+    r"(?P<until_eot> until end of turn)?\.?$",
+    re.IGNORECASE,
+)
+
+#: "<subject> becomes a[n] <creature type(s)> [until end of turn]." with no "in
+#: addition to its other types" - Kargan Intimidator's "Target creature becomes a
+#: Coward until end of turn." CR 205.1a: "when an effect sets one or more of an
+#: object's subtypes, the new subtype(s) replaces any existing subtypes from the
+#: appropriate set" - here the creature types - so the card types stay and the
+#: creature types become exactly the named ones. The words are checked against
+#: CR 205.3m's list (`_creature_type_words`); anything else in the slot (a card
+#: type, a colour, a base power and toughness) is some other shape's sentence.
+_BECOMES_CREATURE_TYPE_RE = re.compile(
+    rf"^{_SUBJECT} becomes an? (?P<subtypes>[A-Za-z][A-Za-z' ]*?)"
     r"(?P<until_eot> until end of turn)?\.?$",
     re.IGNORECASE,
 )
@@ -5360,13 +5377,20 @@ def _becomes_type_in_addition_builder(
 
 
 def _becomes_subtype_in_addition_builder(
-    subtypes: Sequence[str], keywords: Sequence[str], duration: Duration
+    subtypes: Sequence[str],
+    keywords: Sequence[str],
+    duration: Duration,
+    *,
+    replaces: bool = False,
 ) -> EffectBuilder:
     """`_BECOMES_SUBTYPE_IN_ADDITION_RE`'s shape: one layer 4 subtype
     addition per creature type (CR 613.1d; CR 205.1b keeps every prior type)
     and one layer 6 grant per keyword (CR 613.1f), all built from the one
     resolution and so sharing its one timestamp (CR 613.7b), fixed to the
-    objects the caller resolved (CR 611.2c)."""
+    objects the caller resolved (CR 611.2c).
+
+    `replaces` is the same sentence without "in addition to its other types"
+    (CR 205.1a): one layer 4 `SetCreatureTypes` for all the named types."""
 
     def builder(
         source: CardState,
@@ -5377,18 +5401,31 @@ def _becomes_subtype_in_addition_builder(
         effects: list[ContinuousEffect] = []
         for target in targets:
             selector = only_this_incarnation(target, target.zone_change_stamp)
-            effects.extend(
-                ContinuousEffect(
-                    description=f"{source.name}: {target.name} becomes a {subtype} "
-                    "in addition to its other types",
-                    layer=Layer.TYPE,
-                    timestamp=timestamp,
-                    duration=duration,
-                    selector=selector,
-                    modification=add_subtype(subtype),
+            if replaces:
+                effects.append(
+                    ContinuousEffect(
+                        description=f"{source.name}: {target.name} becomes "
+                        f"{with_indefinite_article(' '.join(subtypes))}",
+                        layer=Layer.TYPE,
+                        timestamp=timestamp,
+                        duration=duration,
+                        selector=selector,
+                        modification=SetCreatureTypes(subtypes=tuple(subtypes)),
+                    )
                 )
-                for subtype in subtypes
-            )
+            else:
+                effects.extend(
+                    ContinuousEffect(
+                        description=f"{source.name}: {target.name} becomes a {subtype} "
+                        "in addition to its other types",
+                        layer=Layer.TYPE,
+                        timestamp=timestamp,
+                        duration=duration,
+                        selector=selector,
+                        modification=add_subtype(subtype),
+                    )
+                    for subtype in subtypes
+                )
             effects.extend(
                 ContinuousEffect(
                     description=f"{source.name}: {target.name} gains {keyword}",
@@ -6118,7 +6155,9 @@ _SELF_DOESNT_UNTAP_RE = re.compile(
 _ATTACHED_DOESNT_UNTAP_RE = re.compile(
     r"^(?P<attachment>equipped|enchanted) (?P<subject>creature|permanent|artifact) "
     r"(?:(?P<loses>loses all abilities) and )?(?:doesn'?t untap during its "
-    r"controller'?s untap step|(?P<cant>can'?t become untapped))\.?$",
+    r"controller'?s untap step|(?P<cant>can'?t become untapped))"
+    r"(?: and its activated abilities can'?t be activated(?: unless they'?re mana abilities)?)?"
+    r"\.?$",
     re.IGNORECASE,
 )
 
@@ -10786,14 +10825,19 @@ def _if_gated_builder(base: EffectBuilder, condition: str) -> EffectBuilder:
 def _parse_layer_sentence(sentence: str) -> EffectBuilder | None:
     """`_parse_layer_sentence_ungated`, then - for a sentence that is none of
     those shapes - `_parse_if_gated_layer_sentence`'s trailing "if" rider, then
-    `conditional_statics`' "as long as" / "during your turn" template, then
+    `conditional_statics`' "as long as" / "during your turn" template, the
+    attached compound grant, the gated self static, then
     `_parse_protection_static`."""
+    from ..attached_restrictions import parse_attached_compound_grant
+    from ..attacking_statics import parse_gated_self_static
     from .conditional_statics import parse_conditional_static
 
     return (
         _parse_layer_sentence_ungated(sentence)
         or _parse_if_gated_layer_sentence(sentence)
         or parse_conditional_static(sentence)
+        or parse_attached_compound_grant(sentence)
+        or parse_gated_self_static(sentence)
         or _parse_protection_static(sentence)
     )
 
@@ -11407,6 +11451,15 @@ def _parse_layer_sentence_ungated(sentence: str) -> EffectBuilder | None:
             return None
         duration = Duration.UNTIL_END_OF_TURN if match.group("until_eot") else Duration.INDEFINITE
         return _becomes_subtype_in_addition_builder(subtypes, keywords, duration)
+    if (match := _BECOMES_CREATURE_TYPE_RE.fullmatch(sentence)) and (
+        replaced := _creature_type_words(match.group("subtypes"))
+    ) is not None:
+        return _becomes_subtype_in_addition_builder(
+            replaced,
+            [],
+            Duration.UNTIL_END_OF_TURN if match.group("until_eot") else Duration.INDEFINITE,
+            replaces=True,
+        )
     if match := _SELF_BECOMES_TYPE_UNTIL_NEXT_TURN_RE.fullmatch(sentence):
         extra_type = _card_type_word(match.group("extra_type"))
         if extra_type is None:
@@ -11511,13 +11564,16 @@ _HAS_ALL_ACTIVATED_ABILITIES_RE = re.compile(
     r"battlefield), )?"
     r"(?P<subject>this (?:creature|permanent|artifact)|it"
     r"|creatures you control with (?:an? )?(?P<counter>[+-]\d+/[+-]\d+|[a-z]+) counters? on them)"
-    r" (?:has|have) all activated abilities of (?:all )?"
+    r" (?:has|have) all activated abilities of "
+    # Scheming Fence: the one permanent chosen as it entered (CR 614.12a),
+    # loyalty abilities (CR 606.2) excepted.
+    r"(?:(?P<chosen>the chosen permanent)(?P<except_loyalty> except for loyalty abilities)?|(?:all )?"
     r"(?:(?:(?P<pile_types>[a-z]+(?:,? (?:and |or )?[a-z]+)*) )?cards exiled with (?:this \w+|it)"
     r"|(?P<the_exiled>the exiled cards?)"
     r"|(?:(?P<graveyard_types>[a-z]+(?:,? (?:and |or )?[a-z]+)*) )?cards in "
     r"(?P<graveyard_whose>your graveyard|all graveyards)"
     r"|(?P<board_types>[a-z]+)(?P<board_whose> your opponents control| you control)?"
-    r"(?P<except_mana> except mana abilities)?)\.?$",
+    r"(?P<except_mana> except mana abilities)?))\.?$",
     re.IGNORECASE,
 )
 
@@ -11548,7 +11604,10 @@ def all_activated_abilities_grant(sentence: str) -> AllActivatedAbilitiesGrant |
     from_graveyard = bool(graveyard_whose_text)
     if match.group("subject").lower() == "it" and match.group("on_battlefield") is None:
         return None
-    from_exile = match.group("board_types") is None and not from_graveyard
+    chosen = match.group("chosen") is not None
+    if chosen and counter is not None:
+        return None
+    from_exile = match.group("board_types") is None and not from_graveyard and not chosen
     except_mana = match.group("except_mana") is not None
     exile_types = types_of(match.group("pile_types"))
     board_types = types_of(match.group("board_types"))
@@ -11585,6 +11644,8 @@ def all_activated_abilities_grant(sentence: str) -> AllActivatedAbilitiesGrant |
         graveyard_types=tuple(graveyard_types),
         graveyard_subtypes=tuple(graveyard_subtypes),
         except_mana=except_mana,
+        chosen=chosen,
+        except_loyalty=match.group("except_loyalty") is not None,
     )
 
 
