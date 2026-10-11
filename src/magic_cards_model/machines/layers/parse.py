@@ -2275,6 +2275,21 @@ _MASS_BECOMES_ARTIFACT_CREATURES_RE = re.compile(
     re.IGNORECASE,
 )
 
+#: "Artifacts you control become 5/5 artifact creatures in addition to their
+#: other types until end of turn." (Tezzeret the Seeker's -5) and "Artifacts you
+#: control become artifact creatures with base power and toughness 5/5 until end
+#: of turn." (The Antiquities War's chapter III) - `_MASS_BECOMES_ARTIFACT_
+#: CREATURES_RE` with the base power and toughness the instruction also sets
+#: (CR 613.4b), over a group `machines/effects.py` has already fixed (CR 611.2c)
+#: and rewritten to the plain "creatures" subject.
+_MASS_BECOMES_SIZED_ARTIFACT_CREATURES_RE = re.compile(
+    r"^creatures (?:you control|your opponents control) become "
+    r"(?:(?P<p1>\d+)/(?P<t1>\d+) artifact creatures(?: in addition to their other types)?"
+    r"|artifact creatures with base power and toughness (?P<p2>\d+)/(?P<t2>\d+))"
+    r" until end of turn\.?$",
+    re.IGNORECASE,
+)
+
 #: "[Subject] has base power and toughness N/N and becomes a[n] <creature
 #: type(s)> in addition to its other types until end of turn." (Minsc, Beloved
 #: Ranger's {X} ability, X already substituted) and its group twin "Creatures
@@ -11214,6 +11229,15 @@ def _parse_layer_sentence_ungated(sentence: str) -> EffectBuilder | None:
     if _MASS_BECOMES_ARTIFACT_CREATURES_RE.fullmatch(sentence):
         return _becomes_creature_type_with_base_pt_builder(
             (), (), None, None, loses_abilities=False, artifact_creature=True
+        )
+    if match := _MASS_BECOMES_SIZED_ARTIFACT_CREATURES_RE.fullmatch(sentence):
+        return _becomes_creature_type_with_base_pt_builder(
+            (),
+            (),
+            int(match.group("p1") or match.group("p2")),
+            int(match.group("t1") or match.group("t2")),
+            loses_abilities=False,
+            artifact_creature=True,
         )
     if match := _BASE_PT_SET_RE.fullmatch(sentence) or _MASS_BASE_PT_SET_RE.fullmatch(sentence):
         return _base_pt_set_builder(int(match.group("power")), int(match.group("toughness")))

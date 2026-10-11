@@ -802,7 +802,7 @@ _MASS_SUBTYPE_SUBJECT_RE = re.compile(
 #: (`layers/group_grants.parse_group`), fixed once as the effect begins.
 _MASS_GROUP_SUBJECT_RE = re.compile(
     r"^(?P<subject>[A-Za-z][A-Za-z' -]*? (?P<whose>you control|your opponents control)) "
-    r"(?P<verb>gains?|gets?)\b"
+    r"(?P<verb>gains?|gets?|becomes?)\b"
 )
 
 
