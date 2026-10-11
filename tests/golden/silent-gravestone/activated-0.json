@@ -1,0 +1,121 @@
+{
+  "ability": "{4}, {T}: Exile this artifact and all cards from all graveyards. Draw a card.",
+  "action": {
+    "controller": "alice",
+    "modes": [],
+    "on_stack": true,
+    "source": "Silent Gravestone@alice#1",
+    "targets": [],
+    "x": 0
+  },
+  "board": {
+    "busy_turn": false,
+    "entering": [],
+    "order": ["alice", "bob"],
+    "players": {
+      "alice": {
+        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Wastes", "Memnite", "Icehide Golem", "Bonesplitter", "Icy Manipulator", "Silent Gravestone"],
+        "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel"],
+        "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt"],
+        "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
+      },
+      "bob": {
+        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Kaito, Bane of Nightmares", "Fleecemane Lion", "Icehide Golem", "Shadowspear", "Dragonfire Blade"],
+        "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel"],
+        "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt"],
+        "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
+      }
+    },
+    "step": "precombat_main",
+    "tapped": [],
+    "tokens": [],
+    "variant": "quiet",
+    "war_turn": false
+  },
+  "card": "Silent Gravestone",
+  "delta": {
+    "created": {},
+    "decisions": [],
+    "fields_changed": ["cards_drawn_this_turn", "exile_residents_seen", "permanents_left_battlefield_this_turn", "turn_counts", "turn_history"],
+    "notices": {},
+    "objects": {
+      "Bonesplitter@alice#2": {
+        "zone": ["graveyard", "exile"]
+      },
+      "Bonesplitter@bob#1": {
+        "zone": ["graveyard", "exile"]
+      },
+      "Forest@alice#5": {
+        "zone": ["graveyard", "exile"]
+      },
+      "Forest@alice#6": {
+        "zone": ["library", "hand"]
+      },
+      "Forest@bob#3": {
+        "zone": ["graveyard", "exile"]
+      },
+      "Grizzly Bears@alice#2": {
+        "zone": ["graveyard", "exile"]
+      },
+      "Grizzly Bears@bob#2": {
+        "zone": ["graveyard", "exile"]
+      },
+      "Island@alice#4": {
+        "zone": ["graveyard", "exile"]
+      },
+      "Island@bob#2": {
+        "zone": ["graveyard", "exile"]
+      },
+      "Lightning Bolt@alice#2": {
+        "zone": ["graveyard", "exile"]
+      },
+      "Lightning Bolt@bob#2": {
+        "zone": ["graveyard", "exile"]
+      },
+      "Llanowar Elves@alice#1": {
+        "zone": ["graveyard", "exile"]
+      },
+      "Llanowar Elves@bob#1": {
+        "zone": ["graveyard", "exile"]
+      },
+      "Memnite@alice#2": {
+        "zone": ["graveyard", "exile"]
+      },
+      "Memnite@bob#1": {
+        "zone": ["graveyard", "exile"]
+      },
+      "Opt@alice#2": {
+        "zone": ["graveyard", "exile"]
+      },
+      "Opt@bob#2": {
+        "zone": ["graveyard", "exile"]
+      },
+      "Serra Angel@alice#1": {
+        "zone": ["graveyard", "exile"]
+      },
+      "Serra Angel@bob#1": {
+        "zone": ["graveyard", "exile"]
+      },
+      "Silent Gravestone@alice#1": {
+        "zone": ["battlefield", "exile"]
+      },
+      "Swamp@alice#4": {
+        "zone": ["graveyard", "exile"]
+      },
+      "Swamp@bob#2": {
+        "zone": ["graveyard", "exile"]
+      }
+    },
+    "players": {},
+    "stack": []
+  },
+  "family": "activated",
+  "format": 1,
+  "kind": "activated",
+  "number": 0,
+  "recipe": {
+    "enters": false,
+    "off_zone": false,
+    "variant": "quiet"
+  }
+}

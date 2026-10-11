@@ -3446,10 +3446,15 @@ def _parse_counters_and_becomes_type_clause(text: str) -> AbilityEffect | None:
 
 #: "Put `<n>` `<kind>` counter(s) on each creature target player controls." -
 #: Twisted Fates' own second sentence; the real, off-set printing is
-#: Meadowboon's whole own trigger, the identical clause standing alone.
+#: Meadowboon's whole own trigger, the identical clause standing alone. The
+#: subject-first form "Target player puts a +1/+1 counter on each creature
+#: they control." (a Shadrix Silverquill mode bullet) names the same player
+#: and the same group.
 _COUNTER_EACH_CREATURE_TARGET_PLAYER_RE = re.compile(
-    rf"^put (?P<n>{COUNT}) (?P<kind>\+1/\+1|-1/-1|[a-z]+) counters? on each creature "
-    r"target player controls\.?$",
+    rf"^(?:put (?P<n>{COUNT}) (?P<kind>\+1/\+1|-1/-1|[a-z]+) counters? on each creature "
+    r"target player controls"
+    rf"|target player puts (?P<n2>{COUNT}) (?P<kind2>\+1/\+1|-1/-1|[a-z]+) counters? on each "
+    r"creature they control)\.?$",
     re.IGNORECASE,
 )
 
@@ -3469,10 +3474,10 @@ def _parse_counter_each_creature_target_player_clause(
         return None
     if not _targets_understood("target player", allow_player_targets=True):
         return None
-    amount = parse_count(match.group("n"))
+    amount = parse_count(match.group("n") or match.group("n2"))
     if amount is None:
         return None
-    kind = _counter_kind(match.group("kind"))
+    kind = _counter_kind(match.group("kind") or match.group("kind2"))
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
         targets = [

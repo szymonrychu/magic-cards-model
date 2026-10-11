@@ -1862,20 +1862,51 @@ _FIRST_DRAW_REVEAL_LINE_RE = re.compile(
 )
 
 
+#: Keranos, God of Storms' line - the same static reveal, but mandatory and
+#: only on the controller's own turns, with one linked trigger per kind of
+#: card revealed: "Reveal the first card you draw on each of your turns.
+#: Whenever you reveal a land card this way, draw a card. Whenever you reveal
+#: a nonland card this way, <name> deals 3 damage to any target." (CR 121.2,
+#: CR 701.20a, CR 603.11, CR 607.2h.)
+_MANDATORY_FIRST_DRAW_REVEAL_LINE_RE = re.compile(
+    r"^Reveal the first card you draw on each of your turns\.\s*"
+    r"(?P<triggers>(?:Whenever you reveal an? (?:land|nonland) card this way, [^.]+\.?\s*)+)$"
+)
+_MANDATORY_REVEAL_TRIGGER_RE = re.compile(
+    r"Whenever you reveal an? (?P<kind>land|nonland) card this way, (?P<effect>[^.]+)\.?"
+)
+
+
 def is_first_draw_reveal_line(text: str) -> bool:
-    """Whether `text` is `_FIRST_DRAW_REVEAL_LINE_RE`'s whole line - asked by
-    `static_audit/cost_modification`."""
-    return _FIRST_DRAW_REVEAL_LINE_RE.fullmatch(text.split("(")[0].strip()) is not None
+    """Whether `text` is one of the first-draw reveal lines' whole shape - asked
+    by `static_audit/cost_modification`."""
+    stripped = text.split("(")[0].strip()
+    return (
+        _FIRST_DRAW_REVEAL_LINE_RE.fullmatch(stripped) is not None
+        or _MANDATORY_FIRST_DRAW_REVEAL_LINE_RE.fullmatch(stripped) is not None
+    )
 
 
 def first_draw_reveal_lines(card: Card) -> list[str]:
-    """Each printed line of `card` that is `_FIRST_DRAW_REVEAL_LINE_RE`'s
-    shape - the static reveal ability and its linked trigger in one line."""
+    """Each printed line of `card` that is a first-draw reveal shape - the
+    static reveal ability and its linked trigger(s) in one line."""
     return [
-        line
-        for line in (card.oracle_text or "").splitlines()
-        if _FIRST_DRAW_REVEAL_LINE_RE.fullmatch(line.split("(")[0].strip())
+        line for line in (card.oracle_text or "").splitlines() if is_first_draw_reveal_line(line)
     ]
+
+
+def first_draw_reveal_is_mandatory(card: Card) -> bool:
+    """Whether the reveal is not a "may" (Keranos) - CR 701.20a."""
+    return any(
+        _MANDATORY_FIRST_DRAW_REVEAL_LINE_RE.fullmatch(line.split("(")[0].strip())
+        for line in first_draw_reveal_lines(card)
+    )
+
+
+def first_draw_reveal_own_turns_only(card: Card) -> bool:
+    """Whether the reveal happens only on its controller's turns ("on each of
+    your turns") rather than on each turn (Kefnet's "each turn")."""
+    return first_draw_reveal_is_mandatory(card)
 
 
 def has_first_draw_reveal(card: Card) -> bool:
@@ -1893,7 +1924,24 @@ def first_draw_reveal_abilities(card: Card) -> list[TriggeredAbility]:
     (`ExtraTriggerEvent.REVEALED_FIRST_DRAW`)."""
     built: list[TriggeredAbility] = []
     for line in first_draw_reveal_lines(card):
-        match = _FIRST_DRAW_REVEAL_LINE_RE.fullmatch(line.split("(")[0].strip())
+        stripped = line.split("(")[0].strip()
+        mandatory = _MANDATORY_FIRST_DRAW_REVEAL_LINE_RE.fullmatch(stripped)
+        if mandatory is not None:
+            for trigger in _MANDATORY_REVEAL_TRIGGER_RE.finditer(mandatory.group("triggers")):
+                kind_condition = f"you reveal a {trigger.group('kind')} card this way"
+                built.append(
+                    TriggeredAbility(
+                        raw=line,
+                        text=f"Whenever {kind_condition}, {trigger.group('effect')}",
+                        face=card.name,
+                        word=TriggerWord.WHENEVER,
+                        condition=kind_condition,
+                        effect=trigger.group("effect"),
+                        event=None,
+                    )
+                )
+            continue
+        match = _FIRST_DRAW_REVEAL_LINE_RE.fullmatch(stripped)
         assert match is not None
         condition = "you reveal an instant or sorcery card this way"
         effect = (
@@ -3544,6 +3592,10 @@ def _protection_refusal_for_attachment(game: Any, attached: CardState, host: Any
         return None
     quality = game.protection_quality_against(host, attached)
     if quality is None:
+        return None
+    from .protection_statics import aura_exempts_itself
+
+    if aura_exempts_itself(game, attached, host, quality):
         return None
     return (
         f"{host.name} has protection from {quality}, so {attached.name} "

@@ -835,6 +835,12 @@ _QUALITY_LIST_AND_FROM_RE = re.compile(r"\bfrom\s+[^.\n]*?\s+and\s+from\b", re.I
 #: list of zones one instruction acts on (CR 400.1), not two instructions.
 #: Bounded to a zone noun on *both* sides of the "and", so a trailing "and
 #: draw ..." after "hand" still splits.
+#: "exile this artifact and all cards from all graveyards" - see
+#: `split_effect_clauses`.
+_EXILE_SELF_AND_ALL_GRAVEYARDS_RE = re.compile(
+    r"\bexile this [a-z]+ and all cards from all graveyards\b", re.IGNORECASE
+)
+
 _ZONE_PAIR_AND_RE = re.compile(
     r"\b(?:hands?|graveyards?|librar(?:y|ies)) and (?:hands?|graveyards?|librar(?:y|ies))\b",
     re.IGNORECASE,
@@ -985,6 +991,12 @@ def split_effect_clauses(text: str) -> list[str]:
         lambda m: m.group(0).replace(" and ", _AND_SENTINEL), masked
     )
     masked = _ZONE_PAIR_AND_RE.sub(lambda m: m.group(0).replace(" and ", _AND_SENTINEL), masked)
+    # "Exile this artifact and all cards from all graveyards." (Silent
+    # Gravestone) - one instruction naming two objects, read whole by
+    # `removal._parse_exile_self_and_all_graveyards_clause`.
+    masked = _EXILE_SELF_AND_ALL_GRAVEYARDS_RE.sub(
+        lambda m: m.group(0).replace(" and ", _AND_SENTINEL), masked
+    )
     # "blue and red Elemental creature token" - one colour phrase.
     masked = _COLOUR_PAIR_AND_RE.sub(lambda m: m.group(0).replace(" and ", _AND_SENTINEL), masked)
     # "instant and sorcery cards" / "artifact and creature card" - one card

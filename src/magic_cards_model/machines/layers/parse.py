@@ -2148,7 +2148,11 @@ _GROUP_QUOTED_ABILITY_GRANT_RE = re.compile(
     r"(?P<scope> you control)?(?P<named> with the chosen name)?"
     # CR 205.3m: "All Slivers have "..."" (Cautery Sliver) - every creature of
     # the subtype, whoever controls it.
-    r"|all (?P<all_subtype>[a-z]+))"
+    r"|all (?P<all_subtype>[a-z]+)"
+    # "Non-Spirit creatures have "..."" (Clash of Realities): every creature
+    # of either player without the subtype - the negated twin of the "All
+    # <subtype>s" arm above (CR 109.2's "non-" negation).
+    r"|non-(?P<non_subtype>[a-z]+) creatures)"
     r' have "(?P<ability>.+)"\.?$',
     re.IGNORECASE | re.DOTALL,
 )
@@ -2172,6 +2176,13 @@ def group_quoted_ability_grant_selector(match: re.Match[str], source: CardState)
         if subtype is None:
             return None
         return creatures_controlled_by_with_subtype(None, [subtype], any_controller=True)
+    if match.group("non_subtype") is not None:
+        subtype = match.group("non_subtype").lower()
+        if subtype not in subtype_vocabulary():
+            return None
+        return creatures_controlled_by_with_subtype(
+            None, [subtype], negate=True, any_controller=True
+        )
     card_type = _card_type_word(match.group("subject"))
     if card_type is None:
         return None
@@ -10207,7 +10218,14 @@ def _group_quoted_ability_grant_builder(
         selector = group_quoted_ability_grant_selector(match, source)
         if selector is None:
             return []
-        subject = (match.group("subject") or f"all {match.group('all_subtype')}").lower()
+        subject = (
+            match.group("subject")
+            or (
+                f"non-{match.group('non_subtype')} creatures"
+                if match.group("non_subtype") is not None
+                else f"all {match.group('all_subtype')}"
+            )
+        ).lower()
         return [
             ContinuousEffect(
                 description=f"{source.name}: {subject}"
@@ -10768,7 +10786,24 @@ def _if_gated_builder(base: EffectBuilder, condition: str) -> EffectBuilder:
 def _parse_layer_sentence(sentence: str) -> EffectBuilder | None:
     """`_parse_layer_sentence_ungated`, then - for a sentence that is none of
     those shapes - `_parse_if_gated_layer_sentence`'s trailing "if" rider."""
-    return _parse_layer_sentence_ungated(sentence) or _parse_if_gated_layer_sentence(sentence)
+    return (
+        _parse_layer_sentence_ungated(sentence)
+        or _parse_if_gated_layer_sentence(sentence)
+        or _parse_protection_static(sentence)
+    )
+
+
+def _parse_protection_static(sentence: str) -> EffectBuilder | None:
+    """`machines/protection_statics.py`'s "<group> have hexproof / shroud /
+    protection from <quality>" shapes (CR 702.11, CR 702.18, CR 702.16), tried
+    last so every shape above keeps its reading. Imported lazily: that module
+    imports this package."""
+    lowered = sentence.lower()
+    if "hexproof" not in lowered and "shroud" not in lowered and "protection from" not in lowered:
+        return None
+    from ..protection_statics import parse_protection_grant
+
+    return parse_protection_grant(sentence)
 
 
 @functools.lru_cache(maxsize=16384)
@@ -12456,6 +12491,9 @@ def _parse_narrow_static_layer_sentence(sentence: str) -> EffectBuilder | None:
             return None
         if match.group("all_subtype") is not None:
             if _singular_subtype_word(match.group("all_subtype")) is None:
+                return None
+        elif match.group("non_subtype") is not None:
+            if match.group("non_subtype").lower() not in subtype_vocabulary():
                 return None
         elif _card_type_word(match.group("subject")) is None or (
             match.group("scope") is None and match.group("named") is None

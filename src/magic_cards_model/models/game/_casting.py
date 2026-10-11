@@ -1457,6 +1457,12 @@ class CastingMixin:
                 options = (
                     (*options, NO_FURTHER_MODES) if not chosen else (NO_FURTHER_MODES, *options)
                 )
+            elif modal.optional and not chosen:
+                # "you may choose two" (Shadrix Silverquill): the instruction
+                # as a whole is optional, so declining is offered before the
+                # first mode - but once a mode is chosen the rest must follow
+                # (`len(chosen) < minimum`), so it is offered only here.
+                options = (*options, NO_FURTHER_MODES)
             answer = self.ask(
                 Decision(
                     kind=DecisionKind.CHOOSE_A_MODE,
@@ -1497,7 +1503,14 @@ class CastingMixin:
                 scripted = None
                 continue
             asked = self._ask_targets(
-                profile, ability.controller, ability.source_id, ability.source_name, body
+                profile,
+                ability.controller,
+                ability.source_id,
+                ability.source_name,
+                body,
+                excluding=(
+                    {ref for slice_ in slices for ref in slice_} if modal.distinct_targets else None
+                ),
             )
             if asked is None:
                 return False

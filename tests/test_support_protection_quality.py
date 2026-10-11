@@ -50,7 +50,10 @@ def test_colour_count_qualities_read():
     `tests/scenarios/test_protection_color_count_qualities.py` plays them."""
     assert protection_quality_readable("multicolored")
     assert protection_quality_readable("monocolored")
-    assert not protection_quality_readable("everything")
+    # CR 702.16j (EP-01 R2 T2): "protection from everything" is read now -
+    # `tests/scenarios/test_ep01_r2_protection_from_quality.py` plays it.
+    assert protection_quality_readable("everything")
+    assert not protection_quality_readable("a blue moon")
 
 
 def test_the_cast_this_turn_quality_reads():

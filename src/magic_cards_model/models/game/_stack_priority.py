@@ -159,7 +159,12 @@ def protection_qualities(card: Card) -> list[str]:
     "creatures you control have ... protection from black and from red") -
     `Game._effective_protection_qualities` is the one that reads both.
     """
-    return _qualities_from_text(card.oracle_text)
+    text = card.oracle_text
+    if text is None and card.card_faces:
+        # A flip or transform card prints its text per face (Tok-Tok's
+        # "Protection from red" sits on the flipped half).
+        text = "\n".join(face.oracle_text or "" for face in card.card_faces)
+    return _qualities_from_text(text)
 
 
 def protection_quality_readable(quality: str) -> bool:
@@ -170,7 +175,8 @@ def protection_quality_readable(quality: str) -> bool:
     notice rather than crediting it on presence."""
     wanted = quality.strip().lower()
     return (
-        _is_spell_quality(wanted)
+        wanted == "everything"
+        or _is_spell_quality(wanted)
         or _card_type_named(wanted) is not None
         or wanted in _COLOR_WORDS
         or wanted in _COLOR_COUNT_QUALITIES
@@ -1734,6 +1740,7 @@ class StackPriorityMixin:
                         # CR 607.2a: what this ability exiled is "exiled with"
                         # its source for the source's other linked ability.
                         link_cards_exiled_during(self, ability, exiled_before)
+                        self._announce_final_chapter_resolved(ability)
                     else:
                         self._note_unread_trigger(ability)
         except Exception:
@@ -1744,6 +1751,29 @@ class StackPriorityMixin:
         self.delayed_triggers.discard(ability)  # CR 608.2n: it ceases to exist
         self._before_priority()
         return ability
+
+    def _announce_final_chapter_resolved(self: "Game", ability: AbilityOnStack) -> None:
+        """Raise `FINAL_CHAPTER_RESOLVED` when `ability` is a Saga's final
+        chapter ability and has just finished resolving (CR 714.2e names the
+        final chapter ability: the chapter ability with the Saga's final
+        chapter number in its chapter symbol). The Saga is read as it was
+        (CR 608.2h's last known information) when it has since left."""
+        printed = ability.ability
+        if not isinstance(printed, TriggeredAbility) or printed.chapter is None:
+            return
+        saga = ability.source_or_last_known(self)
+        if saga is None or saga.final_chapter_number != printed.chapter:
+            return
+        self.emit(
+            GameEvent(
+                event=ExtraTriggerEvent.FINAL_CHAPTER_RESOLVED,
+                subject_id=saga.id,
+                subject_name=saga.name,
+                subject_controller=ability.controller,
+                player=ability.controller,
+                amount=printed.chapter,
+            )
+        )
 
     def _effect_of(self: "Game", ability: AbilityOnStack) -> object | None:
         """The scripted effect of an ability, or None if nobody has written one.
@@ -2810,8 +2840,16 @@ class StackPriorityMixin:
         Halo's CR 614.12a chosen name), unioned with the grants currently on
         the battlefield - see `player_protection_qualities`.
         """
+        target = self._targeted_thing(target)
         if isinstance(target, Player):
-            return self._player_protection_refusal(target, source)
+            return self._player_protection_refusal(
+                target,
+                source,
+                source_controller,
+                is_spell=is_spell,
+                source_state=source_state,
+                source_mana_value=source_mana_value,
+            )
         if not isinstance(target, CardState):
             return None
         for quality in self._effective_protection_qualities(target):
@@ -2916,6 +2954,11 @@ class StackPriorityMixin:
         "your opponents".
         """
         target = self._targeted_thing(target)
+        from ...machines.protection_statics import static_target_refusal
+
+        restricted = static_target_refusal(self, target, source_controller, source)
+        if restricted is not None:
+            return restricted
         if isinstance(target, Player):
             plain, qualities = self.player_hexproof(target)
             protected = target.username
@@ -2977,6 +3020,12 @@ class StackPriorityMixin:
             lines = list(self.characteristics_of(target).abilities)
         except KeyError:
             lines = target.oracle_text.splitlines()
+        from ...machines.protection_statics import hexproof_suppressed
+
+        if hexproof_suppressed(self, target):
+            # CR 702.11e: "lose hexproof" takes every "hexproof from" with it,
+            # and "can't have or gain" keeps a later grant from returning it.
+            return False, []
         return hexproof_abilities_in(lines)
 
     def player_hexproof(self: "Game", player: Player) -> tuple[bool, list[str]]:
@@ -3010,7 +3059,16 @@ class StackPriorityMixin:
             return True
         return any(keyword == "shroud" for keyword, _ in self._player_static_keyword_grants(player))
 
-    def _player_protection_refusal(self: "Game", target: Player, source: "Card") -> str | None:
+    def _player_protection_refusal(
+        self: "Game",
+        target: Player,
+        source: "Card",
+        source_controller: str | None = None,
+        *,
+        is_spell: bool = False,
+        source_state: CardState | None = None,
+        source_mana_value: float | None = None,
+    ) -> str | None:
         """Why a *player's* protection stops `source` targeting them (CR 702.16b).
 
         Two sources of quality, unioned: what the player carries on
@@ -3023,7 +3081,24 @@ class StackPriorityMixin:
         if refusal is not None:
             return refusal
         for quality in self.player_protection_qualities(target.username):
-            if quality == source.name or self.source_has_quality_of_card(source, quality):
+            # CR 702.16k: "each of your opponents" is every object that player
+            # controls - the source's controller decides, not its characteristics.
+            from_opponent = (
+                source_controller is not None
+                and _EACH_OPPONENT_PROTECTION_QUALITY.match(quality.strip())
+                and source_controller != target.username
+            )
+            if (
+                from_opponent
+                or quality == source.name
+                or self.source_has_quality_of_card(
+                    source,
+                    quality,
+                    is_spell=is_spell,
+                    source_state=source_state,
+                    source_mana_value=source_mana_value,
+                )
+            ):
                 return (
                     f"{target.username} has protection from {quality}, so {source.name} "
                     f"cannot target them (CR 702.16b)"
@@ -3047,9 +3122,15 @@ class StackPriorityMixin:
         `Player.protection_from` would outlive its source.
         """
         qualities: list[str] = []
+        from ...machines.protection_statics import player_protection_qualities_of
+
+        board = self.computed_board()
         for permanent in self.battlefield:
             if self.controller_of(permanent).username != username:
                 continue
+            for quality in player_protection_qualities_of(self, permanent, board, username):
+                if quality not in qualities:
+                    qualities.append(quality)
             for line in (permanent.card.oracle_text or "").split("\n"):
                 if not _PLAYER_PROTECTION_FROM_CHOSEN_NAME.match(line.strip()):
                     continue
@@ -3099,7 +3180,9 @@ class StackPriorityMixin:
         battlefield (a spell on the stack, say) has no computed board to ask,
         so only its own printed protection applies there.
         """
-        qualities = list(protection_qualities(target.card))
+        # The face that is up (CR 710.2, CR 712.8d): a flip card's protection
+        # sits on its flipped half only.
+        qualities = _qualities_from_text(target.oracle_text)
         if target.zone is Zone.BATTLEFIELD:
             try:
                 characteristics = self.characteristics_of(target)
@@ -3202,8 +3285,16 @@ class StackPriorityMixin:
         for quality in self.player_protection_qualities(player.username):
             if quality not in qualities:
                 qualities.append(quality)
+        source_controller = self.controller_of(event.source).username
         for quality in qualities:
-            if quality == event.source.name or self.source_has_quality(event.source, quality):
+            if (
+                (
+                    _EACH_OPPONENT_PROTECTION_QUALITY.match(quality.strip())
+                    and source_controller != player.username
+                )
+                or quality == event.source.name
+                or self.source_has_quality(event.source, quality)
+            ):
                 return (
                     f"{player.username} has protection from {quality}, so damage from "
                     f"{event.source.name} is prevented (CR 702.16e)"

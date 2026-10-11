@@ -424,7 +424,11 @@ class DamageLifeMixin:
             # unless the attacker has trample over planeswalkers.
             present = permanent.counter_count(Counter.LOYALTY)
             if present > 0:
-                permanent.remove_counters(Counter.LOYALTY, min(amount, present))
+                from ...machines.protection_statics import loyalty_counters_to_remove
+
+                removed = loyalty_counters_to_remove(self, permanent, amount, present)
+                if removed > 0:
+                    permanent.remove_counters(Counter.LOYALTY, removed)
         if Type.CREATURE in types:
             if as_counters:
                 self.add_counters(permanent, Counter.MINUS_ONE, amount)

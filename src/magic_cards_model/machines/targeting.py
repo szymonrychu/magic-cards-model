@@ -3885,6 +3885,22 @@ def kicked_instead_target_text(text: str) -> tuple[str, str] | None:
     return f"choose {match.group('base')}.", f"choose {match.group('kicked')}."
 
 
+#: "You can't choose an untapped creature as this spell's target as you cast
+#: it." (Enthralling Hold, Dream Leash) - an Aura spell's own targeting
+#: restriction (CR 601.2c: targets are chosen as the spell is cast), so the
+#: enchant target must be tapped.
+_UNTAPPED_TARGET_FORBIDDEN_RE = re.compile(
+    r"^you can't choose an untapped (?:creature|permanent|land|artifact|enchantment) "
+    r"as this spell's target as you cast it\.?$",
+    re.IGNORECASE | re.MULTILINE,
+)
+
+
+def untapped_target_forbidden(oracle_text: str | None) -> bool:
+    """Whether the spell's own text forbids choosing an untapped target."""
+    return _UNTAPPED_TARGET_FORBIDDEN_RE.search(oracle_text or "") is not None
+
+
 def _with_aura_target(card: Card, profile: TargetingProfile) -> TargetingProfile:
     """CR 303.4a: an Aura spell's target comes from its enchant ability.
 
@@ -3903,8 +3919,9 @@ def _with_aura_target(card: Card, profile: TargetingProfile) -> TargetingProfile
         if ability.canonical.lower() == "enchant" and (ability.parameter or "").strip()
     ]
     added: list[TargetRequirement] = []
+    only_tapped = untapped_target_forbidden(card.oracle_text)
     for restriction in restrictions:
-        read = _parse(f"target {restriction}")
+        read = _parse(f"target {'tapped ' if only_tapped else ''}{restriction}")
         if not read.understood or not read.requirements:
             return TargetingProfile(understood=False)
         added.extend(read.requirements)
@@ -4469,6 +4486,9 @@ def _spell_text(oracle_text: str) -> str:
         # damage to any target. Create a 0/1 ... token. It has "Sacrifice
         # this token: Add {C}."" is still the spell's own line.
         if not stripped or ":" in _QUOTED_SPAN.sub("", stripped) or _TRIGGER.match(without_word):
+            continue
+        if _UNTAPPED_TARGET_FORBIDDEN_RE.match(stripped):
+            # Read by `_with_aura_target` as a "tapped" enchant target.
             continue
         lines.append(stripped)
     return "\n".join(lines)

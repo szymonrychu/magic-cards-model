@@ -2509,9 +2509,14 @@ def parse_granted_ability_lines(texts: Sequence[str]) -> list[Ability]:
 #: alternative, purely additive: every line the two alternatives above
 #: already matched still does, since this only ever widens which lines merge,
 #: never which stay apart.
+#:
+#: A fourth alternative: Shadrix Silverquill's "you may choose two. Each mode
+#: must target a different player." (CR 700.2d's sibling rider, a restriction
+#: on the targets of the chosen modes) also ends the instruction with a plain
+#: period, and for the same reason must pull its bullets in.
 _MODAL_INSTRUCTION_TAIL = re.compile(
     r"choose\b.*(?:[-—]|\bchoose [^.]+ instead\.|\bthat hasn'?t (?:already )?"
-    r"been chosen(?: this turn)?\.)\s*$",
+    r"been chosen(?: this turn)?\.|\beach mode must target a different player\.)\s*$",
     re.IGNORECASE,
 )
 

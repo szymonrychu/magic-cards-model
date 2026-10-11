@@ -115,6 +115,7 @@
     "_announce_casualty",
     "_announce_conspire",
     "_announce_entry",
+    "_announce_final_chapter_resolved",
     "_announce_granted_life_costs",
     "_announce_mandatory_costs",
     "_announce_optional_costs",

@@ -453,6 +453,54 @@ def _parse_self_keyword_grant_until_eot_clause(text: str) -> AbilityEffect | Non
     return None
 
 
+#: "This creature gains protection from red until end of turn." (Thick-Skinned
+#: Goblin's `{R}:` ability) - the self-grant of a named protection quality,
+#: CR 702.16a's "protection from [quality]" (and CR 702.16g's "and from")
+#: added in layer 6 (CR 613.1f) until end of turn (CR 611.2a). The quality
+#: vocabulary is `machines/protection_statics.parse_protection_qualities`'s,
+#: the one the static grants read, so "each color" and a chosen quality mean
+#: the same here.
+_SELF_PROTECTION_GRANT_UNTIL_EOT_RE = re.compile(
+    r"^(?:it|this permanent|this creature) gains protection from "
+    r"(?P<qualities>(?!the color of your choice).+?) until end of turn\.?$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s36")
+def _parse_self_protection_grant_until_eot_clause(text: str) -> AbilityEffect | None:
+    """`_SELF_PROTECTION_GRANT_UNTIL_EOT_RE`'s shape - see its docstring."""
+    match = _SELF_PROTECTION_GRANT_UNTIL_EOT_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    from ..protection_statics import parse_protection_qualities, resolve_qualities
+
+    qualities = parse_protection_qualities(match.group("qualities"))
+    if qualities is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        source = ability.source(game)
+        if source is None or source.zone is not Zone.BATTLEFIELD:
+            return
+        resolved = resolve_qualities(qualities, source)
+        if resolved is None:
+            return
+        store = continuous_effects(game)
+        store.add(
+            ContinuousEffect(
+                description=f"{source.name}: gains protection from {', '.join(resolved)}",
+                layer=Layer.ABILITY,
+                timestamp=store.tick(),
+                duration=Duration.UNTIL_END_OF_TURN,
+                selector=_only(source.id),
+                modification=grant_ability("protection from " + " and from ".join(resolved)),
+            )
+        )
+
+    return effect
+
+
 #: "Target creature you control gains protection from the color of your
 #: choice until end of turn." (Mother of Runes). The phrase itself is checked
 #: through `_targets_understood` the same as every other targeted clause;
@@ -2385,6 +2433,53 @@ def _parse_tap_target_then_no_untap_clause(text: str) -> AbilityEffect | None:
         for target in _own_phrase_targets(game, ability, phrase):
             game.tap_permanent(target)
             target.exerted = True
+
+    return effect
+
+
+#: "Tap that creature and it doesn't untap during its controller's next untap
+#: step." (Kashi-Tribe Warriors, Matsu-Tribe Sniper, Frostwalk Bastion, ...) -
+#: `_TAP_TARGET_THEN_NO_UNTAP_RE`'s anaphoric twin for a *trigger*: nothing is
+#: targeted, "that creature" is the one the trigger's own event names (CR 603.2,
+#: CR 607.1) - the creature that was dealt the damage for a "deals damage to a
+#: creature" event (`GameEvent.target_id`), else the event's subject. Read
+#: whole because the bare "and" would otherwise cut "it doesn't untap ..." away
+#: from the tap it refers back to.
+_TAP_THAT_THEN_NO_UNTAP_RE = re.compile(
+    r"^tap that (?P<noun>[a-z]+)(?:,? and |\.\s*)(?:it|that (?P=noun)) doesn'?t untap "
+    r"during its controller'?s next untap step\.?$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s36")
+def _parse_tap_that_then_no_untap_clause(text: str) -> AbilityEffect | None:
+    """`_TAP_THAT_THEN_NO_UNTAP_RE`'s shape.
+
+    Reuses the CR 701.43a-b `CardState.exerted` flag exactly as
+    `_parse_tap_target_then_no_untap_clause` does: the creature skips only its
+    controller's next untap step (CR 502.3). Ability-only by construction - a
+    spell has no `ability.event` to read "that creature" from - and a
+    referent that has since left the battlefield is simply not tapped
+    (CR 608.2b - nothing to act on).
+    """
+    whole = _strip_non_effect_preamble(text).strip()
+    if _TAP_THAT_THEN_NO_UNTAP_RE.fullmatch(whole) is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        ability = stack_object
+        assert isinstance(ability, AbilityOnStack)
+        event = ability.event
+        if event is None:
+            return
+        referent_id = event.target_id or event.subject_id
+        if referent_id is None:
+            return
+        permanent = game.find_by_id(referent_id)
+        if isinstance(permanent, CardState) and permanent.zone is Zone.BATTLEFIELD:
+            game.tap_permanent(permanent)
+            permanent.exerted = True
 
     return effect
 
@@ -7848,6 +7943,47 @@ def _parse_for_each_opponent_tap_then_stun_clause(
         for permanent in tapped:
             if permanent.zone is Zone.BATTLEFIELD:
                 permanent.add_counters(Counter.STUN, 1)
+
+    return effect
+
+
+_TAP_TARGETS_THEN_STUN_RE = re.compile(
+    rf"^tap (?P<phrase>(?:up to )?(?:{COUNT}|x) target [a-z ]+?)\.\s*"
+    r"put a stun counter on each of those [a-z]+(?P<opposing> you don'?t control)?\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+@ABILITY_TEXT.rung("s29")
+def _parse_tap_targets_then_stun_clause(text: str) -> AbilityEffect | None:
+    """Lost in the Maze: "tap X target creatures. Put a stun counter on each of
+    those creatures you don't control." - the counted-target twin of
+    `_parse_for_each_opponent_tap_then_stun_clause` (CR 608.2c: tap first,
+    then the stun counter lands on "those creatures" - the ones just tapped,
+    narrowed by "you don't control" to the ones the ability's controller does
+    not control; CR 122.1d for the counter).
+    """
+    match = _TAP_TARGETS_THEN_STUN_RE.fullmatch(_strip_non_effect_preamble(text).strip())
+    if match is None:
+        return None
+    phrase = match.group("phrase")
+    if not _targets_understood(phrase, count_agnostic=True):
+        return None
+    opposing = match.group("opposing") is not None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        controller = game.controller_of(stack_object).username
+        tapped: list[CardState] = []
+        for target in game.resolve_targets(stack_object):
+            if isinstance(target, CardState) and target.zone is Zone.BATTLEFIELD:
+                game.tap_permanent(target)
+                tapped.append(target)
+        for permanent in tapped:
+            if permanent.zone is not Zone.BATTLEFIELD:
+                continue
+            if opposing and game.controller_of(permanent).username == controller:
+                continue
+            permanent.add_counters(Counter.STUN, 1)
 
     return effect
 

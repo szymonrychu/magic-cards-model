@@ -7243,6 +7243,54 @@ def _parse_exile_dead_self_clause(clause: str, *, for_spell: bool) -> TargetedCl
     return effect
 
 
+#: "Exile this artifact and all cards from all graveyards." (Silent Gravestone)
+#: - the source and every graveyard card in one CR 608.2c instruction. The
+#: bare "and" between the two objects is masked in `split_effect_clauses`
+#: (`text._EXILE_SELF_AND_ALL_GRAVEYARDS_RE`) so the sentence reaches this
+#: reader whole instead of as "exile this artifact" / "all cards from all
+#: graveyards".
+_EXILE_SELF_AND_ALL_GRAVEYARDS_RE = re.compile(
+    r"^exile this [a-z]+ and all cards from all graveyards$", re.IGNORECASE
+)
+
+
+@MIXED_CLAUSE.rung("s26", for_spell=FORWARD)
+def _parse_exile_self_and_all_graveyards_clause(
+    clause: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`_EXILE_SELF_AND_ALL_GRAVEYARDS_RE`'s shape. Ability-only: "this
+    <type>" is the permanent the ability came from.
+
+    CR 406.2 / CR 701.13a: exile moves an object to the exile zone from
+    wherever it is, so one pass over every graveyard (the still-playing set,
+    CR 104.3a) plus the source covers both halves. The source is exiled only
+    if it is still the incarnation that made the ability (CR 400.7 - a
+    permanent that has left and returned is a new object); the graveyards go
+    regardless, since the ability exists independently of its source
+    (CR 113.7a).
+    """
+    if for_spell:
+        return None
+    if _EXILE_SELF_AND_ALL_GRAVEYARDS_RE.fullmatch(clause.strip()) is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        ability = stack_object
+        assert isinstance(ability, AbilityOnStack)
+        source = ability.source(game)
+        if (
+            source is not None
+            and source.zone is Zone.BATTLEFIELD
+            and (ability.source_stamp is None or source.zone_change_stamp == ability.source_stamp)
+        ):
+            game.exile_permanent(source)
+        for player in game.players_in_game:
+            for card_state in list(player.graveyard):
+                game.exile_permanent(card_state)
+
+    return effect
+
+
 # --------------------------------------------------------------------------
 # Wave W1 (revisited): "choose a card name"/"the same name as that card",
 # then search a graveyard, a hand, and a library for cards with that name and

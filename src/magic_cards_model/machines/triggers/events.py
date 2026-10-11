@@ -307,6 +307,13 @@ class ExtraTriggerEvent(StrEnum):
     #: **Emitted by:** `machines/designations.parse_becomes_solved_clause`,
     #: the resolution of every Case's "To solve" end-step trigger.
     CASE_SOLVED = "case_solved"
+    #: "whenever the final chapter ability of a Saga you control resolves"
+    #: (Tom Bombadil; CR 714.2e names the final chapter ability, CR 608.2n is
+    #: the end of its resolution). `GameEvent.subject_id` is the Saga,
+    #: `GameEvent.player` its controller, `GameEvent.amount` the chapter
+    #: number. **Emitted by:** `Game._resolve_ability`, after the effect of a
+    #: chapter ability whose chapter is the Saga's final chapter number.
+    FINAL_CHAPTER_RESOLVED = "final_chapter_resolved"
 
 
 class GameEvent(EngineModel):

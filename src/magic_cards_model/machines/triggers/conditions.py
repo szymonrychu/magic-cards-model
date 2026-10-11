@@ -3561,12 +3561,14 @@ def _unread_condition_matches(
         # CR 607.2h: only a reveal the static "reveal the first card you draw
         # each turn" made, by the controller of this source, of an instant or
         # sorcery card.
-        return (
-            event.event is ExtraTriggerEvent.REVEALED_FIRST_DRAW
-            and event.player == controller
-            and event.subject_card is not None
-            and bool({Type.INSTANT, Type.SORCERY} & set(event.subject_card.types))
-        )
+        if event.event is not ExtraTriggerEvent.REVEALED_FIRST_DRAW or event.player != controller:
+            return False
+        if event.subject_card is None:
+            return False
+        revealed = set(event.subject_card.types)
+        if "land card" in condition:
+            return (Type.LAND in revealed) != condition.startswith("you reveal a nonland")
+        return bool({Type.INSTANT, Type.SORCERY} & revealed)
 
     if _ONE_OR_MORE_DEAL_COMBAT_DAMAGE_RE.fullmatch(condition):
         # CR 603.2c: one trigger per step's damage to a player, however many
@@ -3678,6 +3680,13 @@ def _unread_condition_matches(
         # CR 719.3a-b: you solve a Case when a Case you control becomes
         # solved; the event's player is that Case's controller.
         return event.event is ExtraTriggerEvent.CASE_SOLVED and event.player == controller
+
+    if _FINAL_CHAPTER_RESOLVES_CONDITION.match(condition):
+        # CR 714.2e: "a Saga you control" - the event's player is the Saga's
+        # controller, and only its final chapter ability raises the event.
+        return (
+            event.event is ExtraTriggerEvent.FINAL_CHAPTER_RESOLVED and event.player == controller
+        )
 
     if _ENLISTS_A_CREATURE_CONDITION.match(condition) and mine:
         # CR 702.154b: Guardian of New Benalia's own "Whenever this creature
@@ -5845,6 +5854,7 @@ from ._common import (  # noqa: E402
     _ENLISTS_A_CREATURE_CONDITION,
     _ENTERING_CAUSE_RE,
     _EXILE_FROM_GRAVEYARD_OR_BATTLEFIELD_CONDITION,
+    _FINAL_CHAPTER_RESOLVES_CONDITION,
     _LAND_ADDED_CHOSEN_MANA_CONDITION,
     _LAST_COUNTER_CONDITION,
     _LAST_TIME_COUNTER_CONDITION,

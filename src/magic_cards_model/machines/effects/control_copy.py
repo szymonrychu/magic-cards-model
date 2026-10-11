@@ -1181,6 +1181,61 @@ def _parse_copy_that_spell_retargeted_clause(text: str) -> AbilityEffect | None:
     return effect
 
 
+#: "Change the target to enchanted creature if able." (Captured by the
+#: Consulate's cast trigger, once its "if it has a single target" has been
+#: split off) - CR 115.7a: the trigger's event is the cast of the spell whose
+#: target changes, the new target is the permanent the Aura is attached to
+#: (CR 303.4b), and "if able" is CR 115.7a's own rule: a target that can't
+#: be changed to another legal target stays as it was.
+_CHANGE_TARGET_TO_RE = re.compile(
+    r"^change the target to (?P<new>enchanted (?:creature|permanent|land)|"
+    r"this (?:creature|permanent))(?P<able> if able)?\.?$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s35")
+def _parse_change_the_target_to_clause(text: str) -> AbilityEffect | None:
+    """`_CHANGE_TARGET_TO_RE`'s shape - see its docstring. Goes through
+    `Game.change_targets`, the one CR 115.7 retargeting path, so the new
+    target is checked exactly like an announced one (protection, hexproof,
+    the requirement the old target filled)."""
+    match = _CHANGE_TARGET_TO_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    attached = match.group("new").lower().startswith("enchanted")
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        event = ability.event
+        if event is None or event.subject_id is None:
+            return
+        spell = game.find_by_id(event.subject_id)
+        if spell is None or spell not in game.stack:
+            return
+        source = ability.source(game)
+        if source is None:
+            return
+        destination = (
+            game.find_by_id(source.attached_to)
+            if attached and source.attached_to is not None
+            else None
+            if attached
+            else source
+        )
+        if not isinstance(destination, CardState) or destination.zone is not Zone.BATTLEFIELD:
+            return
+        game.change_targets(
+            spell,
+            ability.controller,
+            scope=RetargetScope.ALL,
+            to=destination,
+            source_name=ability.source_name,
+            source_id=source_id_of(ability),
+        )
+
+    return effect
+
+
 #: Flamehold Grappler's whole enters trigger, once its condition has been split
 #: off: "copy the next spell you cast this turn when you cast it. You may choose
 #: new targets for the copy."

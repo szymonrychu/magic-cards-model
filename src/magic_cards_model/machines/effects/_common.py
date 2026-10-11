@@ -1677,6 +1677,7 @@ _SELECT_FROM_TOP_KINDS: dict[str, Callable[[CardState], bool]] = {
     "instant": lambda state: Type.INSTANT in state.types,
     "sorcery": lambda state: Type.SORCERY in state.types,
     "planeswalker": lambda state: Type.PLANESWALKER in state.types,
+    "saga": lambda state: state.is_saga,
 }
 
 

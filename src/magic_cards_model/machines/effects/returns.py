@@ -2356,6 +2356,50 @@ def _parse_mass_return_from_graveyard_to_hand_clause(
     return effect
 
 
+#: "Each player returns all <description> from their graveyard to their hand."
+#: (Empty the Catacombs; Underworld Cerberus' dies trigger after its "exile it
+#: and") - `_MASS_RETURN_FROM_GRAVEYARD_TO_HAND_RE`'s subject widened from
+#: "you" to every player: each player's own graveyard goes to that same
+#: player's hand (CR 404.1 / CR 108.3 - a graveyard card's owner is the player
+#: whose graveyard it is in).
+_EACH_PLAYER_RETURNS_FROM_GRAVEYARD_TO_HAND_RE = re.compile(
+    r"^each player returns all (?P<rest>.+?) from their graveyard to their hand\.?$",
+    re.IGNORECASE,
+)
+
+
+@MIXED_CLAUSE.rung("s31", for_spell=FORWARD)
+def _parse_each_player_returns_from_graveyard_to_hand_clause(
+    clause: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`_EACH_PLAYER_RETURNS_FROM_GRAVEYARD_TO_HAND_RE`'s shape.
+
+    The group is chosen in every graveyard before anything moves (CR 608.2f's
+    snapshot, as `_parse_mass_return_from_graveyard_to_hand_clause` does) and
+    each card goes through `Game.return_to_hand`, the same zone move the
+    controller-only reader makes.
+    """
+    match = _EACH_PLAYER_RETURNS_FROM_GRAVEYARD_TO_HAND_RE.fullmatch(clause.strip())
+    if match is None:
+        return None
+    predicate = _parse_card_group_qualifier(match.group("rest"))
+    if predicate is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        chosen = [
+            state
+            for player in game.players_in_game
+            for state in list(player.graveyard)
+            if predicate(state)
+        ]
+        for state in chosen:
+            if state.zone is Zone.GRAVEYARD:
+                game.return_to_hand(state)
+
+    return effect
+
+
 #: "Return all <description> to their owners' hands." - Sunderflock's own
 #: enters trigger. `_RETURN_TARGET_RE`'s verb with no target at all: every
 #: permanent on the battlefield matching the description.

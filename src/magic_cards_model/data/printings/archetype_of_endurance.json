@@ -1,0 +1,137 @@
+{
+  "object": "card",
+  "id": "3145ca68-7a9d-4161-9456-518591251b56",
+  "oracle_id": "79254223-3fa6-4b7c-8163-1e48bf5cb708",
+  "multiverse_ids": [
+    378488
+  ],
+  "mtgo_id": 51845,
+  "mtgo_foil_id": 51846,
+  "tcgplayer_id": 78855,
+  "cardmarket_id": 265725,
+  "name": "Archetype of Endurance",
+  "lang": "en",
+  "released_at": "2014-02-07",
+  "uri": "https://api.scryfall.com/cards/3145ca68-7a9d-4161-9456-518591251b56",
+  "scryfall_uri": "https://scryfall.com/card/bng/116/archetype-of-endurance?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T10:45:37Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/3/1/3145ca68-7a9d-4161-9456-518591251b56.jpg?1783939537",
+    "normal": "https://cards.scryfall.io/normal/front/3/1/3145ca68-7a9d-4161-9456-518591251b56.jpg?1783939537",
+    "large": "https://cards.scryfall.io/large/front/3/1/3145ca68-7a9d-4161-9456-518591251b56.jpg?1783939537",
+    "png": "https://cards.scryfall.io/png/front/3/1/3145ca68-7a9d-4161-9456-518591251b56.png?1783939537",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/3/1/3145ca68-7a9d-4161-9456-518591251b56.jpg?1783939537",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/3/1/3145ca68-7a9d-4161-9456-518591251b56.jpg?1783939537",
+    "thumb": "https://cards.scryfall.io/thumb/front/3/1/3145ca68-7a9d-4161-9456-518591251b56.webp?1783939537",
+    "grid": "https://cards.scryfall.io/grid/front/3/1/3145ca68-7a9d-4161-9456-518591251b56.webp?1783939537",
+    "display": "https://cards.scryfall.io/display/front/3/1/3145ca68-7a9d-4161-9456-518591251b56.webp?1783939537",
+    "art": "https://cards.scryfall.io/art/front/3/1/3145ca68-7a9d-4161-9456-518591251b56.webp?1783939537",
+    "crop": "https://cards.scryfall.io/crop/front/3/1/3145ca68-7a9d-4161-9456-518591251b56.webp?1783939537"
+  },
+  "mana_cost": "{6}{G}{G}",
+  "cmc": 8.0,
+  "type_line": "Enchantment Creature \u2014 Boar",
+  "oracle_text": "Creatures you control have hexproof.\nCreatures your opponents control lose hexproof and can't have or gain hexproof.",
+  "power": "6",
+  "toughness": "5",
+  "colors": [
+    "G"
+  ],
+  "color_identity": [
+    "G"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "50a80fe4-a757-408f-ad23-52c5cc5f45cc",
+  "set": "bng",
+  "set_name": "Born of the Gods",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/50a80fe4-a757-408f-ad23-52c5cc5f45cc",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Abng&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/bng?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/3145ca68-7a9d-4161-9456-518591251b56/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A79254223-3fa6-4b7c-8163-1e48bf5cb708&unique=prints",
+  "collector_number": "116",
+  "digital": false,
+  "rarity": "uncommon",
+  "flavor_text": "Despite its fearsome stature, it is as elusive as a shadow, circling round to stalk those who presume to hunt it.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Slawomir Maniak",
+  "artist_ids": [
+    "d887bc66-2779-416c-a1ff-d8720242063e"
+  ],
+  "illustration_id": "4420a12f-fc3f-4630-8711-541fcffccb74",
+  "border_color": "black",
+  "frame": "2003",
+  "frame_effects": [
+    "enchantment"
+  ],
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 2909,
+  "penny_rank": 5546,
+  "prices": {
+    "usd": "2.18",
+    "usd_foil": "8.64",
+    "usd_etched": null,
+    "eur": "1.43",
+    "eur_foil": "5.08",
+    "tix": "0.03"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=378488&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DArchetype%2Bof%2BEndurance",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DArchetype%2Bof%2BEndurance",
+    "edhrec": "https://edhrec.com/route/?cc=Archetype+of+Endurance"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F78855%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=265725&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/51845?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

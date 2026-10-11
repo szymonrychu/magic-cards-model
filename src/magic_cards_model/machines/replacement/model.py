@@ -1368,12 +1368,19 @@ def _protection_effects(game: "Game", event: ReplaceableEvent) -> list[Applicabl
     and the protection parser both live there.
     """
     reason = game.protection_from_damage(event)
-    if reason is None or event.card is None:
+    # A player with protection (Runed Halo, Absolute Virtue) is damaged too:
+    # CR 702.16e says "to a permanent or player".
+    protected = event.card if event.card is not None else event.source
+    if reason is None or protected is None:
         return []
     return [
         ApplicableEffect(
-            key=f"{event.card.id}:protection",
-            source=event.card,
+            key=(
+                f"{event.card.id}:protection"
+                if event.card is not None
+                else f"{event.player.username if event.player else ''}:protection"
+            ),
+            source=protected,
             label=reason,
             apply=_prevent_all,
         )

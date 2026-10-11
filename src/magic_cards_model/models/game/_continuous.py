@@ -60,6 +60,7 @@ from ...machines.next_spell import (
     next_spell_keyword_grants_for,
     spell_has_quality,
 )
+from ...machines.protection_statics import player_keyword_grants
 from ...machines.replacement import (
     EventKind,
     ReplaceableEvent,
@@ -800,6 +801,9 @@ class ContinuousMixin:
                 conditional = conditional_group_keyword_grant_of_line(line)
                 if conditional is not None and permanent.counters[conditional[0]] > 0:
                     grants.append((conditional[2], []))
+            # "You and Humans you control have hexproof." and the other static
+            # group grants whose subject names the player (CR 702.11c).
+            grants.extend(player_keyword_grants(self, permanent, board, player.username))
         return grants
 
     def grant_player_hexproof(
