@@ -11,6 +11,7 @@ from ..machines.crew_saddle_statics import reads_crew_saddle_line
 from ..machines.defender_attack_requirements import reads_defender_attack_requirement_line
 from ..machines.equip_block_statics import reads_equip_block_line
 from ..machines.exert_on_attack import reads_exert_as_it_attacks_line
+from ..machines.graveyard_statics import reads_graveyard_ability_line
 from ..machines.player_action_prohibitions import reads_player_action_prohibition_line
 from ..machines.revealed_information import reads_revealed_information_line
 from ..machines.transform_prohibitions import reads_cant_transform_line
@@ -27,6 +28,7 @@ _FAMILIES = (
     reads_cant_transform_line,
     reads_defender_attack_requirement_line,
     reads_first_flip_heads_line,
+    reads_graveyard_ability_line,
 )
 
 

@@ -2610,6 +2610,17 @@ def unearth_abilities(card: Card) -> list[KeywordAbility]:
     ]
 
 
+def unearth_abilities_of(game: Any, card: CardState) -> list[KeywordAbility]:
+    """The unearth abilities `card` has right now: printed, plus any a static
+    grants (Mishra, Tamer of Mak Fawa), and none while a static strips graveyard
+    cards of their abilities (Yixlid Jailer)."""
+    from .graveyard_statics import granted_unearth_abilities, graveyard_abilities_lost_by
+
+    if card.zone is Zone.GRAVEYARD and graveyard_abilities_lost_by(game) is not None:
+        return []
+    return unearth_abilities(card.card) + granted_unearth_abilities(game, card)
+
+
 def unearth_activation(
     game: Any, card: CardState, player: str, index: int = 0
 ) -> KeywordActivation:
@@ -2635,8 +2646,16 @@ def unearth_activation(
     effect, not the activation (`_parse_delayed_reanimate_haste_exile_
     clauses`, `machines/casting.exile_warped`).
     """
-    printed = unearth_abilities(card.card)
+    printed = unearth_abilities_of(game, card)
     if index >= len(printed):
+        from .graveyard_statics import graveyard_abilities_lost_by
+
+        jailer = graveyard_abilities_lost_by(game) if card.zone is Zone.GRAVEYARD else None
+        if jailer is not None:
+            raise ValueError(
+                f"{card.name} has no unearth ability: {jailer} makes cards in graveyards "
+                f"lose all abilities ({KeywordRule.UNEARTH})"
+            )
         raise ValueError(
             f"{card.name} has no unearth ability number {index} ({KeywordRule.UNEARTH})"
         )
@@ -4658,7 +4677,9 @@ class OffZoneAbility(NamedTuple):
     not have to branch on which family built the entry."""
 
 
-def off_zone_abilities(card: Card) -> list[OffZoneAbility]:
+def off_zone_abilities(
+    card: Card, *, state: CardState | None = None, game: Any = None
+) -> list[OffZoneAbility]:
     """Every activated ability of `card` that functions off the battlefield,
     in one order: cycling first (CR 702.29a - "Cycling is an activated
     ability that functions only while the card with cycling is in a player's
@@ -4669,6 +4690,11 @@ def off_zone_abilities(card: Card) -> list[OffZoneAbility]:
     card with cycling and nothing else keeps the index its own
     `cycling_activation`/`actions/cycle` caller already passes - every
     cycling printing in the pool is exactly that card.
+
+    With the object's `state` and the `game`, what the battlefield does to the
+    card is applied too: a static granting unearth to graveyard cards (Mishra,
+    Tamer of Mak Fawa) adds it, and one stripping graveyard cards of their
+    abilities (Yixlid Jailer) removes every graveyard-zone entry.
     """
     pool: list[OffZoneAbility] = []
     for index, kw_ability in enumerate(cycling_abilities(card)):
@@ -4692,7 +4718,8 @@ def off_zone_abilities(card: Card) -> list[OffZoneAbility]:
                 ),
             )
         )
-    for index, kw_ability in enumerate(unearth_abilities(card)):
+    unearths = unearth_abilities(card) if state is None else unearth_abilities_of(game, state)
+    for index, kw_ability in enumerate(unearths):
         pool.append(
             OffZoneAbility(
                 family="unearth",
@@ -4742,6 +4769,11 @@ def off_zone_abilities(card: Card) -> list[OffZoneAbility]:
                 ability=ability,
             )
         )
+    if state is not None and state.zone is Zone.GRAVEYARD:
+        from .graveyard_statics import graveyard_abilities_lost_by
+
+        if graveyard_abilities_lost_by(game) is not None:
+            return [entry for entry in pool if entry.zone is not Zone.GRAVEYARD]
     return pool
 
 
@@ -4765,7 +4797,7 @@ def off_zone_activation(
     anything: a card with one off-zone ability has no number 1, and a card
     with none has no number 0.
     """
-    pool = off_zone_abilities(card.card)
+    pool = off_zone_abilities(card.card, state=card, game=game)
     if index < 0 or index >= len(pool):
         raise ValueError(
             f"{card.name} has no activated ability functioning off the battlefield, "
@@ -5515,6 +5547,14 @@ def why_cannot_dredge(game: Any, card: CardState, player: str) -> str | None:
         return (
             f"{card.name}'s dredge ability functions in a graveyard, but it is in "
             f"the {card.zone.value} ({KeywordRule.DREDGE})"
+        )
+    from .graveyard_statics import graveyard_abilities_lost_by
+
+    jailer = graveyard_abilities_lost_by(game)
+    if jailer is not None:
+        return (
+            f"{jailer} makes cards in graveyards lose all abilities, so {card.name} "
+            f"has no dredge ({KeywordRule.DREDGE})"
         )
     library = len(game.player(player).library)
     if library < count:

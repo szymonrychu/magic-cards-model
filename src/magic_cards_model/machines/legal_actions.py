@@ -1746,7 +1746,7 @@ def _off_zone_actions(
     """
     actions: list[Action] = []
     spend = ManaSpend.activating(card.card)
-    for index, entry in enumerate(off_zone_abilities(card.card)):
+    for index, entry in enumerate(off_zone_abilities(card.card, state=card, game=game)):
         # CR 602.2b: announced like any activation. Only a printed line can
         # target; cycling, unearth and transmute spell out untargeted effects.
         found = _target_candidates(

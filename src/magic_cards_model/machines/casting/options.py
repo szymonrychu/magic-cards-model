@@ -267,6 +267,16 @@ class KeywordCastOption(EngineModel):
                 f"but it is in the {where.value} ({self.rule})"
             )
 
+        if where is Zone.GRAVEYARD and game is not None and self in keyword_cast_options(spell.card):
+            from ..graveyard_statics import graveyard_abilities_lost_by
+
+            jailer = graveyard_abilities_lost_by(game)
+            if jailer is not None:
+                return (
+                    f"{self.keyword} is a printed ability of {spell.name}, and {jailer} makes "
+                    f"cards in graveyards lose all abilities ({self.rule})"
+                )
+
         if self.condition is not None and game is not None:
             from .permissions import cast_condition_holds
 
