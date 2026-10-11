@@ -56,11 +56,13 @@ def _refusal(scenario, spell, target, username):
 
 
 def _ability_refusal(scenario, source, target, username):
-    try:
-        scenario.activate(source, sacrificing=[source], targets=[target], username=username)
-    except ValueError as error:
-        return str(error)
-    return None
+    """Why protection stops an ability of permanent `source` targeting `target`
+    (CR 702.16b: "abilities from a source with the stated quality") - the
+    question `Game.legal_target` asks again as the ability resolves
+    (CR 608.2b)."""
+    return scenario.game.protection_refusal(
+        target, source.card, source_controller=username, is_spell=False, source_state=source
+    )
 
 
 # -- Pristine Angel: as long as untapped, protection from artifacts and each color --
@@ -239,11 +241,9 @@ def test_serras_emissary_protects_its_creatures_from_the_chosen_card_type():
     scenario.start_at(Step.PRECOMBAT_MAIN)
     emissary = _enter_choosing(scenario, "Serra's Emissary", "bob", "creature")
     bears = scenario.creature("Grizzly Bears", "bob")
-    scenario.put_onto_battlefield("Ravenous Chupacabra", "alice")
-    with pytest.raises(ValueError, match="protection from creature"):
-        scenario.choose_trigger_targets("Ravenous Chupacabra", [emissary])
-    with pytest.raises(ValueError, match="protection from creature"):
-        scenario.choose_trigger_targets("Ravenous Chupacabra", [bears])
+    chupacabra = scenario.put_onto_battlefield("Ravenous Chupacabra", "alice")
+    assert "protection from creature" in _ability_refusal(scenario, chupacabra, emissary, "alice")
+    assert "protection from creature" in _ability_refusal(scenario, chupacabra, bears, "alice")
 
 
 def test_serras_emissary_protects_the_player_from_the_chosen_card_type():

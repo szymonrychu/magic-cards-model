@@ -3501,6 +3501,12 @@ class ZonesMixin:
         so only a land `username` owns qualifies."""
         if land.zone is not Zone.GRAVEYARD or land.owner != username:
             return None
+        from ...machines.protection_statics import graveyard_land_play_prohibited
+
+        if graveyard_land_play_prohibited(self, username):
+            # "Your opponents can't play land cards from graveyards." (Tomik):
+            # a "can't" beats any "may" (CR 101.2).
+            return None
         board = self.computed_board()
         for permanent in self.permanents_controlled_by(username):
             if any(plays_lands_from_graveyard_line(line) for line in board.of(permanent).abilities):

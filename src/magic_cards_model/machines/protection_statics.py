@@ -953,3 +953,105 @@ def aura_exempts_itself(game: "Game", aura: CardState, host: Any, quality: str) 
         if quality.lower() in [each.lower() for each in _own_protection_qualities(other)]:
             return False
     return True
+
+
+# -- "Your opponents can't play land cards from graveyards." -------------------
+
+#: Tomik, Distinguished Advokist's second line: the restriction on top of
+#: another permanent's "You may play lands from your graveyard" (CR 101.2: a
+#: "can't" beats a "may"). Read by `Game.graveyard_land_permission`, the one
+#: door through which a land card in a graveyard becomes playable.
+_NO_GRAVEYARD_LAND_PLAY_RE = re.compile(
+    r"^(?P<who>your opponents|players|each opponent) can't play land cards from "
+    r"(?:graveyards|a graveyard|their graveyards)\.?$",
+    re.IGNORECASE,
+)
+
+
+def graveyard_land_play_prohibition(text: str) -> str | None:
+    """`"opponents"` or `"players"` when `text` is a "... can't play land cards
+    from graveyards." line, else `None`."""
+    match = _NO_GRAVEYARD_LAND_PLAY_RE.match(_strip_reminder(text)[0].strip())
+    if match is None:
+        return None
+    return "players" if match.group("who").lower() == "players" else "opponents"
+
+
+def graveyard_land_play_prohibited(game: "Game", username: str) -> bool:
+    """Whether a permanent on the battlefield forbids `username` playing land
+    cards from graveyards (CR 305.1)."""
+    for permanent in game.battlefield:
+        if "can't play land cards from" not in permanent.oracle_text.lower():
+            continue
+        for line in permanent.oracle_text.splitlines():
+            who = graveyard_land_play_prohibition(line)
+            if who is None:
+                continue
+            controller = game.controller_of(permanent).username
+            if who == "players" or controller != username:
+                return True
+    return False
+
+
+# -- Deification: all but one loyalty counter ---------------------------------
+
+_LOYALTY_FLOOR_RE = re.compile(
+    r"^as long as you control an? (?P<noun>[a-z]+), if damage dealt to a planeswalker "
+    r"you control(?P<chosen> of the chosen type)? would result in all loyalty counters "
+    r"on it being removed, instead all but one of those counters are removed\.?$",
+    re.IGNORECASE,
+)
+
+
+def loyalty_floor_line(text: str) -> tuple[Type, bool] | None:
+    """(required controlled card type, "of the chosen type") for a "... if
+    damage dealt to a planeswalker you control ... would result in all loyalty
+    counters on it being removed, instead all but one ..." line, else `None`."""
+    match = _LOYALTY_FLOOR_RE.match(_strip_reminder(text)[0].strip())
+    if match is None:
+        return None
+    try:
+        card_type = Type(match.group("noun").lower())
+    except ValueError:
+        return None
+    return card_type, match.group("chosen") is not None
+
+
+def loyalty_counters_to_remove(
+    game: "Game", planeswalker: CardState, amount: int, present: int
+) -> int:
+    """How many loyalty counters damage of `amount` removes from `planeswalker`
+    (which has `present`), after any "instead all but one of those counters are
+    removed" replacement (CR 120.3c, CR 614.1a): the damage would remove them
+    all, a permanent on the battlefield says so, and the planeswalker is its
+    controller's (of the chosen type when the line says so)."""
+    removed = min(amount, present)
+    if removed < present or present < 1:
+        return removed
+    owner = game.controller_of(planeswalker).username
+    chars = game.characteristics_of(planeswalker)
+    for permanent in game.battlefield:
+        if "all but one of those counters" not in permanent.oracle_text.lower():
+            continue
+        if game.controller_of(permanent).username != owner:
+            continue
+        for line in permanent.oracle_text.splitlines():
+            floor = loyalty_floor_line(line)
+            if floor is None:
+                continue
+            required, chosen = floor
+            if not any(
+                required in game.characteristics_of(each).types
+                for each in game.permanents_controlled_by(owner)
+            ):
+                continue
+            if chosen:
+                choice = permanent.choice
+                if (
+                    choice is None
+                    or choice.kind is not ChoiceKind.PLANESWALKER_TYPE
+                    or choice.value.lower() not in [each.lower() for each in chars.subtypes]
+                ):
+                    continue
+            return present - 1
+    return removed
