@@ -2179,6 +2179,13 @@ class KeywordActivation(EngineModel):
             prohibited = self.game.activation_prohibition(self.card, is_mana=False)
             if prohibited is not None:
                 return prohibited
+            from .attached_restrictions import enchanted_player_activation_prohibition
+
+            barred = enchanted_player_activation_prohibition(
+                self.game, self.player, is_mana=False, is_loyalty=False
+            )
+            if barred is not None:
+                return barred
         if (
             self.zone is Zone.BATTLEFIELD
             and self.game is not None

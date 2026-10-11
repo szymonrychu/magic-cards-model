@@ -80,8 +80,12 @@ _COLOR_WORDS: dict[str, Color] = {
 #: see that function's docstring.
 #: CR 702.93a's undying is persist's mirror and is granted the same way
 #: (Undying Evil's "Target creature gains undying until end of turn.").
+#: CR 702.89a's umbra armor is a static ability whose replacement effect reads
+#: the Aura's computed ability list (`replacement/parse._keyword_replacements`),
+#: so Umbra Mystic's "Auras attached to permanents you control have umbra
+#: armor" grants it the same way.
 _GRANTABLE_TRIGGERED_KEYWORDS = frozenset(
-    {"prowess", "persist", "undying", "flanking", "exalted", "riot"}
+    {"prowess", "persist", "undying", "flanking", "exalted", "riot", "umbra armor"}
 )
 _KNOWN_KEYWORDS = (
     frozenset(keyword.value for keyword in Keyword)

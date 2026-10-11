@@ -31,6 +31,7 @@ from ...models.card_state import (
     MAY_STAY_TAPPED_TEXT,
     UNTAPS_IN_OTHER_UNTAP_TEXT,
     CardState,
+    TargetKind,
 )
 from .model import (
     AddEveryCreatureType,
@@ -86,6 +87,10 @@ _GROUP_TYPE_WORDS = {
 _VERB_RE = re.compile(r" (?:gets?|have|has|are|is|loses?) ")
 
 _NAMED_RE = re.compile(r"^(?P<head>.+?) named (?P<names>.+)$")
+_SUFFIX_ATTACHED_RE = re.compile(
+    r" attached to (?:an? |any )?(?:permanents?|creatures?) (?P<who>you control|your opponents control)$"
+)
+_SUFFIX_ENCHANTED_PLAYER_RE = re.compile(r" enchanted player controls$")
 _SUFFIX_CONTROL_RE = re.compile(r" (?P<who>you control|your opponents control)$")
 _SUFFIX_CHOSEN_RE = re.compile(r" of the chosen type$")
 _SUFFIX_COUNTER_RE = re.compile(
@@ -129,7 +134,17 @@ def parse_group(subject: str) -> dict[str, Any] | None:
     changed = True
     while changed:
         changed = False
-        if match := _SUFFIX_CONTROL_RE.search(text):
+        if match := _SUFFIX_ATTACHED_RE.search(text):
+            fields["attached_to_scope"] = "you" if match["who"] == "you control" else "opponents"
+            text = text[: match.start()]
+            changed = True
+        elif match := _SUFFIX_ENCHANTED_PLAYER_RE.search(text):
+            # CR 303.4m: the player the source Aura is attached to.
+            fields["scope"] = "you"
+            fields["enchanted_player"] = True
+            text = text[: match.start()]
+            changed = True
+        elif match := _SUFFIX_CONTROL_RE.search(text):
             fields["scope"] = "you" if match["who"] == "you control" else "opponents"
             text = text[: match.start()]
             changed = True
@@ -226,14 +241,25 @@ def group_selector(spec: dict[str, Any], source: CardState) -> GroupMatch:
     the source's CR 614.12a choice."""
     from .parse import chosen_creature_type_of
 
-    fields = {key: value for key, value in spec.items() if key not in ("other", "chosen")}
+    fields = {
+        key: value
+        for key, value in spec.items()
+        if key not in ("other", "chosen", "enchanted_player")
+    }
+    username = source.controller
+    chosen_missing = False
+    if spec.get("enchanted_player"):
+        attachment = getattr(source, "attachment", None)
+        if attachment is not None and attachment.kind is TargetKind.PLAYER:
+            username = attachment.username
+        else:
+            chosen_missing = True
     if fields.get("named"):
         # CR 201.5: the source's own name in the list reaches the parser as
         # "this permanent".
         fields["named"] = tuple(
             source.name.lower() if name == "this permanent" else name for name in fields["named"]
         )
-    chosen_missing = False
     if spec["chosen"]:
         chosen_type = chosen_creature_type_of(source)
         if chosen_type is None:
@@ -241,7 +267,7 @@ def group_selector(spec: dict[str, Any], source: CardState) -> GroupMatch:
         else:
             fields["any_subtypes"] = (*fields["any_subtypes"], chosen_type)
     return GroupMatch(
-        username=source.controller,
+        username=username,
         other_than=source.id if spec["other"] else None,
         empty_if_unset=chosen_missing,
         **fields,

@@ -197,6 +197,39 @@ def attached_activation_prohibition(game: "Game", obj: "CardState", *, is_mana: 
     return None
 
 
+#: Overwhelming Splendor's "Enchanted player can't activate abilities that
+#: aren't mana abilities or loyalty abilities." (CR 303.4m, CR 602.5).
+ENCHANTED_PLAYER_NO_ACTIVATE_RE = re.compile(
+    r"^enchanted player can't activate abilities that aren't mana abilities or "
+    r"loyalty abilities\.?$",
+    re.IGNORECASE,
+)
+
+
+def enchanted_player_activation_prohibition(
+    game: "Game", activator: str, *, is_mana: bool, is_loyalty: bool
+) -> str | None:
+    """Why an Aura on `activator` stops them activating this ability, or None
+    (CR 602.5). Mana abilities (CR 605.1a) and loyalty abilities (CR 606) are
+    spared by the sentence itself. Read off the computed board each time (CR
+    611.3a), from every Aura attached to that player."""
+    from .group_attack_statics import _enchanted_player
+
+    if is_mana or is_loyalty:
+        return None
+    board = game.computed_board()
+    for source in game.battlefield:
+        if _enchanted_player(source) != activator:
+            continue
+        for line in board.of(source).abilities:
+            if ENCHANTED_PLAYER_NO_ACTIVATE_RE.match(line.strip()):
+                return (
+                    f"{activator} can't activate abilities that aren't mana or loyalty "
+                    f"abilities: {source.name} says so (CR 602.5)"
+                )
+    return None
+
+
 def reads_attached_restriction_line(printing: "Card", text: str, *, card_name: str) -> bool:
     """Whether every sentence of this static line is an attachment restriction
     `parse_attached` reads (the cost form is `attack_block_costs`'s)."""
@@ -210,6 +243,8 @@ def reads_attached_restriction_line(printing: "Card", text: str, *, card_name: s
 
 
 def _reads_sentence(sentence: str) -> bool:
+    if ENCHANTED_PLAYER_NO_ACTIVATE_RE.fullmatch(sentence.strip()):
+        return True
     found = parse_attached(sentence)
     if found is not None:
         return found.pay is None

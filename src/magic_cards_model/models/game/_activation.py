@@ -981,6 +981,13 @@ class ActivationMixin:
         prohibited = self._activation_prohibition(permanent, ability)
         if prohibited is not None:
             return prohibited
+        from ...machines.attached_restrictions import enchanted_player_activation_prohibition
+
+        barred = enchanted_player_activation_prohibition(
+            self, controller, is_mana=ability.mana is not None, is_loyalty=ability.loyalty is not None
+        )
+        if barred is not None:
+            return barred
 
         if self.characteristics_of(permanent).has_ability(CANT_ACTIVATE_ABILITIES_TEXT):
             # A one-shot resolved effect's lock (Braided Net's own "Tap

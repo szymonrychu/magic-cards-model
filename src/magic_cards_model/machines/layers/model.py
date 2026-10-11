@@ -1771,6 +1771,9 @@ class GroupMatch(SelectorBase):
     share_kind: Literal["color", "creature_type"] = "color"
     """Konda's Banner: only creatures sharing a color / a creature type with the
     permanent `shares_with` (its equipped creature) are in the group."""
+    attached_to_scope: Literal["you", "opponents"] | None = None
+    """ "Auras attached to permanents you control": the group member is attached
+    to a permanent whose controller is (not) `username`."""
     or_subtypes: tuple[str, ...] = ()
     """ "Creatures and Vehicles you control": a permanent with one of these
     subtypes is in the group whether or not it passes the type clauses."""
@@ -1793,6 +1796,12 @@ class GroupMatch(SelectorBase):
             return False
         if self.named and chars.name.lower() not in self.named:
             return False
+        if self.attached_to_scope is not None:
+            host = board.get(chars.attached_to) if chars.attached_to is not None else None
+            if host is None or host.controller is None:
+                return False
+            if (host.controller == self.username) != (self.attached_to_scope == "you"):
+                return False
         if self.shares_with is not None:
             reference = board.get(self.shares_with)
             if reference is None:

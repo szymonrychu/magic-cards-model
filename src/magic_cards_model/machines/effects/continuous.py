@@ -819,7 +819,14 @@ def _mass_group_filter(
     if match is None:
         return None
     spec = parse_group(match.group("subject"))
-    if spec is None or spec["chosen"] or spec["other"] or spec.get("named"):
+    if (
+        spec is None
+        or spec["chosen"]
+        or spec["other"]
+        or spec.get("named")
+        or spec.get("enchanted_player")
+        or spec.get("attached_to_scope")
+    ):
         return None
     if not (spec["all_types"] or spec["any_types"]) or (
         spec["all_types"] == (Type.CREATURE,)
@@ -828,7 +835,7 @@ def _mass_group_filter(
         return None
     # Whose permanents is the caller's question (`group_match["whose"]`).
     fields = {
-        key: value for key, value in spec.items() if key not in ("other", "chosen", "scope")
+        key: value for key, value in spec.items() if key not in ("other", "chosen", "scope", "enchanted_player")
     }
     selector = GroupMatch(username=None, scope="any", **fields)
 

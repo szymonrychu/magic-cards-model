@@ -8,6 +8,7 @@ performs: each predicate stages a throwaway permanent of the printing on a real
 `static_audit/__init__.py`).
 """
 
+from magic_cards_model.machines.attached_restrictions import reads_attached_restriction_line
 from magic_cards_model.machines.combat import all_damage_has_wither, may_assign_as_though_unblocked
 from magic_cards_model.machines.mulligan_time import mulligan_time_line
 from magic_cards_model.machines.zone_grants import line_grants_off_zone
@@ -24,6 +25,7 @@ _GATES = (
     "can be attached only to",
     "could mulligan",
     "twice each turn rather than only once",
+    "can't activate abilities that aren't mana abilities",
 )
 
 
@@ -116,6 +118,8 @@ def reads_anthems_grants_line(printing, text, *, card_name=None, legendary=False
         return mulligan_time_line(card_name or printing.name, text) is not None
     if "can be attached only to" in lowered:
         return _reads_attach_restriction(printing)
+    if "can't activate abilities that aren't mana abilities" in lowered:
+        return reads_attached_restriction_line(printing, text, card_name=card_name or printing.name)
     if "twice each turn rather than only once" in lowered:
         return _loyalty_twice(printing)
     if "had wither" in lowered:
