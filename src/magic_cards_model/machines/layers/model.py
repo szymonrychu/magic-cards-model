@@ -918,6 +918,18 @@ class Only(SelectorBase):
         return chars.card_id == self.card_id
 
 
+class OnlyIfCreature(SelectorBase):
+    """One permanent by id, and only while it is a creature (CR 613.5, judged
+    against the characteristics computed so far): Clawing Torment's "As long as
+    enchanted permanent is a creature, it gets -1/-1 and can't block."."""
+
+    kind: Literal["only_if_creature"] = "only_if_creature"
+    card_id: UUID
+
+    def __call__(self, chars: Characteristics, board: Board) -> bool:
+        return chars.card_id == self.card_id and Type.CREATURE in chars.types
+
+
 class PairedPartners(SelectorBase):
     """The two creatures of a soulbond pair the source is in (CR 702.95a): the
     source and its partner, and only while the pair holds - both creatures,
@@ -1901,6 +1913,7 @@ class WithChangeling(SelectorBase):
 #: count things or say "each other" (CR 613.5).
 Selector = Annotated[
     Only
+    | OnlyIfCreature
     | PairedPartners
     | OnlyThisIncarnation
     | CreatureControlledByWithId

@@ -4,6 +4,8 @@ when the production reader of its family performs it - `static_cast_bans`
 (the "can't cast / play / activate / attack" grammar), the spell's own
 "cast this spell only if" gate, or `casting_restrictions`' cast windows."""
 
+from ..machines.attached_restrictions import reads_attached_restriction_line
+from ..machines.combat import reads_block_requirement_line
 from ..machines.casting_restrictions import reads_player_rule_static_line
 from ..machines.static_cast_bans import reads_self_cast_restriction_line, reads_static_ban_line
 from ..models.card import Supertype
@@ -11,6 +13,12 @@ from ..models.card import Supertype
 
 def reads_casting_attack_restrictions_line(printing, text, *, card_name, legendary) -> bool:
     lowered = text.lower()
+    if "blocks each combat if able" in lowered and reads_block_requirement_line(text):
+        return True
+    if "activated abilities can't be activated" in lowered and reads_attached_restriction_line(
+        printing, text, card_name=card_name
+    ):
+        return True
     if "cast" not in lowered and "play lands" not in lowered and "activate" not in lowered:
         return False
     name = card_name or printing.name

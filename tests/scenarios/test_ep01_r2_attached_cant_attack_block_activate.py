@@ -391,11 +391,12 @@ def test_spirespine_bestowed_makes_the_enchanted_creature_block_if_able():
         .build()
     )
     bears = scenario.creature("Grizzly Bears", "bob")
-    scenario.find("Spirespine", Zone.BATTLEFIELD, "bob").attach_to(bears)
+    spirespine = scenario.find("Spirespine", Zone.BATTLEFIELD, "bob")
+    spirespine.attach_to(bears)
     scenario.start_at(Step.DECLARE_ATTACKERS)
     giant = scenario.creature("Hill Giant", "alice")
     scenario.attack_with(giant, defending="bob")
     assert scenario.game.power_of(bears) == 6
     with pytest.raises(ValueError, match="CR 509.1c"):
         scenario.block(giant, scenario.creature("Serra Angel", "bob"))
-    scenario.block(giant, bears)
+    scenario.block(giant, bears, spirespine)

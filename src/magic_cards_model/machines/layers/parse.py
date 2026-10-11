@@ -10716,7 +10716,13 @@ def _if_gated_builder(base: EffectBuilder, condition: str) -> EffectBuilder:
 def _parse_layer_sentence(sentence: str) -> EffectBuilder | None:
     """`_parse_layer_sentence_ungated`, then - for a sentence that is none of
     those shapes - `_parse_if_gated_layer_sentence`'s trailing "if" rider."""
-    return _parse_layer_sentence_ungated(sentence) or _parse_if_gated_layer_sentence(sentence)
+    from ..attached_restrictions import parse_attached_compound_grant
+
+    return (
+        _parse_layer_sentence_ungated(sentence)
+        or _parse_if_gated_layer_sentence(sentence)
+        or parse_attached_compound_grant(sentence)
+    )
 
 
 @functools.lru_cache(maxsize=16384)

@@ -1924,6 +1924,10 @@ def evasion_restriction_refusal(
     `looks_like_unparsed_evasion_restriction` instead of silently doing
     nothing.
     """
+    from .attached_restrictions import attached_evasion_refusal
+
+    if (attached := attached_evasion_refusal(game, attacker)) is not None:
+        return attached
     for sentence in _evasion_restriction_sentences(attacker, game):
         compound = _CANT_BLOCK_OR_BE_BLOCKED_BY_RE.search(sentence)
         if compound is not None:
@@ -3450,8 +3454,18 @@ _ATTACKS_EACH_COMBAT_RE = re.compile(
 )
 
 
+#: "This creature attacks or blocks each combat if able." (Iron Golem,
+#: Relentless Raptor): CR 508.1d's requirement on its controller's turn and
+#: CR 509.1c's on the other player's - one sentence, two requirements.
+_ATTACKS_OR_BLOCKS_EACH_COMBAT_RE = re.compile(
+    r"^(?:(?P<subject>.+?) )?attacks or blocks each combat if able\.?$", re.IGNORECASE
+)
+
+
 def _attack_requirement_match(line: str, name: str) -> "re.Match[str] | None":
-    match = _ATTACKS_EACH_COMBAT_RE.fullmatch(line.strip())
+    match = _ATTACKS_EACH_COMBAT_RE.fullmatch(line.strip()) or (
+        _ATTACKS_OR_BLOCKS_EACH_COMBAT_RE.fullmatch(line.strip())
+    )
     if match is None:
         return None
     subject = (match.group("subject") or "").strip().lower()
@@ -3472,6 +3486,12 @@ def _attack_requirement_match(line: str, name: str) -> "re.Match[str] | None":
     return match
 
 
+def reads_block_requirement_line(line: str) -> bool:
+    """Whether `line` is "This creature blocks each combat if able." (CR 509.1c),
+    the requirement `_own_block_requirements` reads off the computed board."""
+    return _BLOCKS_NAMED_EACH_COMBAT_RE.fullmatch(line.strip()) is not None
+
+
 def is_attack_requirement_line(line: str, name: str) -> bool:
     """Whether one computed ability line of a creature named `name` is its own
     "attacks [a player] each combat if able" requirement (CR 508.1d)."""
@@ -3487,7 +3507,7 @@ def _own_attack_requirements(game: "Game", creature: CardState) -> list[bool]:
     for line in characteristics.abilities:
         match = _attack_requirement_match(line, creature.name)
         if match is not None:
-            requirements.append(match.group("player") is not None)
+            requirements.append("player" in match.re.groupindex and match.group("player") is not None)
     from .combat_statics import extra_attack_requirements
 
     requirements.extend(extra_attack_requirements(game, creature))
@@ -3672,6 +3692,13 @@ def _own_block_requirements(game: "Game", creature: CardState) -> list[str | Non
         if match is not None:
             attacker = match.group("attacker")
             names.append(attacker.lower() if attacker is not None else None)
+        elif _attack_requirement_match(line, creature.name) is not None and (
+            _ATTACKS_OR_BLOCKS_EACH_COMBAT_RE.fullmatch(line.strip())
+        ):
+            names.append(None)
+    from .attached_restrictions import attached_block_requirements
+
+    names.extend(attached_block_requirements(game, creature))
     return names
 
 
