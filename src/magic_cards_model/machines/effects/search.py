@@ -1243,6 +1243,70 @@ def _parse_search_mv_equal_to_sacrificed_clause(
     return effect
 
 
+#: Evolving Door's whole ability text: "Count the colors of the sacrificed
+#: creature, then search your library for a creature card that's exactly that
+#: many colors plus one. Exile that card, then shuffle. You may cast the
+#: exiled card." Read whole (`text._parse_unsplittable_whole_text`) because the
+#: clause split would cut "that many colors plus one" away from the count it
+#: names. CR 105.1 counts the colours; the sacrificed permanent's count was
+#: taken as the cost was paid (`AbilityOnStack.cost_sacrificed_color_counts`,
+#: CR 608.2h), so a sacrificed token that has ceased to exist still counts.
+_COUNT_COLORS_SEARCH_EXILE_CAST_RE = re.compile(
+    r"^count the colors of the sacrificed (?P<noun>[a-z]+), then search your library for "
+    r"an? (?P<quality>[a-z]+) card that's exactly that many colors plus one\. "
+    r"exile that card, then shuffle\. you may cast the exiled card\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_count_colors_search_exile_cast_clause(
+    clause: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`_COUNT_COLORS_SEARCH_EXILE_CAST_RE`'s shape - ability-only (a spell's
+    sacrifice is not recorded at resolution). A sacrifice that paid nothing
+    leaves nothing to count, so nothing is searched for. The find is exiled
+    (CR 701.23a, the library shuffled by `search_library`) and may then be cast
+    paying its mana cost (CR 608.2g), at the sorcery speed the card prints for
+    its activation."""
+    if for_spell:
+        return None
+    match = _COUNT_COLORS_SEARCH_EXILE_CAST_RE.fullmatch(clause.strip())
+    if match is None or not _search_quality_is_readable(match.group("quality")):
+        return None
+    quality_matches = _quality_matcher(match.group("quality"))
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        if not isinstance(stack_object, AbilityOnStack):
+            return
+        counts = stack_object.cost_sacrificed_color_counts
+        if not counts:
+            return
+        wanted = counts[0] + 1
+        controller = game.controller_of(stack_object)
+        found = game.search_library(
+            controller,
+            lambda state: quality_matches(state) and len(state.card.colors or ()) == wanted,
+            count=1,
+            optional=True,
+            source=stack_object.source_name,
+            source_id=source_id_of(stack_object),
+        )
+        game.exile_cards(found)
+        for card in found:
+            game.may_cast_during_resolution(
+                card,
+                controller.username,
+                prompt=f"cast {card.name}",
+                source=stack_object.source_name,
+                source_id=source_id_of(stack_object),
+                source_name=stack_object.source_name,
+                rule="CR 608.2g",
+                pays_mana_cost=True,
+            )
+
+    return effect
+
+
 #: Primeval Titan's own shape: "search your library for up to two land cards,
 #: put them onto the battlefield tapped, then shuffle." Used to need its own
 #: regex and parser (`_SEARCH_UP_TO_N_AND_PUT_RE`/`_parse_search_up_to_n_

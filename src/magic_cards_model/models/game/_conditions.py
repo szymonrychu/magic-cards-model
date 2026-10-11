@@ -1141,6 +1141,18 @@ class ConditionsMixin:
         power, toughness = state.last_known_power_toughness()
         return power if stat == "power" else toughness
 
+    def _last_known_color_count(self: "Game", card_id: UUID) -> int:
+        """How many colours a sacrificed permanent had (CR 105.1), the computed
+        ones while it is still on the battlefield (CR 613.5) and its own once
+        it has left; 0 for an id nothing finds (a token that has ceased to
+        exist, CR 704.5d - callers read it while the token is still there)."""
+        state = self.find_by_id(card_id)
+        if state is None:
+            return 0
+        if state.zone is Zone.BATTLEFIELD:
+            return len(self.characteristics_of(state).colors)
+        return len(state.card.colors or ())
+
     def last_known_mana_value(self: "Game", card: "CardState | UUID") -> float:
         """An object's mana value as CR 608.2h reads it (CR 202.3): the
         computed one while it is still on the battlefield (a copy has the

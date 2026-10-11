@@ -211,6 +211,7 @@
     "_iter",
     "_keep_keywords_gained_as_a_spell",
     "_land_play_event",
+    "_last_known_color_count",
     "_last_known_stat",
     "_layer_context",
     "_left_battlefield_for",

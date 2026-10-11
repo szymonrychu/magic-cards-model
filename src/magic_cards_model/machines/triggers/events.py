@@ -959,6 +959,13 @@ class AbilityOnStack(EngineModel):
     token has ceased to exist (CR 704.5d), which happens before this ability
     resolves; see `CastRecord.additional_cost_mana_values`, its spell twin."""
 
+    cost_sacrificed_color_counts: tuple[int, ...] = ()
+    """`cost_sacrificed_card_ids`' colour counts, aligned by position and taken
+    by `Game.activate_ability` as this object is created, for the same reason
+    `cost_sacrificed_mana_values` is (CR 608.2h's last known information; a
+    sacrificed token has ceased to exist, CR 704.5d, by resolution) - Evolving
+    Door's "Count the colors of the sacrificed creature" (CR 105.1)."""
+
     cost_sacrificed_powers: tuple[int | None, ...] = ()
     """`cost_sacrificed_card_ids`' powers, aligned by position and taken by
     `Game.activate_ability` as this object is created - CR 608.2h's last known

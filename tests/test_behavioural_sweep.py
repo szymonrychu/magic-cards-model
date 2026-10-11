@@ -99,6 +99,7 @@ from magic_cards_model.machines.casting import (
     keyword_cast_options,
     kicker_costs,
     optional_additional_costs,
+    remove_suspend_time_counter,
 )
 from magic_cards_model.machines.conditions import board as board_conditions
 from magic_cards_model.machines.conditions import cast_record as cast_record_conditions
@@ -147,7 +148,13 @@ from magic_cards_model.machines.triggers import (
 from magic_cards_model.models import Card, CardState, Color, Type, Zone
 from magic_cards_model.models.action import ActionKind
 from magic_cards_model.models.card import Layout
-from magic_cards_model.models.card_state import Choice, ChoiceKind, TargetRef
+from magic_cards_model.models.card_state import (
+    Choice,
+    ChoiceKind,
+    ExileAnnotation,
+    ExileMarker,
+    TargetRef,
+)
 from magic_cards_model.models.game import (
     _STEP_NAMES,
     builtin_condition_readable,
@@ -989,6 +996,14 @@ def _quick_fit(card: Card, requirement: TargetRequirement) -> bool:
         word.lower().endswith(requirement.required_keyword) for word in card.keywords
     ):
         return False
+    # "target creature with defender": a printed keyword outside the families
+    # above is still settled by the printing (CR 702.3a).
+    if (
+        requirement.required_keyword
+        and requirement.required_keyword not in _KEYWORD_FAMILIES
+        and requirement.required_keyword not in {word.lower() for word in card.keywords}
+    ):
+        return False
     return not requirement.excluded_colors & set(card.colors or ())
 
 
@@ -1000,6 +1015,36 @@ _PERMANENT_TYPES = {
     Type.PLANESWALKER,
     Type.BATTLE,
 }
+
+
+#: "As this creature enters, exile an instant or sorcery card from your
+#: graveyard" (Living Lore, CR 614.12, CR 607.2a): the card types it names.
+_ENTERS_EXILE_FROM_GRAVEYARD_RE = re.compile(
+    r"as [^,.]+ enters, (?:you may )?exile an? (?P<types>[a-z]+(?: or [a-z]+)*) card "
+    r"from your graveyard",
+    re.IGNORECASE,
+)
+
+
+@cache
+def _enters_exile_material(name: str) -> tuple[Material, ...]:
+    """A graveyard card for a permanent that exiles one as it enters, so its
+    linked "the exiled card" abilities have something to work on: the first
+    in-format printing of the types the text names (not the source)."""
+    card = next(c for c in _format_pool() if c.name == name)
+    match = _ENTERS_EXILE_FROM_GRAVEYARD_RE.search(card.oracle_text or "")
+    if match is None:
+        return ()
+    wanted = {Type(word.lower()) for word in match.group("types").split(" or ")}
+    for candidate in _format_pool():
+        if (
+            candidate.name != name
+            and not candidate.card_faces
+            and candidate.types
+            and set(candidate.types) <= wanted
+        ):
+            return (Material(candidate.name, ALICE, Zone.GRAVEYARD),)
+    return ()
 
 
 @cache
@@ -1535,7 +1580,10 @@ def _attach(scenario: PlayedScenario, source: CardState) -> None:
             continue
         if wanted is not None and permanent.name != wanted:
             continue
-        if "land" in restriction and not permanent.card.is_land:
+        if "nonland" in restriction:
+            if permanent.card.is_land:
+                continue
+        elif "land" in restriction and not permanent.card.is_land:
             continue
         if "creature" in restriction and Type.CREATURE not in permanent.types:
             continue
@@ -1558,6 +1606,31 @@ def _back_face(card: Card, ability: Any) -> bool:
         and re.search(r"\btransform\b", faces[0].oracle_text or "", re.IGNORECASE) is not None
     )
     return transforms and len(faces) > 1 and ability is not None and ability.face == faces[1].name
+
+
+def _exiled_as_it_entered(scenario: PlayedScenario, source: CardState) -> None:
+    """A permanent printed "As this enters, exile an instant or sorcery card
+    from your graveyard" (Living Lore, CR 607.2a) was staged without
+    entering: the graveyard card `_enters_exile_material` staged is exiled
+    with it, the link its "the exiled card" reads back."""
+    match = _ENTERS_EXILE_FROM_GRAVEYARD_RE.search(source.card.oracle_text or "")
+    if match is None or source.zone is not Zone.BATTLEFIELD:
+        return
+    game = scenario.game
+    if game.cards_exiled_with(source.id, None):
+        return
+    wanted = {Type(word.lower()) for word in match.group("types").split(" or ")}
+    for card in list(game.player(source.controller).graveyard):
+        if card is not source and card.types and set(card.types) <= wanted:
+            for exiled in game.exile_cards([card]):
+                exiled.exile_annotation = ExileAnnotation(
+                    marker=ExileMarker.LINKED,
+                    owner=exiled.owner,
+                    turn_exiled=game.turn.turns_taken if game.turn is not None else None,
+                    linked_permanent_id=source.id,
+                    linked_permanent_stamp=None,
+                )
+            return
 
 
 def _prime(scenario: PlayedScenario, source: CardState, ability: Any) -> CardState:
@@ -1607,6 +1680,7 @@ def _prime(scenario: PlayedScenario, source: CardState, ability: Any) -> CardSta
         # are in its band (CR 711.2a/b) - staged at the band's lowest level.
         source.counters.set("level", band[0])
     _attach(scenario, source)
+    _exiled_as_it_entered(scenario, source)
     if getattr(ability, "ability_word", None) == "∞":
         # An Infinity ability functions only while its source is harnessed
         # (The Mind Stone, The Soul Stone) - staged harnessed.
@@ -4387,6 +4461,69 @@ def _to_graveyard(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
     yield discarded
 
 
+def _special_exile(scenario: PlayedScenario, state: CardState, action: MarkedExile) -> None:
+    """Pay a CR 116.2 special action's cost with the stock lands and take it."""
+    payment = action.begin_paying()
+    payment.auto_tap(scenario.game.permanents_controlled_by(ALICE))
+    payment.pay()
+    action.take()
+
+
+def _removing_time_counter(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
+    """ "Whenever a time counter is removed from this card while it's exiled"
+    (Aeon Chronicler, Roiling Horror): suspend the source from the hand
+    (CR 116.2f, with the least X a Suspend X allows), then take a time counter
+    off it the way suspend's upkeep trigger does (CR 702.62a)."""
+
+    def remove() -> tuple[PlayedScenario, Any]:
+        scenario = _board(hand=(case.card,))
+        _stack_material(scenario)
+        state = _last(scenario, case.card, Zone.HAND, ALICE)
+        try:
+            _special_exile(
+                scenario,
+                state,
+                MarkedExile.suspend(scenario.game, state, ALICE, x_value=2),
+            )
+            suspended = _last(scenario, case.card, Zone.EXILE, ALICE)
+            remove_suspend_time_counter(scenario.game, suspended)
+        except (ValueError, AssertionError) as error:
+            raise _Unavailable(f"suspending {case.card}: {error}") from error
+        scenario.game.retain_priority(ALICE)
+        return scenario, suspended.id
+
+    yield remove
+
+
+def _foretell_card() -> str:
+    """The first in-format pool card with foretell that is not a land - a card
+    to foretell when the source watches the player foretelling (CR 702.143a)."""
+    for card in _format_pool():
+        if card.is_land or card.card_faces:
+            continue
+        if any(k.canonical.lower() == "foretell" for k in keyword_abilities(card)):
+            return card.name
+    raise _Unavailable("no foretell card in the pool")
+
+
+def _foretelling(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
+    """ "Whenever you foretell a card": the source on the battlefield, another
+    card foretold from the hand for its {2} (CR 116.2h, CR 702.143a)."""
+    other = _foretell_card()
+
+    def foretell() -> tuple[PlayedScenario, Any]:
+        scenario, source_id = _home(case, ability, hand=(other,))
+        state = _last(scenario, other, Zone.HAND, ALICE)
+        try:
+            _special_exile(scenario, state, MarkedExile.foretell(scenario.game, state, ALICE))
+        except (ValueError, AssertionError) as error:
+            raise _Unavailable(f"foretelling {other}: {error}") from error
+        scenario.game.retain_priority(ALICE)
+        return scenario, source_id
+
+    yield foretell
+
+
 def _enlisting(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
     """The source attacks and enlists another creature its controller could
     have attacked with (CR 702.154a)."""
@@ -4587,6 +4724,10 @@ def _attempts(case: Case) -> Iterator[Attempt]:
             yield from _animated_attack(case, ability)
         elif kind == TriggerEvent.ENTERS_THE_BATTLEFIELD.value:
             yield from _ninjutsu_entering(case, ability)
+        elif kind == "time_counter_removed":
+            yield from _removing_time_counter(case, ability)
+        elif kind == "foretold":
+            yield from _foretelling(case, ability)
 
 
 #: Attempts whose event happens later in the turn (or in the next ones), so
@@ -5037,6 +5178,7 @@ def run_trigger_case(case: Case, only: dict[str, Any] | None = None) -> Outcome:
             _target_material(ability.text)
             + _precondition_material(ability.intervening_if or "")
             + _board_material(case.card, ability.intervening_if or "")
+            + _enters_exile_material(case.card)
             + whole_card_material
         )
         try:
@@ -5577,9 +5719,16 @@ def _activation_board(
             scenario.game.resolve_top()
             _settle(scenario)
     else:
+        # An opponent's sorcery-speed activation (Detention Vortex, CR 602.5d)
+        # is legal in that opponent's own main phase.
+        opponent_sorcery = (
+            _activator_for(ability) == BOB
+            and "as a sorcery" in (ability.instructions or "").lower()
+        )
         scenario = _board(
             battlefield=(card.name, *_extra_lands_for(card, ability.cost)),
             step=_activation_step(ability),
+            active=BOB if opponent_sorcery else ALICE,
         )
         source = _source(scenario, case, ability)
     indexes = [

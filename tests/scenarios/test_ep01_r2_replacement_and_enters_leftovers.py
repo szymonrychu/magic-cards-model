@@ -10,7 +10,7 @@ and on the all-creatures wording (Doran, the Siege Tower).
 import pytest
 
 from magic_cards_model.machines import Step
-from magic_cards_model.models import Zone
+from magic_cards_model.models import Color, Zone
 from magic_cards_model.models.card import Type
 from magic_cards_model.models.card_state import Choice, ChoiceKind
 from magic_cards_model.models.token import PREDEFINED, TokenDefinition, create_tokens
@@ -336,8 +336,28 @@ def test_nephalia_academy_puts_the_discarded_card_on_top_of_the_library():
     assert len(alice.graveyard) == 0
 
 
+def test_wilt_leaf_liege_a_non_listed_printing_enters_instead_of_being_discarded():
+    # Wilt-Leaf Liege prints the same replacement beside two anthems and a
+    # hybrid cost - a printing none of the listed cards share.
+    scenario = _discard_board(["Wilt-Leaf Liege", "Island"])
+    assert _on_battlefield(scenario, "Wilt-Leaf Liege")
+    assert "Wilt-Leaf Liege" not in _names(scenario.player("alice").graveyard)
+
+
+def test_wilt_leaf_liege_discarded_by_its_own_controller_goes_to_the_graveyard():
+    scenario = _discard_board(["Wilt-Leaf Liege", "Island"], caster="alice")
+    assert not _on_battlefield(scenario, "Wilt-Leaf Liege")
+    assert "Wilt-Leaf Liege" in _names(scenario.player("alice").graveyard)
+
+
 def test_discard_replacement_lines_are_handled():
-    for name in ("Obstinate Baloth", "Dodecapod", "Loxodon Smiter", "Nephalia Academy"):
+    for name in (
+        "Obstinate Baloth",
+        "Dodecapod",
+        "Loxodon Smiter",
+        "Nephalia Academy",
+        "Wilt-Leaf Liege",
+    ):
         _handled(name, "causes you to discard")
 
 
@@ -691,6 +711,109 @@ def test_living_lore_sacrifice_casts_the_exiled_card_free():
 
 def test_living_lore_lines_are_handled():
     _handled("Living Lore", "Whenever this creature deals combat damage")
+
+
+# --- Evolving Door: count the sacrificed creature's colors, search, cast ------
+# (CR 105.1, 608.2h, 701.23a, 608.2g) - the exiled-card cast rung's second
+# printing beside Living Lore.
+
+
+def _door_board(*library, sacrifice="Llanowar Elves", lands=2):
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=["Evolving Door", sacrifice, *["Forest", "Plains"] * lands],
+            library=list(library),
+        )
+        .player("bob", library=["Island"] * 5)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    return scenario
+
+
+def _library_card(scenario, name):
+    return next(c for c in scenario.player("alice").library if c.name == name)
+
+
+def _door_run(scenario, *, sacrificed, cast=True, found=None):
+    door = next(c for c in scenario.game.battlefield if c.name == "Evolving Door")
+    if found is not None:
+        scenario.will_choose_cards(found, username="alice", source="Evolving Door")
+    scenario.will_take_the_may(cast, source="Evolving Door")
+    scenario.activate(door, sacrificing=[sacrificed], auto=True)
+    scenario.pass_until_resolved()
+
+
+def test_evolving_door_finds_a_creature_with_one_more_color_and_casts_it():
+    scenario = _door_board("Watchwolf", "Grizzly Bears", "Memnite", "Yotian Tactician")
+    elves = scenario.creature("Llanowar Elves", "alice")
+    watchwolf = _library_card(scenario, "Watchwolf")
+    shuffles = scenario.game.shuffles_performed
+    _door_run(scenario, sacrificed=elves, found=watchwolf)
+    assert elves.zone is Zone.GRAVEYARD
+    assert watchwolf.zone is Zone.STACK, "the exiled card was cast, paying its mana cost"
+    assert scenario.game.shuffles_performed > shuffles
+
+
+def test_evolving_door_offers_only_exactly_one_color_more():
+    scenario = _door_board("Watchwolf", "Grizzly Bears", "Memnite", "Yotian Tactician")
+    door = next(c for c in scenario.game.battlefield if c.name == "Evolving Door")
+    elves = scenario.creature("Llanowar Elves", "alice")
+    scenario.will_choose_cards(
+        _library_card(scenario, "Watchwolf"), username="alice", source="Evolving Door"
+    )
+    scenario.will_take_the_may(False, source="Evolving Door")
+    scenario.activate(door, sacrificing=[elves], auto=True)
+    scenario.pass_until_resolved()
+    questions = [
+        q
+        for q in scenario.questions_asked()
+        if q.kind.name == "CHOOSE_CARDS" and q.source == "Evolving Door"
+    ]
+    offered = {c.name for c in scenario.all_card_states() if c.id in set(questions[-1].cards)}
+    assert offered == {"Watchwolf", "Yotian Tactician"}
+
+
+def test_evolving_door_colorless_sacrifice_finds_a_one_color_creature():
+    scenario = _door_board("Grizzly Bears", "Watchwolf", sacrifice="Memnite")
+    memnite = scenario.creature("Memnite", "alice")
+    bears = _library_card(scenario, "Grizzly Bears")
+    _door_run(scenario, sacrificed=memnite, found=bears)
+    assert bears.zone is Zone.STACK
+
+
+def test_evolving_door_reads_a_sacrificed_tokens_last_known_colors():
+    scenario = _door_board("Grizzly Bears", "Watchwolf", sacrifice="Memnite")
+    token_soldier = create_tokens(
+        scenario.game,
+        TokenDefinition(subtypes=("Soldier",), colors=(Color.WHITE,), power=1, toughness=1),
+        "alice",
+    )[0]
+    watchwolf = _library_card(scenario, "Watchwolf")
+    _door_run(scenario, sacrificed=token_soldier, found=watchwolf)
+    assert watchwolf.zone is Zone.STACK, "a white token had one color, so a two-color find"
+
+
+def test_evolving_door_declining_the_cast_leaves_the_card_exiled():
+    scenario = _door_board("Watchwolf", "Grizzly Bears")
+    elves = scenario.creature("Llanowar Elves", "alice")
+    watchwolf = _library_card(scenario, "Watchwolf")
+    _door_run(scenario, sacrificed=elves, cast=False, found=watchwolf)
+    assert watchwolf.zone is Zone.EXILE
+
+
+def test_evolving_door_with_no_matching_creature_finds_nothing():
+    scenario = _door_board("Grizzly Bears", "Memnite")
+    elves = scenario.creature("Llanowar Elves", "alice")
+    _door_run(scenario, sacrificed=elves)
+    assert not scenario.game.exile
+    assert {c.name for c in scenario.player("alice").library} == {"Grizzly Bears", "Memnite"}
+
+
+def test_evolving_door_line_is_handled():
+    _handled("Evolving Door", "Count the colors")
 
 
 # -- Assault Formation: {G}: Target creature with defender can attack this turn -

@@ -746,9 +746,11 @@ def _parse_unsplittable_whole_text(text: str, *, for_spell: bool) -> TargetedCla
     3 damage to each other creature and each opponent", whose bare "and" the
     split would cut in two."""
     whole = " ".join(_strip_non_effect_preamble(text).split())
-    return _parse_search_mv_equal_to_sacrificed_clause(
-        whole, for_spell=for_spell
-    ) or _parse_damage_each_other_type_and_each_opponent_clause(whole, for_spell=for_spell)
+    return (
+        _parse_search_mv_equal_to_sacrificed_clause(whole, for_spell=for_spell)
+        or _parse_count_colors_search_exile_cast_clause(whole, for_spell=for_spell)
+        or _parse_damage_each_other_type_and_each_opponent_clause(whole, for_spell=for_spell)
+    )
 
 
 def _parse_comma_chained_player_clause(clause: str) -> ClauseEffect | None:
@@ -4262,7 +4264,11 @@ from .dispatch import (  # noqa: E402
 )
 from .library import manifest_dread  # noqa: E402
 from .removal import _parse_bare_sacrifice_of_choice_clause  # noqa: E402
-from .search import _parse_search_mv_equal_to_sacrificed_clause, _search_and_place_for  # noqa: E402
+from .search import (  # noqa: E402
+    _parse_count_colors_search_exile_cast_clause,
+    _parse_search_mv_equal_to_sacrificed_clause,
+    _search_and_place_for,
+)
 from .tokens import (  # noqa: E402
     _is_notice_only,
     _parse_generic_token_descriptor,

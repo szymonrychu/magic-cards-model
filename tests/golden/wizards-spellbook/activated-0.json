@@ -1,0 +1,94 @@
+{
+  "ability": "{T}: Exile target instant or sorcery card from a graveyard. Roll a d20. 1—9 | Copy that card. You may cast the copy. 10—19 | Copy that card. You may cast the copy by paying {1} rather than paying its mana cost. 20 | Copy each card exiled with this artifact. You may cast any number of the copies without paying their mana costs. Activate only as a sorcery.",
+  "action": {
+    "controller": "alice",
+    "modes": [],
+    "on_stack": true,
+    "source": "Wizard's Spellbook@alice#1",
+    "targets": ["Lightning Bolt@alice#2"],
+    "x": 0
+  },
+  "board": {
+    "busy_turn": false,
+    "entering": [],
+    "order": ["alice", "bob"],
+    "players": {
+      "alice": {
+        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Wastes", "Memnite", "Icehide Golem", "Bonesplitter", "Icy Manipulator", "Wizard's Spellbook"],
+        "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel"],
+        "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt"],
+        "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
+      },
+      "bob": {
+        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Kaito, Bane of Nightmares", "Fleecemane Lion", "Icehide Golem", "Shadowspear", "Dragonfire Blade"],
+        "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel"],
+        "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt"],
+        "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
+      }
+    },
+    "step": "precombat_main",
+    "tapped": [],
+    "tokens": [],
+    "variant": "quiet",
+    "war_turn": false
+  },
+  "card": "Wizard's Spellbook",
+  "delta": {
+    "created": {
+      "Lightning Bolt@alice+1": {
+        "counters": {},
+        "zone": "stack"
+      }
+    },
+    "decisions": [
+      {
+        "amount": 0,
+        "cards": ["Lightning Bolt@alice+1"],
+        "kind": "may",
+        "player": "alice",
+        "players": [],
+        "prompt": "cast the copy of Lightning Bolt",
+        "source": "Wizard's Spellbook"
+      },
+      {
+        "amount": 0,
+        "cards": [],
+        "kind": "choose_targets",
+        "player": "alice",
+        "players": [],
+        "prompt": "choose targets for Lightning Bolt",
+        "source": "Lightning Bolt"
+      },
+      {
+        "amount": 1,
+        "cards": [],
+        "kind": "pay_mana",
+        "player": "alice",
+        "players": [],
+        "prompt": "pay {1} to cast Lightning Bolt",
+        "source": "Lightning Bolt"
+      }
+    ],
+    "fields_changed": ["became_tapped_count_this_turn", "cast_records", "coin_flips_performed", "exile_residents_seen", "spells_cast_this_turn", "turn_counts", "turn_facts"],
+    "notices": {},
+    "objects": {
+      "Lightning Bolt@alice#2": {
+        "zone": ["graveyard", "exile"]
+      },
+      "Swamp@alice#1": {
+        "tapped": [false, true]
+      }
+    },
+    "players": {},
+    "stack": ["Lightning Bolt@alice+1"]
+  },
+  "family": "activated",
+  "format": 1,
+  "kind": "activated",
+  "number": 0,
+  "recipe": {
+    "enters": false,
+    "off_zone": false,
+    "variant": "quiet"
+  }
+}

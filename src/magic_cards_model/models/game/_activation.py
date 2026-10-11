@@ -3157,6 +3157,10 @@ class ActivationMixin:
             on_stack.cost_sacrificed_mana_values = tuple(
                 self.last_known_mana_value(card_id) for card_id in on_stack.cost_sacrificed_card_ids
             )
+            on_stack.cost_sacrificed_color_counts = tuple(
+                self._last_known_color_count(card_id)
+                for card_id in on_stack.cost_sacrificed_card_ids
+            )
             on_stack.cost_sacrificed_powers = tuple(
                 self._last_known_stat(card_id, "power")
                 for card_id in on_stack.cost_sacrificed_card_ids
