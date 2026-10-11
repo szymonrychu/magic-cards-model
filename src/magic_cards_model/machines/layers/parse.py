@@ -8517,6 +8517,8 @@ def quoted_ability_grants(
     grants nothing and must still be able to take its own line back off the
     creature it used to be on.
     """
+    from .group_grants import equipment_by_mana_value_group
+
     grantable: set[str] = set()
     wanted: dict[UUID, set[str]] = {}
     text_to_read = source.class_ability_text
@@ -8534,6 +8536,17 @@ def quoted_ability_grants(
         legendary=Supertype.LEGENDARY in source.card.supertypes,
     ):
         normalized = _strip_ability_word(_normalize_duration_first(sentence))
+        if equipment_group := equipment_by_mana_value_group(normalized, source):
+            # Bludgeon Brawl: the static pump each such artifact has as an
+            # Equipment (the equip ability itself is a layer 6 line,
+            # `GrantAbilitiesByManaValue`).
+            for permanent in permanents:
+                printed = printed_characteristics(permanent)
+                if equipment_group(printed, {}):
+                    text = f"Equipped creature gets +{int(printed.mana_value)}/+0."
+                    grantable.add(text)
+                    wanted.setdefault(permanent.id, set()).add(text)
+            continue
         if match := _ATTACHED_CREATURE_STATIC_RE.fullmatch(normalized):
             text = (match.group("granted") or "").strip()
             if not text:

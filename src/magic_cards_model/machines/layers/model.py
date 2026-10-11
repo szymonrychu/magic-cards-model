@@ -2154,6 +2154,21 @@ class GrantAbilityInstance(ModificationBase):
         return chars.with_(abilities=chars.abilities + (self.text,))
 
 
+class GrantAbilitiesByManaValue(ModificationBase):
+    """Layer 6 addition (CR 613.1f) of lines that print the permanent's own
+    mana value (CR 202.3): Bludgeon Brawl's "equip {X} and 'Equipped creature
+    gets +X/+0,' where X is that artifact's mana value". Each `$mv` in a
+    template is that permanent's mana value as the layers computed it."""
+
+    kind: Literal["grant_abilities_by_mana_value"] = "grant_abilities_by_mana_value"
+    templates: tuple[str, ...]
+
+    def __call__(self, chars: Characteristics, board: Board) -> Characteristics:
+        value = str(int(chars.mana_value))
+        lines = tuple(template.replace("$mv", value) for template in self.templates)
+        return chars.with_(abilities=chars.abilities + lines)
+
+
 class AddType(ModificationBase):
     """Layer 4: gain a card type on top of the ones already there (CR 205.1b)."""
 
@@ -2647,6 +2662,7 @@ Modification = Annotated[
     | GrantAbility
     | GrantActivatedAbilitiesOf
     | GrantAbilityInstance
+    | GrantAbilitiesByManaValue
     | AddType
     | AddSupertype
     | RemoveType

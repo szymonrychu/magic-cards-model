@@ -37,6 +37,7 @@ from .model import (
     AddEveryCreatureType,
     AddSupertype,
     ContinuousEffect,
+    GrantAbilitiesByManaValue,
     GroupMatch,
     Layer,
     LoseAllAbilities,
@@ -166,7 +167,7 @@ def parse_group(subject: str) -> dict[str, Any] | None:
             text = text[: match.start()]
             changed = True
     other = False
-    words = text.split()
+    words = [word.strip(",") for word in text.split()]
     if words and words[0] == "other":
         other = True
         words = words[1:]
@@ -325,6 +326,10 @@ _LETHAL_BY_POWER_RE = re.compile(
     r"rather than (?:their|its) toughness$"
 )
 _GROUP_LOSE_KEYWORDS_RE = re.compile(r"^(?P<subject>.+?) loses? (?P<keywords>[a-z ,]+)$")
+_EQUIPMENT_BY_MANA_VALUE_RE = re.compile(
+    r"^each (?P<group>[a-z, -]+) is an equipment with equip \{x\} and "
+    r"\"equipped creature gets \+x/\+0,\" where x is that artifact's mana value$"
+)
 _GROUP_EQUIP_CREW_RE = re.compile(
     r"^(?P<subject>.+?) (?:have|has) (?P<ability>equip(?: [a-z]+)* (?:\{[^{}]+\})+|crew \d+)$"
 )
@@ -446,6 +451,10 @@ def parse_group_static_sentence(sentence: str):
             "may choose not to untap",
             lambda: [(Layer.ABILITY, None, grant_ability(MAY_STAY_TAPPED_TEXT))],
         )
+    if match := _EQUIPMENT_BY_MANA_VALUE_RE.fullmatch(lowered):
+        if parse_group(match["group"]) is None:
+            return None
+        return _equipment_by_mana_value_builder(sentence, match["group"])
     if not _VERB_RE.search(lowered) or '"' in text:
         return None
     if match := _GROUP_EQUIP_CREW_RE.fullmatch(lowered):
@@ -667,6 +676,74 @@ def _plain_are_builder(sentence: str, subject: str, tail: str):
         return _effects(source, timestamp, sentence, selector, f"{subject} are {tail}", parts)
 
     return build
+
+
+def _equipment_by_mana_value_builder(sentence: str, subject: str):
+    """Bludgeon Brawl: layer 4 makes the group Equipment, layer 6 gives each
+    its equip ability and static pump. CR 613.6 keeps the second part on the
+    objects the first one found, but this engine re-asks a selector per layer,
+    and "non-Equipment" would drop the artifact the moment layer 4 had made it
+    one; so layer 6 asks the same group with the Equipment test moved to "has
+    no equip ability yet" - the printed Equipment, which the sentence leaves
+    alone."""
+
+    def build(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        spec = parse_group(subject)
+        type_selector = group_selector(spec, source)
+        later = group_selector(
+            {
+                **spec,
+                "not_subtypes": tuple(s for s in spec["not_subtypes"] if s != "equipment"),
+                "without_keyword": "equip",
+            },
+            source,
+        )
+        ability = _source_line_for_group(source, sentence)
+        return [
+            ContinuousEffect(
+                description=f"{source.name}: {subject} is an Equipment with equip {{X}}",
+                layer=layer,
+                timestamp=timestamp,
+                order=order,
+                source_id=source.id,
+                source_ability=ability,
+                selector=selector,
+                modification=modification,
+            )
+            for order, (layer, selector, modification) in enumerate(
+                (
+                    (Layer.TYPE, type_selector, add_subtype("Equipment")),
+                    (
+                        Layer.ABILITY,
+                        later,
+                        GrantAbilitiesByManaValue(
+                            templates=("Equip {$mv}", "Equipped creature gets +$mv/+0.")
+                        ),
+                    ),
+                )
+            )
+        ]
+
+    return build
+
+
+def equipment_by_mana_value_group(sentence: str, source: CardState):
+    """The `GroupMatch` of a Bludgeon Brawl sentence (`parse_group_static_sentence`
+    builds its layers), or None when `sentence` is not that shape."""
+    match = _EQUIPMENT_BY_MANA_VALUE_RE.fullmatch(sentence.strip().rstrip(".").lower())
+    spec = parse_group(match["group"]) if match else None
+    return None if spec is None else group_selector(spec, source)
+
+
+def _source_line_for_group(source: CardState, sentence: str):
+    from .parse import _source_line_for
+
+    return _source_line_for(source, sentence)
 
 
 def _builder(sentence: str, subject: str, what: str, parts):
