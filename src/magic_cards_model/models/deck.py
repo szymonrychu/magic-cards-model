@@ -33,6 +33,17 @@ _ANY_NUMBER = re.compile(r"A deck can have any number of cards named", re.IGNORE
 _UP_TO_N = re.compile(r"A deck can have up to (\w+) cards named", re.IGNORECASE)
 
 
+def reads_deck_limit_line(line: str) -> bool:
+    """Whether one static line is a copy-limit override `DeckLimits.
+    copies_allowed` performs (CR 100.2a): "A deck can have any number of
+    cards named ~." or "A deck can have up to <N> cards named ~." with an N
+    it reads - `support.py`'s audit credit (`static_audit/game_rules_untap.py`)."""
+    if _ANY_NUMBER.match(line.strip()):
+        return True
+    printed = _UP_TO_N.match(line.strip())
+    return printed is not None and parse_count(printed.group(1), article=False) is not None
+
+
 class DeckIllegal(ValueError):
     """A decklist that breaks its format's construction rules.
 

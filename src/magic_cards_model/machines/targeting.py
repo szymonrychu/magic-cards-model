@@ -3901,6 +3901,32 @@ def untapped_target_forbidden(oracle_text: str | None) -> bool:
     return _UNTAPPED_TARGET_FORBIDDEN_RE.search(oracle_text or "") is not None
 
 
+def with_face_aura_target(face: Any, profile: TargetingProfile) -> TargetingProfile:
+    """CR 303.4a for one face cast on its own: a double-faced card cast
+    transformed is evaluated as its back face (CR 712.11c), and an Aura back
+    face (disturb's Twinblade Invocation, CR 702.146a) takes its target from
+    that face's own "Enchant <quality>" line - `_with_aura_target` reads the
+    card's front face, which is not an Aura at all."""
+    if "Aura" not in (getattr(face, "type_line", "") or ""):
+        return profile
+    added: list[TargetRequirement] = []
+    for line in (getattr(face, "oracle_text", "") or "").splitlines():
+        match = re.fullmatch(r"Enchant (?P<restriction>[^(]+?)\s*(?:\(.*\))?", line.strip())
+        if match is None:
+            continue
+        read = _parse(f"target {match.group('restriction').strip()}")
+        if not read.understood or not read.requirements:
+            return TargetingProfile(understood=False)
+        added.extend(read.requirements)
+    if not added:
+        return profile
+    return TargetingProfile(
+        requirements=(*added, *profile.requirements),
+        understood=profile.understood,
+        division=profile.division,
+    )
+
+
 def _with_aura_target(card: Card, profile: TargetingProfile) -> TargetingProfile:
     """CR 303.4a: an Aura spell's target comes from its enchant ability.
 
@@ -6515,6 +6541,10 @@ _COMPARISON_CLAUSE = re.compile(
     r"|(?P<count_dir>less|greater) than or equal to the number of "
     r"(?:cards in (?P<controllers_graveyard>its controller'?s? graveyard)"
     r"|colors of mana spent to cast (?P<colors_spent_source>this creature|this spell|it))\b"
+    # Vedalken Shackles: "power less than or equal to the number of Islands
+    # you control" - a count of the *caster's* board, carried on as CR
+    # 107.3c's "where X is" definition (`comparison_x_definition`).
+    r"|(?P<expr_dir>less|greater) than or equal to (?P<expr>the number of [^,.]+? you control)"
     r"|less than or equal to\s+(?P<le_num>x|\d+)\b"
     r"|greater than or equal to\s+(?P<ge_num>x|\d+)\b"
     r"|(?P<strict_dir>less|greater) than (?P<source_loyalty>.+?)'s loyalty\b"
@@ -6592,6 +6622,14 @@ def _extract_comparison(
             if match.group(group) is not None  # noqa: B023 - `match` is not reassigned
         )
         return attribute, operator, None, count, rest[: match.start()] + rest[match.end() :]
+    if match.group("expr_dir") is not None:
+        operator = (
+            ComparisonOperator.LESS_OR_EQUAL
+            if match.group("expr_dir").lower() == "less"
+            else ComparisonOperator.GREATER_OR_EQUAL
+        )
+        remaining = rest[: match.start()] + rest[match.end() :]
+        return attribute, operator, None, None, f"{remaining}, where X is {match.group('expr')}"
     if match.group("strict_dir") is not None:
         # "less/greater than `<Name>`'s loyalty" (Nahiri, the Unforgiving) -
         # a strict inequality (CR 107.1a's plain English "less than", not "or

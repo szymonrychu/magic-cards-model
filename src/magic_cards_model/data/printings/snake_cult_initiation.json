@@ -1,0 +1,151 @@
+{
+  "object": "card",
+  "id": "93b47606-82d1-402c-b1c6-591457b10d86",
+  "oracle_id": "b6a64b19-e312-4e98-91bd-3bedca84eed3",
+  "multiverse_ids": [
+    130708
+  ],
+  "mtgo_id": 26766,
+  "mtgo_foil_id": 26767,
+  "tcgplayer_id": 14988,
+  "cardmarket_id": 15081,
+  "name": "Snake Cult Initiation",
+  "lang": "en",
+  "released_at": "2007-05-04",
+  "uri": "https://api.scryfall.com/cards/93b47606-82d1-402c-b1c6-591457b10d86",
+  "scryfall_uri": "https://scryfall.com/card/fut/89/snake-cult-initiation?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T11:45:08Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/9/3/93b47606-82d1-402c-b1c6-591457b10d86.jpg?1783943108",
+    "normal": "https://cards.scryfall.io/normal/front/9/3/93b47606-82d1-402c-b1c6-591457b10d86.jpg?1783943108",
+    "large": "https://cards.scryfall.io/large/front/9/3/93b47606-82d1-402c-b1c6-591457b10d86.jpg?1783943108",
+    "png": "https://cards.scryfall.io/png/front/9/3/93b47606-82d1-402c-b1c6-591457b10d86.png?1783943108",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/9/3/93b47606-82d1-402c-b1c6-591457b10d86.jpg?1783943108",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/9/3/93b47606-82d1-402c-b1c6-591457b10d86.jpg?1783943108",
+    "thumb": "https://cards.scryfall.io/thumb/front/9/3/93b47606-82d1-402c-b1c6-591457b10d86.webp?1783943108",
+    "grid": "https://cards.scryfall.io/grid/front/9/3/93b47606-82d1-402c-b1c6-591457b10d86.webp?1783943108",
+    "display": "https://cards.scryfall.io/display/front/9/3/93b47606-82d1-402c-b1c6-591457b10d86.webp?1783943108",
+    "art": "https://cards.scryfall.io/art/front/9/3/93b47606-82d1-402c-b1c6-591457b10d86.webp?1783943108",
+    "crop": "https://cards.scryfall.io/crop/front/9/3/93b47606-82d1-402c-b1c6-591457b10d86.webp?1783943108"
+  },
+  "mana_cost": "{3}{B}",
+  "cmc": 4.0,
+  "type_line": "Enchantment \u2014 Aura",
+  "oracle_text": "Enchant creature\nEnchanted creature has poisonous 3. (Whenever it deals combat damage to a player, that player gets three poison counters. A player with ten or more poison counters loses the game.)",
+  "colors": [
+    "B"
+  ],
+  "color_identity": [
+    "B"
+  ],
+  "keywords": [
+    "Enchant"
+  ],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "8a9cb417-8709-4336-be36-2fb0cea31fe1",
+      "component": "combo_piece",
+      "name": "Poison Counter",
+      "type_line": "Card",
+      "uri": "https://api.scryfall.com/cards/8a9cb417-8709-4336-be36-2fb0cea31fe1"
+    },
+    {
+      "object": "related_card",
+      "id": "93b47606-82d1-402c-b1c6-591457b10d86",
+      "component": "combo_piece",
+      "name": "Snake Cult Initiation",
+      "type_line": "Enchantment \u2014 Aura",
+      "uri": "https://api.scryfall.com/cards/93b47606-82d1-402c-b1c6-591457b10d86"
+    }
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "bf951ddb-4445-4923-87cb-3fe4ac3c6b9a",
+  "set": "fut",
+  "set_name": "Future Sight",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/bf951ddb-4445-4923-87cb-3fe4ac3c6b9a",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Afut&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/fut?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/93b47606-82d1-402c-b1c6-591457b10d86/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Ab6a64b19-e312-4e98-91bd-3bedca84eed3&unique=prints",
+  "collector_number": "89",
+  "digital": false,
+  "rarity": "uncommon",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Justin Sweet",
+  "artist_ids": [
+    "bb15780e-8f96-4823-b258-a7a9fd79b02c"
+  ],
+  "illustration_id": "6d4c2cf9-959b-43ff-8a31-d352b941bdae",
+  "border_color": "black",
+  "frame": "future",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 20948,
+  "penny_rank": 17834,
+  "prices": {
+    "usd": "0.47",
+    "usd_foil": "7.33",
+    "usd_etched": null,
+    "eur": "0.28",
+    "eur_foil": "3.14",
+    "tix": "0.03"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=130708&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DSnake%2BCult%2BInitiation",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DSnake%2BCult%2BInitiation",
+    "edhrec": "https://edhrec.com/route/?cc=Snake+Cult+Initiation"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F14988%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=15081&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/26766?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

@@ -1,0 +1,179 @@
+{
+  "object": "card",
+  "id": "88bc8cdf-adfa-4a11-a8c0-484bc03edc65",
+  "oracle_id": "4db96d32-b4c2-44e9-a73f-aca7dad279b6",
+  "multiverse_ids": [
+    685865
+  ],
+  "mtgo_id": 135458,
+  "tcgplayer_id": 610057,
+  "cardmarket_id": 805710,
+  "name": "Twinblade Geist // Twinblade Invocation",
+  "lang": "en",
+  "released_at": "2025-01-24",
+  "uri": "https://api.scryfall.com/cards/88bc8cdf-adfa-4a11-a8c0-484bc03edc65",
+  "scryfall_uri": "https://scryfall.com/card/inr/47/twinblade-geist-twinblade-invocation?utm_source=api",
+  "layout": "transform",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T02:02:58Z",
+  "cmc": 2.0,
+  "type_line": "Creature \u2014 Spirit Warrior // Enchantment \u2014 Aura",
+  "color_identity": [
+    "W"
+  ],
+  "keywords": [
+    "Transform",
+    "Enchant",
+    "Double strike",
+    "Disturb"
+  ],
+  "card_faces": [
+    {
+      "object": "card_face",
+      "name": "Twinblade Geist",
+      "mana_cost": "{1}{W}",
+      "type_line": "Creature \u2014 Spirit Warrior",
+      "oracle_text": "Double strike\nDisturb {2}{W} (You may cast this card from your graveyard transformed for its disturb cost.)",
+      "colors": [
+        "W"
+      ],
+      "power": "1",
+      "toughness": "1",
+      "flavor_text": "She faced down a howlpack alone, saving her town at the cost of her life.",
+      "artist": "Tuan Duong Chu",
+      "artist_id": "d84246f9-a536-485f-a21d-a237302ed100",
+      "illustration_id": "62868d68-fafd-4008-b274-d5513cb77395",
+      "image_uris": {
+        "small": "https://cards.scryfall.io/small/front/8/8/88bc8cdf-adfa-4a11-a8c0-484bc03edc65.jpg?1783908178",
+        "normal": "https://cards.scryfall.io/normal/front/8/8/88bc8cdf-adfa-4a11-a8c0-484bc03edc65.jpg?1783908178",
+        "large": "https://cards.scryfall.io/large/front/8/8/88bc8cdf-adfa-4a11-a8c0-484bc03edc65.jpg?1783908178",
+        "png": "https://cards.scryfall.io/png/front/8/8/88bc8cdf-adfa-4a11-a8c0-484bc03edc65.png?1783908178",
+        "art_crop": "https://cards.scryfall.io/art_crop/front/8/8/88bc8cdf-adfa-4a11-a8c0-484bc03edc65.jpg?1783908178",
+        "border_crop": "https://cards.scryfall.io/border_crop/front/8/8/88bc8cdf-adfa-4a11-a8c0-484bc03edc65.jpg?1783908178",
+        "thumb": "https://cards.scryfall.io/thumb/front/8/8/88bc8cdf-adfa-4a11-a8c0-484bc03edc65.webp?1783908178",
+        "grid": "https://cards.scryfall.io/grid/front/8/8/88bc8cdf-adfa-4a11-a8c0-484bc03edc65.webp?1783908178",
+        "display": "https://cards.scryfall.io/display/front/8/8/88bc8cdf-adfa-4a11-a8c0-484bc03edc65.webp?1783908178",
+        "art": "https://cards.scryfall.io/art/front/8/8/88bc8cdf-adfa-4a11-a8c0-484bc03edc65.webp?1783908178",
+        "crop": "https://cards.scryfall.io/crop/front/8/8/88bc8cdf-adfa-4a11-a8c0-484bc03edc65.webp?1783908178"
+      }
+    },
+    {
+      "object": "card_face",
+      "name": "Twinblade Invocation",
+      "mana_cost": "",
+      "type_line": "Enchantment \u2014 Aura",
+      "oracle_text": "Enchant creature\nEnchanted creature has double strike.\nIf Twinblade Invocation would be put into a graveyard from anywhere, exile it instead.",
+      "colors": [
+        "W"
+      ],
+      "color_indicator": [
+        "W"
+      ],
+      "flavor_text": "Since her passing, many more travelers have made it home alive.",
+      "artist": "Tuan Duong Chu",
+      "artist_id": "d84246f9-a536-485f-a21d-a237302ed100",
+      "illustration_id": "ba25ac4a-d3db-4881-99c5-302e953c0246",
+      "image_uris": {
+        "small": "https://cards.scryfall.io/small/back/8/8/88bc8cdf-adfa-4a11-a8c0-484bc03edc65.jpg?1783908178",
+        "normal": "https://cards.scryfall.io/normal/back/8/8/88bc8cdf-adfa-4a11-a8c0-484bc03edc65.jpg?1783908178",
+        "large": "https://cards.scryfall.io/large/back/8/8/88bc8cdf-adfa-4a11-a8c0-484bc03edc65.jpg?1783908178",
+        "png": "https://cards.scryfall.io/png/back/8/8/88bc8cdf-adfa-4a11-a8c0-484bc03edc65.png?1783908178",
+        "art_crop": "https://cards.scryfall.io/art_crop/back/8/8/88bc8cdf-adfa-4a11-a8c0-484bc03edc65.jpg?1783908178",
+        "border_crop": "https://cards.scryfall.io/border_crop/back/8/8/88bc8cdf-adfa-4a11-a8c0-484bc03edc65.jpg?1783908178",
+        "thumb": "https://cards.scryfall.io/thumb/back/8/8/88bc8cdf-adfa-4a11-a8c0-484bc03edc65.webp?1783908178",
+        "grid": "https://cards.scryfall.io/grid/back/8/8/88bc8cdf-adfa-4a11-a8c0-484bc03edc65.webp?1783908178",
+        "display": "https://cards.scryfall.io/display/back/8/8/88bc8cdf-adfa-4a11-a8c0-484bc03edc65.webp?1783908178",
+        "art": "https://cards.scryfall.io/art/back/8/8/88bc8cdf-adfa-4a11-a8c0-484bc03edc65.webp?1783908178",
+        "crop": "https://cards.scryfall.io/crop/back/8/8/88bc8cdf-adfa-4a11-a8c0-484bc03edc65.webp?1783908178"
+      }
+    }
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "b9618c8c-9f31-4b42-9798-2991893c27bf",
+  "set": "inr",
+  "set_name": "Innistrad Remastered",
+  "set_type": "masters",
+  "set_uri": "https://api.scryfall.com/sets/b9618c8c-9f31-4b42-9798-2991893c27bf",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Ainr&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/inr?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/88bc8cdf-adfa-4a11-a8c0-484bc03edc65/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A4db96d32-b4c2-44e9-a73f-aca7dad279b6&unique=prints",
+  "collector_number": "47",
+  "digital": false,
+  "rarity": "uncommon",
+  "artist": "Tuan Duong Chu",
+  "artist_ids": [
+    "d84246f9-a536-485f-a21d-a237302ed100"
+  ],
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "enchantment"
+  ],
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 14367,
+  "penny_rank": 8319,
+  "prices": {
+    "usd": "0.20",
+    "usd_foil": "0.29",
+    "usd_etched": null,
+    "eur": "0.15",
+    "eur_foil": "0.21",
+    "tix": "0.04"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=685865&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DTwinblade%2BGeist%2B%252F%252F%2BTwinblade%2BInvocation",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DTwinblade%2BGeist%2B%252F%252F%2BTwinblade%2BInvocation",
+    "edhrec": "https://edhrec.com/route/?cc=Twinblade+Geist"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F610057%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=805710&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/135458?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

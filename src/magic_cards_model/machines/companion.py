@@ -321,9 +321,142 @@ def companion_condition_satisfied(
             )
         return CompanionConditionResult(satisfied=True, reason=f"{card.name}'s condition holds")
 
+    for reader in (
+        _different_names,
+        _shares_a_card_type,
+        _has_an_activated_ability,
+        _one_of_each_symbol,
+    ):
+        result = reader(card, normalized, mainboard_cards)
+        if result is not None:
+            return result
+
     return CompanionConditionResult(
         satisfied=None, reason=f"{card.name}'s condition {condition!r} is not a recognised shape"
     )
+
+
+def _holds(card: Card, offending: list[str], rule: str) -> CompanionConditionResult:
+    if offending:
+        return CompanionConditionResult(
+            satisfied=False, reason=f"{', '.join(sorted(set(offending)))} {rule}"
+        )
+    return CompanionConditionResult(satisfied=True, reason=f"{card.name}'s condition holds")
+
+
+#: Lutri, the Spellchaser: "Each nonland card in your starting deck has a
+#: different name." - a name is its English name (CR 201.2).
+_DIFFERENT_NAMES_RE = re.compile(
+    r"^each (?P<qualifier>[\w-]+) card in your starting deck has a different name$",
+    re.IGNORECASE,
+)
+
+
+def _different_names(
+    card: Card, normalized: str, cards: list[Card]
+) -> CompanionConditionResult | None:
+    match = _DIFFERENT_NAMES_RE.match(normalized)
+    if match is None:
+        return None
+    qualifying = _qualifying_cards(match.group("qualifier"), cards)
+    if qualifying is None:
+        return None
+    seen: set[str] = set()
+    repeated = []
+    for candidate in qualifying:
+        if candidate.name in seen:
+            repeated.append(candidate.name)
+        seen.add(candidate.name)
+    return _holds(card, repeated, "appears more than once")
+
+
+#: Umori, the Collector: "Each nonland card in your starting deck shares a
+#: card type." - one card type (CR 205.2a) every such card has.
+_SHARES_A_CARD_TYPE_RE = re.compile(
+    r"^each (?P<qualifier>[\w-]+) card in your starting deck shares a card type$",
+    re.IGNORECASE,
+)
+
+
+def _shares_a_card_type(
+    card: Card, normalized: str, cards: list[Card]
+) -> CompanionConditionResult | None:
+    match = _SHARES_A_CARD_TYPE_RE.match(normalized)
+    if match is None:
+        return None
+    qualifying = _qualifying_cards(match.group("qualifier"), cards)
+    if qualifying is None:
+        return None
+    if not qualifying:
+        return _holds(card, [], "")
+    shared = set(types_of(qualifying[0].type_line))
+    for candidate in qualifying[1:]:
+        shared &= set(types_of(candidate.type_line))
+    offending = [] if shared else [candidate.name for candidate in qualifying]
+    return _holds(card, offending, "share no single card type")
+
+
+#: Zirda, the Dawnwaker: "Each permanent card in your starting deck has an
+#: activated ability." - CR 602.1's "[Cost]: [Effect.]", read off the front
+#: face (CR 712.8a), a loyalty ability and a keyword's reminder text ("Equip
+#: {2} ({2}: Attach ...)", a basic land's "({T}: Add {G}.)") included.
+_HAS_ACTIVATED_ABILITY_RE = re.compile(
+    r"^each (?P<qualifier>[\w-]+) card in your starting deck has an activated ability$",
+    re.IGNORECASE,
+)
+_QUOTED_RE = re.compile(r"\"[^\"]*\"|“[^”]*”")
+
+
+def _card_has_activated_ability(candidate: Card) -> bool:
+    for line in _QUOTED_RE.sub("", candidate.front_oracle_text or "").splitlines():
+        if ":" in line and not line.lstrip().lower().startswith("companion"):
+            return True
+    return False
+
+
+def _has_an_activated_ability(
+    card: Card, normalized: str, cards: list[Card]
+) -> CompanionConditionResult | None:
+    match = _HAS_ACTIVATED_ABILITY_RE.match(normalized)
+    if match is None:
+        return None
+    qualifying = _qualifying_cards(match.group("qualifier"), cards)
+    if qualifying is None:
+        return None
+    offending = [c.name for c in qualifying if not _card_has_activated_ability(c)]
+    return _holds(card, offending, "has no activated ability")
+
+
+#: Jegantha, the Wellspring: "No card in your starting deck has more than one
+#: of the same mana symbol in its mana cost." - CR 107.4's symbols, counted
+#: over a split card's combined cost (CR 709.4) and a double-faced card's
+#: front face (CR 712.8a).
+_ONE_OF_EACH_SYMBOL_RE = re.compile(
+    r"^no card in your starting deck has more than one of the same mana symbol in its mana cost$",
+    re.IGNORECASE,
+)
+_SYMBOL_RE = re.compile(r"\{[^}]+\}")
+
+
+def _deck_mana_cost(candidate: Card) -> str:
+    if candidate.mana_cost:
+        return candidate.mana_cost
+    if candidate.card_faces:
+        return candidate.card_faces[0].mana_cost or ""
+    return ""
+
+
+def _one_of_each_symbol(
+    card: Card, normalized: str, cards: list[Card]
+) -> CompanionConditionResult | None:
+    if _ONE_OF_EACH_SYMBOL_RE.match(normalized) is None:
+        return None
+    offending = []
+    for candidate in cards:
+        symbols = _SYMBOL_RE.findall(_deck_mana_cost(candidate).upper())
+        if len(symbols) != len(set(symbols)):
+            offending.append(candidate.name)
+    return _holds(card, offending, "has a repeated mana symbol in its mana cost")
 
 
 def reads_companion_line(card: Card, text: str) -> bool:

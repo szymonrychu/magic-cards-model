@@ -1153,6 +1153,62 @@ def _self_pump_per_controlled_permanent_builder(
     return builder
 
 
+#: "Enchanted creature gets +X/+X, where X is the number of creature cards in
+#: your graveyard." (Wreath of Geists) and Katilda's Rising Dawn's "Enchanted
+#: creature has flying, lifelink, and protection from Vampires, and it gets
+#: +X/+X, where X is the number of permanents you control that are Spirits
+#: and/or enchantments." - the attached creature's sublayer 7c bonus
+#: (CR 613.4c) sized by any count phrase the characteristic-defining reader
+#: `_cda_value` reads, recounted on every computation (CR 611.3a), with an
+#: optional keyword list granted in layer 6 (CR 613.1f) ahead of it.
+_ATTACHED_HAS_AND_GETS_X_RE = re.compile(
+    r"^(?P<attachment>equipped|enchanted) creature "
+    r"(?:has (?P<keywords>[a-z].+?),? and it )?gets \+x/\+x, where x is (?P<count>.+?)\.?$",
+    re.IGNORECASE,
+)
+
+
+def _attached_has_and_gets_x_builder(
+    keywords: list[str],
+    count: CdaCountFactory,
+    *,
+    subject: str,
+    line: str,
+) -> EffectBuilder:
+    """`_ATTACHED_HAS_AND_GETS_X_RE`'s shape. The keywords are
+    `_attached_creature_static_builder`'s own layer 6 grant; the bonus is one
+    sublayer 7c effect on the attached creature, X counted from the source's
+    point of view ("you" is the Aura's or Equipment's controller, CR 109.5).
+    An unattached source produces nothing (CR 301.5a, CR 303.4b)."""
+    grants = _attached_creature_static_builder(0, 0, keywords, subject=subject, line=line)
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        attached = source.attached_to
+        if attached is None:
+            return []
+        effects = list(grants(source, timestamp, targets, context)) if keywords else []
+        effects.append(
+            ContinuousEffect(
+                description=f"{source.name}: {subject} creature gets +X/+X",
+                layer=Layer.POWER_TOUGHNESS,
+                sublayer=Sublayer.MODIFY,
+                timestamp=timestamp,
+                source_id=source.id,
+                source_ability=_source_line_for(source, line),
+                selector=_only(attached),
+                modification=modify_power_toughness_per(count(source, context), 1, 1),
+            )
+        )
+        return effects
+
+    return builder
+
+
 def _attached_pump_per_controlled_builder(
     power: int,
     toughness: int,
@@ -1500,10 +1556,12 @@ def _become_a_copy_builder(
 #: identical no-controller-filter selector `_other_creatures_are_type_
 #: builder` already uses for "Other creatures are `<type>`s" - the same
 #: reading, minus that one's own "other" exclusion, since haste applies to
-#: the source creature that grants it too, if it is one.
+#: the source creature that grants it too, if it is one. A numbered item
+#: ("All Sliver creatures have poisonous 1.", CR 702.70a) is read by
+#: `_split_and_validate_keywords` like any other.
 _ALL_CREATURES_KEYWORD_GRANT_RE = re.compile(
     r"^all (?:(?P<subtype>[a-z]+) )?creatures (?:have|has) "
-    r"(?P<keywords>[a-z]+(?: [a-z]+)?(?:(?:,\s*| and )[a-z]+(?: [a-z]+)?)*)\.?$",
+    r"(?P<keywords>[a-z]+(?: [a-z]+| \d+)?(?:(?:,\s*| and )[a-z]+(?: [a-z]+| \d+)?)*)\.?$",
     re.IGNORECASE,
 )
 
@@ -1747,6 +1805,18 @@ _PAIRED_BOTH_RE = re.compile(
     r"(?: and get (?P<p1>[+-]\d+)/(?P<t1>[+-]\d+))?)"
     r"|(?:get (?P<p2>[+-]\d+)/(?P<t2>[+-]\d+)))\.?$",
     re.IGNORECASE,
+)
+
+#: "As long as this creature is paired with another creature, each of those
+#: creatures has "`<ability>`"." (Galvanic Alchemist, Stern Mentor, Stonewright)
+#: - `_PAIRED_BOTH_RE`'s pair (CR 702.95a) granted a whole quoted ability
+#: (CR 113.10a), on the computed board by `_paired_quoted_grant_builder` and
+#: made activatable by `quoted_ability_grants`, for only as long as the pair
+#: holds (CR 702.95e).
+_PAIRED_EACH_QUOTED_RE = re.compile(
+    r"^as long as this creature is paired with another creature, each of those "
+    r'creatures has "(?P<ability>.+)"\.?$',
+    re.IGNORECASE | re.DOTALL,
 )
 
 #: "Creatures you control that are enchanted get +1/+1." (Necromancer's
@@ -4364,6 +4434,48 @@ def _paired_both_builder(
     return builder
 
 
+def _paired_quoted_grant_builder(granted: str, *, line: str) -> EffectBuilder:
+    """`_PAIRED_EACH_QUOTED_RE`'s shape: a layer 6 grant (CR 613.1f) of a
+    quoted ability over the source and its soulbond partner."""
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        return [
+            ContinuousEffect(
+                description=f'{source.name}: each paired creature has "{granted}"',
+                layer=Layer.ABILITY,
+                timestamp=timestamp,
+                source_id=source.id,
+                source_ability=line,
+                selector=PairedPartners(source_id=source.id),
+                modification=grant_ability(granted),
+            )
+        ]
+
+    return builder
+
+
+def paired_partner_ids(source: CardState, permanents: Sequence[CardState]) -> tuple[UUID, ...]:
+    """`source` and its soulbond partner while the pair holds (CR 702.95a,
+    CR 702.95e: both creatures, pointing at each other, one controller) -
+    `PairedPartners`' test over the printed board, or nothing."""
+    if source.paired_with is None or not printed_characteristics(source).is_creature:
+        return ()
+    partner = next((p for p in permanents if p.id == source.paired_with), None)
+    if (
+        partner is None
+        or partner.paired_with != source.id
+        or partner.controller != source.controller
+        or not printed_characteristics(partner).is_creature
+    ):
+        return ()
+    return (source.id, partner.id)
+
+
 def _per_other_creature_anthem_builder(
     power: int,
     toughness: int,
@@ -6953,7 +7065,7 @@ _TURN_FACT_GATED_SELF_PUMP_RE = re.compile(
 #: fixed "can attack as though it didn't have defender" text, or an ordinary
 #: keyword list.
 _TURN_FACT_GATED_SELF_RE = re.compile(
-    r"^as long as (?P<condition>.+?), this (?:creature|permanent|token) "
+    r"^as long as (?P<condition>.+?), (?:this (?:creature|permanent|token)|(?P<it>it)) "
     r"(?:(?P<no_defender>can attack as though it didn'?t have defender)"
     r"|(?:has|have) (?P<keywords>[a-z]+(?: [a-z]+)?(?:(?:,\s*| and )[a-z]+(?: [a-z]+)?)*))\.?$",
     re.IGNORECASE,
@@ -7533,6 +7645,50 @@ def _life_total_power_toughness_cda_builder(line: str) -> EffectBuilder:
     return builder
 
 
+#: "Equipped creature has base power and toughness X/X, where X is your life
+#: total." (Aettir and Priwen) - a sublayer 7b set (CR 613.4b) on the
+#: attached creature, X the source's controller's life total ("your", CR
+#: 109.5), read off `context.life_by_player` on every computation the way
+#: `_life_total_power_toughness_cda_builder` reads it.
+_ATTACHED_BASE_PT_LIFE_TOTAL_RE = re.compile(
+    r"^(?P<attachment>equipped|enchanted) creature has base power and toughness "
+    r"X/X, where X is your life total\.?$",
+    re.IGNORECASE,
+)
+
+
+def _attached_base_pt_life_total_builder(subject: str, *, line: str) -> EffectBuilder:
+    """`_ATTACHED_BASE_PT_LIFE_TOTAL_RE`'s shape."""
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        attached = source.attached_to
+        if attached is None:
+            return []
+        life = context.life_by_player.get(source.controller, 0)
+        return [
+            ContinuousEffect(
+                description=(
+                    f"{source.name}: {subject} creature has base power and toughness "
+                    f"{life}/{life} from its controller's life total"
+                ),
+                layer=Layer.POWER_TOUGHNESS,
+                sublayer=Sublayer.SET,
+                timestamp=timestamp,
+                source_id=source.id,
+                source_ability=_source_line_for(source, line),
+                selector=_only(attached),
+                modification=set_power_toughness(life, life),
+            )
+        ]
+
+    return builder
+
+
 def _basic_land_type_count_power_only_cda_builder(line: str) -> EffectBuilder:
     """`_BASIC_LAND_TYPE_COUNT_POWER_ONLY_CDA_RE`'s shape - Fblthp, Knows the
     Way's and Nishoba Brawler's power-only *domain* characteristic-defining
@@ -7763,6 +7919,14 @@ _CDA_COUNTERS_RE = re.compile(
     rf"(?P<quality>[a-z ,/-]+?) {_CDA_BOARD_SCOPE}$"
 )
 _CDA_BOARD_COUNT_RE = re.compile(rf"^the number of (?P<quality>[a-z ,/-]+?) {_CDA_BOARD_SCOPE}$")
+#: "the number of permanents you control that are Spirits and/or
+#: enchantments" (Katilda, Dawnhart Martyr and its Aura back face) - the same
+#: board count with the quality after "that are" instead of before the
+#: scope; an and/or list is one disjunction (CR 205.2b), so a Spirit
+#: enchantment counts once.
+_CDA_PERMANENTS_THAT_ARE_RE = re.compile(
+    rf"^the number of permanents {_CDA_BOARD_SCOPE} that are (?P<quality>[a-z ,/-]+?)$"
+)
 _CDA_CRAFT_POWER_RE = re.compile(
     r"^the total power of the exiled cards used to craft (?:it|this (?:creature|permanent))$"
 )
@@ -7964,6 +8128,11 @@ def _cda_base_count(phrase: str) -> CdaCountFactory | None:
         if quality is None:
             return None
         return _cda_board_count(quality, match.group("who"), "counters", match.group("counter"))
+    if match := _CDA_PERMANENTS_THAT_ARE_RE.fullmatch(phrase):
+        quality = _cda_quality(match.group("quality"))
+        if quality is None:
+            return None
+        return _cda_board_count(quality, match.group("who"), "count")
     if match := _CDA_BOARD_COUNT_RE.fullmatch(phrase):
         quality = _cda_quality(match.group("quality"))
         if quality is None:
@@ -8664,6 +8833,12 @@ def quoted_ability_grants(
             for permanent in permanents:
                 if subtype in {t.lower() for t in printed_characteristics(permanent).subtypes}:
                     wanted.setdefault(permanent.id, set()).add(text)
+            continue
+        if match := _PAIRED_EACH_QUOTED_RE.fullmatch(normalized):
+            text = match.group("ability").strip()
+            grantable.add(text)
+            for permanent_id in paired_partner_ids(source, permanents):
+                wanted.setdefault(permanent_id, set()).add(text)
             continue
         if match := _INDEFINITE_KEYWORD_AND_QUOTED_GRANT_RE.fullmatch(normalized):
             text = (match.group("granted") or "").strip()
@@ -10899,7 +11074,10 @@ def _parse_layer_sentence_ungated(sentence: str) -> EffectBuilder | None:
     # imports `AttackingGroupControlledBy`/`grant_ability`/etc. *from* this
     # one; importing it back at this module's own top level would be a cycle.
     from ..attacking_statics import parse_attacking_group_keyword_grant
+    from ..game_rule_statics import parse_opponents_lose_keyword
 
+    if (opponents_lose := parse_opponents_lose_keyword(sentence)) is not None:
+        return opponents_lose
     attacking_group = parse_attacking_group_keyword_grant(sentence)
     if attacking_group is not None:
         return attacking_group
@@ -11086,6 +11264,19 @@ def _parse_layer_sentence_ungated(sentence: str) -> EffectBuilder | None:
             per_counter(match.group("power")),
             per_counter(match.group("toughness")),
             match.group("counter").lower(),
+            subject=match.group("attachment").lower(),
+            line=sentence,
+        )
+    if match := _ATTACHED_HAS_AND_GETS_X_RE.fullmatch(sentence):
+        value = _cda_value(match.group("count"))
+        keywords: list[str] | None = []
+        if match.group("keywords") is not None:
+            keywords = _split_and_validate_keywords(match.group("keywords"))
+        if value is None or value[1] != 0 or keywords is None:
+            return None
+        return _attached_has_and_gets_x_builder(
+            keywords,
+            value[0],
             subject=match.group("attachment").lower(),
             line=sentence,
         )
@@ -11765,6 +11956,10 @@ def _parse_narrow_static_layer_sentence(sentence: str) -> EffectBuilder | None:
         return _all_activated_abilities_builder(all_activated, line=sentence)
     if _SELF_PROTECTION_FROM_CHOSEN_COLOR_RE.fullmatch(sentence):
         return _self_protection_from_chosen_color_builder(line=sentence)
+    if match := _PAIRED_EACH_QUOTED_RE.fullmatch(sentence):
+        granted = match.group("ability").strip()
+        if granted:
+            return _paired_quoted_grant_builder(granted, line=sentence)
     if match := _PAIRED_BOTH_RE.fullmatch(sentence):
         keywords = _split_and_validate_keywords(match["keywords"]) if match["keywords"] else []
         if keywords is not None:
@@ -11981,6 +12176,10 @@ def _parse_narrow_static_layer_sentence(sentence: str) -> EffectBuilder | None:
             subject=match.group("attachment").lower(),
             granted=match.group("granted").strip(),
             line=sentence,
+        )
+    if match := _ATTACHED_BASE_PT_LIFE_TOTAL_RE.fullmatch(sentence):
+        return _attached_base_pt_life_total_builder(
+            match.group("attachment").lower(), line=sentence
         )
     if match := _ATTACHED_CREATURE_STATIC_RE.fullmatch(sentence):
         raw_keywords = (
@@ -12481,8 +12680,32 @@ def _parse_narrow_static_layer_sentence(sentence: str) -> EffectBuilder | None:
                 granted,
                 line=sentence,
             )
-    if match := _TURN_FACT_GATED_SELF_RE.fullmatch(sentence):
+    if (match := _TURN_FACT_GATED_SELF_RE.fullmatch(sentence)) and not (
+        # The "it" subject is read only for the counter gate below; any other
+        # "as long as ..., it has ..." (Fleecemane Lion's "is monstrous")
+        # belongs to the readers after this one.
+        match.group("it")
+        and not (
+            match.group("no_defender")
+            and _SELF_HAS_N_COUNTERS_RE.fullmatch(match.group("condition").strip())
+        )
+    ):
         fact = _TURN_FACT_CONDITION_PHRASES.get(match.group("condition").strip().lower())
+        counters = _SELF_HAS_N_COUNTERS_RE.fullmatch(match.group("condition").strip())
+        if fact is None and counters is not None and match.group("no_defender"):
+            # Faithbound Judge: "As long as this creature has three or more
+            # judgment counters on it, it can attack as though it didn't have
+            # defender." - CR 604.2's condition on the source's own counters.
+            threshold = parse_count(counters.group("count"), article=False)
+            if threshold is None:
+                return None
+            kind = counters.group("kind")
+            return _context_gated_self_static_builder(
+                lambda source, context: source.counters[kind] >= threshold,
+                [ATTACK_WITHOUT_DEFENDER_TEXT],
+                line=sentence,
+                description=f"with {threshold}+ {kind} counters",
+            )
         if fact is None:
             return None
         fact_name, subject = fact

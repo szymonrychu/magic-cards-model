@@ -6044,8 +6044,11 @@ def _parse_target_get_energy_pay_damage(text: str) -> Effect | None:
 #: mana-value/counter riders neither printing carries and plus an explicit
 #: "you control" restriction destroy-all effects never have (Wrath of God
 #: hits every player's creatures; this hits only the controller's).
+#: Widened (EP01-R2-T6): "Untap all other creatures you control." (Ahn-Crop
+#: Champion's and Combat Celebrant's exert consequence) - "other" leaves the
+#: ability's own source tapped.
 _UNTAP_ALL_YOU_CONTROL_RE = re.compile(
-    r"^untap all (?P<qualifier>.+?) you control\.?$", re.IGNORECASE
+    r"^untap all (?P<other>other )?(?P<qualifier>.+?) you control\.?$", re.IGNORECASE
 )
 
 
@@ -6061,14 +6064,100 @@ def _parse_untap_all_you_control_clause(sentence: str) -> TargetedClause | None:
     if type_matches is None:
         return None
 
+    excludes_source = match.group("other") is not None
+
     def effect(game: "Game", stack_object: "StackObject") -> None:
         controller = game.controller_of(stack_object)
+        source_id = None
+        if excludes_source:
+            source = (
+                stack_object if isinstance(stack_object, CardState) else stack_object.source(game)  # type: ignore[union-attr]
+            )
+            source_id = source.id if source is not None else None
         for permanent in list(game.battlefield):
-            if permanent.zone is not Zone.BATTLEFIELD:
+            if permanent.zone is not Zone.BATTLEFIELD or permanent.id == source_id:
                 continue
             if game.controller_of(permanent).username != controller.username:
                 continue
             if type_matches(game.characteristics_of(permanent)):
+                permanent.untap()
+
+    return effect
+
+
+#: "That player untaps a `<quality>` they control." - Hokori, Dust Drinker's
+#: "At the beginning of each player's upkeep, that player untaps a land they
+#: control." "That player" is the player the triggering event names (the
+#: active player whose upkeep began, CR 503.1); they choose which matching
+#: permanent (CR 608.2d), a tapped one by default, and untap it (CR 701.26b).
+_THAT_PLAYER_UNTAPS_RE = re.compile(
+    r"^that player untaps (?:a|an|one) (?P<quality>[a-z ,-]+?) they control\.?$", re.IGNORECASE
+)
+
+
+@ABILITY_TEXT.rung("s35")
+def _parse_that_player_untaps_clause(text: str) -> AbilityEffect | None:
+    """`_THAT_PLAYER_UNTAPS_RE`'s shape, or `None`."""
+    match = _THAT_PLAYER_UNTAPS_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    quality = match.group("quality").strip()
+    type_matches = _parse_mass_type_qualifier(quality)
+    if type_matches is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        player = ability.event.player if ability.event is not None else None
+        if player is None:
+            return
+        candidates = computed_permanents(game, game.permanents_controlled_by(player), type_matches)
+        if not candidates:
+            return
+        tapped_first = sorted(candidates, key=lambda state: not state.tapped)
+        chosen = game.ask(
+            Decision(
+                kind=DecisionKind.CHOOSE_CARDS,
+                player=player,
+                prompt=f"untap a {quality} you control",
+                source=ability.source_name,
+                amount=1,
+                cards=tuple(state.id for state in candidates),
+                exact=True,
+                default_cards=(tapped_first[0].id,),
+                source_id=source_id_of(ability),
+            )
+        )
+        assert isinstance(chosen, tuple)
+        by_id = {state.id: state for state in candidates}
+        for card_id in chosen:
+            by_id[card_id].untap()
+
+    return effect
+
+
+#: "Untap all `<qualifier>`." with no controller named (Intruder Alarm's
+#: "Whenever a creature enters, untap all creatures.") - CR 701.26b, every
+#: player's matching permanents, untapped simultaneously (CR 608.2f). The
+#: qualifier is `_parse_mass_type_qualifier`'s grammar, so "creatures you
+#: control" or "attacking creatures" never reach here (each has its own rung).
+_UNTAP_ALL_EVERYONES_RE = re.compile(r"^untap all (?P<qualifier>[a-z ,-]+?)\.?$", re.IGNORECASE)
+
+
+@MIXED_CLAUSE.rung("s35")
+def _parse_untap_all_everyones_clause(sentence: str) -> TargetedClause | None:
+    """`_UNTAP_ALL_EVERYONES_RE`'s shape."""
+    match = _UNTAP_ALL_EVERYONES_RE.fullmatch(sentence.strip())
+    if match is None:
+        return None
+    type_matches = _parse_mass_type_qualifier(match.group("qualifier"))
+    if type_matches is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        for permanent in list(game.battlefield):
+            if permanent.zone is Zone.BATTLEFIELD and type_matches(
+                game.characteristics_of(permanent)
+            ):
                 permanent.untap()
 
     return effect

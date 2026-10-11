@@ -64,6 +64,10 @@ class CastTiming(StrEnum):
     #: `why_cannot_cast_now` of the card as a hand card, so flash (CR 702.8a)
     #: and every flash grant still count.
     OWN = "own"
+    #: "as though it had flash" (CR 702.8a): any time the caster has priority,
+    #: whatever the card's own type. A pile permission that says so
+    #: (`permissions._linked_exile_play_option`) is the only source here.
+    FLASH = "flash"
 
 
 def freerunning_condition_holds(game: Any, caster: str) -> bool:
@@ -199,6 +203,15 @@ class KeywordCastOption(EngineModel):
     carry the line. `Casting._use_keyword` stamps it onto
     `CardState.granted_ability_texts`, where
     `machines/triggers.granted_triggered_abilities_of` reads it back."""
+    owner_only: bool = False
+    """The permission names "your graveyard" (disturb, CR 702.146a): only
+    the card's owner may use it, so a card in another player's graveyard is
+    refused rather than cast by whoever has priority."""
+    casts_transformed: bool = False
+    """The option casts the card "transformed" (CR 712.11a): disturb's "You
+    may cast this card transformed from your graveyard" (CR 702.146a).
+    `Casting.use_keyword` announces `cast_transformed` for it, so the spell
+    is put on the stack back face up (CR 712.8c)."""
     exile_instead_of_graveyard: bool = False
     """The grant's own "If a spell cast this way would be put into a/your
     graveyard, exile it instead." (CR 614.1a) - Kess, Dissident Mage's and
@@ -285,6 +298,12 @@ class KeywordCastOption(EngineModel):
             return (
                 f"{self.keyword} casts {spell.name} from the {self.zone.value}, "
                 f"but it is in the {where.value} ({self.rule})"
+            )
+
+        if self.owner_only and spell.owner is not None and spell.owner != caster:
+            return (
+                f"{self.keyword} casts {spell.name} only from its owner's graveyard, "
+                f"and {spell.owner}, not {caster}, owns it ({self.rule})"
             )
 
         if self.condition is not None and game is not None:
@@ -526,6 +545,11 @@ def _option_from_keyword(ability: KeywordAbility) -> KeywordCastOption | None:
             zone=Zone.GRAVEYARD,
             additional_cost=total_cost_for_phrase("Discard a land card"),
         )
+
+    if canonical == "disturb":
+        # CR 702.146a: a graveyard alternative cost that casts the card
+        # transformed (`machines/disturb.py`).
+        return disturb_cast_option(ability)
 
     if canonical == "escape":
         # CR 702.138a: "Escape represents a static ability that functions
@@ -1878,6 +1902,7 @@ def reads_optional_exile_reduction_line(text: str) -> bool:
 
 
 from ..aftermath import aftermath_cast_option  # noqa: E402
+from ..disturb import disturb_cast_option  # noqa: E402
 from ._common import (  # noqa: E402
     _BLIGHT_PHRASE,
     _OPTIONAL_BEHOLD,

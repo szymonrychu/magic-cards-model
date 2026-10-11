@@ -3561,6 +3561,52 @@ _CREATE_TOKEN_COPY_OF_TARGET_RE = re.compile(
     re.IGNORECASE,
 )
 
+#: "Create a token that's a copy of enchanted|equipped creature[, except
+#: <exception>]." - Ghastly Mimicry's upkeep trigger ("..., except it's a
+#: Spirit in addition to its other types."). No target: the object is the one
+#: the ability's source is attached to as it resolves (CR 303.4, CR 301.5);
+#: none, and nothing is created (CR 608.2b's spirit for an untargeted
+#: referent that is gone). The exception is `_read_copy_exception_list`'s.
+_CREATE_TOKEN_COPY_OF_ATTACHED_RE = re.compile(
+    r"^create a token that['’]?s a copy of (?:enchanted|equipped) creature"
+    r"(?:, except (?P<except>[^.]+?))?\.?$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s21")
+def _parse_create_token_copy_of_attached_clause(clause: str) -> AbilityEffect | None:
+    """`_CREATE_TOKEN_COPY_OF_ATTACHED_RE`'s shape, or `None`."""
+    if "copy of" not in clause:
+        return None
+    match = _CREATE_TOKEN_COPY_OF_ATTACHED_RE.fullmatch(" ".join(clause.strip().split()))
+    if match is None:
+        return None
+    listed = _read_copy_exception_list(match.group("except")) if match.group("except") else None
+    if match.group("except") and listed is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        source = ability.source(game)
+        if source is None or source.zone is not Zone.BATTLEFIELD or source.attached_to is None:
+            return
+        attached = game.find_by_id(source.attached_to)
+        if not isinstance(attached, CardState) or attached.zone is not Zone.BATTLEFIELD:
+            return
+        token_copy_of(
+            game,
+            attached,
+            ability.controller,
+            added_abilities=listed.added_abilities if listed else (),
+            power=listed.power if listed else None,
+            toughness=listed.toughness if listed else None,
+            added_creature_type=listed.added_creature_type if listed else None,
+            not_legendary=listed.not_legendary if listed else False,
+        )
+
+    return effect
+
+
 #: CR 707.9b's card-type exception - "except it's an artifact in addition to
 #: its other types" (Molten Duplication): the named card type joins the
 #: copy's copiable type line (CR 205.1b's "in addition to").

@@ -428,41 +428,24 @@ def triggered_abilities_of(card: Card) -> list[TriggeredAbility]:
         # ever sit here waiting to fire on the wrong event.
         and (ability.event is not None or _unread_trigger_events(ability.condition))
     ]
-    expanded: list[TriggeredAbility] = []
-    for ability in printed:
-        for split in _expand_attacks_or_blocks(
-            ability, card.name, legendary=Supertype.LEGENDARY in card.supertypes
-        ):
-            for enters_split in _expand_enters_or_attacks(
-                split, card.name, legendary=Supertype.LEGENDARY in card.supertypes
-            ):
-                for leaves_split in _expand_enters_or_leaves(enters_split):
-                    for dies_split in _expand_enters_or_dies(
-                        leaves_split,
-                        card.name,
-                        legendary=Supertype.LEGENDARY in card.supertypes,
-                    ):
-                        for damage_split in _expand_enters_or_deals_combat_damage(
-                            dies_split,
-                            card.name,
-                            legendary=Supertype.LEGENDARY in card.supertypes,
-                        ):
-                            for upkeep_split in _expand_enters_and_upkeep(
-                                damage_split,
-                                card.name,
-                                legendary=Supertype.LEGENDARY in card.supertypes,
-                            ):
-                                for tapped_split in _expand_enters_or_becomes_tapped(
-                                    upkeep_split,
-                                    card.name,
-                                    legendary=Supertype.LEGENDARY in card.supertypes,
-                                ):
-                                    for transforms_split in _expand_enters_or_transforms_into(
-                                        tapped_split
-                                    ):
-                                        expanded.extend(
-                                            _expand_transforms_and_first_main(transforms_split)
-                                        )
+    legendary = Supertype.LEGENDARY in card.supertypes
+    # CR 603.1b: each compound condition shape split into one ability per
+    # trigger condition, applied in turn to every half the earlier ones left.
+    splitters = (
+        lambda each: _expand_attacks_or_blocks(each, card.name, legendary=legendary),
+        lambda each: _expand_enters_or_attacks(each, card.name, legendary=legendary),
+        _expand_enters_or_leaves,
+        lambda each: _expand_enters_or_dies(each, card.name, legendary=legendary),
+        lambda each: _expand_enters_or_deals_combat_damage(each, card.name, legendary=legendary),
+        lambda each: _expand_enters_and_upkeep(each, card.name, legendary=legendary),
+        lambda each: _expand_enters_or_becomes_tapped(each, card.name, legendary=legendary),
+        _expand_enters_or_transforms_into,
+        _expand_enters_or_becomes_target,
+        _expand_transforms_and_first_main,
+    )
+    expanded: list[TriggeredAbility] = list(printed)
+    for splitter in splitters:
+        expanded = [split for each in expanded for split in splitter(each)]
     return expanded + keyword_triggered_abilities(card) + siege_triggered_abilities(card)
 
 
@@ -607,6 +590,45 @@ def _expand_enters_or_transforms_into(ability: TriggeredAbility) -> list[Trigger
             update={
                 "condition": f"this {kind} {match.group('transforms')}",
                 "event": TriggerEvent.TRANSFORMS,
+            }
+        ),
+    ]
+
+
+#: "Whenever this creature enters or becomes the target of an Aura spell,
+#: ..." (Brine Comber) and its Aura back face's "Whenever this Aura enters or
+#: enchanted creature becomes the target of an Aura spell, ..." (Brinebound
+#: Gift). CR 603.1b: two trigger conditions; `_trigger_event` reads one event
+#: per ability, so the compound kept only the becomes-target half and the
+#: enters half (CR 603.6a) never triggered.
+_ENTERS_OR_BECOMES_TARGET_RE = re.compile(
+    r"^this (?P<kind>[a-z]+) enters or "
+    r"(?P<host>(?:enchanted|equipped) creature )?(?P<rest>becomes the target of .+)$",
+    re.IGNORECASE,
+)
+
+
+def _expand_enters_or_becomes_target(ability: TriggeredAbility) -> list[TriggeredAbility]:
+    """One `_ENTERS_OR_BECOMES_TARGET_RE` ability becomes two: the entering
+    half and the becomes-target half (CR 115.1) - on the source itself, or on
+    the creature it is attached to when the half names "enchanted/equipped
+    creature". Anything else passes through unchanged, singleton-wrapped."""
+    match = _ENTERS_OR_BECOMES_TARGET_RE.match(ability.condition.strip())
+    if match is None:
+        return [ability]
+    kind = match.group("kind").lower()
+    subject = (match.group("host") or f"this {kind} ").lower()
+    return [
+        ability.model_copy(
+            update={
+                "condition": f"this {kind} enters",
+                "event": TriggerEvent.ENTERS_THE_BATTLEFIELD,
+            }
+        ),
+        ability.model_copy(
+            update={
+                "condition": f"{subject}{match.group('rest')}",
+                "event": TriggerEvent.BECOMES_TARGET,
             }
         ),
     ]

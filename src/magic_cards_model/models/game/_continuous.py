@@ -604,6 +604,10 @@ class ContinuousMixin:
                 return permanent.counter_count(kind)
             if permanent.cant_have_counters_put_on_it or permanent.cant_have_counter_kind(kind):
                 return permanent.counter_count(kind)
+            # Melira, Sylvok Outcast: "Creatures you control can't have -1/-1
+            # counters put on them." (CR 101.2, `machines/game_rule_statics.py`).
+            if game_rule_statics.permanent_counter_prohibited(self, permanent, kind) is not None:
+                return permanent.counter_count(kind)
 
             event = ReplaceableEvent(
                 kind=EventKind.ADD_COUNTERS,
@@ -742,6 +746,9 @@ class ContinuousMixin:
             if isinstance(player, str):
                 player = self.player(player)
             if amount <= 0 or self.player_counters_prohibited(player.username, kind) is not None:
+                return player.counter_count(kind)
+            # "You can't get poison counters." (Melira, Sylvok Outcast; CR 101.2).
+            if game_rule_statics.player_counter_prohibited(self, player.username, kind):
                 return player.counter_count(kind)
 
             event = ReplaceableEvent(
@@ -2004,6 +2011,7 @@ class ContinuousMixin:
         return self.player(state.controller) if state.controller else self.active_player
 
 
+from ...machines import game_rule_statics  # noqa: E402
 from ._common import (  # noqa: E402
     _COLOR_WORDS,
     _DAMAGE_CANT_BE_PREVENTED_RE,

@@ -257,6 +257,13 @@ class CardRequirement(EngineModel):
     token: bool | None = None
     """Fountainport's "Sacrifice a token" (CR 111.1): True asks for a token,
     False ("a nontoken creature") for a card, None either."""
+    attacking: bool = False
+    """Templar Knight's "tap five untapped *attacking* creatures you
+    control": CR 506.4's status - declared as an attacker and still in
+    combat - read off `game.attacking_creatures()`, so it needs a board."""
+    named: str | None = None
+    """Templar Knight's "... named Templar Knight" (CR 201.2): the permanent's
+    name, compared on `CardState.name` - the face that is up (CR 712.8d)."""
     keywords: list[str] = Field(default_factory=list)
     """Sephara's "tap four untapped creatures you control *with flying*": the
     permanent must have **all** of these keyword abilities (CR 702), read
@@ -275,6 +282,8 @@ class CardRequirement(EngineModel):
             or self.tapped is not None
             or self.token is not None
             or self.keywords
+            or self.attacking
+            or self.named is not None
         )
 
     def why_not(self, card: CardState, game: Any = None, payer: str | None = None) -> str | None:
@@ -342,6 +351,14 @@ class CardRequirement(EngineModel):
             return f"{card.name} is {with_indefinite_article(unwanted)}"
         if self.subtypes and not subtypes & self._wanted_subtypes():
             return f"{card.name} is not {with_indefinite_article('/'.join(self.subtypes))}"
+        if self.named is not None and card.name != self.named:
+            return f"{card.name} is not named {self.named}"
+        if (
+            self.attacking
+            and game is not None
+            and card.id not in {attacker.id for attacker in game.attacking_creatures()}
+        ):
+            return f"{card.name} is not attacking"
         if self.keywords:
             from ..combat import has_keyword
 
@@ -559,6 +576,7 @@ class CostComponent(EngineModel):
     own docstring."""
 
     _reveals_recorded: list[Any] = PrivateAttr(default_factory=list)
+    _exerted_recorded: list[Any] = PrivateAttr(default_factory=list)
     """The `Reveal` records a paid `ComponentKind.REVEAL` wrote, so `unpay` can
     take exactly those back (CR 733.1). Private for the same reason `_undo` is."""
 
@@ -1002,7 +1020,10 @@ class CostComponent(EngineModel):
         life = game.player(self.payer).life
         if life < self.amount:
             return f"{self.payer} cannot pay {self.amount} life from a life total of {life}"
-        return None
+        # CR 119.8: a player who can't lose life can't pay life (above 0).
+        from ..game_rule_statics import life_total_cant_change
+
+        return life_total_cant_change(game, self.payer)
 
     # -- paying and rewinding ---------------------------------------------
 
@@ -1020,6 +1041,9 @@ class CostComponent(EngineModel):
             for card in self.cards:
                 self._remember(card)
                 card.exerted = True  # CR 701.43a
+                if game is not None and card.id not in game.exerted_this_turn:
+                    game.exerted_this_turn.add(card.id)
+                    self._exerted_recorded.append(card.id)
         elif self.kind is ComponentKind.TAP:
             for card in self.cards:
                 self._remember(card)
@@ -1328,6 +1352,10 @@ class CostComponent(EngineModel):
             # more than once, so the rewind is simply putting the flag back.
             for card, _ in reversed(self._undo):
                 _live(card).exerted = False
+            if game is not None:
+                for card_id in self._exerted_recorded:
+                    game.exerted_this_turn.discard(card_id)
+            self._exerted_recorded = []
         elif self.kind is ComponentKind.TAP:
             # Tapping moves nothing, so untapping is the whole rewind.
             for card, _ in reversed(self._undo):

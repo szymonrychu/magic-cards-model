@@ -138,7 +138,10 @@ def test_an_opponents_graveyard_cast_is_not_reduced():
         .build()
     )
     scenario.start_at(Step.PRECOMBAT_MAIN)
-    scenario.pass_priority("alice")
+    # Faithless Looting is a sorcery: flashback keeps its timing (CR 702.34a,
+    # CR 307.1), so bob casts it in his own main phase, Bilbo still alice's.
+    while scenario.turn.active_player != "bob" or scenario.step is not Step.PRECOMBAT_MAIN:
+        scenario.advance()
     casting = scenario.cast("Faithless Looting", username="bob", from_zone=Zone.GRAVEYARD)
     casting.use_keyword("Flashback")
     assert casting.total_cost.mana.converted == 3

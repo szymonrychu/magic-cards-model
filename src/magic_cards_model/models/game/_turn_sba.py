@@ -207,8 +207,141 @@ class TurnSbaMixin:
                 for state in self.permanents_controlled_by(username)
                 if not self.characteristics_of(state).has_ability(DOESNT_UNTAP_TEXT)
                 and not state.cant_become_untapped
+                and not self._untap_static_keeps_tapped(state, username)
             ],
         )
+
+    def _untap_static_keeps_tapped(self: "Game", state: CardState, username: str) -> bool:
+        """CR 502.3's "effects can keep one or more of a player's permanents
+        from untapping", for the printed lines `machines/untap_statics.py`
+        reads off the computed board: a group restriction from any
+        permanent ("Islands don't untap during their controllers' untap
+        steps.", Choke), the permanent's own conditional one ("... if it has
+        a +1/+1 counter on it.", Steel Dromedary) and an Aura's conditional
+        one ("As long as you control another snow permanent, enchanted
+        creature doesn't untap ...", Winter's Rest)."""
+        from ...machines import untap_statics as us
+
+        for source in self.battlefield:
+            controller = self.controller_of(source).username
+            for line in us.normalized_lines(self, source):
+                group = us.group_doesnt_untap_of_line(line)
+                if group is not None and us.matches(self, controller, group, state):
+                    return True
+                if source is state:
+                    condition = us.self_doesnt_untap_condition_of_line(line)
+                    if condition is not None and us.holds(self, username, condition, state):
+                        return True
+                if source.attached_to == state.id:
+                    condition = us.attached_doesnt_untap_condition_of_line(line)
+                    if condition is not None and us.holds(self, controller, condition, source):
+                        return True
+        return False
+
+    def _untap_step_choices(
+        self: "Game", username: str, untappable: list[CardState]
+    ) -> list[CardState]:
+        """The CR 502.3 choices "the active player determines": a "You may
+        choose not to untap <this> during your untap step." permanent stays
+        tapped if they say so, and under "Players can't untap more than one
+        <quality> during their untap steps." (Stoic Angel, Imi Statue, Winter
+        Moon) they choose the one tapped permanent of that quality that
+        untaps. Only tapped permanents are asked about - an untapped one
+        cannot become untapped (CR 701.26b)."""
+        from ...machines import untap_statics as us
+
+        chosen = list(untappable)
+        for state in [s for s in chosen if s.tapped]:
+            if any(
+                us.is_may_choose_not_to_untap_line(line)
+                for line in us.normalized_lines(self, state)
+            ):
+                decision = Decision(
+                    kind=DecisionKind.MAY,
+                    player=username,
+                    prompt=(
+                        f"you may choose not to untap {state.name} during your untap step "
+                        "(CR 502.3)"
+                    ),
+                    source=state.name,
+                    source_id=state.id,
+                    default_may=False,
+                )
+                if self.ask(decision):
+                    chosen.remove(state)
+        for source in self.battlefield:
+            for line in us.normalized_lines(self, source):
+                phrase = us.untap_at_most_one_of_line(line)
+                if phrase is None:
+                    continue
+                candidates = [
+                    s for s in chosen if s.tapped and us.matches(self, username, phrase, s)
+                ]
+                if len(candidates) < 2:
+                    continue
+                decision = Decision(
+                    kind=DecisionKind.CHOOSE_CARDS,
+                    player=username,
+                    prompt=f"choose the one {phrase} to untap ({source.name}, CR 502.3)",
+                    source=source.name,
+                    source_id=source.id,
+                    amount=1,
+                    exact=True,
+                    cards=tuple(s.id for s in candidates),
+                )
+                answer = self.ask(decision)
+                kept_ids = set(answer) if isinstance(answer, tuple) else set()
+                kept = next((s for s in candidates if s.id in kept_ids), candidates[0])
+                chosen = [s for s in chosen if s is kept or s not in candidates]
+        return chosen
+
+    def _other_players_untapping(self: "Game", active: str) -> list[CardState]:
+        """The permanents of players other than `active` that "Untap <what>
+        during each other player's untap step." untaps now (Seedborn Muse,
+        Thousand Moons Infantry, Quest for Renewal's "as long as"). It is not
+        their controller's untap step, so their own "doesn't untap during
+        its controller's untap step" does not apply; a stun counter still
+        does, inside `CardState.untap` (CR 122.1d)."""
+        from ...machines import untap_statics as us
+
+        found: list[CardState] = []
+        for source in self.battlefield:
+            controller = self.controller_of(source).username
+            if controller == active:
+                continue
+            for line in us.normalized_lines(self, source):
+                grant = us.other_players_untap_of_line(line)
+                if grant is None or not us.holds(self, controller, grant.condition, source):
+                    continue
+                targets = (
+                    [source]
+                    if grant.quality is None
+                    else [
+                        s
+                        for s in self.permanents_controlled_by(controller)
+                        if us.matches(self, controller, grant.quality, s)
+                    ]
+                )
+                found.extend(s for s in targets if s not in found)
+        return found
+
+    def _static_skips_upkeep_step(self: "Game") -> bool:
+        """Whether a static line skips the active player's upkeep step (CR
+        614.10): "Players skip their upkeep steps." from any permanent, or
+        "Skip your upkeep step[ if <condition>]." from one they control."""
+        from ...machines import untap_statics as us
+
+        assert self.turn is not None
+        active = self.turn.active_player
+        for source in self.battlefield:
+            controller = self.controller_of(source).username
+            for line in us.normalized_lines(self, source):
+                skip = us.upkeep_skip_of_line(line)
+                if skip is None or (not skip.everyone and controller != active):
+                    continue
+                if us.holds(self, controller, skip.condition, source):
+                    return True
+        return False
 
     def untap_step(self: "Game") -> None:
         """Untap everything the active player controls (CR 502.3).
@@ -274,13 +407,14 @@ class TurnSbaMixin:
         # Storage Matrix's choice (`machines/untap_choices`): each untapped one
         # narrows what this step untaps to a chosen type.
         own = untap_type_restrictions(self, active.username, verdict.permanents)
-        untappable = [
-            state
-            for state in (*own, *self._untapping_in_others_untap_step(active.username))
-            if not self._chooses_not_to_untap(state)
-        ]
+        untappable = self._untap_step_choices(active.username, own)
+        others = self._other_players_untapping(active.username)
         tapped = [state for state in untappable if state.tapped]
+        others_tapped = [state for state in others if state.tapped]
         active.untap_all(untappable)
+        for state in others_tapped:
+            state.untap()
+        tapped.extend(others_tapped)
         for state in tapped:
             self.emit(
                 GameEvent(
@@ -296,7 +430,9 @@ class TurnSbaMixin:
         # "you untap one or more permanents" asks about it with its count -
         # the permanents that actually untapped, and none at all is no event
         # (CR 603.2g).
-        untapped = sum(1 for state in tapped if not state.tapped)
+        untapped = sum(
+            1 for state in tapped if not state.tapped and state.controller == active.username
+        )
         if untapped:
             self.emit(
                 GameEvent(
@@ -1883,11 +2019,21 @@ class TurnSbaMixin:
             if board.of(state).has_ability(LEGEND_RULE_EXEMPT_TEXT)
         }
 
+        # `machines/game_rule_statics.py`: "The "legend rule" doesn't apply."
+        # (Mirror Gallery) for everyone, or "... doesn't apply to <subtype>s
+        # you control." (Spider-Verse) for that subtype of one controller's.
+        everyone_exempt, exempt_subtypes = game_rule_statics.legend_rule_exemptions(self, board)
+        if everyone_exempt:
+            return []
+
         losers: list[CardState] = []
         for username in self._turn_order_from_active():
             if username in exempt_players:
                 continue
             for name, copies in groups.get(username, {}).items():
+                subtypes = exempt_subtypes.get(username)
+                if subtypes:
+                    copies = [s for s in copies if not subtypes & set(board.of(s).subtypes)]
                 if len(copies) < 2:
                     continue
                 kept = self._ask_which_legend_to_keep(username, name, copies)
@@ -1908,10 +2054,14 @@ class TurnSbaMixin:
         """
         losing: list[str] = []
         for player in self.players:
-            if not self.is_in_game(player.username) or not (
+            # CR 704.5a alone is switched off by "You don't lose the game for
+            # having 0 or less life." (`machines/game_rule_statics.py`).
+            loses_to_life = (
                 player.life <= 0
-                or player.tried_to_draw_from_empty_library
-                or player.loses_to_poison
+                and game_rule_statics.ignores_zero_life_loss(self, player.username) is None
+            )
+            if not self.is_in_game(player.username) or not (
+                loses_to_life or player.tried_to_draw_from_empty_library or player.loses_to_poison
             ):
                 continue
             if self.why_cant_lose_the_game(player.username) is not None:
@@ -2221,6 +2371,16 @@ class TurnSbaMixin:
                         f"{username} can't {verb} the game: {permanent.name} says so "
                         "(CR 101.2, CR 604.2)"
                     )
+        # Abyssal Persecutor's reversed "You can't win the game and your
+        # opponents can't lose the game." (`machines/game_rule_statics.py`).
+        reversed_source = game_rule_statics.outcome_prohibition_from_reversed(
+            self, username, lose=lose
+        )
+        if reversed_source is not None:
+            return (
+                f"{username} can't {verb} the game: {reversed_source.name} says so "
+                "(CR 101.2, CR 604.2)"
+            )
         return None
 
     def advance(self: "Game", username: str | None = None) -> Step:
@@ -2312,6 +2472,11 @@ class TurnSbaMixin:
         if previous_step is Step.CLEANUP and not self.turn.extra_phase_queue:
             self._skip_replaced_extra_turns()
         step = self.turn.advance()
+        if step is Step.UPKEEP and self._static_skips_upkeep_step():
+            # CR 614.10 / 500.11: "Players skip their upkeep steps." (Eon Hub)
+            # and "Skip your upkeep step if ..." (Gibbering Descent's
+            # Hellbent) - proceed past it as though it didn't exist.
+            step = self.turn.advance()
         if step is Step.DRAW and (self.turn.skips_draw() or self.static_skips_draw_step()):
             # CR 103.8a skips the starting player's whole first draw step, and
             # CR 500.11: to skip a step "is to proceed past it as though it
@@ -2400,6 +2565,7 @@ class TurnSbaMixin:
             self.permanents_left_battlefield_this_turn = {}
             self.lands_entered_this_turn = {}
             self.attacked_this_turn = set()
+            self.exerted_this_turn = set()
             self.attacked_players_this_turn = {}
             self.became_tapped_count_this_turn = {}
             self.permanents_sacrificed_this_turn = {}
@@ -2548,6 +2714,7 @@ class TurnSbaMixin:
         return self.turn.step
 
 
+from ...machines import game_rule_statics  # noqa: E402
 from ...machines.layers.parse import read_cant_lose_cant_win  # noqa: E402
 from ...machines.turn_scoped_riders import (  # noqa: E402
     CANT_LOSE_THE_GAME,

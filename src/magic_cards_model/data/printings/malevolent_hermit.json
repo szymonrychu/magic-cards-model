@@ -1,0 +1,189 @@
+{
+  "object": "card",
+  "id": "e79269af-63eb-43d2-afee-c38fa14a0c5b",
+  "oracle_id": "51233ade-70cd-4539-9f41-5ffab761da54",
+  "multiverse_ids": [
+    534823,
+    534824
+  ],
+  "resource_id": "624AA053489A9798E64C5978141F28FC4D3736444A68398E1C7F03CE8AB446FC",
+  "mtgo_id": 93060,
+  "arena_id": 78394,
+  "tcgplayer_id": 248289,
+  "cardmarket_id": 575025,
+  "name": "Malevolent Hermit // Benevolent Geist",
+  "lang": "en",
+  "released_at": "2021-09-24",
+  "uri": "https://api.scryfall.com/cards/e79269af-63eb-43d2-afee-c38fa14a0c5b",
+  "scryfall_uri": "https://scryfall.com/card/mid/61/malevolent-hermit-benevolent-geist?utm_source=api",
+  "layout": "transform",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T06:54:02Z",
+  "cmc": 2.0,
+  "type_line": "Creature \u2014 Human Wizard // Creature \u2014 Spirit Wizard",
+  "color_identity": [
+    "U"
+  ],
+  "keywords": [
+    "Flying",
+    "Transform",
+    "Disturb"
+  ],
+  "card_faces": [
+    {
+      "object": "card_face",
+      "name": "Malevolent Hermit",
+      "mana_cost": "{1}{U}",
+      "type_line": "Creature \u2014 Human Wizard",
+      "oracle_text": "{U}, Sacrifice this creature: Counter target noncreature spell unless its controller pays {3}.\nDisturb {2}{U} (You may cast this card from your graveyard transformed for its disturb cost.)",
+      "colors": [
+        "U"
+      ],
+      "power": "2",
+      "toughness": "1",
+      "artist": "Daarken",
+      "artist_id": "e607a0d4-fc12-4c01-9e3f-501f5269b9cb",
+      "illustration_id": "e4543968-8f2e-456a-a582-c75e866f5b02",
+      "image_uris": {
+        "small": "https://cards.scryfall.io/small/front/e/7/e79269af-63eb-43d2-afee-c38fa14a0c5b.jpg?1783925642",
+        "normal": "https://cards.scryfall.io/normal/front/e/7/e79269af-63eb-43d2-afee-c38fa14a0c5b.jpg?1783925642",
+        "large": "https://cards.scryfall.io/large/front/e/7/e79269af-63eb-43d2-afee-c38fa14a0c5b.jpg?1783925642",
+        "png": "https://cards.scryfall.io/png/front/e/7/e79269af-63eb-43d2-afee-c38fa14a0c5b.png?1783925642",
+        "art_crop": "https://cards.scryfall.io/art_crop/front/e/7/e79269af-63eb-43d2-afee-c38fa14a0c5b.jpg?1783925642",
+        "border_crop": "https://cards.scryfall.io/border_crop/front/e/7/e79269af-63eb-43d2-afee-c38fa14a0c5b.jpg?1783925642",
+        "thumb": "https://cards.scryfall.io/thumb/front/e/7/e79269af-63eb-43d2-afee-c38fa14a0c5b.webp?1783925642",
+        "grid": "https://cards.scryfall.io/grid/front/e/7/e79269af-63eb-43d2-afee-c38fa14a0c5b.webp?1783925642",
+        "display": "https://cards.scryfall.io/display/front/e/7/e79269af-63eb-43d2-afee-c38fa14a0c5b.webp?1783925642",
+        "art": "https://cards.scryfall.io/art/front/e/7/e79269af-63eb-43d2-afee-c38fa14a0c5b.webp?1783925642",
+        "crop": "https://cards.scryfall.io/crop/front/e/7/e79269af-63eb-43d2-afee-c38fa14a0c5b.webp?1783925642"
+      }
+    },
+    {
+      "object": "card_face",
+      "name": "Benevolent Geist",
+      "mana_cost": "",
+      "type_line": "Creature \u2014 Spirit Wizard",
+      "oracle_text": "Flying\nNoncreature spells you control can't be countered.\nIf Benevolent Geist would be put into a graveyard from anywhere, exile it instead.",
+      "colors": [
+        "U"
+      ],
+      "color_indicator": [
+        "U"
+      ],
+      "power": "2",
+      "toughness": "2",
+      "flavor_text": "All his old grudges suddenly seemed laughably petty. So he laughed.",
+      "artist": "Daarken",
+      "artist_id": "e607a0d4-fc12-4c01-9e3f-501f5269b9cb",
+      "illustration_id": "7ea2cc3d-ae55-423d-856b-761e89dc7d8a",
+      "image_uris": {
+        "small": "https://cards.scryfall.io/small/back/e/7/e79269af-63eb-43d2-afee-c38fa14a0c5b.jpg?1783925642",
+        "normal": "https://cards.scryfall.io/normal/back/e/7/e79269af-63eb-43d2-afee-c38fa14a0c5b.jpg?1783925642",
+        "large": "https://cards.scryfall.io/large/back/e/7/e79269af-63eb-43d2-afee-c38fa14a0c5b.jpg?1783925642",
+        "png": "https://cards.scryfall.io/png/back/e/7/e79269af-63eb-43d2-afee-c38fa14a0c5b.png?1783925642",
+        "art_crop": "https://cards.scryfall.io/art_crop/back/e/7/e79269af-63eb-43d2-afee-c38fa14a0c5b.jpg?1783925642",
+        "border_crop": "https://cards.scryfall.io/border_crop/back/e/7/e79269af-63eb-43d2-afee-c38fa14a0c5b.jpg?1783925642",
+        "thumb": "https://cards.scryfall.io/thumb/back/e/7/e79269af-63eb-43d2-afee-c38fa14a0c5b.webp?1783925642",
+        "grid": "https://cards.scryfall.io/grid/back/e/7/e79269af-63eb-43d2-afee-c38fa14a0c5b.webp?1783925642",
+        "display": "https://cards.scryfall.io/display/back/e/7/e79269af-63eb-43d2-afee-c38fa14a0c5b.webp?1783925642",
+        "art": "https://cards.scryfall.io/art/back/e/7/e79269af-63eb-43d2-afee-c38fa14a0c5b.webp?1783925642",
+        "crop": "https://cards.scryfall.io/crop/back/e/7/e79269af-63eb-43d2-afee-c38fa14a0c5b.webp?1783925642"
+      }
+    }
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "arena",
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "44b8eb8f-fa23-401a-98b5-1fbb9871128e",
+  "set": "mid",
+  "set_name": "Innistrad: Midnight Hunt",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/44b8eb8f-fa23-401a-98b5-1fbb9871128e",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Amid&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/mid?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/e79269af-63eb-43d2-afee-c38fa14a0c5b/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A51233ade-70cd-4539-9f41-5ffab761da54&unique=prints",
+  "collector_number": "61",
+  "digital": false,
+  "rarity": "rare",
+  "artist": "Daarken",
+  "artist_ids": [
+    "e607a0d4-fc12-4c01-9e3f-501f5269b9cb"
+  ],
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "sunmoondfc"
+  ],
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 4377,
+  "penny_rank": 888,
+  "preview": {
+    "source": "Wizards of the Coast",
+    "source_uri": "https://www.twitch.tv/videos/1143922637",
+    "previewed_at": "2021-09-09"
+  },
+  "prices": {
+    "usd": "1.05",
+    "usd_foil": "1.26",
+    "usd_etched": null,
+    "eur": "0.99",
+    "eur_foil": "1.50",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=534823&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DMalevolent%2BHermit%2B%252F%252F%2BBenevolent%2BGeist",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DMalevolent%2BHermit%2B%252F%252F%2BBenevolent%2BGeist",
+    "edhrec": "https://edhrec.com/route/?cc=Malevolent+Hermit"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F248289%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=575025&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/93060?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

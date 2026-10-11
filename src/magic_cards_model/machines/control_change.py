@@ -74,7 +74,10 @@ _TAP_THEN_LOCK_RE = re.compile(
     r"(?:its|their) (?P<activation_lock>activated abilities can'?t be activated)"
     r")"
     rf" for as long as (?:you control (?P<controlled>{_SELF})|(?P<remains>{_SELF}) remains "
-    r"on the battlefield|(?P<tapped>it remains tapped))\.?$",
+    r"on the battlefield|(?P<tapped>it remains tapped)"
+    # Deserter's Quarters, Rust Tick, Entrancing Lyre: "... for as long as
+    # this artifact remains tapped" - the *source's* tapped status.
+    rf"|(?P<source_tapped>{_SELF}) remains tapped)\.?$",
     re.IGNORECASE,
 )
 
@@ -96,6 +99,20 @@ def _lock_condition(
     duration is read off whatever the sentence actually names). Only
     `"tapped"` reads `target`; the other two never pass one.
     """
+    if duration_kind == "source_tapped":
+        source = ability.source(game)
+        if (
+            source is None
+            or source.zone is not Zone.BATTLEFIELD
+            or source.zone_change_stamp is None
+            or not source.tapped
+            or (
+                ability.source_stamp is not None
+                and source.zone_change_stamp != ability.source_stamp
+            )
+        ):
+            return None
+        return RemainsTapped(card_id=source.id, stamp=source.zone_change_stamp)
     if duration_kind == "tapped":
         assert target is not None
         if target.zone is not Zone.BATTLEFIELD or target.zone_change_stamp is None:
@@ -140,6 +157,8 @@ def _parse_tap_then_lock_clause(effect_text: str) -> AbilityEffect | None:
     what, modification = _rider_modification(match.group("rider"), activation_lock=activation_lock)
     if match.group("tapped") is not None:
         duration_kind = "tapped"
+    elif match.group("source_tapped") is not None:
+        duration_kind = "source_tapped"
     elif match.group("controlled") is not None:
         duration_kind = "controlled"
     else:
@@ -187,7 +206,8 @@ def _parse_tap_then_lock_clause(effect_text: str) -> AbilityEffect | None:
 _GAIN_CONTROL_FOR_AS_LONG_RE = re.compile(
     r"^gain control of (?P<phrase>(?:up to (?:one|two|three|\d+) )?target [^.]+?) "
     rf"for as long as (?:you control (?P<controlled>{_SELF})|(?P<remains>{_SELF}) remains "
-    r"on the battlefield)\.(?:\s*then (?P<rest>.+))?$",
+    # Vedalken Shackles: "... for as long as this artifact remains tapped."
+    rf"on the battlefield|(?P<source_tapped>{_SELF}) remains tapped)\.(?:\s*then (?P<rest>.+))?$",
     re.IGNORECASE,
 )
 
@@ -206,10 +226,14 @@ def _parse_gain_control_for_as_long_clause(effect_text: str) -> AbilityEffect | 
         rest = parse_mixed_effect(match.group("rest").strip())
         if rest is None:
             return None
-    controlled = match.group("controlled") is not None
+    if match.group("controlled") is not None:
+        duration_kind = "controlled"
+    elif match.group("source_tapped") is not None:
+        duration_kind = "source_tapped"
+    else:
+        duration_kind = "remains"
 
     def effect(game: Game, ability: AbilityOnStack) -> None:
-        duration_kind = "controlled" if controlled else "remains"
         condition = _lock_condition(game, ability, duration_kind=duration_kind)
         targets = [
             target
@@ -580,12 +604,182 @@ def parse_gain_control_untimed_clause(effect_text: str) -> AbilityEffect | None:
     return effect
 
 
+#: "Target `<creature>` has|gains `<keywords>` for as long as this `<noun>`
+#: remains tapped." - Hisoka's Guard ("Target creature you control other than
+#: this creature has shroud for as long as this creature remains tapped.").
+#: CR 611.2b's duration is the *source's* tapped status; the keyword grant is
+#: layer 6 (CR 613.1f), built by `machines/layers` from the plain "target
+#: creature gains `<keywords>` until end of turn." sentence and given this
+#: duration instead.
+_GRANT_WHILE_SOURCE_TAPPED_RE = re.compile(
+    r"^(?P<phrase>target [^.]+?) (?:has|have|gains?) (?P<keywords>[a-z][a-z, ]*?) "
+    rf"for as long as (?P<source_tapped>{_SELF}) remains tapped\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_grant_while_source_tapped_clause(effect_text: str) -> AbilityEffect | None:
+    """`_GRANT_WHILE_SOURCE_TAPPED_RE`'s shape, or `None`."""
+    from .effects import _targets_understood
+    from .effects.continuous import continuous_effects, layer_context_for
+    from .layers import parsed_layer_effects
+
+    match = _GRANT_WHILE_SOURCE_TAPPED_RE.fullmatch(" ".join(effect_text.split()))
+    if match is None:
+        return None
+    if not _targets_understood(match.group("phrase"), count_agnostic=True):
+        return None
+    sentence = f"target creature gains {match.group('keywords').strip()} until end of turn."
+    builder = parsed_layer_effects(sentence)
+    if builder is None:
+        return None
+
+    def effect(game: Game, ability: AbilityOnStack) -> None:
+        condition = _lock_condition(game, ability, duration_kind="source_tapped")
+        source = ability.source(game)
+        targets = [
+            target
+            for target in game.resolve_card_targets(ability)
+            if target.zone is Zone.BATTLEFIELD
+        ]
+        if condition is None or source is None or not targets:
+            return
+        store = continuous_effects(game)
+        timestamp = store.tick()
+        context = layer_context_for(game, game.player(ability.controller))
+        for built in builder(source, timestamp, targets, context):
+            store.add(
+                built.model_copy(
+                    update={"duration": Duration.FOR_AS_LONG_AS, "condition": condition}
+                ),
+                game=game,
+            )
+
+    return effect
+
+
+#: Giant Oyster: "For as long as this creature remains tapped, target tapped
+#: creature doesn't untap during its controller's untap step, and at the
+#: beginning of each of your draw steps, put a -1/-1 counter on that creature.
+#: When this creature leaves the battlefield or becomes untapped, remove all
+#: -1/-1 counters from the creature." Three parts, all tied to the source:
+#: the untap lock (layer 6, CR 611.2b's duration on the source being tapped),
+#: a delayed trigger with that stated duration (CR 603.7b) at each of the
+#: controller's chosen steps, and a CR 603.7a delayed "when" ability watching
+#: the source leave (CR 603.6c) or become untapped.
+_LOCK_AND_COUNTER_WHILE_TAPPED_RE = re.compile(
+    rf"^for as long as (?P<src>{_SELF}) remains tapped, (?P<phrase>target [^,]+?) "
+    r"doesn'?t untap during its controller'?s untap step, and at the beginning of each of "
+    r"your (?P<step>upkeep|draw step|end step)s?, put an? (?P<kind>[^ ]+) counter on "
+    rf"(?:that|the) creature\. when (?P<src2>{_SELF}) leaves the battlefield or becomes "
+    r"untapped, remove all (?P<kind2>[^ ]+) counters from (?:that|the) creature\.?$",
+    re.IGNORECASE,
+)
+
+_LOCK_STEP_WORDS = {"upkeep": "UPKEEP", "draw step": "DRAW", "end step": "END"}
+
+
+def _parse_lock_and_counter_while_tapped_clause(effect_text: str) -> AbilityEffect | None:
+    """`_LOCK_AND_COUNTER_WHILE_TAPPED_RE`'s shape, or `None`."""
+    from .abilities import TriggerEvent
+    from .delayed import (
+        CounterOnSubjectWhileSourceTapped,
+        DelayedTrigger,
+        RemoveCountersFromLinkedCreature,
+    )
+    from .effects import _targets_understood
+    from .turn import Step
+
+    match = _LOCK_AND_COUNTER_WHILE_TAPPED_RE.fullmatch(" ".join(effect_text.split()))
+    if match is None or match.group("kind").lower() != match.group("kind2").lower():
+        return None
+    if not _targets_understood(match.group("phrase"), count_agnostic=True):
+        return None
+    step = Step[_LOCK_STEP_WORDS[match.group("step").lower()]]
+    kind = match.group("kind")
+
+    def effect(game: Game, ability: AbilityOnStack) -> None:
+        condition = _lock_condition(game, ability, duration_kind="source_tapped")
+        source = ability.source(game)
+        targets = [
+            target
+            for target in game.resolve_card_targets(ability)
+            if target.zone is Zone.BATTLEFIELD and target.zone_change_stamp is not None
+        ]
+        if condition is None or source is None or source.zone_change_stamp is None:
+            return  # CR 611.2b: already false, so none of it begins.
+        store = game.continuous_effects
+        timestamp = store.tick()
+        for target in targets:
+            assert target.zone_change_stamp is not None
+            store.add(
+                ContinuousEffect(
+                    description=f"{ability.source_name}: {target.name} doesn't untap",
+                    layer=Layer.ABILITY,
+                    timestamp=timestamp,
+                    duration=Duration.FOR_AS_LONG_AS,
+                    condition=condition,
+                    selector=only_this_incarnation(target, target.zone_change_stamp),
+                    modification=grant_ability(DOESNT_UNTAP_TEXT),
+                ),
+                game=game,
+            )
+            siblings = [
+                game.create_delayed_trigger(
+                    DelayedTrigger(
+                        text=f"At the beginning of each of your {match.group('step')}s, put a "
+                        f"{kind} counter on that creature.",
+                        event=TriggerEvent.BEGINNING_OF_STEP,
+                        step=step,
+                        only_when_active=ability.controller,
+                        remaining=None,
+                        controller=ability.controller,
+                        source_id=source.id,
+                        source_name=ability.source_name,
+                        subject_id=target.id,
+                        expected_zone=Zone.BATTLEFIELD,
+                        expected_stamp=target.zone_change_stamp,
+                        effect=CounterOnSubjectWhileSourceTapped(
+                            source_card_id=source.id,
+                            source_stamp=source.zone_change_stamp,
+                            counter_kind=kind,
+                        ),
+                    )
+                )
+            ]
+            for event in (TriggerEvent.LEAVES_THE_BATTLEFIELD, TriggerEvent.BECOMES_UNTAPPED):
+                siblings.append(
+                    game.create_delayed_trigger(
+                        DelayedTrigger(
+                            text=f"When {ability.source_name} leaves the battlefield or becomes "
+                            f"untapped, remove all {kind} counters from the creature.",
+                            event=event,
+                            controller=ability.controller,
+                            source_id=source.id,
+                            source_name=ability.source_name,
+                            subject_id=source.id,
+                            effect=RemoveCountersFromLinkedCreature(
+                                creature_id=target.id,
+                                creature_stamp=target.zone_change_stamp,
+                                counter_kind=kind,
+                            ),
+                        )
+                    )
+                )
+            for trigger in siblings:
+                trigger.sibling_ids = tuple(o.id for o in siblings if o is not trigger)
+
+    return effect
+
+
 def control_change_ability_effect(effect_text: str) -> AbilityEffect | None:
     """A control change or rider on an activated or triggered ability."""
     for reader in (
         _parse_tap_then_lock_clause,
         _parse_gain_control_for_as_long_clause,
         _parse_gain_control_of_all_target_players_clause,
+        _parse_grant_while_source_tapped_clause,
+        _parse_lock_and_counter_while_tapped_clause,
     ):
         effect = reader(effect_text)
         if effect is not None:

@@ -1080,6 +1080,8 @@ class ActivationMixin:
                 # "Pay X life" owes 0 until X is announced (CR 119.4b), and the
                 # announced amount is checked as the cost is paid.
                 life_owed += life.amount
+        if life_owed > 0 and (reason := game_rule_statics.life_total_cant_change(self, controller)):
+            return f"{reason}, so {permanent.name}'s ability cannot be activated"
         if life_owed > 0 and self.player(controller).life < life_owed:
             # CR 119.4: an amount of life greater than 0 may be paid "only if
             # their life total is greater than or equal to the amount of the
@@ -2022,7 +2024,12 @@ class ActivationMixin:
                         }
                     )
                     del exiles[: component.required]
-                elif not component.cards and (
+                elif (
+                    not component.cards
+                    # "... named Templar Knight" names a quality the chosen
+                    # permanents share (CR 201.2), not this permanent.
+                    and (component.requirement is None or component.requirement.named is None)
+                ) and (
                     _cost_refers_to_self(piece.text, permanent)
                     or _exiles_itself_by_name(piece.text, permanent)
                 ):
@@ -3351,6 +3358,7 @@ class ActivationMixin:
             return on_stack
 
 
+from ...machines import game_rule_statics  # noqa: E402
 from ._common import _SPEND_AS_ANY_COLOR_STATIC_RE, _SPEND_AS_ANY_COLOR_TO_ACTIVATE_RE  # noqa: E402
 from ._conditions import (  # noqa: E402
     _card_type_named,
