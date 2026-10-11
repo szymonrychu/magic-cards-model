@@ -17,6 +17,7 @@ from magic_cards_model.machines import Step
 from magic_cards_model.machines.casting import why_cannot_cast_restriction
 from magic_cards_model.machines.legal_actions import legal_actions
 from magic_cards_model.models import Zone
+from magic_cards_model.machines.casting import PlayAction
 from magic_cards_model.models.action import ActionKind, Affordability
 from magic_cards_model.support import HANDLED, classify_clauses
 from tests.cards import card
@@ -534,3 +535,174 @@ def test_skyclave_shade_needs_it_to_be_my_turn():
 
 def test_skyclave_shade_is_credited():
     _handled("Skyclave Shade", "Landfall")
+
+
+# -- d20 result tables: Wizard's Spellbook and Chaos Channeler -------------------
+
+
+def _force_roll(scenario, low, high):
+    """Pick the game's shuffle seed so the next d20 lands in `low`..`high`
+    (`Game.roll_dice` seeds each die from the seed and its count of random
+    outcomes so far)."""
+    from random import Random
+
+    game = scenario.game
+    for seed in range(5000):
+        if low <= Random(f"{seed}:{game.coin_flips_performed}:die").randint(1, 20) <= high:
+            game.shuffle_seed = seed
+            return
+    raise AssertionError("no seed found")
+
+
+def _spellbook_board(*, islands=3):
+    scenario = _main(
+        alice={
+            "battlefield": ["Wizard's Spellbook", *(["Island"] * islands)],
+            "library": ["Island"] * 6,
+        },
+        bob={"graveyard": ["Divination", "Opt"], "library": ["Island"] * 3},
+    )
+    return scenario
+
+
+def _activate_spellbook(scenario, target):
+    book = scenario.find("Wizard's Spellbook", Zone.BATTLEFIELD, "alice")
+    scenario.activate(book, targets=[target])
+    scenario.pass_until_resolved()
+    while scenario.game.stack:
+        scenario.pass_until_resolved()
+
+
+def _hand(scenario, username="alice"):
+    return len(scenario.player(username).hand)
+
+
+def test_spellbook_low_roll_exiles_the_card_and_lets_me_cast_a_copy_at_full_cost():
+    scenario = _spellbook_board()
+    divination = scenario.find("Divination", Zone.GRAVEYARD, "bob")
+    _force_roll(scenario, 1, 9)
+    scenario.will_take_the_may(True)
+    hand = _hand(scenario)
+    _activate_spellbook(scenario, divination)
+    assert divination.zone is Zone.EXILE, "the original is exiled with the book"
+    assert _hand(scenario) == hand + 2, "the copy of Divination was cast and resolved"
+    islands = [c for c in scenario.game.battlefield if c.name == "Island"]
+    assert islands and all(c.tapped for c in islands), "{2}{U} was paid"
+
+
+def test_spellbook_middle_roll_casts_the_copy_for_one_generic():
+    scenario = _spellbook_board(islands=1)
+    divination = scenario.find("Divination", Zone.GRAVEYARD, "bob")
+    _force_roll(scenario, 10, 19)
+    scenario.will_take_the_may(True)
+    hand = _hand(scenario)
+    _activate_spellbook(scenario, divination)
+    assert _hand(scenario) == hand + 2
+    assert divination.zone is Zone.EXILE
+
+
+def test_spellbook_low_roll_with_too_little_mana_casts_nothing():
+    scenario = _spellbook_board(islands=1)
+    divination = scenario.find("Divination", Zone.GRAVEYARD, "bob")
+    _force_roll(scenario, 1, 9)
+    hand = _hand(scenario)
+    _activate_spellbook(scenario, divination)
+    assert _hand(scenario) == hand, "{2}{U} is not payable with one Island"
+    assert divination.zone is Zone.EXILE
+    assert not [c for c in scenario.game.exile if c.is_copy], "an uncast copy ceases to exist"
+
+
+def test_spellbook_declining_the_copy_leaves_nothing_behind():
+    scenario = _spellbook_board()
+    divination = scenario.find("Divination", Zone.GRAVEYARD, "bob")
+    _force_roll(scenario, 1, 9)
+    scenario.will_take_the_may(False)
+    hand = _hand(scenario)
+    _activate_spellbook(scenario, divination)
+    assert _hand(scenario) == hand
+    assert not [c for c in scenario.game.exile if c.is_copy]
+
+
+def test_spellbook_natural_twenty_copies_every_card_exiled_with_it_for_free():
+    scenario = _spellbook_board(islands=0)
+    divination = scenario.find("Divination", Zone.GRAVEYARD, "bob")
+    book = scenario.find("Wizard's Spellbook", Zone.BATTLEFIELD, "alice")
+    # a card exiled with the book on an earlier activation
+    counterspell = scenario.find("Opt", Zone.GRAVEYARD, "bob")
+    scenario.game.exile_cards([counterspell])
+    from magic_cards_model.models.card_state import ExileAnnotation, ExileMarker
+
+    counterspell.exile_annotation = ExileAnnotation(
+        marker=ExileMarker.LINKED,
+        owner="bob",
+        turn_exiled=0,
+        linked_permanent_id=book.id,
+        linked_permanent_stamp=book.zone_change_stamp,
+    )
+    _force_roll(scenario, 20, 20)
+    scenario.will_take_the_may(False)  # Opt's copy, the older exile
+    scenario.will_take_the_may(True)  # Divination's copy
+    hand = _hand(scenario)
+    _activate_spellbook(scenario, divination)
+    assert _hand(scenario) == hand + 2, "Divination's copy was cast without paying {2}{U}"
+
+
+def test_spellbook_cannot_target_a_land_or_a_creature_card():
+    scenario = _spellbook_board()
+    bob_island = scenario.player("bob").library[0]
+    with pytest.raises(ValueError):
+        _activate_spellbook(scenario, bob_island)
+
+
+def test_spellbook_is_sorcery_speed():
+    scenario = _spellbook_board()
+    book = scenario.find("Wizard's Spellbook", Zone.BATTLEFIELD, "alice")
+    scenario.advance()  # past the main phase into combat
+    while scenario.step is not Step.BEGINNING_OF_COMBAT:
+        scenario.advance()
+    assert scenario.why_cannot_activate(book) is not None
+
+
+def _channeler_attack(top, *, low, high, library_extra=()):
+    scenario = _main(
+        alice={
+            "battlefield": ["Chaos Channeler"],
+            "library": [*top, *library_extra, "Island", "Island", "Island"],
+        },
+        bob={"library": ["Island"] * 3},
+    )
+    channeler = scenario.find("Chaos Channeler", Zone.BATTLEFIELD, "alice")
+    channeler.summoning_sick = False
+    _force_roll(scenario, low, high)
+    return scenario, channeler
+
+
+@pytest.mark.parametrize(
+    ("low", "high", "count"), [(1, 9, 1), (10, 19, 2), (20, 20, 3)], ids=["1-9", "10-19", "20"]
+)
+def test_chaos_channeler_exiles_as_many_cards_as_the_row_says_and_they_are_playable(
+    low, high, count
+):
+    scenario, channeler = _channeler_attack(["Forest", "Mountain", "Swamp"], low=low, high=high)
+    top = list(scenario.player("alice").library[:3])
+    scenario.attack_with(channeler)
+    scenario.pass_until_resolved()
+    exiled = [c for c in top if c.zone is Zone.EXILE]
+    assert len(exiled) == count
+    assert exiled == top[:count], "the top cards, in order"
+    for card_state in exiled:
+        assert scenario.game.play_permission_for(card_state, "alice", PlayAction.PLAY) is not None
+
+
+def test_chaos_channeler_does_nothing_unless_it_attacks():
+    scenario, channeler = _channeler_attack(["Forest", "Mountain"], low=20, high=20)
+    top = scenario.player("alice").library[0]
+    scenario.pass_until_resolved()
+    assert top.zone is Zone.LIBRARY
+
+
+def test_roll_tables_are_credited():
+    _handled("Wizard's Spellbook", "Roll a d20")
+    _handled("Wizard's Spellbook", "Copy that card")
+    _handled("Wizard's Spellbook", "Copy each card exiled")
+    _handled("Chaos Channeler", "roll a d20")

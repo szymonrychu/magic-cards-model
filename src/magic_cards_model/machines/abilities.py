@@ -2407,7 +2407,7 @@ def parse_abilities(card: Card) -> list[Ability]:
     abilities: list[Ability] = []
     for face_name, text in _faces(card):
         face_abilities: list[Ability] = []
-        merged = _merge_modal_bullet_lines(text.split("\n"))
+        merged = _merge_roll_table_lines(_merge_modal_bullet_lines(text.split("\n")))
         if is_leveler_text(text):
             # CR 711.2: a level symbol and its power/toughness box are not
             # abilities; each ability in a striation is tagged with its band,
@@ -2514,6 +2514,42 @@ _MODAL_INSTRUCTION_TAIL = re.compile(
     r"been chosen(?: this turn)?\.)\s*$",
     re.IGNORECASE,
 )
+
+
+#: A die-roll result-table row as Oracle prints it ("1—9 | Copy that card.",
+#: "20 | ..."): CR 706.2's table, the lines under a "roll a dN" instruction.
+ROLL_TABLE_ROW_RE = re.compile(
+    r"^\s*(?P<low>\d+)(?:\s*[—–-]\s*(?P<high>\d+))?\s*\|\s*(?P<body>.+)$"
+)
+_ROLL_INSTRUCTION_RE = re.compile(r"\broll an? d\d+\b", re.IGNORECASE)
+_ROLL_ACTIVATION_INSTRUCTION_RE = re.compile(r"\s(?P<text>Activate only [^.]*\.)\s*$")
+
+
+def _merge_roll_table_lines(lines: list[str]) -> list[str]:
+    """Fold a "... roll a dN ..." line and the result-table rows under it
+    (`ROLL_TABLE_ROW_RE`) into one newline-joined line, the way
+    `_merge_modal_bullet_lines` folds a modal header and its bullets: the rows
+    are the outcomes of that one roll (CR 706.2), never abilities of their own."""
+    merged: list[str] = []
+    index = 0
+    while index < len(lines):
+        line = lines[index]
+        index += 1
+        if _ROLL_INSTRUCTION_RE.search(line) and index < len(lines):
+            block = [line]
+            while index < len(lines) and ROLL_TABLE_ROW_RE.match(lines[index]):
+                block.append(lines[index])
+                index += 1
+            if len(block) > 1:
+                # CR 602.1b: an activation instruction closes the ability, so
+                # it moves from after the roll instruction to after the table.
+                instruction = _ROLL_ACTIVATION_INSTRUCTION_RE.search(block[0])
+                if instruction is not None:
+                    block[0] = block[0][: instruction.start()].rstrip()
+                    block[-1] = f"{block[-1]} {instruction.group('text')}"
+            line = "\n".join(block)
+        merged.append(line)
+    return merged
 
 
 def _merge_modal_bullet_lines(lines: list[str]) -> list[str]:
