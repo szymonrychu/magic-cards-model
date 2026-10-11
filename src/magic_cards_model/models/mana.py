@@ -426,7 +426,8 @@ class ManaCost(EngineModel):
                 colored_reduction[color] -= 1
                 continue
             kept.append(symbol)
-        generic_reduction += sum(colored_reduction.values())
+        if not isinstance(other, ColoredOnlyReduction):
+            generic_reduction += sum(colored_reduction.values())
 
         reduced: list[ManaSymbol] = []
         for symbol in kept:
@@ -445,6 +446,14 @@ class ManaCost(EngineModel):
         left = "".join(str(s) for s in self.symbols[: self.split_after])
         right = "".join(str(s) for s in self.symbols[self.split_after :])
         return f"{left}{_SPLIT}{right}"
+
+
+class ColoredOnlyReduction(ManaCost):
+    """A cost reduction that "reduces only the amount of colored mana you pay"
+    (Morophon, the Boundless): CR 118.7c-d would spill a colored reduction the
+    cost has no symbol for into generic mana, and this one says it does not.
+    Applied by `ManaCost.minus`; never persisted (it exists while a total cost
+    is being determined, CR 601.2f)."""
 
 
 def _fold_generic(symbols: list[ManaSymbol], amount: int) -> list[ManaSymbol]:
