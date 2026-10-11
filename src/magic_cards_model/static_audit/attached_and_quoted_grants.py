@@ -19,6 +19,7 @@ from magic_cards_model.machines.abilities import self_normalized_effect_text
 _ATTACHED_OR_GROUP_GATE = (
     "enchanted ",
     "equipped ",
+    " boast twice ",
     ' have "',
     ' has "',
     " have \u201c",
@@ -51,12 +52,16 @@ def _sentences(line: str) -> tuple[str, ...]:
 
 @functools.cache
 def _reads(line: str) -> bool:
-    from magic_cards_model.machines.layers.attached_grants import parse_attached_sentence
+    from magic_cards_model.machines.layers.attached_grants import (
+        parse_attached_sentence,
+        reads_boast_twice,
+    )
     from magic_cards_model.machines.layers.quoted_grants import parse_group_quoted_sentence
 
     def read(sentence: str) -> bool:
         return (
             parse_attached_sentence(sentence) is not None
+            or reads_boast_twice(sentence)
             or parse_group_quoted_sentence(sentence) is not None
         )
 

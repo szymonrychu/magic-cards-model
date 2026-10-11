@@ -27,6 +27,7 @@ import pytest
 from magic_cards_model.machines import Step, keywords
 from magic_cards_model.models import Zone
 from magic_cards_model.models.card import Color, Supertype, Type
+from magic_cards_model.models.card_state import Counter
 from magic_cards_model.models.mana import ManaCost
 from tests.scenarios.harness import Scenario
 
@@ -791,6 +792,78 @@ def test_birgi_does_not_trigger_on_a_land_ability():
     scenario.game.put_triggers_on_stack()
     assert scenario.stack_names() == []
     assert scenario.player().mana_pool.floating == {Color.RED: 1}, "just the land's own mana"
+
+
+def boast_board(*, birgi_for: str | None, extra: list[str] | None = None):
+    """Axgard Braggart attacked (Boast - {1}{W}: untap, +1/+1 counter); Birgi
+    sits on `birgi_for`'s side when given."""
+    players = {"alice": ["Axgard Braggart", "Plains", "Plains", "Plains", "Plains", "Plains"]}
+    players["bob"] = list(extra or [])
+    if birgi_for:
+        players[birgi_for].append("Birgi, God of Storytelling")
+    scenario = (
+        Scenario()
+        .player("alice", library=["Plains"] * 3, battlefield=players["alice"])
+        .player("bob", life=40, library=["Island"] * 3, battlefield=players["bob"])
+        .build()
+    )
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    braggart = scenario.creature("Axgard Braggart", "alice")
+    scenario.attack_with(braggart)
+    return scenario, braggart
+
+
+def boast_once(scenario, braggart):
+    scenario.activate(braggart, auto=True)
+    scenario.resolve_top()
+
+
+def test_birgi_lets_a_creature_boast_a_second_time_in_the_turn():
+    """CR 702.142a says boast is once each turn; Birgi's static says creatures
+    you control can boast twice during each of your turns rather than once."""
+    scenario, braggart = boast_board(birgi_for="alice")
+    boast_once(scenario, braggart)
+    assert scenario.why_cannot_activate(braggart, 0) is None, "the second boast is allowed"
+    boast_once(scenario, braggart)
+    assert braggart.counter_count(Counter.PLUS_ONE) == 2
+
+
+def test_birgi_allows_only_two_boasts_not_three():
+    scenario, braggart = boast_board(birgi_for="alice")
+    boast_once(scenario, braggart)
+    boast_once(scenario, braggart)
+    reason = scenario.why_cannot_activate(braggart, 0)
+    assert reason is not None and "already been activated" in reason
+
+
+def test_without_birgi_the_second_boast_is_still_refused():
+    scenario, braggart = boast_board(birgi_for=None)
+    boast_once(scenario, braggart)
+    reason = scenario.why_cannot_activate(braggart, 0)
+    assert reason is not None and "already been activated" in reason
+
+
+def test_an_opponents_birgi_does_not_let_my_creature_boast_twice():
+    """ "Creatures you control": Birgi under bob's control grants nothing to alice."""
+    scenario, braggart = boast_board(birgi_for="bob")
+    boast_once(scenario, braggart)
+    reason = scenario.why_cannot_activate(braggart, 0)
+    assert reason is not None and "already been activated" in reason
+
+
+def test_birgi_still_needs_the_creature_to_have_attacked():
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=["Axgard Braggart", "Birgi, God of Storytelling", "Plains", "Plains"],
+        )
+        .player("bob", life=40)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    reason = scenario.why_cannot_activate(scenario.creature("Axgard Braggart", "alice"), 0)
+    assert reason is not None and "702.142a" in reason
 
 
 def jace_board():

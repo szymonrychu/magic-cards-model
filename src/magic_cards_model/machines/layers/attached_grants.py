@@ -971,3 +971,43 @@ def cant_be_enchanted_by_other_auras_refusal(game, aura: CardState, target) -> s
                 f'"can\'t be enchanted by other Auras" (CR 303.4)'
             )
     return None
+
+
+# --------------------------------------------------------------------------
+# "Creatures you control can boast twice during each of your turns rather than
+# once." (Birgi, God of Storytelling) - the per-turn limit of CR 702.142a
+# --------------------------------------------------------------------------
+
+_BOAST_TWICE = re.compile(
+    r"^creatures you control can boast twice during each of your turns rather than once\.?$"
+)
+
+
+@functools.lru_cache(maxsize=1024)
+def reads_boast_twice(sentence: str) -> bool:
+    """Whether `sentence` is the boast-limit static `boast_activation_limit` reads."""
+    return _BOAST_TWICE.match(sentence.strip().lower()) is not None
+
+
+def boast_activation_limit(game, source: CardState, activator: str) -> int:
+    """How many times `source`'s boast ability may be activated each turn.
+
+    CR 702.142a makes boast "only once each turn"; an effect that says the
+    creature "can boast twice during each of your turns rather than once"
+    (Birgi) raises the limit to two on the controller's own turns. Read off the
+    computed board (CR 613.1f) so a Birgi that lost its abilities counts for
+    nothing, and only for creatures its controller controls.
+    """
+    if game is None or source.controller != activator or game.active_player.username != activator:
+        return 1
+    board = None
+    for permanent in game.battlefield:
+        if (
+            permanent.controller != activator
+            or "boast twice" not in (permanent.oracle_text or "").lower()
+        ):
+            continue
+        board = board if board is not None else game.computed_board()
+        if any(reads_boast_twice(line) for line in board.of(permanent).abilities):
+            return 2
+    return 1
