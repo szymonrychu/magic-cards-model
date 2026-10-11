@@ -1019,8 +1019,11 @@ _PHRASE_DISCARD = re.compile(
 #: "other" after a count the same way: never the ability's own source.
 _PHRASE_TAP = re.compile(
     rf"^tap (?:(?P<another>another)|{_COST_COUNT}) (?P<other>other )?(?:untapped )?"
-    r"(?P<quality>[\w ,/]+?) "
+    r"(?P<attacking>attacking )?(?P<quality>[\w ,/]+?) "
     r"you control(?P<share> that share a creature type)?"
+    # CR 201.2: "named <name>" (Templar Knight's "Tap five untapped attacking
+    # creatures you control named Templar Knight") - a name comparison.
+    r"(?: named (?P<named>[^,.]+?))?"
     r"(?P<other_than> other than this (?:creature|permanent|artifact))?"
     r"(?: with (?P<keyword>[a-z]+))?"
     # CR 208.1: "... with total power 10 or greater" (Mossbridge Troll) - the
@@ -1623,6 +1626,8 @@ def cost_component_for_phrase(phrase: str, payer: str | None = None) -> CostComp
         )
         if tap.group("keyword"):
             requirement.keywords = [tap.group("keyword").lower()]
+        requirement.attacking = tap.group("attacking") is not None
+        requirement.named = tap.group("named")
         component = tap_cost(payer=payer, description=text)
         component.required = read[0]
         if tap.group("power") is not None:

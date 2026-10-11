@@ -669,6 +669,66 @@ class ReturnEarthbentLand(DelayedEffectSpecBase):
         game.put_onto_battlefield(permanent, trigger.controller, tapped=True)
 
 
+class CounterOnSubjectWhileSourceTapped(DelayedEffectSpecBase):
+    """Giant Oyster's "For as long as this creature remains tapped, ... at the
+    beginning of each of your draw steps, put a -1/-1 counter on that
+    creature." - a delayed trigger with a stated duration (CR 603.7b), the
+    duration being CR 611.2b's "for as long as" on the *source's* tapped
+    status. The trigger only fires while that holds (`event_matches`); once
+    the source untaps or leaves, its sibling `RemoveCountersFromLinkedCreature`
+    drops it for good."""
+
+    kind: Literal["counter_on_subject_while_source_tapped"] = (
+        "counter_on_subject_while_source_tapped"
+    )
+    source_card_id: UUID
+    source_stamp: UUID
+    counter_kind: str
+
+    matches_against_the_game: ClassVar[bool] = True
+
+    def event_matches(self, game: "Game", trigger: "DelayedTrigger", event: GameEvent) -> bool:
+        source = game.find_by_id(self.source_card_id)
+        return (
+            isinstance(source, CardState)
+            and source.zone is Zone.BATTLEFIELD
+            and source.zone_change_stamp == self.source_stamp
+            and source.tapped
+        )
+
+    def __call__(self, game: "Game", ability: AbilityOnStack, trigger: "DelayedTrigger") -> None:
+        permanent = trigger.still_affects(game)
+        if permanent is None:
+            return
+        game.add_counters(permanent, self.counter_kind, putter=trigger.controller)
+
+
+class RemoveCountersFromLinkedCreature(DelayedEffectSpecBase):
+    """Giant Oyster's "When this creature leaves the battlefield or becomes
+    untapped, remove all -1/-1 counters from the creature." - one CR 603.7a
+    ability watching two events, so two sibling `DelayedTrigger`s keyed on the
+    *source* (`subject_id`); the creature it acts on is carried here. Whichever
+    fires first drops the other and the draw-step sibling."""
+
+    kind: Literal["remove_counters_from_linked_creature"] = "remove_counters_from_linked_creature"
+    creature_id: UUID
+    creature_stamp: UUID
+    counter_kind: str
+
+    def __call__(self, game: "Game", ability: AbilityOnStack, trigger: "DelayedTrigger") -> None:
+        _drop_sibling_triggers(game, trigger)
+        creature = game.find_by_id(self.creature_id)
+        if (
+            not isinstance(creature, CardState)
+            or creature.zone is not Zone.BATTLEFIELD
+            or creature.zone_change_stamp != self.creature_stamp
+        ):
+            return
+        present = creature.counters[self.counter_kind]
+        if present:
+            creature.remove_counters(self.counter_kind, present)
+
+
 class DevourerOfDestinyFirstUpkeep(DelayedEffectSpecBase):
     """ "look at the top four cards of your library. You may put one of those
     cards back on top of your library. Exile the rest." (Devourer of Destiny.)
@@ -2385,7 +2445,9 @@ DelayedEffectSpec = Annotated[
     | PayOrElseReturnExiledCard
     | DiscardCardsAtRandomForController
     | ThatCreatureDiesConsequence
-    | ChosenObjectTriggeredAbility,
+    | ChosenObjectTriggeredAbility
+    | CounterOnSubjectWhileSourceTapped
+    | RemoveCountersFromLinkedCreature,
     Field(discriminator="kind"),
 ]
 

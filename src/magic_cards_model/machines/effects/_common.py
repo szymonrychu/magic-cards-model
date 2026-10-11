@@ -1717,6 +1717,17 @@ def _parse_mass_type_qualifier(phrase: str) -> Callable[[Characteristics], bool]
             supertype_prefix.group("non") is None,
         )
         lowered = lowered[supertype_prefix.end() :].strip()
+    #: CR 105.2's colour word ahead of the rest (Wrath of Marit Lage's "tap
+    #: all red creatures"), or its negation ("nonred"), read off the computed
+    #: colours (CR 613.1e) and ANDed with the rest.
+    color_wanted: tuple[Color, bool] | None = None
+    color_prefix = re.match(r"^(?P<non>non-?)?(?P<word>white|blue|black|red|green)\s+", lowered)
+    if color_prefix is not None:
+        color_wanted = (
+            Color[color_prefix.group("word").upper()],
+            color_prefix.group("non") is None,
+        )
+        lowered = lowered[color_prefix.end() :].strip()
     #: CR 205.2a's negation prefix, read for *any* card type rather than only
     #: "nonland": Whipflare's "each nonartifact creature" is the same grammar
     #: "nonland permanent" is, and a word this cannot resolve to a real type
@@ -1772,6 +1783,10 @@ def _parse_mass_type_qualifier(phrase: str) -> Callable[[Characteristics], bool]
         if supertype_wanted is not None:
             supertype, present = supertype_wanted
             if (supertype in chars.supertypes) is not present:
+                return False
+        if color_wanted is not None:
+            color, present = color_wanted
+            if (color in chars.colors) is not present:
                 return False
         return type_predicate(chars)
 

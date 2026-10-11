@@ -1,0 +1,185 @@
+{
+  "object": "card",
+  "id": "a3ff628a-ef8e-45c4-84e7-a33ec28f025a",
+  "oracle_id": "4d0a0027-53b3-45a1-8736-f0ac86b19342",
+  "multiverse_ids": [
+    540911,
+    540912
+  ],
+  "mtgo_id": 94450,
+  "arena_id": 78859,
+  "tcgplayer_id": 253466,
+  "cardmarket_id": 582234,
+  "name": "Mischievous Catgeist // Catlike Curiosity",
+  "lang": "en",
+  "released_at": "2021-11-19",
+  "uri": "https://api.scryfall.com/cards/a3ff628a-ef8e-45c4-84e7-a33ec28f025a",
+  "scryfall_uri": "https://scryfall.com/card/vow/69/mischievous-catgeist-catlike-curiosity?utm_source=api",
+  "layout": "transform",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T06:41:39Z",
+  "cmc": 2.0,
+  "type_line": "Creature \u2014 Cat Spirit // Enchantment \u2014 Aura",
+  "color_identity": [
+    "U"
+  ],
+  "keywords": [
+    "Transform",
+    "Enchant",
+    "Disturb"
+  ],
+  "card_faces": [
+    {
+      "object": "card_face",
+      "name": "Mischievous Catgeist",
+      "mana_cost": "{1}{U}",
+      "type_line": "Creature \u2014 Cat Spirit",
+      "oracle_text": "Whenever this creature deals combat damage to a player, draw a card.\nDisturb {2}{U} (You may cast this card from your graveyard transformed for its disturb cost.)",
+      "colors": [
+        "U"
+      ],
+      "power": "1",
+      "toughness": "1",
+      "flavor_text": "\"I never get any knitting done, but I don't entirely mind.\"\n\u2014Lorn, Lambholt innkeeper",
+      "artist": "Denman Rooke",
+      "artist_id": "5eedbc4b-34a3-4ca5-b3f5-9ac2f6b6adf7",
+      "illustration_id": "e85b8e54-dc20-4a71-ba2e-3e2dd1832d96",
+      "image_uris": {
+        "small": "https://cards.scryfall.io/small/front/a/3/a3ff628a-ef8e-45c4-84e7-a33ec28f025a.jpg?1783924899",
+        "normal": "https://cards.scryfall.io/normal/front/a/3/a3ff628a-ef8e-45c4-84e7-a33ec28f025a.jpg?1783924899",
+        "large": "https://cards.scryfall.io/large/front/a/3/a3ff628a-ef8e-45c4-84e7-a33ec28f025a.jpg?1783924899",
+        "png": "https://cards.scryfall.io/png/front/a/3/a3ff628a-ef8e-45c4-84e7-a33ec28f025a.png?1783924899",
+        "art_crop": "https://cards.scryfall.io/art_crop/front/a/3/a3ff628a-ef8e-45c4-84e7-a33ec28f025a.jpg?1783924899",
+        "border_crop": "https://cards.scryfall.io/border_crop/front/a/3/a3ff628a-ef8e-45c4-84e7-a33ec28f025a.jpg?1783924899",
+        "thumb": "https://cards.scryfall.io/thumb/front/a/3/a3ff628a-ef8e-45c4-84e7-a33ec28f025a.webp?1783924899",
+        "grid": "https://cards.scryfall.io/grid/front/a/3/a3ff628a-ef8e-45c4-84e7-a33ec28f025a.webp?1783924899",
+        "display": "https://cards.scryfall.io/display/front/a/3/a3ff628a-ef8e-45c4-84e7-a33ec28f025a.webp?1783924899",
+        "art": "https://cards.scryfall.io/art/front/a/3/a3ff628a-ef8e-45c4-84e7-a33ec28f025a.webp?1783924899",
+        "crop": "https://cards.scryfall.io/crop/front/a/3/a3ff628a-ef8e-45c4-84e7-a33ec28f025a.webp?1783924899"
+      }
+    },
+    {
+      "object": "card_face",
+      "name": "Catlike Curiosity",
+      "mana_cost": "",
+      "type_line": "Enchantment \u2014 Aura",
+      "oracle_text": "Enchant creature\nEnchanted creature has \"Whenever this creature deals combat damage to a player, draw a card.\"\nIf Catlike Curiosity would be put into a graveyard from anywhere, exile it instead.",
+      "colors": [
+        "U"
+      ],
+      "color_indicator": [
+        "U"
+      ],
+      "artist": "Denman Rooke",
+      "artist_id": "5eedbc4b-34a3-4ca5-b3f5-9ac2f6b6adf7",
+      "illustration_id": "8a882337-31b7-4b9b-ab1f-ca23397d29bd",
+      "image_uris": {
+        "small": "https://cards.scryfall.io/small/back/a/3/a3ff628a-ef8e-45c4-84e7-a33ec28f025a.jpg?1783924899",
+        "normal": "https://cards.scryfall.io/normal/back/a/3/a3ff628a-ef8e-45c4-84e7-a33ec28f025a.jpg?1783924899",
+        "large": "https://cards.scryfall.io/large/back/a/3/a3ff628a-ef8e-45c4-84e7-a33ec28f025a.jpg?1783924899",
+        "png": "https://cards.scryfall.io/png/back/a/3/a3ff628a-ef8e-45c4-84e7-a33ec28f025a.png?1783924899",
+        "art_crop": "https://cards.scryfall.io/art_crop/back/a/3/a3ff628a-ef8e-45c4-84e7-a33ec28f025a.jpg?1783924899",
+        "border_crop": "https://cards.scryfall.io/border_crop/back/a/3/a3ff628a-ef8e-45c4-84e7-a33ec28f025a.jpg?1783924899",
+        "thumb": "https://cards.scryfall.io/thumb/back/a/3/a3ff628a-ef8e-45c4-84e7-a33ec28f025a.webp?1783924899",
+        "grid": "https://cards.scryfall.io/grid/back/a/3/a3ff628a-ef8e-45c4-84e7-a33ec28f025a.webp?1783924899",
+        "display": "https://cards.scryfall.io/display/back/a/3/a3ff628a-ef8e-45c4-84e7-a33ec28f025a.webp?1783924899",
+        "art": "https://cards.scryfall.io/art/back/a/3/a3ff628a-ef8e-45c4-84e7-a33ec28f025a.webp?1783924899",
+        "crop": "https://cards.scryfall.io/crop/back/a/3/a3ff628a-ef8e-45c4-84e7-a33ec28f025a.webp?1783924899"
+      }
+    }
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "arena",
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "8144b676-569f-4716-8005-bc8f0778f3fa",
+  "set": "vow",
+  "set_name": "Innistrad: Crimson Vow",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/8144b676-569f-4716-8005-bc8f0778f3fa",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Avow&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/vow?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/a3ff628a-ef8e-45c4-84e7-a33ec28f025a/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A4d0a0027-53b3-45a1-8736-f0ac86b19342&unique=prints",
+  "collector_number": "69",
+  "digital": false,
+  "rarity": "uncommon",
+  "artist": "Denman Rooke",
+  "artist_ids": [
+    "5eedbc4b-34a3-4ca5-b3f5-9ac2f6b6adf7"
+  ],
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "sunmoondfc"
+  ],
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 12069,
+  "penny_rank": 14205,
+  "preview": {
+    "source": "Wizards of the Coast",
+    "source_uri": "https://twitter.com/MTGArenaJP/status/1455182769852612615",
+    "previewed_at": "2021-11-01"
+  },
+  "prices": {
+    "usd": "0.27",
+    "usd_foil": "0.37",
+    "usd_etched": null,
+    "eur": "0.16",
+    "eur_foil": "0.38",
+    "tix": "0.03"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=540911&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DMischievous%2BCatgeist%2B%252F%252F%2BCatlike%2BCuriosity",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DMischievous%2BCatgeist%2B%252F%252F%2BCatlike%2BCuriosity",
+    "edhrec": "https://edhrec.com/route/?cc=Mischievous+Catgeist"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F253466%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=582234&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/94450?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

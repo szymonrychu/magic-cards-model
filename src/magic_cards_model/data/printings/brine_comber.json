@@ -1,0 +1,206 @@
+{
+  "object": "card",
+  "id": "8d233bc5-8a08-4d38-abd4-21a112141afd",
+  "oracle_id": "8845ba0d-c2f4-49e4-b06e-54a06a8297e0",
+  "multiverse_ids": [
+    541103,
+    541104
+  ],
+  "mtgo_id": 94834,
+  "arena_id": 79051,
+  "tcgplayer_id": 253049,
+  "cardmarket_id": 581692,
+  "name": "Brine Comber // Brinebound Gift",
+  "lang": "en",
+  "released_at": "2021-11-19",
+  "uri": "https://api.scryfall.com/cards/8d233bc5-8a08-4d38-abd4-21a112141afd",
+  "scryfall_uri": "https://scryfall.com/card/vow/233/brine-comber-brinebound-gift?utm_source=api",
+  "layout": "transform",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T06:40:01Z",
+  "cmc": 3.0,
+  "type_line": "Creature \u2014 Spirit // Enchantment \u2014 Aura",
+  "color_identity": [
+    "U",
+    "W"
+  ],
+  "keywords": [
+    "Transform",
+    "Enchant",
+    "Disturb"
+  ],
+  "card_faces": [
+    {
+      "object": "card_face",
+      "name": "Brine Comber",
+      "mana_cost": "{1}{W}{U}",
+      "type_line": "Creature \u2014 Spirit",
+      "oracle_text": "Whenever this creature enters or becomes the target of an Aura spell, create a 1/1 white Spirit creature token with flying.\nDisturb {W}{U} (You may cast this card from your graveyard transformed for its disturb cost.)",
+      "colors": [
+        "U",
+        "W"
+      ],
+      "power": "1",
+      "toughness": "1",
+      "artist": "Olena Richards",
+      "artist_id": "fad4282c-49d1-4b5b-be1d-713369fc8bc8",
+      "illustration_id": "348ec7b8-21b5-4c84-adaa-77f983ad3e51",
+      "image_uris": {
+        "small": "https://cards.scryfall.io/small/front/8/d/8d233bc5-8a08-4d38-abd4-21a112141afd.jpg?1783924801",
+        "normal": "https://cards.scryfall.io/normal/front/8/d/8d233bc5-8a08-4d38-abd4-21a112141afd.jpg?1783924801",
+        "large": "https://cards.scryfall.io/large/front/8/d/8d233bc5-8a08-4d38-abd4-21a112141afd.jpg?1783924801",
+        "png": "https://cards.scryfall.io/png/front/8/d/8d233bc5-8a08-4d38-abd4-21a112141afd.png?1783924801",
+        "art_crop": "https://cards.scryfall.io/art_crop/front/8/d/8d233bc5-8a08-4d38-abd4-21a112141afd.jpg?1783924801",
+        "border_crop": "https://cards.scryfall.io/border_crop/front/8/d/8d233bc5-8a08-4d38-abd4-21a112141afd.jpg?1783924801",
+        "thumb": "https://cards.scryfall.io/thumb/front/8/d/8d233bc5-8a08-4d38-abd4-21a112141afd.webp?1783924801",
+        "grid": "https://cards.scryfall.io/grid/front/8/d/8d233bc5-8a08-4d38-abd4-21a112141afd.webp?1783924801",
+        "display": "https://cards.scryfall.io/display/front/8/d/8d233bc5-8a08-4d38-abd4-21a112141afd.webp?1783924801",
+        "art": "https://cards.scryfall.io/art/front/8/d/8d233bc5-8a08-4d38-abd4-21a112141afd.webp?1783924801",
+        "crop": "https://cards.scryfall.io/crop/front/8/d/8d233bc5-8a08-4d38-abd4-21a112141afd.webp?1783924801"
+      }
+    },
+    {
+      "object": "card_face",
+      "name": "Brinebound Gift",
+      "mana_cost": "",
+      "type_line": "Enchantment \u2014 Aura",
+      "oracle_text": "Enchant creature\nWhenever this Aura enters or enchanted creature becomes the target of an Aura spell, create a 1/1 white Spirit creature token with flying.\nIf this Aura would be put into a graveyard from anywhere, exile it instead.",
+      "colors": [
+        "U",
+        "W"
+      ],
+      "color_indicator": [
+        "U",
+        "W"
+      ],
+      "artist": "Olena Richards",
+      "artist_id": "fad4282c-49d1-4b5b-be1d-713369fc8bc8",
+      "illustration_id": "7d860d46-3a79-43b6-89c0-ce628efaa207",
+      "image_uris": {
+        "small": "https://cards.scryfall.io/small/back/8/d/8d233bc5-8a08-4d38-abd4-21a112141afd.jpg?1783924801",
+        "normal": "https://cards.scryfall.io/normal/back/8/d/8d233bc5-8a08-4d38-abd4-21a112141afd.jpg?1783924801",
+        "large": "https://cards.scryfall.io/large/back/8/d/8d233bc5-8a08-4d38-abd4-21a112141afd.jpg?1783924801",
+        "png": "https://cards.scryfall.io/png/back/8/d/8d233bc5-8a08-4d38-abd4-21a112141afd.png?1783924801",
+        "art_crop": "https://cards.scryfall.io/art_crop/back/8/d/8d233bc5-8a08-4d38-abd4-21a112141afd.jpg?1783924801",
+        "border_crop": "https://cards.scryfall.io/border_crop/back/8/d/8d233bc5-8a08-4d38-abd4-21a112141afd.jpg?1783924801",
+        "thumb": "https://cards.scryfall.io/thumb/back/8/d/8d233bc5-8a08-4d38-abd4-21a112141afd.webp?1783924801",
+        "grid": "https://cards.scryfall.io/grid/back/8/d/8d233bc5-8a08-4d38-abd4-21a112141afd.webp?1783924801",
+        "display": "https://cards.scryfall.io/display/back/8/d/8d233bc5-8a08-4d38-abd4-21a112141afd.webp?1783924801",
+        "art": "https://cards.scryfall.io/art/back/8/d/8d233bc5-8a08-4d38-abd4-21a112141afd.webp?1783924801",
+        "crop": "https://cards.scryfall.io/crop/back/8/d/8d233bc5-8a08-4d38-abd4-21a112141afd.webp?1783924801"
+      }
+    }
+  ],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "8d233bc5-8a08-4d38-abd4-21a112141afd",
+      "component": "combo_piece",
+      "name": "Brine Comber // Brinebound Gift",
+      "type_line": "Creature \u2014 Spirit // Enchantment \u2014 Aura",
+      "uri": "https://api.scryfall.com/cards/8d233bc5-8a08-4d38-abd4-21a112141afd"
+    },
+    {
+      "object": "related_card",
+      "id": "6bee4081-5d74-4cc2-ba2f-887bc8799513",
+      "component": "token",
+      "name": "Spirit",
+      "type_line": "Token Creature \u2014 Spirit",
+      "uri": "https://api.scryfall.com/cards/6bee4081-5d74-4cc2-ba2f-887bc8799513"
+    }
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "arena",
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "8144b676-569f-4716-8005-bc8f0778f3fa",
+  "set": "vow",
+  "set_name": "Innistrad: Crimson Vow",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/8144b676-569f-4716-8005-bc8f0778f3fa",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Avow&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/vow?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/8d233bc5-8a08-4d38-abd4-21a112141afd/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A8845ba0d-c2f4-49e4-b06e-54a06a8297e0&unique=prints",
+  "collector_number": "233",
+  "digital": false,
+  "rarity": "uncommon",
+  "artist": "Olena Richards",
+  "artist_ids": [
+    "fad4282c-49d1-4b5b-be1d-713369fc8bc8"
+  ],
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "sunmoondfc"
+  ],
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 20948,
+  "penny_rank": 8864,
+  "preview": {
+    "source": "Pixie Kitten Plays",
+    "source_uri": "https://www.youtube.com/watch?v=xcRbVozw5-c",
+    "previewed_at": "2021-10-31"
+  },
+  "prices": {
+    "usd": "0.18",
+    "usd_foil": "0.36",
+    "usd_etched": null,
+    "eur": "0.10",
+    "eur_foil": "0.24",
+    "tix": "0.03"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=541103&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DBrine%2BComber%2B%252F%252F%2BBrinebound%2BGift",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DBrine%2BComber%2B%252F%252F%2BBrinebound%2BGift",
+    "edhrec": "https://edhrec.com/route/?cc=Brine+Comber"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F253049%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=581692&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/94834?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

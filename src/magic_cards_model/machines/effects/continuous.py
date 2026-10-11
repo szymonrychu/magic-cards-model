@@ -5678,6 +5678,34 @@ def _parse_untap_all_you_control_clause(sentence: str) -> TargetedClause | None:
     return effect
 
 
+#: "Untap all `<qualifier>`." with no controller named (Intruder Alarm's
+#: "Whenever a creature enters, untap all creatures.") - CR 701.26b, every
+#: player's matching permanents, untapped simultaneously (CR 608.2f). The
+#: qualifier is `_parse_mass_type_qualifier`'s grammar, so "creatures you
+#: control" or "attacking creatures" never reach here (each has its own rung).
+_UNTAP_ALL_EVERYONES_RE = re.compile(r"^untap all (?P<qualifier>[a-z ,-]+?)\.?$", re.IGNORECASE)
+
+
+@MIXED_CLAUSE.rung("s35")
+def _parse_untap_all_everyones_clause(sentence: str) -> TargetedClause | None:
+    """`_UNTAP_ALL_EVERYONES_RE`'s shape."""
+    match = _UNTAP_ALL_EVERYONES_RE.fullmatch(sentence.strip())
+    if match is None:
+        return None
+    type_matches = _parse_mass_type_qualifier(match.group("qualifier"))
+    if type_matches is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        for permanent in list(game.battlefield):
+            if permanent.zone is Zone.BATTLEFIELD and type_matches(
+                game.characteristics_of(permanent)
+            ):
+                permanent.untap()
+
+    return effect
+
+
 #: "Tap all `<qualifier>` `<whose>`." - Suppression Ray's own first sentence
 #: and Dawnglare Invoker's whole activated ability ("tap all creatures target
 #: player controls"), Cryptic Command's third mode and Subjugator Angel's
