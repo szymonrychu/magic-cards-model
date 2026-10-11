@@ -658,3 +658,60 @@ def test_living_lore_sacrifice_casts_the_exiled_card_free():
 
 def test_living_lore_lines_are_handled():
     _handled("Living Lore", "Whenever this creature deals combat damage")
+
+
+# -- Assault Formation: {G}: Target creature with defender can attack this turn -
+
+
+def _wall_board():
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=["Assault Formation", "Wall of Omens", "Grizzly Bears", "Forest"],
+            library=["Island"] * 6,
+        )
+        .player("bob", life=20, battlefield=["Grizzly Bears"], library=["Island"] * 6)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    for creature in scenario.game.battlefield:
+        creature.summoning_sick = False
+    return scenario
+
+
+def test_assault_formation_lets_a_defender_attack_this_turn():
+    scenario = _wall_board()
+    wall = scenario.creature("Wall of Omens", "alice")
+    assert not scenario.can_attack(wall)
+    formation = _on_battlefield(scenario, "Assault Formation")[0]
+    scenario.activate(formation, *scenario.untapped_sources("Forest"), index=0, targets=[wall])
+    scenario.pass_until_resolved()
+    assert scenario.can_attack(wall)
+    assert _damage_to_bob(scenario, wall) == 4, "its toughness is the damage it deals"
+
+
+def test_assault_formation_does_not_free_a_different_defender_or_last_past_the_turn():
+    scenario = _wall_board()
+    wall = scenario.creature("Wall of Omens", "alice")
+    formation = _on_battlefield(scenario, "Assault Formation")[0]
+    scenario.activate(formation, *scenario.untapped_sources("Forest"), index=0, targets=[wall])
+    scenario.pass_until_resolved()
+    turns = scenario.turn.turns_taken
+    while scenario.turn.turns_taken == turns:
+        scenario.advance()
+    while scenario.turn.active_player != "alice":
+        scenario.advance()
+    assert not scenario.can_attack(wall), "the grant ended with the turn"
+
+
+def test_assault_formation_cannot_target_a_creature_without_defender():
+    scenario = _wall_board()
+    bears = scenario.creature("Grizzly Bears", "alice")
+    formation = _on_battlefield(scenario, "Assault Formation")[0]
+    with pytest.raises(ValueError):
+        scenario.activate(formation, *scenario.untapped_sources("Forest"), index=0, targets=[bears])
+
+
+def test_assault_formation_activated_line_is_credited():
+    _handled("Assault Formation", "can attack this turn as though it didn't have defender")

@@ -43,6 +43,7 @@ from ..casting import (
 from ..casting_restrictions import create_targeted_cant_cast_restriction
 from ..combat import (
     ASSIGN_AS_THOUGH_UNBLOCKED_TEXT,
+    ATTACK_WITHOUT_DEFENDER_TEXT,
     KEYWORDS_OUTSIDE_COMBAT,
     Keyword,
     has_keyword,
@@ -10949,6 +10950,48 @@ def _parse_creature_type_cant_block_this_turn_clause(clause: str) -> TargetedCla
                     modification=grant_ability("This creature can't block."),
                 )
             )
+
+    return effect
+
+
+#: "Target creature with defender can attack this turn as though it didn't have
+#: defender." (Assault Formation's `{G}` ability) - the one-shot, targeted twin of
+#: Ghalta the Immovable's static grant: the fixed `ATTACK_WITHOUT_DEFENDER_TEXT`
+#: for the rest of the turn (CR 611.2a), on the creature chosen (CR 611.2c).
+_TARGET_ATTACKS_WITHOUT_DEFENDER_RE = re.compile(
+    r"^(?P<phrase>target [^.]+?) can attack this turn as though it didn'?t have defender$",
+    re.IGNORECASE,
+)
+
+
+@MIXED_CLAUSE.rung("s26", for_spell=FORWARD)
+def _parse_target_attacks_without_defender_clause(
+    clause: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`_TARGET_ATTACKS_WITHOUT_DEFENDER_RE`'s shape, or `None`."""
+    match = _TARGET_ATTACKS_WITHOUT_DEFENDER_RE.fullmatch(" ".join(clause.split()).rstrip("."))
+    if match is None or not _targets_understood(match.group("phrase")):
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        source_name = (
+            stack_object.card.name
+            if isinstance(stack_object, CardState)
+            else stack_object.source_name
+        )
+        store = continuous_effects(game)
+        for target in game.resolve_targets(stack_object):
+            if isinstance(target, CardState) and target.zone is Zone.BATTLEFIELD:
+                store.add(
+                    ContinuousEffect(
+                        description=f"{source_name}: can attack as though it didn't have defender",
+                        layer=Layer.ABILITY,
+                        timestamp=store.tick(),
+                        duration=Duration.UNTIL_END_OF_TURN,
+                        selector=_only(target.id),
+                        modification=grant_ability(ATTACK_WITHOUT_DEFENDER_TEXT),
+                    )
+                )
 
     return effect
 
