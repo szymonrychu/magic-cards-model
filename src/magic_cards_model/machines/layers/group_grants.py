@@ -82,6 +82,9 @@ _SUFFIX_CHOSEN_RE = re.compile(r" of the chosen type$")
 _SUFFIX_COUNTER_RE = re.compile(
     r" with (?:an? |one or more )?(?P<kind>[a-z+/\-0-9]+) counters? on (?:them|it)$"
 )
+_SUFFIX_NO_COUNTER_RE = re.compile(
+    r" without (?:an? )?(?P<kind>[a-z+/\-0-9]+) counters? on (?:them|it)$"
+)
 _SUFFIX_KEYWORD_RE = re.compile(r" (?P<how>with|without) (?P<keyword>[a-z]+)$")
 
 
@@ -123,6 +126,10 @@ def parse_group(subject: str) -> dict[str, Any] | None:
             changed = True
         elif match := _SUFFIX_CHOSEN_RE.search(text):
             chosen = True
+            text = text[: match.start()]
+            changed = True
+        elif match := _SUFFIX_NO_COUNTER_RE.search(text):
+            fields["without_counter"] = match["kind"]
             text = text[: match.start()]
             changed = True
         elif match := _SUFFIX_COUNTER_RE.search(text):

@@ -1758,6 +1758,7 @@ class GroupMatch(SelectorBase):
     with_keyword: str | None = None
     without_keyword: str | None = None
     with_counter: str | None = None
+    without_counter: str | None = None
     shares_with: UUID | None = None
     share_kind: Literal["color", "creature_type"] = "color"
     """Konda's Banner: only creatures sharing a color / a creature type with the
@@ -1819,6 +1820,11 @@ class GroupMatch(SelectorBase):
             return False
         if self.without_keyword is not None and keywords_in_lines(
             list(chars.abilities), [self.without_keyword]
+        ):
+            return False
+        if self.without_counter is not None and any(
+            kind.lower() == self.without_counter.lower() and count > 0
+            for kind, count in chars.counters.items()
         ):
             return False
         return self.with_counter is None or any(
