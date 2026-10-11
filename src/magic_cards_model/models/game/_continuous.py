@@ -919,6 +919,10 @@ class ContinuousMixin:
         life totals, turn facts, ...)."""
         return LayerContext(
             face_down_creatures=sum(1 for permanent in self.battlefield if permanent.face_down),
+            hand_size_by_controller={
+                player.username: len(player.hand) for player in self.players_in_game
+            },
+            life_by_controller={player.username: player.life for player in self.players_in_game},
             graveyards=tuple(card for player in self.players_in_game for card in player.graveyard),
             graveyard_by_controller={
                 player.username: tuple(player.graveyard) for player in self.players_in_game

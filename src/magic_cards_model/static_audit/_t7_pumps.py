@@ -5,5 +5,7 @@ regex of its own); see `static_audit/__init__.py`.
 """
 
 
-def reads_line(printing, text: str, *, card_name: str | None = None, legendary: bool = False) -> bool:
+def reads_line(
+    printing, text: str, *, card_name: str | None = None, legendary: bool = False
+) -> bool:
     return False

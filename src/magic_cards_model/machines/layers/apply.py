@@ -728,6 +728,24 @@ class LayerContext(EngineModel):
     #: face-down creatures on the battlefield" is this count.
     face_down_creatures: int = 0
 
+    #: Cards in each player's hand and each player's life total, keyed by
+    #: username - two more things the layer engine never sees on the
+    #: battlefield, read by the characteristic-defining abilities that count
+    #: "the number of cards in your hand" (Aeon Chronicler) or compare life
+    #: totals (Malignus, Roiling Horror). Like every field here they are read
+    #: when the effects are built, and the board is rebuilt on every
+    #: computation (CR 613.5), so the P/T tracks them live.
+    hand_size_by_controller: Mapping[str, int] = Field(default_factory=dict)
+    life_by_controller: Mapping[str, int] = Field(default_factory=dict)
+
+    def opponents_life_totals(self, controller: str | None) -> tuple[int, ...]:
+        """The life total of every player this context knows who is not
+        `controller` (CR 102.2: in a two-player game the opponent; in a
+        multiplayer game, each player not on `controller`'s team)."""
+        return tuple(
+            life for username, life in self.life_by_controller.items() if username != controller
+        )
+
     def cards_exiled_with(self, source: CardState) -> tuple[CardState, ...]:
         """The cards exiled with `source` - this incarnation of it (CR 607.2a,
         CR 400.7; `ExileAnnotation.links_to`)."""

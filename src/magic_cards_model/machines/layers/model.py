@@ -837,6 +837,9 @@ class CountBoardWhere(CountBase):
         "count", "greatest_mana_value", "greatest_power", "greatest_toughness", "counters"
     ] = "count"
     counter: str | None = None
+    #: A further narrowing word that is a supertype ("snow permanents",
+    #: Rimefeather Owl; CR 205.4).
+    supertype: Supertype | None = None
 
     def _matches(self, chars: Characteristics, other: Characteristics) -> bool:
         if self.scope == "you" and other.controller != chars.controller:
@@ -851,6 +854,8 @@ class CountBoardWhere(CountBase):
             if not (by_type or by_subtype):
                 return False
         if any(card_type in other.types for card_type in self.types_none):
+            return False
+        if self.supertype is not None and self.supertype not in other.supertypes:
             return False
         if self.nonbasic and other.is_basic:
             return False
@@ -984,6 +989,18 @@ class EveryCreature(SelectorBase):
 
     def __call__(self, chars: Characteristics, board: Board) -> bool:
         return chars.is_creature
+
+
+class PermanentsWithCounter(SelectorBase):
+    """Every permanent with at least one `counter` counter on it, whoever
+    controls it (CR 122.1) - Rimefeather Owl's "Permanents with ice counters
+    on them are snow."."""
+
+    kind: Literal["permanents_with_counter"] = "permanents_with_counter"
+    counter: str
+
+    def __call__(self, chars: Characteristics, board: Board) -> bool:
+        return chars.counters.get(self.counter, 0) > 0
 
 
 class SameNameAs(SelectorBase):
@@ -1905,6 +1922,7 @@ Selector = Annotated[
     | OnlyThisIncarnation
     | CreatureControlledByWithId
     | EveryCreature
+    | PermanentsWithCounter
     | SameNameAs
     | CreaturesControlledBy
     | OtherCreaturesControlledBy

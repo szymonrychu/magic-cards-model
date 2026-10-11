@@ -2045,8 +2045,8 @@ _LEADING_GRAVEYARD_COUNT_GATED_SELF_STATIC_RE = re.compile(
 #: `CreaturesControlledByWhereToughnessExceedsPower` already checks; nothing
 #: here is a variable to capture.
 _GROUP_ASSIGNS_DAMAGE_AS_TOUGHNESS_RE = re.compile(
-    r"^each creature you control with toughness greater than its power assigns combat "
-    r"damage equal to its toughness rather than its power\.?$",
+    r"^each creature(?P<mine> you control)?(?P<gated> with toughness greater than its power)? "
+    r"assigns combat damage equal to its toughness rather than its power\.?$",
     re.IGNORECASE,
 )
 
@@ -3482,6 +3482,92 @@ def _self_chosen_basic_land_type_builder(line: str) -> EffectBuilder:
                 source_ability=_source_line_for(source, line),
                 selector=_only(source.id),
                 modification=set_basic_land_type(chosen, mana_ability),
+            )
+        ]
+
+    return builder
+
+
+#: "This creature is the chosen type in addition to its other types." (Metallic
+#: Mimic, Roaming Throne) / "This land is the chosen type in addition to its
+#: other types." (Thran Portal) - the additive twin of Multiversal Passage's
+#: setting sentence just above (CR 205.1b / CR 305.7 contrast: nothing is
+#: lost, the choice from CR 614.12a is added).
+_SELF_CHOSEN_TYPE_IN_ADDITION_RE = re.compile(
+    r"^this (?P<kind>creature|land|permanent) is the chosen type in addition to its other "
+    r"types\.?$",
+    re.IGNORECASE,
+)
+
+
+def _self_chosen_type_in_addition_builder(kind: str, line: str) -> EffectBuilder:
+    """`_SELF_CHOSEN_TYPE_IN_ADDITION_RE`'s shape: layer 4 (CR 613.1d), adding
+    the creature type (CR 205.3m) or basic land type (CR 305.6, with its
+    intrinsic mana ability) the permanent recorded as it entered. No recorded
+    choice grants nothing rather than guessing one."""
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        if kind == "land":
+            chosen = chosen_basic_land_type_of(source)
+            mana_ability = BASIC_LAND_TYPES.get(chosen) if chosen is not None else None
+            if chosen is None or mana_ability is None:
+                return []
+            modification = add_subtype(chosen, mana_ability)
+        else:
+            choice = source.choice
+            if choice is None or choice.kind is not ChoiceKind.CREATURE_TYPE or not choice.value:
+                return []
+            chosen = choice.value
+            modification = add_subtype(chosen)
+        return [
+            ContinuousEffect(
+                description=f"{source.name}: is the chosen type ({chosen}) in addition",
+                layer=Layer.TYPE,
+                timestamp=timestamp,
+                source_id=source.id,
+                source_ability=_source_line_for(source, line),
+                selector=_only(source.id),
+                modification=modification,
+            )
+        ]
+
+    return builder
+
+
+#: "Permanents with ice counters on them are snow." (Rimefeather Owl) -
+#: CR 205.4 supertypes are granted in layer 4 (CR 613.1d) to whoever has the
+#: counter, whoever controls it.
+_PERMANENTS_WITH_COUNTER_ARE_SUPERTYPE_RE = re.compile(
+    r"^permanents with (?P<counter>[a-z]+) counters on them are (?P<supertype>snow)\.?$",
+    re.IGNORECASE,
+)
+
+
+def _permanents_with_counter_gain_supertype_builder(
+    counter: str, supertype: Supertype, line: str
+) -> EffectBuilder:
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        return [
+            ContinuousEffect(
+                description=(
+                    f"{source.name}: permanents with {counter} counters are {supertype.value}"
+                ),
+                layer=Layer.TYPE,
+                timestamp=timestamp,
+                source_id=source.id,
+                source_ability=_source_line_for(source, line),
+                selector=PermanentsWithCounter(counter=counter),
+                modification=AddSupertype(supertype=supertype),
             )
         ]
 
@@ -7647,6 +7733,15 @@ _CDA_OFFSET_SUFFIX_RE = re.compile(r"^(?P<rest>.+?) (?P<op>plus|minus) (?P<n>\d+
 _CDA_GRAVEYARD_SCOPE = r"(?P<where>your graveyard|all graveyards|your opponents' graveyards)"
 _CDA_BOARD_SCOPE = r"(?P<who>you control|your opponents control|on the battlefield)"
 
+_CDA_HAND_RE = re.compile(r"^the number of cards in your hand$")
+_CDA_HALF_OPPONENT_LIFE_RE = re.compile(
+    r"^half the highest life total among your opponents, rounded (?P<direction>up|down)$"
+)
+_CDA_LIFE_LEAD_RE = re.compile(
+    r"^your life total minus the life total of an opponent with the most life$"
+)
+_CDA_SNOW_COUNT_RE = re.compile(rf"^the number of snow permanents {_CDA_BOARD_SCOPE}$")
+
 _CDA_DEVOTION_RE = re.compile(r"^your devotion to (?P<colors>[a-z, ]+?)$")
 _CDA_PARTY_RE = re.compile(r"^the number of creatures in your party$")
 _CDA_DRAWN_RE = re.compile(r"^the number of cards you've drawn this turn$")
@@ -7763,7 +7858,11 @@ def _cda_owned_exile(source: CardState, context: LayerContext) -> tuple[CardStat
 
 
 def _cda_board_count(
-    quality: _CdaQuality, who: str, measure: str, counter: str | None = None
+    quality: _CdaQuality,
+    who: str,
+    measure: str,
+    counter: str | None = None,
+    supertype: Supertype | None = None,
 ) -> CdaCountFactory:
     scope = {"you control": "you", "your opponents control": "opponents"}.get(who, "any")
     count = CountBoardWhere(
@@ -7775,6 +7874,7 @@ def _cda_board_count(
         colorless=quality.colorless,
         measure=measure,
         counter=counter,
+        supertype=supertype,
     )
     return lambda source, context: count
 
@@ -7795,6 +7895,38 @@ def _cda_base_count(phrase: str) -> CdaCountFactory | None:
     """
     if _CDA_PARTY_RE.fullmatch(phrase):
         return lambda source, context: CountParty()
+    if _CDA_HAND_RE.fullmatch(phrase):
+        # CR 402.1: the hand is where a player holds cards; it is a zone the
+        # layer engine never sees, so the size comes through the context.
+        return lambda source, context: FixedCount(
+            value=context.hand_size_by_controller.get(source.controller or "", 0)
+        )
+    if match := _CDA_HALF_OPPONENT_LIFE_RE.fullmatch(phrase):
+        # CR 107.1a rounds a half up or down as the card says.
+        round_up = match.group("direction") == "up"
+
+        def half_highest_opponent_life(source: CardState, context: LayerContext) -> Count:
+            highest = max(context.opponents_life_totals(source.controller), default=0)
+            return FixedCount(value=(highest + 1) // 2 if round_up else highest // 2)
+
+        return half_highest_opponent_life
+    if _CDA_LIFE_LEAD_RE.fullmatch(phrase):
+        # CR 119.1: each player's life total; the lead is signed, so a player
+        # behind gets a negative number (CR 208.1 allows a negative P/T).
+        def life_lead(source: CardState, context: LayerContext) -> Count:
+            own = context.life_by_controller.get(source.controller or "", 0)
+            return FixedCount(
+                value=own - max(context.opponents_life_totals(source.controller), default=0)
+            )
+
+        return life_lead
+    if match := _CDA_SNOW_COUNT_RE.fullmatch(phrase):
+        return _cda_board_count(
+            _CdaQuality((), (), (), False, False),
+            match.group("who"),
+            "count",
+            supertype=Supertype.SNOW,
+        )
     if _CDA_DRAWN_RE.fullmatch(phrase):
         return lambda source, context: FixedCount(
             value=context.cards_drawn_this_turn.get(source.controller or "", 0)
@@ -9961,12 +10093,17 @@ def _self_pump_while_controlling_subtype_builder(
     return builder
 
 
-def _group_assigns_damage_as_toughness_builder(*, line: str) -> EffectBuilder:
+def _group_assigns_damage_as_toughness_builder(
+    *, line: str, mine: bool = True, gated: bool = True
+) -> EffectBuilder:
     """Ghalta the Immovable's "Each creature you control with toughness
     greater than its power assigns combat damage equal to its toughness
     rather than its power." - the group twin of Loot, the Anomaly's self
     grant, over `creatures_controlled_by_toughness_exceeds_power` instead of
-    `SelfIfPowerNegative`.
+    `SelfIfPowerNegative`. The ungated wordings (Assault Formation: "Each
+    creature you control assigns ..."; Doran, the Siege Tower: "Each creature
+    assigns ...") drop the toughness comparison, and the second drops "you
+    control" too (CR 510.1a is what "its power" replaces).
     """
 
     def builder(
@@ -9978,14 +10115,21 @@ def _group_assigns_damage_as_toughness_builder(*, line: str) -> EffectBuilder:
         return [
             ContinuousEffect(
                 description=(
-                    f"{source.name}: creatures you control with toughness greater than "
-                    "power assign damage equal to toughness"
+                    f"{source.name}: creatures {'you control ' if mine else ''}"
+                    f"{'with toughness greater than power ' if gated else ''}"
+                    "assign damage equal to toughness"
                 ),
                 layer=Layer.ABILITY,
                 timestamp=timestamp,
                 source_id=source.id,
                 source_ability=_source_line_for(source, line),
-                selector=creatures_controlled_by_toughness_exceeds_power(source.controller),
+                selector=(
+                    creatures_controlled_by_toughness_exceeds_power(source.controller)
+                    if gated
+                    else creatures_controlled_by(source.controller)
+                    if mine
+                    else every_creature
+                ),
                 modification=grant_ability(ASSIGNS_DAMAGE_AS_TOUGHNESS_TEXT),
             )
         ]
@@ -12360,8 +12504,12 @@ def _parse_static_layer_sentence(sentence: str) -> EffectBuilder | None:
             line=sentence,
             description="while another creature entered under your control this turn",
         )
-    if _GROUP_ASSIGNS_DAMAGE_AS_TOUGHNESS_RE.fullmatch(sentence):
-        return _group_assigns_damage_as_toughness_builder(line=sentence)
+    if match := _GROUP_ASSIGNS_DAMAGE_AS_TOUGHNESS_RE.fullmatch(sentence):
+        return _group_assigns_damage_as_toughness_builder(
+            line=sentence,
+            mine=match.group("mine") is not None,
+            gated=match.group("gated") is not None,
+        )
     if _EQUIPPED_ASSIGNS_DAMAGE_AS_TOUGHNESS_RE.fullmatch(sentence):
         return _equipped_assigns_damage_as_toughness_builder(line=sentence)
     if _SELF_ASSIGNS_DAMAGE_AS_THOUGH_POSITIVE_RE.fullmatch(sentence):
@@ -12464,6 +12612,12 @@ def _parse_static_layer_sentence(sentence: str) -> EffectBuilder | None:
             )
     if _THIS_LAND_IS_CHOSEN_TYPE_RE.fullmatch(sentence):
         return _self_chosen_basic_land_type_builder(line=sentence)
+    if match := _SELF_CHOSEN_TYPE_IN_ADDITION_RE.fullmatch(sentence):
+        return _self_chosen_type_in_addition_builder(match.group("kind").lower(), sentence)
+    if match := _PERMANENTS_WITH_COUNTER_ARE_SUPERTYPE_RE.fullmatch(sentence):
+        return _permanents_with_counter_gain_supertype_builder(
+            match.group("counter").lower(), Supertype(match.group("supertype").lower()), sentence
+        )
     return None
 
 
@@ -12955,6 +13109,7 @@ from .model import (  # noqa: E402
     PairedPartners,
     PermanentsOfTypes,
     PermanentsOfTypesControlledBy,
+    PermanentsWithCounter,
     PermanentsWithName,
     RemainsOnBattlefield,
     RemoveType,
