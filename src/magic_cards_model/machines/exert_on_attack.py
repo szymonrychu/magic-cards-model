@@ -46,7 +46,9 @@ def reads_exert_as_it_attacks_line(line: str) -> bool:
     printed, effect = exert_as_it_attacks_effect(strip_reminder(line))
     if not printed:
         return False
-    return effect is None or reflexive_consequence_effect(effect.rstrip(".")) is not None
+    # The performer (`ReflexiveWhenYouDoConsequence`) is handed the effect as
+    # printed, full stop included, so that is the text judged here.
+    return effect is None or reflexive_consequence_effect(effect) is not None
 
 
 def strip_reminder(line: str) -> str:
