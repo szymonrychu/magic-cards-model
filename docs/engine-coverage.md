@@ -7885,3 +7885,11 @@ Read by `machines/block_statics.py` off every battlefield permanent's computed a
 | "While you're searching your library, you may cast this card from your library." (CR 701.23a, 601.3): offered as a search starts, mana cost paid | `casting/permissions.py:search_cast_candidates`, `Game._offer_casts_while_searching` | Panglacial Wurm | `scenarios/test_ep01_r1_static_cast_permissions.py` |
 | "You can't spend mana to cast this spell." (CR 601.2h): `ManaSpend.no_mana` empties the spendable pool; convoke/delve still pay, and a hybrid symbol takes a creature of either colour (CR 107.4e) | `models/mana.py:reads_cant_spend_mana_line`, `cost/components.py:cost_less` | Hogaak, Arisen Necropolis | `scenarios/test_ep01_r1_static_cast_permissions.py` |
 | "Whenever this creature deals damage to an opponent, flip it." (CR 710.2, CR 710.4) | `effects/damage._parse_flip_self_clause` (ABILITY_TEXT) -> `CardState.flip` | Akki Lavarunner // Tok-Tok, Volcano Born (with its static +1 from red sources, CR 614.1a); Inquisitor's Flail (double combat damage dealt by / to the equipped creature) | `scenarios/test_ep01_r1_damage_double_half_plus.py` |
+
+## R0c-T5: kicker that changes an imperative's target; Class attack/discard levels; nonartifact destroy
+
+| Mechanic | CR | Where | Proof |
+|---|---|---|---|
+| "<Verb> target X. If this spell was kicked, [instead] <verb> target Y [instead]." - the kicked sentence's targets replace the unkicked ones (before: both "target" words were demanded, so the unkicked cast needed two targets) | CR 601.2c, 702.33d | `machines/targeting._KICKED_INSTEAD_IMPERATIVE_TARGETS_RE` via `kicked_instead_target_text` | Tear Asunder; Bloodchief's Thirst (second printing, "instead" before the verb) in `scenarios/test_kicker_changes_exile_target.py` |
+| Class level 1 attack trigger (may discard, if you do draw), level 2 discard damage, level 3 search-then-random-discard | CR 716.2a, 508.3d, 701.9b, 118.12 | existing readers, scenario-proven | Cool but Rude in `scenarios/test_class_attack_discard_draw_levels.py` |
+| "Destroy target nonartifact creature." refusal, indestructible, regeneration | CR 701.8a, 702.12b, 701.19a | existing reader, scenario-proven | Go for the Throat in `scenarios/test_destroy_target_nonartifact_creature.py` |
