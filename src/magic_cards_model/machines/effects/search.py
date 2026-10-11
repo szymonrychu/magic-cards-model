@@ -794,8 +794,11 @@ _SEARCH_AND_EXILE_THEN_SHUFFLE_RE = re.compile(
     r"(?: with mana value (?P<max_mv>\d+) or less)?"
     r"(?: with mana cost (?P<mana_costs>" + _MANA_COST_LIST + r"))?"
     r"(?: with (?P<having>" + _HAVING_PATTERN + r"))?"
-    r", exile (?:it|them)(?:, then shuffle)?"
-    rf"(?:\.\s*you gain (?P<life>{COUNT}) life)?\.?$",
+    r", exile (?:it|them)(?P<face_down> face down)?(?:, then shuffle)?"
+    rf"(?:\.\s*you gain (?P<life>{COUNT}) life)?"
+    # Hoarding Broodlord: CR 400.7's own bound on the permission - "for as long
+    # as that card remains exiled" ends the moment the card leaves exile.
+    r"(?P<play>\.\s*for as long as that card remains exiled, you may play it)?\.?$",
     re.IGNORECASE,
 )
 
@@ -816,6 +819,8 @@ def _parse_search_and_exile_then_shuffle_clause(
     if n is None:
         return None
     life = parse_count(match.group("life")) if match.group("life") else 0
+    face_down = match.group("face_down") is not None
+    play = match.group("play") is not None
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
         controller = game.controller_of(stack_object)
@@ -836,11 +841,32 @@ def _parse_search_and_exile_then_shuffle_clause(
             source=source,
             source_id=source_id,
         )
-        game.exile_cards(found)
+        for exiled in game.exile_cards(found):
+            if face_down:
+                exiled.face_up = False
+            if play:
+                game.grant_play_permission(
+                    exiled,
+                    controller.username,
+                    action=PlayAction.PLAY,
+                    source_name=source,
+                    rule="CR 601.3, CR 611.2a",
+                    zone=Zone.EXILE,
+                    until_end_of_turn=False,
+                )
         if life:
             game.gain_life(controller, life)
 
     return effect
+
+
+def parse_search_exile_then_play_whole_text(text: str) -> TargetedClause | None:
+    """Hoarding Broodlord's two sentences read whole: the search-and-exile and
+    the permission that is bound to what it exiled ("that card")."""
+    flat = " ".join(text.split())
+    if "remains exiled, you may play it" not in flat.lower():
+        return None
+    return _parse_search_and_exile_then_shuffle_clause(flat, for_spell=False)
 
 
 #: "Search your library for `<quality>` card[s][, reveal it,] then shuffle

@@ -478,7 +478,9 @@ def has_convoke_now(spell: CardState) -> bool:
     )
 
     record = game.cast_record_of(spell)
-    origin_zone = record.origin_zone if record is not None else None
+    # CR 601.2a: before the cast is complete (CR 601.2i writes the record) the
+    # announcement's own origin is the only answer.
+    origin_zone = record.origin_zone if record is not None else spell._announced_from
     board = game.computed_board()
     for permanent in game.permanents_controlled_by(controller):
         for line in board.of(permanent).abilities:

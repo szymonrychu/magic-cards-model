@@ -1682,6 +1682,12 @@ class CardState(EngineModel):
     simply never moved.
     """
 
+    _announced_from: Any = PrivateAttr(default=None)
+    """The zone this card was in when its casting was announced (CR 601.2a): the
+    cast record that says so is only written once the spell is cast (CR 601.2i),
+    but a granted convoke ("Spells you cast from exile have convoke") is read
+    while the total cost is being paid, in between. Private, never serialised."""
+
     _board_source: Any = PrivateAttr(default=None)
     """The `Game` this object asks for its computed characteristics (CR 613.5).
 

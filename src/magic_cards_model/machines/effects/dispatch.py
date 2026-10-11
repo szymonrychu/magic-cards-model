@@ -4502,6 +4502,7 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
     # sentence's target, with a CR 611.2b duration tied to the source.
     for whole_text_reader in (
         impulse_choice.parse_exile_top_choose_one_play,
+        parse_search_exile_then_play_whole_text,
         _parse_remove_all_counters_then_cant_have_clause,
         _parse_player_loses_all_counters_clause,
         block_reassignment.parse_remove_blocker_then_it_blocks_another_clause,
@@ -6616,6 +6617,7 @@ from .search import (  # noqa: E402
     _parse_search_library_and_outside_distinct_names_opponent_chooses_clause,
     _parse_search_mv_less_than_self_power_clause,
     _parse_search_reveal_shuffle_top_clause,
+    parse_search_exile_then_play_whole_text,
     _parse_search_split_destination_clause,
     _parse_search_that_many_battlefield_clause,
     _read_search_count,

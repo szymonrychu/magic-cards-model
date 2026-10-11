@@ -1249,6 +1249,7 @@ class Casting(EngineModel):
                 self.announced_library_index = library.index(self.spell)
         self._lift_out_of_every_zone()
         self.spell.move_to(Zone.STACK)
+        self.spell._announced_from = self.announced_zone
         # CR 712.11a: `move_to` turns a card leaving for the stack front face
         # up; one cast transformed goes there back face up.
         self.spell.transformed = self.transformed
