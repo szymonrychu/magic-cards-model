@@ -3226,6 +3226,34 @@ def is_equip_discount_for_this_line(line: str) -> bool:
     return _EQUIP_ABILITIES_TARGETING_THIS_COST_LESS_RE.fullmatch(line.strip()) is not None
 
 
+_ATTACHED_ONLY_TO_RE = re.compile(
+    r"can be attached only to (?:an? )?(?P<quality>[a-z ]+?)(?:\.|$)", re.IGNORECASE | re.MULTILINE
+)
+
+
+def attach_only_quality(card: Card) -> str | None:
+    """The quality in a "`<name>` can be attached only to a <quality>." line
+    (Konda's Banner: "legendary creature", CR 301.5c), or None."""
+    match = _ATTACHED_ONLY_TO_RE.search(card.oracle_text or "")
+    return None if match is None else match["quality"].lower()
+
+
+def attach_restriction_refusal(game: Any, equipment: CardState, target: CardState) -> str | None:
+    """Why `target` is not a thing `equipment` can be attached to, or None."""
+    from .layers.group_grants import group_selector, parse_group
+
+    quality = attach_only_quality(equipment.card)
+    if quality is None:
+        return None
+    spec = parse_group(quality)
+    if spec is None:
+        return f"{equipment.name} can be attached only to a {quality}, which cannot be read"
+    board = game.computed_board()
+    if group_selector({**spec, "scope": "any"}, equipment)(board.of(target), board.characteristics):
+        return None
+    return f"{equipment.name} can be attached only to a {quality}; {target.name} is not one (CR 301.5c)"
+
+
 def _equip_ability_price(ability: KeywordAbility) -> float:
     """The mana value of an equip ability's cost, for CR 702.6c's choice."""
     try:
@@ -3290,6 +3318,9 @@ def equip_activation(
         game, equipment, player, ability=chosen, pay_zero=pay_zero, target=target
     )
     profile_for_text(EQUIP_EFFECT).check([target], player, game, source_id=equipment.id)
+    refusal = attach_restriction_refusal(game, equipment, target)
+    if refusal is not None:
+        raise ValueError(refusal)
     # CR 702.16b: the equip ability is "from a source with the stated quality"
     # whenever the Equipment has it, and a bare-text profile carries no source
     # card to ask - so the protection half of the target check is made here.

@@ -244,6 +244,10 @@ _HAND_PUMP_RE = re.compile(
     r"^(?P<subject>.+?) gets? (?P<p>[+-](?:x|0))/(?P<t>[+-](?:x|0)), "
     r"where x is the number of cards in your hand$"
 )
+_SHARES_WITH_EQUIPPED_RE = re.compile(
+    r"^creatures that share (?P<what>a color|a creature type) with equipped creature "
+    r"gets? (?P<power>[+-]\d+)/(?P<toughness>[+-]\d+)$"
+)
 _COUNT_PUMP_RE = re.compile(
     r"^(?P<subject>.+?) gets? (?P<p>[+-](?:x|0))/(?P<t>[+-](?:x|0)), where x is "
     r"(?P<count>your speed|the number of creature cards in all graveyards)$"
@@ -436,6 +440,13 @@ def parse_group_static_sentence(sentence: str):
             f"have base P/T {power}/{toughness}",
             lambda: [(Layer.POWER_TOUGHNESS, Sublayer.SET, set_power_toughness(power, toughness))],
         )
+    if match := _SHARES_WITH_EQUIPPED_RE.fullmatch(lowered):
+        return _shares_with_equipped_builder(
+            sentence,
+            "color" if match["what"] == "a color" else "creature_type",
+            int(match["power"]),
+            int(match["toughness"]),
+        )
     if match := _COUNT_PUMP_RE.fullmatch(lowered):
         if not _count_subject_ok(match["subject"]):
             return None
@@ -590,8 +601,43 @@ _THIS_AND_ENCHANTED_RE = re.compile(
 )
 
 
+def _shares_with_equipped_builder(sentence: str, kind: str, power: int, toughness: int):
+    """ "Creatures that share a color with equipped creature get +1/+1"
+    (Konda's Banner, CR 613.4c): the group is every creature (whoever controls
+    it) sharing the quality with the creature this permanent is attached to,
+    asked of the computed board each time (CR 611.3a); unattached, no one."""
+
+    def build(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        if source.attached_to is None:
+            return []
+        selector = GroupMatch(
+            scope="any",
+            all_types=(Type.CREATURE,),
+            shares_with=source.attached_to,
+            share_kind=kind,
+        )
+        return _effects(
+            source,
+            timestamp,
+            sentence,
+            selector,
+            f"creatures sharing a {kind.replace('_', ' ')} with the equipped creature get "
+            f"{power:+d}/{toughness:+d}",
+            [(Layer.POWER_TOUGHNESS, Sublayer.MODIFY, modify_power_toughness(power, toughness))],
+        )
+
+    return build
+
+
 def _count_subject_ok(subject: str) -> bool:
-    return bool(_THIS_AND_ENCHANTED_RE.fullmatch(subject.strip())) or _subject_ok(subject) is not False
+    return (
+        bool(_THIS_AND_ENCHANTED_RE.fullmatch(subject.strip())) or _subject_ok(subject) is not False
+    )
 
 
 def _count_of(kind: str, source: CardState, context: LayerContext) -> int:
@@ -601,7 +647,9 @@ def _count_of(kind: str, source: CardState, context: LayerContext) -> int:
     sees on its own)."""
     if kind == "your speed":
         game = source._board_source
-        player = None if game is None or source.controller is None else game.player(source.controller)
+        player = (
+            None if game is None or source.controller is None else game.player(source.controller)
+        )
         return 0 if player is None or player.speed is None else player.speed
     return sum(1 for card in context.graveyards if Type.CREATURE in card.card.types)
 

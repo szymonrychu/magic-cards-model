@@ -1758,6 +1758,10 @@ class GroupMatch(SelectorBase):
     with_keyword: str | None = None
     without_keyword: str | None = None
     with_counter: str | None = None
+    shares_with: UUID | None = None
+    share_kind: Literal["color", "creature_type"] = "color"
+    """Konda's Banner: only creatures sharing a color / a creature type with the
+    permanent `shares_with` (its equipped creature) are in the group."""
     named: tuple[str, ...] = ()
     """Lowercased card names: "Equipment named Sword of Kaldra, Shield of
     Kaldra, and Helm of Kaldra" (CR 201.2)."""
@@ -1777,6 +1781,15 @@ class GroupMatch(SelectorBase):
             return False
         if self.named and chars.name.lower() not in self.named:
             return False
+        if self.shares_with is not None:
+            reference = board.get(self.shares_with)
+            if reference is None:
+                return False
+            if self.share_kind == "color":
+                if not set(reference.colors) & set(chars.colors):
+                    return False
+            elif not {t.lower() for t in reference.subtypes} & {t.lower() for t in chars.subtypes}:
+                return False
         if any(card_type not in chars.types for card_type in self.all_types):
             return False
         if self.any_types and not any(card_type in chars.types for card_type in self.any_types):

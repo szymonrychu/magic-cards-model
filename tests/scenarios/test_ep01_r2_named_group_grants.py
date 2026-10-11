@@ -17,9 +17,7 @@ def board(alice, bob=()):
 
 
 def find(scenario, name, username="alice"):
-    return next(
-        c for c in scenario.game.battlefield if c.name == name and c.controller == username
-    )
+    return next(c for c in scenario.game.battlefield if c.name == name and c.controller == username)
 
 
 def test_the_named_equipment_is_indestructible_including_itself():

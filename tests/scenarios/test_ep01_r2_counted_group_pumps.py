@@ -5,7 +5,6 @@ graveyards." (Nighthowler) and "Other creatures you control get +X/+0, where X
 is your speed." (Samut, the Driving Force; CR 702.179f: no speed reads as 0).
 """
 
-from magic_cards_model.models import Zone
 from tests.scenarios.harness import Scenario
 
 

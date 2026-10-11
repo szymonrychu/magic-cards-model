@@ -20,6 +20,7 @@ _GATES = (
     "had wither",
     "mana as though it were",
     "mana of any type can be spent",
+    "can be attached only to",
 )
 
 
@@ -75,6 +76,16 @@ def _reads_mana_colour_rule(printing, lowered: str) -> bool:
     return _COLOR_RULE_CACHE[key]
 
 
+def _reads_attach_restriction(printing) -> bool:
+    """CR 301.5c: `keywords.attach_restriction_refusal` really refuses a
+    creature outside the named quality and allows one inside it."""
+    from magic_cards_model.machines.keywords import attach_only_quality
+    from magic_cards_model.machines.layers.group_grants import parse_group
+
+    quality = attach_only_quality(printing)
+    return quality is not None and parse_group(quality) is not None
+
+
 def reads_anthems_grants_line(printing, text, *, card_name=None, legendary=False) -> bool:
     lowered = text.lower()
     # A static ability granting a keyword (or a type or colour) to cards off the
@@ -86,6 +97,8 @@ def reads_anthems_grants_line(printing, text, *, card_name=None, legendary=False
         return False
     if "mana as though it were" in lowered or "mana of any type can be spent" in lowered:
         return _reads_mana_colour_rule(printing, lowered)
+    if "can be attached only to" in lowered:
+        return _reads_attach_restriction(printing)
     if "had wither" in lowered:
         return _all_damage_has_wither(printing)
     return _may_assign_as_though_unblocked(printing)
