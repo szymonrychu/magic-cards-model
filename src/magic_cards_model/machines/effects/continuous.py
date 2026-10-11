@@ -4341,6 +4341,70 @@ def _parse_self_keyword_choice_until_eot_trigger(text: str) -> AbilityEffect | N
     return effect
 
 
+#: "target creature gains your choice of `<A>` or `<B>` until end of turn. If
+#: that creature is equipped, it gains `<A>` and `<B>` until end of turn
+#: instead." (Eowyn, Lady of Rohan): CR 608.2d's choice is asked at resolution,
+#: and only when the target is not equipped (CR 301.5), in which case both
+#: keywords are granted without a question.
+_TARGET_KEYWORD_CHOICE_UNLESS_EQUIPPED_RE = re.compile(
+    r"^target creature gains your choice of (?P<first>[a-z]+(?: [a-z]+)?) or "
+    r"(?P<second>[a-z]+(?: [a-z]+)?) until end of turn\. If that creature is equipped, "
+    r"it gains (?P<both_first>[a-z]+(?: [a-z]+)?) and (?P<both_second>[a-z]+(?: [a-z]+)?) "
+    r"until end of turn instead\.?$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s22")
+def _parse_target_keyword_choice_unless_equipped_trigger(text: str) -> AbilityEffect | None:
+    """`_TARGET_KEYWORD_CHOICE_UNLESS_EQUIPPED_RE`'s shape."""
+    match = _TARGET_KEYWORD_CHOICE_UNLESS_EQUIPPED_RE.fullmatch(" ".join(text.split()))
+    if match is None:
+        return None
+    first, second = match.group("first").lower(), match.group("second").lower()
+    if (match.group("both_first").lower(), match.group("both_second").lower()) != (first, second):
+        return None
+    keywords = _split_choice_keywords(f"{first} or {second}")
+    if keywords is None:
+        return None
+    from .amounts import _is_equipped
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        store = game.continuous_effects
+        board = game.computed_board()
+        for target in game.resolve_card_targets(ability):
+            if target.zone is not Zone.BATTLEFIELD:
+                continue
+            granted = list(keywords)
+            if not _is_equipped(game, board, target):
+                answer = game.ask(
+                    Decision(
+                        kind=DecisionKind.CHOOSE_A_QUALITY,
+                        player=ability.controller,
+                        prompt="choose a keyword",
+                        source=ability.source_name,
+                        options=tuple(keywords),
+                        source_id=source_id_of(ability),
+                    )
+                )
+                assert isinstance(answer, str)
+                granted = [answer]
+            timestamp = store.tick()
+            for keyword in granted:
+                store.add(
+                    ContinuousEffect(
+                        description=f"{ability.source_name}: {target.name} gains {keyword}",
+                        layer=Layer.ABILITY,
+                        timestamp=timestamp,
+                        duration=Duration.UNTIL_END_OF_TURN,
+                        selector=only_this_incarnation(target, target.zone_change_stamp),
+                        modification=grant_ability(keyword),
+                    )
+                )
+
+    return effect
+
+
 #: CR 702.91a's Battle cry effect, written out as plain, unkeyworded text:
 #: "each other attacking creature gets +1/+0 until end of turn." (Wingnut,
 #: Bat on the Belfry's own attack trigger). `keywords._battle_cry_effect` is

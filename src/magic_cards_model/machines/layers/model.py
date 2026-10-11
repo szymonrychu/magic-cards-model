@@ -17,10 +17,10 @@ from ...data.subtypes import subtype_vocabulary
 from ...ids import new_id
 from ...models.card import Color, Supertype, Type, has_changeling, with_every_creature_type
 from ...models.card_state import (
-    DEVOTION_BONUS_TEXT,
     CANT_BECOME_UNTAPPED_TEXT,
     CANT_HAVE_COUNTERS_TEXT,
     CANT_HAVE_KIND_COUNTERS_TEXT,
+    DEVOTION_BONUS_TEXT,
     LETHAL_BY_POWER_TEXT,
     CardState,
 )

@@ -25,8 +25,8 @@ from typing import TYPE_CHECKING, Any
 from ...data.subtypes import subtype_vocabulary
 from ...models.card import Color, Supertype, Type
 from ...models.card_state import (
-    DEVOTION_BONUS_TEXT,
     CANT_HAVE_KIND_COUNTERS_TEXT,
+    DEVOTION_BONUS_TEXT,
     LETHAL_BY_POWER_TEXT,
     MAY_STAY_TAPPED_TEXT,
     UNTAPS_IN_OTHER_UNTAP_TEXT,
@@ -300,8 +300,8 @@ _UNTAP_OTHER_STEP_RE = re.compile(
     r"^untap all (?P<subject>.+?) during each other player's untap step$"
 )
 _MAY_STAY_TAPPED_RE = re.compile(
-    r"^you may choose not to untap (?P<subject>this (?:creature|permanent|artifact|enchantment|land))"
-    r" during your untap step$"
+    r"^you may choose not to untap "
+    r"(?P<subject>this (?:creature|permanent|artifact|enchantment|land)) during your untap step$"
 )
 _DEVOTION_INCREASE_RE = re.compile(
     r"^your devotion to each color and each combination of colors is increased by one$"

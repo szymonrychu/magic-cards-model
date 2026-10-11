@@ -73,7 +73,9 @@ MAY_STAY_TAPPED_TEXT = "You may choose not to untap this permanent during your u
 #: CR 700.5, CR 604.2: "Your devotion to each color and each combination of
 #: colors is increased by one." grants itself this marker; every devotion count
 #: adds one per such permanent its controller controls.
-DEVOTION_BONUS_TEXT = "Your devotion to each color and each combination of colors is increased by one."
+DEVOTION_BONUS_TEXT = (
+    "Your devotion to each color and each combination of colors is increased by one."
+)
 LETHAL_BY_POWER_TEXT = "Lethal damage is determined by power rather than toughness."
 
 

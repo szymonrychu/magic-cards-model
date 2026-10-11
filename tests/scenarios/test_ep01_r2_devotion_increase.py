@@ -11,7 +11,9 @@ from tests.scenarios.harness import Scenario
 def _board(alice_battlefield, hand=()):
     scenario = (
         Scenario()
-        .player("alice", hand=list(hand), battlefield=list(alice_battlefield), library=["Swamp"] * 5)
+        .player(
+            "alice", hand=list(hand), battlefield=list(alice_battlefield), library=["Swamp"] * 5
+        )
         .player("bob", battlefield=[], library=["Swamp"] * 5)
         .build()
     )

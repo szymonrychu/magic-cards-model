@@ -10,7 +10,6 @@
 """
 
 from magic_cards_model.machines import Step
-from magic_cards_model.models import Zone
 from tests.scenarios.harness import Scenario
 
 
@@ -41,7 +40,9 @@ def _tapped(scenario, name):
 
 
 def test_green_and_blue_creatures_untap_in_the_opponents_untap_step():
-    scenario = _tapped_board(["Murkfiend Liege", "Grizzly Bears", "Lord of Atlantis", "Goblin Piker"])
+    scenario = _tapped_board(
+        ["Murkfiend Liege", "Grizzly Bears", "Lord of Atlantis", "Goblin Piker"]
+    )
     _to_bobs_upkeep(scenario)
     assert not _tapped(scenario, "Grizzly Bears")
     assert not _tapped(scenario, "Lord of Atlantis")
