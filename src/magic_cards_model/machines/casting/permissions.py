@@ -513,9 +513,13 @@ def _spell_matches_grant_filter(spell: CardState, what: str) -> bool:
         word = raw_word.strip(",").lower()
         if not word or word in {"and", "or"}:
             continue
-        negated = word.startswith("non-")
+        # "non-Lesson" (hyphenated before a subtype) and "nonland" (one word
+        # before a card type, CR 205.2) both negate the word after the prefix.
+        negated = word.startswith("non-") or (
+            word.startswith("non") and word[len("non") :].rstrip("s") in type_words
+        )
         if negated:
-            word = word[len("non-") :]
+            word = word[len("non-") :] if word.startswith("non-") else word[len("non") :]
         singular = word.rstrip("s")
         if word in {"permanent", "permanents"}:
             matched = bool(types & _PERMANENT_TYPES)
@@ -2198,7 +2202,9 @@ def _grant_on_a_card_in_a_zone(
     card's mana cost." is the only such sentence in this pool, and anything
     else leaves the keyword costless and therefore unread.
     """
-    match = _GRANTED_KEYWORD_ON_A_CARD_IN_A_ZONE.match(text)
+    # CR 207.2c: an ability word ("Goblin Formula - ") has no rules meaning.
+    line, _ability_word = strip_ability_word(_REMINDER_TEXT_RE.sub("", text))
+    match = _GRANTED_KEYWORD_ON_A_CARD_IN_A_ZONE.match(line.strip())
     if match is None:
         return None
     zone = _ZONE_WORDS_FOR_GRANTS.get((match.group("zone") or match.group("zones")).lower())
@@ -2246,7 +2252,10 @@ def reads_granted_zone_keyword_line(card: Card, text: str) -> bool:
     permission that opens that zone to it (Ninja Teen's level 3 pair).
     Without either, a keyword granted to cards in a zone it never casts
     from does nothing, and is not credited."""
-    match = _GRANTED_KEYWORD_ON_A_CARD_IN_A_ZONE.match(_REMINDER_TEXT_RE.sub("", text).strip())
+    # CR 207.2c: an ability word ("Goblin Formula - ") has no rules meaning,
+    # and the live reader sees the line without it (`parse_abilities`).
+    line, _ability_word = strip_ability_word(_REMINDER_TEXT_RE.sub("", text))
+    match = _GRANTED_KEYWORD_ON_A_CARD_IN_A_ZONE.match(line.strip())
     if match is None:
         return False
     zone = _ZONE_WORDS_FOR_GRANTS.get((match.group("zone") or match.group("zones")).lower())

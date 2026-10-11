@@ -50,6 +50,7 @@ from ..delayed import (
     CreateTokenCopyOfLastKnown,
     DelayedTrigger,
     ReflexiveAttachSubjectToTargetConsequence,
+    ReflexiveReturnThenAttachToSubjectConsequence,
     SacrificeSubject,
     anaphoric_delayed_trigger,
     parse_anaphoric_delayed_clause,
@@ -2399,6 +2400,63 @@ def _parse_named_equipment_token_clause(text: str) -> AbilityEffect | None:
             source_name=ability_on_stack.source_name,
             subject_id=token.id,
             callback=ReflexiveAttachSubjectToTargetConsequence(),
+        )
+
+    return effect
+
+
+#: "create `<token>`. When you do, return target `<card>` from your graveyard
+#: to the battlefield, then attach it to that token." - Ratonhnhake:ton's
+#: combat damage trigger: CR 603.12's mandatory ("instruct") action, then a
+#: reflexive ability that returns a card and attaches it to the new token.
+_TOKEN_THEN_REFLEXIVE_RETURN_ATTACH_RE = re.compile(
+    r"^(?P<action>create .+? tokens?(?: with [^.]+)?)\.\s*when you do,\s*"
+    r"(?P<consequence>return target .+? from your graveyard to the battlefield, "
+    r"then attach it to that token)\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+@ABILITY_TEXT.rung("s20")
+def _parse_token_then_reflexive_return_and_attach_clause(text: str) -> AbilityEffect | None:
+    """`_TOKEN_THEN_REFLEXIVE_RETURN_ATTACH_RE`'s shape. The token is always
+    created; the reflexive ability exists only once it is real (CR 603.12)
+    and carries the token as its subject for "that token"."""
+    match = _TOKEN_THEN_REFLEXIVE_RETURN_ATTACH_RE.fullmatch(
+        _strip_non_effect_preamble(text).strip()
+    )
+    if match is None:
+        return None
+    token_match = _TOKEN_CLAUSE_RE.fullmatch(match.group("action").strip())
+    if token_match is None:
+        return None
+    count = parse_count(token_match.group("n"))
+    words = token_match.group("desc").strip().split()
+    if not words or count is None:
+        return None
+    name = " ".join(words)
+    tail = token_match.group("tail")
+    definition = (
+        PREDEFINED[name]
+        if tail is None and name in PREDEFINED
+        else _parse_generic_token_descriptor(words, tail)
+    )
+    if definition is None:
+        return None
+    reflexive_text = f"When you do, {match.group('consequence').strip()}."
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        controller = game.controller_of(ability)
+        created = create_tokens(game, definition, controller.username, count)
+        if not created:
+            return
+        game.create_reflexive_trigger(
+            text=reflexive_text,
+            controller=controller.username,
+            source_id=ability.source_id,
+            source_name=ability.source_name,
+            subject_id=created[0].id,
+            callback=ReflexiveReturnThenAttachToSubjectConsequence(),
         )
 
     return effect

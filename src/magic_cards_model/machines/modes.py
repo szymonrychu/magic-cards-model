@@ -633,3 +633,22 @@ def _blank_quotes(text: str) -> str:
         elif inside:
             out[index] = " "
     return "".join(out)
+
+
+#: A rider on the instruction line itself - Glorfindel, Dauntless Rescuer's
+#: "Whenever you scry, choose one and Glorfindel gets +1/+1 until end of
+#: turn." (CR 700.2: the bullets are the modes; the rest of the instruction
+#: is an instruction like any other and happens whichever mode is chosen).
+_INSTRUCTION_RIDER = re.compile(
+    r"^choose (?:one|two|three) and (?P<rider>[^.]+\.)\s*$", re.IGNORECASE
+)
+
+
+def instruction_rider(instruction: str) -> str | None:
+    """The sentence a modal instruction line carries after "choose N and",
+    capitalised as a sentence of its own, or `None` when it carries none."""
+    match = _INSTRUCTION_RIDER.match(instruction.strip())
+    if match is None:
+        return None
+    rider = match.group("rider")
+    return rider[:1].upper() + rider[1:]

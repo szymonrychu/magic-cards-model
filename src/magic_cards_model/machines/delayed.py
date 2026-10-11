@@ -1531,6 +1531,45 @@ class ReflexiveAttachSubjectToTargetConsequence(DelayedEffectSpecBase):
                 return
 
 
+class ReflexiveReturnThenAttachToSubjectConsequence(DelayedEffectSpecBase):
+    """ "Create `<a token>`. When you do, return target `<card>` from your
+    graveyard to the battlefield, then attach it to that token." (CR 603.12,
+    CR 701.3a) - Ratonhnhake:ton's combat damage trigger.
+
+    The reflexive ability names its own target (announced off `<effect>`
+    alone, `printed_ability`, CR 603.3d); "that token" is the one the
+    antecedent created, carried on `DelayedTrigger.subject_id` (CR 603.7c).
+    The return is read like any other "return ... to the battlefield" clause
+    and run first, the attach follows (CR 608.2c) to whatever came back.
+    """
+
+    kind: Literal["reflexive_return_then_attach_to_subject_consequence"] = (
+        "reflexive_return_then_attach_to_subject_consequence"
+    )
+
+    def printed_ability(self, trigger: "DelayedTrigger") -> TriggeredAbility | None:
+        return _reflexive_when_you_do_ability(trigger)
+
+    def __call__(self, game: "Game", ability: AbilityOnStack, trigger: "DelayedTrigger") -> None:
+        from .effects import attach_permanent, parse_mixed_effect
+
+        printed = _reflexive_when_you_do_ability(trigger)
+        if printed is None or printed.effect is None or trigger.subject_id is None:
+            return
+        returned, _, _ = printed.effect.rstrip(".").partition(", then attach it to that token")
+        returning = parse_mixed_effect(returned + ".")
+        if returning is None:
+            return
+        targets = [t for t in game.resolve_targets(ability) if isinstance(t, CardState)]
+        returning(game, ability)
+        subject = game.find_by_id(trigger.subject_id)
+        if not isinstance(subject, CardState) or subject.zone is not Zone.BATTLEFIELD:
+            return
+        for target in targets:
+            if target.zone is Zone.BATTLEFIELD:
+                attach_permanent(game, target, subject)
+
+
 class ReflexiveDamageEqualToSubjectPowerConsequence(DelayedEffectSpecBase):
     """ "When one or more Equipment become attached to that creature this
     way, that creature deals damage equal to its power to up to one target
@@ -2370,6 +2409,7 @@ DelayedEffectSpec = Annotated[
     | ReflexiveMandatoryTokenDamageConsequence
     | ReflexiveCounterCountConsequence
     | ReflexiveAttachSubjectToTargetConsequence
+    | ReflexiveReturnThenAttachToSubjectConsequence
     | ReflexiveDamageEqualToSubjectPowerConsequence
     | ReflexiveWhenYouDoConsequence
     | ReflexiveExileCopiedCard

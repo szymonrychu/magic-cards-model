@@ -1,11 +1,11 @@
 {
-  "ability": "0: Create a 2/2 white Samurai creature token with double strike.",
+  "ability": "+1: Exile up to one target artifact or creature. Return that card to the battlefield under its owner's control at the beginning of that player's next end step.",
   "action": {
     "controller": "alice",
     "modes": [],
     "on_stack": true,
     "source": "The Eternal Wanderer@alice#1",
-    "targets": [],
+    "targets": ["Memnite@alice#1"],
     "x": 0
   },
   "board": {
@@ -34,27 +34,15 @@
   },
   "card": "The Eternal Wanderer",
   "delta": {
-    "created": {
-      "Samurai Token@alice+1": {
-        "attached_to": null,
-        "class_level": 1,
-        "controller": "alice",
-        "counters": {},
-        "damage": 0,
-        "face_up": true,
-        "granted": [],
-        "monstrous": false,
-        "power": 2,
-        "tapped": false,
-        "toughness": 2,
-        "transformed": false,
-        "zone": "battlefield"
+    "created": {},
+    "decisions": [],
+    "fields_changed": ["delayed_triggers", "exile_residents_seen", "permanents_left_battlefield_this_turn", "turn_counts", "turn_history"],
+    "notices": {},
+    "objects": {
+      "Memnite@alice#1": {
+        "zone": ["battlefield", "exile"]
       }
     },
-    "decisions": [],
-    "fields_changed": ["continuous_effects", "turn_counts", "turn_facts", "turn_history"],
-    "notices": {},
-    "objects": {},
     "players": {},
     "stack": []
   },

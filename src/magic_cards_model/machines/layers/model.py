@@ -2492,6 +2492,13 @@ class GrantActivatedAbilitiesOf(ModificationBase):
     card_types: tuple[Type, ...] = ()
     controller: str | None = None
     whose: Literal["opponents", "you", "any"] = "any"
+    chosen: bool = False
+    """Only the one permanent `only_card_id` names, chosen as the source
+    entered (Scheming Fence, CR 614.12a); with no id (nothing was chosen, or it
+    is gone) nothing is copied."""
+    only_card_id: UUID | None = None
+    except_loyalty: bool = False
+    """Loyalty abilities (CR 606.2) are not copied."""
 
     def texts(self, board: Board, host_id: UUID | None) -> tuple[str, ...]:
         """Every activated ability line this grant copies onto `host_id`."""
@@ -2499,13 +2506,19 @@ class GrantActivatedAbilitiesOf(ModificationBase):
         for other in board.values():
             if other.card_id == host_id:
                 continue
+            if self.chosen and other.card_id != self.only_card_id:
+                continue
             if self.card_types and not any(kind in other.types for kind in self.card_types):
                 continue
             if self.whose == "opponents" and other.controller == self.controller:
                 continue
             if self.whose == "you" and other.controller != self.controller:
                 continue
-            lines.extend(activated_ability_lines(other.abilities, other.name))
+            lines.extend(
+                activated_ability_lines(
+                    other.abilities, other.name, loyalty=not self.except_loyalty
+                )
+            )
         return tuple(dict.fromkeys(lines))
 
     def __call__(self, chars: Characteristics, board: Board) -> Characteristics:
@@ -3857,6 +3870,9 @@ class AllActivatedAbilitiesGrant(NamedTuple):
     graveyard_whose: Literal["you", "any"] = "any"
     graveyard_types: tuple[Type, ...] = ()
     graveyard_subtypes: tuple[str, ...] = ()
+    chosen: bool = False
+    """The one permanent chosen as the source entered (Scheming Fence)."""
+    except_loyalty: bool = False
 
     def graveyard_texts(self, source: CardState, context: LayerContext) -> tuple[str, ...]:
         """The activated abilities of every matching card in the named
@@ -3902,8 +3918,19 @@ class AllActivatedAbilitiesGrant(NamedTuple):
         return tuple(dict.fromkeys(texts))
 
     def board_modification(self, source: CardState) -> GrantActivatedAbilitiesOf:
+        chosen_id = None
+        if self.chosen and source.choice is not None and source.choice.kind.value == "object":
+            try:
+                chosen_id = UUID(source.choice.value)
+            except ValueError:
+                chosen_id = None
         return GrantActivatedAbilitiesOf(
-            card_types=self.board_types, controller=source.controller, whose=self.board_whose
+            card_types=self.board_types,
+            controller=source.controller,
+            whose=self.board_whose,
+            chosen=self.chosen,
+            only_card_id=chosen_id,
+            except_loyalty=self.except_loyalty,
         )
 
     def selector(self, source: CardState) -> Selector:

@@ -54,6 +54,7 @@ from ...machines.decisions import (
 )
 from ...machines.effects import (
     devotion_to,
+    modal_trigger_profile,
 )
 from ...machines.keywords import (
     morph_ability,
@@ -2481,6 +2482,42 @@ class ActivationMixin:
             profile, [TargetRef.coerce(target) for target in targets], controller, permanent.id
         )
 
+    def _announce_activation_modes(
+        self: "Game",
+        permanent: CardState,
+        controller: str,
+        ability: ActivatedAbility,
+        targets: list[object] | None,
+    ) -> tuple[list[int], list[list[TargetRef]]] | None:
+        """CR 700.2a for an activation: "The controller of a modal spell or
+        activated ability chooses the mode(s) as part of casting that spell or
+        activating that ability" - and CR 700.2c, only the chosen modes' own
+        targets are announced. `None` when the ability is not modal.
+
+        Reads the same bulleted "Choose one -" tail a modal triggered ability
+        does (`modal_trigger_profile`), with the same exclusions: a mode that
+        has no legal target can't be chosen (CR 700.2), and "choose one that
+        hasn't been chosen this turn" (Kargan Intimidator) leaves out a mode
+        this permanent already chose (`_announce_trigger_modes`). `targets`,
+        when the caller names them, answer the first targeted mode's slice.
+        """
+        modal = modal_trigger_profile(ability.effect)
+        if modal is None:
+            return None
+        announcing = AbilityOnStack(
+            kind=AbilityKind.ACTIVATED,
+            ability=ability,
+            source_id=permanent.id,
+            source_name=permanent.name,
+            controller=controller,
+        )
+        if not self._announce_trigger_modes(announcing, modal, targets or None):
+            raise ValueError(
+                f"{permanent.name}'s ability has no mode that can be chosen, so it cannot be "
+                "activated (CR 700.2, CR 602.2b)"
+            )
+        return list(announcing.modes), [list(slice_) for slice_ in announcing.mode_targets]
+
     def _check_activation_division(
         self: "Game",
         ability: ActivatedAbility,
@@ -2607,12 +2644,18 @@ class ActivationMixin:
         self._announced_targets.pop(key, None)
         ability = self.activated_abilities(permanent)[index]
         announced_x = x_value or self.announced_reveal_counts.get(key, 0)
-        announced = self._announce_activation_targets(
-            permanent,
-            controller,
-            self._activation_target_text(ability, announced_x, permanent),
-            targets,
-        )
+        self._announced_modes.pop(key, None)
+        modes = self._announce_activation_modes(permanent, controller, ability, targets)
+        if modes is not None:
+            self._announced_modes[key] = modes
+            announced = [target for slice_ in modes[1] for target in slice_]
+        else:
+            announced = self._announce_activation_targets(
+                permanent,
+                controller,
+                self._activation_target_text(ability, announced_x, permanent),
+                targets,
+            )
         if division is not None:
             # CR 601.2d via CR 602.2b: the division is announced right after
             # the targets, and refused now, before anything is paid.
@@ -2664,8 +2707,8 @@ class ActivationMixin:
             ),
             x_value,
         )
-        if announced is not None:
-            self._announced_targets[key] = (announced, payment)
+        if announced is not None or key in self._announced_modes:
+            self._announced_targets[key] = (announced or [], payment)
         self._opened_payments[key] = payment
         self._activation_source_stamps[key] = permanent.zone_change_stamp
         return payment
@@ -2824,6 +2867,7 @@ class ActivationMixin:
             key = self._activation_key(permanent, index)
             handoff = self._activation_handoff_key(permanent, index)
             entry = self._announced_targets.pop(handoff, None)
+            announced_modes = self._announced_modes.pop(handoff, None)
             opened = self._opened_payments.pop(handoff, None)
             paid = opened if opened is not None and opened.step is CostStep.PAID else None
             opened_stamp = self._activation_source_stamps.pop(handoff, None)
@@ -2864,14 +2908,20 @@ class ActivationMixin:
             else:
                 # A caller that never went through `begin_activating` announces
                 # here instead, against the ability's own text.
-                announced_targets = self._announce_activation_targets(
-                    permanent,
-                    controller,
-                    self._activation_target_text(ability, x_value, permanent),
-                    targets,
+                announced_modes = self._announce_activation_modes(
+                    permanent, controller, ability, targets
                 )
-                if announced_targets is not None:
-                    targets = list(announced_targets)
+                if announced_modes is not None:
+                    targets = [target for slice_ in announced_modes[1] for target in slice_]
+                else:
+                    announced_targets = self._announce_activation_targets(
+                        permanent,
+                        controller,
+                        self._activation_target_text(ability, x_value, permanent),
+                        targets,
+                    )
+                    if announced_targets is not None:
+                        targets = list(announced_targets)
             announced_division = (
                 self._check_activation_division(
                     ability,
@@ -3157,6 +3207,8 @@ class ActivationMixin:
                 source_times_transformed=permanent.times_transformed,
                 controller=controller,
                 targets=[TargetRef.coerce(target) for target in targets or []],
+                modes=list(announced_modes[0]) if announced_modes is not None else [],
+                mode_targets=list(announced_modes[1]) if announced_modes is not None else [],
                 x_value=x_value,
                 division=announced_division,
                 cost_exiled_card_id=exiled_for_cost.id if exiled_for_cost is not None else None,

@@ -759,3 +759,242 @@ def test_razorgrass_screen_cannot_attack_but_is_not_required_to():
     scenario = Scenario().player("alice", battlefield=["Razorgrass Screen"]).player("bob").build()
     scenario.start_at(Step.DECLARE_ATTACKERS)
     scenario.attack_with(defending="bob")
+
+
+# -- Glorfindel played end to end: "Whenever you scry, choose one and ~ gets
+#    +1/+1 until end of turn" (CR 701.22a, 603.3c, 700.2) ---------------------
+
+_FEWER_THAN_TWO = "Glorfindel can't be blocked by more than one creature each combat this turn."
+_MUST_BE_BLOCKED = "Glorfindel must be blocked this turn if able."
+
+
+def _scry_with_glorfindel(mode, blockers=()):
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Glorfindel, Dauntless Rescuer"], library=["Mountain"])
+        .player("bob", battlefield=list(blockers))
+        .build()
+    )
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    scenario.scry_keeping_everything_on_top(username="alice")
+    scenario.will_choose_mode(mode, username="alice", source="Glorfindel, Dauntless Rescuer")
+    scenario.game.scry("alice", 1, source="Glorfindel, Dauntless Rescuer")
+    scenario.game.put_triggers_on_stack()
+    assert scenario.stack_names() == ["Glorfindel, Dauntless Rescuer's triggered ability"]
+    scenario.pass_until_resolved()
+    return scenario
+
+
+def test_glorfindel_scry_pumps_and_applies_the_chosen_mode():
+    scenario = _scry_with_glorfindel(_FEWER_THAN_TWO, ["Hill Giant", "Grizzly Bears"])
+    glorfindel = scenario.creature("Glorfindel, Dauntless Rescuer", "alice")
+    base = glorfindel.card.power
+    assert scenario.game.power_of(glorfindel) == int(base) + 1
+    scenario.attack_with(glorfindel, defending="bob")
+    with pytest.raises(ValueError, match="CR 509.1b"):
+        scenario.block(
+            glorfindel, *[scenario.creature(n, "bob") for n in ("Hill Giant", "Grizzly Bears")]
+        )
+
+
+def test_glorfindel_other_mode_forces_a_block_and_still_pumps():
+    scenario = _scry_with_glorfindel(_MUST_BE_BLOCKED, ["Hill Giant"])
+    glorfindel = scenario.creature("Glorfindel, Dauntless Rescuer", "alice")
+    assert scenario.game.power_of(glorfindel) == int(glorfindel.card.power) + 1
+    scenario.attack_with(glorfindel, defending="bob")
+    with pytest.raises(ValueError, match="CR 509.1c"):
+        scenario.no_blocks()
+    scenario.block(glorfindel, scenario.creature("Hill Giant", "bob"))
+
+
+def test_glorfindel_modes_do_not_apply_without_a_scry():
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Glorfindel, Dauntless Rescuer"])
+        .player("bob", battlefield=["Hill Giant", "Grizzly Bears"])
+        .build()
+    )
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    glorfindel = scenario.creature("Glorfindel, Dauntless Rescuer", "alice")
+    scenario.attack_with(glorfindel, defending="bob")
+    scenario.no_blocks()
+
+
+# -- Ratonhnhake:ton's reflexive return-and-attach (CR 603.12, CR 701.3a) -------
+
+
+def _ratonhnhaketon_hits(graveyard):
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Ratonhnhaké꞉ton"], graveyard=list(graveyard))
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    assassin = scenario.creature("Ratonhnhaké꞉ton", "alice")
+    scenario.attack_with(assassin, defending="bob")
+    scenario.no_blocks()
+    scenario.combat_damage()
+    scenario.game.put_triggers_on_stack()
+    scenario.pass_until_resolved()  # the token
+    scenario.game.put_triggers_on_stack()
+    if scenario.stack_names():
+        scenario.pass_until_resolved()  # the reflexive return-and-attach
+    return scenario
+
+
+def test_ratonhnhaketon_returns_an_equipment_and_attaches_it_to_the_new_token():
+    scenario = _ratonhnhaketon_hits(["Bonesplitter"])
+    bonesplitter = scenario.find("Bonesplitter", Zone.BATTLEFIELD, "alice")
+    token = scenario.creature("Assassin Token", "alice")
+    assert bonesplitter.attached_to == token.id
+    assert scenario.game.characteristics_of(token).has_ability("Menace")
+
+
+def test_ratonhnhaketon_without_an_equipment_in_the_graveyard_still_makes_the_token():
+    scenario = _ratonhnhaketon_hits(["Grizzly Bears"])
+    scenario.creature("Assassin Token", "alice")
+    assert scenario.find("Grizzly Bears", Zone.GRAVEYARD, "alice") is not None
+
+
+# -- The Eternal Wanderer's +1: a delayed return at the owner's next end step --
+#    (CR 603.7, CR 400.7)
+
+
+def _wanderer_exiles(giants_owner="bob"):
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["The Eternal Wanderer"], library=["Island"] * 10)
+        .player("bob", battlefield=["Hill Giant"], library=["Island"] * 10)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    wanderer = scenario.find("The Eternal Wanderer", Zone.BATTLEFIELD, "alice")
+    giant = scenario.creature("Hill Giant", "bob")
+    scenario.activate(wanderer, index=0, targets=[giant])
+    scenario.pass_until_resolved()
+    return scenario, giant
+
+
+def _advance_to_end_step_of(scenario, username):
+    for _ in range(40):
+        if scenario.step is Step.END_STEP and scenario.game.active_player.username == username:
+            return
+        scenario.advance()
+    raise AssertionError("never reached the end step")
+
+
+def test_the_eternal_wanderer_exiled_card_returns_at_its_owners_next_end_step():
+    scenario, giant = _wanderer_exiles()
+    assert giant.zone is Zone.EXILE
+    _advance_to_end_step_of(scenario, "alice")
+    scenario.game.put_triggers_on_stack()
+    assert giant.zone is Zone.EXILE  # alice's own end step is not bob's
+    _advance_to_end_step_of(scenario, "bob")
+    scenario.game.put_triggers_on_stack()
+    scenario.pass_until_resolved()
+    returned = scenario.creature("Hill Giant", "bob")
+    assert returned.zone is Zone.BATTLEFIELD
+
+
+def test_the_eternal_wanderer_with_no_target_exiles_and_returns_nothing():
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["The Eternal Wanderer"], library=["Island"] * 10)
+        .player("bob", battlefield=["Hill Giant"], library=["Island"] * 10)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    wanderer = scenario.find("The Eternal Wanderer", Zone.BATTLEFIELD, "alice")
+    scenario.activate(wanderer, index=0, targets=[])
+    scenario.pass_until_resolved()
+    assert scenario.creature("Hill Giant", "bob").zone is Zone.BATTLEFIELD
+
+
+# -- Kargan Intimidator's modal activation, driven through the engine -----------
+#    "{1}: Choose one that hasn't been chosen this turn - ..." (CR 700.2a,
+#    CR 700.2c, CR 700.2d, CR 602.2b)
+
+PUMP_MODE = "This creature gets +1/+1 until end of turn."
+COWARD_MODE = "Target creature becomes a Coward until end of turn."
+TRAMPLE_MODE = "Target Warrior gains trample until end of turn."
+
+
+def _kargan_world(bob=("Grizzly Bears", "Serra Angel"), alice_extra=()):
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=["Kargan Intimidator", *alice_extra, "Island", "Island", "Island"],
+            library=["Island"] * 10,
+        )
+        .player("bob", battlefield=list(bob), library=["Island"] * 10)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    return scenario, scenario.creature("Kargan Intimidator", "alice")
+
+
+def _kargan_activate(scenario, kargan, mode, *targets):
+    scenario.will_choose_mode(mode, username="alice", source="Kargan Intimidator")
+    scenario.activate(kargan, *scenario.untapped_sources("Island"), index=0, targets=list(targets))
+    scenario.pass_until_resolved()
+
+
+def test_kargan_pump_mode_gives_plus_one_plus_one():
+    scenario, kargan = _kargan_world()
+    base = scenario.game.power_of(kargan)
+    _kargan_activate(scenario, kargan, PUMP_MODE)
+    assert scenario.game.power_of(kargan) == base + 1
+
+
+def test_kargan_coward_mode_makes_the_target_a_coward_that_cannot_block_warriors():
+    scenario, kargan = _kargan_world()
+    bears = scenario.creature("Grizzly Bears", "bob")
+    _kargan_activate(scenario, kargan, COWARD_MODE, bears)
+    assert scenario.game.characteristics_of(bears).subtypes == ("Coward",)  # CR 205.1a
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    scenario.attack_with(kargan, defending="bob")
+    with pytest.raises(ValueError, match="CR 509.1b"):
+        scenario.block(kargan, bears)
+
+
+def test_kargan_trample_mode_targets_only_a_warrior():
+    scenario, kargan = _kargan_world(alice_extra=["Hill Giant"])
+    _kargan_activate(scenario, kargan, TRAMPLE_MODE, kargan)  # Kargan is a Warrior
+    assert scenario.game.characteristics_of(kargan).has_ability("Trample")
+
+
+def test_kargan_trample_mode_refuses_a_target_that_is_not_a_warrior():
+    scenario, kargan = _kargan_world()
+    bears = scenario.creature("Grizzly Bears", "bob")
+    with pytest.raises(ValueError, match="needs a warrior"):
+        _kargan_activate(scenario, kargan, TRAMPLE_MODE, bears)
+
+
+def test_kargan_cannot_repeat_a_mode_in_one_turn():
+    scenario, kargan = _kargan_world()
+    _kargan_activate(scenario, kargan, PUMP_MODE)
+    scenario.will_choose_mode(PUMP_MODE, username="alice", source="Kargan Intimidator")
+    with pytest.raises(ValueError, match="not among the printed modes"):
+        scenario.activate(kargan, *scenario.untapped_sources("Island"), index=0, targets=[])
+
+
+def test_each_mode_can_be_chosen_once_in_a_turn():
+    scenario, kargan = _kargan_world()
+    bears = scenario.creature("Grizzly Bears", "bob")
+    _kargan_activate(scenario, kargan, PUMP_MODE)
+    _kargan_activate(scenario, kargan, COWARD_MODE, bears)
+    _kargan_activate(scenario, kargan, TRAMPLE_MODE, kargan)
+    assert set(kargan.chosen_modal_options_this_turn) == {PUMP_MODE, COWARD_MODE, TRAMPLE_MODE}
+
+
+def test_kargan_modes_reset_on_the_next_turn():
+    scenario, kargan = _kargan_world()
+    _kargan_activate(scenario, kargan, PUMP_MODE)
+    assert PUMP_MODE in kargan.chosen_modal_options_this_turn
+    for _ in range(30):
+        scenario.advance()
+        if scenario.game.turn.turn_number > 1 and scenario.step is Step.PRECOMBAT_MAIN:
+            break
+    assert PUMP_MODE not in kargan.chosen_modal_options_this_turn

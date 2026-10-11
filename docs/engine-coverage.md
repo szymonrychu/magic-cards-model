@@ -7939,4 +7939,18 @@ Rules read with `mise run rules:find`: CR 101.2, 601.3, 602.5, 506.5, 508.1c, 50
 | "can't be blocked by more than one creature each combat this turn" mode | `effects/continuous._parse_block_requirement_grant_clause` | Glorfindel, Dauntless Rescuer | same file |
 | "No more than one creature can attack ~ each combat" credited by the audit | `static_audit/casting_attack_restrictions.py` | The Eternal Wanderer | `scenarios/test_ep01_r2_attack_requirement_statics.py` |
 
-Other lines of the X cards (Godsend's block trigger, Glorfindel's scry trigger, Ratonhnhake's token trigger, The Eternal Wanderer's +1, Rakdos' life-lost discount, Norman Osborn's mayhem grant, Scheming Fence's copied abilities) belong to other epics. Gutter Skulker // Gutter Shortcut cannot join the pool until disturb is built.
+The other lines of the X cards are closed in the same task (CR 509.3a/509.3c/509.3e, 700.2a, 603.12, 603.7, 701.3a, 702.187b, 613.1f, 609.4b, 205.1a):
+
+| Mechanic | Where | Cards | Proof |
+|---|---|---|---|
+| "Whenever equipped creature blocks or becomes blocked by one or more creatures, you may exile one of those creatures" (once per combat, the other side of the pair; exiled with the source) | `triggers/conditions._equipped_blocks_or_is_blocked_once`, `effects/removal._exile_one_of_those_creatures_effect` | Godsend | `scenarios/test_ep01_r2_cant_cast_restrictions.py` |
+| "choose one and ~ gets +1/+1 until end of turn" (a rider on the modal instruction, run whichever mode is chosen) | `abilities._MODAL_INSTRUCTION_TAIL`, `modes.instruction_rider`, `effects/modal._run_modal_instruction_rider` | Glorfindel, Dauntless Rescuer | `scenarios/test_ep01_r2_attack_requirement_statics.py` |
+| "Create a token. When you do, return target <card> from your graveyard to the battlefield, then attach it to that token" | `effects/tokens._parse_token_then_reflexive_return_and_attach_clause`, `delayed.ReflexiveReturnThenAttachToSubjectConsequence` | Ratonhnhake:ton | same file |
+| "... return that card ... at the beginning of that player's [its owner's] next end step" (`only_when_active` on the owner) | `effects/returns._parse_delayed_blink_clauses` | The Eternal Wanderer | same file |
+| "cost {1} less to cast for each 1 life your opponents have lost this turn" | `effects/amounts._LIFE_LOST_BY_OPPONENTS_EACH_RE` | Rakdos, Lord of Riots | `scenarios/test_ep01_r2_cast_only_if_and_turn_restrictions.py` |
+| "Each nonland card in your graveyard has mayhem" read through its ability word | `casting/permissions.reads_granted_zone_keyword_line` | Norman Osborn // Green Goblin | `scenarios/test_ep01_r2_cant_cast_restrictions.py` |
+| "has all activated abilities of the chosen permanent except for loyalty abilities" + "spend mana as though any color to activate those abilities" | `layers/parse.all_activated_abilities_grant`, `GrantActivatedAbilitiesOf(chosen, only_card_id, except_loyalty)` | Scheming Fence | `scenarios/test_ep01_r2_attached_cant_attack_block_activate.py` |
+| Modes (and each chosen mode's targets) are announced as a modal activated ability is activated, "that hasn't been chosen this turn" excluded (CR 700.2a/700.2c) | `Game._announce_activation_modes` (shares `_announce_trigger_modes`) | Kargan Intimidator | `scenarios/test_ep01_r2_attack_requirement_statics.py` |
+| "<target> becomes a <creature type> [until end of turn]" replaces the creature types (CR 205.1a) | `layers/parse._BECOMES_CREATURE_TYPE_RE` | Kargan Intimidator | same file |
+
+Gutter Skulker // Gutter Shortcut cannot join the pool until disturb is built.

@@ -122,6 +122,7 @@ from magic_cards_model.machines.counter_effects import (
 from magic_cards_model.machines.effects import (
     _INLINE_REMINDER_RE,
     _YOU_AND_GROUP_SUBJECT_RE,
+    _ability_effect_or_notice,
     _compose_layer_effect_with_remainder_for_ability_mode,
     _parse_counter_then_recruit_by_mana_value_pair,
     _parse_endure_clause,
@@ -169,7 +170,12 @@ from magic_cards_model.machines.layers import (
 )
 from magic_cards_model.machines.layers.parse import read_cant_lose_cant_win
 from magic_cards_model.machines.map_tokens import credits_explore_via_created_token
-from magic_cards_model.machines.modes import Mode, modal_profile, substitute_x
+from magic_cards_model.machines.modes import (
+    Mode,
+    instruction_rider,
+    modal_profile,
+    substitute_x,
+)
 from magic_cards_model.machines.objects_as_costs import (
     granted_convoke_line_is_readable,
     has_improvise,
@@ -2389,6 +2395,12 @@ def _modal_trigger_category(effect_text: str, *, card_name: str | None = None) -
     def read(text: str) -> object | None:
         return _first_reading(text, card_name=card_name)
 
+    # A rider on the instruction line ("choose one and ~ gets +1/+1 until
+    # end of turn.") is run by the real dispatch before the modes.
+    rider = instruction_rider(profile.instruction)
+    if rider is not None and not _reads_whole(read(rider), read, rider):
+        return NOTICE
+
     if all(
         _reads_whole(read(mode_effect_body(mode)), read, mode_effect_body(mode))
         for mode in profile.modes
@@ -2430,6 +2442,7 @@ def _first_reading(mode_text: str, *, card_name: str | None = None) -> object | 
         parse_mixed_effect,
         _compose_layer_effect_with_remainder_for_ability_mode,
         _parse_where_x_is_continuous_effect,
+        _ability_effect_or_notice,
     ):
         result = reader(normalized)
         if result is not None:

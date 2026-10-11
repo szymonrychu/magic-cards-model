@@ -1,5 +1,5 @@
 {
-  "ability": "−4: For each player, choose a creature that player controls. Each player sacrifices all creatures they control not chosen this way.",
+  "ability": "0: Create a 2/2 white Samurai creature token with double strike.",
   "action": {
     "controller": "alice",
     "modes": [],
@@ -34,37 +34,27 @@
   },
   "card": "The Eternal Wanderer",
   "delta": {
-    "created": {},
-    "decisions": [
-      {
-        "amount": 1,
-        "cards": ["Memnite@alice#1", "Icehide Golem@alice#1"],
-        "kind": "choose_cards",
-        "player": "alice",
-        "players": [],
-        "prompt": "choose a creature you control",
-        "source": "The Eternal Wanderer"
-      },
-      {
-        "amount": 1,
-        "cards": ["Fleecemane Lion@bob#1", "Icehide Golem@bob#1"],
-        "kind": "choose_cards",
-        "player": "bob",
-        "players": [],
-        "prompt": "choose a creature you control",
-        "source": "The Eternal Wanderer"
-      }
-    ],
-    "fields_changed": ["creatures_died_this_turn", "graveyard_arrivals_announced", "graveyard_arrivals_this_turn", "nontoken_creatures_died_under_control_this_turn", "permanents_left_battlefield_this_turn", "permanents_sacrificed_this_turn", "turn_facts", "turn_history"],
-    "notices": {},
-    "objects": {
-      "Fleecemane Lion@bob#1": {
-        "zone": ["battlefield", "graveyard"]
-      },
-      "Memnite@alice#1": {
-        "zone": ["battlefield", "graveyard"]
+    "created": {
+      "Samurai Token@alice+1": {
+        "attached_to": null,
+        "class_level": 1,
+        "controller": "alice",
+        "counters": {},
+        "damage": 0,
+        "face_up": true,
+        "granted": [],
+        "monstrous": false,
+        "power": 2,
+        "tapped": false,
+        "toughness": 2,
+        "transformed": false,
+        "zone": "battlefield"
       }
     },
+    "decisions": [],
+    "fields_changed": ["continuous_effects", "turn_counts", "turn_facts", "turn_history"],
+    "notices": {},
+    "objects": {},
     "players": {},
     "stack": []
   },

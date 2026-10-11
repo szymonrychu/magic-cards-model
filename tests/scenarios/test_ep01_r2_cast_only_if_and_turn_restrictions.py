@@ -152,6 +152,60 @@ def test_a_self_named_unless_gate_reads_an_opponent_losing_life():
     assert _try(after, "Rakdos, Lord of Riots") is None
 
 
+def _giant_world(lost, *, owner="alice"):
+    """alice controls Rakdos (so its discount applies to her creature spells)
+    and holds a Hill Giant ({3}{R}); bob has lost `lost` life this turn."""
+    scenario = _scenario(alice=["Rakdos, Lord of Riots"], alice_hand=["Hill Giant", "Shock"])
+    if lost:
+        scenario.game.lose_life("bob", lost)
+    return scenario
+
+
+@pytest.mark.parametrize(("lost", "mana"), [(0, 4), (1, 3), (2, 2), (3, 1), (6, 1)])
+def test_creature_spells_cost_one_less_for_each_life_the_opponents_lost(lost, mana):
+    """Hill Giant {3}{R} costs {1} less per life lost, the {R} staying: exactly
+    `mana` sources pay for it, and one fewer is refused."""
+    scenario = _giant_world(lost)
+    scenario.cast_onto_stack(
+        "Hill Giant",
+        *scenario.untapped_sources(*(["Mountain", "Island", "Swamp", "Forest"])[:mana]),
+    )
+    assert scenario.stack_names() == ["Hill Giant"]
+    if mana > 1:
+        short = _giant_world(lost)
+        with pytest.raises(ValueError):
+            short.cast_onto_stack(
+                "Hill Giant",
+                *short.untapped_sources(*(["Mountain", "Island", "Swamp"])[: mana - 1]),
+            )
+
+
+def test_the_life_discount_counts_only_what_the_opponents_lost():
+    scenario = _giant_world(1)
+    scenario.game.lose_life("alice", 4)  # her own life loss is not counted
+    with pytest.raises(ValueError):
+        scenario.cast_onto_stack("Hill Giant", *scenario.untapped_sources("Mountain", "Island"))
+
+
+def test_the_life_discount_ends_with_the_source_and_is_not_the_opponents():
+    gone = _giant_world(3)
+    gone.game.exile_permanent(gone.find("Rakdos, Lord of Riots", Zone.BATTLEFIELD, "alice"))
+    with pytest.raises(ValueError):
+        gone.cast_onto_stack("Hill Giant", *gone.untapped_sources("Mountain"))
+    # bob's creature spells are not discounted by alice's Rakdos
+    scenario = _scenario(alice=["Rakdos, Lord of Riots"], bob_hand=["Hill Giant"], first="bob")
+    scenario.game.lose_life("bob", 3)
+    with pytest.raises(ValueError):
+        scenario.cast_onto_stack(
+            "Hill Giant", *scenario.untapped_sources("Mountain", username="bob"), username="bob"
+        )
+
+
+def test_the_life_discount_does_not_touch_noncreature_spells():
+    scenario = _giant_world(3)
+    scenario.cast_onto_stack("Shock", *scenario.untapped_sources("Mountain"), targets=["bob"])
+
+
 def test_feast_of_blood_cast_only_if_two_vampires():
     def world(vampires):
         return lambda: _scenario(

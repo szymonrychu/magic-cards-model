@@ -1040,6 +1040,13 @@ def _parse_return_rider_clause(clause: str) -> ReturnRiderCounter | None:
     return ReturnRiderCounter(amount=amount, who=who)
 
 
+#: "the beginning of that player's next end step" / "of its owner's next end
+#: step" - the exiled card's owner's own end step (CR 603.7).
+_OWNERS_NEXT_END_STEP_RE = re.compile(
+    r"the beginning of (?:that player's|its owner's) next end step", re.IGNORECASE
+)
+
+
 def _parse_delayed_blink_clauses(
     clauses: list[str], index: int, *, for_spell: bool
 ) -> tuple[int, TargetedClause] | None:
@@ -1074,7 +1081,14 @@ def _parse_delayed_blink_clauses(
         return None
     if index + 1 >= len(clauses):
         return None
-    timing = _parse_delayed_timing_clause(clauses[index + 1])
+    # CR 603.7: "at the beginning of that player's next end step" (The Eternal
+    # Wanderer's +1: the exiled card's owner) waits for the next end step of
+    # that player's own turn - read as the plain next end step plus an
+    # `only_when_active` gate on the owner, below.
+    owners_end_step = _OWNERS_NEXT_END_STEP_RE.search(clauses[index + 1]) is not None
+    timing = _parse_delayed_timing_clause(
+        _OWNERS_NEXT_END_STEP_RE.sub("the beginning of the next end step", clauses[index + 1])
+    )
     if timing is None:
         return None
     step, verb = timing
@@ -1161,6 +1175,7 @@ def _parse_delayed_blink_clauses(
                     source_id=source_id,
                     source_name=source_name,
                     subject_id=target.id,
+                    only_when_active=target.owner if owners_end_step else None,
                     expected_zone=Zone.EXILE,
                     expected_stamp=target.zone_change_stamp,
                     effect=blink_effect,

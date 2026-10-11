@@ -478,3 +478,179 @@ def test_ashioks_erasure_bans_the_name_of_the_spell_it_exiled_until_it_leaves():
     scenario = build()
     scenario.game.exile_permanent(scenario.find("Ashiok's Erasure", Zone.BATTLEFIELD, "bob"))
     scenario.cast("Divination", username="alice")
+
+
+# -- Godsend's own exile: "Whenever equipped creature blocks or becomes blocked
+#    by one or more creatures, you may exile one of those creatures" ---------
+#    (CR 509.3a, 509.3c, 509.3e, 607.2a)
+
+
+def _godsend_combat(*, owner, blockers, attackers=("Grizzly Bears",), may=True):
+    """alice attacks bob; `owner`'s Godsend is attached to alice's first
+    attacker (owner alice) or bob's first blocker (owner bob), and the may is
+    answered. The scenario is left in the declare attackers step."""
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player(
+            "alice",
+            battlefield=[*attackers, *(["Godsend"] if owner == "alice" else [])],
+            hand=["Grizzly Bears"],
+            library=["Island"] * 5,
+        )
+        .player(
+            "bob",
+            battlefield=[*blockers, *(["Godsend"] if owner == "bob" else [])],
+            library=["Island"] * 5,
+        )
+        .build()
+    )
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    godsend = scenario.find("Godsend", Zone.BATTLEFIELD, owner)
+    attacking = [scenario.creature(name, "alice") for name in attackers]
+    blocking = [scenario.creature(name, "bob") for name in blockers]
+    godsend.attach_to(attacking[0] if owner == "alice" else blocking[0])
+    scenario.attack_with(*attacking, defending="bob")
+    scenario.will_take_the_may(may, source="Godsend", username=owner)
+    return scenario, attacking, blocking
+
+
+def _resolve_godsend_trigger(scenario):
+    scenario.game.put_triggers_on_stack()
+    assert scenario.stack_names() == ["Godsend's triggered ability"]
+    scenario.pass_until_resolved()
+
+
+def test_godsend_exiles_one_of_the_creatures_blocking_the_equipped_creature():
+    scenario, (attacker,), blocking = _godsend_combat(
+        owner="alice", blockers=["Hill Giant", "Serra Angel"]
+    )
+    scenario.will_choose_cards(blocking[1], source="Godsend", username="alice")
+    scenario.block(attacker, *blocking)
+    _resolve_godsend_trigger(scenario)  # a single trigger however many block
+    assert blocking[1].zone is Zone.EXILE
+    assert blocking[0].zone is Zone.BATTLEFIELD
+
+
+def test_godsend_exiles_the_attacker_the_equipped_blocker_blocks():
+    scenario, (attacker,), (blocker,) = _godsend_combat(owner="bob", blockers=["Hill Giant"])
+    scenario.block(attacker, blocker)
+    _resolve_godsend_trigger(scenario)
+    assert attacker.zone is Zone.EXILE
+    # exiled with Godsend, so its controller's later copies of the name are banned
+    scenario.start_at(Step.POSTCOMBAT_MAIN)
+    refusal = None
+    try:
+        scenario.cast("Grizzly Bears", username="alice")
+    except ValueError as error:
+        refusal = str(error)
+    assert refusal is not None and "Godsend" in refusal
+
+
+def test_godsend_blocking_two_attackers_triggers_once_and_exiles_one():
+    scenario, attackers, (blocker,) = _godsend_combat(
+        owner="bob", blockers=["Foriysian Interceptor"], attackers=("Grizzly Bears", "Hill Giant")
+    )
+    scenario.will_choose_cards(attackers[0], source="Godsend", username="bob")
+    scenario.block(attackers[0], blocker)
+    scenario.block(attackers[1], blocker)
+    _resolve_godsend_trigger(scenario)
+    assert attackers[0].zone is Zone.EXILE
+    assert attackers[1].zone is Zone.BATTLEFIELD
+
+
+def test_godsend_may_declined_exiles_nothing():
+    scenario, (attacker,), blocking = _godsend_combat(
+        owner="alice", blockers=["Hill Giant"], may=False
+    )
+    scenario.block(attacker, *blocking)
+    _resolve_godsend_trigger(scenario)
+    assert blocking[0].zone is Zone.BATTLEFIELD
+
+
+def test_godsend_does_not_trigger_for_a_creature_it_does_not_equip():
+    scenario, (attacker, other), blocking = _godsend_combat(
+        owner="alice", blockers=["Hill Giant"], attackers=("Grizzly Bears", "Hill Giant")
+    )
+    scenario.block(other, *blocking)
+    scenario.game.put_triggers_on_stack()
+    assert scenario.stack_names() == []
+
+
+# -- "Each nonland card in your graveyard has mayhem" (Green Goblin) -------------
+#    (CR 702.187b, CR 611.3d, CR 113.6f)
+
+GOBLIN = "Norman Osborn // Green Goblin"
+
+
+def _goblin_world(*, graveyard=("Divination",), hand=("Divination",), goblin_owner="alice"):
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player(
+            "alice",
+            battlefield=[*(GOBLIN,) * (goblin_owner == "alice"), *ISLANDS],
+            hand=list(hand),
+            graveyard=list(graveyard),
+            library=["Island"] * 5,
+        )
+        .player(
+            "bob",
+            battlefield=[*(GOBLIN,) * (goblin_owner == "bob")],
+            library=["Island"] * 5,
+        )
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scenario.goblin = scenario.creature("Norman Osborn", goblin_owner)
+    scenario.goblin.transform()  # CR 701.27a: Green Goblin
+    return scenario
+
+
+def _cast_from_graveyard(scenario, name):
+    """Cast `name` out of alice's graveyard announcing mayhem and paying its
+    mana cost; the refusal text, or None when it is on the stack."""
+    try:
+        sources = scenario.untapped_sources("Island", "Island", "Island")
+        casting = scenario.cast(name, username="alice", from_zone=Zone.GRAVEYARD)
+        casting.use_keyword("Mayhem")
+        scenario.pay_with(casting.begin_paying(), *sources)
+        scenario.put_on_stack(casting)
+    except ValueError as error:
+        return str(error)
+    return None
+
+
+def test_a_card_discarded_this_turn_may_be_cast_from_the_graveyard_for_its_mana_cost():
+    scenario = _goblin_world(graveyard=(), hand=("Divination",))
+    shock = scenario.find("Divination", Zone.HAND, "alice")
+    scenario.game.discard_cards("alice", [shock])
+    assert _cast_from_graveyard(scenario, "Divination") is None
+    assert scenario.stack_names() == ["Divination"]
+
+
+def test_a_card_not_discarded_this_turn_has_mayhem_but_cannot_use_it():
+    scenario = _goblin_world(graveyard=("Divination",), hand=())
+    refusal = _cast_from_graveyard(scenario, "Divination")
+    assert refusal is not None and "did not discard" in refusal
+
+
+def test_mayhem_is_only_granted_to_the_controllers_graveyard():
+    """bob controls Green Goblin: alice's discarded card gets no mayhem."""
+    scenario = _goblin_world(graveyard=(), hand=("Divination",), goblin_owner="bob")
+    scenario.game.discard_cards("alice", [scenario.find("Divination", Zone.HAND, "alice")])
+    assert "no Mayhem ability" in (_cast_from_graveyard(scenario, "Divination") or "")
+
+
+def test_the_mayhem_grant_ends_when_the_green_goblin_leaves():
+    scenario = _goblin_world(graveyard=(), hand=("Divination",))
+    scenario.game.discard_cards("alice", [scenario.find("Divination", Zone.HAND, "alice")])
+    scenario.game.exile_permanent(scenario.goblin)
+    assert "no Mayhem ability" in (_cast_from_graveyard(scenario, "Divination") or "")
+
+
+def test_the_unflipped_norman_osborn_grants_no_mayhem():
+    scenario = _goblin_world(graveyard=(), hand=("Divination",))
+    scenario.goblin.transform()  # back to Norman Osborn
+    scenario.game.discard_cards("alice", [scenario.find("Divination", Zone.HAND, "alice")])
+    assert "no Mayhem ability" in (_cast_from_graveyard(scenario, "Divination") or "")

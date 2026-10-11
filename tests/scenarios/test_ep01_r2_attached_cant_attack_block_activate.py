@@ -444,3 +444,71 @@ def test_the_chosen_permanent_activates_again_when_the_fence_leaves():
     scenario.game.exile_permanent(scenario.find("Scheming Fence", Zone.BATTLEFIELD, "alice"))
     ring = scenario.find("Sol Ring", Zone.BATTLEFIELD, "alice")
     assert scenario.why_cannot_activate(ring) is None
+
+
+# -- "This creature has all activated abilities of the chosen permanent except
+#    for loyalty abilities. You may spend mana as though it were mana of any
+#    color to activate those abilities." (Scheming Fence; CR 613.1f, CR 609.4b,
+#    CR 606.2) -------------------------------------------------------------------
+
+
+def _fence_copy_world(chosen: str, *others: str):
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Scheming Fence"],
+            battlefield=[chosen, *others, "Island", "Island", "Island", "Island"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scenario.will_take_the_may(True, source="Scheming Fence")
+    scenario.will_choose_cards(
+        scenario.find(chosen, Zone.BATTLEFIELD, "alice"), source="Scheming Fence"
+    )
+    fence = scenario.put_onto_battlefield("Scheming Fence", "alice")
+    return scenario, fence
+
+
+PUMP = "{1}{G}: This creature gets +2/+2 until end of turn. Activate only once each turn."
+
+
+def test_the_fence_has_the_chosen_permanents_activated_abilities():
+    scenario, fence = _fence_copy_world("Basking Rootwalla")
+    assert scenario.game.characteristics_of(fence).has_ability(PUMP)
+
+
+def test_the_fence_pays_for_those_abilities_with_mana_of_any_color():
+    scenario, fence = _fence_copy_world("Basking Rootwalla")
+    base = scenario.game.power_of(fence)
+    scenario.activate(fence, *scenario.untapped_sources("Island", "Island"), index=0)
+    scenario.pass_until_resolved()
+    assert scenario.game.power_of(fence) == base + 2
+
+
+def test_the_chosen_permanent_itself_can_no_longer_be_activated():
+    scenario, _fence = _fence_copy_world("Basking Rootwalla")
+    rootwalla = scenario.find("Basking Rootwalla", Zone.BATTLEFIELD, "alice")
+    assert scenario.why_cannot_activate(rootwalla) is not None
+
+
+def test_any_color_mana_is_only_for_the_copied_abilities():
+    scenario, _fence = _fence_copy_world("Basking Rootwalla", "Blazing Rootwalla")
+    other = scenario.find("Blazing Rootwalla", Zone.BATTLEFIELD, "alice")
+    with pytest.raises(ValueError):
+        scenario.activate(other, *scenario.untapped_sources("Island", "Island"), index=0)
+
+
+def test_the_fence_loses_the_abilities_when_the_chosen_permanent_leaves():
+    scenario, fence = _fence_copy_world("Basking Rootwalla")
+    scenario.game.exile_permanent(scenario.find("Basking Rootwalla", Zone.BATTLEFIELD, "alice"))
+    assert not scenario.game.characteristics_of(fence).has_ability(PUMP)
+
+
+def test_loyalty_abilities_are_not_copied():
+    scenario, fence = _fence_copy_world("Jace Beleren")
+    abilities = scenario.game.characteristics_of(fence).abilities
+    assert not any(line.startswith(("+", "−", "-", "0:")) for line in abilities)
+    assert not any("draw a card" in line.lower() for line in abilities)

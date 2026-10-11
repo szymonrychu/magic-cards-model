@@ -1094,6 +1094,12 @@ class Game(
     _announced_targets: dict[str, tuple[list[TargetRef], CostPayment]] = PrivateAttr(
         default_factory=dict
     )
+    _announced_modes: dict[str, tuple[list[int], list[list[TargetRef]]]] = PrivateAttr(
+        default_factory=dict
+    )
+    """The modes (and each one's targets) `begin_activating` announced for a
+    modal activated ability (CR 700.2a), taken back by `activate_ability`
+    together with `_announced_targets`. Not persisted, for the same reason."""
     _opened_payments: dict[str, CostPayment] = PrivateAttr(default_factory=dict)
     _activation_source_stamps: dict[str, UUID] = PrivateAttr(default_factory=dict)
     """The source's `zone_change_stamp` as `begin_activating` opened each

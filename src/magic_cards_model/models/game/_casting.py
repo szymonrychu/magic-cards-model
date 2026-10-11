@@ -1380,7 +1380,12 @@ class CastingMixin:
             return True
         return bool(self._legal_target_candidates(profile, caster, card.id))
 
-    def _announce_trigger_modes(self: "Game", ability: AbilityOnStack, modal: ModalProfile) -> bool:
+    def _announce_trigger_modes(
+        self: "Game",
+        ability: AbilityOnStack,
+        modal: ModalProfile,
+        scripted_targets: Sequence[object] | None = None,
+    ) -> bool:
         """Choose a modal triggered ability's modes and their targets as it goes
         on the stack (CR 603.3c, CR 700.2b, CR 700.2c). False when no mode is
         chosen, which removes the ability.
@@ -1464,7 +1469,11 @@ class CastingMixin:
                     mode.text for mode in chosen
                 )
         slices: list[list[TargetRef]] = []
-        scripted = self.trigger_targets.get(ability.source_name)
+        scripted = (
+            list(scripted_targets)
+            if scripted_targets is not None
+            else self.trigger_targets.get(ability.source_name)
+        )
         for mode in chosen:
             body = mode_effect_body(mode)
             profile = profile_for_text(body)
@@ -1472,7 +1481,13 @@ class CastingMixin:
                 slices.append([])
                 continue
             if scripted is not None:
-                slices.append(list(scripted))
+                if scripted_targets is not None:
+                    # Targets the activating player named (CR 602.2b): checked
+                    # against this mode's own requirement (CR 601.2c).
+                    profile.check(
+                        list(scripted), ability.controller, self, source_id=ability.source_id
+                    )
+                slices.append([TargetRef.coerce(target) for target in scripted])
                 scripted = None
                 continue
             asked = self._ask_targets(
