@@ -82,6 +82,7 @@ from .cost import (
     total_cost_for_phrase,
 )
 from .cost.abilities import KEYWORD_KINDS, ability_cost_adjustment, cycling_costs_nothing
+from .crew_saddle_statics import contribution, station_amount, total_contribution
 from .decisions import Decision, DecisionKind, source_id_of
 from .delayed import anaphoric_delayed_trigger
 from .designations import designation_holds, split_as_long_as
@@ -103,8 +104,6 @@ from .objects_as_costs import (
     crew_number,
     crew_offer,
     has_crew_loyalty_alternative,
-    power_of,
-    total_power,
 )
 from .soulbond import soulbond_effect
 from .triggers import (
@@ -3537,9 +3536,11 @@ def crew_activation(
             )
         seen.add(creature.id)
 
-    have = total_power(chosen, game)
+    have = total_contribution(game, chosen, "crew")
     if have < number:
-        listing = ", ".join(f"{c.name} ({power_of(c, game)})" for c in chosen) or "nothing"
+        listing = (
+            ", ".join(f"{c.name} ({contribution(game, c, 'crew')})" for c in chosen) or "nothing"
+        )
         raise ValueError(
             f"crewing {vehicle.name} needs total power {number} or greater, but "
             f"{listing} totals {have} ({KeywordRule.CREW})"
@@ -3766,9 +3767,11 @@ def saddle_activation(
                 f"only one untap to spend ({KeywordRule.SADDLE}, CR 118.3)"
             )
         seen.add(creature.id)
-    have = total_power(chosen, game)
+    have = total_contribution(game, chosen, "saddle")
     if have < number:
-        listing = ", ".join(f"{c.name} ({power_of(c, game)})" for c in chosen) or "nothing"
+        listing = (
+            ", ".join(f"{c.name} ({contribution(game, c, 'saddle')})" for c in chosen) or "nothing"
+        )
         raise ValueError(
             f"saddling {mount.name} needs total power {number} or greater, but "
             f"{listing} totals {have} ({KeywordRule.SADDLE})"
@@ -3915,7 +3918,7 @@ def _station_effect(activation: KeywordActivation) -> CardState | None:
     tapped = game.find_by_id(paid[0].id)
     if not isinstance(tapped, CardState):
         return None
-    amount = power_of(tapped, game)
+    amount = station_amount(game, tapped)
     if amount > 0:
         game.add_counters(permanent, Counter.CHARGE, amount)
     return permanent

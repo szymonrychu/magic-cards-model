@@ -1,0 +1,132 @@
+{
+  "object": "card",
+  "id": "97ffdaad-7b35-4256-9da1-0befc6bd86f4",
+  "oracle_id": "45beca46-480c-4771-ba46-78b6ac7d5c2c",
+  "multiverse_ids": [
+    413596
+  ],
+  "mtgo_id": 60991,
+  "mtgo_foil_id": 60992,
+  "tcgplayer_id": 118728,
+  "cardmarket_id": 290360,
+  "name": "Honden of Seeing Winds",
+  "lang": "en",
+  "released_at": "2016-06-10",
+  "uri": "https://api.scryfall.com/cards/97ffdaad-7b35-4256-9da1-0befc6bd86f4",
+  "scryfall_uri": "https://scryfall.com/card/ema/54/honden-of-seeing-winds?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T10:13:34Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/9/7/97ffdaad-7b35-4256-9da1-0befc6bd86f4.jpg?1783937614",
+    "normal": "https://cards.scryfall.io/normal/front/9/7/97ffdaad-7b35-4256-9da1-0befc6bd86f4.jpg?1783937614",
+    "large": "https://cards.scryfall.io/large/front/9/7/97ffdaad-7b35-4256-9da1-0befc6bd86f4.jpg?1783937614",
+    "png": "https://cards.scryfall.io/png/front/9/7/97ffdaad-7b35-4256-9da1-0befc6bd86f4.png?1783937614",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/9/7/97ffdaad-7b35-4256-9da1-0befc6bd86f4.jpg?1783937614",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/9/7/97ffdaad-7b35-4256-9da1-0befc6bd86f4.jpg?1783937614",
+    "thumb": "https://cards.scryfall.io/thumb/front/9/7/97ffdaad-7b35-4256-9da1-0befc6bd86f4.webp?1783937614",
+    "grid": "https://cards.scryfall.io/grid/front/9/7/97ffdaad-7b35-4256-9da1-0befc6bd86f4.webp?1783937614",
+    "display": "https://cards.scryfall.io/display/front/9/7/97ffdaad-7b35-4256-9da1-0befc6bd86f4.webp?1783937614",
+    "art": "https://cards.scryfall.io/art/front/9/7/97ffdaad-7b35-4256-9da1-0befc6bd86f4.webp?1783937614",
+    "crop": "https://cards.scryfall.io/crop/front/9/7/97ffdaad-7b35-4256-9da1-0befc6bd86f4.webp?1783937614"
+  },
+  "mana_cost": "{4}{U}",
+  "cmc": 5.0,
+  "type_line": "Legendary Enchantment \u2014 Shrine",
+  "oracle_text": "At the beginning of your upkeep, draw a card for each Shrine you control.",
+  "colors": [
+    "U"
+  ],
+  "color_identity": [
+    "U"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "1f29f022-3ace-4c96-85e8-1f7b63aadf7e",
+  "set": "ema",
+  "set_name": "Eternal Masters",
+  "set_type": "masters",
+  "set_uri": "https://api.scryfall.com/sets/1f29f022-3ace-4c96-85e8-1f7b63aadf7e",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Aema&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/ema?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/97ffdaad-7b35-4256-9da1-0befc6bd86f4/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A45beca46-480c-4771-ba46-78b6ac7d5c2c&unique=prints",
+  "collector_number": "54",
+  "digital": false,
+  "rarity": "uncommon",
+  "flavor_text": "To the sorrow of all, its winds found sin in the hearts of those who once learned from its wisdom.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Martina Pilcerova",
+  "artist_ids": [
+    "30fead7c-da53-4c1b-b514-4be6e5ce487c"
+  ],
+  "illustration_id": "24b317b6-4a48-4fee-b97f-c5f906be1cb9",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 5326,
+  "penny_rank": 4293,
+  "prices": {
+    "usd": "2.74",
+    "usd_foil": "7.47",
+    "usd_etched": null,
+    "eur": "1.62",
+    "eur_foil": "4.85",
+    "tix": "0.04"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=413596&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DHonden%2Bof%2BSeeing%2BWinds",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DHonden%2Bof%2BSeeing%2BWinds",
+    "edhrec": "https://edhrec.com/route/?cc=Honden+of+Seeing+Winds"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F118728%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=290360&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/60991?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

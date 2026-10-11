@@ -57,12 +57,17 @@ from ...machines.layers import (
     only_this_incarnation,
     plays_lands_from_graveyard_line,
 )
+from ...machines.player_action_prohibitions import (
+    library_search_blocked,
+    sacrifice_caused_by_opponent,
+)
 from ...machines.replacement import (
     EventKind,
     NextTimeDrawReplacement,
     ReplaceableEvent,
     apply_replacements,
 )
+from ...machines.revealed_information import additional_looks
 from ...machines.spell_grants import granted_hand_keyword_lines
 from ...machines.triggers import (
     AbilityOnStack,
@@ -999,7 +1004,9 @@ class ZonesMixin:
             self.emit(GameEvent(event=TriggerEvent.SCRY_OR_SURVEIL, player=player.username))
             self.record_turn_fact("scried_or_surveilled", player.username)
 
-            looked_at = self._look_at_top(player, count)
+            looked_at = self._look_at_top(
+                player, count + additional_looks(self, player.username, "scry")
+            )
             pending_looks = self._look_before_choosing(player, looked_at, source)
             answer = self.ask(
                 Decision(
@@ -1092,7 +1099,9 @@ class ZonesMixin:
             self.emit(GameEvent(event=TriggerEvent.SCRY_OR_SURVEIL, player=player.username))
             self.record_turn_fact("scried_or_surveilled", player.username)
 
-            looked_at = self._look_at_top(player, count)
+            looked_at = self._look_at_top(
+                player, count + additional_looks(self, player.username, "surveil")
+            )
             pending_looks = self._look_before_choosing(player, looked_at, source)
             answer = self.ask(
                 Decision(
@@ -1561,6 +1570,11 @@ class ZonesMixin:
             ):
                 return []
 
+            if zone is Zone.LIBRARY and library_search_blocked(self, player.username) is not None:
+                # CR 101.2: "Players can't search libraries." - nothing is found,
+                # raised, removed or shuffled.
+                return []
+
             if zone is Zone.LIBRARY:
                 # CR 701.23a: this is the one function every library search in
                 # the engine goes through, so it is the one place to raise
@@ -1701,6 +1715,8 @@ class ZonesMixin:
                 and caused_by == player.username
                 and search_prohibition_source(self, caused_by) is not None
             ):
+                return []
+            if library_search_blocked(self, player.username) is not None:
                 return []
             found = self.search_library(
                 player,
@@ -2827,7 +2843,9 @@ class ZonesMixin:
             raise ValueError(f"{permanent.name} is not a permanent on the battlefield")
         from ...machines.attacking_statics import cant_be_sacrificed
 
-        if cant_be_sacrificed(self, permanent) is not None:
+        if cant_be_sacrificed(self, permanent) is not None or sacrifice_caused_by_opponent(
+            self, permanent
+        ):
             # CR 101.2: "can't" beats the instruction to sacrifice; the
             # permanent stays where it is.
             return permanent

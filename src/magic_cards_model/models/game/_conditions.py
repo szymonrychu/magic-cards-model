@@ -20,6 +20,7 @@ from ...machines.layers import (
     ComputedBoard,
     LayerNotice,
 )
+from ...machines.revealed_information import face_down_visible_to
 from ...machines.triggers import (
     AbilityOnStack,
     ExtraTriggerEvent,
@@ -898,6 +899,19 @@ class ConditionsMixin:
                         turn=self._turns_taken(),
                         carried=False,
                     )
+        # "You may look at face-down creatures your opponents control any time."
+        # (Found Footage, Keeper of the Lens) - read fresh like the grants above.
+        for hidden in face_down_visible_to(self, viewer):
+            found[hidden.id] = KnownCard(
+                card_id=hidden.id,
+                card_name=hidden.card.name,
+                owner=hidden.owner or "",
+                zone=Zone.BATTLEFIELD,
+                index_from_top=None,
+                source='a static "look at face-down creatures" grant',
+                turn=self._turns_taken(),
+                carried=False,
+            )
         # "Play with the top card of your library revealed." (Courser of
         # Kruphix, Melek): every seat's top card is public to every viewer
         # while a permanent its owner controls says so (CR 400.2).
