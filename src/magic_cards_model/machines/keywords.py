@@ -2613,12 +2613,14 @@ def unearth_abilities(card: Card) -> list[KeywordAbility]:
 def unearth_abilities_of(game: Any, card: CardState) -> list[KeywordAbility]:
     """The unearth abilities `card` has right now: printed, plus any a static
     grants (Mishra, Tamer of Mak Fawa), and none while a static strips graveyard
-    cards of their abilities (Yixlid Jailer)."""
+    cards of their abilities (Yixlid Jailer) - except a grant stamped after
+    that static (CR 613.7a), which survives it."""
     from .graveyard_statics import granted_unearth_abilities, graveyard_abilities_lost_by
 
+    granted = granted_unearth_abilities(game, card)
     if card.zone is Zone.GRAVEYARD and graveyard_abilities_lost_by(game) is not None:
-        return []
-    return unearth_abilities(card.card) + granted_unearth_abilities(game, card)
+        return granted
+    return unearth_abilities(card.card) + granted
 
 
 def unearth_activation(
@@ -2651,7 +2653,7 @@ def unearth_activation(
         from .graveyard_statics import graveyard_abilities_lost_by
 
         jailer = graveyard_abilities_lost_by(game) if card.zone is Zone.GRAVEYARD else None
-        if jailer is not None:
+        if jailer is not None and not printed:
             raise ValueError(
                 f"{card.name} has no unearth ability: {jailer} makes cards in graveyards "
                 f"lose all abilities ({KeywordRule.UNEARTH})"
@@ -4773,7 +4775,12 @@ def off_zone_abilities(
         from .graveyard_statics import graveyard_abilities_lost_by
 
         if graveyard_abilities_lost_by(game) is not None:
-            return [entry for entry in pool if entry.zone is not Zone.GRAVEYARD]
+            # unearth entries were already filtered by `unearth_abilities_of`
+            return [
+                entry
+                for entry in pool
+                if entry.zone is not Zone.GRAVEYARD or entry.family == "unearth"
+            ]
     return pool
 
 

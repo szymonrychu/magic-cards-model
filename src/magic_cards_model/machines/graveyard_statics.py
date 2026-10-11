@@ -6,7 +6,9 @@
   existing. Judged from the battlefield, whoever controls the static.
 - "Each artifact card in your graveyard has unearth {1}{B}{R}." (CR 702.84a,
   CR 613.1f): each card of that type in the static controller's graveyard
-  gains an unearth ability. A Jailer-style removal wins over a grant here.
+  gains an unearth ability. A removal and a grant are both layer 6, so they
+  apply in timestamp order (CR 613.7a, the battlefield's entry order): a grant
+  stamped after the removal survives it, one stamped before is stripped.
 """
 
 import re
@@ -61,9 +63,22 @@ def granted_unearth_abilities(game: "Game", card: "CardState") -> "list[KeywordA
     owner = game._graveyard_owner_of(card)  # noqa: SLF001
     if owner is None:
         return []
+    last_removal = max(
+        (
+            position
+            for position, source in enumerate(game.battlefield)
+            if any(
+                _LOSE_ALL_RE.fullmatch(line.strip())
+                for line in game.characteristics_of(source).abilities
+            )
+        ),
+        default=-1,
+    )
     types = None
     granted: list[KeywordAbility] = []
-    for source in game.battlefield:
+    for position, source in enumerate(game.battlefield):
+        if position < last_removal:
+            continue
         if game.controller_of(source).username != owner:
             continue
         for line in game.characteristics_of(source).abilities:

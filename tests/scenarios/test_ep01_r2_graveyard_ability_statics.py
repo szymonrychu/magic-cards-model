@@ -162,6 +162,28 @@ def test_a_jailer_takes_the_granted_unearth_away_too():
     assert off_zone_abilities(ring.card, state=ring, game=scenario.game) == []
 
 
+def test_a_grant_stamped_after_the_jailer_survives_it():
+    """CR 613.7a: layer 6 effects apply in timestamp order, so Mishra entering
+    after Yixlid Jailer gives the unearth back; the Jailer only stripped
+    what existed before it."""
+    scenario = _board(
+        alice={"battlefield": ["Yixlid Jailer"]},
+        bob={"graveyard": ["Sol Ring"], "battlefield": ["Mishra, Tamer of Mak Fawa"]},
+    )
+    ring = scenario.find("Sol Ring", Zone.GRAVEYARD, "bob")
+    pool = off_zone_abilities(ring.card, state=ring, game=scenario.game)
+    assert [entry.family for entry in pool] == ["unearth"]
+
+
+def test_a_jailer_stamped_after_the_grant_still_strips_the_printed_unearth():
+    scenario = _board(
+        alice={"battlefield": ["Yixlid Jailer"]},
+        bob={"graveyard": ["Anathemancer"], "battlefield": ["Mishra, Tamer of Mak Fawa"]},
+    )
+    card = scenario.find("Anathemancer", Zone.GRAVEYARD, "bob")
+    assert off_zone_abilities(card.card, state=card, game=scenario.game) == []
+
+
 # ---- Mishra's other line: Ward-Sacrifice a permanent on every permanent ----
 
 
