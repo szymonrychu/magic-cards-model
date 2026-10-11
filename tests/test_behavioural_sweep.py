@@ -3708,7 +3708,10 @@ def _untapping(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
 
 def _targeting(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
     """Make something the target of a spell (a probe spell cast at it) or of
-    an ability (the stock targeting tool activated at it), CR 115.1."""
+    an ability (the stock targeting tool activated at it), CR 115.1. Pacifism
+    is the Aura probe (Brine Comber's "an Aura spell", CR 303.4a); a source
+    whose condition names its "enchanted/equipped creature" is aimed at what
+    it is attached to."""
     for probe in ("Giant Growth", "Lightning Bolt"):
 
         def spell(probe: str = probe) -> tuple[PlayedScenario, Any]:
@@ -3744,6 +3747,16 @@ def _targeting(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
         return scenario, source_id
 
     yield tool
+
+    def aura_spell() -> tuple[PlayedScenario, Any]:
+        scenario, source_id = _home(case, ability, hand=("Pacifism",))
+        aim = source_id
+        if re.search(r"\b(?:enchanted|equipped) creature becomes", ability.condition, re.I):
+            aim = scenario.game.find_by_id(source_id).attached_to or source_id
+        _cast(scenario, "Pacifism", prefer=aim)
+        return scenario, source_id
+
+    yield aura_spell
 
 
 #: The keywords that let a card be cast face down and turned face up for a
@@ -4748,6 +4761,15 @@ SWEEP_DRIVER_GAPS: tuple[DriverGap, ...] = (
         kind="activated",
         event="an activation in combat by the attacking source",
         precondition=r"activate only if this creature is attacking",
+    ),
+    # EP01-R2-T6: Templar Knight's "Tap five untapped attacking creatures you
+    # control named Templar Knight" cost needs five of them declared as
+    # attackers first - proven by
+    # tests/scenarios/test_ep01_r2_tap_attacking_named_cost.py.
+    DriverGap(
+        kind="activated",
+        event="several same-named creatures attacking to pay a tap cost",
+        precondition=r"tap \w+ untapped attacking creatures you control named",
     ),
     DriverGap(
         kind="activated",

@@ -159,7 +159,12 @@ def protection_qualities(card: Card) -> list[str]:
     "creatures you control have ... protection from black and from red") -
     `Game._effective_protection_qualities` is the one that reads both.
     """
-    return _qualities_from_text(card.oracle_text)
+    text = card.oracle_text
+    if text is None and card.card_faces:
+        # A flip or transform card prints its text per face (Tok-Tok's
+        # "Protection from red" sits on the flipped half).
+        text = "\n".join(face.oracle_text or "" for face in card.card_faces)
+    return _qualities_from_text(text)
 
 
 def protection_quality_readable(quality: str) -> bool:

@@ -2507,6 +2507,13 @@ def _condition_matches(
         if mine:
             if event.subject_id != source.id:
                 return False
+        elif (host := _HOST_BECOMES_TARGET_RE.match(lowered.strip())) is not None:
+            # CR 303.4b/301.5a: Brinebound Gift's "enchanted creature becomes
+            # the target of ..." - the permanent the source is attached to.
+            if source.attached_to is None or event.subject_id != source.attached_to:
+                return False
+            lowered = host.group("by")
+            condition = lowered
         elif (object_subject := _OBJECT_TARGET_SUBJECT.match(lowered.strip())) is not None:
             if event.subject_id is None and object_subject.group("you"):
                 # Reidane's "you or another permanent you control": CR 115.1
@@ -2875,6 +2882,11 @@ _TARGETED_OBJECT = (
     r"(?:creature|permanent|artifact|enchantment|land|planeswalker)"
     r"(?: spell)?(?: you control| an opponent controls)?"
 )
+#: "enchanted creature becomes the target of an Aura spell" (Brinebound Gift)
+#: - the attached permanent as the targeted object; `by` is the rest.
+_HOST_BECOMES_TARGET_RE = re.compile(
+    r"^(?:enchanted|equipped) creature becomes the target of (?P<by>.+)$"
+)
 _OBJECT_TARGET_SUBJECT = re.compile(
     rf"^(?P<you>you or )?(?P<subject>{_TARGETED_OBJECT}(?: or {_TARGETED_OBJECT})*)"
     r" becomes the target of (?P<by>.+)$"
@@ -2951,7 +2963,27 @@ def _targeting_object_matches(game: "Game", condition: str, event: GameEvent) ->
     is_ability_object = any(item.id == event.targeted_by for item in game.abilities_on_stack)
     if names_spell and names_ability:
         return True
-    return is_ability_object if names_ability else not is_ability_object
+    if names_ability:
+        return is_ability_object
+    if is_ability_object:
+        return False
+    quality = _TARGETING_SPELL_QUALITY.search(lowered)
+    if quality is None:
+        return True
+    # Brine Comber's "an Aura spell", Wild Defiance's "an instant or sorcery
+    # spell" (CR 115.1): the targeting spell itself must have the quality.
+    from ..next_spell import spell_has_quality
+
+    spell = game.find_by_id(event.targeted_by)
+    return spell is not None and spell_has_quality(spell, quality.group("quality"))
+
+
+#: The quality a becomes-target condition puts on the targeting spell: "an
+#: Aura spell", "an instant or sorcery spell" - the words between the article
+#: and "spell", read by `machines/next_spell.spell_has_quality`.
+_TARGETING_SPELL_QUALITY = re.compile(
+    r"(?:^|\bthe target of )(?:an?|one or more) (?P<quality>(?!spell\b)[a-z][a-z ]*?) spells?\b"
+)
 
 
 #: The subject of a `_COUNTERS_PUT_CONDITION` that is not the source itself:
@@ -3210,8 +3242,9 @@ def _unread_condition_matches(
         if match.group("your_turn") and game.active_player.username != controller:
             return False
         from_library = match.group("origin") == "your library"
+        any_graveyard = match.group("whose") == "graveyards"
         for arrival in game.graveyard_batch:
-            if arrival.player != controller:
+            if arrival.player != controller and not any_graveyard:
                 continue
             if from_library and arrival.origin_zone is not Zone.LIBRARY:
                 continue

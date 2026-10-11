@@ -464,3 +464,138 @@ def test_a_disturbed_aura_whose_creature_dies_is_exiled():
 
     assert bears.zone is Zone.GRAVEYARD
     assert aura.zone is Zone.EXILE
+
+
+# -- every listed disturb printing ------------------------------------------
+
+#: Every disturb card the EP-01 round 2 audit listed, with its back face and
+#: what the back face needs as a target as it is cast (CR 303.4a: an Aura
+#: spell targets the object or player it will enchant).
+LISTED_DISTURB = [
+    ("Baithook Angler", "Hook-Haunt Drifter", None),
+    (BEGGAR, "Generous Soul", None),
+    ("Binding Geist", "Spectral Binding", "creature"),
+    ("Brine Comber", "Brinebound Gift", "creature"),
+    ("Chaplain of Alms", "Chapel Shieldgeist", None),
+    ("Covert Cutpurse", "Covetous Geist", None),
+    ("Covetous Castaway", "Ghostly Castigator", None),
+    ("Dennick, Pious Apprentice", "Dennick, Pious Apparition", None),
+    (GRAFKEEPER, "Departed Soulkeeper", None),
+    ("Distracting Geist", "Clever Distraction", "creature"),
+    ("Dorothea, Vengeful Victim", "Dorothea's Retribution", "creature"),
+    ("Drogskol Infantry", "Drogskol Armaments", "creature"),
+    ("Faithbound Judge", "Sinner's Judgment", "player"),
+    (GALEDRIFTER, "Waildrifter", None),
+    ("Gutter Skulker", "Gutter Shortcut", "creature"),
+    ("Katilda, Dawnhart Martyr", "Katilda's Rising Dawn", "creature"),
+    ("Kindly Ancestor", "Ancestor's Embrace", "creature"),
+    ("Lantern Bearer", "Lanterns' Lift", "creature"),
+    (VETERAN, "Luminous Phantom", None),
+    ("Malevolent Hermit", "Benevolent Geist", None),
+    ("Mirrorhall Mimic", "Ghastly Mimicry", "creature"),
+    ("Mischievous Catgeist", "Catlike Curiosity", "creature"),
+    ("Mourning Patrol", "Morning Apparition", None),
+    ("Overwhelmed Archivist", "Archive Haunt", None),
+    (TWINBLADE, "Twinblade Invocation", "creature"),
+]
+
+#: A line on a listed disturb card that the round assigns to a sibling task
+#: (the plan: "The card's remaining static lines (e.g. Gutter Skulker's 'can't
+#: be blocked as long as it's attacking alone') are T4's/T3's"). Those lines
+#: are audited by their own task; every other clause here must read handled.
+SIBLING_OWNED_LINES = {
+    "Cards in graveyards can't be the targets of spells or abilities.",
+    "This creature can't be blocked as long as it's attacking alone.",
+    "Enchanted creature can't be blocked as long as it's attacking alone.",
+}
+
+_LANDS = ["Plains"] * 7 + ["Island"] * 5 + ["Swamp"] * 2
+_PIP_LAND = {"W": "Plains", "U": "Island", "B": "Swamp"}
+
+
+def _sources_for(cost: str) -> list[str]:
+    """The lands that pay `cost` exactly: each coloured pip its basic, the
+    generic part Plains (seven on the board pay {5}{W}{W})."""
+    pips = [symbol.strip("{}") for symbol in cost.replace("}{", "} {").split()]
+    coloured = [_PIP_LAND[pip] for pip in pips if pip in _PIP_LAND]
+    generic = sum(int(pip) for pip in pips if pip.isdigit())
+    return coloured + ["Plains"] * generic
+
+
+@pytest.mark.parametrize(("name", "back", "target"), LISTED_DISTURB)
+def test_every_listed_disturb_card_offers_its_graveyard_cast(name, back, target):
+    (option,) = [o for o in keyword_cast_options(card(name)) if o.keyword == "Disturb"]
+
+    assert option.zone is Zone.GRAVEYARD
+    assert option.casts_transformed is True
+    assert option.pays_mana_cost is False
+
+
+@pytest.mark.parametrize(("name", "back", "target"), LISTED_DISTURB)
+def test_every_listed_disturb_card_is_cast_transformed_and_enters_back_face_up(name, back, target):
+    """CR 702.146a/b and CR 712.11a for each listed printing: paid for its own
+    disturb cost from the graveyard, on the stack as its back face, and on the
+    battlefield back face up - an Aura attached to what it targeted."""
+    scenario = board(
+        {"graveyard": [name], "battlefield": [*_LANDS, "Grizzly Bears"]},
+        {"battlefield": ["Hill Giant"]},
+    ).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    (option,) = [o for o in keyword_cast_options(card(name)) if o.keyword == "Disturb"]
+    targets = {
+        None: None,
+        "creature": [scenario.creature("Grizzly Bears")],
+        "player": ["bob"],
+    }[target]
+
+    spell = _disturb(scenario, name, *_sources_for(str(option.cost)), targets=targets)
+    assert spell.zone is Zone.STACK
+    assert spell.name == back
+    scenario.resolve_top()
+
+    assert spell.zone is Zone.BATTLEFIELD
+    assert spell.transformed
+    assert spell.name == back
+    if target == "creature":
+        assert spell.attached_to == scenario.creature("Grizzly Bears").id
+
+
+@pytest.mark.parametrize(("name", "back", "target"), LISTED_DISTURB)
+def test_every_listed_disturb_card_reads_handled(name, back, target):
+    support = card_support(card(name))
+
+    unhandled = [
+        clause
+        for clause in support.clauses
+        if clause.status != "handled" and clause.text not in SIBLING_OWNED_LINES
+    ]
+    assert not unhandled, unhandled
+    assert all(
+        clause.status in {"handled", "unaudited"}
+        for clause in support.clauses
+        if clause.text in SIBLING_OWNED_LINES
+    )
+
+
+@pytest.mark.parametrize(
+    "name", [GRAFKEEPER, BEGGAR, "Baithook Angler", "Mourning Patrol", "Covert Cutpurse"]
+)
+def test_a_disturbed_creature_of_each_proof_printing_is_exiled_when_it_dies(name):
+    """The back face's "If <this> would be put into a graveyard from
+    anywhere, exile it instead" (CR 614.1a), on Devoted Grafkeeper, Beloved
+    Beggar and three more listed printings: destroyed, it goes to exile."""
+    scenario = board(
+        {"graveyard": [name], "battlefield": _LANDS},
+        {"hand": ["Go for the Throat"], "battlefield": ["Swamp"] * 2},
+    ).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    (option,) = [o for o in keyword_cast_options(card(name)) if o.keyword == "Disturb"]
+    spirit = _disturb(scenario, name, *_sources_for(str(option.cost)))
+    scenario.resolve_top()
+    scenario.pass_priority("alice")
+
+    swamps = scenario.untapped_sources("Swamp", "Swamp", username="bob")
+    scenario.cast_and_resolve("Go for the Throat", *swamps, username="bob", targets=[spirit])
+
+    assert spirit.zone is Zone.EXILE
+    assert scenario.find(name, Zone.EXILE).id == spirit.id

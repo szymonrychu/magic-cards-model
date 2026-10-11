@@ -154,9 +154,11 @@ _ONE_OR_MORE_BECOME_TAPPED_CONDITION = re.compile(
 #: "one or more `<type>` cards are put into your graveyard from anywhere[
 #: during your turn]" (Robot Domination; Crawling Infestation) and the
 #: narrower origin "from your library" (CR 400.6). A card, so never a token
-#: (CR 108.2).
+#: (CR 108.2). The plural "into graveyards" (Dennick, Pious Apparition) is
+#: any player's graveyard, not only the controller's.
 _ONE_OR_MORE_CARDS_INTO_YOUR_GRAVEYARD_CONDITION = re.compile(
-    r"^one or more (?P<types>[a-z]+(?: or [a-z]+)*) cards are put into your graveyard"
+    r"^one or more (?P<types>[a-z]+(?: or [a-z]+)*) cards are put into "
+    r"(?P<whose>your graveyard|graveyards)"
     r" from (?P<origin>anywhere|your library)(?P<your_turn> during your turn)?$"
 )
 

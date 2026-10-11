@@ -33,6 +33,8 @@ skipped upkeep, `Game._advance_past_checks`):
   cards in hand."
 """
 
+import pytest
+
 from magic_cards_model.machines import Step
 from magic_cards_model.models import Zone
 from magic_cards_model.models.card_state import Counter
@@ -315,6 +317,22 @@ def test_giant_oyster_choice_is_per_permanent():
     to_untap_step_of(scenario, "alice")
 
     assert tapped([oyster, bears]) == [True, False]
+
+
+@pytest.mark.parametrize("name", ["The Blackstaff of Waterdeep", "Hisoka's Guard"])
+def test_the_other_listed_choose_not_to_untap_printings_keep_their_choice(name):
+    """The Blackstaff of Waterdeep and Hisoka's Guard print the same CR 502.3
+    choice: kept tapped when its controller takes it, untapped otherwise."""
+    scenario = build([name])
+    permanent = tap(scenario, name)
+
+    to_untap_step_of(scenario, "alice")
+    assert not permanent.tapped
+
+    permanent.tapped = True
+    scenario.will_take_the_may(True, username="alice", source=name)
+    to_untap_step_of(scenario, "alice")
+    assert permanent.tapped
 
 
 def test_an_untapped_permanent_is_never_asked_about():
