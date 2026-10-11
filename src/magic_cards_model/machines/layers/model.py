@@ -1729,6 +1729,84 @@ class CreaturesControlledByWithColor(SelectorBase):
         )
 
 
+class GroupMatch(SelectorBase):
+    """A printed group subject read generally (CR 611.3a, CR 613.5): "other
+    green creatures you control", "all Rats", "artifacts you control",
+    "non-Archon creatures", "legendary Humans you control", "creatures you
+    control with flanking", "creatures with slime counters on them". Every
+    clause is a predicate on the computed characteristics, so the group is
+    re-asked on each computation and never locked in. An empty tuple / None
+    leaves that clause out; `scope` says whose permanents (`username` is the
+    source's controller)."""
+
+    kind: Literal["group_match"] = "group_match"
+    username: str | None = None
+    scope: Literal["you", "opponents", "any"] = "you"
+    other_than: UUID | None = None
+    all_types: tuple[Type, ...] = ()
+    any_types: tuple[Type, ...] = ()
+    not_types: tuple[Type, ...] = ()
+    any_subtypes: tuple[str, ...] = ()
+    not_subtypes: tuple[str, ...] = ()
+    any_colors: tuple[Color, ...] = ()
+    not_colors: tuple[Color, ...] = ()
+    colorless: bool = False
+    legendary: bool | None = None
+    token: bool | None = None
+    with_keyword: str | None = None
+    without_keyword: str | None = None
+    with_counter: str | None = None
+    empty_if_unset: bool = False
+    """A "of the chosen type" group whose source recorded no choice is empty."""
+
+    def __call__(self, chars: Characteristics, board: Board) -> bool:
+        if self.empty_if_unset:
+            return False
+        if self.scope == "you" and chars.controller != self.username:
+            return False
+        if self.scope == "opponents" and (
+            chars.controller is None or chars.controller == self.username
+        ):
+            return False
+        if self.other_than is not None and chars.card_id == self.other_than:
+            return False
+        if any(card_type not in chars.types for card_type in self.all_types):
+            return False
+        if self.any_types and not any(card_type in chars.types for card_type in self.any_types):
+            return False
+        if any(card_type in chars.types for card_type in self.not_types):
+            return False
+        have = {subtype.lower() for subtype in chars.subtypes}
+        if self.any_subtypes and not any(subtype.lower() in have for subtype in self.any_subtypes):
+            return False
+        if any(subtype.lower() in have for subtype in self.not_subtypes):
+            return False
+        if self.any_colors and not any(color in chars.colors for color in self.any_colors):
+            return False
+        if any(color in chars.colors for color in self.not_colors):
+            return False
+        if self.colorless and chars.colors:
+            return False
+        if self.legendary is not None and self.legendary != (
+            Supertype.LEGENDARY in chars.supertypes
+        ):
+            return False
+        if self.token is not None and self.token != chars.is_token:
+            return False
+        if self.with_keyword is not None and not keywords_in_lines(
+            list(chars.abilities), [self.with_keyword]
+        ):
+            return False
+        if self.without_keyword is not None and keywords_in_lines(
+            list(chars.abilities), [self.without_keyword]
+        ):
+            return False
+        return self.with_counter is None or any(
+            kind.lower() == self.with_counter.lower() and count > 0
+            for kind, count in chars.counters.items()
+        )
+
+
 class PermanentsOfTypesControlledBy(SelectorBase):
     """ "<type> and <type> you control" (CR 205.2a) - `PermanentsControlledBy`'s
     own multi-type sibling, for a compound subject naming more than one card
@@ -1935,6 +2013,7 @@ Selector = Annotated[
     | CreaturesWithSubtype
     | PermanentsControlledByWithSubtype
     | CreaturesControlledByWithColor
+    | GroupMatch
     | PermanentsControlledByWithCounters
     | AttackingTokensControlledBy
     | AttackingGroupControlledBy

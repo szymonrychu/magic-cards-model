@@ -1,0 +1,146 @@
+{
+  "object": "card",
+  "id": "a4e787a7-3721-4ba7-b643-a103488cfc8a",
+  "oracle_id": "48054407-b5e1-431c-ad03-c12a31d0d9a8",
+  "multiverse_ids": [
+    571607
+  ],
+  "mtgo_id": 102032,
+  "tcgplayer_id": 276522,
+  "cardmarket_id": 664618,
+  "name": "Sedris, the Traitor King",
+  "lang": "en",
+  "released_at": "2022-07-08",
+  "uri": "https://api.scryfall.com/cards/a4e787a7-3721-4ba7-b643-a103488cfc8a",
+  "scryfall_uri": "https://scryfall.com/card/2x2/274/sedris-the-traitor-king?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T05:50:05Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/a/4/a4e787a7-3721-4ba7-b643-a103488cfc8a.jpg?1783921805",
+    "normal": "https://cards.scryfall.io/normal/front/a/4/a4e787a7-3721-4ba7-b643-a103488cfc8a.jpg?1783921805",
+    "large": "https://cards.scryfall.io/large/front/a/4/a4e787a7-3721-4ba7-b643-a103488cfc8a.jpg?1783921805",
+    "png": "https://cards.scryfall.io/png/front/a/4/a4e787a7-3721-4ba7-b643-a103488cfc8a.png?1783921805",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/a/4/a4e787a7-3721-4ba7-b643-a103488cfc8a.jpg?1783921805",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/a/4/a4e787a7-3721-4ba7-b643-a103488cfc8a.jpg?1783921805",
+    "thumb": "https://cards.scryfall.io/thumb/front/a/4/a4e787a7-3721-4ba7-b643-a103488cfc8a.webp?1783921805",
+    "grid": "https://cards.scryfall.io/grid/front/a/4/a4e787a7-3721-4ba7-b643-a103488cfc8a.webp?1783921805",
+    "display": "https://cards.scryfall.io/display/front/a/4/a4e787a7-3721-4ba7-b643-a103488cfc8a.webp?1783921805",
+    "art": "https://cards.scryfall.io/art/front/a/4/a4e787a7-3721-4ba7-b643-a103488cfc8a.webp?1783921805",
+    "crop": "https://cards.scryfall.io/crop/front/a/4/a4e787a7-3721-4ba7-b643-a103488cfc8a.webp?1783921805"
+  },
+  "mana_cost": "{3}{U}{B}{R}",
+  "cmc": 6.0,
+  "type_line": "Legendary Creature \u2014 Zombie Warrior",
+  "oracle_text": "Each creature card in your graveyard has unearth {2}{B}. ({2}{B}: Return the card to the battlefield. The creature gains haste. Exile it at the beginning of the next end step or if it would leave the battlefield. Unearth only as a sorcery.)",
+  "power": "5",
+  "toughness": "5",
+  "colors": [
+    "B",
+    "R",
+    "U"
+  ],
+  "color_identity": [
+    "B",
+    "R",
+    "U"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "5a645837-b050-449f-ac90-1e7ccbf45031",
+  "set": "2x2",
+  "set_name": "Double Masters 2022",
+  "set_type": "masters",
+  "set_uri": "https://api.scryfall.com/sets/5a645837-b050-449f-ac90-1e7ccbf45031",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3A2x2&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/2x2?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/a4e787a7-3721-4ba7-b643-a103488cfc8a/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A48054407-b5e1-431c-ad03-c12a31d0d9a8&unique=prints",
+  "collector_number": "274",
+  "digital": false,
+  "rarity": "mythic",
+  "flavor_text": "He bids his minions rise from their graves to their knees.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Paul Bonner",
+  "artist_ids": [
+    "db74e463-9c78-4f45-80a9-efa5cc4f9841"
+  ],
+  "illustration_id": "6feaef65-8ba4-4ad4-8c8f-8802ad214070",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 13125,
+  "penny_rank": 17739,
+  "preview": {
+    "source": "ilMasella",
+    "source_uri": "https://www.twitch.tv/videos/1508848809?t=00h52m00s",
+    "previewed_at": "2022-06-20"
+  },
+  "prices": {
+    "usd": "1.11",
+    "usd_foil": "1.19",
+    "usd_etched": null,
+    "eur": "0.83",
+    "eur_foil": "1.16",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=571607&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DSedris%252C%2Bthe%2BTraitor%2BKing",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DSedris%252C%2Bthe%2BTraitor%2BKing",
+    "edhrec": "https://edhrec.com/route/?cc=Sedris%2C+the+Traitor+King"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F276522%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=664618&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/102032?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

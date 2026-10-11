@@ -1,0 +1,134 @@
+{
+  "object": "card",
+  "id": "867b32d2-e396-411d-ac02-1af4106dd3d2",
+  "oracle_id": "1099588c-cc26-4523-8bd2-90e1e1433f53",
+  "multiverse_ids": [
+    430708
+  ],
+  "mtgo_id": 64522,
+  "mtgo_foil_id": 64523,
+  "tcgplayer_id": 135080,
+  "cardmarket_id": 298718,
+  "name": "Overwhelming Splendor",
+  "lang": "en",
+  "released_at": "2017-07-14",
+  "uri": "https://api.scryfall.com/cards/867b32d2-e396-411d-ac02-1af4106dd3d2",
+  "scryfall_uri": "https://scryfall.com/card/hou/19/overwhelming-splendor?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T09:47:39Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/8/6/867b32d2-e396-411d-ac02-1af4106dd3d2.jpg?1783936059",
+    "normal": "https://cards.scryfall.io/normal/front/8/6/867b32d2-e396-411d-ac02-1af4106dd3d2.jpg?1783936059",
+    "large": "https://cards.scryfall.io/large/front/8/6/867b32d2-e396-411d-ac02-1af4106dd3d2.jpg?1783936059",
+    "png": "https://cards.scryfall.io/png/front/8/6/867b32d2-e396-411d-ac02-1af4106dd3d2.png?1783936059",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/8/6/867b32d2-e396-411d-ac02-1af4106dd3d2.jpg?1783936059",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/8/6/867b32d2-e396-411d-ac02-1af4106dd3d2.jpg?1783936059",
+    "thumb": "https://cards.scryfall.io/thumb/front/8/6/867b32d2-e396-411d-ac02-1af4106dd3d2.webp?1783936059",
+    "grid": "https://cards.scryfall.io/grid/front/8/6/867b32d2-e396-411d-ac02-1af4106dd3d2.webp?1783936059",
+    "display": "https://cards.scryfall.io/display/front/8/6/867b32d2-e396-411d-ac02-1af4106dd3d2.webp?1783936059",
+    "art": "https://cards.scryfall.io/art/front/8/6/867b32d2-e396-411d-ac02-1af4106dd3d2.webp?1783936059",
+    "crop": "https://cards.scryfall.io/crop/front/8/6/867b32d2-e396-411d-ac02-1af4106dd3d2.webp?1783936059"
+  },
+  "mana_cost": "{6}{W}{W}",
+  "cmc": 8.0,
+  "type_line": "Enchantment \u2014 Aura Curse",
+  "oracle_text": "Enchant player\nCreatures enchanted player controls lose all abilities and have base power and toughness 1/1.\nEnchanted player can't activate abilities that aren't mana abilities or loyalty abilities.",
+  "colors": [
+    "W"
+  ],
+  "color_identity": [
+    "W"
+  ],
+  "keywords": [
+    "Enchant"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "65ff168b-bb94-47a5-a8f9-4ec6c213e768",
+  "set": "hou",
+  "set_name": "Hour of Devastation",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/65ff168b-bb94-47a5-a8f9-4ec6c213e768",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Ahou&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/hou?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/867b32d2-e396-411d-ac02-1af4106dd3d2/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A1099588c-cc26-4523-8bd2-90e1e1433f53&unique=prints",
+  "collector_number": "19",
+  "digital": false,
+  "rarity": "mythic",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Richard Wright",
+  "artist_ids": [
+    "7b1b0ce9-2c58-4321-a2a7-cdc94feae082"
+  ],
+  "illustration_id": "174c8c96-26b2-437e-b826-2e84bcb98072",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 8672,
+  "penny_rank": 1861,
+  "prices": {
+    "usd": "6.04",
+    "usd_foil": "16.91",
+    "usd_etched": null,
+    "eur": "5.20",
+    "eur_foil": "7.09",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=430708&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DOverwhelming%2BSplendor",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DOverwhelming%2BSplendor",
+    "edhrec": "https://edhrec.com/route/?cc=Overwhelming+Splendor"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F135080%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=298718&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/64522?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

@@ -1,0 +1,133 @@
+{
+  "object": "card",
+  "id": "a9407b60-8921-4531-bdbe-9a82aaa38d28",
+  "oracle_id": "cc7f290f-ca00-4285-9bdb-4b4402444f30",
+  "multiverse_ids": [
+    106642
+  ],
+  "mtgo_id": 25971,
+  "mtgo_foil_id": 25972,
+  "tcgplayer_id": 14613,
+  "cardmarket_id": 14114,
+  "name": "Lord of Atlantis",
+  "lang": "en",
+  "released_at": "2006-10-06",
+  "uri": "https://api.scryfall.com/cards/a9407b60-8921-4531-bdbe-9a82aaa38d28",
+  "scryfall_uri": "https://scryfall.com/card/tsb/24/lord-of-atlantis?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T11:48:00Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/a/9/a9407b60-8921-4531-bdbe-9a82aaa38d28.jpg?1783943280",
+    "normal": "https://cards.scryfall.io/normal/front/a/9/a9407b60-8921-4531-bdbe-9a82aaa38d28.jpg?1783943280",
+    "large": "https://cards.scryfall.io/large/front/a/9/a9407b60-8921-4531-bdbe-9a82aaa38d28.jpg?1783943280",
+    "png": "https://cards.scryfall.io/png/front/a/9/a9407b60-8921-4531-bdbe-9a82aaa38d28.png?1783943280",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/a/9/a9407b60-8921-4531-bdbe-9a82aaa38d28.jpg?1783943280",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/a/9/a9407b60-8921-4531-bdbe-9a82aaa38d28.jpg?1783943280",
+    "thumb": "https://cards.scryfall.io/thumb/front/a/9/a9407b60-8921-4531-bdbe-9a82aaa38d28.webp?1783943280",
+    "grid": "https://cards.scryfall.io/grid/front/a/9/a9407b60-8921-4531-bdbe-9a82aaa38d28.webp?1783943280",
+    "display": "https://cards.scryfall.io/display/front/a/9/a9407b60-8921-4531-bdbe-9a82aaa38d28.webp?1783943280",
+    "art": "https://cards.scryfall.io/art/front/a/9/a9407b60-8921-4531-bdbe-9a82aaa38d28.webp?1783943280",
+    "crop": "https://cards.scryfall.io/crop/front/a/9/a9407b60-8921-4531-bdbe-9a82aaa38d28.webp?1783943280"
+  },
+  "mana_cost": "{U}{U}",
+  "cmc": 2.0,
+  "type_line": "Creature \u2014 Merfolk",
+  "oracle_text": "Other Merfolk get +1/+1 and have islandwalk. (They can't be blocked as long as defending player controls an Island.)",
+  "power": "2",
+  "toughness": "2",
+  "colors": [
+    "U"
+  ],
+  "color_identity": [
+    "U"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "legal",
+    "premodern": "legal",
+    "predh": "legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "6519be58-b8cb-4cd7-9f5b-4db23364715b",
+  "set": "tsb",
+  "set_name": "Time Spiral Timeshifted",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/6519be58-b8cb-4cd7-9f5b-4db23364715b",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Atsb&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/tsb?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/a9407b60-8921-4531-bdbe-9a82aaa38d28/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Acc7f290f-ca00-4285-9bdb-4b4402444f30&unique=prints",
+  "collector_number": "24",
+  "digital": false,
+  "rarity": "special",
+  "flavor_text": "A master of tactics, the Lord of Atlantis makes his people bold in battle merely by arriving to lead them.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Melissa A. Benson",
+  "artist_ids": [
+    "9ade7727-1436-4828-9a1d-487c3d2ad1d9"
+  ],
+  "illustration_id": "f42364ed-5cc3-443c-8388-d161717d6e92",
+  "border_color": "black",
+  "frame": "1997",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 5008,
+  "prices": {
+    "usd": "9.82",
+    "usd_foil": "41.97",
+    "usd_etched": null,
+    "eur": "7.01",
+    "eur_foil": "17.22",
+    "tix": "0.72"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=106642&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DLord%2Bof%2BAtlantis",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DLord%2Bof%2BAtlantis",
+    "edhrec": "https://edhrec.com/route/?cc=Lord+of+Atlantis"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F14613%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=14114&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/25971?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

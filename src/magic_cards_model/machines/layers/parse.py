@@ -11541,6 +11541,17 @@ def _all_activated_abilities_builder(
 
 @functools.lru_cache(maxsize=16384)
 def _parse_static_layer_sentence(sentence: str) -> EffectBuilder | None:
+    """`_parse_narrow_static_layer_sentence`, then EP-01 R2 T1's generic group
+    subject (`group_grants.py`) - tried last, and also when a narrow shape
+    matched the sentence but declined it (a "<subtype>s you control have ..."
+    regex reading "Artifacts you control"), so nothing the older shapes read
+    changes."""
+    from .group_grants import parse_group_static_sentence
+
+    return _parse_narrow_static_layer_sentence(sentence) or parse_group_static_sentence(sentence)
+
+
+def _parse_narrow_static_layer_sentence(sentence: str) -> EffectBuilder | None:
     """The board-wide and filtered *static* shapes (CR 611.3), split out of
     `_parse_layer_sentence` only to keep either function readable - the two are
     one lookup, tried in this order.

@@ -1,0 +1,132 @@
+{
+  "object": "card",
+  "id": "656c3e32-8928-4b99-b79c-5761c592aa3d",
+  "oracle_id": "10da681b-50bd-4a1b-9934-f0c90e0af55c",
+  "multiverse_ids": [
+    482790
+  ],
+  "tcgplayer_id": 212423,
+  "cardmarket_id": 453973,
+  "name": "Tectonic Reformation",
+  "lang": "en",
+  "released_at": "2020-04-17",
+  "uri": "https://api.scryfall.com/cards/656c3e32-8928-4b99-b79c-5761c592aa3d",
+  "scryfall_uri": "https://scryfall.com/card/c20/162/tectonic-reformation?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T08:26:08Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/6/5/656c3e32-8928-4b99-b79c-5761c592aa3d.jpg?1783931168",
+    "normal": "https://cards.scryfall.io/normal/front/6/5/656c3e32-8928-4b99-b79c-5761c592aa3d.jpg?1783931168",
+    "large": "https://cards.scryfall.io/large/front/6/5/656c3e32-8928-4b99-b79c-5761c592aa3d.jpg?1783931168",
+    "png": "https://cards.scryfall.io/png/front/6/5/656c3e32-8928-4b99-b79c-5761c592aa3d.png?1783931168",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/6/5/656c3e32-8928-4b99-b79c-5761c592aa3d.jpg?1783931168",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/6/5/656c3e32-8928-4b99-b79c-5761c592aa3d.jpg?1783931168",
+    "thumb": "https://cards.scryfall.io/thumb/front/6/5/656c3e32-8928-4b99-b79c-5761c592aa3d.webp?1783931168",
+    "grid": "https://cards.scryfall.io/grid/front/6/5/656c3e32-8928-4b99-b79c-5761c592aa3d.webp?1783931168",
+    "display": "https://cards.scryfall.io/display/front/6/5/656c3e32-8928-4b99-b79c-5761c592aa3d.webp?1783931168",
+    "art": "https://cards.scryfall.io/art/front/6/5/656c3e32-8928-4b99-b79c-5761c592aa3d.webp?1783931168",
+    "crop": "https://cards.scryfall.io/crop/front/6/5/656c3e32-8928-4b99-b79c-5761c592aa3d.webp?1783931168"
+  },
+  "mana_cost": "{1}{R}",
+  "cmc": 2.0,
+  "type_line": "Enchantment",
+  "oracle_text": "Each land card in your hand has cycling {R}.\nCycling {2} ({2}, Discard this card: Draw a card.)",
+  "colors": [
+    "R"
+  ],
+  "color_identity": [
+    "R"
+  ],
+  "keywords": [
+    "Cycling"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": false,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "f60ec786-1f8d-42f7-9abc-0d880fe243f6",
+  "set": "c20",
+  "set_name": "Commander 2020",
+  "set_type": "commander",
+  "set_uri": "https://api.scryfall.com/sets/f60ec786-1f8d-42f7-9abc-0d880fe243f6",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Ac20&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/c20?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/656c3e32-8928-4b99-b79c-5761c592aa3d/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A10da681b-50bd-4a1b-9934-f0c90e0af55c&unique=prints",
+  "collector_number": "162",
+  "digital": false,
+  "rarity": "rare",
+  "flavor_text": "Alone in the charred desolation of her kingdom, she regretted many things\u2014most of all not acting sooner.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "James Paick",
+  "artist_ids": [
+    "1a7be0a2-d8ac-45c7-b0a0-eb0886f47b5f"
+  ],
+  "illustration_id": "967c874a-8539-49ec-8976-868d4ce5ea71",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "edhrec_rank": 6720,
+  "penny_rank": 4035,
+  "prices": {
+    "usd": "0.41",
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": "0.33",
+    "eur_foil": null,
+    "tix": null
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=482790&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DTectonic%2BReformation",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DTectonic%2BReformation",
+    "edhrec": "https://edhrec.com/route/?cc=Tectonic+Reformation"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F212423%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=453973&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards?affiliate_id=scryfall&data%5Bsearch%5D=Tectonic+Reformation&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}
