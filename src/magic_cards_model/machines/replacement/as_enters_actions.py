@@ -55,6 +55,12 @@ _PUT_FROM_EXILE = re.compile(
 _EXILE_UP_TO_X = re.compile(r"^exile up to x creature cards from your graveyard\.?$", re.IGNORECASE)
 
 
+_EXILE_ONE_FROM_GRAVEYARD = re.compile(
+    r"^exile an? (?P<what>creature|instant or sorcery) card from (?P<whose>your|a) graveyard\.?$",
+    re.IGNORECASE,
+)
+
+
 def _choose(
     game: "Game",
     who: str,
@@ -198,7 +204,54 @@ def _exile_up_to_x(_match: re.Match[str]) -> Action:
     return act
 
 
+def _exile_one_from_graveyard(match: re.Match[str]) -> Action:
+    """Dermotaxi's "Imprint - As this Vehicle enters, exile a creature card from
+    a graveyard" and Living Lore's "exile an instant or sorcery card from your
+    graveyard": the one card is exiled *with* the entering permanent (CR 607.2a)
+    so its later abilities can read it back (`Game.cards_exiled_with`)."""
+    wanted = (
+        {Type.CREATURE}
+        if match.group("what").lower() == "creature"
+        else {Type.INSTANT, Type.SORCERY}
+    )
+    yours = match.group("whose").lower() == "your"
+
+    def act(game, who, event, source, card_name):
+        entering = event.card
+        holders = [game.player(who)] if yours else list(game.players_in_game)
+        candidates = [
+            card
+            for holder in holders
+            for card in holder.graveyard
+            if wanted & set(card.types) and (entering is None or card.id != entering.id)
+        ]
+        chosen = _choose(
+            game,
+            who,
+            candidates,
+            1,
+            f"choose a card to exile as {card_name} enters",
+            card_name,
+            source,
+        )
+        if len(chosen) != 1 and candidates:
+            chosen = candidates[:1]  # not a "may": one must be exiled
+        for exiled in game.exile_cards(chosen):
+            if exiled.zone is Zone.EXILE and entering is not None:
+                exiled.exile_annotation = ExileAnnotation(
+                    marker=ExileMarker.LINKED,
+                    owner=exiled.owner,
+                    turn_exiled=game.turn.turns_taken if game.turn is not None else None,
+                    linked_permanent_id=entering.id,
+                    linked_permanent_stamp=None,
+                )
+        return len(chosen)
+
+    return act
+
+
 _ACTIONS = (
+    (_EXILE_ONE_FROM_GRAVEYARD, _exile_one_from_graveyard),
     (_REVEAL, _reveal),
     (_RETURN, _return),
     (_PUT_FROM_EXILE, _put_from_exile),

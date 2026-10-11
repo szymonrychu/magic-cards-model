@@ -11,6 +11,7 @@ import pytest
 
 from magic_cards_model.machines import Step
 from magic_cards_model.models import Zone
+from magic_cards_model.models.card import Type
 from magic_cards_model.models.card_state import Choice, ChoiceKind
 from magic_cards_model.models.token import PREDEFINED, TokenDefinition, create_tokens
 from magic_cards_model.support import HANDLED, classify_clauses
@@ -545,3 +546,62 @@ def test_without_guile_the_countered_spell_goes_to_the_graveyard():
 
 def test_guile_line_is_handled():
     _handled("Guile", "would counter a spell")
+
+
+# --- Dermotaxi: imprint a graveyard creature, then become a copy of it ---------
+# (CR 607.2a, 614.12a, 707.9b, 707.4)
+
+
+def _dermotaxi_board(*, graveyard):
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Dermotaxi"],
+            battlefield=["Island", "Island", "Grizzly Bears", "Grizzly Bears"],
+            graveyard=list(graveyard),
+        )
+        .player("bob", graveyard=["Wall of Omens"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    taxi = scenario.cast_and_resolve("Dermotaxi", username="alice", auto=True)
+    return scenario, taxi
+
+
+def test_dermotaxi_exiles_a_creature_card_from_a_graveyard_as_it_enters():
+    scenario, taxi = _dermotaxi_board(graveyard=["Serra Angel"])
+    linked = scenario.game.cards_exiled_with(taxi.id, None)
+    assert len(linked) == 1
+    assert linked[0].name in {"Serra Angel", "Wall of Omens"}
+    assert linked[0].zone is Zone.EXILE
+
+
+def test_dermotaxi_with_no_creature_card_anywhere_exiles_nothing():
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Dermotaxi"], battlefield=["Island", "Island"], graveyard=["Island"])
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    taxi = scenario.cast_and_resolve("Dermotaxi", username="alice", auto=True)
+    assert scenario.game.cards_exiled_with(taxi.id, None) == []
+
+
+def test_dermotaxi_becomes_a_vehicle_copy_of_the_exiled_card_until_end_of_turn():
+    scenario, taxi = _dermotaxi_board(graveyard=[])
+    linked = scenario.game.cards_exiled_with(taxi.id, None)
+    assert [c.name for c in linked] == ["Wall of Omens"]
+    bears = [c for c in scenario.game.battlefield if c.name == "Grizzly Bears"]
+    scenario.activate(taxi, tapping_for_cost=bears)
+    scenario.pass_until_resolved()
+    chars = scenario.game.characteristics_of(taxi)
+    assert chars.name == "Wall of Omens"
+    assert "Vehicle" in chars.subtypes
+    assert Type.ARTIFACT in chars.types and Type.CREATURE in chars.types
+
+
+def test_dermotaxi_lines_are_handled():
+    _handled("Dermotaxi", "Imprint")
+    _handled("Dermotaxi", "Until end of turn")

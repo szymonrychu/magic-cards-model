@@ -1062,6 +1062,17 @@ def _sacrifice_any_number_choice(effect: ReplacementEffect) -> tuple[str, bool] 
     return match.group("restriction").strip(), match.group("optional") is not None
 
 
+def _action_alone(action: "Action", card_name: str) -> Apply:
+    """CR 614.12a: an "As [this] enters" action with nothing sized from it."""
+
+    def apply(game: "Game", source: CardState | None, event: ReplaceableEvent) -> None:
+        entering = event.card
+        if entering is not None and entering.controller is not None:
+            action(game, entering.controller, event, source, card_name)
+
+    return apply
+
+
 def _action_then_enter_with_counters(
     action: "Action", follower: ReplacementEffect, card_name: str
 ) -> Apply:
@@ -2830,6 +2841,18 @@ def _self_enters_modifiers(
                             counted_action, parsed[follower], card_state.card.name
                         ),
                         f"{effect.text} {parsed[follower].text}",
+                        False,
+                    )
+                )
+                continue
+            if counted_action is not None and follower is None:
+                # A bare "As [this] enters, <action>" with no sentence sizing
+                # counters from it: Dermotaxi's imprint (CR 607.2a).
+                performable.append(
+                    (
+                        f"{key}:{index}",
+                        _action_alone(counted_action, card_state.card.name),
+                        effect.text,
                         False,
                     )
                 )

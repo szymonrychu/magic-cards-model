@@ -534,7 +534,7 @@ def _copiable_values_of(game: Game, obj: CardState) -> Characteristics:
     return printed_characteristics(obj)
 
 
-_SELF_SUBJECT = r"this (?:land|permanent|artifact|creature|enchantment)|he|she|it"
+_SELF_SUBJECT = r"this (?:land|permanent|artifact|creature|enchantment|vehicle)|he|she|it"
 
 #: "`<subject>` becomes a copy of `<object>`[ `<duration>`][, except
 #: `<exceptions>`]." with an optional leading duration - Absorbing Man's and
@@ -549,7 +549,8 @@ _SELF_SUBJECT = r"this (?:land|permanent|artifact|creature|enchantment)|he|she|i
 _BECOMES_A_COPY_RE = re.compile(
     r"^(?:(?P<lead>until end of turn|until your next turn), )?"
     rf"(?P<subject>{_SELF_SUBJECT}|target [^.]+?)"
-    r" becomes a copy of (?P<object>(?:up to one |a second |another )?target [^.]+?)"
+    r" becomes a copy of (?P<object>(?:up to one |a second |another )?target [^.]+?"
+    r"|the exiled card)"
     r"(?P<trail> until end of turn| until your next turn)?"
     r'(?:, except (?P<exception>(?:[^."]|"[^"]*")+?))?\.?$',
     re.IGNORECASE,
@@ -580,6 +581,9 @@ def _parse_becomes_a_copy_clause(
         return None
     duration = _copy_duration(match.group("lead") or match.group("trail"))
     subject_is_target = match.group("subject").lower().startswith("target")
+    exiled_card = match.group("object").lower() == "the exiled card"
+    if exiled_card and subject_is_target:
+        return None
 
     def effect(game: Game, stack_object: StackObject) -> None:
         from .triggers import AbilityOnStack as StackAbility
@@ -608,7 +612,13 @@ def _parse_becomes_a_copy_clause(
             ):
                 return
             subject = source
-            copied_object = announced[0] if announced else None
+            if exiled_card:
+                # Dermotaxi: "the exiled card" is the one exiled with this
+                # permanent as it entered (CR 607.2a), not a target.
+                linked = game.cards_exiled_with(source.id, None)
+                copied_object = linked[0] if linked else None
+            else:
+                copied_object = announced[0] if announced else None
         if subject is None or copied_object is None or subject.zone is not Zone.BATTLEFIELD:
             return  # CR 115.6's "up to one" chose none, or CR 608.2b removed it
         this_ability = None
