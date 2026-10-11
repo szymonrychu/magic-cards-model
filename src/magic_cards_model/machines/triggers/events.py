@@ -118,6 +118,11 @@ class ExtraTriggerEvent(StrEnum):
     #: and Greater Gargadon's printed "Sacrifice an artifact, creature, or
     #: land: Remove a time counter from this card" - raise it alike.
     LAST_TIME_COUNTER_REMOVED = "last_time_counter_removed"
+    #: "Whenever a time counter is removed from this card while it's exiled"
+    #: (Aeon Chronicler, Roiling Horror): every time counter a suspended card
+    #: loses, the last one included. `GameEvent.subject_id` is the card.
+    #: **Emitted by:** `machines/casting.remove_suspend_time_counter`.
+    TIME_COUNTER_REMOVED = "time_counter_removed"
     #: "When the last `<kind>` counter is removed from this permanent" for
     #: any other counter kind - a Siege's intrinsic defeat trigger (CR
     #: 310.12b) is the one that needs it. Raised by `CardState.remove_counters`

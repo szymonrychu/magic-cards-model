@@ -321,6 +321,7 @@
       "_parse_event_subject_pump_clause",
       "_parse_target_plus_x_minus_x_clause",
       "_parse_move_counter_clause",
+      "_parse_counters_equal_to_exiled_power_clause",
       "_parse_create_token_copy_of_cost_exiled_card_clause",
       "_parse_draw_then_delayed_discard_at_random_clause",
       "_parse_copy_cast_spell_clause",

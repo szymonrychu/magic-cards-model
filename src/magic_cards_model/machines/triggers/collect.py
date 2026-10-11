@@ -80,6 +80,8 @@ def _unread_trigger_events(condition: str) -> frozenset[TriggerEvent | ExtraTrig
         return frozenset({ExtraTriggerEvent.MANA_ADDED})
     if _LAST_TIME_COUNTER_CONDITION.match(lowered):
         return frozenset({ExtraTriggerEvent.LAST_TIME_COUNTER_REMOVED})
+    if _TIME_COUNTER_REMOVED_WHILE_EXILED_CONDITION.match(lowered):
+        return frozenset({ExtraTriggerEvent.TIME_COUNTER_REMOVED})
     if _LAST_COUNTER_CONDITION.match(lowered):
         return frozenset({ExtraTriggerEvent.LAST_COUNTER_REMOVED})
     if _REVEALED_THIS_WAY_CONDITION.match(lowered):
@@ -302,6 +304,14 @@ def zones_ability_functions_in(
     # what says which rule they came from. Both are covered by the one branch:
     # CR 702.62a scopes the sentence to the pair, not to either one.
     if ability.keyword is not None and ability.keyword.lower() == "suspend":
+        return frozenset({Zone.EXILE})
+
+    # CR 113.6b: "Whenever a time counter is removed from this card while it's
+    # exiled" (Aeon Chronicler, Roiling Horror) states the zone it works in;
+    # the reader files "while it's exiled" as the intervening condition.
+    if _TIME_COUNTER_REMOVED_WHILE_EXILED_CONDITION.match(lowered) and (
+        ability.intervening_if or ""
+    ).lower() in ("it's exiled", "this card is exiled"):
         return frozenset({Zone.EXILE})
 
     # CR 702.94a: miracle's static ability reveals the card "from your hand
@@ -1927,6 +1937,7 @@ from ._common import (  # noqa: E402
     _SELF_PUT_INTO_GRAVEYARD_FROM_ANYWHERE_CONDITION,
     _SOLVE_A_CASE_CONDITION,
     _STATE_COUNTER_TRIGGER_RE,
+    _TIME_COUNTER_REMOVED_WHILE_EXILED_CONDITION,
     _UNTAPPED_DURING_UNTAP_STEP_CONDITION,
     _YOU_PUT_A_COUNTER_ON_QUALITY_CONDITION,
 )

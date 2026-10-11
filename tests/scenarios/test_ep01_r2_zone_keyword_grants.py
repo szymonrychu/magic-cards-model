@@ -471,3 +471,143 @@ def test_without_devourer_a_card_cannot_be_foretold():
     giant = scenario.find("Hill Giant", Zone.HAND, "alice")
     with pytest.raises(ValueError, match="foretell"):
         MarkedExile.foretell(scenario.game, giant, "alice")
+
+
+# -- Suspend X: the count is chosen as the card is suspended (CR 702.62a) -----
+
+
+def _suspend_x(scenario, name: str, x: int, sources: list[str], player: str = "alice"):
+    from magic_cards_model.machines.casting import MarkedExile
+
+    card_state = scenario.find(name, Zone.HAND, player)
+    action = MarkedExile.suspend(scenario.game, card_state, player, x_value=x)
+    scenario.pay_with(action.begin_paying(), *scenario.untapped_sources(*sources, username=player))
+    action.take()
+    return card_state
+
+
+def _suspend_scenario(card_name: str, land: str, lands: int) -> Scenario:
+    return (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("alice", hand=[card_name], battlefield=[land] * lands, library=["Forest"] * 12)
+        .player("bob", library=["Forest"] * 12)
+    )
+
+
+def _upkeep_of(scenario, owner: str = "alice") -> None:
+    scenario.advance()
+    while not (scenario.step is Step.UPKEEP and scenario.turn.active_player == owner):
+        while not scenario.game.stack_is_empty:
+            scenario.resolve_top()
+        scenario.advance()
+
+
+def test_suspend_x_lines_are_read_as_keywords():
+    from magic_cards_model.machines.abilities import keyword_ability
+
+    for name in ("Aeon Chronicler", "Roiling Horror"):
+        ability = keyword_ability(card(name), "suspend")
+        assert ability is not None, name
+        assert ability.count is None and ability.count_is_x and ability.count_minimum == 1
+
+
+@pytest.mark.parametrize(
+    ("name", "land", "lands", "x", "cost"),
+    [
+        ("Aeon Chronicler", "Island", 6, 2, "{5}{U}"),
+        ("Roiling Horror", "Swamp", 6, 3, "{3}{B}{B}{B}"),
+    ],
+)
+def test_suspend_x_exiles_the_card_with_x_time_counters_for_the_x_cost(name, land, lands, x, cost):
+    from magic_cards_model.machines.casting import MarkedExile
+    from magic_cards_model.models.card_state import Counter
+
+    scenario = _suspend_scenario(name, land, lands).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    card_state = scenario.find(name, Zone.HAND, "alice")
+    action = MarkedExile.suspend(scenario.game, card_state, "alice", x_value=x)
+    assert str(action.cost.mana) == cost
+    scenario.pay_with(action.begin_paying(), *scenario.untapped_sources(*[land] * lands))
+    action.take()
+
+    assert card_state.zone is Zone.EXILE
+    assert card_state.counter_count(Counter.TIME) == x
+    assert card_state.exile_annotation.marker is ExileMarker.SUSPENDED
+
+
+def test_suspend_x_cannot_be_zero():
+    from magic_cards_model.machines.casting import MarkedExile
+
+    scenario = _suspend_scenario("Aeon Chronicler", "Island", 4).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    card_state = scenario.find("Aeon Chronicler", Zone.HAND, "alice")
+    with pytest.raises(ValueError, match="can't be 0"):
+        MarkedExile.suspend(scenario.game, card_state, "alice", x_value=0)
+
+
+def test_suspend_x_must_be_announced():
+    from magic_cards_model.machines.casting import MarkedExile
+
+    scenario = _suspend_scenario("Aeon Chronicler", "Island", 4).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    card_state = scenario.find("Aeon Chronicler", Zone.HAND, "alice")
+    with pytest.raises(ValueError, match="X"):
+        MarkedExile.suspend(scenario.game, card_state, "alice")
+
+
+def test_aeon_chroniclers_removed_time_counter_draws_a_card():
+    scenario = _suspend_scenario("Aeon Chronicler", "Island", 6).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    _suspend_x(scenario, "Aeon Chronicler", 2, ["Island"] * 6)
+    hand_before = len(scenario.player("alice").hand)
+
+    _upkeep_of(scenario)
+    scenario.resolve_top()  # the upkeep trigger: remove a time counter
+    scenario.resolve_top()  # the removed-counter trigger it raised
+
+    # Upkeep's own removal: one counter off, and the trigger drew a card.
+    assert len(scenario.player("alice").hand) == hand_before + 1
+
+
+def test_roiling_horrors_removed_time_counter_drains_a_player():
+    scenario = _suspend_scenario("Roiling Horror", "Swamp", 6).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    _suspend_x(scenario, "Roiling Horror", 2, ["Swamp"] * 6)
+    alice_life, bob_life = scenario.player("alice").life, scenario.player("bob").life
+
+    _upkeep_of(scenario)
+    scenario.choose_trigger_targets("Roiling Horror", [scenario.player("bob")])
+    scenario.resolve_top()  # the upkeep trigger: remove a time counter
+    scenario.resolve_top()  # the removed-counter trigger it raised
+
+    assert scenario.player("alice").life == alice_life + 1
+    assert scenario.player("bob").life == bob_life - 1
+
+
+def test_the_removed_counter_trigger_only_works_in_exile():
+    from magic_cards_model.machines.triggers.collect import (
+        triggered_abilities_of,
+        zones_ability_functions_in,
+    )
+
+    scenario = _suspend_scenario("Aeon Chronicler", "Island", 1).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    chronicler = scenario.find("Aeon Chronicler", Zone.HAND, "alice")
+    (ability,) = [
+        a
+        for a in triggered_abilities_of(chronicler.card)
+        if a.condition == "a time counter is removed from this card"
+    ]
+    assert zones_ability_functions_in(ability, chronicler, scenario.game) == frozenset({Zone.EXILE})
+
+
+def test_suspend_x_is_listed_as_a_legal_action_at_its_least_x():
+    from magic_cards_model.machines.legal_actions import legal_actions
+    from magic_cards_model.models.action import ActionKind
+
+    scenario = _suspend_scenario("Aeon Chronicler", "Island", 5).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    (suspend,) = [a for a in legal_actions(scenario.game, "alice") if a.kind is ActionKind.SUSPEND]
+    assert suspend.mana_cost == "{4}{U}", "X=1 in {X}{3}{U}"

@@ -5426,7 +5426,9 @@ class MarkedExile(EngineModel):
         )
 
     @classmethod
-    def suspend(cls, game: Any, card: CardState, player: str) -> "MarkedExile":
+    def suspend(
+        cls, game: Any, card: CardState, player: str, x_value: int | None = None
+    ) -> "MarkedExile":
         """CR 116.2f: exile a card with suspend from hand, paying its suspend cost.
 
         "'Suspend N-[cost]' means 'If you could begin to cast this card by
@@ -5462,11 +5464,23 @@ class MarkedExile(EngineModel):
                 f"{card.name} could not begin to be cast right now, so it cannot be "
                 f"suspended: {refusal} (CR 116.2f, CR 702.62c)"
             )
-        if ability.count is None:
+        counters = ability.count
+        if ability.count_is_x:
+            # "Suspend X—{X}{3}{U}. X can't be 0.": the player announces X as
+            # they suspend (CR 107.3a); it is the number of time counters and
+            # the X in the cost (CR 107.3b).
+            if x_value is None:
+                raise ValueError(f"announce X to suspend {card.name} (CR 107.3a, CR 702.62a)")
+            if x_value < (ability.count_minimum or 0):
+                raise ValueError(f"{card.name}'s suspend X can't be 0 (CR 702.62a)")
+            counters = x_value
+        if counters is None:
             raise ValueError(f"{card.name}'s suspend count could not be read (CR 702.62a)")
         cost = total_cost_for_phrase(ability.cost or "") if ability.cost else TotalCost()
         if cost is None:
             raise ValueError(f"{card.name}'s suspend cost could not be read (CR 702.62a)")
+        if ability.count_is_x:
+            cost = cost.model_copy(update={"mana": cost.mana.with_x(counters)})
         return cls(
             card=card,
             player=player,
@@ -5474,7 +5488,7 @@ class MarkedExile(EngineModel):
             cost=cost.assign_payer(player),
             rule="CR 116.2f",
             game=game,
-            time_counters=ability.count,
+            time_counters=counters,
         )
 
     def begin_paying(self) -> CostPayment:
@@ -5593,6 +5607,15 @@ def remove_suspend_time_counter(game: Any, card: CardState) -> int:
         return card.counter_count(Counter.TIME)
     card.remove_counters(Counter.TIME, 1)
     remaining = card.counter_count(Counter.TIME)
+    game.emit(
+        GameEvent(
+            event=ExtraTriggerEvent.TIME_COUNTER_REMOVED,
+            subject_id=card.id,
+            subject_name=card.name,
+            subject_card=card.card,
+            player=card.owner,
+        )
+    )
     if remaining == 0:
         game.emit(
             GameEvent(

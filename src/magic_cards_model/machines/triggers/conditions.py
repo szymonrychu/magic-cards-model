@@ -3493,6 +3493,11 @@ def _unread_condition_matches(
             and event.player == controller
         )
 
+    if _TIME_COUNTER_REMOVED_WHILE_EXILED_CONDITION.match(condition):
+        return (
+            event.event is ExtraTriggerEvent.TIME_COUNTER_REMOVED and event.subject_id == source.id
+        )
+
     if _LAST_TIME_COUNTER_CONDITION.match(condition):
         # CR 702.62a's third ability ("this card") and CR 702.63a's own third
         # ability ("this permanent") - both name the source itself and
@@ -5854,6 +5859,7 @@ from ._common import (  # noqa: E402
     _SELF_PUT_INTO_GRAVEYARD_FROM_ANYWHERE_CONDITION,
     _SOLVE_A_CASE_CONDITION,
     _STATE_COUNTER_TRIGGER_RE,
+    _TIME_COUNTER_REMOVED_WHILE_EXILED_CONDITION,
     _UNTAPPED_DURING_UNTAP_STEP_CONDITION,
     _YOU_PUT_A_COUNTER_ON_QUALITY_CONDITION,
 )

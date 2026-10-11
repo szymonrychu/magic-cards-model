@@ -2180,6 +2180,11 @@ class KeywordAbility(BaseAbility):
     parameter: str | None = None
     #: The number in `Suspend 3—{2}{B}{B}` or `Annihilator 2`, when there is one.
     count: int | None = None
+    #: True when the number is a variable X, announced as the ability is used
+    #: (`Suspend X—{X}{3}{U}. X can't be 0.`, CR 702.62a with CR 107.3a).
+    count_is_x: bool = False
+    #: The least X the line allows: 1 for its "X can't be 0." sentence.
+    count_minimum: int | None = None
     #: True when `cost` is nothing but mana symbols, so a caller can hand it
     #: straight to `ManaCost.parse` instead of reading a sentence.
     cost_is_mana: bool = False
@@ -3559,8 +3564,8 @@ def _parse_line(raw: str, keywords: list[str], face: str) -> list[Ability]:
 #: ability would read as a keyword cost.
 _KEYWORD_COST = re.compile(
     r"^(?P<keyword>[A-Z][A-Za-z'’-]*(?: [A-Za-z'’-]+)*?)"
-    r"(?: (?P<count>\d+))?"
-    r"—(?=\S)(?P<cost>[^:]+?)\.?$"
+    r"(?: (?P<count>\d+|X))?"
+    r"—(?=\S)(?P<cost>[^:]+?)\.?(?: (?P<minimum>X can't be 0)\.)?$"
 )
 
 
@@ -3766,7 +3771,9 @@ def _parse_keyword_cost(text: str, known: list[str], common: dict) -> KeywordAbi
         keyword=printed,
         canonical=canonical,
         cost=cost,
-        count=int(count) if count is not None else None,
+        count=int(count) if count is not None and count != "X" else None,
+        count_is_x=count == "X",
+        count_minimum=1 if match.group("minimum") else None,
         cost_is_mana=bool(_ONLY_SYMBOLS.match(cost)),
         em_dash=True,
     )

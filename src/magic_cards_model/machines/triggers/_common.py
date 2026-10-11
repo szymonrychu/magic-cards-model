@@ -184,6 +184,15 @@ _LAST_TIME_COUNTER_CONDITION = re.compile(
     r"^the last time counter is removed from this (?:card|permanent)$"
 )
 
+#: "Whenever a time counter is removed from this card while it's exiled"
+#: (Aeon Chronicler, Roiling Horror): a card in exile watching its own time
+#: counters come off, CR 702.62a's upkeep removal or any other. The reader
+#: splits "while it's exiled" off as the intervening condition (CR 603.4),
+#: which also names the zone the ability functions in (CR 113.6b).
+_TIME_COUNTER_REMOVED_WHILE_EXILED_CONDITION = re.compile(
+    r"^a time counter is removed from this card$"
+)
+
 #: "When the last `<kind>` counter is removed from this permanent" for every
 #: kind but time (read above) - CR 310.12b's Siege defeat trigger, "When the
 #: last defense counter is removed from this permanent".

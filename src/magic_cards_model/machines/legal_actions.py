@@ -97,7 +97,7 @@ from ..models.mana import ManaCost, ManaSpend
 from ..models.player import Player
 from ..models.zone import Zone
 from ..snapshot import board_snapshot
-from .abilities import printed_production
+from .abilities import keyword_ability, printed_production
 from .casting import (
     AlternativeCostSource,
     CastTiming,
@@ -1314,8 +1314,17 @@ def _unlock_door_actions(
 # Suspend, foretell, plot (CR 116.2f/h/k) - `MarkedExile` in `casting.py`.
 # ---------------------------------------------------------------------------
 
+def _suspend_at_its_least_x(game: Any, card: CardState, player: str) -> MarkedExile:
+    """`MarkedExile.suspend`, with the least X a "Suspend X" line allows
+    (CR 702.62a, CR 107.3a) announced so the action is listed at all: the
+    seat that takes it names the X it really wants (`x_value`)."""
+    ability = keyword_ability(card.card, "suspend")
+    least = (ability.count_minimum or 0) if ability is not None and ability.count_is_x else None
+    return MarkedExile.suspend(game, card, player, x_value=least)
+
+
 _MARKED_EXILE_BUILDERS: tuple[tuple[ActionKind, Any], ...] = (
-    (ActionKind.SUSPEND, MarkedExile.suspend),
+    (ActionKind.SUSPEND, _suspend_at_its_least_x),
     (ActionKind.FORETELL, MarkedExile.foretell),
     (ActionKind.PLOT, MarkedExile.plot),
 )
