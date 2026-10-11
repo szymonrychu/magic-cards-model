@@ -24,6 +24,7 @@ from ...numbers import (
 )
 from .. import (
     block_reassignment,
+    impulse_choice,
     map_tokens,
     mass_pump_conditions,
     token_riders,
@@ -4500,6 +4501,7 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
     # Read whole: the second sentence's "It"/"That player" is the first
     # sentence's target, with a CR 611.2b duration tied to the source.
     for whole_text_reader in (
+        impulse_choice.parse_exile_top_choose_one_play,
         _parse_remove_all_counters_then_cant_have_clause,
         _parse_player_loses_all_counters_clause,
         block_reassignment.parse_remove_blocker_then_it_blocks_another_clause,
