@@ -1723,7 +1723,7 @@
         "create a 1/1 red Goblin creature token that's tapped and attacking.": "<none>",
         "create a 1/1 red Goblin creature token with haste.": "_parse_whole_text_token_clause",
         "create a 1/1 red Phyrexian Goblin creature token.": "_parse_whole_text_token_clause",
-        "create a 1/1 red Satyr creature token with \"This token can't block.\" If the creature had power 4 or greater, create two of those tokens instead.": "<none>",
+        "create a 1/1 red Satyr creature token with \"This token can't block.\" If the creature had power 4 or greater, create two of those tokens instead.": "_parse_condition_instead_clause_for_ability",
         "create a 1/1 red Soldier creature token with haste, then copy that spell. The copy targets that token.": "_parse_create_token_then_copy_spell_retargeted_clause",
         "create a 1/1 red Soldier creature token with haste.": "_parse_whole_text_token_clause",
         "create a 1/1 white Ally creature token, then attach this Equipment to it.": "_parse_create_token_then_attach_clause",
