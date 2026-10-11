@@ -60,7 +60,7 @@ def mode_bullet_body(printing, text) -> str | None:
 
 def reads_enters_choices_line(printing, text, *, card_name=None, legendary=False) -> bool:
     lowered = text.lower()
-    if "enter" not in lowered:
+    if "enter" not in lowered and "turned face up" not in lowered:
         return False
     effects = _effects_of_line(printing, text)
     if not effects:
