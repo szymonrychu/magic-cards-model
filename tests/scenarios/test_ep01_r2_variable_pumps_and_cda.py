@@ -10,8 +10,10 @@ permanent, including the ones an ice counter makes snow.
 
 from magic_cards_model.machines import Step
 from magic_cards_model.machines.abilities import AbilityKind
+from magic_cards_model.machines.layers import LayerContext, compute_board, static_effects
 from magic_cards_model.models import Zone
 from magic_cards_model.models.card_state import Choice, ChoiceKind
+from tests.cards import card_state
 from tests.scenarios.harness import Scenario
 
 
@@ -324,3 +326,104 @@ def test_cid_pumps_a_hero_that_is_not_an_artifact():
     pumped = build(alice={"battlefield": ["Cid, Timeless Artificer", "Jennifer Walters"]}, bob={})
     plain = pt(bare, "Jennifer Walters")
     assert pt(pumped, "Jennifer Walters") == (plain[0] + 1, plain[1] + 1)
+
+
+# --- "A deck can have any number of cards named ~" (CR 100.2a) -------------
+
+
+def _constructed(mainboard: dict[str, int]):
+    from magic_cards_model.models import Deck
+    from tests.cards import card
+
+    filler = {"Forest": 60 - sum(mainboard.values())}
+    return Deck(mainboard={**mainboard, **filler}).problems(card)
+
+
+def test_cid_is_exempt_from_the_four_copy_limit():
+    assert _constructed({"Cid, Timeless Artificer": 9}) == []
+
+
+def test_a_card_without_the_line_is_still_held_to_four_copies():
+    problems = _constructed({"Aura Gnarlid": 5})
+    assert problems and "Aura Gnarlid" in problems[0]
+
+
+# --- "~ is every creature type (even if this card isn't on the battlefield)" -
+# (CR 205.3m, CR 604.3: a characteristic-defining ability works in every zone)
+
+
+def test_mistform_ultimus_is_every_creature_type_on_the_battlefield():
+    scenario = build(alice={"battlefield": ["Mistform Ultimus"]}, bob={})
+    subtypes = scenario.game.computed_board().of(scenario.creature("Mistform Ultimus")).subtypes
+    assert {"Goblin", "Elf", "Illusion", "Wizard"} <= set(subtypes)
+
+
+def test_mistform_ultimus_is_every_creature_type_in_the_hand_too():
+    scenario = build(alice={"hand": ["Mistform Ultimus"]}, bob={})
+    state = scenario.find("Mistform Ultimus", Zone.HAND, "alice")
+    assert {"Goblin", "Elf", "Illusion"} <= set(state.subtypes)
+
+
+def test_a_card_without_the_line_keeps_only_its_own_types():
+    scenario = build(alice={"hand": ["Aura Gnarlid"]}, bob={})
+    state = scenario.find("Aura Gnarlid", Zone.HAND, "alice")
+    assert set(state.subtypes) == {"Beast"}
+
+
+# --- "Enchanted land is the chosen type." (CR 305.7, CR 303.4) -------------
+
+
+def _mirage_on_forest(chosen: str):
+    scenario = build(
+        alice={"hand": ["Convincing Mirage"], "battlefield": ["Forest", "Island", "Island"]},
+        bob={},
+    )
+    scenario.will_choose(chosen, source="Convincing Mirage")
+    forest = scenario.find("Forest", Zone.BATTLEFIELD, "alice")
+    islands = scenario.untapped_sources("Island", "Island")
+    scenario.cast_and_resolve("Convincing Mirage", *islands, username="alice", targets=[forest])
+    return scenario, forest
+
+
+def test_convincing_mirage_makes_the_enchanted_land_the_chosen_basic_type_only():
+    scenario, forest = _mirage_on_forest("Mountain")
+    chars = scenario.game.computed_board().of(forest)
+    assert chars.subtypes == ("Mountain",)
+    assert chars.abilities == ("{T}: Add {R}.",)
+
+
+def test_convincing_mirage_does_not_touch_other_lands():
+    scenario, _ = _mirage_on_forest("Swamp")
+    island = scenario.find("Island", Zone.BATTLEFIELD, "alice")
+    assert scenario.game.computed_board().of(island).subtypes == ("Island",)
+
+
+# --- "During your turn, as long as ~ is equipped, it has double strike ..." --
+# (CR 301.5, CR 611.3)
+
+
+def _cloud_board(*, equipped: bool, active: str):
+    cloud = card_state(
+        "Cloud, Planet's Champion", zone=Zone.BATTLEFIELD, controller="alice", owner="alice"
+    )
+    staff = card_state("Wizard's Staff", zone=Zone.BATTLEFIELD, controller="alice", owner="alice")
+    if equipped:
+        staff.attach_to(cloud)
+    cards = [cloud, staff]
+    board = compute_board(cards, static_effects(cards, context=LayerContext(active_player=active)))
+    return board.of(cloud)
+
+
+def test_cloud_equipped_on_its_controllers_turn_has_double_strike_and_indestructible():
+    cloud = _cloud_board(equipped=True, active="alice")
+    assert cloud.has_ability("Double strike") and cloud.has_ability("Indestructible")
+
+
+def test_cloud_without_an_equipment_has_neither():
+    cloud = _cloud_board(equipped=False, active="alice")
+    assert not cloud.has_ability("Double strike") and not cloud.has_ability("Indestructible")
+
+
+def test_cloud_equipped_on_the_opponents_turn_has_neither():
+    cloud = _cloud_board(equipped=True, active="bob")
+    assert not cloud.has_ability("Double strike") and not cloud.has_ability("Indestructible")

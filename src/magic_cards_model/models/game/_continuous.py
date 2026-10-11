@@ -110,6 +110,15 @@ _MANA_VALUE_QUALITY_RE = re.compile(
 )
 
 
+#: "each mana value other than 3" (Haktos the Unscarred's chosen number, once
+#: `Game._effective_protection_qualities` has read "the chosen number" off the
+#: protected permanent's own choice) or the unresolved "... the chosen number",
+#: which protects from nothing because no number was chosen.
+_OTHER_MANA_VALUE_QUALITY_RE = re.compile(
+    r"^each mana value other than (?P<number>\d+|the chosen number)$", re.IGNORECASE
+)
+
+
 def _characteristic_quality(quality: str) -> Callable[[Characteristics], bool] | None:
     """A protection quality that is a test on the source's computed
     characteristics (CR 702.16a: "any characteristic value or information"),
@@ -118,6 +127,12 @@ def _characteristic_quality(quality: str) -> Callable[[Characteristics], bool] |
     plural ("Demons", "Elves", "Arcane"), a supertype ("snow"), or a type
     qualified by one ("God creatures")."""
     wanted = quality.strip()
+    other = _OTHER_MANA_VALUE_QUALITY_RE.match(wanted)
+    if other is not None:
+        if not other.group("number").isdigit():
+            return lambda chars: False
+        number = int(other.group("number"))
+        return lambda chars: chars.mana_value != number
     match = _MANA_VALUE_QUALITY_RE.match(wanted)
     if match is not None:
         number = int(match.group("number"))

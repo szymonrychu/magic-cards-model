@@ -10,6 +10,7 @@ one-directional.
 """
 
 import re
+from random import Random
 from collections.abc import Callable
 from typing import TYPE_CHECKING
 
@@ -524,6 +525,11 @@ def _each_opponent_reveals_hand_then_name(effect: ReplacementEffect, card_name: 
 
 _BECOMES_CHOICE_RE = re.compile(r"^it becomes your choice of (?P<opts>.+)$")
 _FLIP_A_COIN_RE = re.compile(r"^flip a coin$")
+#: "As Haktos enters, choose 2, 3, or 4 at random." - a CR 614.12a choice the
+#: game makes itself, from the printed list, instead of asking a player.
+_CHOOSE_NUMBER_AT_RANDOM_RE = re.compile(
+    r"^choose (?P<options>\d+(?:, \d+)*,? or \d+) at random$", re.IGNORECASE
+)
 _COUNTERS_PER_OTHER_CREATURE_RE = re.compile(
     r"^put X \+1/\+1 counters on it, where X is the number of other creatures you control$"
 )
@@ -536,6 +542,23 @@ _EXILE_FROM_GRAVEYARD_RE = re.compile(
 _CHOOSE_ATTACH_RE = re.compile(r"^choose a creature you control it could be attached to$")
 _EMBLEM_RE = re.compile(r'^you get an emblem with "(?P<text>.+)"$', re.DOTALL)
 _ATTACH_FOLLOW_UP_RE = re.compile(r"^if you do, it enters attached to that creature\.?$", re.I)
+
+
+def _choose_number_at_random(options: tuple[str, ...]) -> Apply:
+    """CR 614.12a: the entering permanent's choice is made before it enters;
+    here nobody chooses - one of the printed numbers comes out of the game's
+    seeded randomness (the `flip_coin` convention: `shuffle_seed` plus the
+    running `coin_flips_performed` count, so a scenario's outcome is fixed and
+    a replay reproduces it)."""
+
+    def apply(game: "Game", source: CardState | None, event: ReplaceableEvent) -> None:
+        if source is None:
+            return
+        rng = Random(f"{game.shuffle_seed}:{game.coin_flips_performed}:choice")  # noqa: S311
+        game.coin_flips_performed += 1
+        source.choice = Choice(kind=ChoiceKind.NUMBER, value=rng.choice(options))
+
+    return apply
 
 
 def _coin_flip(card_name: str) -> Apply:
@@ -836,6 +859,9 @@ def enters_choice_apply(effect: ReplacementEffect, card_name: str) -> Apply | No
         return _ask_quality(ChoiceKind.BODY, bodies, "choose what it becomes", card_name)
     if _FLIP_A_COIN_RE.match(text):
         return _coin_flip(card_name)
+    match = _CHOOSE_NUMBER_AT_RANDOM_RE.match(text)
+    if match is not None:
+        return _choose_number_at_random(tuple(re.findall(r"\d+", match.group("options"))))
     if _COUNTERS_PER_OTHER_CREATURE_RE.match(text):
         return _counters_per_other_creature(card_name)
     if _CHOOSE_CREATURE_TO_COPY_RE.match(text):

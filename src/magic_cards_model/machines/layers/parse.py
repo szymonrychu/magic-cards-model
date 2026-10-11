@@ -1730,6 +1730,17 @@ _SELF_PROTECTION_FROM_CHOSEN_COLOR_RE = re.compile(
     re.IGNORECASE,
 )
 
+#: "This creature has protection from each mana value other than the chosen
+#: number." (Haktos the Unscarred) - the chosen-colour grant's twin over the
+#: number the permanent chose as it entered (CR 614.12a), as the quality
+#: "each mana value other than N" (CR 702.16a: protection from any
+#: characteristic value; `models/game/_continuous.py:_characteristic_quality`).
+_SELF_PROTECTION_FROM_OTHER_MANA_VALUE_RE = re.compile(
+    r"^this (?:creature|permanent|token) has protection from each mana value other than the "
+    r"chosen number\.?$",
+    re.IGNORECASE,
+)
+
 #: "As long as this creature is paired with another creature, both creatures
 #: have <keyword(s)>[ and get +N/+N]." (Silverblade Paladin, Nightshade
 #: Peddler, Wolfir Silverheart) - CR 702.95a's pair, read live by
@@ -3447,7 +3458,15 @@ def _self_type_grant_builder(
 _THIS_LAND_IS_CHOSEN_TYPE_RE = re.compile(r"^this land is the chosen type\.?$", re.IGNORECASE)
 
 
-def _self_chosen_basic_land_type_builder(line: str) -> EffectBuilder:
+#: "Enchanted land is the chosen type." (Convincing Mirage) - Multiversal
+#: Passage's setting effect (CR 305.7) aimed at the land this Aura is attached
+#: to (CR 303.4b) instead of at the source itself.
+_ENCHANTED_LAND_IS_CHOSEN_TYPE_RE = re.compile(
+    r"^enchanted land is the chosen type\.?$", re.IGNORECASE
+)
+
+
+def _self_chosen_basic_land_type_builder(line: str, *, enchanted: bool = False) -> EffectBuilder:
     """`_THIS_LAND_IS_CHOSEN_TYPE_RE`'s shape.
 
     Layer 4 (CR 613.1d), setting rather than additive (CR 305.7 - no "in
@@ -3474,16 +3493,17 @@ def _self_chosen_basic_land_type_builder(line: str) -> EffectBuilder:
     ) -> list[ContinuousEffect]:
         chosen = chosen_basic_land_type_of(source)
         mana_ability = BASIC_LAND_TYPES.get(chosen) if chosen is not None else None
-        if chosen is None or mana_ability is None:
+        target_id = source.attached_to if enchanted else source.id
+        if chosen is None or mana_ability is None or target_id is None:
             return []
         return [
             ContinuousEffect(
-                description=f"{source.name}: this land is the chosen type ({chosen})",
+                description=f"{source.name}: the land is the chosen type ({chosen})",
                 layer=Layer.TYPE,
                 timestamp=timestamp,
                 source_id=source.id,
                 source_ability=_source_line_for(source, line),
-                selector=_only(source.id),
+                selector=_only(target_id),
                 modification=set_basic_land_type(chosen, mana_ability),
             )
         ]
@@ -4444,6 +4464,35 @@ def _anthem_builder(
                 source_ability=_source_line_for(source, line),
                 selector=selector,
                 modification=modify_power_toughness(power, toughness),
+            )
+        ]
+
+    return builder
+
+
+def _self_protection_from_chosen_number_builder(*, line: str) -> EffectBuilder:
+    """`_SELF_PROTECTION_FROM_OTHER_MANA_VALUE_RE`'s shape; no number recorded
+    grants nothing."""
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        chosen = source.choice
+        if chosen is None or chosen.kind is not ChoiceKind.NUMBER or not chosen.value.isdigit():
+            return []
+        ability = f"Protection from each mana value other than {chosen.value}"
+        return [
+            ContinuousEffect(
+                description=f"{source.name}: has {ability} (the chosen number)",
+                layer=Layer.ABILITY,
+                timestamp=timestamp,
+                source_id=source.id,
+                source_ability=_source_line_for(source, line),
+                selector=_only(source.id),
+                modification=grant_ability(ability),
             )
         ]
 
@@ -6885,6 +6934,17 @@ _DEVOTION_GATED_NOT_A_CREATURE_RE = re.compile(
 #: are checked off `LayerContext.graveyard_of`.
 _SELF_DURING_YOUR_TURN_KEYWORD_GRANT_RE = re.compile(
     r"^during your turn, this (?:creature|permanent|token) (?:has|have) "
+    r"(?P<keywords>[a-z]+(?: [a-z]+)?(?:(?:,\s*| and )[a-z]+(?: [a-z]+)?)*)\.?$",
+    re.IGNORECASE,
+)
+
+#: "During your turn, as long as this creature is equipped, it has double strike
+#: and indestructible." (Cloud, Planet's Champion) - the turn gate of the rung
+#: above plus Brass Knuckles' attachment test (`SelfIfAttachedCount`, CR 301.5:
+#: an Equipment attached to it makes it "equipped").
+_SELF_DURING_YOUR_TURN_IF_EQUIPPED_KEYWORD_GRANT_RE = re.compile(
+    r"^during your turn, as long as this (?:creature|permanent|token) is equipped, "
+    r"(?:it|this (?:creature|permanent|token)) (?:has|have) "
     r"(?P<keywords>[a-z]+(?: [a-z]+)?(?:(?:,\s*| and )[a-z]+(?: [a-z]+)?)*)\.?$",
     re.IGNORECASE,
 )
@@ -10745,6 +10805,36 @@ def _context_gated_self_static_builder(
     return builder
 
 
+def _during_your_turn_if_equipped_grant_builder(granted: list[str], *, line: str) -> EffectBuilder:
+    """`_SELF_DURING_YOUR_TURN_IF_EQUIPPED_KEYWORD_GRANT_RE`'s shape: the turn
+    is read at build time off `LayerContext.active_player` (the board is
+    rebuilt every CR 613.5 computation), the equipped test live off the board
+    (`SelfIfAttachedCount`, at least one Equipment attached, CR 301.5)."""
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        if context.active_player != source.controller:
+            return []
+        return [
+            ContinuousEffect(
+                description=f"{source.name}: has {ability} while equipped during your turn",
+                layer=Layer.ABILITY,
+                timestamp=timestamp,
+                source_id=source.id,
+                source_ability=_source_line_for(source, line),
+                selector=SelfIfAttachedCount(card_id=source.id, subtype="equipment", threshold=1),
+                modification=grant_ability(ability),
+            )
+            for ability in granted
+        ]
+
+    return builder
+
+
 def _per_color_keyword_grant_builder(
     grants: list[tuple[str, Color]], *, line: str
 ) -> EffectBuilder:
@@ -11861,6 +11951,8 @@ def _parse_static_layer_sentence(sentence: str) -> EffectBuilder | None:
         return _all_activated_abilities_builder(all_activated, line=sentence)
     if _SELF_PROTECTION_FROM_CHOSEN_COLOR_RE.fullmatch(sentence):
         return _self_protection_from_chosen_color_builder(line=sentence)
+    if _SELF_PROTECTION_FROM_OTHER_MANA_VALUE_RE.fullmatch(sentence):
+        return _self_protection_from_chosen_number_builder(line=sentence)
     if match := _PAIRED_BOTH_RE.fullmatch(sentence):
         keywords = _split_and_validate_keywords(match["keywords"]) if match["keywords"] else []
         if keywords is not None:
@@ -12425,6 +12517,11 @@ def _parse_static_layer_sentence(sentence: str) -> EffectBuilder | None:
         return _per_color_keyword_grant_builder(grants, line=sentence)
     if match := _PERMANENTS_WITH_COUNTERS_WARD_RE.fullmatch(sentence):
         return _permanents_with_counters_ward_builder(match.group("cost"), line=sentence)
+    if match := _SELF_DURING_YOUR_TURN_IF_EQUIPPED_KEYWORD_GRANT_RE.fullmatch(sentence):
+        keywords = _split_and_validate_keywords(match.group("keywords"))
+        if keywords is None:
+            return None
+        return _during_your_turn_if_equipped_grant_builder(keywords, line=sentence)
     if match := _SELF_DURING_YOUR_TURN_KEYWORD_GRANT_RE.fullmatch(sentence):
         keywords = _split_and_validate_keywords(match.group("keywords"))
         if keywords is None:
@@ -12764,6 +12861,8 @@ def _parse_static_layer_sentence(sentence: str) -> EffectBuilder | None:
             )
     if _THIS_LAND_IS_CHOSEN_TYPE_RE.fullmatch(sentence):
         return _self_chosen_basic_land_type_builder(line=sentence)
+    if _ENCHANTED_LAND_IS_CHOSEN_TYPE_RE.fullmatch(sentence):
+        return _self_chosen_basic_land_type_builder(line=sentence, enchanted=True)
     if match := _SELF_CHOSEN_TYPE_IN_ADDITION_RE.fullmatch(sentence):
         return _self_chosen_type_in_addition_builder(match.group("kind").lower(), sentence)
     if " for each " in sentence.lower() and (built := _pump_per_count_builder(sentence)):
