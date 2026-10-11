@@ -25,7 +25,9 @@ def _compile_learn_return_from_graveyard(effect: ReplacementEffect) -> CardRepla
         return None
     if (effect.condition or "").strip() != "this card is in your graveyard":
         return None
-    if (effect.replacement or "").strip().rstrip(".") != "you may return this card to the battlefield":
+    if (effect.replacement or "").strip().rstrip(
+        "."
+    ) != "you may return this card to the battlefield":
         return None
 
     def applies(game: "Game", source: CardState, event: ReplaceableEvent) -> bool:

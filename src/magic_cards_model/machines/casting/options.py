@@ -267,7 +267,11 @@ class KeywordCastOption(EngineModel):
                 f"but it is in the {where.value} ({self.rule})"
             )
 
-        if where is Zone.GRAVEYARD and game is not None and self in keyword_cast_options(spell.card):
+        if (
+            where is Zone.GRAVEYARD
+            and game is not None
+            and self in keyword_cast_options(spell.card)
+        ):
             from ..graveyard_statics import graveyard_abilities_lost_by
 
             jailer = graveyard_abilities_lost_by(game)
