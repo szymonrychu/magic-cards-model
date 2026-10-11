@@ -59,7 +59,16 @@ def _reads_untap_line(printing, line: str) -> bool:
     return condition is None or _condition_readable(printing, condition)
 
 
+def _reads_game_rule_line(line: str) -> bool:
+    from magic_cards_model.machines import game_rule_statics
+    from magic_cards_model.models.game import _ZERO_LOYALTY_EXEMPTION_RE
+
+    return game_rule_statics.reads_game_rule_line(line) or bool(
+        _ZERO_LOYALTY_EXEMPTION_RE.fullmatch(line.rstrip("."))
+    )
+
+
 def reads_game_rules_untap_line(printing, text, *, card_name=None, legendary=False) -> bool:
     name = card_name or printing.name
     line = self_normalized_effect_text(name, text.lstrip("•* ").strip(), legendary=legendary)
-    return _reads_untap_line(printing, line)
+    return _reads_untap_line(printing, line) or _reads_game_rule_line(line)

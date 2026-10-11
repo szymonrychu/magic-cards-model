@@ -911,7 +911,10 @@ class Player(EngineModel):
         game = self.game
         if game is None:
             return False
-        return game.life_gain_prohibited(self.username) is not None
+        return (
+            game.life_gain_prohibited(self.username) is not None
+            or life_total_cant_change(game, self.username) is not None
+        )
 
     def lose_life(self, amount: int) -> int:
         """Lose life, returning the new total (CR 119.3).
@@ -931,6 +934,8 @@ class Player(EngineModel):
         """
         if amount < 0:
             raise ValueError("cannot lose a negative amount of life")
+        if self.game is not None and life_total_cant_change(self.game, self.username):
+            return self.life  # CR 119.8: "Your life total can't change." (CR 101.2)
         self.life -= amount
         if amount:
             self._record_life_lost(amount)
@@ -1310,3 +1315,6 @@ class Player(EngineModel):
         """
         for card_state in permanents:
             card_state.untap()
+
+
+from ..machines.game_rule_statics import life_total_cant_change  # noqa: E402

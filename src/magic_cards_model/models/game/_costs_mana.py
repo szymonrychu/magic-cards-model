@@ -730,7 +730,7 @@ class CostsManaMixin:
         for component in cost.components:
             if component.kind is ComponentKind.PAY_LIFE:
                 life -= component.amount
-                if life < 0:
+                if life < 0 or (component.amount > 0 and component.why_not(self) is not None):
                     return False
                 continue
             pool = self._cost_candidates(component, caster)

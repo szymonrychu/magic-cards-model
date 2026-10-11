@@ -1931,11 +1931,21 @@ class TurnSbaMixin:
             if board.of(state).has_ability(LEGEND_RULE_EXEMPT_TEXT)
         }
 
+        # `machines/game_rule_statics.py`: "The "legend rule" doesn't apply."
+        # (Mirror Gallery) for everyone, or "... doesn't apply to <subtype>s
+        # you control." (Spider-Verse) for that subtype of one controller's.
+        everyone_exempt, exempt_subtypes = game_rule_statics.legend_rule_exemptions(self, board)
+        if everyone_exempt:
+            return []
+
         losers: list[CardState] = []
         for username in self._turn_order_from_active():
             if username in exempt_players:
                 continue
             for name, copies in groups.get(username, {}).items():
+                subtypes = exempt_subtypes.get(username)
+                if subtypes:
+                    copies = [s for s in copies if not subtypes & set(board.of(s).subtypes)]
                 if len(copies) < 2:
                     continue
                 kept = self._ask_which_legend_to_keep(username, name, copies)
@@ -1956,10 +1966,14 @@ class TurnSbaMixin:
         """
         losing: list[str] = []
         for player in self.players:
-            if not self.is_in_game(player.username) or not (
+            # CR 704.5a alone is switched off by "You don't lose the game for
+            # having 0 or less life." (`machines/game_rule_statics.py`).
+            loses_to_life = (
                 player.life <= 0
-                or player.tried_to_draw_from_empty_library
-                or player.loses_to_poison
+                and game_rule_statics.ignores_zero_life_loss(self, player.username) is None
+            )
+            if not self.is_in_game(player.username) or not (
+                loses_to_life or player.tried_to_draw_from_empty_library or player.loses_to_poison
             ):
                 continue
             if self.why_cant_lose_the_game(player.username) is not None:
@@ -2269,6 +2283,16 @@ class TurnSbaMixin:
                         f"{username} can't {verb} the game: {permanent.name} says so "
                         "(CR 101.2, CR 604.2)"
                     )
+        # Abyssal Persecutor's reversed "You can't win the game and your
+        # opponents can't lose the game." (`machines/game_rule_statics.py`).
+        reversed_source = game_rule_statics.outcome_prohibition_from_reversed(
+            self, username, lose=lose
+        )
+        if reversed_source is not None:
+            return (
+                f"{username} can't {verb} the game: {reversed_source.name} says so "
+                "(CR 101.2, CR 604.2)"
+            )
         return None
 
     def advance(self: "Game", username: str | None = None) -> Step:
@@ -2602,6 +2626,7 @@ class TurnSbaMixin:
 
 
 from ...machines.layers.parse import read_cant_lose_cant_win  # noqa: E402
+from ...machines import game_rule_statics  # noqa: E402
 from ...machines.turn_scoped_riders import (  # noqa: E402
     CANT_LOSE_THE_GAME,
     OPPONENTS_CANT_WIN_THE_GAME,

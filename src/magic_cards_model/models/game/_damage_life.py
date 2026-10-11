@@ -108,6 +108,8 @@ class DamageLifeMixin:
             player = self.player(player)
         if amount <= 0:
             return player.life
+        if game_rule_statics.life_total_cant_change(self, player.username) is not None:
+            return player.life  # CR 119.7/101.2: the gain can't happen at all
 
         event = ReplaceableEvent(
             kind=EventKind.GAIN_LIFE, player=player, amount=amount, lifelink=lifelink
@@ -153,6 +155,8 @@ class DamageLifeMixin:
             player = self.player(player)
         if amount <= 0:
             return player.life
+        if game_rule_statics.life_total_cant_change(self, player.username) is not None:
+            return player.life  # CR 119.8/101.2: the loss can't happen at all
         event = ReplaceableEvent(
             kind=EventKind.LOSE_LIFE, player=player, amount=amount, payment=payment
         )
@@ -528,7 +532,9 @@ class DamageLifeMixin:
             infect = source is not None and source_had_keyword(source, Keyword.INFECT, self)
             wither = source is not None and source_had_keyword(source, Keyword.WITHER, self)
             if isinstance(target, Player):
-                if infect:
+                # Phyrexian Unlife: "As long as you have 0 or less life, all
+                # damage is dealt to you as though its source had infect."
+                if infect or game_rule_statics.damage_dealt_as_though_infect(self, target.username):
                     # CR 120.3b / 702.90b: poison counters, and no life lost -
                     # so no CR 119.3 life-loss event either.
                     self.add_player_counters(target, Counter.POISON, event.amount)
@@ -988,3 +994,6 @@ from ._common import (  # noqa: E402
     _OPPONENTS_LIFE_GAIN_PROHIBITION_RE,
 )
 from .records import ShieldKind  # noqa: E402
+
+
+from ...machines import game_rule_statics  # noqa: E402

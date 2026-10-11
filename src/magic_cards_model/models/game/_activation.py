@@ -1039,6 +1039,8 @@ class ActivationMixin:
                 # "Pay X life" owes 0 until X is announced (CR 119.4b), and the
                 # announced amount is checked as the cost is paid.
                 life_owed += life.amount
+        if life_owed > 0 and (reason := game_rule_statics.life_total_cant_change(self, controller)):
+            return f"{reason}, so {permanent.name}'s ability cannot be activated"
         if life_owed > 0 and self.player(controller).life < life_owed:
             # CR 119.4: an amount of life greater than 0 may be paid "only if
             # their life total is greater than or equal to the amount of the
@@ -3212,3 +3214,6 @@ from ._conditions import (  # noqa: E402
 )
 from ._costs_mana import _cost_moved, _cost_refers_to_self  # noqa: E402
 from ._zones import _exiles_itself_by_name, moves_a_library_card  # noqa: E402
+
+
+from ...machines import game_rule_statics  # noqa: E402

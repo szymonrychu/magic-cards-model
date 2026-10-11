@@ -10745,7 +10745,10 @@ def _parse_layer_sentence_ungated(sentence: str) -> EffectBuilder | None:
     # imports `AttackingGroupControlledBy`/`grant_ability`/etc. *from* this
     # one; importing it back at this module's own top level would be a cycle.
     from ..attacking_statics import parse_attacking_group_keyword_grant
+    from ..game_rule_statics import parse_opponents_lose_keyword
 
+    if (opponents_lose := parse_opponents_lose_keyword(sentence)) is not None:
+        return opponents_lose
     attacking_group = parse_attacking_group_keyword_grant(sentence)
     if attacking_group is not None:
         return attacking_group

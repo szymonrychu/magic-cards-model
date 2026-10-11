@@ -1002,7 +1002,10 @@ class CostComponent(EngineModel):
         life = game.player(self.payer).life
         if life < self.amount:
             return f"{self.payer} cannot pay {self.amount} life from a life total of {life}"
-        return None
+        # CR 119.8: a player who can't lose life can't pay life (above 0).
+        from ..game_rule_statics import life_total_cant_change
+
+        return life_total_cant_change(game, self.payer)
 
     # -- paying and rewinding ---------------------------------------------
 
