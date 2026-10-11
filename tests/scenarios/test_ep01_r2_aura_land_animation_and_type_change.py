@@ -916,3 +916,108 @@ def test_a_coward_can_block_an_attacker_that_is_not_a_warrior():
     scenario.attack_with(attacker, defending="bob")
     scenario.block(attacker, coward)
     assert coward.id in scenario.game.combat.blocker_ids
+
+
+# --------------------------------------------------------------------------
+# Second printings of each rewrite reader, none of them a listed card
+# --------------------------------------------------------------------------
+
+
+def aura_on(aura: str, target_name: str, extra=(), *, target_owner: str = "alice"):
+    zones = {"alice": [aura, *extra], "bob": []}
+    zones[target_owner].append(target_name)
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=zones["alice"])
+        .player("bob", battlefield=zones["bob"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    target = on_battlefield(scenario, target_name, target_owner)[0]
+    attached = attach(scenario, aura, target)
+    return scenario, target, attached
+
+
+def test_lignify_makes_a_flier_a_vanilla_treefolk_and_gives_it_back_when_it_leaves():
+    """ "Enchanted creature is a Treefolk with base power and toughness 0/4 and
+    loses all abilities." (CR 613.1d, CR 613.1f, CR 613.4b)."""
+    scenario, angel, aura = aura_on("Lignify", "Serra Angel")
+    now = chars(scenario, angel)
+    assert now.subtypes == ("Treefolk",)
+    assert now.power_toughness == (0, 4)
+    assert not now.has_ability("Flying")
+    aura.unattach()
+    back = chars(scenario, angel)
+    assert back.power_toughness == (4, 4)
+    assert back.has_ability("Flying")
+
+
+def test_lignify_leaves_another_creature_alone():
+    scenario, _, _ = aura_on("Lignify", "Serra Angel", ["Serra Angel"])
+    other = on_battlefield(scenario, "Serra Angel")[1]
+    assert chars(scenario, other).power_toughness == (4, 4)
+
+
+def test_ensoul_artifact_animates_an_artifact_that_stays_an_artifact():
+    """ "Enchanted artifact is a creature with base power and toughness 5/5 in
+    addition to its other types." (CR 613.1d: the types are added, not set)."""
+    scenario, ring, aura = aura_on("Ensoul Artifact", "Sol Ring")
+    now = chars(scenario, ring)
+    assert Type.ARTIFACT in now.types and Type.CREATURE in now.types
+    assert now.power_toughness == (5, 5)
+    aura.unattach()
+    assert chars(scenario, ring).types == (Type.ARTIFACT,)
+
+
+def test_puppet_crafting_makes_a_permanent_a_construct_creature():
+    scenario, ring, aura = aura_on("Puppet Crafting", "Sol Ring")
+    now = chars(scenario, ring)
+    assert Type.CREATURE in now.types and "Construct" in now.subtypes
+    assert now.power_toughness == (5, 5)
+    assert aura.attached_to == ring.id
+
+
+def test_argent_mutation_adds_artifact_until_end_of_turn_only():
+    """ "Target permanent becomes an artifact in addition to its other types
+    until end of turn." (CR 613.1d, CR 514.2)"""
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=["Island", "Island", "Island", "Grizzly Bears"],
+            hand=["Argent Mutation"],
+            library=["Island"] * 3,
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = on_battlefield(scenario, "Grizzly Bears")[0]
+    scenario.cast_and_resolve(
+        "Argent Mutation", *scenario.untapped_sources("Island", "Island", "Island"), targets=[bears]
+    )
+    now = chars(scenario, bears)
+    assert Type.ARTIFACT in now.types and Type.CREATURE in now.types
+    past_cleanup(scenario)
+    assert chars(scenario, bears).types == (Type.CREATURE,)
+
+
+def test_turn_to_frog_makes_the_target_a_one_one_frog_without_abilities_until_end_of_turn():
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Island", "Island"], hand=["Turn to Frog"])
+        .player("bob", battlefield=["Serra Angel"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    angel = on_battlefield(scenario, "Serra Angel", "bob")[0]
+    scenario.cast_and_resolve(
+        "Turn to Frog", *scenario.untapped_sources("Island", "Island"), targets=[angel]
+    )
+    now = chars(scenario, angel)
+    assert now.power_toughness == (1, 1)
+    assert now.subtypes == ("Frog",)
+    assert Color.BLUE in now.colors
+    assert not now.has_ability("Flying")
+    past_cleanup(scenario)
+    assert chars(scenario, angel).power_toughness == (4, 4)

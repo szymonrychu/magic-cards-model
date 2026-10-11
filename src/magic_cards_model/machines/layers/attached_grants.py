@@ -64,6 +64,8 @@ from .model import (
     CountAttachedWithAnySubtype,
     CountByControllerOfObject,
     CountObjectManaValue,
+    CountPermanentsControlledBy,
+    CountPermanentsWithSubtypeControlledBy,
     Duration,
     FixedCount,
     Layer,
@@ -294,6 +296,62 @@ def _additional_pump_builder(
     return builder
 
 
+_CONTROLLED_COUNT_RE = re.compile(
+    r"^(?P<kind>[a-z]+) you control(?: and (?:has|have) (?P<keywords>.+?))?\.?$", re.IGNORECASE
+)
+
+
+def _parse_pump_per_controlled(match: re.Match[str], sentence: str) -> EffectBuilder | None:
+    """ "Enchanted creature gets +1/+1 for each enchantment you control[ and has
+    first strike]" (Ethereal Armor): one permanent of the named card type or
+    subtype counts per object the Aura's controller controls (CR 109.4,
+    CR 613.4c), recounted on every board computation (CR 611.3a). The keyword
+    tail, when there is one, is the same attached grant a plain "has" reads."""
+    from .parse import _attached_creature_static_builder, _card_type_word
+
+    counted = _CONTROLLED_COUNT_RE.fullmatch(match["phrase"].strip())
+    if counted is None:
+        return None
+    kind = counted["kind"].lower()
+    card_type = _card_type_word(kind)
+    subtype = None if card_type is not None else canonical_subtype(kind)
+    if card_type is None and subtype is None:
+        return None
+    keywords: list[str] = []
+    if counted["keywords"] is not None:
+        parsed = keywords_of(counted["keywords"])
+        if parsed is None:
+            return None
+        keywords = parsed
+
+    def factory(source, context):
+        if card_type is not None:
+            return CountPermanentsControlledBy(username=source.controller, card_type=card_type)
+        return CountPermanentsWithSubtypeControlledBy(
+            username=source.controller, subtype=subtype.lower()
+        )
+
+    subject = f"{match['attachment'].lower()} {match['noun'].lower()}"
+    pump = _pump_per_count_builder(
+        factory,
+        _multiplier(match["power"]),
+        _multiplier(match["toughness"]),
+        subject=subject,
+        line=sentence,
+    )
+    if not keywords:
+        return pump
+    grant = _attached_creature_static_builder(0, 0, keywords, subject=subject, line=sentence)
+
+    def builder(source, timestamp, targets, context):
+        return [
+            *pump(source, timestamp, targets, context),
+            *grant(source, timestamp, targets, context),
+        ]
+
+    return builder
+
+
 def _parse_pump(sentence: str) -> EffectBuilder | None:
     if match := _PUMP_WHERE_X_RE.fullmatch(sentence):
         if not _subject_ok(match["noun"].lower()):
@@ -311,6 +369,8 @@ def _parse_pump(sentence: str) -> EffectBuilder | None:
     if match := _PUMP_FOR_EACH_RE.fullmatch(sentence):
         if not _subject_ok(match["noun"].lower()):
             return None
+        if (controlled := _parse_pump_per_controlled(match, sentence)) is not None:
+            return controlled
         counted = _ATTACHED_COUNT_RE.fullmatch(match["phrase"].strip().rstrip("."))
         if counted is None:
             return None

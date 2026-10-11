@@ -439,3 +439,57 @@ def test_a_cast_wreath_of_geists_pumps_once_not_twice():
     aura = scenario.cast_and_resolve("Wreath of Geists", *forests, targets=[bears])
     assert aura.attached_to == bears.id
     assert pt(scenario, bears) == (4, 4)
+
+
+# --------------------------------------------------------------------------
+# "for each <card type> you control" (Ethereal Armor): a second printing of
+# the count-pump family that is not one of the listed cards
+# --------------------------------------------------------------------------
+
+
+def armor_scenario(extra_alice: list[str] = (), bob: list[str] = ()):
+    return started(
+        Scenario()
+        .player("alice", battlefield=["Ethereal Armor", "Grizzly Bears", *extra_alice])
+        .player("bob", battlefield=list(bob))
+        .build()
+    )
+
+
+def test_ethereal_armor_counts_each_enchantment_you_control_and_grants_first_strike():
+    """Enchanted creature gets +1/+1 for each enchantment you control and has
+    first strike: the Aura itself is an enchantment you control, so a 2/2 reads
+    3/3 alone and 4/4 with two more (CR 613.4c, CR 611.3a)."""
+    scenario = armor_scenario(["Ghostly Prison", "Leyline of Sanctity"])
+    bears = scenario.creature("Grizzly Bears", "alice")
+    attach(scenario, "Ethereal Armor", bears)
+    assert pt(scenario, bears) == (5, 5), (
+        "Armor, Ghostly Prison and Leyline of Sanctity are 3 enchantments"
+    )
+    assert scenario.game.characteristics_of(bears).has_ability("First strike")
+
+
+def test_ethereal_armor_recounts_when_an_enchantment_leaves():
+    scenario = armor_scenario(["Ghostly Prison"])
+    bears = scenario.creature("Grizzly Bears", "alice")
+    attach(scenario, "Ethereal Armor", bears)
+    assert pt(scenario, bears) == (4, 4)
+    scenario.game.exile_permanent(scenario.find("Ghostly Prison", Zone.BATTLEFIELD, "alice"))
+    assert pt(scenario, bears) == (3, 3)
+
+
+def test_ethereal_armor_ignores_an_opponents_enchantments_and_non_enchantments():
+    scenario = armor_scenario(["Sol Ring"], bob=["Leyline of Sanctity"])
+    bears = scenario.creature("Grizzly Bears", "alice")
+    attach(scenario, "Ethereal Armor", bears)
+    assert pt(scenario, bears) == (3, 3), "only the Armor counts"
+
+
+def test_ethereal_armor_gives_nothing_to_other_creatures_or_once_unattached():
+    scenario = armor_scenario(["Grizzly Bears"])
+    first, second = scenario.creatures("Grizzly Bears", "Grizzly Bears", username="alice")
+    armor = attach(scenario, "Ethereal Armor", first)
+    assert pt(scenario, second) == (2, 2)
+    armor.unattach()
+    assert pt(scenario, first) == (2, 2)
+    assert not scenario.game.characteristics_of(first).has_ability("First strike")

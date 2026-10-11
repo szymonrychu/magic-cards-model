@@ -1,0 +1,155 @@
+{
+  "object": "card",
+  "id": "0a7cb0f8-2946-4b00-a192-0b31c8e1ec5c",
+  "oracle_id": "04c7f4fe-2098-4311-866d-6733c08d5178",
+  "multiverse_ids": [
+    650327
+  ],
+  "mtgo_id": 122614,
+  "tcgplayer_id": 535741,
+  "cardmarket_id": 753449,
+  "name": "Nettlecyst",
+  "lang": "en",
+  "released_at": "2024-02-09",
+  "uri": "https://api.scryfall.com/cards/0a7cb0f8-2946-4b00-a192-0b31c8e1ec5c",
+  "scryfall_uri": "https://scryfall.com/card/mkc/233/nettlecyst?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T03:22:51Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/0/a/0a7cb0f8-2946-4b00-a192-0b31c8e1ec5c.jpg?1783912971",
+    "normal": "https://cards.scryfall.io/normal/front/0/a/0a7cb0f8-2946-4b00-a192-0b31c8e1ec5c.jpg?1783912971",
+    "large": "https://cards.scryfall.io/large/front/0/a/0a7cb0f8-2946-4b00-a192-0b31c8e1ec5c.jpg?1783912971",
+    "png": "https://cards.scryfall.io/png/front/0/a/0a7cb0f8-2946-4b00-a192-0b31c8e1ec5c.png?1783912971",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/0/a/0a7cb0f8-2946-4b00-a192-0b31c8e1ec5c.jpg?1783912971",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/0/a/0a7cb0f8-2946-4b00-a192-0b31c8e1ec5c.jpg?1783912971",
+    "thumb": "https://cards.scryfall.io/thumb/front/0/a/0a7cb0f8-2946-4b00-a192-0b31c8e1ec5c.webp?1783912971",
+    "grid": "https://cards.scryfall.io/grid/front/0/a/0a7cb0f8-2946-4b00-a192-0b31c8e1ec5c.webp?1783912971",
+    "display": "https://cards.scryfall.io/display/front/0/a/0a7cb0f8-2946-4b00-a192-0b31c8e1ec5c.webp?1783912971",
+    "art": "https://cards.scryfall.io/art/front/0/a/0a7cb0f8-2946-4b00-a192-0b31c8e1ec5c.webp?1783912971",
+    "crop": "https://cards.scryfall.io/crop/front/0/a/0a7cb0f8-2946-4b00-a192-0b31c8e1ec5c.webp?1783912971"
+  },
+  "mana_cost": "{3}",
+  "cmc": 3.0,
+  "type_line": "Artifact \u2014 Equipment",
+  "oracle_text": "Living weapon (When this Equipment enters, create a 0/0 black Phyrexian Germ creature token, then attach this to it.)\nEquipped creature gets +1/+1 for each artifact and/or enchantment you control.\nEquip {2}",
+  "colors": [],
+  "color_identity": [],
+  "keywords": [
+    "Equip",
+    "Living weapon"
+  ],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "0a7cb0f8-2946-4b00-a192-0b31c8e1ec5c",
+      "component": "combo_piece",
+      "name": "Nettlecyst",
+      "type_line": "Artifact \u2014 Equipment",
+      "uri": "https://api.scryfall.com/cards/0a7cb0f8-2946-4b00-a192-0b31c8e1ec5c"
+    },
+    {
+      "object": "related_card",
+      "id": "5163600e-f87a-4a8e-8123-c9d499a689bd",
+      "component": "combo_piece",
+      "name": "Nettling Host",
+      "type_line": "Creature \u2014 Phyrexian Horror",
+      "uri": "https://api.scryfall.com/cards/5163600e-f87a-4a8e-8123-c9d499a689bd"
+    },
+    {
+      "object": "related_card",
+      "id": "c05bed6b-da9a-4a82-9c66-df5285fd872a",
+      "component": "token",
+      "name": "Phyrexian Germ",
+      "type_line": "Token Creature \u2014 Phyrexian Germ",
+      "uri": "https://api.scryfall.com/cards/c05bed6b-da9a-4a82-9c66-df5285fd872a"
+    }
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": false,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "286c37ca-ba65-4d3e-8c5d-d1878d88fd95",
+  "set": "mkc",
+  "set_name": "Murders at Karlov Manor Commander",
+  "set_type": "commander",
+  "set_uri": "https://api.scryfall.com/sets/286c37ca-ba65-4d3e-8c5d-d1878d88fd95",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Amkc&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/mkc?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/0a7cb0f8-2946-4b00-a192-0b31c8e1ec5c/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A04c7f4fe-2098-4311-866d-6733c08d5178&unique=prints",
+  "collector_number": "233",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Vincent Proce",
+  "artist_ids": [
+    "d82b1138-76d3-49f7-9d8c-bc2e2d3e0b0a"
+  ],
+  "illustration_id": "3719d81b-6a9e-4475-9e88-b7809a2901c2",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "edhrec_rank": 1037,
+  "penny_rank": 2306,
+  "prices": {
+    "usd": "4.33",
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": "2.08",
+    "eur_foil": null,
+    "tix": "0.24"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=650327&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DNettlecyst",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DNettlecyst",
+    "edhrec": "https://edhrec.com/route/?cc=Nettlecyst"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F535741%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=753449&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/122614?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

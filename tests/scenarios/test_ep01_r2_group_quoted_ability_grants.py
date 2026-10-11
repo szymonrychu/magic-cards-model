@@ -842,3 +842,62 @@ def test_the_audit_module_refuses_a_line_the_readers_do_not_read(text):
     from tests.cards import card
 
     assert not reads_attached_and_quoted_grants_line(card("Grizzly Bears"), text)
+
+
+# --------------------------------------------------------------------------
+# Second printings of each reader, none of them a listed card
+# --------------------------------------------------------------------------
+
+
+def test_cryptolith_rite_gives_every_creature_you_control_a_real_mana_ability():
+    """ "Creatures you control have "{T}: Add one mana of any color."": a
+    summoning-sick-free Bear taps for mana; the opponent's creature does not
+    get it (CR 113.3d)."""
+    scenario = board(["Cryptolith Rite", "Grizzly Bears"], ["Grizzly Bears"])
+    bears = find_all(scenario, "Grizzly Bears", "alice")[0]
+    text = "{T}: Add one mana of any color."
+    index = granted_index(scenario, bears, text)
+    scenario.activate(bears, index=index, color=Color.GREEN)
+    assert bears.tapped
+    assert sum(scenario.player("alice").mana_pool.floating.values()) == 1
+    theirs = find_all(scenario, "Grizzly Bears", "bob")[0]
+    assert text not in chars(scenario, theirs).abilities
+
+
+def test_chromatic_lantern_gives_lands_a_mana_ability_and_not_creatures():
+    scenario = board(["Chromatic Lantern", "Forest", "Grizzly Bears"])
+    forest = find_all(scenario, "Forest", "alice")[0]
+    bears = find_all(scenario, "Grizzly Bears", "alice")[0]
+    text = "{T}: Add one mana of any color."
+    assert text in chars(scenario, forest).abilities
+    assert text not in chars(scenario, bears).abilities
+    scenario.game.put_into_graveyard(find_all(scenario, "Chromatic Lantern", "alice")[0])
+    assert text not in chars(scenario, forest).abilities
+
+
+def test_paradise_mantle_gives_only_the_equipped_creature_a_mana_ability():
+    scenario = board(["Paradise Mantle", "Grizzly Bears", "Grizzly Bears"])
+    first, second = find_all(scenario, "Grizzly Bears", "alice")
+    mantle = find_all(scenario, "Paradise Mantle", "alice")[0]
+    mantle.attach_to(first)
+    text = "{T}: Add one mana of any color."
+    scenario.activate(first, index=granted_index(scenario, first, text), color=Color.RED)
+    assert first.tapped
+    assert text not in chars(scenario, second).abilities
+    mantle.unattach()
+    assert text not in chars(scenario, first).abilities
+
+
+def test_all_slivers_grant_reaches_both_players_slivers_and_nothing_else():
+    """Pulmonic Sliver's "All Slivers have ..." is the "All" group (no "you
+    control"): the opponent's Sliver gets it too, a Bear does not."""
+    scenario = board(["Pulmonic Sliver", "Grizzly Bears"], ["Scuttling Sliver"])
+    line = next(
+        text
+        for text in chars(scenario, find_all(scenario, "Pulmonic Sliver", "alice")[0]).abilities
+        if text.startswith("If this permanent would be put into a graveyard")
+    )
+    theirs = find_all(scenario, "Scuttling Sliver", "bob")[0]
+    bears = find_all(scenario, "Grizzly Bears", "alice")[0]
+    assert line in chars(scenario, theirs).abilities
+    assert line not in chars(scenario, bears).abilities
