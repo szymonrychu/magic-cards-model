@@ -281,20 +281,25 @@ def parse_opponents_lose_keyword(sentence: str):
 # -- asking the board ---------------------------------------------------------
 
 
-def _controlled_lines(game: Game, username: str | None = None):
+def _controlled_lines(game: Game, username: str | None = None) -> list[tuple[Any, Any, str]]:
     """(permanent, controller, line) for every computed ability line on the
     battlefield (CR 604.2: only while the source is there and still has it),
-    optionally only `username`'s permanents."""
-    for permanent in list(game.battlefield):
-        try:
-            chars = game.characteristics_of(permanent)
-        except KeyError:
-            continue
-        controller = chars.controller or permanent.controller
-        if username is not None and controller != username:
-            continue
-        for line in chars.abilities:
-            yield permanent, controller, line
+    optionally only `username`'s permanents - read off one layered board
+    (`snapshot.scan_pin`: nothing here changes the game)."""
+    from ..snapshot import scan_pin
+
+    found: list[tuple[Any, Any, str]] = []
+    with scan_pin(game):
+        for permanent in list(game.battlefield):
+            try:
+                chars = game.characteristics_of(permanent)
+            except KeyError:
+                continue
+            controller = chars.controller or permanent.controller
+            if username is not None and controller != username:
+                continue
+            found.extend((permanent, controller, line) for line in chars.abilities)
+    return found
 
 
 def ignores_zero_life_loss(game: Game, username: str) -> str | None:

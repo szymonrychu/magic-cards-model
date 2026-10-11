@@ -817,11 +817,15 @@ class Player(EngineModel):
         game = self.game
         if game is None:
             return []
+        from ..snapshot import scan_pin
+
         found: list[tuple[str, int | None]] = []
+        with scan_pin(game):  # read-only: one layered board for the whole scan
+            lines_of = {p.id: list(_computed_ability_lines(game, p)) for p in game.battlefield}
         for permanent in game.battlefield:
             controller = game.controller_of(permanent).username
             mine = controller == self.username
-            for line in _computed_ability_lines(game, permanent):
+            for line in lines_of[permanent.id]:
                 if mine and _is_no_maximum_hand_size_line(line):
                     found.append(("set", None))
                     continue

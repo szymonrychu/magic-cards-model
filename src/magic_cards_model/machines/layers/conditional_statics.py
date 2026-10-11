@@ -1064,6 +1064,10 @@ def sync_conditional_grant_texts(permanents: Sequence[CardState], context: Layer
     wanted: dict[UUID, set[str]] = {}
     board: dict[UUID, Characteristics] | None = None
     for source in permanents:
+        printed = source.oracle_text or ""
+        # `class_ability_text` is a subset of the printed text: gate on that first.
+        if '"' not in printed or "as long as" not in printed.lower():
+            continue
         text = source.class_ability_text
         if not text or '"' not in text or "as long as" not in text.lower():
             continue

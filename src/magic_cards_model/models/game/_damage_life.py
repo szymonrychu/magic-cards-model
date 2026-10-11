@@ -82,9 +82,12 @@ class DamageLifeMixin:
         exactly when every other "until end of turn" effect does.
         """
         from ...machines.cleanup_damage_statics import damage_survives_cleanup
+        from ...snapshot import scan_pin
 
+        with scan_pin(self):  # read every permanent off one layered board first
+            kept = {p.id for p in self.battlefield if damage_survives_cleanup(self, p)}
         for permanent in self.battlefield:
-            if not damage_survives_cleanup(self, permanent):
+            if permanent.id not in kept:
                 permanent.damage = 0
             permanent.regeneration_shields = 0
 

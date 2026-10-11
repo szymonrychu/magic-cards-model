@@ -198,16 +198,19 @@ class TurnSbaMixin:
         """
         if self.players_skipping_next_untap.get(username, 0) > 0:
             return UntapStepRule(skipped=True, permanents=[])
-        return UntapStepRule(
-            skipped=False,
-            permanents=[
-                state
-                for state in self.permanents_controlled_by(username)
-                if not self.characteristics_of(state).has_ability(DOESNT_UNTAP_TEXT)
-                and not state.cant_become_untapped
-                and not self._untap_static_keeps_tapped(state, username)
-            ],
-        )
+        # A read-only scan: one layered board for every permanent and every
+        # untap static asked about it (`snapshot.scan_pin`).
+        with scan_pin(self):
+            return UntapStepRule(
+                skipped=False,
+                permanents=[
+                    state
+                    for state in self.permanents_controlled_by(username)
+                    if not self.characteristics_of(state).has_ability(DOESNT_UNTAP_TEXT)
+                    and not state.cant_become_untapped
+                    and not self._untap_static_keeps_tapped(state, username)
+                ],
+            )
 
     def _untap_static_keeps_tapped(self: "Game", state: CardState, username: str) -> bool:
         """CR 502.3's "effects can keep one or more of a player's permanents
@@ -249,11 +252,21 @@ class TurnSbaMixin:
         from ...machines import untap_statics as us
 
         chosen = list(untappable)
+        with scan_pin(self):  # read every line off one board before asking
+            may_stay = {
+                s.id
+                for s in chosen
+                if s.tapped
+                and any(us.is_may_choose_not_to_untap_line(x) for x in us.normalized_lines(self, s))
+            }
+            at_most_one = [
+                (source, phrase)
+                for source in self.battlefield
+                for line in us.normalized_lines(self, source)
+                if (phrase := us.untap_at_most_one_of_line(line)) is not None
+            ]
         for state in [s for s in chosen if s.tapped]:
-            if any(
-                us.is_may_choose_not_to_untap_line(line)
-                for line in us.normalized_lines(self, state)
-            ):
+            if state.id in may_stay:
                 decision = Decision(
                     kind=DecisionKind.MAY,
                     player=username,
@@ -267,30 +280,27 @@ class TurnSbaMixin:
                 )
                 if self.ask(decision):
                     chosen.remove(state)
-        for source in self.battlefield:
-            for line in us.normalized_lines(self, source):
-                phrase = us.untap_at_most_one_of_line(line)
-                if phrase is None:
-                    continue
+        for source, phrase in at_most_one:
+            with scan_pin(self):
                 candidates = [
                     s for s in chosen if s.tapped and us.matches(self, username, phrase, s)
                 ]
-                if len(candidates) < 2:
-                    continue
-                decision = Decision(
-                    kind=DecisionKind.CHOOSE_CARDS,
-                    player=username,
-                    prompt=f"choose the one {phrase} to untap ({source.name}, CR 502.3)",
-                    source=source.name,
-                    source_id=source.id,
-                    amount=1,
-                    exact=True,
-                    cards=tuple(s.id for s in candidates),
-                )
-                answer = self.ask(decision)
-                kept_ids = set(answer) if isinstance(answer, tuple) else set()
-                kept = next((s for s in candidates if s.id in kept_ids), candidates[0])
-                chosen = [s for s in chosen if s is kept or s not in candidates]
+            if len(candidates) < 2:
+                continue
+            decision = Decision(
+                kind=DecisionKind.CHOOSE_CARDS,
+                player=username,
+                prompt=f"choose the one {phrase} to untap ({source.name}, CR 502.3)",
+                source=source.name,
+                source_id=source.id,
+                amount=1,
+                exact=True,
+                cards=tuple(s.id for s in candidates),
+            )
+            answer = self.ask(decision)
+            kept_ids = set(answer) if isinstance(answer, tuple) else set()
+            kept = next((s for s in candidates if s.id in kept_ids), candidates[0])
+            chosen = [s for s in chosen if s is kept or s not in candidates]
         return chosen
 
     def _other_players_untapping(self: "Game", active: str) -> list[CardState]:
@@ -303,24 +313,25 @@ class TurnSbaMixin:
         from ...machines import untap_statics as us
 
         found: list[CardState] = []
-        for source in self.battlefield:
-            controller = self.controller_of(source).username
-            if controller == active:
-                continue
-            for line in us.normalized_lines(self, source):
-                grant = us.other_players_untap_of_line(line)
-                if grant is None or not us.holds(self, controller, grant.condition, source):
+        with scan_pin(self):  # read-only: one layered board for the whole scan
+            for source in self.battlefield:
+                controller = self.controller_of(source).username
+                if controller == active:
                     continue
-                targets = (
-                    [source]
-                    if grant.quality is None
-                    else [
-                        s
-                        for s in self.permanents_controlled_by(controller)
-                        if us.matches(self, controller, grant.quality, s)
-                    ]
-                )
-                found.extend(s for s in targets if s not in found)
+                for line in us.normalized_lines(self, source):
+                    grant = us.other_players_untap_of_line(line)
+                    if grant is None or not us.holds(self, controller, grant.condition, source):
+                        continue
+                    targets = (
+                        [source]
+                        if grant.quality is None
+                        else [
+                            s
+                            for s in self.permanents_controlled_by(controller)
+                            if us.matches(self, controller, grant.quality, s)
+                        ]
+                    )
+                    found.extend(s for s in targets if s not in found)
         return found
 
     def _static_skips_upkeep_step(self: "Game") -> bool:
@@ -331,14 +342,15 @@ class TurnSbaMixin:
 
         assert self.turn is not None
         active = self.turn.active_player
-        for source in self.battlefield:
-            controller = self.controller_of(source).username
-            for line in us.normalized_lines(self, source):
-                skip = us.upkeep_skip_of_line(line)
-                if skip is None or (not skip.everyone and controller != active):
-                    continue
-                if us.holds(self, controller, skip.condition, source):
-                    return True
+        with scan_pin(self):  # read-only: one layered board for the whole scan
+            for source in self.battlefield:
+                controller = self.controller_of(source).username
+                for line in us.normalized_lines(self, source):
+                    skip = us.upkeep_skip_of_line(line)
+                    if skip is None or (not skip.everyone and controller != active):
+                        continue
+                    if us.holds(self, controller, skip.condition, source):
+                        return True
         return False
 
     def untap_step(self: "Game") -> None:
