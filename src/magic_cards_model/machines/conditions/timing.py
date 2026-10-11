@@ -53,6 +53,16 @@ def _turn(context: "ConditionContext", match: re.Match[str]) -> bool:
     return holds != bool(match.group("negated"))
 
 
+def _extra_turn(context: "ConditionContext", match: re.Match[str]) -> bool:
+    """ "it's [not] an extra turn" / "this turn is an extra turn" (CR 500.7:
+    a turn an effect added after another turn). Medomai the Ageless' "can't
+    attack during extra turns"."""
+    turn = context.game.turn
+    if turn is None or turn.in_pregame:
+        return False
+    return turn.taking_extra_turn != bool(match.group("negated"))
+
+
 def _main_phase(context: "ConditionContext", match: re.Match[str]) -> bool:
     """ "it's your [precombat|postcombat] main phase" (CR 505.1)."""
     from ..turn import MAIN_PHASES, Step
@@ -152,6 +162,10 @@ READERS: tuple[ConditionReader, ...] = (
     ConditionReader(
         re.compile(r"it(?:'s| is) (?P<negated>not )?(?P<whose>your|their|an opponent's) turn"),
         _turn,
+    ),
+    ConditionReader(
+        re.compile(r"(?:it(?:'s| is)|this turn is) (?P<negated>not )?an extra turn"),
+        _extra_turn,
     ),
     ConditionReader(
         re.compile(

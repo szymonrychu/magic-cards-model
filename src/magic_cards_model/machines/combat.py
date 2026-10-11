@@ -1403,8 +1403,21 @@ def _evasion_restriction_sentences(attacker: CardState, game: "Game | None" = No
         rf".*(?:can't be blocked\b|can't block or be blocked by\b)",
         re.IGNORECASE,
     )
-    sentences = _computed_ability_sentences(attacker, game)
-    return [sentence for sentence in sentences if subject.search(sentence)]
+    found = [
+        sentence
+        for sentence in _computed_ability_sentences(attacker, game)
+        if subject.search(sentence)
+    ]
+    if game is not None and attacker.zone is Zone.BATTLEFIELD:
+        # A gated grant ("As long as you have the city's blessing, this
+        # creature has hexproof and can't be blocked.") hands over the bare
+        # clause `_split_gated_grants` keeps verbatim, which is no sentence.
+        found.extend(
+            ability
+            for ability in game.characteristics_of(attacker).abilities
+            if ability.strip().rstrip(".").lower() == "can't be blocked"
+        )
+    return found
 
 
 def attacker_cap_restriction(defender: CardState, game: "Game | None" = None) -> str | None:

@@ -415,6 +415,8 @@ def _record_damage(game: "Game", event: "GameEvent") -> None:
         # travels on the event.
         supertypes = tuple(event.subject_card.supertypes)
         colors = tuple(event.subject_card.colors or ())
+    if source is not None and source.zone is Zone.BATTLEFIELD and (event.amount or 0) > 0:
+        source.has_dealt_damage = True
     game.damage_dealt_this_turn.append(
         DamageDealt(
             source_id=event.subject_id,

@@ -49,6 +49,12 @@ _FLAT_COST_INCREASE = re.compile(
 _NAMED_COST_INCREASE = re.compile(
     r"[Ss]pells with the chosen name cost \{(?P<amount>\d+)\} more to cast\."
 )
+#: "Spells with the chosen name you cast cost {2} less to cast." (Council of
+#: the Absolute) - the discount twin of the tax above, scoped to the
+#: permanent's own controller by "you cast".
+_NAMED_COST_DECREASE = re.compile(
+    r"[Ss]pells with the chosen name you cast cost \{(?P<amount>\d+)\} less to cast\."
+)
 #: Gathering Stone's own discount, `_NAMED_COST_INCREASE`'s twin scoped by a
 #: CR 614.12a creature-type choice instead of a card name - "Spells you cast
 #: of the chosen type cost `{N}` less to cast." Urza's Incubator (Modern-legal,
@@ -286,6 +292,11 @@ def _unconditional_cost_modifier_effect(text: str) -> CostModifierEffect | None:
     if match is not None:
         return CostModifierEffect(
             kind=CostModifierKind.NAMED_INCREASE, amount=int(match.group("amount"))
+        )
+    match = _NAMED_COST_DECREASE.search(text)
+    if match is not None:
+        return CostModifierEffect(
+            kind=CostModifierKind.NAMED_DECREASE, amount=int(match.group("amount"))
         )
     match = _CHOSEN_TYPE_COST_DECREASE.search(text)
     if match is not None:

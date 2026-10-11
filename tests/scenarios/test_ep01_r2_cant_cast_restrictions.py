@@ -347,3 +347,45 @@ def test_ashes_of_the_abhorrent_bans_graveyard_casts_for_every_player():
 
     assert _try(build, "Faithless Looting", "alice", from_zone=Zone.GRAVEYARD) is not None
     assert _try(build, "Faithless Looting", "bob", from_zone=Zone.GRAVEYARD) is not None
+
+
+# -- Council of the Absolute's own discount ---------------------------------
+
+
+def _discount(source_owner, caster, spell="Shock", *, choose="Shock"):
+    """The reduction (in mana) `caster` gets on `spell` with a Council of the
+    Absolute owned by `source_owner` naming `choose`."""
+    world = _world(
+        "Council of the Absolute",
+        owner=source_owner,
+        choose=choose,
+        alice_hand=[spell],
+        bob_hand=[spell],
+    )
+    scenario = world()
+    card = scenario.find(spell, Zone.HAND, caster)
+    _, decreases, _ = scenario.game.static_cost_modifiers_for(card, caster)
+    return sum(cost.converted for cost in decreases)
+
+
+def test_council_of_the_absolute_discounts_its_controllers_chosen_name_by_two():
+    assert _discount("alice", "alice") == 2
+
+
+def test_council_of_the_absolute_discounts_only_spells_its_controller_casts():
+    assert _discount("alice", "bob") == 0
+
+
+def test_council_of_the_absolute_discounts_only_the_chosen_name():
+    assert _discount("alice", "alice", spell="Shock", choose=BOLT) == 0
+
+
+def test_the_discount_ends_with_the_permanent():
+    world = _world("Council of the Absolute", owner="alice", choose="Shock", alice_hand=["Shock"])
+    scenario = world()
+    scenario.game.exile_permanent(
+        scenario.find("Council of the Absolute", Zone.BATTLEFIELD, "alice")
+    )
+    card = scenario.find("Shock", Zone.HAND, "alice")
+    _, decreases, _ = scenario.game.static_cost_modifiers_for(card, "alice")
+    assert decreases == []

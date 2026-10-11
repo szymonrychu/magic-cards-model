@@ -1083,7 +1083,7 @@ class CostsManaMixin:
         self: "Game",
         attacks: "Sequence[tuple[CardState, Targetable | str]]",
         sources: "Sequence[CardState] | None" = None,
-    ) -> list[CardState]:
+    ) -> list[tuple[CardState, str]]:
         """CR 508.1h-j: determine the total cost to attack, let the active
         player activate mana abilities for it, and pay it in full - or refuse
         the whole declaration (CR 508.1: "the game returns to the moment
@@ -1129,47 +1129,57 @@ class CostsManaMixin:
 
     def _choose_attack_cost_returns(
         self: "Game", attacks: "Sequence[tuple[CardState, Targetable | str]]"
-    ) -> list[CardState]:
+    ) -> list[tuple[CardState, str]]:
         """CR 508.1g-h: the permanents each "can't attack unless you return a
-        <permanent> you control to its owner's hand" cost (Floodtide Serpent)
-        will return, chosen by the attacking player as the attack is declared
-        (`attack_block_costs.return_costs`). Chosen before any mana is paid
-        so a cost that cannot be paid changes nothing."""
+        <permanent> you control to its owner's hand" (Floodtide Serpent) or
+        "... unless you sacrifice two Islands" (Leviathan) cost will take,
+        chosen by the attacking player as the attack is declared
+        (`attack_block_costs.return_costs`), each with the verb that pays it.
+        Chosen before any mana is paid so a cost that cannot be paid changes
+        nothing."""
         from ...machines import attack_block_costs
 
         taken: set = set()
-        chosen: list[CardState] = []
+        chosen: list[tuple[CardState, str]] = []
         for creature, _defender in attacks:
-            for sentence, candidates in attack_block_costs.return_costs(self, creature):
-                available = [permanent for permanent in candidates if permanent.id not in taken]
-                if not available:
-                    raise ValueError(
-                        f'{creature.name} can\'t attack: "{sentence}" and there is nothing '
-                        "left to return (CR 508.1c, CR 118.3)"
-                    )
-                picked = available[-1]
-                if len(available) > 1:
-                    answer = self.ask(
-                        Decision(
-                            kind=DecisionKind.CHOOSE_CARDS,
-                            player=self.active_player.username,
-                            prompt=f"choose the permanent to return to pay for {creature.name} "
-                            "attacking",
-                            source=creature.name,
-                            source_id=None,
-                            amount=1,
-                            cards=tuple(permanent.id for permanent in available),
+            for sentence, candidates, count, verb in attack_block_costs.return_costs(
+                self, creature
+            ):
+                for _ in range(count):
+                    available = [permanent for permanent in candidates if permanent.id not in taken]
+                    if not available:
+                        raise ValueError(
+                            f'{creature.name} can\'t attack: "{sentence}" and there is nothing '
+                            f"left to {verb} (CR 508.1c, CR 118.3)"
                         )
-                    )
-                    by_id = {permanent.id: permanent for permanent in available}
-                    picked = by_id[answer[0]]
-                taken.add(picked.id)
-                chosen.append(picked)
+                    picked = available[-1]
+                    if len(available) > 1:
+                        answer = self.ask(
+                            Decision(
+                                kind=DecisionKind.CHOOSE_CARDS,
+                                player=self.active_player.username,
+                                prompt=f"choose the permanent to {verb} to pay for "
+                                f"{creature.name} attacking",
+                                source=creature.name,
+                                source_id=None,
+                                amount=1,
+                                cards=tuple(permanent.id for permanent in available),
+                            )
+                        )
+                        by_id = {permanent.id: permanent for permanent in available}
+                        picked = by_id[answer[0]]
+                    taken.add(picked.id)
+                    chosen.append((picked, verb))
         return chosen
 
-    def _return_attack_cost_permanents(self: "Game", chosen: "Sequence[CardState]") -> None:
-        for permanent in chosen:
-            self.return_to_hand(permanent)
+    def _return_attack_cost_permanents(
+        self: "Game", chosen: "Sequence[tuple[CardState, str]]"
+    ) -> None:
+        for permanent, verb in chosen:
+            if verb == "sacrifice":
+                self.sacrifice(permanent)
+            else:
+                self.return_to_hand(permanent)
 
     def _pay_block_costs(self: "Game", blocks: "Sequence[tuple[CardState, CardState]]") -> None:
         """CR 509.1d-f: determine the total cost to block, let the defending

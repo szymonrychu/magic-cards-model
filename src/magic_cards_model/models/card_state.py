@@ -1051,6 +1051,11 @@ class CardState(EngineModel):
     neither an ability nor part of the permanent's copiable values." Set by
     renown's own trigger (CR 702.112a, `machines/effects.py`'s "it becomes
     renowned"), cleared by `move_to` off the battlefield."""
+    has_dealt_damage: bool = False
+    """Whether this permanent has dealt damage since it came to the battlefield
+    ("hasn't dealt damage yet", Karakyk Guardian, Ratonhnhake): written by
+    `machines/conditions/history.record` from each damage event it is the
+    source of, cleared by `move_to` off the battlefield (CR 400.7)."""
     paired_with: UUID | None = None
     """CR 702.95a's pairing: the `id` of the creature this one is paired with,
     or `None`. Only `machines/soulbond.py` writes it, and it reads it lazily
@@ -3120,6 +3125,7 @@ class CardState(EngineModel):
             self.suspected = False
             self.renowned = False
             self.paired_with = None  # CR 702.95e
+            self.has_dealt_damage = False  # CR 400.7
             self.solved = False  # CR 719.3b
             if zone is Zone.GRAVEYARD:
                 self._note_put_into_graveyard_with_counters()

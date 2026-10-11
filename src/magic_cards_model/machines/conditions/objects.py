@@ -405,6 +405,17 @@ def _declared_as_an_attacker(context: "ConditionContext", match: re.Match[str]) 
     return event.declared_attacker == (match.group("negated") is None)
 
 
+def _attacking_alone(context: "ConditionContext", match: re.Match[str]) -> bool:
+    """ "it's attacking alone" (Yuan-Ti Malison, Gutter Skulker) - CR 506.5: a
+    creature attacks alone if it's the only creature declared as an attacker.
+    Read off `Game.combat` right now; False for a subject that is not
+    attacking at all."""
+    subject = _subject(context, match.group("subject"))
+    attackers = context.game.combat.attacker_ids
+    held = subject is not None and attackers == [subject.id]
+    return not held if match.group("negated") else held
+
+
 def _attacking_defender_quality(context: "ConditionContext", match: re.Match[str]) -> bool:
     """ "it's attacking a battle" (Rampaging Geoderm) - CR 508.1's declared
     defender, read off `Game.combat` right now rather than off the trigger
@@ -1117,6 +1128,10 @@ READERS: tuple[ConditionReader, ...] = (
     ConditionReader(
         re.compile(r"it (?:is(?P<negated>n't| not)|is) being declared as an attacker"),
         _declared_as_an_attacker,
+    ),
+    ConditionReader(
+        re.compile(rf"(?P<subject>{SUBJECT})(?:'s| is)(?P<negated> not)? attacking alone"),
+        _attacking_alone,
     ),
     ConditionReader(
         re.compile(

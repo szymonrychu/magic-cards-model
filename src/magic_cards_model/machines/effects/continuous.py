@@ -10027,7 +10027,7 @@ def _parse_put_then_grant_then_delayed_whole_text(
 #: by the time the clause gets here, like every other self-reference.
 _TARGET_BLOCKS_SELF_IF_ABLE_RE = re.compile(
     r"^(?P<phrase>(?:up to one )?target (?:[a-z' ]+ )?creature(?: [a-z' ]+?)?) blocks "
-    r"(?:this creature|this permanent|it) this turn if able\.?$",
+    r"(?P<referent>this creature|this permanent|it) this (?:turn|combat) if able\.?$",
     re.IGNORECASE,
 )
 
@@ -10066,7 +10066,19 @@ def _parse_target_blocks_self_if_able_clause(text: str) -> TargetedClause | None
         ):
             return
         controller = game.controller_of(stack_object).username
-        line = f"This creature blocks {source.name} each combat if able."
+        # "it" is whatever the trigger event names: the creature that
+        # attacked (Fighter Class: "Whenever a creature you control attacks,
+        # ... blocks it this combat if able"), which is the source itself for
+        # "Whenever this creature attacks" (Avalanche Tusker).
+        attacker = source
+        event = stack_object.event
+        if match.group("referent").lower() == "it" and event is not None:
+            named = game.find_by_id(event.subject_id) if event.subject_id is not None else None
+            if isinstance(named, CardState):
+                if named.zone is not Zone.BATTLEFIELD:
+                    return
+                attacker = named
+        line = f"This creature blocks {attacker.name} each combat if able."
         for target in game.resolve_targets(stack_object):
             if isinstance(target, CardState) and target.zone is Zone.BATTLEFIELD:
                 _grant_keywords_to(
@@ -10418,7 +10430,7 @@ def _double_power_and_toughness(game: "Game", target: CardState, source_name: st
 #: (CR 613.1f, CR 113.10) until cleanup. The single "target creature" form
 #: stays with `dispatch.py`'s own `_TARGET_CANT_BE_BLOCKED_RE`.
 _COUNTED_TARGETS_CANT_BE_BLOCKED_RE = re.compile(
-    r"^(?P<phrase>(?:up to |one or )?(?:x|\w+) target .*?creatures) can'?t be blocked this turn"
+    r"^(?P<phrase>(?:up to |one or )?(?:x|\w+) target .*?creatures(?: [a-z' ]+?)?) can'?t be blocked this turn"
     r"(?:\.\s*until end of turn, those creatures gain "
     r"(?:(?P<keywords>[a-z][a-z0-9 ,]*?),? and )?\"(?P<granted>[^\"]+)\")?\.?$",
     re.IGNORECASE,
