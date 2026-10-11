@@ -801,3 +801,42 @@ def test_storage_matrix_only_restricts_the_untap_step_of_the_player_whose_turn_i
     assert _tapped(scenario, "bob") == ["Forest", "Grizzly Bears"], (
         "alice's turn: bob untaps nothing"
     )
+
+
+# -- Wrenn and Six -7: an emblem granting retrace to instants and sorceries --------------
+
+
+def _wrenn_ultimate():
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=["Wrenn and Six", "Mountain"],
+            hand=["Island"],
+            graveyard=["Lightning Bolt", "Grizzly Bears"],
+            library=["Island"] * 5,
+        )
+        .player("bob", battlefield=["Forest"], library=["Mountain"] * 5)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    return scenario
+
+
+def test_wrenn_and_six_emblem_grants_retrace_to_instants_and_sorceries_only():
+    scenario = _wrenn_ultimate()
+    bolt = scenario.find("Lightning Bolt", Zone.GRAVEYARD, "alice")
+    bears = scenario.find("Grizzly Bears", Zone.GRAVEYARD, "alice")
+    assert not granted_cast_options(scenario.game, bolt, "alice", Zone.GRAVEYARD)
+    wrenn = scenario.find("Wrenn and Six", Zone.BATTLEFIELD, "alice")
+    wrenn.counters.set("loyalty", 7)
+    scenario.activate(wrenn, index=2)
+    scenario.pass_until_resolved()
+    assert len(scenario.game.emblems_of("alice")) == 1
+    assert granted_cast_options(scenario.game, bolt, "alice", Zone.GRAVEYARD)
+    assert not granted_cast_options(scenario.game, bears, "alice", Zone.GRAVEYARD)
+    casting = scenario.cast("Lightning Bolt", from_zone=Zone.GRAVEYARD)
+    island = scenario.find("Island", Zone.HAND, "alice")
+    casting.use_keyword("Retrace", choosing=[island])
+    scenario.pay_with(casting.begin_paying(), *scenario.untapped_sources("Mountain"))
+    assert island.zone is Zone.GRAVEYARD, "the land card was discarded as an additional cost"

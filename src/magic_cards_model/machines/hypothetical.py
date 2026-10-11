@@ -124,6 +124,7 @@ from .cost import (
 from .decisions import Decision, DecisionKind, DecisionScript, ScriptedAnswer
 from .legal_actions import legal_actions
 from .replacement import unread_self_enters_tapped_lines
+from .untap_choices import guaranteed_untaps
 
 if TYPE_CHECKING:
     from ..models.game import Game
@@ -589,8 +590,11 @@ def _untapped_copy(game: "Game", player: str) -> tuple["Game", tuple[str, ...]]:
             f"assuming untapped: {player} skips their next untap step (CR 614.10), "
             f"so nothing untaps and this is the board as it stands",
         )
-    was_tapped = [state for state in verdict.permanents if state.tapped]
-    copy.player(player).untap_all(verdict.permanents)
+    # Storage Matrix-style choices (CR 502.3) are the player's to make and a
+    # look-ahead cannot ask: only what untaps whichever type is chosen counts.
+    batch, choosers = guaranteed_untaps(copy, player, verdict.permanents)
+    was_tapped = [state for state in batch if state.tapped]
+    copy.player(player).untap_all(batch)
     # Named from what actually untapped rather than from the batch, so a
     # permanent whose untap was replaced (CR 122.1d, CR 701.43a) is not
     # claimed as untapped by a notice the board disagrees with.
@@ -599,10 +603,24 @@ def _untapped_copy(game: "Game", player: str) -> tuple["Game", tuple[str, ...]]:
         return copy, (
             f"assuming untapped: nothing {player} controls would untap, "
             f"so this is the board as it stands",
+            *(
+                (f"{', '.join(choosers)} would make {player} choose what untaps (CR 502.3)",)
+                if choosers
+                else ()
+            ),
         )
+    chose = (
+        (
+            f"{', '.join(choosers)} would make {player} choose what untaps (CR 502.3); "
+            f"only permanents that untap under any choice are assumed untapped",
+        )
+        if choosers
+        else ()
+    )
     return copy, (
         f"assuming untapped: {', '.join(untapped)} untap for {player}; "
         f"every other permanent is left exactly as it is now",
+        *chose,
     )
 
 

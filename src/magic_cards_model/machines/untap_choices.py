@@ -81,3 +81,33 @@ def untap_type_restrictions(
                 in {each.value.lower() for each in game.characteristics_of(permanent).types}
             ]
     return remaining
+
+
+def guaranteed_untaps(
+    game: Game, username: str, permanents: list[CardState]
+) -> tuple[list[CardState], tuple[str, ...]]:
+    """What a look-ahead can promise of `permanents` without asking anyone: the
+    ones that untap whichever type each untapped chooser would pick (CR 502.3).
+
+    `untap_type_restrictions` asks the player; a hypothetical must not, and
+    cannot know the answer, so it keeps only a permanent of every offered type
+    (the safe side for "can I pay"). Returns the narrowed list and the names of
+    the sources that made it uncertain, so the caller can say so."""
+    board = game.computed_board()
+    remaining = list(permanents)
+    sources: list[str] = []
+    for source in list(game.battlefield):
+        if source.tapped:
+            continue
+        for line in board.of(source).abilities:
+            types = untap_choice_types(line)
+            if types is None:
+                continue
+            sources.append(source.name)
+            remaining = [
+                permanent
+                for permanent in remaining
+                if set(types)
+                <= {each.value.lower() for each in game.characteristics_of(permanent).types}
+            ]
+    return remaining, tuple(sources)
