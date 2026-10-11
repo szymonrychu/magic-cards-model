@@ -532,6 +532,9 @@ def damage_then_followup_spell_effect(effect_text: str) -> Any:
     handed to the ordinary clause pipeline whole; if that cannot read it
     either, the whole spell is left unread (CR 608.2c) instead of running half.
     """
+    if "damage" not in effect_text.lower():  # the head or its controller rider deals it
+        return None
+
     from .effects import (
         _merge_may_discard_if_you_do_clauses,
         _parse_mixed_clauses,
@@ -541,8 +544,6 @@ def damage_then_followup_spell_effect(effect_text: str) -> Any:
         _targets_understood,
     )
 
-    if "damage" not in effect_text.lower():  # the head or its controller rider deals it
-        return None
     sentences = _plain_resolution_sentences(_strip_non_effect_preamble(effect_text))
     if len(sentences) < 1:
         return None
@@ -695,14 +696,15 @@ _ABILITY_HEAD_RE = re.compile(
 def damage_then_player_rider_ability_effect(effect_text: str) -> Any:
     """`_ABILITY_HEAD_RE`'s sentence plus "If a player is dealt damage this
     way, `<rider>`" as one ability effect, or None."""
+    if "dealt damage this way" not in effect_text.lower():
+        return None
+
     from .effects import (
         _plain_resolution_sentences,
         _strip_non_effect_preamble,
         _targets_understood,
     )
 
-    if "dealt damage this way" not in effect_text.lower():
-        return None
     sentences = _plain_resolution_sentences(_strip_non_effect_preamble(effect_text))
     if len(sentences) != 2:
         return None

@@ -161,11 +161,12 @@ _COPY_THAT_SPELL_THEN_RE = re.compile(
 
 
 def _parse_copy_that_spell_then_clause(text: str) -> AbilityEffect | None:
-    from .effects import parse_mixed_effect
-
     match = _COPY_THAT_SPELL_THEN_RE.fullmatch(" ".join(text.split()))
     if match is None:
         return None
+
+    from .effects import parse_mixed_effect
+
     rest = parse_mixed_effect(match.group("rest").strip())
     if rest is None:
         return None
@@ -285,11 +286,12 @@ _LEADING_CAST_TRIGGER_RE = re.compile(
 
 
 def _parse_spell_after_cast_trigger(text: str) -> Effect | None:
-    from .effects import _spell_effect_or_notice
-
     match = _LEADING_CAST_TRIGGER_RE.fullmatch(text.strip())
     if match is None:
         return None
+
+    from .effects import _spell_effect_or_notice
+
     return _spell_effect_or_notice(match.group("rest"))
 
 
@@ -915,11 +917,12 @@ _EXILE_THEN_BECOME_ITS_COPY_RE = re.compile(
 
 
 def _parse_exile_then_become_its_copy_clause(text: str) -> AbilityEffect | None:
-    from .effects import _targets_understood, _watch_for_departure_and_return_exiled_card
-
     match = _EXILE_THEN_BECOME_ITS_COPY_RE.fullmatch(" ".join(text.split()))
     if match is None:
         return None
+
+    from .effects import _targets_understood, _watch_for_departure_and_return_exiled_card
+
     if not _targets_understood(match.group("phrase"), count_agnostic=True):
         return None
     enchanted = match.group("subject").lower() == "enchanted creature"
@@ -989,6 +992,10 @@ _IF_NOT_A_CREATURE_BECOMES_RE = re.compile(
 def _if_not_a_creature_rider(
     text: str, first_reader: Callable[[str], object]
 ) -> Callable[[Game, StackObject], None] | None:
+    match = _IF_NOT_A_CREATURE_BECOMES_RE.fullmatch(" ".join(text.split()))
+    if match is None:
+        return None
+
     from .layers import (
         AddSubtype,
         _creature_type_words,
@@ -999,9 +1006,6 @@ def _if_not_a_creature_rider(
     )
     from .layers import Sublayer as PTSublayer
 
-    match = _IF_NOT_A_CREATURE_BECOMES_RE.fullmatch(" ".join(text.split()))
-    if match is None:
-        return None
     first = first_reader(match.group("first").strip())
     if first is None or getattr(first, "__name__", "").endswith("notice_only"):
         return None

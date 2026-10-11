@@ -665,6 +665,11 @@ def _gated_grants(rest: str) -> list[str] | None:
 def parse_gated_self_static(sentence: str) -> EffectBuilder | None:
     """The self statics above, or None. Tried by
     `machines/layers._parse_layer_sentence` after its other shapes."""
+    text = " ".join(sentence.split())
+    lowered = text.lower()
+    if "as long as" not in lowered and " unless " not in lowered:
+        return None
+
     from .layers import (
         ContinuousEffect,
         SetCreatureTypes,
@@ -674,10 +679,6 @@ def parse_gated_self_static(sentence: str) -> EffectBuilder | None:
         set_power_toughness,
     )
 
-    text = " ".join(sentence.split())
-    lowered = text.lower()
-    if "as long as" not in lowered and " unless " not in lowered:
-        return None
     negate = False
     base: re.Match[str] | None = None
     if match := _GATED_LEADING_RE.fullmatch(text):

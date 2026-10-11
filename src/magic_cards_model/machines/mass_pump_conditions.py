@@ -217,11 +217,12 @@ def _keyword_list(first: str, rest: str) -> list[str] | None:
 
 def same_is_true_effect(effect_text: str) -> Callable[["Game", "AbilityOnStack"], None] | None:
     """The ability effect for the "same is true for" family, or None."""
-    from .effects import _run_mass_pump
-
     match = _SAME_IS_TRUE_RE.match(" ".join(effect_text.split()))
     if match is None:
         return None
+
+    from .effects import _run_mass_pump
+
     names = _keyword_list(match.group("first"), match.group("rest"))
     if names is None:
         return None

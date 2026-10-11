@@ -123,8 +123,6 @@ def _counter_matching(game: "Game", wanted: StackFilter, you: str) -> int:
 
 def parse_mass_stack_whole_text(text: str, *, for_spell: bool) -> Any:
     """The whole text as one of this module's shapes, or None."""
-    from .effects import _parse_token_clause
-
     sentences = [
         sentence.strip()
         for sentence in re.split(r"(?<=\.)\s+", text.strip())
@@ -132,6 +130,9 @@ def parse_mass_stack_whole_text(text: str, *, for_spell: bool) -> Any:
     ]
     if not sentences:
         return None
+
+    from .effects import _parse_token_clause
+
     first = sentences[0]
 
     exile_match = _EXILE_ALL_SPELLS_AND_COUNTER_RE.fullmatch(first)

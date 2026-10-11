@@ -172,13 +172,14 @@ def dies_consequence_effect(text: str, *, source_stamp: UUID | None = None) -> A
 
 def parse_then_when_that_creature_dies_this_turn(text: str, *, for_spell: bool) -> Any:
     """The whole two-sentence chain, or None."""
+    match = _THEN_WHEN_THAT_CREATURE_DIES_RE.fullmatch(" ".join(text.split()))
+    if match is None:
+        return None
+
     from ..machines.abilities import TriggerEvent
     from .delayed import DelayedTrigger, ThatCreatureDiesConsequence
     from .effects import _parse_mixed_clauses
 
-    match = _THEN_WHEN_THAT_CREATURE_DIES_RE.fullmatch(" ".join(text.split()))
-    if match is None:
-        return None
     if re.search(r"\bX\b", match.group("first")):
         # CR 107.3a: an X the caster announced is read by `effects.effect_for`
         # substituting it into the text first - declining here is what lets

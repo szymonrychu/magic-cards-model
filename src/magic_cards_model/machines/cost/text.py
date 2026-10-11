@@ -272,11 +272,12 @@ def cost_modifier_effect(text: str) -> CostModifierEffect | None:
     leaves the whole sentence unread (and so reported), never applied
     unconditionally.
     """
-    from ...models.game import condition_is_readable
-
     effect = _unconditional_cost_modifier_effect(text)
     if effect is not None:
         return effect
+
+    from ...models.game import condition_is_readable
+
     tail = _AS_LONG_AS_TAIL.fullmatch(text.strip())
     if tail is None or not condition_is_readable(tail.group("condition")):
         return None

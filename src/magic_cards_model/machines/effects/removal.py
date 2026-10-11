@@ -8546,11 +8546,12 @@ def _parse_counter_targeting_object_unless_clause(text: str) -> AbilityEffect | 
     targeting object already gone from the stack leaves nothing to counter
     and nobody is asked.
     """
-    from ..cost import total_cost_for_phrase
-
     match = _COUNTER_TARGETING_OBJECT_UNLESS_RE.fullmatch(text.strip())
     if match is None:
         return None
+
+    from ..cost import total_cost_for_phrase
+
     verb = match.group("verb").lower()
     rest = match.group("rest").strip()
     if verb == "pays":

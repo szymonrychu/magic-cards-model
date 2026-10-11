@@ -12,11 +12,19 @@ import pkgutil
 from functools import cache
 
 
+#: Families that stage a throwaway game per line: asked last, since `any`
+#: stops at the first family that reads the line and the answer is the same in
+#: any order.
+_STAGED_LAST = ("damage_replacement", "enters_counters", "game_rules_untap")
+
+
 @cache
 def _readers():
     return tuple(
         getattr(importlib.import_module(f"{__name__}.{m.name}"), f"reads_{m.name}_line")
-        for m in sorted(pkgutil.iter_modules(__path__), key=lambda m: m.name)
+        for m in sorted(
+            pkgutil.iter_modules(__path__), key=lambda m: (m.name in _STAGED_LAST, m.name)
+        )
         if not m.name.startswith("_")
     )
 

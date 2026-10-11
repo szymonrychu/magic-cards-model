@@ -171,11 +171,12 @@ def _mana_value_bound(comparison: str) -> Callable[["Game", str], tuple[int, boo
 
 
 def _parse_exile_until_then_cast_if_mana_value(text: str, *, for_spell: bool) -> Any:
-    from .effects import _offer_free_casts_from_among, _parse_exile_until_antecedent
-
     sentences = _sentences(text)
     if len(sentences) != 3:
         return None
+
+    from .effects import _offer_free_casts_from_among, _parse_exile_until_antecedent
+
     antecedent = _parse_exile_until_antecedent(sentences[0])
     if antecedent is None:
         return None

@@ -118,12 +118,13 @@ def parse_destroy_target_and_same_name_permanents_clause(
 ) -> TargetedClause | None:
     """`_DESTROY_TARGET_AND_SAME_NAME_RE`'s shape, or `None` - Maelstrom
     Pulse's whole text."""
-    from .effects import _targets_understood
-
     whole = " ".join(text.strip().split())
     match = _DESTROY_TARGET_AND_SAME_NAME_RE.fullmatch(whole)
     if match is None:
         return None
+
+    from .effects import _targets_understood
+
     if not _targets_understood(f"target {match.group('phrase')}", count_agnostic=True):
         return None
 
@@ -149,12 +150,13 @@ def parse_return_target_and_same_name_permanents_to_hands_clause(
     """`_RETURN_TARGET_AND_SAME_NAME_TO_OWNERS_HANDS_RE`'s shape, or `None` -
     Echoing Truth's whole text, the generalisation proof for the shared
     `_same_name_battlefield_group` selector above."""
-    from .effects import _targets_understood
-
     whole = " ".join(text.strip().split())
     match = _RETURN_TARGET_AND_SAME_NAME_TO_OWNERS_HANDS_RE.fullmatch(whole)
     if match is None:
         return None
+
+    from .effects import _targets_understood
+
     if not _targets_understood(f"target {match.group('phrase')}", count_agnostic=True):
         return None
 
@@ -203,12 +205,13 @@ def parse_target_blocks_if_able_then_may_gain_keyword_clause(
     Dispute's own first two sentences, with its trailing "Learn." (or any
     other rider a future printing of this shape carries) composed after
     through the ordinary per-clause dispatcher rather than read here."""
-    from .effects import _targets_understood, parse_mixed_effect, parse_mixed_effect_for_spell
-
     whole = " ".join(text.strip().split())
     match = _TARGET_BLOCKS_THIS_TURN_IF_ABLE_RE.fullmatch(whole)
     if match is None:
         return None
+
+    from .effects import _targets_understood, parse_mixed_effect, parse_mixed_effect_for_spell
+
     if not _targets_understood(match.group("phrase"), count_agnostic=True):
         return None
     keyword = match.group("keyword")
@@ -364,14 +367,15 @@ def parse_look_top_reveal_conditional_battlefield_clause(
     text: str, *, for_spell: bool
 ) -> TargetedClause | None:
     """`_LOOK_TOP_REVEAL_CONDITIONAL_BATTLEFIELD_RE`'s shape, or `None`."""
-    from random import Random
-
-    from .effects import _grant_keywords_to, _singular_card_type, source_id_of
-
     whole = " ".join(text.strip().split())
     match = _LOOK_TOP_REVEAL_CONDITIONAL_BATTLEFIELD_RE.fullmatch(whole)
     if match is None:
         return None
+
+    from random import Random
+
+    from .effects import _grant_keywords_to, _singular_card_type, source_id_of
+
     count = parse_count(match.group("n"))
     if count is None:
         return None
@@ -477,12 +481,13 @@ def parse_return_from_graveyard_to_battlefield_distinct_clause(
     it, the same trust every other targeted clause in this file already
     places in `TargetingProfile.check` having already run.
     """
-    from .effects import _targets_understood
-
     whole = " ".join(text.strip().split())
     match = _RETURN_FROM_GRAVEYARD_TO_BATTLEFIELD_DISTINCT_RE.fullmatch(whole)
     if match is None:
         return None
+
+    from .effects import _targets_understood
+
     if not _targets_understood(
         f"{match.group('phrase')} from your graveyard",
         count_agnostic=True,
@@ -532,16 +537,17 @@ def parse_target_player_exiles_creature_and_graveyard_clause(
 ) -> TargetedClause | None:
     """`_TARGET_OPPONENT_EXILES_CREATURE_AND_GRAVEYARD_RE`'s shape, or
     `None` - Strategic Betrayal's whole text."""
+    whole = " ".join(text.strip().split())
+    match = _TARGET_OPPONENT_EXILES_CREATURE_AND_GRAVEYARD_RE.fullmatch(whole)
+    if match is None:
+        return None
+
     from magic_cards_model.phrases import with_indefinite_article
 
     from ..models.player import Player
     from .effects import Decision, DecisionKind, _targets_understood, source_id_of
     from .targeting import permanent_description
 
-    whole = " ".join(text.strip().split())
-    match = _TARGET_OPPONENT_EXILES_CREATURE_AND_GRAVEYARD_RE.fullmatch(whole)
-    if match is None:
-        return None
     if not _targets_understood(f"target {match.group('who')}", allow_player_targets=True):
         return None
     count = parse_count(match.group("n"))

@@ -45,12 +45,13 @@ _REVEAL_SOME_CHOOSE_ONE_RE = re.compile(
 
 def parse_reveal_some_then_choose_one(text: str) -> Any:
     """`_REVEAL_SOME_CHOOSE_ONE_RE`'s whole ability, or None."""
-    from .casting import PlayAction, once_per_turn_key
-    from .effects import _nonland_or_typed_card_matcher, count_expression
-
     match = _REVEAL_SOME_CHOOSE_ONE_RE.fullmatch(" ".join(text.split()))
     if match is None:
         return None
+
+    from .casting import PlayAction, once_per_turn_key
+    from .effects import _nonland_or_typed_card_matcher, count_expression
+
     expression = match.group("x_expr") or match.group("eq_expr")
     fixed: int | None = None
     counter = None
@@ -164,11 +165,12 @@ def parse_hand_exile_until_leaves_clause(text: str) -> Any:
     for "you may" - and it is exiled until the source leaves the battlefield,
     then returned to its owner's hand (CR 610.3's "previous zone"). CR 610.3b:
     if the source already left before this resolved, nothing is exiled."""
-    from .effects import _nonland_or_typed_card_matcher
-
     match = _HAND_EXILE_UNTIL_LEAVES_RE.fullmatch(" ".join(text.split()))
     if match is None:
         return None
+
+    from .effects import _nonland_or_typed_card_matcher
+
     if (match.group("verb").lower() == "choose") != (match.group("then") is not None):
         return None
     permits = _nonland_or_typed_card_matcher(match.group("quality").strip())

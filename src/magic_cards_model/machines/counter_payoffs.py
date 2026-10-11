@@ -104,10 +104,11 @@ _PUT_THAT_MANY_COUNTERS_ON_IT_RE = re.compile(
 
 
 def _put_that_many_counters_on_it(text: str, *, for_spell: bool):  # noqa: ANN202
-    from . import effects
-
     if for_spell:
         return None
+
+    from . import effects
+
     match = _PUT_THAT_MANY_COUNTERS_ON_IT_RE.fullmatch(text.strip())
     if match is None:
         return None
@@ -234,11 +235,12 @@ def _resolution_clause(text: str):  # noqa: ANN202
 
 
 def _put_counter_then_x_clause_where_x_is_counters_on_self(text: str, *, for_spell: bool):  # noqa: ANN202
+    if for_spell:
+        return None
+
     from . import effects
     from .modes import substitute_x
 
-    if for_spell:
-        return None
     match = _PUT_COUNTER_THEN_X_CLAUSE_WHERE_X_IS_COUNTERS_ON_SELF_RE.fullmatch(
         " ".join(text.split())
     )
@@ -337,10 +339,11 @@ _REMOVE_A_COUNTER_FROM_IT_WHEN_YOU_DO_RE = re.compile(
 
 
 def _remove_a_counter_from_it_when_you_do(text: str, *, for_spell: bool):  # noqa: ANN202
-    from . import effects
-
     if for_spell:
         return None
+
+    from . import effects
+
     match = _REMOVE_A_COUNTER_FROM_IT_WHEN_YOU_DO_RE.fullmatch(" ".join(text.split()))
     if match is None:
         return None
@@ -426,11 +429,12 @@ _CREWED_THIS_TURN_TARGET_THEN_MAYBE_DOUBLE_RE = re.compile(
 
 
 def _crewed_this_turn_target_then_maybe_double(text: str, *, for_spell: bool):  # noqa: ANN202
+    if for_spell:
+        return None
+
     from . import effects
     from .targeting import permanent_description
 
-    if for_spell:
-        return None
     match = _CREWED_THIS_TURN_TARGET_THEN_MAYBE_DOUBLE_RE.fullmatch(" ".join(text.split()))
     if match is None:
         return None
@@ -480,10 +484,11 @@ _MAY_PAY_LIFE_EQUAL_TO_ITS_POWER_THEN_COUNTERS_RE = re.compile(
 
 
 def _may_pay_life_equal_to_its_power_then_counters(text: str, *, for_spell: bool):  # noqa: ANN202
-    from . import effects
-
     if for_spell:
         return None
+
+    from . import effects
+
     match = _MAY_PAY_LIFE_EQUAL_TO_ITS_POWER_THEN_COUNTERS_RE.fullmatch(" ".join(text.split()))
     if match is None:
         return None

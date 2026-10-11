@@ -73,11 +73,12 @@ _COPY_IT_IF_CONDITION_RE = re.compile(
 
 
 def _parse_copy_it_if_condition_clause(text: str) -> AbilityEffect | None:
-    from .effects import ConditionalClauseNotice, _effect_condition_is_readable
-
     match = _COPY_IT_IF_CONDITION_RE.fullmatch(" ".join(text.split()))
     if match is None:
         return None
+
+    from .effects import ConditionalClauseNotice, _effect_condition_is_readable
+
     condition_text = match.group("condition").strip()
     if not _effect_condition_is_readable(condition_text):
         return None
@@ -142,6 +143,10 @@ _CONDITIONAL_TARGET_PUMP_RE = re.compile(
 
 
 def _parse_conditional_targeted_layer_clause(text: str) -> AbilityEffect | None:
+    match = _CONDITIONAL_TARGET_PUMP_RE.fullmatch(" ".join(text.split()))
+    if match is None:
+        return None
+
     from .effects import ConditionalClauseNotice, _effect_condition_is_readable, _targets_understood
     from .layers import (
         ContinuousEffect,
@@ -154,9 +159,6 @@ def _parse_conditional_targeted_layer_clause(text: str) -> AbilityEffect | None:
         only_this_incarnation,
     )
 
-    match = _CONDITIONAL_TARGET_PUMP_RE.fullmatch(" ".join(text.split()))
-    if match is None:
-        return None
     condition_text = match.group("condition").strip()
     if not _effect_condition_is_readable(condition_text):
         return None
@@ -241,13 +243,14 @@ _SACRIFICE_UNLESS_CONDITION_RE = re.compile(
 
 
 def _parse_sacrifice_unless_condition_clause(text: str) -> AbilityEffect | None:
+    match = _SACRIFICE_UNLESS_CONDITION_RE.fullmatch(" ".join(text.split()))
+    if match is None:
+        return None
+
     from ..phrases import with_indefinite_article
     from .effects import ConditionalClauseNotice, _effect_condition_is_readable
     from .targeting import permanent_description
 
-    match = _SACRIFICE_UNLESS_CONDITION_RE.fullmatch(" ".join(text.split()))
-    if match is None:
-        return None
     condition_text = match.group("condition").strip()
     if not _effect_condition_is_readable(condition_text):
         return None
@@ -330,12 +333,13 @@ _QUANTIFIED_TARGET_PLAYERS_EACH_DISCARD_RE = re.compile(
 
 
 def _parse_quantified_target_players_each_discard_clause(text: str) -> AbilityEffect | None:
-    from ..numbers import QuantitySource, parse_quantity
-    from .effects import _discard_cards, _targets_understood
-
     match = _QUANTIFIED_TARGET_PLAYERS_EACH_DISCARD_RE.fullmatch(" ".join(text.split()))
     if match is None:
         return None
+
+    from ..numbers import QuantitySource, parse_quantity
+    from .effects import _discard_cards, _targets_understood
+
     phrase = f"{match.group('players')} target players"
     if not _targets_understood(phrase, allow_player_targets=True, count_agnostic=True):
         return None
@@ -374,11 +378,12 @@ _FLIP_COINS_THEN_SKIP_TURNS_RE = re.compile(
 
 
 def _parse_flip_coins_then_skip_turns_clause(text: str) -> AbilityEffect | None:
-    from .effects import _targets_understood
-
     match = _FLIP_COINS_THEN_SKIP_TURNS_RE.fullmatch(" ".join(text.split()))
     if match is None:
         return None
+
+    from .effects import _targets_understood
+
     if not _targets_understood("target opponent", allow_player_targets=True):
         return None
     n_coins = parse_count(match.group("coins"))
@@ -506,11 +511,12 @@ _LOOK_TOP_REVEAL_CREATURE_OR_LAND_INFUSION_RE = re.compile(
 
 
 def _parse_look_top_reveal_creature_or_land_infusion_clause(text: str) -> Effect | None:
-    from .effects import _bounded_quality_matcher
-
     match = _LOOK_TOP_REVEAL_CREATURE_OR_LAND_INFUSION_RE.fullmatch(" ".join(text.split()))
     if match is None:
         return None
+
+    from .effects import _bounded_quality_matcher
+
     look_n = parse_count(match.group("n"))
     instead_n = parse_count(match.group("m"))
     if look_n is None or instead_n is None or look_n <= 0 or instead_n <= 0:
@@ -572,11 +578,12 @@ _EACH_PLAYER_HALVES_LIFE_HAND_PERMANENTS_RE = re.compile(
 
 
 def _parse_each_player_halves_life_hand_permanents_clause(text: str) -> Effect | None:
-    from .effects import _discard_cards, _players_in_apnap_order
-
     match = _EACH_PLAYER_HALVES_LIFE_HAND_PERMANENTS_RE.fullmatch(" ".join(text.split()))
     if match is None:
         return None
+
+    from .effects import _discard_cards, _players_in_apnap_order
+
     round_up = match.group("direction").lower() == "up"
 
     def effect(game: Game, spell: CardState) -> None:
@@ -648,11 +655,12 @@ _TARGET_PLAYER_HALF_LIBRARY_DRAW_AND_HALF_LIFE_RE = re.compile(
 
 
 def _parse_target_player_half_library_draw_and_half_life_clause(text: str) -> Effect | None:
-    from .effects import _targets_understood
-
     match = _TARGET_PLAYER_HALF_LIBRARY_DRAW_AND_HALF_LIFE_RE.fullmatch(" ".join(text.split()))
     if match is None:
         return None
+
+    from .effects import _targets_understood
+
     if not _targets_understood("target player", allow_player_targets=True):
         return None
     round_up = match.group("direction").lower() == "up"

@@ -239,11 +239,12 @@ _THEN_CHOOSE_A_COLOR_RE = re.compile(
 
 
 def _then_choose_a_color(text: str) -> StackEffect | None:
-    from .effects import _ability_effect_or_notice, _parse_becomes_chosen_color_clause
-
     match = _THEN_CHOOSE_A_COLOR_RE.fullmatch(" ".join(text.split()))
     if match is None:
         return None
+
+    from .effects import _ability_effect_or_notice, _parse_becomes_chosen_color_clause
+
     rest = _parse_becomes_chosen_color_clause(match.group("rest"))
     if rest is None:
         return None

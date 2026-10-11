@@ -76,12 +76,13 @@ def parse_sacrifice_self_when_you_do(text: str) -> "AbilityEffect | None":
     whole ability closed rather than sacrificing for nothing, and again when
     it resolves (`delayed.ReflexiveConsequence`), choosing its own targets as
     it goes on the stack (CR 603.3d)."""
-    from .delayed import ReflexiveConsequence
-    from .effects import parse_mixed_effect, reflexive_consequence_effect
-
     match = _SACRIFICE_SELF_WHEN_YOU_DO_RE.fullmatch(text.strip())
     if match is None:
         return None
+
+    from .delayed import ReflexiveConsequence
+    from .effects import parse_mixed_effect, reflexive_consequence_effect
+
     sacrifice = parse_mixed_effect(match.group("action") + ".")
     consequence = match.group("consequence").strip() + "."
     if sacrifice is None or reflexive_consequence_effect(consequence) is None:
@@ -109,11 +110,12 @@ def parse_sacrifice_self_then_series(text: str) -> "AbilityEffect | None":
     rest in the order written (CR 608.2c). Nothing after it is conditional on
     the sacrifice, so a source already gone is simply not sacrificed and the
     rest still happens (CR 113.7a)."""
-    from .effects import parse_mixed_effect
-
     match = _SACRIFICE_SELF_THEN_SERIES_RE.fullmatch(text.strip())
     if match is None:
         return None
+
+    from .effects import parse_mixed_effect
+
     rest = re.sub(r",\s+and\s+", ". ", match.group("rest").strip())
     rest = re.sub(r",\s+", ". ", rest)
     sacrifice = parse_mixed_effect(match.group("action") + ".")
@@ -131,11 +133,12 @@ def parse_sacrifice_self_then_series(text: str) -> "AbilityEffect | None":
 def parse_put_counters_on_two_objects(text: str) -> "AbilityEffect | None":
     """ "put `<counters>` on `<object>` and `<counters>` on this `<noun>`." -
     each half read as its own "put" instruction, in the order written."""
-    from .effects import parse_mixed_effect
-
     match = _PUT_COUNTERS_ON_TWO_OBJECTS_RE.fullmatch(" ".join(text.strip().split()))
     if match is None:
         return None
+
+    from .effects import parse_mixed_effect
+
     first = parse_mixed_effect(f"put {match.group('first')}.")
     second = parse_mixed_effect(f"put {match.group('second')}.")
     if first is None or second is None:

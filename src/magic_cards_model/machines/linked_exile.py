@@ -327,11 +327,12 @@ def parse_put_linked_into_graveyard_then_tokens_clause(clause: str) -> AbilityEf
     pile, CR 701.7a's tokens counted off what actually reached a graveyard -
     a replacement that exiled a card instead does not count - then the
     source is sacrificed, CR 701.21a)."""
-    from .effects import _parse_generic_token_descriptor
-
     match = _PUT_LINKED_INTO_GRAVEYARD_THEN_TOKENS_RE.fullmatch(" ".join(clause.split()))
     if match is None:
         return None
+
+    from .effects import _parse_generic_token_descriptor
+
     definition = _parse_generic_token_descriptor(match.group("desc").split(), None)
     if definition is None:
         return None

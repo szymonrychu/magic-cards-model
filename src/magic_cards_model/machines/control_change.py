@@ -146,11 +146,12 @@ def _rider_modification(rider: str | None, *, activation_lock: bool) -> tuple[st
 
 def _parse_tap_then_lock_clause(effect_text: str) -> AbilityEffect | None:
     """`_TAP_THEN_LOCK_RE`'s shape, or `None`."""
-    from .effects import _targets_understood
-
     match = _TAP_THEN_LOCK_RE.fullmatch(" ".join(effect_text.split()))
     if match is None:
         return None
+
+    from .effects import _targets_understood
+
     if not _targets_understood(match.group("phrase"), count_agnostic=True):
         return None
     activation_lock = match.group("activation_lock") is not None
@@ -214,11 +215,12 @@ _GAIN_CONTROL_FOR_AS_LONG_RE = re.compile(
 
 def _parse_gain_control_for_as_long_clause(effect_text: str) -> AbilityEffect | None:
     """`_GAIN_CONTROL_FOR_AS_LONG_RE`'s shape, or `None`."""
-    from .effects import _targets_understood, parse_mixed_effect
-
     match = _GAIN_CONTROL_FOR_AS_LONG_RE.fullmatch(" ".join(effect_text.split()))
     if match is None:
         return None
+
+    from .effects import _targets_understood, parse_mixed_effect
+
     if not _targets_understood(match.group("phrase"), count_agnostic=True):
         return None
     rest = None
@@ -296,12 +298,13 @@ def _parse_gain_control_of_all_target_players_clause(effect_text: str) -> Abilit
     reading `_parse_mass_gain_control_untap` uses for an untargeted "all
     `<description>` until end of turn" group.
     """
-    from .effects import _targets_understood
-    from .targeting import permanent_description
-
     match = _GAIN_CONTROL_OF_ALL_TARGET_PLAYERS_RE.fullmatch(" ".join(effect_text.split()))
     if match is None:
         return None
+
+    from .effects import _targets_understood
+    from .targeting import permanent_description
+
     if not _targets_understood(f"target {match.group('who')}", allow_player_targets=True):
         return None
     requirement = permanent_description(match.group("description"))
@@ -375,12 +378,13 @@ def _quality_matcher(word: str) -> Callable[[Characteristics], bool] | None:
 
 def _parse_gain_control_longer_if_clause(effect_text: str) -> Effect | None:
     """`_GAIN_CONTROL_LONGER_IF_RE`'s shape, or `None`."""
-    from .effects import _targets_understood
-    from .layers import _split_and_validate_keywords
-
     match = _GAIN_CONTROL_LONGER_IF_RE.fullmatch(" ".join(effect_text.split()))
     if match is None:
         return None
+
+    from .effects import _targets_understood
+    from .layers import _split_and_validate_keywords
+
     if not _targets_understood(match.group("phrase")):
         return None
     has_quality = _quality_matcher(match.group("quality"))
@@ -520,12 +524,13 @@ def _phrase_has_validated_history_restriction(phrase: str) -> bool:
 
 def parse_gain_control_untimed_clause(effect_text: str) -> AbilityEffect | None:
     """`_GAIN_CONTROL_UNTIMED_RE`'s shape, or `None`."""
-    from .effects import _counter_kind, _targets_understood
-    from .layers import _singular_subtype_word, add_subtype
-
     match = _GAIN_CONTROL_UNTIMED_RE.fullmatch(" ".join(effect_text.split()))
     if match is None:
         return None
+
+    from .effects import _counter_kind, _targets_understood
+    from .layers import _singular_subtype_word, add_subtype
+
     phrase = match.group("phrase")
     if _NOT_UNTIMED_RE.search(phrase) and not _phrase_has_validated_history_restriction(phrase):
         return None
@@ -620,13 +625,14 @@ _GRANT_WHILE_SOURCE_TAPPED_RE = re.compile(
 
 def _parse_grant_while_source_tapped_clause(effect_text: str) -> AbilityEffect | None:
     """`_GRANT_WHILE_SOURCE_TAPPED_RE`'s shape, or `None`."""
+    match = _GRANT_WHILE_SOURCE_TAPPED_RE.fullmatch(" ".join(effect_text.split()))
+    if match is None:
+        return None
+
     from .effects import _targets_understood
     from .effects.continuous import continuous_effects, layer_context_for
     from .layers import parsed_layer_effects
 
-    match = _GRANT_WHILE_SOURCE_TAPPED_RE.fullmatch(" ".join(effect_text.split()))
-    if match is None:
-        return None
     if not _targets_understood(match.group("phrase"), count_agnostic=True):
         return None
     sentence = f"target creature gains {match.group('keywords').strip()} until end of turn."
@@ -681,6 +687,10 @@ _LOCK_STEP_WORDS = {"upkeep": "UPKEEP", "draw step": "DRAW", "end step": "END"}
 
 def _parse_lock_and_counter_while_tapped_clause(effect_text: str) -> AbilityEffect | None:
     """`_LOCK_AND_COUNTER_WHILE_TAPPED_RE`'s shape, or `None`."""
+    match = _LOCK_AND_COUNTER_WHILE_TAPPED_RE.fullmatch(" ".join(effect_text.split()))
+    if match is None or match.group("kind").lower() != match.group("kind2").lower():
+        return None
+
     from .abilities import TriggerEvent
     from .delayed import (
         CounterOnSubjectWhileSourceTapped,
@@ -690,9 +700,6 @@ def _parse_lock_and_counter_while_tapped_clause(effect_text: str) -> AbilityEffe
     from .effects import _targets_understood
     from .turn import Step
 
-    match = _LOCK_AND_COUNTER_WHILE_TAPPED_RE.fullmatch(" ".join(effect_text.split()))
-    if match is None or match.group("kind").lower() != match.group("kind2").lower():
-        return None
     if not _targets_understood(match.group("phrase"), count_agnostic=True):
         return None
     step = Step[_LOCK_STEP_WORDS[match.group("step").lower()]]

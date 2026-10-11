@@ -5461,11 +5461,12 @@ def _parse_choose_card_name_for_source_clause(text: str) -> AbilityEffect | None
     characteristics (CR 201.4a), and record it on the ability's source while
     that source is still on the battlefield - a source that has left has no
     static ability left to read it (CR 604.2)."""
-    from ..replacement import _card_name_quality_refusal
-
     match = _CHOOSE_A_CARD_NAME_EFFECT_RE.fullmatch(text.strip())
     if match is None:
         return None
+
+    from ..replacement import _card_name_quality_refusal
+
     quality = (match.group("quality") or "").lower() or None
     noun = f"{quality} card name" if quality else "card name"
 

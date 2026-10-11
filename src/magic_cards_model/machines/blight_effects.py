@@ -261,11 +261,12 @@ def parse_target_opponent_blights_clause(text: str) -> AbilityEffect | None:
     ability: "Pay 1 life, Blight 2: Target opponent blights 2. Activate only
     as a sorcery." - the cost half is already `machines/cost.py`'s "Pay N
     life" plus its own blight-as-a-cost reading; this is only the effect)."""
-    from .effects import _targets_understood
-
     match = _TARGET_OPPONENT_BLIGHTS_RE.fullmatch(text.strip())
     if match is None:
         return None
+
+    from .effects import _targets_understood
+
     if not _targets_understood("target opponent", allow_player_targets=True):
         return None
     count = parse_count(match.group("n"))
@@ -491,12 +492,13 @@ def parse_may_blight_then_copy_blighted_creature_clause(text: str) -> AbilityEff
     reused whole from `models.token._put_onto_the_battlefield_attacking` and
     `effects._defender_of_controllers_attack`.
     """
-    from ..models.token import _put_onto_the_battlefield_attacking
-    from .effects import _defender_of_controllers_attack, _read_token_copy_except
-
     match = _MAY_BLIGHT_THEN_COPY_BLIGHTED_CREATURE_RE.fullmatch(" ".join(text.strip().split()))
     if match is None:
         return None
+
+    from ..models.token import _put_onto_the_battlefield_attacking
+    from .effects import _defender_of_controllers_attack, _read_token_copy_except
+
     count = parse_count(match.group("n"))
     if count is None:
         return None
@@ -556,11 +558,12 @@ def parse_target_gains_quoted_ability_until_eot_clause(text: str) -> AbilityEffe
     *targeted* twin: nothing about granting a quoted ability is special to
     the source granting it to itself.
     """
-    from .effects import _targets_understood, continuous_effects
-
     match = _TARGET_GAINS_QUOTED_TRIGGER_UNTIL_EOT_RE.fullmatch(text.strip())
     if match is None:
         return None
+
+    from .effects import _targets_understood, continuous_effects
+
     granted_text = match.group("ability").strip()
     if not granted_text:
         return None
@@ -618,11 +621,12 @@ def parse_protection_from_each_color_until_your_next_turn_clause(
     period, so a comma-joined line reads back as a single, meaningless
     quality string instead of five real ones.
     """
-    from .effects import _COLOR_NAME, _targets_understood, continuous_effects
-
     match = _PROTECTION_FROM_EACH_COLOR_RE.fullmatch(text.strip())
     if match is None:
         return None
+
+    from .effects import _COLOR_NAME, _targets_understood, continuous_effects
+
     if not _targets_understood(match.group("phrase"), count_agnostic=False):
         return None
     granted_text = "Protection from " + " and from ".join(

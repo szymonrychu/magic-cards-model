@@ -585,11 +585,12 @@ _CREATE_THAT_MANY_TOKENS_RE = re.compile(
 
 
 def _create_that_many_tokens(text: str, *, for_spell: bool):  # noqa: ANN202
-    from . import effects
-
     match = _CREATE_THAT_MANY_TOKENS_RE.fullmatch(text)
     if match is None:
         return None
+
+    from . import effects
+
     desc = match.group("desc")
     tapped = desc.lower().startswith("tapped ")
     if tapped:
@@ -630,11 +631,12 @@ _REMOVE_A_COUNTER_IF_YOU_DO_RE = re.compile(
 
 
 def _remove_a_counter_if_you_do(text: str, *, for_spell: bool):  # noqa: ANN202
-    from . import effects
-
     match = _REMOVE_A_COUNTER_IF_YOU_DO_RE.fullmatch(text)
     if match is None:
         return None
+
+    from . import effects
+
     description = parse_description(match.group("description"))
     if description is None:
         return None
@@ -734,13 +736,14 @@ _CREATE_ONE_TOKEN_OR_ANOTHER_RE = re.compile(
 
 
 def _create_one_token_or_another(text: str, *, for_spell: bool):  # noqa: ANN202
+    match = _CREATE_ONE_TOKEN_OR_ANOTHER_RE.fullmatch(text)
+    if match is None:
+        return None
+
     from ..models.token import PREDEFINED
     from . import effects
     from .decisions import Decision, DecisionKind, source_id_of
 
-    match = _CREATE_ONE_TOKEN_OR_ANOTHER_RE.fullmatch(text)
-    if match is None:
-        return None
     options = (match.group("first"), match.group("second"))
     if any(option not in PREDEFINED for option in options):
         return None
@@ -795,12 +798,13 @@ def _resolution_clause(text: str, *, for_spell: bool):  # noqa: ANN202
 
 
 def _if_graveyard_count_otherwise(text: str, *, for_spell: bool):  # noqa: ANN202
-    from ..numbers import parse_count
-    from . import effects
-
     match = _IF_GRAVEYARD_COUNT_OTHERWISE_RE.fullmatch(text)
     if match is None:
         return None
+
+    from ..numbers import parse_count
+    from . import effects
+
     threshold = parse_count(match.group("n"), article=False)
     counter = effects.count_expression(
         f"the number of {match.group('quality')} cards in your graveyard"
@@ -829,12 +833,13 @@ _TARGET_PLAYER_INVESTIGATES_RE = re.compile(
 
 
 def _target_player_investigates(text: str, *, for_spell: bool):  # noqa: ANN202
-    from ..models.player import Player
-    from . import effects
-
     match = _TARGET_PLAYER_INVESTIGATES_RE.fullmatch(text)
     if match is None:
         return None
+
+    from ..models.player import Player
+    from . import effects
+
     rest = None
     if match.group("rest"):
         rest = _resolution_clause(match.group("rest"), for_spell=for_spell)
@@ -866,15 +871,16 @@ _TARGET_PLAYER_GAINS_THEN_SEARCHES_RE = re.compile(
 
 
 def _target_player_gains_then_searches(text: str, *, for_spell: bool):  # noqa: ANN202
+    match = _TARGET_PLAYER_GAINS_THEN_SEARCHES_RE.fullmatch(text)
+    if match is None:
+        return None
+
     from ..models.player import Player
     from ..models.zone import Zone
     from ..numbers import parse_count
     from . import effects
     from .decisions import source_id_of
 
-    match = _TARGET_PLAYER_GAINS_THEN_SEARCHES_RE.fullmatch(text)
-    if match is None:
-        return None
     amount = parse_count(match.group("n"))
     quality = match.group("quality")
     if amount is None or not effects._search_quality_is_readable(quality):
@@ -958,15 +964,16 @@ def _card_quality(quality: str):  # noqa: ANN202 - Callable[[CardState], bool] |
 
 
 def _search_library_and_or_graveyard(text: str, *, for_spell: bool):  # noqa: ANN202
+    match = _SEARCH_LIBRARY_AND_OR_GRAVEYARD_RE.fullmatch(text)
+    if match is None:
+        return None
+
     from ..models.zone import Zone
     from ..numbers import parse_count
     from . import effects
     from .decisions import Decision, DecisionKind, source_id_of
     from .layers import ContinuousEffect, Duration, Layer, grant_ability, only_this_incarnation
 
-    match = _SEARCH_LIBRARY_AND_OR_GRAVEYARD_RE.fullmatch(text)
-    if match is None:
-        return None
     quality = match.group("quality")
     matches_quality = _card_quality(quality)
     if matches_quality is None:
@@ -1141,14 +1148,15 @@ _CREATE_THEN_COUNTERS_PER_SOURCE_COUNTER_RE = re.compile(
 
 
 def _create_then_counters_per_source_counter(text: str, *, for_spell: bool):  # noqa: ANN202
+    if for_spell:
+        return None
+
     from ..models.token import is_token
     from ..models.zone import Zone
     from ..numbers import parse_count
     from . import effects
     from .decisions import source_id_of
 
-    if for_spell:
-        return None
     match = _CREATE_THEN_COUNTERS_PER_SOURCE_COUNTER_RE.fullmatch(text)
     if match is None:
         return None
@@ -1200,12 +1208,13 @@ _CREATE_TOKEN_THEN_PUT_THIS_CREATURES_COUNTERS_ON_IT_RE = re.compile(
 
 
 def _create_token_then_put_this_creatures_counters_on_it(text: str, *, for_spell: bool):  # noqa: ANN202
+    if for_spell:
+        return None
+
     from ..models.token import is_token
     from ..models.zone import Zone
     from . import effects
 
-    if for_spell:
-        return None
     match = _CREATE_TOKEN_THEN_PUT_THIS_CREATURES_COUNTERS_ON_IT_RE.fullmatch(text.strip())
     if match is None:
         return None
@@ -1257,13 +1266,14 @@ _REFLEXIVE_MAY_PAY_X_MOVE_COUNTERS_RE = re.compile(
 
 
 def _reflexive_may_pay_x_move_counters(text: str, *, for_spell: bool):  # noqa: ANN202
+    if for_spell:
+        return None
+
     from ..models.mana import ManaCost
     from . import effects
     from .decisions import source_id_of
     from .delayed import ReflexiveConsequence
 
-    if for_spell:
-        return None
     match = _REFLEXIVE_MAY_PAY_X_MOVE_COUNTERS_RE.fullmatch(text.strip())
     if match is None:
         return None
@@ -1315,13 +1325,14 @@ _MAY_MOVE_ANY_NUMBER_COUNTERS_RE = re.compile(
 
 
 def _may_move_any_number_counters(text: str, *, for_spell: bool):  # noqa: ANN202
+    if for_spell:
+        return None
+
     from ..models.card_state import CardState
     from ..models.zone import Zone
     from . import effects
     from .decisions import Decision, DecisionKind, source_id_of
 
-    if for_spell:
-        return None
     match = _MAY_MOVE_ANY_NUMBER_COUNTERS_RE.fullmatch(text.strip())
     if match is None:
         return None
@@ -1377,14 +1388,15 @@ _PUT_COUNTER_THEN_DOUBLE_ON_THAT_RE = re.compile(
 
 
 def _put_counter_then_double_on_that(text: str, *, for_spell: bool):  # noqa: ANN202
+    match = _PUT_COUNTER_THEN_DOUBLE_ON_THAT_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+
     from ..models.card_state import CardState
     from ..models.zone import Zone
     from ..numbers import parse_count
     from . import effects
 
-    match = _PUT_COUNTER_THEN_DOUBLE_ON_THAT_RE.fullmatch(text.strip())
-    if match is None:
-        return None
     if match.group("kind").lower() != match.group("kind2").lower():
         return None
     kind = match.group("kind").lower()
@@ -1425,13 +1437,14 @@ _CHOOSE_ANY_NUMBER_THEN_DOUBLE_EACH_RE = re.compile(
 
 
 def _choose_any_number_then_double_each(text: str, *, for_spell: bool):  # noqa: ANN202
+    match = _CHOOSE_ANY_NUMBER_THEN_DOUBLE_EACH_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+
     from ..models.card_state import CardState
     from ..models.zone import Zone
     from . import effects
 
-    match = _CHOOSE_ANY_NUMBER_THEN_DOUBLE_EACH_RE.fullmatch(text.strip())
-    if match is None:
-        return None
     phrase = match.group("phrase").strip()
     if not effects._targets_understood(phrase, count_agnostic=True):
         return None
@@ -1470,13 +1483,14 @@ _DEALS_DAMAGE_THEN_MAY_EXILE_GRAVEYARD_EXTRA_DAMAGE_RE = re.compile(
 
 
 def _deals_damage_then_may_exile_graveyard_extra_damage(text: str, *, for_spell: bool):  # noqa: ANN202
+    if not for_spell:
+        return None
+
     from ..models.card_state import CardState
     from ..models.zone import Zone
     from . import effects
     from .decisions import source_id_of
 
-    if not for_spell:
-        return None
     match = _DEALS_DAMAGE_THEN_MAY_EXILE_GRAVEYARD_EXTRA_DAMAGE_RE.fullmatch(text.strip())
     if match is None:
         return None
