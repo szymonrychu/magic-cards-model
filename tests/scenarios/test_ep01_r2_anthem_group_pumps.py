@@ -10,7 +10,7 @@ colour it has.
 """
 
 from magic_cards_model.models import Zone
-from magic_cards_model.models.card_state import Counter
+from magic_cards_model.models.card_state import Choice, ChoiceKind, Counter
 from magic_cards_model.models.token import token_copy_of
 from tests.scenarios.harness import Scenario
 
@@ -158,3 +158,43 @@ def test_an_empty_hand_changes_nothing():
     scenario = hand_board([], "Serra Angel")
 
     assert pt(scenario, scenario.creature("Serra Angel")) == (4, 4)
+
+
+# -- a chosen creature type: "Other creatures you control of the chosen type
+# get +1/+1." (Morophon, the Boundless) ---------------------------------------
+
+
+def morophon_board(chosen, *alice, bob=()):
+    scenario = board("Morophon, the Boundless", *alice, bob=bob)
+    morophon = scenario.creature("Morophon, the Boundless")
+    morophon.choice = Choice(kind=ChoiceKind.CREATURE_TYPE, value=chosen)
+    return scenario
+
+
+def test_only_other_creatures_of_the_chosen_type_you_control_get_it():
+    scenario = morophon_board("Elf", "Llanowar Elves", "Grizzly Bears", bob=["Llanowar Elves"])
+    elf = scenario.creature("Llanowar Elves")
+    bears = scenario.creature("Grizzly Bears")
+    theirs = scenario.creature("Llanowar Elves", "bob")
+    morophon = scenario.creature("Morophon, the Boundless")
+
+    assert pt(scenario, elf) == plus(elf, 1)
+    assert pt(scenario, bears) == printed(bears)
+    assert pt(scenario, theirs) == printed(theirs)
+    assert pt(scenario, morophon) == printed(morophon), "'other': it is every type, still excluded"
+
+
+def test_no_recorded_choice_pumps_nothing():
+    scenario = board("Morophon, the Boundless", "Llanowar Elves")
+    elf = scenario.creature("Llanowar Elves")
+
+    assert pt(scenario, elf) == printed(elf)
+
+
+def test_the_chosen_type_is_the_one_recorded_not_a_fixed_one():
+    scenario = morophon_board("Bear", "Llanowar Elves", "Grizzly Bears")
+    elf = scenario.creature("Llanowar Elves")
+    bears = scenario.creature("Grizzly Bears")
+
+    assert pt(scenario, bears) == plus(bears, 1)
+    assert pt(scenario, elf) == printed(elf)

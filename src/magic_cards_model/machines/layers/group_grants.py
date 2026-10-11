@@ -72,7 +72,9 @@ _VERB_RE = re.compile(r" (?:gets?|have|has|are|is) ")
 
 _SUFFIX_CONTROL_RE = re.compile(r" (?P<who>you control|your opponents control)$")
 _SUFFIX_CHOSEN_RE = re.compile(r" of the chosen type$")
-_SUFFIX_COUNTER_RE = re.compile(r" with (?:an? |one or more )?(?P<kind>[a-z+/\-0-9]+) counters? on (?:them|it)$")
+_SUFFIX_COUNTER_RE = re.compile(
+    r" with (?:an? |one or more )?(?P<kind>[a-z+/\-0-9]+) counters? on (?:them|it)$"
+)
 _SUFFIX_KEYWORD_RE = re.compile(r" (?P<how>with|without) (?P<keyword>[a-z]+)$")
 
 
@@ -313,7 +315,10 @@ def parse_group_static_sentence(sentence: str):
     if not _VERB_RE.search(lowered) or '"' in text:
         return None
     if match := _LOSE_ALL_RE.fullmatch(lowered):
-        if _subject_ok(match["subject"]) is False:
+        if _subject_ok(match["subject"]) is False or _is_bare_all_creatures(match["subject"]):
+            # "All creatures lose all abilities ..." is Humility's own
+            # `LAYER_EFFECTS` row (its CR 613.6 interplay is pinned by
+            # `tests/test_layers.py`), so the generic reader leaves it there.
             return None
         parts: list[tuple[Layer, Sublayer | None, Any]] = [
             (Layer.ABILITY, None, LoseAllAbilities())
@@ -454,3 +459,31 @@ def _hand_pump_builder(sentence: str, subject: str, power: str, toughness: str):
         )
 
     return build
+
+
+def _is_bare_all_creatures(subject: str) -> bool:
+    spec = parse_group(subject)
+    return (
+        spec is not None
+        and spec["scope"] == "any"
+        and spec["all_types"] == (Type.CREATURE,)
+        and not any(
+            spec.get(key)
+            for key in (
+                "any_types",
+                "not_types",
+                "any_subtypes",
+                "not_subtypes",
+                "any_colors",
+                "not_colors",
+                "colorless",
+                "other",
+                "chosen",
+                "with_counter",
+                "with_keyword",
+                "without_keyword",
+            )
+        )
+        and spec.get("legendary") is None
+        and spec.get("token") is None
+    )

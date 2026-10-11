@@ -7918,3 +7918,15 @@ Read by `machines/block_statics.py` off every battlefield permanent's computed a
 | "<Verb> target X. If this spell was kicked, [instead] <verb> target Y [instead]." - the kicked sentence's targets replace the unkicked ones (before: both "target" words were demanded, so the unkicked cast needed two targets) | CR 601.2c, 702.33d | `machines/targeting._KICKED_INSTEAD_IMPERATIVE_TARGETS_RE` via `kicked_instead_target_text` | Tear Asunder; Bloodchief's Thirst (second printing, "instead" before the verb) in `scenarios/test_kicker_changes_exile_target.py` |
 | Class level 1 attack trigger (may discard, if you do draw), level 2 discard damage, level 3 search-then-random-discard | CR 716.2a, 508.3d, 701.9b, 118.12 | existing readers, scenario-proven | Cool but Rude in `scenarios/test_class_attack_discard_draw_levels.py` |
 | "Destroy target nonartifact creature." refusal, indestructible, regeneration | CR 701.8a, 702.12b, 701.19a | existing reader, scenario-proven | Go for the Throat in `scenarios/test_destroy_target_nonartifact_creature.py` |
+
+## EP-01-R2-T1: group anthems, group keyword grants, type and base P/T statics (in progress)
+
+| Mechanic | CR | Where | Proof |
+|---|---|---|---|
+| "[Other] [colour/type/subtype/non-X/legendary/token] <creatures/permanents/lands> [you control / your opponents control / all] get +N/+N [and have <keywords>]" | CR 611.3a, 613.4c, 613.1f | `machines/layers/group_grants.py` (`parse_group` + `GroupMatch` selector), tried last by `_parse_static_layer_sentence` | Wilt-Leaf Liege, Murkfiend Liege in `scenarios/test_ep01_r2_anthem_group_pumps.py` |
+| "... of the chosen type" groups, "with <keyword>" / "with <counter> counters on them" groups | CR 614.12a, 611.3a | same | Morophon, Cover of Darkness, Sludge Monster |
+| "<group> have <keyword>" (All Rats, artifacts you control, legendary Humans you control, other permanents you control, Sliver creatures you control) | CR 613.1f | same | `scenarios/test_ep01_r2_group_keyword_grants.py` |
+| "this creature is also a Cleric, Rogue, ..."; "All lands are Islands in addition ..."; "All nonland permanents are legendary" | CR 613.1d, 205.1b, 305.6 | same | `scenarios/test_ep01_r2_type_and_base_pt_statics.py` |
+| "<group> have base power and toughness N/N"; "<group> lose all abilities and have base power and toughness N/N" | CR 613.4b, 613.1f | same | Harmonious Archon, Godhead of Awe, Poppet Stitcher, Sludge Monster |
+| "All creatures get -X/-0, where X is the number of cards in your hand" | CR 613.4c, 613.5 | same (`LayerContext.hand_size_of`) | Meishin, the Mind Cage |
+| "You may have this creature assign its combat damage as though it weren't blocked." audit credit | CR 510.1c | `static_audit/anthems_grants.py` asks `combat.may_assign_as_though_unblocked` | Lone Wolf, Rhox, Spinebiter, Thorn Elemental, Tornado Elemental |

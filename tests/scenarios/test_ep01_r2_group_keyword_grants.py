@@ -13,6 +13,7 @@ source's controller - and the effect ends with its source (CR 604.2).
 
 from magic_cards_model.machines.combat import has_keyword
 from magic_cards_model.models import Zone
+from magic_cards_model.models.card_state import Choice, ChoiceKind
 from tests.scenarios.harness import Scenario
 
 
@@ -106,3 +107,15 @@ def test_a_legend_that_starts_with_a_creature_type_still_reads_the_type():
     assert "indestructible" in keywords(scenario, sliver)
     assert "indestructible" in keywords(scenario, hivelord)
     assert "indestructible" not in keywords(scenario, bears)
+
+
+def test_creatures_of_the_chosen_type_have_fear_for_both_players():
+    """Cover of Darkness: "Creatures of the chosen type have fear." - no
+    controller clause, so the opponent's creatures of that type too."""
+    scenario = board("Cover of Darkness", "Llanowar Elves", "Grizzly Bears", bob=["Llanowar Elves"])
+    cover = scenario.find("Cover of Darkness", Zone.BATTLEFIELD)
+    cover.choice = Choice(kind=ChoiceKind.CREATURE_TYPE, value="Elf")
+
+    assert has_keyword(scenario.creature("Llanowar Elves"), "fear", scenario.game)
+    assert has_keyword(scenario.creature("Llanowar Elves", "bob"), "fear", scenario.game)
+    assert not has_keyword(scenario.creature("Grizzly Bears"), "fear", scenario.game)
