@@ -471,3 +471,66 @@ def test_uba_mask_each_player_includes_the_opponent():
 def test_shared_fate_and_uba_mask_are_credited():
     _handled("Shared Fate", "Each player may look at cards they exiled")
     _handled("Uba Mask", "Each player may play lands and cast spells")
+
+
+# -- Skyclave Shade: a landfall trigger from the graveyard ------------------
+
+
+def _shade_board(*, hand=("Swamp",), graveyard=("Skyclave Shade",), bob_hand=()):
+    return _main(
+        alice={
+            "hand": list(hand),
+            "graveyard": list(graveyard),
+            "battlefield": ["Swamp", "Swamp"],
+        },
+        bob={"hand": list(bob_hand), "battlefield": ["Forest"]},
+    )
+
+
+def test_skyclave_shade_can_be_cast_from_the_graveyard_after_a_land_enters_on_my_turn():
+    scenario = _shade_board()
+    shade = scenario.find("Skyclave Shade", Zone.GRAVEYARD, "alice")
+    assert not _offered(scenario, shade, ActionKind.CAST), "no landfall yet"
+    scenario.play_land("Swamp")
+    scenario.pass_until_resolved()
+    assert _offered(scenario, shade, ActionKind.CAST)
+    casting = scenario.cast("Skyclave Shade", "alice", from_zone=Zone.GRAVEYARD)
+    payment = casting.begin_paying()
+    scenario.pay_with(payment, *scenario.untapped_sources("Swamp", "Swamp"))
+    scenario.put_on_stack(casting)
+    scenario.resolve_top()
+    assert shade.zone is Zone.BATTLEFIELD
+
+
+def test_skyclave_shade_stays_put_when_the_land_is_an_opponents():
+    scenario = _shade_board(hand=(), bob_hand=("Forest",))
+    scenario.game.put_onto_battlefield(scenario.find("Forest", Zone.HAND, "bob"), "bob")
+    scenario.pass_until_resolved()
+    shade = scenario.find("Skyclave Shade", Zone.GRAVEYARD, "alice")
+    assert not _offered(scenario, shade, ActionKind.CAST), "'a land you control' only"
+
+
+def test_skyclave_shade_permission_ends_with_the_turn():
+    scenario = _shade_board()
+    shade = scenario.find("Skyclave Shade", Zone.GRAVEYARD, "alice")
+    scenario.play_land("Swamp")
+    scenario.pass_until_resolved()
+    assert _offered(scenario, shade, ActionKind.CAST)
+    turns = scenario.turn.turns_taken
+    while scenario.turn.turns_taken == turns:
+        scenario.advance()
+    assert not _offered(scenario, shade, ActionKind.CAST, username="alice")
+
+
+def test_skyclave_shade_needs_it_to_be_my_turn():
+    scenario = _shade_board(hand=("Swamp",))
+    while not (scenario.turn.active_player == "bob" and scenario.step is Step.PRECOMBAT_MAIN):
+        scenario.advance()
+    scenario.game.put_onto_battlefield(scenario.find("Swamp", Zone.HAND, "alice"), "alice")
+    scenario.pass_until_resolved()
+    shade = scenario.find("Skyclave Shade", Zone.GRAVEYARD, "alice")
+    assert scenario.game.play_permission_for(shade, "alice") is None, "it is bob's turn"
+
+
+def test_skyclave_shade_is_credited():
+    _handled("Skyclave Shade", "Landfall")

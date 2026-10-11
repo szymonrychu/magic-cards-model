@@ -4250,6 +4250,39 @@ def _parse_cast_exiled_card_free_clause(clause: str, *, for_spell: bool) -> Targ
     return effect
 
 
+#: "You may cast it from your graveyard this turn." (Skyclave Shade's landfall
+#: trigger, its source card sitting in the graveyard): CR 601.3's permission to
+#: cast the ability's own source from the graveyard, for the rest of the turn
+#: (CR 611.2a). A source that has since left the graveyard is a new object
+#: (CR 400.7) and is handed nothing.
+_CAST_SELF_FROM_GRAVEYARD_RE = re.compile(
+    r"^you may cast (?:it|this \w+) from your graveyard this turn$", re.IGNORECASE
+)
+
+
+@MIXED_CLAUSE.rung("s26", for_spell=FORWARD)
+def _parse_cast_self_from_graveyard_clause(
+    clause: str, *, for_spell: bool
+) -> TargetedClause | None:
+    if for_spell or _CAST_SELF_FROM_GRAVEYARD_RE.fullmatch(clause.strip().rstrip(".")) is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        source = stack_object.source(game)
+        if source is None or source.zone is not Zone.GRAVEYARD:
+            return
+        game.grant_play_permission(
+            source,
+            game.controller_of(stack_object).username,
+            action=PlayAction.CAST,
+            source_name=stack_object.source_name,
+            zone=Zone.GRAVEYARD,
+            rule="CR 601.3",
+        )
+
+    return effect
+
+
 #: "Destroy this enchantment." (Experimental Frenzy's `{3}{R}` ability) - CR 701.8a's
 #: destroy on the ability's own source, a self-reference (CR 201.5, CR 115.1a) rather
 #: than a target. Ability-only: a spell is never a permanent on the battlefield.

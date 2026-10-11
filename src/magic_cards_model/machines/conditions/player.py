@@ -722,6 +722,12 @@ def zones_the_source_names(clause: str, source: "CardState") -> "frozenset[Zone]
         match.group("self"), source
     ):
         return frozenset({Zone.GRAVEYARD})
+    # A conjunction that places the source in one conjunct ("if this card is in
+    # your graveyard and it's your turn" - Skyclave Shade): that conjunct is
+    # the zone statement, the rest is an ordinary condition.
+    if " and " in text:
+        head, _, rest = text.partition(" and ")
+        return zones_the_source_names(head, source) or zones_the_source_names(rest, source)
     return None
 
 
