@@ -719,3 +719,65 @@ def test_cloud_stops_multiplying_when_the_equipment_moves_to_another_creature():
     _equip(scenario, "Mage Slayer", "Grizzly Bears")
     triggers, _lost = _attack_trigger_damage(scenario, "Grizzly Bears")
     assert triggers == 1
+
+
+# -- The Aetherspark: attached to a creature, it can't be attacked and gains loyalty ------
+
+SPARK = "The Aetherspark"
+SPARK_TRIGGER = (
+    "Whenever equipped creature deals combat damage during your turn, "
+    "put that many loyalty counters on this permanent."
+)
+
+
+def _spark(attached):
+    scenario = _board([SPARK, "Grizzly Bears"], ["Grizzly Bears"])
+    spark = scenario.find(SPARK, Zone.BATTLEFIELD, "alice")
+    if attached:
+        spark.attach_to(scenario.find("Grizzly Bears", Zone.BATTLEFIELD, "alice"))
+    return scenario, spark
+
+
+def _bob_attack_refusal(scenario):
+    _next_turn(scenario)
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    bears = scenario.find("Grizzly Bears", Zone.BATTLEFIELD, "bob")
+    bears.summoning_sick = False
+    try:
+        scenario.attack_with(bears, defending=scenario.find(SPARK, Zone.BATTLEFIELD, "alice"))
+    except ValueError as error:
+        return str(error)
+    return None
+
+
+def test_an_attached_aetherspark_cannot_be_attacked():
+    scenario, _spark_card = _spark(attached=True)
+    refusal = _bob_attack_refusal(scenario)
+    assert refusal is not None and "can't be attacked" in refusal
+
+
+def test_an_unattached_aetherspark_can_be_attacked():
+    scenario, _spark_card = _spark(attached=False)
+    assert _bob_attack_refusal(scenario) is None
+
+
+def test_aetherspark_gains_the_loyalty_trigger_only_while_attached():
+    attached, _ = _spark(attached=True)
+    assert SPARK_TRIGGER in _chars(attached, SPARK).abilities
+    loose, _ = _spark(attached=False)
+    assert SPARK_TRIGGER not in _chars(loose, SPARK).abilities
+    assert attached.game.continuous_effects.layer_notices == []
+
+
+def test_the_equipped_creature_dealing_combat_damage_adds_that_many_loyalty_counters():
+    scenario, spark = _spark(attached=True)
+    before = spark.counter_count("loyalty")
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    bears = scenario.find("Grizzly Bears", Zone.BATTLEFIELD, "alice")
+    bears.summoning_sick = False
+    scenario.attack_with(bears, defending="bob")
+    scenario.no_blocks()
+    scenario.combat_damage()
+    while scenario.game.stack:
+        scenario.resolve_top()
+    assert spark.counter_count("loyalty") == before + 2

@@ -1208,6 +1208,23 @@ def group_block_restriction_refusal(
     return None
 
 
+def _cant_be_attacked(game: "Game", permanent: CardState) -> bool:
+    """Whether the permanent's own computed text says "`<it>` can't be attacked"
+    (The Aetherspark while attached to a creature), read off the computed board
+    (CR 613.5) so it holds only while the ability does (CR 611.3a)."""
+    names = {name.lower() for name in _self_reference_alternatives(permanent)} | {"this permanent"}
+    for sentence in _computed_ability_sentences(permanent, game):
+        match = _CANT_BE_ATTACKED_SENTENCE_RE.fullmatch(sentence.strip())
+        if match is not None and match["subject"].lower() in names:
+            return True
+    return False
+
+
+_CANT_BE_ATTACKED_SENTENCE_RE = re.compile(
+    r"^(?P<subject>.+?) can't be attacked\.?$", re.IGNORECASE
+)
+
+
 def _defender_refusal(game: "Game", defender: TargetRef, active: str) -> str | None:
     """Whether this is something the active player may attack (CR 508.1a, 508.1c)."""
     if defender.is_player:
@@ -1234,6 +1251,8 @@ def _defender_refusal(game: "Game", defender: TargetRef, active: str) -> str | N
     types = set(game.characteristics_of(permanent).types)
     if not types & ATTACKABLE_PERMANENT_TYPES:
         return f"{permanent.name} is not a player, planeswalker, or battle"
+    if _cant_be_attacked(game, permanent):
+        return f"{permanent.name} can't be attacked (CR 508.1c)"
     if Type.BATTLE in types:
         # CR 310.9b: "A battle's protector can never attack it. A battle can
         # be attacked by any attacking player for whom its protector is a

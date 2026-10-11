@@ -63,6 +63,7 @@ from .model import (
     SetTypesAndSubtypes,
     SharesColorAtom,
     SourceAttachedAtom,
+    SourceAttachedToAtom,
     SourceCountersAtom,
     StaticAtom,
     SubjectQualityAtom,
@@ -177,6 +178,9 @@ _ATTACHED_IS_RE = re.compile(
     re.IGNORECASE,
 )
 _YOUR_TURN_RE = re.compile(r"^it(?:'s| is) your turn$", re.IGNORECASE)
+_ATTACHED_TO_RE = re.compile(
+    rf"^{_SELF} is attached to an? (?P<quality>.+)$", re.IGNORECASE
+)
 _PAIRED_RE = re.compile(rf"^{_SELF} is paired with another creature$", re.IGNORECASE)
 
 
@@ -298,6 +302,11 @@ def _parse_condition(text: str) -> _Condition | None:
     lowered = clause.lower()
     if match := _YOUR_TURN_RE.fullmatch(clause):
         return _Condition(gates=(_your_turn_gate,))
+    if match := _ATTACHED_TO_RE.fullmatch(clause):
+        quality = _quality(match.group("quality"))
+        if quality is None:
+            return None
+        return _Condition(atoms=(SourceAttachedToAtom(quality=quality),))
     if _PAIRED_RE.fullmatch(clause):
         # CR 702.95a-e: the pair itself is the condition - the paired-partners
         # selector (the subject) only matches while both creatures point at each
@@ -547,6 +556,10 @@ _BASE_PT_RE = re.compile(
     r"^(?:has|have) base power and toughness (?P<power>\d+)/(?P<toughness>\d+)$", re.IGNORECASE
 )
 _HAS_RE = re.compile(r"^(?:has|have) (?P<rest>.+)$", re.IGNORECASE)
+_CANT_BE_ATTACKED_RE = re.compile(r"^can'?t be attacked$", re.IGNORECASE)
+#: The line a "can't be attacked" predicate writes onto its subject, which
+#: `machines/combat._defender_refusal` reads back off the computed board.
+CANT_BE_ATTACKED_LINE = "This permanent can't be attacked."
 _LOSES_ALL_RE = re.compile(r"^loses? all abilities$", re.IGNORECASE)
 _ALL_ACTIVATED_RE = re.compile(
     r"^(?:has|have) all activated abilities of that card$", re.IGNORECASE
@@ -656,6 +669,16 @@ def _parse_predicate(text: str) -> tuple[_Change, ...] | None:
             if becomes is None:
                 return None
             changes.extend(becomes)
+            continue
+        if _CANT_BE_ATTACKED_RE.fullmatch(piece):
+            changes.append(
+                _Change(
+                    Layer.ABILITY,
+                    None,
+                    lambda source, context: grant_ability(CANT_BE_ATTACKED_LINE),
+                    "can't be attacked",
+                )
+            )
             continue
         if _LOSES_ALL_RE.fullmatch(piece):
             changes.append(
@@ -818,7 +841,7 @@ def _your_step_gate(steps: frozenset[str]) -> Gate:
 
     return gate
 _SUBJECT_PREDICATE_RE = re.compile(
-    r"^(?P<subject>.+?) (?P<predicate>(?:gets?|has|have|loses?|is|are) .+)$", re.IGNORECASE
+    r"^(?P<subject>.+?) (?P<predicate>(?:gets?|has|have|loses?|is|are|can't|cannot) .+)$", re.IGNORECASE
 )
 
 

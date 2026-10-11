@@ -2045,6 +2045,23 @@ class SourceAttachedAtom(EngineModel):
         return False
 
 
+class SourceAttachedToAtom(EngineModel):
+    """ "`<this>` is attached to a creature" (The Aetherspark): the permanent the
+    source is attached to (CR 301.5, CR 303.4) has a quality, judged on the
+    characteristics computed so far (CR 613.5)."""
+
+    model_config = ConfigDict(frozen=True)
+
+    kind: Literal["source_attached_to"] = "source_attached_to"
+    quality: QualityTest = Field(default_factory=QualityTest)
+
+    def holds(self, source: Characteristics, target: Characteristics, board: Board) -> bool:
+        if source.attached_to is None:
+            return False
+        host = board.get(source.attached_to)
+        return host is not None and self.quality.matches(host)
+
+
 class CounterKindsAmongAtom(EngineModel):
     """ "there are three or more different kinds of counters among creatures
     you control" (Hundred-Battle Veteran): distinct counter kinds across the
@@ -2098,6 +2115,7 @@ StaticAtom = Annotated[
     | SourceCountersAtom
     | SubjectQualityAtom
     | SourceAttachedAtom
+    | SourceAttachedToAtom
     | CounterKindsAmongAtom
     | SharesColorAtom,
     Field(discriminator="kind"),
