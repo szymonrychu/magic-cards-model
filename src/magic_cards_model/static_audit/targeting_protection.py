@@ -16,12 +16,17 @@ A line is credited only when the PRODUCTION reader performs it:
   it." must be one `machines/targeting._with_aura_target` turns into a
   tapped-only enchant target on the spell's real targeting profile.
 
+- "\u2022 Target player <does something>" mode bullets are credited when the
+  production effect-clause reader (`effects.registries.effect_for`) reads the
+  bullet's bare body.
+
 Group hexproof/shroud/protection grants are read by the layer parser
 (`protection_statics.parse_protection_grant`) and are credited by the
 support oracle's own `parsed_layer_effects` step; they need no rule here.
 """
 
 from ..machines.abilities import self_normalized_effect_text
+from ..machines.effects.registries import effect_for
 from ..machines.protection_statics import (
     graveyard_land_play_prohibition,
     loyalty_floor_line,
@@ -32,6 +37,11 @@ from ..machines.targeting import targeting_profile, untapped_target_forbidden
 
 def reads_targeting_protection_line(printing, text, *, card_name=None, legendary=False) -> bool:
     lowered = text.lower()
+    if lowered.startswith("\u2022 target player "):
+        # A mode bullet of a modal triggered ability whose every mode targets a
+        # player (CR 700.2, CR 115.1): the bullet is judged as the bare clause
+        # the production effect reader reads for that mode.
+        return effect_for(printing.name, text[1:].strip()) is not None
     if "can't be the target" in lowered:
         normalized = self_normalized_effect_text(
             card_name or printing.name, text, legendary=legendary

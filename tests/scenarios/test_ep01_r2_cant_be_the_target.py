@@ -595,3 +595,16 @@ def test_silent_gravestone_carries_the_ground_seal_static_line():
     reason = _refusal(scenario, "Raise Dead", bears, "alice")
     assert reason is not None
     assert "can't be the target" in reason
+
+
+# -- Shadrix Silverquill: its "* Target player ..." mode bullets ---------------
+
+
+def test_shadrix_mode_bullets_are_each_read_by_the_production_effect_reader():
+    from magic_cards_model.support import card_support
+    from tests.cards import card
+
+    support = card_support(card("Shadrix Silverquill"))
+    bullets = [clause for clause in support.clauses if clause.text.startswith("•")]
+    assert len(bullets) == 3
+    assert [clause.status for clause in bullets] == ["handled"] * 3
