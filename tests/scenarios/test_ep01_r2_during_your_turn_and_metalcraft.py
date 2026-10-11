@@ -651,3 +651,74 @@ def test_the_refueler_does_not_help_an_opponents_exhaust_ability():
     assert scenario.game.active_player.username == "alice"
     refusal = scenario.why_cannot_activate(guardian, index=1, username="bob")
     assert "already been activated" in (refusal or "")
+
+
+# -- Asmoranomardicadaistinaculdacar: "As long as you've discarded a card this turn, ----
+# you may pay {B/R} to cast this spell." (CR 118.9: an alternative cost, gated on history)
+
+ASMO = "Asmoranomardicadaistinaculdacar"
+
+
+def _asmo(*, bob_hand=()):
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player(
+            "alice",
+            hand=[ASMO, "Island"],
+            battlefield=["Mountain", "Swamp"],
+            library=["Island"] * 5,
+        )
+        .player("bob", hand=list(bob_hand), battlefield=["Mountain"], library=["Mountain"] * 5)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    return scenario
+
+
+def _cast_asmo(scenario):
+    casting = scenario.cast(ASMO)
+    offers = [option for option in casting.alternative_costs if option.unavailable is None]
+    assert len(offers) == 1, [option.unavailable for option in casting.alternative_costs]
+    casting.use_alternative_cost(offers[0].index)
+    scenario.pay_with(casting.begin_paying(), *scenario.untapped_sources("Mountain"))
+    scenario.put_on_stack(casting)
+    scenario.resolve_top()
+    return scenario.find(ASMO, Zone.BATTLEFIELD, "alice")
+
+
+def test_asmo_can_be_cast_for_one_hybrid_mana_after_discarding_a_card():
+    scenario = _asmo()
+    island = scenario.find("Island", Zone.HAND, "alice")
+    scenario.game.discard_cards("alice", [island])
+    assert _cast_asmo(scenario).zone is Zone.BATTLEFIELD
+    assert _notices(scenario) == []
+
+
+def test_asmo_cannot_be_cast_before_a_card_was_discarded():
+    scenario = _asmo()
+    casting = scenario.cast(ASMO)
+    (option,) = casting.alternative_costs
+    assert option.unavailable is not None and "discarded a card this turn" in option.unavailable
+    with pytest.raises(ValueError):
+        casting.use_alternative_cost(option.index)
+
+
+def test_an_opponents_discard_does_not_count():
+    scenario = _asmo(bob_hand=["Island"])
+    scenario.game.discard_cards("bob", [scenario.find("Island", Zone.HAND, "bob")])
+    (option,) = scenario.cast(ASMO).alternative_costs
+    assert option.unavailable is not None
+
+
+def test_asmos_discard_condition_ends_with_the_turn():
+    scenario = _asmo()
+    scenario.game.discard_cards("alice", [scenario.find("Island", Zone.HAND, "alice")])
+    _next_turn(scenario)
+    scenario.turn.advance_to(Step.CLEANUP)
+    scenario.advance()
+    scenario.advance()
+    assert scenario.game.active_player.username == "alice"
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    (option,) = scenario.cast(ASMO).alternative_costs
+    assert option.unavailable is not None

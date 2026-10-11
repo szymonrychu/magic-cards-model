@@ -1190,6 +1190,19 @@ _CONDITIONAL_ALTERNATIVE = re.compile(
 )
 
 
+#: Asmoranomardicadaistinaculdacar's wording of the same offer: "As long as
+#: `<condition>`, you may pay `<cost>` to cast this spell." (CR 118.9, CR 604.6) -
+#: the cost stands in for the mana cost (the card has none), the condition
+#: ahead of it. The offered phrase is "pay `<cost>`" so it reads as the
+#: sentence above's "what" does.
+_CONDITIONAL_ALTERNATIVE_AS_LONG_AS = re.compile(
+    r"^(?:Metalcraft|Delirium|Hellbent|Threshold|Ferocious|Morbid)?\s*(?:\u2014\s*)?"
+    r"As long as (?P<condition>[^,.]+), you may (?P<what>pay [^.]+?) to cast this "
+    r"(?:spell|card|creature)\.",
+    re.MULTILINE | re.IGNORECASE,
+)
+
+
 #: A cost phrase that is nothing but mana, with or without the verb in front of
 #: it: Mindbreak Trap prints "pay {0}", and CR 118.5 makes that a real cost
 #: ("Some costs are represented by {0} ... Even though such a cost requires no
@@ -1223,6 +1236,12 @@ def conditional_alternative_cost_offers(text: str) -> list[ConditionalAlternativ
             continue
         offers.append(
             ConditionalAlternativeCostOffer(phrase=match.group("what").strip(), condition=condition)
+        )
+    for match in _CONDITIONAL_ALTERNATIVE_AS_LONG_AS.finditer(text or ""):
+        offers.append(
+            ConditionalAlternativeCostOffer(
+                phrase=match.group("what").strip(), condition=match.group("condition").strip()
+            )
         )
     return offers
 
