@@ -463,3 +463,90 @@ def test_cursed_wombat_gives_every_permanent_the_extra_counter_trigger():
     scenario.game.put_triggers_on_stack()
     texts = chars(scenario, bears).abilities
     assert any("put an additional +1/+1 counter" in text for text in texts)
+
+
+# --------------------------------------------------------------------------
+# The audit: every listed static line is read by the engine's own readers
+# --------------------------------------------------------------------------
+
+#: (card, start of the static line this task owns). Cards with a second line
+#: that belongs to another task are named for this line only.
+LISTED_LINES = [
+    ("Honest Work", "Enchanted creature loses all abilities and is a Citizen"),
+    ("Kasmina's Transmutation", "Enchanted creature loses all abilities and has base"),
+    ("Utter Insignificance", "Enchanted creature loses all abilities and has base"),
+    ("Witness Protection", "Enchanted creature loses all abilities and is a green"),
+    ("Disturbing Conversion", "Enchanted creature gets -X/-0"),
+    ("Fear of Death", "Enchanted creature gets -X/-0"),
+    ("Spontaneous Mutation", "Enchanted creature gets -X/-0"),
+    ("Jiang Yanggu, Wildcrafter", "Each creature you control with a +1/+1 counter"),
+    ("Rishkar, Peema Renegade", "Each creature you control with a counter"),
+    ("Joraga Treespeaker", "Elves you control have"),
+    ("Tyvar Kell", "Elves you control have"),
+    ("Death's Approach", "Enchanted creature gets -X/-X"),
+    ("Kagemaro's Clutch", "Enchanted creature gets -X/-X"),
+    ("Vampiric Sliver", "All Sliver creatures have"),
+    ("Fungus Sliver", "All Sliver creatures have"),
+    ("Kataki, War's Wage", "All artifacts have"),
+    ("Magus of the Tabernacle", "All creatures have"),
+    ("Proud Wildbonder", "Creatures you control with trample have"),
+    ("Strange Augmentation", "Delirium"),
+    ("Great Divide Guide", "Each land and Ally you control"),
+    ("Path of Annihilation", "Eldrazi you control have"),
+    ("Awaken the Ancient", "Enchanted Mountain is a 7/7"),
+    ("With Great Power . . .", "Enchanted creature gets +2/+2 for each"),
+    ("Wreath of Geists", "Enchanted creature gets +X/+X"),
+    ("Withercrown", "Enchanted creature has base power 0"),
+    ("Oni Possession", "Enchanted creature is a Demon Spirit"),
+    ("Metamorphic Alteration", "Enchanted creature is a copy"),
+    ("Grounded", "Enchanted creature loses flying"),
+    ("Consecrate Land", "Enchanted land has indestructible"),
+    ("Wind Zendikon", "Enchanted land is a 2/2"),
+    ("Guardian Zendikon", "Enchanted land is a 2/6"),
+    ("Corrupted Zendikon", "Enchanted land is a 3/3 black"),
+    ("Crackling Emergence", "Enchanted land is a 3/3 red"),
+    ("Crusher Zendikon", "Enchanted land is a 4/2"),
+    ("Nissa's Zendikon", "Enchanted land is a 4/4"),
+    ("Harmonious Emergence", "Enchanted land is a 4/5"),
+    ("Living Terrain", "Enchanted land is a 5/6"),
+    ("Vastwood Zendikon", "Enchanted land is a 6/4"),
+    ("Glittering Frost", "Enchanted land is snow"),
+    ("Lithoform Blight", "Enchanted land loses all land types"),
+    ("Lightwheel Enhancements", "Enchanted permanent gets +1/+1"),
+    ("Indestructibility", "Enchanted permanent has indestructible"),
+    ("Hardlight Containment", "Enchanted permanent has ward"),
+    ("Minimus Containment", "Enchanted permanent is a Treasure"),
+    ("Sugar Coat", "Enchanted permanent is a colorless Food"),
+    ("Imprisoned in the Moon", "Enchanted permanent is a colorless land"),
+    ("In Bolas's Clutches", "Enchanted permanent is legendary"),
+    ("Hedron Matrix", "Equipped creature gets +X/+X"),
+    ("Trailblazer's Boots", "Equipped creature has nonbasic landwalk"),
+    ("Song of Stupefaction", "Fathomless descent"),
+    ("Night of the Sweets' Revenge", "Foods you control have"),
+    ("Clement, the Worrywort", "Frogs you control have"),
+    ("Taste for Mayhem", "Hellbent"),
+    ("Katilda, Dawnhart Prime", "Human creatures you control have"),
+    ("Forgotten Monument", "Other Caves you control have"),
+    ("A Realm Reborn", "Other permanents you control have"),
+    ("Cursed Wombat", "Permanents you control have"),
+    ("Sachi, Daughter of Seshiro", "Shamans you control have"),
+    ("Tempered Sliver", "Sliver creatures you control have"),
+    ("Hollowhead Sliver", "Sliver creatures you control have"),
+    ("Manaweft Sliver", "Sliver creatures you control have"),
+    ("Goldspan Dragon", "Treasures you control have"),
+    ("Resplendent Mentor", "White creatures you control have"),
+    ("Unctus, Grand Metatect", "Other blue creatures you control have"),
+]
+
+
+@pytest.mark.parametrize(("name", "prefix"), LISTED_LINES, ids=[row[0] for row in LISTED_LINES])
+def test_the_listed_static_line_is_handled(name, prefix):
+    from magic_cards_model.support import HANDLED, classify_clauses
+    from tests.cards import card
+
+    clauses = [c for c in classify_clauses(card(name)) if c.text.startswith(prefix)]
+    assert clauses, (name, prefix, [c.text for c in classify_clauses(card(name))])
+    assert {c.category for c in clauses} == {HANDLED}, (
+        name,
+        [(c.text, c.category) for c in clauses],
+    )

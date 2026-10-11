@@ -413,3 +413,29 @@ def test_taste_for_mayhem_hellbent_adds_two_power_only_with_an_empty_hand():
     bears = empty_hand.creature("Grizzly Bears", "alice")
     attach(empty_hand, "Taste for Mayhem", bears)
     assert pt(empty_hand, bears) == (6, 2), "no cards in hand: +2/+0 and the additional +2/+0"
+
+
+# --------------------------------------------------------------------------
+# Cast for real: a resolving Aura is not a second copy of its own static
+# --------------------------------------------------------------------------
+
+
+def test_a_cast_wreath_of_geists_pumps_once_not_twice():
+    """CR 608.3b: the Aura enters attached; its static ability is not also a
+    one-shot effect of the spell, so the pump is X, not 2X."""
+    scenario = started(
+        Scenario()
+        .player(
+            "alice",
+            hand=["Wreath of Geists"],
+            battlefield=["Grizzly Bears", "Forest", "Forest", "Forest"],
+            graveyard=["Llanowar Elves", "Llanowar Elves"],
+        )
+        .player("bob")
+        .build()
+    )
+    bears = scenario.creature("Grizzly Bears", "alice")
+    forests = scenario.untapped_sources("Forest", "Forest", "Forest", username="alice")
+    aura = scenario.cast_and_resolve("Wreath of Geists", *forests, targets=[bears])
+    assert aura.attached_to == bears.id
+    assert pt(scenario, bears) == (4, 4)
