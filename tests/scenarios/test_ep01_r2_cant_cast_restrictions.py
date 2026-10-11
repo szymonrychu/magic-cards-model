@@ -332,7 +332,7 @@ def test_drannith_magistrate_bans_casting_from_anywhere_but_the_hand():
     assert _try(world, "Faithless Looting", "alice", from_zone=Zone.GRAVEYARD) is not None
     assert _try(world, "Shock", "alice", **ALICE) is None
     # its controller may still cast from a graveyard (on their own turn: flashback
-    # keeps the sorcery's timing, CR 702.34a)
+    # changes the zone and cost, never the timing: CR 117.1a)
     own = _world("Drannith Magistrate", owner="alice", alice_gy=["Faithless Looting"])
     assert _try(own, "Faithless Looting", "alice", from_zone=Zone.GRAVEYARD) is None
 
