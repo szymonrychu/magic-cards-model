@@ -190,3 +190,59 @@ def test_immerwolf_does_not_stop_a_non_werewolf_transforming():
     delver = scenario.creature("Delver of Secrets", "alice")
     delver.transform()
     assert delver.transformed
+
+
+# ---- "All lands lose all abilities except mana abilities." (Blood Sun) ------------
+
+
+def _blood_sun_board(*, with_blood_sun=True):
+    alice = ["Ghost Quarter", "Forest"] + (["Blood Sun"] if with_blood_sun else [])
+    return _board(alice, bob=["Mutavault", "Grizzly Bears"])
+
+
+def test_blood_sun_strips_a_lands_non_mana_abilities():
+    scenario = _blood_sun_board()
+    lines = scenario.game.characteristics_of(
+        scenario.find("Ghost Quarter", Zone.BATTLEFIELD)
+    ).abilities
+    assert not any("Destroy target land" in line for line in lines)
+    mutavault = scenario.find("Mutavault", Zone.BATTLEFIELD, "bob")
+    assert not any(
+        "becomes" in line for line in scenario.game.characteristics_of(mutavault).abilities
+    )
+
+
+def test_blood_sun_keeps_a_lands_mana_abilities():
+    scenario = _blood_sun_board()
+    ghost_quarter = scenario.find("Ghost Quarter", Zone.BATTLEFIELD)
+    lines = scenario.game.characteristics_of(ghost_quarter).abilities
+    assert any(line.startswith("{T}: Add {C}") for line in lines)
+
+
+def test_a_basic_land_still_taps_for_mana_under_blood_sun():
+    scenario = _board(["Forest", "Blood Sun", "Grizzly Bears"], hand=["Giant Growth"])
+    bears = scenario.creature("Grizzly Bears", "alice")
+    scenario.cast_and_resolve("Giant Growth", *scenario.untapped_sources("Forest"), targets=[bears])
+    assert scenario.game.power_of(bears) == 5
+
+
+def test_a_land_cannot_activate_its_stripped_ability():
+    scenario = _blood_sun_board()
+    ghost_quarter = scenario.find("Ghost Quarter", Zone.BATTLEFIELD)
+    with pytest.raises(ValueError):
+        scenario.activate(
+            ghost_quarter, index=1, targets=[scenario.find("Mutavault", Zone.BATTLEFIELD, "bob")]
+        )
+
+
+def test_without_blood_sun_the_land_keeps_every_ability():
+    scenario = _blood_sun_board(with_blood_sun=False)
+    ghost_quarter = scenario.find("Ghost Quarter", Zone.BATTLEFIELD)
+    lines = scenario.game.characteristics_of(ghost_quarter).abilities
+    assert any("Destroy target land" in line for line in lines)
+
+
+def test_blood_sun_does_not_touch_non_land_permanents():
+    scenario = _blood_sun_board()
+    bears = scenario.creature("Grizzly Bears", "bob")
+    assert scenario.game.characteristics_of(bears).power == 2

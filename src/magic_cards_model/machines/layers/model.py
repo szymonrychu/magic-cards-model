@@ -1973,6 +1973,27 @@ class LoseAllAbilities(ModificationBase):
         )
 
 
+class LoseAllAbilitiesExceptManaAbilities(ModificationBase):
+    """Layer 6 removal (CR 613.1f) that leaves mana abilities (CR 605.1) -
+    "All lands lose all abilities except mana abilities." Rule-effect lines
+    survive it for the same reason they survive `LoseAllAbilities`."""
+
+    kind: Literal["lose_all_abilities_except_mana_abilities"] = (
+        "lose_all_abilities_except_mana_abilities"
+    )
+
+    def __call__(self, chars: Characteristics, board: Board) -> Characteristics:
+        from ..mana_ability_lines import line_is_mana_ability
+
+        return chars.with_(
+            abilities=tuple(
+                line
+                for line in chars.abilities
+                if line in RULE_EFFECT_TEXTS or line_is_mana_ability(line)
+            )
+        )
+
+
 class LoseKeyword(ModificationBase):
     """Layer 6 removal of one keyword (CR 613.1f) - "loses indestructible".
 
@@ -2521,6 +2542,7 @@ class GrantActivatedAbilitiesOf(ModificationBase):
 
 Modification = Annotated[
     LoseAllAbilities
+    | LoseAllAbilitiesExceptManaAbilities
     | LoseKeyword
     | GrantAbility
     | GrantActivatedAbilitiesOf
