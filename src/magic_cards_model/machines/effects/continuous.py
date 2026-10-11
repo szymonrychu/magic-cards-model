@@ -4873,7 +4873,37 @@ def _player_instruction(text: str) -> ClauseEffect | None:
     if emblem is not None:
         quoted = emblem.group("text")
         return lambda game, player, source, _source_id: _get_emblem(game, player, quoted, source)
+    if _ATTACH_TO_A_PLAYER_RE.fullmatch(stripped) is not None:
+        return _attach_permanent_to_a_player
     return parse_clause_effect(stripped)
+
+
+#: "attach it to a player." - Curse of Leeches // Leeching Lurker's "As this
+#: permanent transforms into Curse of Leeches, ..." (CR 712.20).
+_ATTACH_TO_A_PLAYER_RE = re.compile(r"^attach (?:it|this permanent) to a player\.?$", re.IGNORECASE)
+
+
+def _attach_permanent_to_a_player(
+    game: "Game", player: Player, source: str, source_id: str | None
+) -> None:
+    """CR 303.4d: the Aura's controller chooses which player it enchants."""
+    permanent = next((state for state in game.battlefield if str(state.id) == source_id), None)
+    if permanent is None:
+        return
+    candidates = tuple(candidate.username for candidate in game.players_in_game)
+    (chosen,) = game.ask(
+        Decision(
+            kind=DecisionKind.CHOOSE_PLAYERS,
+            player=player.username,
+            prompt=f"choose a player to attach {source} to",
+            source=source,
+            source_id=source_id,
+            amount=1,
+            players=candidates,
+            exact=True,
+        )
+    )
+    permanent.attach_to(chosen)
 
 
 def _get_emblem(game: "Game", player: Player, text: str, source: str) -> None:

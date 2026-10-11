@@ -298,3 +298,59 @@ def test_a_jailer_takes_the_phoenix_replacement_away():
     _learn(scenario)
 
     assert "Retriever Phoenix" not in [q.source for q in scenario.questions_asked()]
+
+
+# ---- Curse of Leeches // Leeching Lurker: attach to a player as it transforms --
+#
+# CR 712.20 (an "As this transforms" ability applies while transforming),
+# CR 303.4d (the Aura's controller chooses what it is attached to), CR 303.4m.
+
+
+def _curse_board():
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("alice", battlefield=["Curse of Leeches // Leeching Lurker"])
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    curse = scenario.find("Curse of Leeches // Leeching Lurker", Zone.BATTLEFIELD, "alice")
+    return scenario, curse
+
+
+def test_transforming_into_the_curse_attaches_it_to_the_chosen_player():
+    from magic_cards_model.machines.effects.continuous import transform_permanent
+
+    scenario, curse = _curse_board()
+    transform_permanent(scenario.game, curse, day_night=True)  # to Leeching Lurker
+    assert curse.up_face_name == "Leeching Lurker"
+    assert curse.attachment is None
+
+    scenario.will_choose_players("bob", username="alice")
+    transform_permanent(scenario.game, curse, day_night=True)  # back to Curse of Leeches
+
+    assert curse.up_face_name == "Curse of Leeches"
+    assert curse.attachment is not None and not curse.attachment.is_card
+    assert curse.attachment.username == "bob"
+    assert curse.zone is Zone.BATTLEFIELD  # an Aura on a player is legal (CR 303.4c)
+    scenario.game.check_state_based_actions()
+    assert curse.zone is Zone.BATTLEFIELD
+
+
+def test_the_controller_may_pick_themselves():
+    from magic_cards_model.machines.effects.continuous import transform_permanent
+
+    scenario, curse = _curse_board()
+    transform_permanent(scenario.game, curse, day_night=True)
+    scenario.will_choose_players("alice", username="alice")
+    transform_permanent(scenario.game, curse, day_night=True)
+    assert curse.attachment.username == "alice"
+
+
+def test_transforming_into_the_lurker_attaches_nothing():
+    from magic_cards_model.machines.effects.continuous import transform_permanent
+
+    scenario, curse = _curse_board()
+    transform_permanent(scenario.game, curse, day_night=True)
+    assert curse.attachment is None
