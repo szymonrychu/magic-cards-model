@@ -599,6 +599,12 @@ class ReplaceableEvent:
     #: leave the stack" (CR 702.34a), which is why flashback's own entry in
     #: `_stack_replacements` does not gate on this at all and rebound's does.
     resolving: bool = False
+    #: True when this `ZONE_CHANGE` is a CR 701.9a discard, and, for one,
+    #: the player who controls the spell or ability causing it (`None` for a
+    #: cost, the cleanup step or a rule): "if a spell or ability an opponent
+    #: controls causes you to discard this card" reads it (Obstinate Baloth).
+    discarded: bool = False
+    cause_controller: str | None = None
 
     #: False when the effect causing this `DESTROY` printed "can't be
     #: regenerated" (Wrath of God's "Destroy all creatures. They can't be

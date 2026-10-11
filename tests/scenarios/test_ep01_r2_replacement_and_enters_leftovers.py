@@ -11,7 +11,20 @@ import pytest
 
 from magic_cards_model.machines import Step
 from magic_cards_model.models.card_state import Choice, ChoiceKind
+from magic_cards_model.models.token import PREDEFINED, TokenDefinition, create_tokens
+from magic_cards_model.support import HANDLED, classify_clauses
+from tests.cards import card
 from tests.scenarios.harness import Scenario
+
+
+def _handled(name: str, containing: str) -> None:
+    outcomes = [o for o in classify_clauses(card(name)) if containing in o.text]
+    assert outcomes, f"{name}: no clause containing {containing!r}"
+    assert {o.category for o in outcomes} == {HANDLED}, outcomes
+
+
+def _on_battlefield(scenario, name):
+    return [c for c in scenario.game.battlefield if c.name == name]
 
 
 def _attack_unblocked(battlefield_alice, battlefield_bob=()):
@@ -135,3 +148,159 @@ def test_haktos_enters_with_a_random_choice_of_two_three_or_four():
     assert haktos.choice is not None
     assert haktos.choice.kind is ChoiceKind.NUMBER
     assert haktos.choice.value in {"2", "3", "4"}
+
+
+# --- Solved token replacement (CR 614.1a, 701.7b, 719.3b, 702.169b) ------------
+
+_DETECTIVE = TokenDefinition(power=2, toughness=2, subtypes=("Detective",))
+
+
+def _case_board(*, solved: bool):
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Case of the Pilfered Proof"], library=["Island"] * 5)
+        .player("bob", library=["Island"] * 5)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    case = _on_battlefield(scenario, "Case of the Pilfered Proof")[0]
+    case.solved = solved
+    return scenario
+
+
+def test_solved_pilfered_proof_adds_a_clue_to_any_token_you_create():
+    scenario = _case_board(solved=True)
+    create_tokens(scenario.game, _DETECTIVE, "alice", 1)
+    assert len(_on_battlefield(scenario, "Clue Token")) == 1
+
+
+def test_unsolved_pilfered_proof_adds_nothing():
+    scenario = _case_board(solved=False)
+    create_tokens(scenario.game, _DETECTIVE, "alice", 1)
+    assert _on_battlefield(scenario, "Clue Token") == []
+
+
+def test_solved_pilfered_proof_does_not_help_the_opponent():
+    scenario = _case_board(solved=True)
+    create_tokens(scenario.game, PREDEFINED["Treasure"], "bob", 1)
+    assert _on_battlefield(scenario, "Clue Token") == []
+
+
+def test_pilfered_proof_line_is_handled():
+    _handled("Case of the Pilfered Proof", "Solved")
+
+
+# --- The Rollercrusher Ride: delirium-gated noncombat damage doubling ----------
+# (CR 614.1a, 701.10g, 604.2)
+
+_FOUR_TYPES = ["Grizzly Bears", "Lightning Bolt", "Island", "Sol Ring"]
+
+
+def _ride_board(graveyard, *, bob_battlefield=()):
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player(
+            "alice",
+            hand=["Shock"],
+            battlefield=["The Rollercrusher Ride", "Mountain"],
+            graveyard=list(graveyard),
+            library=["Island"] * 5,
+        )
+        .player("bob", life=20, battlefield=list(bob_battlefield))
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    return scenario
+
+
+def _shock_bob(scenario):
+    bob = scenario.player("bob")
+    scenario.cast_onto_stack("Shock", username="alice", targets=[bob], auto=True)
+    scenario.pass_until_resolved()
+    return 20 - bob.life
+
+
+def test_rollercrusher_ride_doubles_noncombat_damage_with_delirium():
+    assert _shock_bob(_ride_board(_FOUR_TYPES)) == 4
+
+
+def test_rollercrusher_ride_does_nothing_without_four_card_types():
+    assert _shock_bob(_ride_board(_FOUR_TYPES[:3])) == 2
+
+
+def test_rollercrusher_ride_line_is_handled():
+    _handled("The Rollercrusher Ride", "Delirium")
+
+
+# --- "If a spell or ability an opponent controls causes you to discard" --------
+# (CR 701.9a, 614.1a, 614.12; Dodecapod, Loxodon Smiter, Obstinate Baloth,
+# Nephalia Academy)
+
+
+def _discard_board(alice_hand, *, caster="bob", alice_battlefield=()):
+    alice = (
+        "alice",
+        dict(
+            hand=list(alice_hand) + (["Mind Rot"] if caster == "alice" else []),
+            battlefield=list(alice_battlefield) + ["Swamp"] * 3,
+            library=["Island"] * 5,
+        ),
+    )
+    bob = (
+        "bob",
+        dict(
+            hand=["Mind Rot"] if caster == "bob" else [],
+            battlefield=["Swamp"] * 3,
+            library=["Island"] * 5,
+        ),
+    )
+    scenario = Scenario().manual_turn_based_actions()
+    for name, kwargs in (bob, alice) if caster == "bob" else (alice, bob):  # active first
+        scenario = scenario.player(name, **kwargs)
+    scenario = scenario.build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    alice = scenario.player("alice")
+    scenario.cast_onto_stack("Mind Rot", username=caster, targets=[alice], auto=True)
+    scenario.pass_until_resolved()
+    return scenario
+
+
+def _names(cards):
+    return sorted(c.name for c in cards)
+
+
+def test_obstinate_baloth_enters_instead_when_an_opponents_spell_discards_it():
+    scenario = _discard_board(["Obstinate Baloth", "Island"])
+    assert _on_battlefield(scenario, "Obstinate Baloth")
+    assert "Obstinate Baloth" not in _names(scenario.player("alice").graveyard)
+    assert "Island" in _names(scenario.player("alice").graveyard)
+
+
+def test_dodecapod_enters_with_two_counters():
+    scenario = _discard_board(["Dodecapod", "Island"])
+    pod = _on_battlefield(scenario, "Dodecapod")[0]
+    assert pod.counter_count("+1/+1") == 2
+
+
+def test_loxodon_smiter_enters_instead():
+    scenario = _discard_board(["Loxodon Smiter", "Island"])
+    assert _on_battlefield(scenario, "Loxodon Smiter")
+
+
+def test_a_self_inflicted_discard_still_goes_to_the_graveyard():
+    scenario = _discard_board(["Obstinate Baloth", "Island"], caster="alice")
+    assert not _on_battlefield(scenario, "Obstinate Baloth")
+    assert "Obstinate Baloth" in _names(scenario.player("alice").graveyard)
+
+
+def test_nephalia_academy_puts_the_discarded_card_on_top_of_the_library():
+    scenario = _discard_board(["Grizzly Bears", "Island"], alice_battlefield=["Nephalia Academy"])
+    alice = scenario.player("alice")
+    assert "Grizzly Bears" in [c.name for c in alice.library[:2]]
+    assert len(alice.graveyard) == 0
+
+
+def test_discard_replacement_lines_are_handled():
+    for name in ("Obstinate Baloth", "Dodecapod", "Loxodon Smiter", "Nephalia Academy"):
+        _handled(name, "causes you to discard")

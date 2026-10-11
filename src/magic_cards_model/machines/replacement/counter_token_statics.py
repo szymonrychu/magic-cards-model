@@ -139,7 +139,7 @@ _TOKEN_EVENT_RE = re.compile(
     re.IGNORECASE,
 )
 _PLUS_TOKEN_RE = re.compile(
-    r"^(?:create )?those tokens plus an additional (?P<name>[A-Za-z]+) token(?: are created)?$",
+    r"^(?:create )?those tokens plus an? (?:additional )?(?P<name>[A-Za-z]+) token(?: are created)?$",
     re.IGNORECASE,
 )
 _ONE_OF_EACH_RE = re.compile(r"^create one of each$", re.IGNORECASE)
@@ -165,6 +165,10 @@ def _token_filter(event_text: str):
     return lambda d: word in {s.lower() for s in d.subtypes}
 
 
+#: CR 702.169d: "Solved - [ability text]" works only while the Case is solved.
+_SOLVED_WORD_RE = re.compile(r"^solved\s+\u2014", re.IGNORECASE)
+
+
 def _creator_is_you(source: CardState, event: ReplaceableEvent) -> bool:
     return event.creating_controller == source.controller
 
@@ -179,11 +183,14 @@ def _compile_token_replacement(effect: ReplacementEffect) -> CardReplacement | N
     if wants is None:
         return None
     replacement = split[1]
+    solved_only = _SOLVED_WORD_RE.match(effect.raw.strip()) is not None
 
     def applies(game: "Game", source: CardState, event: ReplaceableEvent) -> bool:
         if event.kind is not EventKind.CREATE_TOKENS or event.amount <= 0:
             return False
         if event.definition is None or not wants(event.definition):
+            return False
+        if solved_only and not source.solved:
             return False
         return _creator_is_you(source, event)
 

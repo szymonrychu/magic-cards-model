@@ -2073,9 +2073,17 @@ def _compile_damage_plus_amount(effect: ReplacementEffect) -> CardReplacement | 
     if effect.kind is not ReplacementKind.IF_WOULD_INSTEAD:
         return None
     condition = effect.condition
+    event_text, _, trailing = (effect.event or "").partition(" while ")
+    if trailing:
+        # The Rollercrusher Ride's "... noncombat damage to a permanent or
+        # player while there are four or more card types among cards in your
+        # graveyard": the trailing "while" clause is the same CR 604.2 bound.
+        if condition is not None:
+            return None
+        condition = trailing.strip()
     if condition is not None and not condition_claims(condition):
         return None
-    spec = read_damage_modifier(effect.event or "", effect.replacement or "")
+    spec = read_damage_modifier(event_text, effect.replacement or "")
     if spec is None:
         return None
 
@@ -3939,8 +3947,13 @@ def performs_static_line(card: Card, text: str) -> bool:
         return True
     if damage_life_floor_line(line):
         return True
+    bare = _ABILITY_WORD_PREFIX.sub("", line)
     return any(
-        line in (effect.text.strip(), effect.raw.strip()) and _compile(effect) is not None
+        (
+            line in (effect.text.strip(), effect.raw.strip())
+            or bare == _ABILITY_WORD_PREFIX.sub("", strip_reminder_text(effect.raw)[0].strip())
+        )
+        and _compile(effect) is not None
         for effect in parse_replacement_effects(card)
     )
 
