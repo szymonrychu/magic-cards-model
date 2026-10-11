@@ -283,6 +283,12 @@ _CYCLE_CONDITION = re.compile(
     r"^(?P<who>you|a player|an opponent) cycles? (?P<what>this card|another card|a card)$"
 )
 
+#: CR 702.143c's "you foretell a card" (Dream Devourer, Behold the Multiverse's
+#: kin): the special action of CR 116.2h, performed by `<who>`.
+_FORETELL_CONDITION = re.compile(
+    r"^(?P<who>you|a player|an opponent) foretells? (?:a card|another card)$"
+)
+
 #: CR 602.2's activation, restricted by CR 605.1a's mana-ability test:
 #: "`<who>` activates an ability [of `<type list>`] that isn't a mana
 #: ability" - Flamescroll Celebrant's "an opponent", Burning-Tree Shaman's

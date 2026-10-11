@@ -3573,6 +3573,12 @@ def _unread_condition_matches(
             return event.subject_id != source.id
         return True
 
+    match = _FORETELL_CONDITION.match(condition)
+    if match is not None:
+        return event.event is ExtraTriggerEvent.FORETOLD and _acting_player_matches(
+            match.group("who"), controller, event.player
+        )
+
     match = _ABILITY_ACTIVATED_CONDITION.match(condition)
     if match is not None:
         if event.event is not ExtraTriggerEvent.ABILITY_ACTIVATED:
@@ -5822,6 +5828,7 @@ from ._common import (  # noqa: E402
     _ENLISTS_A_CREATURE_CONDITION,
     _ENTERING_CAUSE_RE,
     _EXILE_FROM_GRAVEYARD_OR_BATTLEFIELD_CONDITION,
+    _FORETELL_CONDITION,
     _LAND_ADDED_CHOSEN_MANA_CONDITION,
     _LAST_COUNTER_CONDITION,
     _LAST_TIME_COUNTER_CONDITION,

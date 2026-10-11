@@ -77,6 +77,7 @@ from ..spell_grants import (
     casualty_numbers,
     conspire_count,
     granted_affinity_reductions,
+    granted_zone_keyword_lines,
     replicate_costs,
 )
 from ..targeting import (
@@ -5353,6 +5354,10 @@ class MarkedExile(EngineModel):
     game: Any = Field(default=None, exclude=True, repr=False)
     payment: CostPayment | None = None
     taken: bool = False
+    granted_ability_texts: tuple[str, ...] = ()
+    """Foretell only: the "Foretell {cost}" line a static ability gave the card
+    in hand (CR 702.143a - Dream Devourer's grant), stamped on it in exile so
+    the later cast finds the cost it was given."""
     time_counters: int | None = None
     """Suspend only (CR 702.62a): the N of "Suspend N-[cost]", put on the card
     as `Counter.TIME` once it reaches exile. `None` for plot and foretell,
@@ -5397,7 +5402,8 @@ class MarkedExile(EngineModel):
         CR 116.2h allows it "any time they have priority during their turn", so
         unlike plot it is not restricted to a main phase or an empty stack.
         """
-        if _keyword(card.card, "foretell") is None:
+        granted = tuple(granted_zone_keyword_lines(game, card, "foretell"))
+        if _keyword(card.card, "foretell") is None and not granted:
             raise ValueError(f"{card.name} has no foretell ability (CR 702.143a)")
         if (
             game is not None
@@ -5416,6 +5422,7 @@ class MarkedExile(EngineModel):
             rule="CR 116.2h",
             face_down=True,
             game=game,
+            granted_ability_texts=() if _keyword(card.card, "foretell") else granted[:1],
         )
 
     @classmethod
@@ -5511,6 +5518,19 @@ class MarkedExile(EngineModel):
         if self.face_down:
             self.card.turn_face_down()
         annotate_exile(self.card, self.marker, self.player, self.game)
+        if self.granted_ability_texts:
+            self.card.granted_ability_texts = self.granted_ability_texts
+        if self.marker is ExileMarker.FORETOLD:
+            # CR 702.143c: "foretelling a card" is this special action.
+            self.game.emit(
+                GameEvent(
+                    event=ExtraTriggerEvent.FORETOLD,
+                    subject_id=self.card.id,
+                    subject_name=self.card.name,
+                    subject_card=self.card.card,
+                    player=self.player,
+                )
+            )
         if self.time_counters is not None:
             # CR 702.62a: "... exile it with N time counters on it."
             self.game.add_counters(self.card, Counter.TIME, self.time_counters)

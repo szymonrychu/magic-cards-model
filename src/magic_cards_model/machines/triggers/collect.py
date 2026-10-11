@@ -102,6 +102,8 @@ def _unread_trigger_events(condition: str) -> frozenset[TriggerEvent | ExtraTrig
         return frozenset({ExtraTriggerEvent.CLASS_BECOMES_LEVEL})
     if _CYCLE_CONDITION.match(lowered):
         return frozenset({ExtraTriggerEvent.CYCLED})
+    if _FORETELL_CONDITION.match(lowered):
+        return frozenset({ExtraTriggerEvent.FORETOLD})
     if _ABILITY_ACTIVATED_CONDITION.match(lowered):
         return frozenset({ExtraTriggerEvent.ABILITY_ACTIVATED})
     if _RING_TEMPTS_YOU_CONDITION.match(lowered):
@@ -1899,6 +1901,7 @@ from ._common import (  # noqa: E402
     _ENLISTS_A_CREATURE_CONDITION,
     _ENTERING_CAUSE_RE,
     _EXILE_FROM_GRAVEYARD_OR_BATTLEFIELD_CONDITION,
+    _FORETELL_CONDITION,
     _LAND_ADDED_CHOSEN_MANA_CONDITION,
     _LAST_COUNTER_CONDITION,
     _LAST_TIME_COUNTER_CONDITION,

@@ -100,7 +100,8 @@ _SPELLS_YOU_CAST_HAVE_RE = re.compile(
 #: "Each `<quality>` spell you cast[ from your hand] has `<keyword>`."
 _EACH_SPELL_YOU_CAST_HAS_RE = re.compile(
     r"^each (?P<what>(?:[\w'-]+ )*?)spell you cast(?: from your (?P<zone>hand|graveyard))? "
-    r"has (?P<keyword>[^.]+?)\.?(?: The (?P<cost_keyword>[a-z]+) cost is equal to its mana cost\.?)?$",
+    r"has (?P<keyword>[^.]+?)\.?"
+    r"(?: The (?P<cost_keyword>[a-z]+) cost is equal to its mana cost\.?)?$",
     re.IGNORECASE,
 )
 

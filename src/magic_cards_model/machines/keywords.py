@@ -137,6 +137,7 @@ class KeywordRule(StrEnum):
     DREDGE = "CR 702.52a"
     MOBILIZE = "CR 702.181a"
     MADNESS = "CR 702.35a"
+    SCAVENGE = "CR 702.97a"
     MIRACLE = "CR 702.94a"
     MORPH = "CR 702.37a"
     DISGUISE = "CR 702.168a"
@@ -4630,7 +4631,102 @@ class OffZoneAbility(NamedTuple):
     not have to branch on which family built the entry."""
 
 
-def off_zone_abilities(card: Card) -> list[OffZoneAbility]:
+#: A scavenge line as a grant writes it out: "Scavenge {2}{G}" - the keyword
+#: and the cost `spell_grants.granted_zone_keyword_lines` computed.
+_SCAVENGE_LINE_RE = re.compile(r"^Scavenge (?P<cost>\{.+\})$")
+
+#: CR 702.97a's whole ability, as the rule spells it after the cost.
+_SCAVENGE_EFFECT = (
+    "Put a number of +1/+1 counters equal to the power of the card you exiled on target creature"
+)
+
+
+def scavenge_abilities(
+    card: Card, state: CardState | None = None, game: Any = None
+) -> list[KeywordAbility]:
+    """Every scavenge ability `card` has (CR 702.97a): the printed ones, then -
+    when `state` is the card in a game - the ones a static ability grants it
+    ("Each creature card in your graveyard has scavenge. The scavenge cost is
+    equal to its mana cost.", `machines/spell_grants.py`)."""
+    found = [
+        ability for ability in keyword_abilities(card) if ability.canonical.lower() == "scavenge"
+    ]
+    if state is not None and game is not None:
+        from .spell_grants import granted_zone_keyword_lines
+
+        for line in granted_zone_keyword_lines(game, state, "scavenge"):
+            match = _SCAVENGE_LINE_RE.fullmatch(line)
+            if match is not None:
+                found.append(
+                    KeywordAbility(
+                        raw=line,
+                        text=line,
+                        face="",
+                        keyword="Scavenge",
+                        canonical="Scavenge",
+                        cost=match.group("cost"),
+                        cost_is_mana=True,
+                    )
+                )
+    return found
+
+
+def scavenge_activation(
+    game: Any,
+    card: CardState,
+    player: str,
+    index: int = 0,
+    *,
+    targets: list[Any] | None = None,
+) -> KeywordActivation:
+    """CR 702.97a: "'Scavenge [cost]' means '[Cost], Exile this card from your
+    graveyard: Put a number of +1/+1 counters equal to the power of the card you
+    exiled on target creature. Activate only as a sorcery.'"
+
+    Built from the rule's own wording like unearth's (CR 702.84a), and run by
+    the ordinary effect reader (`generic_effect`): the exile is a cost, so the
+    power the counters are counted from is the exiled card's own."""
+    from .targeting import profile_for_text
+
+    abilities = scavenge_abilities(card.card, card, game)
+    if index >= len(abilities):
+        raise ValueError(
+            f"{card.name} has no scavenge ability number {index} ({KeywordRule.SCAVENGE})"
+        )
+    ability = abilities[index]
+    cost_text = f"{ability.cost}, Exile this card from your graveyard"
+    cost = total_cost_for_phrase(cost_text, player)
+    if cost is None:
+        raise ValueError(
+            f"{card.name}'s scavenge cost {ability.cost!r} could not be read, so it cannot be paid"
+        )
+    for component in cost.components:
+        if component.kind is ComponentKind.EXILE and not component.cards:
+            component.cards = [card]  # "Exile this card": the cost names itself.
+    synthetic = _synthetic_ability(ability, cost_text=cost_text, effect=_SCAVENGE_EFFECT)
+    profile = profile_for_text(synthetic.text)
+    if profile.understood and profile.requirements:
+        profile.check(list(targets or []), player, game, source=card)
+    return statically_priced(
+        KeywordActivation(
+            card=card,
+            player=player,
+            keyword=ability.canonical,
+            rule=str(KeywordRule.SCAVENGE),
+            zone=Zone.GRAVEYARD,
+            cost=cost.assign_payer(player),
+            sorcery_only=True,
+            ability=synthetic,
+            targets=[TargetRef.coerce(target) for target in targets or []],
+            generic_effect=True,
+            game=game,
+        )
+    )
+
+
+def off_zone_abilities(
+    card: Card, state: CardState | None = None, game: Any = None
+) -> list[OffZoneAbility]:
     """Every activated ability of `card` that functions off the battlefield,
     in one order: cycling first (CR 702.29a - "Cycling is an activated
     ability that functions only while the card with cycling is in a player's
@@ -4714,6 +4810,23 @@ def off_zone_abilities(card: Card) -> list[OffZoneAbility]:
                 ability=ability,
             )
         )
+    # Last, so a granted scavenge appearing or going never renumbers the
+    # abilities the card prints.
+    for index, kw_ability in enumerate(scavenge_abilities(card, state, game)):
+        pool.append(
+            OffZoneAbility(
+                family="scavenge",
+                index=index,
+                keyword=kw_ability.canonical,
+                zone=Zone.GRAVEYARD,
+                rule=str(KeywordRule.SCAVENGE),
+                ability=_synthetic_ability(
+                    kw_ability,
+                    cost_text=f"{kw_ability.cost}, Exile this card from your graveyard",
+                    effect=_SCAVENGE_EFFECT,
+                ),
+            )
+        )
     return pool
 
 
@@ -4737,7 +4850,7 @@ def off_zone_activation(
     anything: a card with one off-zone ability has no number 1, and a card
     with none has no number 0.
     """
-    pool = off_zone_abilities(card.card)
+    pool = off_zone_abilities(card.card, card, game)
     if index < 0 or index >= len(pool):
         raise ValueError(
             f"{card.name} has no activated ability functioning off the battlefield, "
@@ -4756,6 +4869,13 @@ def off_zone_activation(
                 f"({KeywordRule.CYCLING})"
             )
         return cycling_activation(game, card, player, entry.index)
+    if entry.family == "scavenge":
+        if sacrificing or discarding or exiling:
+            raise ValueError(
+                f"{card.name}'s {entry.keyword} ability takes no object costs beyond exiling "
+                f"itself ({entry.rule})"
+            )
+        return scavenge_activation(game, card, player, entry.index, targets=targets)
     if entry.family in ("unearth", "transmute"):
         if targets or sacrificing or discarding or exiling:
             # Same fail-closed refusal as cycling above: CR 702.84a and

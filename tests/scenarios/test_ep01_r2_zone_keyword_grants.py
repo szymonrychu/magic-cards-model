@@ -256,9 +256,7 @@ def test_without_gorger_a_vampire_card_is_discarded_to_the_graveyard():
 
 
 def test_gorger_only_covers_cards_its_controller_owns():
-    scenario = (
-        _gorger([], bob_hand=["Nighthawk Scavenger"])
-    ).build()
+    scenario = (_gorger([], bob_hand=["Nighthawk Scavenger"])).build()
     scenario.start_at(Step.PRECOMBAT_MAIN)
     bobs = scenario.find("Nighthawk Scavenger", Zone.HAND, "bob")
     from magic_cards_model.machines.keywords import discard
@@ -266,3 +264,210 @@ def test_gorger_only_covers_cards_its_controller_owns():
     discard(scenario.game, bobs, "bob")
 
     assert bobs.zone is Zone.GRAVEYARD
+
+
+# -- Varolz, the Scar-Striped: scavenge for every creature card in the graveyard
+
+
+def _varolz(graveyard: list[str], lands: list[str]) -> Scenario:
+    return _board(
+        battlefield=["Varolz, the Scar-Striped", "Grizzly Bears", *lands], graveyard=graveyard
+    )
+
+
+def _scavenge(scenario, name: str, target, username: str = "alice"):
+    from magic_cards_model.machines.keywords import off_zone_abilities, off_zone_activation
+    from tests.scenarios.harness import mana_from
+
+    state = scenario.find(name, Zone.GRAVEYARD, username)
+    pool = off_zone_abilities(state.card, state=state, game=scenario.game)
+    (index,) = [i for i, entry in enumerate(pool) if entry.family == "scavenge"]
+    activation = off_zone_activation(
+        scenario.game, state, username, index, targets=[target] if target is not None else None
+    )
+    return state, activation, mana_from
+
+
+def test_varolz_clauses_are_handled():
+    _handled("Varolz, the Scar-Striped")
+
+
+def test_varolz_gives_a_graveyard_creature_scavenge_at_its_own_mana_cost():
+    scenario = _varolz(["Hill Giant"], ["Mountain", "Mountain", "Mountain", "Mountain"]).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.creature("Grizzly Bears")
+
+    giant, activation, mana_from = _scavenge(scenario, "Hill Giant", bears)
+    assert str(activation.cost.mana) == "{3}{R}"
+    payment = activation.begin_paying()
+    for source in scenario.untapped_sources("Mountain", "Mountain", "Mountain", "Mountain"):
+        payment.tap_for_mana(source, mana_from(source))
+    payment.pay()
+    activation.activate()
+
+    assert giant.zone is Zone.EXILE, "scavenge exiles the card as a cost"
+    scenario.resolve_top()
+    assert bears.counter_count("+1/+1") == 3, "counters equal to the exiled card's power"
+
+
+def test_scavenge_is_sorcery_speed():
+    scenario = _varolz(["Hill Giant"], ["Mountain"] * 4).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.creature("Grizzly Bears")
+    _giant, activation, _ = _scavenge(scenario, "Hill Giant", bears)
+    assert activation.why_not() is None
+    scenario.advance()
+    while scenario.step is not Step.BEGINNING_OF_COMBAT:
+        scenario.advance()
+    assert activation.why_not() is not None
+
+
+def test_varolz_does_not_cover_a_noncreature_card():
+    scenario = _varolz(["Lightning Bolt"], ["Mountain"]).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    from magic_cards_model.machines.keywords import off_zone_abilities
+
+    bolt = scenario.find("Lightning Bolt", Zone.GRAVEYARD, "alice")
+    assert not [
+        e
+        for e in off_zone_abilities(bolt.card, state=bolt, game=scenario.game)
+        if e.family == "scavenge"
+    ]
+
+
+def test_without_varolz_a_graveyard_creature_has_no_scavenge():
+    scenario = _board(graveyard=["Hill Giant"], battlefield=["Grizzly Bears"]).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    from magic_cards_model.machines.keywords import off_zone_abilities
+
+    giant = scenario.find("Hill Giant", Zone.GRAVEYARD, "alice")
+    assert not [
+        e
+        for e in off_zone_abilities(giant.card, state=giant, game=scenario.game)
+        if e.family == "scavenge"
+    ]
+
+
+def test_varolz_scavenge_is_offered_as_a_legal_action_with_a_target():
+    from magic_cards_model.machines.legal_actions import legal_actions
+    from magic_cards_model.models.action import ActionKind
+
+    scenario = _varolz(["Hill Giant"], ["Mountain"] * 4).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    giant = scenario.find("Hill Giant", Zone.GRAVEYARD, "alice")
+
+    offered = [
+        action
+        for action in legal_actions(scenario.game, "alice")
+        if action.kind is ActionKind.ACTIVATE_OFF_ZONE and action.card_id == giant.id
+    ]
+    assert [action.keyword for action in offered] == ["Scavenge"]
+    assert offered[0].mana_cost == "{3}{R}"
+    assert offered[0].target_slots
+
+
+# -- Dream Devourer: foretell for every nonland card in your hand ------------
+
+
+def _devourer(hand: list[str], lands: list[str]) -> Scenario:
+    return _board(hand=hand, battlefield=["Dream Devourer", *lands])
+
+
+def _foretell(scenario, name: str, sources: int = 2):
+    from magic_cards_model.machines.casting import MarkedExile
+
+    card_state = scenario.find(name, Zone.HAND, "alice")
+    action = MarkedExile.foretell(scenario.game, card_state, "alice")
+    scenario.pay_with(
+        action.begin_paying(), *scenario.untapped_sources(*["Mountain"] * sources, username="alice")
+    )
+    action.take()
+    return card_state
+
+
+def _next_main_of_alice(scenario) -> None:
+    for _ in range(60):
+        scenario.advance()
+        if scenario.step is Step.UNTAP:
+            scenario.game.untap_step()
+        if scenario.turn.active_player == "alice" and scenario.step is Step.PRECOMBAT_MAIN:
+            return
+    raise AssertionError("never got back to alice's main phase")
+
+
+def test_dream_devourer_clauses_are_handled():
+    _handled("Dream Devourer")
+
+
+def test_devourer_lets_a_card_without_foretell_be_foretold():
+    scenario = _devourer(["Hill Giant"], ["Mountain"] * 6).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    giant = _foretell(scenario, "Hill Giant")
+
+    assert giant.zone is Zone.EXILE
+    assert giant.exile_annotation is not None
+    assert giant.exile_annotation.marker is ExileMarker.FORETOLD
+
+
+def test_the_granted_foretell_cost_is_the_mana_cost_reduced_by_two():
+    scenario = _devourer(["Hill Giant"], ["Mountain"] * 6).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    _foretell(scenario, "Hill Giant")
+    scenario.game.put_triggers_on_stack()
+    scenario.resolve_top()
+    _next_main_of_alice(scenario)
+
+    casting = scenario.cast("Hill Giant", from_zone=Zone.EXILE)
+    casting.use_keyword("Foretell")
+    assert str(casting.total_cost.mana) == "{1}{R}", "{3}{R} reduced by {2}"
+    scenario.pay_with(
+        casting.begin_paying(), *scenario.untapped_sources("Mountain", "Mountain", username="alice")
+    )
+    scenario.put_on_stack(casting)
+    giant = scenario.resolve_top()
+
+    assert giant.zone is Zone.BATTLEFIELD
+
+
+def test_foretelling_pumps_the_devourer_until_end_of_turn():
+    scenario = _devourer(["Hill Giant"], ["Mountain"] * 4).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    devourer = scenario.creature("Dream Devourer")
+    assert scenario.game.power_of(devourer) == 0
+
+    _foretell(scenario, "Hill Giant")
+    scenario.game.put_triggers_on_stack()
+    assert "Dream Devourer's triggered ability" in scenario.stack_names()
+    scenario.resolve_top()
+
+    assert scenario.game.power_of(devourer) == 2
+
+
+def test_devourer_does_not_cover_a_land_card():
+    scenario = _devourer(["Mountain"], ["Mountain"] * 3).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    from magic_cards_model.machines.casting import MarkedExile
+
+    land = scenario.find("Mountain", Zone.HAND, "alice")
+    with pytest.raises(ValueError, match="foretell"):
+        MarkedExile.foretell(scenario.game, land, "alice")
+
+
+def test_a_card_that_already_has_foretell_keeps_its_own_cost():
+    scenario = _devourer(["Lupine Harbingers"], ["Mountain"] * 3).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    from magic_cards_model.machines.spell_grants import granted_zone_keyword_lines
+
+    harbingers = scenario.find("Lupine Harbingers", Zone.HAND, "alice")
+    assert granted_zone_keyword_lines(scenario.game, harbingers, "foretell") == []
+
+
+def test_without_devourer_a_card_cannot_be_foretold():
+    scenario = _board(hand=["Hill Giant"], battlefield=["Mountain"] * 3).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    from magic_cards_model.machines.casting import MarkedExile
+
+    giant = scenario.find("Hill Giant", Zone.HAND, "alice")
+    with pytest.raises(ValueError, match="foretell"):
+        MarkedExile.foretell(scenario.game, giant, "alice")

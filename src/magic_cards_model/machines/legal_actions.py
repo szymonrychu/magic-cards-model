@@ -1751,14 +1751,14 @@ def _off_zone_actions(
     """
     actions: list[Action] = []
     spend = ManaSpend.activating(card.card)
-    for index, entry in enumerate(off_zone_abilities(card.card)):
+    for index, entry in enumerate(off_zone_abilities(card.card, card, game)):
         # CR 602.2b: announced like any activation. Only a printed line can
         # target; cycling, unearth and transmute spell out untargeted effects.
         found = _target_candidates(
             game,
             player,
             card,
-            profile_for_text(entry.ability.text if entry.family == "printed" else ""),
+            profile_for_text(entry.ability.text if entry.family in ("printed", "scavenge") else ""),
             source_is_spell=False,
         )
         target_slots = _slots_from(found)

@@ -210,6 +210,12 @@ class ExtraTriggerEvent(StrEnum):
     #: `machines/keywords.KeywordActivation` once a cycling or typecycling
     #: activation is on the stack, its cost paid.
     CYCLED = "cycled"
+    #: CR 702.143c: "If an effect refers to foretelling a card, it means
+    #: performing the special action associated with a foretell ability" -
+    #: raised once that special action (CR 116.2h) has exiled the card.
+    #: `GameEvent.subject_id` is the foretold card, `GameEvent.player` who
+    #: foretold it. **Emitted by:** `MarkedExile.take` for the foretell marker.
+    FORETOLD = "foretold"
     #: CR 602.2: "To activate an ability is to put it onto the stack and pay
     #: its costs" - raised for every activated ability that does that, and
     #: so never for a mana ability (CR 605.3b: it does not use the stack).
