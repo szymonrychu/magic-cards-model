@@ -1,5 +1,5 @@
 """Scenario: Konda's Banner - "can be attached only to a legendary creature"
-(CR 301.5c, CR 702.6a), and the two groups defined relative to the equipped
+(CR 702.6c, CR 702.6a), and the two groups defined relative to the equipped
 creature: "Creatures that share a color with equipped creature get +1/+1" and
 "Creatures that share a creature type with equipped creature get +1/+1"
 (CR 613.4c, CR 611.3a, CR 205.3).

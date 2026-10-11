@@ -7949,5 +7949,5 @@ Read by `machines/block_statics.py` off every battlefield permanent's computed a
 | "has all activated abilities of ... except mana abilities" / "gains all activated abilities of target creature until end of turn" | CR 613.1f, CR 605.1a | `GrantActivatedAbilitiesOf.except_mana`, continuous rung | `scenarios/test_ep01_r2_copied_activated_abilities.py`, `..._gain_activated_abilities_until_eot.py` |
 | "Equipment you control have equip {1}." / "Vehicles you control have crew 1." | CR 702.6c, CR 702.122a | `zone_grants` battlefield grants, `equip_activation` | `scenarios/test_ep01_r2_equip_and_crew_grants.py` |
 | "Equipment named ... have indestructible" | CR 201.2 | `GroupMatch.named` | `scenarios/test_ep01_r2_named_group_grants.py` |
-| Konda's Banner | CR 301.5c, CR 613.4c | `GroupMatch.shares_with`, `keywords.attach_restriction_refusal` | `scenarios/test_ep01_r2_konda_banner_statics.py` |
+| Konda's Banner | CR 702.6c, CR 613.4c | `GroupMatch.shares_with`, `keywords.attach_restriction_refusal` | `scenarios/test_ep01_r2_konda_banner_statics.py` |
 | X from speed / graveyards; "without a +1/+1 counter"; "During turns other than yours" | CR 613.4c, CR 702.179f | `group_grants` builders | `test_ep01_r2_counted_group_pumps.py`, `..._group_without_counter.py`, `..._turn_gated_creature.py` |

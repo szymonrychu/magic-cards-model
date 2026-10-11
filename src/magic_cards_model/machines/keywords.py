@@ -3233,7 +3233,7 @@ _ATTACHED_ONLY_TO_RE = re.compile(
 
 def attach_only_quality(card: Card) -> str | None:
     """The quality in a "`<name>` can be attached only to a <quality>." line
-    (Konda's Banner: "legendary creature", CR 301.5c), or None."""
+    (Konda's Banner: "legendary creature", CR 702.6c), or None."""
     match = _ATTACHED_ONLY_TO_RE.search(card.oracle_text or "")
     return None if match is None else match["quality"].lower()
 
@@ -3253,7 +3253,7 @@ def attach_restriction_refusal(game: Any, equipment: CardState, target: CardStat
         return None
     return (
         f"{equipment.name} can be attached only to a {quality}; "
-        f"{target.name} is not one (CR 301.5c)"
+        f"{target.name} is not one (CR 702.6c)"
     )
 
 

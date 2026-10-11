@@ -77,7 +77,7 @@ def _reads_mana_colour_rule(printing, lowered: str) -> bool:
 
 
 def _reads_attach_restriction(printing) -> bool:
-    """CR 301.5c: `keywords.attach_restriction_refusal` really refuses a
+    """CR 702.6c: `keywords.attach_restriction_refusal` really refuses a
     creature outside the named quality and allows one inside it."""
     from magic_cards_model.machines.keywords import attach_only_quality
     from magic_cards_model.machines.layers.group_grants import parse_group
