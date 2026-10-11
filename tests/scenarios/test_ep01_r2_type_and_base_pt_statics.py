@@ -136,3 +136,44 @@ def test_the_base_set_ends_when_the_source_leaves():
     scenario.game.put_into_graveyard(godhead)
 
     assert pt(scenario, angel) == (4, 4)
+
+
+# -- "lose all abilities and have base power and toughness N/N" -------------
+
+
+def test_creature_tokens_you_control_lose_abilities_and_are_3_3():
+    """Poppet Stitcher: layer 6 removal (CR 613.1f) and a 7b set (CR 613.4b),
+    only for tokens its controller owns."""
+    from magic_cards_model.models.token import token_copy_of
+
+    scenario = board("Poppet Stitcher", "Serra Angel", bob=["Serra Angel"])
+    scenario.creature("Poppet Stitcher").transform()  # the static line is Poppet Factory's
+    angel = scenario.creature("Serra Angel")
+    (token,) = token_copy_of(scenario.game, angel, "alice")
+    theirs = scenario.creature("Serra Angel", "bob")
+    (their_token,) = token_copy_of(scenario.game, theirs, "bob")
+
+    found = chars(scenario, token)
+    assert found.power_toughness == (3, 3)
+    assert not any("flying" in line.lower() for line in found.abilities)
+    assert pt(scenario, angel) == (4, 4), "a nontoken creature is outside the group"
+    assert pt(scenario, their_token) == (4, 4), "the opponent's token is outside the group"
+
+
+def test_non_horror_creatures_with_slime_counters_lose_abilities_and_are_2_2():
+    """Sludge Monster: a counter-qualified group, "non-Horror" excluding the
+    Monster itself even when it carries a slime counter."""
+    scenario = board("Sludge Monster", "Serra Angel", "Grizzly Bears", bob=["Serra Angel"])
+    marked = scenario.creature("Serra Angel")
+    marked.add_counters("slime", 1)
+    theirs = scenario.creature("Serra Angel", "bob")
+    theirs.add_counters("slime", 1)
+    monster = scenario.creature("Sludge Monster")
+    monster.add_counters("slime", 1)
+    bears = scenario.creature("Grizzly Bears")
+
+    assert pt(scenario, marked) == (2, 2)
+    assert not any("flying" in line.lower() for line in chars(scenario, marked).abilities)
+    assert pt(scenario, theirs) == (2, 2), "no 'you control': both players' creatures"
+    assert pt(scenario, monster) == (int(monster.card.power), int(monster.card.toughness))
+    assert pt(scenario, bears) == (int(bears.card.power), int(bears.card.toughness))

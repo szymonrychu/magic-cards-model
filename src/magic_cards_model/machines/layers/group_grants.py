@@ -31,6 +31,7 @@ from .model import (
     ContinuousEffect,
     GroupMatch,
     Layer,
+    LoseAllAbilities,
     Only,
     Sublayer,
     add_subtype,
@@ -71,7 +72,7 @@ _VERB_RE = re.compile(r" (?:gets?|have|has|are|is) ")
 
 _SUFFIX_CONTROL_RE = re.compile(r" (?P<who>you control|your opponents control)$")
 _SUFFIX_CHOSEN_RE = re.compile(r" of the chosen type$")
-_SUFFIX_COUNTER_RE = re.compile(r" with an? (?P<kind>[a-z+/\-0-9]+) counters? on (?:them|it)$")
+_SUFFIX_COUNTER_RE = re.compile(r" with (?:an? |one or more )?(?P<kind>[a-z+/\-0-9]+) counters? on (?:them|it)$")
 _SUFFIX_KEYWORD_RE = re.compile(r" (?P<how>with|without) (?P<keyword>[a-z]+)$")
 
 
@@ -210,6 +211,14 @@ _GROUP_PUMP_RE = re.compile(
     r"^(?P<subject>.+?) gets? (?P<power>[+-]\d+)/(?P<toughness>[+-]\d+)"
     r"(?: and (?:have|has) (?P<keywords>.+))?$"
 )
+_LOSE_ALL_RE = re.compile(
+    r"^(?P<subject>.+?) lose all abilities(?: and have base power and toughness "
+    r"(?P<power>\d+)/(?P<toughness>\d+))?$"
+)
+_HAND_PUMP_RE = re.compile(
+    r"^(?P<subject>.+?) gets? (?P<p>[+-](?:x|0))/(?P<t>[+-](?:x|0)), "
+    r"where x is the number of cards in your hand$"
+)
 _GROUP_GRANT_RE = re.compile(r"^(?P<subject>.+?) (?:have|has) (?P<keywords>.+)$")
 _GROUP_BASE_PT_RE = re.compile(
     r"^(?P<subject>.+?) (?:have|has) base power and toughness (?P<power>\d+)/(?P<toughness>\d+)$"
@@ -303,6 +312,21 @@ def parse_group_static_sentence(sentence: str):
     lowered = text.lower()
     if not _VERB_RE.search(lowered) or '"' in text:
         return None
+    if match := _LOSE_ALL_RE.fullmatch(lowered):
+        if _subject_ok(match["subject"]) is False:
+            return None
+        parts: list[tuple[Layer, Sublayer | None, Any]] = [
+            (Layer.ABILITY, None, LoseAllAbilities())
+        ]
+        if match["power"] is not None:
+            parts.append(
+                (
+                    Layer.POWER_TOUGHNESS,
+                    Sublayer.SET,
+                    set_power_toughness(int(match["power"]), int(match["toughness"])),
+                )
+            )
+        return _builder(sentence, match["subject"], "lose all abilities", lambda: parts)
     if match := _SELF_ALSO_RE.fullmatch(lowered):
         parts = _type_parts(match["tail"])
         if parts is None:
@@ -319,6 +343,10 @@ def parse_group_static_sentence(sentence: str):
             f"have base P/T {power}/{toughness}",
             lambda: [(Layer.POWER_TOUGHNESS, Sublayer.SET, set_power_toughness(power, toughness))],
         )
+    if match := _HAND_PUMP_RE.fullmatch(lowered):
+        if _subject_ok(match["subject"]) is False:
+            return None
+        return _hand_pump_builder(sentence, match["subject"], match["p"], match["t"])
     if match := _GROUP_PUMP_RE.fullmatch(lowered):
         power, toughness = int(match["power"]), int(match["toughness"])
         keywords: list[str] = []
@@ -388,5 +416,41 @@ def _builder(sentence: str, subject: str, what: str, parts):
         if selector is None:
             return []
         return _effects(source, timestamp, sentence, selector, f"{subject} {what}", parts())
+
+    return build
+
+
+def _hand_pump_builder(sentence: str, subject: str, power: str, toughness: str):
+    """ "... get -X/-0, where X is the number of cards in your hand" (CR 613.4c):
+    X is read from the hand every time the effects are rebuilt (CR 613.5), so
+    it follows the hand size continuously."""
+
+    def amount(token: str, size: int) -> int:
+        return 0 if token[1] == "0" else (size if token[0] == "+" else -size)
+
+    def build(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        selector = _subject_selector(subject, source)
+        if selector is None:
+            return []
+        size = context.hand_size_of(source.controller)
+        return _effects(
+            source,
+            timestamp,
+            sentence,
+            selector,
+            f"{subject} get {amount(power, size):+d}/{amount(toughness, size):+d}",
+            [
+                (
+                    Layer.POWER_TOUGHNESS,
+                    Sublayer.MODIFY,
+                    modify_power_toughness(amount(power, size), amount(toughness, size)),
+                )
+            ],
+        )
 
     return build

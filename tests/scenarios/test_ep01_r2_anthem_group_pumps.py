@@ -117,3 +117,44 @@ def test_the_pump_stacks_with_a_plus_one_counter():
     bears.add_counters(Counter.PLUS_ONE, 1)
 
     assert pt(scenario, bears) == plus(bears, 2)
+
+
+# -- count-based: "All creatures get -X/-0, where X is the number of cards in
+# your hand." (Meishin, the Mind Cage) -----------------------------------------
+
+
+def hand_board(hand, *alice, bob=()):
+    return (
+        Scenario()
+        .player("alice", hand=list(hand), battlefield=["Meishin, the Mind Cage", *alice])
+        .player("bob", battlefield=list(bob), hand=["Forest", "Forest", "Forest"])
+        .build()
+    )
+
+
+def test_every_creature_gets_minus_the_controllers_hand_size_in_power_only():
+    """X counts Meishin's controller's hand (bob's three cards are irrelevant),
+    reaches both players' creatures, and leaves toughness alone."""
+    scenario = hand_board(["Forest", "Forest"], "Serra Angel", bob=["Serra Angel"])
+    mine = scenario.creature("Serra Angel")
+    theirs = scenario.creature("Serra Angel", "bob")
+
+    assert pt(scenario, mine) == (2, 4)
+    assert pt(scenario, theirs) == (2, 4)
+
+
+def test_x_follows_the_hand_as_it_changes():
+    """CR 611.3a / CR 613.5: recomputed continuously, not locked in."""
+    scenario = hand_board(["Forest", "Forest"], "Serra Angel")
+    angel = scenario.creature("Serra Angel")
+    assert pt(scenario, angel) == (2, 4)
+
+    scenario.game.players[0].hand[0].zone = Zone.GRAVEYARD
+    scenario.game.players[0].hand.pop(0)
+    assert pt(scenario, angel) == (3, 4)
+
+
+def test_an_empty_hand_changes_nothing():
+    scenario = hand_board([], "Serra Angel")
+
+    assert pt(scenario, scenario.creature("Serra Angel")) == (4, 4)
