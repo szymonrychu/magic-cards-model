@@ -378,6 +378,7 @@ from .counter_token_statics import COUNTER_TOKEN_COMPILERS  # noqa: E402
 from .destroy_statics import DESTROY_COMPILERS  # noqa: E402
 from .draw_statics import DRAW_COMPILERS  # noqa: E402
 from .event_statics import EVENT_COMPILERS  # noqa: E402
+from .graveyard_statics import GRAVEYARD_COMPILERS  # noqa: E402
 
 OTHER_COMPILERS: tuple[Callable[[ReplacementEffect], CardReplacement | None], ...] = (
     _compile_zone_change,
@@ -385,8 +386,9 @@ OTHER_COMPILERS: tuple[Callable[[ReplacementEffect], CardReplacement | None], ..
     *COUNTER_TOKEN_COMPILERS,
     *EVENT_COMPILERS,
     *DESTROY_COMPILERS,
+    *GRAVEYARD_COMPILERS,
 )
 
 #: Compilers that read `ReplacementEffect.condition` (or the whole printed
 #: paragraph) themselves, so `parse._compile` offers them conditioned effects.
-CONDITION_AWARE_OTHER_COMPILERS = (*DRAW_COMPILERS, *EVENT_COMPILERS)
+CONDITION_AWARE_OTHER_COMPILERS = (*DRAW_COMPILERS, *EVENT_COMPILERS, *GRAVEYARD_COMPILERS)

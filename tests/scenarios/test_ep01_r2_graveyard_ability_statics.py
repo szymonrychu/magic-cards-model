@@ -208,3 +208,93 @@ def test_declining_the_sacrifice_counters_the_spell():
     assert bolt.zone is Zone.GRAVEYARD
     assert bears.zone is Zone.BATTLEFIELD
     assert bears.damage == 0
+
+
+# ---- Retriever Phoenix: a learn replacement that functions in the graveyard --
+#
+# CR 614.1a (replacement of "would"), CR 113.6b (zones an ability functions in),
+# CR 701.48a (learn).
+
+
+def _learner(*, alice_graveyard=(), alice_hand=("Island",), bob_battlefield=()):
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player(
+            "alice",
+            graveyard=list(alice_graveyard),
+            hand=list(alice_hand),
+            library=["Forest"] * 5,
+        )
+        .player("bob", battlefield=list(bob_battlefield))
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    return scenario
+
+
+def _learn(scenario, who="alice"):
+    from magic_cards_model.machines.effects.library import learn
+
+    learn(scenario.game, scenario.game.player(who), "Divide by Zero", source_id=None)
+
+
+def test_phoenix_in_the_graveyard_returns_instead_of_learning():
+    scenario = _learner(alice_graveyard=["Retriever Phoenix"])
+    scenario.will_take_the_may(True, username="alice", source="Retriever Phoenix")
+
+    _learn(scenario)
+
+    phoenix = scenario.find("Retriever Phoenix", Zone.BATTLEFIELD, "alice")
+    assert phoenix.zone is Zone.BATTLEFIELD
+    # Learn never happened: the Island is still in hand, nothing was drawn.
+    assert [c.name for c in scenario.player("alice").hand] == ["Island"]
+    assert len(scenario.player("alice").library) == 5
+
+
+def test_declining_the_replacement_lets_learn_happen():
+    scenario = _learner(alice_graveyard=["Retriever Phoenix"])
+    scenario.will_take_the_may(False, username="alice", source="Retriever Phoenix")
+    scenario.will_take_the_may(True, username="alice", source="Divide by Zero")
+    scenario.will_discard(scenario.find("Island", Zone.HAND, "alice"), username="alice")
+
+    _learn(scenario)
+
+    assert scenario.find("Retriever Phoenix", Zone.GRAVEYARD, "alice").zone is Zone.GRAVEYARD
+    assert len(scenario.player("alice").library) == 4  # discarded the Island, drew a Forest
+
+
+def test_phoenix_outside_the_graveyard_does_not_replace_learn():
+    scenario = _learner(alice_graveyard=[], alice_hand=("Retriever Phoenix",))
+    scenario.will_take_the_may(False, username="alice", source="Divide by Zero")
+
+    _learn(scenario)
+
+    questions = [q.source for q in scenario.questions_asked()]
+    assert "Retriever Phoenix" not in questions
+
+
+def test_an_opponents_phoenix_does_not_replace_my_learn():
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("alice", hand=["Island"], library=["Forest"] * 5)
+        .player("bob", graveyard=["Retriever Phoenix"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scenario.will_take_the_may(False, username="alice", source="Divide by Zero")
+
+    _learn(scenario)
+
+    assert "Retriever Phoenix" not in [q.source for q in scenario.questions_asked()]
+    assert scenario.find("Retriever Phoenix", Zone.GRAVEYARD, "bob").zone is Zone.GRAVEYARD
+
+
+def test_a_jailer_takes_the_phoenix_replacement_away():
+    scenario = _learner(alice_graveyard=["Retriever Phoenix"], bob_battlefield=["Yixlid Jailer"])
+    scenario.will_take_the_may(False, username="alice", source="Divide by Zero")
+
+    _learn(scenario)
+
+    assert "Retriever Phoenix" not in [q.source for q in scenario.questions_asked()]
