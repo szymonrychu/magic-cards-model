@@ -220,3 +220,31 @@ def test_without_a_demon_or_devil_it_gains_nothing():
     _plus_one_with(scenario)
 
     assert scenario.player("alice").life == 20
+
+
+def test_each_opponent_discards_their_hand_only_for_opponents():
+    """The "each opponent" head of the each-player step reader, on a second
+    printing: Myojin of Night's Reach's "Remove a divinity counter ...: Each
+    opponent discards their hand." empties bob's hand and leaves alice's."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Island", "Island"],
+            battlefield=["Myojin of Night's Reach"],
+            library=["Island"] * 3,
+        )
+        .player("bob", hand=["Island", "Island", "Island"], library=["Island"] * 3)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    myojin = scenario.creature("Myojin of Night's Reach", "alice")
+    myojin.add_counters("divinity", 1)
+
+    abilities = scenario.game.activated_abilities(myojin)
+    index = next(i for i, a in enumerate(abilities) if "Each opponent discards" in a.raw)
+    scenario.activate(myojin, index=index, username="alice")
+    scenario.resolve_top()
+
+    assert len(scenario.player("bob").hand) == 0
+    assert len(scenario.player("alice").hand) == 2
