@@ -220,7 +220,7 @@ def test_pearl_ear_gives_enchantment_spells_affinity_for_auras():
     ring.cancel()
     bears = scenario.cast("Grizzly Bears")
 
-    assert discounted == "{W}{W}", "{1}{W}{W} loses its generic, one reduction spare"
+    assert discounted == "{2}{W}", "{4}{W} less one for each of my two Auras, not bob's"
     assert str(bears.total_cost.mana) == "{1}{G}"
 
 
