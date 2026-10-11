@@ -72,6 +72,8 @@ _GROUP_BASIC_LAND_TYPES = {
     "forest": "Forest",
 }
 _GROUP_TYPE_WORDS = {
+    "instant": Type.INSTANT,
+    "sorcery": Type.SORCERY,
     "creature": Type.CREATURE,
     "artifact": Type.ARTIFACT,
     "enchantment": Type.ENCHANTMENT,

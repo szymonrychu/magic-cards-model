@@ -325,12 +325,23 @@ def parse_zone_line(line: str) -> tuple[ZoneGrant, ...]:
     return tuple(grants)
 
 
+_NOUN_RE = re.compile(r"\b(?:cards?|spells?)\b")
+
+
 def _split_subjects(text: str) -> list[str]:
     """ "cards that aren't on the battlefield, spells, and permanents" and
     "creature spells you control and creature cards you own that aren't on the
     battlefield" as separate subjects, but "instant and sorcery cards in your
     graveyard" as one."""
-    parts = re.split(r",\s*(?:and\s+)?|\s+and\s+(?=[a-z' -]*?(?:spells?|cards?) )", text.strip())
+    parts: list[str] = []
+    for piece in re.split(r",\s*(?:and\s+)?|\s+and\s+", text.strip()):
+        # A piece with no "card"/"spell" noun is the front of a type list
+        # ("instant" in "instant and sorcery card in your graveyard"): it joins
+        # the piece after it rather than standing as a subject of its own.
+        if parts and not _NOUN_RE.search(parts[-1]) and _NOUN_RE.search(piece):
+            parts[-1] = f"{parts[-1]} and {piece}"
+        else:
+            parts.append(piece)
     items = [re.sub(r"^(?:and|all|each)\s+", "", part.strip()) for part in parts if part]
     # A bare "permanents" is the battlefield half of the sentence
     # (`layers/group_grants._battlefield_part`), not an off-battlefield group.
