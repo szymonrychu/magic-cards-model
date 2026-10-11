@@ -24,12 +24,34 @@ if TYPE_CHECKING:
     from ..models.game import Game
     from ..models.mana import ManaCost
 
+_SUBJECT = r"(?:enchanted (?:creature|permanent|artifact|land)|equipped creature|it)"
+#: One thing an attachment can forbid: CR 508.1c, CR 509.1b, CR 701.27 (a
+#: transform) and CR 702.122a (crewing a Vehicle).
+_ITEM = r"(?:attack|block|transform|crew vehicles)"
 _RESTRICTION_RE = re.compile(
     r"^(?P<cond>as long as another player controls enchanted creature, )?"
-    r"(?P<subject>enchanted (?:creature|permanent|artifact|land)|equipped creature|it)"
+    rf"(?P<subject>{_SUBJECT})"
     r"(?: is an? (?P<becomes>[a-z]+) and)?"
-    r" can't (?P<what>attack or block|attack|block)"
+    rf" can't (?P<what>{_ITEM}(?:(?:, or | or |, | and )(?:{_ITEM}))*)"
     r"(?P<tail>.*?)\.?$",
+    re.IGNORECASE,
+)
+#: "Its activated abilities can't be activated unless they're mana abilities."
+#: (Intercessor's Arrest, a sentence of its own) and "Enchanted creature's
+#: activated abilities can't be activated." (Detainment Spell).
+_DEACTIVATE_SENTENCE_RE = re.compile(
+    r"^(?:its|(?:enchanted|equipped) (?:creature|permanent|artifact|land)'s) "
+    r"activated abilities can't be activated(?P<mana> unless they're mana abilities)?\.?$",
+    re.IGNORECASE,
+)
+#: "Enchanted permanent doesn't untap during its controller's untap step and
+#: its activated abilities can't be activated." (Encrust): the untap half is the
+#: layer system's grant (`layers.parse._ATTACHED_DOESNT_UNTAP_RE`), the
+#: activation half is read here.
+_UNTAP_AND_DEACTIVATE_RE = re.compile(
+    r"^(?:enchanted|equipped) (?:creature|permanent|artifact|land) doesn't untap during its "
+    r"controller's untap step and its activated abilities can't be activated"
+    r"(?P<mana> unless they're mana abilities)?\.?$",
     re.IGNORECASE,
 )
 _DEACTIVATE_TAIL_RE = re.compile(
@@ -53,6 +75,8 @@ class AttachedRestriction:
     sentence: str
     attack: bool = False
     block: bool = False
+    transform: bool = False
+    crew: bool = False
     deactivate: bool = False
     mana_exempt: bool = False
     #: "unless its controller pays <cost>" - the cost text, enforced by
@@ -68,6 +92,12 @@ def parse_attached(sentence: str) -> AttachedRestriction | None:
     text = sentence.strip()
     if _REQUIREMENT_RE.fullmatch(text):
         return AttachedRestriction(sentence=text, requirement=True)
+    for pattern in (_DEACTIVATE_SENTENCE_RE, _UNTAP_AND_DEACTIVATE_RE):
+        found = pattern.fullmatch(text)
+        if found is not None:
+            return AttachedRestriction(
+                sentence=text, deactivate=True, mana_exempt=found["mana"] is not None
+            )
     match = _RESTRICTION_RE.fullmatch(text)
     if match is None:
         return None
@@ -77,6 +107,8 @@ def parse_attached(sentence: str) -> AttachedRestriction | None:
         sentence=text,
         attack="attack" in what,
         block="block" in what,
+        transform="transform" in what,
+        crew="crew" in what,
         needs_other_controller=match["cond"] is not None,
     )
     if not tail.strip():
@@ -89,6 +121,30 @@ def parse_attached(sentence: str) -> AttachedRestriction | None:
     pay = _PAY_TAIL_RE.fullmatch(tail)
     if pay is not None:
         return AttachedRestriction(**{**base.__dict__, "pay": pay["cost"]})
+    return None
+
+
+def attached_crew_refusal(game: "Game", creature: "CardState") -> str | None:
+    """Why an attachment's "can't ... crew Vehicles" stops `creature` crewing
+    (CR 702.122d), or None."""
+    for source, restriction in _attached_restrictions(game, creature):
+        if restriction.crew:
+            return (
+                f'{creature.name} can\'t crew Vehicles: {source.name} says "{restriction.sentence}" '
+                "(CR 702.122d)"
+            )
+    return None
+
+
+def attached_transform_refusal(game: "Game", permanent: "CardState") -> str | None:
+    """Why an attachment's "can't ... transform" stops `permanent` turning over
+    (CR 701.27a), or None."""
+    for source, restriction in _attached_restrictions(game, permanent):
+        if restriction.transform:
+            return (
+                f'{permanent.name} can\'t transform: {source.name} says "{restriction.sentence}" '
+                "(CR 701.27a)"
+            )
     return None
 
 
@@ -212,6 +268,11 @@ def reads_attached_restriction_line(printing: "Card", text: str, *, card_name: s
 def _reads_sentence(sentence: str) -> bool:
     found = parse_attached(sentence)
     if found is not None:
+        if _UNTAP_AND_DEACTIVATE_RE.fullmatch(sentence):
+            # the untap half is the layer system's grant
+            from .layers import _parse_layer_sentence
+
+            return _parse_layer_sentence(sentence) is not None
         return found.pay is None
     if _ACTIVATION_TAX_RE.fullmatch(sentence):
         return True

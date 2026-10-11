@@ -2849,6 +2849,13 @@ class CardState(EngineModel):
 
             if is_day_night_bound(self, self._board_source):
                 return  # CR 702.145b, CR 702.145e
+            from ..machines.attached_restrictions import attached_transform_refusal
+
+            if (
+                self._board_source is not None
+                and attached_transform_refusal(self._board_source, self) is not None
+            ):
+                return  # CR 101.2: "can't transform" beats the instruction to
         target = self.face_it_would_transform_into
         if target is None:
             return  # CR 701.27c, CR 712.9

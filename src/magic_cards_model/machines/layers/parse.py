@@ -6066,7 +6066,9 @@ _SELF_DOESNT_UNTAP_RE = re.compile(
 _ATTACHED_DOESNT_UNTAP_RE = re.compile(
     r"^(?P<attachment>equipped|enchanted) (?P<subject>creature|permanent|artifact) "
     r"(?:(?P<loses>loses all abilities) and )?(?:doesn'?t untap during its "
-    r"controller'?s untap step|(?P<cant>can'?t become untapped))\.?$",
+    r"controller'?s untap step|(?P<cant>can'?t become untapped))"
+    r"(?: and its activated abilities can'?t be activated(?: unless they'?re mana abilities)?)?"
+    r"\.?$",
     re.IGNORECASE,
 )
 

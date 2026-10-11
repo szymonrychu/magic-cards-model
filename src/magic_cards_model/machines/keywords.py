@@ -66,6 +66,7 @@ from .abilities import (
     keyword_abilities,
     target_cost_reduction_amount,
 )
+from .attached_restrictions import attached_crew_refusal
 from .combat import has_keyword
 from .cost import (
     ComponentKind,
@@ -3527,7 +3528,7 @@ def crew_activation(
     offer = crew_offer(vehicle)
     seen: set[UUID] = set()
     for creature in chosen:
-        refusal = offer.why_not(creature, player, game)
+        refusal = offer.why_not(creature, player, game) or attached_crew_refusal(game, creature)
         if refusal is not None:
             raise ValueError(refusal)
         if creature.id in seen:
@@ -3757,7 +3758,7 @@ def saddle_activation(
     offer = saddle_offer(mount)
     seen: set[UUID] = set()
     for creature in chosen:
-        refusal = offer.why_not(creature, player, game)
+        refusal = offer.why_not(creature, player, game) or attached_crew_refusal(game, creature)
         if refusal is not None:
             raise ValueError(refusal)
         if creature.id in seen:
