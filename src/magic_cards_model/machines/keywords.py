@@ -3381,6 +3381,10 @@ def _protection_refusal_for_attachment(game: Any, attached: CardState, host: Any
     quality = game.protection_quality_against(host, attached)
     if quality is None:
         return None
+    from .protection_statics import aura_exempts_itself
+
+    if aura_exempts_itself(game, attached, host, quality):
+        return None
     return (
         f"{host.name} has protection from {quality}, so {attached.name} "
         f"cannot be attached to it (CR 702.16c, CR 702.16d)"

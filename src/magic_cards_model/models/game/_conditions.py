@@ -71,7 +71,17 @@ def _qualities_from_text(text: str | None) -> list[str]:
     # CR 702.16a's quality ends where the keyword's own reminder text starts:
     # "protection from black (This creature can't be blocked ... by anything
     # black.)" - the parenthesised CR reminder (CR 207.2) is not a quality.
-    for match in _PROTECTION.finditer(_REMINDER_TEXT.sub("", text or "")):
+    # Only a keyword line is the object's own protection (CR 702.1: "only the
+    # name of the ability"): a sentence that merely mentions the phrase is a
+    # static ability granting it elsewhere ("Human creatures you control have
+    # protection from ...", "You have protection from each of your
+    # opponents."), exactly as `hexproof_abilities_in` reads hexproof.
+    keyword_lines = "\n".join(
+        line
+        for line in _REMINDER_TEXT.sub("", text or "").split("\n")
+        if ":" not in line and "." not in line
+    )
+    for match in _PROTECTION.finditer(keyword_lines):
         # A comma ends the phrase unless another "from" follows it: Emrakul,
         # the Aeons Torn's "protection from spells that are one or more
         # colors, annihilator 6" names one quality, then another keyword.

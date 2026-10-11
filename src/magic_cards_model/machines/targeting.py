@@ -2238,7 +2238,7 @@ class TargetingProfile(EngineModel):
                     f"{target.name} is phased out and is treated as though it does "
                     "not exist (CR 702.26b)"
                 )
-        self._check_protection(targets, game, caster)
+        self._check_protection(targets, game, caster, source=source, source_id=source_id)
         self._check_shroud(targets, game)
         self._check_hexproof(targets, caster, game, source, source_id)
 
@@ -2435,7 +2435,15 @@ class TargetingProfile(EngineModel):
                     break
                 earlier -= 1
 
-    def _check_protection(self, targets: list[Any], game: Any, caster: str | None = None) -> None:
+    def _check_protection(
+        self,
+        targets: list[Any],
+        game: Any,
+        caster: str | None = None,
+        *,
+        source: Any = None,
+        source_id: UUID | None = None,
+    ) -> None:
         """CR 702.16b, at announcement (CR 601.2c) rather than only at the
         CR 608.2b recheck.
 
@@ -2454,16 +2462,38 @@ class TargetingProfile(EngineModel):
         card at all, so this method never runs for one, and `is_spell=True`
         is always correct when it does (CR 112.1's "a card on the stack").
         """
-        if game is None or self.source_card is None:
+        if game is None:
             return
         refusal_of = getattr(game, "protection_refusal", None)
         if refusal_of is None:
             return
+        source_card = self.source_card
+        is_spell = True
+        source_state = None
+        if source_card is None:
+            # An ability's own words carry no card: its source object does
+            # (CR 702.16b: "abilities from a source with the stated quality").
+            origin = source
+            if origin is None and source_id is not None:
+                origin = game.find_by_id(source_id)
+            if origin is not None and not isinstance(origin, CardState):
+                origin = origin.source_or_last_known(game)
+            if not isinstance(origin, CardState):
+                return
+            source_card = origin.card
+            is_spell = origin.zone is Zone.STACK
+            source_state = None if is_spell else origin
         for target in targets:
             # `source_controller`: CR 702.16k's protection from a player is
             # decided by who controls the spell or ability, not by any
             # quality printed on its source (Figure of Fable's Avatar).
-            refusal = refusal_of(target, self.source_card, source_controller=caster, is_spell=True)
+            refusal = refusal_of(
+                target,
+                source_card,
+                source_controller=caster,
+                is_spell=is_spell,
+                source_state=source_state,
+            )
             if refusal is not None:
                 raise ValueError(refusal)
 

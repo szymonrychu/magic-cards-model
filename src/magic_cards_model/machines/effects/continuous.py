@@ -452,6 +452,54 @@ def _parse_self_keyword_grant_until_eot_clause(text: str) -> AbilityEffect | Non
     return None
 
 
+#: "This creature gains protection from red until end of turn." (Thick-Skinned
+#: Goblin's `{R}:` ability) - the self-grant of a named protection quality,
+#: CR 702.16a's "protection from [quality]" (and CR 702.16g's "and from")
+#: added in layer 6 (CR 613.1f) until end of turn (CR 611.2a). The quality
+#: vocabulary is `machines/protection_statics.parse_protection_qualities`'s,
+#: the one the static grants read, so "each color" and a chosen quality mean
+#: the same here.
+_SELF_PROTECTION_GRANT_UNTIL_EOT_RE = re.compile(
+    r"^(?:it|this permanent|this creature) gains protection from "
+    r"(?P<qualities>(?!the color of your choice).+?) until end of turn\.?$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s36")
+def _parse_self_protection_grant_until_eot_clause(text: str) -> AbilityEffect | None:
+    """`_SELF_PROTECTION_GRANT_UNTIL_EOT_RE`'s shape - see its docstring."""
+    match = _SELF_PROTECTION_GRANT_UNTIL_EOT_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    from ..protection_statics import parse_protection_qualities, resolve_qualities
+
+    qualities = parse_protection_qualities(match.group("qualities"))
+    if qualities is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        source = ability.source(game)
+        if source is None or source.zone is not Zone.BATTLEFIELD:
+            return
+        resolved = resolve_qualities(qualities, source)
+        if resolved is None:
+            return
+        store = continuous_effects(game)
+        store.add(
+            ContinuousEffect(
+                description=f"{source.name}: gains protection from {', '.join(resolved)}",
+                layer=Layer.ABILITY,
+                timestamp=store.tick(),
+                duration=Duration.UNTIL_END_OF_TURN,
+                selector=_only(source.id),
+                modification=grant_ability("protection from " + " and from ".join(resolved)),
+            )
+        )
+
+    return effect
+
+
 #: "Target creature you control gains protection from the color of your
 #: choice until end of turn." (Mother of Runes). The phrase itself is checked
 #: through `_targets_understood` the same as every other targeted clause;

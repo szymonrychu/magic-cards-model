@@ -370,7 +370,7 @@ def _parse_subject(text: str) -> tuple[bool, tuple[Group, ...]] | None:
     return None if group is None else (False, (group,))
 
 
-def _parse_qualities(text: str) -> tuple[str, ...] | None:
+def parse_protection_qualities(text: str) -> tuple[str, ...] | None:
     qualities: list[str] = []
     for part in re.split(r",?\s+and\s+from\s+|,\s+from\s+", text.strip().rstrip(".")):
         part = part.strip().lower()
@@ -393,7 +393,7 @@ def _parse_items(text: str, verb: str) -> tuple[Item, ...] | None:
     items: list[Item] = []
     head, _, protection = low.partition("protection from ")
     if protection:
-        qualities = _parse_qualities(protection)
+        qualities = parse_protection_qualities(protection)
         if qualities is None:
             return None
         protection_item = Item("protection", qualities)
@@ -410,7 +410,7 @@ def _parse_items(text: str, verb: str) -> tuple[Item, ...] | None:
         elif token == "shroud":
             items.append(Item("shroud"))
         elif token.startswith("hexproof from "):
-            qualities = _parse_qualities(token[len("hexproof from ") :])
+            qualities = parse_protection_qualities(token[len("hexproof from ") :])
             if qualities is None:
                 return None
             items.append(Item("hexproof_from", qualities))
@@ -915,3 +915,41 @@ def static_target_refusal(game: "Game", target: Any, caster: str, source: Any) -
                 f'"{line.strip()}"; CR 101.2, CR 115.2)'
             )
     return None
+
+
+def _own_protection_qualities(aura: CardState) -> tuple[str, ...]:
+    """The protection qualities `aura`'s own static line grants, chosen ones
+    resolved from what it chose as it entered."""
+    found: list[str] = []
+    for line in aura.oracle_text.splitlines():
+        grant = parse_static_grant(self_normalized_effect_text(aura.name, line, legendary=False))
+        if grant is None:
+            continue
+        for item in grant.items:
+            if item.kind == "protection":
+                found.extend(resolve_qualities(item.qualities, aura) or ())
+    return tuple(found)
+
+
+def aura_exempts_itself(game: "Game", aura: CardState, host: Any, quality: str) -> bool:
+    """CR 702.16n: an Aura that gives the enchanted creature protection from a
+    quality and says "this effect doesn't remove this Aura" is not put into
+    the graveyard by the protection it grants itself. If the creature has
+    another instance of protection from the same quality - printed on it, or
+    granted by another Aura that grants it - that instance affects Auras as
+    normal."""
+    if "doesn't remove this aura" not in aura.oracle_text.lower():
+        return False
+    own = [each.lower() for each in _own_protection_qualities(aura)]
+    if quality.lower() not in own or not isinstance(host, CardState):
+        return False
+    from ..models.game._conditions import _qualities_from_text
+
+    if quality.lower() in [each.lower() for each in _qualities_from_text(host.oracle_text)]:
+        return False
+    for other in game.battlefield:
+        if other.id == aura.id or other.attached_to != host.id:
+            continue
+        if quality.lower() in [each.lower() for each in _own_protection_qualities(other)]:
+            return False
+    return True

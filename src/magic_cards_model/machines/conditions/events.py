@@ -76,7 +76,25 @@ def _removed_loyalty_counters(context: "ConditionContext", match: re.Match[str])
     return needed is not None and event.loyalty_removed >= needed
 
 
+def _has_a_single_target(context: "ConditionContext", match: re.Match[str]) -> bool:
+    """ "it has a single target": the spell the trigger event is about (a cast
+    event's subject) is on the stack with exactly one target (CR 115.1,
+    CR 601.2c). On CR 608.2a's recheck the spell may be gone - then it has no
+    target to be single."""
+    event = context.event
+    if event is None or event.subject_id is None:
+        return False
+    spell = context.game.find_by_id(event.subject_id)
+    if spell is None or spell not in context.game.stack:
+        return False
+    return len(spell.targets) == 1
+
+
 READERS: tuple[ConditionReader, ...] = (
+    ConditionReader(
+        re.compile(r"(?:it|that spell) has a single target"),
+        _has_a_single_target,
+    ),
     ConditionReader(
         re.compile(rf"you removed (?P<count>{COUNT}) or more loyalty counters? to activate it"),
         _removed_loyalty_counters,

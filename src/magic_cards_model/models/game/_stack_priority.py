@@ -2812,8 +2812,16 @@ class StackPriorityMixin:
         Halo's CR 614.12a chosen name), unioned with the grants currently on
         the battlefield - see `player_protection_qualities`.
         """
+        target = self._targeted_thing(target)
         if isinstance(target, Player):
-            return self._player_protection_refusal(target, source)
+            return self._player_protection_refusal(
+                target,
+                source,
+                source_controller,
+                is_spell=is_spell,
+                source_state=source_state,
+                source_mana_value=source_mana_value,
+            )
         if not isinstance(target, CardState):
             return None
         for quality in self._effective_protection_qualities(target):
@@ -3023,7 +3031,16 @@ class StackPriorityMixin:
             return True
         return any(keyword == "shroud" for keyword, _ in self._player_static_keyword_grants(player))
 
-    def _player_protection_refusal(self: "Game", target: Player, source: "Card") -> str | None:
+    def _player_protection_refusal(
+        self: "Game",
+        target: Player,
+        source: "Card",
+        source_controller: str | None = None,
+        *,
+        is_spell: bool = False,
+        source_state: CardState | None = None,
+        source_mana_value: float | None = None,
+    ) -> str | None:
         """Why a *player's* protection stops `source` targeting them (CR 702.16b).
 
         Two sources of quality, unioned: what the player carries on
@@ -3036,7 +3053,24 @@ class StackPriorityMixin:
         if refusal is not None:
             return refusal
         for quality in self.player_protection_qualities(target.username):
-            if quality == source.name or self.source_has_quality_of_card(source, quality):
+            # CR 702.16k: "each of your opponents" is every object that player
+            # controls - the source's controller decides, not its characteristics.
+            from_opponent = (
+                source_controller is not None
+                and _EACH_OPPONENT_PROTECTION_QUALITY.match(quality.strip())
+                and source_controller != target.username
+            )
+            if (
+                from_opponent
+                or quality == source.name
+                or self.source_has_quality_of_card(
+                    source,
+                    quality,
+                    is_spell=is_spell,
+                    source_state=source_state,
+                    source_mana_value=source_mana_value,
+                )
+            ):
                 return (
                     f"{target.username} has protection from {quality}, so {source.name} "
                     f"cannot target them (CR 702.16b)"
@@ -3223,8 +3257,16 @@ class StackPriorityMixin:
         for quality in self.player_protection_qualities(player.username):
             if quality not in qualities:
                 qualities.append(quality)
+        source_controller = self.controller_of(event.source).username
         for quality in qualities:
-            if quality == event.source.name or self.source_has_quality(event.source, quality):
+            if (
+                (
+                    _EACH_OPPONENT_PROTECTION_QUALITY.match(quality.strip())
+                    and source_controller != player.username
+                )
+                or quality == event.source.name
+                or self.source_has_quality(event.source, quality)
+            ):
                 return (
                     f"{player.username} has protection from {quality}, so damage from "
                     f"{event.source.name} is prevented (CR 702.16e)"
