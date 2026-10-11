@@ -2301,6 +2301,7 @@ def _best_flow_plan(
     *,
     any_color: bool = False,
     snow_any_color: bool = False,
+    color_rule: Any = None,
 ) -> TapPlan | None:
     """The smallest tapping plan that settles `options` (one already-resolved
     reading of `ManaCost`'s payable-in-multiple-ways symbols) out of `simple`
@@ -2369,7 +2370,11 @@ def _best_flow_plan(
             ),
         )
         demands = _demand_list(
-            options, all_buckets, any_color=any_color, snow_any_color=snow_any_color
+            options,
+            all_buckets,
+            any_color=any_color,
+            snow_any_color=snow_any_color,
+            color_rule=color_rule,
         )
         result = _assign_sources(demands, sources_map, capacity_map)
         if result is None:
@@ -2481,6 +2486,7 @@ def _solve_auto_tap_flow(
             context.game,
             any_color=context.spend is not None and context.spend.any_color,
             snow_any_color=context.spend is not None and context.spend.snow_any_color,
+            color_rule=None if context.spend is None else context.spend.color_rule,
         )
         if plan is not None:
             if life and life > life_available - _plan_life_loss(context, plan):

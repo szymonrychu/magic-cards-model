@@ -584,6 +584,7 @@ def _cast_action(
     if game.spends_mana_as_any_color_for_spell(card, player):
         # CR 609.4b, read here exactly as `Casting.determine_cost` reads it.
         spend = spend.model_copy(update={"any_color": True})
+    spend = spend.model_copy(update={"color_rule": game.mana_color_rule(player)})
     unpayable = (
         None if alternative_cost is not None else why_mana_cost_unpayable(card.name, total.mana)
     )
@@ -1546,7 +1547,7 @@ def _battlefield_ability_actions(
             board.of(permanent),
             any_color=game.spends_mana_as_any_color(permanent, ability, player),
             class_level=getattr(ability, "class_level_target", None) is not None,
-        )
+        ).model_copy(update={"color_rule": game.mana_color_rule(player, permanent)})
         affordable, reason, pays_with = _cost_affordability(
             game, player, total, candidate_scan, spend=spend
         )

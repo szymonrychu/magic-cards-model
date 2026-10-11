@@ -691,7 +691,10 @@ class ContinuousMixin:
                         and own_kind["kind"].lower() == str(kind).lower()
                         and self._still_has_static_line(source, text)
                     ):
-                        return f"{username} can't get {kind} counters: {source.name} says so (CR 101.2)"
+                        return (
+                            f"{username} can't get {kind} counters: "
+                            f"{source.name} says so (CR 101.2)"
+                        )
                     continue
                 if not _PLAYER_COUNTERS_PROHIBITION_RE.match(text):
                     continue

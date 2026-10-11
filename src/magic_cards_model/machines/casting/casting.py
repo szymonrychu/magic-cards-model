@@ -4339,6 +4339,9 @@ class Casting(EngineModel):
             ).model_copy(
                 update={
                     "treasure_only": self.treasure_mana_only,
+                    "color_rule": (
+                        None if self.game is None else self.game.mana_color_rule(self.caster)
+                    ),
                     # CR 609.4b: Chromatic Orrery, Oath of Nissa, Case File
                     # Auditor - "spend mana as though it were mana of any color".
                     "any_color": self.keyword_any_color

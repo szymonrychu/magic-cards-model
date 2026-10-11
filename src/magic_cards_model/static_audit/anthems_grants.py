@@ -15,7 +15,12 @@ from magic_cards_model.models.player import Player
 from magic_cards_model.models.zone import Zone
 
 #: Cheap lowercase gate: every line this module can credit carries one of these.
-_GATES = ("as though it weren't blocked", "had wither")
+_GATES = (
+    "as though it weren't blocked",
+    "had wither",
+    "mana as though it were",
+    "mana of any type can be spent",
+)
 
 
 def _staged(printing):
@@ -54,6 +59,22 @@ def _all_damage_has_wither(printing) -> bool:
     return _WITHER_CACHE[printing.name]
 
 
+_COLOR_RULE_CACHE: dict[tuple[str, str], bool] = {}
+
+
+def _reads_mana_colour_rule(printing, lowered: str) -> bool:
+    """CR 609.4b: `Game.mana_color_rule` really returns a rule for this card's
+    line (and, for Celestial Dawn's second sentence, one that carries it)."""
+    key = (printing.name, lowered)
+    if key not in _COLOR_RULE_CACHE:
+        game, state = _staged(printing)
+        rule = game.mana_color_rule("sweep_you", state)
+        _COLOR_RULE_CACHE[key] = rule is not None and (
+            "other mana" not in lowered or rule.others_colorless
+        )
+    return _COLOR_RULE_CACHE[key]
+
+
 def reads_anthems_grants_line(printing, text, *, card_name=None, legendary=False) -> bool:
     lowered = text.lower()
     # A static ability granting a keyword (or a type or colour) to cards off the
@@ -63,6 +84,8 @@ def reads_anthems_grants_line(printing, text, *, card_name=None, legendary=False
         return True
     if not any(gate in lowered for gate in _GATES):
         return False
+    if "mana as though it were" in lowered or "mana of any type can be spent" in lowered:
+        return _reads_mana_colour_rule(printing, lowered)
     if "had wither" in lowered:
         return _all_damage_has_wither(printing)
     return _may_assign_as_though_unblocked(printing)

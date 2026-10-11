@@ -2614,7 +2614,7 @@ class ActivationMixin:
                 source_characteristics,
                 any_color=self.spends_mana_as_any_color(permanent, ability, controller),
                 class_level=getattr(ability, "class_level_target", None) is not None,
-            ),
+            ).model_copy(update={"color_rule": self.mana_color_rule(controller, permanent)}),
         )
         payment.paying_for = "ability"
         payment.restrict_x_from_text(
