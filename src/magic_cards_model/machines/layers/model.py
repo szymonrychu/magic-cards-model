@@ -2052,6 +2052,21 @@ class AddSupertype(ModificationBase):
         return chars.with_(supertypes=chars.supertypes + (self.supertype,))
 
 
+class RemoveSupertype(ModificationBase):
+    """Layer 4 (CR 613.1d): stop having a supertype - "~ isn't legendary if
+    it's a token". CR 205.4b: the object keeps every other supertype it had."""
+
+    kind: Literal["remove_supertype"] = "remove_supertype"
+    supertype: Supertype
+
+    def __call__(self, chars: Characteristics, board: Board) -> Characteristics:
+        if self.supertype not in chars.supertypes:
+            return chars
+        return chars.with_(
+            supertypes=tuple(kind for kind in chars.supertypes if kind is not self.supertype)
+        )
+
+
 #: The card types whose subtypes are a closed list of their own: artifact
 #: types (CR 205.3g), enchantment types (CR 205.3h), land types (CR 205.3i),
 #: the spell types instants and sorceries share (CR 205.3k), and the battle
@@ -2512,6 +2527,7 @@ Modification = Annotated[
     | GrantAbilityInstance
     | AddType
     | AddSupertype
+    | RemoveSupertype
     | RemoveType
     | AddSubtype
     | AddEveryCreatureType
