@@ -52,24 +52,11 @@ CANT_BECOME_UNTAPPED_TEXT = "Can't become untapped."
 #: abilities" effect does not end it either.
 CANT_HAVE_COUNTERS_TEXT = "Can't have counters put on it."
 
-#: The per-kind form of `CANT_HAVE_COUNTERS_TEXT` - "Creatures your opponents
-#: control can't have +1/+1 counters put on them." (Blightbeetle) - one line per
-#: kind, `{kind}` the counter kind as `Counter` spells it.
-CANT_HAVE_KIND_COUNTERS_TEXT = "Can't have {kind} counters put on it."
-
 
 #: The canonical line "Lethal damage dealt to creatures you control is
 #: determined by their power rather than their toughness." (Zilortha) puts on
 #: each creature it reaches in layer 6 - read by `CardState.lethal_threshold`.
 #: An effect on the object, not an ability of it (`layers.RULE_EFFECT_TEXTS`).
-#: CR 502.3 and CR 604.2: the marker "Untap all <group> you control during each
-#: other player's untap step." grants each permanent of the group, read by
-#: `Game.untap_step` for every player whose step it is not.
-UNTAPS_IN_OTHER_UNTAP_TEXT = "Untaps during each other player's untap step."
-#: CR 502.3 and CR 604.2: the marker "You may choose not to untap this
-#: <permanent> during your untap step." grants itself; `Game.untap_step` asks
-#: its controller whether to leave it tapped.
-MAY_STAY_TAPPED_TEXT = "You may choose not to untap this permanent during your untap step."
 #: CR 700.5, CR 604.2: "Your devotion to each color and each combination of
 #: colors is increased by one." grants itself this marker; every devotion count
 #: adds one per such permanent its controller controls.
@@ -2799,15 +2786,6 @@ class CardState(EngineModel):
         one not on the battlefield (a card the effect no longer reaches)."""
         computed = self.computed_characteristics
         return computed is not None and CANT_HAVE_COUNTERS_TEXT in computed.abilities
-
-    def cant_have_counter_kind(self, kind: str) -> bool:
-        """Whether an effect says this permanent "can't have `kind` counters
-        put on it" (CR 122.6, CR 101.2) - the per-kind sibling of
-        `cant_have_counters_put_on_it`, read off the computed board."""
-        computed = self.computed_characteristics
-        return computed is not None and (
-            CANT_HAVE_KIND_COUNTERS_TEXT.format(kind=str(kind)) in computed.abilities
-        )
 
     def untap(self, *, exert_applies: bool = True) -> None:
         """Untap this card, unless it was exerted (CR 701.43a-b).

@@ -618,10 +618,11 @@ class ContinuousMixin:
         with self._id_allocator_scope():
             if amount <= 0:
                 return permanent.counter_count(kind)
-            if permanent.cant_have_counters_put_on_it or permanent.cant_have_counter_kind(kind):
+            if permanent.cant_have_counters_put_on_it:
                 return permanent.counter_count(kind)
             # Melira, Sylvok Outcast: "Creatures you control can't have -1/-1
-            # counters put on them." (CR 101.2, `machines/game_rule_statics.py`).
+            # counters put on them." and Blightbeetle's opponents' twin (CR 101.2,
+            # `machines/game_rule_statics.py`).
             if game_rule_statics.permanent_counter_prohibited(self, permanent, kind) is not None:
                 return permanent.counter_count(kind)
 

@@ -1156,17 +1156,18 @@ def _self_pump_per_controlled_permanent_builder(
     return builder
 
 
-#: "Enchanted creature gets +X/+X, where X is the number of creature cards in
-#: your graveyard." (Wreath of Geists) and Katilda's Rising Dawn's "Enchanted
-#: creature has flying, lifelink, and protection from Vampires, and it gets
-#: +X/+X, where X is the number of permanents you control that are Spirits
-#: and/or enchantments." - the attached creature's sublayer 7c bonus
-#: (CR 613.4c) sized by any count phrase the characteristic-defining reader
-#: `_cda_value` reads, recounted on every computation (CR 611.3a), with an
-#: optional keyword list granted in layer 6 (CR 613.1f) ahead of it.
+#: Katilda's Rising Dawn's "Enchanted creature has flying, lifelink, and
+#: protection from Vampires, and it gets +X/+X, where X is the number of
+#: permanents you control that are Spirits and/or enchantments." - the
+#: attached creature's sublayer 7c bonus (CR 613.4c) sized by any count phrase
+#: the characteristic-defining reader `_cda_value` reads, recounted on every
+#: computation (CR 611.3a), with the keyword list granted in layer 6
+#: (CR 613.1f) ahead of it. The keyword-less "Enchanted creature gets +X/+X,
+#: where X is ..." (Wreath of Geists, Hedron Matrix) is `attached_grants`'
+#: `_PUMP_WHERE_X_RE`, the one reader of that shape.
 _ATTACHED_HAS_AND_GETS_X_RE = re.compile(
     r"^(?P<attachment>equipped|enchanted) creature "
-    r"(?:has (?P<keywords>[a-z].+?),? and it )?gets \+x/\+x, where x is (?P<count>.+?)\.?$",
+    r"has (?P<keywords>[a-z].+?),? and it gets \+x/\+x, where x is (?P<count>.+?)\.?$",
     re.IGNORECASE,
 )
 
@@ -1819,18 +1820,6 @@ _PAIRED_BOTH_RE = re.compile(
     r"(?: and get (?P<p1>[+-]\d+)/(?P<t1>[+-]\d+))?)"
     r"|(?:get (?P<p2>[+-]\d+)/(?P<t2>[+-]\d+)))\.?$",
     re.IGNORECASE,
-)
-
-#: "As long as this creature is paired with another creature, each of those
-#: creatures has "`<ability>`"." (Galvanic Alchemist, Stern Mentor, Stonewright)
-#: - `_PAIRED_BOTH_RE`'s pair (CR 702.95a) granted a whole quoted ability
-#: (CR 113.10a), on the computed board by `_paired_quoted_grant_builder` and
-#: made activatable by `quoted_ability_grants`, for only as long as the pair
-#: holds (CR 702.95e).
-_PAIRED_EACH_QUOTED_RE = re.compile(
-    r"^as long as this creature is paired with another creature, each of those "
-    r'creatures has "(?P<ability>.+)"\.?$',
-    re.IGNORECASE | re.DOTALL,
 )
 
 #: "Creatures you control that are enchanted get +1/+1." (Necromancer's
@@ -4720,48 +4709,6 @@ def _paired_both_builder(
         return effects
 
     return builder
-
-
-def _paired_quoted_grant_builder(granted: str, *, line: str) -> EffectBuilder:
-    """`_PAIRED_EACH_QUOTED_RE`'s shape: a layer 6 grant (CR 613.1f) of a
-    quoted ability over the source and its soulbond partner."""
-
-    def builder(
-        source: CardState,
-        timestamp: int,
-        targets: Sequence[CardState],
-        context: LayerContext,
-    ) -> list[ContinuousEffect]:
-        return [
-            ContinuousEffect(
-                description=f'{source.name}: each paired creature has "{granted}"',
-                layer=Layer.ABILITY,
-                timestamp=timestamp,
-                source_id=source.id,
-                source_ability=line,
-                selector=PairedPartners(source_id=source.id),
-                modification=grant_ability(granted),
-            )
-        ]
-
-    return builder
-
-
-def paired_partner_ids(source: CardState, permanents: Sequence[CardState]) -> tuple[UUID, ...]:
-    """`source` and its soulbond partner while the pair holds (CR 702.95a,
-    CR 702.95e: both creatures, pointing at each other, one controller) -
-    `PairedPartners`' test over the printed board, or nothing."""
-    if source.paired_with is None or not printed_characteristics(source).is_creature:
-        return ()
-    partner = next((p for p in permanents if p.id == source.paired_with), None)
-    if (
-        partner is None
-        or partner.paired_with != source.id
-        or partner.controller != source.controller
-        or not printed_characteristics(partner).is_creature
-    ):
-        return ()
-    return (source.id, partner.id)
 
 
 def _per_other_creature_anthem_builder(
@@ -9181,12 +9128,6 @@ def quoted_ability_grants(
                 if subtype in {t.lower() for t in printed_characteristics(permanent).subtypes}:
                     wanted.setdefault(permanent.id, set()).add(text)
             continue
-        if match := _PAIRED_EACH_QUOTED_RE.fullmatch(normalized):
-            text = match.group("ability").strip()
-            grantable.add(text)
-            for permanent_id in paired_partner_ids(source, permanents):
-                wanted.setdefault(permanent_id, set()).add(text)
-            continue
         if match := _INDEFINITE_KEYWORD_AND_QUOTED_GRANT_RE.fullmatch(normalized):
             text = (match.group("granted") or "").strip()
             if not text:
@@ -11405,9 +11346,10 @@ def _if_gated_builder(base: EffectBuilder, condition: str) -> EffectBuilder:
 def _parse_layer_sentence(sentence: str) -> EffectBuilder | None:
     """`_parse_layer_sentence_ungated`, then - for a sentence that is none of
     those shapes - `_parse_if_gated_layer_sentence`'s trailing "if" rider, then
-    `conditional_statics`' "as long as" / "during your turn" template, the
-    attached compound grant, the gated self static, then
-    `_parse_protection_static`."""
+    `_parse_protection_static` (the hexproof / shroud / protection grants own
+    their "as long as" conditions too), `conditional_statics`' "as long as" /
+    "during your turn" template, the attached compound grant, and the gated
+    self static."""
     from ..attached_restrictions import parse_attached_compound_grant
     from ..attacking_statics import parse_gated_self_static
     from .conditional_statics import parse_conditional_static
@@ -11415,18 +11357,18 @@ def _parse_layer_sentence(sentence: str) -> EffectBuilder | None:
     return (
         _parse_layer_sentence_ungated(sentence)
         or _parse_if_gated_layer_sentence(sentence)
+        or _parse_protection_static(sentence)
         or parse_conditional_static(sentence)
         or parse_attached_compound_grant(sentence)
         or parse_gated_self_static(sentence)
-        or _parse_protection_static(sentence)
     )
 
 
 def _parse_protection_static(sentence: str) -> EffectBuilder | None:
     """`machines/protection_statics.py`'s "<group> have hexproof / shroud /
     protection from <quality>" shapes (CR 702.11, CR 702.18, CR 702.16), tried
-    last so every shape above keeps its reading. Imported lazily: that module
-    imports this package."""
+    after the ungated and "if"-gated shapes so each of those keeps its reading.
+    Imported lazily: that module imports this package."""
     lowered = sentence.lower()
     if "hexproof" not in lowered and "shroud" not in lowered and "protection from" not in lowered:
         return None
@@ -12172,7 +12114,8 @@ _HAS_ALL_ACTIVATED_ABILITIES_RE = re.compile(
     r" (?:has|have) all activated abilities of "
     # Scheming Fence: the one permanent chosen as it entered (CR 614.12a),
     # loyalty abilities (CR 606.2) excepted.
-    r"(?:(?P<chosen>the chosen permanent)(?P<except_loyalty> except for loyalty abilities)?|(?:all )?"
+    r"(?:(?P<chosen>the chosen permanent)(?P<except_loyalty> except for loyalty abilities)?"
+    r"|(?:all )?"
     r"(?:(?:(?P<pile_types>[a-z]+(?:,? (?:and |or )?[a-z]+)*) )?cards exiled with (?:this \w+|it)"
     r"|(?P<the_exiled>the exiled cards?)"
     r"|(?:(?P<graveyard_types>[a-z]+(?:,? (?:and |or )?[a-z]+)*) )?cards in "
@@ -12349,10 +12292,6 @@ def _parse_narrow_static_layer_sentence(sentence: str) -> EffectBuilder | None:
         return _all_activated_abilities_builder(all_activated, line=sentence)
     if _SELF_PROTECTION_FROM_CHOSEN_COLOR_RE.fullmatch(sentence):
         return _self_protection_from_chosen_color_builder(line=sentence)
-    if match := _PAIRED_EACH_QUOTED_RE.fullmatch(sentence):
-        granted = match.group("ability").strip()
-        if granted:
-            return _paired_quoted_grant_builder(granted, line=sentence)
     if _SELF_PROTECTION_FROM_OTHER_MANA_VALUE_RE.fullmatch(sentence):
         return _self_protection_from_chosen_number_builder(line=sentence)
     if match := _PAIRED_BOTH_RE.fullmatch(sentence):

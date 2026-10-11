@@ -157,9 +157,7 @@ class GroupModifier:
         return len(earlier) == (self.ordinal or 1) - 1
 
 
-def _matches_choice(
-    game: "Game", chosen: str, spell: "CardState", source: "CardState"
-) -> bool:
+def _matches_choice(game: "Game", chosen: str, spell: "CardState", source: "CardState") -> bool:
     """Whether `spell` is what `source` chose as it entered (CR 614.12a): a card
     type or creature type for "of the chosen type" (a changeling has every
     creature type, CR 702.73a), a card name for "with the chosen name". A

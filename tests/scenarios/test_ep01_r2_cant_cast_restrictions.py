@@ -331,9 +331,10 @@ def test_drannith_magistrate_bans_casting_from_anywhere_but_the_hand():
     world = _world("Drannith Magistrate", alice_gy=["Faithless Looting"], alice_hand=["Shock"])
     assert _try(world, "Faithless Looting", "alice", from_zone=Zone.GRAVEYARD) is not None
     assert _try(world, "Shock", "alice", **ALICE) is None
-    # its controller may still cast from a graveyard
-    own = _world("Drannith Magistrate", bob_gy=["Faithless Looting"])
-    assert _try(own, "Faithless Looting", "bob", from_zone=Zone.GRAVEYARD) is None
+    # its controller may still cast from a graveyard (on their own turn: flashback
+    # keeps the sorcery's timing, CR 702.34a)
+    own = _world("Drannith Magistrate", owner="alice", alice_gy=["Faithless Looting"])
+    assert _try(own, "Faithless Looting", "alice", from_zone=Zone.GRAVEYARD) is None
 
 
 def test_ashes_of_the_abhorrent_bans_graveyard_casts_for_every_player():

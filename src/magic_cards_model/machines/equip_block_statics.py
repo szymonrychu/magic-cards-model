@@ -6,8 +6,8 @@ live off computed ability lines (CR 613.5):
   equipped." (Goblin Brawler): `attach_refusal`, asked when equip is announced
   and resolved and by the CR 704.5n state-based action.
 - "Equip {0}. Activate only once each turn." (Leather Armor):
-  `equip_once_each_turn`; "You may activate equip abilities any time you could
-  cast an instant." (Leonin Shikari): `equip_at_instant_speed`.
+  `equip_once_each_turn`. "You may activate equip abilities any time you could
+  cast an instant." (Leonin Shikari) is `keywords.equip_at_instant_speed`'s.
 - "Tapped creatures you control can block as though they were untapped."
   (Masako the Humorless) and "This creature can block Dragons as though it had
   reach." (Dragon Hunter): `blocks_as_though_untapped`, `blocks_as_though_reach`.
@@ -32,9 +32,6 @@ _ATTACH_ONLY_RE = re.compile(
     re.IGNORECASE,
 )
 _CANT_BE_EQUIPPED_RE = re.compile(r"^(?:this [a-z]+|~) can't be equipped\.?$", re.IGNORECASE)
-_EQUIP_INSTANT_RE = re.compile(
-    r"^you may activate equip abilities any time you could cast an instant\.?$", re.IGNORECASE
-)
 _EQUIP_ONCE_RE = re.compile(r"^equip\b.*\bactivate only once each turn\.?$", re.IGNORECASE)
 _UNTAPPED_BLOCK_RE = re.compile(
     r"^tapped creatures you control can block as though they were untapped\.?$", re.IGNORECASE
@@ -56,7 +53,6 @@ _LOYALTY_COST_RE = re.compile(
 _PATTERNS = (
     _ATTACH_ONLY_RE,
     _CANT_BE_EQUIPPED_RE,
-    _EQUIP_INSTANT_RE,
     _EQUIP_ONCE_RE,
     _UNTAPPED_BLOCK_RE,
     _REACH_RE,
@@ -105,14 +101,6 @@ def attach_refusal(game: "Game", equipment: CardState, host: CardState | None) -
     if any(_CANT_BE_EQUIPPED_RE.match(line) for line in _lines(game, host)):
         return f"{host.name} can't be equipped (CR 301.5)"
     return None
-
-
-def equip_at_instant_speed(game: "Game", player: str) -> bool:
-    return any(
-        _EQUIP_INSTANT_RE.match(line)
-        for permanent in game.permanents_controlled_by(player)
-        for line in _lines(game, permanent)
-    )
 
 
 def equip_once_each_turn(equipment: CardState) -> bool:

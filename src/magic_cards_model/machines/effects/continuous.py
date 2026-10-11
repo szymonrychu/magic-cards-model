@@ -43,8 +43,8 @@ from ..casting import (
 from ..casting_restrictions import create_targeted_cant_cast_restriction
 from ..combat import (
     ASSIGN_AS_THOUGH_UNBLOCKED_TEXT,
-    BLOCKED_BY_AT_MOST_ONE_GRANT_TEXT,
     ATTACK_WITHOUT_DEFENDER_TEXT,
+    BLOCKED_BY_AT_MOST_ONE_GRANT_TEXT,
     KEYWORDS_OUTSIDE_COMBAT,
     Keyword,
     has_keyword,

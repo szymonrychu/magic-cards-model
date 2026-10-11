@@ -92,7 +92,6 @@ from .designations import designation_holds, split_as_long_as
 from .equip_block_statics import (
     attach_refusal,
     equip_activation_key,
-    equip_at_instant_speed,
     equip_once_each_turn,
 )
 from .layers import (

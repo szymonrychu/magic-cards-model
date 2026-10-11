@@ -25,11 +25,8 @@ from typing import TYPE_CHECKING, Any
 from ...data.subtypes import subtype_vocabulary
 from ...models.card import Color, Supertype, Type
 from ...models.card_state import (
-    CANT_HAVE_KIND_COUNTERS_TEXT,
     DEVOTION_BONUS_TEXT,
     LETHAL_BY_POWER_TEXT,
-    MAY_STAY_TAPPED_TEXT,
-    UNTAPS_IN_OTHER_UNTAP_TEXT,
     CardState,
     TargetKind,
 )
@@ -320,9 +317,6 @@ _GROUP_ARE_PLAIN_RE = re.compile(
     r"^(?P<subject>.+?) (?:are|is) (?P<tail>every creature type|the chosen type|colorless|"
     r"white|blue|black|red|green|plains|islands|swamps|mountains|forests)$"
 )
-_GROUP_NO_COUNTERS_RE = re.compile(
-    r"^(?P<subject>.+?) can't have (?P<kind>\+1/\+1|-1/-1) counters put on (?:them|it)$"
-)
 _LETHAL_BY_POWER_RE = re.compile(
     r"^lethal damage dealt to (?P<subject>.+?) is determined by (?:their|its) power "
     r"rather than (?:their|its) toughness$"
@@ -337,13 +331,6 @@ _LOYALTY_ABILITIES_OF_RE = re.compile(
 )
 _GROUP_EQUIP_CREW_RE = re.compile(
     r"^(?P<subject>.+?) (?:have|has) (?P<ability>equip(?: [a-z]+)* (?:\{[^{}]+\})+|crew \d+)$"
-)
-_UNTAP_OTHER_STEP_RE = re.compile(
-    r"^untap all (?P<subject>.+?) during each other player's untap step$"
-)
-_MAY_STAY_TAPPED_RE = re.compile(
-    r"^you may choose not to untap "
-    r"(?P<subject>this (?:creature|permanent|artifact|enchantment|land)) during your untap step$"
 )
 _DEVOTION_INCREASE_RE = re.compile(
     r"^your devotion to each color and each combination of colors is increased by one$"
@@ -433,28 +420,12 @@ def parse_group_static_sentence(sentence: str):
     docstring)."""
     text = sentence.strip().rstrip(".")
     lowered = text.lower()
-    if match := _UNTAP_OTHER_STEP_RE.fullmatch(lowered):
-        if _subject_ok(match["subject"]) is False:
-            return None
-        return _builder(
-            sentence,
-            match["subject"],
-            "untap during each other player's untap step",
-            lambda: [(Layer.ABILITY, None, grant_ability(UNTAPS_IN_OTHER_UNTAP_TEXT))],
-        )
     if _DEVOTION_INCREASE_RE.fullmatch(lowered):
         return _builder(
             sentence,
             "this permanent",
             "increases its controller's devotion",
             lambda: [(Layer.ABILITY, None, grant_ability(DEVOTION_BONUS_TEXT))],
-        )
-    if match := _MAY_STAY_TAPPED_RE.fullmatch(lowered):
-        return _builder(
-            sentence,
-            match["subject"],
-            "may choose not to untap",
-            lambda: [(Layer.ABILITY, None, grant_ability(MAY_STAY_TAPPED_TEXT))],
         )
     if match := _EQUIPMENT_BY_MANA_VALUE_RE.fullmatch(lowered):
         if parse_group(match["group"]) is None:
@@ -477,16 +448,6 @@ def parse_group_static_sentence(sentence: str):
             match["subject"],
             f"have {granted}",
             lambda: [(Layer.ABILITY, None, grant_ability_instance(granted))],
-        )
-    if match := _GROUP_NO_COUNTERS_RE.fullmatch(lowered):
-        if _subject_ok(match["subject"]) is False:
-            return None
-        text_line = CANT_HAVE_KIND_COUNTERS_TEXT.format(kind=match["kind"])
-        return _builder(
-            sentence,
-            match["subject"],
-            f"can't have {match['kind']} counters put on them",
-            lambda: [(Layer.ABILITY, None, grant_ability(text_line))],
         )
     if match := _LETHAL_BY_POWER_RE.fullmatch(lowered):
         if _subject_ok(match["subject"]) is False:

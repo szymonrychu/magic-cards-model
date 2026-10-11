@@ -203,19 +203,29 @@ def cant_get_poison_line(line: str) -> bool:
 
 
 _CREATURES_CANT_HAVE_COUNTERS_RE = re.compile(
-    r"^creatures you control can't have (?P<kind>[+-]\d+/[+-]\d+) counters put on them\.?$",
+    r"^creatures (?P<whose>you|your opponents) control can't have "
+    r"(?P<kind>[+-]\d+/[+-]\d+) counters put on them\.?$",
     re.IGNORECASE,
 )
 
 
+class CounterProhibition(NamedTuple):
+    kind: str
+    opponents: bool
+
+
 @cache
-def controlled_creatures_counter_prohibition(line: str) -> str | None:
+def controlled_creatures_counter_prohibition(line: str) -> CounterProhibition | None:
     """The counter kind "Creatures you control can't have <kind> counters put
-    on them." forbids (Melira's "-1/-1"), or None."""
+    on them." forbids (Melira's "-1/-1") - or, for "Creatures your opponents
+    control ..." (Blightbeetle's "+1/+1"), the same kind on the other side of
+    the table - or None."""
     if "counters put on them" not in line:
         return None
     match = _CREATURES_CANT_HAVE_COUNTERS_RE.fullmatch(_norm(line))
-    return None if match is None else match.group("kind")
+    if match is None:
+        return None
+    return CounterProhibition(match.group("kind"), match.group("whose").lower() != "you")
 
 
 _OPPONENTS_LOSE_KEYWORD_RE = re.compile(
@@ -334,9 +344,12 @@ def permanent_counter_prohibited(game: Game, permanent: CardState, kind: str) ->
         return None
     if not chars.is_creature:
         return None
-    owner_of_rule = chars.controller or permanent.controller
-    for source, _controller, line in _controlled_lines(game, owner_of_rule):
-        if controlled_creatures_counter_prohibition(line) == str(kind):
+    holder = chars.controller or permanent.controller
+    for source, controller, line in _controlled_lines(game):
+        prohibition = controlled_creatures_counter_prohibition(line)
+        if prohibition is None or prohibition.kind != str(kind):
+            continue
+        if (controller != holder) == prohibition.opponents:
             return (
                 f"{permanent.name} can't have {kind} counters put on it: {source.name} says so "
                 "(CR 101.2)"

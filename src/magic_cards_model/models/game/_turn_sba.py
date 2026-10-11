@@ -65,8 +65,6 @@ from ..card import (
 )
 from ..card_state import (
     LETHAL_BY_POWER_TEXT,
-    MAY_STAY_TAPPED_TEXT,
-    UNTAPS_IN_OTHER_UNTAP_TEXT,
     CardState,
     Counter,
     annihilate_counters_on,
@@ -442,41 +440,6 @@ class TurnSbaMixin:
                     step=Step.UNTAP,
                 )
             )
-
-    def _chooses_not_to_untap(self: "Game", state: CardState) -> bool:
-        """CR 502.3, CR 604.2: "You may choose not to untap this <permanent>
-        during your untap step." - asked of the controller only while the
-        permanent is tapped, and an unscripted player declines (it untaps)."""
-        if not state.tapped or state.controller is None:
-            return False
-        if not self.characteristics_of(state).has_ability(MAY_STAY_TAPPED_TEXT):
-            return False
-        return bool(
-            self.ask(
-                Decision(
-                    kind=DecisionKind.MAY,
-                    player=state.controller,
-                    prompt=f"leave {state.name} tapped instead of untapping it (CR 502.3)?",
-                    source=state.name,
-                    source_id=source_id_of(state),
-                    default_may=False,
-                )
-            )
-        )
-
-    def _untapping_in_others_untap_step(self: "Game", active: str) -> list[CardState]:
-        """CR 502.3, CR 604.2: the permanents "Untap all <group> you control
-        during each other player's untap step." (Seedborn Muse) reaches - those
-        controlled by someone other than the active player that carry the
-        marker the group sentence grants. Stun (CR 122.1d) and "can't become
-        untapped" apply as they do to any untap."""
-        return [
-            state
-            for state in self.battlefield
-            if state.controller != active
-            and not state.cant_become_untapped
-            and self.characteristics_of(state).has_ability(UNTAPS_IN_OTHER_UNTAP_TEXT)
-        ]
 
     def _day_night_untap_check(self: "Game") -> None:
         """CR 502.2's turn-based action: the previous turn's active player's

@@ -85,7 +85,7 @@ HAND_GRANT_KEYWORDS: dict[str, str] = {
 #: The keyword phrase itself, as printed after "have"/"has": a bare keyword,
 #: "casualty N", "affinity for <text>", or "miracle <mana cost>".
 _KEYWORD_PHRASE_RE = re.compile(
-    r"^(?:(?P<bare>storm|cascade|improvise|conspire|rebound|convoke)"
+    r"^(?:(?P<bare>storm|cascade|improvise|conspire|rebound|convoke|replicate)"
     r"|(?P<ripple>ripple) (?P<ripple_n>\d+)"
     r"|(?P<casualty>casualty) (?P<n>\d+)"
     r"|(?P<affinity>affinity) for (?P<what>[a-z]+)"
@@ -392,8 +392,9 @@ def reads_spell_keyword_grant_line(text: str) -> bool:
 
 #: A cheap test a line must pass before it is read at all: every shape above
 #: says "you cast" or "in your hand".
-_MIGHT_GRANT_RE = re.compile(r"you cast|you control|in your hand", re.IGNORECASE)
-_MIGHT_GRANT_RE = re.compile(r"you cast|in your hand|you own|in your graveyard", re.IGNORECASE)
+_MIGHT_GRANT_RE = re.compile(
+    r"you cast|you control|in your hand|you own|in your graveyard", re.IGNORECASE
+)
 
 
 def _grants_of(game: Any, controller: str) -> Iterator[tuple[str, SpellKeywordGrant]]:
@@ -451,7 +452,7 @@ def granted_spell_keyword_lines(
         lines.extend(grant.line for grant in next_spell_keyword_grants_for(game, spell, caster))
     lines.extend(_own_spell_keyword_lines(game, spell, caster))
     for _name, grant in _grants_of(game, caster):
-        if grant.subject in ("hand_card", "self_spell"):
+        if grant.subject in ("hand_card", "self_spell", "zone_card"):
             continue
         if grant.subject == "first_spell" and not first_spell:
             continue
