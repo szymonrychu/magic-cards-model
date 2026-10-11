@@ -1315,7 +1315,7 @@ def _unlock_door_actions(
 # ---------------------------------------------------------------------------
 
 
-def _suspend_at_its_least_x(game: Any, card: CardState, player: str) -> MarkedExile:
+def suspend_at_its_least_x(game: Any, card: CardState, player: str) -> MarkedExile:
     """`MarkedExile.suspend`, with the least X a "Suspend X" line allows
     (CR 702.62a, CR 107.3a) announced so the action is listed at all: the
     seat that takes it names the X it really wants (`x_value`)."""
@@ -1325,7 +1325,7 @@ def _suspend_at_its_least_x(game: Any, card: CardState, player: str) -> MarkedEx
 
 
 _MARKED_EXILE_BUILDERS: tuple[tuple[ActionKind, Any], ...] = (
-    (ActionKind.SUSPEND, _suspend_at_its_least_x),
+    (ActionKind.SUSPEND, suspend_at_its_least_x),
     (ActionKind.FORETELL, MarkedExile.foretell),
     (ActionKind.PLOT, MarkedExile.plot),
 )
