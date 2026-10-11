@@ -638,9 +638,9 @@ def test_a_legendary_snake_you_control_has_shroud():
     assert _refusal(scenario, "Lightning Bolt", sakiko, "bob") is not None
 
 
-def test_the_elite_is_not_legendary_so_it_and_other_creatures_stay_targetable():
+@pytest.mark.parametrize("name", ["Kashi-Tribe Elite", "Grizzly Bears"])
+def test_the_elite_is_not_legendary_so_it_and_other_creatures_stay_targetable(name):
     scenario = _kashi_board()
     scenario.start_at(Step.PRECOMBAT_MAIN)
-    for name in ("Kashi-Tribe Elite", "Grizzly Bears"):
-        creature = scenario.creature(name, "alice")
-        assert _refusal(scenario, "Lightning Bolt", creature, "bob") is None
+    creature = scenario.creature(name, "alice")
+    assert _refusal(scenario, "Lightning Bolt", creature, "bob") is None
