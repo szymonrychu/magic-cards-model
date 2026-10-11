@@ -3240,6 +3240,26 @@ def equip_activation(
     return activation
 
 
+_GRANTED_EQUIP_RE = re.compile(r"^equip (?P<cost>(?:\{[^}]+\})+)$", re.IGNORECASE)
+
+
+def _cheaper_granted_equip_cost(game: Any, equipment: CardState, printed: TotalCost) -> TotalCost:
+    """An Equipment with several equip abilities is equipped through whichever
+    the player picks (CR 702.6c, CR 113.2c), so a mana-only "Equip {N}" granted
+    to it in layer 6 (CR 613.1f; Puresteel Paladin's metalcraft "Equipment you
+    control have equip {0}") competes with the printed one on cost. Read off
+    the computed board, so it exists only while the grant does (CR 611.3a)."""
+    best = printed
+    for line in game.computed_board().of(equipment).abilities:
+        match = _GRANTED_EQUIP_RE.fullmatch(line.strip())
+        if match is None:
+            continue
+        granted = TotalCost(mana=ManaCost.parse(match.group("cost")))
+        if granted.mana.converted < best.mana.converted:
+            best = granted
+    return best
+
+
 def unannounced_equip_activation(
     game: Any,
     equipment: CardState,
@@ -3267,6 +3287,8 @@ def unannounced_equip_activation(
             f"{equipment.name}'s equip cost {ability.cost!r} could not be read, "
             f"so it cannot be paid"
         )
+    if game is not None:
+        cost = _cheaper_granted_equip_cost(game, equipment, cost)
     free_from = free_first_equip_source(game, player) if pay_zero and game is not None else None
     if free_from is not None:
         cost = TotalCost(mana=ManaCost.parse("{0}"))

@@ -57,6 +57,8 @@ from .model import (
     PairedPartners,
     QualityTest,
     Selector,
+    SetCreatureTypes,
+    SetTypesAndSubtypes,
     SharesColorAtom,
     SourceAttachedAtom,
     SourceCountersAtom,
@@ -579,6 +581,12 @@ def _parse_predicate(text: str) -> tuple[_Change, ...] | None:
                 )
             )
             continue
+        if match := _BECOMES_RE.fullmatch(piece):
+            becomes = _parse_becomes(match)
+            if becomes is None:
+                return None
+            changes.extend(becomes)
+            continue
         if _LOSES_ALL_RE.fullmatch(piece):
             changes.append(
                 _Change(
@@ -610,6 +618,71 @@ def _parse_predicate(text: str) -> tuple[_Change, ...] | None:
     return tuple(changes) or None
 
 
+_BECOMES_RE = re.compile(
+    r"^(?:is|are) an? (?P<head>.+?)(?: with base power and toughness (?P<bp>\d+)/(?P<bt>\d+))?$",
+    re.IGNORECASE,
+)
+_PT_WORD_RE = re.compile(r"^(?P<power>\d+)/(?P<toughness>\d+)$")
+
+
+def _parse_becomes(match: re.Match[str]) -> list[_Change] | None:
+    """ "is a Bear [with base power and toughness 4/2]" / "is a 5/5 Golem
+    artifact creature": the type line the subject has while the condition
+    holds (CR 613.1d), its base power and toughness (CR 613.4b). Card types
+    named replace the old ones (CR 205.1a); only creature types named replace
+    the creature types and leave the card types alone (CR 205.3d)."""
+    types: list[Type] = []
+    subtypes: list[str] = []
+    base: tuple[int, int] | None = None
+    if match.group("bp"):
+        base = (int(match.group("bp")), int(match.group("bt")))
+    for word in match.group("head").split():
+        if pt := _PT_WORD_RE.fullmatch(word):
+            base = (int(pt.group("power")), int(pt.group("toughness")))
+        elif (card_type := _card_type(word)) is not None:
+            types.append(card_type)
+        elif (subtype := _subtype(word)) is not None:
+            subtypes.append(subtype)
+        else:
+            return None
+    if not (types or subtypes or base):
+        return None
+    changes: list[_Change] = []
+    if types:
+        changes.append(
+            _Change(
+                Layer.TYPE,
+                None,
+                lambda source, context, t=tuple(types), s=tuple(subtypes): SetTypesAndSubtypes(
+                    types=t, subtypes=s
+                ),
+                "becomes " + " ".join((*subtypes, *(each.value for each in types))),
+            )
+        )
+    elif subtypes:
+        changes.append(
+            _Change(
+                Layer.TYPE,
+                None,
+                lambda source, context, s=tuple(subtypes): SetCreatureTypes(subtypes=s),
+                "becomes " + " ".join(subtypes),
+            )
+        )
+    if base is not None:
+        changes.append(
+            _Change(
+                Layer.POWER_TOUGHNESS,
+                Sublayer.SET,
+                lambda source, context, b=base: set_power_toughness(*b),
+                f"base {base[0]}/{base[1]}",
+            )
+        )
+    return changes
+
+
+_EQUIP_GRANT_RE = re.compile(r"^equip (?P<cost>(?:\{[^}]+\})+)$", re.IGNORECASE)
+
+
 def _parse_grants(raw: str, quotes: list[str]) -> list[_Change] | None:
     """ "flying and vigilance" / '\0 0\0' (one quoted ability) -> grants."""
     changes: list[_Change] = []
@@ -625,6 +698,17 @@ def _parse_grants(raw: str, quotes: list[str]) -> list[_Change] | None:
                     lambda source, context, t=text: grant_ability(t),
                     f"has {text!r}",
                     quoted=text,
+                )
+            )
+            continue
+        if equip := _EQUIP_GRANT_RE.fullmatch(piece):
+            text = f"Equip {equip.group('cost')}"
+            changes.append(
+                _Change(
+                    Layer.ABILITY,
+                    None,
+                    lambda source, context, t=text: grant_ability(t),
+                    f"has {text}",
                 )
             )
             continue
@@ -649,7 +733,7 @@ _LEADING_RE = re.compile(r"^as long as (?P<condition>.+?), (?P<body>.+)$", re.IG
 _TRAILING_RE = re.compile(r"^(?P<body>.+?) as long as (?P<condition>[^,]+)$", re.IGNORECASE)
 _DURING_YOUR_TURN_RE = re.compile(r"^during your turn, (?P<rest>.+)$", re.IGNORECASE)
 _SUBJECT_PREDICATE_RE = re.compile(
-    r"^(?P<subject>.+?) (?P<predicate>(?:gets?|has|have|loses?) .+)$", re.IGNORECASE
+    r"^(?P<subject>.+?) (?P<predicate>(?:gets?|has|have|loses?|is|are) .+)$", re.IGNORECASE
 )
 
 
@@ -669,6 +753,7 @@ def _parse(sentence: str) -> _Parsed | None:
         .strip()
         .rstrip(".")
     )
+    full_line = line
     lowered = line.lower()
     if "as long as" not in lowered and not lowered.startswith("during your turn"):
         return None
@@ -676,7 +761,9 @@ def _parse(sentence: str) -> _Parsed | None:
     if match := _DURING_YOUR_TURN_RE.fullmatch(line):
         condition = _Condition(gates=(_your_turn_gate,))
         line = match.group("rest")
-    candidates: list[tuple[str, str]] = []
+    candidates: list[tuple[str | None, str]] = []
+    if not condition.gates == () and "as long as" not in line.lower():
+        candidates.append((None, line))
     if match := _LEADING_RE.fullmatch(line):
         candidates.append((match.group("condition"), match.group("body")))
     if match := _TRAILING_RE.fullmatch(line):
@@ -686,19 +773,22 @@ def _parse(sentence: str) -> _Parsed | None:
         if head.lower().startswith("as long as "):
             candidates.append((head[len("as long as ") :], tail))
     for condition_text, body in candidates:
-        parsed_condition = _parse_condition(condition_text)
-        if parsed_condition is None:
-            continue
-        merged = condition.merged(parsed_condition)
+        if condition_text is None:
+            merged = condition
+        else:
+            parsed_condition = _parse_condition(condition_text)
+            if parsed_condition is None:
+                continue
+            merged = condition.merged(parsed_condition)
         inner = _parse_layer_sentence_ungated(body[:1].upper() + body[1:] + ".")
         if inner is not None:
-            return _Parsed(merged, _Subject("inner", lambda source: []), (), line, inner)
+            return _Parsed(merged, _Subject("inner", lambda source: []), (), full_line, inner)
         for subject_text, predicate_text in _split_subject_predicate(body):
             subject = _parse_subject(subject_text, merged)
             changes = _parse_predicate(predicate_text)
             if subject is None or changes is None:
                 continue
-            return _Parsed(subject[1], subject[0], changes, line)
+            return _Parsed(subject[1], subject[0], changes, full_line)
     return None
 
 
