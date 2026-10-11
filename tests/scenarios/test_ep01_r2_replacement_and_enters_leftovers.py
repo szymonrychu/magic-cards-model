@@ -605,3 +605,56 @@ def test_dermotaxi_becomes_a_vehicle_copy_of_the_exiled_card_until_end_of_turn()
 def test_dermotaxi_lines_are_handled():
     _handled("Dermotaxi", "Imprint")
     _handled("Dermotaxi", "Until end of turn")
+
+
+# --- Living Lore: exile an instant or sorcery as it enters ---------------------
+# (CR 607.2a, 614.12a, 608.2g)
+
+
+def _lore_board(*, graveyard):
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Living Lore"],
+            battlefield=["Island", "Island", "Island", "Island"],
+            graveyard=list(graveyard),
+        )
+        .player("bob", life=20)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    lore = scenario.cast_and_resolve("Living Lore", username="alice", auto=True)
+    return scenario, lore
+
+
+def test_living_lore_exiles_a_spell_card_and_takes_its_mana_value():
+    scenario, lore = _lore_board(graveyard=["Lightning Helix", "Grizzly Bears"])
+    exiled = scenario.game.cards_exiled_with(lore.id, None)
+    assert [c.name for c in exiled] == ["Lightning Helix"]
+    chars = scenario.game.characteristics_of(lore)
+    assert (chars.power, chars.toughness) == (2, 2)
+
+
+def test_living_lore_ignores_creature_cards_in_the_graveyard():
+    scenario, lore = _lore_board(graveyard=["Grizzly Bears"])
+    assert scenario.game.cards_exiled_with(lore.id, None) == []
+
+
+def test_living_lore_sacrifice_casts_the_exiled_card_free():
+    scenario, lore = _lore_board(graveyard=["Lightning Bolt"])
+    lore.summoning_sick = False
+    scenario.will_take_the_may(True, source="Living Lore")
+    scenario.will_choose_targets("bob", source="Lightning Bolt")
+    scenario.turn.advance_to(Step.PRECOMBAT_MAIN)
+    scenario.attack_with(lore, defending="bob")
+    scenario.no_blocks()
+    scenario.combat_damage()
+    scenario.game.put_triggers_on_stack()
+    scenario.resolve_top()
+    assert lore.zone is Zone.GRAVEYARD
+    assert "Lightning Bolt" in scenario.stack_names()
+
+
+def test_living_lore_lines_are_handled():
+    _handled("Living Lore", "Whenever this creature deals combat damage")

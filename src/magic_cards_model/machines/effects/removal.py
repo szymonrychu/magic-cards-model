@@ -4218,6 +4218,38 @@ def _parse_imprint_clause(clause: str, *, for_spell: bool) -> TargetedClause | N
     return effect
 
 
+_CAST_EXILED_CARD_FREE_RE = re.compile(
+    r"^you may cast the exiled card without paying its mana cost$", re.IGNORECASE
+)
+
+
+@MIXED_CLAUSE.rung("s26", for_spell=FORWARD)
+def _parse_cast_exiled_card_free_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
+    """ "You may cast the exiled card without paying its mana cost." (Living
+    Lore's "If you do" consequence): "the exiled card" is the card exiled with
+    this permanent as it entered (CR 607.2a), cast as the ability resolves
+    (CR 608.2g). The source may already be gone (it was sacrificed first), which
+    is fine - the link is by id."""
+    if for_spell or _CAST_EXILED_CARD_FREE_RE.fullmatch(clause.strip().rstrip(".")) is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        source_id, source_name = _permanent_id_and_name(stack_object, for_spell=False)
+        controller = game.controller_of(stack_object).username
+        for card in game.cards_exiled_with(source_id, None):
+            game.may_cast_during_resolution(
+                card,
+                controller,
+                prompt=f"cast {card.name} without paying its mana cost",
+                source=source_name,
+                source_id=source_id_of(stack_object),
+                source_name=source_name,
+                rule="CR 608.2g",
+            )
+
+    return effect
+
+
 #: Every noun `_sacrifice_restriction` accepts after "this " - a card type
 #: (CR 205.2a) or the bare word "permanent" itself. Slayer of the Wicked's
 #: "target Vampire, Werewolf, or Zombie" kind of compound restriction is not
