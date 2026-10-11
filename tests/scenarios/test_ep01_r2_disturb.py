@@ -275,6 +275,43 @@ def test_flashback_keeps_the_sorcerys_own_timing(step):
         casting.cast()
 
 
+def test_flashback_keeps_its_timing_beside_a_sorcery_timed_grant():
+    """CR 117.1a follows the option the cast actually uses. Kess, Dissident
+    Mage grants a graveyard cast of a sorcery that carries sorcery timing of
+    its own; its presence must not lend that answer to flashback (CR 702.34a),
+    which keeps Faithless Looting's own sorcery timing in beginning of combat."""
+    scenario = board(
+        {
+            "graveyard": ["Faithless Looting"],
+            "battlefield": ["Kess, Dissident Mage", *["Mountain"] * 3],
+        }
+    ).build()
+    scenario.start_at(Step.BEGINNING_OF_COMBAT)
+
+    with pytest.raises(ValueError, match="(?i)main phase"):
+        casting = scenario.cast("Faithless Looting", from_zone=Zone.GRAVEYARD)
+        casting.use_keyword("Flashback")
+        scenario.pay_with(casting.begin_paying(), *scenario.untapped_sources(*["Mountain"] * 3))
+        casting.cast()
+
+
+def test_flashback_beside_a_sorcery_timed_grant_in_the_main_phase():
+    """The positive half: in its controller's main phase, flashback casts
+    Faithless Looting from the graveyard with Kess on the battlefield."""
+    scenario = board(
+        {
+            "graveyard": ["Faithless Looting"],
+            "battlefield": ["Kess, Dissident Mage", *["Mountain"] * 3],
+        }
+    ).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    casting = scenario.cast("Faithless Looting", from_zone=Zone.GRAVEYARD)
+    casting.use_keyword("Flashback")
+    scenario.pay_with(casting.begin_paying(), *scenario.untapped_sources(*["Mountain"] * 3))
+    assert scenario.put_on_stack(casting).zone is Zone.STACK
+
+
 def test_escape_keeps_the_creatures_own_timing():
     """CR 702.138a: escape is a permission to cast from the graveyard; Uro is
     a creature spell (CR 302.1, CR 117.1a), so not in the end step."""

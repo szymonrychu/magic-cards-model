@@ -366,8 +366,14 @@ def why_cannot_cast_now(
     *,
     face: str | None = None,
     without_alternative_flash: bool = False,
+    without_keyword_timing: bool = False,
 ) -> str | None:
     """Why the timing rules refuse this cast right now, or None (CR 117.1a).
+
+    `without_keyword_timing` drops the last exemption - an option for the
+    card's zone that carries a timing of its own - so `Casting` can hold the
+    refusal until the keyword is announced and ask whether the option used is
+    that one (CR 117.1a follows the option the cast actually uses).
 
     CR 117.1a is the whole rule in two sentences: "A player may cast an instant
     spell any time they have priority. A player may cast a noninstant spell
@@ -461,12 +467,19 @@ def why_cannot_cast_now(
         return None  # Radagast of Rhosgobel's own first-creature-spell flash grant
     if not without_alternative_flash and flash_by_alternative_cost(game, spell, caster):
         return None  # Primal Prayers: flash while paying its alternative cost
-    if spell.zone is not Zone.HAND and any(
-        _keyword_option_answers_timing(option)
-        for option in [
-            *(o for o in castable_from(spell.card, spell.zone) if not o.casts_transformed),
-            *(granted.option for granted in granted_cast_options(game, spell, caster, spell.zone)),
-        ]
+    if (
+        not without_keyword_timing
+        and spell.zone is not Zone.HAND
+        and any(
+            _keyword_option_answers_timing(option)
+            for option in [
+                *(o for o in castable_from(spell.card, spell.zone) if not o.casts_transformed),
+                *(
+                    granted.option
+                    for granted in granted_cast_options(game, spell, caster, spell.zone)
+                ),
+            ]
+        )
     ):
         # Only an option carrying a timing of its own answers here - plot's
         # "only as a sorcery" (CR 702.170a), sneak's declare blockers window
@@ -474,6 +487,9 @@ def why_cannot_cast_now(
         # `KeywordCastOption.why_not` asks it. `CastTiming.ANY` is the card's
         # own timing (flashback CR 702.34a, escape CR 702.138a, disturb CR
         # 702.146a change the zone and cost, never when): CR 117.1a, above.
+        # It answers for the proposal only: `Casting` holds the strict refusal
+        # in `timing_refusals_unless_keyword_timing` and raises it at `cast()`
+        # unless the option used is one of these.
         return None
     return (
         f"{face or spell.name} is not an instant and has no flash, so {caster} can only cast "
@@ -796,6 +812,18 @@ class Casting(EngineModel):
     by nothing else. The keyword is not announced until `use_keyword`, after
     the proposal, so the refusal is held here and `cast()` raises it unless
     the keyword actually used was the one that opened the window."""
+    timing_refusals_unless_keyword_timing: dict[str, str] = Field(default_factory=dict)
+    """CR 117.1a refusals set aside at the proposal because some option for
+    the card's zone carries a timing of its own (`_keyword_option_answers_
+    timing`: plot, sneak, a pile's flash, madness, a sorcery-timed graveyard
+    grant), keyed like `face_cast_refusals`. Another option for the same card
+    - flashback beside Kess, Dissident Mage's grant - keeps the card's own
+    timing, so `cast()` raises the refusal unless the option used is one that
+    answers timing itself (`keyword_answers_timing`)."""
+    keyword_answers_timing: bool = False
+    """Whether `keyword_used`'s option decides its own timing in
+    `KeywordCastOption.why_not` - what lets `cast()` drop a held
+    `timing_refusals_unless_keyword_timing` entry."""
     extra_mana_counters: int = 0
     """The amount of mana paid as "any amount of mana" for that many +1/+1
     counters (`pay_extra_mana_for_counters`), copied onto
@@ -1168,6 +1196,31 @@ class Casting(EngineModel):
                     # (Primal Prayers): `cast()` raises `strict` unless that
                     # cost is the one this cast pays.
                     self.timing_refusals_unless_flash_grant[option or ""] = strict
+                strictest = why_cannot_cast_now(
+                    self.spell,
+                    self.caster,
+                    self.game,
+                    face=evaluated,
+                    without_alternative_flash=True,
+                    without_keyword_timing=True,
+                )
+                if strictest is not None and strict is None:
+                    # Allowed (at least) because an option with its own timing
+                    # exists: `cast()` raises `strictest` unless the option
+                    # used is such an option - or, when an alternative cost
+                    # grants flash too, unless that cost is paid.
+                    self.timing_refusals_unless_keyword_timing[option or ""] = strictest
+                    if (
+                        why_cannot_cast_now(
+                            self.spell,
+                            self.caster,
+                            self.game,
+                            face=evaluated,
+                            without_keyword_timing=True,
+                        )
+                        is None
+                    ):
+                        self.timing_refusals_unless_flash_grant[option or ""] = strictest
             if timing is not None:
                 window_refusal = self._timing_window_refusal()
                 if window_refusal is None:
@@ -2117,6 +2170,9 @@ class Casting(EngineModel):
         self.keyword_cost_paid = not option.pays_mana_cost
         self.keyword_pays_life_for_mana_value = option.pays_life_for_mana_value
         self.keyword_opens_window = option.timing is CastTiming.OWN_DECLARE_BLOCKERS
+        self.keyword_answers_timing = (
+            not option.casts_transformed and _keyword_option_answers_timing(option)
+        )
         if option.casts_transformed:
             # CR 712.11a: disturb casts the card back face up (CR 702.146a).
             self.cast_transformed()
@@ -4606,8 +4662,31 @@ class Casting(EngineModel):
         refusal = self.timing_refusals_unless_flash_grant.get(self.face or "")
         if refusal is None or self.game is None:
             return
+        if self._flash_grant_claimed():
+            return
+        if self.keyword_answers_timing and (self.face or "") in (
+            self.timing_refusals_unless_keyword_timing
+        ):
+            return
+        raise ValueError(refusal)
+
+    def _flash_grant_claimed(self) -> bool:
+        """Whether this cast pays the alternative cost that grants flash."""
+        if self.game is None:
+            return False
         sources = flash_grant_sources(self.game, self._as_announced, self.caster)
-        if self.free_cast_source in sources:
+        return self.free_cast_source in sources
+
+    def _refuse_unless_keyword_timing_claimed(self) -> None:
+        """CR 117.1a's refusal, set aside at the proposal because an option
+        with its own timing exists for the card's zone, comes back unless the
+        option this cast used is such an option (or the flash-granting
+        alternative cost lifted it too and is the one paid)."""
+        key = self.face or ""
+        refusal = self.timing_refusals_unless_keyword_timing.get(key)
+        if refusal is None or self.keyword_answers_timing:
+            return
+        if key in self.timing_refusals_unless_flash_grant and self._flash_grant_claimed():
             return
         raise ValueError(refusal)
 
@@ -4737,6 +4816,7 @@ class Casting(EngineModel):
         self._refuse_if_x_changed_since_targets()
         self._refuse_unless_allowed_from_its_zone()
         self._refuse_unless_timing_window_claimed()
+        self._refuse_unless_keyword_timing_claimed()
         self._refuse_unless_flash_grant_claimed()
 
         self._advance_to(CastingStep.CAST)
