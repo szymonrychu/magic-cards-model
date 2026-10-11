@@ -32,7 +32,6 @@ from collections.abc import Sequence
 
 from ..models.card_state import CardState
 from .combat import _parse_creature_description
-from .layers.model import grant_keyword
 from .layers import (
     AttackingGroupControlledBy,
     ContinuousEffect,
@@ -45,6 +44,7 @@ from .layers import (
     _split_and_validate_keywords,
     grant_ability,
 )
+from .layers.model import grant_keyword
 from .triggers import _parse_subtype_list
 
 #: "Attacking creatures you control have double strike[, deathtouch, ...]."

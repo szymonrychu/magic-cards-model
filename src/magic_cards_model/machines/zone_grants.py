@@ -132,8 +132,10 @@ def _keyword_line(item: str) -> str | None:
     if keyword not in ZONE_GRANTABLE_KEYWORDS and not _is_cycling(keyword):
         return None
     line = keyword.capitalize()
-    return f"{line} {match['arg'].upper()}" if match["arg"] and match["arg"][0] == "{" else (
-        f"{line} {match['arg']}" if match["arg"] else line
+    return (
+        f"{line} {match['arg'].upper()}"
+        if match["arg"] and match["arg"][0] == "{"
+        else (f"{line} {match['arg']}" if match["arg"] else line)
     )
 
 
@@ -370,7 +372,7 @@ def zone_grant_lines(game: Game | None, card: CardState) -> tuple[str, ...]:
     return tuple(line for _source, grant in _grants_for(game, card) for line in grant.lines)
 
 
-def _battlefield_granted_lines(game: "Game", card: CardState) -> tuple[str, ...]:
+def _battlefield_granted_lines(game: Game, card: CardState) -> tuple[str, ...]:
     """The keyword lines layer 6 added to a permanent beyond its printed ones
     (CR 613.1f) - what "Other Sliver creatures you control have outlast {2}"
     gives a Sliver, for the keyword readers that take a printing."""
@@ -386,7 +388,7 @@ def _battlefield_granted_lines(game: "Game", card: CardState) -> tuple[str, ...]
     return tuple(extras)
 
 
-def granted_instance_count(game: "Game", card: CardState, keyword: str) -> int:
+def granted_instance_count(game: Game, card: CardState, keyword: str) -> int:
     """How many instances of `keyword` the battlefield's group grants give
     `card` as it would enter the battlefield (CR 614.12: a permanent's
     replacement effects see the characteristics it would have there), e.g.
@@ -500,7 +502,6 @@ def group_quality_is_readable(quality: str) -> bool:
 def group_quality_matches(state: CardState, quality: str) -> bool:
     """Whether `state` (a spell) has `quality` under the group grammar, asked of
     its printed characteristics (CR 109.3)."""
-    from .layers.group_grants import group_selector
     from .layers.model import GroupMatch, printed_characteristics
 
     fields = _quality_fields(quality)

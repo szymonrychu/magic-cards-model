@@ -227,7 +227,8 @@ def test_first_slivers_chosen_gives_every_sliver_you_control_exalted():
 def test_exalted_needs_a_lone_attacker():
     scenario = combat_board(["First Sliver's Chosen", "Sliver Construct"])
     scenario.attack_with(
-        scenario.creature("Sliver Construct"), scenario.creature("First Sliver's Chosen"),
+        scenario.creature("Sliver Construct"),
+        scenario.creature("First Sliver's Chosen"),
         defending="bob",
     )
     resolve_everything(scenario)
@@ -335,7 +336,11 @@ def test_spider_punk_gives_other_spiders_riot():
     scenario = (
         Scenario()
         .manual_turn_based_actions()
-        .player("alice", hand=["Giant Spider"], battlefield=["Spider-Punk", "Forest", "Forest", "Forest", "Forest", "Forest"])
+        .player(
+            "alice",
+            hand=["Giant Spider"],
+            battlefield=["Spider-Punk", "Forest", "Forest", "Forest", "Forest", "Forest"],
+        )
         .player("bob")
         .build()
     )

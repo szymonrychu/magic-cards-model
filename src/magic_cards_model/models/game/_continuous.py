@@ -7,7 +7,6 @@ from uuid import NAMESPACE_OID, UUID, uuid5
 
 from ...data.subtypes import canonical_subtype
 from ...ids import install_id_allocator, reset_id_allocator
-from ...machines.zone_grants import apply_zone_characteristics
 from ...machines.abilities import (
     AbilityKind,
     ActivatedAbility,
@@ -70,6 +69,7 @@ from ...machines.triggers import (
     ExtraTriggerEvent,
     GameEvent,
 )
+from ...machines.zone_grants import apply_zone_characteristics
 from ...snapshot import board_snapshot, cached_board
 from ..card import (
     Card,

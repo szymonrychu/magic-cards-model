@@ -38,7 +38,6 @@ from ...machines.keyword_counters import (
     enters_with_counters_pronoun_fallback,
     has_shield_counter,
 )
-from ...machines.zone_grants import effective_card
 from ...machines.keywords import (
     apply_as_enters_day_night,
     apply_daybound_nightbound,
@@ -71,6 +70,7 @@ from ...machines.triggers import (
     GameEvent,
     triggers_for,
 )
+from ...machines.zone_grants import effective_card
 from ...snapshot import command
 from ..card import (
     Card,

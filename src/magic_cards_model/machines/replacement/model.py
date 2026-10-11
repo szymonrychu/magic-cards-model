@@ -903,7 +903,8 @@ def _absorb_expanded(lines: list[str]) -> list[str]:
         match = _ABSORB_LINE_RE.match(line.strip())
         if match is not None:
             expanded.append(
-                f"If a source would deal damage to this creature, prevent {match['n']} of that damage."
+                "If a source would deal damage to this creature, "
+                f"prevent {match['n']} of that damage."
             )
     return expanded
 
@@ -946,7 +947,9 @@ def replacements_of_state(
         + _double_all_damage_replacements(_rules_lines("\n".join(chars.abilities)))
         + _leave_exile_line_replacements(chars.abilities)
         + _damage_life_floor_replacements(_rules_lines("\n".join(chars.abilities)))
-        + damage_static_replacements(card, _absorb_expanded(_rules_lines("\n".join(chars.abilities))))
+        + damage_static_replacements(
+            card, _absorb_expanded(_rules_lines("\n".join(chars.abilities)))
+        )
         + _granted_line_replacements(card, permanent.granted_ability_texts)
     )
     if "Class" not in chars.subtypes:

@@ -19,7 +19,6 @@ from ...models.card_state import (
 from ...models.mana import ManaCost, ManaSpend
 from ...models.zone import Zone
 from ...numbers import VariableX, parse_amount, parse_count
-from ..zone_grants import effective_card
 from ...phrases import with_indefinite_article
 from ...snapshot import EngineModel
 from ..abilities import (
@@ -89,6 +88,7 @@ from ..targeting import (
 from ..teamwork import teamwork_ability, teamwork_instead_target_text, teamwork_payment_refusal
 from ..triggers import ExtraTriggerEvent, GameEvent
 from ..turn import Step
+from ..zone_grants import effective_card
 from .granted_life_costs import GrantedLifeCost, granted_life_costs
 from .options import AlternativeCostOption, KeywordCastOption
 from .permissions import GrantedCastOption, PlayPermission

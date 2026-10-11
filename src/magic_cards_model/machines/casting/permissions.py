@@ -2242,7 +2242,10 @@ def _grant_on_a_card_in_a_zone(
         return None
     if not _spell_matches_grant_filter(spell, match.group("what") or match.group("whats")):
         return None
-    if match.group("ncolors") and len(spell.colors) != _EXACT_COLOR_COUNT_WORDS[match.group("ncolors")]:
+    if (
+        match.group("ncolors")
+        and len(spell.colors) != _EXACT_COLOR_COUNT_WORDS[match.group("ncolors")]
+    ):
         return None
     keyword = match.group("keyword")
     printed = match.group("cost").strip() or None

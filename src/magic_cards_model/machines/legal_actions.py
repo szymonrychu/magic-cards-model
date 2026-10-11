@@ -1359,7 +1359,10 @@ def _marked_exile_actions(
 
 
 def _dredge_action(game: Any, player: str, card: CardState) -> Action | None:
-    if dredge_count(effective_card(game, card)) is None or why_cannot_dredge(game, card, player) is not None:
+    if (
+        dredge_count(effective_card(game, card)) is None
+        or why_cannot_dredge(game, card, player) is not None
+    ):
         return None
     return Action(
         kind=ActionKind.DREDGE,

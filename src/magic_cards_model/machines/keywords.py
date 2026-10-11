@@ -107,7 +107,6 @@ from .objects_as_costs import (
     total_power,
 )
 from .soulbond import soulbond_effect
-from .zone_grants import effective_card
 from .triggers import (
     AbilityOnStack,
     ExtraTriggerEvent,
@@ -116,6 +115,7 @@ from .triggers import (
     triggers_for,
 )
 from .turn import DayNight
+from .zone_grants import effective_card
 
 
 class KeywordRule(StrEnum):

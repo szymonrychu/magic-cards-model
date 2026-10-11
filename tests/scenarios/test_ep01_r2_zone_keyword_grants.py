@@ -132,7 +132,9 @@ def test_tectonic_reformation_gives_a_land_card_in_hand_cycling():
     activation.resolve()
 
     assert forest.zone is Zone.GRAVEYARD
-    assert [state.name for state in scenario.player("alice").cards_in(Zone.HAND)].count("Island") == 1
+    assert [state.name for state in scenario.player("alice").cards_in(Zone.HAND)].count(
+        "Island"
+    ) == 1
 
 
 def test_homing_sliver_reaches_each_players_hand():
@@ -170,7 +172,14 @@ def test_the_necrobloom_gives_land_cards_in_the_graveyard_dredge_two():
 def test_satoru_umezawa_gives_creature_cards_in_hand_ninjutsu():
     scenario = build(
         {
-            "battlefield": ["Satoru Umezawa", "Grizzly Bears", "Island", "Swamp", "Island", "Swamp"],
+            "battlefield": [
+                "Satoru Umezawa",
+                "Grizzly Bears",
+                "Island",
+                "Swamp",
+                "Island",
+                "Swamp",
+            ],
             "hand": ["Llanowar Elves"],
         },
         {},

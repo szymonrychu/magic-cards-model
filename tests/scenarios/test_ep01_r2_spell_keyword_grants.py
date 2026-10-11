@@ -49,13 +49,19 @@ def hit_bob_with(scenario, *attackers):
 
 
 def test_ezio_gives_assassin_spells_freerunning_once_an_assassin_connected():
-    scenario = board(["Ezio Auditore da Firenze", "Swamp", "Swamp", "Mountain"], hand=["Ezio Auditore da Firenze"])
+    scenario = board(
+        ["Ezio Auditore da Firenze", "Swamp", "Swamp", "Mountain"],
+        hand=["Ezio Auditore da Firenze"],
+    )
     ezio = scenario.creature("Ezio Auditore da Firenze")
     second = scenario.find("Ezio Auditore da Firenze", Zone.HAND, "alice")
     scenario.start_at(Step.PRECOMBAT_MAIN)
     with pytest.raises(ValueError, match="(?i)freerunning"):
         scenario.game.cast(
-            second, "alice", keyword="freerunning", mana_sources=scenario.untapped_sources("Swamp", "Mountain")
+            second,
+            "alice",
+            keyword="freerunning",
+            mana_sources=scenario.untapped_sources("Swamp", "Mountain"),
         )
 
     hit_bob_with(scenario, ezio)
@@ -68,7 +74,8 @@ def test_ezio_gives_assassin_spells_freerunning_once_an_assassin_connected():
 
 def test_freerunning_is_only_for_assassin_spells():
     scenario = board(
-        ["Ezio Auditore da Firenze", "Swamp", "Swamp", "Mountain"], hand=["Kalain, Reclusive Painter"]
+        ["Ezio Auditore da Firenze", "Swamp", "Swamp", "Mountain"],
+        hand=["Kalain, Reclusive Painter"],
     )
     ezio = scenario.creature("Ezio Auditore da Firenze")
     kalain = scenario.find("Kalain, Reclusive Painter", Zone.HAND, "alice")
@@ -76,7 +83,10 @@ def test_freerunning_is_only_for_assassin_spells():
 
     with pytest.raises(ValueError):
         scenario.game.cast(
-            kalain, "alice", keyword="freerunning", mana_sources=scenario.untapped_sources("Swamp", "Swamp")
+            kalain,
+            "alice",
+            keyword="freerunning",
+            mana_sources=scenario.untapped_sources("Swamp", "Swamp"),
         )
 
 
@@ -91,13 +101,17 @@ def test_freerunning_needs_an_assassin_that_connected_not_just_any_attacker():
 
     with pytest.raises(ValueError, match="(?i)freerunning"):
         scenario.game.cast(
-            second, "alice", keyword="freerunning", mana_sources=scenario.untapped_sources("Swamp", "Swamp")
+            second,
+            "alice",
+            keyword="freerunning",
+            mana_sources=scenario.untapped_sources("Swamp", "Swamp"),
         )
 
 
 def test_freerunning_grant_ends_when_ezio_leaves():
     scenario = board(
-        ["Ezio Auditore da Firenze", "Swamp", "Swamp", "Mountain"], hand=["Ezio Auditore da Firenze"]
+        ["Ezio Auditore da Firenze", "Swamp", "Swamp", "Mountain"],
+        hand=["Ezio Auditore da Firenze"],
     )
     ezio = scenario.creature("Ezio Auditore da Firenze")
     hit_bob_with(scenario, ezio)
@@ -106,7 +120,10 @@ def test_freerunning_grant_ends_when_ezio_leaves():
 
     with pytest.raises(ValueError):
         scenario.game.cast(
-            second, "alice", keyword="freerunning", mana_sources=scenario.untapped_sources("Swamp", "Swamp")
+            second,
+            "alice",
+            keyword="freerunning",
+            mana_sources=scenario.untapped_sources("Swamp", "Swamp"),
         )
 
 
@@ -193,7 +210,9 @@ def test_the_affinity_grant_ends_with_the_golem():
 
 
 def test_cast_through_time_gives_instants_rebound():
-    scenario = board(["Cast Through Time", "Mountain"], bob=["Grizzly Bears"], hand=["Lightning Bolt"])
+    scenario = board(
+        ["Cast Through Time", "Mountain"], bob=["Grizzly Bears"], hand=["Lightning Bolt"]
+    )
     scenario.start_at(Step.PRECOMBAT_MAIN)
     (mountain,) = scenario.untapped_sources("Mountain")
 
@@ -252,7 +271,9 @@ def test_thrumming_stone_ripples_a_spell_with_the_same_name_for_free():
     assert names.count("Lightning Bolt") == 2, "the cast one and the rippled one"
     assert scenario.player("bob").life == 14
     library = [state.name for state in scenario.player("alice").library]
-    assert library == ["Swamp", "Island", "Island", "Island"], "revealed and uncast go to the bottom"
+    assert library == ["Swamp", "Island", "Island", "Island"], (
+        "revealed and uncast go to the bottom"
+    )
 
 
 def test_ripple_with_no_same_name_card_just_bottoms_the_revealed_cards():
