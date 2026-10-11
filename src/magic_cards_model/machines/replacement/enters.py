@@ -130,7 +130,8 @@ NOT_ESCAPED_CONDITION = "this permanent didn't escape"
 #: read off the spell's cast record as the permanent enters (`_kicked_count`).
 _TIMES_KICKED_RE = re.compile(r"^times? it was kicked$", re.IGNORECASE)
 _ENTERS_AS_COPY = re.compile(
-    rf"^(?:If (?P<condition>[^,]+?),\s*)?(?:You may have\s+)?(?P<subject>.+?) (?:{_ENTERS}|enter)(?P<tapped> tapped)?"
+    r"^(?:If (?P<condition>[^,]+?),\s*)?(?:You may have\s+)?"
+    rf"(?P<subject>.+?) (?:{_ENTERS}|enter)(?P<tapped> tapped)?"
     r" as a copy of (?P<copy_of>.+?)(?:,\s*except\s+(?P<exception>.+?))?\.?$",
     re.IGNORECASE,
 )
@@ -206,9 +207,7 @@ def _try_enters_as_copy(sentence: str, names: tuple[str, ...]) -> list[Replaceme
             copy_exception=parsed_exception,
             copy_exception_unparsed=unparsed_exception,
             tapped=bool(match.group("tapped")),
-            optional=bool(
-                re.match(r"^(?:if [^,]+?,\s*)?you may have\b", sentence, re.IGNORECASE)
-            ),
+            optional=bool(re.match(r"^(?:if [^,]+?,\s*)?you may have\b", sentence, re.IGNORECASE)),
             condition=(match.group("condition") or "").strip() or None,
             self_replacement=_refers_to_self(subject, names),
         )

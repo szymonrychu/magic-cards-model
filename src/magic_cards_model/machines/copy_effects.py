@@ -754,7 +754,9 @@ def _parse_each_becomes_a_copy_clause(
             # just entered attached to (CR 303.4).
             source = stack_object.source_or_last_known(game) if is_ability else None
             host = game.find_by_id(source.attached_to) if source is not None else None
-            targets = [host] if isinstance(host, CardState) and host.zone is Zone.BATTLEFIELD else []
+            targets = (
+                [host] if isinstance(host, CardState) and host.zone is Zone.BATTLEFIELD else []
+            )
         else:
             targets = game.resolve_card_targets(stack_object)
         if not targets:

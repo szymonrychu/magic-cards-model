@@ -19,9 +19,7 @@ from .model import (
     ReplacementKind,
 )
 
-_EVENT_RE = re.compile(
-    r"^a spell or ability you control would counter a spell$", re.IGNORECASE
-)
+_EVENT_RE = re.compile(r"^a spell or ability you control would counter a spell$", re.IGNORECASE)
 _REPLACEMENT_RE = re.compile(
     r"^exile that spell and you may play that card without paying its mana cost$",
     re.IGNORECASE,

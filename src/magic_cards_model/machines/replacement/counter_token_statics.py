@@ -139,7 +139,8 @@ _TOKEN_EVENT_RE = re.compile(
     re.IGNORECASE,
 )
 _PLUS_TOKEN_RE = re.compile(
-    r"^(?:create )?those tokens plus an? (?:additional )?(?P<name>[A-Za-z]+) token(?: are created)?$",
+    r"^(?:create )?those tokens plus an? (?:additional )?(?P<name>[A-Za-z]+) token"
+    r"(?: are created)?$",
     re.IGNORECASE,
 )
 _ONE_OF_EACH_RE = re.compile(r"^create one of each$", re.IGNORECASE)

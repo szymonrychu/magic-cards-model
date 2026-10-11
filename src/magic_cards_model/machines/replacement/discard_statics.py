@@ -64,14 +64,14 @@ def _compile_discard_replacement(effect: ReplacementEffect) -> CardReplacement |
         if match is None or event_text != "putting it into your graveyard":
             return None
         counters = (
-            {match.group("kind"): _NUMBERS[match.group("n").lower()]}
-            if match.group("n")
-            else {}
+            {match.group("kind"): _NUMBERS[match.group("n").lower()]} if match.group("n") else {}
         )
 
         def applies(game, source: CardState, event: ReplaceableEvent) -> bool:
-            return event.card is not None and event.card.id == source.id and _caused_by_opponent(
-                game, event.card.owner or "", event
+            return (
+                event.card is not None
+                and event.card.id == source.id
+                and _caused_by_opponent(game, event.card.owner or "", event)
             )
 
         def apply(game, source: CardState, event: ReplaceableEvent) -> None:
