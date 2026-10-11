@@ -214,3 +214,57 @@ def test_without_the_grant_the_instant_goes_to_the_graveyard():
     )
 
     assert bolt.zone is Zone.GRAVEYARD
+
+
+# -- ripple (CR 702.60a) ------------------------------------------------------
+
+
+def ripple_board(library):
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player(
+            "alice",
+            battlefield=["Thrumming Stone", "Mountain"],
+            hand=["Lightning Bolt"],
+            library=library,
+        )
+        .player("bob", library=["Island"] * 4)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    return scenario
+
+
+def test_thrumming_stone_ripples_a_spell_with_the_same_name_for_free():
+    scenario = ripple_board(["Lightning Bolt", "Island", "Island", "Island", "Swamp"])
+    scenario.will_choose_targets("bob", source="Lightning Bolt", times=None)
+    (mountain,) = scenario.untapped_sources("Mountain")
+    casting = scenario.cast("Lightning Bolt")
+    casting.choose_targets(["bob"])
+    scenario.pay_with(casting.begin_paying(), mountain)
+    scenario.put_on_stack(casting)
+    while not scenario.game.stack_is_empty:
+        scenario.game.put_triggers_on_stack()
+        scenario.resolve_top()
+
+    names = [state.name for state in scenario.player("alice").graveyard]
+    assert names.count("Lightning Bolt") == 2, "the cast one and the rippled one"
+    assert scenario.player("bob").life == 14
+    library = [state.name for state in scenario.player("alice").library]
+    assert library == ["Swamp", "Island", "Island", "Island"], "revealed and uncast go to the bottom"
+
+
+def test_ripple_with_no_same_name_card_just_bottoms_the_revealed_cards():
+    scenario = ripple_board(["Island", "Swamp", "Island", "Island", "Forest"])
+    (mountain,) = scenario.untapped_sources("Mountain")
+    casting = scenario.cast("Lightning Bolt")
+    casting.choose_targets(["bob"])
+    scenario.pay_with(casting.begin_paying(), mountain)
+    scenario.put_on_stack(casting)
+    while not scenario.game.stack_is_empty:
+        scenario.game.put_triggers_on_stack()
+        scenario.resolve_top()
+
+    assert [state.name for state in scenario.player("alice").graveyard] == ["Lightning Bolt"]
+    assert [state.name for state in scenario.player("alice").library][0] == "Forest"

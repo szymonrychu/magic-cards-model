@@ -623,6 +623,29 @@ def _cascade_ability(ability: KeywordAbility) -> TriggeredAbility:
     )
 
 
+def _ripple_ability(ability: KeywordAbility) -> TriggeredAbility:
+    """CR 702.60a: "Ripple N" means "When you cast this spell, you may reveal
+    the top N cards of your library, or, if there are fewer than N cards in
+    your library, you may reveal all the cards in your library. If you reveal
+    cards from your library this way, you may cast any of those cards with the
+    same name as this spell without paying their mana costs, then put all
+    revealed cards not cast this way on the bottom of your library in any
+    order." CR 702.60b: each instance triggers separately."""
+    count = ability.count if ability.count is not None else 1
+    return _expansion(
+        ability,
+        keyword="ripple",
+        word=TriggerWord.WHEN,
+        condition="you cast this spell",
+        effect=(
+            f"you may reveal the top {count} cards of your library. You may cast any of "
+            "those cards with the same name as this spell without paying their mana costs. "
+            "Put all revealed cards not cast this way on the bottom of your library in any order"
+        ),
+        event=TriggerEvent.CAST_SPELL,
+    )
+
+
 def _storm_ability(ability: KeywordAbility) -> TriggeredAbility:
     """CR 702.40a: "Storm" means "When you cast this spell, copy it for each
     other spell that was cast before it this turn. If the spell has any
@@ -1757,6 +1780,7 @@ _TRIGGER_EXPANSIONS: dict[str, Callable[[KeywordAbility], list[TriggeredAbility]
     "ward": _single(_ward_ability),
     "prowess": _single(_prowess_ability),
     "cascade": _single(_cascade_ability),
+    "ripple": _single(_ripple_ability),
     "storm": _single(_storm_ability),
     "replicate": _single(_replicate_ability),
     "persist": _single(_persist_ability),
@@ -6281,6 +6305,65 @@ def _cascade_effect(game: Any, ability: AbilityOnStack) -> CascadeResult | None:
     return cascade(game, source)
 
 
+_RIPPLE_COUNT_RE = re.compile(r"ripple\s+(?P<n>\d+)", re.IGNORECASE)
+
+
+def ripple(game: Any, spell: CardState, count: int) -> list[CardState]:
+    """CR 702.60a's resolution: reveal the top `count` cards of the caster's
+    library (all of it when it is shorter), offer a free cast of each revealed
+    card sharing `spell`'s name during this resolution (CR 608.2g), then put
+    every revealed card not cast on the bottom of the library, in the order they
+    were revealed (the "any order" is the caster's, and the engine keeps the
+    revealed order)."""
+    with game._id_allocator_scope():  # noqa: SLF001
+        controller = spell.controller or game.active_player.username
+        owner = game.player(controller)
+        revealed = list(owner.library[:count])
+        if not revealed:
+            return []
+        for state in revealed:
+            game.reveal(state, source=spell.name)
+        cast: list[CardState] = []
+        for state in revealed:
+            if state.name != spell.name:
+                continue
+            castable = game.can_cast_during_resolution(state, controller)
+            decision = Decision(
+                kind=DecisionKind.MAY,
+                player=controller,
+                prompt=f"cast {state.name} without paying its mana cost (ripple)",
+                source=spell.name,
+                source_id=source_id_of(spell),
+                affirmative_is_legal=castable,
+            )
+            if game.ask(decision) and (
+                game.cast_during_resolution(
+                    state,
+                    controller,
+                    source_name=f"{spell.name}'s ripple",
+                    rule="CR 702.60a",
+                )
+                is not None
+            ):
+                cast.append(state)
+        for state in revealed:
+            if state in cast:
+                continue
+            owner.cards_in(Zone.LIBRARY).remove(state)
+            owner.add(state, Zone.LIBRARY)  # the bottom of the library
+        return cast
+
+
+def _ripple_effect(game: Any, ability: AbilityOnStack) -> list[CardState]:
+    """CR 702.60a: the trigger sits above the spell that caused it (CR 603.3b),
+    so `ability.source` is still that spell on the stack."""
+    source = ability.source(game)
+    match = _RIPPLE_COUNT_RE.search(ability.ability.raw or "")
+    if source is None or match is None:
+        return []
+    return ripple(game, source, int(match["n"]))
+
+
 def _storm_effect(game: Any, ability: AbilityOnStack) -> list[CardState]:
     """CR 702.40a's copy half.
 
@@ -6933,6 +7016,7 @@ KEYWORD_TRIGGER_EFFECTS: dict[str, Callable[[Any, AbilityOnStack], Any]] = {
     "undying": _undying_effect,
     "modular": _modular_effect,
     "cascade": _cascade_effect,
+    "ripple": _ripple_effect,
     "storm": _storm_effect,
     "replicate": _replicate_effect,
     "casualty": _casualty_effect,
