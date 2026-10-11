@@ -223,3 +223,179 @@ def test_puresteel_paladin_free_equip_actually_attaches():
     activation.activate()
     scenario.resolve_top()
     assert scenario.game.characteristics_of(paladin).power_toughness == (4, 2)
+
+
+# -- Supernatural Rescue: "This spell has flash as long as you control a Spirit." ------
+
+
+def _rescue(alice_board, *, step=Step.DECLARE_ATTACKERS):
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player(
+            "alice",
+            hand=["Supernatural Rescue"],
+            battlefield=["Plains", "Plains", "Plains", "Plains", *alice_board],
+        )
+        .player("bob", battlefield=["Grizzly Bears"])
+        .build()
+    )
+    scenario.start_at(step)
+    return scenario
+
+
+def test_supernatural_rescue_has_flash_while_you_control_a_spirit():
+    scenario = _rescue(["Enemy of the Guildpact"])
+    spirit = scenario.find("Enemy of the Guildpact", Zone.BATTLEFIELD, "alice")
+    plains = scenario.untapped_sources("Plains", "Plains", "Plains", "Plains")
+    rescue = scenario.cast_onto_stack("Supernatural Rescue", *plains, targets=[spirit])
+    assert rescue.zone is Zone.STACK
+
+
+def test_supernatural_rescue_without_a_spirit_is_sorcery_speed():
+    scenario = _rescue(["Grizzly Bears"])
+    bears = scenario.find("Grizzly Bears", Zone.BATTLEFIELD, "alice")
+    with pytest.raises(ValueError, match="only cast it during their own main phase"):
+        scenario.cast("Supernatural Rescue", targets=[bears])
+
+
+def test_supernatural_rescue_is_castable_in_a_main_phase_without_a_spirit():
+    scenario = _rescue(["Grizzly Bears"], step=Step.PRECOMBAT_MAIN)
+    bears = scenario.find("Grizzly Bears", Zone.BATTLEFIELD, "alice")
+    plains = scenario.untapped_sources("Plains", "Plains", "Plains", "Plains")
+    assert scenario.cast_onto_stack(
+        "Supernatural Rescue", *plains, targets=[bears]
+    ).zone is Zone.STACK
+
+
+def test_a_spirit_the_opponent_controls_grants_no_flash():
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player(
+            "alice",
+            hand=["Supernatural Rescue"],
+            battlefield=["Plains", "Plains", "Plains", "Plains", "Grizzly Bears"],
+        )
+        .player("bob", battlefield=["Enemy of the Guildpact"])
+        .build()
+    )
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    bears = scenario.find("Grizzly Bears", Zone.BATTLEFIELD, "alice")
+    with pytest.raises(ValueError, match="only cast it during their own main phase"):
+        scenario.cast("Supernatural Rescue", targets=[bears])
+
+
+def test_supernatural_rescue_loses_flash_once_the_spirit_leaves():
+    scenario = _rescue(["Enemy of the Guildpact", "Grizzly Bears"])
+    scenario.game.destroy(scenario.find("Enemy of the Guildpact", Zone.BATTLEFIELD, "alice"))
+    bears = scenario.find("Grizzly Bears", Zone.BATTLEFIELD, "alice")
+    with pytest.raises(ValueError, match="only cast it during their own main phase"):
+        scenario.cast("Supernatural Rescue", targets=[bears])
+
+
+# -- Bloodbraid Marauder: "Delirium - This spell has cascade as long as ..." -----------
+
+FOUR_TYPES = ["Island", "Lightning Bolt", "Grizzly Bears", "Sol Ring"]
+
+
+def _marauder(graveyard, library=("Mountain", "Opt", "Island")):
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player(
+            "alice",
+            hand=["Bloodbraid Marauder"],
+            graveyard=list(graveyard),
+            library=list(library),
+            battlefield=["Mountain", "Mountain"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    return scenario
+
+
+def test_marauder_cascades_with_four_card_types_in_the_graveyard():
+    scenario = _marauder(FOUR_TYPES)
+    scenario.will_take_the_may(True, source="Bloodbraid Marauder")
+    scenario.cast_onto_stack("Bloodbraid Marauder", *scenario.untapped_sources("Mountain", "Mountain"))
+    assert len(scenario.game.stack) == 2, "the spell and its cascade trigger"
+    scenario.resolve_top()
+    assert scenario.find("Opt", Zone.STACK).zone is Zone.STACK, "the cascade hit was cast"
+
+
+def test_marauder_does_not_cascade_with_only_three_card_types():
+    scenario = _marauder(FOUR_TYPES[:3])
+    scenario.cast_onto_stack("Bloodbraid Marauder", *scenario.untapped_sources("Mountain", "Mountain"))
+    assert len(scenario.game.stack) == 1
+
+
+def test_marauder_counts_types_not_cards():
+    scenario = _marauder(["Island", "Island", "Island", "Island", "Lightning Bolt"])
+    scenario.cast_onto_stack("Bloodbraid Marauder", *scenario.untapped_sources("Mountain", "Mountain"))
+    assert len(scenario.game.stack) == 1
+
+
+# -- Forge Anew: "During your turn, you may activate equip abilities any time you ------
+# could cast an instant." (CR 702.6a's sorcery timing, lifted on its controller's turn)
+
+
+def _forge(forge_player="alice", step=Step.DECLARE_ATTACKERS):
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player(
+            "alice",
+            battlefield=["Bonesplitter", "Grizzly Bears", "Plains", *(["Forge Anew"] if forge_player == "alice" else [])],
+        )
+        .player("bob", battlefield=["Forest"] + (["Forge Anew"] if forge_player == "bob" else []))
+        .build()
+    )
+    scenario.start_at(step)
+    return scenario
+
+
+def _equip_refusal(scenario):
+    activation = equip_activation(
+        scenario.game,
+        scenario.find("Bonesplitter", Zone.BATTLEFIELD, "alice"),
+        scenario.find("Grizzly Bears", Zone.BATTLEFIELD, "alice"),
+        "alice",
+    )
+    return activation.why_not()
+
+
+def test_forge_anew_lets_its_controller_equip_outside_a_main_phase_on_their_turn():
+    scenario = _forge()
+    assert _equip_refusal(scenario) is None
+
+
+def test_forge_anew_equip_at_instant_speed_resolves():
+    scenario = _forge()
+    bonesplitter = scenario.find("Bonesplitter", Zone.BATTLEFIELD, "alice")
+    bears = scenario.find("Grizzly Bears", Zone.BATTLEFIELD, "alice")
+    activation = equip_activation(scenario.game, bonesplitter, bears, "alice")
+    activation.begin_paying().pay()
+    activation.activate()
+    scenario.resolve_top()
+    assert scenario.game.characteristics_of(bears).power_toughness == (4, 2)
+
+
+def test_without_forge_anew_equip_is_still_sorcery_speed():
+    scenario = _forge(forge_player="nobody")
+    assert "sorcery" in (_equip_refusal(scenario) or "")
+
+
+def test_an_opponents_forge_anew_does_not_unlock_my_equip():
+    scenario = _forge(forge_player="bob")
+    assert "sorcery" in (_equip_refusal(scenario) or "")
+
+
+def test_forge_anew_only_applies_during_its_controllers_own_turn():
+    scenario = _forge()
+    _next_turn(scenario)
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    assert scenario.game.active_player.username == "bob"
+    assert "sorcery" in (_equip_refusal(scenario) or "")

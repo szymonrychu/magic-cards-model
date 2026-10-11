@@ -2168,6 +2168,7 @@ class KeywordActivation(EngineModel):
             self.sorcery_only
             and self.game is not None
             and not self.game.can_cast_sorcery(self.player)
+            and not (self.keyword == "Equip" and equip_at_instant_speed(self.game, self.player))
         ):
             # CR 307.5: "only as a sorcery" means priority, own main phase,
             # empty stack - and nothing about actually casting a sorcery.
@@ -3100,6 +3101,39 @@ def is_free_first_equip_line(line: str) -> bool:
     """Whether a static line is `_FREE_FIRST_EQUIP_RE`'s permission, gated or
     not - what `support.py` counts handled."""
     return _free_first_equip_match(line) is not None
+
+
+#: "During your turn, you may activate equip abilities any time you could cast
+#: an instant." (Forge Anew): CR 702.6a's "Activate only as a sorcery" lifted by
+#: a static ability (CR 604.2), the permission itself gated on whose turn it is.
+_INSTANT_SPEED_EQUIP_RE = re.compile(
+    r"^(?P<your_turn>during your turn, )?you may activate equip abilities any time you could "
+    r"cast an instant\.?$",
+    re.IGNORECASE,
+)
+
+
+def is_instant_speed_equip_line(line: str) -> bool:
+    """Whether a static line is `_INSTANT_SPEED_EQUIP_RE`'s permission - what the
+    static audit counts handled."""
+    return _INSTANT_SPEED_EQUIP_RE.fullmatch(line.strip()) is not None
+
+
+def equip_at_instant_speed(game: Any, player: str) -> bool:
+    """Whether a static ability `player` controls lets them activate equip
+    abilities whenever they could cast an instant right now. Read off the
+    computed board (CR 613.5), so a permanent that lost the ability grants
+    nothing, and re-read at every question (CR 611.3a)."""
+    board = game.computed_board()
+    for permanent in game.permanents_controlled_by(player):
+        for line in board.of(permanent).abilities:
+            match = _INSTANT_SPEED_EQUIP_RE.fullmatch(line.strip())
+            if match is None:
+                continue
+            if match["your_turn"] and (game.turn is None or game.turn.active_player != player):
+                continue
+            return True
+    return False
 
 
 def free_first_equip_source(game: Any, player: str) -> CardState | None:

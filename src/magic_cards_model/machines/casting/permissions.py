@@ -2970,6 +2970,13 @@ _CONDITIONAL_FLASH_RES = (
         r"mana cost and as though it had flash\.?$",
         re.IGNORECASE,
     ),
+    # Supernatural Rescue: "This spell has flash as long as you control a
+    # Spirit." - the grant worded as the spell's own static ability (CR 604.2,
+    # CR 702.8a), so the same cast-time condition read as the others above.
+    re.compile(
+        r"^this (?:spell|creature) has flash as long as (?P<condition>[^.]+)\.?$",
+        re.IGNORECASE,
+    ),
 )
 _CONDITIONAL_FREE_CAST_AND_FLASH_RE = _CONDITIONAL_FLASH_RES[2]
 
