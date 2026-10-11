@@ -3511,7 +3511,11 @@ def attack_requirement_holders(game: "Game", player: str) -> list[CardState]:
     for creature in game.permanents_controlled_by(player):
         if not board.of(creature).is_creature:
             continue
-        if creature.goaded_by or _own_attack_requirement_count(game, creature):
+        if (
+            creature.goaded_by
+            or _own_attack_requirement_count(game, creature)
+            or forced_defender_requirements(game, creature)
+        ):
             holders.append(creature)
     return holders
 
@@ -3540,6 +3544,11 @@ def attack_requirements_obeyed(
     )
     if defender.is_player:
         obeyed += sum(1 for goader in goaders if goader != defender.username)
+        obeyed += sum(
+            1
+            for required in forced_defender_requirements(game, creature)
+            if required == defender.username
+        )
     return obeyed
 
 
@@ -3573,9 +3582,10 @@ def most_obedient_attack(game: "Game", creature: CardState) -> tuple[TargetRef |
 @dataclass(frozen=True)
 class UnobeyedAttackRequirement:
     """A creature whose requirements a declaration obeys fewer of than it
-    could, and the reason, naming each requirement (CR 508.1d)."""
+    could (or, for a requirement on the declaration as a whole, no single
+    creature), and the reason, naming each requirement (CR 508.1d)."""
 
-    creature: CardState
+    creature: CardState | None
     reason: str
 
 
@@ -3586,6 +3596,10 @@ def _requirement_wording(game: "Game", creature: CardState) -> str:
         parts.append("attacks each combat if able")
     if any(requirements):
         parts.append("attacks a player each combat if able")
+    parts.extend(
+        f"attacks {player} each combat if able"
+        for player in forced_defender_requirements(game, creature)
+    )
     for goader in creature.goaded_by:
         parts.append(
             f"is goaded by {goader} (CR 701.15b: it attacks each combat if able and "
@@ -3642,6 +3656,9 @@ def unobeyed_attack_requirement(
                 f"{_defender_wording(game, best_defender)} would obey {best}"
             )
         return UnobeyedAttackRequirement(creature, reason)
+    collective = collective_requirement_violation(game, declared)
+    if collective is not None:
+        return UnobeyedAttackRequirement(None, collective)
     return None
 
 
@@ -3820,3 +3837,9 @@ def required_block_declaration(game: "Game", username: str) -> list[tuple[UUID, 
     pairs.extend(required_lure_declaration(game, username, declared))
     pairs.extend(required_exact_declaration(game, username, declared))
     return pairs
+
+
+from .defender_attack_requirements import (  # noqa: E402
+    collective_requirement_violation,
+    forced_defender_requirements,
+)

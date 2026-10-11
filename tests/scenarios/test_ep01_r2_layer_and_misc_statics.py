@@ -21,9 +21,7 @@ def _board(alice=(), *, bob=(), hand=(), bob_hand=()):
     scenario = (
         Scenario()
         .manual_turn_based_actions()
-        .player(
-            "alice", battlefield=list(alice), hand=list(hand), library=["Plains"] * 8
-        )
+        .player("alice", battlefield=list(alice), hand=list(hand), library=["Plains"] * 8)
         .player("bob", battlefield=list(bob), hand=list(bob_hand), library=["Plains"] * 8)
         .build()
     )
@@ -43,7 +41,9 @@ def test_domineer_gives_me_control_of_the_enchanted_artifact_creature():
 
 
 def test_control_returns_when_domineer_leaves_the_battlefield():
-    scenario = _board(["Domineer", "Forest", "Forest"], bob=["Wurmcoil Engine"], hand=["Nature's Claim"])
+    scenario = _board(
+        ["Domineer", "Forest", "Forest"], bob=["Wurmcoil Engine"], hand=["Nature's Claim"]
+    )
     wurm = scenario.creature("Wurmcoil Engine", "bob")
     domineer = scenario.find("Domineer", Zone.BATTLEFIELD, "alice")
     domineer.attach_to(wurm)
@@ -77,7 +77,10 @@ def _aeve_with_a_storm_copy():
         *scenario.untapped_sources("Forest"),
         targets=[scenario.creature("Grizzly Bears", "alice")],
     )
-    scenario.cast_onto_stack("Aeve, Progenitor Ooze", *scenario.untapped_sources("Forest", "Forest", "Forest", "Forest", "Forest"))
+    scenario.cast_onto_stack(
+        "Aeve, Progenitor Ooze",
+        *scenario.untapped_sources("Forest", "Forest", "Forest", "Forest", "Forest"),
+    )
     while scenario.game.stack or scenario.pending_triggers:
         scenario.pass_until_resolved()
     aeves = [
