@@ -7885,3 +7885,12 @@ Read by `machines/block_statics.py` off every battlefield permanent's computed a
 | "While you're searching your library, you may cast this card from your library." (CR 701.23a, 601.3): offered as a search starts, mana cost paid | `casting/permissions.py:search_cast_candidates`, `Game._offer_casts_while_searching` | Panglacial Wurm | `scenarios/test_ep01_r1_static_cast_permissions.py` |
 | "You can't spend mana to cast this spell." (CR 601.2h): `ManaSpend.no_mana` empties the spendable pool; convoke/delve still pay, and a hybrid symbol takes a creature of either colour (CR 107.4e) | `models/mana.py:reads_cant_spend_mana_line`, `cost/components.py:cost_less` | Hogaak, Arisen Necropolis | `scenarios/test_ep01_r1_static_cast_permissions.py` |
 | "Whenever this creature deals damage to an opponent, flip it." (CR 710.2, CR 710.4) | `effects/damage._parse_flip_self_clause` (ABILITY_TEXT) -> `CardState.flip` | Akki Lavarunner // Tok-Tok, Volcano Born (with its static +1 from red sources, CR 614.1a); Inquisitor's Flail (double combat damage dealt by / to the equipped creature) | `scenarios/test_ep01_r1_damage_double_half_plus.py` |
+
+## R0c-T4: triome lands, enters-or-dies mill, Treasure flashback sorcery, search-or-fight modal
+
+| Mechanic | Where | Cards | Proof |
+|---|---|---|---|
+| Triome: three basic land types, three-colour mana ability read as removed-by-layer-6 when printed "{G}, {W}, or {U}" (list spelling now compared alike), "This land enters tapped." (CR 614.1c), Cycling {3} (CR 702.29a) | `models/game/_activation.py:_still_has_ability` | Spara's Headquarters, Zagoth Triome | `scenarios/test_triome_land_cycling.py` |
+| "When this creature enters or dies, mill three cards." (CR 701.17a, 701.17b) | existing mill reader | Stitcher's Supplier | `scenarios/test_mill_on_enter_or_dies.py` |
+| "Create a Treasure token." with Flashback (CR 111.10a, 702.34a) | existing token + flashback machinery | Strike It Rich | `scenarios/test_treasure_creating_sorcery_with_flashback.py` |
+| Modal "search basic land / your creature fights target creature you don't control" (CR 700.2, 701.23, 701.14) | existing modal, search and fight readers | Bushwhack | `scenarios/test_modal_search_basic_or_fight.py` |
