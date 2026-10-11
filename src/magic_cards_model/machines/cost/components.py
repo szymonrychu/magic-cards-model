@@ -981,6 +981,11 @@ class CostComponent(EngineModel):
                 return f"{card.name} is not a permanent, so it cannot be sacrificed"
             if game is not None and (why := attacking_statics.cant_be_sacrificed(game, card)):
                 return why
+        if game is not None and self.cards:
+            from ..player_action_prohibitions import payment_refusal
+
+            if why := payment_refusal(game, life=False, sacrificed=tuple(self.cards)):
+                return why
         return self._why_not_controlled()
 
     def _why_not_controlled(self) -> str | None:
@@ -1022,8 +1027,9 @@ class CostComponent(EngineModel):
             return f"{self.payer} cannot pay {self.amount} life from a life total of {life}"
         # CR 119.8: a player who can't lose life can't pay life (above 0).
         from ..game_rule_statics import life_total_cant_change
+        from ..player_action_prohibitions import payment_refusal
 
-        return life_total_cant_change(game, self.payer)
+        return life_total_cant_change(game, self.payer) or payment_refusal(game, life=True)
 
     # -- paying and rewinding ---------------------------------------------
 

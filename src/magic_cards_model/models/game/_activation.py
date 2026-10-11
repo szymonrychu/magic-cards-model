@@ -56,6 +56,7 @@ from ...machines.effects import (
     devotion_to,
     modal_trigger_profile,
 )
+from ...machines.equip_block_statics import additional_loyalty_cost, loyalty_activation_limit
 from ...machines.keywords import (
     ACTIVATED_EXHAUST_FACT,
     exhaust_reactivation_allowed,
@@ -1144,8 +1145,9 @@ class ActivationMixin:
                     f"{permanent.name}'s loyalty ability can only be activated during "
                     f"{controller}'s main phase, with the stack empty (CR 606.3)"
                 )
-            if self._loyalty_activation_count(permanent) >= self._loyalty_activations_allowed(
-                permanent
+            if self._loyalty_activation_count(permanent) >= max(
+                self._loyalty_activations_allowed(permanent),
+                loyalty_activation_limit(self, controller),
             ):
                 return (
                     f"{permanent.name}'s loyalty abilities have already been activated "
@@ -1927,6 +1929,12 @@ class ActivationMixin:
                 components.append(
                     loyalty_cost(permanent, amount, payer=controller, description=piece.text)
                 )
+                # CR 606.4: "cost an additional [+1]" (Carth the Lion) is another
+                # loyalty symbol paid with the printed one.
+                for _ in range(additional_loyalty_cost(self, controller)):
+                    components.append(
+                        loyalty_cost(permanent, 1, payer=controller, description="[+1]")
+                    )
             else:
                 # CostKind.OTHER: a printed cost sentence `machines/abilities.py`
                 # could not classify into one of the shapes above. CR 118.3 makes

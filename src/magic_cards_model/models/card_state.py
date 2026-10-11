@@ -2919,6 +2919,11 @@ class CardState(EngineModel):
                 and attached_transform_refusal(self._board_source, self) is not None
             ):
                 return  # CR 101.2: "can't transform" beats the instruction to
+        if self.zone is Zone.BATTLEFIELD and self._board_source is not None:
+            from ..machines.transform_prohibitions import transform_is_prevented
+
+            if transform_is_prevented(self._board_source, self):
+                return  # a "can't transform" static (CR 701.27a, CR 701.28f)
         target = self.face_it_would_transform_into
         if target is None:
             return  # CR 701.27c, CR 712.9

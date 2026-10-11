@@ -1,0 +1,136 @@
+{
+  "object": "card",
+  "id": "f7474f9e-a994-4ed7-83df-22edd8219e24",
+  "oracle_id": "ee00a42d-6ee4-4e46-92d6-62e8e5910880",
+  "multiverse_ids": [
+    625339
+  ],
+  "mtgo_id": 114209,
+  "tcgplayer_id": 505804,
+  "cardmarket_id": 722987,
+  "name": "Oath of Teferi",
+  "lang": "en",
+  "released_at": "2023-08-04",
+  "uri": "https://api.scryfall.com/cards/f7474f9e-a994-4ed7-83df-22edd8219e24",
+  "scryfall_uri": "https://scryfall.com/card/cmm/934/oath-of-teferi?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T04:03:33Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/f/7/f7474f9e-a994-4ed7-83df-22edd8219e24.jpg?1783915413",
+    "normal": "https://cards.scryfall.io/normal/front/f/7/f7474f9e-a994-4ed7-83df-22edd8219e24.jpg?1783915413",
+    "large": "https://cards.scryfall.io/large/front/f/7/f7474f9e-a994-4ed7-83df-22edd8219e24.jpg?1783915413",
+    "png": "https://cards.scryfall.io/png/front/f/7/f7474f9e-a994-4ed7-83df-22edd8219e24.png?1783915413",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/f/7/f7474f9e-a994-4ed7-83df-22edd8219e24.jpg?1783915413",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/f/7/f7474f9e-a994-4ed7-83df-22edd8219e24.jpg?1783915413",
+    "thumb": "https://cards.scryfall.io/thumb/front/f/7/f7474f9e-a994-4ed7-83df-22edd8219e24.webp?1783915413",
+    "grid": "https://cards.scryfall.io/grid/front/f/7/f7474f9e-a994-4ed7-83df-22edd8219e24.webp?1783915413",
+    "display": "https://cards.scryfall.io/display/front/f/7/f7474f9e-a994-4ed7-83df-22edd8219e24.webp?1783915413",
+    "art": "https://cards.scryfall.io/art/front/f/7/f7474f9e-a994-4ed7-83df-22edd8219e24.webp?1783915413",
+    "crop": "https://cards.scryfall.io/crop/front/f/7/f7474f9e-a994-4ed7-83df-22edd8219e24.webp?1783915413"
+  },
+  "mana_cost": "{3}{W}{U}",
+  "cmc": 5.0,
+  "type_line": "Legendary Enchantment",
+  "oracle_text": "When Oath of Teferi enters, exile another target permanent you control. Return it to the battlefield under its owner's control at the beginning of the next end step.\nYou may activate the loyalty abilities of planeswalkers you control twice each turn rather than only once.",
+  "colors": [
+    "U",
+    "W"
+  ],
+  "color_identity": [
+    "U",
+    "W"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": false,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "cd05036f-2698-43e6-a48e-5c8d82f0a551",
+  "set": "cmm",
+  "set_name": "Commander Masters",
+  "set_type": "masters",
+  "set_uri": "https://api.scryfall.com/sets/cd05036f-2698-43e6-a48e-5c8d82f0a551",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Acmm&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/cmm?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/f7474f9e-a994-4ed7-83df-22edd8219e24/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Aee00a42d-6ee4-4e46-92d6-62e8e5910880&unique=prints",
+  "collector_number": "934",
+  "digital": false,
+  "rarity": "rare",
+  "flavor_text": "\"For the lost and forgotten, I will keep watch.\"",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Wesley Burt",
+  "artist_ids": [
+    "b98c9d94-8bdb-49af-871d-7bac92274535"
+  ],
+  "illustration_id": "538c3134-648f-4d8d-87b1-f2cc3cf32016",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "edhrec_rank": 2774,
+  "penny_rank": 5795,
+  "prices": {
+    "usd": "13.89",
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": "3.31",
+    "eur_foil": null,
+    "tix": "0.03"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=625339&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DOath%2Bof%2BTeferi",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DOath%2Bof%2BTeferi",
+    "edhrec": "https://edhrec.com/route/?cc=Oath+of+Teferi"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F505804%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=722987&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/114209?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

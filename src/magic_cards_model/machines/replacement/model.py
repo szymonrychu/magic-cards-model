@@ -459,6 +459,9 @@ class EventKind(StrEnum):
     #: spell, `destination` where it would go, `cause_controller` who controls
     #: the countering spell or ability (Guile).
     COUNTER_SPELL = "counter_spell"
+    #: A player is about to learn (CR 701.48a): `player` learns. A replacement
+    #: that sets `replaced` calls it off (Retriever Phoenix, from a graveyard).
+    LEARN = "learn"
 
 
 @dataclass
@@ -714,7 +717,12 @@ class ReplaceableEvent:
         """
         if self.kind in (EventKind.DAMAGE, EventKind.LOSE_LIFE):
             return self.amount > 0
-        if self.kind in (EventKind.DESTROY, EventKind.LOSE_THE_GAME, EventKind.BEGIN_EXTRA_TURN):
+        if self.kind in (
+            EventKind.DESTROY,
+            EventKind.LOSE_THE_GAME,
+            EventKind.BEGIN_EXTRA_TURN,
+            EventKind.LEARN,
+        ):
             return not self.replaced
         return True
 
@@ -1155,6 +1163,31 @@ def _anywhere_effects(game: "Game", event: ReplaceableEvent) -> list[ApplicableE
                     apply=compiled.apply,
                 )
             )
+    return found
+
+
+def _graveyard_source_effects(game: "Game", event: ReplaceableEvent) -> list[ApplicableEffect]:
+    """Replacement effects of cards that function from the graveyard (CR 113.6b):
+    "As long as this card is in your graveyard, if you would learn, ..."."""
+    if event.kind is not EventKind.LEARN or event.player is None:
+        return []
+    from ..graveyard_statics import graveyard_abilities_lost_by
+
+    if graveyard_abilities_lost_by(game) is not None:
+        return []
+    found: list[ApplicableEffect] = []
+    for card in list(event.player.graveyard):
+        for index, effect in enumerate(parse_replacement_effects(card.card)):
+            compiled = _compile(effect)
+            if compiled is not None and compiled.applies(game, card, event):
+                found.append(
+                    ApplicableEffect(
+                        key=f"{card.id}:graveyard:{index}",
+                        source=card,
+                        label=compiled.label,
+                        apply=compiled.apply,
+                    )
+                )
     return found
 
 
@@ -2186,6 +2219,7 @@ def applicable_effects(game: "Game", event: ReplaceableEvent) -> list[Applicable
 
     found.extend(_stack_replacements(game, event))
     found.extend(_anywhere_effects(game, event))
+    found.extend(_graveyard_source_effects(game, event))
 
     # One board, hoisted out of the loop below: `computed_board()` recomputes
     # the whole battlefield on every call (CR 613.5), and `replacements_of_

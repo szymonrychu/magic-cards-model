@@ -2397,3 +2397,29 @@ def test_a_snapshot_written_before_exerted_this_turn_is_refused() -> None:
         match=f"schema_version={_SCHEMA_VERSION_BEFORE_EP01_R2_T6_EXERTED_THIS_TURN}",
     ):
         Game.model_validate(dumped)
+
+
+#: The version stamped before EP01-R2-T8: `Modification` gained
+#: `RemoveSupertype` and `LoseAllAbilitiesExceptManaAbilities`. The last shape
+#: without them is main's 141.
+_SCHEMA_VERSION_BEFORE_EP01_R2_T8_MODIFICATIONS = 141
+
+
+def test_a_snapshot_written_before_the_t8_modifications_is_refused() -> None:
+    """A version-141 dump cannot hold a continuous effect that removes a
+    supertype or every ability but mana abilities: refused, not decoded."""
+    from magic_cards_model.machines.layers.model import (
+        LoseAllAbilitiesExceptManaAbilities,
+        RemoveSupertype,
+    )
+
+    assert RemoveSupertype is not None and LoseAllAbilitiesExceptManaAbilities is not None
+    assert Game.CURRENT_SCHEMA_VERSION > _SCHEMA_VERSION_BEFORE_EP01_R2_T8_MODIFICATIONS
+    dumped = _a_played_game().model_dump(mode="json")
+    dumped["schema_version"] = _SCHEMA_VERSION_BEFORE_EP01_R2_T8_MODIFICATIONS
+
+    with pytest.raises(
+        SchemaVersionMismatch,
+        match=f"schema_version={_SCHEMA_VERSION_BEFORE_EP01_R2_T8_MODIFICATIONS}",
+    ):
+        Game.model_validate(dumped)

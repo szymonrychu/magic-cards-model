@@ -1968,7 +1968,7 @@ class Game(
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 148
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 149
     #: 67: `machines/cost.CostComponent` gained `link_to_permanent_id` (CR
     #: 607.2q), reachable from `Game` through a pending `AbilityOnStack.
     #: keyword_activation`/`.unless_payment`'s own `CostPayment.components`.
@@ -2308,6 +2308,10 @@ class Game(
     #: only mana produced by basic lands"), `ManaPayment` gained
     #: `basic_land_spent` and `ManaSpend` gained `only_from` / `any_type`; an
     #: older dump would let floating nonbasic mana pay for Imperiosaur.
+    #: 149 (EP01-R2-T8): `Modification` gained `RemoveSupertype` (Aeve) and
+    #: `LoseAllAbilitiesExceptManaAbilities` (Blood Sun), both stored in a
+    #: continuous effect; an older dump would refuse to decode an effect of
+    #: either kind. T8's reserved number (main at the cut + 8).
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a

@@ -1829,9 +1829,12 @@ def additional_trigger_times(
     function - so doubling the ability that creates a delayed trigger does not
     double the delayed trigger, which is DDR#981's whole point.
     """
+    from ..trigger_doubling import extra_trigger_times
+
+    family = extra_trigger_times(game, ability, source, event)
     if source.zone is not Zone.BATTLEFIELD:
-        return 0
-    extra = 0
+        return family
+    extra = family
     for permanent in list(game.battlefield):
         controller = permanent.controller
         if controller is None:

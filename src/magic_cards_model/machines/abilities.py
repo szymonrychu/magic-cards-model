@@ -3583,7 +3583,10 @@ _KEYWORD_COST = re.compile(
 #: 'Equip [quality]' or 'Equip [quality] creature.'" - Steelclaw Lance's
 #: "Equip Knight {1}", Blackblade Reforged's "Equip legendary creature {3}",
 #: Mjolnir, Hammer of Thor's "Equip worthy {1}" (CR 700.16).
-_EQUIP_WITH_QUALITY = re.compile(r"^Equip(?: (?P<quality>[^{}.:]+?))? (?P<cost>(?:\{[^}]+\})+)$")
+_EQUIP_WITH_QUALITY = re.compile(
+    r"^Equip(?: (?P<quality>[^{}.:]+?))? (?P<cost>(?:\{[^}]+\})+)"
+    r"(?P<once>\. Activate only once each turn\.?)?$"
+)
 
 
 def _parse_equip_with_quality(
@@ -3598,7 +3601,11 @@ def _parse_equip_with_quality(
     if match is None:
         return None
     quality = match.group("quality")
-    if quality is None and any(keyword.lower() == "equip" for keyword in keywords):
+    if (
+        quality is None
+        and match.group("once") is None
+        and any(keyword.lower() == "equip" for keyword in keywords)
+    ):
         return None
     return KeywordAbility(
         **common,

@@ -41,6 +41,8 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from ..models.zone import Zone
+from .player_action_prohibitions import VENTURED, venture_refused
+from .trigger_doubling import room_ability_times
 
 if TYPE_CHECKING:
     from ..models.card import Card
@@ -236,13 +238,15 @@ def _enter_room(game: "Game", dungeon: "CardState", player: str) -> None:
     room = room_named(dungeon.card, dungeon.venture_room)
     if room is None:
         return
-    game.create_reflexive_trigger(
-        text=room.effect,
-        controller=player,
-        source_id=dungeon.id,
-        source_name=dungeon.name,
-        callback=DungeonRoomAbility(room=room.name),
-    )
+    # CR 603.2d: "Room abilities of dungeons you own trigger an additional time."
+    for _ in range(room_ability_times(game, player)):
+        game.create_reflexive_trigger(
+            text=room.effect,
+            controller=player,
+            source_id=dungeon.id,
+            source_name=dungeon.name,
+            callback=DungeonRoomAbility(room=room.name),
+        )
 
 
 def complete(game: "Game", dungeon: "CardState") -> None:
@@ -284,7 +288,7 @@ def venture(
     source_name: str,
     source_id: str | None = None,
     quality: str | None = None,
-) -> "CardState":
+) -> "CardState | None":
     """CR 701.49a-d: venture into the dungeon (or into `quality`, CR
     701.49d). Returns the dungeon the marker is now in.
 
@@ -296,6 +300,10 @@ def venture(
 
     Every room entered triggers its room ability (CR 309.4c)."""
     with game._id_allocator_scope():  # noqa: SLF001 - ids minted here are persisted
+        if venture_refused(game, player):
+            # CR 101.2: "can't venture into the dungeon more than once each turn".
+            return dungeon_in_command_zone(game, player)
+        game.record_turn_fact(VENTURED, player)
         complete_finished_dungeons(game)
         dungeon = dungeon_in_command_zone(game, player)
         if dungeon is not None and is_bottommost(dungeon.card, dungeon.venture_room):

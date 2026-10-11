@@ -72,15 +72,20 @@ class DamageLifeMixin:
                 self._damage_recorders[source.id] = previous
 
     def remove_all_damage(self: "Game") -> None:
-        """Wipe damage marked on every permanent (CR 514.2, 703.4p).
+        """Wipe damage marked on every permanent (CR 514.2, 703.4p), except a
+        permanent whose own static says damage isn't removed from it during
+        cleanup steps (`cleanup_damage_statics`).
 
         The unspent regeneration shields go with it, for the same reason and
         in the same breath: CR 701.19a's shield protects a permanent "the next
         time it would be destroyed **this turn**", so one nobody spent expires
         exactly when every other "until end of turn" effect does.
         """
+        from ...machines.cleanup_damage_statics import damage_survives_cleanup
+
         for permanent in self.battlefield:
-            permanent.damage = 0
+            if not damage_survives_cleanup(self, permanent):
+                permanent.damage = 0
             permanent.regeneration_shields = 0
 
     def become_monarch(self: "Game", player: Player | str) -> None:

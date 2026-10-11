@@ -27,7 +27,7 @@ BASIC_LAND_TYPES: dict[str, str] = {
 #: or Equipment is attached to, never a target.
 _YOU_CONTROL_ATTACHED_RE = re.compile(
     r"^[Yy]ou control (?P<attachment>enchanted|equipped) "
-    r"(?P<subject>creature|permanent|artifact|enchantment|land|planeswalker)\.?$"
+    r"(?P<subject>artifact creature|creature|permanent|artifact|enchantment|land|planeswalker)\.?$"
 )
 
 

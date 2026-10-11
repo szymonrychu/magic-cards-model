@@ -1,0 +1,133 @@
+{
+  "object": "card",
+  "id": "c0010b89-afc4-4dee-bda3-2f34e552cba5",
+  "oracle_id": "ca283839-864f-4252-8452-480e3ba29b20",
+  "multiverse_ids": [
+    48571
+  ],
+  "mtgo_id": 20147,
+  "mtgo_foil_id": 20148,
+  "tcgplayer_id": 11356,
+  "cardmarket_id": 33,
+  "name": "Domineer",
+  "lang": "en",
+  "released_at": "2003-10-02",
+  "uri": "https://api.scryfall.com/cards/c0010b89-afc4-4dee-bda3-2f34e552cba5",
+  "scryfall_uri": "https://scryfall.com/card/mrd/33/domineer?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T12:09:16Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/c/0/c0010b89-afc4-4dee-bda3-2f34e552cba5.jpg?1783944556",
+    "normal": "https://cards.scryfall.io/normal/front/c/0/c0010b89-afc4-4dee-bda3-2f34e552cba5.jpg?1783944556",
+    "large": "https://cards.scryfall.io/large/front/c/0/c0010b89-afc4-4dee-bda3-2f34e552cba5.jpg?1783944556",
+    "png": "https://cards.scryfall.io/png/front/c/0/c0010b89-afc4-4dee-bda3-2f34e552cba5.png?1783944556",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/c/0/c0010b89-afc4-4dee-bda3-2f34e552cba5.jpg?1783944556",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/c/0/c0010b89-afc4-4dee-bda3-2f34e552cba5.jpg?1783944556",
+    "thumb": "https://cards.scryfall.io/thumb/front/c/0/c0010b89-afc4-4dee-bda3-2f34e552cba5.webp?1783944556",
+    "grid": "https://cards.scryfall.io/grid/front/c/0/c0010b89-afc4-4dee-bda3-2f34e552cba5.webp?1783944556",
+    "display": "https://cards.scryfall.io/display/front/c/0/c0010b89-afc4-4dee-bda3-2f34e552cba5.webp?1783944556",
+    "art": "https://cards.scryfall.io/art/front/c/0/c0010b89-afc4-4dee-bda3-2f34e552cba5.webp?1783944556",
+    "crop": "https://cards.scryfall.io/crop/front/c/0/c0010b89-afc4-4dee-bda3-2f34e552cba5.webp?1783944556"
+  },
+  "mana_cost": "{1}{U}{U}",
+  "cmc": 3.0,
+  "type_line": "Enchantment \u2014 Aura",
+  "oracle_text": "Enchant artifact creature\nYou control enchanted artifact creature.",
+  "colors": [
+    "U"
+  ],
+  "color_identity": [
+    "U"
+  ],
+  "keywords": [
+    "Enchant"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "1d4f90ba-8d4a-4ee5-bc2f-e2d6bffe4955",
+  "set": "mrd",
+  "set_name": "Mirrodin",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/1d4f90ba-8d4a-4ee5-bc2f-e2d6bffe4955",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Amrd&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/mrd?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/c0010b89-afc4-4dee-bda3-2f34e552cba5/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Aca283839-864f-4252-8452-480e3ba29b20&unique=prints",
+  "collector_number": "33",
+  "digital": false,
+  "rarity": "uncommon",
+  "flavor_text": "Since they haven't seen their original master for millennia, golems are eager to take orders from anyone.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Jon Foster",
+  "artist_ids": [
+    "be1fa767-c905-49b1-afcf-77a8e9ebbd31"
+  ],
+  "illustration_id": "cfb26d53-9ced-480c-956d-bf3940a68d70",
+  "border_color": "black",
+  "frame": "2003",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 29483,
+  "prices": {
+    "usd": "0.19",
+    "usd_foil": "0.35",
+    "usd_etched": null,
+    "eur": "0.13",
+    "eur_foil": "0.34",
+    "tix": "0.03"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=48571&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DDomineer",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DDomineer",
+    "edhrec": "https://edhrec.com/route/?cc=Domineer"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F11356%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=33&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/20147?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

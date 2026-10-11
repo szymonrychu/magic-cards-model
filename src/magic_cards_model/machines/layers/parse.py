@@ -2231,7 +2231,8 @@ _GROUP_EVASION_GRANT_RE = re.compile(
 #: excluded (`other_creatures_controlled_by`), so it keeps only its printed
 #: ward rather than gaining a second instance from its own line.
 _GROUP_QUOTED_ABILITY_GRANT_RE = re.compile(
-    r"^(?:(?P<other>other )?(?P<subject>planeswalkers|creatures|lands|artifacts|enchantments)"
+    r"^(?:(?P<other>other )?"
+    r"(?P<subject>planeswalkers|creatures|lands|artifacts|enchantments)"
     r"(?P<scope> you control)?(?P<named> with the chosen name)?"
     # CR 205.3m: "All Slivers have "..."" (Cautery Sliver) - every creature of
     # the subtype, whoever controls it.
@@ -11444,6 +11445,10 @@ def _parse_layer_sentence_ungated(sentence: str) -> EffectBuilder | None:
     +4/+4 until end of turn."
     """
     sentence = _strip_ability_word(_normalize_duration_first(sentence))
+    from .other_statics import parse_other_static_sentence
+
+    if (other_static := parse_other_static_sentence(sentence)) is not None:
+        return other_static
     if (match := _LEADING_GRAVEYARD_COUNT_GATED_SELF_STATIC_RE.fullmatch(sentence)) and (
         leading_gated := _leading_graveyard_count_gated_builder(match, line=sentence)
     ) is not None:

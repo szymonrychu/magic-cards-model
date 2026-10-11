@@ -71,6 +71,7 @@ from ...machines.targeting import (
     profile_for_text,
     reflexive_consequence_text,
 )
+from ...machines.trigger_doubling import without_suppressed
 from ...machines.triggers import (
     AbilityOnStack,
     ExtraTriggerEvent,
@@ -755,6 +756,7 @@ class TriggersDecisionsMixin:
                 # is stopped from causing - on the entering permanent or on
                 # any other.
                 triggered = self._without_etb_suppressed(event, triggered)
+            triggered = without_suppressed(self, event, triggered)
             # CR 603.7: a delayed triggered ability is not printed on any card, so
             # no source can be asked for it. It watches the event directly, and once
             # it has triggered it is an ordinary trigger in every other respect -

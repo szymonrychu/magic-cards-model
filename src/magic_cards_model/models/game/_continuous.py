@@ -66,6 +66,7 @@ from ...machines.replacement import (
     ReplaceableEvent,
     apply_replacements,
 )
+from ...machines.revealed_information import hand_revealed_by_others, top_card_revealed_by_others
 from ...machines.triggers import (
     ExtraTriggerEvent,
     GameEvent,
@@ -1317,7 +1318,7 @@ class ContinuousMixin:
         every player) - read fresh off the computed board every call, like
         `controls_look_at_top_permission`, so it ends when the permanent does."""
         board = self.computed_board()
-        return any(
+        return hand_revealed_by_others(self, username) or any(
             self._PLAY_WITH_HAND_REVEALED_RE.fullmatch(self._static_line_without_ability_word(line))
             is not None
             for permanent in self.permanents_controlled_by(username)
@@ -1356,7 +1357,7 @@ class ContinuousMixin:
         "Play with the top card of your library revealed." (CR 400.2),
         read fresh off the computed board every call."""
         board = self.computed_board()
-        return any(
+        return top_card_revealed_by_others(self) or any(
             self._TOP_CARD_REVEALED_RE.fullmatch(self._static_line_without_ability_word(line))
             is not None
             for permanent in self.permanents_controlled_by(username)

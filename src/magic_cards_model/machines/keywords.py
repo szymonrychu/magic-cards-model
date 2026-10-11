@@ -85,9 +85,16 @@ from .cost import (
     total_cost_for_phrase,
 )
 from .cost.abilities import KEYWORD_KINDS, ability_cost_adjustment, cycling_costs_nothing
+from .crew_saddle_statics import contribution, station_amount, total_contribution
 from .decisions import Decision, DecisionKind, source_id_of
 from .delayed import anaphoric_delayed_trigger
 from .designations import designation_holds, split_as_long_as
+from .equip_block_statics import (
+    attach_refusal,
+    equip_activation_key,
+    equip_at_instant_speed,
+    equip_once_each_turn,
+)
 from .layers import (
     ComputedBoard,
     ContinuousEffect,
@@ -106,8 +113,6 @@ from .objects_as_costs import (
     crew_number,
     crew_offer,
     has_crew_loyalty_alternative,
-    power_of,
-    total_power,
 )
 from .soulbond import soulbond_effect
 from .triggers import (
@@ -2351,6 +2356,16 @@ class KeywordActivation(EngineModel):
                 f"it is suspended (CR 702.62b, CR 602.5b)"
             )
         if (
+            self.keyword == "Equip"
+            and self.game is not None
+            and equip_once_each_turn(self.card)
+            and self.game.activations.get(equip_activation_key(self.card), 0) > 0
+        ):
+            return (
+                f"{self.card.name}'s equip ability can be activated only once each turn "
+                f"({self.rule}, CR 602.5b)"
+            )
+        if (
             self.sorcery_only
             and self.game is not None
             and not self.game.can_cast_sorcery(self.player)
@@ -2473,6 +2488,9 @@ class KeywordActivation(EngineModel):
             # "the first equip ability you activate each turn" counts this one
             # whichever cost it paid (`free_first_equip_source`).
             self.game.record_turn_fact(ACTIVATED_EQUIP_FACT, self.player)
+            if equip_once_each_turn(self.card):
+                key = equip_activation_key(self.card)
+                self.game.activations[key] = self.game.activations.get(key, 0) + 1
         if self.forecast:
             # CR 702.57b's own once-each-turn restriction, checked back in
             # `why_not` against this same key - the card is still in `zone`
@@ -2781,6 +2799,19 @@ def unearth_abilities(card: Card) -> list[KeywordAbility]:
     ]
 
 
+def unearth_abilities_of(game: Any, card: CardState) -> list[KeywordAbility]:
+    """The unearth abilities `card` has right now: printed, plus any a static
+    grants (Mishra, Tamer of Mak Fawa), and none while a static strips graveyard
+    cards of their abilities (Yixlid Jailer) - except a grant stamped after
+    that static (CR 613.7a), which survives it."""
+    from .graveyard_statics import graveyard_abilities_lost_by, unearth_grants_surviving_removal
+    from .zone_grants import effective_card
+
+    if card.zone is Zone.GRAVEYARD and graveyard_abilities_lost_by(game) is not None:
+        return unearth_grants_surviving_removal(game, card)
+    return unearth_abilities(effective_card(game, card))
+
+
 def unearth_activation(
     game: Any, card: CardState, player: str, index: int = 0
 ) -> KeywordActivation:
@@ -2806,8 +2837,16 @@ def unearth_activation(
     effect, not the activation (`_parse_delayed_reanimate_haste_exile_
     clauses`, `machines/casting.exile_warped`).
     """
-    printed = unearth_abilities(effective_card(game, card))
+    printed = unearth_abilities_of(game, card)
     if index >= len(printed):
+        from .graveyard_statics import graveyard_abilities_lost_by
+
+        jailer = graveyard_abilities_lost_by(game) if card.zone is Zone.GRAVEYARD else None
+        if jailer is not None and not printed:
+            raise ValueError(
+                f"{card.name} has no unearth ability: {jailer} makes cards in graveyards "
+                f"lose all abilities ({KeywordRule.UNEARTH})"
+            )
         raise ValueError(
             f"{card.name} has no unearth ability number {index} ({KeywordRule.UNEARTH})"
         )
@@ -3502,6 +3541,8 @@ def equip_activation(
     chosen = min(usable, key=_equip_ability_price, default=None)
     if candidates and chosen is None:
         raise ValueError(next(refusal for refusal in refusals if refusal is not None))
+    if (why := attach_refusal(game, equipment, target)) is not None:
+        raise ValueError(why)
     activation = unannounced_equip_activation(
         game, equipment, player, ability=chosen, pay_zero=pay_zero, target=target
     )
@@ -3619,7 +3660,7 @@ def unannounced_equip_activation(
         rule=str(KeywordRule.EQUIP),
         zone=Zone.BATTLEFIELD,
         cost=cost,
-        sorcery_only=True,
+        sorcery_only=game is None or not equip_at_instant_speed(game, player),
         ability=_synthetic_ability(ability, cost_text=ability.cost or "", effect=EQUIP_EFFECT),
         game=game,
         free_equip_from=free_from.name if free_from is not None else None,
@@ -3679,6 +3720,8 @@ def _equip_effect(activation: KeywordActivation) -> CardState | None:
             # CR 702.6c / CR 608.2b: the target no longer has the quality this
             # equip ability asked for, so it is illegal and nothing moves.
             continue
+        if attach_refusal(game, equipment, creature) is not None:
+            continue  # CR 301.5: it can't be equipped by this Equipment
         if _protection_refusal_for_attachment(game, equipment, creature) is not None:
             # CR 608.2b's recheck of a target that gained protection in
             # response, and CR 301.5b: "If an effect attempts to attach an
@@ -3867,9 +3910,11 @@ def crew_activation(
             )
         seen.add(creature.id)
 
-    have = total_power(chosen, game)
+    have = total_contribution(game, chosen, "crew")
     if have < number:
-        listing = ", ".join(f"{c.name} ({power_of(c, game)})" for c in chosen) or "nothing"
+        listing = (
+            ", ".join(f"{c.name} ({contribution(game, c, 'crew')})" for c in chosen) or "nothing"
+        )
         raise ValueError(
             f"crewing {vehicle.name} needs total power {number} or greater, but "
             f"{listing} totals {have} ({KeywordRule.CREW})"
@@ -4096,9 +4141,11 @@ def saddle_activation(
                 f"only one untap to spend ({KeywordRule.SADDLE}, CR 118.3)"
             )
         seen.add(creature.id)
-    have = total_power(chosen, game)
+    have = total_contribution(game, chosen, "saddle")
     if have < number:
-        listing = ", ".join(f"{c.name} ({power_of(c, game)})" for c in chosen) or "nothing"
+        listing = (
+            ", ".join(f"{c.name} ({contribution(game, c, 'saddle')})" for c in chosen) or "nothing"
+        )
         raise ValueError(
             f"saddling {mount.name} needs total power {number} or greater, but "
             f"{listing} totals {have} ({KeywordRule.SADDLE})"
@@ -4245,7 +4292,7 @@ def _station_effect(activation: KeywordActivation) -> CardState | None:
     tapped = game.find_by_id(paid[0].id)
     if not isinstance(tapped, CardState):
         return None
-    amount = power_of(tapped, game)
+    amount = station_amount(game, tapped)
     if amount > 0:
         game.add_counters(permanent, Counter.CHARGE, amount)
     return permanent
@@ -4459,7 +4506,9 @@ def equipment_state_based_actions(game: Any) -> list[CardState]:
             continue  # CR 704.5m's Aura, or CR 704.5p's everything else.
         host = game.find_by_id(permanent.attached_to)
         host = host if isinstance(host, CardState) else None
-        if not _host_is_legal_for(game, permanent, host, wanted, board):
+        if not _host_is_legal_for(game, permanent, host, wanted, board) or (
+            wanted == "creature" and attach_refusal(game, permanent, host) is not None
+        ):
             permanent.unattach()
             unattached.append(permanent)
     return unattached
@@ -5067,6 +5116,11 @@ def off_zone_abilities(
     card with cycling and nothing else keeps the index its own
     `cycling_activation`/`actions/cycle` caller already passes - every
     cycling printing in the pool is exactly that card.
+
+    With the object's `state` and the `game`, what the battlefield does to the
+    card is applied too: a static granting unearth to graveyard cards (Mishra,
+    Tamer of Mak Fawa) adds it, and one stripping graveyard cards of their
+    abilities (Yixlid Jailer) removes every graveyard-zone entry.
     """
     pool: list[OffZoneAbility] = []
     for index, kw_ability in enumerate(cycling_abilities(card)):
@@ -5090,7 +5144,8 @@ def off_zone_abilities(
                 ),
             )
         )
-    for index, kw_ability in enumerate(unearth_abilities(card)):
+    unearths = unearth_abilities(card) if state is None else unearth_abilities_of(game, state)
+    for index, kw_ability in enumerate(unearths):
         pool.append(
             OffZoneAbility(
                 family="unearth",
@@ -5157,6 +5212,16 @@ def off_zone_abilities(
                 ),
             )
         )
+    if state is not None and state.zone is Zone.GRAVEYARD:
+        from .graveyard_statics import graveyard_abilities_lost_by
+
+        if graveyard_abilities_lost_by(game) is not None:
+            # unearth entries were already filtered by `unearth_abilities_of`
+            return [
+                entry
+                for entry in pool
+                if entry.zone is not Zone.GRAVEYARD or entry.family == "unearth"
+            ]
     return pool
 
 
@@ -5946,6 +6011,14 @@ def why_cannot_dredge(game: Any, card: CardState, player: str) -> str | None:
         return (
             f"{card.name}'s dredge ability functions in a graveyard, but it is in "
             f"the {card.zone.value} ({KeywordRule.DREDGE})"
+        )
+    from .graveyard_statics import graveyard_abilities_lost_by
+
+    jailer = graveyard_abilities_lost_by(game)
+    if jailer is not None:
+        return (
+            f"{jailer} makes cards in graveyards lose all abilities, so {card.name} "
+            f"has no dredge ({KeywordRule.DREDGE})"
         )
     library = len(game.player(player).library)
     if library < count:

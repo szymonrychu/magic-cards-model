@@ -115,7 +115,10 @@ def reflexive_consequence_effect(text: str) -> AbilityEffect | None:
     # A whole-ability sentence whose "it" is the ability's own source ("When you
     # do, prevent all combat damage that would be dealt to it this turn." -
     # Oketra's Avenger, CR 701.43d's linked trigger).
-    return ABILITY_TEXT.run("s19", " ".join(text.split()))
+    flat = " ".join(text.split())
+    # "target creature gets +X/+X until end of turn, where X is ..." (Hydra
+    # Trainer): X is defined in the sentence and fixed as the ability resolves.
+    return ABILITY_TEXT.run("s19", flat) or _parse_where_x_is_continuous_effect(flat)
 
 
 def _choose_a_color(

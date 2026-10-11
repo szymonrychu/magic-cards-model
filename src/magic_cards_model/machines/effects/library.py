@@ -3183,7 +3183,12 @@ def learn(game: "Game", player: Player, source: str, *, source_id: str | None) -
     and the move are `_reveal_and_bring_into_hand`, the same tail Karn, the
     Great Creator's -2 and the Burning Wish family use, so the Lesson stays
     known to every player in that hand until it changes zones again.
+
+    CR 614.1a: "if you would learn" is replaceable, from a graveyard too
+    (Retriever Phoenix), so the event is raised first.
     """
+    if not apply_replacements(game, ReplaceableEvent(kind=EventKind.LEARN, player=player)).happens:
+        return
     if (
         player.hand
         and game.may(player, "discard a card, then draw a card", source=source, source_id=source_id)

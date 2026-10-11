@@ -2638,6 +2638,27 @@ class LoseAllAbilities(ModificationBase):
         )
 
 
+class LoseAllAbilitiesExceptManaAbilities(ModificationBase):
+    """Layer 6 removal (CR 613.1f) that leaves mana abilities (CR 605.1) -
+    "All lands lose all abilities except mana abilities." Rule-effect lines
+    survive it for the same reason they survive `LoseAllAbilities`."""
+
+    kind: Literal["lose_all_abilities_except_mana_abilities"] = (
+        "lose_all_abilities_except_mana_abilities"
+    )
+
+    def __call__(self, chars: Characteristics, board: Board) -> Characteristics:
+        from ..mana_ability_lines import line_is_mana_ability
+
+        return chars.with_(
+            abilities=tuple(
+                line
+                for line in chars.abilities
+                if line in RULE_EFFECT_TEXTS or line_is_mana_ability(line)
+            )
+        )
+
+
 class LoseKeyword(ModificationBase):
     """Layer 6 removal of one keyword (CR 613.1f) - "loses indestructible".
 
@@ -2746,6 +2767,21 @@ class AddSupertype(ModificationBase):
         if self.supertype in chars.supertypes:
             return chars
         return chars.with_(supertypes=chars.supertypes + (self.supertype,))
+
+
+class RemoveSupertype(ModificationBase):
+    """Layer 4 (CR 613.1d): stop having a supertype - "~ isn't legendary if
+    it's a token". CR 205.4b: the object keeps every other supertype it had."""
+
+    kind: Literal["remove_supertype"] = "remove_supertype"
+    supertype: Supertype
+
+    def __call__(self, chars: Characteristics, board: Board) -> Characteristics:
+        if self.supertype not in chars.supertypes:
+            return chars
+        return chars.with_(
+            supertypes=tuple(kind for kind in chars.supertypes if kind is not self.supertype)
+        )
 
 
 #: The card types whose subtypes are a closed list of their own: artifact
@@ -3318,6 +3354,7 @@ class AddColors(ModificationBase):
 
 Modification = Annotated[
     LoseAllAbilities
+    | LoseAllAbilitiesExceptManaAbilities
     | LoseKeyword
     | GrantAbility
     | GrantActivatedAbilitiesOf
@@ -3326,6 +3363,7 @@ Modification = Annotated[
     | GrantAbilitiesByManaValue
     | AddType
     | AddSupertype
+    | RemoveSupertype
     | RemoveType
     | AddSubtype
     | AddEveryCreatureType

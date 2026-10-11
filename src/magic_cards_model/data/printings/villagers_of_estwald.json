@@ -1,0 +1,193 @@
+{
+  "object": "card",
+  "id": "319b65f6-a6e6-45ea-9837-bc5831f54205",
+  "oracle_id": "dcf692f6-baec-4b60-a6e3-2a8b731d7816",
+  "multiverse_ids": [
+    686071
+  ],
+  "mtgo_id": 135872,
+  "tcgplayer_id": 610090,
+  "cardmarket_id": 805843,
+  "name": "Villagers of Estwald // Howlpack of Estwald",
+  "lang": "en",
+  "released_at": "2025-01-24",
+  "uri": "https://api.scryfall.com/cards/319b65f6-a6e6-45ea-9837-bc5831f54205",
+  "scryfall_uri": "https://scryfall.com/card/inr/224/villagers-of-estwald-howlpack-of-estwald?utm_source=api",
+  "layout": "transform",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T02:01:29Z",
+  "cmc": 3.0,
+  "type_line": "Creature \u2014 Human Werewolf // Creature \u2014 Werewolf",
+  "color_identity": [
+    "G"
+  ],
+  "keywords": [
+    "Transform"
+  ],
+  "card_faces": [
+    {
+      "object": "card_face",
+      "name": "Villagers of Estwald",
+      "mana_cost": "{2}{G}",
+      "type_line": "Creature \u2014 Human Werewolf",
+      "oracle_text": "At the beginning of each upkeep, if no spells were cast last turn, transform this creature.",
+      "colors": [
+        "G"
+      ],
+      "power": "2",
+      "toughness": "3",
+      "flavor_text": "You can spot a werewolf-infested town by its lack of butcher shops.",
+      "artist": "Kev Walker",
+      "artist_id": "f366a0ee-a0cd-466d-ba6a-90058c7a31a6",
+      "illustration_id": "6c9323c0-ddc7-41d1-8c61-ad5237f79c1f",
+      "image_uris": {
+        "small": "https://cards.scryfall.io/small/front/3/1/319b65f6-a6e6-45ea-9837-bc5831f54205.jpg?1783908089",
+        "normal": "https://cards.scryfall.io/normal/front/3/1/319b65f6-a6e6-45ea-9837-bc5831f54205.jpg?1783908089",
+        "large": "https://cards.scryfall.io/large/front/3/1/319b65f6-a6e6-45ea-9837-bc5831f54205.jpg?1783908089",
+        "png": "https://cards.scryfall.io/png/front/3/1/319b65f6-a6e6-45ea-9837-bc5831f54205.png?1783908089",
+        "art_crop": "https://cards.scryfall.io/art_crop/front/3/1/319b65f6-a6e6-45ea-9837-bc5831f54205.jpg?1783908089",
+        "border_crop": "https://cards.scryfall.io/border_crop/front/3/1/319b65f6-a6e6-45ea-9837-bc5831f54205.jpg?1783908089",
+        "thumb": "https://cards.scryfall.io/thumb/front/3/1/319b65f6-a6e6-45ea-9837-bc5831f54205.webp?1783908089",
+        "grid": "https://cards.scryfall.io/grid/front/3/1/319b65f6-a6e6-45ea-9837-bc5831f54205.webp?1783908089",
+        "display": "https://cards.scryfall.io/display/front/3/1/319b65f6-a6e6-45ea-9837-bc5831f54205.webp?1783908089",
+        "art": "https://cards.scryfall.io/art/front/3/1/319b65f6-a6e6-45ea-9837-bc5831f54205.webp?1783908089",
+        "crop": "https://cards.scryfall.io/crop/front/3/1/319b65f6-a6e6-45ea-9837-bc5831f54205.webp?1783908089"
+      }
+    },
+    {
+      "object": "card_face",
+      "name": "Howlpack of Estwald",
+      "mana_cost": "",
+      "type_line": "Creature \u2014 Werewolf",
+      "oracle_text": "At the beginning of each upkeep, if a player cast two or more spells last turn, transform this creature.",
+      "colors": [
+        "G"
+      ],
+      "color_indicator": [
+        "G"
+      ],
+      "power": "4",
+      "toughness": "6",
+      "flavor_text": "Estwald's citizens don't dislike outsiders\u2014they taste just fine.",
+      "artist": "Kev Walker",
+      "artist_id": "f366a0ee-a0cd-466d-ba6a-90058c7a31a6",
+      "illustration_id": "1ec20759-7a4b-4daa-8407-499e965574a8",
+      "image_uris": {
+        "small": "https://cards.scryfall.io/small/back/3/1/319b65f6-a6e6-45ea-9837-bc5831f54205.jpg?1783908089",
+        "normal": "https://cards.scryfall.io/normal/back/3/1/319b65f6-a6e6-45ea-9837-bc5831f54205.jpg?1783908089",
+        "large": "https://cards.scryfall.io/large/back/3/1/319b65f6-a6e6-45ea-9837-bc5831f54205.jpg?1783908089",
+        "png": "https://cards.scryfall.io/png/back/3/1/319b65f6-a6e6-45ea-9837-bc5831f54205.png?1783908089",
+        "art_crop": "https://cards.scryfall.io/art_crop/back/3/1/319b65f6-a6e6-45ea-9837-bc5831f54205.jpg?1783908089",
+        "border_crop": "https://cards.scryfall.io/border_crop/back/3/1/319b65f6-a6e6-45ea-9837-bc5831f54205.jpg?1783908089",
+        "thumb": "https://cards.scryfall.io/thumb/back/3/1/319b65f6-a6e6-45ea-9837-bc5831f54205.webp?1783908089",
+        "grid": "https://cards.scryfall.io/grid/back/3/1/319b65f6-a6e6-45ea-9837-bc5831f54205.webp?1783908089",
+        "display": "https://cards.scryfall.io/display/back/3/1/319b65f6-a6e6-45ea-9837-bc5831f54205.webp?1783908089",
+        "art": "https://cards.scryfall.io/art/back/3/1/319b65f6-a6e6-45ea-9837-bc5831f54205.webp?1783908089",
+        "crop": "https://cards.scryfall.io/crop/back/3/1/319b65f6-a6e6-45ea-9837-bc5831f54205.webp?1783908089"
+      }
+    }
+  ],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "99ce1bee-8f95-4284-8e06-9de9bfcb53b5",
+      "component": "combo_piece",
+      "name": "Innistrad Checklist",
+      "type_line": "Card",
+      "uri": "https://api.scryfall.com/cards/99ce1bee-8f95-4284-8e06-9de9bfcb53b5"
+    },
+    {
+      "object": "related_card",
+      "id": "319b65f6-a6e6-45ea-9837-bc5831f54205",
+      "component": "combo_piece",
+      "name": "Villagers of Estwald // Howlpack of Estwald",
+      "type_line": "Creature \u2014 Human Werewolf // Creature \u2014 Werewolf",
+      "uri": "https://api.scryfall.com/cards/319b65f6-a6e6-45ea-9837-bc5831f54205"
+    }
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "b9618c8c-9f31-4b42-9798-2991893c27bf",
+  "set": "inr",
+  "set_name": "Innistrad Remastered",
+  "set_type": "masters",
+  "set_uri": "https://api.scryfall.com/sets/b9618c8c-9f31-4b42-9798-2991893c27bf",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Ainr&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/inr?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/319b65f6-a6e6-45ea-9837-bc5831f54205/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Adcf692f6-baec-4b60-a6e3-2a8b731d7816&unique=prints",
+  "collector_number": "224",
+  "digital": false,
+  "rarity": "common",
+  "artist": "Kev Walker",
+  "artist_ids": [
+    "f366a0ee-a0cd-466d-ba6a-90058c7a31a6"
+  ],
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 25270,
+  "penny_rank": 16388,
+  "prices": {
+    "usd": "0.15",
+    "usd_foil": "0.22",
+    "usd_etched": null,
+    "eur": "0.04",
+    "eur_foil": "0.05",
+    "tix": "0.04"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=686071&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DVillagers%2Bof%2BEstwald%2B%252F%252F%2BHowlpack%2Bof%2BEstwald",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DVillagers%2Bof%2BEstwald%2B%252F%252F%2BHowlpack%2Bof%2BEstwald",
+    "edhrec": "https://edhrec.com/route/?cc=Villagers+of+Estwald"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F610090%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=805843&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/135872?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}
