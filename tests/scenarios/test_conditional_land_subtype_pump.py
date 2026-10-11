@@ -9,8 +9,8 @@ static ability "isn't 'locked in'; it applies at any given moment to whatever
 its text indicates", so the condition is re-asked every time the board is
 computed (CR 613.5) - it follows a land that enters, leaves, or changes type.
 CR 205.3i lists the land types and CR 305.6 names the basic ones (Plains,
-Island, Swamp, Mountain, Forest); the condition only reads the subtype, so a dual land such as Stomping Ground
-(Mountain Forest) satisfies it too.
+Island, Swamp, Mountain, Forest); the condition only reads the subtype, so a
+dual land such as Stomping Ground (Mountain Forest) satisfies it too.
 
 **Wild Nacatl** carries two such lines (Mountain and Plains) that stack;
 **Kird Ape** (a different subtype, Forest, and a different bonus, +1/+2)
