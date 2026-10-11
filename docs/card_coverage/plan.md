@@ -17,7 +17,7 @@ Every Modern-legal expansion, newest to oldest. Each row links to its `status.md
 
 | Round | Set | Release date | Cards | Tested | Works | State |
 |---|---|---|---|---|---|---|
-| Round 0 | [metagame decks](000-metagame/status.md) (0 cards not full) | - | 0 | - | - | done |
+| Round 0 | [metagame decks](000-metagame/status.md) (10 cards not full) | - | 10 | - | - | in-progress |
 | 293 | [fra](293-fra/status.md) - Reality Fracture | 2026-10-02 | 268 | 219 | 47 | done |
 | 276 | [hob](276-hob/status.md) - The Hobbit | 2026-08-14 | 186 | 121 | 64 | done |
 | 275 | [msh](275-msh/status.md) - Marvel Super Heroes | 2026-06-26 | 270 | 176 | 94 | done |
@@ -197,52 +197,52 @@ Every Modern-legal expansion, newest to oldest. Each row links to its `status.md
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| Choose one | 54 | Cleansing Nova, Open the Omenpaths, Destructive Tampering, Extract the Truth, Timecrafting | 5dn, acr, aer, afr, ala, blb, csp, dft, dmu, dsk, dst, dtk, eld, fin, frf, fut, gtc, hou, khm, kld, ktk, m19, m20, m21, mh1, mid, mkm, mom, mrd, neo, plc, rtr, snc, sok, spm, stx, thb |
-| bushido | 31 | Jade Avenger, Sokenzan Spellblade, Iizuka the Ruthless, Ronin Cavekeeper, Kuro's Taken | bok, chk, mh2, sok |
-| Delirium | 30 | Bloodbraid Marauder, Scuttletide, Foul Watcher, Inquisitor's Ox, Deathcap Cultivator | ddq, dsk, emn, mh2, soi |
-| exalted | 30 | Knight of Glory, Duty-Bound Dead, Cathedral of War, Servant of Nefarox, Duskmantle Prowler | ala, arb, con, m13, mh1, mh2 |
+| Choose one | 54 | Storyweave, Debt to the Kami, Second Sight, Shriveling Rot, Destructive Tampering | 5dn, acr, aer, afr, ala, blb, csp, dft, dmu, dsk, dst, dtk, eld, fin, frf, fut, gtc, hou, khm, kld, ktk, m19, m20, m21, mh1, mid, mkm, mom, mrd, neo, plc, rtr, snc, sok, spm, stx, thb |
+| bushido | 31 | Sokenzan Spellblade, Iizuka the Ruthless, Ronin Cavekeeper, Kuro's Taken, Kitsune Dawnblade | bok, chk, mh2, sok |
+| Delirium | 30 | Mindwrack Demon, Bloodbraid Marauder, Scuttletide, Foul Watcher, Thraben Foulbloods | ddq, dsk, emn, mh2, soi |
+| exalted | 30 | Qasali Pridemage, Sigiled Behemoth, Ardent Plea, Ethercaste Knight, Knight of Glory | ala, arb, con, m13, mh1, mh2 |
 | soulshift | 24 | Elder Pine of Jukai, Nightsoil Kami, Deathknell Kami, Torii Watchward, Promised Kannushi | bok, chk, sok |
-| Landfall | 22 | Reckless Pyrosurfer, Springheart Nantuko, Territory Culler, Rabaroo Troop, Felidar Retreat | bfz, fin, ltr, mh3, ogw, tla, wwk, zen, znr |
-| disturb | 20 | Lunarch Veteran // Luminous Phantom, Devoted Grafkeeper // Departed Soulkeeper, Overwhelmed Archivist // Archive Haunt, Covert Cutpurse // Covetous Geist, Mourning Patrol // Morning Apparition | mid, vow |
+| Landfall | 22 | Emeria Shepherd, Ob Nixilis, the Fallen, Adventuring Gear, Turntimber Basilisk, Roil Elemental | bfz, fin, ltr, mh3, ogw, tla, wwk, zen, znr |
+| disturb | 20 | Dorothea, Vengeful Victim // Dorothea's Retribution, Distracting Geist // Clever Distraction, Drogskol Infantry // Drogskol Armaments, Mischievous Catgeist // Catlike Curiosity, Twinblade Geist // Twinblade Invocation | mid, vow |
 | backup | 18 | Saiba Cryptomancer, Chomping Kavu, Consuming Aetherborn, Gloomfang Mauler, Cragsmasher Yeti | mom |
-| overload | 17 | Fangs of Kalonia, Street Spasm, Weapon Surge, Break the Ice, Mind Rake | ddj, dgm, mh1, mh2, mh3, rtr |
-| prototype | 15 | Frogmyr Enforcer, Goring Warplow, Combat Thresher, Woodcaller Automaton, Blitz Automaton | bro, mh3 |
+| overload | 17 | Street Spasm, Mizzium Skin, Blustersquall, Vandalblast, Downsize | ddj, dgm, mh1, mh2, mh3, rtr |
+| prototype | 15 | Goring Warplow, Combat Thresher, Woodcaller Automaton, Blitz Automaton, Cradle Clearcutter | bro, mh3 |
 | Domain | 14 | Zar Ojanen, Scion of Efrava, Llanowar Greenwidow, Territorial Maro, Nael, Avizoa Aeronaut, Shadow Prophecy | con, dmu |
 | Eerie | 14 | Optimistic Scavenger, Fear of Infinity, Scrabbling Skullcrab, Dashing Bloodsucker, Erratic Apparition | dsk |
-| Metalcraft | 14 | Vedalken Infiltrator, Puresteel Paladin, Jor Kadeen, the Prevailer, Spire Serpent, Razorfield Rhino | mbs, mh2, nph, som |
-| fabricate | 14 | Marionette Apprentice, Visionary Augmenter, Angel of Invention, Maulfist Squad, Ambitious Aetherborn | kld, mh3 |
+| Metalcraft | 14 | Spire Serpent, Razorfield Rhino, Ardent Recruit, Vedalken Infiltrator, Indomitable Archangel | mbs, mh2, nph, som |
+| fabricate | 14 | Visionary Augmenter, Angel of Invention, Maulfist Squad, Ambitious Aetherborn, Peema Outrider | kld, mh3 |
 | embalm | 13 | Heart-Piercer Manticore, Angel of Sanctions, Anointer Priest, Vizier of Many Faces, Tah-Crop Skirmisher | akh |
-| living weapon | 13 | Colossal Dreadmask, Mandibular Kite, Drossclaw, Cranial Ram, Batterbone | mbs, mh2, mh3, nph |
-| unleash | 13 | Rakdos Drake, Exava, Rakdos Blood Witch, Grim Roustabout, Chaos Imps, Carnival Hellsteed | dgm, rtr |
+| living weapon | 13 | Skinwing, Strandwalker, Flayer Husk, Mortarpod, Bonehoard | mbs, mh2, mh3, nph |
+| unleash | 13 | Grim Roustabout, Chaos Imps, Carnival Hellsteed, Spawn of Rix Maadi, Splatter Thug | dgm, rtr |
 | Kinship | 12 | Pyroclast Consul, Winnower Patrol, Sensation Gorger, Waterspout Weavers, Leaf-Crowned Elder | mor |
-| scavenge | 12 | Dreg Mangler, Thrashing Mossdog, Bannerhide Krushok, Terrus Wurm, Deadbridge Goliath | ddj, dgm, mh2, rtr |
-| Hellbent | 11 | Necromancer's Familiar, Gathan Raiders, Cutthroat il-Dal, Gibbering Descent, Headless Specter | dis, fut, mh1, mh2 |
-| evolve | 11 | Battering Krasis, Scurry Oak, Gluttonous Slug, Adaptive Snapjaw, Shambleshark | dgm, gtc, mh1, mh2 |
-| graft | 11 | Llanowar Reborn, Cytoplast Manipulator, Sporeback Troll, Vigean Hydropon, Vigean Graftmage | dis, fut |
+| scavenge | 12 | Dreg Mangler, Terrus Wurm, Deadbridge Goliath, Slitherhead, Korozda Monitor | ddj, dgm, mh2, rtr |
+| Hellbent | 11 | Taste for Mayhem, Rakdos Pit Dragon, Gobhobbler Rats, Slithering Shade, Demon's Jester | dis, fut, mh1, mh2 |
+| evolve | 11 | Battering Krasis, Scurry Oak, Adaptive Snapjaw, Shambleshark, Crocanura | dgm, gtc, mh1, mh2 |
+| graft | 11 | Cytoplast Manipulator, Sporeback Troll, Vigean Hydropon, Vigean Graftmage, Cytospawn Shambler | dis, fut |
 | mentor | 11 | Hammer Dropper, Sunhome Stalwart, Truefire Captain, Blade Instructor, Light of the Legion | grn |
-| retrace | 11 | Throes of Chaos, Flame Jab, Monstrify, Oona's Grace, Savage Conception | eve, mh1 |
+| retrace | 11 | Flame Jab, Monstrify, Oona's Grace, Savage Conception, Cenn's Enlistment | eve, mh1 |
 | Inspired | 10 | King Macar, the Gold-Cursed, Disciple of Deceit, Daring Thief, Servant of Tymaret, Pheres-Band Raiders | bng, jou |
 | Max speed | 10 | Burnout Bashtronaut, Gastal Raider, Swiftwing Assailant, Racers' Scoreboard, Walking Sarcophagus | dft |
 | afterlife | 10 | Ministrant of Obligation, Seraph of the Scales, Orzhov Racketeers, Knight of Sorrows, Knight of the Last Breath | rna |
-| buyback | 10 | Spell Burst, Reiterate, Demonic Collusion, Wurmcalling, Sprout Swarm | fut, mh1, tmp, tsp |
-| champion | 10 | Thoughtweft Trio, Changeling Berserker, Nova Chaser, Wanderwine Prophets, Changeling Titan | lrw, mor |
+| buyback | 10 | Elvish Fury, Whispers of the Muse, Spell Burst, Reiterate, Demonic Collusion | fut, mh1, tmp, tsp |
+| champion | 10 | Supreme Exemplar, Lightning Crafter, Thoughtweft Trio, Changeling Berserker, Nova Chaser | lrw, mor |
 | cipher | 10 | Hidden Strings, Paranoid Delusions, Stolen Identity, Last Thoughts, Voidwalk | dgm, gtc |
-| reinforce | 10 | Fowl Strike, Break Ties, Wren's Run Hydra, Brighthearth Banneret, Burrenton Bombardier | mh2, mh3, mor |
-| jump | 9 | Direct Current, Maximize Altitude, Quasiduplicate, Gravitic Punch, Maximize Velocity | grn, mh2 |
+| reinforce | 10 | Break Ties, Wren's Run Hydra, Brighthearth Banneret, Burrenton Bombardier, Swell of Courage | mh2, mh3, mor |
+| jump | 9 | Dihada's Ploy, Direct Current, Maximize Altitude, Quasiduplicate, Gravitic Punch | grn, mh2 |
 | when ~ enters, incubate N. | 9 | Phyrexian Awakening, Marauding Dreadship, Corruption of Towashi, Blighted Burgeoning, Converter Beast | mom |
 | Strive | 8 | Hour of Need, Polymorphous Rush, Silence the Believers, Blinding Flare, Colossal Heroics | jou |
-| sliver creatures you control have "..." | 8 | Thorncaster Sliver, Manaweft Sliver, Lavabelly Sliver, Tempered Sliver, Hollowhead Sliver | m14, m15, mh1 |
-| Chroma | 7 | Phosphorescent Feast, Springjack Shepherd, Light from Within, Umbra Stalker, Fiery Bombardment | eve, fut |
-| Exhaust | 7 | Jeong Jeong, the Deserter, Mai, Jaded Edge, Winter, Cursed Rider, Mindspring Merfolk, Sita Varma, Masked Racer | dft, tla |
+| sliver creatures you control have "..." | 8 | Constricting Sliver, Thorncaster Sliver, Manaweft Sliver, Lavabelly Sliver, Tempered Sliver | m14, m15, mh1 |
+| Chroma | 7 | Springjack Shepherd, Light from Within, Umbra Stalker, Fiery Bombardment, Primalcrux | eve, fut |
+| Exhaust | 7 | Winter, Cursed Rider, Mindspring Merfolk, Sita Varma, Masked Racer, Boom Scholar, Spire Mechcycle | dft, tla |
 | Radiance | 7 | Incite Hysteria, Wojek Siren, Surge of Zeal, Rally the Righteous, Bathe in Light | psal, rav |
 | for mirrodin! | 7 | Mirran Bardiche, Sylvok Battle-Chair, Goldwarden's Helm, Dragonwing Glider, Vulshok Splitter | one |
 | freerunning | 7 | Merciless Harlequin, Distract the Guards, Brotherhood Ambushers, Achilles Davenport, Restart Sequence | acr |
 | recover | 7 | Grim Harvest, Resize, Icefall, Sun's Bounty, Garza's Assassin | csp |
 | training | 7 | Cloaked Cadet, Hopeful Initiate, Apprentice Sharpshooter, Gryffwing Cavalry, Parish-Blade Trainee | vow |
-| whenever ~ deals combat damage to a creature, tap that creature and it doesn"..."s next untap step. | 7 | Matsu-Tribe Birdstalker, Kashi-Tribe Elite, Frostwalk Bastion, Kashi-Tribe Warriors, Orochi Ranger | chk, mh1, sok |
+| whenever ~ deals combat damage to a creature, tap that creature and it doesn"..."s next untap step. | 7 | Matsu-Tribe Birdstalker, Kashi-Tribe Elite, Kashi-Tribe Warriors, Orochi Ranger, Matsu-Tribe Decoy | chk, mh1, sok |
 | Celebration | 6 | Grand Ball Guest, Goddric, Cloaked Reveler, Armory Mice, Bespoke Battlegarb, Tuinvale Guide | woe |
 | Corrupted | 6 | The Seedcore, Zealot's Conviction, Phyrexian Atlas, Bonepicker Skirge, Goliath Hatchery | one |
-| Raid | 6 | Admiral's Order, Protean Raider, Ruin Raider, Bellowing Saddlebrute, Alesha, Who Laughs at Fate | fdn, ktk, rix, xln |
+| Raid | 6 | Bellowing Saddlebrute, Ruin Raider, Alesha, Who Laughs at Fate, Strongbox Raider, Admiral's Order | fdn, ktk, rix, xln |
 | afflict | 6 | Merciless Eternal, Frontline Devastator, Eternal of Harsh Truths, Spellweaver Eternal, Khenra Eternal | hou |
 | cleave | 6 | Winged Portent, Fierce Retribution, Alchemist's Retrieval, Wash Away, Lunar Rejection | vow |
 | eternalize | 6 | Timeless Witness, Timeless Dragon, Proven Combatant, Steadfast Sentinel, Champion of Wits | hou, mh2 |
@@ -257,6 +257,7 @@ Every Modern-legal expansion, newest to oldest. Each row links to its `status.md
 - 2026-09-27: ecl refresh - 270-ecl done (round landed, 116/116 handled; 136 tested, 113 works, 3 partial, 0 not working). The 3 partial (Eirdu's granted convoke, Sunderflock's and Wildvine Pummeler's self cost reductions) are static_unaudited by the sweep but proven by scenario tests (test_persist_grants.py, test_vivid_cost_and_cda.py). Integration also fixed pre-existing bugs: Chevill's and Shadow Urchin's dies counter qualifier, "a Goblin creature ... dies" subtype, Ancient Tomb damage before Phyrexian life in auto-tap, Devour, irregular-plural tap costs. Not working pool-wide 7953 -> 7686.
 - 2026-09-27: metagame Round 0 refresh - Round 0 is now the not-full cards from docs/card_coverage/metagame.json (spellslinger snapshot) plus deck-dir cards, listed in 000-metagame/status.md: 172 not full (0 tested, 101 works, 13 partial, 58 not working), state in-progress computed from that list (the old 394 label counted every deck card; fixed). Deck-file "Wear/Tear" split spelling now resolves. 259-tdm: Twinmaw Stormbrood now tested (35 -> 36). Pool-wide Not working unchanged at 7686.
 - 2026-10-03: R0b refresh - Round 0 done (0 metagame cards not full; was 100). Pool-wide Not working 7258 -> 7237, tested 3001 -> 3121. Integration also fixed cross-task and cross-stream gaps found while landing: Thousand-Faced Shadow (notice -> silent from R0b-T5, now handled: copy enters tapped and attacking, enters-from-zone triggers, ninjutsu enters attacking), Karai's sneak-paid-this-turn turn counter, Jarad's "Sacrifice a Swamp and a Forest" (unbuildable once T3 refused unread qualities). Thousand-Faced Shadow's enters trigger is a SWEEP_DRIVER_GAPS entry (ninjutsu entry), proven by scenario.
+- 2026-10-11: metagame refresh - metagame.json re-fetched as of 2026-10-11 (modern 32 / pioneer 2 / standard 10 archetypes, 508 cards at >=20% inclusion, 36 new; fetcher now harvests by id when archetype_name= cannot resolve a listed name, modern ur aggro). Round 0 back to in-progress: 10 not full (3 not working: Wild Nacatl, Flare of Malice, Jace, the Mind Sculptor; 7 handled untested). Planned as R0c.
 - 2026-10-04: 293-fra refresh - round landed (engine main 889a24cf, schema 110): 38 planned cards handled and scenario-tested (35 Empower Jace, Clash of Elements, Null Summoner, Proft), 190 pre-release fra fixtures refreshed (189 entered the pool). fra now 218 tested, 47 works, 3 partial, 0 not working; marked done (was provisional): the 3 partial (Null Summoner, Proft, Sinister Mastermind, Sanctum Lurker) are statics the generator does not audit, each proven by its own scenario file. Gigastorm Titan (eoe) incidentally handled by T6's 'cast another spell this turn' reader. Not working 7059 -> 7022.
 - 2026-10-06: refresh after NW-01 landed (engine main e603f392, bulk cache 2026-10-03 kept so the NW before/after counts compare). Overall tested 3302 -> 3451, works (untested) 11382 -> 11432, partial 1092 -> 1091, not working 6994 -> 6796 (the previous refresh predates fix-mana-leftovers and the module split too). No set round state changed (the not-working campaign is chunked by mechanic, not set); support-baseline.json raised (202 cards above the old floor).
 - 2026-10-06: refresh after NW-02 landed (engine main 24ad60f2, bulk cache 2026-10-03 kept so the NW before/after counts compare). Overall tested 3451 -> 3554, works (untested) 11432 -> 11469, partial 1091 -> 1091, not working 6796 -> 6656. No set round state changed (the not-working campaign is chunked by mechanic, not set); support-baseline.json raised.
