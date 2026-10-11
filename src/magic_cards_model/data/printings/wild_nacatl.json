@@ -1,0 +1,133 @@
+{
+  "object": "card",
+  "id": "5a3bb291-11d1-45e0-a60a-e75c7dc94b94",
+  "oracle_id": "35d3d96a-d303-4bf5-b972-f311331ec07a",
+  "multiverse_ids": [
+    249401
+  ],
+  "mtgo_id": 42086,
+  "mtgo_foil_id": 42087,
+  "tcgplayer_id": 52097,
+  "cardmarket_id": 250539,
+  "name": "Wild Nacatl",
+  "lang": "en",
+  "released_at": "2011-09-02",
+  "uri": "https://api.scryfall.com/cards/5a3bb291-11d1-45e0-a60a-e75c7dc94b94",
+  "scryfall_uri": "https://scryfall.com/card/ddh/4/wild-nacatl?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T11:10:25Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/5/a/5a3bb291-11d1-45e0-a60a-e75c7dc94b94.jpg?1783941025",
+    "normal": "https://cards.scryfall.io/normal/front/5/a/5a3bb291-11d1-45e0-a60a-e75c7dc94b94.jpg?1783941025",
+    "large": "https://cards.scryfall.io/large/front/5/a/5a3bb291-11d1-45e0-a60a-e75c7dc94b94.jpg?1783941025",
+    "png": "https://cards.scryfall.io/png/front/5/a/5a3bb291-11d1-45e0-a60a-e75c7dc94b94.png?1783941025",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/5/a/5a3bb291-11d1-45e0-a60a-e75c7dc94b94.jpg?1783941025",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/5/a/5a3bb291-11d1-45e0-a60a-e75c7dc94b94.jpg?1783941025",
+    "thumb": "https://cards.scryfall.io/thumb/front/5/a/5a3bb291-11d1-45e0-a60a-e75c7dc94b94.webp?1783941025",
+    "grid": "https://cards.scryfall.io/grid/front/5/a/5a3bb291-11d1-45e0-a60a-e75c7dc94b94.webp?1783941025",
+    "display": "https://cards.scryfall.io/display/front/5/a/5a3bb291-11d1-45e0-a60a-e75c7dc94b94.webp?1783941025",
+    "art": "https://cards.scryfall.io/art/front/5/a/5a3bb291-11d1-45e0-a60a-e75c7dc94b94.webp?1783941025",
+    "crop": "https://cards.scryfall.io/crop/front/5/a/5a3bb291-11d1-45e0-a60a-e75c7dc94b94.webp?1783941025"
+  },
+  "mana_cost": "{G}",
+  "cmc": 1.0,
+  "type_line": "Creature \u2014 Cat Warrior",
+  "oracle_text": "This creature gets +1/+1 as long as you control a Mountain.\nThis creature gets +1/+1 as long as you control a Plains.",
+  "power": "1",
+  "toughness": "1",
+  "colors": [
+    "G"
+  ],
+  "color_identity": [
+    "G"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": false,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "bad1fe7e-27df-4999-821b-d477c2ec658d",
+  "set": "ddh",
+  "set_name": "Duel Decks: Ajani vs. Nicol Bolas",
+  "set_type": "duel_deck",
+  "set_uri": "https://api.scryfall.com/sets/bad1fe7e-27df-4999-821b-d477c2ec658d",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Addh&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/ddh?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/5a3bb291-11d1-45e0-a60a-e75c7dc94b94/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A35d3d96a-d303-4bf5-b972-f311331ec07a&unique=prints",
+  "collector_number": "4",
+  "digital": false,
+  "rarity": "common",
+  "flavor_text": "\"The Cloud Nacatl sit and think, a bunch of soft paws. We are the Claws of Marisi, stalking, pouncing, drawing blood.\"",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Wayne Reynolds",
+  "artist_ids": [
+    "afc47cec-3ccc-404e-a8c6-4d83dd504271"
+  ],
+  "illustration_id": "fddac24f-0f12-478e-852e-75708c9553ad",
+  "border_color": "black",
+  "frame": "2003",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "edhrec_rank": 16450,
+  "penny_rank": 4594,
+  "prices": {
+    "usd": "0.38",
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": "0.36",
+    "eur_foil": null,
+    "tix": "0.15"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=249401&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DWild%2BNacatl",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DWild%2BNacatl",
+    "edhrec": "https://edhrec.com/route/?cc=Wild+Nacatl"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F52097%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=250539&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/42086?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}
