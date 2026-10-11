@@ -78,6 +78,7 @@ class Group:
 
     self_only: bool = False
     attached: bool = False
+    partners: bool = False
     scope: str = "you"
     other: bool = False
     card_types: tuple[str, ...] = ()
@@ -323,6 +324,8 @@ def _parse_group(text: str) -> Group | None:
         return Group(self_only=True)
     if low in ("enchanted creature", "enchanted land", "enchanted permanent", "enchanted artifact"):
         return Group(attached=True)
+    if low in ("both creatures", "each of those creatures"):
+        return Group(partners=True)
     if low == "enchanted creatures you control":
         return Group(card_types=("creature",), enchanted=True)
     if low == "each creature with the greatest mana value":
@@ -483,6 +486,8 @@ def resolve_qualities(qualities: Sequence[str], source: CardState) -> tuple[str,
             and choice.kind is ChoiceKind.CREATURE_TYPE
         ):
             resolved.append(choice.value.lower())
+        elif quality == "<chosen card name>" and choice.kind is ChoiceKind.CARD_NAME:
+            resolved.append(choice.value)
         else:
             return None
     return tuple(resolved)
@@ -536,6 +541,7 @@ def _selector(group: Group, grant: StaticGrant, source: CardState, context: Laye
         scope=group.scope,
         self_only=group.self_only,
         attached=group.attached,
+        partners=group.partners,
         other=group.other,
         card_types=tuple(Type(each) for each in group.card_types),
         subtypes=group.subtypes + chosen_subtypes,

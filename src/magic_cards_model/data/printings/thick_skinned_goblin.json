@@ -109,15 +109,15 @@
   "textless": false,
   "booster": true,
   "story_spotlight": false,
-  "edhrec_rank": 30769,
-  "penny_rank": 16306,
+  "edhrec_rank": 30724,
+  "penny_rank": 16297,
   "preview": {
     "source": "Commander Cookout",
     "source_uri": "https://www.youtube.com/watch?v=p6eoJRGfLnM",
     "previewed_at": "2021-03-02"
   },
   "prices": {
-    "usd": "0.10",
+    "usd": "0.11",
     "usd_foil": "0.14",
     "usd_etched": null,
     "eur": "0.04",

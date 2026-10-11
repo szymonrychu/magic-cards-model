@@ -159,7 +159,12 @@ def protection_qualities(card: Card) -> list[str]:
     "creatures you control have ... protection from black and from red") -
     `Game._effective_protection_qualities` is the one that reads both.
     """
-    return _qualities_from_text(card.oracle_text)
+    text = card.oracle_text
+    if text is None and card.card_faces:
+        # A flip or transform card prints its text per face (Tok-Tok's
+        # "Protection from red" sits on the flipped half).
+        text = "\n".join(face.oracle_text or "" for face in card.card_faces)
+    return _qualities_from_text(text)
 
 
 def protection_quality_readable(quality: str) -> bool:
@@ -170,7 +175,8 @@ def protection_quality_readable(quality: str) -> bool:
     notice rather than crediting it on presence."""
     wanted = quality.strip().lower()
     return (
-        _is_spell_quality(wanted)
+        wanted == "everything"
+        or _is_spell_quality(wanted)
         or _card_type_named(wanted) is not None
         or wanted in _COLOR_WORDS
         or wanted in _COLOR_COUNT_QUALITIES
@@ -3112,7 +3118,9 @@ class StackPriorityMixin:
         battlefield (a spell on the stack, say) has no computed board to ask,
         so only its own printed protection applies there.
         """
-        qualities = list(protection_qualities(target.card))
+        # The face that is up (CR 710.4, CR 712.8d): a flip card's protection
+        # sits on its flipped half only.
+        qualities = _qualities_from_text(target.oracle_text)
         if target.zone is Zone.BATTLEFIELD:
             try:
                 characteristics = self.characteristics_of(target)

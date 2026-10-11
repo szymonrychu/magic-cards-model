@@ -1238,6 +1238,10 @@ class ConditionsMixin:
         the same way it is always false for a bare `is_spell=True` here.
         """
         wanted = quality.strip().lower()
+        if wanted == "everything":
+            # CR 702.16j: protection from everything is protection from each
+            # object, whatever its characteristics.
+            return True
         if _is_spell_quality(wanted):
             return is_spell
         if (spell_colours := _spell_colour_quality(wanted)) is not None:
@@ -1302,6 +1306,8 @@ class ConditionsMixin:
         because a bare `Card` alone cannot answer it.
         """
         wanted = quality.strip().lower()
+        if wanted == "everything":
+            return True  # CR 702.16j
         if _is_spell_quality(wanted):
             return source.zone is Zone.STACK
         if (spell_colours := _spell_colour_quality(wanted)) is not None:

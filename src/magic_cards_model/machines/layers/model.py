@@ -1907,6 +1907,9 @@ class StaticGroupGrant(SelectorBase):
     scope: Literal["you", "opponents", "any"] = "you"
     self_only: bool = False
     attached: bool = False
+    partners: bool = False
+    """ "both creatures" of a soulbond pair (CR 702.95): the source and the
+    creature it is paired with, while `paired` holds."""
     other: bool = False
     card_types: tuple[Type, ...] = ()
     subtypes: tuple[str, ...] = ()
@@ -1957,6 +1960,9 @@ class StaticGroupGrant(SelectorBase):
         if self.attached:
             source = board.get(self.source_id)
             return source is not None and source.attached_to == chars.card_id
+        if self.partners:
+            source = board.get(self.source_id)
+            return source is not None and chars.card_id in (source.card_id, source.paired_with)
         if self.scope == "you":
             if chars.controller != self.username:
                 return False
