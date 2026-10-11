@@ -46,9 +46,10 @@ def sunlance_can_target(scenario, name, owner="bob"):
 def test_a_permanents_protection_colour_word_is_changed():
     scenario = board(bob_battlefield=["Kor Firewalker"])
     firewalker = scenario.creature("Kor Firewalker", "bob")
-    assert "protection from red" in " ".join(
-        scenario.game.characteristics_of(firewalker).abilities
-    ).lower()
+    assert (
+        "protection from red"
+        in " ".join(scenario.game.characteristics_of(firewalker).abilities).lower()
+    )
 
     enter_swirl(scenario, "blue")
 
@@ -90,9 +91,10 @@ def test_the_change_ends_when_the_enchantment_leaves():
     scenario = board(bob_battlefield=["Kor Firewalker"])
     firewalker = scenario.creature("Kor Firewalker", "bob")
     swirl = enter_swirl(scenario, "blue")
-    assert "protection from blue" in " ".join(
-        scenario.game.characteristics_of(firewalker).abilities
-    ).lower()
+    assert (
+        "protection from blue"
+        in " ".join(scenario.game.characteristics_of(firewalker).abilities).lower()
+    )
 
     scenario.game.put_into_graveyard(swirl)
 

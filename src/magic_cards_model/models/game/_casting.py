@@ -2168,6 +2168,10 @@ class CastingMixin:
                 casting.x_value = x_value
             # CR 601.2b: casualty's sacrifice is announced with the modes,
             # before CR 601.2c's targets.
+            if casualty_x is None and casualty and casualty_x_instances(card.card):
+                # A seat that names the creature without an X pays "Casualty X"
+                # with that creature's power (the most loyalty its copy can have).
+                casualty_x = self.power_of(casualty[0]) or 0
             if casualty_x is not None:
                 casting.announce_casualty_x(casualty_x)
             for creature in casualty or ():

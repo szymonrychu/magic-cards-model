@@ -29,10 +29,7 @@ def _board(mystic_owner, bears_owner):
         "Rancor",
     ]
     scenario = (
-        Scenario()
-        .player("alice", **players["alice"])
-        .player("bob", **players["bob"])
-        .build()
+        Scenario().player("alice", **players["alice"]).player("bob", **players["bob"]).build()
     )
     bears = scenario.creature("Grizzly Bears", bears_owner)
     rancor = scenario.creature("Rancor", bears_owner)

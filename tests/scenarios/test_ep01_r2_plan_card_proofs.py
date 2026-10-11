@@ -12,8 +12,8 @@ attacks; a blocked one to its blockers), CR 702.12a (indestructible), CR 611.3a
 
 import pytest
 
-from magic_cards_model.machines.combat import has_keyword
 from magic_cards_model.machines import Step
+from magic_cards_model.machines.combat import has_keyword
 from magic_cards_model.models import Zone
 from tests.scenarios.harness import Scenario
 
@@ -58,7 +58,9 @@ def test_the_creature_may_send_all_its_damage_past_its_blocker(name, power, infe
     assert bears.damage == 0 and bears.counter_count("-1/-1") == 0
 
 
-@pytest.mark.parametrize("name", ["Lone Wolf", "Spinebiter", "Thorn Elemental", "Tornado Elemental"])
+@pytest.mark.parametrize(
+    "name", ["Lone Wolf", "Spinebiter", "Thorn Elemental", "Tornado Elemental"]
+)
 def test_declining_assigns_to_the_blocker_as_usual(name):
     scenario, attacker, bears = attack_into_a_blocker(name)
     scenario.will_take_the_may(False, username="alice", source=name)
@@ -114,8 +116,12 @@ def test_walls_of_ba_sing_se_makes_other_permanents_you_control_indestructible()
 
     assert not has_keyword(walls, "indestructible", scenario.game)
     assert has_keyword(scenario.creature("Grizzly Bears", "alice"), "indestructible", scenario.game)
-    assert has_keyword(scenario.find("Forest", Zone.BATTLEFIELD, "alice"), "indestructible", scenario.game)
-    assert not has_keyword(scenario.creature("Grizzly Bears", "bob"), "indestructible", scenario.game)
+    assert has_keyword(
+        scenario.find("Forest", Zone.BATTLEFIELD, "alice"), "indestructible", scenario.game
+    )
+    assert not has_keyword(
+        scenario.creature("Grizzly Bears", "bob"), "indestructible", scenario.game
+    )
 
 
 def test_that_which_was_taken_gives_indestructible_to_a_permanent_with_a_divinity_counter():
@@ -123,7 +129,14 @@ def test_that_which_was_taken_gives_indestructible_to_a_permanent_with_a_divinit
         Scenario()
         .player(
             "alice",
-            battlefield=["That Which Was Taken", "Grizzly Bears", "Mountain", "Mountain", "Mountain", "Mountain"],
+            battlefield=[
+                "That Which Was Taken",
+                "Grizzly Bears",
+                "Mountain",
+                "Mountain",
+                "Mountain",
+                "Mountain",
+            ],
         )
         .player("bob", battlefield=["Grizzly Bears"])
         .build()
@@ -135,7 +148,11 @@ def test_that_which_was_taken_gives_indestructible_to_a_permanent_with_a_divinit
     assert not has_keyword(mine, "indestructible", scenario.game)
 
     scenario.activate(
-        taken, *scenario.untapped_sources(*["Mountain"] * 4), index=0, username="alice", targets=[mine]
+        taken,
+        *scenario.untapped_sources(*["Mountain"] * 4),
+        index=0,
+        username="alice",
+        targets=[mine],
     )
     scenario.resolve_top()
 
@@ -147,13 +164,18 @@ def test_that_which_was_taken_gives_indestructible_to_a_permanent_with_a_divinit
 def test_gold_forged_thopteryx_gives_your_legendary_permanents_ward_two():
     scenario = (
         Scenario()
-        .player("alice", battlefield=["Gold-Forged Thopteryx", "The Walls of Ba Sing Se", "Grizzly Bears"])
+        .player(
+            "alice",
+            battlefield=["Gold-Forged Thopteryx", "The Walls of Ba Sing Se", "Grizzly Bears"],
+        )
         .player("bob", battlefield=["The Walls of Ba Sing Se"])
         .build()
     )
 
     def lines(name, owner):
-        return scenario.game.characteristics_of(scenario.find(name, Zone.BATTLEFIELD, owner)).abilities
+        return scenario.game.characteristics_of(
+            scenario.find(name, Zone.BATTLEFIELD, owner)
+        ).abilities
 
     assert "Ward {2}" in lines("The Walls of Ba Sing Se", "alice")
     assert "Ward {2}" not in lines("Grizzly Bears", "alice")

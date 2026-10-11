@@ -92,9 +92,7 @@ def test_a_spell_cast_from_hand_does_not_have_convoke():
 
 
 def test_party_thrasher_gives_convoke_only_to_noncreature_spells_from_exile():
-    scenario = _board(
-        "Party Thrasher", "Grizzly Bears", hand=("Divination", "Grizzly Bears")
-    )
+    scenario = _board("Party Thrasher", "Grizzly Bears", hand=("Divination", "Grizzly Bears"))
     for name in ("Divination", "Grizzly Bears"):
         card = scenario.game.exile_permanent(scenario.find(name, Zone.HAND, "alice"))
         scenario.game.grant_play_permission(

@@ -164,9 +164,7 @@ def test_declining_the_casualty_asks_nothing_further_and_makes_no_copy():
 
 def test_plus_one_makes_each_opponent_lose_2_life_unless_they_discard():
     scenario = board()
-    scenario.game.put_onto_battlefield(
-        scenario.find(OB, Zone.HAND, "alice"), "alice"
-    )
+    scenario.game.put_onto_battlefield(scenario.find(OB, Zone.HAND, "alice"), "alice")
     ob = obs(scenario)[0]
     life = scenario.player("bob").life
     scenario.will_take_the_may(False)

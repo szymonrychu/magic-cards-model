@@ -835,7 +835,9 @@ def _mass_group_filter(
         return None
     # Whose permanents is the caller's question (`group_match["whose"]`).
     fields = {
-        key: value for key, value in spec.items() if key not in ("other", "chosen", "scope", "enchanted_player")
+        key: value
+        for key, value in spec.items()
+        if key not in ("other", "chosen", "scope", "enchanted_player")
     }
     selector = GroupMatch(username=None, scope="any", **fields)
 

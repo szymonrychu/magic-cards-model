@@ -984,7 +984,10 @@ class ActivationMixin:
         from ...machines.attached_restrictions import enchanted_player_activation_prohibition
 
         barred = enchanted_player_activation_prohibition(
-            self, controller, is_mana=ability.mana is not None, is_loyalty=ability.loyalty is not None
+            self,
+            controller,
+            is_mana=ability.mana is not None,
+            is_loyalty=ability.loyalty is not None,
         )
         if barred is not None:
             return barred

@@ -26,7 +26,6 @@ from typing import TYPE_CHECKING
 
 from ..models.card import Card
 from ..models.card_state import CardState, ChoiceKind
-from ..models.zone import Zone
 
 if TYPE_CHECKING:
     from ..models.game import Game

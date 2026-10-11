@@ -90,7 +90,8 @@ _VERB_RE = re.compile(r" (?:gets?|have|has|are|is|loses?) ")
 
 _NAMED_RE = re.compile(r"^(?P<head>.+?) named (?P<names>.+)$")
 _SUFFIX_ATTACHED_RE = re.compile(
-    r" attached to (?:an? |any )?(?:permanents?|creatures?) (?P<who>you control|your opponents control)$"
+    r" attached to (?:an? |any )?(?:permanents?|creatures?) "
+    r"(?P<who>you control|your opponents control)$"
 )
 _SUFFIX_ENCHANTED_PLAYER_RE = re.compile(r" enchanted player controls$")
 _SUFFIX_CONTROL_RE = re.compile(r" (?P<who>you control|your opponents control)$")

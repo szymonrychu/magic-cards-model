@@ -30,6 +30,7 @@ from ..cost import (
 )
 from ..keywords import (
     FACE_DOWN_CAST_COST,
+    casualty_x_instances,
     printed_casualty_numbers,
     printed_conspire_count,
 )
@@ -1113,13 +1114,13 @@ class OptionalAdditionalCost(EngineModel):
 PAY_LIFE_KEYWORD = "pay life"
 
 
-def casualty_cost_phrase(number: int) -> str:
+def casualty_cost_phrase(number: int | str) -> str:
     """CR 702.153a's cost, spelled out: "sacrifice a creature with power N or
     greater"."""
     return f"Sacrifice a creature with power {number} or greater"
 
 
-def casualty_cost_option(number: int) -> OptionalAdditionalCost:
+def casualty_cost_option(number: int | str) -> OptionalAdditionalCost:
     """One casualty instance as an optional additional cost (CR 702.153a,
     CR 118.8b) - `Casting.pay_casualty` pays it."""
     return OptionalAdditionalCost(
@@ -1207,6 +1208,8 @@ def optional_additional_costs(card: Card) -> list[OptionalAdditionalCost]:
             OptionalAdditionalCost(keyword="bargain", cost=BARGAIN_COST, rule="CR 702.166a")
         )
     found.extend(casualty_cost_option(number) for number in printed_casualty_numbers(card))
+    # "Casualty X": X is announced as the spell is cast (CR 107.3a).
+    found.extend(casualty_cost_option("X") for _ in range(casualty_x_instances(card)))
     found.extend(conspire_cost_option() for _ in range(printed_conspire_count(card)))
     for phrase in additional_cost_phrases(card):
         if _OPTIONAL_ADDITIONAL_COST.match(phrase) is None:

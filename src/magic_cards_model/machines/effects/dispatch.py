@@ -6619,11 +6619,11 @@ from .search import (  # noqa: E402
     _parse_search_library_and_outside_distinct_names_opponent_chooses_clause,
     _parse_search_mv_less_than_self_power_clause,
     _parse_search_reveal_shuffle_top_clause,
-    parse_search_exile_then_play_whole_text,
     _parse_search_split_destination_clause,
     _parse_search_that_many_battlefield_clause,
     _read_search_count,
     _search_descriptions,
+    parse_search_exile_then_play_whole_text,
 )
 from .text import (  # noqa: E402
     _parse_all_of_target_player_then_referent_pair,

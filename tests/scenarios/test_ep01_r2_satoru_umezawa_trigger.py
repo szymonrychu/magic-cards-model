@@ -12,7 +12,7 @@ from magic_cards_model.machines import Step
 from magic_cards_model.machines.decisions import CardSplit, DecisionKind
 from magic_cards_model.machines.keywords import ninjutsu_activation
 from magic_cards_model.models import Zone
-from tests.scenarios.harness import Scenario, mana_from
+from tests.scenarios.harness import Scenario
 
 SATORU = "Satoru Umezawa"
 

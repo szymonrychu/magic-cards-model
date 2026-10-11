@@ -43,7 +43,7 @@ def parse_exile_top_choose_one_play(text: str) -> Any:
     action = PlayAction.PLAY if match.group("action").lower() == "play" else PlayAction.CAST
     optional_discard = match.group("may") is not None
 
-    def effect(game: "Game", stack_object: Any) -> None:
+    def effect(game: Game, stack_object: Any) -> None:
         from .effects.draw_discard import _discard_cards
 
         player = game.controller_of(stack_object)
@@ -129,7 +129,7 @@ def parse_reveal_top_take_one_rest_bottom(text: str) -> Any:
     else:
         quality_matches = None
 
-    def effect(game: "Game", ability: Any) -> None:
+    def effect(game: Game, ability: Any) -> None:
         from random import Random
 
         from ..models.zone import Zone
@@ -207,7 +207,7 @@ def parse_search_exile_then_cast_free(text: str) -> Any:
     quality_matches = _quality_matcher(quality)
     needs_shared_color = match.group("shares") is not None
 
-    def effect(game: "Game", ability: Any) -> None:
+    def effect(game: Game, ability: Any) -> None:
         from ..models.zone import Zone
         from .effects.merges import _offer_free_casts_from_among
 

@@ -21,7 +21,9 @@ SPLENDOR = "Overwhelming Splendor"
 def _board():
     scenario = (
         Scenario()
-        .player("alice", battlefield=[SPLENDOR, "Serra Angel", "Mind Stone"], library=["Island"] * 5)
+        .player(
+            "alice", battlefield=[SPLENDOR, "Serra Angel", "Mind Stone"], library=["Island"] * 5
+        )
         .player(
             "bob",
             battlefield=["Serra Angel", "Grizzly Bears", "Mind Stone", "Jace Beleren"],

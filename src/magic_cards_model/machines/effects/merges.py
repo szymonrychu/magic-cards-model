@@ -2027,6 +2027,9 @@ def _merge_damage_each_group_clauses(
 # --------------------------------------------------------------------------
 
 #: "Each player <rest>" - the head of the sentence, whatever `<rest>` is.
+_EACH_OPPONENT_STEP_RE = re.compile(
+    rf"^(?:loses (?:{COUNT}) life unless |discards their hand$)", re.IGNORECASE
+)
 _EACH_PLAYER_HEAD_RE = re.compile(r"^each (?P<who>player|opponent) (?P<rest>.+)$", re.IGNORECASE)
 
 #: "discards N cards at random" - Burning Inquiry's own discard, which is not
@@ -2335,6 +2338,14 @@ def _merge_each_player_clauses(
     """
     head = _EACH_PLAYER_HEAD_RE.fullmatch(clauses[index].strip().rstrip("."))
     if head is None:
+        return None
+    if head.group("who").lower() == "opponent" and not _EACH_OPPONENT_STEP_RE.match(
+        head.group("rest").strip()
+    ):
+        # "Each opponent" is read here only for the two punisher/hand shapes
+        # below; every other "each opponent ..." sentence keeps the readers
+        # it always had (Invasion of Amonkhet's "each opponent discards a card
+        # and you draw a card" splits at the "and").
         return None
 
     steps: list[ClauseEffect] = []

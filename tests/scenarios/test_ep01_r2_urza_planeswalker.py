@@ -96,7 +96,10 @@ def test_plus_two_discounts_artifact_instant_and_sorcery_spells_and_gains_two_li
 
 def test_minus_ten_destroys_nonland_permanents_but_not_artifacts_and_planeswalkers():
     scenario = _board(
-        "Mind Stone", "Grizzly Bears", "Forest", "Jace Beleren",
+        "Mind Stone",
+        "Grizzly Bears",
+        "Forest",
+        "Jace Beleren",
         bob=["Mind Stone", "Wind Drake", "Island"],
     )
     urza = scenario.creature(URZA)
