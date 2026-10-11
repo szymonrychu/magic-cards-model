@@ -221,16 +221,26 @@ def enumerate_archetype_decks(
     that listing again for this archetype - the listing never depends on
     which archetype is asking."""
     decks: dict[tuple[str, str], list[str]] = {}
+    secondary_ids = set(merge.ids) - {merge.top_id}
 
     for day in days:
-        response = client.statistics_decks(
-            format=format,
-            archetype_name=merge.canonical_name,
-            date_from=day,
-            date_to=day,
-            limit=5000,
-            include_cards="names_only",
-        )
+        try:
+            response = client.statistics_decks(
+                format=format,
+                archetype_name=merge.canonical_name,
+                date_from=day,
+                date_to=day,
+                limit=5000,
+                include_cards="names_only",
+            )
+        except MCPCallError as exc:
+            if "archetype not found" not in str(exc):
+                raise
+            # A name statistics_archetypes lists but archetype_name= cannot
+            # resolve (modern "ur aggro", 2026-10-11): every id, the top one
+            # included, is reached through the whole-format listing instead.
+            secondary_ids = set(merge.ids)
+            break
         items, truncated, original_count = response_items(response)
         if truncated:
             raise TruncationError(
@@ -243,7 +253,6 @@ def enumerate_archetype_decks(
         for item in items:
             decks[_deck_key(item)] = item.get("mainboard") or []
 
-    secondary_ids = set(merge.ids) - {merge.top_id}
     if secondary_ids:
         by_day = whole_format_by_day
         if by_day is None:

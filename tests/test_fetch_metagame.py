@@ -209,6 +209,83 @@ def test_enumerate_archetype_decks_secondary_reaches_other_ids_and_dedupes():
     ]
 
 
+class _UnresolvableNameTransport(FakeTransport):
+    """`archetype_name=` reports "archetype not found" for a name
+    `statistics_archetypes` itself lists - seen live for modern "ur aggro"
+    (2026-10-11), the same text the real server returns."""
+
+    def call(self, tool: str, **arguments: Any) -> Any:
+        if "archetype_name" in arguments:
+            self.calls.append((tool, arguments))
+            raise fm.MCPCallError(
+                tool,
+                arguments,
+                "tool reported isError: "
+                f'{{"error":"archetype not found: \\"{arguments["archetype_name"]}\\" in format '
+                f'{arguments["format"]}"}}',
+            )
+        return super().call(tool, **arguments)
+
+
+def test_enumerate_archetype_decks_unresolvable_name_harvests_every_id_from_the_listing():
+    whole_format_page = _load("statistics_decks_whole_format_day.json")
+    by_id_deck = _load("statistics_decks_by_id.json")
+    days = fm.window_days(date(2026, 9, 22), days=30)
+    responses: dict[Any, Any] = {}
+    for day in days:
+        responses[
+            _key(
+                "statistics_decks",
+                format="modern",
+                date_from=day,
+                date_to=day,
+                limit=5000,
+                include_cards="none",
+            )
+        ] = whole_format_page if day == "2026-09-22" else []
+    responses[
+        _key("statistics_decks", format="modern", id="3677f30b-f064-42bf-b500-3cb5a624af68")
+    ] = by_id_deck
+    transport = _UnresolvableNameTransport(responses)
+    client = fm.SpellslingerClient(transport)
+    # The only id is the top id, so the secondary harvest alone would reach
+    # nothing - an unresolvable name must send the top id there too.
+    decks = fm.enumerate_archetype_decks(
+        client,
+        format="modern",
+        merge=fm.ArchetypeMerge(
+            canonical_name="broodscale bloodchief",
+            ids=("b535c0d2-d346-458f-8c83-ec4ca6f20580",),
+            deck_count=1,
+            top_id="b535c0d2-d346-458f-8c83-ec4ca6f20580",
+        ),
+        days=days,
+    )
+    assert decks == {
+        ("chiyou", "2026-09-22T00:00:00Z"): [
+            "4 Basking Broodscale",
+            "4 Kozilek's Command",
+            "1 Cavern of Souls",
+        ]
+    }
+    # Asked by name once, not once per day of the window.
+    assert sum("archetype_name" in args for _, args in transport.calls) == 1
+
+
+def test_enumerate_archetype_decks_other_tool_errors_still_raise():
+    class _Broken(FakeTransport):
+        def call(self, tool: str, **arguments: Any) -> Any:
+            raise fm.MCPCallError(tool, arguments, "tool reported isError: boom")
+
+    with pytest.raises(fm.MCPCallError, match="boom"):
+        fm.enumerate_archetype_decks(
+            fm.SpellslingerClient(_Broken({})),
+            format="modern",
+            merge=_broodscale_merge(),
+            days=fm.window_days(date(2026, 9, 22), days=30),
+        )
+
+
 def test_fetch_whole_format_listing_by_day_is_shared_not_refetched_per_archetype():
     """`fetch_format` fetches the whole-format day listing once per day and
     shares it across every qualifying archetype's secondary harvest,
