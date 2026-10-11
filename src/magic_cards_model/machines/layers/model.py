@@ -881,6 +881,52 @@ class CountBoardWhere(CountBase):
         return max(values, default=0)
 
 
+class CountByControllerOfObject(CountBase):
+    """A number that depends on who controls the asking object - "the number
+    of cards in its controller's graveyard" (Disturbing Conversion, Death's
+    Approach): the enchanted creature's controller, not the Aura's, so the
+    count is read per player when the effect is built (`LayerContext` holds
+    every graveyard and hand) and picked here by the controller layer 2 left
+    the asking object with (CR 613.1b, CR 613.5). A player with no entry
+    counts 0."""
+
+    kind: Literal["by_controller_of_object"] = "by_controller_of_object"
+    counts: tuple[tuple[str, int], ...] = ()
+
+    def __call__(self, chars: Characteristics, board: Board) -> int:
+        return dict(self.counts).get(chars.controller or "", 0)
+
+
+class CountObjectManaValue(CountBase):
+    """The asking object's own mana value - "where X is its mana value"
+    (Hedron Matrix). Read off the characteristics as the layers left them
+    (CR 613.5), whole-numbered the way CR 202.3 counts mana value."""
+
+    kind: Literal["object_mana_value"] = "object_mana_value"
+
+    def __call__(self, chars: Characteristics, board: Board) -> int:
+        return int(chars.mana_value)
+
+
+class CountAttachedWithAnySubtype(CountBase):
+    """How many permanents with any of several subtypes are attached to the
+    asking object - "for each Aura and Equipment attached to it" (With Great
+    Power . . .). `CountAttachedWithSubtype`'s multi-subtype twin; each
+    attached permanent counts once however many of the subtypes it has.
+    Subtypes are stored lowercased."""
+
+    kind: Literal["attached_with_any_subtype"] = "attached_with_any_subtype"
+    subtypes: tuple[str, ...]
+
+    def __call__(self, chars: Characteristics, board: Board) -> int:
+        return sum(
+            1
+            for other in board.values()
+            if other.attached_to == chars.card_id
+            and any(word.lower() in self.subtypes for word in other.subtypes)
+        )
+
+
 #: How many of something an effect counts, judged against one object and the
 #: board as it stands in that sublayer (CR 613.5).
 Count = Annotated[
@@ -901,7 +947,10 @@ Count = Annotated[
     | CountColorsAmongControlledBy
     | CountDevotion
     | CountParty
-    | CountBoardWhere,
+    | CountBoardWhere
+    | CountByControllerOfObject
+    | CountObjectManaValue
+    | CountAttachedWithAnySubtype,
     Field(discriminator="kind"),
 ]
 
@@ -2139,6 +2188,67 @@ class StaticGroupGrant(SelectorBase):
         return True
 
 
+class GrantGroup(SelectorBase):
+    """The group a quoted-ability grant names (CR 113.10a, CR 611.3):
+    "Elves you control", "Human creatures you control", "Other Caves you
+    control", "Each land and Ally you control", "All Sliver creatures",
+    "White creatures you control", "Creatures you control with trample",
+    "Each creature you control with a counter on it", "Permanents you
+    control". Judged against the characteristics layers 1-5 left (CR 613.1f
+    applies after the group is fixed by type and colour).
+
+    `required_types` must all be present ("creatures"); when `any_of_types` or
+    `any_of_subtypes` is non-empty the object must match one of them (CR 205.2b:
+    an object with several types satisfies any criterion naming one) - the
+    "land and Ally" disjunction. `username` restricts to a controller ("you
+    control"); `None` is every player's ("All"). `exclude_id` is "other". All
+    subtypes and keywords are stored lowercased.
+    """
+
+    kind: Literal["grant_group"] = "grant_group"
+    username: str | None = None
+    any_controller: bool = False
+    exclude_id: UUID | None = None
+    required_types: tuple[Type, ...] = ()
+    any_of_types: tuple[Type, ...] = ()
+    any_of_subtypes: tuple[str, ...] = ()
+    colors_any: tuple[Color, ...] = ()
+    #: `""` is "a counter of any kind"; otherwise the named kind.
+    counter_kind: str | None = None
+    keyword: str | None = None
+
+    def __call__(self, chars: Characteristics, board: Board) -> bool:
+        if not self.any_controller and chars.controller != self.username:
+            return False
+        if self.exclude_id is not None and chars.card_id == self.exclude_id:
+            return False
+        if any(card_type not in chars.types for card_type in self.required_types):
+            return False
+        if self.any_of_types or self.any_of_subtypes:
+            by_type = any(card_type in chars.types for card_type in self.any_of_types)
+            by_subtype = any(word.lower() in self.any_of_subtypes for word in chars.subtypes)
+            if not (by_type or by_subtype):
+                return False
+        if self.colors_any and not any(color in chars.colors for color in self.colors_any):
+            return False
+        if self.counter_kind is not None:
+            if self.counter_kind == "":
+                if not any(count > 0 for count in chars.counters.values()):
+                    return False
+            elif chars.counters.get(self.counter_kind, 0) <= 0:
+                return False
+        return self.keyword is None or _lists_keyword(chars.abilities, self.keyword)
+
+
+def _lists_keyword(abilities: Iterable[str], keyword: str) -> bool:
+    """Whether some ability line is, or is a comma list naming, `keyword`."""
+    for line in abilities:
+        bare = re.sub(r"\s*\([^)]*\)", "", line).strip().rstrip(".")
+        if keyword in {part.strip().lower() for part in bare.split(",")}:
+            return True
+    return False
+
+
 class WithChangeling(SelectorBase):
     """Every object that has changeling as layer 4 finds it (CR 702.73a).
 
@@ -2448,6 +2558,7 @@ Selector = Annotated[
     | TappedCreaturesControlledBy
     | StaticGroupGrant
     | WithChangeling
+    | GrantGroup
     | OtherTransformedPermanentsControlledBy
     | ConditionedSelector,
     Field(discriminator="kind"),
@@ -2806,6 +2917,17 @@ class SetPowerToughnessToManaValue(ModificationBase):
         return chars.with_(power=value, toughness=value)
 
 
+class SetPower(ModificationBase):
+    """Sublayer 7b (CR 613.4b), power only - "has base power 0" (Withercrown)
+    sets the base power and leaves the toughness as it is."""
+
+    kind: Literal["set_power"] = "set_power"
+    power: int
+
+    def __call__(self, chars: Characteristics, board: Board) -> Characteristics:
+        return chars.with_(power=self.power)
+
+
 class DefinePowerToughness(ModificationBase):
     """Sublayer 7a: a characteristic-defining ability that defines P/T."""
 
@@ -2916,6 +3038,39 @@ class BecomeACopy(ModificationBase):
             abilities=self.abilities,
             power=self.power,
             toughness=self.toughness,
+        )
+
+
+class BecomeACopyOfObject(ModificationBase):
+    """Layer 1a (CR 613.2a): the object is a copy of another object on the
+    battlefield, read off the board at the moment layer 1 reaches it - "Enchanted
+    creature is a copy of the chosen creature." (Metamorphic Alteration). The
+    copiable values (CR 707.2) are the original's name, mana value, supertypes,
+    card types, subtypes, colours, abilities, power and toughness as layer 1
+    has left them; counters, attachments and the like are not copiable and
+    stay. An original that is no longer on the battlefield is a new object by
+    CR 400.7, so nothing is copied (the effect names an object that no longer
+    exists)."""
+
+    kind: Literal["become_a_copy_of_object"] = "become_a_copy_of_object"
+    object_id: UUID
+
+    def __call__(self, chars: Characteristics, board: Board) -> Characteristics:
+        original = board.get(self.object_id)
+        if original is None or original.card_id == chars.card_id:
+            return chars
+        return chars.with_(
+            defense=original.defense,
+            loyalty=original.loyalty,
+            name=original.name,
+            mana_value=original.mana_value,
+            supertypes=original.supertypes,
+            types=original.types,
+            subtypes=original.subtypes,
+            colors=original.colors,
+            abilities=original.abilities,
+            power=original.power,
+            toughness=original.toughness,
         )
 
 
@@ -3076,6 +3231,31 @@ class GrantLoyaltyAbilitiesOf(ModificationBase):
         return chars.with_(abilities=chars.abilities + added)
 
 
+class SetName(ModificationBase):
+    """Layer 3 (CR 613.1c): a continuous effect that sets an object's name
+    (CR 612.8): "That object loses any names it had and has only the
+    specified name." - Honest Work's "named Humble Merchant"."""
+
+    kind: Literal["set_name"] = "set_name"
+    name: str
+
+    def __call__(self, chars: Characteristics, board: Board) -> Characteristics:
+        return chars.with_(name=self.name)
+
+
+class AddColors(ModificationBase):
+    """Layer 5 (CR 613.1e): gain colours on top of the ones already there -
+    Unctus's "becomes a blue artifact in addition to its other colors and
+    types" (CR 105.3: an effect can make an object more than one colour)."""
+
+    kind: Literal["add_colors"] = "add_colors"
+    colors: tuple[Color, ...] = ()
+
+    def __call__(self, chars: Characteristics, board: Board) -> Characteristics:
+        added = tuple(color for color in self.colors if color not in chars.colors)
+        return chars.with_(colors=chars.colors + added) if added else chars
+
+
 Modification = Annotated[
     LoseAllAbilities
     | LoseKeyword
@@ -3097,6 +3277,7 @@ Modification = Annotated[
     | ReplaceText
     | SetPowerToughness
     | SetPowerToughnessToManaValue
+    | SetPower
     | DefinePowerToughness
     | DefinePower
     | DefineToughness
@@ -3104,9 +3285,12 @@ Modification = Annotated[
     | ModifyPowerToughnessPer
     | SwitchPowerToughness
     | BecomeACopy
+    | BecomeACopyOfObject
     | SetTypesAndSubtypes
     | SetCreatureTypes
     | AddTypesAndSubtype
+    | SetName
+    | AddColors
     | GrantHexproofFromItsColors,
     Field(discriminator="kind"),
 ]

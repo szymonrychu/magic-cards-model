@@ -6278,7 +6278,9 @@ def why_cannot_enchant(aura: CardState, target: Any, caster: str, game: Any = No
         refusal = profile.requirements[0].rejects(target, caster, game)
         if refusal is not None:
             return f"{aura.name} says 'Enchant {restriction}': {refusal} (CR 702.5a)"
-    return None
+    from .layers.attached_grants import cant_be_enchanted_by_other_auras_refusal
+
+    return cant_be_enchanted_by_other_auras_refusal(game, aura, target)
 
 
 def aura_state_based_actions(game: Any) -> list[CardState]:

@@ -1,0 +1,1013 @@
+"""Aura and Equipment statics that read the object they are attached to
+(EP-01 round 2, task T5).
+
+Every sentence here is a static ability of an Aura or Equipment whose subject
+is "enchanted <thing>" / "equipped creature" - whatever the source is attached
+to (CR 303.4b, CR 301.5a), read off `CardState.attached_to` and never off the
+board, with an unattached source producing nothing (CR 303.4c, CR 301.5c).
+`parse_attached_sentence` is the one entry point, called last by
+`parse._parse_layer_sentence_ungated` so a shape another reader already owns
+keeps its reader.
+
+The families, each a template and never a card:
+
+- a count-sized pump: "gets +X/+X, where X is the number of <type> cards in
+  your graveyard / its controller's graveyard / your hand" and "... where X is
+  its mana value", "gets +2/+2 for each Aura and Equipment attached to it"
+  (layer 7c, CR 613.4c; the count is recounted on every board computation,
+  CR 611.3a, CR 613.5);
+- a conditional rider: "gets an additional +2/+2 as long as there are four or
+  more card types among cards in your graveyard" (delirium) / "... as long as
+  you have no cards in hand" (hellbent). The ability word has no rules meaning
+  (CR 207.2c); the condition is the text, read when the effects are built;
+- a plain permanent subject: "Enchanted permanent gets +1/+1 and has
+  vigilance.", "has indestructible.", "has ward {1}.", "Equipped creature has
+  nonbasic landwalk.";
+- a type, colour, ability and name rewrite: "Enchanted land is a 2/2 blue
+  Elemental creature with flying. It's still a land." (layer 4 adds the types,
+  CR 613.1d; layer 5 sets the colour, CR 613.1e; layer 6 grants the keyword,
+  CR 613.1f; sublayer 7b sets base power and toughness, CR 613.4b),
+  "loses all abilities and has base power and toughness 1/1", "is a colorless
+  Food artifact with "..." and loses all other card types and abilities",
+  "is a green and white Citizen creature with base power and toughness 1/1
+  named ...", "loses all land types and abilities and has "..." ", "is a Demon
+  Spirit.", "is legendary.", "is snow.", "loses flying.";
+- a quoted ability, which is a layer 6 grant of the quoted text and also goes
+  on `CardState.granted_ability_texts` so it is a real activated, mana or
+  triggered ability (`attached_quoted_texts`, read by
+  `parse.quoted_ability_grants`; CR 113.10a).
+"""
+
+from __future__ import annotations
+
+import functools
+import re
+from collections.abc import Callable, Sequence
+from dataclasses import dataclass, field
+from uuid import UUID
+
+from ...data.subtypes import canonical_subtype
+from ...models.card import Color, Supertype, Type
+from ...models.card_state import CardState, ChoiceKind
+from ...numbers import parse_count
+from ._common import _COLOR_WORDS, BASIC_LAND_TYPES
+from .apply import EffectBuilder, LayerContext
+from .model import (
+    _PERMANENT_CARD_TYPES,
+    AddColors,
+    AddSubtype,
+    AddSupertype,
+    AddType,
+    BecomeACopyOfObject,
+    ContinuousEffect,
+    CopySublayer,
+    CountAttachedWithAnySubtype,
+    CountByControllerOfObject,
+    CountObjectManaValue,
+    CountPermanentsControlledBy,
+    CountPermanentsWithSubtypeControlledBy,
+    Duration,
+    FixedCount,
+    Layer,
+    LoseAllLandTypes,
+    Modification,
+    SetBasicLandType,
+    SetColors,
+    SetCreatureTypes,
+    SetName,
+    SetPower,
+    SetTypesAndSubtypes,
+    Sublayer,
+    _only,
+    _split_and_validate_keywords,
+    count_card_types,
+    grant_ability,
+    lose_all_abilities,
+    lose_keyword,
+    modify_power_toughness,
+    modify_power_toughness_per,
+    only_this_incarnation,
+    set_power_toughness,
+)
+
+_ATTACHED_SUBJECT = r"(?P<attachment>enchanted|equipped) (?P<noun>[a-z]+)"
+_PT = r"(?P<power>[+-](?:\d+|x))/(?P<toughness>[+-](?:\d+|x))"
+
+
+def _source_line(source: CardState, sentence: str) -> str:
+    from .parse import _source_line_for
+
+    return _source_line_for(source, sentence)
+
+
+def _subject_ok(noun: str) -> bool:
+    from .parse import _card_type_word
+
+    return (
+        noun in {"permanent", "land"}
+        or _card_type_word(noun) is not None
+        or (noun.capitalize() in {"Mountain", "Island", "Plains", "Swamp", "Forest"})
+    )
+
+
+def _multiplier(box: str) -> int:
+    """`+X` -> 1, `-X` -> -1, `+0`/`-0` -> 0, `+2` -> 2 (a count's multiplier)."""
+    sign = -1 if box.startswith("-") else 1
+    body = box[1:].lower()
+    return 0 if body == "0" else sign * (1 if body == "x" else int(body))
+
+
+# --------------------------------------------------------------------------
+# Counts
+# --------------------------------------------------------------------------
+
+_ZONE_COUNT_RE = re.compile(
+    r"^the number of (?:(?P<kind>[a-z]+) )?cards in "
+    r"(?P<whose>your|its controller's) (?P<zone>graveyard|hand)$",
+    re.IGNORECASE,
+)
+_MANA_VALUE_RE = re.compile(r"^its mana value$", re.IGNORECASE)
+_ATTACHED_COUNT_RE = re.compile(
+    r"^(?P<subtypes>[a-z]+(?: (?:and|and/or|or) [a-z]+)*) attached to it$", re.IGNORECASE
+)
+
+CountFactory = Callable[[CardState, LayerContext], object]
+
+
+def _card_kinds(kind: str | None) -> tuple[Type, ...] | None:
+    """The card types a "<kind> cards" qualifier names - `()` for every card,
+    `None` for a qualifier this does not read."""
+    from .parse import _card_type_word
+
+    if kind is None:
+        return ()
+    if kind.lower() == "permanent":
+        return tuple(_PERMANENT_CARD_TYPES)
+    card_type = _card_type_word(kind)
+    return None if card_type is None else (card_type,)
+
+
+def _count_factory(phrase: str) -> CountFactory | None:
+    """A "where X is ..." phrase as a factory taking the source and the layer
+    context and returning the `Count` (read at build time for a zone, off the
+    asking object for a mana value)."""
+    text = phrase.strip().rstrip(".")
+    if _MANA_VALUE_RE.fullmatch(text):
+        return lambda source, context: CountObjectManaValue()
+    match = _ZONE_COUNT_RE.fullmatch(text)
+    if match is None:
+        return None
+    kinds = _card_kinds(match.group("kind"))
+    zone = match.group("zone").lower()
+    if kinds is None or (zone == "hand" and kinds):
+        return None
+    yours = match.group("whose").lower() == "your"
+
+    def qualifying(cards: Sequence[CardState]) -> int:
+        return sum(1 for card in cards if not kinds or any(kind in card.types for kind in kinds))
+
+    if zone == "hand":
+        if yours:
+            return lambda source, context: FixedCount(value=context.hand_size_of(source.controller))
+        return lambda source, context: CountByControllerOfObject(
+            counts=tuple(sorted(context.hand_size_by_player.items()))
+        )
+    if yours:
+        return lambda source, context: FixedCount(
+            value=qualifying(context.graveyard_of(source.controller))
+        )
+    return lambda source, context: CountByControllerOfObject(
+        counts=tuple(
+            sorted(
+                (player, qualifying(cards))
+                for player, cards in context.graveyard_by_controller.items()
+            )
+        )
+    )
+
+
+# --------------------------------------------------------------------------
+# Conditions ("as long as ...") read when the effects are built
+# --------------------------------------------------------------------------
+
+_CARD_TYPES_AMONG_RE = re.compile(
+    r"^there are (?P<n>[a-z0-9]+) or more card types among cards in your graveyard$",
+    re.IGNORECASE,
+)
+_NO_CARDS_IN_HAND_RE = re.compile(r"^you have no cards in hand$", re.IGNORECASE)
+_HAND_AT_MOST_RE = re.compile(r"^you have (?P<n>[a-z0-9]+) or fewer cards in hand$", re.IGNORECASE)
+_GRAVEYARD_AT_LEAST_RE = re.compile(
+    r"^(?:there are|you have) (?P<n>[a-z0-9]+) or more cards in your graveyard$", re.IGNORECASE
+)
+_ConditionFn = Callable[[CardState, LayerContext], bool]
+
+
+def _condition(text: str) -> _ConditionFn | None:
+    text = text.strip().rstrip(".")
+    if match := _CARD_TYPES_AMONG_RE.fullmatch(text):
+        n = parse_count(match.group("n"), article=False)
+        if n is None:
+            return None
+        return lambda source, context: (
+            count_card_types(context.graveyard_of(source.controller)) >= n
+        )
+    if _NO_CARDS_IN_HAND_RE.fullmatch(text):
+        return lambda source, context: context.hand_size_of(source.controller) == 0
+    if match := _HAND_AT_MOST_RE.fullmatch(text):
+        n = parse_count(match.group("n"), article=False)
+        if n is None:
+            return None
+        return lambda source, context: context.hand_size_of(source.controller) <= n
+    if match := _GRAVEYARD_AT_LEAST_RE.fullmatch(text):
+        n = parse_count(match.group("n"), article=False)
+        if n is None:
+            return None
+        return lambda source, context: len(context.graveyard_of(source.controller)) >= n
+    return None
+
+
+# --------------------------------------------------------------------------
+# Pumps
+# --------------------------------------------------------------------------
+
+_PUMP_WHERE_X_RE = re.compile(
+    rf"^{_ATTACHED_SUBJECT} gets {_PT}, where x is (?P<phrase>.+)$", re.IGNORECASE
+)
+_PUMP_FOR_EACH_RE = re.compile(
+    rf"^{_ATTACHED_SUBJECT} gets {_PT} for each (?P<phrase>.+)$", re.IGNORECASE
+)
+_PUMP_ADDITIONAL_RE = re.compile(
+    rf"^{_ATTACHED_SUBJECT} gets an additional {_PT} as long as (?P<condition>.+)$", re.IGNORECASE
+)
+_PERMANENT_STATIC_RE = re.compile(
+    rf"^{_ATTACHED_SUBJECT}(?: gets (?P<pt>[+-]\d+/[+-]\d+))?(?: and)?"
+    r"(?: (?:has|have) (?P<keywords>.+))?$",
+    re.IGNORECASE,
+)
+
+
+def _pump_per_count_builder(
+    factory: CountFactory, power: int, toughness: int, *, subject: str, line: str
+) -> EffectBuilder:
+    def builder(source, timestamp, targets, context):
+        attached = source.attached_to
+        if attached is None:
+            return []
+        return [
+            ContinuousEffect(
+                description=(
+                    f"{source.name}: {subject} gets {power:+d}/{toughness:+d} per counted object"
+                ),
+                layer=Layer.POWER_TOUGHNESS,
+                sublayer=Sublayer.MODIFY,
+                timestamp=timestamp,
+                source_id=source.id,
+                source_ability=_source_line(source, line),
+                selector=_only(attached),
+                modification=modify_power_toughness_per(factory(source, context), power, toughness),
+            )
+        ]
+
+    return builder
+
+
+def _additional_pump_builder(
+    power: int, toughness: int, condition: _ConditionFn, *, subject: str, line: str
+) -> EffectBuilder:
+    def builder(source, timestamp, targets, context):
+        attached = source.attached_to
+        if attached is None or not condition(source, context):
+            return []
+        return [
+            ContinuousEffect(
+                description=(
+                    f"{source.name}: {subject} gets an additional {power:+d}/{toughness:+d}"
+                ),
+                layer=Layer.POWER_TOUGHNESS,
+                sublayer=Sublayer.MODIFY,
+                timestamp=timestamp,
+                source_id=source.id,
+                source_ability=_source_line(source, line),
+                selector=_only(attached),
+                modification=modify_power_toughness(power, toughness),
+            )
+        ]
+
+    return builder
+
+
+_CONTROLLED_COUNT_RE = re.compile(
+    r"^(?P<kind>[a-z]+) you control(?: and (?:has|have) (?P<keywords>.+?))?\.?$", re.IGNORECASE
+)
+
+
+def _parse_pump_per_controlled(match: re.Match[str], sentence: str) -> EffectBuilder | None:
+    """ "Enchanted creature gets +1/+1 for each enchantment you control[ and has
+    first strike]" (Ethereal Armor): one permanent of the named card type or
+    subtype counts per object the Aura's controller controls (CR 109.4,
+    CR 613.4c), recounted on every board computation (CR 611.3a). The keyword
+    tail, when there is one, is the same attached grant a plain "has" reads."""
+    from .parse import _attached_creature_static_builder, _card_type_word
+
+    counted = _CONTROLLED_COUNT_RE.fullmatch(match["phrase"].strip())
+    if counted is None:
+        return None
+    kind = counted["kind"].lower()
+    card_type = _card_type_word(kind)
+    subtype = None if card_type is not None else canonical_subtype(kind)
+    if card_type is None and subtype is None:
+        return None
+    keywords: list[str] = []
+    if counted["keywords"] is not None:
+        parsed = keywords_of(counted["keywords"])
+        if parsed is None:
+            return None
+        keywords = parsed
+
+    def factory(source, context):
+        if card_type is not None:
+            return CountPermanentsControlledBy(username=source.controller, card_type=card_type)
+        return CountPermanentsWithSubtypeControlledBy(
+            username=source.controller, subtype=subtype.lower()
+        )
+
+    subject = f"{match['attachment'].lower()} {match['noun'].lower()}"
+    pump = _pump_per_count_builder(
+        factory,
+        _multiplier(match["power"]),
+        _multiplier(match["toughness"]),
+        subject=subject,
+        line=sentence,
+    )
+    if not keywords:
+        return pump
+    grant = _attached_creature_static_builder(0, 0, keywords, subject=subject, line=sentence)
+
+    def builder(source, timestamp, targets, context):
+        return [
+            *pump(source, timestamp, targets, context),
+            *grant(source, timestamp, targets, context),
+        ]
+
+    return builder
+
+
+def _parse_pump(sentence: str) -> EffectBuilder | None:
+    if match := _PUMP_WHERE_X_RE.fullmatch(sentence):
+        if not _subject_ok(match["noun"].lower()):
+            return None
+        factory = _count_factory(match["phrase"])
+        if factory is None:
+            return None
+        return _pump_per_count_builder(
+            factory,
+            _multiplier(match["power"]),
+            _multiplier(match["toughness"]),
+            subject=f"{match['attachment'].lower()} {match['noun'].lower()}",
+            line=sentence,
+        )
+    if match := _PUMP_FOR_EACH_RE.fullmatch(sentence):
+        if not _subject_ok(match["noun"].lower()):
+            return None
+        if (controlled := _parse_pump_per_controlled(match, sentence)) is not None:
+            return controlled
+        counted = _ATTACHED_COUNT_RE.fullmatch(match["phrase"].strip().rstrip("."))
+        if counted is None:
+            return None
+        words = [
+            canonical_subtype(word)
+            for word in re.split(r" (?:and/or|and|or) ", counted["subtypes"], flags=re.IGNORECASE)
+        ]
+        if any(word is None for word in words):
+            return None
+        subtypes = tuple(word.lower() for word in words if word is not None)
+        return _pump_per_count_builder(
+            lambda source, context: CountAttachedWithAnySubtype(subtypes=subtypes),
+            _multiplier(match["power"]),
+            _multiplier(match["toughness"]),
+            subject=f"{match['attachment'].lower()} {match['noun'].lower()}",
+            line=sentence,
+        )
+    if match := _PUMP_ADDITIONAL_RE.fullmatch(sentence):
+        if not _subject_ok(match["noun"].lower()):
+            return None
+        condition = _condition(match["condition"])
+        if condition is None:
+            return None
+        return _additional_pump_builder(
+            _multiplier(match["power"]),
+            _multiplier(match["toughness"]),
+            condition,
+            subject=f"{match['attachment'].lower()} {match['noun'].lower()}",
+            line=sentence,
+        )
+    return None
+
+
+# --------------------------------------------------------------------------
+# "Enchanted permanent gets +N/+N and has <keywords>" / "Equipped creature has
+# <keywords>" - the creature-only readers' permanent twin
+# --------------------------------------------------------------------------
+
+_LANDWALK_RE = re.compile(r"^(?:nonbasic|legendary|snow|artifact) landwalk$", re.IGNORECASE)
+
+
+def keywords_of(raw: str) -> list[str] | None:
+    """`raw` as a keyword list, with the supertype/card-type landwalks
+    (CR 702.14a) `_split_and_validate_keywords` does not whitelist."""
+    parts = re.split(r",\s*(?:and\s+)?|\s+and\s+", raw.strip())
+    if parts and all(_LANDWALK_RE.fullmatch(part.strip()) for part in parts):
+        return [part.strip().capitalize() for part in parts]
+    return _split_and_validate_keywords(raw)
+
+
+def _parse_permanent_static(sentence: str) -> EffectBuilder | None:
+    match = _PERMANENT_STATIC_RE.fullmatch(sentence.rstrip("."))
+    if match is None or not _subject_ok(match["noun"].lower()):
+        return None
+    if match["pt"] is None and match["keywords"] is None:
+        return None
+    keywords: list[str] = []
+    if match["keywords"] is not None:
+        parsed = keywords_of(match["keywords"])
+        if parsed is None:
+            return None
+        keywords = parsed
+    power = toughness = 0
+    if match["pt"] is not None:
+        p, t = match["pt"].split("/")
+        power, toughness = int(p), int(t)
+    from .parse import _attached_creature_static_builder
+
+    return _attached_creature_static_builder(
+        power,
+        toughness,
+        keywords,
+        subject=f"{match['attachment'].lower()} {match['noun'].lower()}",
+        line=sentence,
+    )
+
+
+# --------------------------------------------------------------------------
+# Type, colour, ability and name rewrites
+# --------------------------------------------------------------------------
+
+_QUOTED_REF = re.compile(r"\x00(\d+)\x00")
+_CARD_TYPE_WORDS = {
+    "creature": Type.CREATURE,
+    "artifact": Type.ARTIFACT,
+    "land": Type.LAND,
+    "enchantment": Type.ENCHANTMENT,
+}
+_SPLIT_RE = re.compile(r",? and (?:it )?(?=loses |is |are |has |have |can't )", re.IGNORECASE)
+
+
+@dataclass
+class _Change:
+    """What one attached rewrite sentence does, by layer."""
+
+    name: str | None = None
+    set_types: tuple[Type, ...] | None = None
+    set_subtypes: tuple[str, ...] = ()
+    add_types: tuple[Type, ...] = ()
+    add_subtypes: tuple[str, ...] = ()
+    creature_types: tuple[str, ...] | None = None
+    supertypes: tuple[Supertype, ...] = ()
+    lose_land_types: bool = False
+    colors: tuple[Color, ...] | None = None
+    lose_abilities: bool = False
+    lose_keywords: tuple[str, ...] = ()
+    keywords: list[str] = field(default_factory=list)
+    quoted: list[str] = field(default_factory=list)
+    base_pt: tuple[int, int] | None = None
+    base_power: int | None = None
+    cant_be_enchanted: bool = False
+    copy_of_chosen: bool = False
+    basic_land_type: str | None = None
+    land_type_additive: bool = False
+    add_colors: tuple[Color, ...] = ()
+
+    def anything(self) -> bool:
+        return any(
+            (
+                self.name,
+                self.set_types,
+                self.add_types,
+                self.add_subtypes,
+                self.creature_types,
+                self.supertypes,
+                self.lose_land_types,
+                self.colors is not None,
+                self.lose_abilities,
+                self.lose_keywords,
+                self.keywords,
+                self.quoted,
+                self.base_pt,
+                self.base_power is not None,
+                self.cant_be_enchanted,
+                self.copy_of_chosen,
+                self.basic_land_type,
+                self.add_colors,
+            )
+        )
+
+
+def _colors_of(words: list[str]) -> tuple[Color, ...] | None:
+    """The colour words at the start of a head: a colour set, `()` for
+    colorless, `None` if there is no colour word at all."""
+    if words and words[0].lower() == "colorless":
+        return ()
+    found = [_COLOR_WORDS[word.lower()] for word in words if word.lower() in _COLOR_WORDS]
+    return tuple(found) if found else None
+
+
+def _read_is_clause(clause: str, quotes: list[str], change: _Change) -> bool:
+    """`is a[n] ...` / `is legendary` / `is snow`, folded into `change`."""
+    body = clause.strip().rstrip(".")
+    lowered = body.lower()
+    if lowered == "a copy of the chosen creature":
+        change.copy_of_chosen = True
+        return True
+    if lowered in {"legendary", "snow"}:
+        change.supertypes += (Supertype.LEGENDARY if lowered == "legendary" else Supertype.SNOW,)
+        return True
+    in_addition = False
+    for marker in (
+        r"[,.]? ?(?:and )?(?:it|that)'s still an? land",
+        r" that's still an? land",
+        r"\. it's still an? land",
+    ):
+        replaced = re.sub(marker + r"$", "", body, flags=re.IGNORECASE)
+        if replaced != body:
+            body, in_addition = replaced, True
+            break
+    additive_colors = False
+    addition = re.search(
+        r" in addition to (?:its|his|her|their) other (?:colors and types|types|colors)$",
+        body,
+        flags=re.IGNORECASE,
+    )
+    if addition:
+        body, in_addition, additive_colors = body[: addition.start()], True, True
+    named = re.search(r" named (?P<name>[A-Z][^\x00]*?)$", body)
+    if named:
+        change.name = named["name"].strip()
+        body = body[: named.start()]
+    # "... and Q0 named X" / "... with Q0": quoted abilities
+    for quoted in re.finditer(r"\x00(\d+)\x00", body):
+        change.quoted.append(quotes[int(quoted[1])])
+    body = re.sub(r"(?:,? ?(?:and|with) )?\x00\d+\x00,?", "", body).strip()
+    body = re.sub(r"\s+", " ", body)
+    pt = re.search(r" with base power and toughness (\d+)/(\d+)$", body)
+    if pt:
+        change.base_pt = (int(pt[1]), int(pt[2]))
+        body = body[: pt.start()]
+    with_keywords = re.search(
+        r" with (?P<kw>[a-z ,]+?)(?: and base power and toughness (\d+)/(\d+))?$", body
+    )
+    if with_keywords and with_keywords["kw"].lower() not in {"base power and toughness"}:
+        parsed = keywords_of(with_keywords["kw"])
+        if parsed is None:
+            return False
+        change.keywords.extend(parsed)
+        if with_keywords[2]:
+            change.base_pt = (int(with_keywords[2]), int(with_keywords[3]))
+        body = body[: with_keywords.start()]
+    body = re.sub(r"^(?:an?|the) ", "", body, flags=re.IGNORECASE)
+    tokens = body.split()
+    if tokens and re.fullmatch(r"\d+/\d+", tokens[0]):
+        change.base_pt = tuple(int(n) for n in tokens[0].split("/"))  # type: ignore[assignment]
+        tokens = tokens[1:]
+    # colour words, possibly joined by "and"
+    color_words: list[str] = []
+    while tokens and (
+        tokens[0].lower() in _COLOR_WORDS
+        or tokens[0].lower() == "colorless"
+        or (
+            tokens[0].lower() == "and"
+            and color_words
+            and len(tokens) > 1
+            and tokens[1].lower() in _COLOR_WORDS
+        )
+    ):
+        word = tokens.pop(0)
+        if word.lower() != "and":
+            color_words.append(word)
+    if color_words:
+        colors = _colors_of(color_words)
+        if additive_colors:
+            change.add_colors = colors or ()
+        else:
+            change.colors = colors
+    card_types: list[Type] = []
+    subtypes: list[str] = []
+    for token in tokens:
+        lowered_token = token.lower()
+        if lowered_token in _CARD_TYPE_WORDS:
+            card_types.append(_CARD_TYPE_WORDS[lowered_token])
+        elif (subtype := canonical_subtype(token)) is not None:
+            if subtype.capitalize() in BASIC_LAND_TYPES:
+                change.basic_land_type = subtype.capitalize()
+                change.land_type_additive = in_addition
+            else:
+                subtypes.append(subtype)
+        else:
+            return False
+    types = tuple(card_types)
+    subs = tuple(word.capitalize() for word in subtypes)
+    if in_addition:
+        change.add_types, change.add_subtypes = types, subs
+    elif types:
+        change.set_types, change.set_subtypes = types, subs
+    elif subs:
+        change.creature_types = subs
+    return True
+
+
+def _read_has_clause(clause: str, quotes: list[str], change: _Change) -> bool:
+    body = clause.strip().rstrip(".")
+    if match := re.fullmatch(r"base power (\d+)", body, re.IGNORECASE):
+        change.base_power = int(match[1])
+        return True
+    if match := re.fullmatch(r"base power and toughness (\d+)/(\d+)", body, re.IGNORECASE):
+        change.base_pt = (int(match[1]), int(match[2]))
+        return True
+    pieces = re.split(r",? and |, ", body)
+    for piece in pieces:
+        piece = piece.strip()
+        quote = _QUOTED_REF.fullmatch(piece)
+        if quote:
+            change.quoted.append(quotes[int(quote[1])])
+            continue
+        if match := re.fullmatch(r"base power (\d+)", piece, re.IGNORECASE):
+            change.base_power = int(match[1])
+            continue
+        parsed = keywords_of(piece)
+        if parsed is None:
+            return False
+        change.keywords.extend(parsed)
+    return True
+
+
+def _read_loses_clause(clause: str, change: _Change) -> bool:
+    body = clause.strip().rstrip(".").lower()
+    if body in {"all abilities", "all other abilities"}:
+        change.lose_abilities = True
+        return True
+    if body == "all land types and abilities":
+        change.lose_land_types = change.lose_abilities = True
+        return True
+    if body == "all other card types and abilities":
+        change.lose_abilities = True
+        return True
+    parsed = keywords_of(body)
+    if parsed is None:
+        return False
+    change.lose_keywords += tuple(word.lower() for word in parsed)
+    return True
+
+
+NO_OTHER_AURAS = "can't be enchanted by other auras"
+
+
+def _read_change(sentence: str) -> tuple[_Change, str, list[str]] | None:
+    """A rewrite sentence as `(change, subject, quoted texts)`, or `None`."""
+    quotes: list[str] = []
+
+    def stash(match: re.Match[str]) -> str:
+        quotes.append(match["text"])
+        return f"\x00{len(quotes) - 1}\x00"
+
+    text = re.sub(r'"(?P<text>[^"]+)"', stash, sentence.rstrip())
+    subject = re.match(
+        rf"^{_ATTACHED_SUBJECT} (?=(?:loses|is|are|has|have) )", text, flags=re.IGNORECASE
+    )
+    if subject is None or not _subject_ok(subject["noun"].lower()):
+        return None
+    rest = text[subject.end() :].rstrip(".")
+    change = _Change()
+    for clause in _SPLIT_RE.split(rest):
+        clause = clause.strip()
+        verb, _, tail = clause.partition(" ")
+        verb = verb.lower()
+        if verb == "loses":
+            ok = _read_loses_clause(tail, change)
+        elif verb in {"is", "are"}:
+            ok = _read_is_clause(tail, quotes, change)
+        elif verb in {"has", "have"}:
+            ok = _read_has_clause(tail, quotes, change)
+        elif clause.lower() == NO_OTHER_AURAS:
+            change.cant_be_enchanted = ok = True
+        else:
+            ok = False
+        if not ok:
+            return None
+    if not change.anything():
+        return None
+    return change, f"{subject['attachment'].lower()} {subject['noun'].lower()}", list(change.quoted)
+
+
+def _change_builder(
+    change: _Change, *, subject: str, line: str, duration: Duration | None = None
+) -> EffectBuilder:
+    """`change` as layered continuous effects.
+
+    With `duration=None` this is an Aura's or Equipment's static ability over
+    what it is attached to (CR 303.4b, CR 301.5a). With a `duration` it is a
+    resolving spell's or ability's one-shot effect (CR 611.2) over exactly the
+    objects it was handed, fixed as it begins (CR 611.2c): one effect per
+    target, tied to that incarnation of it (CR 400.7).
+    """
+
+    def builder(source, timestamp, targets, context):
+        if duration is None:
+            attached = source.attached_to
+            if attached is None:
+                return []
+            chosen: list[tuple[str, object]] = [(subject, _only(attached))]
+            ability = _source_line(source, line)
+        else:
+            chosen = [
+                (target.name, only_this_incarnation(target, target.zone_change_stamp))
+                for target in targets
+            ]
+            ability = None
+        effects: list[ContinuousEffect] = []
+        for label, selector in chosen:
+
+            def add(
+                layer: Layer,
+                modification: Modification,
+                what: str,
+                sublayer=None,
+                *,
+                label=label,
+                selector=selector,
+            ) -> None:
+                effects.append(
+                    ContinuousEffect(
+                        description=f"{source.name}: {label} {what}",
+                        layer=layer,
+                        sublayer=sublayer,
+                        timestamp=timestamp,
+                        order=len(effects),
+                        source_id=source.id if duration is None else None,
+                        source_ability=ability,
+                        duration=duration or Duration.INDEFINITE,
+                        selector=selector,
+                        modification=modification,
+                    )
+                )
+
+            _add_change(change, add, source)
+        return effects
+
+    return builder
+
+
+def _add_change(change: _Change, add, source: CardState) -> None:
+    """Every layer's share of `change`, through `add(layer, modification, what)`."""
+    chosen = source.choice
+    if change.copy_of_chosen and chosen is not None and chosen.kind is ChoiceKind.OBJECT:
+        add(
+            Layer.COPY,
+            BecomeACopyOfObject(object_id=UUID(chosen.value)),
+            "is a copy of the chosen creature",
+            CopySublayer.COPIABLE,
+        )
+    if change.name is not None:
+        add(Layer.TEXT, SetName(name=change.name), f"is named {change.name}")
+    if change.lose_land_types:
+        add(Layer.TYPE, LoseAllLandTypes(), "loses all land types")
+    if change.basic_land_type is not None:
+        mana_ability = BASIC_LAND_TYPES[change.basic_land_type]
+        if change.land_type_additive:
+            add(
+                Layer.TYPE,
+                AddSubtype(subtype=change.basic_land_type, mana_ability=mana_ability),
+                f"is also {change.basic_land_type}",
+            )
+        else:
+            add(
+                Layer.TYPE,
+                SetBasicLandType(subtype=change.basic_land_type, mana_ability=mana_ability),
+                f"is {change.basic_land_type}",
+            )
+    if change.set_types is not None:
+        add(
+            Layer.TYPE,
+            SetTypesAndSubtypes(types=change.set_types, subtypes=change.set_subtypes),
+            "has its card types and subtypes set",
+        )
+    if change.creature_types is not None:
+        add(
+            Layer.TYPE,
+            SetCreatureTypes(subtypes=change.creature_types),
+            "has its creature types set",
+        )
+    if change.add_types or change.add_subtypes:
+        for card_type in change.add_types:
+            add(Layer.TYPE, AddType(card_type=card_type), f"is also a {card_type.value}")
+        for word in change.add_subtypes:
+            add(Layer.TYPE, AddSubtype(subtype=word), f"is also a {word}")
+    for supertype in change.supertypes:
+        add(Layer.TYPE, AddSupertype(supertype=supertype), f"is {supertype.value}")
+    if change.colors is not None:
+        add(Layer.COLOR, SetColors(colors=change.colors), "has its colour set")
+    if change.add_colors:
+        add(Layer.COLOR, AddColors(colors=change.add_colors), "gains a colour")
+    if change.lose_abilities:
+        add(Layer.ABILITY, lose_all_abilities, "loses all abilities")
+    for keyword in change.lose_keywords:
+        add(Layer.ABILITY, lose_keyword(keyword), f"loses {keyword}")
+    for keyword in change.keywords:
+        add(Layer.ABILITY, grant_ability(keyword), f"has {keyword}")
+    for text in change.quoted:
+        add(Layer.ABILITY, grant_ability(text), f'has "{text}"')
+    if change.base_pt is not None:
+        add(
+            Layer.POWER_TOUGHNESS,
+            set_power_toughness(*change.base_pt),
+            f"has base power and toughness {change.base_pt[0]}/{change.base_pt[1]}",
+            Sublayer.SET,
+        )
+    if change.base_power is not None:
+        add(
+            Layer.POWER_TOUGHNESS,
+            SetPower(power=change.base_power),
+            f"has base power {change.base_power}",
+            Sublayer.SET,
+        )
+
+
+def _parse_change(sentence: str) -> EffectBuilder | None:
+    read = _read_change(sentence)
+    if read is None:
+        return None
+    change, subject, _ = read
+    return _change_builder(change, subject=subject, line=sentence)
+
+
+# --------------------------------------------------------------------------
+# The same rewrites as a resolving ability's one-shot effect (CR 611.2)
+# --------------------------------------------------------------------------
+
+#: "Target land becomes an Island until end of turn.", "This creature loses all
+#: abilities until end of turn.", "Target artifact becomes an artifact creature.",
+#: "Target creature you control becomes a blue artifact in addition to its other
+#: colors and types until end of turn." (a duration-first form is normalised
+#: before this is tried), "Target artifact has base power and toughness 4/4.".
+#: A "target" subject names its objects at announcement (CR 601.2c); a "this"
+#: subject is the source itself and is a one-shot only with a stated duration -
+#: without one it would be a static ability's own sentence (CR 611.3).
+_ONE_SHOT_RE = re.compile(
+    r"^(?P<subject>target (?P<noun>[a-z]+)(?: you control)?|this [a-z]+) "
+    r"(?P<verb>becomes|loses|has) (?P<rest>.+?)(?P<until> until end of turn)?\.?$",
+    re.IGNORECASE,
+)
+
+
+def _read_one_shot(sentence: str) -> tuple[_Change, Duration] | None:
+    quotes: list[str] = []
+
+    def stash(match: re.Match[str]) -> str:
+        quotes.append(match["text"])
+        return f"\x00{len(quotes) - 1}\x00"
+
+    text = re.sub(r'"(?P<text>[^"]+)"', stash, sentence.strip())
+    match = _ONE_SHOT_RE.fullmatch(text)
+    if match is None:
+        return None
+    targeted = match["subject"].lower().startswith("target")
+    verb = match["verb"].lower()
+    if (verb == "has" and not targeted) or (not targeted and not match["until"]):
+        return None
+    change = _Change()
+    rest = match["rest"]
+    if verb == "becomes":
+        ok = _read_is_clause(rest, quotes, change)
+    elif verb == "loses":
+        ok = _read_loses_clause(rest, change)
+    else:
+        ok = _read_has_clause(rest, quotes, change)
+    if not ok or not change.anything():
+        return None
+    noun_type = _CARD_TYPE_WORDS.get((match["noun"] or "").lower())
+    if (
+        noun_type is not None
+        and change.set_types
+        and noun_type in change.set_types
+        and not change.set_subtypes
+    ):
+        # "Target artifact becomes an artifact creature": it already is the
+        # artifact, so only the creature type is new and its artifact subtypes
+        # (Equipment, Vehicle) stay (CR 205.1a keeps subtypes that remain valid).
+        change.add_types = tuple(card for card in change.set_types if card is not noun_type)
+        change.set_types = None
+    duration = Duration.UNTIL_END_OF_TURN if match["until"] else Duration.INDEFINITE
+    return change, duration
+
+
+def _parse_one_shot(sentence: str) -> EffectBuilder | None:
+    read = _read_one_shot(sentence)
+    if read is None:
+        return None
+    change, duration = read
+    return _change_builder(change, subject="it", line=sentence, duration=duration)
+
+
+# --------------------------------------------------------------------------
+# Entry points
+# --------------------------------------------------------------------------
+
+
+@functools.lru_cache(maxsize=4096)
+def parse_attached_sentence(sentence: str) -> EffectBuilder | None:
+    """`sentence` as one of the attached shapes above, or `None`."""
+    lowered = sentence.lower()
+    text = sentence.strip()
+    if "enchanted " not in lowered and "equipped " not in lowered:
+        return _parse_one_shot(text)
+    return _parse_pump(text) or _parse_permanent_static(text) or _parse_change(text)
+
+
+@functools.lru_cache(maxsize=4096)
+def attached_quoted_texts(sentence: str) -> tuple[str, ...]:
+    """The quoted abilities an attached rewrite sentence grants (empty for any
+    other sentence) - what `parse.quoted_ability_grants` stores on the
+    enchanted permanent so each is a working ability (CR 113.10a)."""
+    lowered = sentence.lower()
+    if '"' not in sentence or ("enchanted " not in lowered and "equipped " not in lowered):
+        return ()
+    read = _read_change(sentence.strip())
+    return tuple(read[2]) if read is not None else ()
+
+
+def cant_be_enchanted_by_other_auras_refusal(game, aura: CardState, target) -> str | None:
+    """Why `aura` may not be attached to `target` because of "Enchanted land
+    has indestructible and can't be enchanted by other Auras." (Consecrate
+    Land), or None.
+
+    CR 303.4: "Other effects can limit what a permanent can be enchanted by."
+    The limit is the static ability of an Aura attached to `target` that is
+    not `aura` itself (that is what "other" means), read off the computed
+    board so an Aura that has lost its abilities limits nothing (CR 613.1f).
+    `keywords.why_cannot_enchant` asks this for the cast announcement
+    (CR 303.4a) and for CR 303.4c's state-based action alike, so an Aura
+    already attached when the limit arrives is put into the graveyard.
+    """
+    if game is None or not isinstance(target, CardState):
+        return None
+    board = None
+    for source in game.battlefield:
+        if source.id == aura.id or source.attached_to != target.id:
+            continue
+        if NO_OTHER_AURAS not in (source.oracle_text or "").lower():
+            continue
+        board = board if board is not None else game.computed_board()
+        if any(NO_OTHER_AURAS in line.lower() for line in board.of(source).abilities):
+            return (
+                f"{target.name} can't be enchanted by other Auras: {source.name} says "
+                f'"can\'t be enchanted by other Auras" (CR 303.4)'
+            )
+    return None
+
+
+# --------------------------------------------------------------------------
+# "Creatures you control can boast twice during each of your turns rather than
+# once." (Birgi, God of Storytelling) - the per-turn limit of CR 702.142a
+# --------------------------------------------------------------------------
+
+_BOAST_TWICE = re.compile(
+    r"^creatures you control can boast twice during each of your turns rather than once\.?$"
+)
+
+
+@functools.lru_cache(maxsize=1024)
+def reads_boast_twice(sentence: str) -> bool:
+    """Whether `sentence` is the boast-limit static `boast_activation_limit` reads."""
+    return _BOAST_TWICE.match(sentence.strip().lower()) is not None
+
+
+def boast_activation_limit(game, source: CardState, activator: str) -> int:
+    """How many times `source`'s boast ability may be activated each turn.
+
+    CR 702.142a makes boast "only once each turn"; an effect that says the
+    creature "can boast twice during each of your turns rather than once"
+    (Birgi) raises the limit to two on the controller's own turns. Read off the
+    computed board (CR 613.1f) so a Birgi that lost its abilities counts for
+    nothing, and only for creatures its controller controls.
+    """
+    if game is None or source.controller != activator or game.active_player.username != activator:
+        return 1
+    board = None
+    for permanent in game.battlefield:
+        if (
+            permanent.controller != activator
+            or "boast twice" not in (permanent.oracle_text or "").lower()
+        ):
+            continue
+        board = board if board is not None else game.computed_board()
+        if any(reads_boast_twice(line) for line in board.of(permanent).abilities):
+            return 2
+    return 1

@@ -1,0 +1,161 @@
+{
+  "object": "card",
+  "id": "e87459aa-af8f-4bd2-a310-151353083a2e",
+  "oracle_id": "8d57dadb-c689-4691-b331-aba15daf46ff",
+  "multiverse_ids": [
+    527425
+  ],
+  "mtgo_id": 91778,
+  "arena_id": 77243,
+  "tcgplayer_id": 243256,
+  "cardmarket_id": 571359,
+  "name": "Delina, Wild Mage",
+  "lang": "en",
+  "released_at": "2021-07-23",
+  "uri": "https://api.scryfall.com/cards/e87459aa-af8f-4bd2-a310-151353083a2e",
+  "scryfall_uri": "https://scryfall.com/card/afr/138/delina-wild-mage?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T07:08:00Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/e/8/e87459aa-af8f-4bd2-a310-151353083a2e.jpg?1783926480",
+    "normal": "https://cards.scryfall.io/normal/front/e/8/e87459aa-af8f-4bd2-a310-151353083a2e.jpg?1783926480",
+    "large": "https://cards.scryfall.io/large/front/e/8/e87459aa-af8f-4bd2-a310-151353083a2e.jpg?1783926480",
+    "png": "https://cards.scryfall.io/png/front/e/8/e87459aa-af8f-4bd2-a310-151353083a2e.png?1783926480",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/e/8/e87459aa-af8f-4bd2-a310-151353083a2e.jpg?1783926480",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/e/8/e87459aa-af8f-4bd2-a310-151353083a2e.jpg?1783926480",
+    "thumb": "https://cards.scryfall.io/thumb/front/e/8/e87459aa-af8f-4bd2-a310-151353083a2e.webp?1783926480",
+    "grid": "https://cards.scryfall.io/grid/front/e/8/e87459aa-af8f-4bd2-a310-151353083a2e.webp?1783926480",
+    "display": "https://cards.scryfall.io/display/front/e/8/e87459aa-af8f-4bd2-a310-151353083a2e.webp?1783926480",
+    "art": "https://cards.scryfall.io/art/front/e/8/e87459aa-af8f-4bd2-a310-151353083a2e.webp?1783926480",
+    "crop": "https://cards.scryfall.io/crop/front/e/8/e87459aa-af8f-4bd2-a310-151353083a2e.webp?1783926480"
+  },
+  "mana_cost": "{3}{R}",
+  "cmc": 4.0,
+  "type_line": "Legendary Creature \u2014 Elf Shaman",
+  "oracle_text": "Whenever Delina attacks, choose target creature you control, then roll a d20.\n1\u201414 | Create a tapped and attacking token that's a copy of that creature, except it's not legendary and it has \"At end of combat, exile this token.\"\n15\u201420 | Create one of those tokens. You may roll again.",
+  "power": "3",
+  "toughness": "2",
+  "colors": [
+    "R"
+  ],
+  "color_identity": [
+    "R"
+  ],
+  "keywords": [],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "f4e87a11-b3b1-47b2-bd73-f4c78d6fbe6c",
+      "component": "token",
+      "name": "Copy",
+      "type_line": "Token",
+      "uri": "https://api.scryfall.com/cards/f4e87a11-b3b1-47b2-bd73-f4c78d6fbe6c"
+    },
+    {
+      "object": "related_card",
+      "id": "c4f1dc68-868b-4f3f-b10a-62842d88edc4",
+      "component": "combo_piece",
+      "name": "Delina, Wild Mage",
+      "type_line": "Legendary Creature \u2014 Elf Shaman",
+      "uri": "https://api.scryfall.com/cards/c4f1dc68-868b-4f3f-b10a-62842d88edc4"
+    }
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "arena",
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "e1ef87ba-ba92-4573-817f-543b996d2851",
+  "set": "afr",
+  "set_name": "Adventures in the Forgotten Realms",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/e1ef87ba-ba92-4573-817f-543b996d2851",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Aafr&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/afr?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/e87459aa-af8f-4bd2-a310-151353083a2e/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A8d57dadb-c689-4691-b331-aba15daf46ff&unique=prints",
+  "collector_number": "138",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Wisnu Tan",
+  "artist_ids": [
+    "f2d36cdd-a4e9-43ba-b2ad-9d514f6706d4"
+  ],
+  "illustration_id": "f4d5191a-dc02-4435-94e7-30fee67f0d85",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 1740,
+  "penny_rank": 12277,
+  "preview": {
+    "source": "Wizards of the Coast",
+    "source_uri": "https://www.youtube.com/watch?v=WIH3IyPILHs",
+    "previewed_at": "2021-07-01"
+  },
+  "prices": {
+    "usd": "4.88",
+    "usd_foil": "6.46",
+    "usd_etched": null,
+    "eur": "6.89",
+    "eur_foil": "6.89",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=527425&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DDelina%252C%2BWild%2BMage",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DDelina%252C%2BWild%2BMage",
+    "edhrec": "https://edhrec.com/route/?cc=Delina%2C+Wild+Mage"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F243256%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=571359&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/91778?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

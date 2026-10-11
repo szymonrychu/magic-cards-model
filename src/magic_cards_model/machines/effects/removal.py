@@ -41,6 +41,7 @@ from ..abilities import (
 )
 from ..casting import (
     PlayAction,
+    annotate_exile,
 )
 from ..chosen_type import (
     shares_creature_type,
@@ -2370,6 +2371,101 @@ def _parse_sacrifice_unless_pay_energy(text: str) -> AbilityEffect | None:
         )
         if not paid:
             game.sacrifice(source)
+
+    return effect
+
+
+#: "Sacrifice this <type> unless you pay {1}." - the upkeep tax Kataki, War's
+#: Wage and Magus of the Tabernacle hand every artifact/creature as a quoted
+#: trigger (and Phyrexian Soulgorger-style printed upkeep costs). CR 118.12a:
+#: "'[Do something] unless [a player does something else].' This means the same
+#: thing as '[A player may do something else]. If [that player] doesn't,
+#: [do something].'" - the controller is asked to pay the mana (CR 608.2g lets
+#: untapped sources be tapped for it) and the source is sacrificed when they
+#: decline or cannot. Mana symbols only: `{E}` is the energy twin above.
+_SACRIFICE_UNLESS_PAY_MANA_RE = re.compile(
+    r"^sacrifice this (?:creature|permanent|artifact|enchantment|planeswalker|land|token) "
+    r"unless you pay (?P<cost>(?:\{(?!e\})[^}]+\})+)\.?$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s25")
+def _parse_sacrifice_unless_pay_mana(text: str) -> AbilityEffect | None:
+    """`_SACRIFICE_UNLESS_PAY_MANA_RE`'s shape (CR 118.12a, CR 701.21a)."""
+    match = _SACRIFICE_UNLESS_PAY_MANA_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    cost = ManaCost.parse(match.group("cost"))
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        source = ability.source(game)
+        if source is None or source.zone is not Zone.BATTLEFIELD:
+            return
+        if ability.source_stamp is not None and source.zone_change_stamp != ability.source_stamp:
+            return
+        paid = game.may_pay_mana_cost(
+            game.player(ability.controller),
+            cost,
+            source=ability.source_name,
+            source_id=source_id_of(ability),
+            prompt=f"pay {cost} or sacrifice {source.name}",
+        )
+        if not paid:
+            game.sacrifice(source)
+
+    return effect
+
+
+#: "You may exile a nonland card with mana value `<n>` or less from your hand.
+#: If you do, it becomes plotted." (Jace Reawakened's second +1). CR 702.170c:
+#: a plotted card is an exiled card its owner may later cast for free
+#: (CR 702.170d) - the exile pile marker (CR 406.4) is the fact, so the card
+#: need not print plot itself. "If you do" runs only when a card was exiled
+#: (CR 608.2c).
+_MAY_EXILE_FROM_HAND_BECOMES_PLOTTED_RE = re.compile(
+    r"^you may exile an? nonland card with mana value (?P<limit>\d+) or less from your hand\.\s*"
+    r"if you do, it becomes plotted\.?$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s25")
+def _parse_may_exile_from_hand_becomes_plotted(text: str) -> AbilityEffect | None:
+    """`_MAY_EXILE_FROM_HAND_BECOMES_PLOTTED_RE`'s shape (CR 702.170c)."""
+    match = _MAY_EXILE_FROM_HAND_BECOMES_PLOTTED_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    limit = int(match.group("limit"))
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        player = game.player(ability.controller)
+        candidates = [
+            card for card in player.hand if not card.card.is_land and card.mana_value <= limit
+        ]
+        if not candidates:
+            return
+        chosen = game.ask(
+            Decision(
+                kind=DecisionKind.CHOOSE_CARDS,
+                player=player.username,
+                prompt=f"you may exile a nonland card with mana value {limit} or less to plot it",
+                source=ability.source_name,
+                source_id=source_id_of(ability),
+                amount=1,
+                exact=False,
+                cards=tuple(card.id for card in candidates),
+                card_labels=tuple(card.name for card in candidates),
+                default_cards=(),
+            )
+        )
+        by_id = {card.id: card for card in candidates}
+        picked = next((by_id[i] for i in chosen if i in by_id), None) if chosen else None
+        if picked is None:
+            return
+        game.exile_permanent(picked)
+        if picked.zone is Zone.EXILE:
+            annotate_exile(picked, ExileMarker.PLOTTED, picked.owner, game)
 
     return effect
 
@@ -6809,6 +6905,36 @@ def _readable_ability_effect(text: str) -> AbilityEffect | None:
     effect = _ability_effect_or_notice(text)
     if effect is None or getattr(effect, "__name__", "").endswith("notice_only"):
         return None
+    return effect
+
+
+#: "Exile this token." / "Exile this creature." - the ability's own source
+#: leaves the battlefield for exile (CR 406.1), but only if it is still the
+#: object the ability came from (CR 400.7): the closing line of a granted or
+#: copied "At end of combat, exile this token." (CR 707.9a).
+_EXILE_SELF_RE = re.compile(r"^exile this (?P<noun>[a-z]+)\.?$", re.IGNORECASE)
+
+
+@ABILITY_TEXT.rung("s27")
+def _parse_exile_self(text: str) -> AbilityEffect | None:
+    """`_EXILE_SELF_RE`'s shape."""
+    if not text.startswith(("Exile this ", "exile this ")):
+        return None
+    match = _EXILE_SELF_RE.fullmatch(" ".join(text.split()))
+    if match is None:
+        return None
+    if match.group("noun").lower() not in _SACRIFICE_SELF_NOUNS | {"token"}:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        source = ability.source(game)
+        if (
+            source is not None
+            and source.zone is Zone.BATTLEFIELD
+            and (ability.source_stamp is None or source.zone_change_stamp == ability.source_stamp)
+        ):
+            game.exile_permanent(source)
+
     return effect
 
 

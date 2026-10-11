@@ -2407,7 +2407,7 @@ def parse_abilities(card: Card) -> list[Ability]:
     abilities: list[Ability] = []
     for face_name, text in _faces(card):
         face_abilities: list[Ability] = []
-        merged = _merge_modal_bullet_lines(text.split("\n"))
+        merged = _merge_die_table_rows(_merge_modal_bullet_lines(text.split("\n")))
         if is_leveler_text(text):
             # CR 711.2: a level symbol and its power/toughness box are not
             # abilities; each ability in a striation is tagged with its band,
@@ -2523,6 +2523,27 @@ _MODAL_INSTRUCTION_TAIL = re.compile(
     r"\bchoose (?:one|two|three) and [^.—]+\.\s*$",
     re.IGNORECASE,
 )
+
+
+#: One row of a die results table: "1-14 | ..." or "20 | ..." (CR 706.2's own
+#: "roll a d20 ... N-M | result" layout; Scryfall prints an en or em dash).
+_DIE_TABLE_ROW = re.compile(r"^\d+(?:\s*[-\u2013\u2014]\s*\d+)?\s*\|")
+
+
+def _merge_die_table_rows(lines: list[str]) -> list[str]:
+    """Fold a die results table's rows back into the line that rolls the die
+    (CR 706.2): a row is part of the ability that rolled, not an ability of
+    its own, so Delina's "...then roll a d20." and its "1-14 | ..." and
+    "15-20 | ..." rows reach `_parse_line` as one newline-joined line, the
+    way `_merge_modal_bullet_lines` does for a mode's bullets. A card with no
+    such row is untouched."""
+    merged: list[str] = []
+    for line in lines:
+        if merged and _DIE_TABLE_ROW.match(line.strip()):
+            merged[-1] = f"{merged[-1]}\n{line}"
+        else:
+            merged.append(line)
+    return merged
 
 
 def _merge_modal_bullet_lines(lines: list[str]) -> list[str]:

@@ -4569,6 +4569,85 @@ def _parse_target_player_creates_token(text: str) -> AbilityEffect | None:
     return effect
 
 
+# --------------------------------------------------------------------------
+# "Choose target <X>, then roll a d20." and its results table (CR 706.2)
+# --------------------------------------------------------------------------
+
+_DIE_TABLE_TOKEN_COPY_RE = re.compile(
+    r"^choose (?P<phrase>target [a-z]+(?: you control)?), then roll an? d(?P<sides>\d+)\.\s*"
+    r"(?P<low_from>\d+)\s*[-–—]\s*(?P<low_to>\d+)\s*\|\s*"
+    r"create an? tapped and attacking token that['’]?s a copy of that [a-z]+"
+    r"(?:, except (?P<except>[^|]+?))?\.?\s*"
+    r"(?P<high_from>\d+)\s*[-–—]\s*(?P<high_to>\d+)\s*\|\s*"
+    r"create one of those tokens\.\s*you may roll again\.?$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s26")
+def _parse_die_table_tapped_attacking_token_copies(text: str) -> AbilityEffect | None:
+    """Delina, Wild Mage's template: the chosen creature is copied once as a
+    tapped and attacking token (CR 508.4, CR 707.9) on a low roll, and on a
+    high roll once more with an optional re-roll - which is read through the
+    same table again (CR 706.2). The two ranges must split the die exactly, so
+    a table that leaves a result without an outcome is not read."""
+    if "|" not in text:
+        return None
+    match = _DIE_TABLE_TOKEN_COPY_RE.fullmatch(" ".join(text.strip().split()))
+    if match is None or not _targets_understood(match.group("phrase")):
+        return None
+    sides = int(match.group("sides"))
+    low = (int(match.group("low_from")), int(match.group("low_to")))
+    high = (int(match.group("high_from")), int(match.group("high_to")))
+    if low[0] != 1 or high[0] != low[1] + 1 or high[1] != sides:
+        return None
+    options: dict[str, Any] = {}
+    exception = match.group("except")
+    if exception is not None:
+        listed = _read_copy_exception_list(exception)
+        if listed is None:
+            return None
+        options = {
+            "added_abilities": listed.added_abilities,
+            "power": listed.power,
+            "toughness": listed.toughness,
+            "added_creature_type": listed.added_creature_type,
+            "not_legendary": listed.not_legendary,
+        }
+    high_from = high[0]
+
+    def effect(game: "Game", ability: "StackObject") -> None:
+        controller = game.controller_of(ability)
+        (original, *_) = [t for t in game.resolve_targets(ability) if isinstance(t, CardState)] or [
+            None
+        ]
+        if original is None:
+            return
+        while True:
+            (rolled,) = game.roll_dice(controller, sides)
+            token_copy_of(
+                game,
+                original,
+                controller.username,
+                **_token_copy_tapped_and_attacking(game, original, controller.username),
+                **options,
+            )
+            if rolled < high_from:
+                return
+            if not game.ask(
+                Decision(
+                    kind=DecisionKind.MAY,
+                    player=controller.username,
+                    prompt=f"roll a d{sides} again (CR 706.2)",
+                    source=getattr(ability, "source_name", None),
+                    source_id=source_id_of(ability),
+                )
+            ):
+                return
+
+    return effect
+
+
 from ._common import (  # noqa: E402
     _ANAPHOR_GAINS_KEYWORDS_RE,
     _COLOR_WORD_TO_COLOR,

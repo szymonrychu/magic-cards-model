@@ -1362,7 +1362,11 @@ class ActivationMixin:
                     f"{name} has not attacked this turn, so its boast ability "
                     "cannot be activated (CR 702.142a)"
                 )
-            if self._activation_count(source, index):
+            from ...machines.layers.attached_grants import boast_activation_limit
+
+            if self._activation_count(source, index) >= boast_activation_limit(
+                self, source, activator
+            ):
                 return f"{name}'s boast ability has already been activated this turn (CR 702.142a)"
         for window in read.windows:
             if not self._activation_window_holds(window, activator):

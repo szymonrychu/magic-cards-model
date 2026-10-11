@@ -8582,7 +8582,9 @@ def quoted_ability_grants(
     grants nothing and must still be able to take its own line back off the
     creature it used to be on.
     """
+    from .attached_grants import attached_quoted_texts
     from .group_grants import equipment_by_mana_value_group
+    from .quoted_grants import group_quoted_grant_of
 
     grantable: set[str] = set()
     wanted: dict[UUID, set[str]] = {}
@@ -8677,6 +8679,20 @@ def quoted_ability_grants(
             for permanent in permanents:
                 if group_selector(printed_characteristics(permanent), {}):
                     wanted.setdefault(permanent.id, set()).add(text)
+            continue
+        if (texts := attached_quoted_texts(normalized)) and (
+            "enchanted " in normalized.lower() or "equipped " in normalized.lower()
+        ):
+            grantable.update(texts)
+            if source.attached_to is not None:
+                wanted.setdefault(source.attached_to, set()).update(texts)
+            continue
+        if (group := group_quoted_grant_of(normalized)) is not None:
+            grantable.add(group.ability)
+            selector = group.selector(source)
+            for permanent in permanents:
+                if selector(printed_characteristics(permanent), {}):
+                    wanted.setdefault(permanent.id, set()).add(group.ability)
     return grantable, wanted
 
 
@@ -11139,9 +11155,8 @@ def _parse_layer_sentence_ungated(sentence: str) -> EffectBuilder | None:
         return _keyword_grant_builder(keywords)
     if " lose" in sentence.lower() and (match := _KEYWORD_LOSS_RE.fullmatch(sentence)):
         keywords = _split_and_validate_keywords(match.group("keywords"))
-        if keywords is None:
-            return None
-        return _keyword_loss_builder(keywords)
+        if keywords is not None:
+            return _keyword_loss_builder(keywords)
     if match := _ANTHEM_PER_COUNT_RE.fullmatch(sentence):
         count = _controlled_count_factory(match.group("each"))
         keywords = (
@@ -11447,10 +11462,11 @@ def _parse_layer_sentence_ungated(sentence: str) -> EffectBuilder | None:
             if match.group("keywords") is not None
             else []
         )
-        if subtypes is None or keywords is None:
-            return None
-        duration = Duration.UNTIL_END_OF_TURN if match.group("until_eot") else Duration.INDEFINITE
-        return _becomes_subtype_in_addition_builder(subtypes, keywords, duration)
+        if subtypes is not None and keywords is not None:
+            duration = (
+                Duration.UNTIL_END_OF_TURN if match.group("until_eot") else Duration.INDEFINITE
+            )
+            return _becomes_subtype_in_addition_builder(subtypes, keywords, duration)
     if (match := _BECOMES_CREATURE_TYPE_RE.fullmatch(sentence)) and (
         replaced := _creature_type_words(match.group("subtypes"))
     ) is not None:
@@ -11467,7 +11483,12 @@ def _parse_layer_sentence_ungated(sentence: str) -> EffectBuilder | None:
         return _self_becomes_type_until_next_turn_builder(extra_type, match.group("ability"))
     if (animation := _parse_animation_sentence(sentence)) is not None:
         return animation
-    return _parse_static_layer_sentence(sentence)
+    if (builder := _parse_static_layer_sentence(sentence)) is not None:
+        return builder
+    from .attached_grants import parse_attached_sentence
+    from .quoted_grants import parse_group_quoted_sentence
+
+    return parse_attached_sentence(sentence) or parse_group_quoted_sentence(sentence)
 
 
 #: CR 701.54e's "your Ring-bearer" as the subject of a static ability - The

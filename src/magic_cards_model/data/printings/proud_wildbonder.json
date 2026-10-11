@@ -1,0 +1,144 @@
+{
+  "object": "card",
+  "id": "f4876e17-a206-4351-9c0b-0845db4569a3",
+  "oracle_id": "e72f995e-288f-4d32-b067-ae73eea87e67",
+  "multiverse_ids": [
+    479749
+  ],
+  "mtgo_id": 80467,
+  "arena_id": 71296,
+  "tcgplayer_id": 212109,
+  "cardmarket_id": 451893,
+  "name": "Proud Wildbonder",
+  "lang": "en",
+  "released_at": "2020-04-24",
+  "uri": "https://api.scryfall.com/cards/f4876e17-a206-4351-9c0b-0845db4569a3",
+  "scryfall_uri": "https://scryfall.com/card/iko/229/proud-wildbonder?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T08:23:28Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/f/4/f4876e17-a206-4351-9c0b-0845db4569a3.jpg?1783931008",
+    "normal": "https://cards.scryfall.io/normal/front/f/4/f4876e17-a206-4351-9c0b-0845db4569a3.jpg?1783931008",
+    "large": "https://cards.scryfall.io/large/front/f/4/f4876e17-a206-4351-9c0b-0845db4569a3.jpg?1783931008",
+    "png": "https://cards.scryfall.io/png/front/f/4/f4876e17-a206-4351-9c0b-0845db4569a3.png?1783931008",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/f/4/f4876e17-a206-4351-9c0b-0845db4569a3.jpg?1783931008",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/f/4/f4876e17-a206-4351-9c0b-0845db4569a3.jpg?1783931008",
+    "thumb": "https://cards.scryfall.io/thumb/front/f/4/f4876e17-a206-4351-9c0b-0845db4569a3.webp?1783931008",
+    "grid": "https://cards.scryfall.io/grid/front/f/4/f4876e17-a206-4351-9c0b-0845db4569a3.webp?1783931008",
+    "display": "https://cards.scryfall.io/display/front/f/4/f4876e17-a206-4351-9c0b-0845db4569a3.webp?1783931008",
+    "art": "https://cards.scryfall.io/art/front/f/4/f4876e17-a206-4351-9c0b-0845db4569a3.webp?1783931008",
+    "crop": "https://cards.scryfall.io/crop/front/f/4/f4876e17-a206-4351-9c0b-0845db4569a3.webp?1783931008"
+  },
+  "mana_cost": "{2}{R/G}{R/G}",
+  "cmc": 4.0,
+  "type_line": "Creature \u2014 Human Warrior",
+  "oracle_text": "Trample\nCreatures you control with trample have \"You may have this creature assign its combat damage as though it weren't blocked.\"",
+  "power": "4",
+  "toughness": "3",
+  "colors": [
+    "G",
+    "R"
+  ],
+  "color_identity": [
+    "G",
+    "R"
+  ],
+  "keywords": [
+    "Trample"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "arena",
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "19feda43-15ab-427e-a0e4-148a4bf2b03a",
+  "set": "iko",
+  "set_name": "Ikoria: Lair of Behemoths",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/19feda43-15ab-427e-a0e4-148a4bf2b03a",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Aiko&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/iko?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/f4876e17-a206-4351-9c0b-0845db4569a3/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Ae72f995e-288f-4d32-b067-ae73eea87e67&unique=prints",
+  "collector_number": "229",
+  "digital": false,
+  "rarity": "uncommon",
+  "flavor_text": "\"You're little now, yes, but one day your footsteps will make mountains tremble.\"\n\u2014Gustin, wildbonder",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Dmitry Burmak",
+  "artist_ids": [
+    "9872f5c0-274a-48ce-a9ad-6f0d5654e29c"
+  ],
+  "illustration_id": "cd0b1202-77e3-48e6-a058-c7a070fbe5d2",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 13231,
+  "penny_rank": 16043,
+  "preview": {
+    "source": "MTG: Young Mage",
+    "source_uri": "https://www.youtube.com/watch?v=MZpg2nZGjIY",
+    "previewed_at": "2020-04-03"
+  },
+  "prices": {
+    "usd": "0.21",
+    "usd_foil": "0.31",
+    "usd_etched": null,
+    "eur": "0.17",
+    "eur_foil": "0.24",
+    "tix": "0.03"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=479749&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DProud%2BWildbonder",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DProud%2BWildbonder",
+    "edhrec": "https://edhrec.com/route/?cc=Proud+Wildbonder"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F212109%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=451893&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/80467?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}
