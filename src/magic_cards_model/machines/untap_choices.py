@@ -50,7 +50,7 @@ def is_untap_choice_line(line: str) -> bool:
 
 
 def untap_type_restrictions(
-    game: "Game", username: str, permanents: list[CardState]
+    game: Game, username: str, permanents: list[CardState]
 ) -> list[CardState]:
     """`permanents` (what `username`'s untap step would untap) narrowed by every
     untapped permanent whose computed text makes the player choose a type."""

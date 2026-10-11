@@ -200,7 +200,9 @@ def _paired(partner_name, navigator, *, alice_extra=(), bob=()):
     return scenario
 
 
-NAVIGATOR_LINE = "{1}{U}: Exile this creature, then return it to the battlefield under your control."
+NAVIGATOR_LINE = (
+    "{1}{U}: Exile this creature, then return it to the battlefield under your control."
+)
 LOOKOUT_LINE = "Whenever this creature deals damage to an opponent, draw a card."
 ALCHEMIST_LINE = "{2}{U}: Untap this creature."
 
@@ -248,7 +250,9 @@ def test_galvanic_alchemist_grants_untap_to_both_paired_creatures():
 
 
 def test_galvanic_alchemist_untap_ability_works_on_the_partner():
-    scenario = _paired("Grizzly Bears", "Galvanic Alchemist", alice_extra=["Island", "Island", "Island"])
+    scenario = _paired(
+        "Grizzly Bears", "Galvanic Alchemist", alice_extra=["Island", "Island", "Island"]
+    )
     bears = scenario.find("Grizzly Bears", Zone.BATTLEFIELD, "alice")
     bears.tapped = True
     sources = scenario.untapped_sources("Island", "Island", "Island", username="alice")
@@ -355,7 +359,11 @@ SLIVER_PUMP = "This creature gets +1/+1 as long as you control a Swamp."
 
 def test_sedge_sliver_grants_every_sliver_the_swamp_pump_line():
     scenario = _board(["Sedge Sliver", "Cautery Sliver", "Grizzly Bears"], ["Pulmonic Sliver"])
-    for name, who in (("Sedge Sliver", "alice"), ("Cautery Sliver", "alice"), ("Pulmonic Sliver", "bob")):
+    for name, who in (
+        ("Sedge Sliver", "alice"),
+        ("Cautery Sliver", "alice"),
+        ("Pulmonic Sliver", "bob"),
+    ):
         assert SLIVER_PUMP in _chars(scenario, name, who).abilities
     assert SLIVER_PUMP not in _chars(scenario, "Grizzly Bears").abilities
     assert scenario.game.continuous_effects.layer_notices == []
@@ -408,7 +416,9 @@ def test_cliffstomper_is_unpumped_on_the_opponents_turn_and_flips_back():
 
 
 def test_cliffstomper_counts_only_mountains_it_controls():
-    scenario = _board(["Sardian Cliffstomper", "Mountain", "Mountain", "Mountain", "Forest"], ["Mountain"])
+    scenario = _board(
+        ["Sardian Cliffstomper", "Mountain", "Mountain", "Mountain", "Forest"], ["Mountain"]
+    )
     assert _chars(scenario, "Sardian Cliffstomper").power_toughness == (0, 4)
 
 
@@ -417,14 +427,20 @@ def test_cliffstomper_counts_only_mountains_it_controls():
 
 def test_doc_ock_has_hexproof_only_with_another_villain():
     scenario = _board(["Doc Ock, Sinister Scientist", "Doc Ock's Henchmen"])
-    assert any(a.lower() == "hexproof" for a in _chars(scenario, "Doc Ock, Sinister Scientist").abilities)
+    assert any(
+        a.lower() == "hexproof" for a in _chars(scenario, "Doc Ock, Sinister Scientist").abilities
+    )
     alone = _board(["Doc Ock, Sinister Scientist"])
-    assert not any(a.lower() == "hexproof" for a in _chars(alone, "Doc Ock, Sinister Scientist").abilities)
+    assert not any(
+        a.lower() == "hexproof" for a in _chars(alone, "Doc Ock, Sinister Scientist").abilities
+    )
 
 
 def test_doc_ock_does_not_count_an_opponents_villain():
     scenario = _board(["Doc Ock, Sinister Scientist"], ["Doc Ock's Henchmen"])
-    assert not any(a.lower() == "hexproof" for a in _chars(scenario, "Doc Ock, Sinister Scientist").abilities)
+    assert not any(
+        a.lower() == "hexproof" for a in _chars(scenario, "Doc Ock, Sinister Scientist").abilities
+    )
 
 
 def test_bolgs_company_has_haste_only_while_another_goblin_is_around():
@@ -543,9 +559,14 @@ def test_ogre_loses_regenerate_when_the_demon_leaves():
 
 def test_diviner_loses_its_ability_when_the_other_wizard_leaves():
     scenario = _board(["Expedition Diviner", "Fugitive Wizard"])
-    assert "When this creature dies, draw a card." in _chars(scenario, "Expedition Diviner").abilities
+    assert (
+        "When this creature dies, draw a card." in _chars(scenario, "Expedition Diviner").abilities
+    )
     scenario.game.destroy(scenario.find("Fugitive Wizard", Zone.BATTLEFIELD, "alice"))
-    assert "When this creature dies, draw a card." not in _chars(scenario, "Expedition Diviner").abilities
+    assert (
+        "When this creature dies, draw a card."
+        not in _chars(scenario, "Expedition Diviner").abilities
+    )
 
 
 def test_hundred_battle_veteran_needs_different_kinds_not_more_counters():
@@ -577,14 +598,21 @@ def _ray(target, *, bob=()):
 def test_ray_of_frost_strips_all_abilities_from_a_red_creature():
     scenario = _ray("Goblin Artillery")
     assert not any("2 damage" in line for line in _chars(scenario, "Goblin Artillery").abilities)
-    assert scenario.game.activated_abilities(scenario.find("Goblin Artillery", Zone.BATTLEFIELD, "alice")) == []
+    assert (
+        scenario.game.activated_abilities(
+            scenario.find("Goblin Artillery", Zone.BATTLEFIELD, "alice")
+        )
+        == []
+    )
     assert scenario.game.continuous_effects.layer_notices == []
 
 
 def test_ray_of_frost_leaves_a_nonred_creature_alone():
     scenario = _ray("Llanowar Elves")
     assert "{T}: Add {G}." in _chars(scenario, "Llanowar Elves").abilities
-    assert scenario.game.activated_abilities(scenario.find("Llanowar Elves", Zone.BATTLEFIELD, "alice"))
+    assert scenario.game.activated_abilities(
+        scenario.find("Llanowar Elves", Zone.BATTLEFIELD, "alice")
+    )
 
 
 def test_ray_of_frost_moving_to_a_nonred_creature_restores_the_red_ones_abilities():

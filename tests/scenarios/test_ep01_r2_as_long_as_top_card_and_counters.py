@@ -251,7 +251,9 @@ def test_a_myojin_cast_from_hand_enters_with_a_divinity_counter_and_is_indestruc
         .build()
     )
     scenario.start_at(Step.PRECOMBAT_MAIN)
-    myojin = scenario.cast_and_resolve(MYOJIN_RAGE, *scenario.untapped_sources(*(["Mountain"] * 10)))
+    myojin = scenario.cast_and_resolve(
+        MYOJIN_RAGE, *scenario.untapped_sources(*(["Mountain"] * 10))
+    )
     assert myojin.counter_count("divinity") == 1
     assert _has(scenario.game.characteristics_of(myojin), "Indestructible")
 
@@ -330,7 +332,9 @@ def test_skill_borrower_flips_to_the_next_top_card():
 
 def test_conspicuous_snoop_reads_only_goblin_cards():
     scenario = _board(["Conspicuous Snoop"], ["Goblin Artillery"])
-    gained = [line for line in _chars(scenario, "Conspicuous Snoop").abilities if "2 damage" in line]
+    gained = [
+        line for line in _chars(scenario, "Conspicuous Snoop").abilities if "2 damage" in line
+    ]
     assert gained and "Conspicuous Snoop" not in gained[0]
     other = _board(["Conspicuous Snoop"], ["Llanowar Elves"])
     assert "{T}: Add {G}." not in _chars(other, "Conspicuous Snoop").abilities
@@ -350,7 +354,9 @@ def test_conspicuous_snoop_can_use_the_borrowed_ability():
 
 
 def test_crown_pumps_creatures_that_share_a_color_with_the_top_creature_card():
-    scenario = _board(["Crown of Convergence", "Grizzly Bears", "Savannah Lions"], ["Llanowar Elves"])
+    scenario = _board(
+        ["Crown of Convergence", "Grizzly Bears", "Savannah Lions"], ["Llanowar Elves"]
+    )
     assert _chars(scenario, "Grizzly Bears").power_toughness == (3, 3)
     assert _chars(scenario, "Savannah Lions").power_toughness == (2, 1)
 
@@ -361,7 +367,9 @@ def test_crown_does_nothing_when_the_top_card_is_not_a_creature():
 
 
 def test_crown_follows_the_top_card_when_it_changes():
-    scenario = _board(["Crown of Convergence", "Grizzly Bears"], ["Llanowar Elves", "Savannah Lions"])
+    scenario = _board(
+        ["Crown of Convergence", "Grizzly Bears"], ["Llanowar Elves", "Savannah Lions"]
+    )
     assert _chars(scenario, "Grizzly Bears").power_toughness == (3, 3)
     scenario.draw()
     assert _chars(scenario, "Grizzly Bears").power_toughness == (2, 2)

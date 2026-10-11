@@ -2856,7 +2856,9 @@ class ActivationMixin:
             )
             self.activations[key] = self.activations.get(key, 0) + 1
             if ability.exhaust:
-                self.record_turn_fact(ACTIVATED_EXHAUST_FACT, self.controller_of(permanent).username)
+                self.record_turn_fact(
+                    ACTIVATED_EXHAUST_FACT, self.controller_of(permanent).username
+                )
                 # CR 702.177a: "Activate only once" - unlike `activations`
                 # above, this is never cleared on a new turn (`exhausted`
                 # persists for the object's whole existence on the

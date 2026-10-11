@@ -265,9 +265,9 @@ def test_supernatural_rescue_is_castable_in_a_main_phase_without_a_spirit():
     scenario = _rescue(["Grizzly Bears"], step=Step.PRECOMBAT_MAIN)
     bears = scenario.find("Grizzly Bears", Zone.BATTLEFIELD, "alice")
     plains = scenario.untapped_sources("Plains", "Plains", "Plains", "Plains")
-    assert scenario.cast_onto_stack(
-        "Supernatural Rescue", *plains, targets=[bears]
-    ).zone is Zone.STACK
+    assert (
+        scenario.cast_onto_stack("Supernatural Rescue", *plains, targets=[bears]).zone is Zone.STACK
+    )
 
 
 def test_a_spirit_the_opponent_controls_grants_no_flash():
@@ -322,7 +322,9 @@ def _marauder(graveyard, library=("Mountain", "Opt", "Island")):
 def test_marauder_cascades_with_four_card_types_in_the_graveyard():
     scenario = _marauder(FOUR_TYPES)
     scenario.will_take_the_may(True, source="Bloodbraid Marauder")
-    scenario.cast_onto_stack("Bloodbraid Marauder", *scenario.untapped_sources("Mountain", "Mountain"))
+    scenario.cast_onto_stack(
+        "Bloodbraid Marauder", *scenario.untapped_sources("Mountain", "Mountain")
+    )
     assert len(scenario.game.stack) == 2, "the spell and its cascade trigger"
     scenario.resolve_top()
     assert scenario.find("Opt", Zone.STACK).zone is Zone.STACK, "the cascade hit was cast"
@@ -330,13 +332,17 @@ def test_marauder_cascades_with_four_card_types_in_the_graveyard():
 
 def test_marauder_does_not_cascade_with_only_three_card_types():
     scenario = _marauder(FOUR_TYPES[:3])
-    scenario.cast_onto_stack("Bloodbraid Marauder", *scenario.untapped_sources("Mountain", "Mountain"))
+    scenario.cast_onto_stack(
+        "Bloodbraid Marauder", *scenario.untapped_sources("Mountain", "Mountain")
+    )
     assert len(scenario.game.stack) == 1
 
 
 def test_marauder_counts_types_not_cards():
     scenario = _marauder(["Island", "Island", "Island", "Island", "Lightning Bolt"])
-    scenario.cast_onto_stack("Bloodbraid Marauder", *scenario.untapped_sources("Mountain", "Mountain"))
+    scenario.cast_onto_stack(
+        "Bloodbraid Marauder", *scenario.untapped_sources("Mountain", "Mountain")
+    )
     assert len(scenario.game.stack) == 1
 
 
@@ -350,7 +356,12 @@ def _forge(forge_player="alice", step=Step.DECLARE_ATTACKERS):
         .manual_turn_based_actions()
         .player(
             "alice",
-            battlefield=["Bonesplitter", "Grizzly Bears", "Plains", *(["Forge Anew"] if forge_player == "alice" else [])],
+            battlefield=[
+                "Bonesplitter",
+                "Grizzly Bears",
+                "Plains",
+                *(["Forge Anew"] if forge_player == "alice" else []),
+            ],
         )
         .player("bob", battlefield=["Forest"] + (["Forge Anew"] if forge_player == "bob" else []))
         .build()
@@ -488,7 +499,9 @@ def _six(
             graveyard=list(graveyard),
             library=["Island"] * 5,
         )
-        .player("bob", battlefield=["Forest"], graveyard=["Llanowar Elves"], library=["Mountain"] * 5)
+        .player(
+            "bob", battlefield=["Forest"], graveyard=["Llanowar Elves"], library=["Mountain"] * 5
+        )
         .build()
     )
     scenario.start_at(Step.PRECOMBAT_MAIN)
@@ -785,4 +798,6 @@ def test_an_opponents_untapped_storage_matrix_also_restricts_my_untap_step():
 def test_storage_matrix_only_restricts_the_untap_step_of_the_player_whose_turn_it_is():
     scenario = _matrix_board(["Storage Matrix"], ["Forest", "Grizzly Bears"])
     scenario.start_at(Step.UPKEEP)
-    assert _tapped(scenario, "bob") == ["Forest", "Grizzly Bears"], "alice's turn: bob untaps nothing"
+    assert _tapped(scenario, "bob") == ["Forest", "Grizzly Bears"], (
+        "alice's turn: bob untaps nothing"
+    )

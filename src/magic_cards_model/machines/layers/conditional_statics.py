@@ -48,8 +48,8 @@ from .model import (
     Characteristics,
     ConditionedSelector,
     ContinuousEffect,
-    CountBoardWhere,
     ControlsAtom,
+    CountBoardWhere,
     CounterKindsAmongAtom,
     Layer,
     Modification,
@@ -178,9 +178,7 @@ _ATTACHED_IS_RE = re.compile(
     re.IGNORECASE,
 )
 _YOUR_TURN_RE = re.compile(r"^it(?:'s| is) your turn$", re.IGNORECASE)
-_ATTACHED_TO_RE = re.compile(
-    rf"^{_SELF} is attached to an? (?P<quality>.+)$", re.IGNORECASE
-)
+_ATTACHED_TO_RE = re.compile(rf"^{_SELF} is attached to an? (?P<quality>.+)$", re.IGNORECASE)
 _PAIRED_RE = re.compile(rf"^{_SELF} is paired with another creature$", re.IGNORECASE)
 
 
@@ -457,7 +455,15 @@ def _group_quality(noun: str) -> QualityTest | None:
     singular = [
         word[:-1]
         if word.lower()
-        in ("creatures", "artifacts", "lands", "permanents", "tokens", "enchantments", "planeswalkers")
+        in (
+            "creatures",
+            "artifacts",
+            "lands",
+            "permanents",
+            "tokens",
+            "enchantments",
+            "planeswalkers",
+        )
         else word
         for word in words
     ]
@@ -640,7 +646,8 @@ def _parse_predicate(text: str) -> tuple[_Change, ...] | None:
                     lambda source, context, c=counted, p=tuple(per): modify_power_toughness_per(
                         c, p[0], p[1]
                     ),
-                    f"{match.group('power')}/{match.group('toughness')} for each {match.group('what')}",
+                    f"{match.group('power')}/{match.group('toughness')} "
+                    f"for each {match.group('what')}",
                 )
             )
             if any(fixed):
@@ -840,8 +847,11 @@ def _your_step_gate(steps: frozenset[str]) -> Gate:
         return _your_turn_gate(source, context) and context.current_step in steps
 
     return gate
+
+
 _SUBJECT_PREDICATE_RE = re.compile(
-    r"^(?P<subject>.+?) (?P<predicate>(?:gets?|has|have|loses?|is|are|can't|cannot) .+)$", re.IGNORECASE
+    r"^(?P<subject>.+?) (?P<predicate>(?:gets?|has|have|loses?|is|are|can't|cannot) .+)$",
+    re.IGNORECASE,
 )
 
 

@@ -583,7 +583,10 @@ def _combined_builders(first: EffectBuilder, second: EffectBuilder) -> EffectBui
         targets: Sequence[CardState],
         context: LayerContext,
     ) -> list[ContinuousEffect]:
-        return [*first(source, timestamp, targets, context), *second(source, timestamp, targets, context)]
+        return [
+            *first(source, timestamp, targets, context),
+            *second(source, timestamp, targets, context),
+        ]
 
     return combined
 

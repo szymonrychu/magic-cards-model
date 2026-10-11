@@ -15,7 +15,6 @@ from ...machines.decisions import (
     DecisionKind,
     source_id_of,
 )
-from ...machines.untap_choices import untap_type_restrictions
 from ...machines.keywords import (
     apply_daybound_nightbound,
     attachment_state_based_actions,
@@ -57,6 +56,7 @@ from ...machines.turn import (
     Step,
     day_night_after_untap_check,
 )
+from ...machines.untap_choices import untap_type_restrictions
 from ...snapshot import scan_pin
 from ..card import (
     Supertype,

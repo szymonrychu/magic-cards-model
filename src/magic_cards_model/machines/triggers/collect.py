@@ -1745,7 +1745,9 @@ def is_additional_trigger_line(text: str) -> bool:
     if typed is not None and _typed_whose(typed["whose"]) is not None:
         return True
     gated = _SELF_GATED_ADDITIONAL_TRIGGER_RE.match(text.strip())
-    return gated is not None and _SELF_OR_ATTACHED_WHOSE_RE.match(gated["whose"].strip()) is not None
+    return (
+        gated is not None and _SELF_OR_ATTACHED_WHOSE_RE.match(gated["whose"].strip()) is not None
+    )
 
 
 def _computed_ability_lines(game: "Game", permanent: CardState) -> tuple[str, ...]:
