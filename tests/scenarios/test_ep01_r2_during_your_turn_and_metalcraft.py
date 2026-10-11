@@ -722,3 +722,67 @@ def test_asmos_discard_condition_ends_with_the_turn():
     scenario.start_at(Step.PRECOMBAT_MAIN)
     (option,) = scenario.cast(ASMO).alternative_costs
     assert option.unavailable is not None
+
+
+# -- Storage Matrix: each player chooses a permanent type to untap during their untap step --
+
+
+def _matrix_board(alice, bob=()):
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=list(alice), library=["Island"] * 5)
+        .player("bob", battlefield=list(bob), library=["Mountain"] * 5)
+        .build()
+    )
+    assert scenario.step is Step.UNTAP
+    for player in ("alice", "bob"):
+        for permanent in scenario.game.permanents_controlled_by(player):
+            if permanent.name != "Storage Matrix":
+                permanent.tapped = True
+    return scenario
+
+
+def _tapped(scenario, username="alice"):
+    return sorted(p.name for p in scenario.game.permanents_controlled_by(username) if p.tapped)
+
+
+def test_storage_matrix_lets_only_the_chosen_type_untap():
+    scenario = _matrix_board(["Storage Matrix", "Forest", "Grizzly Bears", "Sol Ring"])
+    scenario.will_choose("creature", source="Storage Matrix")
+    scenario.start_at(Step.UPKEEP)
+    assert _tapped(scenario) == ["Forest", "Sol Ring"]
+
+
+@pytest.mark.parametrize(
+    ("choice", "stays_tapped"),
+    [
+        ("land", ["Grizzly Bears", "Sol Ring"]),
+        ("artifact", ["Forest", "Grizzly Bears"]),
+    ],
+)
+def test_storage_matrix_other_choices(choice, stays_tapped):
+    scenario = _matrix_board(["Storage Matrix", "Forest", "Grizzly Bears", "Sol Ring"])
+    scenario.will_choose(choice, source="Storage Matrix")
+    scenario.start_at(Step.UPKEEP)
+    assert _tapped(scenario) == stays_tapped
+
+
+def test_a_tapped_storage_matrix_changes_nothing():
+    scenario = _matrix_board(["Storage Matrix", "Forest", "Grizzly Bears"])
+    scenario.find("Storage Matrix", Zone.BATTLEFIELD, "alice").tapped = True
+    scenario.start_at(Step.UPKEEP)
+    assert _tapped(scenario) == []
+    assert scenario.questions_asked() == []
+
+
+def test_an_opponents_untapped_storage_matrix_also_restricts_my_untap_step():
+    scenario = _matrix_board(["Forest", "Grizzly Bears"], ["Storage Matrix"])
+    scenario.will_choose("land", source="Storage Matrix")
+    scenario.start_at(Step.UPKEEP)
+    assert _tapped(scenario) == ["Grizzly Bears"]
+
+
+def test_storage_matrix_only_restricts_the_untap_step_of_the_player_whose_turn_it_is():
+    scenario = _matrix_board(["Storage Matrix"], ["Forest", "Grizzly Bears"])
+    scenario.start_at(Step.UPKEEP)
+    assert _tapped(scenario, "bob") == ["Forest", "Grizzly Bears"], "alice's turn: bob untaps nothing"

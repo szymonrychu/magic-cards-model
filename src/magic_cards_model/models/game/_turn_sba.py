@@ -15,6 +15,7 @@ from ...machines.decisions import (
     DecisionKind,
     source_id_of,
 )
+from ...machines.untap_choices import untap_type_restrictions
 from ...machines.keywords import (
     apply_daybound_nightbound,
     attachment_state_based_actions,
@@ -266,7 +267,9 @@ class TurnSbaMixin:
         # CR 502.2: second, the day/night check (CR 731.2) - after CR 502.1's
         # phasing and before CR 502.3's untap, and skipped with the step.
         self._day_night_untap_check()
-        untappable = verdict.permanents
+        # Storage Matrix's choice (`machines/untap_choices`): each untapped one
+        # narrows what this step untaps to a chosen type.
+        untappable = untap_type_restrictions(self, active.username, verdict.permanents)
         tapped = [state for state in untappable if state.tapped]
         active.untap_all(untappable)
         for state in tapped:
