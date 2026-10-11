@@ -246,3 +246,48 @@ def test_blood_sun_does_not_touch_non_land_permanents():
     scenario = _blood_sun_board()
     bears = scenario.creature("Grizzly Bears", "bob")
     assert scenario.game.characteristics_of(bears).power == 2
+
+
+# ---- "Two-Headed Coin" (Edgar, King of Figaro): the first flip each turn is heads ------
+
+
+def _seed_where_the_first_flips_land_tails(game, flips=2):
+    """Pick a `shuffle_seed` whose first `flips` natural coin flips are all
+    tails (`Game.flip_coin`: heads is `random() < 0.5`)."""
+    from random import Random
+
+    start = game.coin_flips_performed
+    for seed in range(1000):
+        if all(
+            Random(f"{seed}:{start + n}:coin").random() >= 0.5  # noqa: S311
+            for n in range(flips)
+        ):
+            game.shuffle_seed = seed
+            return
+    raise AssertionError("no seed found")
+
+
+def test_edgars_two_headed_coin_makes_my_first_flip_each_turn_heads():
+    scenario = _board(["Edgar, King of Figaro"])
+    _seed_where_the_first_flips_land_tails(scenario.game)
+    assert scenario.game.flip_coin("alice") is True
+
+
+def test_the_second_flip_in_a_turn_is_not_forced():
+    scenario = _board(["Edgar, King of Figaro"])
+    _seed_where_the_first_flips_land_tails(scenario.game)
+    assert scenario.game.flip_coin("alice") is True
+    assert scenario.game.flip_coin("alice") is False
+
+
+def test_without_edgar_the_flip_is_natural():
+    scenario = _board()
+    _seed_where_the_first_flips_land_tails(scenario.game)
+    assert scenario.game.flip_coin("alice") is False
+
+
+def test_an_opponents_edgar_does_not_bias_my_flip():
+    scenario = _board(bob=["Edgar, King of Figaro"])
+    _seed_where_the_first_flips_land_tails(scenario.game)
+    assert scenario.game.flip_coin("alice") is False
+    assert scenario.game.flip_coin("bob") is True

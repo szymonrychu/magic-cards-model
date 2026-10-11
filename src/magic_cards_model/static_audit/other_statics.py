@@ -6,6 +6,7 @@ loyalty-ability statics. A line is credited only when the production reader of
 its family performs it."""
 
 from ..machines.cleanup_damage_statics import reads_damage_kept_through_cleanup_line
+from ..machines.coin_flip_statics import reads_first_flip_heads_line
 from ..machines.crew_saddle_statics import reads_crew_saddle_line
 from ..machines.defender_attack_requirements import reads_defender_attack_requirement_line
 from ..machines.exert_on_attack import reads_exert_as_it_attacks_line
@@ -25,6 +26,7 @@ _FAMILIES = (
     reads_damage_kept_through_cleanup_line,
     reads_cant_transform_line,
     reads_defender_attack_requirement_line,
+    reads_first_flip_heads_line,
 )
 
 

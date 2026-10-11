@@ -1406,6 +1406,11 @@ class ZonesMixin:
             results.append(rng.random() < 0.5)
         # CR 614.1a, 705.1: the flipper ignores the losing flips first.
         kept = sorted(results, reverse=True)[: max(len(results) - event.ignore, 1)]
+        from ...machines.coin_flip_statics import first_flip_is_forced_heads
+
+        flipper = event.player.username if event.player is not None else None
+        if flipper is not None and first_flip_is_forced_heads(self, flipper):
+            return True  # CR 705.3: the indicated result replaces the actual one
         return kept[0]
 
     def roll_dice(self: "Game", player: "Player | str", sides: int, count: int = 1) -> list[int]:

@@ -1770,7 +1770,7 @@ def _merge_flip_coin_damage_or_exile_transform_clauses(
         if source is None or source.zone is not Zone.BATTLEFIELD:
             return
         controller = ability.controller
-        if game.flip_coin():
+        if game.flip_coin(controller):
             decision = Decision(
                 kind=DecisionKind.MAY,
                 player=controller,
@@ -1836,7 +1836,7 @@ def _merge_flip_coin_lose_consequence_clauses(
         return None
 
     def effect(game: "Game", ability: AbilityOnStack) -> None:
-        if not game.flip_coin():
+        if not game.flip_coin(ability.controller):
             consequence(game, ability)  # type: ignore[arg-type]
 
     return 2, effect
