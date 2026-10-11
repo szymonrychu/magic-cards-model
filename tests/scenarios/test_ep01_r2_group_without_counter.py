@@ -4,21 +4,25 @@ CR 613.1f, CR 702.107a, CR 611.3a): a creature drops out of the group the moment
 a counter lands on it and re-enters when it is gone.
 """
 
-from magic_cards_model.models.card_state import Counter
-from magic_cards_model.machines.zone_grants import effective_card
 from magic_cards_model.machines.keywords import keyword_abilities
+from magic_cards_model.machines.zone_grants import effective_card
+from magic_cards_model.models.card_state import Counter
 from tests.scenarios.harness import Scenario
 
 
 def has_outlast(scenario, state):
     return any(
-        line.lower().startswith("outlast") for line in scenario.game.characteristics_of(state).abilities
+        line.lower().startswith("outlast")
+        for line in scenario.game.characteristics_of(state).abilities
     )
 
 
 def board(alice, bob=()):
     return (
-        Scenario().player("alice", battlefield=list(alice)).player("bob", battlefield=list(bob)).build()
+        Scenario()
+        .player("alice", battlefield=list(alice))
+        .player("bob", battlefield=list(bob))
+        .build()
     )
 
 

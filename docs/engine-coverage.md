@@ -7936,3 +7936,18 @@ Read by `machines/block_statics.py` off every battlefield permanent's computed a
 - `machines/zone_grants.py`: "Each creature card in your graveyard has unearth {2}{B}", "Each land card in your hand has cycling {R}", "Land cards in your graveyard have dredge 2", "Each creature card in your hand has ninjutsu ...", "Each Sliver card in each player's hand has slivercycling {3}", "Creature cards you own that aren't on the battlefield have flash", and the "The same is true for ..." type/colour sentences (Maskwood Nexus, Conspiracy, Celestial Dawn, Mycosynth Lattice). `effective_card(game, card)` appends the granted keyword lines to the printing every keyword reader takes (unearth, cycling, dredge, ninjutsu, outlast, flash), `Game.characteristics_of` applies the layer 4 / 5 parts off the battlefield. CR 604.2, CR 613.1d, CR 613.1e, CR 613.1f.
 - Granted keywords with a machine of their own: flanking, exalted (CR 702.83a), frenzy N (CR 702.68a), bushido N (CR 702.45a), absorb N (CR 702.64a, written out as the damage-prevention line), riot (CR 702.136a, counted off the group grant for the entering permanent), outlast (CR 702.107a); `INSTANCE_KEYWORDS` grants add one instance per grant (CR 702.25b).
 - Spell grants: freerunning (CR 702.173a; the Assassin half of the condition, commander is not a format here), web-slinging, affinity for any readable quality, rebound (CR 702.88a), ripple N (CR 702.60a), convoke from exile, jump-start (CR 702.133a: graveyard permission, discard as additional cost, exile on leaving the stack).
+
+## EP-01 R2 T1, continuation 2 (static group and rule readers)
+
+| Static line | CR | Reader | Scenario |
+|---|---|---|---|
+| "Spells and abilities can't be countered." | CR 101.2, CR 604.2 | `casting_restrictions.static_uncounterable_source` | `scenarios/test_ep01_r2_global_uncounterable.py` |
+| "Creatures ... can't have +1/+1 counters put on them." | CR 122.6 | `CardState.cant_have_counter_kind`, `Game.add_counters` | `scenarios/test_ep01_r2_group_counter_prohibition.py` |
+| "You can't get poison counters." / "lose infect" | CR 122.6, CR 613.1f | `Game.player_counters_prohibited(kind)`, group `lose_keyword` | `scenarios/test_ep01_r2_controller_rules_statics.py` |
+| "All damage is dealt as though its source had wither." / "Lethal damage ... determined by their power" | CR 702.80a, CR 120.6 | `combat.all_damage_has_wither`, `CardState.lethal_threshold` | `scenarios/test_ep01_r2_damage_statics.py` |
+| "You may spend white mana as though ..." / "Mana of any type can be spent" | CR 609.4b | `Game.mana_color_rule`, `ManaColorRule` | `scenarios/test_ep01_r2_mana_colour_statics.py` |
+| "has all activated abilities of ... except mana abilities" / "gains all activated abilities of target creature until end of turn" | CR 613.1f, CR 605.1a | `GrantActivatedAbilitiesOf.except_mana`, continuous rung | `scenarios/test_ep01_r2_copied_activated_abilities.py`, `..._gain_activated_abilities_until_eot.py` |
+| "Equipment you control have equip {1}." / "Vehicles you control have crew 1." | CR 702.6c, CR 702.122a | `zone_grants` battlefield grants, `equip_activation` | `scenarios/test_ep01_r2_equip_and_crew_grants.py` |
+| "Equipment named ... have indestructible" | CR 201.2 | `GroupMatch.named` | `scenarios/test_ep01_r2_named_group_grants.py` |
+| Konda's Banner | CR 301.5c, CR 613.4c | `GroupMatch.shares_with`, `keywords.attach_restriction_refusal` | `scenarios/test_ep01_r2_konda_banner_statics.py` |
+| X from speed / graveyards; "without a +1/+1 counter"; "During turns other than yours" | CR 613.4c, CR 702.179f | `group_grants` builders | `test_ep01_r2_counted_group_pumps.py`, `..._group_without_counter.py`, `..._turn_gated_creature.py` |

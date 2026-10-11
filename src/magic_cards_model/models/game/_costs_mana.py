@@ -545,13 +545,6 @@ _SPEND_OTHERS_COLORLESS_RE = re.compile(
 _ANY_TYPE_OWN_ACTIVATION_RE = re.compile(
     r"^mana of any type can be spent to activate [^.]+'s abilities\.?$", re.IGNORECASE
 )
-_COLOR_WORDS = {
-    "white": Color.WHITE,
-    "blue": Color.BLUE,
-    "black": Color.BLACK,
-    "red": Color.RED,
-    "green": Color.GREEN,
-}
 
 
 class CostsManaMixin:

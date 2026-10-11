@@ -255,6 +255,11 @@ _SHARES_WITH_EQUIPPED_RE = re.compile(
     r"^creatures that share (?P<what>a color|a creature type) with equipped creature "
     r"gets? (?P<power>[+-]\d+)/(?P<toughness>[+-]\d+)$"
 )
+_OTHER_TURNS_CREATURE_RE = re.compile(
+    r"^during turns other than yours, this (?:artifact|permanent|enchantment|land) is an? "
+    r"(?P<power>\d+)/(?P<toughness>\d+) (?P<subtype>[a-z]+) (?P<types>[a-z]+(?: [a-z]+)*) "
+    r"with (?P<keywords>[a-z ,]+)$"
+)
 _COUNT_PUMP_RE = re.compile(
     r"^(?P<subject>.+?) gets? (?P<p>[+-](?:x|0))/(?P<t>[+-](?:x|0)), where x is "
     r"(?P<count>your speed|the number of creature cards in all graveyards)$"
@@ -447,6 +452,8 @@ def parse_group_static_sentence(sentence: str):
             f"have base P/T {power}/{toughness}",
             lambda: [(Layer.POWER_TOUGHNESS, Sublayer.SET, set_power_toughness(power, toughness))],
         )
+    if match := _OTHER_TURNS_CREATURE_RE.fullmatch(lowered):
+        return _other_turns_creature_builder(sentence, match)
     if match := _SHARES_WITH_EQUIPPED_RE.fullmatch(lowered):
         return _shares_with_equipped_builder(
             sentence,
@@ -606,6 +613,45 @@ def _builder(sentence: str, subject: str, what: str, parts):
 _THIS_AND_ENCHANTED_RE = re.compile(
     r"^this (?:creature|permanent) and enchanted (?:creature|permanent) each$"
 )
+
+
+def _other_turns_creature_builder(sentence: str, match: re.Match[str]):
+    """ "During turns other than yours, this artifact is a 2/3 Gargoyle artifact
+    creature with flying." (Warden of the Wall): while the active player is not
+    its controller (`LayerContext.active_player`, CR 500.1) the permanent gains
+    the named creature type and subtype (layer 4), base P/T (layer 7b) and the
+    keywords (layer 6). It stays what it was otherwise (CR 205.1b)."""
+    types = [_GROUP_TYPE_WORDS.get(word) for word in match["types"].split()]
+    keywords = _split_keywords(match["keywords"])
+    subtype = match["subtype"]
+    if keywords is None or subtype not in subtype_vocabulary() or None in types:
+        return None
+    power, toughness = int(match["power"]), int(match["toughness"])
+
+    def build(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        if context.active_player is None or context.active_player == source.controller:
+            return []
+        parts: list[tuple[Layer, Sublayer | None, Any]] = [
+            *[(Layer.TYPE, None, add_type(kind)) for kind in types if kind is not None],
+            (Layer.TYPE, None, add_subtype(subtype.title())),
+            (Layer.POWER_TOUGHNESS, Sublayer.SET, set_power_toughness(power, toughness)),
+            *[(Layer.ABILITY, None, grant_keyword(keyword)) for keyword in keywords],
+        ]
+        return _effects(
+            source,
+            timestamp,
+            sentence,
+            Only(card_id=source.id),
+            f"during other turns it is a {power}/{toughness} {subtype} creature",
+            parts,
+        )
+
+    return build
 
 
 def _shares_with_equipped_builder(sentence: str, kind: str, power: int, toughness: int):
