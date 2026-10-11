@@ -460,3 +460,88 @@ def test_protean_raider_enters_as_itself_when_you_did_not_attack():
 
 def test_protean_raider_line_is_handled():
     _handled("Protean Raider", "Raid")
+
+
+# --- Unbreathing Horde: prevent damage, remove a counter (CR 615.1, 122.1) ----
+
+
+def _horde_board(counters: int = 3):
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("alice", hand=["Lightning Bolt"], battlefield=["Mountain"])
+        .player("bob", battlefield=["Unbreathing Horde"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    horde = scenario.creature("Unbreathing Horde", "bob")
+    scenario.game.add_counters(horde, "+1/+1", counters)
+    return scenario, horde
+
+
+def test_unbreathing_horde_prevents_damage_and_loses_a_counter():
+    scenario, horde = _horde_board(3)
+    scenario.cast_onto_stack("Lightning Bolt", username="alice", targets=[horde], auto=True)
+    scenario.pass_until_resolved()
+    assert horde.zone is Zone.BATTLEFIELD
+    assert horde.damage == 0
+    assert horde.counter_count("+1/+1") == 2
+
+
+def test_unbreathing_horde_with_no_counters_still_prevents_the_damage():
+    scenario, horde = _horde_board(1)
+    scenario.cast_onto_stack("Lightning Bolt", username="alice", targets=[horde], auto=True)
+    scenario.pass_until_resolved()
+    assert horde.damage == 0
+    assert horde.counter_count("+1/+1") == 0
+
+
+def test_unbreathing_horde_line_is_handled():
+    _handled("Unbreathing Horde", "prevent that damage")
+
+
+# --- Guile: a counter becomes exile, and you may play the card free -----------
+# (CR 701.6a, 614.1a, 608.2g)
+
+
+def _guile_board(*, guile: bool, answer: bool = True):
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Counterspell"],
+            battlefield=(["Guile"] if guile else []) + ["Island", "Island"],
+        )
+        .player("bob", life=20, hand=["Lightning Bolt"], battlefield=["Mountain"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    (mountain,) = scenario.untapped_sources("Mountain", username="bob")
+    scenario.pass_priority("alice")
+    bolt = scenario.cast_onto_stack("Lightning Bolt", mountain, username="bob", targets=["alice"])
+    scenario.pass_priority("bob")
+    scenario.will_take_the_may(answer, source="Guile")
+    scenario.will_choose_targets("bob", source="Lightning Bolt")
+    scenario.cast_onto_stack("Counterspell", username="alice", targets=[bolt], auto=True)
+    scenario.resolve_top()
+    return scenario, bolt
+
+
+def test_guile_exiles_the_countered_spell_and_lets_you_cast_it_free():
+    scenario, bolt = _guile_board(guile=True)
+    assert bolt.zone is Zone.STACK
+    assert scenario.game.controller_of(bolt).username == "alice"
+
+
+def test_guile_lets_you_decline_and_the_spell_stays_exiled():
+    scenario, bolt = _guile_board(guile=True, answer=False)
+    assert bolt.zone is Zone.EXILE
+
+
+def test_without_guile_the_countered_spell_goes_to_the_graveyard():
+    scenario, bolt = _guile_board(guile=False)
+    assert bolt.zone is Zone.GRAVEYARD
+
+
+def test_guile_line_is_handled():
+    _handled("Guile", "would counter a spell")

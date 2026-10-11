@@ -79,6 +79,7 @@ from ...machines.priority import PriorityOutcome
 from ...machines.replacement import (
     EventKind,
     ReplaceableEvent,
+    apply_replacements,
 )
 from ...machines.targeting import (
     RetargetScope,
@@ -3278,6 +3279,24 @@ class StackPriorityMixin:
                 or spell_protected_from_countering(self, spell)
             ):
                 return spell
+            free_player: str | None = None
+            free_source = ""
+            if isinstance(spell, CardState) and not to_exile and to_library is None:
+                # CR 701.6a / CR 614.1a: "if a spell or ability you control
+                # would counter a spell, instead exile ..." (Guile).
+                resolving = self.resolving
+                event = ReplaceableEvent(
+                    kind=EventKind.COUNTER_SPELL,
+                    card=spell,
+                    origin=Zone.STACK,
+                    destination=Zone.GRAVEYARD,
+                    cause_controller=resolving.controller if resolving is not None else None,
+                )
+                apply_replacements(self, event)
+                if event.destination is Zone.EXILE:
+                    to_exile = True
+                    free_player = event.free_play_player
+                    free_source = event.free_play_source
             self.stack.remove(spell)
             if isinstance(spell, CardState):
                 if to_library is not None:
@@ -3296,6 +3315,19 @@ class StackPriorityMixin:
                 # (`machines/triggers._cast_record_for_clause`) instead of a
                 # lingering record being misread as "nothing was spent".
                 self.forget_cast_record(spell)
+                if free_player is not None and spell.zone is Zone.EXILE:
+                    # ", you may play that card without paying its mana cost":
+                    # carried out as the countering effect resolves (CR 608.2g).
+                    self.may_cast_during_resolution(
+                        spell,
+                        free_player,
+                        prompt=f"play {spell.name} without paying its mana cost",
+                        source=free_source,
+                        source_id=None,
+                        source_name=free_source,
+                        rule="CR 608.2g",
+                        play=True,
+                    )
             self.emit(
                 GameEvent(
                     event=TriggerEvent.SPELL_IS_COUNTERED,

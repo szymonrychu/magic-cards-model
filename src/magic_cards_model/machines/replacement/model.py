@@ -455,6 +455,10 @@ class EventKind(StrEnum):
     #: A permanent is about to assemble `amount` Contraptions (CR 701.45a,
     #: Steamflogger Boss): `card` is the assembling Rigger.
     ASSEMBLE = "assemble"
+    #: A spell on the stack is about to be countered (CR 701.6a): `card` is the
+    #: spell, `destination` where it would go, `cause_controller` who controls
+    #: the countering spell or ability (Guile).
+    COUNTER_SPELL = "counter_spell"
 
 
 @dataclass
@@ -605,6 +609,10 @@ class ReplaceableEvent:
     #: controls causes you to discard this card" reads it (Obstinate Baloth).
     discarded: bool = False
     cause_controller: str | None = None
+    #: For `COUNTER_SPELL`: the player who may play the exiled card free, and
+    #: the permanent that said so (Guile).
+    free_play_player: str | None = None
+    free_play_source: str = ""
 
     #: False when the effect causing this `DESTROY` printed "can't be
     #: regenerated" (Wrath of God's "Destroy all creatures. They can't be
