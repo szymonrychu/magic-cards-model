@@ -3481,8 +3481,14 @@ def _parse_reflexive_mandatory_mill_clause(text: str) -> AbilityEffect | None:
 #: symbols. The symbol run is only ever mana: `ManaCost.try_parse` declines
 #: {E} (CR 107.14) and every other non-mana symbol, so an energy payment the
 #: energy reader could not read is never taken for a mana one.
+#: Ezio Auditore da Firenze gates the offer itself: "you may pay {W}{U}{B}{R}{G}
+#: if that player has 10 or less life. When you do, ..." - the condition is
+#: read when the trigger resolves (CR 603.4 reads an intervening if only at
+#: the front of a trigger; this one sits inside the instruction), and a
+#: payment that was never offered is never made.
 _REFLEXIVE_MAY_PAY_MANA_RE = re.compile(
-    r"^you may pay (?P<mana>(?:\{[^}]+\})+)\.\s*when you do,\s*(?P<consequence>.+?)\.?$",
+    r"^you may pay (?P<mana>(?:\{[^}]+\})+)(?: if (?P<condition>[^.]+))?\.\s*"
+    r"when you do,\s*(?P<consequence>.+?)\.?$",
     re.IGNORECASE | re.DOTALL,
 )
 
@@ -3504,10 +3510,17 @@ def _parse_reflexive_pay_mana_clause(text: str) -> AbilityEffect | None:
     consequence_text = _reflexive_consequence_text(match.group("consequence"))
     if reflexive_pay_consequence_effect(consequence_text) is None:
         return None
+    condition = match.group("condition")
+    if condition is not None and not _effect_condition_is_readable(condition, allow_anaphor=True):
+        return None
 
     def effect(game: "Game", ability: AbilityOnStack) -> None:
         player = game.controller_of(ability)
         source_id, source_name = _permanent_id_and_name(ability, for_spell=False)
+        if condition is not None and not game.condition_holds(
+            player.username, condition, ability.source(game), ability=ability, event=ability.event
+        ):
+            return
         paid = game.may_pay_mana_cost(
             player, cost, source=source_name, source_id=source_id_of(source_id)
         )
@@ -3519,6 +3532,7 @@ def _parse_reflexive_pay_mana_clause(text: str) -> AbilityEffect | None:
             source_id=ability.source_id,
             source_name=source_name,
             callback=ReflexivePayManaConsequence(),
+            event=ability.event,
         )
 
     return effect
