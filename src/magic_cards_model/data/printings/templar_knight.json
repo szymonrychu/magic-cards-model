@@ -1,0 +1,137 @@
+{
+  "object": "card",
+  "id": "3d5a1bec-9128-4c5e-98c3-317424f892d1",
+  "oracle_id": "f9453fe2-fadf-4cd4-8d2c-0eaa0e2d78d6",
+  "multiverse_ids": [
+    667600
+  ],
+  "mtgo_id": 127986,
+  "tcgplayer_id": 555796,
+  "cardmarket_id": 774633,
+  "name": "Templar Knight",
+  "lang": "en",
+  "released_at": "2024-07-05",
+  "uri": "https://api.scryfall.com/cards/3d5a1bec-9128-4c5e-98c3-317424f892d1",
+  "scryfall_uri": "https://scryfall.com/card/acr/10/templar-knight?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T02:49:44Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/3/d/3d5a1bec-9128-4c5e-98c3-317424f892d1.jpg?1783910984",
+    "normal": "https://cards.scryfall.io/normal/front/3/d/3d5a1bec-9128-4c5e-98c3-317424f892d1.jpg?1783910984",
+    "large": "https://cards.scryfall.io/large/front/3/d/3d5a1bec-9128-4c5e-98c3-317424f892d1.jpg?1783910984",
+    "png": "https://cards.scryfall.io/png/front/3/d/3d5a1bec-9128-4c5e-98c3-317424f892d1.png?1783910984",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/3/d/3d5a1bec-9128-4c5e-98c3-317424f892d1.jpg?1783910984",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/3/d/3d5a1bec-9128-4c5e-98c3-317424f892d1.jpg?1783910984",
+    "thumb": "https://cards.scryfall.io/thumb/front/3/d/3d5a1bec-9128-4c5e-98c3-317424f892d1.webp?1783910984",
+    "grid": "https://cards.scryfall.io/grid/front/3/d/3d5a1bec-9128-4c5e-98c3-317424f892d1.webp?1783910984",
+    "display": "https://cards.scryfall.io/display/front/3/d/3d5a1bec-9128-4c5e-98c3-317424f892d1.webp?1783910984",
+    "art": "https://cards.scryfall.io/art/front/3/d/3d5a1bec-9128-4c5e-98c3-317424f892d1.webp?1783910984",
+    "crop": "https://cards.scryfall.io/crop/front/3/d/3d5a1bec-9128-4c5e-98c3-317424f892d1.webp?1783910984"
+  },
+  "mana_cost": "{1}{W}",
+  "cmc": 2.0,
+  "type_line": "Creature \u2014 Human Knight",
+  "oracle_text": "Vigilance\n{W}, Tap five untapped attacking creatures you control named Templar Knight: Search your library for a legendary artifact card, put it onto the battlefield, then shuffle.\nA deck can have any number of cards named Templar Knight.",
+  "power": "3",
+  "toughness": "1",
+  "colors": [
+    "W"
+  ],
+  "color_identity": [
+    "W"
+  ],
+  "keywords": [
+    "Vigilance"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "54b67b0b-cd3f-4e0d-ac25-fef5d966409b",
+  "set": "acr",
+  "set_name": "Assassin's Creed",
+  "set_type": "draft_innovation",
+  "set_uri": "https://api.scryfall.com/sets/54b67b0b-cd3f-4e0d-ac25-fef5d966409b",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Aacr&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/acr?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/3d5a1bec-9128-4c5e-98c3-317424f892d1/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Af9453fe2-fadf-4cd4-8d2c-0eaa0e2d78d6&unique=prints",
+  "collector_number": "10",
+  "digital": false,
+  "rarity": "uncommon",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Daniel Correia",
+  "artist_ids": [
+    "d383f00d-0078-4c43-92f6-cbf62ab5df05"
+  ],
+  "illustration_id": "be37cb45-5542-4b81-b0bf-c3ac69412bba",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "triangle",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "promo_types": [
+    "universesbeyond"
+  ],
+  "edhrec_rank": 13713,
+  "prices": {
+    "usd": "1.91",
+    "usd_foil": "2.27",
+    "usd_etched": null,
+    "eur": "0.91",
+    "eur_foil": "1.16",
+    "tix": "9.50"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=667600&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DTemplar%2BKnight",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DTemplar%2BKnight",
+    "edhrec": "https://edhrec.com/route/?cc=Templar+Knight"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F555796%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=774633&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/127986?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

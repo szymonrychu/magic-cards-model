@@ -1,0 +1,149 @@
+{
+  "object": "card",
+  "id": "fb1189c9-7842-466e-8238-1e02677d8494",
+  "oracle_id": "158a6225-a246-4fd6-aa57-0df8067b4383",
+  "multiverse_ids": [
+    479747
+  ],
+  "mtgo_id": 80463,
+  "arena_id": 71294,
+  "tcgplayer_id": 212017,
+  "cardmarket_id": 450978,
+  "name": "Lutri, the Spellchaser",
+  "lang": "en",
+  "released_at": "2020-04-24",
+  "uri": "https://api.scryfall.com/cards/fb1189c9-7842-466e-8238-1e02677d8494",
+  "scryfall_uri": "https://scryfall.com/card/iko/227/lutri-the-spellchaser?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T08:23:30Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/f/b/fb1189c9-7842-466e-8238-1e02677d8494.jpg?1783931010",
+    "normal": "https://cards.scryfall.io/normal/front/f/b/fb1189c9-7842-466e-8238-1e02677d8494.jpg?1783931010",
+    "large": "https://cards.scryfall.io/large/front/f/b/fb1189c9-7842-466e-8238-1e02677d8494.jpg?1783931010",
+    "png": "https://cards.scryfall.io/png/front/f/b/fb1189c9-7842-466e-8238-1e02677d8494.png?1783931010",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/f/b/fb1189c9-7842-466e-8238-1e02677d8494.jpg?1783931010",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/f/b/fb1189c9-7842-466e-8238-1e02677d8494.jpg?1783931010",
+    "thumb": "https://cards.scryfall.io/thumb/front/f/b/fb1189c9-7842-466e-8238-1e02677d8494.webp?1783931010",
+    "grid": "https://cards.scryfall.io/grid/front/f/b/fb1189c9-7842-466e-8238-1e02677d8494.webp?1783931010",
+    "display": "https://cards.scryfall.io/display/front/f/b/fb1189c9-7842-466e-8238-1e02677d8494.webp?1783931010",
+    "art": "https://cards.scryfall.io/art/front/f/b/fb1189c9-7842-466e-8238-1e02677d8494.webp?1783931010",
+    "crop": "https://cards.scryfall.io/crop/front/f/b/fb1189c9-7842-466e-8238-1e02677d8494.webp?1783931010"
+  },
+  "mana_cost": "{1}{U/R}{U/R}",
+  "cmc": 3.0,
+  "type_line": "Legendary Creature \u2014 Elemental Otter",
+  "oracle_text": "Companion \u2014 Each nonland card in your starting deck has a different name. (If this card is your chosen companion, you may put it into your hand from outside the game for {3} as a sorcery.)\nFlash\nWhen Lutri enters, if you cast it, copy target instant or sorcery spell you control. You may choose new targets for the copy.",
+  "power": "3",
+  "toughness": "2",
+  "colors": [
+    "R",
+    "U"
+  ],
+  "color_identity": [
+    "R",
+    "U"
+  ],
+  "keywords": [
+    "Companion",
+    "Flash"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "banned",
+    "competitivebrawl": "banned",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "arena",
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "19feda43-15ab-427e-a0e4-148a4bf2b03a",
+  "set": "iko",
+  "set_name": "Ikoria: Lair of Behemoths",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/19feda43-15ab-427e-a0e4-148a4bf2b03a",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Aiko&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/iko?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/fb1189c9-7842-466e-8238-1e02677d8494/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A158a6225-a246-4fd6-aa57-0df8067b4383&unique=prints",
+  "collector_number": "227",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Lie Setiawan",
+  "artist_ids": [
+    "6f771d3f-310e-4aa4-841f-5ba4ba9f025a"
+  ],
+  "illustration_id": "a710eb78-b119-49eb-8274-6bc76edffbbd",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "companion",
+    "legendary"
+  ],
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 12045,
+  "penny_rank": 4783,
+  "preview": {
+    "source": "Wizards of the Coast",
+    "source_uri": "https://www.twitch.tv/videos/581433985",
+    "previewed_at": "2020-04-02"
+  },
+  "prices": {
+    "usd": "0.48",
+    "usd_foil": "3.04",
+    "usd_etched": null,
+    "eur": "1.06",
+    "eur_foil": "2.04",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=479747&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DLutri%252C%2Bthe%2BSpellchaser",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DLutri%252C%2Bthe%2BSpellchaser",
+    "edhrec": "https://edhrec.com/route/?cc=Lutri%2C+the+Spellchaser"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F212017%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=450978&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/80463?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

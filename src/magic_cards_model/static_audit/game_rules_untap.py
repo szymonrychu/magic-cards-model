@@ -61,10 +61,13 @@ def _reads_untap_line(printing, line: str) -> bool:
 
 def _reads_game_rule_line(line: str) -> bool:
     from magic_cards_model.machines import game_rule_statics
+    from magic_cards_model.models.deck import reads_deck_limit_line
     from magic_cards_model.models.game import _ZERO_LOYALTY_EXEMPTION_RE
 
-    return game_rule_statics.reads_game_rule_line(line) or bool(
-        _ZERO_LOYALTY_EXEMPTION_RE.fullmatch(line.rstrip("."))
+    return (
+        game_rule_statics.reads_game_rule_line(line)
+        or bool(_ZERO_LOYALTY_EXEMPTION_RE.fullmatch(line.rstrip(".")))
+        or reads_deck_limit_line(line)
     )
 
 

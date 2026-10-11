@@ -1,0 +1,137 @@
+{
+  "object": "card",
+  "id": "ae7ba1de-48f9-423b-867a-22bd3f6c06c2",
+  "oracle_id": "595a15f0-77f3-4544-8acc-10630e12cc14",
+  "multiverse_ids": [
+    571422
+  ],
+  "mtgo_id": 101662,
+  "tcgplayer_id": 277238,
+  "cardmarket_id": 665736,
+  "name": "Shadowborn Apostle",
+  "lang": "en",
+  "released_at": "2022-07-08",
+  "uri": "https://api.scryfall.com/cards/ae7ba1de-48f9-423b-867a-22bd3f6c06c2",
+  "scryfall_uri": "https://scryfall.com/card/2x2/89/shadowborn-apostle?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T05:51:39Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/a/e/ae7ba1de-48f9-423b-867a-22bd3f6c06c2.jpg?1783921899",
+    "normal": "https://cards.scryfall.io/normal/front/a/e/ae7ba1de-48f9-423b-867a-22bd3f6c06c2.jpg?1783921899",
+    "large": "https://cards.scryfall.io/large/front/a/e/ae7ba1de-48f9-423b-867a-22bd3f6c06c2.jpg?1783921899",
+    "png": "https://cards.scryfall.io/png/front/a/e/ae7ba1de-48f9-423b-867a-22bd3f6c06c2.png?1783921899",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/a/e/ae7ba1de-48f9-423b-867a-22bd3f6c06c2.jpg?1783921899",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/a/e/ae7ba1de-48f9-423b-867a-22bd3f6c06c2.jpg?1783921899",
+    "thumb": "https://cards.scryfall.io/thumb/front/a/e/ae7ba1de-48f9-423b-867a-22bd3f6c06c2.webp?1783921899",
+    "grid": "https://cards.scryfall.io/grid/front/a/e/ae7ba1de-48f9-423b-867a-22bd3f6c06c2.webp?1783921899",
+    "display": "https://cards.scryfall.io/display/front/a/e/ae7ba1de-48f9-423b-867a-22bd3f6c06c2.webp?1783921899",
+    "art": "https://cards.scryfall.io/art/front/a/e/ae7ba1de-48f9-423b-867a-22bd3f6c06c2.webp?1783921899",
+    "crop": "https://cards.scryfall.io/crop/front/a/e/ae7ba1de-48f9-423b-867a-22bd3f6c06c2.webp?1783921899"
+  },
+  "mana_cost": "{B}",
+  "cmc": 1.0,
+  "type_line": "Creature \u2014 Human Cleric",
+  "oracle_text": "A deck can have any number of cards named Shadowborn Apostle.\n{B}, Sacrifice six creatures named Shadowborn Apostle: Search your library for a Demon creature card, put it onto the battlefield, then shuffle.",
+  "power": "1",
+  "toughness": "1",
+  "colors": [
+    "B"
+  ],
+  "color_identity": [
+    "B"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "5a645837-b050-449f-ac90-1e7ccbf45031",
+  "set": "2x2",
+  "set_name": "Double Masters 2022",
+  "set_type": "masters",
+  "set_uri": "https://api.scryfall.com/sets/5a645837-b050-449f-ac90-1e7ccbf45031",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3A2x2&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/2x2?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/ae7ba1de-48f9-423b-867a-22bd3f6c06c2/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A595a15f0-77f3-4544-8acc-10630e12cc14&unique=prints",
+  "collector_number": "89",
+  "digital": false,
+  "rarity": "common",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Lucas Graciano",
+  "artist_ids": [
+    "ce98f39c-7cdd-47e6-a520-6c50443bb4c2"
+  ],
+  "illustration_id": "d76e095d-531c-483f-a7d1-eb87ca5f422e",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 10575,
+  "penny_rank": 6092,
+  "preview": {
+    "source": "Wizards of the Coast",
+    "source_uri": "https://magic.wizards.com/en/articles/archive/feature/double-masters-2022-release-notes-2022-06-24",
+    "previewed_at": "2022-06-24"
+  },
+  "prices": {
+    "usd": "1.60",
+    "usd_foil": "2.00",
+    "usd_etched": null,
+    "eur": "0.65",
+    "eur_foil": "0.81",
+    "tix": "0.04"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=571422&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DShadowborn%2BApostle",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DShadowborn%2BApostle",
+    "edhrec": "https://edhrec.com/route/?cc=Shadowborn+Apostle"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F277238%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=665736&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/101662?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}
