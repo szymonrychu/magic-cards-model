@@ -6757,6 +6757,17 @@ _SELF_PUMP_WHILE_CONTROLS_RE = re.compile(
     re.IGNORECASE,
 )
 
+#: "This creature gets +1/+1 as long as you control a Mountain." (Wild Nacatl,
+#: one such line per land type), "This creature gets +1/+2 as long as you
+#: control a Forest." (Kird Ape) - a self pump (CR 613.4c) behind CR 611.3a's
+#: live "you control a `<subtype>`" condition. Only a word the subtype
+#: vocabulary knows reads; a card type or colour is `_SELF_PUMP_WHILE_CONTROLS_RE`'s.
+_SELF_PUMP_WHILE_CONTROLS_SUBTYPE_RE = re.compile(
+    r"^this (?:creature|permanent) gets (?P<power>[+-]\d+)/(?P<toughness>[+-]\d+) "
+    r"as long as you control an? (?P<subtype>[A-Za-z'-]+)\.?$",
+    re.IGNORECASE,
+)
+
 #: The two turn-fact conditions this shape recognises, each already tracked by
 #: `Game.record_turn_fact`/`turn_fact_holds` (`models/game.py`) for the
 #: identical "Activate only if ..." restriction - reused here rather than
@@ -9916,6 +9927,40 @@ def _self_pump_while_controls_builder(
     return builder
 
 
+def _self_pump_while_controlling_subtype_builder(
+    power: int, toughness: int, subtype: str, *, line: str
+) -> EffectBuilder:
+    """`_SELF_PUMP_WHILE_CONTROLS_SUBTYPE_RE`'s pump: sublayer 7c (CR 613.4c),
+    gated by `SelfIfControlsCounted` so "you control a `<subtype>`" is re-asked
+    against the board being computed (CR 611.3a), following a land that
+    enters, leaves or changes type."""
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        return [
+            ContinuousEffect(
+                description=f"{source.name}: {power:+d}/{toughness:+d} with a {subtype}",
+                layer=Layer.POWER_TOUGHNESS,
+                sublayer=Sublayer.MODIFY,
+                timestamp=timestamp,
+                source_id=source.id,
+                source_ability=_source_line_for(source, line),
+                selector=SelfIfControlsCounted(
+                    card_id=source.id,
+                    username=source.controller,
+                    requirements=(ControlledCountRequirement(subtype=subtype, threshold=1),),
+                ),
+                modification=modify_power_toughness(power, toughness),
+            )
+        ]
+
+    return builder
+
+
 def _group_assigns_damage_as_toughness_builder(*, line: str) -> EffectBuilder:
     """Ghalta the Immovable's "Each creature you control with toughness
     greater than its power assigns combat damage equal to its toughness
@@ -12093,6 +12138,12 @@ def _parse_static_layer_sentence(sentence: str) -> EffectBuilder | None:
             keywords,
             line=sentence,
             description="during your turn",
+        )
+    if (match := _SELF_PUMP_WHILE_CONTROLS_SUBTYPE_RE.fullmatch(sentence)) and (
+        subtype := canonical_subtype(match.group("subtype"))
+    ):
+        return _self_pump_while_controlling_subtype_builder(
+            int(match.group("power")), int(match.group("toughness")), subtype, line=sentence
         )
     if match := _SELF_PUMP_WHILE_CONTROLS_RE.fullmatch(sentence):
         noun = match.group("noun").lower()
