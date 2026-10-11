@@ -243,6 +243,9 @@ def cost_count(phrase: str) -> Reader | None:
     text = re.sub(r"^(?:the number of )", "", text)
     if text in {"creature that died this turn", "creatures that died this turn"}:
         return lambda ctx: ctx.game.creatures_died_this_turn
+    if text in {"permanent sacrificed this turn", "permanents sacrificed this turn"}:
+        # CR 701.21a: a sacrifice by any player, counted where `sacrifice` writes it.
+        return lambda ctx: sum(ctx.game.permanents_sacrificed_this_turn.values())
     if text in {"creature in your party", "creatures in your party"}:
         from ..designations import party_size
 

@@ -635,7 +635,7 @@ class CostsManaMixin:
         return False
 
     def _spend_as_any_color_grants(
-        self: "Game", player: str
+        self: "Game", player: str, *, any_type_only: bool = False
     ) -> Iterator[tuple[CardState, str | None]]:
         """Every battlefield permanent's CR 609.4b sentence ("You may spend
         mana as though it were mana of any color[ to cast <quality> spells].",
@@ -652,6 +652,8 @@ class CostsManaMixin:
                     if match is None:
                         continue
                     if match.group("who").lower() == "you" and not mine:
+                        continue
+                    if any_type_only and match.group("any_type") is None:
                         continue
                     if not self._still_has_static_line(source, text):
                         continue
@@ -672,6 +674,17 @@ class CostsManaMixin:
         # pile the same sentence opens to play.
         grant = linked_exile_play_grant(self, spell, caster, land=False)
         return grant is not None and grant.line.any_color
+
+    def spends_mana_of_any_type_for_spell(self: "Game", spell: CardState, caster: str) -> bool:
+        """Whether "mana of any type can be spent" to cast `spell` (CR 609.4b:
+        Vizier of the Menagerie's "You can spend mana of any type to cast
+        creature spells."), which also lets coloured mana pay a `{C}` symbol."""
+        from ...machines.next_spell import spell_has_quality
+
+        return any(
+            scope is None or spell_has_quality(spell, scope.lower())
+            for _source, scope in self._spend_as_any_color_grants(caster, any_type_only=True)
+        )
 
     @staticmethod
     def _resulting_mana_value(card: CardState, option: str | None) -> int:

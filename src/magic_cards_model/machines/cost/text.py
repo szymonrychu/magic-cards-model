@@ -686,6 +686,14 @@ _STATIC_FREE_CAST = re.compile(
 _THE_NUMBER_OF_YOU_CONTROL = re.compile(r"^the number of (?P<quality>.+?) you control$")
 
 
+#: Weftwalking: CR 118.9's alternative cost of nothing, offered to each player
+#: for the first spell they cast during each of their own turns.
+_FIRST_SPELL_EACH_PLAYER_FREE = re.compile(
+    r"^The first spell each player casts during each of their turns may be cast "
+    r"without paying its mana cost\.?$",
+    re.IGNORECASE,
+)
+
 #: Zaffai and the Tempests: "Once during each of your turns, you may cast an
 #: instant or sorcery spell from your hand without paying its mana cost." One
 #: with the Multiverse: "Once during each of your turns, you may cast a spell
@@ -802,6 +810,8 @@ def static_free_cast_grant(text: str) -> StaticFreeCastGrant | None:
     costed = _static_cost_cast_grant(text) or _static_by_paying_grant(text)
     if costed is not None:
         return costed
+    if _FIRST_SPELL_EACH_PLAYER_FREE.match(text.strip()) is not None:
+        return StaticFreeCastGrant(zone=None, any_zone=True, first_spell_each_players_turn=True)
     once = _ONCE_EACH_TURN_FREE_CAST.match(text.strip())
     if once is not None:
         qualifier = re.sub(r"spells?$", "", once.group("what").strip().lower()).strip()

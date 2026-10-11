@@ -190,6 +190,28 @@ def is_creature_source(source: CardState, game: Any = None) -> bool:
     return Type.CREATURE in source.types
 
 
+def is_basic_land_source(source: CardState, game: Any = None) -> bool:
+    """Whether mana from this permanent is mana from a basic land (CR 106.3:
+    the source of mana is the source of the ability that produced it) - read
+    off the computed board where it still is, else off what it last was."""
+    if game is not None and source.zone is Zone.BATTLEFIELD:
+        try:
+            view = game.characteristics_of(source)
+            return Supertype.BASIC in view.supertypes and Type.LAND in view.types
+        except (AttributeError, KeyError):
+            pass
+    return Supertype.BASIC in source.supertypes and Type.LAND in source.types
+
+
+def source_allowed_by(only_from: str | None, source: CardState, game: Any = None) -> bool:
+    """Whether `source` may pay a cost limited by `ManaSpend.only_from`."""
+    if only_from == "basic_land":
+        return is_basic_land_source(source, game)
+    if only_from == "creature":
+        return is_creature_source(source, game)
+    return True
+
+
 def is_treasure_source(source: CardState, game: Any = None) -> bool:
     """Whether mana from this permanent is mana from a Treasure (CR 106.3:
     the source of mana is the source of the ability that produced it) -
@@ -1415,7 +1437,7 @@ def _auto_tap_candidates(
       legendary creature or planeswalker to name a colour among.
     """
     scanned = _scan_mana_candidates(payment, sources)
-    return _filter_candidate_scan(scanned, payment.spend)
+    return _filter_candidate_scan(scanned, payment.spend, payment.game)
 
 
 #: `_scan_mana_candidates`'s own row: a candidate plus the `any_color` flag
@@ -1633,7 +1655,7 @@ def _scan_mana_candidates(
 
 
 def _filter_candidate_scan(
-    scanned: list[_ScannedCandidate], spend: "ManaSpend | None"
+    scanned: list[_ScannedCandidate], spend: "ManaSpend | None", game: Any = None
 ) -> list[_Candidate]:
     """`_scan_mana_candidates`'s rows narrowed to the ones CR 106.6 permits
     `spend` to draw on, in the `_Candidate` shape `_group_by_source` takes.
@@ -1642,10 +1664,12 @@ def _filter_candidate_scan(
     `mana_candidate_scan`/`_scan_mana_candidates` is the half that costs
     anything.
     """
+    only_from = spend.only_from if spend is not None else None
     return [
         (source, options, restriction)
         for source, options, restriction, _any, _index in scanned
-        if restriction is None or restriction.allows(spend)
+        if (restriction is None or restriction.allows(spend))
+        and (only_from is None or source_allowed_by(only_from, source, game))
     ]
 
 
@@ -2301,6 +2325,7 @@ def _best_flow_plan(
     *,
     any_color: bool = False,
     snow_any_color: bool = False,
+    any_type: bool = False,
 ) -> TapPlan | None:
     """The smallest tapping plan that settles `options` (one already-resolved
     reading of `ManaCost`'s payable-in-multiple-ways symbols) out of `simple`
@@ -2369,7 +2394,11 @@ def _best_flow_plan(
             ),
         )
         demands = _demand_list(
-            options, all_buckets, any_color=any_color, snow_any_color=snow_any_color
+            options,
+            all_buckets,
+            any_color=any_color,
+            snow_any_color=snow_any_color,
+            any_type=any_type,
         )
         result = _assign_sources(demands, sources_map, capacity_map)
         if result is None:
@@ -2458,7 +2487,7 @@ def _solve_auto_tap_flow(
         scanned = [entry for entry in candidate_scan if entry[0].id in source_ids]
     else:
         scanned = _scan_mana_candidates(context, sources)
-    grouped = _group_by_source(_filter_candidate_scan(scanned, context.spend))
+    grouped = _group_by_source(_filter_candidate_scan(scanned, context.spend, context.game))
     simple = [
         (source, alternatives) for source, alternatives in grouped if not _is_exotic(alternatives)
     ]
@@ -2481,6 +2510,7 @@ def _solve_auto_tap_flow(
             context.game,
             any_color=context.spend is not None and context.spend.any_color,
             snow_any_color=context.spend is not None and context.spend.snow_any_color,
+            any_type=context.spend is not None and context.spend.any_type,
         )
         if plan is not None:
             if life and life > life_available - _plan_life_loss(context, plan):
@@ -3059,6 +3089,7 @@ def _mana_pool_overwrite(target: ManaPool, contents: ManaPool) -> None:
     target.snow = copied.snow
     target.treasure = copied.treasure
     target.creature = copied.creature
+    target.basic_land = copied.basic_land
     target.restricted = copied.restricted
     target.spend_effects = copied.spend_effects
     target.retained = copied.retained
@@ -3079,6 +3110,7 @@ def _copy_pool(pool: ManaPool) -> ManaPool:
         snow=dict(pool.snow),
         treasure=dict(pool.treasure),
         creature=dict(pool.creature),
+        basic_land=dict(pool.basic_land),
         restricted=[entry.model_copy(deep=True) for entry in pool.restricted],
         spend_effects=[tagged.model_copy(deep=True) for tagged in pool.spend_effects],
         retained=[entry.model_copy(deep=True) for entry in pool.retained],
@@ -3564,6 +3596,14 @@ class CostPayment(EngineModel):
         # and the CR 602.5 refusals collected on the way - `_activated_mana_
         # ability`, shared with `mana_ability_index` so the ability a
         # `TapPlan` entry reports is the ability the tap actually activates.
+        if self.spend is not None and not source_allowed_by(
+            self.spend.only_from, source, self.game
+        ):
+            kind = "basic land" if self.spend.only_from == "basic_land" else "creature"
+            raise ValueError(
+                f"{source.name} is not a {kind}, and only mana produced by {kind}s "
+                f"may be spent to cast {self.spend.name} (CR 106.6)"
+            )
         if (
             self.spend is not None
             and self.spend.treasure_only
@@ -3639,6 +3679,7 @@ class CostPayment(EngineModel):
             spend_effect=spend_effect,
             treasure=is_treasure_source(source, self.game),
             creature=is_creature_source(source, self.game),
+            basic_land=is_basic_land_source(source, self.game),
         )
         if self.game is not None:
             # CR 405.6c: the mana ability's other effect happens with the mana,
@@ -4185,6 +4226,7 @@ class CostPayment(EngineModel):
         pool.snow = dict(self.pool.snow)
         pool.treasure = dict(self.pool.treasure)
         pool.creature = dict(self.pool.creature)
+        pool.basic_land = dict(self.pool.basic_land)
         pool.restricted = [entry.model_copy(deep=True) for entry in self.pool.restricted]
         pool.retained = [entry.model_copy(deep=True) for entry in self.pool.retained]
 
@@ -4223,6 +4265,7 @@ class CostPayment(EngineModel):
         pool.snow = dict(self._preexisting.snow)
         pool.treasure = dict(self._preexisting.treasure)
         pool.creature = dict(self._preexisting.creature)
+        pool.basic_land = dict(self._preexisting.basic_land)
         pool.restricted = [entry.model_copy(deep=True) for entry in self._preexisting.restricted]
         pool.retained = [entry.model_copy(deep=True) for entry in self._preexisting.retained]
 

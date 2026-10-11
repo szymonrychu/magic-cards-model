@@ -551,6 +551,20 @@ def reads_cant_spend_mana_line(oracle_text: str) -> bool:
     return _CANT_SPEND_MANA_RE.search(oracle_text) is not None
 
 
+_SPEND_ONLY_FROM_RE = re.compile(
+    r"^Spend only mana produced by (?P<what>basic lands|creatures) to cast this spell\.$",
+    re.MULTILINE,
+)
+_SPEND_ONLY_FROM = {"basic lands": "basic_land", "creatures": "creature"}
+
+
+def spend_only_from(oracle_text: str) -> str | None:
+    """Which source kind a card's own "Spend only mana produced by <kind> to
+    cast this spell." limits its cost to (`ManaSpend.only_from`), or `None`."""
+    match = _SPEND_ONLY_FROM_RE.search(oracle_text)
+    return None if match is None else _SPEND_ONLY_FROM[match.group("what")]
+
+
 class ManaSpend(EngineModel):
     """The object mana is about to be spent on, reduced to what a restriction
     can ask about: whether it is being cast or activated, and the
@@ -609,6 +623,17 @@ class ManaSpend(EngineModel):
     pay this cost. A restriction on the *cost* rather than on the mana, so it
     lives on the spend, not in `ManaRestriction`; floating mana from any other
     source is simply not available to this payment."""
+
+    only_from: str | None = None
+    """"Spend only mana produced by basic lands [creatures] to cast this spell."
+    (Imperiosaur, Myr Superion; CR 106.6 / CR 601.2h): `"basic_land"` or
+    `"creature"`. A restriction on the *cost*, like `treasure_only`: only the
+    part of the pool that source kind made (`ManaPool.basic_land`,
+    `ManaPool.creature`) is available to this payment, and a tap of any other
+    source is refused."""
+    any_type: bool = False
+    """CR 609.4b's "mana of any type can be spent" (Vizier of the Menagerie):
+    `any_color`'s wider twin - a `{C}` demand accepts coloured mana too."""
 
     mana_value: float | None = None
     """CR 202.3's mana value of the spell being cast - X counted as the number
@@ -684,6 +709,7 @@ class ManaSpend(EngineModel):
                 "x_in_cost": x_count > 0,
                 "snow_any_color": snow_any_color,
                 "no_mana": reads_cant_spend_mana_line(getattr(card, "oracle_text", "") or ""),
+                "only_from": spend_only_from(getattr(card, "oracle_text", "") or ""),
             }
         )
 
@@ -1041,6 +1067,9 @@ class ManaPayment(EngineModel):
     three or more mana from creatures was spent to cast it". A sub-count of
     `spend` whatever tags the mana carried, since a creature's mana may be
     restricted (Inga and Esika's own grant is); read onto `CastRecord`."""
+    basic_land_spent: dict[Color, int] = Field(default_factory=dict)
+    """How much of `spend` came from a basic land (CR 106.3), so paying with the
+    restricted sub-pool also takes it out of `ManaPool.basic_land`."""
     retained_spent: list[RetainedMana] = Field(default_factory=list)
     """How much of `spend` was retained mana (CR 500.5a/500.5b), and under
     which scope - `restricted_spent`'s third sibling, read back by `pay` so
@@ -1131,6 +1160,7 @@ def _demand_list(
     *,
     any_color: bool = False,
     snow_any_color: bool = False,
+    any_type: bool = False,
 ) -> list[tuple[int, list[_Bucket]]]:
     """The demand list `_assign` (and `machines/cost.py`'s source-picking
     `_assign_sources`) solve against, built from one resolution of a cost's
@@ -1151,6 +1181,9 @@ def _demand_list(
     that color - while a `{C}` demand (`Color.COLORLESS`, not a color) and a
     snow demand stay as they are.
 
+    `any_type` is CR 609.4b's "mana of any type can be spent" (Vizier of the
+    Menagerie): the `{C}` demand then accepts every bucket as well.
+
     `snow_any_color` is the same permission narrowed to mana from snow sources
     (`ManaSpend.snow_any_color`, Draugr Necromancer): only a snow bucket is
     widened.
@@ -1165,7 +1198,7 @@ def _demand_list(
         (
             count,
             list(buckets)
-            if any_color and color is not Color.COLORLESS
+            if any_color and (color is not Color.COLORLESS or any_type)
             else [
                 b
                 for b in buckets
@@ -1203,6 +1236,11 @@ def _recoloured(
     return moved
 
 
+def _clipped(tagged: dict[Color, int], within: dict[Color, int]) -> dict[Color, int]:
+    """`tagged` limited, colour by colour, to what `within` holds."""
+    return {c: n for c, n in ((c, min(n, within.get(c, 0))) for c, n in tagged.items()) if n > 0}
+
+
 class ManaPool(EngineModel):
     """Mana floating in a player's pool.
 
@@ -1220,6 +1258,11 @@ class ManaPool(EngineModel):
     Treasure's mana carries no CR 106.6 tag, so it is always among the
     untagged, non-snow mana, and a payment spends it before other mana of
     the same colour (CR 118.3a leaves which mana to the payer)."""
+    basic_land: dict[Color, int] = Field(default_factory=dict)
+    """The part of `floating` a basic land produced (CR 106.3), whatever else it
+    is tagged with - what "Spend only mana produced by basic lands to cast this
+    spell" (`ManaSpend.only_from`) may draw on. Like `treasure` it narrows
+    nothing by itself; the spell's own restriction does."""
     creature: dict[Color, int] = Field(default_factory=dict)
     """The part of `floating` a creature produced (CR 106.3), whatever else it
     is tagged with - what "mana from creatures was spent to cast it" asks
@@ -1281,6 +1324,7 @@ class ManaPool(EngineModel):
         retain_until: "ManaRetentionScope | None" = None,
         treasure: bool = False,
         creature: bool = False,
+        basic_land: bool = False,
     ) -> None:
         if amount < 0:
             raise ValueError("cannot add a negative amount of mana")
@@ -1290,6 +1334,8 @@ class ManaPool(EngineModel):
             self.snow[color] = self.snow.get(color, 0) + amount
         if creature and amount:
             self.creature[color] = self.creature.get(color, 0) + amount
+        if basic_land and amount:
+            self.basic_land[color] = self.basic_land.get(color, 0) + amount
         if (
             treasure
             and amount
@@ -1319,6 +1365,7 @@ class ManaPool(EngineModel):
         retain_until: "ManaRetentionScope | None" = None,
         treasure: bool = False,
         creature: bool = False,
+        basic_land: bool = False,
     ) -> None:
         for color in colors:
             self.add(
@@ -1329,6 +1376,7 @@ class ManaPool(EngineModel):
                 retain_until=retain_until,
                 treasure=treasure,
                 creature=creature,
+                basic_land=basic_land,
             )
 
     def empty(
@@ -1372,6 +1420,7 @@ class ManaPool(EngineModel):
             self.snow = {}
             self.treasure = {}
             self.creature = {}
+            self.basic_land = {}
             self.restricted = []
             self.spend_effects = []
             self.retained = surviving
@@ -1390,6 +1439,7 @@ class ManaPool(EngineModel):
             self.snow = _kept(self.snow, keep)
             self.treasure = _kept(self.treasure, keep)
             self.creature = _kept(self.creature, keep)
+            self.basic_land = _kept(self.basic_land, keep)
             for tagged in (*self.restricted, *self.spend_effects):
                 tagged.amounts = _kept(tagged.amounts, keep)
             self.restricted = [entry for entry in self.restricted if entry.amounts]
@@ -1406,6 +1456,7 @@ class ManaPool(EngineModel):
         self.snow = _recoloured(self.snow, lost, becomes)
         self.treasure = _recoloured(self.treasure, lost, becomes)
         self.creature = _recoloured(self.creature, lost, becomes)
+        self.basic_land = _recoloured(self.basic_land, lost, becomes)
         for tagged in (*self.restricted, *self.spend_effects):
             tagged.amounts = _recoloured(tagged.amounts, lost, becomes)
         self.retained = surviving
@@ -1481,6 +1532,22 @@ class ManaPool(EngineModel):
             raise ValueError("resolve X with ManaCost.with_x before paying")
         if choices is not None and len(choices) != len(cost.symbols):
             raise ValueError(f"expected {len(cost.symbols)} choices, got {len(choices)}")
+        if spend is not None and spend.only_from is not None:
+            # Only the part of the pool that kind of source made is spendable.
+            source = getattr(self, spend.only_from)
+            narrowed = ManaPool(
+                floating=dict(source),
+                treasure=_clipped(self.treasure, source),
+                creature=_clipped(self.creature, source),
+                basic_land=_clipped(self.basic_land, source),
+                snow=_clipped(self.snow, source),
+            )
+            return narrowed.payment_for(
+                cost,
+                life_available=life_available,
+                choices=choices,
+                spend=spend.model_copy(update={"only_from": None}),
+            )
         if spend is not None and spend.treasure_only:
             # Only the Treasure-made part of the pool is spendable at all.
             treasures = ManaPool(floating=dict(self.treasure), treasure=dict(self.treasure))
@@ -1548,6 +1615,8 @@ class ManaPool(EngineModel):
                 self.treasure[color] = max(self.treasure.get(color, 0) - amount, 0)
             for color, amount in payment.creature_spent.items():
                 self.creature[color] = max(self.creature.get(color, 0) - amount, 0)
+            for color, amount in payment.basic_land_spent.items():
+                self.basic_land[color] = max(self.basic_land.get(color, 0) - amount, 0)
             for taken in payment.restricted_spent:
                 entry = self._entry_for(taken.restriction)
                 for color, amount in taken.amounts.items():
@@ -1567,6 +1636,7 @@ class ManaPool(EngineModel):
         self.snow = {color: n for color, n in self.snow.items() if n > 0}
         self.treasure = {color: n for color, n in self.treasure.items() if n > 0}
         self.creature = {color: n for color, n in self.creature.items() if n > 0}
+        self.basic_land = {color: n for color, n in self.basic_land.items() if n > 0}
         for entry in self.restricted:
             entry.amounts = {color: n for color, n in entry.amounts.items() if n > 0}
         self.restricted = [entry for entry in self.restricted if entry.amounts]
@@ -1593,6 +1663,7 @@ class ManaPool(EngineModel):
             buckets,
             any_color=spend_on is not None and spend_on.any_color,
             snow_any_color=spend_on is not None and spend_on.snow_any_color,
+            any_type=spend_on is not None and spend_on.any_type,
         )
         spent = _assign(buckets, demands)
         if spent is None:
@@ -1633,6 +1704,11 @@ class ManaPool(EngineModel):
                 color: taken
                 for color, amount in spend.items()
                 if (taken := min(amount, self.creature.get(color, 0))) > 0
+            },
+            basic_land_spent={
+                color: taken
+                for color, amount in spend.items()
+                if (taken := min(amount, self.basic_land.get(color, 0))) > 0
             },
             restricted_spent=[
                 RestrictedMana(restriction=self.restricted[slot].restriction, amounts=dict(taken))

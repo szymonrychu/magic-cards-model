@@ -23,7 +23,7 @@ from dataclasses import dataclass
 from functools import cache
 from typing import TYPE_CHECKING, Any
 
-from ...models.card_state import TargetKind
+from ...models.card_state import ChoiceKind, TargetKind
 from ...models.mana import ManaCost
 from ...models.zone import Zone
 from .statics import (
@@ -59,6 +59,12 @@ _ZONES = {
 _TARGET_CLAUSE = re.compile(r"(?:^| )that targets? (?P<what>.+)$")
 _FROM_CLAUSE = re.compile(r" ?from (?P<zones>.+?)$")
 _SHARES_TYPE = " that share a card type with the exiled card"
+#: "...of the chosen type" / "...with the chosen name": the quality is the
+#: choice the source recorded as it entered (CR 614.12a), read at pricing time.
+_CHOSEN = re.compile(r"^(?:of the chosen (?P<type>type)|with the chosen (?P<name>name))$")
+#: Bard Class's rider: the reduction takes only coloured mana off the cost and
+#: never spills into generic (CR 118.7a).
+_COLORED_ONLY = " this effect reduces only the amount of colored mana you pay"
 
 
 @dataclass(frozen=True)
@@ -78,6 +84,8 @@ class GroupModifier:
     expr: Reader | None
     condition: Any  # (CostContext) -> bool, or None
     cant_be_countered: bool
+    chosen: str | None = None  # "type" or "name": the source's recorded choice
+    colored_only: bool = False
 
     def modification(self, ctx: CostContext, caster: str, cast_from: Zone) -> ManaCost | None:
         """The cost this line takes off (or adds to) `ctx.spell`, or `None`
@@ -97,6 +105,8 @@ class GroupModifier:
         if self.zones and cast_from not in self.zones:
             return None
         if self.shares_type_with_imprint and not _shares_type_with_imprint(game, spell, source):
+            return None
+        if self.chosen is not None and not _matches_choice(self.chosen, spell, source):
             return None
         if self.target is not None and not self.target(ctx):
             return None
@@ -119,7 +129,10 @@ class GroupModifier:
             units = self.expr(scoped)
         if units <= 0:
             return None
-        return ManaCost.parse(str(self.unit) * units)
+        priced = ManaCost.parse(str(self.unit) * units)
+        if self.colored_only:
+            return _colored_part_of_the_cost(priced, ctx)
+        return priced
 
     def _ordinal_holds(self, ctx: CostContext, caster: str) -> bool:
         """ "The first/second <quality> spell you cast each turn": the spell
@@ -134,6 +147,38 @@ class GroupModifier:
             and (not self.kicked or _is_kicked(game, prior, None))
         ]
         return len(earlier) == (self.ordinal or 1) - 1
+
+
+def _matches_choice(chosen: str, spell: "CardState", source: "CardState") -> bool:
+    """Whether `spell` is what `source` chose as it entered (CR 614.12a): a card
+    type or creature type for "of the chosen type", a card name for "with the
+    chosen name". A source that never chose matches nothing."""
+    choice = source.choice
+    if choice is None:
+        return False
+    value = choice.value.lower()
+    if chosen == "name":
+        return choice.kind is ChoiceKind.CARD_NAME and value in {
+            spell.name.lower(),
+            spell.card.name.lower(),
+        }
+    if choice.kind is ChoiceKind.CARD_TYPE:
+        return value in {t.value.lower() for t in spell.types_as_a_spell(spell.card.types)}
+    if choice.kind is ChoiceKind.CREATURE_TYPE:
+        return value in {subtype.lower() for subtype in spell.subtypes}
+    return False
+
+
+def _colored_part_of_the_cost(reduction: ManaCost, ctx: CostContext) -> ManaCost | None:
+    """`reduction` cut down to the coloured symbols the spell's cost really has
+    (CR 118.7a: "reduces only the amount of colored mana you pay" - nothing to
+    take off when the cost has no such symbol, and never generic)."""
+    casting = ctx.casting
+    base = getattr(casting, "base_cost", None) or ManaCost.parse(ctx.spell.card.mana_cost or "")
+    kept = ""
+    for color, amount in reduction.colored.items():
+        kept += f"{{{color.value}}}" * min(amount, base.colored.get(color, 0))
+    return ManaCost.parse(kept) if kept else None
 
 
 def _is_kicked(game: "Game", spell: "CardState", casting: Any) -> bool:
@@ -201,6 +246,9 @@ def group_spell_modifier(line: str) -> GroupModifier | None:
         return None
     if text.startswith("this spell") or text.startswith("activated abilit"):
         return None
+    colored_only = text.endswith(_COLORED_ONLY)
+    if colored_only:
+        text = text[: -len(_COLORED_ONLY)].rstrip(". ")
     cant_be_countered = text.endswith(_UNCOUNTERABLE)
     if cant_be_countered:
         text = text[: -len(_UNCOUNTERABLE)]
@@ -228,6 +276,10 @@ def group_spell_modifier(line: str) -> GroupModifier | None:
             scope = owner
             after = after.replace(phrase, "", 1).strip()
             break
+    chosen = None
+    if (chosen_match := _CHOSEN.match(after)) is not None:
+        chosen = "type" if chosen_match.group("type") else "name"
+        after = ""
     shares = False
     if after.startswith("that share a card type with the exiled card"):
         shares, after = True, ""
@@ -273,7 +325,7 @@ def group_spell_modifier(line: str) -> GroupModifier | None:
         if expr is None:
             return None
     else:
-        unit = ManaCost.try_parse(amount)
+        unit = ManaCost.try_parse(amount.upper())
         if unit is None:
             return None
     return GroupModifier(
@@ -290,6 +342,8 @@ def group_spell_modifier(line: str) -> GroupModifier | None:
         expr=expr,
         condition=condition,
         cant_be_countered=cant_be_countered,
+        chosen=chosen,
+        colored_only=colored_only,
     )
 
 

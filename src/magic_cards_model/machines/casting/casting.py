@@ -4345,6 +4345,8 @@ class Casting(EngineModel):
                         self.game is not None
                         and self.game.spends_mana_as_any_color_for_spell(self.spell, self.caster)
                     ),
+                    "any_type": self.game is not None
+                    and self.game.spends_mana_of_any_type_for_spell(self.spell, self.caster),
                 }
             ),
         )
@@ -5122,7 +5124,11 @@ def static_free_cast_grants(game: Any, caster: str) -> list[tuple[str, StaticFre
     # whole battlefield every call (CR 613.5).
     board = game.computed_board()
     for permanent in getattr(game, "battlefield", []):
-        if permanent.controller != caster:
+        yours = permanent.controller == caster
+        if not yours and not any(
+            "each player casts" in line for line in board.of(permanent).abilities
+        ):
+            # Only a grant that names every player reaches past its controller.
             continue
         static_lines = {
             ability.raw.strip()
@@ -5131,7 +5137,7 @@ def static_free_cast_grants(game: Any, caster: str) -> list[tuple[str, StaticFre
         }
         for line in static_lines:
             grant = static_free_cast_grant(line)
-            if grant is not None:
+            if grant is not None and (yours or grant.first_spell_each_players_turn):
                 grant = grant.model_copy(update={"source_id": permanent.id})
                 if grant.once_each_of_your_turns or grant.once_each_turn:
                     grant = grant.model_copy(
@@ -5232,6 +5238,12 @@ def static_free_cast_refusal(
                 f"{source_name} only applies to spells with mana value {cap} or less, and "
                 f"{card.name} is {card.mana_value}"
             )
+    if grant.first_spell_each_players_turn:
+        turn = getattr(game, "turn", None)
+        if turn is None or turn.active_player != caster:
+            return f"{source_name} applies only during your own turn (CR 118.9)"
+        if game.spells_cast_this_turn.get(caster):
+            return f"{source_name} only applies to the first spell you cast this turn (CR 118.9)"
     if grant.once_each_turn:
         used = getattr(game, "once_per_turn_cast_permissions_used", {})
         if grant.once_per_turn_key in used:

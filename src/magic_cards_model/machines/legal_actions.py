@@ -582,7 +582,12 @@ def _cast_action(
     spend = ManaSpend.casting(card, zone=card.zone, snow_any_color=snow_any_color)
     if game.spends_mana_as_any_color_for_spell(card, player):
         # CR 609.4b, read here exactly as `Casting.determine_cost` reads it.
-        spend = spend.model_copy(update={"any_color": True})
+        spend = spend.model_copy(
+            update={
+                "any_color": True,
+                "any_type": game.spends_mana_of_any_type_for_spell(card, player),
+            }
+        )
     unpayable = (
         None if alternative_cost is not None else why_mana_cost_unpayable(card.name, total.mana)
     )
