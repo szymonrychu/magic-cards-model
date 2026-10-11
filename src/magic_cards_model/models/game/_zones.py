@@ -44,6 +44,8 @@ from ...machines.keywords import (
     dredge,
     dredge_count,
     enters_transformed_at_night,
+    first_draw_reveal_is_mandatory,
+    first_draw_reveal_own_turns_only,
     granted_keyword_triggered_abilities,
     has_first_draw_reveal,
     is_indestructible,
@@ -2221,7 +2223,11 @@ class ZonesMixin:
             for permanent in self.battlefield
             if permanent.controller == player.username and has_first_draw_reveal(permanent.card)
         ]:
-            if not self.ask(
+            if first_draw_reveal_own_turns_only(source.card) and (
+                self.turn is None or self.turn.active_player != player.username
+            ):
+                continue  # "on each of your turns" (Keranos)
+            if not first_draw_reveal_is_mandatory(source.card) and not self.ask(
                 Decision(
                     kind=DecisionKind.MAY,
                     player=player.username,

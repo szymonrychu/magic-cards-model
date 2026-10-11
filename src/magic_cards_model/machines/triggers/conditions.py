@@ -3528,12 +3528,14 @@ def _unread_condition_matches(
         # CR 607.2h: only a reveal the static "reveal the first card you draw
         # each turn" made, by the controller of this source, of an instant or
         # sorcery card.
-        return (
-            event.event is ExtraTriggerEvent.REVEALED_FIRST_DRAW
-            and event.player == controller
-            and event.subject_card is not None
-            and bool({Type.INSTANT, Type.SORCERY} & set(event.subject_card.types))
-        )
+        if event.event is not ExtraTriggerEvent.REVEALED_FIRST_DRAW or event.player != controller:
+            return False
+        if event.subject_card is None:
+            return False
+        revealed = set(event.subject_card.types)
+        if "land card" in condition:
+            return (Type.LAND in revealed) != condition.startswith("you reveal a nonland")
+        return bool({Type.INSTANT, Type.SORCERY} & revealed)
 
     if _ONE_OR_MORE_DEAL_COMBAT_DAMAGE_RE.fullmatch(condition):
         # CR 603.2c: one trigger per step's damage to a player, however many
