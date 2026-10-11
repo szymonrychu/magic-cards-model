@@ -121,6 +121,7 @@
     "SetTypesAndSubtypes",
     "Sublayer",
     "SwitchPowerToughness",
+    "StaticGroupGrant",
     "TappedCreaturesControlledBy",
     "WithChangeling",
     "YouStillControl",

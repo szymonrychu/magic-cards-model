@@ -10714,7 +10714,24 @@ def _if_gated_builder(base: EffectBuilder, condition: str) -> EffectBuilder:
 def _parse_layer_sentence(sentence: str) -> EffectBuilder | None:
     """`_parse_layer_sentence_ungated`, then - for a sentence that is none of
     those shapes - `_parse_if_gated_layer_sentence`'s trailing "if" rider."""
-    return _parse_layer_sentence_ungated(sentence) or _parse_if_gated_layer_sentence(sentence)
+    return (
+        _parse_layer_sentence_ungated(sentence)
+        or _parse_if_gated_layer_sentence(sentence)
+        or _parse_protection_static(sentence)
+    )
+
+
+def _parse_protection_static(sentence: str) -> EffectBuilder | None:
+    """`machines/protection_statics.py`'s "<group> have hexproof / shroud /
+    protection from <quality>" shapes (CR 702.11, CR 702.18, CR 702.16), tried
+    last so every shape above keeps its reading. Imported lazily: that module
+    imports this package."""
+    lowered = sentence.lower()
+    if "hexproof" not in lowered and "shroud" not in lowered and "protection from" not in lowered:
+        return None
+    from ..protection_statics import parse_protection_grant
+
+    return parse_protection_grant(sentence)
 
 
 @functools.lru_cache(maxsize=16384)

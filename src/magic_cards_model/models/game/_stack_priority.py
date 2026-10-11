@@ -2912,6 +2912,11 @@ class StackPriorityMixin:
         "your opponents".
         """
         target = self._targeted_thing(target)
+        from ...machines.protection_statics import static_target_refusal
+
+        restricted = static_target_refusal(self, target, source_controller, source)
+        if restricted is not None:
+            return restricted
         if isinstance(target, Player):
             plain, qualities = self.player_hexproof(target)
             protected = target.username
@@ -2973,6 +2978,12 @@ class StackPriorityMixin:
             lines = list(self.characteristics_of(target).abilities)
         except KeyError:
             lines = target.oracle_text.splitlines()
+        from ...machines.protection_statics import hexproof_suppressed
+
+        if hexproof_suppressed(self, target):
+            # CR 702.11e: "lose hexproof" takes every "hexproof from" with it,
+            # and "can't have or gain" keeps a later grant from returning it.
+            return False, []
         return hexproof_abilities_in(lines)
 
     def player_hexproof(self: "Game", player: Player) -> tuple[bool, list[str]]:
@@ -3043,9 +3054,15 @@ class StackPriorityMixin:
         `Player.protection_from` would outlive its source.
         """
         qualities: list[str] = []
+        from ...machines.protection_statics import player_protection_qualities_of
+
+        board = self.computed_board()
         for permanent in self.battlefield:
             if self.controller_of(permanent).username != username:
                 continue
+            for quality in player_protection_qualities_of(self, permanent, board, username):
+                if quality not in qualities:
+                    qualities.append(quality)
             for line in (permanent.card.oracle_text or "").split("\n"):
                 if not _PLAYER_PROTECTION_FROM_CHOSEN_NAME.match(line.strip()):
                     continue

@@ -1880,6 +1880,118 @@ class TappedCreaturesControlledBy(SelectorBase):
         return not (self.excludes_self and chars.card_id == self.source_id)
 
 
+class StaticGroupGrant(SelectorBase):
+    """The group a static "<group> have hexproof / shroud / protection from
+    <quality>" line (`machines/protection_statics.py`) hands its grant to, with
+    the line's own board condition (CR 611.3a, CR 604.2): re-asked on every
+    CR 613.5 computation, so the grant stops the moment the condition fails or
+    the source leaves.
+
+    The group is the source's own object (`self_only`), the object an Aura or
+    Equipment is attached to (`attached`, CR 303.4b, CR 301.5a), or every
+    permanent matching the type/subtype/status filters on the `scope` side of
+    the table. Tapped status is not a characteristic, so `tapped_ids` is the
+    snapshot `LayerContext.tapped_ids` took when the effect was built (the
+    `TappedCreaturesControlledBy` reasoning).
+
+    The condition's facts that are not on the board - whose turn it is, whether
+    the source is tapped or entered this turn - were settled when the effect
+    was built (`protection_statics`' builder emits nothing while they fail);
+    `requirements`, `lore_counters_min` and `paired` are the ones the board
+    itself answers.
+    """
+
+    kind: Literal["static_group_grant"] = "static_group_grant"
+    source_id: UUID
+    username: str | None = None
+    scope: Literal["you", "opponents", "any"] = "you"
+    self_only: bool = False
+    attached: bool = False
+    other: bool = False
+    card_types: tuple[Type, ...] = ()
+    subtypes: tuple[str, ...] = ()
+    """Lowercased; any one of them qualifies ("Mounts and Vehicles")."""
+    legendary: bool = False
+    tokens: bool = False
+    tapped_filter: Literal["tapped", "untapped"] | None = None
+    tapped_ids: tuple[UUID, ...] = ()
+    enchanted: bool = False
+    greatest_mana_value: bool = False
+    requirements: tuple[ControlledCountRequirement, ...] = ()
+    lore_counters_min: int = 0
+    """ "four or more lore counters among Sagas you control"."""
+    paired: bool = False
+
+    def gate_holds(self, board: Board) -> bool:
+        if not all(
+            requirement.holds(self.username, board, exclude_id=self.source_id)
+            for requirement in self.requirements
+        ):
+            return False
+        if self.lore_counters_min:
+            lore = sum(
+                other.counters.get("lore", 0)
+                for other in board.values()
+                if other.controller == self.username and "Saga" in other.subtypes
+            )
+            if lore < self.lore_counters_min:
+                return False
+        if self.paired:
+            source = board.get(self.source_id)
+            partner = None if source is None else board.get(source.paired_with)
+            if (
+                source is None
+                or partner is None
+                or partner.paired_with != source.card_id
+                or not (source.is_creature and partner.is_creature)
+                or source.controller != partner.controller
+            ):
+                return False
+        return True
+
+    def __call__(self, chars: Characteristics, board: Board) -> bool:
+        if not self.gate_holds(board):
+            return False
+        if self.self_only:
+            return chars.card_id == self.source_id
+        if self.attached:
+            source = board.get(self.source_id)
+            return source is not None and source.attached_to == chars.card_id
+        if self.scope == "you":
+            if chars.controller != self.username:
+                return False
+        elif self.scope == "opponents" and (
+            chars.controller is None or chars.controller == self.username
+        ):
+            return False
+        if self.other and chars.card_id == self.source_id:
+            return False
+        if self.card_types and not any(card_type in chars.types for card_type in self.card_types):
+            return False
+        if self.subtypes and not any(
+            subtype.lower() in self.subtypes for subtype in chars.subtypes
+        ):
+            return False
+        if self.legendary and Supertype.LEGENDARY not in chars.supertypes:
+            return False
+        if self.tokens and not chars.is_token:
+            return False
+        if self.tapped_filter is not None and (
+            (chars.card_id in self.tapped_ids) != (self.tapped_filter == "tapped")
+        ):
+            return False
+        if self.enchanted and not any(
+            other.attached_to == chars.card_id and Type.ENCHANTMENT in other.types
+            for other in board.values()
+        ):
+            return False
+        if self.greatest_mana_value:
+            creature_values = [other.mana_value for other in board.values() if other.is_creature]
+            if not creature_values or chars.mana_value != max(creature_values):
+                return False
+        return True
+
+
 class WithChangeling(SelectorBase):
     """Every object that has changeling as layer 4 finds it (CR 702.73a).
 
@@ -1939,6 +2051,7 @@ Selector = Annotated[
     | AttackingTokensControlledBy
     | AttackingGroupControlledBy
     | TappedCreaturesControlledBy
+    | StaticGroupGrant
     | WithChangeling
     | OtherTransformedPermanentsControlledBy,
     Field(discriminator="kind"),
