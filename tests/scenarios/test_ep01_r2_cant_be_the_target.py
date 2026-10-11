@@ -586,3 +586,12 @@ def test_the_support_oracle_reads_every_clause_of_the_card(card):
         c.text for c in support.clauses if c.status != "handled" and not c.text.startswith(others)
     ]
     assert unread == []
+
+
+def test_silent_gravestone_carries_the_ground_seal_static_line():
+    scenario = _graveyard_board(["Silent Gravestone"], ["Grizzly Bears"])
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.find("Grizzly Bears", Zone.GRAVEYARD, "alice")
+    reason = _refusal(scenario, "Raise Dead", bears, "alice")
+    assert reason is not None
+    assert "can't be the target" in reason
