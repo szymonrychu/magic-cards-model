@@ -22,6 +22,8 @@ Verified with `mise run rules:find`:
 - CR 122.1: a counter is a marker placed on an object.
 """
 
+import pytest
+
 from magic_cards_model.machines import Step
 from magic_cards_model.models import Zone
 from tests.scenarios.harness import Scenario
@@ -196,3 +198,170 @@ def test_zhao_does_not_touch_basic_lands():
     scenario.find(ZHAO, Zone.BATTLEFIELD, "alice").add_counters("conqueror")
     forest = scenario.find("Forest", Zone.BATTLEFIELD, "bob")
     assert "Mountain" not in scenario.game.characteristics_of(forest).subtypes
+
+
+# -- Tighter Vampire Nocturnus assertions ---------------------------------------------
+
+
+def test_nocturnus_gives_exactly_flying_and_the_pump_while_the_top_card_is_black():
+    scenario = _board([NOCTURNUS, "Vampire Hexmage"], ["Dark Ritual"])
+    for name in (NOCTURNUS, "Vampire Hexmage"):
+        chars = _chars(scenario, name)
+        assert _has(chars, "Flying")
+    assert _chars(scenario, NOCTURNUS).power_toughness == (5, 4)
+    assert _chars(scenario, "Vampire Hexmage").power_toughness == (4, 2)
+    assert scenario.game.continuous_effects.layer_notices == []
+
+
+def test_nocturnus_keeps_its_printed_abilities_when_the_top_card_is_not_black():
+    scenario = _board([NOCTURNUS], ["Island"])
+    assert not _has(_chars(scenario, NOCTURNUS), "Flying")
+    assert _chars(scenario, NOCTURNUS).power_toughness == (3, 3)
+
+
+# -- The other Myojin: the same counter rule, each on its own card -----------------------
+
+OTHER_MYOJIN = [
+    "Myojin of Cleansing Fire",
+    "Myojin of Night's Reach",
+    "Myojin of Seeing Winds",
+    "Myojin of Life's Web",
+    "Myojin of Infinite Rage",
+]
+
+
+@pytest.mark.parametrize("name", OTHER_MYOJIN)
+def test_each_myojin_is_indestructible_exactly_while_it_has_a_divinity_counter(name):
+    scenario = _board([name], [])
+    myojin = scenario.find(name, Zone.BATTLEFIELD, "alice")
+    assert not _has(_chars(scenario, name), "Indestructible")
+    myojin.add_counters("divinity")
+    assert _has(_chars(scenario, name), "Indestructible")
+    myojin.remove_counters("divinity")
+    assert not _has(_chars(scenario, name), "Indestructible")
+    assert scenario.game.continuous_effects.layer_notices == []
+
+
+def test_a_myojin_cast_from_hand_enters_with_a_divinity_counter_and_is_indestructible():
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("alice", hand=[MYOJIN_RAGE], battlefield=["Mountain"] * 10, library=["Island"] * 4)
+        .player("bob", library=["Mountain"] * 4)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    myojin = scenario.cast_and_resolve(MYOJIN_RAGE, *scenario.untapped_sources(*(["Mountain"] * 10)))
+    assert myojin.counter_count("divinity") == 1
+    assert _has(scenario.game.characteristics_of(myojin), "Indestructible")
+
+
+def test_a_myojin_put_onto_the_battlefield_has_no_counter_and_is_destructible():
+    scenario = (
+        Scenario()
+        .player("alice", hand=[MYOJIN_RAGE], library=["Island"] * 4)
+        .player("bob", library=["Mountain"] * 4)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    myojin = scenario.put_onto_battlefield(MYOJIN_RAGE, "alice")
+    assert myojin.counter_count("divinity") == 0
+    assert not _has(scenario.game.characteristics_of(myojin), "Indestructible")
+
+
+# -- Voice of the Blessed: thresholds of +1/+1 counters ----------------------------------
+
+VOICE = "Voice of the Blessed"
+
+
+def test_voice_has_neither_keyword_below_four_counters():
+    scenario = _board([VOICE], [])
+    scenario.find(VOICE, Zone.BATTLEFIELD, "alice").add_counters("+1/+1", 3)
+    chars = _chars(scenario, VOICE)
+    assert not _has(chars, "Flying") and not _has(chars, "Vigilance")
+    assert chars.power_toughness == (5, 5)
+
+
+def test_voice_with_four_counters_has_flying_and_vigilance_only():
+    scenario = _board([VOICE], [])
+    scenario.find(VOICE, Zone.BATTLEFIELD, "alice").add_counters("+1/+1", 4)
+    chars = _chars(scenario, VOICE)
+    assert _has(chars, "Flying") and _has(chars, "Vigilance")
+    assert not _has(chars, "Indestructible")
+    assert scenario.game.continuous_effects.layer_notices == []
+
+
+def test_voice_with_ten_counters_is_also_indestructible():
+    scenario = _board([VOICE], [])
+    voice = scenario.find(VOICE, Zone.BATTLEFIELD, "alice")
+    voice.add_counters("+1/+1", 10)
+    assert _has(_chars(scenario, VOICE), "Indestructible")
+    voice.remove_counters("+1/+1", 1)
+    chars = _chars(scenario, VOICE)
+    assert not _has(chars, "Indestructible")
+    assert _has(chars, "Flying")
+
+
+def test_other_counter_kinds_do_not_count_toward_voices_thresholds():
+    scenario = _board([VOICE], [])
+    scenario.find(VOICE, Zone.BATTLEFIELD, "alice").add_counters("charge", 5)
+    assert not _has(_chars(scenario, VOICE), "Flying")
+
+
+# -- Skill Borrower / Conspicuous Snoop: all activated abilities of the top card ----------
+
+
+def test_skill_borrower_gains_the_top_artifact_or_creatures_activated_abilities():
+    scenario = _board(["Skill Borrower"], ["Llanowar Elves"])
+    assert "{T}: Add {G}." in _chars(scenario, "Skill Borrower").abilities
+    assert scenario.game.continuous_effects.layer_notices == []
+
+
+def test_skill_borrower_ignores_a_top_card_that_is_not_an_artifact_or_creature():
+    scenario = _board(["Skill Borrower"], ["Island"])
+    assert "{T}: Add {G}." not in _chars(scenario, "Skill Borrower").abilities
+
+
+def test_skill_borrower_flips_to_the_next_top_card():
+    scenario = _board(["Skill Borrower"], ["Llanowar Elves", "Island"])
+    scenario.draw()
+    assert "{T}: Add {G}." not in _chars(scenario, "Skill Borrower").abilities
+
+
+def test_conspicuous_snoop_reads_only_goblin_cards():
+    scenario = _board(["Conspicuous Snoop"], ["Goblin Artillery"])
+    gained = [line for line in _chars(scenario, "Conspicuous Snoop").abilities if "2 damage" in line]
+    assert gained and "Conspicuous Snoop" not in gained[0]
+    other = _board(["Conspicuous Snoop"], ["Llanowar Elves"])
+    assert "{T}: Add {G}." not in _chars(other, "Conspicuous Snoop").abilities
+
+
+def test_conspicuous_snoop_can_use_the_borrowed_ability():
+    scenario = _board(["Conspicuous Snoop"], ["Goblin Artillery"])
+    snoop = scenario.find("Conspicuous Snoop", Zone.BATTLEFIELD, "alice")
+    snoop.summoning_sick = False
+    scenario.activate(snoop, targets=["bob"], index=0)
+    scenario.pass_until_resolved()
+    assert scenario.player("bob").life == 18
+    assert scenario.player("alice").life == 17
+
+
+# -- Crown of Convergence: creatures sharing a color with the top card -------------------
+
+
+def test_crown_pumps_creatures_that_share_a_color_with_the_top_creature_card():
+    scenario = _board(["Crown of Convergence", "Grizzly Bears", "Savannah Lions"], ["Llanowar Elves"])
+    assert _chars(scenario, "Grizzly Bears").power_toughness == (3, 3)
+    assert _chars(scenario, "Savannah Lions").power_toughness == (2, 1)
+
+
+def test_crown_does_nothing_when_the_top_card_is_not_a_creature():
+    scenario = _board(["Crown of Convergence", "Grizzly Bears"], ["Forest"])
+    assert _chars(scenario, "Grizzly Bears").power_toughness == (2, 2)
+
+
+def test_crown_follows_the_top_card_when_it_changes():
+    scenario = _board(["Crown of Convergence", "Grizzly Bears"], ["Llanowar Elves", "Savannah Lions"])
+    assert _chars(scenario, "Grizzly Bears").power_toughness == (3, 3)
+    scenario.draw()
+    assert _chars(scenario, "Grizzly Bears").power_toughness == (2, 2)
