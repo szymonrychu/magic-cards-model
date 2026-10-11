@@ -43,6 +43,7 @@ from ..casting import (
 from ..casting_restrictions import create_targeted_cant_cast_restriction
 from ..combat import (
     ASSIGN_AS_THOUGH_UNBLOCKED_TEXT,
+    BLOCKED_BY_AT_MOST_ONE_GRANT_TEXT,
     KEYWORDS_OUTSIDE_COMBAT,
     Keyword,
     has_keyword,
@@ -10184,6 +10185,15 @@ _SELF_MUST_BE_BLOCKED_THIS_TURN_RE = re.compile(
     re.IGNORECASE,
 )
 
+#: "This creature can't be blocked by more than one creature each combat this
+#: turn." - Glorfindel's other mode: the source's own CR 509.1b restriction for
+#: the turn, granted as the text `combat.blocked_by_at_most_one_refusal` reads.
+_SELF_AT_MOST_ONE_BLOCKER_THIS_TURN_RE = re.compile(
+    r"^(?:[\u2022*]\s*)?(?:this creature|this permanent|it) can't be blocked by more than one "
+    r"creature(?: each combat)? this turn\.?$",
+    re.IGNORECASE,
+)
+
 
 @ABILITY_TEXT.rung("s11")
 @SPELL_TEXT.rung("s10")
@@ -10218,7 +10228,14 @@ def _parse_block_requirement_grant_clause(text: str) -> TargetedClause | None:
                     )
 
         return lure_effect
-    if _SELF_MUST_BE_BLOCKED_THIS_TURN_RE.fullmatch(flat) is None:
+    grant = (
+        "This creature must be blocked if able."
+        if _SELF_MUST_BE_BLOCKED_THIS_TURN_RE.fullmatch(flat) is not None
+        else BLOCKED_BY_AT_MOST_ONE_GRANT_TEXT
+        if _SELF_AT_MOST_ONE_BLOCKER_THIS_TURN_RE.fullmatch(flat) is not None
+        else None
+    )
+    if grant is None:
         return None
 
     def self_effect(game: "Game", stack_object: "StackObject") -> None:
@@ -10239,7 +10256,7 @@ def _parse_block_requirement_grant_clause(text: str) -> TargetedClause | None:
         _grant_keywords_to(
             game,
             source,
-            ["This creature must be blocked if able."],
+            [grant],
             "until end of turn",
             controller=game.controller_of(stack_object).username,
             source_name=stack_object.source_name,
@@ -10430,7 +10447,8 @@ def _double_power_and_toughness(game: "Game", target: CardState, source_name: st
 #: (CR 613.1f, CR 113.10) until cleanup. The single "target creature" form
 #: stays with `dispatch.py`'s own `_TARGET_CANT_BE_BLOCKED_RE`.
 _COUNTED_TARGETS_CANT_BE_BLOCKED_RE = re.compile(
-    r"^(?P<phrase>(?:up to |one or )?(?:x|\w+) target .*?creatures(?: [a-z' ]+?)?) can'?t be blocked this turn"
+    r"^(?P<phrase>(?:up to |one or )?(?:x|\w+) target .*?creatures(?: [a-z' ]+?)?) "
+    r"can'?t be blocked this turn"
     r"(?:\.\s*until end of turn, those creatures gain "
     r"(?:(?P<keywords>[a-z][a-z0-9 ,]*?),? and )?\"(?P<granted>[^\"]+)\")?\.?$",
     re.IGNORECASE,

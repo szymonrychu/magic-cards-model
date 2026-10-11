@@ -374,9 +374,16 @@ _CHOSEN_NAME_PROHIBITION_RE = re.compile(
     re.IGNORECASE,
 )
 
-#: Any other "the chosen ..." subject (Scheming Fence's "the chosen
-#: permanent") names a choice this reader does not record; it is left to the
-#: reader that owns that choice rather than guessed at here.
+#: Scheming Fence's "Activated abilities of the chosen permanent can't be
+#: activated." - the subject named by an "as this enters, you may choose a
+#: nonland permanent" choice (`ChoiceKind.OBJECT`, the permanent's id).
+_CHOSEN_PERMANENT_PROHIBITION_RE = re.compile(
+    r"^activated abilities of the chosen permanent can't be activated\.?$", re.IGNORECASE
+)
+
+#: Any other "the chosen ..." subject names a choice this reader does not
+#: record; it is left to the reader that owns that choice rather than guessed
+#: at here.
 _CHOSEN_NAME_SUBJECT_RE = re.compile(r"\bthe chosen\b", re.IGNORECASE)
 
 
@@ -398,7 +405,11 @@ def reads_activation_rule_line(
             match = _SELF_LOYALTY_INSTANT_SPEED_RE.match(normalized)
             condition = match.group("condition") if match is not None else None
             return condition is None or condition_is_readable(condition)
-    if _CHOSEN_NAME_PROHIBITION_RE.match(line) or _parse_activation_prohibition(line):
+    if (
+        _CHOSEN_NAME_PROHIBITION_RE.match(line)
+        or _CHOSEN_PERMANENT_PROHIBITION_RE.match(line)
+        or _parse_activation_prohibition(line)
+    ):
         return True
     if _HASTE_ACTIVATION_PERMISSION_RE.match(line):
         return True
@@ -1483,6 +1494,23 @@ class ActivationMixin:
                         f"{obj.name}'s activated abilities can't be activated: "
                         f"{source.name} names it (CR 602.5, CR 611.1)"
                     )
+                if _CHOSEN_PERMANENT_PROHIBITION_RE.match(text):
+                    # "The chosen permanent" is one object, named by CR
+                    # 614.12a's recorded choice (the same id comparison
+                    # `enters_forms` makes for the chosen creature).
+                    choice = source.choice
+                    if (
+                        self._still_has_static_line(source, text)
+                        and choice is not None
+                        and choice.kind is ChoiceKind.OBJECT
+                        and obj.zone is Zone.BATTLEFIELD
+                        and choice.value == str(obj.id)
+                    ):
+                        return (
+                            f"{obj.name}'s activated abilities can't be activated: "
+                            f"{source.name} says so (CR 602.5, CR 611.1)"
+                        )
+                    continue
                 if _CHOSEN_NAME_SUBJECT_RE.search(text):
                     continue
                 if obj.zone is not Zone.BATTLEFIELD:

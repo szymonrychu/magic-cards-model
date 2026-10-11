@@ -4706,6 +4706,14 @@ SWEEP_DRIVER_GAPS: tuple[DriverGap, ...] = (
         event="a Tentacle token, which no pool printing is",
         precondition=r"^whenever a tentacle you control dies",
     ),
+    # EP01-R2-T4: the stock board's creatures share no creature type, so the
+    # activation's targets are refused; proven by
+    # tests/scenarios/test_ep01_r2_attack_requirement_statics.py (Secret Tunnel).
+    DriverGap(
+        kind="activated",
+        event="two creatures of the controller's that share a creature type",
+        precondition=r"target creatures you control that share a creature type",
+    ),
     DriverGap(
         kind="activated",
         event="a creature card exiled with the source by its own as-enters exile",

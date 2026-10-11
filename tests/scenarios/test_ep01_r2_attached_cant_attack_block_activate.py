@@ -400,3 +400,47 @@ def test_spirespine_bestowed_makes_the_enchanted_creature_block_if_able():
     with pytest.raises(ValueError, match="CR 509.1c"):
         scenario.block(giant, scenario.creature("Serra Angel", "bob"))
     scenario.block(giant, bears, spirespine)
+
+
+# -- "Activated abilities of the chosen permanent can't be activated." --------
+# (Scheming Fence: the permanent chosen as it enters, CR 614.12a)
+
+
+def _fence_world(chosen: str):
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Scheming Fence"],
+            battlefield=["Sol Ring", "Llanowar Elves", "Forest", "Forest"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scenario.will_take_the_may(True, source="Scheming Fence")
+    scenario.will_choose_cards(
+        scenario.find(chosen, Zone.BATTLEFIELD, "alice"), source="Scheming Fence"
+    )
+    scenario.put_onto_battlefield("Scheming Fence", "alice")
+    return scenario
+
+
+def test_the_chosen_permanents_abilities_cant_be_activated():
+    scenario = _fence_world("Sol Ring")
+    ring = scenario.find("Sol Ring", Zone.BATTLEFIELD, "alice")
+    reason = scenario.why_cannot_activate(ring)
+    assert reason is not None and "Scheming Fence" in reason and "CR 602.5" in reason
+
+
+def test_a_permanent_that_was_not_chosen_still_activates():
+    scenario = _fence_world("Sol Ring")
+    elves = scenario.find("Llanowar Elves", Zone.BATTLEFIELD, "alice")
+    assert scenario.why_cannot_activate(elves) is None
+
+
+def test_the_chosen_permanent_activates_again_when_the_fence_leaves():
+    scenario = _fence_world("Sol Ring")
+    scenario.game.exile_permanent(scenario.find("Scheming Fence", Zone.BATTLEFIELD, "alice"))
+    ring = scenario.find("Sol Ring", Zone.BATTLEFIELD, "alice")
+    assert scenario.why_cannot_activate(ring) is None

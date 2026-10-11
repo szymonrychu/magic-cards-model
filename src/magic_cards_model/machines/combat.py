@@ -1420,6 +1420,18 @@ def _evasion_restriction_sentences(attacker: CardState, game: "Game | None" = No
     return found
 
 
+@functools.cache
+def attacker_cap_pattern(short_name: str) -> "re.Pattern[str]":
+    """The sentence shape `attacker_cap_restriction` reads for a defender
+    called `short_name`; also asked by the static audit
+    (`static_audit/casting_attack_restrictions.py`)."""
+    return re.compile(
+        rf"no more than one creature can attack (?:this planeswalker|this battle|"
+        rf"{re.escape(short_name)})\b.*each combat",
+        re.IGNORECASE,
+    )
+
+
 def attacker_cap_restriction(defender: CardState, game: "Game | None" = None) -> str | None:
     """The sentence granting `defender` (a planeswalker or battle being
     attacked) a "no more than one creature can attack this `<subject>` each
@@ -1437,12 +1449,7 @@ def attacker_cap_restriction(defender: CardState, game: "Game | None" = None) ->
     which is why it lives here, read by `Game.declare_attackers` over the
     whole declaration, rather than inside `attack_refusal`.
     """
-    short_name = defender.name.split(",")[0].strip()
-    subject = re.compile(
-        rf"no more than one creature can attack (?:this planeswalker|this battle|"
-        rf"{re.escape(short_name)})\b.*each combat",
-        re.IGNORECASE,
-    )
+    subject = attacker_cap_pattern(defender.name.split(",")[0].strip())
     for sentence in _computed_ability_sentences(defender, game):
         if subject.search(sentence):
             return sentence

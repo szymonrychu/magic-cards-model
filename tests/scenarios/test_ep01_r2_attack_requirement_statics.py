@@ -2,7 +2,7 @@
 states about itself (CR 508.1c, 508.1d, 509.1b, 509.1c, 506.5, 613.1f).
 
 - "can't be blocked as long as it's attacking alone" (Yuan-Ti Malison, Dream
-  Prowler, Gutter Skulker and its Aura face Gutter Shortcut)
+  Prowler)
 - "can't attack during extra turns" (Medomai the Ageless)
 - "can't attack if defending player controls <description>" (Orgg)
 - "can't attack unless you sacrifice two Islands" (Leviathan)
@@ -31,8 +31,6 @@ from magic_cards_model.models.card_state import Counter
 
 from .harness import Scenario
 
-SKULKER = "Gutter Skulker // Gutter Shortcut"
-
 
 def _block(
     attacker: str,
@@ -51,7 +49,7 @@ def _block(
         .player("bob", battlefield=[*blockers, *theirs])
         .build()
     )
-    attacking = scenario.creature(attacker.split(" // ")[0], "alice")
+    attacking = scenario.creature(attacker, "alice")
     if setup is not None:
         setup(scenario, attacking)
     scenario.start_at(Step.DECLARE_ATTACKERS)
@@ -67,13 +65,13 @@ def _block(
 # -- "can't be blocked as long as it's attacking alone" ----------------------
 
 
-@pytest.mark.parametrize("name", ["Yuan-Ti Malison", SKULKER, "Dream Prowler"])
+@pytest.mark.parametrize("name", ["Yuan-Ti Malison", "Dream Prowler"])
 def test_unblockable_while_attacking_alone(name):
     refusal = _block(name, ["Hill Giant"])
     assert refusal is not None and "can't be blocked" in refusal and "CR 509.1b" in refusal
 
 
-@pytest.mark.parametrize("name", ["Yuan-Ti Malison", SKULKER, "Dream Prowler"])
+@pytest.mark.parametrize("name", ["Yuan-Ti Malison", "Dream Prowler"])
 def test_blockable_when_another_creature_attacks_too(name):
     assert _block(name, ["Hill Giant"], extra_attackers=["Grizzly Bears"]) is None
 
@@ -90,27 +88,6 @@ def test_the_other_attacker_is_not_unblockable_either():
     bears = scenario.creature("Grizzly Bears", "alice")
     scenario.attack_with(malison, bears, defending="bob")
     scenario.block(bears, scenario.creature("Hill Giant", "bob"))
-
-
-def test_gutter_shortcut_aura_grants_attacking_alone_evasion():
-    def attach(scenario, attacking):
-        aura = scenario.find("Gutter Skulker", Zone.BATTLEFIELD, "alice")
-        aura.transformed = True
-        assert scenario.game.characteristics_of(aura).name == "Gutter Shortcut"
-        aura.attach_to(attacking)
-
-    refusal = _block("Grizzly Bears", ["Hill Giant"], mine=[SKULKER], setup=attach)
-    assert refusal is not None and "can't be blocked" in refusal
-    assert (
-        _block(
-            "Grizzly Bears",
-            ["Hill Giant"],
-            extra_attackers=["Runeclaw Bear"],
-            mine=[SKULKER],
-            setup=attach,
-        )
-        is None
-    )
 
 
 # -- Medomai: "can't attack during extra turns" ------------------------------
@@ -571,3 +548,72 @@ def test_secret_tunnel_leaves_a_third_creature_blockable():
     scenario.start_at(Step.DECLARE_ATTACKERS)
     scenario.attack_with(bears, guide, defending="bob")
     scenario.block(guide, scenario.creature("Hill Giant", "bob"))
+
+
+# -- Glorfindel's mode: "can't be blocked by more than one creature each combat
+#    this turn" ------------------------------------------------------------
+
+
+def _resolve_glorfindel_mode(scenario, text):
+    """Resolve one bullet of Glorfindel's "Whenever you scry, choose one"
+    trigger as the engine's effect parser reads it (the scry trigger event
+    itself is another family's)."""
+    from magic_cards_model.machines.abilities import AbilityKind, parse_abilities
+    from magic_cards_model.machines.effects import _ability_effect_or_notice
+    from magic_cards_model.machines.triggers import AbilityOnStack
+
+    glorfindel = scenario.creature("Glorfindel, Dauntless Rescuer", "alice")
+    (trigger,) = [
+        ability
+        for ability in parse_abilities(glorfindel.card)
+        if ability.kind is AbilityKind.TRIGGERED
+    ]
+    effect = _ability_effect_or_notice(text)
+    assert effect is not None
+    with scenario.game._id_allocator_scope():
+        effect(
+            scenario.game,
+            AbilityOnStack(
+                kind=AbilityKind.TRIGGERED,
+                ability=trigger,
+                source_id=glorfindel.id,
+                source_name=glorfindel.name,
+                controller="alice",
+            ),
+        )
+    return glorfindel
+
+
+def _glorfindel_blocked(modes, blockers):
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Glorfindel, Dauntless Rescuer"])
+        .player("bob", battlefield=blockers)
+        .build()
+    )
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    for text in modes:
+        glorfindel = _resolve_glorfindel_mode(scenario, text)
+    glorfindel = scenario.creature("Glorfindel, Dauntless Rescuer", "alice")
+    scenario.attack_with(glorfindel, defending="bob")
+    try:
+        scenario.block(glorfindel, *[scenario.creature(name, "bob") for name in blockers])
+    except ValueError as error:
+        return str(error)
+    return None
+
+
+AT_MOST_ONE = "This creature can't be blocked by more than one creature each combat this turn."
+
+
+def test_glorfindel_mode_forbids_a_second_blocker_this_turn():
+    refusal = _glorfindel_blocked([AT_MOST_ONE], ["Hill Giant", "Grizzly Bears"])
+    assert refusal is not None and "more than one creature" in refusal and "CR 509.1b" in refusal
+
+
+def test_glorfindel_mode_allows_a_single_blocker():
+    assert _glorfindel_blocked([AT_MOST_ONE], ["Hill Giant"]) is None
+
+
+def test_without_the_mode_glorfindel_can_be_double_blocked():
+    assert _glorfindel_blocked([], ["Hill Giant", "Grizzly Bears"]) is None

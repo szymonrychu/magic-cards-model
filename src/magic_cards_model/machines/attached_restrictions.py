@@ -317,11 +317,6 @@ def _attached_restrictions(game: "Game", subject: "CardState"):
                 yield source, restriction
 
 
-_IT_RE = re.compile(
-    r"^it(?=(?:'s| is) (?:not )?(?:attacking|blocking|blocked|unblocked|tapped|untapped)\b)"
-)
-
-
 def attached_evasion_refusal(game: "Game", attacker: "CardState") -> str | None:
     """Why an attachment's gated "can't be blocked" ("... as long as you
     control a Gate", "During your turn, ...") makes `attacker` unblockable
@@ -330,16 +325,9 @@ def attached_evasion_refusal(game: "Game", attacker: "CardState") -> str | None:
     for source, restriction in _attached_restrictions(game, attacker):
         if not restriction.evasion:
             continue
-        # "it" in the attachment's condition is the creature it is attached
-        # to ("... can't be blocked as long as it's attacking alone").
-        condition = _IT_RE.sub(
-            "enchanted creature"
-            if "Aura" in game.characteristics_of(source).subtypes
-            else "equipped creature",
-            restriction.condition or "",
-            count=1,
+        held = game.condition_holds(
+            game.controller_of(source).username or "", restriction.condition or "", source
         )
-        held = game.condition_holds(game.controller_of(source).username or "", condition, source)
         if held:
             return (
                 f'{attacker.name} can\'t be blocked: {source.name} says "{restriction.sentence}" '

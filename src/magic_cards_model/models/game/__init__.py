@@ -1947,7 +1947,7 @@ class Game(
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 141
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 145
     #: 67: `machines/cost.CostComponent` gained `link_to_permanent_id` (CR
     #: 607.2q), reachable from `Game` through a pending `AbilityOnStack.
     #: keyword_activation`/`.unless_payment`'s own `CostPayment.components`.
@@ -2270,6 +2270,10 @@ class Game(
     #: `craft_materials` and `ManaSpend` gained `no_mana` (Hogaak); an older
     #: dump would decode a crafted Mastercraft Raptor with no materials, so its
     #: power would read 0.
+    #: 145 (EP01-R2-T4, reserved: 141 + task 4): `CardState` gained
+    #: `has_dealt_damage` (Karakyk Guardian's and Ratonhnhake's "hasn't dealt
+    #: damage yet"); an older dump would read every creature that has dealt
+    #: damage as one that has not, handing it hexproof back.
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
