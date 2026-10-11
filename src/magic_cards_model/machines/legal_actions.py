@@ -1314,6 +1314,7 @@ def _unlock_door_actions(
 # Suspend, foretell, plot (CR 116.2f/h/k) - `MarkedExile` in `casting.py`.
 # ---------------------------------------------------------------------------
 
+
 def _suspend_at_its_least_x(game: Any, card: CardState, player: str) -> MarkedExile:
     """`MarkedExile.suspend`, with the least X a "Suspend X" line allows
     (CR 702.62a, CR 107.3a) announced so the action is listed at all: the

@@ -4,28 +4,20 @@ statics, static replacement and enters leftovers (CR 604.3, 613.4a, 601.3,
 601.2f, 614.1, 614.12).
 
 One private module per sub-family (`_t7_*`), each asking the production reader
-that performs the line; this module only fans the call out.
+that performs the line; this module only fans the call out. The pump, d20,
+replacement and zone-grant lines are credited by their production readers
+directly (`support.py` asks `reads_spell_keyword_grant_line`,
+`reads_granted_zone_keyword_line` and the effect/replacement parsers), so they
+need no audit module.
 """
 
 from magic_cards_model.static_audit import (
     _t7_casting,
     _t7_cda,
     _t7_cost,
-    _t7_d20,
-    _t7_pumps,
-    _t7_replacement,
-    _t7_zone_grants,
 )
 
-_FAMILIES = (
-    _t7_cda,
-    _t7_pumps,
-    _t7_casting,
-    _t7_cost,
-    _t7_replacement,
-    _t7_zone_grants,
-    _t7_d20,
-)
+_FAMILIES = (_t7_cda, _t7_casting, _t7_cost)
 
 
 def reads_pumps_cda_cost_replacement_line(
