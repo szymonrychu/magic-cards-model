@@ -3885,6 +3885,32 @@ def kicked_instead_target_text(text: str) -> tuple[str, str] | None:
     return f"choose {match.group('base')}.", f"choose {match.group('kicked')}."
 
 
+def with_face_aura_target(face: Any, profile: TargetingProfile) -> TargetingProfile:
+    """CR 303.4a for one face cast on its own: a double-faced card cast
+    transformed is evaluated as its back face (CR 712.11c), and an Aura back
+    face (disturb's Twinblade Invocation, CR 702.146a) takes its target from
+    that face's own "Enchant <quality>" line - `_with_aura_target` reads the
+    card's front face, which is not an Aura at all."""
+    if "Aura" not in (getattr(face, "type_line", "") or ""):
+        return profile
+    added: list[TargetRequirement] = []
+    for line in (getattr(face, "oracle_text", "") or "").splitlines():
+        match = re.fullmatch(r"Enchant (?P<restriction>[^(]+?)\s*(?:\(.*\))?", line.strip())
+        if match is None:
+            continue
+        read = _parse(f"target {match.group('restriction').strip()}")
+        if not read.understood or not read.requirements:
+            return TargetingProfile(understood=False)
+        added.extend(read.requirements)
+    if not added:
+        return profile
+    return TargetingProfile(
+        requirements=(*added, *profile.requirements),
+        understood=profile.understood,
+        division=profile.division,
+    )
+
+
 def _with_aura_target(card: Card, profile: TargetingProfile) -> TargetingProfile:
     """CR 303.4a: an Aura spell's target comes from its enchant ability.
 

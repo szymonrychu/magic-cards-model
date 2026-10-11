@@ -82,6 +82,7 @@ from ..targeting import (
     profile_for_modes_with_owners,
     profile_for_text,
     spell_profile_for_text,
+    with_face_aura_target,
     targeting_profile,
     targeting_trigger_text,
 )
@@ -449,7 +450,9 @@ def why_cannot_cast_now(
     if not without_alternative_flash and flash_by_alternative_cost(game, spell, caster):
         return None  # Primal Prayers: flash while paying its alternative cost
     if spell.zone is not Zone.HAND and (
-        castable_from(spell.card, spell.zone)
+        # Disturb (CR 702.146a) carries no timing of its own: the face it
+        # casts is timed by its own type, so it is not exempt here.
+        any(not option.casts_transformed for option in castable_from(spell.card, spell.zone))
         or granted_cast_options(game, spell, caster, spell.zone)
     ):
         # A keyword is what allows this cast at all (CR 601.3), and each one
@@ -1694,8 +1697,9 @@ class Casting(EngineModel):
                 # family of defect `targeting_profile`'s own docstring
                 # already fixed for a transform/modal DFC's blank top-level
                 # `oracle_text` field, one layer further in.
+                back_face = self.spell.card.back_face
                 return self._with_bestowed_target(
-                    profile_for_text(self.spell.card.back_face.oracle_text or "")
+                    with_face_aura_target(back_face, profile_for_text(back_face.oracle_text or ""))
                 )
             return self._with_bestowed_target(targeting_profile(self.spell.card))
         return self._with_bestowed_target(
@@ -2098,6 +2102,9 @@ class Casting(EngineModel):
         self.keyword_cost_paid = not option.pays_mana_cost
         self.keyword_pays_life_for_mana_value = option.pays_life_for_mana_value
         self.keyword_opens_window = option.timing is CastTiming.OWN_DECLARE_BLOCKERS
+        if option.casts_transformed:
+            # CR 712.11a: disturb casts the card back face up (CR 702.146a).
+            self.cast_transformed()
         if option.keyword.lower() == "bestow":
             # CR 702.103b: "As a spell cast bestowed is put onto the stack, it
             # becomes an Aura enchantment and gains enchant creature." CR 601.2a
