@@ -82,9 +82,9 @@ from ..targeting import (
     profile_for_modes_with_owners,
     profile_for_text,
     spell_profile_for_text,
-    with_face_aura_target,
     targeting_profile,
     targeting_trigger_text,
+    with_face_aura_target,
 )
 from ..teamwork import teamwork_ability, teamwork_instead_target_text, teamwork_payment_refusal
 from ..triggers import ExtraTriggerEvent, GameEvent
