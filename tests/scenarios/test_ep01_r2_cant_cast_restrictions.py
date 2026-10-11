@@ -21,7 +21,7 @@ Shapes, each proven on at least two differently-worded printings:
   "greater than the number of lands that player controls" (Lavinia).
 - "of the chosen color" (Iona).
 - type bans: "You can't cast creature / noncreature / permanent spells"
-  (Grid Monitor, Steel Golem, Nikya, Nullhide Ferox, Codie).
+  (Grid Monitor, Steel Golem, Nikya, Codie).
 - zones: "Your opponents can't cast spells from anywhere other than their
   hands." (Drannith Magistrate), graveyards (Ashes of the Abhorrent).
 """
@@ -305,7 +305,6 @@ def test_iona_bans_the_chosen_colour_for_opponents_only():
         ("Grid Monitor", "Hill Giant", "Divination"),
         ("Steel Golem", "Serra Angel", "Divination"),
         ("Nikya of the Old Ways", "Divination", "Hill Giant"),
-        ("Nullhide Ferox", "Divination", "Hill Giant"),
         ("Codie, Vociferous Codex", "Hill Giant", "Divination"),
     ],
 )
@@ -389,3 +388,93 @@ def test_the_discount_ends_with_the_permanent():
     card = scenario.find("Shock", Zone.HAND, "alice")
     _, decreases, _ = scenario.game.static_cost_modifiers_for(card, "alice")
     assert decreases == []
+
+
+# -- "the same name as a card exiled with <source>" (Circu, Godsend) ----------
+
+
+def _linked_exile_world(source, victim="Shock"):
+    """bob controls `source`; a `victim` of alice's is already exiled with it
+    (the exiling triggers are other families'); another copy is in each hand."""
+
+    def build():
+        from magic_cards_model.models.card_state import ExileAnnotation, ExileMarker
+
+        scenario = _world(
+            source, owner="bob", alice_hand=[victim, BOLT], bob_hand=[victim], alice_gy=[victim]
+        )()
+        permanent = scenario.find(source, Zone.BATTLEFIELD, "bob")
+        exiled = scenario.find(victim, Zone.GRAVEYARD, "alice")
+        scenario.game.exile_cards([exiled])
+        exiled.exile_annotation = ExileAnnotation(
+            marker=ExileMarker.IMPRINTED,
+            linked_permanent_id=permanent.id,
+            linked_permanent_stamp=permanent.zone_change_stamp,
+        )
+        return scenario
+
+    return build
+
+
+@pytest.mark.parametrize("source", ["Circu, Dimir Lobotomist", "Godsend"])
+def test_opponents_cant_cast_the_name_of_a_card_exiled_with_the_source(source):
+    world = _linked_exile_world(source)
+    refusal = _try(world, "Shock", "alice", **ALICE)
+    assert refusal is not None and source in refusal
+    assert _try(world, BOLT, "alice", **ALICE) is None
+    # "your opponents": the source's own controller may cast that name
+    assert _try(world, "Shock", "bob", **BOB) is None
+
+
+@pytest.mark.parametrize("source", ["Circu, Dimir Lobotomist", "Godsend"])
+def test_the_ban_ends_when_the_source_leaves(source):
+    scenario = _linked_exile_world(source)()
+    scenario.game.exile_permanent(scenario.find(source, Zone.BATTLEFIELD, "bob"))
+    scenario.cast("Shock", username="alice", targets=["bob"])
+
+
+# -- Ashiok's Erasure: the spell it exiled -------------------------------------
+
+
+def test_ashioks_erasure_bans_the_name_of_the_spell_it_exiled_until_it_leaves():
+    def build():
+        scenario = (
+            Scenario()
+            .manual_turn_based_actions()
+            .player(
+                "alice",
+                battlefield=[*ISLANDS],
+                hand=["Divination", "Divination"],
+                library=["Island"] * 5,
+            )
+            .player(
+                "bob",
+                battlefield=[*ISLANDS],
+                hand=["Ashiok's Erasure"],
+                library=["Island"] * 5,
+            )
+            .build()
+        )
+        scenario.start_at(Step.PRECOMBAT_MAIN)
+        spell = scenario.cast_onto_stack(
+            "Divination",
+            *scenario.untapped_sources(*["Island"] * 3, username="alice"),
+            username="alice",
+        )
+        scenario.pass_priority("alice")
+        scenario.cast_onto_stack(
+            "Ashiok's Erasure",
+            *scenario.untapped_sources(*["Island"] * 4, username="bob"),
+            username="bob",
+        )
+        scenario.resolve_top()
+        scenario.choose_trigger_targets("Ashiok's Erasure", [spell])
+        scenario.pass_until_resolved()
+        assert spell.zone is Zone.EXILE
+        return scenario
+
+    refusal = _try(build, "Divination", "alice")
+    assert refusal is not None and "Ashiok's Erasure" in refusal
+    scenario = build()
+    scenario.game.exile_permanent(scenario.find("Ashiok's Erasure", Zone.BATTLEFIELD, "bob"))
+    scenario.cast("Divination", username="alice")

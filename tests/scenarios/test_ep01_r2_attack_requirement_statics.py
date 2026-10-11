@@ -49,7 +49,7 @@ def _block(
         .player("bob", battlefield=[*blockers, *theirs])
         .build()
     )
-    attacking = scenario.creature(attacker, "alice")
+    attacking = scenario.creature(attacker.split(" // ")[0], "alice")
     if setup is not None:
         setup(scenario, attacking)
     scenario.start_at(Step.DECLARE_ATTACKERS)
@@ -617,3 +617,145 @@ def test_glorfindel_mode_allows_a_single_blocker():
 
 def test_without_the_mode_glorfindel_can_be_double_blocked():
     assert _glorfindel_blocked([], ["Hill Giant", "Grizzly Bears"]) is None
+
+
+# -- block restrictions from permanents and creatures (CR 509.1b) -----------
+
+
+def test_bower_passage_stops_flyers_blocking_its_controllers_creatures():
+    refusal = _block("Hill Giant", ["Serra Angel"], mine=["Bower Passage"])
+    assert refusal is not None and "Bower Passage" in refusal and "CR 509.1b" in refusal
+    assert _block("Hill Giant", ["Grizzly Bears"], mine=["Bower Passage"]) is None
+
+
+def test_bower_passage_does_not_protect_the_opponents_creatures():
+    assert _block("Hill Giant", ["Serra Angel"], theirs=["Bower Passage"]) is None
+
+
+def test_silumgar_assassin_cannot_be_blocked_by_greater_power():
+    refusal = _block("Silumgar Assassin", ["Hill Giant"])
+    assert refusal is not None and "CR 509.1b" in refusal
+    assert _block("Silumgar Assassin", ["Grizzly Bears"]) is None  # equal power may block
+
+
+def test_herald_of_secret_streams_makes_countered_creatures_unblockable():
+    def counter(scenario, attacking):
+        attacking.add_counters(Counter.PLUS_ONE, 1)
+
+    refusal = _block(
+        "Grizzly Bears", ["Hill Giant"], mine=["Herald of Secret Streams"], setup=counter
+    )
+    assert refusal is not None and "can't be blocked" in refusal
+    assert _block("Grizzly Bears", ["Hill Giant"], mine=["Herald of Secret Streams"]) is None
+    assert (
+        _block("Grizzly Bears", ["Hill Giant"], theirs=["Herald of Secret Streams"], setup=counter)
+        is None
+    )
+
+
+def test_norman_osborn_cannot_be_blocked():
+    refusal = _block("Norman Osborn // Green Goblin", ["Hill Giant"])
+    assert refusal is not None and "can't be blocked" in refusal
+
+
+@pytest.mark.parametrize(
+    ("blocker", "blocked"),
+    [("Grizzly Bears", True), ("Serra Angel", False)],
+)
+def test_void_winnower_opponents_cant_block_with_even_mana_values(blocker, blocked):
+    refusal = _block("Hill Giant", [blocker], mine=["Void Winnower"])
+    assert (refusal is not None) is blocked
+    # Void Winnower's controller blocks freely
+    assert _block("Hill Giant", [blocker], theirs=["Void Winnower"]) is None
+
+
+def _make_coward(scenario, creature):
+    """What Kargan Intimidator's "Target creature becomes a Coward until end of
+    turn" mode does (CR 205.3m: the creature type is added in layer 4), put on
+    the board directly - the mode's own activation is another family's."""
+    from magic_cards_model.machines.layers import (
+        ContinuousEffect,
+        Duration,
+        Layer,
+        add_subtype,
+        only_this_incarnation,
+    )
+
+    effects = scenario.game.continuous_effects
+    with scenario.game._id_allocator_scope():
+        effects.add(
+            ContinuousEffect(
+                description=f"{creature.name} becomes a Coward",
+                layer=Layer.TYPE,
+                timestamp=effects.tick(),
+                duration=Duration.UNTIL_END_OF_TURN,
+                selector=only_this_incarnation(creature, creature.zone_change_stamp),
+                modification=add_subtype("Coward"),
+            )
+        )
+
+
+def test_cowards_cant_block_warriors():
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Kargan Intimidator"])
+        .player("bob", battlefield=["Grizzly Bears", "Serra Angel"])
+        .build()
+    )
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    kargan = scenario.creature("Kargan Intimidator", "alice")
+    bears = scenario.creature("Grizzly Bears", "bob")
+    _make_coward(scenario, bears)
+    assert "Coward" in scenario.game.characteristics_of(bears).subtypes
+    scenario.attack_with(kargan, defending="bob")
+    with pytest.raises(ValueError, match="CR 509.1b"):
+        scenario.block(kargan, bears)
+    scenario.block(kargan, scenario.creature("Serra Angel", "bob"))
+
+
+def test_a_coward_may_block_a_creature_that_is_not_a_warrior():
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Kargan Intimidator", "Hill Giant"])
+        .player("bob", battlefield=["Grizzly Bears"])
+        .build()
+    )
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    bears = scenario.creature("Grizzly Bears", "bob")
+    _make_coward(scenario, bears)
+    giant = scenario.creature("Hill Giant", "alice")
+    scenario.attack_with(giant, defending="bob")
+    scenario.block(giant, bears)
+
+
+# -- "attacks or blocks each combat if able" and "blocks each combat if able" --
+
+
+@pytest.mark.parametrize("name", ["Iron Golem", "Relentless Raptor"])
+def test_attacks_or_blocks_each_combat_requires_the_attack(name):
+    scenario = Scenario().player("alice", battlefield=[name]).player("bob").build()
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    with pytest.raises(ValueError, match=r"CR 508\.1d"):
+        scenario.attack_with()
+    scenario.attack_with(scenario.creature(name, "alice"), defending="bob")
+
+
+@pytest.mark.parametrize("name", ["Iron Golem", "Relentless Raptor", "Razorgrass Screen"])
+def test_the_blocking_requirement_forces_the_block(name):
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Hill Giant"])
+        .player("bob", battlefield=[name])
+        .build()
+    )
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    scenario.attack_with(scenario.creature("Hill Giant", "alice"), defending="bob")
+    with pytest.raises(ValueError, match=r"CR 509\.1c"):
+        scenario.no_blocks()
+    scenario.block(scenario.attackers()[0], scenario.creature(name, "bob"))
+
+
+def test_razorgrass_screen_cannot_attack_but_is_not_required_to():
+    scenario = Scenario().player("alice", battlefield=["Razorgrass Screen"]).player("bob").build()
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    scenario.attack_with(defending="bob")
