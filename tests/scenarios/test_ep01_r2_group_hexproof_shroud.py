@@ -613,3 +613,34 @@ def test_the_support_oracle_reads_every_static_line_of_the_card(card):
     # Lost in the Maze's ETB tap-and-stun trigger belongs to another epic.
     unread = [t for t in unread if not t.startswith("When this enchantment enters, tap X")]
     assert unread == []
+
+
+# -- Legendary Snakes you control have shroud: Kashi-Tribe Elite --------------
+
+
+def _kashi_board():
+    return (
+        Scenario()
+        .manual_turn_based_actions()
+        .player(
+            "alice", battlefield=["Kashi-Tribe Elite", "Sakiko, Mother of Summer", "Grizzly Bears"]
+        )
+        .player("bob", hand=["Lightning Bolt"], battlefield=["Mountain"])
+        .build()
+    )
+
+
+def test_a_legendary_snake_you_control_has_shroud():
+    scenario = _kashi_board()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    sakiko = scenario.creature("Sakiko, Mother of Summer", "alice")
+    assert _has_keyword(scenario, sakiko, "shroud")
+    assert _refusal(scenario, "Lightning Bolt", sakiko, "bob") is not None
+
+
+def test_the_elite_is_not_legendary_so_it_and_other_creatures_stay_targetable():
+    scenario = _kashi_board()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    for name in ("Kashi-Tribe Elite", "Grizzly Bears"):
+        creature = scenario.creature(name, "alice")
+        assert _refusal(scenario, "Lightning Bolt", creature, "bob") is None
