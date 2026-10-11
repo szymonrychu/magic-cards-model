@@ -17,7 +17,9 @@ below pins "exactly once" for one reconciled part:
 - graveyard unearth grants (Mishra, Sedris) - `zone_grants` (CR 702.84a);
 - the zone scavenge grant (Varolz) - `spell_grants` (CR 702.97a);
 - "Creatures [your opponents] control can't have <kind> counters put on
-  them." (Blightbeetle, Melira) - `game_rule_statics` (CR 101.2, CR 122.6).
+  them." (Blightbeetle, Melira) - `game_rule_statics` (CR 101.2, CR 122.6);
+- a spell keyword grant both `spell_grants` and `zone_grants` read (Sami's
+  affinity, CR 702.41a).
 """
 
 from magic_cards_model.machines import Step
@@ -154,3 +156,19 @@ def test_counter_prohibitions_reach_the_side_their_line_names():
     assert mine.counter_count(Counter.PLUS_ONE) == 1
     assert mine.counter_count(Counter.MINUS_ONE) == 0, "Melira: her controller's creatures"
     assert theirs.counter_count(Counter.MINUS_ONE) == 1
+
+
+def test_a_granted_affinity_reduces_the_cost_once():
+    """ "Spells you cast have affinity for artifacts." (Sami) is read by both
+    `spell_grants` and `zone_grants`' spell subjects; one instance of affinity
+    (CR 702.41a) takes {1} off per artifact - two artifacts make Serra Angel
+    {3}{W}{W} cost {1}{W}{W}, not {W}{W}."""
+    from magic_cards_model.models.mana import ManaCost
+
+    scenario = _build(
+        {
+            "hand": ["Serra Angel"],
+            "battlefield": ["Sami, Wildcat Captain", "Ornithopter", "Memnite", "Plains"],
+        }
+    )
+    assert scenario.cast("Serra Angel").total_cost.mana == ManaCost.parse("{1}{W}{W}")
