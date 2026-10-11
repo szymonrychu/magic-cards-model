@@ -1570,11 +1570,13 @@ _PILE_PERMISSION_LEADS = (
     (re.compile(r"^once each turn, ", re.IGNORECASE), "once"),
 )
 _PILE_PERMISSION_BODY_RE = re.compile(
-    r"^you may (?P<look>look at the cards exiled with this \w+, and you may )?"
+    r"^(?P<who>you|each player) may "
+    r"(?P<look>look at (?:the )?cards (?:they )?exiled with this \w+, and (?:you|they) may )?"
     r"(?P<act>"
     r"play cards exiled with this \w+"
     r"|play lands and cast spells from among (?P<pile>cards (?P<own>you own )?exiled with this \w+"
     r"|those cards"
+    r"|cards they exiled with this \w+(?P<this_turn> this turn)?"
     r"|cards you own in exile with (?P<counter>\w+) counters on them)"
     r"|play lands from among cards exiled with this \w+"
     r"|play a land or cast a spell from among the cards exiled with this \w+"
@@ -1587,7 +1589,9 @@ _PILE_PERMISSION_BODY_RE = re.compile(
     r"(?P<any1>, and mana of any type can be spent to cast (?:that|those) spells?)?"
     r"(?P<anycolor>, and you may spend mana as though it were mana of any colou?r "
     r"to cast (?:those spells|it))?"
-    r"\.(?P<any2> Mana of any type can be spent to cast those spells\.)?$",
+    r"\.(?P<any2> Mana of any type can be spent to cast those spells\.)?"
+    r"(?P<life> If you cast a spell this way, pay life equal to its mana value rather than "
+    r"pay its mana cost\.)?$",
     re.IGNORECASE,
 )
 
@@ -1625,6 +1629,17 @@ class ExilePilePermission(EngineModel):
     controls (`ExileAnnotation.linked_permanent_id`)."""
     flash: bool = False
     looks: bool = False
+    each_player: bool = False
+    """"Each player may ..." (Shared Fate, Uba Mask): the permission reaches every
+    player, not only the permanent's controller."""
+    exiled_by_player: bool = False
+    """"cards they exiled with this ..." / "those cards": only cards the player
+    themself exiled with the permanent (`ExileAnnotation.owner`)."""
+    this_turn: bool = False
+    """"... this turn": only cards exiled on the current turn."""
+    pays_life_for_mana_value: bool = False
+    """"If you cast a spell this way, pay life equal to its mana value rather
+    than pay its mana cost" (Valgavoth; CR 118.9, CR 119.4)."""
 
 
 @lru_cache(maxsize=2048)
@@ -1681,6 +1696,11 @@ def exile_pile_permission(
         exiled_by_your_ability=match.group("exiler") is not None,
         flash=match.group("flash") is not None,
         looks=match.group("look") is not None,
+        each_player=match.group("who").lower() == "each player",
+        exiled_by_player=match.group("who").lower() == "each player"
+        and (match.group("this_turn") is not None or "they exiled" in act or "those cards" in act),
+        this_turn=match.group("this_turn") is not None,
+        pays_life_for_mana_value=match.group("life") is not None,
     )
 
 
@@ -1726,6 +1746,12 @@ def _pile_membership_holds(
         annotation = card.exile_annotation
         if annotation is None or not annotation.links_to(permanent.id, permanent.zone_change_stamp):
             return False
+        if read.exiled_by_player and annotation.owner != player:
+            return False
+        if read.this_turn:
+            turn = getattr(game, "turn", None)
+            if turn is None or annotation.turn_exiled != turn.turns_taken:
+                return False
     owner = card.owner or player
     if read.own_cards_only and owner != player:
         return False
@@ -1745,11 +1771,14 @@ def _pile_permissions_for(
 
     found: list[tuple[CardState, ExilePilePermission]] = []
     board = game.computed_board()
-    for permanent in game.permanents_controlled_by(player):
+    for permanent in game.battlefield:
+        controlled = permanent.controller == player
         legendary = Supertype.LEGENDARY in permanent.card.supertypes
         for line in class_gated_lines(permanent, board.of(permanent).abilities):
             read = exile_pile_permission(permanent.name, line, legendary)
-            if read is None or not _pile_membership_holds(game, card, permanent, read, player):
+            if read is None or not (controlled or read.each_player):
+                continue
+            if not _pile_membership_holds(game, card, permanent, read, player):
                 continue
             if read.during_your_turn:
                 turn = getattr(game, "turn", None)
@@ -1783,6 +1812,13 @@ def linked_exile_play_grant(
         permanent, read = min(options, key=lambda option: option[1].once_each_turn)
         return LinkedExilePlayGrant(permanent, read)
     return None
+
+
+def may_look_at_linked_exile(game: Any, card: CardState, player: str) -> bool:
+    """Whether a pile permission of `player`'s says they "may look at" `card`
+    (Shared Fate's "Each player may look at cards they exiled with this
+    enchantment", Colfenor's Plans): it is in a pile they can read."""
+    return any(read.looks for _, read in _pile_permissions_for(game, card, player))
 
 
 def linked_exile_play_source(game: Any, card: CardState, player: str) -> CardState | None:
@@ -2067,7 +2103,8 @@ def _linked_exile_play_option(
         keyword=CAST_PERMISSION,
         rule="CR 601.3, CR 607.2a",
         zone=Zone.EXILE,
-        pays_mana_cost=not read.free,
+        pays_mana_cost=not (read.free or read.pays_life_for_mana_value),
+        pays_life_for_mana_value=read.pays_life_for_mana_value,
         timing=CastTiming.ANY if read.flash else CastTiming.OWN,
         once_per_turn_key=once_per_turn_key(permanent) if read.once_each_turn else None,
         any_color=read.any_color,

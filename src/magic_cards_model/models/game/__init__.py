@@ -3538,6 +3538,15 @@ class Game(
     _LOOK_AT_TOP_CARD_ANY_TIME_RE: ClassVar[re.Pattern[str]] = re.compile(
         r"^you may look at the top card of your library any time\.?$", re.IGNORECASE
     )
+    #: Lens of Clarity's "You may look at the top card of your library and at
+    #: face-down creatures you don't control any time." - the top-card grant
+    #: above plus CR 708.3's controller-only look, widened to the opposing
+    #: face-down creatures on the battlefield (`Game.known_to`).
+    _LOOK_AT_TOP_AND_FACE_DOWN_ANY_TIME_RE: ClassVar[re.Pattern[str]] = re.compile(
+        r"^you may look at the top card of your library and at face-down creatures you "
+        r"don't control any time\.?$",
+        re.IGNORECASE,
+    )
     #: "You may play lands from the top of your library." (Courser of
     #: Kruphix, Radha, Ka-Zar's own second static) - CR 305.1's land drop
     #: opened to a zone other than the hand, the identical shape

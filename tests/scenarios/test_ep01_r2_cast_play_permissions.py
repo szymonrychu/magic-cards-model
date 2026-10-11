@@ -17,7 +17,7 @@ from magic_cards_model.machines import Step
 from magic_cards_model.machines.casting import why_cannot_cast_restriction
 from magic_cards_model.machines.legal_actions import legal_actions
 from magic_cards_model.models import Zone
-from magic_cards_model.models.action import ActionKind
+from magic_cards_model.models.action import ActionKind, Affordability
 from magic_cards_model.support import HANDLED, classify_clauses
 from tests.cards import card
 from tests.scenarios.harness import Scenario
@@ -224,3 +224,250 @@ def test_frenzy_can_destroy_itself_for_3r():
 def test_frenzy_is_credited():
     _handled("Experimental Frenzy", "You can't play lands or cast spells from your hand")
     _handled("Experimental Frenzy", "Destroy this enchantment")
+
+
+# -- Lens of Clarity: the top card and face-down creatures you don't control --
+
+
+def _known_ids(scenario, viewer):
+    return {known.card_id for known in scenario.game.known_to(viewer)}
+
+
+def test_lens_of_clarity_shows_the_top_card_and_opposing_face_down_creatures():
+    scenario = _main(
+        alice={"battlefield": ["Lens of Clarity"], "library": ["Island", "Forest"]},
+        bob={"battlefield": ["Grizzly Bears"], "library": ["Island"]},
+    )
+    morph = scenario.find("Grizzly Bears", Zone.BATTLEFIELD, "bob")
+    morph.turn_face_down()
+    assert morph.face_down
+    top = scenario.player("alice").library[0]
+    known = _known_ids(scenario, "alice")
+    assert top.id in known
+    assert morph.id in known
+
+
+def test_lens_of_clarity_does_not_show_my_own_hidden_cards_to_the_opponent():
+    scenario = _main(
+        alice={"battlefield": ["Lens of Clarity", "Grizzly Bears"], "library": ["Island"]},
+        bob={"library": ["Island"]},
+    )
+    mine = scenario.find("Grizzly Bears", Zone.BATTLEFIELD, "alice")
+    mine.turn_face_down()
+    assert mine.id not in _known_ids(scenario, "bob")
+    assert scenario.player("alice").library[0].id not in _known_ids(scenario, "bob")
+    assert mine.id not in _known_ids(scenario, "alice"), (
+        "my own face-down creature is not 'I don't control'"
+    )
+
+
+def test_without_lens_an_opposing_face_down_creature_is_unknown():
+    scenario = _main(
+        alice={"library": ["Island"]},
+        bob={"battlefield": ["Grizzly Bears"], "library": ["Island"]},
+    )
+    morph = scenario.find("Grizzly Bears", Zone.BATTLEFIELD, "bob")
+    morph.turn_face_down()
+    assert morph.id not in _known_ids(scenario, "alice")
+
+
+def test_lens_of_clarity_stops_when_it_leaves():
+    scenario = _main(
+        alice={"battlefield": ["Lens of Clarity"], "library": ["Island"]},
+        bob={"battlefield": ["Grizzly Bears"], "library": ["Island"]},
+    )
+    morph = scenario.find("Grizzly Bears", Zone.BATTLEFIELD, "bob")
+    morph.turn_face_down()
+    scenario.game.destroy(scenario.find("Lens of Clarity", Zone.BATTLEFIELD, "alice"))
+    assert morph.id not in _known_ids(scenario, "alice")
+
+
+def test_lens_of_clarity_is_credited():
+    _handled("Lens of Clarity", "face-down creatures")
+
+
+# -- Linked-exile piles: Valgavoth, Shared Fate, Uba Mask -------------------
+
+CAST_PERMISSION = "Cast permission"
+
+
+def _cast_from_exile(scenario, name, username="alice", targets=None):
+    casting = scenario.cast(name, username, from_zone=Zone.EXILE)
+    casting.use_keyword(CAST_PERMISSION)
+    if targets:
+        casting.choose_targets(targets)
+    payment = casting.begin_paying()
+    scenario.auto_pay(payment, username=username)
+    scenario.put_on_stack(casting)
+    return scenario.resolve_top()
+
+
+def test_valgavoth_exiles_an_opponents_dying_creature_and_i_cast_it_for_life():
+    scenario = _main(
+        alice={"battlefield": ["Valgavoth, Terror Eater"]},
+        bob={"battlefield": ["Grizzly Bears"]},
+    )
+    bears = scenario.find("Grizzly Bears", Zone.BATTLEFIELD, "bob")
+    scenario.game.destroy(bears)
+    assert bears.zone is Zone.EXILE
+    assert _offered(scenario, bears, ActionKind.CAST)
+    life = scenario.player("alice").life
+    _cast_from_exile(scenario, "Grizzly Bears")
+    assert scenario.player("alice").life == life - 2, "life equal to its mana value, no mana"
+    assert scenario.find("Grizzly Bears", Zone.BATTLEFIELD, "alice")
+
+
+def test_valgavoth_life_payment_must_be_affordable():
+    scenario = _main(
+        alice={"battlefield": ["Valgavoth, Terror Eater"]},
+        bob={"battlefield": ["Grizzly Bears"]},
+    )
+    scenario.player("alice").life = 1
+    bears = scenario.find("Grizzly Bears", Zone.BATTLEFIELD, "bob")
+    scenario.game.destroy(bears)
+    assert not any(
+        action.kind is ActionKind.CAST
+        and action.card_id == bears.id
+        and action.affordable is Affordability.YES
+        for action in legal_actions(scenario.game, "alice")
+    ), "one life cannot pay 2"
+
+
+def test_valgavoth_leaves_my_own_dying_creature_in_my_graveyard():
+    scenario = _main(
+        alice={"battlefield": ["Valgavoth, Terror Eater", "Grizzly Bears"]},
+        bob={},
+    )
+    bears = scenario.find("Grizzly Bears", Zone.BATTLEFIELD, "alice")
+    scenario.game.destroy(bears)
+    assert bears.zone is Zone.GRAVEYARD
+
+
+def test_valgavoth_pile_is_only_playable_during_its_controllers_turn():
+    scenario = _main(
+        alice={"battlefield": ["Grizzly Bears"]},
+        bob={"battlefield": ["Valgavoth, Terror Eater"]},
+    )
+    bears = scenario.find("Grizzly Bears", Zone.BATTLEFIELD, "alice")
+    scenario.game.destroy(bears)
+    assert bears.zone is Zone.EXILE, "bob's Valgavoth exiled alice's dying creature"
+    assert not _offered(scenario, bears, ActionKind.CAST, username="bob"), "it is alice's turn"
+
+
+def test_valgavoth_lets_me_play_an_opponents_discarded_land():
+    scenario = _main(
+        alice={"battlefield": ["Valgavoth, Terror Eater"]},
+        bob={"hand": ["Forest"]},
+    )
+    forest = scenario.find("Forest", Zone.HAND, "bob")
+    scenario.game.discard_cards("bob", [forest])
+    assert forest.zone is Zone.EXILE
+    scenario.play_land("Forest", "alice", from_zone=Zone.EXILE)
+    assert forest.zone is Zone.BATTLEFIELD
+
+
+def test_valgavoth_is_credited():
+    _handled("Valgavoth, Terror Eater", "During your turn, you may play cards exiled with")
+
+
+def test_shared_fate_exiles_an_opponents_top_card_for_me_to_look_at_and_cast():
+    scenario = _main(
+        alice={"battlefield": ["Shared Fate", "Mountain"], "library": ["Island"] * 3},
+        bob={"library": ["Lightning Bolt", "Island", "Island"]},
+    )
+    bolt = scenario.player("bob").library[0]
+    hand = len(scenario.player("alice").hand)
+    scenario.draw(1, "alice")
+    assert len(scenario.player("alice").hand) == hand, "the draw was replaced"
+    assert bolt.zone is Zone.EXILE
+    assert bolt.id in _known_ids(scenario, "alice"), "alice may look at the card she exiled"
+    assert bolt.id not in _known_ids(scenario, "bob")
+    assert _offered(scenario, bolt, ActionKind.CAST)
+    assert not _offered(scenario, bolt, ActionKind.CAST, username="bob"), "bob did not exile it"
+    life = scenario.player("bob").life
+    _cast_from_exile(scenario, "Lightning Bolt", targets=["bob"])
+    assert scenario.player("bob").life == life - 3
+
+
+def test_shared_fate_lets_me_play_a_land_i_exiled():
+    scenario = _main(
+        alice={"battlefield": ["Shared Fate"], "library": ["Island"] * 3},
+        bob={"library": ["Forest", "Island", "Island"]},
+    )
+    forest = scenario.player("bob").library[0]
+    scenario.draw(1, "alice")
+    scenario.play_land("Forest", "alice", from_zone=Zone.EXILE)
+    assert forest.zone is Zone.BATTLEFIELD
+    assert scenario.game.controller_of(forest).username == "alice"
+
+
+def test_shared_fate_works_for_the_opponent_too_and_only_for_their_own_exile():
+    scenario = _main(
+        alice={"battlefield": ["Shared Fate"], "library": ["Lightning Bolt", "Island", "Island"]},
+        bob={"battlefield": ["Mountain"], "library": ["Island"] * 3},
+    )
+    bolt = scenario.player("alice").library[0]
+    scenario.draw(1, "bob")
+    assert bolt.zone is Zone.EXILE
+    assert bolt.id in _known_ids(scenario, "bob")
+    assert bolt.id not in _known_ids(scenario, "alice")
+    assert not _offered(scenario, bolt, ActionKind.CAST, username="alice")
+    assert _offered(scenario, bolt, ActionKind.CAST, username="bob")
+
+
+def test_without_shared_fate_the_draw_is_a_draw():
+    scenario = _main(alice={"library": ["Island"] * 3}, bob={"library": ["Lightning Bolt"] * 3})
+    hand = len(scenario.player("alice").hand)
+    scenario.draw(1, "alice")
+    assert len(scenario.player("alice").hand) == hand + 1
+
+
+def test_uba_mask_exiles_my_draw_face_up_and_i_may_play_it_this_turn():
+    scenario = _main(
+        alice={"battlefield": ["Uba Mask", "Mountain"], "library": ["Lightning Bolt", "Island"]},
+        bob={"library": ["Island"] * 3},
+    )
+    bolt = scenario.player("alice").library[0]
+    hand = len(scenario.player("alice").hand)
+    scenario.draw(1, "alice")
+    assert len(scenario.player("alice").hand) == hand
+    assert bolt.zone is Zone.EXILE and bolt.face_up
+    assert _offered(scenario, bolt, ActionKind.CAST)
+    assert not _offered(scenario, bolt, ActionKind.CAST, username="bob")
+    life = scenario.player("bob").life
+    _cast_from_exile(scenario, "Lightning Bolt", targets=["bob"])
+    assert scenario.player("bob").life == life - 3
+
+
+def test_uba_mask_land_is_playable_this_turn_only():
+    scenario = _main(
+        alice={"battlefield": ["Uba Mask"], "library": ["Forest", "Island", "Island", "Island"]},
+        bob={"library": ["Island"] * 6},
+    )
+    forest = scenario.player("alice").library[0]
+    scenario.draw(1, "alice")
+    assert _offered(scenario, forest, ActionKind.PLAY_LAND)
+    turns = scenario.turn.turns_taken
+    while scenario.turn.turns_taken == turns:
+        scenario.advance()
+    while scenario.turn.active_player != "alice":
+        scenario.advance()
+    assert forest.zone is Zone.EXILE
+    assert not _offered(scenario, forest, ActionKind.PLAY_LAND), "'this turn' has ended"
+
+
+def test_uba_mask_each_player_includes_the_opponent():
+    scenario = _main(
+        alice={"battlefield": ["Uba Mask"]},
+        bob={"battlefield": ["Mountain"], "library": ["Lightning Bolt", "Island"]},
+    )
+    bolt = scenario.player("bob").library[0]
+    scenario.draw(1, "bob")
+    assert bolt.zone is Zone.EXILE and bolt.face_up
+    assert _offered(scenario, bolt, ActionKind.CAST, username="bob")
+    assert not _offered(scenario, bolt, ActionKind.CAST, username="alice")
+
+
+def test_shared_fate_and_uba_mask_are_credited():
+    _handled("Shared Fate", "Each player may look at cards they exiled")
+    _handled("Uba Mask", "Each player may play lands and cast spells")

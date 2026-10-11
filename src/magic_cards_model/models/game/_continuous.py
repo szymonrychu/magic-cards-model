@@ -1285,6 +1285,21 @@ class ContinuousMixin:
             for line in board.of(permanent).abilities
         )
 
+    def looks_at_opposing_face_down_creatures(self: "Game", username: str) -> bool:
+        """Whether `username` controls a permanent granting Lens of Clarity's
+        "... and at face-down creatures you don't control any time" (CR 708.3's
+        look, extended by a rules-modifying static, CR 611.3d) - read fresh off
+        the computed board every call."""
+        board = self.computed_board()
+        return any(
+            self._LOOK_AT_TOP_AND_FACE_DOWN_ANY_TIME_RE.fullmatch(
+                self._static_line_without_ability_word(line)
+            )
+            is not None
+            for permanent in self.permanents_controlled_by(username)
+            for line in board.of(permanent).abilities
+        )
+
     def reveals_top_card(self: "Game", username: str) -> bool:
         """Whether `username` controls a permanent whose static line is
         "Play with the top card of your library revealed." (CR 400.2),

@@ -3531,6 +3531,8 @@ class ZonesMixin:
         stripped = self._static_line_without_ability_word(text)
         if self._LOOK_AT_TOP_CARD_ANY_TIME_RE.fullmatch(stripped) is not None:
             return True
+        if self._LOOK_AT_TOP_AND_FACE_DOWN_ANY_TIME_RE.fullmatch(stripped) is not None:
+            return True
         from ...machines.casting import static_zone_cast_permission
 
         permission = static_zone_cast_permission(text)
