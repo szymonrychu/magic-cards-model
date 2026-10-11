@@ -594,7 +594,7 @@ class ContinuousMixin:
         with self._id_allocator_scope():
             if amount <= 0:
                 return permanent.counter_count(kind)
-            if permanent.cant_have_counters_put_on_it:
+            if permanent.cant_have_counters_put_on_it or permanent.cant_have_counter_kind(kind):
                 return permanent.counter_count(kind)
 
             event = ReplaceableEvent(

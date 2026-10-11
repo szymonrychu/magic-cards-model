@@ -52,6 +52,18 @@ CANT_BECOME_UNTAPPED_TEXT = "Can't become untapped."
 #: abilities" effect does not end it either.
 CANT_HAVE_COUNTERS_TEXT = "Can't have counters put on it."
 
+#: The per-kind form of `CANT_HAVE_COUNTERS_TEXT` - "Creatures your opponents
+#: control can't have +1/+1 counters put on them." (Blightbeetle) - one line per
+#: kind, `{kind}` the counter kind as `Counter` spells it.
+CANT_HAVE_KIND_COUNTERS_TEXT = "Can't have {kind} counters put on it."
+
+
+#: The canonical line "Lethal damage dealt to creatures you control is
+#: determined by their power rather than their toughness." (Zilortha) puts on
+#: each creature it reaches in layer 6 - read by `CardState.lethal_threshold`.
+#: An effect on the object, not an ability of it (`layers.RULE_EFFECT_TEXTS`).
+LETHAL_BY_POWER_TEXT = "Lethal damage is determined by power rather than toughness."
+
 
 class TargetKind(StrEnum):
     """The two things a spell can point at (CR 115.1)."""
@@ -2555,8 +2567,18 @@ class CardState(EngineModel):
         damage step assign correctly after first strike has landed. None when
         toughness is not a number.
         """
-        toughness = self.toughness
-        return None if toughness is None else toughness - self.damage
+        threshold = self.lethal_threshold
+        return None if threshold is None else threshold - self.damage
+
+    @property
+    def lethal_threshold(self) -> int | None:
+        """The number damage is measured against to be lethal: toughness
+        (CR 120.6), or power while an effect says lethal damage is determined
+        by power instead (`LETHAL_BY_POWER_TEXT`)."""
+        computed = self.computed_characteristics
+        if computed is not None and LETHAL_BY_POWER_TEXT in computed.abilities:
+            return self.power
+        return self.toughness
 
     @property
     def has_lethal_damage(self) -> bool:
@@ -2575,7 +2597,14 @@ class CardState(EngineModel):
         toughness = self.toughness
         if toughness is None or toughness <= 0:
             return False
-        return self.damage >= toughness or self.dealt_deathtouch_damage
+        threshold = self.lethal_threshold
+        if threshold is None:
+            return self.dealt_deathtouch_damage
+        if threshold != toughness and self.damage <= 0:
+            # CR 704.5g needs damage marked on it: a power-measured 0 is no
+            # exception.
+            return self.dealt_deathtouch_damage
+        return self.damage >= threshold or self.dealt_deathtouch_damage
 
     # -- attaching (CR 701.3) ----------------------------------------------
 
@@ -2745,6 +2774,15 @@ class CardState(EngineModel):
         one not on the battlefield (a card the effect no longer reaches)."""
         computed = self.computed_characteristics
         return computed is not None and CANT_HAVE_COUNTERS_TEXT in computed.abilities
+
+    def cant_have_counter_kind(self, kind: str) -> bool:
+        """Whether an effect says this permanent "can't have `kind` counters
+        put on it" (CR 122.6, CR 101.2) - the per-kind sibling of
+        `cant_have_counters_put_on_it`, read off the computed board."""
+        computed = self.computed_characteristics
+        return computed is not None and (
+            CANT_HAVE_KIND_COUNTERS_TEXT.format(kind=str(kind)) in computed.abilities
+        )
 
     def untap(self, *, exert_applies: bool = True) -> None:
         """Untap this card, unless it was exerted (CR 701.43a-b).

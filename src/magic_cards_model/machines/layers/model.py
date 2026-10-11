@@ -19,6 +19,8 @@ from ...models.card import Color, Supertype, Type, has_changeling, with_every_cr
 from ...models.card_state import (
     CANT_BECOME_UNTAPPED_TEXT,
     CANT_HAVE_COUNTERS_TEXT,
+    CANT_HAVE_KIND_COUNTERS_TEXT,
+    LETHAL_BY_POWER_TEXT,
     CardState,
 )
 from ...models.zone import Zone
@@ -3730,6 +3732,9 @@ RULE_EFFECT_TEXTS: frozenset[str] = frozenset(
         CANT_BECOME_UNTAPPED_TEXT,
         CANT_HAVE_COUNTERS_TEXT,
         CANT_ACTIVATE_ABILITIES_TEXT,
+        LETHAL_BY_POWER_TEXT,
+        CANT_HAVE_KIND_COUNTERS_TEXT.format(kind="+1/+1"),
+        CANT_HAVE_KIND_COUNTERS_TEXT.format(kind="-1/-1"),
     }
 )
 

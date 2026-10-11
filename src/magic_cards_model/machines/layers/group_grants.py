@@ -24,7 +24,7 @@ from typing import TYPE_CHECKING, Any
 
 from ...data.subtypes import subtype_vocabulary
 from ...models.card import Color, Supertype, Type
-from ...models.card_state import CardState
+from ...models.card_state import CANT_HAVE_KIND_COUNTERS_TEXT, LETHAL_BY_POWER_TEXT, CardState
 from .model import (
     AddEveryCreatureType,
     AddSupertype,
@@ -37,6 +37,7 @@ from .model import (
     Sublayer,
     add_subtype,
     add_type,
+    grant_ability,
     grant_keyword,
     modify_power_toughness,
     set_basic_land_type,
@@ -236,6 +237,13 @@ _GROUP_ARE_PLAIN_RE = re.compile(
     r"^(?P<subject>.+?) (?:are|is) (?P<tail>every creature type|the chosen type|colorless|"
     r"white|blue|black|red|green|plains|islands|swamps|mountains|forests)$"
 )
+_GROUP_NO_COUNTERS_RE = re.compile(
+    r"^(?P<subject>.+?) can't have (?P<kind>\+1/\+1|-1/-1) counters put on (?:them|it)$"
+)
+_LETHAL_BY_POWER_RE = re.compile(
+    r"^lethal damage dealt to (?P<subject>.+?) is determined by (?:their|its) power "
+    r"rather than (?:their|its) toughness$"
+)
 _SAME_IS_TRUE_RE = re.compile(r"^the same is true for (?P<subjects>.+)$")
 _OFF_ZONE_WORD_RE = re.compile(r"\b(?:cards?|spells?)\b")
 _ARE_LEGENDARY_RE = re.compile(r"^(?P<subject>.+?) (?:are|is) legendary$")
@@ -323,6 +331,25 @@ def parse_group_static_sentence(sentence: str):
     lowered = text.lower()
     if not _VERB_RE.search(lowered) or '"' in text:
         return None
+    if match := _GROUP_NO_COUNTERS_RE.fullmatch(lowered):
+        if _subject_ok(match["subject"]) is False:
+            return None
+        text_line = CANT_HAVE_KIND_COUNTERS_TEXT.format(kind=match["kind"])
+        return _builder(
+            sentence,
+            match["subject"],
+            f"can't have {match['kind']} counters put on them",
+            lambda: [(Layer.ABILITY, None, grant_ability(text_line))],
+        )
+    if match := _LETHAL_BY_POWER_RE.fullmatch(lowered):
+        if _subject_ok(match["subject"]) is False:
+            return None
+        return _builder(
+            sentence,
+            match["subject"],
+            "lethal damage is determined by power",
+            lambda: [(Layer.ABILITY, None, grant_ability(LETHAL_BY_POWER_TEXT))],
+        )
     if match := _LOSE_ALL_RE.fullmatch(lowered):
         if _subject_ok(match["subject"]) is False or _is_bare_all_creatures(match["subject"]):
             # "All creatures lose all abilities ..." is Humility's own

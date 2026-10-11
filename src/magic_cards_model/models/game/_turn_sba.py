@@ -62,6 +62,7 @@ from ..card import (
     Type,
 )
 from ..card_state import (
+    LETHAL_BY_POWER_TEXT,
     CardState,
     Counter,
     annihilate_counters_on,
@@ -1711,6 +1712,19 @@ class TurnSbaMixin:
         if toughness <= 0:
             return True  # CR 704.5f
         # CR 704.5g's arithmetic, plus CR 704.5h's deathtouch, which needs none.
+        return self._damage_is_lethal(state, board, toughness)
+
+    def _damage_is_lethal(
+        self: "Game", state: CardState, board: ComputedBoard, toughness: int
+    ) -> bool:
+        """CR 704.5g / 704.5h against `toughness`, or against power while an
+        effect says lethal damage is determined by power (Zilortha) - which
+        still needs damage marked on the creature (CR 704.5g)."""
+        chars = board.of(state)
+        if LETHAL_BY_POWER_TEXT in chars.abilities and chars.power is not None:
+            return (
+                state.damage > 0 and state.damage >= chars.power
+            ) or state.dealt_deathtouch_damage
         return state.damage >= toughness or state.dealt_deathtouch_damage
 
     def _destroyed_by_state_based_action(
@@ -1739,7 +1753,7 @@ class TurnSbaMixin:
             toughness = state.toughness
         if toughness is None:
             return state.dealt_deathtouch_damage  # CR 704.5h needs no arithmetic
-        return state.damage >= toughness or state.dealt_deathtouch_damage
+        return self._damage_is_lethal(state, board, toughness)
 
     def _legend_rule_losers(self: "Game", board: ComputedBoard) -> list[CardState]:
         """The legendary permanents the legend rule puts into graveyards (CR 704.5j).
