@@ -31,6 +31,7 @@ _GATES = (
     "twice each turn rather than only once",
     "can't activate abilities that aren't mana abilities",
     "casualty x",
+    "instances of color words",
 )
 
 
@@ -107,6 +108,39 @@ def _loyalty_twice(printing) -> bool:
     return _TWICE_CACHE[printing.name]
 
 
+_TEXT_CHANGE_CACHE: dict[str, bool] = {}
+
+
+def _changes_color_words(printing) -> bool:
+    """CR 612.1, CR 613.1c: with this printing and a chosen color word on the
+    battlefield, `sync_text_changes` really rewrites another permanent's text."""
+    if printing.name not in _TEXT_CHANGE_CACHE:
+        import uuid
+
+        from magic_cards_model.machines.text_changes import sync_text_changes
+        from magic_cards_model.models.card_state import Choice, ChoiceKind
+        from magic_cards_model.support import _synthetic_permanent
+
+        game, state = _staged(printing)
+        state.choice = Choice(kind=ChoiceKind.COLOR_WORD, value="blue")
+        probe_card = printing.model_copy(
+            update={
+                "id": uuid.uuid5(printing.id, "text-change-probe"),
+                "name": "Probe",
+                "oracle_text": "Protection from red",
+            }
+        )
+        probe = _synthetic_permanent(
+            probe_card, controller="sweep_opp", token=False, tapped=False, counter_kind=None
+        )
+        probe.bind_to_game(game)
+        probe.zone = Zone.BATTLEFIELD
+        game.battlefield.append(probe)
+        sync_text_changes(game)
+        _TEXT_CHANGE_CACHE[printing.name] = probe.card.oracle_text == "Protection from blue"
+    return _TEXT_CHANGE_CACHE[printing.name]
+
+
 def reads_anthems_grants_line(printing, text, *, card_name=None, legendary=False) -> bool:
     lowered = text.lower()
     # A static ability granting a keyword (or a type or colour) to cards off the
@@ -125,6 +159,8 @@ def reads_anthems_grants_line(printing, text, *, card_name=None, legendary=False
         return _reads_attach_restriction(printing)
     if "can't activate abilities that aren't mana abilities" in lowered:
         return reads_attached_restriction_line(printing, text, card_name=card_name or printing.name)
+    if "instances of color words" in lowered:
+        return _changes_color_words(printing)
     if "casualty x" in lowered:
         # CR 702.153a / CR 107.3a: `Casting.announce_casualty_x` and the casualty
         # copy (`keywords._casualty_effect`) perform exactly this line.

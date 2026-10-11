@@ -919,8 +919,10 @@ def copiable_card_of(game: "Game", original: CardState) -> Card:
     **Not modelled**: the mana cost itself - `BecomeACopy` carries only the
     mana value, so the synthesized card keeps that (`cmc`) and no cost.
     """
+    # CR 707.2: text-changing effects (Swirl the Mists) are not copied.
+    unchanged_card = game.text_change_originals.get(str(original.id), original.card)
     if original.zone is not Zone.BATTLEFIELD:
-        return original.card
+        return unchanged_card
     from ..machines.layers import copiable_characteristics, printed_characteristics
 
     printed = printed_characteristics(original, {})
@@ -937,7 +939,7 @@ def copiable_card_of(game: "Game", original: CardState) -> Card:
         "toughness",
     )
     if all(getattr(printed, field) == getattr(copied, field) for field in fields):
-        return original.card
+        return unchanged_card
     left = " ".join(
         [*(supertype.value.title() for supertype in copied.supertypes)]
         + [kind.value.title() for kind in copied.types]
@@ -954,7 +956,7 @@ def copiable_card_of(game: "Game", original: CardState) -> Card:
             f"{copied.power}/{copied.toughness}",
         ]
     )
-    return original.card.model_copy(
+    return unchanged_card.model_copy(
         update={
             "id": uuid5(NAMESPACE_OID, f"{_TOKEN_CARD_ID_PREFIX}:copiable:{body}"),
             "name": copied.name,

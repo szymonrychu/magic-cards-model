@@ -1257,6 +1257,9 @@ class Casting(EngineModel):
         # up; one cast transformed goes there back face up.
         self.spell.transformed = self.transformed
         game.stack.append(self.spell)
+        from ..text_changes import sync_text_changes
+
+        sync_text_changes(game)  # CR 612.1: a spell's text is changed from the stack on
 
     def _lift_out_of_every_zone(self) -> None:
         """Take the card out of whatever list is holding it, shared zones
