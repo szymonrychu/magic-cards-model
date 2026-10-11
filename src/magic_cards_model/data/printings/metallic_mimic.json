@@ -31,7 +31,7 @@
   },
   "mana_cost": "{2}",
   "cmc": 2.0,
-  "type_line": "Artifact Creature — Shapeshifter",
+  "type_line": "Artifact Creature \u2014 Shapeshifter",
   "oracle_text": "As this creature enters, choose a creature type.\nThis creature is the chosen type in addition to its other types.\nEach other creature you control of the chosen type enters with an additional +1/+1 counter on it.",
   "power": "2",
   "toughness": "1",
@@ -108,13 +108,13 @@
     "surgefoil",
     "universesbeyond"
   ],
-  "edhrec_rank": 961,
-  "penny_rank": 2430,
+  "edhrec_rank": 957,
+  "penny_rank": 2436,
   "prices": {
-    "usd": "1.39",
+    "usd": "1.38",
     "usd_foil": null,
     "usd_etched": null,
-    "eur": "0.92",
+    "eur": "0.90",
     "eur_foil": null,
     "tix": "0.24"
   },
