@@ -6833,6 +6833,8 @@ _EXILE_SELF_RE = re.compile(r"^exile this (?P<noun>[a-z]+)\.?$", re.IGNORECASE)
 @ABILITY_TEXT.rung("s27")
 def _parse_exile_self(text: str) -> AbilityEffect | None:
     """`_EXILE_SELF_RE`'s shape."""
+    if not text.startswith(("Exile this ", "exile this ")):
+        return None
     match = _EXILE_SELF_RE.fullmatch(" ".join(text.split()))
     if match is None:
         return None

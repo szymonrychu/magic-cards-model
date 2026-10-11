@@ -4533,6 +4533,8 @@ def _parse_die_table_tapped_attacking_token_copies(text: str) -> AbilityEffect |
     high roll once more with an optional re-roll - which is read through the
     same table again (CR 706.2). The two ranges must split the die exactly, so
     a table that leaves a result without an outcome is not read."""
+    if "|" not in text:
+        return None
     match = _DIE_TABLE_TOKEN_COPY_RE.fullmatch(" ".join(text.strip().split()))
     if match is None or not _targets_understood(match.group("phrase")):
         return None
