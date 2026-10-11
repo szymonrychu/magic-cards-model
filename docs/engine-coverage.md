@@ -7918,3 +7918,18 @@ Read by `machines/block_statics.py` off every battlefield permanent's computed a
 | "<Verb> target X. If this spell was kicked, [instead] <verb> target Y [instead]." - the kicked sentence's targets replace the unkicked ones (before: both "target" words were demanded, so the unkicked cast needed two targets) | CR 601.2c, 702.33d | `machines/targeting._KICKED_INSTEAD_IMPERATIVE_TARGETS_RE` via `kicked_instead_target_text` | Tear Asunder; Bloodchief's Thirst (second printing, "instead" before the verb) in `scenarios/test_kicker_changes_exile_target.py` |
 | Class level 1 attack trigger (may discard, if you do draw), level 2 discard damage, level 3 search-then-random-discard | CR 716.2a, 508.3d, 701.9b, 118.12 | existing readers, scenario-proven | Cool but Rude in `scenarios/test_class_attack_discard_draw_levels.py` |
 | "Destroy target nonartifact creature." refusal, indestructible, regeneration | CR 701.8a, 702.12b, 701.19a | existing reader, scenario-proven | Go for the Throat in `scenarios/test_destroy_target_nonartifact_creature.py` |
+
+## EP01-R2-T6: Disturb, untap-step statics, game-rule statics, deck-construction statics
+
+| Mechanic | CR | Where | Proof |
+|---|---|---|---|
+| Disturb: cast from the owner's graveyard transformed for the disturb cost, back-face timing and Aura target, front-face graveyard cast refused | 702.146a-b, 712.8c | `machines/disturb.py`, `casting/options.py` (`casts_transformed`, `owner_only`) | Devoted Grafkeeper, Beloved Beggar, Galedrifter, Lunarch Veteran, Twinblade Geist - `scenarios/test_ep01_r2_disturb.py` |
+| Untap during each other player's untap step (self, group, conditional); group/conditional doesn't untap; may choose not to untap; can't untap more than one; skip upkeep | 502.3, 614.10 | `machines/untap_statics.py`, `Game.untap_step_rule`/`_advance_past_checks` | Seedborn Muse, Prophet of Kruphix, Choke, Deserter's Quarters, Stoic Angel, Eon Hub - `scenarios/test_ep01_r2_untap_step_statics.py` |
+| Legend rule off for everyone / for a subtype you control | 704.5j | `machines/game_rule_statics.py`, `Game._legend_rule_losers` | Mirror Gallery, Spider-Verse |
+| Reversed "You can't win the game and your opponents can't lose the game." | 101.2, 104.3b | `Game._game_outcome_prohibition` | Abyssal Persecutor |
+| "You don't lose the game for having 0 or less life." (alone and in Grimoire's compound line); damage as though infect at 0 or less life | 704.5a, 702.90b | `Game._losing_players`, damage event | Phyrexian Unlife, Marina Vendrell's Grimoire |
+| "Your life total can't change." - no gain, no loss, no life payment | 119.7, 119.8 | `Game.gain_life`/`lose_life`, `Player`, `CostComponent` | Platinum Emperion |
+| Can't get poison counters; creatures you control can't have -1/-1 counters; creatures your opponents control lose infect | 101.2, 122.1, 613.1f | `Game.add_player_counters`, `Game.add_counters`, layer 6 | Melira, Sylvok Outcast |
+| Uncounterable for every player's spells, and with a power floor | 101.2, 208.1 | `casting_restrictions.static_uncounterable_source` | Gaea's Herald, Leyline of Lifeforce, Lier, Spellbreaker Behemoth |
+| Maximum hand size increased/reduced, each opponent's reduced, equal to counters, Delirium seven-minus-types | 402.2, 613.11 | `Player._permanents_maximum_hand_size` (timestamp fold) | Minamo Scrollkeeper, Trusted Advisor, Gnat/Locust Miser, Jin-Gitaxias, Midnight Oil, Winter |
+| Copy-limit overrides (any number / up to N); companions Lutri, Umori, Zirda, Jegantha | 100.2a, 702.139a | `DeckLimits.copies_allowed`, `machines/companion.py` | `scenarios/test_ep01_r2_deck_construction_statics.py` |

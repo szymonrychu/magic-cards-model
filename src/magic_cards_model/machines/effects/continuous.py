@@ -5637,8 +5637,11 @@ def _parse_target_get_energy_pay_damage(text: str) -> Effect | None:
 #: mana-value/counter riders neither printing carries and plus an explicit
 #: "you control" restriction destroy-all effects never have (Wrath of God
 #: hits every player's creatures; this hits only the controller's).
+#: Widened (EP01-R2-T6): "Untap all other creatures you control." (Ahn-Crop
+#: Champion's and Combat Celebrant's exert consequence) - "other" leaves the
+#: ability's own source tapped.
 _UNTAP_ALL_YOU_CONTROL_RE = re.compile(
-    r"^untap all (?P<qualifier>.+?) you control\.?$", re.IGNORECASE
+    r"^untap all (?P<other>other )?(?P<qualifier>.+?) you control\.?$", re.IGNORECASE
 )
 
 
@@ -5654,10 +5657,18 @@ def _parse_untap_all_you_control_clause(sentence: str) -> TargetedClause | None:
     if type_matches is None:
         return None
 
+    excludes_source = match.group("other") is not None
+
     def effect(game: "Game", stack_object: "StackObject") -> None:
         controller = game.controller_of(stack_object)
+        source_id = None
+        if excludes_source:
+            source = (
+                stack_object if isinstance(stack_object, CardState) else stack_object.source(game)  # type: ignore[union-attr]
+            )
+            source_id = source.id if source is not None else None
         for permanent in list(game.battlefield):
-            if permanent.zone is not Zone.BATTLEFIELD:
+            if permanent.zone is not Zone.BATTLEFIELD or permanent.id == source_id:
                 continue
             if game.controller_of(permanent).username != controller.username:
                 continue
