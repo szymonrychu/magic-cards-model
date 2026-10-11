@@ -172,6 +172,7 @@ from .reconfigure import (
 from .special_actions import locked_doors, unlock_cost, why_cannot_unlock_door
 from .targeting import profile_for_text
 from .turn import Step
+from .zone_grants import effective_card
 
 _BOOLEAN_DECISION_KINDS = frozenset(
     {
@@ -1358,7 +1359,7 @@ def _marked_exile_actions(
 
 
 def _dredge_action(game: Any, player: str, card: CardState) -> Action | None:
-    if dredge_count(card.card) is None or why_cannot_dredge(game, card, player) is not None:
+    if dredge_count(effective_card(game, card)) is None or why_cannot_dredge(game, card, player) is not None:
         return None
     return Action(
         kind=ActionKind.DREDGE,
@@ -1746,7 +1747,7 @@ def _off_zone_actions(
     """
     actions: list[Action] = []
     spend = ManaSpend.activating(card.card)
-    for index, entry in enumerate(off_zone_abilities(card.card)):
+    for index, entry in enumerate(off_zone_abilities(effective_card(game, card))):
         # CR 602.2b: announced like any activation. Only a printed line can
         # target; cycling, unearth and transmute spell out untargeted effects.
         found = _target_candidates(

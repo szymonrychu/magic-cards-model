@@ -80,7 +80,9 @@ _COLOR_WORDS: dict[str, Color] = {
 #: see that function's docstring.
 #: CR 702.93a's undying is persist's mirror and is granted the same way
 #: (Undying Evil's "Target creature gains undying until end of turn.").
-_GRANTABLE_TRIGGERED_KEYWORDS = frozenset({"prowess", "persist", "undying"})
+_GRANTABLE_TRIGGERED_KEYWORDS = frozenset(
+    {"prowess", "persist", "undying", "flanking", "exalted", "riot"}
+)
 _KNOWN_KEYWORDS = (
     frozenset(keyword.value for keyword in Keyword)
     | KEYWORDS_OUTSIDE_COMBAT

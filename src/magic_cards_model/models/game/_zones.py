@@ -38,6 +38,7 @@ from ...machines.keyword_counters import (
     enters_with_counters_pronoun_fallback,
     has_shield_counter,
 )
+from ...machines.zone_grants import effective_card
 from ...machines.keywords import (
     apply_as_enters_day_night,
     apply_daybound_nightbound,
@@ -2094,7 +2095,7 @@ class ZonesMixin:
         candidates = [
             card
             for card in player.cards_in(Zone.GRAVEYARD)
-            if dredge_count(card.card) is not None
+            if dredge_count(effective_card(self, card)) is not None
             and why_cannot_dredge(self, card, player.username) is None
         ]
         if not candidates:

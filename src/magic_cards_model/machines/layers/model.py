@@ -3787,12 +3787,12 @@ _NUMBERED_KEYWORD_ITEM_RE = re.compile(
 )
 #: The keywords `_NUMBERED_KEYWORD_ITEM_RE` may grant: the ones written with
 #: an N that some machine reads the N of.
-_KNOWN_NUMBERED_KEYWORDS = frozenset({Keyword.TOXIC.value})
+_KNOWN_NUMBERED_KEYWORDS = frozenset({Keyword.TOXIC.value, "absorb", "frenzy", "bushido"})
 #: A keyword written with its cost - CR 702.21a's "Ward [cost]" ("with ward
 #: {3}", Hall of Storm Giants). Granted as "Ward {3}", the same line a printed
 #: instance is, so `machines/keywords.py`'s ward expansion reads its cost.
 _COSTED_KEYWORD_ITEM_RE = re.compile(
-    r"^(?P<keyword>ward) (?P<cost>(?:\{[^}]+\})+)(?:,\s*|,?\s+and\s+|$)", re.IGNORECASE
+    r"^(?P<keyword>ward|outlast) (?P<cost>(?:\{[^}]+\})+)(?:,\s*|,?\s+and\s+|$)", re.IGNORECASE
 )
 
 #: "can't be blocked[ by `<quality>`]" (CR 509.1b) as one item of an "and"/

@@ -107,6 +107,7 @@ from .objects_as_costs import (
     total_power,
 )
 from .soulbond import soulbond_effect
+from .zone_grants import effective_card
 from .triggers import (
     AbilityOnStack,
     ExtraTriggerEvent,
@@ -1110,6 +1111,52 @@ def _flanking_ability(ability: KeywordAbility) -> TriggeredAbility:
     )
 
 
+def _exalted_ability(ability: KeywordAbility) -> TriggeredAbility:
+    """CR 702.83a: "Exalted" means "Whenever a creature you control attacks
+    alone, that creature gets +1/+1 until end of turn." CR 702.83b: each
+    instance of exalted on a permanent triggers separately, which is
+    `keyword_triggered_abilities`' one ability per instance (a granted one
+    included, so two Slivers granted exalted are two instances)."""
+    return _expansion(
+        ability,
+        keyword="exalted",
+        word=TriggerWord.WHENEVER,
+        condition="a creature you control attacks alone",
+        effect="that creature gets +1/+1 until end of turn",
+        event=TriggerEvent.ATTACKS,
+    )
+
+
+def _frenzy_ability(ability: KeywordAbility) -> TriggeredAbility:
+    """CR 702.68a: "Frenzy N" means "Whenever this creature attacks and isn't
+    blocked, it gets +N/+0 until end of turn." CR 702.68b: multiple instances
+    each trigger."""
+    count = ability.count if ability.count is not None else 1
+    return _expansion(
+        ability,
+        keyword="frenzy",
+        word=TriggerWord.WHENEVER,
+        condition="this creature attacks and isn't blocked",
+        effect=f"it gets +{count}/+0 until end of turn",
+        event=TriggerEvent.ATTACKS_UNBLOCKED,
+    )
+
+
+def _bushido_ability(ability: KeywordAbility) -> TriggeredAbility:
+    """CR 702.45a: "Bushido N" means "Whenever this creature blocks or becomes
+    blocked, it gets +N/+N until end of turn." CR 702.45b: multiple instances
+    each trigger."""
+    count = ability.count if ability.count is not None else 1
+    return _expansion(
+        ability,
+        keyword="bushido",
+        word=TriggerWord.WHENEVER,
+        condition="this creature blocks or becomes blocked",
+        effect=f"it gets +{count}/+{count} until end of turn",
+        event=TriggerEvent.BLOCKS,
+    )
+
+
 def _decayed_ability(ability: KeywordAbility) -> TriggeredAbility:
     """CR 702.147a: "Decayed represents a static ability and a triggered
     ability. 'Decayed' means 'This creature can't block' and 'When this
@@ -1735,6 +1782,9 @@ _TRIGGER_EXPANSIONS: dict[str, Callable[[KeywordAbility], list[TriggeredAbility]
     "extort": _single(_extort_ability),
     "increment": _single(_increment_ability),
     "flanking": _single(_flanking_ability),
+    "exalted": _single(_exalted_ability),
+    "frenzy": _single(_frenzy_ability),
+    "bushido": _single(_bushido_ability),
     "ingest": _single(_ingest_ability),
     "decayed": _single(_decayed_ability),
 }
@@ -2416,7 +2466,7 @@ def cycling_activation(
     continues to exist while the object is on the battlefield and in all other
     zones."
     """
-    printed = cycling_abilities(card.card)
+    printed = cycling_abilities(effective_card(game, card))
     if index >= len(printed):
         raise ValueError(
             f"{card.name} has no cycling ability number {index} ({KeywordRule.CYCLING})"
@@ -2617,7 +2667,7 @@ def unearth_activation(
     effect, not the activation (`_parse_delayed_reanimate_haste_exile_
     clauses`, `machines/casting.exile_warped`).
     """
-    printed = unearth_abilities(card.card)
+    printed = unearth_abilities(effective_card(game, card))
     if index >= len(printed):
         raise ValueError(
             f"{card.name} has no unearth ability number {index} ({KeywordRule.UNEARTH})"
@@ -3948,7 +3998,8 @@ def ninjutsu_activation(
     not model, so the ordinary hand-only activation is what a real game
     reaches either way.
     """
-    ability = _keyword(card.card, "ninjutsu") or _keyword(card.card, "commander ninjutsu")
+    granted = effective_card(game, card)
+    ability = _keyword(granted, "ninjutsu") or _keyword(granted, "commander ninjutsu")
     if ability is None:
         raise ValueError(f"{card.name} has no ninjutsu ability ({KeywordRule.NINJUTSU})")
     if card.zone is not Zone.HAND:
@@ -4737,7 +4788,7 @@ def off_zone_activation(
     anything: a card with one off-zone ability has no number 1, and a card
     with none has no number 0.
     """
-    pool = off_zone_abilities(card.card)
+    pool = off_zone_abilities(effective_card(game, card))
     if index < 0 or index >= len(pool):
         raise ValueError(
             f"{card.name} has no activated ability functioning off the battlefield, "
@@ -5480,7 +5531,7 @@ def why_cannot_dredge(game: Any, card: CardState, player: str) -> str | None:
     CR 702.52b: "A player with fewer cards in their library than the number
     required by a dredge ability can't mill any of them this way."
     """
-    count = dredge_count(card.card)
+    count = dredge_count(effective_card(game, card))
     if count is None:
         return f"{card.name} has no dredge ability ({KeywordRule.DREDGE})"
     if card.zone is not Zone.GRAVEYARD:
@@ -5510,7 +5561,7 @@ def dredge(game: Any, card: CardState, player: str) -> list[CardState]:
         refusal = why_cannot_dredge(game, card, player)
         if refusal is not None:
             raise ValueError(refusal)
-        count = dredge_count(card.card)
+        count = dredge_count(effective_card(game, card))
         assert count is not None
 
         owner = game.player(player)

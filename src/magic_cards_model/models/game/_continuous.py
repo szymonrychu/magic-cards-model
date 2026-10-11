@@ -7,6 +7,7 @@ from uuid import NAMESPACE_OID, UUID, uuid5
 
 from ...data.subtypes import canonical_subtype
 from ...ids import install_id_allocator, reset_id_allocator
+from ...machines.zone_grants import apply_zone_characteristics
 from ...machines.abilities import (
     AbilityKind,
     ActivatedAbility,
@@ -1051,7 +1052,10 @@ class ContinuousMixin:
             # CR 113.6c: plus an "as long as this isn't on the battlefield"
             # grant, which applies exactly here (Grist, the Hunger Tide).
             return self._with_defined_power_toughness(
-                permanent, off_battlefield_characteristics_of(permanent)
+                permanent,
+                apply_zone_characteristics(
+                    self, permanent, off_battlefield_characteristics_of(permanent)
+                ),
             )
         board = self.computed_board()
         return self._supplement_characteristics(permanent, board.of(permanent), board)
