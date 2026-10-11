@@ -108,9 +108,7 @@ _IS_A_CREATURE_GATE_RE = re.compile(
     r"it (?P<rest>.+)$",
     re.IGNORECASE,
 )
-_PREDICATE_PREFIX = (
-    r"(?:(?:gets [+-]\d+/[+-]\d+|has [a-z]+(?: and [a-z]+)*?) and )?"
-)
+_PREDICATE_PREFIX = r"(?:(?:gets [+-]\d+/[+-]\d+|has [a-z]+(?: and [a-z]+)*?) and )?"
 _EVASION_RE = re.compile(
     r"^(?P<during>during your turn, )?(?P<subject>enchanted|equipped) "
     r"(?:creature|permanent|artifact|land) "
@@ -181,8 +179,8 @@ def attached_crew_refusal(game: "Game", creature: "CardState") -> str | None:
     for source, restriction in _attached_restrictions(game, creature):
         if restriction.crew:
             return (
-                f'{creature.name} can\'t crew Vehicles: {source.name} says "{restriction.sentence}" '
-                "(CR 702.122d)"
+                f"{creature.name} can't crew Vehicles: {source.name} says "
+                f'"{restriction.sentence}" (CR 702.122d)'
             )
     return None
 
@@ -246,11 +244,22 @@ def parse_attached_compound_grant(sentence: str):  # noqa: ANN201
     subject, rest, gated = match["subject"], match["rest"], match["during"] is not None
     for found in re.finditer(r" and ", rest):
         left, right = rest[: found.start()], rest[found.end() :]
-        halves = [_compound_half(subject, left, gated=gated), _compound_half(subject, right, gated=gated)]
+        halves = [
+            _compound_half(subject, left, gated=gated),
+            _compound_half(subject, right, gated=gated),
+        ]
         if any(half is None for half in halves):
             continue
 
-        def builder(source, timestamp, targets, context, halves=halves, gated=gated, creature_gate=creature_gate):  # noqa: ANN001, ANN202
+        def builder(
+            source,
+            timestamp,
+            targets,
+            context,
+            halves=halves,
+            gated=gated,
+            creature_gate=creature_gate,
+        ):  # noqa: ANN001, ANN202
             if gated and context.active_player != source.controller:
                 return []
             from .layers.parse import _source_line_for
@@ -265,7 +274,9 @@ def parse_attached_compound_grant(sentence: str):  # noqa: ANN201
                 from .layers.model import Only, OnlyIfCreature
 
                 built = [
-                    effect.model_copy(update={"selector": OnlyIfCreature(card_id=effect.selector.card_id)})
+                    effect.model_copy(
+                        update={"selector": OnlyIfCreature(card_id=effect.selector.card_id)}
+                    )
                     if isinstance(effect.selector, Only)
                     else effect
                     for effect in built

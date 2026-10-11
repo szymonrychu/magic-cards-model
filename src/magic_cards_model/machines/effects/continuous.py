@@ -10490,6 +10490,68 @@ def _parse_counted_targets_cant_be_blocked_whole_text(
     return _counted_targets_cant_be_blocked(whole)
 
 
+#: "`<target phrase>` can't be blocked this turn except by `<description>`."
+#: (Departed Deckhand: "except by Spirits"): CR 509.1b's evasion restriction
+#: with a creature description for the exception, granted as the self
+#: sentence `combat_statics.block_evasion_refusal` reads. A keyword exception
+#: ("except by creatures with haste") is `dispatch._TARGET_CANT_BE_BLOCKED_RE`'s.
+_TARGET_CANT_BE_BLOCKED_EXCEPT_BY_RE = re.compile(
+    r"^(?P<phrase>(?:another )?target .+?) can'?t be blocked this turn except by "
+    r"(?P<desc>(?!creatures with ).+?)\.?$",
+    re.IGNORECASE,
+)
+
+
+def _target_cant_be_blocked_except_by(text: str) -> TargetedClause | None:
+    """`_TARGET_CANT_BE_BLOCKED_EXCEPT_BY_RE`'s shape, or `None`."""
+    match = _TARGET_CANT_BE_BLOCKED_EXCEPT_BY_RE.fullmatch(" ".join(text.strip().split()))
+    if match is None:
+        return None
+    from ..combat_statics import parse_blocker_description
+
+    description = match.group("desc").strip()
+    if parse_blocker_description(description) is None:
+        return None
+    if not _targets_understood(match.group("phrase"), count_agnostic=True):
+        return None
+    granted = f"This creature can't be blocked except by {description}."
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        effects = game.continuous_effects
+        for target in game.resolve_targets(stack_object):
+            if not isinstance(target, CardState) or target.zone is not Zone.BATTLEFIELD:
+                continue
+            effects.add(
+                ContinuousEffect(
+                    description=f"{target.name} can't be blocked except by {description} this turn",
+                    layer=Layer.ABILITY,
+                    timestamp=effects.tick(),
+                    duration=Duration.UNTIL_END_OF_TURN,
+                    selector=only_this_incarnation(target, target.zone_change_stamp),
+                    modification=grant_ability(granted),
+                )
+            )
+
+    return effect
+
+
+@MIXED_CLAUSE.rung("s11", for_spell=FORWARD)
+def _parse_target_cant_be_blocked_except_by_clause(
+    clause: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`_target_cant_be_blocked_except_by` as one clause."""
+    return _target_cant_be_blocked_except_by(clause)
+
+
+@ABILITY_TEXT.rung("s41", for_spell=False)
+@SPELL_TEXT.rung("s25", for_spell=True)
+def _parse_target_cant_be_blocked_except_by_text(
+    text: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`_target_cant_be_blocked_except_by` over a whole ability or spell text."""
+    return _target_cant_be_blocked_except_by(_strip_non_effect_preamble(text).strip())
+
+
 #: "`<target phrase>` gains `<keywords>` until end of turn and can't be
 #: blocked this turn[. `<rest>`]" - Pym Particles' "Target creature gains
 #: vigilance until end of turn and can't be blocked this turn. Draw a card.",

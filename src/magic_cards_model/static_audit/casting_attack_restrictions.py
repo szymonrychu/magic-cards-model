@@ -5,8 +5,8 @@ when the production reader of its family performs it - `static_cast_bans`
 "cast this spell only if" gate, or `casting_restrictions`' cast windows."""
 
 from ..machines.attached_restrictions import reads_attached_restriction_line
-from ..machines.combat import reads_block_requirement_line
 from ..machines.casting_restrictions import reads_player_rule_static_line
+from ..machines.combat import reads_block_requirement_line
 from ..machines.static_cast_bans import reads_self_cast_restriction_line, reads_static_ban_line
 from ..models.card import Supertype
 

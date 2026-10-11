@@ -1357,10 +1357,13 @@ def _self_reference_alternatives(state: CardState) -> tuple[str, ...]:
 
 def _self_reference_names(name: str) -> tuple[str, ...]:
     """`_self_reference_alternatives` for a bare name."""
-    words = name.split()
-    candidates = {"this creature", "this token", name, name.split(",")[0].strip()}
-    if len(words) > 1 and "," not in name:
-        candidates.add(words[0])
+    candidates = {"this creature", "this token", "this land", "this vehicle", "this artifact"}
+    # "Norman Osborn // Green Goblin": each face names itself (CR 201.5c).
+    for face in name.split(" // "):
+        words = face.split()
+        candidates.update({face, face.split(",")[0].strip()})
+        if len(words) > 1 and "," not in face:
+            candidates.add(words[0])
     return tuple(
         sorted((candidate for candidate in candidates if candidate), key=len, reverse=True)
     )
@@ -3507,7 +3510,9 @@ def _own_attack_requirements(game: "Game", creature: CardState) -> list[bool]:
     for line in characteristics.abilities:
         match = _attack_requirement_match(line, creature.name)
         if match is not None:
-            requirements.append("player" in match.re.groupindex and match.group("player") is not None)
+            requirements.append(
+                "player" in match.re.groupindex and match.group("player") is not None
+            )
     from .combat_statics import extra_attack_requirements
 
     requirements.extend(extra_attack_requirements(game, creature))
