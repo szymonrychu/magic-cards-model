@@ -17,6 +17,7 @@ from ...data.subtypes import subtype_vocabulary
 from ...ids import new_id
 from ...models.card import Color, Supertype, Type, has_changeling, with_every_creature_type
 from ...models.card_state import (
+    DEVOTION_BONUS_TEXT,
     CANT_BECOME_UNTAPPED_TEXT,
     CANT_HAVE_COUNTERS_TEXT,
     CANT_HAVE_KIND_COUNTERS_TEXT,
@@ -756,6 +757,13 @@ def devotion_to(
         for symbol in printed.symbols:
             if wanted & set(symbol.colors):
                 devotion += 1
+    # CR 604.2: "Your devotion to each color and each combination of colors is
+    # increased by one" (Altar of the Pantheon) - one per such permanent.
+    devotion += sum(
+        1
+        for chars in board.values()
+        if chars.controller == controller and chars.has_ability(DEVOTION_BONUS_TEXT)
+    )
     return devotion
 
 

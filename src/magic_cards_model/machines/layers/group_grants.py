@@ -25,6 +25,7 @@ from typing import TYPE_CHECKING, Any
 from ...data.subtypes import subtype_vocabulary
 from ...models.card import Color, Supertype, Type
 from ...models.card_state import (
+    DEVOTION_BONUS_TEXT,
     CANT_HAVE_KIND_COUNTERS_TEXT,
     LETHAL_BY_POWER_TEXT,
     MAY_STAY_TAPPED_TEXT,
@@ -300,6 +301,9 @@ _MAY_STAY_TAPPED_RE = re.compile(
     r"^you may choose not to untap (?P<subject>this (?:creature|permanent|artifact|enchantment|land))"
     r" during your untap step$"
 )
+_DEVOTION_INCREASE_RE = re.compile(
+    r"^your devotion to each color and each combination of colors is increased by one$"
+)
 _SAME_IS_TRUE_RE = re.compile(r"^the same is true for (?P<subjects>.+)$")
 _OFF_ZONE_WORD_RE = re.compile(r"\b(?:cards?|spells?)\b")
 _ARE_LEGENDARY_RE = re.compile(r"^(?P<subject>.+?) (?:are|is) legendary$")
@@ -393,6 +397,13 @@ def parse_group_static_sentence(sentence: str):
             match["subject"],
             "untap during each other player's untap step",
             lambda: [(Layer.ABILITY, None, grant_ability(UNTAPS_IN_OTHER_UNTAP_TEXT))],
+        )
+    if _DEVOTION_INCREASE_RE.fullmatch(lowered):
+        return _builder(
+            sentence,
+            "this permanent",
+            "increases its controller's devotion",
+            lambda: [(Layer.ABILITY, None, grant_ability(DEVOTION_BONUS_TEXT))],
         )
     if match := _MAY_STAY_TAPPED_RE.fullmatch(lowered):
         return _builder(

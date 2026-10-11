@@ -70,6 +70,10 @@ UNTAPS_IN_OTHER_UNTAP_TEXT = "Untaps during each other player's untap step."
 #: <permanent> during your untap step." grants itself; `Game.untap_step` asks
 #: its controller whether to leave it tapped.
 MAY_STAY_TAPPED_TEXT = "You may choose not to untap this permanent during your untap step."
+#: CR 700.5, CR 604.2: "Your devotion to each color and each combination of
+#: colors is increased by one." grants itself this marker; every devotion count
+#: adds one per such permanent its controller controls.
+DEVOTION_BONUS_TEXT = "Your devotion to each color and each combination of colors is increased by one."
 LETHAL_BY_POWER_TEXT = "Lethal damage is determined by power rather than toughness."
 
 

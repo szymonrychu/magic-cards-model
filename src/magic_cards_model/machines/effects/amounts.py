@@ -6,6 +6,7 @@ from uuid import UUID
 from ...data.subtypes import canonical_subtype
 from ...models.card import Color, Layout, Supertype, Type
 from ...models.card_state import (
+    DEVOTION_BONUS_TEXT,
     PERMANENT_TYPES,
     CardState,
     Counter,
@@ -2078,6 +2079,14 @@ def devotion_to(game: "Game", controller: str, color: Color) -> int:
         for symbol in ManaCost.parse(cost).symbols:
             if color in symbol.colors:
                 total += 1
+    # CR 604.2: "Your devotion to each color and each combination of colors is
+    # increased by one" (Altar of the Pantheon) - one per such permanent.
+    board = game.computed_board()
+    total += sum(
+        1
+        for permanent in game.permanents_controlled_by(controller)
+        if board.of(permanent).has_ability(DEVOTION_BONUS_TEXT)
+    )
     return total
 
 
