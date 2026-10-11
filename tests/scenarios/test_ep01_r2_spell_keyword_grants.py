@@ -206,6 +206,31 @@ def test_the_affinity_grant_ends_with_the_golem():
     assert str(construct.total_cost.mana) == "{3}", "no affinity without the Golem"
 
 
+def test_pearl_ear_gives_enchantment_spells_affinity_for_auras():
+    """Sphere of Safety ({4}{W}) with two Auras out costs {2}{W}; a creature spell is
+    untouched; and the discount counts only Auras its caster controls."""
+    scenario = board(
+        ["Pearl-Ear, Imperial Advisor", "Rancor", "Rancor"],
+        bob=["Rancor"],
+        hand=["Sphere of Safety", "Grizzly Bears"],
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    ring = scenario.cast("Sphere of Safety")
+    discounted = str(ring.total_cost.mana)
+    ring.cancel()
+    bears = scenario.cast("Grizzly Bears")
+
+    assert discounted == "{W}{W}", "{1}{W}{W} loses its generic, one reduction spare"
+    assert str(bears.total_cost.mana) == "{1}{G}"
+
+
+def test_without_pearl_ear_an_enchantment_spell_pays_in_full():
+    scenario = board(["Rancor", "Rancor"], hand=["Sphere of Safety"])
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    assert str(scenario.cast("Sphere of Safety").total_cost.mana) == "{4}{W}"
+
+
 # -- rebound (CR 702.88a) -----------------------------------------------------
 
 
