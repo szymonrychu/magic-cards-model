@@ -550,3 +550,106 @@ def test_the_listed_static_line_is_handled(name, prefix):
         name,
         [(c.text, c.category) for c in clauses],
     )
+
+
+# --------------------------------------------------------------------------
+# One-shot group pumps whose group is a qualified class (CR 611.2c)
+# --------------------------------------------------------------------------
+
+
+def through_cleanup(scenario) -> None:
+    """CR 514.2: "until end of turn" effects end in the cleanup step."""
+    scenario.start_at(Step.END_STEP)
+    scenario.advance()  # cleanup
+
+
+def test_goreclaw_pumps_each_big_creature_you_control_when_it_attacks():
+    """ "Each creature you control with power 4 or greater gets +1/+1 and gains
+    trample until end of turn": the group is fixed as the ability resolves
+    (CR 611.2c), is judged by power (CR 613.5: Goreclaw himself is a 4/3), and
+    leaves a small creature and the opponent's big one alone."""
+    scenario = board(
+        ["Goreclaw, Terror of Qal Sisma", "Serra Angel", "Grizzly Bears"],
+        ["Serra Angel"],
+        step=Step.DECLARE_ATTACKERS,
+    )
+    goreclaw = find_all(scenario, "Goreclaw, Terror of Qal Sisma", "alice")[0]
+    angel = find_all(scenario, "Serra Angel", "alice")[0]
+    bears = find_all(scenario, "Grizzly Bears", "alice")[0]
+    theirs = find_all(scenario, "Serra Angel", "bob")[0]
+    scenario.attack_with(goreclaw, defending="bob")
+    scenario.game.put_triggers_on_stack()
+    scenario.pass_until_resolved()
+
+    assert chars(scenario, goreclaw).power_toughness == (5, 4)
+    assert chars(scenario, goreclaw).has_ability("Trample")
+    assert chars(scenario, angel).power_toughness == (5, 5)
+    assert chars(scenario, angel).has_ability("Trample")
+    assert chars(scenario, bears).power_toughness == (2, 2), "power 2 is under 4"
+    assert not chars(scenario, bears).has_ability("Trample")
+    assert chars(scenario, theirs).power_toughness == (4, 4), "not a creature you control"
+
+    through_cleanup(scenario)
+    assert chars(scenario, goreclaw).power_toughness == (4, 3)
+    assert not chars(scenario, goreclaw).has_ability("Trample")
+    assert chars(scenario, angel).power_toughness == (4, 4)
+
+
+def test_goreclaw_pump_does_not_reach_a_creature_that_arrives_afterwards():
+    scenario = board(
+        ["Goreclaw, Terror of Qal Sisma"],
+        [],
+        step=Step.DECLARE_ATTACKERS,
+        hand=["Serra Angel"],
+    )
+    goreclaw = find_all(scenario, "Goreclaw, Terror of Qal Sisma", "alice")[0]
+    scenario.attack_with(goreclaw, defending="bob")
+    scenario.game.put_triggers_on_stack()
+    scenario.pass_until_resolved()
+    late = scenario.put_onto_battlefield("Serra Angel", username="alice")
+    assert late.zone is Zone.BATTLEFIELD
+    assert chars(scenario, late).power_toughness == (4, 4)
+
+
+def test_valley_floodcaller_pumps_and_untaps_its_tribes_on_a_noncreature_spell():
+    """ "Birds, Frogs, Otters, and Rats you control get +1/+1 until end of turn.
+    Untap them." - a subtype list, your side only, a creature spell does
+    nothing."""
+    scenario = board(
+        ["Valley Floodcaller", "Birds of Paradise", "Typhoid Rats", "Grizzly Bears", "Island"],
+        ["Birds of Paradise"],
+        hand=["Opt"],
+        library=["Island"] * 5,
+    )
+    birds = find_all(scenario, "Birds of Paradise", "alice")[0]
+    rats = find_all(scenario, "Typhoid Rats", "alice")[0]
+    bears = find_all(scenario, "Grizzly Bears", "alice")[0]
+    theirs = find_all(scenario, "Birds of Paradise", "bob")[0]
+    birds.tap()
+    rats.tap()
+    scenario.cast_and_resolve("Opt", *scenario.untapped_sources("Island", username="alice"))
+    scenario.game.put_triggers_on_stack()
+    scenario.pass_until_resolved()
+
+    assert chars(scenario, birds).power_toughness == (1, 2)
+    assert chars(scenario, rats).power_toughness == (2, 2)
+    assert not birds.tapped and not rats.tapped, "untapped"
+    assert chars(scenario, bears).power_toughness == (2, 2)
+    assert chars(scenario, theirs).power_toughness == (0, 1)
+
+    through_cleanup(scenario)
+    assert chars(scenario, birds).power_toughness == (0, 1)
+    assert chars(scenario, rats).power_toughness == (1, 1)
+
+
+def test_valley_floodcaller_ignores_a_creature_spell():
+    scenario = board(
+        ["Valley Floodcaller", "Birds of Paradise", "Swamp"], [], hand=["Typhoid Rats"]
+    )
+    birds = find_all(scenario, "Birds of Paradise", "alice")[0]
+    birds.tap()
+    scenario.cast_and_resolve("Typhoid Rats", *scenario.untapped_sources("Swamp", username="alice"))
+    scenario.game.put_triggers_on_stack()
+    scenario.pass_until_resolved()
+    assert chars(scenario, birds).power_toughness == (0, 1)
+    assert birds.tapped

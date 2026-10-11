@@ -322,6 +322,37 @@ _KEEP_MANA_UNTIL_END_OF_TURN_RE = re.compile(
 )
 
 
+#: "Add {R}. Until end of turn, you don't lose this mana as steps and phases
+#: end." (Birgi, God of Storytelling's cast trigger) - a fixed amount of
+#: coloured mana, retained exactly as Photon's `that much` is: CR 500.5b's
+#: replacement of the emptying of the pool, ending in the cleanup step
+#: (CR 514.2). The trigger is not a mana ability (CR 605.1b: it does not
+#: trigger from a mana ability), so it uses the stack.
+_ADD_FIXED_MANA_RETAINED_RE = re.compile(
+    r"^add (?P<mana>(?:\{[wubrgc]\}\s*)+)\.\s*"
+    r"until end of turn, you don'?t lose this mana as steps and phases end\.?$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s22")
+def _parse_add_fixed_mana_retained(text: str) -> AbilityEffect | None:
+    """`_ADD_FIXED_MANA_RETAINED_RE`'s shape."""
+    match = _ADD_FIXED_MANA_RETAINED_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    colors = [Color(symbol.upper()) for symbol in _MANA_SYMBOL_RE.findall(match.group("mana"))]
+    if not colors:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        pool = game.player(ability.controller).mana_pool
+        for color in colors:
+            pool.add(color, retain_until=ManaRetentionScope.END_OF_TURN)
+
+    return effect
+
+
 @ABILITY_TEXT.rung("s22")
 def _parse_add_one_mana_of_any_color_trigger(text: str) -> AbilityEffect | None:
     """`_ADD_ONE_MANA_OF_ANY_COLOR_TRIGGER_RE`'s shape - Crumbling Vestige's

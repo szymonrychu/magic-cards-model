@@ -952,6 +952,25 @@ def marker_cast_options(spell: CardState) -> list[KeywordCastOption]:
     have it cease to exist before anybody could ask.
     """
     annotation = spell.exile_annotation
+    if (
+        annotation is not None
+        and annotation.marker is ExileMarker.PLOTTED
+        and not any(a.canonical == "plot" for a in keyword_abilities(spell.card))
+    ):
+        # CR 702.170c/d: a card that *became* plotted (Jace Reawakened, Lilah)
+        # is cast the same way a plot card is, though it prints no plot line.
+        return [
+            KeywordCastOption(
+                keyword="Plot",
+                rule="CR 702.170d",
+                zone=Zone.EXILE,
+                cost=None,
+                pays_mana_cost=False,
+                timing=CastTiming.SORCERY,
+                marker=ExileMarker.PLOTTED,
+                later_turn=True,
+            )
+        ]
     if annotation is None or annotation.marker is not ExileMarker.AIRBENT:
         return []
     return [

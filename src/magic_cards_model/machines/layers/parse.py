@@ -11018,9 +11018,8 @@ def _parse_layer_sentence_ungated(sentence: str) -> EffectBuilder | None:
         return _keyword_grant_builder(keywords)
     if " lose" in sentence.lower() and (match := _KEYWORD_LOSS_RE.fullmatch(sentence)):
         keywords = _split_and_validate_keywords(match.group("keywords"))
-        if keywords is None:
-            return None
-        return _keyword_loss_builder(keywords)
+        if keywords is not None:
+            return _keyword_loss_builder(keywords)
     if match := _ANTHEM_PER_COUNT_RE.fullmatch(sentence):
         count = _controlled_count_factory(match.group("each"))
         keywords = (
@@ -11317,10 +11316,11 @@ def _parse_layer_sentence_ungated(sentence: str) -> EffectBuilder | None:
             if match.group("keywords") is not None
             else []
         )
-        if subtypes is None or keywords is None:
-            return None
-        duration = Duration.UNTIL_END_OF_TURN if match.group("until_eot") else Duration.INDEFINITE
-        return _becomes_subtype_in_addition_builder(subtypes, keywords, duration)
+        if subtypes is not None and keywords is not None:
+            duration = (
+                Duration.UNTIL_END_OF_TURN if match.group("until_eot") else Duration.INDEFINITE
+            )
+            return _becomes_subtype_in_addition_builder(subtypes, keywords, duration)
     if match := _SELF_BECOMES_TYPE_UNTIL_NEXT_TURN_RE.fullmatch(sentence):
         extra_type = _card_type_word(match.group("extra_type"))
         if extra_type is None:

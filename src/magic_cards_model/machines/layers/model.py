@@ -2671,6 +2671,19 @@ class SetName(ModificationBase):
         return chars.with_(name=self.name)
 
 
+class AddColors(ModificationBase):
+    """Layer 5 (CR 613.1e): gain colours on top of the ones already there -
+    Unctus's "becomes a blue artifact in addition to its other colors and
+    types" (CR 105.3: an effect can make an object more than one colour)."""
+
+    kind: Literal["add_colors"] = "add_colors"
+    colors: tuple[Color, ...] = ()
+
+    def __call__(self, chars: Characteristics, board: Board) -> Characteristics:
+        added = tuple(color for color in self.colors if color not in chars.colors)
+        return chars.with_(colors=chars.colors + added) if added else chars
+
+
 Modification = Annotated[
     LoseAllAbilities
     | LoseKeyword
@@ -2703,6 +2716,7 @@ Modification = Annotated[
     | SetCreatureTypes
     | AddTypesAndSubtype
     | SetName
+    | AddColors
     | GrantHexproofFromItsColors,
     Field(discriminator="kind"),
 ]

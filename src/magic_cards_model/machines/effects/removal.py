@@ -41,6 +41,7 @@ from ..abilities import (
 )
 from ..casting import (
     PlayAction,
+    annotate_exile,
 )
 from ..chosen_type import (
     shares_creature_type,
@@ -2335,6 +2336,59 @@ def _parse_sacrifice_unless_pay_mana(text: str) -> AbilityEffect | None:
         )
         if not paid:
             game.sacrifice(source)
+
+    return effect
+
+
+#: "You may exile a nonland card with mana value `<n>` or less from your hand.
+#: If you do, it becomes plotted." (Jace Reawakened's second +1). CR 702.170c:
+#: a plotted card is an exiled card its owner may later cast for free
+#: (CR 702.170d) - the exile pile marker (CR 406.4) is the fact, so the card
+#: need not print plot itself. "If you do" runs only when a card was exiled
+#: (CR 608.2c).
+_MAY_EXILE_FROM_HAND_BECOMES_PLOTTED_RE = re.compile(
+    r"^you may exile an? nonland card with mana value (?P<limit>\d+) or less from your hand\.\s*"
+    r"if you do, it becomes plotted\.?$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s25")
+def _parse_may_exile_from_hand_becomes_plotted(text: str) -> AbilityEffect | None:
+    """`_MAY_EXILE_FROM_HAND_BECOMES_PLOTTED_RE`'s shape (CR 702.170c)."""
+    match = _MAY_EXILE_FROM_HAND_BECOMES_PLOTTED_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    limit = int(match.group("limit"))
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        player = game.player(ability.controller)
+        candidates = [
+            card for card in player.hand if not card.card.is_land and card.mana_value <= limit
+        ]
+        if not candidates:
+            return
+        chosen = game.ask(
+            Decision(
+                kind=DecisionKind.CHOOSE_CARDS,
+                player=player.username,
+                prompt=f"you may exile a nonland card with mana value {limit} or less to plot it",
+                source=ability.source_name,
+                source_id=source_id_of(ability),
+                amount=1,
+                exact=False,
+                cards=tuple(card.id for card in candidates),
+                card_labels=tuple(card.name for card in candidates),
+                default_cards=(),
+            )
+        )
+        by_id = {card.id: card for card in candidates}
+        picked = next((by_id[i] for i in chosen if i in by_id), None) if chosen else None
+        if picked is None:
+            return
+        game.exile_permanent(picked)
+        if picked.zone is Zone.EXILE:
+            annotate_exile(picked, ExileMarker.PLOTTED, picked.owner, game)
 
     return effect
 

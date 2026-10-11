@@ -50,10 +50,11 @@ from ...data.subtypes import canonical_subtype
 from ...models.card import Color, Supertype, Type
 from ...models.card_state import CardState, ChoiceKind
 from ...numbers import parse_count
-from ._common import _COLOR_WORDS
+from ._common import _COLOR_WORDS, BASIC_LAND_TYPES
 from .apply import EffectBuilder, LayerContext
 from .model import (
     _PERMANENT_CARD_TYPES,
+    AddColors,
     AddSubtype,
     AddSupertype,
     AddType,
@@ -63,10 +64,12 @@ from .model import (
     CountAttachedWithAnySubtype,
     CountByControllerOfObject,
     CountObjectManaValue,
+    Duration,
     FixedCount,
     Layer,
     LoseAllLandTypes,
     Modification,
+    SetBasicLandType,
     SetColors,
     SetCreatureTypes,
     SetName,
@@ -81,6 +84,7 @@ from .model import (
     lose_keyword,
     modify_power_toughness,
     modify_power_toughness_per,
+    only_this_incarnation,
     set_power_toughness,
 )
 
@@ -419,6 +423,9 @@ class _Change:
     base_power: int | None = None
     cant_be_enchanted: bool = False
     copy_of_chosen: bool = False
+    basic_land_type: str | None = None
+    land_type_additive: bool = False
+    add_colors: tuple[Color, ...] = ()
 
     def anything(self) -> bool:
         return any(
@@ -439,6 +446,8 @@ class _Change:
                 self.base_power is not None,
                 self.cant_be_enchanted,
                 self.copy_of_chosen,
+                self.basic_land_type,
+                self.add_colors,
             )
         )
 
@@ -472,6 +481,14 @@ def _read_is_clause(clause: str, quotes: list[str], change: _Change) -> bool:
         if replaced != body:
             body, in_addition = replaced, True
             break
+    additive_colors = False
+    addition = re.search(
+        r" in addition to (?:its|his|her|their) other (?:colors and types|types|colors)$",
+        body,
+        flags=re.IGNORECASE,
+    )
+    if addition:
+        body, in_addition, additive_colors = body[: addition.start()], True, True
     named = re.search(r" named (?P<name>[A-Z][^\x00]*?)$", body)
     if named:
         change.name = named["name"].strip()
@@ -517,7 +534,11 @@ def _read_is_clause(clause: str, quotes: list[str], change: _Change) -> bool:
         if word.lower() != "and":
             color_words.append(word)
     if color_words:
-        change.colors = _colors_of(color_words)
+        colors = _colors_of(color_words)
+        if additive_colors:
+            change.add_colors = colors or ()
+        else:
+            change.colors = colors
     card_types: list[Type] = []
     subtypes: list[str] = []
     for token in tokens:
@@ -525,7 +546,11 @@ def _read_is_clause(clause: str, quotes: list[str], change: _Change) -> bool:
         if lowered_token in _CARD_TYPE_WORDS:
             card_types.append(_CARD_TYPE_WORDS[lowered_token])
         elif (subtype := canonical_subtype(token)) is not None:
-            subtypes.append(subtype)
+            if subtype.capitalize() in BASIC_LAND_TYPES:
+                change.basic_land_type = subtype.capitalize()
+                change.land_type_additive = in_addition
+            else:
+                subtypes.append(subtype)
         else:
             return False
     types = tuple(card_types)
@@ -622,88 +647,137 @@ def _read_change(sentence: str) -> tuple[_Change, str, list[str]] | None:
     return change, f"{subject['attachment'].lower()} {subject['noun'].lower()}", list(change.quoted)
 
 
-def _change_builder(change: _Change, *, subject: str, line: str) -> EffectBuilder:
+def _change_builder(
+    change: _Change, *, subject: str, line: str, duration: Duration | None = None
+) -> EffectBuilder:
+    """`change` as layered continuous effects.
+
+    With `duration=None` this is an Aura's or Equipment's static ability over
+    what it is attached to (CR 303.4b, CR 301.5a). With a `duration` it is a
+    resolving spell's or ability's one-shot effect (CR 611.2) over exactly the
+    objects it was handed, fixed as it begins (CR 611.2c): one effect per
+    target, tied to that incarnation of it (CR 400.7).
+    """
+
     def builder(source, timestamp, targets, context):
-        attached = source.attached_to
-        if attached is None:
-            return []
-        selector = _only(attached)
-        ability = _source_line(source, line)
+        if duration is None:
+            attached = source.attached_to
+            if attached is None:
+                return []
+            chosen: list[tuple[str, object]] = [(subject, _only(attached))]
+            ability = _source_line(source, line)
+        else:
+            chosen = [
+                (target.name, only_this_incarnation(target, target.zone_change_stamp))
+                for target in targets
+            ]
+            ability = None
         effects: list[ContinuousEffect] = []
+        for label, selector in chosen:
 
-        def add(layer: Layer, modification: Modification, what: str, sublayer=None) -> None:
-            effects.append(
-                ContinuousEffect(
-                    description=f"{source.name}: {subject} {what}",
-                    layer=layer,
-                    sublayer=sublayer,
-                    timestamp=timestamp,
-                    order=len(effects),
-                    source_id=source.id,
-                    source_ability=ability,
-                    selector=selector,
-                    modification=modification,
+            def add(
+                layer: Layer,
+                modification: Modification,
+                what: str,
+                sublayer=None,
+                *,
+                label=label,
+                selector=selector,
+            ) -> None:
+                effects.append(
+                    ContinuousEffect(
+                        description=f"{source.name}: {label} {what}",
+                        layer=layer,
+                        sublayer=sublayer,
+                        timestamp=timestamp,
+                        order=len(effects),
+                        source_id=source.id if duration is None else None,
+                        source_ability=ability,
+                        duration=duration or Duration.INDEFINITE,
+                        selector=selector,
+                        modification=modification,
+                    )
                 )
-            )
 
-        chosen = source.choice
-        if change.copy_of_chosen and chosen is not None and chosen.kind is ChoiceKind.OBJECT:
-            add(
-                Layer.COPY,
-                BecomeACopyOfObject(object_id=UUID(chosen.value)),
-                "is a copy of the chosen creature",
-                CopySublayer.COPIABLE,
-            )
-        if change.name is not None:
-            add(Layer.TEXT, SetName(name=change.name), f"is named {change.name}")
-        if change.lose_land_types:
-            add(Layer.TYPE, LoseAllLandTypes(), "loses all land types")
-        if change.set_types is not None:
-            add(
-                Layer.TYPE,
-                SetTypesAndSubtypes(types=change.set_types, subtypes=change.set_subtypes),
-                "has its card types and subtypes set",
-            )
-        if change.creature_types is not None:
-            add(
-                Layer.TYPE,
-                SetCreatureTypes(subtypes=change.creature_types),
-                "has its creature types set",
-            )
-        if change.add_types or change.add_subtypes:
-            for card_type in change.add_types:
-                add(Layer.TYPE, AddType(card_type=card_type), f"is also a {card_type.value}")
-            for word in change.add_subtypes:
-                add(Layer.TYPE, AddSubtype(subtype=word), f"is also a {word}")
-        for supertype in change.supertypes:
-            add(Layer.TYPE, AddSupertype(supertype=supertype), f"is {supertype.value}")
-        if change.colors is not None:
-            add(Layer.COLOR, SetColors(colors=change.colors), "has its colour set")
-        if change.lose_abilities:
-            add(Layer.ABILITY, lose_all_abilities, "loses all abilities")
-        for keyword in change.lose_keywords:
-            add(Layer.ABILITY, lose_keyword(keyword), f"loses {keyword}")
-        for keyword in change.keywords:
-            add(Layer.ABILITY, grant_ability(keyword), f"has {keyword}")
-        for text in change.quoted:
-            add(Layer.ABILITY, grant_ability(text), f'has "{text}"')
-        if change.base_pt is not None:
-            add(
-                Layer.POWER_TOUGHNESS,
-                set_power_toughness(*change.base_pt),
-                f"has base power and toughness {change.base_pt[0]}/{change.base_pt[1]}",
-                Sublayer.SET,
-            )
-        if change.base_power is not None:
-            add(
-                Layer.POWER_TOUGHNESS,
-                SetPower(power=change.base_power),
-                f"has base power {change.base_power}",
-                Sublayer.SET,
-            )
+            _add_change(change, add, source)
         return effects
 
     return builder
+
+
+def _add_change(change: _Change, add, source: CardState) -> None:
+    """Every layer's share of `change`, through `add(layer, modification, what)`."""
+    chosen = source.choice
+    if change.copy_of_chosen and chosen is not None and chosen.kind is ChoiceKind.OBJECT:
+        add(
+            Layer.COPY,
+            BecomeACopyOfObject(object_id=UUID(chosen.value)),
+            "is a copy of the chosen creature",
+            CopySublayer.COPIABLE,
+        )
+    if change.name is not None:
+        add(Layer.TEXT, SetName(name=change.name), f"is named {change.name}")
+    if change.lose_land_types:
+        add(Layer.TYPE, LoseAllLandTypes(), "loses all land types")
+    if change.basic_land_type is not None:
+        mana_ability = BASIC_LAND_TYPES[change.basic_land_type]
+        if change.land_type_additive:
+            add(
+                Layer.TYPE,
+                AddSubtype(subtype=change.basic_land_type, mana_ability=mana_ability),
+                f"is also {change.basic_land_type}",
+            )
+        else:
+            add(
+                Layer.TYPE,
+                SetBasicLandType(subtype=change.basic_land_type, mana_ability=mana_ability),
+                f"is {change.basic_land_type}",
+            )
+    if change.set_types is not None:
+        add(
+            Layer.TYPE,
+            SetTypesAndSubtypes(types=change.set_types, subtypes=change.set_subtypes),
+            "has its card types and subtypes set",
+        )
+    if change.creature_types is not None:
+        add(
+            Layer.TYPE,
+            SetCreatureTypes(subtypes=change.creature_types),
+            "has its creature types set",
+        )
+    if change.add_types or change.add_subtypes:
+        for card_type in change.add_types:
+            add(Layer.TYPE, AddType(card_type=card_type), f"is also a {card_type.value}")
+        for word in change.add_subtypes:
+            add(Layer.TYPE, AddSubtype(subtype=word), f"is also a {word}")
+    for supertype in change.supertypes:
+        add(Layer.TYPE, AddSupertype(supertype=supertype), f"is {supertype.value}")
+    if change.colors is not None:
+        add(Layer.COLOR, SetColors(colors=change.colors), "has its colour set")
+    if change.add_colors:
+        add(Layer.COLOR, AddColors(colors=change.add_colors), "gains a colour")
+    if change.lose_abilities:
+        add(Layer.ABILITY, lose_all_abilities, "loses all abilities")
+    for keyword in change.lose_keywords:
+        add(Layer.ABILITY, lose_keyword(keyword), f"loses {keyword}")
+    for keyword in change.keywords:
+        add(Layer.ABILITY, grant_ability(keyword), f"has {keyword}")
+    for text in change.quoted:
+        add(Layer.ABILITY, grant_ability(text), f'has "{text}"')
+    if change.base_pt is not None:
+        add(
+            Layer.POWER_TOUGHNESS,
+            set_power_toughness(*change.base_pt),
+            f"has base power and toughness {change.base_pt[0]}/{change.base_pt[1]}",
+            Sublayer.SET,
+        )
+    if change.base_power is not None:
+        add(
+            Layer.POWER_TOUGHNESS,
+            SetPower(power=change.base_power),
+            f"has base power {change.base_power}",
+            Sublayer.SET,
+        )
 
 
 def _parse_change(sentence: str) -> EffectBuilder | None:
@@ -715,6 +789,74 @@ def _parse_change(sentence: str) -> EffectBuilder | None:
 
 
 # --------------------------------------------------------------------------
+# The same rewrites as a resolving ability's one-shot effect (CR 611.2)
+# --------------------------------------------------------------------------
+
+#: "Target land becomes an Island until end of turn.", "This creature loses all
+#: abilities until end of turn.", "Target artifact becomes an artifact creature.",
+#: "Target creature you control becomes a blue artifact in addition to its other
+#: colors and types until end of turn." (a duration-first form is normalised
+#: before this is tried), "Target artifact has base power and toughness 4/4.".
+#: A "target" subject names its objects at announcement (CR 601.2c); a "this"
+#: subject is the source itself and is a one-shot only with a stated duration -
+#: without one it would be a static ability's own sentence (CR 611.3).
+_ONE_SHOT_RE = re.compile(
+    r"^(?P<subject>target (?P<noun>[a-z]+)(?: you control)?|this [a-z]+) "
+    r"(?P<verb>becomes|loses|has) (?P<rest>.+?)(?P<until> until end of turn)?\.?$",
+    re.IGNORECASE,
+)
+
+
+def _read_one_shot(sentence: str) -> tuple[_Change, Duration] | None:
+    quotes: list[str] = []
+
+    def stash(match: re.Match[str]) -> str:
+        quotes.append(match["text"])
+        return f"\x00{len(quotes) - 1}\x00"
+
+    text = re.sub(r'"(?P<text>[^"]+)"', stash, sentence.strip())
+    match = _ONE_SHOT_RE.fullmatch(text)
+    if match is None:
+        return None
+    targeted = match["subject"].lower().startswith("target")
+    verb = match["verb"].lower()
+    if (verb == "has" and not targeted) or (not targeted and not match["until"]):
+        return None
+    change = _Change()
+    rest = match["rest"]
+    if verb == "becomes":
+        ok = _read_is_clause(rest, quotes, change)
+    elif verb == "loses":
+        ok = _read_loses_clause(rest, change)
+    else:
+        ok = _read_has_clause(rest, quotes, change)
+    if not ok or not change.anything():
+        return None
+    noun_type = _CARD_TYPE_WORDS.get((match["noun"] or "").lower())
+    if (
+        noun_type is not None
+        and change.set_types
+        and noun_type in change.set_types
+        and not change.set_subtypes
+    ):
+        # "Target artifact becomes an artifact creature": it already is the
+        # artifact, so only the creature type is new and its artifact subtypes
+        # (Equipment, Vehicle) stay (CR 205.1a keeps subtypes that remain valid).
+        change.add_types = tuple(card for card in change.set_types if card is not noun_type)
+        change.set_types = None
+    duration = Duration.UNTIL_END_OF_TURN if match["until"] else Duration.INDEFINITE
+    return change, duration
+
+
+def _parse_one_shot(sentence: str) -> EffectBuilder | None:
+    read = _read_one_shot(sentence)
+    if read is None:
+        return None
+    change, duration = read
+    return _change_builder(change, subject="it", line=sentence, duration=duration)
+
+
+# --------------------------------------------------------------------------
 # Entry points
 # --------------------------------------------------------------------------
 
@@ -723,9 +865,9 @@ def _parse_change(sentence: str) -> EffectBuilder | None:
 def parse_attached_sentence(sentence: str) -> EffectBuilder | None:
     """`sentence` as one of the attached shapes above, or `None`."""
     lowered = sentence.lower()
-    if "enchanted " not in lowered and "equipped " not in lowered:
-        return None
     text = sentence.strip()
+    if "enchanted " not in lowered and "equipped " not in lowered:
+        return _parse_one_shot(text)
     return _parse_pump(text) or _parse_permanent_static(text) or _parse_change(text)
 
 

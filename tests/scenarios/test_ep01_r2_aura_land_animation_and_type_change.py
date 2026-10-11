@@ -27,6 +27,7 @@ import pytest
 from magic_cards_model.machines import Step, keywords
 from magic_cards_model.models import Zone
 from magic_cards_model.models.card import Color, Supertype, Type
+from magic_cards_model.models.mana import ManaCost
 from tests.scenarios.harness import Scenario
 
 
@@ -585,3 +586,333 @@ def test_metamorphic_alteration_copies_the_creature_chosen_as_it_entered():
     assert chars(scenario, birds).name == "Birds of Paradise"
     aura.unattach()
     assert chars(scenario, bears).name == "Grizzly Bears"
+
+
+# --------------------------------------------------------------------------
+# One-shot rewrites: an activated or triggered ability that makes a permanent
+# something else for a while (CR 611.2, CR 613.1d/e/f)
+# --------------------------------------------------------------------------
+
+
+def one_shot_board(alice: list[str], bob: list[str] | None = None, **zones):
+    scenario = (
+        Scenario().player("alice", battlefield=alice, **zones).player("bob", battlefield=bob or [])
+    )
+    built = scenario.build()
+    built.start_at(Step.PRECOMBAT_MAIN)
+    return built
+
+
+def on_battlefield(scenario: Scenario, name: str, username: str = "alice"):
+    return [s for s in scenario.game.battlefield if s.name == name and s.controller == username]
+
+
+def past_cleanup(scenario: Scenario) -> None:
+    """Run the turn through its cleanup step (CR 514.2: "until end of turn"
+    effects end there)."""
+    scenario.start_at(Step.END_STEP)
+    scenario.advance()  # cleanup
+
+
+def test_floodchaser_turns_a_target_land_into_an_island_until_end_of_turn():
+    """CR 305.7: setting a land's subtype to a basic land type replaces its old
+    land types and rules-text abilities, and the new type brings its mana
+    ability (CR 305.6)."""
+    scenario = one_shot_board(["Floodchaser", "Island", "Forest", "Forest"])
+    floodchaser = on_battlefield(scenario, "Floodchaser")[0]
+    floodchaser.add_counters("+1/+1", 6)
+    island = on_battlefield(scenario, "Island")[0]
+    forest, other = on_battlefield(scenario, "Forest")
+    scenario.activate(floodchaser, island, targets=[forest])
+    scenario.pass_until_resolved()
+    assert floodchaser.counter_count("+1/+1") == 5, "the counter is a cost"
+
+    changed = chars(scenario, forest)
+    assert changed.subtypes == ("Island",)
+    assert changed.has_ability("{T}: Add {U}.")
+    assert not changed.has_ability("{T}: Add {G}.")
+    assert chars(scenario, other).subtypes == ("Forest",), "only the target changes"
+
+    past_cleanup(scenario)
+    assert chars(scenario, forest).subtypes == ("Forest",), "it ends with the turn"
+    assert not chars(scenario, forest).has_ability("{T}: Add {U}.")
+
+
+def test_sealock_monster_makes_a_target_land_an_island_in_addition_when_monstrous():
+    """CR 305.7 does not apply: "in addition to its other types" adds the
+    Island type (CR 205.1b) and its mana ability, and no duration is stated, so
+    the land stays an Island (CR 611.2a)."""
+    scenario = one_shot_board(["Sealock Monster"] + ["Island"] * 7 + ["Forest", "Forest"])
+    monster = on_battlefield(scenario, "Sealock Monster")[0]
+    forest, other = on_battlefield(scenario, "Forest")
+    islands = scenario.untapped_sources(*["Island"] * 7, username="alice")
+    scenario.choose_trigger_targets("Sealock Monster", [forest])
+    scenario.activate(monster, *islands[:7])
+    scenario.pass_until_resolved()
+    assert monster.counter_count("+1/+1") == 3
+    scenario.pass_until_resolved()
+
+    changed = chars(scenario, forest)
+    assert set(changed.subtypes) == {"Forest", "Island"}
+    assert changed.has_ability("{T}: Add {U}.")
+    assert chars(scenario, other).subtypes == ("Forest",)
+
+    past_cleanup(scenario)
+    assert "Island" in chars(scenario, forest).subtypes, "no duration: it lasts"
+
+
+def test_pixie_illusionist_makes_a_land_the_basic_land_type_of_your_choice():
+    scenario = one_shot_board(["Pixie Illusionist", "Forest", "Forest"])
+    pixie = on_battlefield(scenario, "Pixie Illusionist")[0]
+    forest, other = on_battlefield(scenario, "Forest")
+    scenario.will_choose("Swamp", source="Pixie Illusionist")
+    scenario.activate(pixie, targets=[forest])
+    scenario.pass_until_resolved()
+
+    changed = chars(scenario, forest)
+    assert changed.subtypes == ("Swamp",)
+    assert changed.has_ability("{T}: Add {B}.")
+    assert chars(scenario, other).subtypes == ("Forest",)
+
+    past_cleanup(scenario)
+    assert chars(scenario, forest).subtypes == ("Forest",)
+
+
+def test_unctus_makes_a_creature_a_blue_artifact_in_addition_to_what_it_is():
+    scenario = one_shot_board(["Unctus, Grand Metatect", "Island", "Grizzly Bears", "Typhoid Rats"])
+    unctus = on_battlefield(scenario, "Unctus, Grand Metatect")[0]
+    bears = on_battlefield(scenario, "Grizzly Bears")[0]
+    rats = on_battlefield(scenario, "Typhoid Rats")[0]
+    island = on_battlefield(scenario, "Island")[0]
+    scenario.activate(unctus, island, targets=[bears])
+    scenario.pass_until_resolved()
+
+    changed = chars(scenario, bears)
+    assert Type.ARTIFACT in changed.types and Type.CREATURE in changed.types
+    assert set(changed.colors) == {Color.GREEN, Color.BLUE}, "in addition to its other colors"
+    assert "Bear" in changed.subtypes
+    assert Type.ARTIFACT not in chars(scenario, rats).types
+
+    past_cleanup(scenario)
+    after = chars(scenario, bears)
+    assert Type.ARTIFACT not in after.types
+    assert set(after.colors) == {Color.GREEN}
+
+
+def test_boldwyr_intimidator_turns_a_creature_into_a_coward_or_a_warrior():
+    """CR 205.1a: setting a creature type replaces the old creature types."""
+    scenario = one_shot_board(
+        ["Boldwyr Intimidator", "Mountain", "Mountain", "Mountain", "Mountain"],
+        ["Grizzly Bears", "Typhoid Rats"],
+    )
+    intimidator = on_battlefield(scenario, "Boldwyr Intimidator")[0]
+    mountains = scenario.untapped_sources(*["Mountain"] * 4, username="alice")
+    bears = on_battlefield(scenario, "Grizzly Bears", "bob")[0]
+    rats = on_battlefield(scenario, "Typhoid Rats", "bob")[0]
+    scenario.activate(intimidator, mountains[0], index=0, targets=[bears])
+    scenario.pass_until_resolved()
+    assert chars(scenario, bears).subtypes == ("Coward",)
+    scenario.activate(intimidator, *mountains[1:], index=1, targets=[rats])
+    scenario.pass_until_resolved()
+    assert chars(scenario, rats).subtypes == ("Warrior",)
+    assert chars(scenario, intimidator).subtypes != ("Coward",)
+
+    past_cleanup(scenario)
+    assert chars(scenario, bears).subtypes == ("Bear",)
+    assert chars(scenario, rats).subtypes == ("Rat",)
+
+
+def test_nullhide_ferox_loses_all_abilities_until_end_of_turn():
+    scenario = one_shot_board(["Nullhide Ferox", "Forest", "Forest"])
+    ferox = on_battlefield(scenario, "Nullhide Ferox")[0]
+    forests = scenario.untapped_sources("Forest", "Forest", username="alice")
+    assert chars(scenario, ferox).has_ability("Hexproof")
+    scenario.activate(ferox, *forests, index=0)
+    scenario.pass_until_resolved()
+    assert not chars(scenario, ferox).has_ability("Hexproof")
+    assert chars(scenario, ferox).abilities == ()
+
+    past_cleanup(scenario)
+    assert chars(scenario, ferox).has_ability("Hexproof")
+
+
+def test_tezzeret_makes_a_target_artifact_a_4_4_creature_unless_it_is_a_vehicle():
+    """Durationless, so it lasts (CR 611.2a). A Vehicle keeps the power and
+    toughness it printed (the second sentence's "if it isn't a Vehicle")."""
+    scenario = one_shot_board(["Tezzeret, Betrayer of Flesh", "Bonesplitter", "Smuggler's Copter"])
+    tezzeret = on_battlefield(scenario, "Tezzeret, Betrayer of Flesh")[0]
+    sword = on_battlefield(scenario, "Bonesplitter")[0]
+    copter = on_battlefield(scenario, "Smuggler's Copter")[0]
+    scenario.activate(tezzeret, index=1, targets=[sword])
+    scenario.pass_until_resolved()
+    animated = chars(scenario, sword)
+    assert Type.ARTIFACT in animated.types and Type.CREATURE in animated.types
+    assert "Equipment" in animated.subtypes
+    assert animated.power_toughness == (4, 4)
+
+    other = one_shot_board(["Tezzeret, Betrayer of Flesh", "Smuggler's Copter"])
+    their_copter = on_battlefield(other, "Smuggler's Copter")[0]
+    other.activate(
+        on_battlefield(other, "Tezzeret, Betrayer of Flesh")[0], index=1, targets=[their_copter]
+    )
+    other.pass_until_resolved()
+    vehicle = chars(other, their_copter)
+    assert Type.CREATURE in vehicle.types
+    assert vehicle.power_toughness == (3, 3), "a Vehicle keeps its printed 3/3"
+    assert Type.CREATURE not in chars(scenario, copter).types, "only the target"
+
+
+def test_birgi_adds_red_that_survives_steps_and_phases_until_end_of_turn():
+    """CR 500.5: mana empties as each step and phase ends, except mana an
+    effect says you do not lose (Birgi, God of Storytelling), which empties in
+    the cleanup step instead (CR 500.5b, CR 514.2)."""
+    scenario = one_shot_board(
+        ["Birgi, God of Storytelling", "Mountain"], hand=["Shock"], library=["Mountain"] * 3
+    )
+    mountain = on_battlefield(scenario, "Mountain")[0]
+    scenario.cast_and_resolve("Shock", mountain, targets=["bob"])
+    scenario.game.put_triggers_on_stack()
+    scenario.pass_until_resolved()
+    assert scenario.player().mana_pool.floating == {Color.RED: 1}
+
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    assert scenario.player().mana_pool.floating == {Color.RED: 1}, "survives the phase ending"
+
+    scenario.start_at(Step.END_STEP)
+    scenario.advance()  # cleanup
+    assert scenario.player().mana_pool.floating == {}, "gone at cleanup"
+
+
+def test_birgi_does_not_trigger_on_a_land_ability():
+    """Only casting a spell triggers it: tapping a land for mana does not."""
+    scenario = one_shot_board(["Birgi, God of Storytelling", "Mountain"], library=["Mountain"] * 3)
+    mountain = on_battlefield(scenario, "Mountain")[0]
+    scenario.activate(mountain, color=Color.RED)
+    scenario.game.put_triggers_on_stack()
+    assert scenario.stack_names() == []
+    assert scenario.player().mana_pool.floating == {Color.RED: 1}, "just the land's own mana"
+
+
+def jace_board():
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player(
+            "alice",
+            hand=["Grizzly Bears", "Serra Angel", "Mountain"],
+            battlefield=["Jace Reawakened"],
+            library=["Island"] * 5,
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    return scenario
+
+
+def test_jace_reawakened_plots_a_cheap_nonland_card_from_your_hand():
+    """ "You may exile a nonland card with mana value 3 or less from your hand.
+    If you do, it becomes plotted." (CR 702.170c)."""
+    scenario = jace_board()
+    jace = on_battlefield(scenario, "Jace Reawakened")[0]
+    bears = scenario.find("Grizzly Bears", Zone.HAND, "alice")
+    scenario.will_choose_cards(bears, source="Jace Reawakened")
+    scenario.activate(jace, index=1)
+    scenario.pass_until_resolved()
+
+    assert bears.zone is Zone.EXILE
+    assert bears.exile_annotation.marker.value == "plotted"
+    assert bears.exile_annotation.owner == "alice"
+    assert {c.name for c in scenario.player().hand} == {"Serra Angel", "Mountain"}
+
+
+def test_jace_reawakened_may_plot_nothing():
+    scenario = jace_board()
+    jace = on_battlefield(scenario, "Jace Reawakened")[0]
+    scenario.will_choose_cards(source="Jace Reawakened")
+    scenario.activate(jace, index=1)
+    scenario.pass_until_resolved()
+    assert {c.name for c in scenario.player().hand} == {
+        "Grizzly Bears",
+        "Serra Angel",
+        "Mountain",
+    }
+
+
+def test_a_card_plotted_by_jace_is_cast_free_on_a_later_turn_only():
+    """CR 702.170d: the permission belongs to the plotted card, whether or not
+    it prints plot."""
+    scenario = jace_board()
+    jace = on_battlefield(scenario, "Jace Reawakened")[0]
+    bears = scenario.find("Grizzly Bears", Zone.HAND, "alice")
+    scenario.will_choose_cards(bears, source="Jace Reawakened")
+    scenario.activate(jace, index=1)
+    scenario.pass_until_resolved()
+
+    same_turn = scenario.cast("Grizzly Bears", from_zone=Zone.EXILE)
+    with pytest.raises(ValueError, match="later turn"):
+        same_turn.use_keyword("Plot")
+
+    for _ in range(60):
+        scenario.advance()
+        if scenario.turn.active_player == "alice" and scenario.step is Step.PRECOMBAT_MAIN:
+            break
+    casting = scenario.cast("Grizzly Bears", from_zone=Zone.EXILE)
+    casting.use_keyword("Plot")
+    assert casting.total_cost.mana == ManaCost()
+
+
+def boldwyr_combat():
+    """Alice attacks with a Bear made a Warrior; bob has a Bear made a Coward
+    and a Rat left alone."""
+    scenario = one_shot_board(
+        ["Boldwyr Intimidator", "Grizzly Bears"] + ["Mountain"] * 4,
+        ["Grizzly Bears", "Typhoid Rats"],
+    )
+    boldwyr = on_battlefield(scenario, "Boldwyr Intimidator")[0]
+    attacker = on_battlefield(scenario, "Grizzly Bears")[0]
+    coward = on_battlefield(scenario, "Grizzly Bears", "bob")[0]
+    rats = on_battlefield(scenario, "Typhoid Rats", "bob")[0]
+    mountains = scenario.untapped_sources(*["Mountain"] * 4, username="alice")
+    scenario.activate(boldwyr, mountains[0], index=0, targets=[coward])
+    scenario.pass_until_resolved()
+    scenario.activate(boldwyr, *mountains[1:], index=1, targets=[attacker])
+    scenario.pass_until_resolved()
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    scenario.attack_with(attacker, defending="bob")
+    return scenario, attacker, coward, rats
+
+
+def test_a_coward_cannot_block_a_warrior():
+    """Boldwyr Intimidator's "Cowards can't block Warriors." (CR 509.1b): the
+    restriction names a blocker group and an attacker group."""
+    scenario, attacker, coward, rats = boldwyr_combat()
+    with pytest.raises(ValueError, match="can't block"):
+        scenario.block(attacker, coward)
+    assert coward.id not in scenario.game.combat.blocker_ids
+
+
+def test_a_creature_that_is_not_a_coward_can_block_a_warrior():
+    scenario, attacker, coward, rats = boldwyr_combat()
+    scenario.block(attacker, rats)
+    assert rats.id in scenario.game.combat.blocker_ids
+
+
+def test_a_coward_can_block_an_attacker_that_is_not_a_warrior():
+    scenario = one_shot_board(
+        ["Boldwyr Intimidator", "Grizzly Bears", "Mountain"], ["Grizzly Bears"]
+    )
+    boldwyr = on_battlefield(scenario, "Boldwyr Intimidator")[0]
+    attacker = on_battlefield(scenario, "Grizzly Bears")[0]
+    coward = on_battlefield(scenario, "Grizzly Bears", "bob")[0]
+    scenario.activate(
+        boldwyr,
+        scenario.untapped_sources("Mountain", username="alice")[0],
+        index=0,
+        targets=[coward],
+    )
+    scenario.pass_until_resolved()
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    scenario.attack_with(attacker, defending="bob")
+    scenario.block(attacker, coward)
+    assert coward.id in scenario.game.combat.blocker_ids

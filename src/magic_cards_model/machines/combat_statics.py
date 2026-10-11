@@ -416,6 +416,14 @@ _POWER_LESS_CANT_BLOCK_RE = re.compile(
     re.IGNORECASE,
 )
 _GROUP_CANT_BLOCK_RE = re.compile(r"^(?P<group>.+?) can't block\.?$", re.IGNORECASE)
+#: "Cowards can't block Warriors." (Boldwyr Intimidator): one creature group
+#: that can't block, and the attacker group it can't block (CR 509.1b). The
+#: attacker side is a creature description of its own; "it", "this creature"
+#: and "creatures you control" are `_POWER_LESS_CANT_BLOCK_RE`'s objects.
+_GROUP_CANT_BLOCK_GROUP_RE = re.compile(
+    r"^(?P<blockers>.+?) can't block (?P<attackers>.+?)\.?$", re.IGNORECASE
+)
+_NOT_A_GROUP = ("this ", "enchanted ", "equipped ", "it", "creatures you control")
 _THREE_OR_MORE_RE = re.compile(r"^(?P<count>\w+) or more creatures$", re.IGNORECASE)
 
 
@@ -602,7 +610,32 @@ def block_evasion_refusal(game: "Game", blocker: CardState, attacker: CardState)
             refusal = _group_cant_block(game, source, blocker, match, sentence)
             if refusal is not None:
                 return refusal
+        elif (groups := _block_groups(sentence)) is not None:
+            can_block, can_be_blocked = groups
+            if can_block(game, blocker) and can_be_blocked(game, attacker):
+                return (
+                    f"{blocker.name} can't block {attacker.name}: "
+                    f'{source.name} says "{sentence}" (CR 509.1b)'
+                )
     return None
+
+
+def _block_groups(sentence: str):
+    """`(blocker group, attacker group)` predicates of a "`<group>` can't block
+    `<group>`." sentence, or None when either side is not a creature group."""
+    match = _GROUP_CANT_BLOCK_GROUP_RE.fullmatch(sentence)
+    if match is None:
+        return None
+    blockers, attackers = match["blockers"].strip(), match["attackers"].strip()
+    for side in (blockers, attackers):
+        lowered = side.lower()
+        if lowered == "creatures" or lowered.startswith(_NOT_A_GROUP):
+            return None
+    can_block = parse_blocker_description(blockers)
+    can_be_blocked = parse_blocker_description(attackers)
+    if can_block is None or can_be_blocked is None:
+        return None
+    return can_block, can_be_blocked
 
 
 def _power_less_cant_block(game, source, blocker, attacker, match, sentence) -> str | None:
@@ -718,6 +751,7 @@ def _reads_block_sentence(sentence: str, card_name: str) -> bool:
             and group.lower() != "creatures"
             and parse_blocker_description(group) is not None
         )
+    return _block_groups(sentence) is not None
     return False
 
 

@@ -71,6 +71,7 @@ from ..land_animation import (
     retained_animation_sentence,
 )
 from ..layers import (
+    BASIC_LAND_TYPES,
     CANT_ACTIVATE_ABILITIES_TEXT,
     KNOWN_KEYWORDS,
     Condition,
@@ -790,7 +791,7 @@ _MASS_SUBJECT_RE = re.compile(
 #: creature types already gets from a bare type list everywhere else in this
 #: file.
 _MASS_SUBTYPE_SUBJECT_RE = re.compile(
-    r"^(?![Cc]reatures?\b)(?P<subtypes>[A-Z][a-z]+(?:(?:,\s*| and )[A-Z][a-z]+)*) "
+    r"^(?![Cc]reatures?\b)(?P<subtypes>[A-Z][a-z]+(?:(?:,\s*(?:and )?| and )[A-Z][a-z]+)*) "
     r"(?P<whose>you control|your opponents control)\b"
 )
 #: Ravenous Robots: "Creature tokens you control gain haste until end of
@@ -901,7 +902,8 @@ _WHERE_X_IS_RE = re.compile(r",?\s*where x is (?P<expr>.+?)\.?$", re.IGNORECASE)
 _MASS_EACH_SUBJECT_RE = re.compile(
     r"^[Ee]ach (?P<other>other )?(?P<noun>creature|[A-Z][a-z]+) "
     r"(?P<whose>you control|your opponents control)"
-    r"(?: with (?P<with_keyword>[a-z]+(?: [a-z]+)?))? (?P<verb>gets|gains)\b"
+    r"(?: with (?:power (?P<min_power>\d+) or greater|(?P<with_keyword>[a-z]+(?: [a-z]+)?)))?"
+    r" (?P<verb>gets|gains)\b"
 )
 
 
@@ -945,6 +947,7 @@ def _mass_creature_group_targets(
             else creatures_controlled_by_opponents_of(controller)
         )
         with_keyword = each_match.group("with_keyword")
+        min_power = each_match.group("min_power")
         if with_keyword is not None and with_keyword.lower() not in {k.value for k in Keyword}:
             return None
         board = game.computed_board()
@@ -954,6 +957,7 @@ def _mass_creature_group_targets(
             if base(board.of(permanent), board.characteristics)
             and not (each_match.group("other") and permanent.id == source_id)
             and (with_keyword is None or has_keyword(permanent, with_keyword.lower(), game))
+            and (min_power is None or (board.of(permanent).power or 0) >= int(min_power))
             and (
                 wanted_subtype is None
                 or wanted_subtype in {word.lower() for word in board.of(permanent).subtypes}
@@ -971,7 +975,7 @@ def _mass_creature_group_targets(
         # "Knight", never "Knights".
         subtypes = {
             part.strip().lower().removesuffix("s")
-            for part in re.split(r",\s*|\s+and\s+", subtype_match.group("subtypes"))
+            for part in re.split(r",\s*(?:and\s+)?|\s+and\s+", subtype_match.group("subtypes"))
             if part.strip()
         }
         # A subtype word names every permanent carrying it, not only
@@ -1271,9 +1275,10 @@ def _mass_pump_parseable(literal: str) -> str:
     elif each_match is not None:
         # The group (and its "other") is already `targets`; the layer parser
         # only needs the plural group shape.
+        # "gets +1/+1 and gains trample" agrees with its plural subject.
         parseable = (
             f"creatures {each_match.group('whose')} {each_match.group('verb')[:-1]}"
-            + literal.strip()[each_match.end() :]
+            + re.sub(r"\bgains\b", "gain", literal.strip()[each_match.end() :])
         )
     elif color_filter_match is not None:
         # The colour filter, like the power filter below, is already applied
@@ -1745,6 +1750,121 @@ def _untap_and_apply_control_sentences(
         for built in builder(source, timestamp, targets, context):
             if built.holds(game):
                 store.add(built)
+
+
+def _apply_layer_sentences(
+    game: "Game",
+    source: CardState,
+    controller: "Player",
+    targets: Sequence[CardState],
+    sentence: str,
+) -> None:
+    """Build `sentence`'s continuous effects over `targets` (fixed now, CR 611.2c)
+    and keep them; one the layer parser cannot read leaves a `LayerNotice`."""
+    store = continuous_effects(game)
+    builder = parsed_layer_effects(sentence)
+    if builder is None:
+        store.layer_notices.append(
+            LayerNotice(source_id=source.id, source_name=source.name, text=sentence)
+        )
+        return
+    context = layer_context_for(game, controller)
+    for built in builder(source, store.tick(), targets, context):
+        if built.holds(game):
+            store.add(built, game)
+
+
+#: "Target artifact becomes an artifact creature. If it isn't a Vehicle, it has
+#: base power and toughness 4/4." (Tezzeret, Betrayer of Flesh) - a type change
+#: and a conditional base power and toughness. The condition is one instruction
+#: checked as the ability resolves (CR 608.2c), against the target as it then
+#: is, so a Vehicle keeps the power and toughness it prints (CR 301.7) while
+#: any other artifact is set to the stated base (CR 613.4b). Neither half names
+#: a duration, so both last (CR 611.2a).
+_BECOMES_THEN_BASE_PT_UNLESS_SUBTYPE_RE = re.compile(
+    r"^(?P<first>target [a-z]+ becomes an? [a-z ]+?)\.\s*"
+    r"if it isn't an? (?P<subtype>[a-z]+), it has base power and toughness "
+    r"(?P<power>\d+)/(?P<toughness>\d+)\.?$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s14")
+def _parse_becomes_then_base_pt_unless_subtype(effect_text: str) -> AbilityEffect | None:
+    """`_BECOMES_THEN_BASE_PT_UNLESS_SUBTYPE_RE`'s shape."""
+    match = _BECOMES_THEN_BASE_PT_UNLESS_SUBTYPE_RE.fullmatch(effect_text.strip())
+    if match is None:
+        return None
+    first = match.group("first") + "."
+    power, toughness = match.group("power"), match.group("toughness")
+    second = f"Target creature has base power and toughness {power}/{toughness}."
+    if parsed_layer_effects(first) is None or parsed_layer_effects(second) is None:
+        return None
+    subtype = canonical_subtype(match.group("subtype"))
+    if subtype is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        source = ability.source_or_last_known(game)
+        targets = [t for t in game.resolve_card_targets(ability) if t.zone is Zone.BATTLEFIELD]
+        if source is None or not targets:
+            return  # CR 608.2b: no legal target left
+        controller = game.controller_of(ability)
+        _apply_layer_sentences(game, source, controller, targets, first)
+        board = game.computed_board()
+        others = [
+            t
+            for t in targets
+            if subtype.lower() not in {name.lower() for name in board.of(t).subtypes}
+        ]
+        if others:
+            _apply_layer_sentences(game, source, controller, others, second)
+
+    return effect
+
+
+#: "Target land you control becomes the basic land type of your choice until end
+#: of turn." (Pixie Illusionist) - the choice is made as the ability resolves
+#: (CR 608.2d), then it is "becomes an Island until end of turn": CR 305.7's
+#: setting effect, so the land keeps no old land type or rules-text ability.
+_BECOMES_CHOSEN_BASIC_LAND_TYPE_RE = re.compile(
+    r"^(?P<subject>target land(?: you control)?) becomes the basic land type of your choice"
+    r"(?P<until> until end of turn)?\.?$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s14")
+def _parse_becomes_chosen_basic_land_type(effect_text: str) -> AbilityEffect | None:
+    """`_BECOMES_CHOSEN_BASIC_LAND_TYPE_RE`'s shape."""
+    match = _BECOMES_CHOSEN_BASIC_LAND_TYPE_RE.fullmatch(effect_text.strip())
+    if match is None:
+        return None
+    until = match.group("until") or ""
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        source = ability.source_or_last_known(game)
+        targets = [t for t in game.resolve_card_targets(ability) if t.zone is Zone.BATTLEFIELD]
+        if source is None or not targets:
+            return
+        controller = game.controller_of(ability)
+        chosen = game.ask(
+            Decision(
+                kind=DecisionKind.CHOOSE_A_QUALITY,
+                player=controller.username,
+                prompt="choose a basic land type",
+                source=ability.source_name,
+                source_id=source_id_of(ability),
+                options=tuple(BASIC_LAND_TYPES),
+                quality="basic land type",
+            )
+        )
+        if chosen not in BASIC_LAND_TYPES:
+            return
+        sentence = f"Target land becomes {with_indefinite_article(str(chosen))}{until}."
+        _apply_layer_sentences(game, source, controller, targets, sentence)
+
+    return effect
 
 
 @SPELL_TEXT.rung("s14")
