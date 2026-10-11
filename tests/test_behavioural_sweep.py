@@ -2566,18 +2566,32 @@ _ENCHANTED_CREATURE_COLOR = re.compile(
 )
 
 
+#: "if enchanted permanent is tapped" (Volition Reins): the host the Aura is
+#: cast on must be tapped as it enters.
+_ENCHANTED_IS_TAPPED = re.compile(r"\benchanted (?:creature|permanent) is tapped\b", re.IGNORECASE)
+
+
 def _enchanted_host(scenario: PlayedScenario, condition: str | None) -> CardState | None:
     """The creature an Aura is cast on when its own intervening "if" asks the
-    enchanted creature's colour (Ray of Frost, CR 603.4): the simplest real
-    creature of that colour, put on alice's side of the stock board."""
+    enchanted creature's colour (Ray of Frost, CR 603.4) or whether it is
+    tapped (Volition Reins): the simplest real creature of that colour (any
+    colour for the tapped question), put on alice's side of the stock board,
+    tapped when the condition asks for it."""
     found = _ENCHANTED_CREATURE_COLOR.search(condition or "")
-    if found is None:
+    tapped = _ENCHANTED_IS_TAPPED.search(condition or "") is not None
+    if found is None and not tapped:
         return None
-    color = next(c for c in Color if c.name.lower() == found.group("color").lower())
+    color = (
+        None
+        if found is None
+        else next(c for c in Color if c.name.lower() == found.group("color").lower())
+    )
     candidates = [
         card
         for card in _format_pool()
-        if Type.CREATURE in card.types and not card.card_faces and card.colors == [color]
+        if Type.CREATURE in card.types
+        and not card.card_faces
+        and (color is None or card.colors == [color])
     ]
     if not candidates:
         return None
@@ -2585,6 +2599,7 @@ def _enchanted_host(scenario: PlayedScenario, condition: str | None) -> CardStat
     host = card_state(pick.name, Zone.BATTLEFIELD, controller=ALICE, owner=ALICE)
     host.bind_to_game(scenario.game)
     scenario.game.battlefield.append(host)
+    host.tapped = tapped
     return host
 
 

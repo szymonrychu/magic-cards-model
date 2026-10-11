@@ -6288,11 +6288,14 @@ def _tap_all_group_runner(
 
 #: "tap enchanted creature" / "tap equipped creature" - Charmed Sleep's
 #: whole enters trigger, and the first half of Enchanted River's Grasp's and
-#: Honest Work's "tap enchanted creature and remove all counters from it".
+#: Honest Work's "tap enchanted creature and remove all counters from it" -
+#: and its "untap" twin, Volition Reins' "if enchanted permanent is tapped,
+#: untap it" once `abilities._resolve_attached_object_pronoun` names the "it".
 #: CR 303.4b/301.5a: the object the Aura or Equipment is attached to, never a
 #: target of its own (CR 115.1b: an Aura permanent targets nothing).
 _TAP_ATTACHED_RE = re.compile(
-    r"^tap (?:enchanted|equipped) (?:creature|permanent|artifact|land)\.?$", re.IGNORECASE
+    r"^(?P<verb>tap|untap) (?:enchanted|equipped) (?:creature|permanent|artifact|land)\.?$",
+    re.IGNORECASE,
 )
 
 
@@ -6323,13 +6326,20 @@ def _attached_object(game: "Game", stack_object: "StackObject") -> CardState | N
 @MIXED_CLAUSE.rung("s35")
 def _parse_tap_attached_clause(clause: str) -> TargetedClause | None:
     """`_TAP_ATTACHED_RE`'s shape - CR 701.26a's tap, silent on an
-    already-tapped permanent (`CardState.tap_if_untapped`)."""
-    if _TAP_ATTACHED_RE.fullmatch(clause.strip()) is None:
+    already-tapped permanent (`CardState.tap_if_untapped`), or CR 701.26b's
+    untap, silent on an untapped one."""
+    match = _TAP_ATTACHED_RE.fullmatch(clause.strip())
+    if match is None:
         return None
+    untap = match.group("verb").lower() == "untap"
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
         attached = _attached_object(game, stack_object)
-        if attached is not None:
+        if attached is None:
+            return
+        if untap:
+            attached.untap(exert_applies=False)
+        else:
             game.tap_permanent(attached)
 
     return effect
