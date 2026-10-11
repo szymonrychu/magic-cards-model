@@ -60,19 +60,24 @@ def test_the_reduction_is_for_its_controller_only():
     assert _cost(scenario, "Grizzly Bears") == "{1}{G}"
 
 
-def test_a_differently_worded_source_reduces_generic_mana_of_the_chosen_type():
+def _incubator_board(chosen, card):
     scenario = (
         Scenario()
-        .player(
-            "alice",
-            hand=["Urza's Incubator", "Lupine Prototype", "Grizzly Bears"],
-            battlefield=["Forest"] * 4,
-        )
+        .player("alice", hand=["Urza's Incubator", card], battlefield=["Forest"] * 4)
         .player("bob")
         .build()
     )
     scenario.start_at(Step.PRECOMBAT_MAIN)
-    scenario.will_choose("Wolf", source="Urza's Incubator")
+    scenario.will_choose(chosen, source="Urza's Incubator")
     scenario.put_onto_battlefield("Urza's Incubator")
+    return scenario
+
+
+def test_a_differently_worded_source_reduces_generic_mana_of_the_chosen_type():
+    scenario = _incubator_board("Wolf", "Lupine Prototype")
     assert _cost(scenario, "Lupine Prototype") == ""
+
+
+def test_that_source_leaves_another_type_alone():
+    scenario = _incubator_board("Wolf", "Grizzly Bears")
     assert _cost(scenario, "Grizzly Bears") == "{1}{G}"
