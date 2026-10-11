@@ -335,3 +335,10 @@ Every Modern-legal expansion, newest to oldest. Each row links to its `status.md
   - api tests: 261 wrapper pass, lint/test/test:pg green against the new engine
   - goldens added: 241; 199 protected goldens and 3 protected assertions changed, each approved by a fresh sonnet reviewer (2 test deletions rejected, then restored with synthetic unreadable examples); ratchet 0 offenders over 22688 oracle cards
   - integration fixes: bootstrap not byte-identical across tasks (conflicts in support.py/static_audit every merge); T8 vs T7 casting/permissions overlap; 7 sweep regressions from cross-task merges; classify budget restored to ~13.0 by memoising pure readers (pool grew 4235 -> 4957 printings); T8 committed its .scryfall-cache worktree symlink (untracked again, .gitignore fixed, d05132f4)
+- 2026-10-11: R0c (Round 0, metagame decks: 2026-10-11 snapshot, cards at >=20% decklist inclusion)
+  - cards in round: 10; needing fix at plan time: 10; dropped (already handled): 0; fixed: 10; remaining: 0 (also flipped to handled: Kird Ape, Soul Shatter, Leveler, Draugr Thought-Thief, Lurking Informant)
+  - pool-wide Not working after refresh: 5990 (was 6012)
+  - engine tests: 35034 total (pass 34415, skip 573, xfail 46); added since EP-01-R1: +216
+  - api tests: 261 wrapper pass, lint/test/test:pg green against the new engine; added: +0
+  - goldens added: 13; no protected test or golden changed; ratchet 0 offenders over 22688 oracle cards
+  - integration fixes: none needed beyond union-merging MEMORY.md/engine-coverage.md; T4 fixed _still_has_ability in models/game/_activation.py, T5 added the kicked-instead targeting reader
