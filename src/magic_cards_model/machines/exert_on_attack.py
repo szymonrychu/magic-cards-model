@@ -23,19 +23,31 @@ if TYPE_CHECKING:
     from ..models.game import Game
 
 _EXERT_AS_IT_ATTACKS_RE = re.compile(
-    r"^you may exert [^.]+? as it attacks\.(?: when you do, (?P<effect>[^.]+\.?))?$",
+    r"^(?P<once>if this creature hasn't been exerted this turn, )?"
+    r"you may exert [^.]+? as it attacks\.(?: when you do, (?P<effect>[^.]+\.?))?$",
     re.IGNORECASE,
 )
 
 
 @cache
+def _exert_as_it_attacks(line: str) -> tuple[bool, str | None, bool]:
+    match = _EXERT_AS_IT_ATTACKS_RE.fullmatch(" ".join(line.split()))
+    if match is None:
+        return False, None, False
+    return True, match.group("effect"), match.group("once") is not None
+
+
 def exert_as_it_attacks_effect(line: str) -> tuple[bool, str | None]:
     """Whether `line` is the optional exert cost, and the effect text of its
     linked "When you do" trigger (None when the paragraph prints none)."""
-    match = _EXERT_AS_IT_ATTACKS_RE.fullmatch(" ".join(line.split()))
-    if match is None:
-        return False, None
-    return True, match.group("effect")
+    printed, effect, _once = _exert_as_it_attacks(line)
+    return printed, effect
+
+
+def exert_only_once_each_turn(line: str) -> bool:
+    """Whether the exert line is gated on "If this creature hasn't been
+    exerted this turn" (Combat Celebrant) - read off `Game.exerted_this_turn`."""
+    return _exert_as_it_attacks(line)[2]
 
 
 def reads_exert_as_it_attacks_line(line: str) -> bool:
@@ -63,6 +75,10 @@ def offer_exert_as_it_attacks(game: "Game", creature: CardState) -> None:
         printed, effect = exert_as_it_attacks_effect(strip_reminder(line))
         if not printed:
             continue
+        if exert_only_once_each_turn(strip_reminder(line)) and (
+            creature.id in game.exerted_this_turn
+        ):
+            continue
         controller = game.controller_of(creature).username
         chose = game.ask(
             Decision(
@@ -76,6 +92,7 @@ def offer_exert_as_it_attacks(game: "Game", creature: CardState) -> None:
         if not chose:
             continue
         exert(creature)
+        game.exerted_this_turn.add(creature.id)
         if effect:
             game.create_reflexive_trigger(
                 text=f"When you do, {effect}",

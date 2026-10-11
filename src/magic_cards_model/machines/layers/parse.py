@@ -1490,10 +1490,12 @@ def _become_a_copy_builder(
 #: identical no-controller-filter selector `_other_creatures_are_type_
 #: builder` already uses for "Other creatures are `<type>`s" - the same
 #: reading, minus that one's own "other" exclusion, since haste applies to
-#: the source creature that grants it too, if it is one.
+#: the source creature that grants it too, if it is one. A numbered item
+#: ("All Sliver creatures have poisonous 1.", CR 702.70a) is read by
+#: `_split_and_validate_keywords` like any other.
 _ALL_CREATURES_KEYWORD_GRANT_RE = re.compile(
     r"^all (?:(?P<subtype>[a-z]+) )?creatures (?:have|has) "
-    r"(?P<keywords>[a-z]+(?: [a-z]+)?(?:(?:,\s*| and )[a-z]+(?: [a-z]+)?)*)\.?$",
+    r"(?P<keywords>[a-z]+(?: [a-z]+| \d+)?(?:(?:,\s*| and )[a-z]+(?: [a-z]+| \d+)?)*)\.?$",
     re.IGNORECASE,
 )
 
@@ -1737,6 +1739,18 @@ _PAIRED_BOTH_RE = re.compile(
     r"(?: and get (?P<p1>[+-]\d+)/(?P<t1>[+-]\d+))?)"
     r"|(?:get (?P<p2>[+-]\d+)/(?P<t2>[+-]\d+)))\.?$",
     re.IGNORECASE,
+)
+
+#: "As long as this creature is paired with another creature, each of those
+#: creatures has "`<ability>`"." (Galvanic Alchemist, Stern Mentor, Stonewright)
+#: - `_PAIRED_BOTH_RE`'s pair (CR 702.95a) granted a whole quoted ability
+#: (CR 113.10a), on the computed board by `_paired_quoted_grant_builder` and
+#: made activatable by `quoted_ability_grants`, for only as long as the pair
+#: holds (CR 702.95e).
+_PAIRED_EACH_QUOTED_RE = re.compile(
+    r"^as long as this creature is paired with another creature, each of those "
+    r'creatures has "(?P<ability>.+)"\.?$',
+    re.IGNORECASE | re.DOTALL,
 )
 
 #: "Creatures you control that are enchanted get +1/+1." (Necromancer's
@@ -2141,7 +2155,10 @@ _GROUP_QUOTED_ABILITY_GRANT_RE = re.compile(
     r"(?P<scope> you control)?(?P<named> with the chosen name)?"
     # CR 205.3m: "All Slivers have "..."" (Cautery Sliver) - every creature of
     # the subtype, whoever controls it.
-    r"|all (?P<all_subtype>[a-z]+))"
+    r"|all (?P<all_subtype>[a-z]+)"
+    # "Sliver creatures you control have "..."" (Scuttling Sliver, Hollowhead
+    # Sliver) - the creatures of one subtype the source's controller controls.
+    r"|(?P<own_subtype>[a-z]+) creatures you control)"
     r' have "(?P<ability>.+)"\.?$',
     re.IGNORECASE | re.DOTALL,
 )
@@ -2165,6 +2182,11 @@ def group_quoted_ability_grant_selector(match: re.Match[str], source: CardState)
         if subtype is None:
             return None
         return creatures_controlled_by_with_subtype(None, [subtype], any_controller=True)
+    if match.group("own_subtype") is not None:
+        subtype = _singular_subtype_word(match.group("own_subtype"))
+        if subtype is None:
+            return None
+        return creatures_controlled_by_with_subtype(source.controller, [subtype])
     card_type = _card_type_word(match.group("subject"))
     if card_type is None:
         return None
@@ -4293,6 +4315,48 @@ def _paired_both_builder(
         return effects
 
     return builder
+
+
+def _paired_quoted_grant_builder(granted: str, *, line: str) -> EffectBuilder:
+    """`_PAIRED_EACH_QUOTED_RE`'s shape: a layer 6 grant (CR 613.1f) of a
+    quoted ability over the source and its soulbond partner."""
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        return [
+            ContinuousEffect(
+                description=f'{source.name}: each paired creature has "{granted}"',
+                layer=Layer.ABILITY,
+                timestamp=timestamp,
+                source_id=source.id,
+                source_ability=line,
+                selector=PairedPartners(source_id=source.id),
+                modification=grant_ability(granted),
+            )
+        ]
+
+    return builder
+
+
+def paired_partner_ids(source: CardState, permanents: Sequence[CardState]) -> tuple[UUID, ...]:
+    """`source` and its soulbond partner while the pair holds (CR 702.95a,
+    CR 702.95e: both creatures, pointing at each other, one controller) -
+    `PairedPartners`' test over the printed board, or nothing."""
+    if source.paired_with is None or not printed_characteristics(source).is_creature:
+        return ()
+    partner = next((p for p in permanents if p.id == source.paired_with), None)
+    if (
+        partner is None
+        or partner.paired_with != source.id
+        or partner.controller != source.controller
+        or not printed_characteristics(partner).is_creature
+    ):
+        return ()
+    return (source.id, partner.id)
 
 
 def _per_other_creature_anthem_builder(
@@ -7442,6 +7506,50 @@ def _life_total_power_toughness_cda_builder(line: str) -> EffectBuilder:
     return builder
 
 
+#: "Equipped creature has base power and toughness X/X, where X is your life
+#: total." (Aettir and Priwen) - a sublayer 7b set (CR 613.4b) on the
+#: attached creature, X the source's controller's life total ("your", CR
+#: 109.5), read off `context.life_by_player` on every computation the way
+#: `_life_total_power_toughness_cda_builder` reads it.
+_ATTACHED_BASE_PT_LIFE_TOTAL_RE = re.compile(
+    r"^(?P<attachment>equipped|enchanted) creature has base power and toughness "
+    r"X/X, where X is your life total\.?$",
+    re.IGNORECASE,
+)
+
+
+def _attached_base_pt_life_total_builder(subject: str, *, line: str) -> EffectBuilder:
+    """`_ATTACHED_BASE_PT_LIFE_TOTAL_RE`'s shape."""
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        attached = source.attached_to
+        if attached is None:
+            return []
+        life = context.life_by_player.get(source.controller, 0)
+        return [
+            ContinuousEffect(
+                description=(
+                    f"{source.name}: {subject} creature has base power and toughness "
+                    f"{life}/{life} from its controller's life total"
+                ),
+                layer=Layer.POWER_TOUGHNESS,
+                sublayer=Sublayer.SET,
+                timestamp=timestamp,
+                source_id=source.id,
+                source_ability=_source_line_for(source, line),
+                selector=_only(attached),
+                modification=set_power_toughness(life, life),
+            )
+        ]
+
+    return builder
+
+
 def _basic_land_type_count_power_only_cda_builder(line: str) -> EffectBuilder:
     """`_BASIC_LAND_TYPE_COUNT_POWER_ONLY_CDA_RE`'s shape - Fblthp, Knows the
     Way's and Nishoba Brawler's power-only *domain* characteristic-defining
@@ -8558,6 +8666,12 @@ def quoted_ability_grants(
             for permanent in permanents:
                 if subtype in {t.lower() for t in printed_characteristics(permanent).subtypes}:
                     wanted.setdefault(permanent.id, set()).add(text)
+            continue
+        if match := _PAIRED_EACH_QUOTED_RE.fullmatch(normalized):
+            text = match.group("ability").strip()
+            grantable.add(text)
+            for permanent_id in paired_partner_ids(source, permanents):
+                wanted.setdefault(permanent_id, set()).add(text)
             continue
         if match := _INDEFINITE_KEYWORD_AND_QUOTED_GRANT_RE.fullmatch(normalized):
             text = (match.group("granted") or "").strip()
@@ -10153,7 +10267,14 @@ def _group_quoted_ability_grant_builder(
         selector = group_quoted_ability_grant_selector(match, source)
         if selector is None:
             return []
-        subject = (match.group("subject") or f"all {match.group('all_subtype')}").lower()
+        subject = (
+            match.group("subject")
+            or (
+                f"all {match.group('all_subtype')}"
+                if match.group("all_subtype") is not None
+                else f"{match.group('own_subtype')} creatures you control"
+            )
+        ).lower()
         return [
             ContinuousEffect(
                 description=f"{source.name}: {subject}"
@@ -11568,6 +11689,10 @@ def _parse_static_layer_sentence(sentence: str) -> EffectBuilder | None:
         return _all_activated_abilities_builder(all_activated, line=sentence)
     if _SELF_PROTECTION_FROM_CHOSEN_COLOR_RE.fullmatch(sentence):
         return _self_protection_from_chosen_color_builder(line=sentence)
+    if match := _PAIRED_EACH_QUOTED_RE.fullmatch(sentence):
+        granted = match.group("ability").strip()
+        if granted:
+            return _paired_quoted_grant_builder(granted, line=sentence)
     if match := _PAIRED_BOTH_RE.fullmatch(sentence):
         keywords = _split_and_validate_keywords(match["keywords"]) if match["keywords"] else []
         if keywords is not None:
@@ -11784,6 +11909,10 @@ def _parse_static_layer_sentence(sentence: str) -> EffectBuilder | None:
             subject=match.group("attachment").lower(),
             granted=match.group("granted").strip(),
             line=sentence,
+        )
+    if match := _ATTACHED_BASE_PT_LIFE_TOTAL_RE.fullmatch(sentence):
+        return _attached_base_pt_life_total_builder(
+            match.group("attachment").lower(), line=sentence
         )
     if match := _ATTACHED_CREATURE_STATIC_RE.fullmatch(sentence):
         raw_keywords = (
@@ -12381,6 +12510,9 @@ def _parse_static_layer_sentence(sentence: str) -> EffectBuilder | None:
             return None
         if match.group("all_subtype") is not None:
             if _singular_subtype_word(match.group("all_subtype")) is None:
+                return None
+        elif match.group("own_subtype") is not None:
+            if _singular_subtype_word(match.group("own_subtype")) is None:
                 return None
         elif _card_type_word(match.group("subject")) is None or (
             match.group("scope") is None and match.group("named") is None

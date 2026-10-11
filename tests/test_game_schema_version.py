@@ -2351,3 +2351,28 @@ def test_a_snapshot_written_before_soulbond_pairing_is_refused() -> None:
         match=f"schema_version={_SCHEMA_VERSION_BEFORE_EP01_T4_PAIRED_WITH}",
     ):
         Game.model_validate(dumped)
+
+
+#: The version stamped before EP01-R2-T6: `Game` gained `exerted_this_turn`
+#: (CR 701.43a). The last shape without it is main's 141.
+_SCHEMA_VERSION_BEFORE_EP01_R2_T6_EXERTED_THIS_TURN = 141
+
+
+def test_a_snapshot_written_before_exerted_this_turn_is_refused() -> None:
+    """A version-141 dump has no `exerted_this_turn`: decoded as current, a
+    creature exerted earlier this turn could exert again (Combat Celebrant).
+    Refused instead; the current version round-trips the ledger."""
+    assert "exerted_this_turn" in Game.model_fields
+    assert Game.CURRENT_SCHEMA_VERSION > _SCHEMA_VERSION_BEFORE_EP01_R2_T6_EXERTED_THIS_TURN
+    game = _a_played_game()
+    bears = _bears(game, "alice")
+    game.exerted_this_turn.add(bears.id)
+    dumped = game.model_dump(mode="json")
+    assert bears.id in Game.model_validate(dumped).exerted_this_turn
+    dumped["schema_version"] = _SCHEMA_VERSION_BEFORE_EP01_R2_T6_EXERTED_THIS_TURN
+
+    with pytest.raises(
+        SchemaVersionMismatch,
+        match=f"schema_version={_SCHEMA_VERSION_BEFORE_EP01_R2_T6_EXERTED_THIS_TURN}",
+    ):
+        Game.model_validate(dumped)

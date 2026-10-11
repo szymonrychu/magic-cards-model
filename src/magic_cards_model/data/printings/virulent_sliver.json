@@ -1,0 +1,155 @@
+{
+  "object": "card",
+  "id": "d5082a2a-e8b1-4799-ad29-a632d95ae1da",
+  "oracle_id": "767c896d-4ff6-4cd4-b3a4-80179e84e1cd",
+  "multiverse_ids": [
+    509611
+  ],
+  "mtgo_id": 86867,
+  "tcgplayer_id": 233996,
+  "cardmarket_id": 546796,
+  "name": "Virulent Sliver",
+  "lang": "en",
+  "released_at": "2021-03-19",
+  "uri": "https://api.scryfall.com/cards/d5082a2a-e8b1-4799-ad29-a632d95ae1da",
+  "scryfall_uri": "https://scryfall.com/card/tsr/246/virulent-sliver?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T07:29:24Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/d/5/d5082a2a-e8b1-4799-ad29-a632d95ae1da.jpg?1783927764",
+    "normal": "https://cards.scryfall.io/normal/front/d/5/d5082a2a-e8b1-4799-ad29-a632d95ae1da.jpg?1783927764",
+    "large": "https://cards.scryfall.io/large/front/d/5/d5082a2a-e8b1-4799-ad29-a632d95ae1da.jpg?1783927764",
+    "png": "https://cards.scryfall.io/png/front/d/5/d5082a2a-e8b1-4799-ad29-a632d95ae1da.png?1783927764",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/d/5/d5082a2a-e8b1-4799-ad29-a632d95ae1da.jpg?1783927764",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/d/5/d5082a2a-e8b1-4799-ad29-a632d95ae1da.jpg?1783927764",
+    "thumb": "https://cards.scryfall.io/thumb/front/d/5/d5082a2a-e8b1-4799-ad29-a632d95ae1da.webp?1783927764",
+    "grid": "https://cards.scryfall.io/grid/front/d/5/d5082a2a-e8b1-4799-ad29-a632d95ae1da.webp?1783927764",
+    "display": "https://cards.scryfall.io/display/front/d/5/d5082a2a-e8b1-4799-ad29-a632d95ae1da.webp?1783927764",
+    "art": "https://cards.scryfall.io/art/front/d/5/d5082a2a-e8b1-4799-ad29-a632d95ae1da.webp?1783927764",
+    "crop": "https://cards.scryfall.io/crop/front/d/5/d5082a2a-e8b1-4799-ad29-a632d95ae1da.webp?1783927764"
+  },
+  "mana_cost": "{G}",
+  "cmc": 1.0,
+  "type_line": "Creature \u2014 Sliver",
+  "oracle_text": "All Sliver creatures have poisonous 1. (Whenever a Sliver deals combat damage to a player, that player gets a poison counter. A player with ten or more poison counters loses the game.)",
+  "power": "1",
+  "toughness": "1",
+  "colors": [
+    "G"
+  ],
+  "color_identity": [
+    "G"
+  ],
+  "keywords": [],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "8a9cb417-8709-4336-be36-2fb0cea31fe1",
+      "component": "combo_piece",
+      "name": "Poison Counter",
+      "type_line": "Card",
+      "uri": "https://api.scryfall.com/cards/8a9cb417-8709-4336-be36-2fb0cea31fe1"
+    },
+    {
+      "object": "related_card",
+      "id": "d5082a2a-e8b1-4799-ad29-a632d95ae1da",
+      "component": "combo_piece",
+      "name": "Virulent Sliver",
+      "type_line": "Creature \u2014 Sliver",
+      "uri": "https://api.scryfall.com/cards/d5082a2a-e8b1-4799-ad29-a632d95ae1da"
+    }
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "11e90d1b-0502-43e6-b056-e24836523c13",
+  "set": "tsr",
+  "set_name": "Time Spiral Remastered",
+  "set_type": "masters",
+  "set_uri": "https://api.scryfall.com/sets/11e90d1b-0502-43e6-b056-e24836523c13",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Atsr&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/tsr?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/d5082a2a-e8b1-4799-ad29-a632d95ae1da/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A767c896d-4ff6-4cd4-b3a4-80179e84e1cd&unique=prints",
+  "collector_number": "246",
+  "digital": false,
+  "rarity": "common",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Franz Vohwinkel",
+  "artist_ids": [
+    "3a243c17-3baa-4b53-9599-645311cd7d3d"
+  ],
+  "illustration_id": "093a05c9-c0a5-406e-b636-e2a1c0f15e14",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 6643,
+  "penny_rank": 5919,
+  "preview": {
+    "source": "Eurogamer",
+    "source_uri": "https://www.eurogamer.de/articles/mtg-hier-sind-8-spoilerkarten-zu-time-spiral-remastered",
+    "previewed_at": "2021-03-03"
+  },
+  "prices": {
+    "usd": "0.33",
+    "usd_foil": "1.18",
+    "usd_etched": null,
+    "eur": "0.23",
+    "eur_foil": "0.82",
+    "tix": "0.04"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=509611&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DVirulent%2BSliver",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DVirulent%2BSliver",
+    "edhrec": "https://edhrec.com/route/?cc=Virulent+Sliver"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F233996%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=546796&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/86867?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

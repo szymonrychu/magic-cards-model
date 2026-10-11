@@ -518,3 +518,152 @@ def test_marina_vendrells_grimoire_no_maximum_and_no_zero_life_loss():
 )
 def test_x_card_hand_size_lines_are_handled(name, line):
     handled(name, line)
+
+
+# -- poisonous, printed by a grant (CR 702.70a/b, CR 104.3d) -----------------
+#
+# CR 702.70a: "Poisonous N" means "Whenever this creature deals combat damage
+# to a player, that player gets N poison counters." CR 702.70b: several
+# instances trigger separately. Virulent Sliver grants it to every Sliver on
+# the battlefield (both players'), Snake Cult Initiation to the creature it
+# enchants - two wordings of the same counted-keyword grant.
+
+
+def _attack_and_resolve(scenario, *attackers):
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    scenario.attack_with(*attackers)
+    scenario.no_blocks()
+    scenario.combat_damage()
+    while scenario.game.stack or scenario.game.pending_triggers:
+        scenario.game.put_triggers_on_stack()
+        if scenario.game.stack:
+            scenario.resolve_top()
+
+
+def test_virulent_sliver_gives_a_poison_counter_on_combat_damage():
+    scenario = build(["Virulent Sliver"])
+    _attack_and_resolve(scenario, scenario.creature("Virulent Sliver"))
+    assert scenario.player("bob").life == 19
+    assert scenario.player("bob").poison == 1
+
+
+def test_two_virulent_slivers_give_each_sliver_two_instances():
+    """CR 702.70b: each instance triggers separately - one attacker with two
+    grants of poisonous 1 gives two counters."""
+    scenario = build(["Virulent Sliver", "Virulent Sliver"])
+    attacker = scenario.creatures("Virulent Sliver")[0]
+    _attack_and_resolve(scenario, attacker)
+    assert scenario.player("bob").poison == 2
+
+
+def test_virulent_sliver_grants_an_opponents_sliver_too():
+    scenario = build(["Virulent Sliver"], ["Cautery Sliver"])
+    theirs = scenario.creature("Cautery Sliver", "bob")
+    assert "Poisonous 1" in scenario.game.characteristics_of(theirs).abilities
+
+
+def test_virulent_sliver_does_not_grant_a_non_sliver():
+    scenario = build(["Virulent Sliver", "Grizzly Bears"])
+    _attack_and_resolve(scenario, scenario.creature("Grizzly Bears"))
+    assert scenario.player("bob").life == 18
+    assert scenario.player("bob").poison == 0
+
+
+def test_snake_cult_initiation_gives_three_poison_counters():
+    scenario = build(["Grizzly Bears"], alice_hand=["Snake Cult Initiation"])
+    bears = scenario.creature("Grizzly Bears")
+    aura = scenario.put_onto_battlefield("Snake Cult Initiation")
+    aura.attach_to(bears)
+    _attack_and_resolve(scenario, bears)
+    assert scenario.player("bob").poison == 3
+
+
+def test_snake_cult_initiation_blocked_gives_no_poison():
+    scenario = build(["Grizzly Bears"], ["Wall of Omens"], alice_hand=["Snake Cult Initiation"])
+    bears = scenario.creature("Grizzly Bears")
+    aura = scenario.put_onto_battlefield("Snake Cult Initiation")
+    aura.attach_to(bears)
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    scenario.attack_with(bears)
+    scenario.block(bears, scenario.creature("Wall of Omens", "bob"))
+    scenario.combat_damage()
+    scenario.game.put_triggers_on_stack()
+    assert not scenario.game.stack
+    assert scenario.player("bob").poison == 0
+
+
+def test_snake_cult_initiation_poison_alone_can_end_the_game():
+    """CR 104.3d: ten poison counters lose the game."""
+    scenario = build(["Grizzly Bears"], alice_hand=["Snake Cult Initiation"])
+    scenario.game.add_player_counters("bob", "poison", 7)
+    bears = scenario.creature("Grizzly Bears")
+    aura = scenario.put_onto_battlefield("Snake Cult Initiation")
+    aura.attach_to(bears)
+    _attack_and_resolve(scenario, bears)
+    scenario.state_based_actions()
+    assert not scenario.game.is_in_game("bob")
+
+
+@pytest.mark.parametrize(
+    ("name", "line"),
+    [
+        ("Virulent Sliver", "All Sliver creatures have poisonous 1."),
+        ("Snake Cult Initiation", "Enchanted creature has poisonous 3."),
+    ],
+)
+def test_poisonous_grant_lines_are_handled(name, line):
+    handled(name, line)
+
+
+# -- base power and toughness from a life total (CR 613.4b, CR 109.5) --------
+#
+# Aettir and Priwen: "Equipped creature has base power and toughness X/X,
+# where X is your life total." A sublayer 7b set (CR 613.4b), X read live off
+# the Equipment's controller's life total ("your", CR 109.5); 7c pumps and
+# counters still apply on top (CR 613.4c). No other legal printing carries
+# the X-from-life wording.
+
+
+def _pt(scenario, state):
+    chars = scenario.game.computed_board().of(state)
+    return chars.power, chars.toughness
+
+
+def _equipped_bears(alice_life=20, bob_life=20):
+    scenario = build(
+        ["Grizzly Bears", "Aettir and Priwen"], alice_life=alice_life, bob_life=bob_life
+    )
+    bears = scenario.creature("Grizzly Bears")
+    on_field(scenario, "Aettir and Priwen")[0].attach_to(bears)
+    return scenario, bears
+
+
+def test_aettir_sets_base_power_and_toughness_to_your_life_total():
+    scenario, bears = _equipped_bears(alice_life=17, bob_life=5)
+    assert _pt(scenario, bears) == (17, 17)
+
+
+def test_aettir_tracks_the_life_total_live():
+    scenario, bears = _equipped_bears()
+    scenario.game.lose_life("alice", 6)
+    assert _pt(scenario, bears) == (14, 14)
+    scenario.game.gain_life("alice", 3)
+    assert _pt(scenario, bears) == (17, 17)
+
+
+def test_aettir_counters_apply_on_top_of_the_set_value():
+    scenario, bears = _equipped_bears(alice_life=10)
+    bears.counters.add(Counter.PLUS_ONE, 2)
+    assert _pt(scenario, bears) == (12, 12)
+
+
+def test_aettir_unattached_leaves_the_creature_alone():
+    scenario = build(["Grizzly Bears", "Aettir and Priwen"], alice_life=30)
+    assert _pt(scenario, scenario.creature("Grizzly Bears")) == (2, 2)
+
+
+def test_aettir_line_is_handled():
+    handled(
+        "Aettir and Priwen",
+        "Equipped creature has base power and toughness X/X, where X is your life total.",
+    )

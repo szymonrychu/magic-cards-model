@@ -2007,9 +2007,25 @@ class GrantAbility(ModificationBase):
     text: str
 
     def __call__(self, chars: Characteristics, board: Board) -> Characteristics:
-        if chars.has_ability(self.text):
+        if chars.has_ability(self.text) and not _is_counted_trigger_keyword(self.text):
             return chars
         return chars.with_(abilities=chars.abilities + (self.text,))
+
+
+@functools.cache
+def _is_counted_trigger_keyword(text: str) -> bool:
+    """Whether `text` is a numbered keyword `machines/keywords.py` writes out
+    as a triggered ability ("Poisonous 1", "Annihilator 2"). Two grants of one
+    are two abilities, never one: each such rule says its instances trigger
+    separately (CR 702.70b poisonous, CR 702.86b annihilator), so the dedupe
+    `GrantAbility` applies to a redundant keyword (CR 702.3c, CR 702.18b) must
+    not swallow the second."""
+    match = _NUMBERED_KEYWORD_ITEM_RE.match(text.strip().rstrip("."))
+    if match is None or match.end() != len(text.strip().rstrip(".")):
+        return False
+    from ..keywords import writes_triggered_ability
+
+    return writes_triggered_ability(match.group("keyword"))
 
 
 class GrantAbilityInstance(ModificationBase):
@@ -3740,6 +3756,15 @@ _CANT_BE_BLOCKED_ITEM_RE = re.compile(
 _CANT_ATTACK_ALONE_ITEM_RE = re.compile(r"^can'?t attack alone(?:,\s*|\s+and\s+|$)", re.IGNORECASE)
 
 
+def _grantable_numbered_keyword(keyword: str) -> bool:
+    """A numbered keyword a grant may hand out: one a machine reads the N of
+    (`_KNOWN_NUMBERED_KEYWORDS`), or one `machines/keywords.py` writes out as
+    a triggered ability whose N it reads (CR 702.70a's "poisonous N")."""
+    from ..keywords import writes_triggered_ability
+
+    return keyword.lower() in _KNOWN_NUMBERED_KEYWORDS or writes_triggered_ability(keyword)
+
+
 def _split_and_validate_keywords(raw: str) -> list[str] | None:
     """ "double strike and lifelink" / "menace, deathtouch and first strike" /
     "hexproof from monocolored" / "protection from red and from blue" -> each
@@ -3781,7 +3806,7 @@ def _split_and_validate_keywords(raw: str) -> list[str] | None:
             remaining = remaining[costed.end() :].strip()
             continue
         numbered = _NUMBERED_KEYWORD_ITEM_RE.match(remaining)
-        if numbered is not None and numbered.group("keyword").lower() in _KNOWN_NUMBERED_KEYWORDS:
+        if numbered is not None and _grantable_numbered_keyword(numbered.group("keyword")):
             result.append(f"{numbered.group('keyword').capitalize()} {numbered.group('n')}")
             remaining = remaining[numbered.end() :].strip()
             continue

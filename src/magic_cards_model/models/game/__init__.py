@@ -1435,6 +1435,15 @@ class Game(
     which is not enough to judge *which* creature a target names - FRA
     stream S2's own field, not folded into `turn_facts` for that reason."""
 
+    exerted_this_turn: SortedSet[UUID] = Field(default_factory=set)
+    """Which permanents (by id) have been exerted this turn (CR 701.43a), for
+    Combat Celebrant's "If this creature hasn't been exerted this turn, you may
+    exert it as it attacks." - `CardState.exerted` is the untap-step flag and
+    stays set across the turn boundary, so it cannot answer "this turn".
+    Recorded where a permanent is actually exerted (`machines/exert_on_attack`
+    and the exert cost component) and cleared when a new turn begins, the
+    same reset `attacked_this_turn` gets."""
+
     attacked_players_this_turn: dict[UUID, SortedSet[str]] = Field(default_factory=dict)
     """Which players (by username) each attacking creature (by id) attacked
     this turn (CR 508.1a), for Angel of Destiny's own "each player this
@@ -1947,7 +1956,7 @@ class Game(
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 141
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 147
     #: 67: `machines/cost.CostComponent` gained `link_to_permanent_id` (CR
     #: 607.2q), reachable from `Game` through a pending `AbilityOnStack.
     #: keyword_activation`/`.unless_payment`'s own `CostPayment.components`.
@@ -2265,6 +2274,9 @@ class Game(
     #: untapped creatures you control with flying") and
     #: `CreaturesControlledByQuality.excluding_card_id` (its "other creatures
     #: you control with flying"), both defaulting to nothing in an older dump.
+    #: 147 (EP01-R2-T6, reserved main + 6): `Game` gained `exerted_this_turn`
+    #: (CR 701.43a, Combat Celebrant's "hasn't been exerted this turn"); an
+    #: older dump would let a creature exerted earlier this turn exert again.
     #: 141 (EP01-R1-T8): `CardState` gained `crafted_with` (CR 702.167c, the
     #: exiled cards used to craft a permanent), `KeywordActivation` gained
     #: `craft_materials` and `ManaSpend` gained `no_mana` (Hogaak); an older

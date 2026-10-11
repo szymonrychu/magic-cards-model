@@ -1706,6 +1706,24 @@ def _ingest_ability(ability: KeywordAbility) -> TriggeredAbility:
     )
 
 
+def _poisonous_ability(ability: KeywordAbility) -> TriggeredAbility:
+    """CR 702.70a: "Poisonous N" means "Whenever this creature deals combat
+    damage to a player, that player gets N poison counters." CR 702.70b's
+    "each triggers separately" is one ability per instance, printed or
+    granted ("All Sliver creatures have poisonous 1.", "Enchanted creature
+    has poisonous 3.")."""
+    count = ability.count if ability.count is not None else 1
+    noun = "poison counter" if count == 1 else "poison counters"
+    return _expansion(
+        ability,
+        keyword="poisonous",
+        word=TriggerWord.WHENEVER,
+        condition="this creature deals combat damage to a player",
+        effect=f"that player gets {count} {noun}",
+        event=TriggerEvent.DEALS_DAMAGE,
+    )
+
+
 _TRIGGER_EXPANSIONS: dict[str, Callable[[KeywordAbility], list[TriggeredAbility]]] = {
     "ward": _single(_ward_ability),
     "prowess": _single(_prowess_ability),
@@ -1736,6 +1754,7 @@ _TRIGGER_EXPANSIONS: dict[str, Callable[[KeywordAbility], list[TriggeredAbility]
     "increment": _single(_increment_ability),
     "flanking": _single(_flanking_ability),
     "ingest": _single(_ingest_ability),
+    "poisonous": _single(_poisonous_ability),
     "decayed": _single(_decayed_ability),
 }
 

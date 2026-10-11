@@ -559,6 +559,7 @@ class CostComponent(EngineModel):
     own docstring."""
 
     _reveals_recorded: list[Any] = PrivateAttr(default_factory=list)
+    _exerted_recorded: list[Any] = PrivateAttr(default_factory=list)
     """The `Reveal` records a paid `ComponentKind.REVEAL` wrote, so `unpay` can
     take exactly those back (CR 733.1). Private for the same reason `_undo` is."""
 
@@ -1023,6 +1024,9 @@ class CostComponent(EngineModel):
             for card in self.cards:
                 self._remember(card)
                 card.exerted = True  # CR 701.43a
+                if game is not None and card.id not in game.exerted_this_turn:
+                    game.exerted_this_turn.add(card.id)
+                    self._exerted_recorded.append(card.id)
         elif self.kind is ComponentKind.TAP:
             for card in self.cards:
                 self._remember(card)
@@ -1331,6 +1335,10 @@ class CostComponent(EngineModel):
             # more than once, so the rewind is simply putting the flag back.
             for card, _ in reversed(self._undo):
                 _live(card).exerted = False
+            if game is not None:
+                for card_id in self._exerted_recorded:
+                    game.exerted_this_turn.discard(card_id)
+            self._exerted_recorded = []
         elif self.kind is ComponentKind.TAP:
             # Tapping moves nothing, so untapping is the whole rewind.
             for card, _ in reversed(self._undo):

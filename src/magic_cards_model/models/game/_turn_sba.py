@@ -2477,6 +2477,7 @@ class TurnSbaMixin:
             self.permanents_left_battlefield_this_turn = {}
             self.lands_entered_this_turn = {}
             self.attacked_this_turn = set()
+            self.exerted_this_turn = set()
             self.attacked_players_this_turn = {}
             self.became_tapped_count_this_turn = {}
             self.permanents_sacrificed_this_turn = {}
