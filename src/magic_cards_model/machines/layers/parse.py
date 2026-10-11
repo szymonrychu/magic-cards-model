@@ -2137,7 +2137,8 @@ _GROUP_EVASION_GRANT_RE = re.compile(
 #: excluded (`other_creatures_controlled_by`), so it keeps only its printed
 #: ward rather than gaining a second instance from its own line.
 _GROUP_QUOTED_ABILITY_GRANT_RE = re.compile(
-    r"^(?:(?P<other>other )?(?P<subject>planeswalkers|creatures|lands|artifacts|enchantments|permanents)"
+    r"^(?:(?P<other>other )?"
+    r"(?P<subject>planeswalkers|creatures|lands|artifacts|enchantments|permanents)"
     r"(?P<scope> you control)?(?P<named> with the chosen name)?"
     # CR 205.3m: "All Slivers have "..."" (Cautery Sliver) - every creature of
     # the subtype, whoever controls it.

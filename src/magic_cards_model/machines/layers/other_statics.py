@@ -26,7 +26,8 @@ from .model import (
 )
 
 _NOT_LEGENDARY_IF_TOKEN_RE = re.compile(
-    r"^(?:this (?:creature|permanent|artifact|enchantment|land)|it) isn'?t legendary if it'?s a token\.?$",
+    r"^(?:this (?:creature|permanent|artifact|enchantment|land)|it) "
+    r"isn'?t legendary if it'?s a token\.?$",
     re.IGNORECASE,
 )
 
@@ -69,7 +70,9 @@ def _lose_all_except_mana_builder(card_type: Type, line: str) -> EffectBuilder:
     ) -> list[ContinuousEffect]:
         return [
             ContinuousEffect(
-                description=f"{source.name}: {card_type.value}s lose all abilities except mana abilities",
+                description=(
+                    f"{source.name}: {card_type.value}s lose all abilities except mana abilities"
+                ),
                 layer=Layer.ABILITY,
                 timestamp=timestamp,
                 source_id=source.id,
