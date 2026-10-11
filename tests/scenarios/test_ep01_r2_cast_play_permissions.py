@@ -706,3 +706,72 @@ def test_roll_tables_are_credited():
     _handled("Wizard's Spellbook", "Copy that card")
     _handled("Wizard's Spellbook", "Copy each card exiled")
     _handled("Chaos Channeler", "roll a d20")
+
+
+# -- Weftwalking: shuffle hand and graveyard away, draw seven, if cast ---------
+
+
+def _weftwalking_board():
+    return _main(
+        alice={
+            "hand": ["Weftwalking", "Grizzly Bears", "Lightning Bolt"],
+            "graveyard": ["Llanowar Elves"],
+            "battlefield": ["Island"] * 6,
+            "library": ["Forest"] * 12,
+        },
+        bob={"library": ["Island"] * 6},
+    )
+
+
+def test_weftwalking_cast_shuffles_hand_and_graveyard_into_the_library_and_draws_seven():
+    scenario = _weftwalking_board()
+    scenario.cast_and_resolve("Weftwalking", *scenario.untapped_sources(*["Island"] * 6))
+    scenario.pass_until_resolved()
+    alice = scenario.player("alice")
+    assert len(alice.hand) == 7
+    assert not alice.graveyard
+    assert len(alice.library) == 12 + 2 + 1 - 7, "hand (2 left) and graveyard went into the library"
+
+
+def test_weftwalking_put_onto_the_battlefield_does_not_shuffle():
+    scenario = _weftwalking_board()
+    scenario.put_onto_battlefield("Weftwalking")
+    scenario.pass_until_resolved()
+    alice = scenario.player("alice")
+    assert len(alice.hand) == 2
+    assert [c.name for c in alice.graveyard] == ["Llanowar Elves"]
+
+
+def _affordable_casts(scenario, username="alice"):
+    return [
+        action
+        for action in legal_actions(scenario.game, username)
+        if action.kind is ActionKind.CAST and action.affordable is Affordability.YES
+    ]
+
+
+def test_weftwalking_makes_the_first_spell_each_turn_free_but_not_the_second():
+    scenario = _main(
+        alice={"hand": ["Grizzly Bears", "Grizzly Bears"], "battlefield": ["Weftwalking"]},
+        bob={},
+    )
+    assert _affordable_casts(scenario), "the first spell may be cast without paying its mana cost"
+    casting = scenario.cast("Grizzly Bears", "alice")
+    casting.use_keyword("Weftwalking")
+    scenario.pay_with(casting.begin_paying())
+    scenario.put_on_stack(casting)
+    scenario.resolve_top()
+    assert len(scenario.game.spells_cast_this_turn["alice"]) == 1
+    assert not _affordable_casts(scenario), "the second spell this turn is not free"
+
+
+def test_weftwalking_grants_the_free_first_spell_to_the_opponent_on_their_own_turn_only():
+    scenario = _main(
+        alice={"battlefield": ["Weftwalking"]},
+        bob={"hand": ["Grizzly Bears"]},
+    )
+    assert not _affordable_casts(scenario, "bob"), "it is not bob's turn"
+
+
+def test_weftwalking_is_credited():
+    _handled("Weftwalking", "shuffle your hand and graveyard into your library")
