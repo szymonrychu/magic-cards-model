@@ -2951,7 +2951,11 @@ from ._common import (  # noqa: E402
     _targets_understood,
     computed_permanents,
 )
-from .amounts import count_expression, player_counter_count  # noqa: E402
+from .amounts import (  # noqa: E402
+    _that_many_or_notice,  # noqa: E402
+    count_expression,
+    player_counter_count,
+)
 from .continuous import _who_cant_discard_consequence  # noqa: E402
 from .dispatch import (  # noqa: E402
     _ability_effect_or_notice,
@@ -2976,5 +2980,3 @@ from .removal import (  # noqa: E402
 from .search import _search_quality_is_readable  # noqa: E402
 from .text import _plain_resolution_sentences, _strip_non_effect_preamble  # noqa: E402
 from .tokens import _is_notice_only, _parse_generic_token_descriptor  # noqa: E402
-from .amounts import _that_many_or_notice  # noqa: E402
-from .tokens import _is_notice_only  # noqa: E402

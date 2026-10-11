@@ -1308,7 +1308,7 @@ from ._common import (  # noqa: E402
 )
 from .amounts import _that_many_or_notice, amount_expression, count_expression  # noqa: E402
 from .damage import _parse_until_eot_assigns_toughness  # noqa: E402
-from .dispatch import _spell_effect_or_notice  # noqa: E402
+from .dispatch import _ability_effect_or_notice, _spell_effect_or_notice  # noqa: E402
 from .draw_discard import _discard_cards  # noqa: E402
 from .modal import _choose_permanents_to_sacrifice  # noqa: E402
 from .removal import (  # noqa: E402
@@ -1320,4 +1320,3 @@ from .removal import (  # noqa: E402
 from .search import _search_library  # noqa: E402
 from .text import _strip_non_effect_preamble  # noqa: E402
 from .tokens import _is_notice_only  # noqa: E402
-from .dispatch import _ability_effect_or_notice  # noqa: E402
