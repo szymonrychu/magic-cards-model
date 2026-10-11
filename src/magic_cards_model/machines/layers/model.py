@@ -1758,6 +1758,9 @@ class GroupMatch(SelectorBase):
     with_keyword: str | None = None
     without_keyword: str | None = None
     with_counter: str | None = None
+    named: tuple[str, ...] = ()
+    """Lowercased card names: "Equipment named Sword of Kaldra, Shield of
+    Kaldra, and Helm of Kaldra" (CR 201.2)."""
     empty_if_unset: bool = False
     """A "of the chosen type" group whose source recorded no choice is empty."""
 
@@ -1771,6 +1774,8 @@ class GroupMatch(SelectorBase):
         ):
             return False
         if self.other_than is not None and chars.card_id == self.other_than:
+            return False
+        if self.named and chars.name.lower() not in self.named:
             return False
         if any(card_type not in chars.types for card_type in self.all_types):
             return False

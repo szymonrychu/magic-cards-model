@@ -76,6 +76,7 @@ _GROUP_TYPE_WORDS = {
 #: Cheap lowercase gate: a group sentence names one of these verbs.
 _VERB_RE = re.compile(r" (?:gets?|have|has|are|is|loses?) ")
 
+_NAMED_RE = re.compile(r"^(?P<head>.+?) named (?P<names>.+)$")
 _SUFFIX_CONTROL_RE = re.compile(r" (?P<who>you control|your opponents control)$")
 _SUFFIX_CHOSEN_RE = re.compile(r" of the chosen type$")
 _SUFFIX_COUNTER_RE = re.compile(
@@ -102,6 +103,16 @@ def parse_group(subject: str) -> dict[str, Any] | None:
         if text.startswith(quantifier):
             text = text[len(quantifier) :]
     fields: dict[str, Any] = {"scope": "any"}
+    if named := _NAMED_RE.fullmatch(text):
+        # "Equipment named Sword of Kaldra, Shield of Kaldra, and Helm of
+        # Kaldra": the head is an ordinary group, the tail a list of names.
+        head = parse_group(named["head"])
+        if head is None:
+            return None
+        head["named"] = tuple(
+            part.strip() for part in re.split(r",\s*(?:and\s+)?|\s+and\s+", named["names"]) if part
+        )
+        return head
     chosen = False
     changed = True
     while changed:
@@ -194,6 +205,12 @@ def group_selector(spec: dict[str, Any], source: CardState) -> GroupMatch:
     from .parse import chosen_creature_type_of
 
     fields = {key: value for key, value in spec.items() if key not in ("other", "chosen")}
+    if fields.get("named"):
+        # CR 201.5: the source's own name in the list reaches the parser as
+        # "this permanent".
+        fields["named"] = tuple(
+            source.name.lower() if name == "this permanent" else name for name in fields["named"]
+        )
     chosen_missing = False
     if spec["chosen"]:
         chosen_type = chosen_creature_type_of(source)
