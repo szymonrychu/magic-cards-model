@@ -42,7 +42,7 @@
         "kind": "choose_cards",
         "player": "alice",
         "players": [],
-        "prompt": "return a land(s) you control to its owner's hand",
+        "prompt": "return a land you control to its owner's hand",
         "source": "Simic Growth Chamber"
       }
     ],

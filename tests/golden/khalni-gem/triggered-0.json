@@ -42,7 +42,7 @@
         "kind": "choose_cards",
         "player": "alice",
         "players": [],
-        "prompt": "return 2 land(s) you control to its owner's hand",
+        "prompt": "return 2 lands you control to its owner's hand",
         "source": "Khalni Gem"
       }
     ],

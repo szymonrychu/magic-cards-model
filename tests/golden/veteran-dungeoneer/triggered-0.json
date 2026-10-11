@@ -51,7 +51,7 @@
         "source": "Veteran Dungeoneer's triggered ability"
       }
     ],
-    "fields_changed": ["delayed_triggers"],
+    "fields_changed": ["delayed_triggers", "turn_facts"],
     "notices": {},
     "objects": {},
     "players": {},

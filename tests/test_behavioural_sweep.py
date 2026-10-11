@@ -1501,7 +1501,15 @@ def _board_material(card_name: str, condition: str) -> tuple[Material, ...]:
                 if name is not None:
                     material.append(Material(name, ALICE, Zone.BATTLEFIELD))
             return tuple(material) if material and confirmed(tuple(material)) else ()
-        passing = [name for name in candidates if _passes(game, source, test, card_state(name))]
+        # A printing that changes who can win (Abyssal Persecutor's "You can't
+        # win the game ...", CR 101.2) is no neutral material: it would turn a
+        # met "you win the game" condition (Liliana's Contract) into nothing.
+        passing = [
+            name
+            for name in candidates
+            if "can't win the game" not in (pool()[name].oracle_text or "")
+            and _passes(game, source, test, card_state(name))
+        ]
         names = passing[:6]
         # A land quality ("seven or more Plains", Emeria): `_board_candidates`
         # leaves lands out, so the basic lands that pass the quality are tried

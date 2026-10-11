@@ -51,7 +51,7 @@
         "source": "Acererak the Archlich's triggered ability"
       }
     ],
-    "fields_changed": ["delayed_triggers", "known_carries", "permanents_left_battlefield_this_turn", "turn_history"],
+    "fields_changed": ["delayed_triggers", "known_carries", "permanents_left_battlefield_this_turn", "turn_facts", "turn_history"],
     "notices": {},
     "objects": {
       "Acererak the Archlich@alice#1": {

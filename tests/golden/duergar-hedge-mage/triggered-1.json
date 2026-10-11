@@ -5,7 +5,7 @@
     "modes": [],
     "on_stack": true,
     "source": "Duergar Hedge-Mage@alice#1",
-    "targets": ["Aang's Iceberg@bob#1"],
+    "targets": ["A Realm Reborn@bob#1"],
     "x": 0
   },
   "board": {
@@ -20,7 +20,7 @@
         "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
       },
       "bob": {
-        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Kaito, Bane of Nightmares", "Fleecemane Lion", "Icehide Golem", "Shadowspear", "Dragonfire Blade", "Aang's Iceberg"],
+        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Kaito, Bane of Nightmares", "Fleecemane Lion", "Icehide Golem", "Shadowspear", "Dragonfire Blade", "A Realm Reborn"],
         "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel"],
         "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt"],
         "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
@@ -49,8 +49,74 @@
     "fields_changed": ["graveyard_arrivals_announced", "graveyard_arrivals_this_turn", "permanents_left_battlefield_this_turn", "turn_history"],
     "notices": {},
     "objects": {
-      "Aang's Iceberg@bob#1": {
+      "A Realm Reborn@bob#1": {
         "zone": ["battlefield", "graveyard"]
+      },
+      "Dragonfire Blade@bob#1": {
+        "granted": [
+          ["{T}: Add one mana of any color."],
+          []
+        ]
+      },
+      "Fleecemane Lion@bob#1": {
+        "granted": [
+          ["{T}: Add one mana of any color."],
+          []
+        ]
+      },
+      "Forest@bob#1": {
+        "granted": [
+          ["{T}: Add one mana of any color."],
+          []
+        ]
+      },
+      "Icehide Golem@bob#1": {
+        "granted": [
+          ["{T}: Add one mana of any color."],
+          []
+        ]
+      },
+      "Island@bob#1": {
+        "granted": [
+          ["{T}: Add one mana of any color."],
+          []
+        ]
+      },
+      "Kaito, Bane of Nightmares@bob#1": {
+        "granted": [
+          ["{T}: Add one mana of any color."],
+          []
+        ]
+      },
+      "Mountain@bob#1": {
+        "granted": [
+          ["{T}: Add one mana of any color."],
+          []
+        ]
+      },
+      "Plains@bob#1": {
+        "granted": [
+          ["{T}: Add one mana of any color."],
+          []
+        ]
+      },
+      "Shadowspear@bob#1": {
+        "granted": [
+          ["{T}: Add one mana of any color."],
+          []
+        ]
+      },
+      "Swamp@bob#1": {
+        "granted": [
+          ["{T}: Add one mana of any color."],
+          []
+        ]
+      },
+      "Wastes@bob#1": {
+        "granted": [
+          ["{T}: Add one mana of any color."],
+          []
+        ]
       }
     },
     "players": {},
