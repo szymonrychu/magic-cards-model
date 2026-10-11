@@ -1867,6 +1867,36 @@ def _parse_each_player_may_discard_hand_and_draw_clause(
     return effect  # type: ignore[return-value]
 
 
+#: "Each opponent discards their hand." (Myojin of Night's Reach) and "Each
+#: player discards their hand." - CR 701.9a's discard of the whole hand, as
+#: one instruction per affected player in APNAP order (CR 101.4). No choice is
+#: asked: a hand discarded whole has nothing to choose (CR 701.9b).
+_EACH_PLAYER_DISCARDS_HAND_RE = re.compile(
+    r"^each (?P<who>opponent|player) discards (?:their|his or her) hand\.?$", re.IGNORECASE
+)
+
+
+@MIXED_CLAUSE.rung("s25", for_spell=FORWARD)
+def _parse_each_player_discards_hand_clause(text: str, *, for_spell: bool) -> TargetedClause | None:
+    """`_EACH_PLAYER_DISCARDS_HAND_RE`'s shape."""
+    match = _EACH_PLAYER_DISCARDS_HAND_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    opponents_only = match.group("who").lower() == "opponent"
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        source = stack_object.name if for_spell else stack_object.source_name  # type: ignore[union-attr]
+        controller = game.controller_of(stack_object).username
+        for player in _players_in_apnap_order(game):
+            if opponents_only and player.username == controller:
+                continue
+            hand = list(player.hand)
+            if hand:
+                game.discard_cards(player.username, hand, source=source)
+
+    return effect  # type: ignore[return-value]
+
+
 #: "Draw a card if you control a `<color>` permanent[ other than `<self>`]."
 #: - Ral, Monsoon Mage's own −2, second sentence. A mandatory, board-state-
 #: gated draw (CR 121.1), not CR 608.2d's "you may" - the condition is

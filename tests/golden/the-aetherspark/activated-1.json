@@ -1,5 +1,5 @@
 {
-  "ability": "−10: Add ten mana of any one color.",
+  "ability": "−5: Draw two cards.",
   "action": {
     "controller": "alice",
     "modes": [],
@@ -35,32 +35,18 @@
   "card": "The Aetherspark",
   "delta": {
     "created": {},
-    "decisions": [
-      {
-        "amount": 0,
-        "cards": [],
-        "kind": "choose_a_quality",
-        "player": "alice",
-        "players": [],
-        "prompt": "add mana of any color",
-        "source": "The Aetherspark"
-      }
-    ],
-    "fields_changed": [],
+    "decisions": [],
+    "fields_changed": ["cards_drawn_this_turn"],
     "notices": {},
-    "objects": {},
-    "players": {
-      "alice": {
-        "mana_pool": [
-          {},
-          {
-            "floating": {
-              "W": 10
-            }
-          }
-        ]
+    "objects": {
+      "Forest@alice#6": {
+        "zone": ["library", "hand"]
+      },
+      "Grizzly Bears@alice#3": {
+        "zone": ["library", "hand"]
       }
     },
+    "players": {},
     "stack": []
   },
   "family": "activated",

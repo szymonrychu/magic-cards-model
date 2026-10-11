@@ -1507,6 +1507,53 @@ def _parse_target_player_may_search_named_card_clause(
     return effect
 
 
+#: "[You may] search your library for a card named [name], reveal it, put it
+#: into your hand, then shuffle." - the controller's own twin of the
+#: partner-with shape above (Asmoranomardicadaistinaculdacar's enters trigger).
+_YOU_SEARCH_NAMED_CARD_RE = re.compile(
+    r"^(?P<may>you may )?search your library for a card named "
+    r"(?P<name>.+?), reveal it, put it into your hand, then shuffle$",
+    re.IGNORECASE,
+)
+
+
+@MIXED_CLAUSE.rung("s31", for_spell=FORWARD)
+def _parse_you_search_named_card_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
+    """`_YOU_SEARCH_NAMED_CARD_RE`'s shape, or `None`. The optional "you may"
+    is CR 608.2d's plain optional instruction; the search itself is declinable
+    per card (CR 701.23b) and shuffles whether or not anything was found."""
+    match = _YOU_SEARCH_NAMED_CARD_RE.fullmatch(clause.strip().rstrip("."))
+    if match is None:
+        return None
+    name = match.group("name").strip()
+    optional = match.group("may") is not None
+
+    def matches(state: CardState) -> bool:
+        return state.name == name
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        source = stack_object.name if for_spell else stack_object.source_name  # type: ignore[union-attr]
+        source_id = source_id_of(stack_object)
+        controller = game.controller_of(stack_object)
+        if optional and not game.may(
+            controller,
+            f"search your library for a card named {name}",
+            source=source,
+            source_id=source_id,
+        ):
+            return
+        game.search_and_put(
+            controller,
+            matches,
+            destination=Zone.HAND,
+            reveal=True,
+            source=source,
+            source_id=source_id,
+        )
+
+    return effect
+
+
 def _search_and_exile_matching_name(
     game: "Game",
     zones_owner: Player,

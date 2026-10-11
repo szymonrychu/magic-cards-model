@@ -3378,10 +3378,10 @@ def _unread_condition_matches(
     if match is not None:
         if event.event is not ExtraTriggerEvent.LEAVES_GRAVEYARD:
             return False
-        # "your graveyard": whose graveyard the card left, which the event
-        # carries as `player` (the graveyard's owner), not the controller of
-        # whatever effect moved it.
-        if event.player != controller:
+        # "your graveyard" / "an opponent's graveyard": whose graveyard the
+        # card left, which the event carries as `player` (the graveyard's
+        # owner), not the controller of whatever effect moved it.
+        if (event.player == controller) != (match.group("whose") == "your"):
             return False
         types = match.group("types")
         return types is None or _types_match(event.subject_types, types)

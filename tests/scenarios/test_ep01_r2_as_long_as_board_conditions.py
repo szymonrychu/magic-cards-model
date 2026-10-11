@@ -809,3 +809,202 @@ def test_the_equipped_creature_dealing_combat_damage_adds_that_many_loyalty_coun
     while scenario.game.stack:
         scenario.resolve_top()
     assert spark.counter_count("loyalty") == before + 2
+
+
+# -- The remaining printed clauses of the listed cards -----------------------------------
+# Ray of Frost's intervening-if ETB, The Aetherspark's +1, Asmoranomardicadaistinaculdacar's
+# named search and Erebos's Titan's graveyard-leave trigger.
+
+
+def _resolve_all(scenario) -> None:
+    scenario.game.put_triggers_on_stack()
+    while scenario.game.stack:
+        scenario.resolve_top()
+        scenario.game.put_triggers_on_stack()
+
+
+def _cast_ray_on(target, *, owner="bob"):
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Ray of Frost"],
+            battlefield=["Island", "Island"],
+            library=["Island"] * 5,
+        )
+        .player("bob", battlefield=[target], library=["Mountain"] * 5)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    creature = scenario.find(target, Zone.BATTLEFIELD, owner)
+    scenario.cast_and_resolve(
+        "Ray of Frost", *scenario.untapped_sources("Island", "Island"), targets=[creature]
+    )
+    _resolve_all(scenario)
+    return scenario, creature
+
+
+def test_ray_of_frost_entering_on_a_red_creature_taps_it():
+    scenario, creature = _cast_ray_on("Goblin Artillery")
+    assert creature.tapped
+    assert scenario.game.layer_remainder_notices == []
+
+
+def test_ray_of_frost_entering_on_a_nonred_creature_does_not_tap_it():
+    _scenario, creature = _cast_ray_on("Llanowar Elves")
+    assert not creature.tapped
+
+
+SPARK_PLUS_ONE = 0
+
+
+def test_aetherspark_plus_one_attaches_it_and_puts_a_counter_on_that_creature():
+    scenario = _board([SPARK, "Grizzly Bears"])
+    spark = scenario.find(SPARK, Zone.BATTLEFIELD, "alice")
+    bears = scenario.find("Grizzly Bears", Zone.BATTLEFIELD, "alice")
+    scenario.activate(spark, index=SPARK_PLUS_ONE, targets=[bears])
+    _resolve_all(scenario)
+    assert spark.attached_to == bears.id
+    assert bears.counter_count("+1/+1") == 1
+    assert spark.counter_count("loyalty") == 5
+
+
+def test_aetherspark_plus_one_may_target_no_creature_and_still_adds_loyalty():
+    scenario = _board([SPARK, "Grizzly Bears"])
+    spark = scenario.find(SPARK, Zone.BATTLEFIELD, "alice")
+    scenario.activate(spark, index=SPARK_PLUS_ONE, targets=[])
+    _resolve_all(scenario)
+    assert spark.attached_to is None
+    assert scenario.find("Grizzly Bears", Zone.BATTLEFIELD, "alice").counter_count("+1/+1") == 0
+    assert spark.counter_count("loyalty") == 5
+
+
+def test_aetherspark_plus_one_cannot_target_an_opponents_creature():
+    scenario = _board([SPARK], ["Grizzly Bears"])
+    spark = scenario.find(SPARK, Zone.BATTLEFIELD, "alice")
+    bobs = scenario.find("Grizzly Bears", Zone.BATTLEFIELD, "bob")
+    with pytest.raises(ValueError):
+        scenario.activate(spark, index=SPARK_PLUS_ONE, targets=[bobs])
+
+
+ASMO_BOOK = "The Underworld Cookbook"
+
+
+def _asmo_enters(*, library, take=True):
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Asmoranomardicadaistinaculdacar"], library=library)
+        .player("bob", library=["Mountain"] * 5)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scenario.will_take_the_may(take)
+    scenario.put_onto_battlefield("Asmoranomardicadaistinaculdacar")
+    _resolve_all(scenario)
+    return scenario
+
+
+def test_asmoranomardicadaistinaculdacar_enters_and_fetches_the_named_card():
+    scenario = _asmo_enters(library=["Island", ASMO_BOOK, "Island"])
+    assert [card.name for card in scenario.player("alice").hand] == [ASMO_BOOK]
+    assert all(card.name != ASMO_BOOK for card in scenario.player("alice").library)
+
+
+def test_asmoranomardicadaistinaculdacar_declining_the_may_fetches_nothing():
+    scenario = _asmo_enters(library=["Island", ASMO_BOOK], take=False)
+    assert scenario.player("alice").hand == []
+
+
+def test_asmoranomardicadaistinaculdacar_search_fails_quietly_without_the_named_card():
+    scenario = _asmo_enters(library=["Island"] * 3)
+    assert scenario.player("alice").hand == []
+
+
+def test_wretched_throng_dying_fetches_another_copy_by_name():
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=["Wretched Throng"],
+            library=["Island", "Wretched Throng", "Island"],
+        )
+        .player("bob", library=["Mountain"] * 5)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    throng = scenario.find("Wretched Throng", Zone.BATTLEFIELD, "alice")
+    scenario.will_take_the_may(True)
+    scenario.game.put_into_graveyard(throng)
+    _resolve_all(scenario)
+    assert [card.name for card in scenario.player("alice").hand] == ["Wretched Throng"]
+    assert [card.name for card in scenario.player("alice").graveyard] == ["Wretched Throng"]
+
+
+def _titan_board(*, bob_graveyard, alice_graveyard=()):
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Island"],
+            battlefield=["Apostle of Purifying Light", "Forest", "Forest"],
+            graveyard=["Erebos's Titan", *alice_graveyard],
+            library=["Island"] * 5,
+        )
+        .player("bob", graveyard=list(bob_graveyard), library=["Mountain"] * 5)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    return scenario
+
+
+def _exile_from_graveyard(scenario, name, username):
+    apostle = scenario.find("Apostle of Purifying Light", Zone.BATTLEFIELD, "alice")
+    victim = scenario.find(name, Zone.GRAVEYARD, username)
+    scenario.activate(
+        apostle, *scenario.untapped_sources("Forest", "Forest"), index=0, targets=[victim]
+    )
+    _resolve_all(scenario)
+
+
+def test_erebos_titan_returns_when_a_creature_card_leaves_an_opponents_graveyard():
+    scenario = _titan_board(bob_graveyard=["Grizzly Bears"])
+    island = scenario.find("Island", Zone.HAND, "alice")
+    scenario.will_take_the_may(True)
+    scenario.will_discard(island)
+    _exile_from_graveyard(scenario, "Grizzly Bears", "bob")
+    assert [card.name for card in scenario.player("alice").hand] == ["Erebos's Titan"]
+    assert [card.name for card in scenario.player("alice").graveyard] == ["Island"]
+
+
+def test_erebos_titan_stays_put_when_the_discard_is_declined():
+    scenario = _titan_board(bob_graveyard=["Grizzly Bears"])
+    scenario.will_take_the_may(False)
+    _exile_from_graveyard(scenario, "Grizzly Bears", "bob")
+    assert [card.name for card in scenario.player("alice").hand] == ["Island"]
+    assert [card.name for card in scenario.player("alice").graveyard] == ["Erebos's Titan"]
+
+
+def test_erebos_titan_ignores_a_creature_card_leaving_its_controllers_own_graveyard():
+    scenario = _titan_board(bob_graveyard=[], alice_graveyard=["Grizzly Bears"])
+    _exile_from_graveyard(scenario, "Grizzly Bears", "alice")
+    assert [card.name for card in scenario.player("alice").hand] == ["Island"]
+    assert scenario.questions_asked() == []
+
+
+def test_erebos_titan_ignores_a_noncreature_card_leaving_an_opponents_graveyard():
+    scenario = _titan_board(bob_graveyard=["Mountain"])
+    _exile_from_graveyard(scenario, "Mountain", "bob")
+    assert [card.name for card in scenario.player("alice").hand] == ["Island"]
+
+
+def test_narcolepsy_reads_the_same_enchanted_creature_pronoun_at_each_upkeep():
+    scenario = _board(["Narcolepsy", "Grizzly Bears"])
+    scenario.find("Narcolepsy", Zone.BATTLEFIELD, "alice").attach_to(
+        scenario.find("Grizzly Bears", Zone.BATTLEFIELD, "alice")
+    )
+    bears = scenario.find("Grizzly Bears", Zone.BATTLEFIELD, "alice")
+    assert not bears.tapped
+    _next_turn(scenario)
+    _resolve_all(scenario)
+    assert bears.tapped
+    assert scenario.game.layer_remainder_notices == []

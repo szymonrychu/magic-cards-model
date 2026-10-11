@@ -373,3 +373,123 @@ def test_crown_follows_the_top_card_when_it_changes():
     assert _chars(scenario, "Grizzly Bears").power_toughness == (3, 3)
     scenario.draw()
     assert _chars(scenario, "Grizzly Bears").power_toughness == (2, 2)
+
+
+def test_crown_activation_puts_the_top_card_on_the_bottom_and_the_pump_follows():
+    scenario = _board(
+        ["Crown of Convergence", "Grizzly Bears", "Forest", "Plains"],
+        ["Llanowar Elves", "Mountain"],
+    )
+    assert _chars(scenario, "Grizzly Bears").power_toughness == (3, 3)
+    crown = scenario.find("Crown of Convergence", Zone.BATTLEFIELD, "alice")
+    scenario.activate(crown, *scenario.untapped_sources("Forest", "Plains"), index=0)
+    scenario.resolve_top()
+    assert [card.name for card in scenario.top_of_library(2)] == ["Mountain", "Island"]
+    assert scenario.player("alice").library[-1].name == "Llanowar Elves"
+    assert _chars(scenario, "Grizzly Bears").power_toughness == (2, 2)
+    assert scenario.game.continuous_effects.layer_notices == []
+
+
+def test_crown_activation_needs_both_green_and_white_mana():
+    scenario = _board(["Crown of Convergence", "Forest", "Forest"], ["Llanowar Elves", "Mountain"])
+    crown = scenario.find("Crown of Convergence", Zone.BATTLEFIELD, "alice")
+    with pytest.raises(ValueError):
+        scenario.activate(crown, *scenario.untapped_sources("Forest", "Forest"), index=0)
+
+
+# -- Myojin of Cleansing Fire / Night's Reach: remove the divinity counter ---------------
+
+
+def _myojin_board(name: str, *, counter: bool = True, bob_hand=()):
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=[name, "Grizzly Bears"],
+            hand=["Mountain"],
+            library=["Island"] * 4,
+        )
+        .player(
+            "bob",
+            battlefield=["Savannah Lions"],
+            hand=list(bob_hand),
+            library=["Mountain"] * 4,
+        )
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    myojin = scenario.find(name, Zone.BATTLEFIELD, "alice")
+    if counter:
+        myojin.add_counters("divinity")
+    return scenario, myojin
+
+
+def test_cleansing_fire_removing_its_counter_destroys_every_other_creature():
+    scenario, myojin = _myojin_board("Myojin of Cleansing Fire")
+    scenario.activate(myojin, index=0)
+    assert myojin.counter_count("divinity") == 0
+    scenario.resolve_top()
+    assert myojin.zone is Zone.BATTLEFIELD
+    assert scenario.find("Grizzly Bears", Zone.GRAVEYARD, "alice")
+    assert scenario.find("Savannah Lions", Zone.GRAVEYARD, "bob")
+    assert not _has(_chars(scenario, "Myojin of Cleansing Fire"), "Indestructible")
+
+
+def test_cleansing_fire_cannot_be_activated_without_a_divinity_counter():
+    scenario, myojin = _myojin_board("Myojin of Cleansing Fire", counter=False)
+    assert scenario.why_cannot_activate(myojin, index=0) is not None
+
+
+def test_night_reach_removing_its_counter_makes_each_opponent_discard_their_hand():
+    scenario, myojin = _myojin_board(
+        "Myojin of Night's Reach", bob_hand=["Island", "Swamp", "Forest"]
+    )
+    scenario.activate(myojin, index=0)
+    scenario.resolve_top()
+    assert scenario.player("bob").hand == []
+    assert sorted(card.name for card in scenario.player("bob").graveyard) == [
+        "Forest",
+        "Island",
+        "Swamp",
+    ]
+    assert [card.name for card in scenario.player("alice").hand] == ["Mountain"]
+    assert myojin.counter_count("divinity") == 0
+
+
+def test_night_reach_cannot_be_activated_without_a_divinity_counter():
+    scenario, myojin = _myojin_board("Myojin of Night's Reach", counter=False)
+    assert scenario.why_cannot_activate(myojin, index=0) is not None
+
+
+# -- the same readers on second printings --------------------------------------------------
+
+
+def test_novablast_wurm_attacking_destroys_every_creature_but_itself():
+    scenario = _board(["Novablast Wurm", "Grizzly Bears"], [], bob_battlefield=["Savannah Lions"])
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    wurm = scenario.find("Novablast Wurm", Zone.BATTLEFIELD, "alice")
+    wurm.summoning_sick = False
+    scenario.attack_with(wurm, defending="bob")
+    scenario.game.put_triggers_on_stack()
+    scenario.resolve_top()
+    assert wurm.zone is Zone.BATTLEFIELD
+    assert scenario.find("Grizzly Bears", Zone.GRAVEYARD, "alice")
+    assert scenario.find("Savannah Lions", Zone.GRAVEYARD, "bob")
+
+
+def test_mindslicer_dying_makes_every_player_discard_their_hand():
+    scenario = (
+        Scenario()
+        .player(
+            "alice", battlefield=["Mindslicer"], hand=["Island", "Forest"], library=["Island"] * 4
+        )
+        .player("bob", hand=["Mountain"], library=["Mountain"] * 4)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scenario.game.put_into_graveyard(scenario.find("Mindslicer", Zone.BATTLEFIELD, "alice"))
+    scenario.game.put_triggers_on_stack()
+    scenario.resolve_top()
+    assert scenario.player("alice").hand == []
+    assert scenario.player("bob").hand == []
+    assert len(scenario.player("alice").graveyard) == 3

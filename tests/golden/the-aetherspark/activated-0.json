@@ -1,11 +1,11 @@
 {
-  "ability": "−5: Draw two cards.",
+  "ability": "+1: Attach The Aetherspark to up to one target creature you control. Put a +1/+1 counter on that creature.",
   "action": {
     "controller": "alice",
     "modes": [],
     "on_stack": true,
     "source": "The Aetherspark@alice#1",
-    "targets": [],
+    "targets": ["Memnite@alice#1"],
     "x": 0
   },
   "board": {
@@ -36,14 +36,25 @@
   "delta": {
     "created": {},
     "decisions": [],
-    "fields_changed": ["cards_drawn_this_turn"],
+    "fields_changed": ["counters_put_this_turn"],
     "notices": {},
     "objects": {
-      "Forest@alice#6": {
-        "zone": ["library", "hand"]
+      "Memnite@alice#1": {
+        "counters": [
+          {},
+          {
+            "+1/+1": 1
+          }
+        ],
+        "power": [1, 2],
+        "toughness": [1, 2]
       },
-      "Grizzly Bears@alice#3": {
-        "zone": ["library", "hand"]
+      "The Aetherspark@alice#1": {
+        "attached_to": [null, "Memnite@alice#1"],
+        "granted": [
+          [],
+          ["Whenever equipped creature deals combat damage during your turn, put that many loyalty counters on this permanent."]
+        ]
       }
     },
     "players": {},

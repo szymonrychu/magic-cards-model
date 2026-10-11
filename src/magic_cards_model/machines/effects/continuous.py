@@ -4589,7 +4589,8 @@ _SERIAL_INSTRUCTION_SEPARATOR_RE = re.compile(r",\s*(?:and\s+|then\s+)?", re.IGN
 #: deathtouch until end of turn.") as though it were still part of "target
 #: `<description>`", with nothing left to notice the words it never ran.
 _ATTACH_SELF_TO_TARGET_RE = re.compile(
-    r"^attach (?:it|this (?:aura|equipment|fortification|permanent)) to target\b[^.]*$",
+    r"^attach (?:it|this (?:aura|equipment|fortification|permanent)) "
+    r"to (?:up to one )?target\b[^.]*$",
     re.IGNORECASE,
 )
 
@@ -10650,8 +10651,9 @@ def _parse_attach_target_equipment_to_self(text: str) -> AbilityEffect | None:
 #: rider is read as the targeted sentence it restates, so it acts on exactly
 #: the object the attach did.
 _ATTACH_SELF_THEN_THAT_CREATURE_RE = re.compile(
-    r"^(?P<attach>attach (?:it|this (?:aura|equipment)) to target [^.]+)\.\s*"
-    r"(?P<rider>(?:that creature \S.*|untap that creature\.?))$",
+    r"^(?P<attach>attach (?:it|this (?:aura|equipment|fortification|permanent)) "
+    r"to (?:up to one )?target [^.]+)\.\s*"
+    r"(?P<rider>(?:that creature \S.*|untap that creature\.?|put [^.]*? on that creature\.?))$",
     re.IGNORECASE | re.DOTALL,
 )
 

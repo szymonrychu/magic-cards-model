@@ -6627,6 +6627,30 @@ def _parse_reveal_until_creature_then_attacking_rest_random_clause(
     return effect
 
 
+#: "Put the top card of your library on the bottom of your library." (Crown of
+#: Convergence's activated ability) - a card already in the library is moved
+#: to its other end, not "put into" a library, so no put-into-library event is
+#: raised (`Game.put_cards_into_library`'s own rule). An empty library does
+#: nothing (CR 609.3).
+_PUT_TOP_CARD_ON_BOTTOM_RE = re.compile(
+    r"^put the top card of your library on the bottom of your library\.?$", re.IGNORECASE
+)
+
+
+@MIXED_CLAUSE.rung("s34", for_spell=FORWARD)
+def _parse_put_top_card_on_bottom_clause(text: str, *, for_spell: bool) -> TargetedClause | None:
+    """`_PUT_TOP_CARD_ON_BOTTOM_RE`'s shape."""
+    if _PUT_TOP_CARD_ON_BOTTOM_RE.fullmatch(text.strip()) is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        library = game.controller_of(stack_object).library
+        if library:
+            game.put_cards_into_library([library[0]], to_bottom=True)
+
+    return effect  # type: ignore[return-value]
+
+
 from ._common import (  # noqa: E402
     _SELECT_FROM_TOP_KINDS,
     ConditionalClauseNotice,
