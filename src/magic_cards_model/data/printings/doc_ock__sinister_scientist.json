@@ -1,0 +1,138 @@
+{
+  "object": "card",
+  "id": "38681802-429a-4465-8c23-f3d8f790431d",
+  "oracle_id": "dbaa70e6-26de-4ce9-9543-e652cbe387c1",
+  "multiverse_ids": [],
+  "resource_id": "94C999A9BD40381249B0C1DC729C7F43038FF76909D95CDB379F5517F2115FB7",
+  "mtgo_id": 151991,
+  "arena_id": 105793,
+  "tcgplayer_id": 697228,
+  "cardmarket_id": 892002,
+  "name": "Doc Ock, Sinister Scientist",
+  "lang": "en",
+  "released_at": "2026-06-26",
+  "uri": "https://api.scryfall.com/cards/38681802-429a-4465-8c23-f3d8f790431d",
+  "scryfall_uri": "https://scryfall.com/card/msc/783/doc-ock-sinister-scientist?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T00:36:57Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/3/8/38681802-429a-4465-8c23-f3d8f790431d.jpg?1783903017",
+    "normal": "https://cards.scryfall.io/normal/front/3/8/38681802-429a-4465-8c23-f3d8f790431d.jpg?1783903017",
+    "large": "https://cards.scryfall.io/large/front/3/8/38681802-429a-4465-8c23-f3d8f790431d.jpg?1783903017",
+    "png": "https://cards.scryfall.io/png/front/3/8/38681802-429a-4465-8c23-f3d8f790431d.png?1783903017",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/3/8/38681802-429a-4465-8c23-f3d8f790431d.jpg?1783903017",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/3/8/38681802-429a-4465-8c23-f3d8f790431d.jpg?1783903017",
+    "thumb": "https://cards.scryfall.io/thumb/front/3/8/38681802-429a-4465-8c23-f3d8f790431d.webp?1783903017",
+    "grid": "https://cards.scryfall.io/grid/front/3/8/38681802-429a-4465-8c23-f3d8f790431d.webp?1783903017",
+    "display": "https://cards.scryfall.io/display/front/3/8/38681802-429a-4465-8c23-f3d8f790431d.webp?1783903017",
+    "art": "https://cards.scryfall.io/art/front/3/8/38681802-429a-4465-8c23-f3d8f790431d.webp?1783903017",
+    "crop": "https://cards.scryfall.io/crop/front/3/8/38681802-429a-4465-8c23-f3d8f790431d.webp?1783903017"
+  },
+  "mana_cost": "{4}{U}",
+  "cmc": 5.0,
+  "type_line": "Legendary Creature \u2014 Human Scientist Villain",
+  "oracle_text": "As long as there are eight or more cards in your graveyard, Doc Ock has base power and toughness 8/8.\nAs long as you control another Villain, Doc Ock has hexproof. (He can't be the target of spells or abilities your opponents control.)",
+  "power": "4",
+  "toughness": "5",
+  "colors": [
+    "U"
+  ],
+  "color_identity": [
+    "U"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "9d739461-c5ac-43a1-af41-3d5a585b5c8d",
+  "set": "msc",
+  "set_name": "Marvel Super Heroes Commander",
+  "set_type": "commander",
+  "set_uri": "https://api.scryfall.com/sets/9d739461-c5ac-43a1-af41-3d5a585b5c8d",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Amsc&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/msc?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/38681802-429a-4465-8c23-f3d8f790431d/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Adbaa70e6-26de-4ce9-9543-e652cbe387c1&unique=prints",
+  "collector_number": "783",
+  "digital": false,
+  "rarity": "common",
+  "flavor_text": "\"You dared to mock me before. Where are your taunts *now*, Spider-Man?\"",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Piotr Dura",
+  "artist_ids": [
+    "aff176e8-1d15-432e-ad1d-207a474decba"
+  ],
+  "illustration_id": "26c85f29-ab1e-437f-934c-b904f0115905",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "promo_types": [
+    "universesbeyond"
+  ],
+  "edhrec_rank": 12652,
+  "prices": {
+    "usd": "0.27",
+    "usd_foil": "0.28",
+    "usd_etched": null,
+    "eur": "0.13",
+    "eur_foil": "0.17",
+    "tix": "0.01"
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DDoc%2BOck%252C%2BSinister%2BScientist",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DDoc%2BOck%252C%2BSinister%2BScientist",
+    "edhrec": "https://edhrec.com/route/?cc=Doc+Ock%2C+Sinister+Scientist"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F697228%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=892002&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/151991?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

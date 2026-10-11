@@ -1,0 +1,142 @@
+{
+  "object": "card",
+  "id": "0af3c6b1-9139-46a3-ad41-91aabbdda55f",
+  "oracle_id": "027b0223-173f-4f8b-a38c-59bab391f472",
+  "multiverse_ids": [
+    509552
+  ],
+  "mtgo_id": 86749,
+  "tcgplayer_id": 233927,
+  "cardmarket_id": 545116,
+  "name": "Sedge Sliver",
+  "lang": "en",
+  "released_at": "2021-03-19",
+  "uri": "https://api.scryfall.com/cards/0af3c6b1-9139-46a3-ad41-91aabbdda55f",
+  "scryfall_uri": "https://scryfall.com/card/tsr/187/sedge-sliver?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T07:29:49Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/0/a/0af3c6b1-9139-46a3-ad41-91aabbdda55f.jpg?1783927789",
+    "normal": "https://cards.scryfall.io/normal/front/0/a/0af3c6b1-9139-46a3-ad41-91aabbdda55f.jpg?1783927789",
+    "large": "https://cards.scryfall.io/large/front/0/a/0af3c6b1-9139-46a3-ad41-91aabbdda55f.jpg?1783927789",
+    "png": "https://cards.scryfall.io/png/front/0/a/0af3c6b1-9139-46a3-ad41-91aabbdda55f.png?1783927789",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/0/a/0af3c6b1-9139-46a3-ad41-91aabbdda55f.jpg?1783927789",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/0/a/0af3c6b1-9139-46a3-ad41-91aabbdda55f.jpg?1783927789",
+    "thumb": "https://cards.scryfall.io/thumb/front/0/a/0af3c6b1-9139-46a3-ad41-91aabbdda55f.webp?1783927789",
+    "grid": "https://cards.scryfall.io/grid/front/0/a/0af3c6b1-9139-46a3-ad41-91aabbdda55f.webp?1783927789",
+    "display": "https://cards.scryfall.io/display/front/0/a/0af3c6b1-9139-46a3-ad41-91aabbdda55f.webp?1783927789",
+    "art": "https://cards.scryfall.io/art/front/0/a/0af3c6b1-9139-46a3-ad41-91aabbdda55f.webp?1783927789",
+    "crop": "https://cards.scryfall.io/crop/front/0/a/0af3c6b1-9139-46a3-ad41-91aabbdda55f.webp?1783927789"
+  },
+  "mana_cost": "{2}{R}",
+  "cmc": 3.0,
+  "type_line": "Creature \u2014 Sliver",
+  "oracle_text": "All Sliver creatures have \"This creature gets +1/+1 as long as you control a Swamp.\"\nAll Slivers have \"{B}: Regenerate this permanent.\" (The next time it would be destroyed this turn, instead tap it, remove it from combat, and heal all damage on it.)",
+  "power": "2",
+  "toughness": "2",
+  "colors": [
+    "R"
+  ],
+  "color_identity": [
+    "B",
+    "R"
+  ],
+  "keywords": [
+    "Heal",
+    "Regenerate"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "11e90d1b-0502-43e6-b056-e24836523c13",
+  "set": "tsr",
+  "set_name": "Time Spiral Remastered",
+  "set_type": "masters",
+  "set_uri": "https://api.scryfall.com/sets/11e90d1b-0502-43e6-b056-e24836523c13",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Atsr&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/tsr?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/0af3c6b1-9139-46a3-ad41-91aabbdda55f/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A027b0223-173f-4f8b-a38c-59bab391f472&unique=prints",
+  "collector_number": "187",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Richard Kane Ferguson",
+  "artist_ids": [
+    "191620ed-2361-444e-96a6-1fe7ce32ef3b"
+  ],
+  "illustration_id": "691f44ff-5555-4ec3-8902-882af509dbbe",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 11893,
+  "penny_rank": 9034,
+  "preview": {
+    "source": "Luca Van Deun",
+    "source_uri": "https://twitter.com/LegenVD/status/1366803619190874114",
+    "previewed_at": "2021-03-02"
+  },
+  "prices": {
+    "usd": "1.27",
+    "usd_foil": "1.87",
+    "usd_etched": null,
+    "eur": "0.61",
+    "eur_foil": "1.36",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=509552&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DSedge%2BSliver",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DSedge%2BSliver",
+    "edhrec": "https://edhrec.com/route/?cc=Sedge+Sliver"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F233927%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=545116&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/86749?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

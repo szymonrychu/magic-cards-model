@@ -1896,6 +1896,232 @@ class WithChangeling(SelectorBase):
         return has_changeling("\n".join(chars.abilities))
 
 
+class QualityTest(EngineModel):
+    """A printed object quality - "a creature with a counter on it", "a
+    Demon", "a transformed permanent", "red" - read off one object's computed
+    `Characteristics` (CR 613.5). Every field that is set must hold; the
+    `*_any` fields hold when at least one listed value does."""
+
+    model_config = ConfigDict(frozen=True)
+
+    types: tuple[Type, ...] = ()
+    not_types: tuple[Type, ...] = ()
+    subtypes_any: tuple[str, ...] = ()
+    colors_any: tuple[Color, ...] = ()
+    legendary: bool | None = None
+    token: bool | None = None
+    transformed: bool | None = None
+    counter: str | None = None
+    """None: no counter test. "": one or more counters of any kind (Formation
+    Breaker's "a creature with a counter on it"). Otherwise that kind."""
+    name: str | None = None
+
+    def matches(self, chars: Characteristics) -> bool:
+        if not all(each in chars.types for each in self.types):
+            return False
+        if any(each in chars.types for each in self.not_types):
+            return False
+        if self.subtypes_any and not any(
+            each.lower() == wanted.lower()
+            for each in chars.subtypes
+            for wanted in self.subtypes_any
+        ):
+            return False
+        if self.colors_any and not any(each in chars.colors for each in self.colors_any):
+            return False
+        if (
+            self.legendary is not None
+            and (Supertype.LEGENDARY in chars.supertypes) != self.legendary
+        ):
+            return False
+        if self.token is not None and chars.is_token != self.token:
+            return False
+        if self.transformed is not None and chars.transformed != self.transformed:
+            return False
+        if self.name is not None and chars.name.lower() != self.name.lower():
+            return False
+        if self.counter is not None:
+            if self.counter == "":
+                if not any(count > 0 for count in chars.counters.values()):
+                    return False
+            elif _counter_total(chars, self.counter) <= 0:
+                return False
+        return True
+
+
+def _counter_total(chars: Characteristics, kind: str) -> int:
+    wanted = kind.lower()
+    return sum(count for each, count in chars.counters.items() if str(each).lower() == wanted)
+
+
+class ControlsAtom(EngineModel):
+    """ "you control [N or more] `<quality>`" / "an opponent controls ..." /
+    "any player controls ..." as one board test (CR 611.3a: re-asked on every
+    computation). `other` excludes the source itself ("another")."""
+
+    model_config = ConfigDict(frozen=True)
+
+    kind: Literal["controls"] = "controls"
+    who: Literal["you", "opponent", "any"] = "you"
+    quality: QualityTest = Field(default_factory=QualityTest)
+    threshold: int = 1
+    other: bool = False
+
+    def holds(self, source: Characteristics, target: Characteristics, board: Board) -> bool:
+        owner = source.controller
+        count = 0
+        for each in board.values():
+            if self.other and each.card_id == source.card_id:
+                continue
+            if self.who == "you" and each.controller != owner:
+                continue
+            if self.who == "opponent" and (each.controller is None or each.controller == owner):
+                continue
+            if self.quality.matches(each):
+                count += 1
+        return count >= self.threshold
+
+
+class SourceCountersAtom(EngineModel):
+    """ "`<this>` has a divinity counter on it" / "... three or more +1/+1
+    counters on it" (CR 122.1): counters of one kind on the source, or of any
+    kind when `counter` is empty."""
+
+    model_config = ConfigDict(frozen=True)
+
+    kind: Literal["source_counters"] = "source_counters"
+    counter: str = ""
+    threshold: int = 1
+
+    def holds(self, source: Characteristics, target: Characteristics, board: Board) -> bool:
+        if self.counter:
+            return _counter_total(source, self.counter) >= self.threshold
+        return sum(source.counters.values()) >= self.threshold
+
+
+class SubjectQualityAtom(EngineModel):
+    """ "equipped creature is a Human" / "enchanted creature is red" /
+    "`<this>` is a Golem": the effect's own subject, or the source, has a
+    quality (CR 613.5: judged on the characteristics computed so far)."""
+
+    model_config = ConfigDict(frozen=True)
+
+    kind: Literal["subject_quality"] = "subject_quality"
+    of: Literal["target", "source"] = "target"
+    quality: QualityTest = Field(default_factory=QualityTest)
+
+    def holds(self, source: Characteristics, target: Characteristics, board: Board) -> bool:
+        return self.quality.matches(target if self.of == "target" else source)
+
+
+class SourceAttachedAtom(EngineModel):
+    """ "this creature is equipped" / "... is enchanted" / "... is modified":
+    something is attached to the source (CR 301.5, CR 303.4); `modified`
+    is CR 700.9's own definition - a counter, an Equipment, or an Aura its
+    controller controls."""
+
+    model_config = ConfigDict(frozen=True)
+
+    kind: Literal["source_attached"] = "source_attached"
+    subtype: str | None = None
+    modified: bool = False
+
+    def holds(self, source: Characteristics, target: Characteristics, board: Board) -> bool:
+        if self.modified and any(count > 0 for count in source.counters.values()):
+            return True
+        for each in board.values():
+            if each.attached_to != source.card_id:
+                continue
+            subtypes = {word.lower() for word in each.subtypes}
+            if self.modified:
+                if "equipment" in subtypes or (
+                    "aura" in subtypes and each.controller == source.controller
+                ):
+                    return True
+            elif self.subtype is None or self.subtype.lower() in subtypes:
+                return True
+        return False
+
+
+class CounterKindsAmongAtom(EngineModel):
+    """ "there are three or more different kinds of counters among creatures
+    you control" (Hundred-Battle Veteran): distinct counter kinds across the
+    source controller's permanents matching `quality`."""
+
+    model_config = ConfigDict(frozen=True)
+
+    kind: Literal["counter_kinds_among"] = "counter_kinds_among"
+    quality: QualityTest = Field(default_factory=QualityTest)
+    threshold: int = 3
+
+    def holds(self, source: Characteristics, target: Characteristics, board: Board) -> bool:
+        kinds = {
+            str(kind).lower()
+            for each in board.values()
+            if each.controller == source.controller and self.quality.matches(each)
+            for kind, count in each.counters.items()
+            if count > 0
+        }
+        return len(kinds) >= self.threshold
+
+
+class SharesColorAtom(EngineModel):
+    """The effect's subject shares a colour with a fixed set read when the
+    effects are built (Crown of Convergence's "that share a color with that
+    card": the top card of the library, CR 105.2)."""
+
+    model_config = ConfigDict(frozen=True)
+
+    kind: Literal["shares_color"] = "shares_color"
+    colors: tuple[Color, ...] = ()
+
+    def holds(self, source: Characteristics, target: Characteristics, board: Board) -> bool:
+        return any(color in target.colors for color in self.colors)
+
+
+class NotSourceAtom(EngineModel):
+    """ "other": the effect's subject is not the source itself."""
+
+    model_config = ConfigDict(frozen=True)
+
+    kind: Literal["not_source"] = "not_source"
+
+    def holds(self, source: Characteristics, target: Characteristics, board: Board) -> bool:
+        return target.card_id != source.card_id
+
+
+StaticAtom = Annotated[
+    ControlsAtom
+    | NotSourceAtom
+    | SourceCountersAtom
+    | SubjectQualityAtom
+    | SourceAttachedAtom
+    | CounterKindsAmongAtom
+    | SharesColorAtom,
+    Field(discriminator="kind"),
+]
+
+
+class ConditionedSelector(SelectorBase):
+    """`base`, but only while every board `atoms` test holds (CR 611.3a: a
+    static ability's effect "applies at any given moment to whatever its text
+    indicates"). The source is looked up by id on the board being computed, so
+    a source that left the battlefield selects nothing (CR 611.3b)."""
+
+    kind: Literal["conditioned"] = "conditioned"
+    base: Selector
+    source_id: UUID
+    atoms: tuple[StaticAtom, ...] = ()
+
+    def __call__(self, chars: Characteristics, board: Board) -> bool:
+        if not self.base(chars, board):
+            return False
+        source = board.get(self.source_id)
+        if source is None:
+            return False
+        return all(atom.holds(source, chars, board) for atom in self.atoms)
+
+
 #: Does this effect apply to that object? Judged against characteristics as
 #: computed so far, with the rest of the board available for effects that
 #: count things or say "each other" (CR 613.5).
@@ -1940,9 +2166,11 @@ Selector = Annotated[
     | AttackingGroupControlledBy
     | TappedCreaturesControlledBy
     | WithChangeling
-    | OtherTransformedPermanentsControlledBy,
+    | OtherTransformedPermanentsControlledBy
+    | ConditionedSelector,
     Field(discriminator="kind"),
 ]
+ConditionedSelector.model_rebuild()
 
 
 class ModificationBase(EngineModel):

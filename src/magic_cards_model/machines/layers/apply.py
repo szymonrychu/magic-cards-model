@@ -738,6 +738,22 @@ class LayerContext(EngineModel):
             and card.exile_annotation.links_to(source.id, source.zone_change_stamp)
         )
 
+    #: The top card of each player's library (CR 401.1), keyed by username and
+    #: absent for an empty library - Mul Daya Channelers' "As long as the top
+    #: card of your library is a creature card, ..." reads it. A card in a
+    #: library is no permanent, so the layer engine never sees it standing on
+    #: the battlefield; like every field here it is read when the effects are
+    #: built, which is every CR 613.5 computation, so the effect follows the
+    #: top card as it changes (CR 611.3a).
+    top_card_by_player: Mapping[str, CardState] = Field(default_factory=dict)
+
+    def top_card_of(self, controller: str | None) -> CardState | None:
+        """The top card of `controller`'s library, or None for an empty library
+        or a player this context knows nothing about."""
+        if controller is None:
+            return None
+        return self.top_card_by_player.get(controller)
+
     def graveyard_of(self, controller: str | None) -> tuple[CardState, ...]:
         """The graveyard a static ability's own controller sees, or none if
         `controller` is not one this context knows about."""
@@ -1321,6 +1337,10 @@ class ContinuousEffects(EngineModel):
         self.note(permanents)
         shared = context or LayerContext()
         sync_granted_ability_texts(permanents, _every_card_state_in(game) if game else None)
+        # Quoted abilities a conditional static grants (`conditional_statics`).
+        from .conditional_statics import sync_conditional_grant_texts
+
+        sync_conditional_grant_texts(permanents, shared)
         # CR 114.4: an emblem's static abilities function in the command zone
         # (Kaito, Bane of Nightmares' "Ninjas you control get +1/+1."), and
         # CR 613.7d stamps it as it entered that zone.

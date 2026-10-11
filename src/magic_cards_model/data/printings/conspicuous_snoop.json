@@ -1,0 +1,140 @@
+{
+  "object": "card",
+  "id": "5d878dab-5ed2-4ef3-b2c7-472290892854",
+  "oracle_id": "f5d1bd3c-0e65-4999-a810-881b2389b40e",
+  "multiverse_ids": [
+    485462
+  ],
+  "mtgo_id": 81505,
+  "arena_id": 71921,
+  "tcgplayer_id": 215603,
+  "cardmarket_id": 468949,
+  "name": "Conspicuous Snoop",
+  "lang": "en",
+  "released_at": "2020-07-03",
+  "uri": "https://api.scryfall.com/cards/5d878dab-5ed2-4ef3-b2c7-472290892854",
+  "scryfall_uri": "https://scryfall.com/card/m21/139/conspicuous-snoop?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T08:18:13Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/5/d/5d878dab-5ed2-4ef3-b2c7-472290892854.jpg?1783930693",
+    "normal": "https://cards.scryfall.io/normal/front/5/d/5d878dab-5ed2-4ef3-b2c7-472290892854.jpg?1783930693",
+    "large": "https://cards.scryfall.io/large/front/5/d/5d878dab-5ed2-4ef3-b2c7-472290892854.jpg?1783930693",
+    "png": "https://cards.scryfall.io/png/front/5/d/5d878dab-5ed2-4ef3-b2c7-472290892854.png?1783930693",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/5/d/5d878dab-5ed2-4ef3-b2c7-472290892854.jpg?1783930693",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/5/d/5d878dab-5ed2-4ef3-b2c7-472290892854.jpg?1783930693",
+    "thumb": "https://cards.scryfall.io/thumb/front/5/d/5d878dab-5ed2-4ef3-b2c7-472290892854.webp?1783930693",
+    "grid": "https://cards.scryfall.io/grid/front/5/d/5d878dab-5ed2-4ef3-b2c7-472290892854.webp?1783930693",
+    "display": "https://cards.scryfall.io/display/front/5/d/5d878dab-5ed2-4ef3-b2c7-472290892854.webp?1783930693",
+    "art": "https://cards.scryfall.io/art/front/5/d/5d878dab-5ed2-4ef3-b2c7-472290892854.webp?1783930693",
+    "crop": "https://cards.scryfall.io/crop/front/5/d/5d878dab-5ed2-4ef3-b2c7-472290892854.webp?1783930693"
+  },
+  "mana_cost": "{R}{R}",
+  "cmc": 2.0,
+  "type_line": "Creature \u2014 Goblin Rogue",
+  "oracle_text": "Play with the top card of your library revealed.\nYou may cast Goblin spells from the top of your library.\nAs long as the top card of your library is a Goblin card, this creature has all activated abilities of that card.",
+  "power": "2",
+  "toughness": "2",
+  "colors": [
+    "R"
+  ],
+  "color_identity": [
+    "R"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "arena",
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "bc94aba1-7376-4e02-a12d-3a2efb66ab0f",
+  "set": "m21",
+  "set_name": "Core Set 2021",
+  "set_type": "core",
+  "set_uri": "https://api.scryfall.com/sets/bc94aba1-7376-4e02-a12d-3a2efb66ab0f",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Am21&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/m21?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/5d878dab-5ed2-4ef3-b2c7-472290892854/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Af5d1bd3c-0e65-4999-a810-881b2389b40e&unique=prints",
+  "collector_number": "139",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Zoltan Boros",
+  "artist_ids": [
+    "1885e6cb-c827-4896-994e-3d0a027d602f"
+  ],
+  "illustration_id": "b8d09b6e-185f-47b1-a510-cc5706f78f58",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 3260,
+  "penny_rank": 1489,
+  "preview": {
+    "source": "Ond\u0159ej Str\u00e1sk\u00fd",
+    "source_uri": "https://twitter.com/OndrejStrasky/status/1270689948857966592",
+    "previewed_at": "2020-06-10"
+  },
+  "prices": {
+    "usd": "3.40",
+    "usd_foil": "4.62",
+    "usd_etched": null,
+    "eur": "3.79",
+    "eur_foil": "4.39",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=485462&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DConspicuous%2BSnoop",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DConspicuous%2BSnoop",
+    "edhrec": "https://edhrec.com/route/?cc=Conspicuous+Snoop"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F215603%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=468949&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/81505?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}
