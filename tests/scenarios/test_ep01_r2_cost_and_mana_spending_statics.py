@@ -375,3 +375,70 @@ def test_weftwalking_reaches_each_player_on_their_own_turn_only():
     option = _free_option(off_turn)
     assert option.unavailable is not None and "turn" in option.unavailable
     off_turn.cancel()
+
+
+# -- second printings: Ragemonger (colored-only reduction), Rime Chill (Vivid) --
+
+
+def test_ragemonger_takes_black_and_red_off_a_minotaur_spell_and_nothing_else():
+    scenario = _main(
+        alice={
+            "hand": ["Glint-Horn Buccaneer", "Felhide Brawler", "Grizzly Bears"],
+            "battlefield": ["Ragemonger"],
+        },
+    )
+    assert _cost(scenario, "Glint-Horn Buccaneer") == "{1}{R}", "{B} is not in the cost"
+    assert _cost(scenario, "Felhide Brawler") == "{1}", "{1}{B} less {B}: generic is never reduced"
+    assert _cost(scenario, "Grizzly Bears") == "{1}{G}", "not a Minotaur"
+
+
+def test_ragemonger_discounts_only_its_controllers_spells():
+    scenario = _main(
+        alice={"hand": ["Felhide Brawler"]},
+        bob={"battlefield": ["Ragemonger"]},
+    )
+    assert _cost(scenario, "Felhide Brawler") == "{1}{B}"
+
+
+def test_rime_chill_costs_one_less_per_colour_among_your_permanents():
+    scenario = _main(
+        alice={
+            "hand": ["Rime Chill"],
+            "battlefield": ["Grizzly Bears", "Serra Angel", "Forest"],
+        },
+        bob={"battlefield": ["Counterspell"]},
+    )
+    assert _cost(scenario, "Rime Chill", targets=None) == "{4}{U}", "green and white"
+
+
+# -- second printing: Curse of Silence (chosen-name tax on the enchanted player) --
+
+
+def _silenced(bolt_owner: str):
+    scenario = _main(
+        alice={"hand": ["Lightning Bolt"], "battlefield": []},
+        bob={"hand": ["Lightning Bolt"], "battlefield": ["Curse of Silence"]},
+    )
+    curse = scenario.find("Curse of Silence", Zone.BATTLEFIELD, "bob")
+    curse.attach_to(scenario.player("alice"))
+    _choose(scenario, "Curse of Silence", "bob", ChoiceKind.CARD_NAME, "Lightning Bolt")
+    return scenario
+
+
+def test_curse_of_silence_taxes_the_enchanted_players_spell_with_the_chosen_name():
+    scenario = _silenced("alice")
+    assert _cost(scenario, "Lightning Bolt", targets=["bob"]) == "{2}{R}"
+
+
+def test_curse_of_silence_does_not_tax_anyone_else():
+    scenario = _silenced("alice")
+    scenario.find("Curse of Silence", Zone.BATTLEFIELD, "bob").attach_to(scenario.player("bob"))
+    assert _cost(scenario, "Lightning Bolt", targets=["bob"]) == "{R}"
+
+
+def test_curse_of_silence_clauses_are_handled():
+    from magic_cards_model.support import HANDLED, classify_clauses
+    from tests.cards import card
+
+    outcomes = classify_clauses(card("Curse of Silence"))
+    assert {o.category for o in outcomes} == {HANDLED}, outcomes

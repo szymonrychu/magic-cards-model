@@ -611,3 +611,82 @@ def test_suspend_x_is_listed_as_a_legal_action_at_its_least_x():
 
     (suspend,) = [a for a in legal_actions(scenario.game, "alice") if a.kind is ActionKind.SUSPEND]
     assert suspend.mana_cost == "{4}{U}", "X=1 in {X}{3}{U}"
+
+
+# -- second printings -------------------------------------------------------
+#
+# Scavenge (CR 702.97a) printed on a card, beside Varolz's granted one; Suspend
+# X (CR 702.62a) on cards other than the two listed ones.
+
+
+@pytest.mark.parametrize(
+    ("name", "lands", "cost", "power"),
+    [
+        ("Sewer Shambler", ["Swamp"] * 3, "{2}{B}", 2),
+        ("Deadbridge Goliath", ["Forest"] * 6, "{4}{G}{G}", 5),
+    ],
+)
+def test_a_printed_scavenge_puts_counters_equal_to_the_exiled_cards_power(name, lands, cost, power):
+    scenario = _board(graveyard=[name], battlefield=["Grizzly Bears", *lands]).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.creature("Grizzly Bears")
+
+    card_state, activation, mana_from = _scavenge(scenario, name, bears)
+    assert str(activation.cost.mana) == cost
+    payment = activation.begin_paying()
+    for source in scenario.untapped_sources(*lands):
+        payment.tap_for_mana(source, mana_from(source))
+    payment.pay()
+    activation.activate()
+    assert card_state.zone is Zone.EXILE
+    scenario.resolve_top()
+
+    assert bears.counter_count("+1/+1") == power
+
+
+def test_a_printed_scavenge_only_works_from_the_graveyard():
+    from magic_cards_model.machines.keywords import scavenge_activation
+
+    scenario = _board(hand=["Sewer Shambler"], battlefield=["Grizzly Bears", "Swamp"] * 2).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    shambler = scenario.find("Sewer Shambler", Zone.HAND, "alice")
+    activation = scavenge_activation(
+        scenario.game, shambler, "alice", 0, targets=[scenario.creature("Grizzly Bears")]
+    )
+    assert activation.why_not() is not None
+
+
+@pytest.mark.parametrize(
+    ("name", "land", "lands", "x", "cost"),
+    [
+        ("Benalish Commander", "Plains", 5, 3, "{3}{W}{W}"),
+        ("Fungal Behemoth", "Forest", 5, 2, "{2}{G}{G}"),
+    ],
+)
+def test_suspend_x_on_other_printings(name, land, lands, x, cost):
+    from magic_cards_model.machines.casting import MarkedExile
+    from magic_cards_model.models.card_state import Counter
+
+    scenario = _suspend_scenario(name, land, lands).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    card_state = scenario.find(name, Zone.HAND, "alice")
+    action = MarkedExile.suspend(scenario.game, card_state, "alice", x_value=x)
+    assert str(action.cost.mana) == cost
+    scenario.pay_with(action.begin_paying(), *scenario.untapped_sources(*[land] * lands))
+    action.take()
+
+    assert card_state.zone is Zone.EXILE
+    assert card_state.counter_count(Counter.TIME) == x
+
+
+def test_benalish_commanders_removed_time_counter_makes_a_soldier():
+    scenario = _suspend_scenario("Benalish Commander", "Plains", 5).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    _suspend_x(scenario, "Benalish Commander", 2, ["Plains"] * 4)
+    before = len(scenario.game.battlefield)
+
+    _upkeep_of(scenario)
+    scenario.resolve_top()
+    scenario.resolve_top()
+
+    assert len(scenario.game.battlefield) == before + 1

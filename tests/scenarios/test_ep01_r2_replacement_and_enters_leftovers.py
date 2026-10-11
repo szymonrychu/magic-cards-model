@@ -192,6 +192,39 @@ def test_pilfered_proof_line_is_handled():
     _handled("Case of the Pilfered Proof", "Solved")
 
 
+# Peregrin Took prints the same replacement without the Solved gate: "those
+# tokens plus a Food token are created instead" - a second printing of the
+# token-plus-extra-token reader.
+
+
+def _took_board():
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Peregrin Took"], library=["Island"] * 5)
+        .player("bob", library=["Island"] * 5)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    return scenario
+
+
+def test_peregrin_took_adds_a_food_to_any_token_you_create():
+    scenario = _took_board()
+    create_tokens(scenario.game, _DETECTIVE, "alice", 1)
+    assert len(_on_battlefield(scenario, "Food Token")) == 1
+    assert len(_on_battlefield(scenario, "Detective Token")) == 1
+
+
+def test_peregrin_took_does_not_help_the_opponent():
+    scenario = _took_board()
+    create_tokens(scenario.game, _DETECTIVE, "bob", 1)
+    assert _on_battlefield(scenario, "Food Token") == []
+
+
+def test_peregrin_took_line_is_handled():
+    _handled("Peregrin Took", "tokens would be created")
+
+
 # --- The Rollercrusher Ride: delirium-gated noncombat damage doubling ----------
 # (CR 614.1a, 701.10g, 604.2)
 

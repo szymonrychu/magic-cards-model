@@ -71,7 +71,7 @@ _COLORED_ONLY = " this effect reduces only the amount of colored mana you pay"
 class GroupModifier:
     """One parsed group line. `sign` is -1 for "less", +1 for "more"."""
 
-    scope: str  # "you", "opponents" or "anyone"
+    scope: str  # "you", "opponents", "enchanted" (the player a Curse enchants) or "anyone"
     sign: int
     unit: ManaCost
     quality: Quality | None
@@ -98,6 +98,14 @@ class GroupModifier:
             return None
         if self.scope == "opponents" and caster == controller:
             return None
+        if self.scope == "enchanted":
+            attached = source.attachment
+            if (
+                attached is None
+                or attached.kind is not TargetKind.PLAYER
+                or attached.username != caster
+            ):
+                return None
         if self.quality is not None and not self.quality(game, spell):
             return None
         if self.kicked and not _is_kicked(game, spell, ctx.casting):
@@ -271,7 +279,12 @@ def group_spell_modifier(line: str) -> GroupModifier | None:
     head = spell_word.group("head") or ""
     after = spell_word.group("after") or ""
     scope = "anyone"
-    for phrase, owner in (("your opponents cast", "opponents"), ("you cast", "you")):
+    for phrase, owner in (
+        ("your opponents cast", "opponents"),
+        ("you cast", "you"),
+        # CR 303.4m: a Curse's "spells ... enchanted player casts".
+        ("enchanted player casts", "enchanted"),
+    ):
         if phrase in after:
             scope = owner
             after = after.replace(phrase, "", 1).strip()
