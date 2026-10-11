@@ -22,6 +22,7 @@ from ..chosen_type import RESTRICTED_TRIBAL_TYPES, matches_restricted_creature_t
 from ..decisions import Decision, DecisionKind, source_id_of
 from ..delayed import ReflexiveExileCopiedCard
 from ..keyword_counters import enters_count_reader, fixed_enters_count_reader
+from ..zone_grants import granted_instance_count
 from .as_enters_actions import Action, as_enters_action, counters_for
 
 if TYPE_CHECKING:
@@ -3119,7 +3120,7 @@ def _riot_modifiers(game: "Game", card_state: CardState) -> list[tuple[str, Appl
 
     instance_count = sum(
         1 for ability in keyword_abilities(card_state.card) if ability.canonical.lower() == "riot"
-    )
+    ) + granted_instance_count(game, card_state, "riot")
     if not instance_count:
         return []
 

@@ -3366,6 +3366,21 @@ def grant_ability(text: str) -> Modification:
     return GrantAbility(text=text)
 
 
+#: Keywords whose every instance works separately (CR 702.25b flanking, CR
+#: 702.83b exalted, CR 702.68b frenzy, CR 702.45b bushido, CR 702.64b absorb,
+#: CR 702.136b riot): a second grant is a second instance, never merged.
+INSTANCE_KEYWORDS = frozenset({"flanking", "exalted", "frenzy", "bushido", "absorb", "riot"})
+
+
+def grant_keyword(text: str) -> Modification:
+    """Layer 6 addition of a keyword line (CR 613.1f): one more instance for the
+    keywords whose instances each work (`INSTANCE_KEYWORDS`), otherwise the
+    deduplicating `grant_ability`."""
+    if text.split()[0].lower() in INSTANCE_KEYWORDS:
+        return grant_ability_instance(text)
+    return grant_ability(text)
+
+
 def grant_ability_instance(text: str) -> Modification:
     """Layer 6 addition (CR 613.1f) that does *not* deduplicate.
 

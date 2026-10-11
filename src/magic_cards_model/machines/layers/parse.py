@@ -1521,7 +1521,7 @@ def _all_creatures_keyword_grant_builder(
                 source_id=source.id,
                 source_ability=_source_line_for(source, line),
                 selector=selector,
-                modification=grant_ability(keyword),
+                modification=grant_keyword(keyword),
             )
             for keyword in keywords
         ]
@@ -1561,7 +1561,7 @@ def _chosen_parity_keyword_grant_builder(
                 source_id=source.id,
                 source_ability=_source_line_for(source, line),
                 selector=CreaturesOfManaValueParity(parity=parity, without=without),
-                modification=grant_ability(keyword),
+                modification=grant_keyword(keyword),
             )
             for keyword in keywords
         ]
@@ -1967,7 +1967,7 @@ def _other_transformed_permanents_keyword_grant_builder(
                 source_id=source.id,
                 source_ability=_source_line_for(source, line),
                 selector=selector,
-                modification=grant_ability(keyword),
+                modification=grant_keyword(keyword),
             )
             for keyword in keywords
         ]
@@ -2595,7 +2595,7 @@ def _self_becomes_type_until_next_turn_builder(
                         duration=Duration.UNTIL_YOUR_NEXT_TURN,
                         until_next_turn_of=source.controller,
                         selector=only_this_incarnation(target, target.zone_change_stamp),
-                        modification=grant_ability(ability),
+                        modification=grant_keyword(ability),
                     )
                 )
         return effects
@@ -3221,7 +3221,7 @@ def _keyword_grant_for_as_long_builder(
                 duration=Duration.FOR_AS_LONG_AS,
                 condition=condition,
                 selector=only_this_incarnation(target, target.zone_change_stamp),
-                modification=grant_ability(keyword),
+                modification=grant_keyword(keyword),
             )
             for target in targets
             for keyword in keywords
@@ -3900,7 +3900,7 @@ def _pump_and_keyword_builder(
                         duration=duration,
                         until_next_turn_of=until_next_turn_of,
                         selector=only_this_incarnation(target, target.zone_change_stamp),
-                        modification=grant_ability(keyword),
+                        modification=grant_keyword(keyword),
                     )
                 )
         return effects
@@ -3955,7 +3955,7 @@ def _pump_and_keyword_per_target_power_builder(
                         timestamp=timestamp,
                         duration=Duration.UNTIL_END_OF_TURN,
                         selector=only_this_incarnation(target, target.zone_change_stamp),
-                        modification=grant_ability(keyword),
+                        modification=grant_keyword(keyword),
                     )
                 )
         return effects
@@ -4124,7 +4124,7 @@ def _keyword_grant_builder(keywords: Sequence[str]) -> EffectBuilder:
                 timestamp=timestamp,
                 duration=Duration.UNTIL_END_OF_TURN,
                 selector=only_this_incarnation(target, target.zone_change_stamp),
-                modification=grant_ability(keyword),
+                modification=grant_keyword(keyword),
             )
             for target in targets
             for keyword in keywords
@@ -4245,7 +4245,7 @@ def _self_protection_from_chosen_color_builder(*, line: str) -> EffectBuilder:
                 source_id=source.id,
                 source_ability=_source_line_for(source, line),
                 selector=_only(source.id),
-                modification=grant_ability(ability),
+                modification=grant_keyword(ability),
             )
         ]
 
@@ -4273,7 +4273,7 @@ def _paired_both_builder(
                 source_id=source.id,
                 source_ability=line,
                 selector=selector,
-                modification=grant_ability(keyword),
+                modification=grant_keyword(keyword),
             )
             for keyword in keywords
         ]
@@ -4404,7 +4404,7 @@ def _anthem_and_keyword_grant_builder(
                 source_id=source.id,
                 source_ability=line,
                 selector=selector,
-                modification=grant_ability(keyword),
+                modification=grant_keyword(keyword),
             )
             for keyword in keywords
         )
@@ -4464,7 +4464,7 @@ def _mass_pump_until_eot_builder(
                         timestamp=timestamp,
                         duration=Duration.UNTIL_END_OF_TURN,
                         selector=only_this_incarnation(target, target.zone_change_stamp),
-                        modification=grant_ability(keyword),
+                        modification=grant_keyword(keyword),
                     )
                 )
         return effects
@@ -4655,7 +4655,7 @@ def _chosen_type_anthem_builder(
                     source_id=source.id,
                     source_ability=_source_line_for(source, line),
                     selector=selector,
-                    modification=grant_ability(keyword),
+                    modification=grant_keyword(keyword),
                 )
             )
         return effects
@@ -4823,7 +4823,7 @@ def _indefinite_keyword_grant_builder(
                 source_id=source.id,
                 source_ability=source_ability,
                 selector=selector,
-                modification=grant_ability(ability),
+                modification=grant_keyword(ability),
             )
             for ability in abilities
         ]
@@ -4870,7 +4870,7 @@ def _during_your_turn_multi_type_keyword_grant_builder(
                 source_id=source.id,
                 source_ability=line,
                 selector=selector,
-                modification=grant_ability(ability),
+                modification=grant_keyword(ability),
             )
             for ability in abilities
         ]
@@ -4910,7 +4910,7 @@ def _counter_gated_keyword_grant_builder(
                 source_id=source.id,
                 source_ability=_source_line_for(source, line),
                 selector=selector,
-                modification=grant_ability(keyword),
+                modification=grant_keyword(keyword),
             )
             for keyword in keywords
         ]
@@ -4939,7 +4939,7 @@ def _lands_keyword_grant_builder(keywords: list[str], *, line: str) -> EffectBui
                 source_id=source.id,
                 source_ability=_source_line_for(source, line),
                 selector=selector,
-                modification=grant_ability(keyword),
+                modification=grant_keyword(keyword),
             )
             for keyword in keywords
         ]
@@ -5298,7 +5298,7 @@ def _becomes_type_in_addition_builder(
                     timestamp=timestamp,
                     duration=Duration.UNTIL_END_OF_TURN,
                     selector=selector,
-                    modification=grant_ability(keyword),
+                    modification=grant_keyword(keyword),
                 )
                 for keyword in keywords
             )
@@ -5344,7 +5344,7 @@ def _becomes_subtype_in_addition_builder(
                     timestamp=timestamp,
                     duration=duration,
                     selector=selector,
-                    modification=grant_ability(keyword),
+                    modification=grant_keyword(keyword),
                 )
                 for keyword in keywords
             )
@@ -6615,7 +6615,7 @@ def _context_gated_group_pump_and_keyword_builder(
                 source_id=source.id,
                 source_ability=_source_line_for(source, line),
                 selector=selector,
-                modification=grant_ability(ability),
+                modification=grant_keyword(ability),
             )
             for ability in granted
         )
@@ -7347,7 +7347,7 @@ def _filtered_anthem_builder(
                 source_id=source.id,
                 source_ability=_source_line_for(source, line),
                 selector=selector,
-                modification=grant_ability(keyword),
+                modification=grant_keyword(keyword),
             )
             for keyword in keywords
         )
@@ -8092,7 +8092,7 @@ def _attached_creature_static_builder(
                 source_id=source.id,
                 source_ability=_source_line_for(source, line),
                 selector=_only(attached),
-                modification=grant_ability(keyword),
+                modification=grant_keyword(keyword),
             )
             for keyword in keywords
         )
@@ -8209,7 +8209,7 @@ def _attached_creature_gated_grant_builder(
                 source_id=source.id,
                 source_ability=_source_line_for(source, line),
                 selector=selector,
-                modification=grant_ability(keyword),
+                modification=grant_keyword(keyword),
             )
             for keyword in keywords
         ]
@@ -9208,7 +9208,7 @@ def _other_creatures_are_type_builder(
                     source_id=source.id,
                     source_ability=printed,
                     selector=selector,
-                    modification=grant_ability(ability),
+                    modification=grant_keyword(ability),
                 )
             )
         return effects
@@ -9398,7 +9398,7 @@ def _attacking_tokens_keyword_grant_builder(
                 source_id=source.id,
                 source_ability=_source_line_for(source, line),
                 selector=selector,
-                modification=grant_ability(keyword),
+                modification=grant_keyword(keyword),
             )
             for keyword in keywords
         ]
@@ -9480,7 +9480,7 @@ def _graveyard_count_gated_self_static_builder(
                 source_id=source.id,
                 source_ability=_source_line_for(source, line),
                 selector=_only(source.id),
-                modification=grant_ability(ability),
+                modification=grant_keyword(ability),
             )
             for ability in granted
         )
@@ -9537,7 +9537,7 @@ def _graveyard_card_count_gated_self_static_builder(
                 source_id=source.id,
                 source_ability=_source_line_for(source, line),
                 selector=_only(source.id),
-                modification=grant_ability(ability),
+                modification=grant_keyword(ability),
             )
             for ability in granted
         )
@@ -9607,7 +9607,7 @@ def _conditional_self_type_change_builder(change: _SelfTypeChange, *, line: str)
             ContinuousEffect(
                 description=f"{described}, has {ability}",
                 layer=Layer.ABILITY,
-                modification=grant_ability(ability),
+                modification=grant_keyword(ability),
                 **common,
             )
             for ability in change.granted
@@ -9786,7 +9786,7 @@ def _self_gated_by_controlling_any_of_builder(
                 source_id=source.id,
                 source_ability=_source_line_for(source, line),
                 selector=selector,
-                modification=grant_ability(keyword),
+                modification=grant_keyword(keyword),
             )
             for keyword in keywords
         ]
@@ -9827,7 +9827,7 @@ def _self_gated_by_controlling_keyword_grant_builder(
                 source_id=source.id,
                 source_ability=_source_line_for(source, line),
                 selector=selector,
-                modification=grant_ability(keyword),
+                modification=grant_keyword(keyword),
             )
             for keyword in keywords
         ]
@@ -9877,7 +9877,7 @@ def _self_gated_by_controlling_counted_keyword_grant_builder(
                 source_id=source.id,
                 source_ability=_source_line_for(source, line),
                 selector=selector,
-                modification=grant_ability(keyword),
+                modification=grant_keyword(keyword),
             )
             for keyword in keywords
         ]
@@ -10308,7 +10308,7 @@ def _context_gated_self_pump_builder(
                 source_id=source.id,
                 source_ability=_source_line_for(source, line),
                 selector=_only(source.id),
-                modification=grant_ability(ability),
+                modification=grant_keyword(ability),
             )
             for ability in granted
         )
@@ -10359,7 +10359,7 @@ def _context_gated_self_base_pt_builder(
                 source_id=source.id,
                 source_ability=_source_line_for(source, line),
                 selector=_only(source.id),
-                modification=grant_ability(ability),
+                modification=grant_keyword(ability),
             )
             for ability in granted
         )
@@ -10441,7 +10441,7 @@ def _context_gated_self_static_builder(
                 source_id=source.id,
                 source_ability=_source_line_for(source, line),
                 selector=_only(source.id),
-                modification=grant_ability(ability),
+                modification=grant_keyword(ability),
             )
             for ability in granted
         ]
@@ -10477,7 +10477,7 @@ def _per_color_keyword_grant_builder(
                 source_id=source.id,
                 source_ability=_source_line_for(source, line),
                 selector=creatures_controlled_by_with_color(source.controller, color),
-                modification=grant_ability(keyword),
+                modification=grant_keyword(keyword),
             )
             for keyword, color in grants
         ]
@@ -13003,6 +13003,7 @@ from .model import (  # noqa: E402
     every_creature,
     every_land,
     grant_ability,
+    grant_keyword,
     grant_ability_instance,
     lands_controlled_by,
     lose_all_abilities,

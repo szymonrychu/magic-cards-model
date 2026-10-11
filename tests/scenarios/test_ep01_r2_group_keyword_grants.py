@@ -128,10 +128,12 @@ from magic_cards_model.machines.keywords import outlast_activation  # noqa: E402
 from tests.scenarios.harness import mana_from  # noqa: E402
 
 
-def combat_board(alice, bob=()):
+def combat_board(alice, bob=(), manual=False):
+    scenario = Scenario()
+    if manual:
+        scenario = scenario.manual_turn_based_actions()
     scenario = (
-        Scenario()
-        .player("alice", battlefield=list(alice))
+        scenario.player("alice", battlefield=list(alice))
         .player("bob", battlefield=list(bob))
         .build()
     )
@@ -174,7 +176,7 @@ def test_a_blocking_sliver_has_flanking_too_so_nothing_triggers():
     scenario.block(attacker, blocker)
 
     assert scenario.stack_names() == []
-    assert pt(scenario, blocker) == (1, 1)
+    assert pt(scenario, blocker) == (2, 2)
 
 
 def test_the_flanking_grant_ends_with_its_source():
@@ -219,7 +221,7 @@ def test_first_slivers_chosen_gives_every_sliver_you_control_exalted():
     scenario.attack_with(construct, defending="bob")
     resolve_everything(scenario)
 
-    assert pt(scenario, construct) == (3, 3)
+    assert pt(scenario, construct) == (4, 4)
 
 
 def test_exalted_needs_a_lone_attacker():
@@ -230,7 +232,7 @@ def test_exalted_needs_a_lone_attacker():
     )
     resolve_everything(scenario)
 
-    assert pt(scenario, scenario.creature("Sliver Construct")) == (1, 1)
+    assert pt(scenario, scenario.creature("Sliver Construct")) == (2, 2)
 
 
 def test_exalted_is_only_for_the_controllers_slivers():
@@ -246,7 +248,7 @@ def test_exalted_is_only_for_the_controllers_slivers():
 def test_frenzy_sliver_pumps_an_unblocked_sliver_by_frenzy_one():
     """CR 702.68a: frenzy 1 - "Whenever this creature attacks and isn't
     blocked, it gets +1/+0 until end of turn.\""""
-    scenario = combat_board(["Frenzy Sliver", "Sliver Construct"], ["Craw Wurm"])
+    scenario = combat_board(["Frenzy Sliver", "Sliver Construct"], ["Craw Wurm"], manual=True)
     construct = scenario.creature("Sliver Construct")
 
     scenario.attack_with(construct, defending="bob")
@@ -254,11 +256,11 @@ def test_frenzy_sliver_pumps_an_unblocked_sliver_by_frenzy_one():
     scenario.no_blocks()
     resolve_everything(scenario)
 
-    assert pt(scenario, construct) == (2, 1)
+    assert pt(scenario, construct) == (3, 2)
 
 
 def test_frenzy_does_nothing_for_a_blocked_sliver():
-    scenario = combat_board(["Frenzy Sliver", "Sliver Construct"], ["Craw Wurm"])
+    scenario = combat_board(["Frenzy Sliver", "Sliver Construct"], ["Craw Wurm"], manual=True)
     construct = scenario.creature("Sliver Construct")
 
     scenario.attack_with(construct, defending="bob")
@@ -266,7 +268,7 @@ def test_frenzy_does_nothing_for_a_blocked_sliver():
     scenario.block(construct, scenario.creature("Craw Wurm", "bob"))
     resolve_everything(scenario)
 
-    assert pt(scenario, construct) == (1, 1)
+    assert pt(scenario, construct) == (2, 2)
 
 
 def test_absorb_prevents_one_of_the_damage_dealt_to_a_sliver():

@@ -36,7 +36,7 @@ from .model import (
     Sublayer,
     add_subtype,
     add_type,
-    grant_ability,
+    grant_keyword,
     modify_power_toughness,
     set_power_toughness,
 )
@@ -372,7 +372,7 @@ def parse_group_static_sentence(sentence: str):
                     Sublayer.MODIFY,
                     modify_power_toughness(power, toughness),
                 ),
-                *[(Layer.ABILITY, None, grant_ability(keyword)) for keyword in keywords],
+                *[(Layer.ABILITY, None, grant_keyword(keyword)) for keyword in keywords],
             ],
         )
     if match := _ARE_LEGENDARY_RE.fullmatch(lowered):
@@ -399,7 +399,7 @@ def parse_group_static_sentence(sentence: str):
             sentence,
             match["subject"],
             f"have {', '.join(keywords)}",
-            lambda: [(Layer.ABILITY, None, grant_ability(keyword)) for keyword in keywords],
+            lambda: [(Layer.ABILITY, None, grant_keyword(keyword)) for keyword in keywords],
         )
     return None
 

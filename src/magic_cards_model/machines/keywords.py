@@ -3479,7 +3479,7 @@ def outlast_activation(
     card, through `Game.can_activate_tap_ability` - the same method
     `Game.why_cannot_activate` already calls for a printed `{T}` ability.
     """
-    printed = outlast_abilities(creature.card)
+    printed = outlast_abilities(effective_card(game, creature))
     if index >= len(printed):
         raise ValueError(
             f"{creature.name} has no outlast ability number {index} ({KeywordRule.OUTLAST})"

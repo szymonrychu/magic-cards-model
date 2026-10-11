@@ -97,6 +97,7 @@ _NUMBER_WORDS = {"one": 1, "two": 2, "three": 3, "four": 4, "five": 5}
 ZONE_GRANTABLE_KEYWORDS = frozenset(
     {
         "unearth",
+        "outlast",
         "ninjutsu",
         "cycling",
         "dredge",
@@ -359,9 +360,52 @@ def _grants_for(game: Game, card: CardState) -> list[tuple[CardState, ZoneGrant]
 def zone_grant_lines(game: Game | None, card: CardState) -> tuple[str, ...]:
     """The keyword lines the battlefield grants `card` while it is off the
     battlefield (CR 613.1f), in battlefield order."""
-    if game is None or card.zone is Zone.BATTLEFIELD:
+    if game is None:
         return ()
+    if card.zone is Zone.BATTLEFIELD:
+        return _battlefield_granted_lines(game, card)
     return tuple(line for _source, grant in _grants_for(game, card) for line in grant.lines)
+
+
+def _battlefield_granted_lines(game: "Game", card: CardState) -> tuple[str, ...]:
+    """The keyword lines layer 6 added to a permanent beyond its printed ones
+    (CR 613.1f) - what "Other Sliver creatures you control have outlast {2}"
+    gives a Sliver, for the keyword readers that take a printing."""
+    from .layers.model import printed_characteristics
+
+    printed = list(printed_characteristics(card).abilities)
+    extras: list[str] = []
+    for line in game.computed_board().of(card).abilities:
+        if line in printed:
+            printed.remove(line)
+        elif _keyword_line(line.lower()) is not None:
+            extras.append(line)
+    return tuple(extras)
+
+
+def granted_instance_count(game: "Game", card: CardState, keyword: str) -> int:
+    """How many instances of `keyword` the battlefield's group grants give
+    `card` as it would enter the battlefield (CR 614.12: a permanent's
+    replacement effects see the characteristics it would have there), e.g.
+    "Other Spiders you control have riot" for a Spider entering under the
+    grant's controller."""
+    from .layers.model import printed_characteristics
+    from .layers.registry import effects_for
+
+    chars = printed_characteristics(card).with_(controller=card.controller or card.owner)
+    count = 0
+    for source in game.battlefield:
+        if keyword not in (source.card.oracle_text or "").lower() or source.id == card.id:
+            continue
+        for effect in effects_for(source, 0, static_only=True):
+            modification = effect.modification
+            if (
+                modification.kind in ("grant_ability", "grant_ability_instance")
+                and modification.text.lower() == keyword
+                and effect.selector(chars, {})
+            ):
+                count += 1
+    return count
 
 
 _EFFECTIVE: dict[tuple[Any, ...], Card] = {}
