@@ -10,8 +10,8 @@ one-directional.
 """
 
 import re
-from random import Random
 from collections.abc import Callable
+from random import Random
 from typing import TYPE_CHECKING
 
 from ...models.card import Color, Supertype, Type
