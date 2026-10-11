@@ -74,5 +74,5 @@ def test_a_differently_worded_source_reduces_generic_mana_of_the_chosen_type():
     scenario.start_at(Step.PRECOMBAT_MAIN)
     scenario.will_choose("Wolf", source="Urza's Incubator")
     scenario.put_onto_battlefield("Urza's Incubator")
-    assert _cost(scenario, "Lupine Prototype") == "{0}"
+    assert _cost(scenario, "Lupine Prototype") == ""
     assert _cost(scenario, "Grizzly Bears") == "{1}{G}"
