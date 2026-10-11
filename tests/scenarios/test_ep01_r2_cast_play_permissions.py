@@ -757,7 +757,7 @@ def test_weftwalking_makes_the_first_spell_each_turn_free_but_not_the_second():
     )
     assert _affordable_casts(scenario), "the first spell may be cast without paying its mana cost"
     casting = scenario.cast("Grizzly Bears", "alice")
-    casting.use_keyword("Weftwalking")
+    casting.use_alternative_cost("Weftwalking")
     scenario.pay_with(casting.begin_paying())
     scenario.put_on_stack(casting)
     scenario.resolve_top()
