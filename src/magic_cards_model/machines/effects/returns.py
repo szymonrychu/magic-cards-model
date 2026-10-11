@@ -466,8 +466,12 @@ def return_ability_targets_to_battlefield(game: "Game", stack_object: "StackObje
 #: (Kazandu Stomper) - one printed quantity, not always "a". CR 608.2d: no
 #: "target" is named, so the controller picks which land(s) they control,
 #: including this one, as the ability resolves.
+#: Widened (EP01-R2-T6) past lands to any mass qualifier
+#: (`_parse_mass_type_qualifier`): Trusted Advisor's upkeep "return a blue
+#: creature you control to its owner's hand".
 _RETURN_A_LAND_YOU_CONTROL_RE = re.compile(
-    rf"^return {quantity_pattern('n')} lands? you control to (?:its|their) owner'?s hand\.?$",
+    rf"^return {quantity_pattern('n')} (?P<quality>[a-z ,-]+?) you control to (?:its|their) "
+    r"owner'?s hand\.?$",
     re.IGNORECASE,
 )
 
@@ -496,15 +500,15 @@ def _parse_return_a_land_you_control_clause(text: str) -> AbilityEffect | None:
     if match is None:
         return None
     quantity = parse_quantity(match.group("n"))
-    if quantity is None:
+    quality = match.group("quality").strip()
+    type_matches = _parse_mass_type_qualifier(quality)
+    if quantity is None or type_matches is None:
         return None
 
     def effect(game: "Game", ability: AbilityOnStack) -> None:
         controller = ability.controller
         candidates = computed_permanents(
-            game,
-            game.permanents_controlled_by(controller),
-            lambda chars: Type.LAND in chars.types,
+            game, game.permanents_controlled_by(controller), type_matches
         )
         if not candidates:
             return
@@ -518,7 +522,7 @@ def _parse_return_a_land_you_control_clause(text: str) -> AbilityEffect | None:
             Decision(
                 kind=DecisionKind.CHOOSE_CARDS,
                 player=controller,
-                prompt=f"return {'a' if limit == 1 else limit} land(s) you control "
+                prompt=f"return {'a' if limit == 1 else limit} {quality} you control "
                 "to its owner's hand",
                 source=source_name,
                 amount=limit,

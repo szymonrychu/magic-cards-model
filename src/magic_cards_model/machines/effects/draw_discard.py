@@ -644,6 +644,69 @@ def _parse_draw_then_put_land_cave_bonus_clause(text: str) -> AbilityEffect | No
     return effect
 
 
+#: "Discard that many cards." - Marina Vendrell's Grimoire's "Whenever you
+#: lose life, discard that many cards." The count is the triggering event's
+#: own amount (`amounts.that_many`, CR 603.2c), discarded by the controller
+#: (CR 701.9a/b: their choice; fewer in hand discards them all).
+_DISCARD_THAT_MANY_RE = re.compile(r"^discard that many cards\.?$", re.IGNORECASE)
+
+
+@ABILITY_TEXT.rung("s20")
+def _parse_discard_that_many_clause(text: str) -> AbilityEffect | None:
+    """`_DISCARD_THAT_MANY_RE`'s shape, or `None`."""
+    if _DISCARD_THAT_MANY_RE.fullmatch(text.strip()) is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        count = _that_many_or_notice(
+            game,
+            text,
+            source_id=ability.source_id,
+            source_name=ability.source_name,
+            stack_object=ability,
+        )
+        if not count:
+            return
+        player = game.player(ability.controller)
+        _discard_cards(
+            game,
+            player,
+            min(count, len(player.hand)),
+            ability.source_name,
+            source_id=source_id_of(ability),
+        )
+
+    return effect
+
+
+#: "Draw an additional card and remove N `<kind>` counters from this
+#: `<noun>`." - Midnight Oil's draw-step trigger: two instructions joined by
+#: "and", each an ordinary clause read on its own and followed in order
+#: (CR 608.2c).
+_DRAW_AND_REMOVE_COUNTERS_RE = re.compile(
+    r"^(?P<draw>draw [^.]+?) and (?P<remove>remove [^.]+? counters? from this [a-z]+)\.?$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s20")
+def _parse_draw_and_remove_counters_clause(text: str) -> AbilityEffect | None:
+    """`_DRAW_AND_REMOVE_COUNTERS_RE`'s shape, or `None`."""
+    match = _DRAW_AND_REMOVE_COUNTERS_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    draw = parse_mixed_effect(match.group("draw").strip() + ".")
+    remove = _ability_effect_or_notice(match.group("remove").strip() + ".")
+    if draw is None or remove is None or _is_notice_only(remove):
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        draw(game, ability)
+        remove(game, ability)
+
+    return effect
+
+
 def _discard_cards(
     game: "Game",
     player: Player,
@@ -2913,3 +2976,5 @@ from .removal import (  # noqa: E402
 from .search import _search_quality_is_readable  # noqa: E402
 from .text import _plain_resolution_sentences, _strip_non_effect_preamble  # noqa: E402
 from .tokens import _is_notice_only, _parse_generic_token_descriptor  # noqa: E402
+from .amounts import _that_many_or_notice  # noqa: E402
+from .tokens import _is_notice_only  # noqa: E402

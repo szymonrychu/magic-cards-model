@@ -144,6 +144,31 @@ def _counter_unless_pays_effect(
     return effect
 
 
+#: "Counter target `<phrase>` unless its controller pays {N}." on an
+#: *activated or triggered* ability - Malevolent Hermit's "{U}, Sacrifice this
+#: creature: Counter target noncreature spell unless its controller pays
+#: {3}." The spell-only reading in `dispatch.py` is `for_spell`-gated;
+#: CR 118.12a's question goes to the targeted spell's controller either way,
+#: and `_counter_unless_pays_effect` reads only the targets and the stack, both
+#: of which an `AbilityOnStack` carries (Hope-Ender Coatl's "unless they pay"
+#: already reaches it from a trigger).
+_ABILITY_COUNTER_UNLESS_PAYS_RE = re.compile(
+    r"^counter (?P<phrase>target [^.]*?spell) unless its controller pays \{(?P<n>\d+)\}\.?$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s9")
+def _parse_ability_counter_unless_pays_clause(text: str) -> AbilityEffect | None:
+    """`_ABILITY_COUNTER_UNLESS_PAYS_RE`'s shape, or `None`."""
+    if "unless its controller pays" not in text:
+        return None
+    match = _ABILITY_COUNTER_UNLESS_PAYS_RE.fullmatch(text.strip())
+    if match is None or not _targets_understood(match.group("phrase"), battlefield_only=False):
+        return None
+    return _counter_unless_pays_effect(int(match.group("n")))
+
+
 #: "1/1 colorless Thopter artifact creature token with flying" - Hangarback
 #: Walker, Thopter Assembly.
 THOPTER = TokenDefinition(

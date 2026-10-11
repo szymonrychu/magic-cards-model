@@ -662,6 +662,63 @@ def _parse_you_lose_the_game_clause(text: str) -> AbilityEffect | None:
     return effect
 
 
+#: "`<instruction>`. Then if `<condition>`, `<you lose|enchanted player
+#: loses>` the game." - Marina Vendrell's Grimoire ("Discard that many cards.
+#: Then if you have no cards in hand, you lose the game.") and Sinner's
+#: Judgment ("Put a judgment counter on this Aura. Then if there are three or
+#: more judgment counters on it, enchanted player loses the game."). The
+#: instruction is followed first (CR 608.2c) and the condition read after it;
+#: the loss is CR 104.3e's, through `Game.player_loses_the_game`.
+_THEN_IF_LOSES_THE_GAME_RE = re.compile(
+    r"^(?P<head>.+?)\. then if (?:(?P<empty_hand>you have no cards in hand)|there are "
+    r"(?P<n>\w+) or more (?P<kind>[\w+/-]+) counters on it), "
+    r"(?P<who>you lose|enchanted player loses) the game\.?$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s9")
+def _parse_then_if_loses_the_game_clause(text: str) -> AbilityEffect | None:
+    """`_THEN_IF_LOSES_THE_GAME_RE`'s shape, or `None`."""
+    if "the game" not in text:
+        return None
+    match = _THEN_IF_LOSES_THE_GAME_RE.fullmatch(" ".join(text.strip().split()))
+    if match is None:
+        return None
+    head = _ability_effect_or_notice(match.group("head").strip() + ".")
+    if head is None or _is_notice_only(head):
+        return None
+    threshold: int | None = None
+    if match.group("n") is not None:
+        threshold = parse_count(match.group("n"))
+        if threshold is None:
+            return None
+    kind = match.group("kind")
+    enchanted = match.group("who").lower().startswith("enchanted")
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        head(game, ability)
+        source = ability.source(game)
+        if threshold is not None:
+            if source is None or source.counters[kind] < threshold:
+                return
+        elif game.player(ability.controller).hand:
+            return
+        if not enchanted:
+            game.player_loses_the_game(ability.controller)
+            return
+        attachment = source.attachment if source is not None else None
+        if (
+            source is not None
+            and source.zone is Zone.BATTLEFIELD
+            and attachment is not None
+            and attachment.username is not None
+        ):
+            game.player_loses_the_game(attachment.username)
+
+    return effect
+
+
 #: "for each 1 life you lost, exile a permanent you control or a card from
 #: your hand or graveyard." - Lich's Mastery's "Whenever you lose life, ..."
 #: (CR 119.3). The count is the triggering life-loss event's own amount
@@ -1263,3 +1320,4 @@ from .removal import (  # noqa: E402
 from .search import _search_library  # noqa: E402
 from .text import _strip_non_effect_preamble  # noqa: E402
 from .tokens import _is_notice_only  # noqa: E402
+from .dispatch import _ability_effect_or_notice  # noqa: E402

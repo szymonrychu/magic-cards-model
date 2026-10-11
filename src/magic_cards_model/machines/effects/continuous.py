@@ -5678,6 +5678,56 @@ def _parse_untap_all_you_control_clause(sentence: str) -> TargetedClause | None:
     return effect
 
 
+#: "That player untaps a `<quality>` they control." - Hokori, Dust Drinker's
+#: "At the beginning of each player's upkeep, that player untaps a land they
+#: control." "That player" is the player the triggering event names (the
+#: active player whose upkeep began, CR 503.1); they choose which matching
+#: permanent (CR 608.2d), a tapped one by default, and untap it (CR 701.26b).
+_THAT_PLAYER_UNTAPS_RE = re.compile(
+    r"^that player untaps (?:a|an|one) (?P<quality>[a-z ,-]+?) they control\.?$", re.IGNORECASE
+)
+
+
+@ABILITY_TEXT.rung("s35")
+def _parse_that_player_untaps_clause(text: str) -> AbilityEffect | None:
+    """`_THAT_PLAYER_UNTAPS_RE`'s shape, or `None`."""
+    match = _THAT_PLAYER_UNTAPS_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    quality = match.group("quality").strip()
+    type_matches = _parse_mass_type_qualifier(quality)
+    if type_matches is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        player = ability.event.player if ability.event is not None else None
+        if player is None:
+            return
+        candidates = computed_permanents(game, game.permanents_controlled_by(player), type_matches)
+        if not candidates:
+            return
+        tapped_first = sorted(candidates, key=lambda state: not state.tapped)
+        chosen = game.ask(
+            Decision(
+                kind=DecisionKind.CHOOSE_CARDS,
+                player=player,
+                prompt=f"untap a {quality} you control",
+                source=ability.source_name,
+                amount=1,
+                cards=tuple(state.id for state in candidates),
+                exact=True,
+                default_cards=(tapped_first[0].id,),
+                source_id=source_id_of(ability),
+            )
+        )
+        assert isinstance(chosen, tuple)
+        by_id = {state.id: state for state in candidates}
+        for card_id in chosen:
+            by_id[card_id].untap()
+
+    return effect
+
+
 #: "Untap all `<qualifier>`." with no controller named (Intruder Alarm's
 #: "Whenever a creature enters, untap all creatures.") - CR 701.26b, every
 #: player's matching permanents, untapped simultaneously (CR 608.2f). The

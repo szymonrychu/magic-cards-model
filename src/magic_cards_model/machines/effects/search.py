@@ -1507,6 +1507,55 @@ def _parse_target_player_may_search_named_card_clause(
     return effect
 
 
+#: "[You may ]search your library for a card named [name], reveal it, put it
+#: into your hand, then shuffle." - Tempest Hawk's combat-damage trigger,
+#: whose name is its own (CR 201.5: after self-name normalisation it reads
+#: "a card named this creature", the object's own name). The controller's
+#: twin of `_TARGET_PLAYER_MAY_SEARCH_NAMED_CARD_RE`; CR 701.23b lets the
+#: searcher fail to find even a present card, which `Game.search_and_put`'s
+#: own optional search already honours.
+_YOU_SEARCH_NAMED_CARD_RE = re.compile(
+    r"^(?P<may>you may )?search your library for a card named (?P<name>.+?), reveal it, "
+    r"put it into your hand, then shuffle$",
+    re.IGNORECASE,
+)
+_SELF_NAME_RE = re.compile(
+    r"^this (?:creature|permanent|artifact|enchantment|land|planeswalker|spell|card)$",
+    re.IGNORECASE,
+)
+
+
+@MIXED_CLAUSE.rung("s31", for_spell=FORWARD)
+def _parse_you_search_named_card_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
+    """`_YOU_SEARCH_NAMED_CARD_RE`'s shape, or `None`."""
+    match = _YOU_SEARCH_NAMED_CARD_RE.fullmatch(clause.strip().rstrip("."))
+    if match is None:
+        return None
+    printed = match.group("name").strip()
+    if not printed:
+        return None
+    optional = match.group("may") is not None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        source = stack_object.name if for_spell else stack_object.source_name  # type: ignore[union-attr]
+        source_id = source_id_of(stack_object)
+        name = source.split(" // ")[0] if _SELF_NAME_RE.fullmatch(printed) else printed
+        controller = game.controller_of(stack_object)
+        prompt = f"search your library for a card named {name}"
+        if optional and not game.may(controller, prompt, source=source, source_id=source_id):
+            return
+        game.search_and_put(
+            controller,
+            lambda state: state.name == name,
+            destination=Zone.HAND,
+            reveal=True,
+            source=source,
+            source_id=source_id,
+        )
+
+    return effect
+
+
 def _search_and_exile_matching_name(
     game: "Game",
     zones_owner: Player,

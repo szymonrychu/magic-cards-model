@@ -6926,7 +6926,7 @@ _TURN_FACT_GATED_SELF_PUMP_RE = re.compile(
 #: fixed "can attack as though it didn't have defender" text, or an ordinary
 #: keyword list.
 _TURN_FACT_GATED_SELF_RE = re.compile(
-    r"^as long as (?P<condition>.+?), this (?:creature|permanent|token) "
+    r"^as long as (?P<condition>.+?), (?:this (?:creature|permanent|token)|it) "
     r"(?:(?P<no_defender>can attack as though it didn'?t have defender)"
     r"|(?:has|have) (?P<keywords>[a-z]+(?: [a-z]+)?(?:(?:,\s*| and )[a-z]+(?: [a-z]+)?)*))\.?$",
     re.IGNORECASE,
@@ -12415,6 +12415,21 @@ def _parse_static_layer_sentence(sentence: str) -> EffectBuilder | None:
             )
     if match := _TURN_FACT_GATED_SELF_RE.fullmatch(sentence):
         fact = _TURN_FACT_CONDITION_PHRASES.get(match.group("condition").strip().lower())
+        counters = _SELF_HAS_N_COUNTERS_RE.fullmatch(match.group("condition").strip())
+        if fact is None and counters is not None and match.group("no_defender"):
+            # Faithbound Judge: "As long as this creature has three or more
+            # judgment counters on it, it can attack as though it didn't have
+            # defender." - CR 604.2's condition on the source's own counters.
+            threshold = parse_count(counters.group("count"), article=False)
+            if threshold is None:
+                return None
+            kind = counters.group("kind")
+            return _context_gated_self_static_builder(
+                lambda source, context: source.counters[kind] >= threshold,
+                [ATTACK_WITHOUT_DEFENDER_TEXT],
+                line=sentence,
+                description=f"with {threshold}+ {kind} counters",
+            )
         if fact is None:
             return None
         fact_name, subject = fact

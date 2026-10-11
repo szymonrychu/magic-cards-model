@@ -353,9 +353,11 @@ class CardRequirement(EngineModel):
             return f"{card.name} is not {with_indefinite_article('/'.join(self.subtypes))}"
         if self.named is not None and card.name != self.named:
             return f"{card.name} is not named {self.named}"
-        if self.attacking and game is not None and card.id not in {
-            attacker.id for attacker in game.attacking_creatures()
-        }:
+        if (
+            self.attacking
+            and game is not None
+            and card.id not in {attacker.id for attacker in game.attacking_creatures()}
+        ):
             return f"{card.name} is not attacking"
         if self.keywords:
             from ..combat import has_keyword
