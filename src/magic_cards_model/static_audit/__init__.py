@@ -11,7 +11,6 @@ import importlib
 import pkgutil
 from functools import cache
 
-
 #: Families that stage a throwaway game per line: asked last, since `any`
 #: stops at the first family that reads the line and the answer is the same in
 #: any order.
