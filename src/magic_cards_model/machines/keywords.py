@@ -86,6 +86,12 @@ from .crew_saddle_statics import contribution, station_amount, total_contributio
 from .decisions import Decision, DecisionKind, source_id_of
 from .delayed import anaphoric_delayed_trigger
 from .designations import designation_holds, split_as_long_as
+from .equip_block_statics import (
+    attach_refusal,
+    equip_activation_key,
+    equip_at_instant_speed,
+    equip_once_each_turn,
+)
 from .layers import (
     ComputedBoard,
     ContinuousEffect,
@@ -2164,6 +2170,16 @@ class KeywordActivation(EngineModel):
                 f"it is suspended (CR 702.62b, CR 602.5b)"
             )
         if (
+            self.keyword == "Equip"
+            and self.game is not None
+            and equip_once_each_turn(self.card)
+            and self.game.activations.get(equip_activation_key(self.card), 0) > 0
+        ):
+            return (
+                f"{self.card.name}'s equip ability can be activated only once each turn "
+                f"({self.rule}, CR 602.5b)"
+            )
+        if (
             self.sorcery_only
             and self.game is not None
             and not self.game.can_cast_sorcery(self.player)
@@ -2285,6 +2301,9 @@ class KeywordActivation(EngineModel):
             # "the first equip ability you activate each turn" counts this one
             # whichever cost it paid (`free_first_equip_source`).
             self.game.record_turn_fact(ACTIVATED_EQUIP_FACT, self.player)
+            if equip_once_each_turn(self.card):
+                key = equip_activation_key(self.card)
+                self.game.activations[key] = self.game.activations.get(key, 0) + 1
         if self.forecast:
             # CR 702.57b's own once-each-turn restriction, checked back in
             # `why_not` against this same key - the card is still in `zone`
@@ -3200,6 +3219,8 @@ def equip_activation(
     )
     if candidates and chosen is None:
         raise ValueError(next(refusal for refusal in refusals if refusal is not None))
+    if (why := attach_refusal(game, equipment, target)) is not None:
+        raise ValueError(why)
     activation = unannounced_equip_activation(
         game, equipment, player, ability=chosen, pay_zero=pay_zero, target=target
     )
@@ -3292,7 +3313,7 @@ def unannounced_equip_activation(
         rule=str(KeywordRule.EQUIP),
         zone=Zone.BATTLEFIELD,
         cost=cost,
-        sorcery_only=True,
+        sorcery_only=game is None or not equip_at_instant_speed(game, player),
         ability=_synthetic_ability(ability, cost_text=ability.cost or "", effect=EQUIP_EFFECT),
         game=game,
         free_equip_from=free_from.name if free_from is not None else None,
@@ -3352,6 +3373,8 @@ def _equip_effect(activation: KeywordActivation) -> CardState | None:
             # CR 702.6c / CR 608.2b: the target no longer has the quality this
             # equip ability asked for, so it is illegal and nothing moves.
             continue
+        if attach_refusal(game, equipment, creature) is not None:
+            continue  # CR 301.5: it can't be equipped by this Equipment
         if _protection_refusal_for_attachment(game, equipment, creature) is not None:
             # CR 608.2b's recheck of a target that gained protection in
             # response, and CR 301.5b: "If an effect attempts to attach an
@@ -4131,7 +4154,9 @@ def equipment_state_based_actions(game: Any) -> list[CardState]:
             continue  # CR 704.5m's Aura, or CR 704.5p's everything else.
         host = game.find_by_id(permanent.attached_to)
         host = host if isinstance(host, CardState) else None
-        if not _host_is_legal_for(game, permanent, host, wanted, board):
+        if not _host_is_legal_for(game, permanent, host, wanted, board) or (
+            wanted == "creature" and attach_refusal(game, permanent, host) is not None
+        ):
             permanent.unattach()
             unattached.append(permanent)
     return unattached

@@ -67,6 +67,7 @@ from .abilities import (
 )
 from .decisions import Decision, DecisionKind, source_id_of
 from .designations import designation_holds, split_as_long_as
+from .equip_block_statics import blocks_as_though_reach, blocks_as_though_untapped
 from .triggers import ExtraTriggerEvent, GameEvent
 
 #: What a creature may attack besides a player (CR 306.6, 310.5).
@@ -2503,7 +2504,7 @@ def block_refusal(game: "Game", blocker: CardState, attack: Attack) -> str | Non
         # Computed, not printed (CR 613.5) - see `attack_refusal`'s identical
         # check for why.
         return f"{blocker.name} is not a creature"
-    if blocker.tapped:
+    if blocker.tapped and not blocks_as_though_untapped(game, blocker):
         return f"{blocker.name} is tapped"
 
     defending = defending_player(game, attack.defender)
@@ -2518,7 +2519,9 @@ def block_refusal(game: "Game", blocker: CardState, attack: Attack) -> str | Non
         return f"{blocker.name} has decayed and can't block (CR 702.147a)"
 
     if has_keyword(attacker, Keyword.FLYING, game) and not (
-        has_keyword(blocker, Keyword.FLYING, game) or has_keyword(blocker, Keyword.REACH, game)
+        has_keyword(blocker, Keyword.FLYING, game)
+        or has_keyword(blocker, Keyword.REACH, game)
+        or blocks_as_though_reach(game, blocker, attacker)
     ):
         return f"{attacker.name} has flying and {blocker.name} has neither flying nor reach"
 
