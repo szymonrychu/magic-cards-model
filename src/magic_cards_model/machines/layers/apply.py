@@ -685,6 +685,11 @@ class LayerContext(EngineModel):
     #: with nothing to store or clear.
     active_player: str | None = None
 
+    #: The current step's `Step` value (`Game.turn.step`): "During your end
+    #: step, ..." (Zurgo, Thunder's Decree) reads it at build time, the same way
+    #: `active_player` is read, so the effect is on only in that step.
+    current_step: str | None = None
+
     #: The unspent mana in each player's mana pool, keyed by the username
     #: whose pool it is. A second thing the layer engine never sees, and for
     #: the same reason as a graveyard: it is not on the battlefield. Omnath,

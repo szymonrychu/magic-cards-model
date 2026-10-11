@@ -437,7 +437,10 @@ def _group_quality(noun: str) -> QualityTest | None:
     """ "creatures" / "Vampire creatures" / "Equipment" / "Slivers" -> test."""
     words = noun.split()
     singular = [
-        word[:-1] if word.lower() in ("creatures", "artifacts", "lands", "permanents") else word
+        word[:-1]
+        if word.lower()
+        in ("creatures", "artifacts", "lands", "permanents", "tokens", "enchantments", "planeswalkers")
+        else word
         for word in words
     ]
     return _quality(" ".join(singular))
@@ -731,7 +734,22 @@ def _parse_grants(raw: str, quotes: list[str]) -> list[_Change] | None:
 
 _LEADING_RE = re.compile(r"^as long as (?P<condition>.+?), (?P<body>.+)$", re.IGNORECASE)
 _TRAILING_RE = re.compile(r"^(?P<body>.+?) as long as (?P<condition>[^,]+)$", re.IGNORECASE)
-_DURING_YOUR_TURN_RE = re.compile(r"^during your turn, (?P<rest>.+)$", re.IGNORECASE)
+_DURING_YOUR_TURN_RE = re.compile(
+    r"^during your (?P<phase>turn|end step|upkeep|draw step), (?P<rest>.+)$", re.IGNORECASE
+)
+#: The steps of the active player's turn each "during your `<phase>`" names.
+_PHASE_STEPS: dict[str, frozenset[str]] = {
+    "end step": frozenset({"end_step"}),
+    "upkeep": frozenset({"upkeep"}),
+    "draw step": frozenset({"draw"}),
+}
+
+
+def _your_step_gate(steps: frozenset[str]) -> Gate:
+    def gate(source: CardState, context: LayerContext) -> bool:
+        return _your_turn_gate(source, context) and context.current_step in steps
+
+    return gate
 _SUBJECT_PREDICATE_RE = re.compile(
     r"^(?P<subject>.+?) (?P<predicate>(?:gets?|has|have|loses?|is|are) .+)$", re.IGNORECASE
 )
@@ -755,11 +773,12 @@ def _parse(sentence: str) -> _Parsed | None:
     )
     full_line = line
     lowered = line.lower()
-    if "as long as" not in lowered and not lowered.startswith("during your turn"):
+    if "as long as" not in lowered and not lowered.startswith("during your "):
         return None
     condition = _Condition()
     if match := _DURING_YOUR_TURN_RE.fullmatch(line):
-        condition = _Condition(gates=(_your_turn_gate,))
+        steps = _PHASE_STEPS.get(match.group("phase").lower())
+        condition = _Condition(gates=(_your_step_gate(steps) if steps else _your_turn_gate,))
         line = match.group("rest")
     candidates: list[tuple[str | None, str]] = []
     if not condition.gates == () and "as long as" not in line.lower():

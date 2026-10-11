@@ -399,3 +399,70 @@ def test_forge_anew_only_applies_during_its_controllers_own_turn():
     scenario.start_at(Step.DECLARE_ATTACKERS)
     assert scenario.game.active_player.username == "bob"
     assert "sorcery" in (_equip_refusal(scenario) or "")
+
+
+# -- Zurgo, Thunder's Decree: Warrior tokens can't be sacrificed in your end step --------
+
+ZURGO_TOKEN_LINE = "This token can't be sacrificed."
+
+
+def _zurgo(opposing=()):
+    from tests.scenarios.test_mobilize import board
+
+    return board("Zurgo, Thunder's Decree", opposing=opposing).build()
+
+
+def _zurgo_mobilize(scenario):
+    from tests.scenarios.test_mobilize import attack_and_resolve
+
+    return attack_and_resolve(scenario, "Zurgo, Thunder's Decree")
+
+
+def _warriors(scenario, username="alice"):
+    from tests.scenarios.test_mobilize import warriors
+
+    return warriors(scenario, username)
+
+
+def test_zurgos_warrior_tokens_are_not_sacrificed_at_the_end_step():
+    scenario = _zurgo()
+    _zurgo_mobilize(scenario)
+    assert len(_warriors(scenario)) == 2
+    scenario.start_at(Step.POSTCOMBAT_MAIN)
+    scenario.advance()
+    assert scenario.step is Step.END_STEP
+    while scenario.game.stack:
+        scenario.resolve_top()
+    assert len(_warriors(scenario)) == 2, "CR 101.2: 'can't be sacrificed' beats the sacrifice"
+    assert _notices(scenario) == []
+
+
+def test_warrior_tokens_are_sacrificed_normally_without_zurgo():
+    from tests.scenarios.test_mobilize import attack_and_resolve, board
+
+    scenario = board("Voice of Victory").build()
+    attack_and_resolve(scenario)
+    scenario.start_at(Step.POSTCOMBAT_MAIN)
+    scenario.advance()
+    while scenario.game.stack:
+        scenario.resolve_top()
+    assert _warriors(scenario) == []
+
+
+def test_zurgos_grant_exists_only_during_its_controllers_end_step():
+    scenario = _zurgo()
+    _zurgo_mobilize(scenario)
+    (token, _other) = _warriors(scenario)
+    assert not _has(scenario.game.characteristics_of(token), ZURGO_TOKEN_LINE)
+    scenario.start_at(Step.POSTCOMBAT_MAIN)
+    scenario.advance()
+    assert _has(scenario.game.characteristics_of(token), ZURGO_TOKEN_LINE)
+
+
+def test_zurgo_does_not_protect_non_warrior_tokens_or_opponents_warriors():
+    scenario = _zurgo()
+    scenario.start_at(Step.POSTCOMBAT_MAIN)
+    scenario.advance()
+    assert scenario.step is Step.END_STEP
+    bears = scenario.find("Grizzly Bears", Zone.BATTLEFIELD, "alice")
+    assert not _has(scenario.game.characteristics_of(bears), ZURGO_TOKEN_LINE)
