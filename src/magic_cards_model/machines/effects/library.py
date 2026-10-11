@@ -2920,6 +2920,104 @@ def _look_at_target_hand(game: "Game", stack_object: "StackObject") -> None:
                 game.look(state, viewer.username, source=source)
 
 
+#: "Look at the top card of target player's library. You may put that card on
+#: the bottom of that player's library." (Jace, the Mind Sculptor's `+2`) and
+#: the same instruction with the graveyard as the destination - "... You may
+#: put that card into that player's graveyard." (Lurking Informant) / "...
+#: into their graveyard." (Draugr Thought-Thief). CR 701.20e: the look shows
+#: the card only to the controller; CR 701.20b: it moves nothing, so a decline
+#: leaves the card on top. The "may" is the controller's (CR 608.2d), never
+#: the library owner's.
+_LOOK_TOP_OF_TARGET_LIBRARY_MAY_MOVE_RE = re.compile(
+    r"^look at the top card of target player's library\.\s*"
+    r"you may put (?:that card|it) "
+    r"(?P<dest>on the bottom of (?:that player's|their) library"
+    r"|into (?:that player's|their) graveyard)\.?$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s35")
+def _parse_look_top_of_target_library_may_move_clause(text: str) -> AbilityEffect | None:
+    """`_LOOK_TOP_OF_TARGET_LIBRARY_MAY_MOVE_RE`'s shape, or `None`.
+
+    CR 609.3: an empty library has no top card, so nothing is looked at, no
+    question is asked, and nothing moves. A card put on the bottom goes below
+    everything already there (`Player.move` appends), so what the controller
+    learned about the other cards stays true.
+    """
+    match = _LOOK_TOP_OF_TARGET_LIBRARY_MAY_MOVE_RE.fullmatch(" ".join(text.strip().split()))
+    if match is None:
+        return None
+    to_graveyard = match.group("dest").lower().startswith("into")
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        controller = game.controller_of(ability)
+        source_name = ability.source_name
+        for target in game.resolve_targets(ability):
+            if not isinstance(target, Player) or not target.library:
+                continue
+            top = target.library[0]
+            game.look(top, controller.username, source=source_name)
+            if not game.may(
+                controller,
+                f"put {top.name} into {target.username}'s graveyard"
+                if to_graveyard
+                else f"put {top.name} on the bottom of {target.username}'s library",
+                source=source_name,
+                source_id=source_id_of(ability),
+            ):
+                continue
+            if to_graveyard:
+                game.put_into_graveyard(top)
+            else:
+                target.move(top, Zone.LIBRARY)
+
+    return effect
+
+
+#: "Exile all cards from target player's library, then that player shuffles
+#: their hand into their library." (Jace, the Mind Sculptor's `-12`) and the
+#: bare "exile all cards from your library" (Leveler). The library goes to
+#: exile as one `Game.exile_cards` batch (CR 603.2c's one event; an empty
+#: library exiles nothing, CR 609.3), then the same player's hand goes into
+#: their library and CR 701.24a shuffles it - after the exile, so the hand is
+#: never part of what was exiled, and CR 701.24d shuffles even when the hand
+#: is empty.
+_EXILE_ALL_CARDS_FROM_LIBRARY_RE = re.compile(
+    r"^exile all cards from (?P<who>target player's|your) library"
+    r"(?:, then (?P<shuffle>that player|you) shuffles? (?:their|your) hand into "
+    r"(?:their|your) library)?\.?$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s35")
+def _parse_exile_all_cards_from_library_clause(text: str) -> AbilityEffect | None:
+    """`_EXILE_ALL_CARDS_FROM_LIBRARY_RE`'s shape, or `None`. A shuffle tail
+    must name the same player whose library was exiled."""
+    match = _EXILE_ALL_CARDS_FROM_LIBRARY_RE.fullmatch(" ".join(text.strip().split()))
+    if match is None:
+        return None
+    targeted = match.group("who").lower().startswith("target")
+    tail = match.group("shuffle")
+    if tail is not None and (tail.lower() == "that player") != targeted:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        if targeted:
+            players = [t for t in game.resolve_targets(ability) if isinstance(t, Player)]
+        else:
+            players = [game.controller_of(ability)]
+        for player in players:
+            game.exile_cards(list(player.library))
+            if tail is not None:
+                game.put_cards_into_library(list(player.hand))
+                game.shuffle_library(player)
+
+    return effect
+
+
 #: "Look at target opponent's hand. You may exile a nonland card from it.
 #: For as long as that card remains exiled, its owner may play it. A spell
 #: cast this way costs {2} more to cast." - Elite Spellbinder's own template

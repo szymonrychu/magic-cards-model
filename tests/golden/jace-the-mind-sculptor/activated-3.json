@@ -1,0 +1,157 @@
+{
+  "ability": "−12: Exile all cards from target player's library, then that player shuffles their hand into their library.",
+  "action": {
+    "controller": "alice",
+    "modes": [],
+    "on_stack": true,
+    "source": "Jace, the Mind Sculptor@alice#1",
+    "targets": ["player:alice"],
+    "x": 0
+  },
+  "board": {
+    "busy_turn": false,
+    "entering": [],
+    "order": ["alice", "bob"],
+    "players": {
+      "alice": {
+        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Wastes", "Memnite", "Icehide Golem", "Bonesplitter", "Icy Manipulator", "Jace, the Mind Sculptor"],
+        "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel"],
+        "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt"],
+        "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
+      },
+      "bob": {
+        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Kaito, Bane of Nightmares", "Fleecemane Lion", "Icehide Golem", "Shadowspear", "Dragonfire Blade"],
+        "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel"],
+        "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt"],
+        "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
+      }
+    },
+    "step": "precombat_main",
+    "tapped": [],
+    "tokens": [],
+    "variant": "quiet",
+    "war_turn": false
+  },
+  "card": "Jace, the Mind Sculptor",
+  "delta": {
+    "created": {},
+    "decisions": [],
+    "fields_changed": ["exile_residents_seen", "shuffles_performed", "turn_counts"],
+    "notices": {},
+    "objects": {
+      "Forest@alice#10": {
+        "zone": ["library", "exile"]
+      },
+      "Forest@alice#4": {
+        "zone": ["hand", "library"]
+      },
+      "Forest@alice#6": {
+        "zone": ["library", "exile"]
+      },
+      "Forest@alice#7": {
+        "zone": ["library", "exile"]
+      },
+      "Forest@alice#8": {
+        "zone": ["library", "exile"]
+      },
+      "Forest@alice#9": {
+        "zone": ["library", "exile"]
+      },
+      "Grizzly Bears@alice#1": {
+        "zone": ["hand", "library"]
+      },
+      "Grizzly Bears@alice#3": {
+        "zone": ["library", "exile"]
+      },
+      "Grizzly Bears@alice#4": {
+        "zone": ["library", "exile"]
+      },
+      "Grizzly Bears@alice#5": {
+        "zone": ["library", "exile"]
+      },
+      "Grizzly Bears@alice#6": {
+        "zone": ["library", "exile"]
+      },
+      "Grizzly Bears@alice#7": {
+        "zone": ["library", "exile"]
+      },
+      "Island@alice#5": {
+        "zone": ["library", "exile"]
+      },
+      "Island@alice#6": {
+        "zone": ["library", "exile"]
+      },
+      "Island@alice#7": {
+        "zone": ["library", "exile"]
+      },
+      "Island@alice#8": {
+        "zone": ["library", "exile"]
+      },
+      "Island@alice#9": {
+        "zone": ["library", "exile"]
+      },
+      "Lightning Bolt@alice#1": {
+        "zone": ["hand", "library"]
+      },
+      "Lightning Bolt@alice#3": {
+        "zone": ["library", "exile"]
+      },
+      "Lightning Bolt@alice#4": {
+        "zone": ["library", "exile"]
+      },
+      "Lightning Bolt@alice#5": {
+        "zone": ["library", "exile"]
+      },
+      "Lightning Bolt@alice#6": {
+        "zone": ["library", "exile"]
+      },
+      "Lightning Bolt@alice#7": {
+        "zone": ["library", "exile"]
+      },
+      "Opt@alice#1": {
+        "zone": ["hand", "library"]
+      },
+      "Opt@alice#3": {
+        "zone": ["library", "exile"]
+      },
+      "Opt@alice#4": {
+        "zone": ["library", "exile"]
+      },
+      "Opt@alice#5": {
+        "zone": ["library", "exile"]
+      },
+      "Opt@alice#6": {
+        "zone": ["library", "exile"]
+      },
+      "Opt@alice#7": {
+        "zone": ["library", "exile"]
+      },
+      "Swamp@alice#5": {
+        "zone": ["library", "exile"]
+      },
+      "Swamp@alice#6": {
+        "zone": ["library", "exile"]
+      },
+      "Swamp@alice#7": {
+        "zone": ["library", "exile"]
+      },
+      "Swamp@alice#8": {
+        "zone": ["library", "exile"]
+      },
+      "Swamp@alice#9": {
+        "zone": ["library", "exile"]
+      }
+    },
+    "players": {},
+    "stack": []
+  },
+  "family": "activated",
+  "format": 1,
+  "kind": "activated",
+  "number": 3,
+  "recipe": {
+    "enters": false,
+    "off_zone": false,
+    "variant": "quiet"
+  }
+}
