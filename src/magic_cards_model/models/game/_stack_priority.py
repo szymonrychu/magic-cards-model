@@ -3152,7 +3152,7 @@ class StackPriorityMixin:
         battlefield (a spell on the stack, say) has no computed board to ask,
         so only its own printed protection applies there.
         """
-        # The face that is up (CR 710.4, CR 712.8d): a flip card's protection
+        # The face that is up (CR 710.2, CR 712.8d): a flip card's protection
         # sits on its flipped half only.
         qualities = _qualities_from_text(target.oracle_text)
         if target.zone is Zone.BATTLEFIELD:
