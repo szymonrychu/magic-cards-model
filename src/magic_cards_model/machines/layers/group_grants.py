@@ -24,7 +24,12 @@ from typing import TYPE_CHECKING, Any
 
 from ...data.subtypes import subtype_vocabulary
 from ...models.card import Color, Supertype, Type
-from ...models.card_state import CANT_HAVE_KIND_COUNTERS_TEXT, LETHAL_BY_POWER_TEXT, CardState
+from ...models.card_state import (
+    CANT_HAVE_KIND_COUNTERS_TEXT,
+    LETHAL_BY_POWER_TEXT,
+    UNTAPS_IN_OTHER_UNTAP_TEXT,
+    CardState,
+)
 from .model import (
     AddEveryCreatureType,
     AddSupertype,
@@ -101,7 +106,7 @@ def parse_group(subject: str) -> dict[str, Any] | None:
     """The `GroupMatch` clauses a printed group subject names, plus the three
     source-relative flags (`other`, `chosen`) the builder resolves - or `None`
     if any word is not understood (fail closed, never a guessed group)."""
-    text = subject.strip().lower()
+    text = subject.strip().lower().replace(" and/or ", " and ")
     for quantifier in ("all ", "each "):
         if text.startswith(quantifier):
             text = text[len(quantifier) :]
@@ -287,6 +292,9 @@ _GROUP_LOSE_KEYWORDS_RE = re.compile(r"^(?P<subject>.+?) loses? (?P<keywords>[a-
 _GROUP_EQUIP_CREW_RE = re.compile(
     r"^(?P<subject>.+?) (?:have|has) (?P<ability>equip(?: [a-z]+)* (?:\{[^{}]+\})+|crew \d+)$"
 )
+_UNTAP_OTHER_STEP_RE = re.compile(
+    r"^untap all (?P<subject>.+?) during each other player's untap step$"
+)
 _SAME_IS_TRUE_RE = re.compile(r"^the same is true for (?P<subjects>.+)$")
 _OFF_ZONE_WORD_RE = re.compile(r"\b(?:cards?|spells?)\b")
 _ARE_LEGENDARY_RE = re.compile(r"^(?P<subject>.+?) (?:are|is) legendary$")
@@ -372,6 +380,15 @@ def parse_group_static_sentence(sentence: str):
     docstring)."""
     text = sentence.strip().rstrip(".")
     lowered = text.lower()
+    if match := _UNTAP_OTHER_STEP_RE.fullmatch(lowered):
+        if _subject_ok(match["subject"]) is False:
+            return None
+        return _builder(
+            sentence,
+            match["subject"],
+            "untap during each other player's untap step",
+            lambda: [(Layer.ABILITY, None, grant_ability(UNTAPS_IN_OTHER_UNTAP_TEXT))],
+        )
     if not _VERB_RE.search(lowered) or '"' in text:
         return None
     if match := _GROUP_EQUIP_CREW_RE.fullmatch(lowered):

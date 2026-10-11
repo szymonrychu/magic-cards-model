@@ -62,6 +62,10 @@ CANT_HAVE_KIND_COUNTERS_TEXT = "Can't have {kind} counters put on it."
 #: determined by their power rather than their toughness." (Zilortha) puts on
 #: each creature it reaches in layer 6 - read by `CardState.lethal_threshold`.
 #: An effect on the object, not an ability of it (`layers.RULE_EFFECT_TEXTS`).
+#: CR 502.3 and CR 604.2: the marker "Untap all <group> you control during each
+#: other player's untap step." grants each permanent of the group, read by
+#: `Game.untap_step` for every player whose step it is not.
+UNTAPS_IN_OTHER_UNTAP_TEXT = "Untaps during each other player's untap step."
 LETHAL_BY_POWER_TEXT = "Lethal damage is determined by power rather than toughness."
 
 

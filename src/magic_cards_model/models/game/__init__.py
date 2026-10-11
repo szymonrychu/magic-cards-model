@@ -1132,6 +1132,9 @@ class Game(
     them - `emit` fills `subject_types`/`subject_subtypes` from here. Not
     persisted: it is read within the same move that wrote it."""
     _paying_cost: tuple[str, str | None, str | None] | None = PrivateAttr(default=None)
+    #: True while `machines.keywords.discard` moves a card, so a zone-change
+    #: replacement can tell a discard (CR 701.9a) from any other move to a graveyard.
+    _discarding: bool = PrivateAttr(default=False)
     """`(what, keyword, payer)` while a spell's or ability's total cost is
     being paid (`paying_cost_of`), stamped onto every event raised meanwhile.
     Not persisted: it opens and closes within one `CostPayment.pay`."""

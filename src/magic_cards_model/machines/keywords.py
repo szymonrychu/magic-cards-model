@@ -5967,7 +5967,11 @@ def discard(game: Any, card: CardState, player: str) -> CardState:
             # replacement (Rest in Peace's "from anywhere", Leyline of the
             # Void's) still gets its look at a discarded card; that also feeds
             # the CR 700.11/CR 400.6 arrival ledger.
-            game.put_into_graveyard(card)
+            game._discarding = True  # noqa: SLF001
+            try:
+                game.put_into_graveyard(card)
+            finally:
+                game._discarding = False  # noqa: SLF001
             if card.zone is not Zone.GRAVEYARD:
                 return card
             # CR 702.187b's "as long as you discarded this card this turn", recorded

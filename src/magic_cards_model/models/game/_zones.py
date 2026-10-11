@@ -3044,6 +3044,10 @@ class ZonesMixin:
                 # "bottom": `Player.add` appended it below every other card (CR 401.2).
             elif event.destination is Zone.HAND:
                 self._owner_of(card_state).add(card_state, Zone.HAND)
+            elif event.destination is Zone.BATTLEFIELD:
+                # CR 614.1a: "put it onto the battlefield instead" - it enters
+                # under its owner's control (CR 110.2a).
+                self.put_onto_battlefield(card_state, self._owner_of(card_state).username)
             else:
                 raise ValueError(f"a graveyard replacement sent {card_state.name} nowhere")
 

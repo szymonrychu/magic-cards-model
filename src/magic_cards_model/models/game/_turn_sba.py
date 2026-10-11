@@ -63,6 +63,7 @@ from ..card import (
 )
 from ..card_state import (
     LETHAL_BY_POWER_TEXT,
+    UNTAPS_IN_OTHER_UNTAP_TEXT,
     CardState,
     Counter,
     annihilate_counters_on,
@@ -267,7 +268,7 @@ class TurnSbaMixin:
         # CR 502.2: second, the day/night check (CR 731.2) - after CR 502.1's
         # phasing and before CR 502.3's untap, and skipped with the step.
         self._day_night_untap_check()
-        untappable = verdict.permanents
+        untappable = [*verdict.permanents, *self._untapping_in_others_untap_step(active.username)]
         tapped = [state for state in untappable if state.tapped]
         active.untap_all(untappable)
         for state in tapped:
@@ -295,6 +296,20 @@ class TurnSbaMixin:
                     step=Step.UNTAP,
                 )
             )
+
+    def _untapping_in_others_untap_step(self: "Game", active: str) -> list[CardState]:
+        """CR 502.3, CR 604.2: the permanents "Untap all <group> you control
+        during each other player's untap step." (Seedborn Muse) reaches - those
+        controlled by someone other than the active player that carry the
+        marker the group sentence grants. Stun (CR 122.1d) and "can't become
+        untapped" apply as they do to any untap."""
+        return [
+            state
+            for state in self.battlefield
+            if state.controller != active
+            and not state.cant_become_untapped
+            and self.characteristics_of(state).has_ability(UNTAPS_IN_OTHER_UNTAP_TEXT)
+        ]
 
     def _day_night_untap_check(self: "Game") -> None:
         """CR 502.2's turn-based action: the previous turn's active player's
