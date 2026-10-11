@@ -67,6 +67,7 @@ from ...machines.effects import (
     mode_effect_body,
 )
 from ...machines.keywords import (
+    casualty_x_instances,
     has_rebound_now,
 )
 from ...machines.layers import (
@@ -764,6 +765,8 @@ class CastingMixin:
                 taken: set[UUID] = set()
                 chosen_modes = self._announce_resolution_modes(casting, card, caster, face, taken)
                 self._announce_optional_costs(casting, card, caster, taken)
+                if casting.casualty_x is not None:
+                    x_value = casting.casualty_x  # CR 107.3a: the announced X stays
                 self._announce_mandatory_costs(casting, card, caster, taken)
                 targets = self._announce_resolution_targets(casting, card, caster, chosen_modes)
                 if targets:
@@ -979,22 +982,25 @@ class CastingMixin:
         the spell has - printed or granted (CR 702.153b: "each is paid
         separately") - each legal only while a creature with enough power is
         left to sacrifice, then which creature (`CHOOSE_CARDS`)."""
-        for number in casting.casualty_numbers():
+        x_pending = bool(casualty_x_instances(card.card)) and casting.casualty_x is None
+        for number in [*casting.casualty_numbers(), *([None] if x_pending else [])]:
             board = self.computed_board()
             fodder = [
                 state
                 for state in self.permanents_controlled_by(caster)
                 if board.of(state).is_creature
                 and state.id not in taken
-                and (self.power_of(state) or 0) >= number
+                and (self.power_of(state) or 0) >= (number or 0)
             ]
+            is_x = number is None
             if not self.ask(
                 Decision(
                     kind=DecisionKind.MAY,
                     player=caster,
                     prompt=(
-                        f"pay casualty {number} (sacrifice a creature with power {number} or "
-                        f"greater) as you cast {card.name} (CR 702.153a)"
+                        f"pay casualty {'X' if is_x else number} (sacrifice a creature with "
+                        f"power {'X' if is_x else number} or greater) as you cast {card.name} "
+                        "(CR 702.153a)"
                     ),
                     source=card.name,
                     source_id=source_id_of(card),
@@ -1002,6 +1008,21 @@ class CastingMixin:
                 )
             ):
                 return
+            if is_x:
+                # CR 107.3a: X is announced as the spell is cast; the creature
+                # must then have power X or greater.
+                ceiling = max((self.power_of(state) or 0 for state in fodder), default=0)
+                casting.announce_casualty_x(
+                    self.choose_an_amount(
+                        caster,
+                        ceiling,
+                        source=card.name,
+                        source_id=source_id_of(card),
+                        prompt=f"choose X for {card.name}'s casualty X",
+                    )
+                )
+                number = casting.casualty_x
+                fodder = [state for state in fodder if (self.power_of(state) or 0) >= number]
             answer = self.ask(
                 Decision(
                     kind=DecisionKind.CHOOSE_CARDS,
@@ -2009,6 +2030,7 @@ class CastingMixin:
         collect_evidence: bool = False,
         reveal_for_cost: CardState | None = None,
         casualty: Sequence[CardState] | None = None,
+        casualty_x: int | None = None,
         conspire: Sequence[Sequence[CardState]] | None = None,
         granted_life_costs: int = 0,
         exile_for_cost_reduction: Sequence[CardState] | None = None,
@@ -2095,6 +2117,7 @@ class CastingMixin:
         creatures tapped for that cost's own generic mana, applied against the
         open payment like `convoke` (CR 701.67a, bounded by CR 701.67b) and
         refused when no waterbend cost is being paid.
+        `casualty_x` is the X announced for a "Casualty X" instance (CR 107.3a).
         `casualty` is the creature sacrificed for each casualty instance paid
         (CR 702.153a/b), in order - printed instances first, then granted.
         They join `offspring`, `blight` and `gift` as this method's whole
@@ -2145,6 +2168,8 @@ class CastingMixin:
                 casting.x_value = x_value
             # CR 601.2b: casualty's sacrifice is announced with the modes,
             # before CR 601.2c's targets.
+            if casualty_x is not None:
+                casting.announce_casualty_x(casualty_x)
             for creature in casualty or ():
                 casting.pay_casualty(creature)
             # CR 702.78a: each conspire instance's two creatures, announced

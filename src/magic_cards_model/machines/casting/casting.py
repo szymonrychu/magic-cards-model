@@ -66,6 +66,7 @@ from ..cost.statics import object_quality
 from ..cost.text import printed_cost_total
 from ..decisions import source_id_of
 from ..keywords import (
+    casualty_x_instances,
     enchant_restrictions,
     face_down_characteristics,
     why_cannot_enchant,
@@ -964,6 +965,8 @@ class Casting(EngineModel):
     casualty_paid: int = 0
     """How many of this spell's casualty instances were paid (CR 702.153a,
     CR 702.153b: "each is paid separately"), set by `pay_casualty`."""
+    casualty_x: int | None = None
+    """The X announced for a "Casualty X" instance (CR 107.3a), or None."""
     conspire_paid: int = 0
     """How many of this spell's conspire instances were paid (CR 702.78a),
     set by `pay_conspire`."""
@@ -2997,7 +3000,22 @@ class Casting(EngineModel):
         """The N of every casualty instance this spell has as it is cast
         (CR 702.153a): printed, then granted ("Each instant and sorcery spell
         you cast has casualty 1.", `machines/spell_grants.py`)."""
-        return casualty_numbers(self.game, self.spell, self.caster, self.origin_zone)
+        return casualty_numbers(
+            self.game, self.spell, self.caster, self.origin_zone, self.casualty_x
+        )
+
+    def announce_casualty_x(self, value: int) -> CastingStep:
+        """CR 107.3a: the caster of a spell with "Casualty X" chooses and
+        announces X as part of casting it; while the spell is on the stack that
+        X is its value (`x_value`, which the casualty copy's starting loyalty
+        reads back off the cast record)."""
+        if not casualty_x_instances(self.spell.card):
+            raise ValueError(f"{self.spell.name} has no 'Casualty X' to announce (CR 702.153a)")
+        if value < 0:
+            raise ValueError("X cannot be negative (CR 107.1b)")
+        self.casualty_x = value
+        self.x_value = value
+        return self.step
 
     def pay_casualty(self, creature: CardState) -> CastingStep:
         """CR 702.153a: "As an additional cost to cast this spell, you may

@@ -391,14 +391,20 @@ def granted_triggered_abilities_for(game: Any, source: CardState) -> list[Any]:
 _CASUALTY_LINE_RE = re.compile(r"^Casualty (?P<n>\d+)$")
 
 
-def casualty_numbers(game: Any, spell: CardState, caster: str, origin_zone: Zone) -> list[int]:
+def casualty_numbers(
+    game: Any,
+    spell: CardState,
+    caster: str,
+    origin_zone: Zone,
+    casualty_x: int | None = None,
+) -> list[int]:
     """The N of every casualty instance `spell` has as `caster` casts it
     from `origin_zone` (CR 702.153a): the printed ones, then one per grant
     ("Each instant and sorcery spell you cast has casualty 1."). CR 702.153b
     pays each of them separately."""
     from .keywords import printed_casualty_numbers
 
-    numbers = printed_casualty_numbers(spell.card)
+    numbers = printed_casualty_numbers(spell.card, casualty_x)
     if game is None:
         return numbers
     first_spell = not game.spells_cast_this_turn.get(caster)

@@ -60,10 +60,12 @@ from .abilities import (
     Cost,
     CostKind,
     KeywordAbility,
+    StaticAbility,
     TriggeredAbility,
     TriggerEvent,
     TriggerWord,
     keyword_abilities,
+    parse_abilities,
     target_cost_reduction_amount,
 )
 from .combat import has_keyword
@@ -753,16 +755,50 @@ def printed_conspire_count(card: Card) -> int:
     return sum(1 for ability in keyword_abilities(card) if ability.canonical.lower() == "conspire")
 
 
-def printed_casualty_numbers(card: Card) -> list[int]:
+#: "Casualty X. The copy isn't legendary and has starting loyalty X." (Ob
+#: Nixilis, the Adversary): a casualty instance whose N is the X its caster
+#: announces as the spell is cast (CR 107.3a, CR 702.153a), plus - on that
+#: printing - what the casualty copy is (CR 707.2's copiable values).
+_CASUALTY_X_LINE_RE = re.compile(
+    r"^casualty x\.(?P<copy> the copy isn't legendary and has starting loyalty x\.)?$",
+    re.IGNORECASE,
+)
+
+
+def casualty_x_instances(card: Card) -> int:
+    """How many "Casualty X" lines `card` prints (CR 702.153a)."""
+    return sum(
+        1
+        for ability in parse_abilities(card)
+        if isinstance(ability, StaticAbility)
+        and _CASUALTY_X_LINE_RE.fullmatch((ability.text or "").strip())
+    )
+
+
+def casualty_copy_is_nonlegendary_with_x_loyalty(card: Card) -> bool:
+    """Whether the card's casualty line says "The copy isn't legendary and has
+    starting loyalty X"."""
+    return any(
+        isinstance(ability, StaticAbility)
+        and (match := _CASUALTY_X_LINE_RE.fullmatch((ability.text or "").strip())) is not None
+        and match.group("copy") is not None
+        for ability in parse_abilities(card)
+    )
+
+
+def printed_casualty_numbers(card: Card, x_value: int | None = None) -> list[int]:
     """The N of every "Casualty N" `card` prints, in printed order (CR
-    702.153a). A casualty whose N is not a number ("Casualty X") is left
-    out - no reader here announces that X."""
+    702.153a). A "Casualty X" instance counts as `x_value` once its caster has
+    announced it (CR 107.3a), and is left out until then - nothing can be
+    sacrificed for an X nobody has chosen."""
     numbers: list[int] = []
     for ability in keyword_abilities(card):
         if ability.canonical.lower() != "casualty":
             continue
         if ability.count is not None:
             numbers.append(ability.count)
+    if x_value is not None:
+        numbers.extend(x_value for _ in range(casualty_x_instances(card)))
     return numbers
 
 
@@ -6514,10 +6550,29 @@ def _casualty_effect(game: Any, ability: AbilityOnStack) -> CardState | None:
     copy = game.copy_spell(source, controller=ability.controller)
     if copy is None:
         return None
+    if casualty_copy_is_nonlegendary_with_x_loyalty(source.card):
+        # "The copy isn't legendary and has starting loyalty X" (CR 707.2:
+        # these are copiable values of the copy, set by the effect that made it).
+        record = game.cast_record_of(source)
+        copy.card = _casualty_x_copy_of(source.card, record.x_value if record else 0)
     game.offer_new_targets_for_copy(
         copy, ability.controller, source_name=source.name, source_id=source_id_of(source)
     )
     return copy
+
+
+def _casualty_x_copy_of(card: Card, x_value: int) -> Card:
+    """`card` as the copy of Ob Nixilis, the Adversary's casualty has it: no
+    legendary supertype and X for its printed (starting) loyalty."""
+    import uuid
+
+    return card.model_copy(
+        update={
+            "id": uuid.uuid5(card.id, f"casualty-copy|{x_value}"),
+            "type_line": card.type_line.replace("Legendary ", "", 1),
+            "loyalty": str(x_value),
+        }
+    )
 
 
 def _ward_effect(game: Any, ability: AbilityOnStack) -> bool:

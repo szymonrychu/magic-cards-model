@@ -10,6 +10,10 @@ performs: each predicate stages a throwaway permanent of the printing on a real
 
 from magic_cards_model.machines.attached_restrictions import reads_attached_restriction_line
 from magic_cards_model.machines.combat import all_damage_has_wither, may_assign_as_though_unblocked
+from magic_cards_model.machines.keywords import (
+    casualty_copy_is_nonlegendary_with_x_loyalty,
+    casualty_x_instances,
+)
 from magic_cards_model.machines.mulligan_time import mulligan_time_line
 from magic_cards_model.machines.zone_grants import line_grants_off_zone
 from magic_cards_model.models.game import Game
@@ -26,6 +30,7 @@ _GATES = (
     "could mulligan",
     "twice each turn rather than only once",
     "can't activate abilities that aren't mana abilities",
+    "casualty x",
 )
 
 
@@ -120,6 +125,13 @@ def reads_anthems_grants_line(printing, text, *, card_name=None, legendary=False
         return _reads_attach_restriction(printing)
     if "can't activate abilities that aren't mana abilities" in lowered:
         return reads_attached_restriction_line(printing, text, card_name=card_name or printing.name)
+    if "casualty x" in lowered:
+        # CR 702.153a / CR 107.3a: `Casting.announce_casualty_x` and the casualty
+        # copy (`keywords._casualty_effect`) perform exactly this line.
+        return casualty_x_instances(printing) > 0 and (
+            "starting loyalty x" not in lowered
+            or casualty_copy_is_nonlegendary_with_x_loyalty(printing)
+        )
     if "twice each turn rather than only once" in lowered:
         return _loyalty_twice(printing)
     if "had wither" in lowered:

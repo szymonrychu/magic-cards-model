@@ -2027,7 +2027,7 @@ def _merge_damage_each_group_clauses(
 # --------------------------------------------------------------------------
 
 #: "Each player <rest>" - the head of the sentence, whatever `<rest>` is.
-_EACH_PLAYER_HEAD_RE = re.compile(r"^each player (?P<rest>.+)$", re.IGNORECASE)
+_EACH_PLAYER_HEAD_RE = re.compile(r"^each (?P<who>player|opponent) (?P<rest>.+)$", re.IGNORECASE)
 
 #: "discards N cards at random" - Burning Inquiry's own discard, which is not
 #: `_DISCARD_A_CARD_RE`'s default choice at all: CR 701.9b, "By default,
@@ -2361,9 +2361,11 @@ def _merge_each_player_clauses(
         return None
     kept_fragments, kept_steps = settled
     ordered = steps[:kept_steps]
+    opponents_only = head.group("who").lower() == "opponent"
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
         source = stack_object.name if for_spell else stack_object.source_name  # type: ignore[union-attr]
+        controller = game.controller_of(stack_object).username
         # `_permanent_id_and_name` (defined below) is called for its id half
         # only - see the exile-linking comment inside the loop for why.
         source_id, _ = _permanent_id_and_name(stack_object, for_spell=for_spell)
@@ -2371,6 +2373,8 @@ def _merge_each_player_clauses(
             # CR 608.2e / CR 101.4: the whole table completes one step before
             # the next one starts, in APNAP order within each step.
             for player in _players_in_apnap_order(game):
+                if opponents_only and player.username == controller:
+                    continue
                 before = len(game.exile)
                 # CR 608.2e: a later "that many" of this player's is this
                 # player's own count, not the table's.
