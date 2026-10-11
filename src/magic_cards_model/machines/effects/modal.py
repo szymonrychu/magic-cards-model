@@ -4763,7 +4763,8 @@ def _parse_choose_opponent_and_creature_reveal_exile_choice_whole_text(
 #: before this ever runs, but the label is kept optional here too (not
 #: required) in case it reaches this some other way, unstripped.
 _CONDITION_INSTEAD_RE = re.compile(
-    r"^(?P<base>[^.]+)\.\s*(?:[a-z][a-z' ]*?\s+[\u2014-]\s+)?"
+    r'^(?P<base>(?:[^."]|"[^"]*")+)(?:\.\s*|(?<=")\s+)'
+    r"(?:[a-z][a-z' ]*?\s+[\u2014-]\s+)?"
     r"(?:"
     r"if (?P<condition_leading>[^,]+), "
     r"(?:instead (?P<alternative_leading>.+?)|(?P<alternative_trailing>.+?) instead)"
@@ -4948,9 +4949,16 @@ def _ability_instead_alternative_text(base: str, alternative: str) -> str | None
         return f"{base[: found.start('n')]}{elided.group('m')}{base[found.end('n') :]}"
     if those := _ABILITY_THOSE_TOKENS_ALTERNATIVE_RE.fullmatch(alternative):
         token = _ABILITY_BASE_TOKEN_RE.fullmatch(base.strip())
-        if token is None or token.group("tail").strip():
+        if token is None:
             return None
-        return f"create {those.group('count')} {token.group('desc')} tokens"
+        tail = token.group("tail").strip()
+        # "those tokens" are the base's tokens, quoted ability included
+        # (Anax's Satyr "with "This token can't block."").
+        if tail and not re.fullmatch(r'with "[^"]+"', tail):
+            return None
+        return " ".join(
+            f"create {those.group('count')} {token.group('desc')} tokens {tail}".split()
+        )
     return _anaphoric_target_substitution(base, alternative)
 
 

@@ -15,9 +15,18 @@ CR 613.1f (layer 6 grants), CR 613.4c (7c pump), CR 613.4b (7b base P/T),
 CR 700.9 (modified).
 """
 
+import pytest
+
 from magic_cards_model.machines import Step, soulbond
 from magic_cards_model.models import Zone
 from tests.scenarios.harness import Scenario
+
+
+def _next_turn(scenario) -> None:
+    """Run this turn out and begin the next player's upkeep."""
+    scenario.turn.advance_to(Step.CLEANUP)
+    scenario.advance()
+    scenario.advance()
 
 
 def _board(alice, bob=(), *, alice_graveyard=()):
@@ -552,3 +561,108 @@ def test_hundred_battle_veteran_ignores_an_opponents_counters():
     scenario.find("Llanowar Elves", Zone.BATTLEFIELD, "bob").add_counters("flying")
     scenario.find("Llanowar Elves", Zone.BATTLEFIELD, "bob").add_counters("deathtouch")
     assert _chars(scenario, "Hundred-Battle Veteran").power_toughness == (4, 2)
+
+
+# -- Ray of Frost: as long as enchanted creature is red, it loses all abilities -----------
+
+
+def _ray(target, *, bob=()):
+    scenario = _board(["Ray of Frost", target], bob)
+    scenario.find("Ray of Frost", Zone.BATTLEFIELD, "alice").attach_to(
+        scenario.find(target, Zone.BATTLEFIELD, "alice")
+    )
+    return scenario
+
+
+def test_ray_of_frost_strips_all_abilities_from_a_red_creature():
+    scenario = _ray("Goblin Artillery")
+    assert not any("2 damage" in line for line in _chars(scenario, "Goblin Artillery").abilities)
+    assert scenario.game.activated_abilities(scenario.find("Goblin Artillery", Zone.BATTLEFIELD, "alice")) == []
+    assert scenario.game.continuous_effects.layer_notices == []
+
+
+def test_ray_of_frost_leaves_a_nonred_creature_alone():
+    scenario = _ray("Llanowar Elves")
+    assert "{T}: Add {G}." in _chars(scenario, "Llanowar Elves").abilities
+    assert scenario.game.activated_abilities(scenario.find("Llanowar Elves", Zone.BATTLEFIELD, "alice"))
+
+
+def test_ray_of_frost_moving_to_a_nonred_creature_restores_the_red_ones_abilities():
+    scenario = _board(["Ray of Frost", "Goblin Artillery", "Llanowar Elves"])
+    ray = scenario.find("Ray of Frost", Zone.BATTLEFIELD, "alice")
+    artillery = scenario.find("Goblin Artillery", Zone.BATTLEFIELD, "alice")
+    elves = scenario.find("Llanowar Elves", Zone.BATTLEFIELD, "alice")
+    ray.attach_to(artillery)
+    assert scenario.game.activated_abilities(artillery) == []
+    ray.attach_to(elves)
+    assert scenario.game.activated_abilities(artillery)
+    assert "{T}: Add {G}." in _chars(scenario, "Llanowar Elves").abilities
+
+
+# -- Anax, Hardened in the Forge: a Satyr token with a quoted can't-block line -----------
+
+ANAX = "Anax, Hardened in the Forge"
+
+
+def _satyrs(scenario, username="alice"):
+    return [
+        state
+        for state in scenario.game.permanents_controlled_by(username)
+        if "Satyr" in state.subtypes
+    ]
+
+
+def _die_and_resolve(scenario, name, username="alice"):
+    scenario.game.destroy(scenario.find(name, Zone.BATTLEFIELD, username))
+    scenario.game.put_triggers_on_stack()
+    scenario.pass_until_resolved()
+
+
+def test_anax_dying_creature_makes_one_satyr_that_cannot_block():
+    scenario = _board([ANAX, "Grizzly Bears"])
+    _die_and_resolve(scenario, "Grizzly Bears")
+    (satyr,) = _satyrs(scenario)
+    assert satyr.power == 1 and satyr.toughness == 1
+    assert "This token can't block." in scenario.game.characteristics_of(satyr).abilities
+    assert scenario.game.unmodeled_trigger_effect_notices == []
+
+
+def test_anax_makes_two_satyrs_when_the_dying_creature_had_power_four_or_more():
+    scenario = _board([ANAX, "Craw Wurm"])
+    _die_and_resolve(scenario, "Craw Wurm")
+    assert len(_satyrs(scenario)) == 2
+
+
+def test_anax_itself_dying_also_makes_a_satyr():
+    scenario = _board([ANAX])
+    _die_and_resolve(scenario, ANAX)
+    assert len(_satyrs(scenario)) == 1
+
+
+def test_anax_ignores_an_opponents_creature_dying():
+    scenario = _board([ANAX], ["Grizzly Bears"])
+    _die_and_resolve(scenario, "Grizzly Bears", "bob")
+    assert _satyrs(scenario) == []
+
+
+def test_a_satyr_token_dying_does_not_make_more_satyrs():
+    scenario = _board([ANAX, "Grizzly Bears"])
+    _die_and_resolve(scenario, "Grizzly Bears")
+    (satyr,) = _satyrs(scenario)
+    scenario.game.destroy(satyr)
+    scenario.game.put_triggers_on_stack()
+    scenario.pass_until_resolved()
+    assert _satyrs(scenario) == []
+
+
+def test_the_satyr_really_cannot_block():
+    scenario = _board([ANAX, "Grizzly Bears"], ["Hill Giant"])
+    _die_and_resolve(scenario, "Grizzly Bears")
+    (satyr,) = _satyrs(scenario)
+    _next_turn(scenario)
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    giant = scenario.find("Hill Giant", Zone.BATTLEFIELD, "bob")
+    giant.summoning_sick = False
+    scenario.attack_with(giant, defending="alice")
+    with pytest.raises(ValueError, match="block"):
+        scenario.block(giant, satyr)
