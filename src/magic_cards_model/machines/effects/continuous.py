@@ -85,6 +85,7 @@ from ..layers import (
     YouStillControl,
     _only,
     _split_and_validate_keywords,
+    activated_ability_lines,
     add_subtype,
     all_permanents_controlled_by,
     creatures_controlled_by,
@@ -3565,6 +3566,58 @@ def _parse_target_gains_quoted_ability_for_as_long_as_clause(
                 ),
                 game,
             )
+
+    return effect
+
+
+#: "This creature gains all activated abilities of target creature until end
+#: of turn." (Quicksilver Elemental): CR 613.1f's layer 6 copy of the target's
+#: whole activated abilities (CR 602.1), each with the target's own name
+#: rewritten to "this permanent" (CR 201.5b) and fixed as the ability
+#: resolves. The target keeps its own; the grant ends in the cleanup step.
+_GAINS_ALL_ACTIVATED_ABILITIES_UNTIL_EOT_RE = re.compile(
+    r"^this (?:creature|permanent) gains all activated abilities of (?P<phrase>target .+?) "
+    r"until end of turn\.?(?: \(.*\))?$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s36")
+def _parse_gains_all_activated_abilities_of_target_until_eot_clause(
+    effect_text: str,
+) -> AbilityEffect | None:
+    """`_GAINS_ALL_ACTIVATED_ABILITIES_UNTIL_EOT_RE`'s shape - see the banner."""
+    stripped = " ".join(effect_text.split())
+    if "all activated abilities of" not in stripped:
+        return None
+    match = _GAINS_ALL_ACTIVATED_ABILITIES_UNTIL_EOT_RE.fullmatch(stripped)
+    if match is None or not _targets_understood(match.group("phrase"), count_agnostic=False):
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        source = ability.source(game)
+        if source is None or source.zone is not Zone.BATTLEFIELD:
+            return
+        store = continuous_effects(game)
+        board = game.computed_board()
+        for target in game.resolve_targets(ability):
+            if not isinstance(target, CardState) or target.zone is not Zone.BATTLEFIELD:
+                continue
+            for order, text in enumerate(
+                activated_ability_lines(board.of(target).abilities, target.name)
+            ):
+                store.add(
+                    ContinuousEffect(
+                        description=f'{source.name}: gains "{text}" until end of turn',
+                        layer=Layer.ABILITY,
+                        timestamp=store.tick(),
+                        order=order,
+                        duration=Duration.UNTIL_END_OF_TURN,
+                        selector=only_this_incarnation(source, source.zone_change_stamp),
+                        modification=grant_ability(text),
+                    ),
+                    game,
+                )
 
     return effect
 
