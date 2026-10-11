@@ -30,6 +30,7 @@ from ..cost import (
 )
 from ..keywords import (
     FACE_DOWN_CAST_COST,
+    casualty_x_instances,
     printed_casualty_numbers,
     printed_conspire_count,
 )
@@ -63,6 +64,16 @@ class CastTiming(StrEnum):
     #: `why_cannot_cast_now` of the card as a hand card, so flash (CR 702.8a)
     #: and every flash grant still count.
     OWN = "own"
+
+
+def freerunning_condition_holds(game: Any, caster: str) -> bool:
+    """CR 702.173a: a player was dealt combat damage this turn by a creature
+    that, as it dealt that damage, was an Assassin under `caster`'s control."""
+    return any(
+        record.controller == caster
+        and any(kind.lower() == "assassin" for kind in record.creature_types)
+        for record in game.combat_damage_to_players_this_turn
+    )
 
 
 class KeywordCastOption(EngineModel):
@@ -140,6 +151,15 @@ class KeywordCastOption(EngineModel):
     its owner's hand" (CR 702.188a's web-slinging): unavailable while the
     caster controls no tapped creature, and the chosen creature is checked
     as it is chosen (CR 601.2b)."""
+    freerunning: bool = False
+    """True for CR 702.173a's freerunning: the alternative cost is available
+    only "if a player was dealt combat damage this turn by a creature that, at
+    the time it dealt that damage, was an Assassin creature or a commander under
+    your control". `why_not` asks `freerunning_condition_holds`, which reads the
+    same per-turn record prowl does (`Game.combat_damage_to_players_this_turn`),
+    captured as the damage was dealt. A commander is a CR 903 designation of the
+    Commander format, which is not one of this engine's formats (Modern,
+    Pioneer, Standard), so the Assassin half is the whole condition here."""
     prowl: bool = False
     """True for CR 702.76a's prowl: the alternative cost is available only "if
     a player was dealt combat damage this turn by a source that, at the time
@@ -315,6 +335,12 @@ class KeywordCastOption(EngineModel):
                     f"with {self.keyword} ({self.rule})"
                 )
 
+        if self.freerunning and game is not None and not freerunning_condition_holds(game, caster):
+            return (
+                f"no player was dealt combat damage this turn by an Assassin creature "
+                f"{caster} controlled, so {spell.name} cannot be cast for its "
+                f"{self.keyword} cost ({self.rule})"
+            )
         if self.prowl and game is not None and not game.prowl_condition_holds(caster, spell):
             return (
                 f"no player was dealt combat damage this turn by a source {caster} "
@@ -510,6 +536,29 @@ def _option_from_keyword(ability: KeywordAbility) -> KeywordCastOption | None:
             cost=cost,
             pays_mana_cost=False,
             understood=cost is not None,
+        )
+
+    if canonical == "jump-start":
+        # CR 702.133a: "You may cast this card from your graveyard if the
+        # resulting spell is an instant or sorcery spell by discarding a card
+        # as an additional cost to cast it" and "If this spell was cast using
+        # its jump-start ability, exile this card instead of putting it
+        # anywhere else any time it would leave the stack." The graveyard half
+        # is this permission, paying the card's own mana cost with the discard
+        # as an additional cost (CR 601.2f); the exile half is the replacement
+        # `machines/replacement` applies to a spell recorded as cast with it.
+        from ..cost import discard_cost
+
+        return KeywordCastOption(
+            keyword=ability.canonical,
+            rule="CR 702.133a",
+            zone=Zone.GRAVEYARD,
+            cost=None,
+            pays_mana_cost=True,
+            additional_cost=TotalCost(
+                components=[discard_cost(required=1, description="Discard a card")]
+            ),
+            understood=True,
         )
 
     if canonical == "harmonize":
@@ -711,6 +760,21 @@ def _option_from_keyword(ability: KeywordAbility) -> KeywordCastOption | None:
             zone=Zone.HAND,
             cost=cost,
             pays_mana_cost=False,
+            understood=cost is not None,
+        )
+
+    if canonical == "freerunning":
+        # CR 702.173a: an alternative cost (CR 118.9) with no zone of its own,
+        # so the hand, the zone a card is cast from by default - prowl's
+        # reading. The condition is `why_not`'s, off `freerunning`.
+        cost = total_cost_for_phrase(printed) if printed else None
+        return KeywordCastOption(
+            keyword=ability.canonical,
+            rule="CR 702.173a",
+            zone=Zone.HAND,
+            cost=cost,
+            pays_mana_cost=False,
+            freerunning=True,
             understood=cost is not None,
         )
 
@@ -1050,13 +1114,13 @@ class OptionalAdditionalCost(EngineModel):
 PAY_LIFE_KEYWORD = "pay life"
 
 
-def casualty_cost_phrase(number: int) -> str:
+def casualty_cost_phrase(number: int | str) -> str:
     """CR 702.153a's cost, spelled out: "sacrifice a creature with power N or
     greater"."""
     return f"Sacrifice a creature with power {number} or greater"
 
 
-def casualty_cost_option(number: int) -> OptionalAdditionalCost:
+def casualty_cost_option(number: int | str) -> OptionalAdditionalCost:
     """One casualty instance as an optional additional cost (CR 702.153a,
     CR 118.8b) - `Casting.pay_casualty` pays it."""
     return OptionalAdditionalCost(
@@ -1144,6 +1208,8 @@ def optional_additional_costs(card: Card) -> list[OptionalAdditionalCost]:
             OptionalAdditionalCost(keyword="bargain", cost=BARGAIN_COST, rule="CR 702.166a")
         )
     found.extend(casualty_cost_option(number) for number in printed_casualty_numbers(card))
+    # "Casualty X": X is announced as the spell is cast (CR 107.3a).
+    found.extend(casualty_cost_option("X") for _ in range(casualty_x_instances(card)))
     found.extend(conspire_cost_option() for _ in range(printed_conspire_count(card)))
     for phrase in additional_cost_phrases(card):
         if _OPTIONAL_ADDITIONAL_COST.match(phrase) is None:

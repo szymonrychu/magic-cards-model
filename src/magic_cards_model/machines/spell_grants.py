@@ -51,6 +51,7 @@ from ..models.mana import ManaCost
 from ..models.zone import Zone
 from ..snapshot import EngineModel
 from .abilities import AbilityKind, parse_abilities
+from .zone_grants import group_quality_is_readable, group_quality_matches
 
 #: The keywords a spell grant is read for, each with the rule of the machine
 #: that executes it. Affinity's "[text]" and casualty's N travel with the
@@ -61,6 +62,9 @@ SPELL_GRANT_KEYWORDS: dict[str, str] = {
     "casualty": "CR 702.153a",
     "affinity": "CR 702.41a",
     "conspire": "CR 702.78a",
+    "rebound": "CR 702.88a",
+    "convoke": "CR 702.51a",
+    "ripple": "CR 702.60a",
 }
 
 #: The keywords a card-in-hand grant is read for.
@@ -71,7 +75,8 @@ HAND_GRANT_KEYWORDS: dict[str, str] = {
 #: The keyword phrase itself, as printed after "have"/"has": a bare keyword,
 #: "casualty N", "affinity for <text>", or "miracle <mana cost>".
 _KEYWORD_PHRASE_RE = re.compile(
-    r"^(?:(?P<bare>storm|cascade|improvise|conspire)"
+    r"^(?:(?P<bare>storm|cascade|improvise|conspire|rebound|convoke)"
+    r"|(?P<ripple>ripple) (?P<ripple_n>\d+)"
     r"|(?P<casualty>casualty) (?P<n>\d+)"
     r"|(?P<affinity>affinity) for (?P<what>[a-z]+)"
     r"|(?P<miracle>miracle) (?P<cost>(?:\{[^{}]+\})+))$",
@@ -82,7 +87,8 @@ _KEYWORD_PHRASE_RE = re.compile(
 #: quality may be empty ("Spells you cast have affinity for artifacts.", Sami,
 #: Wildcat Captain).
 _SPELLS_YOU_CAST_HAVE_RE = re.compile(
-    r"^(?P<what>(?:[\w'-]+ )*?)spells you cast(?: from your (?P<zone>hand|graveyard))? "
+    r"^(?P<what>(?:[\w'-]+ )*?)spells you (?:cast|control)"
+    r"(?: from (?:your )?(?P<zone>hand|graveyard|exile))? "
     r"have (?P<keyword>.+?)\.?$",
     re.IGNORECASE,
 )
@@ -112,7 +118,11 @@ _CARDS_IN_YOUR_HAND_HAVE_RE = re.compile(
 #: Reminder text (CR 207.2) trailing the grant: italics, no game function.
 _TRAILING_REMINDER_RE = re.compile(r"\s*\([^()]*\)\s*$")
 
-_ZONE_WORDS: dict[str, Zone] = {"hand": Zone.HAND, "graveyard": Zone.GRAVEYARD}
+_ZONE_WORDS: dict[str, Zone] = {
+    "hand": Zone.HAND,
+    "graveyard": Zone.GRAVEYARD,
+    "exile": Zone.EXILE,
+}
 
 
 class SpellKeywordGrant(EngineModel):
@@ -143,6 +153,9 @@ def _keyword_line(phrase: str, allowed: dict[str, str]) -> tuple[str, str] | Non
     if match.group("bare"):
         keyword = match.group("bare").lower()
         line = keyword.capitalize()
+    elif match.group("ripple"):
+        keyword = "ripple"
+        line = f"Ripple {int(match.group('ripple_n'))}"
     elif match.group("casualty"):
         keyword = "casualty"
         line = f"Casualty {int(match.group('n'))}"
@@ -163,9 +176,14 @@ def _keyword_line(phrase: str, allowed: dict[str, str]) -> tuple[str, str] | Non
 def _affinity_is_counted(what: str) -> bool:
     """Whether `Game._affinity_count` counts CR 702.41a's "[text]" - an
     affinity it would reduce nothing for is not a grant this reads."""
+    from ..data.subtypes import canonical_subtype
     from ..models.game import _AFFINITY_CARD_TYPES, _AFFINITY_SUBTYPES
 
-    return what in _AFFINITY_CARD_TYPES or what in _AFFINITY_SUBTYPES
+    return (
+        what in _AFFINITY_CARD_TYPES
+        or what in _AFFINITY_SUBTYPES
+        or canonical_subtype(what) is not None
+    )
 
 
 def _normalized_quality(raw: str | None) -> str:
@@ -178,13 +196,17 @@ def _normalized_quality(raw: str | None) -> str:
 def _quality_is_readable(quality: str) -> bool:
     from .next_spell import spell_quality_is_readable
 
-    return not quality or spell_quality_is_readable(quality)
+    return not quality or spell_quality_is_readable(quality) or group_quality_is_readable(quality)
 
 
 def _object_has_quality(state: CardState, quality: str) -> bool:
-    from .next_spell import spell_has_quality
+    from .next_spell import spell_has_quality, spell_quality_is_readable
 
-    return not quality or spell_has_quality(state, quality)
+    if not quality:
+        return True
+    if spell_quality_is_readable(quality):
+        return spell_has_quality(state, quality)
+    return group_quality_matches(state, quality)
 
 
 @lru_cache(maxsize=4096)
@@ -240,7 +262,7 @@ def reads_spell_keyword_grant_line(text: str) -> bool:
 
 #: A cheap test a line must pass before it is read at all: every shape above
 #: says "you cast" or "in your hand".
-_MIGHT_GRANT_RE = re.compile(r"you cast|in your hand", re.IGNORECASE)
+_MIGHT_GRANT_RE = re.compile(r"you cast|you control|in your hand", re.IGNORECASE)
 
 
 def _grants_of(game: Any, controller: str) -> Iterator[tuple[str, SpellKeywordGrant]]:
@@ -369,14 +391,20 @@ def granted_triggered_abilities_for(game: Any, source: CardState) -> list[Any]:
 _CASUALTY_LINE_RE = re.compile(r"^Casualty (?P<n>\d+)$")
 
 
-def casualty_numbers(game: Any, spell: CardState, caster: str, origin_zone: Zone) -> list[int]:
+def casualty_numbers(
+    game: Any,
+    spell: CardState,
+    caster: str,
+    origin_zone: Zone,
+    casualty_x: int | None = None,
+) -> list[int]:
     """The N of every casualty instance `spell` has as `caster` casts it
     from `origin_zone` (CR 702.153a): the printed ones, then one per grant
     ("Each instant and sorcery spell you cast has casualty 1."). CR 702.153b
     pays each of them separately."""
     from .keywords import printed_casualty_numbers
 
-    numbers = printed_casualty_numbers(spell.card)
+    numbers = printed_casualty_numbers(spell.card, casualty_x)
     if game is None:
         return numbers
     first_spell = not game.spells_cast_this_turn.get(caster)

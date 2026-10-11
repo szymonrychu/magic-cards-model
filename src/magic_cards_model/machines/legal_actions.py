@@ -172,6 +172,7 @@ from .reconfigure import (
 from .special_actions import locked_doors, unlock_cost, why_cannot_unlock_door
 from .targeting import profile_for_text
 from .turn import Step
+from .zone_grants import effective_card
 
 _BOOLEAN_DECISION_KINDS = frozenset(
     {
@@ -583,6 +584,7 @@ def _cast_action(
     if game.spends_mana_as_any_color_for_spell(card, player):
         # CR 609.4b, read here exactly as `Casting.determine_cost` reads it.
         spend = spend.model_copy(update={"any_color": True})
+    spend = spend.model_copy(update={"color_rule": game.mana_color_rule(player)})
     unpayable = (
         None if alternative_cost is not None else why_mana_cost_unpayable(card.name, total.mana)
     )
@@ -1358,7 +1360,10 @@ def _marked_exile_actions(
 
 
 def _dredge_action(game: Any, player: str, card: CardState) -> Action | None:
-    if dredge_count(card.card) is None or why_cannot_dredge(game, card, player) is not None:
+    if (
+        dredge_count(effective_card(game, card)) is None
+        or why_cannot_dredge(game, card, player) is not None
+    ):
         return None
     return Action(
         kind=ActionKind.DREDGE,
@@ -1542,7 +1547,7 @@ def _battlefield_ability_actions(
             board.of(permanent),
             any_color=game.spends_mana_as_any_color(permanent, ability, player),
             class_level=getattr(ability, "class_level_target", None) is not None,
-        )
+        ).model_copy(update={"color_rule": game.mana_color_rule(player, permanent)})
         affordable, reason, pays_with = _cost_affordability(
             game, player, total, candidate_scan, spend=spend
         )
@@ -1746,7 +1751,7 @@ def _off_zone_actions(
     """
     actions: list[Action] = []
     spend = ManaSpend.activating(card.card)
-    for index, entry in enumerate(off_zone_abilities(card.card)):
+    for index, entry in enumerate(off_zone_abilities(effective_card(game, card))):
         # CR 602.2b: announced like any activation. Only a printed line can
         # target; cycling, unearth and transmute spell out untargeted effects.
         found = _target_candidates(

@@ -19,6 +19,9 @@ from ...models.card import Color, Supertype, Type, has_changeling, with_every_cr
 from ...models.card_state import (
     CANT_BECOME_UNTAPPED_TEXT,
     CANT_HAVE_COUNTERS_TEXT,
+    CANT_HAVE_KIND_COUNTERS_TEXT,
+    DEVOTION_BONUS_TEXT,
+    LETHAL_BY_POWER_TEXT,
     CardState,
 )
 from ...models.zone import Zone
@@ -754,6 +757,13 @@ def devotion_to(
         for symbol in printed.symbols:
             if wanted & set(symbol.colors):
                 devotion += 1
+    # CR 604.2: "Your devotion to each color and each combination of colors is
+    # increased by one" (Altar of the Pantheon) - one per such permanent.
+    devotion += sum(
+        1
+        for chars in board.values()
+        if chars.controller == controller and chars.has_ability(DEVOTION_BONUS_TEXT)
+    )
     return devotion
 
 
@@ -1729,6 +1739,125 @@ class CreaturesControlledByWithColor(SelectorBase):
         )
 
 
+class GroupMatch(SelectorBase):
+    """A printed group subject read generally (CR 611.3a, CR 613.5): "other
+    green creatures you control", "all Rats", "artifacts you control",
+    "non-Archon creatures", "legendary Humans you control", "creatures you
+    control with flanking", "creatures with slime counters on them". Every
+    clause is a predicate on the computed characteristics, so the group is
+    re-asked on each computation and never locked in. An empty tuple / None
+    leaves that clause out; `scope` says whose permanents (`username` is the
+    source's controller)."""
+
+    kind: Literal["group_match"] = "group_match"
+    username: str | None = None
+    scope: Literal["you", "opponents", "any"] = "you"
+    other_than: UUID | None = None
+    all_types: tuple[Type, ...] = ()
+    any_types: tuple[Type, ...] = ()
+    not_types: tuple[Type, ...] = ()
+    any_subtypes: tuple[str, ...] = ()
+    not_subtypes: tuple[str, ...] = ()
+    any_colors: tuple[Color, ...] = ()
+    not_colors: tuple[Color, ...] = ()
+    colorless: bool = False
+    legendary: bool | None = None
+    token: bool | None = None
+    with_keyword: str | None = None
+    without_keyword: str | None = None
+    with_counter: str | None = None
+    without_counter: str | None = None
+    shares_with: UUID | None = None
+    share_kind: Literal["color", "creature_type"] = "color"
+    """Konda's Banner: only creatures sharing a color / a creature type with the
+    permanent `shares_with` (its equipped creature) are in the group."""
+    attached_to_scope: Literal["you", "opponents"] | None = None
+    """ "Auras attached to permanents you control": the group member is attached
+    to a permanent whose controller is (not) `username`."""
+    or_subtypes: tuple[str, ...] = ()
+    """ "Creatures and Vehicles you control": a permanent with one of these
+    subtypes is in the group whether or not it passes the type clauses."""
+    named: tuple[str, ...] = ()
+    """Lowercased card names: "Equipment named Sword of Kaldra, Shield of
+    Kaldra, and Helm of Kaldra" (CR 201.2)."""
+    empty_if_unset: bool = False
+    """A "of the chosen type" group whose source recorded no choice is empty."""
+
+    def __call__(self, chars: Characteristics, board: Board) -> bool:
+        if self.empty_if_unset:
+            return False
+        if self.scope == "you" and chars.controller != self.username:
+            return False
+        if self.scope == "opponents" and (
+            chars.controller is None or chars.controller == self.username
+        ):
+            return False
+        if self.other_than is not None and chars.card_id == self.other_than:
+            return False
+        if self.named and chars.name.lower() not in self.named:
+            return False
+        if self.attached_to_scope is not None:
+            host = board.get(chars.attached_to) if chars.attached_to is not None else None
+            if host is None or host.controller is None:
+                return False
+            if (host.controller == self.username) != (self.attached_to_scope == "you"):
+                return False
+        if self.shares_with is not None:
+            reference = board.get(self.shares_with)
+            if reference is None:
+                return False
+            if self.share_kind == "color":
+                if not set(reference.colors) & set(chars.colors):
+                    return False
+            elif not {t.lower() for t in reference.subtypes} & {t.lower() for t in chars.subtypes}:
+                return False
+        have = {subtype.lower() for subtype in chars.subtypes}
+        listed_subtype = any(subtype.lower() in have for subtype in self.or_subtypes)
+        if not listed_subtype and any(card_type not in chars.types for card_type in self.all_types):
+            return False
+        if (
+            not listed_subtype
+            and self.any_types
+            and not any(card_type in chars.types for card_type in self.any_types)
+        ):
+            return False
+        if any(card_type in chars.types for card_type in self.not_types):
+            return False
+        if self.any_subtypes and not any(subtype.lower() in have for subtype in self.any_subtypes):
+            return False
+        if any(subtype.lower() in have for subtype in self.not_subtypes):
+            return False
+        if self.any_colors and not any(color in chars.colors for color in self.any_colors):
+            return False
+        if any(color in chars.colors for color in self.not_colors):
+            return False
+        if self.colorless and chars.colors:
+            return False
+        if self.legendary is not None and self.legendary != (
+            Supertype.LEGENDARY in chars.supertypes
+        ):
+            return False
+        if self.token is not None and self.token != chars.is_token:
+            return False
+        if self.with_keyword is not None and not keywords_in_lines(
+            list(chars.abilities), [self.with_keyword]
+        ):
+            return False
+        if self.without_keyword is not None and keywords_in_lines(
+            list(chars.abilities), [self.without_keyword]
+        ):
+            return False
+        if self.without_counter is not None and any(
+            kind.lower() == self.without_counter.lower() and count > 0
+            for kind, count in chars.counters.items()
+        ):
+            return False
+        return self.with_counter is None or any(
+            kind.lower() == self.with_counter.lower() and count > 0
+            for kind, count in chars.counters.items()
+        )
+
+
 class PermanentsOfTypesControlledBy(SelectorBase):
     """ "<type> and <type> you control" (CR 205.2a) - `PermanentsControlledBy`'s
     own multi-type sibling, for a compound subject naming more than one card
@@ -1935,6 +2064,7 @@ Selector = Annotated[
     | CreaturesWithSubtype
     | PermanentsControlledByWithSubtype
     | CreaturesControlledByWithColor
+    | GroupMatch
     | PermanentsControlledByWithCounters
     | AttackingTokensControlledBy
     | AttackingGroupControlledBy
@@ -2022,6 +2152,21 @@ class GrantAbilityInstance(ModificationBase):
 
     def __call__(self, chars: Characteristics, board: Board) -> Characteristics:
         return chars.with_(abilities=chars.abilities + (self.text,))
+
+
+class GrantAbilitiesByManaValue(ModificationBase):
+    """Layer 6 addition (CR 613.1f) of lines that print the permanent's own
+    mana value (CR 202.3): Bludgeon Brawl's "equip {X} and 'Equipped creature
+    gets +X/+0,' where X is that artifact's mana value". Each `$mv` in a
+    template is that permanent's mana value as the layers computed it."""
+
+    kind: Literal["grant_abilities_by_mana_value"] = "grant_abilities_by_mana_value"
+    templates: tuple[str, ...]
+
+    def __call__(self, chars: Characteristics, board: Board) -> Characteristics:
+        value = str(int(chars.mana_value))
+        lines = tuple(template.replace("$mv", value) for template in self.templates)
+        return chars.with_(abilities=chars.abilities + lines)
 
 
 class AddType(ModificationBase):
@@ -2479,6 +2624,9 @@ class GrantActivatedAbilitiesOf(ModificationBase):
     card_types: tuple[Type, ...] = ()
     controller: str | None = None
     whose: Literal["opponents", "you", "any"] = "any"
+    except_mana: bool = False
+    """Sharkey's "... except mana abilities" (CR 605.1a): activated mana
+    abilities of the other permanents are not copied."""
 
     def texts(self, board: Board, host_id: UUID | None) -> tuple[str, ...]:
         """Every activated ability line this grant copies onto `host_id`."""
@@ -2492,7 +2640,11 @@ class GrantActivatedAbilitiesOf(ModificationBase):
                 continue
             if self.whose == "you" and other.controller != self.controller:
                 continue
-            lines.extend(activated_ability_lines(other.abilities, other.name))
+            lines.extend(
+                activated_ability_lines(
+                    other.abilities, other.name, include_mana=not self.except_mana
+                )
+            )
         return tuple(dict.fromkeys(lines))
 
     def __call__(self, chars: Characteristics, board: Board) -> Characteristics:
@@ -2504,12 +2656,42 @@ class GrantActivatedAbilitiesOf(ModificationBase):
         return chars.with_(abilities=chars.abilities + added)
 
 
+_LOYALTY_LINE_RE = re.compile(r"^(?:[+\u2212\u2013-]\s?(?:\d+|x)|0)\s*:", re.IGNORECASE)
+
+
+class GrantLoyaltyAbilitiesOf(ModificationBase):
+    """Layer 6 addition (CR 613.1f) of the loyalty abilities (CR 606) of one
+    other permanent - Kasmina, Enigma Sage's "Each other planeswalker you
+    control has the loyalty abilities of Kasmina."
+
+    Read off the board as layer 6 finds it (CR 613.5), so what Kasmina has
+    now - not what she printed - is what the others get."""
+
+    kind: Literal["grant_loyalty_abilities_of"] = "grant_loyalty_abilities_of"
+    source_id: UUID
+
+    def __call__(self, chars: Characteristics, board: Board) -> Characteristics:
+        source = board.get(self.source_id)
+        if source is None or source.card_id == chars.card_id:
+            return chars
+        added = tuple(
+            line
+            for line in dict.fromkeys(source.abilities)
+            if _LOYALTY_LINE_RE.match(line) and not chars.has_ability(line)
+        )
+        if not added:
+            return chars
+        return chars.with_(abilities=chars.abilities + added)
+
+
 Modification = Annotated[
     LoseAllAbilities
     | LoseKeyword
     | GrantAbility
     | GrantActivatedAbilitiesOf
+    | GrantLoyaltyAbilitiesOf
     | GrantAbilityInstance
+    | GrantAbilitiesByManaValue
     | AddType
     | AddSupertype
     | RemoveType
@@ -3287,6 +3469,21 @@ def grant_ability(text: str) -> Modification:
     return GrantAbility(text=text)
 
 
+#: Keywords whose every instance works separately (CR 702.25b flanking, CR
+#: 702.83b exalted, CR 702.68b frenzy, CR 702.45b bushido, CR 702.64b absorb,
+#: CR 702.136b riot): a second grant is a second instance, never merged.
+INSTANCE_KEYWORDS = frozenset({"flanking", "exalted", "frenzy", "bushido", "absorb", "riot"})
+
+
+def grant_keyword(text: str) -> Modification:
+    """Layer 6 addition of a keyword line (CR 613.1f): one more instance for the
+    keywords whose instances each work (`INSTANCE_KEYWORDS`), otherwise the
+    deduplicating `grant_ability`."""
+    if text.split()[0].lower() in INSTANCE_KEYWORDS:
+        return grant_ability_instance(text)
+    return grant_ability(text)
+
+
 def grant_ability_instance(text: str) -> Modification:
     """Layer 6 addition (CR 613.1f) that does *not* deduplicate.
 
@@ -3636,6 +3833,9 @@ RULE_EFFECT_TEXTS: frozenset[str] = frozenset(
         CANT_BECOME_UNTAPPED_TEXT,
         CANT_HAVE_COUNTERS_TEXT,
         CANT_ACTIVATE_ABILITIES_TEXT,
+        LETHAL_BY_POWER_TEXT,
+        CANT_HAVE_KIND_COUNTERS_TEXT.format(kind="+1/+1"),
+        CANT_HAVE_KIND_COUNTERS_TEXT.format(kind="-1/-1"),
     }
 )
 
@@ -3708,12 +3908,12 @@ _NUMBERED_KEYWORD_ITEM_RE = re.compile(
 )
 #: The keywords `_NUMBERED_KEYWORD_ITEM_RE` may grant: the ones written with
 #: an N that some machine reads the N of.
-_KNOWN_NUMBERED_KEYWORDS = frozenset({Keyword.TOXIC.value})
+_KNOWN_NUMBERED_KEYWORDS = frozenset({Keyword.TOXIC.value, "absorb", "frenzy", "bushido"})
 #: A keyword written with its cost - CR 702.21a's "Ward [cost]" ("with ward
 #: {3}", Hall of Storm Giants). Granted as "Ward {3}", the same line a printed
 #: instance is, so `machines/keywords.py`'s ward expansion reads its cost.
 _COSTED_KEYWORD_ITEM_RE = re.compile(
-    r"^(?P<keyword>ward) (?P<cost>(?:\{[^}]+\})+)(?:,\s*|,?\s+and\s+|$)", re.IGNORECASE
+    r"^(?P<keyword>ward|outlast) (?P<cost>(?:\{[^}]+\})+)(?:,\s*|,?\s+and\s+|$)", re.IGNORECASE
 )
 
 #: "can't be blocked[ by `<quality>`]" (CR 509.1b) as one item of an "and"/
@@ -3844,6 +4044,7 @@ class AllActivatedAbilitiesGrant(NamedTuple):
     graveyard_whose: Literal["you", "any"] = "any"
     graveyard_types: tuple[Type, ...] = ()
     graveyard_subtypes: tuple[str, ...] = ()
+    except_mana: bool = False
 
     def graveyard_texts(self, source: CardState, context: LayerContext) -> tuple[str, ...]:
         """The activated abilities of every matching card in the named
@@ -3890,7 +4091,10 @@ class AllActivatedAbilitiesGrant(NamedTuple):
 
     def board_modification(self, source: CardState) -> GrantActivatedAbilitiesOf:
         return GrantActivatedAbilitiesOf(
-            card_types=self.board_types, controller=source.controller, whose=self.board_whose
+            card_types=self.board_types,
+            controller=source.controller,
+            whose=self.board_whose,
+            except_mana=self.except_mana,
         )
 
     def selector(self, source: CardState) -> Selector:

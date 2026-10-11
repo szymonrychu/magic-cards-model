@@ -24,6 +24,7 @@ from ...numbers import (
 )
 from .. import (
     block_reassignment,
+    impulse_choice,
     map_tokens,
     mass_pump_conditions,
     token_riders,
@@ -4420,6 +4421,25 @@ def _reorder_token_named_after_tail(text: str) -> str:
     return _TOKEN_WITH_TAIL_THEN_NAMED_RE.sub(swap, text)
 
 
+#: "Artifact, instant, and sorcery spells you cast this turn cost {2} less to
+#: cast." (Urza, Planeswalker): a list of spell kinds whose ", and" would
+#: otherwise be cut into a clause of its own by `_CLAUSE_SEPARATOR`.
+_SPELL_KIND_LIST_RE = re.compile(
+    r"(?<![\w,])(?P<kinds>[A-Za-z]+(?:, [A-Za-z]+)+,? (?:and|or) [A-Za-z]+)"
+    r"(?= spells you cast this turn cost )"
+)
+
+
+def _spell_kind_list_as_or(text: str) -> str:
+    """CR 601.2f: the list is one disjunction of spell kinds (a spell is never
+    two of them at once), written "a or b or c" before the clause split."""
+    if " spells you cast this turn cost " not in text:
+        return text
+    return _SPELL_KIND_LIST_RE.sub(
+        lambda m: re.sub(r",? (?:and|or) |, ", " or ", m.group("kinds")), text
+    )
+
+
 @memoised_clauses
 def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] | None:
     """Every clause of `text`, or `None` the moment one clause (or one
@@ -4456,6 +4476,7 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
     # the sentence before it created, folded into one token clause first.
     text = _fold_following_token_grant(text)
     text = _reorder_token_named_after_tail(text)
+    text = _spell_kind_list_as_or(text)
     shuffle_self_and_targets = _parse_shuffle_self_and_targets_into_owners_libraries_clause(
         text, for_spell=for_spell
     )
@@ -4480,6 +4501,10 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
     # Read whole: the second sentence's "It"/"That player" is the first
     # sentence's target, with a CR 611.2b duration tied to the source.
     for whole_text_reader in (
+        impulse_choice.parse_exile_top_choose_one_play,
+        impulse_choice.parse_reveal_top_take_one_rest_bottom,
+        impulse_choice.parse_search_exile_then_cast_free,
+        parse_search_exile_then_play_whole_text,
         _parse_remove_all_counters_then_cant_have_clause,
         _parse_player_loses_all_counters_clause,
         block_reassignment.parse_remove_blocker_then_it_blocks_another_clause,
@@ -6598,6 +6623,7 @@ from .search import (  # noqa: E402
     _parse_search_that_many_battlefield_clause,
     _read_search_count,
     _search_descriptions,
+    parse_search_exile_then_play_whole_text,
 )
 from .text import (  # noqa: E402
     _parse_all_of_target_player_then_referent_pair,

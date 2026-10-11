@@ -24,7 +24,7 @@ from functools import cache
 from typing import TYPE_CHECKING, Any
 
 from ...models.card_state import TargetKind
-from ...models.mana import ManaCost
+from ...models.mana import ColoredOnlyReduction, ManaCost
 from ...models.zone import Zone
 from .statics import (
     CostContext,
@@ -50,6 +50,7 @@ _EACH = re.compile(r"^ for each (?P<count>.+)$")
 _WHERE = re.compile(r"^, where x is (?P<expr>.+)$")
 _IF = re.compile(r"^ if (?P<cond>.+)$")
 _UNCOUNTERABLE = " and can't be countered"
+_COLORED_ONLY = ". this effect reduces only the amount of colored mana you pay"
 _ZONES = {
     "your graveyard": Zone.GRAVEYARD,
     "exile": Zone.EXILE,
@@ -78,6 +79,8 @@ class GroupModifier:
     expr: Reader | None
     condition: Any  # (CostContext) -> bool, or None
     cant_be_countered: bool
+    chosen_type: bool = False
+    colored_only: bool = False
 
     def modification(self, ctx: CostContext, caster: str, cast_from: Zone) -> ManaCost | None:
         """The cost this line takes off (or adds to) `ctx.spell`, or `None`
@@ -93,6 +96,8 @@ class GroupModifier:
         if self.quality is not None and not self.quality(game, spell):
             return None
         if self.kicked and not _is_kicked(game, spell, ctx.casting):
+            return None
+        if self.chosen_type and not _is_of_chosen_type(game, spell, source):
             return None
         if self.zones and cast_from not in self.zones:
             return None
@@ -119,7 +124,10 @@ class GroupModifier:
             units = self.expr(scoped)
         if units <= 0:
             return None
-        return ManaCost.parse(str(self.unit) * units)
+        priced = ManaCost.parse(str(self.unit) * units)
+        if self.colored_only:
+            return ColoredOnlyReduction(symbols=priced.symbols)
+        return priced
 
     def _ordinal_holds(self, ctx: CostContext, caster: str) -> bool:
         """ "The first/second <quality> spell you cast each turn": the spell
@@ -134,6 +142,21 @@ class GroupModifier:
             and (not self.kicked or _is_kicked(game, prior, None))
         ]
         return len(earlier) == (self.ordinal or 1) - 1
+
+
+def _is_of_chosen_type(game: "Game", spell: "CardState", source: "CardState") -> bool:
+    """CR 614.12a: "of the chosen type" - the creature type `source` chose as it
+    entered is one of the spell's creature types (a changeling has every one,
+    CR 702.73a)."""
+    from ..combat import has_keyword
+    from ..layers.parse import chosen_creature_type_of
+
+    chosen = chosen_creature_type_of(source)
+    if chosen is None:
+        return False
+    return has_keyword(spell, "changeling", game) or any(
+        subtype.lower() == chosen.lower() for subtype in spell.card.subtypes
+    )
 
 
 def _is_kicked(game: "Game", spell: "CardState", casting: Any) -> bool:
@@ -201,6 +224,9 @@ def group_spell_modifier(line: str) -> GroupModifier | None:
         return None
     if text.startswith("this spell") or text.startswith("activated abilit"):
         return None
+    colored_only = False
+    if text.endswith(_COLORED_ONLY):
+        colored_only, text = True, text[: -len(_COLORED_ONLY)]
     cant_be_countered = text.endswith(_UNCOUNTERABLE)
     if cant_be_countered:
         text = text[: -len(_UNCOUNTERABLE)]
@@ -228,6 +254,9 @@ def group_spell_modifier(line: str) -> GroupModifier | None:
             scope = owner
             after = after.replace(phrase, "", 1).strip()
             break
+    chosen_type = False
+    if after.startswith("of the chosen type"):
+        chosen_type, after = True, after.removeprefix("of the chosen type").strip()
     shares = False
     if after.startswith("that share a card type with the exiled card"):
         shares, after = True, ""
@@ -273,7 +302,7 @@ def group_spell_modifier(line: str) -> GroupModifier | None:
         if expr is None:
             return None
     else:
-        unit = ManaCost.try_parse(amount)
+        unit = ManaCost.try_parse(amount.upper())
         if unit is None:
             return None
     return GroupModifier(
@@ -290,6 +319,8 @@ def group_spell_modifier(line: str) -> GroupModifier | None:
         expr=expr,
         condition=condition,
         cant_be_countered=cant_be_countered,
+        chosen_type=chosen_type,
+        colored_only=colored_only,
     )
 
 

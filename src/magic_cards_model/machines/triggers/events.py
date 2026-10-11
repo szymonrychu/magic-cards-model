@@ -586,7 +586,9 @@ class GameEvent(EngineModel):
     keyword_action: str | None = None
     """The keyword action this event happened during, when that is what a
     trigger event's own "while <doing it>" qualifier asks: `"scry"` for a
-    `TriggerEvent.LIBRARY_BOTTOM_CHOSEN` made while scrying (CR 701.22a)."""
+    `TriggerEvent.LIBRARY_BOTTOM_CHOSEN` made while scrying (CR 701.22a). An
+    `ExtraTriggerEvent.ABILITY_ACTIVATED` raised by a keyword's activated
+    ability carries that keyword here, lowercased (`"ninjutsu"`, CR 702.49a)."""
 
     mana_ability: bool = False
     """`ExtraTriggerEvent.ABILITY_ACTIVATED` for a mana ability (CR 605.3a:

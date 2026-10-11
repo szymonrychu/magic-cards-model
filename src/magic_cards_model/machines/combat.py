@@ -288,6 +288,25 @@ def source_had_keyword(state: CardState, keyword: Keyword | str, game: "Game") -
     return has_keyword(state, keyword, game)
 
 
+_ALL_DAMAGE_WITHER_RE = re.compile(
+    r"all damage is dealt as though its source had wither\.?(?: \(.*\))?", re.IGNORECASE
+)
+
+
+def all_damage_has_wither(game: "Game") -> bool:
+    """CR 702.80a through a CR 604.2 static ability: some permanent says "All
+    damage is dealt as though its source had wither." (Everlasting Torment),
+    whoever controls it, so every source - a spell or a noncreature one too -
+    deals damage as -1/-1 counters to creatures."""
+    board = game.computed_board()
+    return any(
+        _ALL_DAMAGE_WITHER_RE.fullmatch(line.strip())
+        for permanent in game.battlefield
+        for line in board.of(permanent).abilities
+        if "wither" in line
+    )
+
+
 def keywords_as_it_exists(state: CardState, game: "Game") -> tuple[str, ...]:
     """Every keyword the layer system leaves this permanent with, lowercased
     and sorted - the snapshot `CardState.last_known_keywords` stores."""
@@ -3203,6 +3222,8 @@ def lethal_for(
     None when the blocker's toughness is not a number.
     """
     toughness = _toughness_of(game, blocker)
+    if toughness is not None and game is not None:
+        toughness = blocker.lethal_threshold  # power under Zilortha (CR 120.6)
     remaining = None if toughness is None else toughness - blocker.damage - already_assigned
     if has_keyword(attacker, Keyword.DEATHTOUCH, game):
         return 0 if remaining is not None and remaining <= 0 else 1

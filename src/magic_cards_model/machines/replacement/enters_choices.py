@@ -527,6 +527,10 @@ _FLIP_A_COIN_RE = re.compile(r"^flip a coin$")
 _COUNTERS_PER_OTHER_CREATURE_RE = re.compile(
     r"^put X \+1/\+1 counters on it, where X is the number of other creatures you control$"
 )
+_FIXED_COUNTERS_ON_IT_RE = re.compile(
+    r"^put (?P<count>an?|one|two|three|four|five|six|seven|eight) (?P<kind>\+1/\+1|-1/-1) "
+    r"counters? on it$"
+)
 _CHOOSE_CREATURE_TO_COPY_RE = re.compile(r"^you may choose another creature on the battlefield$")
 _TURN_OTHERS_FACE_DOWN_RE = re.compile(r"^turn all other nontoken creatures face down$")
 _EXILE_FROM_GRAVEYARD_RE = re.compile(
@@ -571,6 +575,29 @@ def _counters_per_other_creature(card_name: str) -> Apply:
             game.add_counters(source, "+1/+1", count, putter=source.controller)
         else:
             event.counters["+1/+1"] = event.counters.get("+1/+1", 0) + count
+
+    return apply
+
+
+def _parse_count(word: str) -> int | None:
+    from ...numbers import parse_count
+
+    return parse_count(word)
+
+
+def _fixed_counters_on_it(count: int, kind: str) -> Apply:
+    """ "put four +1/+1 counters on it" (Bubble Smuggler, Hooded Hydra): the same
+    two moments `_counters_per_other_creature` serves - placed with the
+    permanent as it enters (CR 614.1c) or put on it as it is turned face up
+    (CR 614.1e)."""
+
+    def apply(game: "Game", source: CardState | None, event: ReplaceableEvent) -> None:
+        if source is None or source.controller is None:
+            return
+        if source.zone is Zone.BATTLEFIELD:
+            game.add_counters(source, kind, count, putter=source.controller)
+        else:
+            event.counters[kind] = event.counters.get(kind, 0) + count
 
     return apply
 
@@ -838,6 +865,9 @@ def enters_choice_apply(effect: ReplacementEffect, card_name: str) -> Apply | No
         return _coin_flip(card_name)
     if _COUNTERS_PER_OTHER_CREATURE_RE.match(text):
         return _counters_per_other_creature(card_name)
+    match = _FIXED_COUNTERS_ON_IT_RE.match(text)
+    if match is not None and (count := _parse_count(match.group("count"))):
+        return _fixed_counters_on_it(count, match.group("kind"))
     if _CHOOSE_CREATURE_TO_COPY_RE.match(text):
         return _choose_creature_to_copy(card_name)
     if _TURN_OTHERS_FACE_DOWN_RE.match(text):

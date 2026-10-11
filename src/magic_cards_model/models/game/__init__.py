@@ -1132,6 +1132,9 @@ class Game(
     them - `emit` fills `subject_types`/`subject_subtypes` from here. Not
     persisted: it is read within the same move that wrote it."""
     _paying_cost: tuple[str, str | None, str | None] | None = PrivateAttr(default=None)
+    #: True while `machines.keywords.discard` moves a card, so a zone-change
+    #: replacement can tell a discard (CR 701.9a) from any other move to a graveyard.
+    _discarding: bool = PrivateAttr(default=False)
     """`(what, keyword, payer)` while a spell's or ability's total cost is
     being paid (`paying_cost_of`), stamped onto every event raised meanwhile.
     Not persisted: it opens and closes within one `CostPayment.pay`."""
@@ -1646,6 +1649,12 @@ class Game(
     planeswalker's loyalty abilities having been activated refuses the next
     one. Cleared when a new turn begins."""
 
+    text_change_originals: dict[str, Card] = Field(default_factory=dict)
+    """CR 612.1 / CR 613.1c: the printed `Card` of each object (keyed by its id)
+    whose rules text a color-word change (Swirl the Mists) is rewriting right
+    now - put back by `machines/text_changes.sync_text_changes` the moment the
+    effect no longer reaches it. Empty unless such a permanent is in play."""
+
     forecast_activations: SortedSet[str] = Field(default_factory=set)
     """Which forecast abilities (CR 702.57a) have been activated this turn,
     keyed `"<card id>:<zone_change_stamp>"` - `Game._activation_key`'s own
@@ -1947,7 +1956,7 @@ class Game(
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 141
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 142
     #: 67: `machines/cost.CostComponent` gained `link_to_permanent_id` (CR
     #: 607.2q), reachable from `Game` through a pending `AbilityOnStack.
     #: keyword_activation`/`.unless_payment`'s own `CostPayment.components`.
@@ -2265,6 +2274,11 @@ class Game(
     #: untapped creatures you control with flying") and
     #: `CreaturesControlledByQuality.excluding_card_id` (its "other creatures
     #: you control with flying"), both defaulting to nothing in an older dump.
+    #: 142 (EP01-R2-T1): `Game` gained `text_change_originals` (CR 612.1, CR
+    #: 613.1c, Swirl the Mists): the printed `Card` of every object whose rules
+    #: text a color-word change is rewriting, so it can be put back when the
+    #: effect stops. An older dump decodes with none, which is right: no text
+    #: change was recorded.
     #: 141 (EP01-R1-T8): `CardState` gained `crafted_with` (CR 702.167c, the
     #: exiled cards used to craft a permanent), `KeywordActivation` gained
     #: `craft_materials` and `ManaSpend` gained `no_mana` (Hogaak); an older
@@ -3488,6 +3502,15 @@ class Game(
             while self.turn.step is Step.MULLIGAN:
                 pending = self.awaiting_mulligan_declarations
                 for username in pending:
+                    # CR 103.5b: "any time you could mulligan" is a time a seat
+                    # owing a declaration may act, before it declares.
+                    while True:
+                        for option in self.mulligan_time_options(username):
+                            if self.ask(option):
+                                self.take_mulligan_time_action(username, option.card)
+                                break
+                        else:
+                            break
                     self.declare_mulligan(username, ask_mulligan(self.decisions, username))
                 if not pending:
                     # Every seat left is at CR 103.5's ceiling, so the round has

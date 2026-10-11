@@ -271,6 +271,15 @@ _SELF_LOYALTY_INSTANT_SPEED_RE = re.compile(
 )
 
 
+#: Urza, Planeswalker's own static, read once its name has become "this
+#: permanent" (`self_normalized_effect_text`).
+_LOYALTY_TWICE_RE = re.compile(
+    r"^you may activate the loyalty abilities of (?:this permanent|\w+) twice each turn "
+    r"rather than only once\.?$",
+    re.IGNORECASE,
+)
+
+
 def _activation_condition(instructions: str) -> str | None:
     """The condition of an "Activate only if <condition>" restriction (CR
     602.5b), without a trailing "and only as a sorcery"-style second
@@ -972,6 +981,16 @@ class ActivationMixin:
         prohibited = self._activation_prohibition(permanent, ability)
         if prohibited is not None:
             return prohibited
+        from ...machines.attached_restrictions import enchanted_player_activation_prohibition
+
+        barred = enchanted_player_activation_prohibition(
+            self,
+            controller,
+            is_mana=ability.mana is not None,
+            is_loyalty=ability.loyalty is not None,
+        )
+        if barred is not None:
+            return barred
 
         if self.characteristics_of(permanent).has_ability(CANT_ACTIVATE_ABILITIES_TEXT):
             # A one-shot resolved effect's lock (Braided Net's own "Tap
@@ -1101,7 +1120,9 @@ class ActivationMixin:
                     f"{permanent.name}'s loyalty ability can only be activated during "
                     f"{controller}'s main phase, with the stack empty (CR 606.3)"
                 )
-            if self._loyalty_activation_count(permanent):
+            if self._loyalty_activation_count(permanent) >= self._loyalty_activations_allowed(
+                permanent
+            ):
                 return (
                     f"{permanent.name}'s loyalty abilities have already been activated "
                     "this turn (CR 606.3)"
@@ -1632,6 +1653,28 @@ class ActivationMixin:
 
     def _activation_count(self: "Game", permanent: CardState, index: int) -> int:
         return self.activations.get(self._activation_key(permanent, index), 0)
+
+    def _loyalty_activations_allowed(self: "Game", permanent: CardState) -> int:
+        """How often loyalty abilities of `permanent` may be activated each turn.
+
+        CR 606.3 allows one; "You may activate the loyalty abilities of `<self>`
+        twice each turn rather than only once" (Urza, Planeswalker) is a static
+        ability (CR 604.2) of the permanent itself that raises that to two.
+        """
+        if permanent.zone is not Zone.BATTLEFIELD:
+            return 1
+        legendary = Supertype.LEGENDARY in permanent.card.supertypes
+        for line in parse_abilities(permanent.card):
+            if line.kind is not AbilityKind.STATIC:
+                continue
+            text = (line.text or "").strip()
+            if not _LOYALTY_TWICE_RE.match(
+                self_normalized_effect_text(permanent.name, text, legendary=legendary)
+            ):
+                continue
+            if self._still_has_static_line(permanent, text):
+                return 2
+        return 1
 
     def _loyalty_activation_count(self: "Game", permanent: CardState) -> int:
         """How often any loyalty ability of this permanent was activated this turn.
@@ -2614,7 +2657,7 @@ class ActivationMixin:
                 source_characteristics,
                 any_color=self.spends_mana_as_any_color(permanent, ability, controller),
                 class_level=getattr(ability, "class_level_target", None) is not None,
-            ),
+            ).model_copy(update={"color_rule": self.mana_color_rule(controller, permanent)}),
         )
         payment.paying_for = "ability"
         payment.restrict_x_from_text(

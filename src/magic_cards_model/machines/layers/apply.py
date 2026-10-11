@@ -1320,6 +1320,10 @@ class ContinuousEffects(EngineModel):
         """
         self.note(permanents)
         shared = context or LayerContext()
+        if game is not None:
+            from ..text_changes import sync_text_changes
+
+            sync_text_changes(game)  # CR 613.1c: layer 3 comes before any ability is read
         sync_granted_ability_texts(permanents, _every_card_state_in(game) if game else None)
         # CR 114.4: an emblem's static abilities function in the command zone
         # (Kaito, Bane of Nightmares' "Ninjas you control get +1/+1."), and

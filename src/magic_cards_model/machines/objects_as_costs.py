@@ -478,7 +478,9 @@ def has_convoke_now(spell: CardState) -> bool:
     )
 
     record = game.cast_record_of(spell)
-    origin_zone = record.origin_zone if record is not None else None
+    # CR 601.2a: before the cast is complete (CR 601.2i writes the record) the
+    # announcement's own origin is the only answer.
+    origin_zone = record.origin_zone if record is not None else spell._announced_from
     board = game.computed_board()
     for permanent in game.permanents_controlled_by(controller):
         for line in board.of(permanent).abilities:
@@ -497,7 +499,7 @@ def has_convoke_now(spell: CardState) -> bool:
     return False
 
 
-_ZONE_WORDS_FOR_CONVOKE = {"hand": Zone.HAND, "graveyard": Zone.GRAVEYARD}
+_ZONE_WORDS_FOR_CONVOKE = {"hand": Zone.HAND, "graveyard": Zone.GRAVEYARD, "exile": Zone.EXILE}
 
 
 def granted_convoke_line_is_readable(text: str) -> bool:
@@ -553,15 +555,18 @@ def improvise_payment(card: Card) -> ObjectOffer | None:
 
 def crew_number(card: Card) -> int | None:
     """The N of `Crew N`, or None if the card has no crew ability (CR 702.122a)."""
+    numbers: list[int] = []
     for ability in keyword_abilities(card):
         if ability.canonical.lower() != "crew":
             continue
         printed = (ability.cost or ability.parameter or "").strip()
         try:
-            return int(printed)
+            numbers.append(int(printed))
         except ValueError:
             return None
-    return None
+    # CR 702.122a: a Vehicle with a granted second Crew N lets its controller
+    # activate whichever it likes, so the smaller N is the one that matters.
+    return min(numbers, default=None)
 
 
 def is_vehicle(card: Card) -> bool:

@@ -65,7 +65,14 @@ from ..card_state import (
     Counter,
     TargetRef,
 )
-from ..mana import ManaCost, ManaPool, ManaRetentionScope, ManaSpend, SymbolKind
+from ..mana import (
+    ManaColorRule,
+    ManaCost,
+    ManaPool,
+    ManaRetentionScope,
+    ManaSpend,
+    SymbolKind,
+)
 from ..player import Player
 from ..zone import Zone
 
@@ -526,6 +533,20 @@ _LOOKS_LIKE_SPEND_AS_ANY_COLOR_TO_ACTIVATE_RE = re.compile(
 )
 
 
+_SPEND_COLOR_AS_ANY_RE = re.compile(
+    r"^you may spend (?P<color>white|blue|black|red|green) mana as though it were mana of "
+    r"any color(?P<own> to pay the activation costs of this (?:creature|permanent|artifact)'s "
+    r"abilities)?\.?$",
+    re.IGNORECASE,
+)
+_SPEND_OTHERS_COLORLESS_RE = re.compile(
+    r"^you may spend other mana only as though it were colorless mana\.?$", re.IGNORECASE
+)
+_ANY_TYPE_OWN_ACTIVATION_RE = re.compile(
+    r"^mana of any type can be spent to activate [^.]+'s abilities\.?$", re.IGNORECASE
+)
+
+
 class CostsManaMixin:
     # -- turn-based actions (CR 703) ---------------------------------------
 
@@ -633,6 +654,45 @@ class CostsManaMixin:
                     ):
                         return True
         return False
+
+    def mana_color_rule(
+        self: "Game", player: str, permanent: CardState | None = None
+    ) -> "ManaColorRule | None":
+        """The CR 609.4b `ManaColorRule` the battlefield gives `player` for a
+        spend - Celestial Dawn's two sentences (every spend), Quicksilver
+        Elemental's and Sharkey's one-source forms (only an activation of that
+        very permanent, `permanent`) - or None. Rescanned on every call (CR
+        611.3a), gated on `_still_has_static_line` (CR 613.1f)."""
+        rule: ManaColorRule | None = None
+        for source in list(self.battlefield):
+            if self.controller_of(source).username != player:
+                continue
+            for line in parse_abilities(source.card):
+                if line.kind is not AbilityKind.STATIC:
+                    continue
+                text = (line.text or "").strip()
+                if "mana" not in text.lower():
+                    continue
+                found: list[ManaColorRule] = []
+                for sentence in (part for part in re.split(r"(?<=\.)\s+", text) if part):
+                    if match := _SPEND_COLOR_AS_ANY_RE.match(sentence):
+                        if match.group("own") is not None and permanent is not source:
+                            continue
+                        found.append(
+                            ManaColorRule(
+                                any_from=frozenset({_COLOR_WORDS[match["color"].lower()]})
+                            )
+                        )
+                    elif _SPEND_OTHERS_COLORLESS_RE.match(sentence):
+                        found.append(ManaColorRule(others_colorless=True))
+                    elif _ANY_TYPE_OWN_ACTIVATION_RE.match(sentence) and permanent is source:
+                        found.append(
+                            ManaColorRule(any_from=frozenset(_COLOR_WORDS.values()), any_type=True)
+                        )
+                if found and self._still_has_static_line(source, text):
+                    for each in found:
+                        rule = each if rule is None else rule.merged(each)
+        return rule
 
     def _spend_as_any_color_grants(
         self: "Game", player: str

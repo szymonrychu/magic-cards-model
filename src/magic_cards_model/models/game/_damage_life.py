@@ -14,6 +14,7 @@ from ...machines.casting_restrictions import (
 )
 from ...machines.combat import (
     Keyword,
+    all_damage_has_wither,
     source_had_keyword,
 )
 from ...machines.keyword_counters import (
@@ -526,7 +527,9 @@ class DamageLifeMixin:
             # known information once the source has left the battlefield
             # (CR 702.90d, 702.80b), from any zone (CR 702.90e, 702.80c).
             infect = source is not None and source_had_keyword(source, Keyword.INFECT, self)
-            wither = source is not None and source_had_keyword(source, Keyword.WITHER, self)
+            wither = (
+                source is not None and source_had_keyword(source, Keyword.WITHER, self)
+            ) or all_damage_has_wither(self)
             if isinstance(target, Player):
                 if infect:
                     # CR 120.3b / 702.90b: poison counters, and no life lost -

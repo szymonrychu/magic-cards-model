@@ -1,0 +1,140 @@
+{
+  "object": "card",
+  "id": "84238335-e08c-421c-b9b9-70a679ff2967",
+  "oracle_id": "bf418a2f-e639-4e52-9cad-5a0713a1829b",
+  "multiverse_ids": [
+    622611
+  ],
+  "mtgo_id": 115105,
+  "tcgplayer_id": 504115,
+  "cardmarket_id": 721892,
+  "name": "Morophon, the Boundless",
+  "lang": "en",
+  "released_at": "2023-08-04",
+  "uri": "https://api.scryfall.com/cards/84238335-e08c-421c-b9b9-70a679ff2967",
+  "scryfall_uri": "https://scryfall.com/card/cmm/3/morophon-the-boundless?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T04:28:13Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/8/4/84238335-e08c-421c-b9b9-70a679ff2967.jpg?1783916893",
+    "normal": "https://cards.scryfall.io/normal/front/8/4/84238335-e08c-421c-b9b9-70a679ff2967.jpg?1783916893",
+    "large": "https://cards.scryfall.io/large/front/8/4/84238335-e08c-421c-b9b9-70a679ff2967.jpg?1783916893",
+    "png": "https://cards.scryfall.io/png/front/8/4/84238335-e08c-421c-b9b9-70a679ff2967.png?1783916893",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/8/4/84238335-e08c-421c-b9b9-70a679ff2967.jpg?1783916893",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/8/4/84238335-e08c-421c-b9b9-70a679ff2967.jpg?1783916893",
+    "thumb": "https://cards.scryfall.io/thumb/front/8/4/84238335-e08c-421c-b9b9-70a679ff2967.webp?1783916893",
+    "grid": "https://cards.scryfall.io/grid/front/8/4/84238335-e08c-421c-b9b9-70a679ff2967.webp?1783916893",
+    "display": "https://cards.scryfall.io/display/front/8/4/84238335-e08c-421c-b9b9-70a679ff2967.webp?1783916893",
+    "art": "https://cards.scryfall.io/art/front/8/4/84238335-e08c-421c-b9b9-70a679ff2967.webp?1783916893",
+    "crop": "https://cards.scryfall.io/crop/front/8/4/84238335-e08c-421c-b9b9-70a679ff2967.webp?1783916893"
+  },
+  "mana_cost": "{7}",
+  "cmc": 7.0,
+  "type_line": "Legendary Creature \u2014 Shapeshifter",
+  "oracle_text": "Changeling (This card is every creature type.)\nAs Morophon enters, choose a creature type.\nSpells of the chosen type you cast cost {W}{U}{B}{R}{G} less to cast. This effect reduces only the amount of colored mana you pay.\nOther creatures you control of the chosen type get +1/+1.",
+  "power": "6",
+  "toughness": "6",
+  "colors": [],
+  "color_identity": [
+    "B",
+    "G",
+    "R",
+    "U",
+    "W"
+  ],
+  "keywords": [
+    "Changeling"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "cd05036f-2698-43e6-a48e-5c8d82f0a551",
+  "set": "cmm",
+  "set_name": "Commander Masters",
+  "set_type": "masters",
+  "set_uri": "https://api.scryfall.com/sets/cd05036f-2698-43e6-a48e-5c8d82f0a551",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Acmm&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/cmm?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/84238335-e08c-421c-b9b9-70a679ff2967/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Abf418a2f-e639-4e52-9cad-5a0713a1829b&unique=prints",
+  "collector_number": "3",
+  "digital": false,
+  "rarity": "mythic",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Victor Adame Minguez",
+  "artist_ids": [
+    "bd8f7368-5b10-4554-b6b8-d052c6aca89f"
+  ],
+  "illustration_id": "a2f7c0f0-d2ce-4c93-928a-825e5edb3cf2",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 1589,
+  "penny_rank": 9117,
+  "prices": {
+    "usd": "8.46",
+    "usd_foil": "11.51",
+    "usd_etched": null,
+    "eur": "4.29",
+    "eur_foil": "7.44",
+    "tix": "0.41"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=622611&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DMorophon%252C%2Bthe%2BBoundless",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DMorophon%252C%2Bthe%2BBoundless",
+    "edhrec": "https://edhrec.com/route/?cc=Morophon%2C+the+Boundless"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F504115%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=721892&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/115105?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

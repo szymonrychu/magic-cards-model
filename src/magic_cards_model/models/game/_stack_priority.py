@@ -1035,7 +1035,8 @@ class StackPriorityMixin:
             controller = controller or spell.controller or self.controller_of(spell).username
             state_type = TokenState if spell.is_permanent else CardState
             copy = state_type(
-                card=spell.card,
+                # CR 707.2: a text-changing effect on the original isn't copied.
+                card=self.text_change_originals.get(str(spell.id), spell.card),
                 zone=Zone.STACK,
                 controller=controller,
                 owner=controller,
@@ -1054,6 +1055,9 @@ class StackPriorityMixin:
                 prepare_spell_face=spell.prepare_spell_face,
             )
             self.stack.append(copy)
+            from ...machines.text_changes import sync_text_changes
+
+            sync_text_changes(self)
             self.note_cast(
                 copy,
                 keyword=original_record.keyword,

@@ -26,6 +26,9 @@ from ..abilities import (
     parse_granted_ability_lines,
     self_normalized_effect_text,
 )
+from ..abilities import (
+    _is_activated_mana_ability as is_activated_mana_ability,
+)
 from ..combat import (
     ASSIGN_AS_THOUGH_UNBLOCKED_TEXT,
     ASSIGNS_DAMAGE_AS_THOUGH_POSITIVE_TEXT,
@@ -45,7 +48,9 @@ from .model import DOESNT_UNTAP_TEXT
 
 #: What the effect does to one object it applies to. Pure: returns a new
 #: `Characteristics`, never edits the one it was handed.
-def activated_ability_lines(lines: Iterable[str], name: str) -> tuple[str, ...]:
+def activated_ability_lines(
+    lines: Iterable[str], name: str, *, include_mana: bool = True
+) -> tuple[str, ...]:
     """The activated abilities (CR 602.1) among an object's ability `lines`,
     each with its own name rewritten to "this permanent" (CR 201.5b) - the form
     it takes once another object has it, since the self-reference then means
@@ -58,7 +63,9 @@ def activated_ability_lines(lines: Iterable[str], name: str) -> tuple[str, ...]:
     found: list[str] = []
     for line in lines:
         if any(
-            isinstance(ability, ActivatedAbility) for ability in parse_granted_ability_lines([line])
+            isinstance(ability, ActivatedAbility)
+            and (include_mana or not is_activated_mana_ability(ability))
+            for ability in parse_granted_ability_lines([line])
         ):
             found.append(self_normalized_effect_text(name, line))
     return tuple(dict.fromkeys(found))
@@ -1521,7 +1528,7 @@ def _all_creatures_keyword_grant_builder(
                 source_id=source.id,
                 source_ability=_source_line_for(source, line),
                 selector=selector,
-                modification=grant_ability(keyword),
+                modification=grant_keyword(keyword),
             )
             for keyword in keywords
         ]
@@ -1561,7 +1568,7 @@ def _chosen_parity_keyword_grant_builder(
                 source_id=source.id,
                 source_ability=_source_line_for(source, line),
                 selector=CreaturesOfManaValueParity(parity=parity, without=without),
-                modification=grant_ability(keyword),
+                modification=grant_keyword(keyword),
             )
             for keyword in keywords
         ]
@@ -1967,7 +1974,7 @@ def _other_transformed_permanents_keyword_grant_builder(
                 source_id=source.id,
                 source_ability=_source_line_for(source, line),
                 selector=selector,
-                modification=grant_ability(keyword),
+                modification=grant_keyword(keyword),
             )
             for keyword in keywords
         ]
@@ -2264,6 +2271,21 @@ _MASS_BASE_PT_SET_RE = re.compile(
 #: become the creature's (CR 301.7).
 _MASS_BECOMES_ARTIFACT_CREATURES_RE = re.compile(
     r"^creatures (?:you control|your opponents control) become artifact creatures"
+    r" until end of turn\.?$",
+    re.IGNORECASE,
+)
+
+#: "Artifacts you control become 5/5 artifact creatures in addition to their
+#: other types until end of turn." (Tezzeret the Seeker's -5) and "Artifacts you
+#: control become artifact creatures with base power and toughness 5/5 until end
+#: of turn." (The Antiquities War's chapter III) - `_MASS_BECOMES_ARTIFACT_
+#: CREATURES_RE` with the base power and toughness the instruction also sets
+#: (CR 613.4b), over a group `machines/effects.py` has already fixed (CR 611.2c)
+#: and rewritten to the plain "creatures" subject.
+_MASS_BECOMES_SIZED_ARTIFACT_CREATURES_RE = re.compile(
+    r"^creatures (?:you control|your opponents control) become "
+    r"(?:(?P<p1>\d+)/(?P<t1>\d+) artifact creatures(?: in addition to their other types)?"
+    r"|artifact creatures with base power and toughness (?P<p2>\d+)/(?P<t2>\d+))"
     r" until end of turn\.?$",
     re.IGNORECASE,
 )
@@ -2595,7 +2617,7 @@ def _self_becomes_type_until_next_turn_builder(
                         duration=Duration.UNTIL_YOUR_NEXT_TURN,
                         until_next_turn_of=source.controller,
                         selector=only_this_incarnation(target, target.zone_change_stamp),
-                        modification=grant_ability(ability),
+                        modification=grant_keyword(ability),
                     )
                 )
         return effects
@@ -2734,7 +2756,7 @@ def _fold_attached_pronoun_riders(sentences: list[str]) -> list[str]:
 #: sentence rather than granting half of it.
 _ANIMATION_RE = re.compile(
     r"^(?P<subject>[Tt]his (?:land|permanent|artifact|creature|enchantment)"
-    r"|(?:[Uu]p to (?:one|two|three) )?(?:target|another target) [a-z]+(?: [a-z]+)*?"
+    r"|(?:[Uu]p to (?:one|two|three) )?(?:[Tt]arget|[Aa]nother target) [a-z]+(?: [a-z]+)*?"
     r"|[Ii]t|[Tt]hat (?:land|permanent|creature|artifact))"
     r" becomes an? (?P<power>\d+)/(?P<toughness>\d+) "
     r"(?P<colors>(?:white|blue|black|red|green)(?:(?:,| and|, and) "
@@ -2744,7 +2766,9 @@ _ANIMATION_RE = re.compile(
     r"(?: with (?:(?:(?P<quoted_keywords>[^\"]+?) and )?\"(?P<granted>[^\"]+?)\.?\""
     r"|(?P<keywords>[^\"]+?)))?"
     r"(?: that's still an? (?P<retained_inline>(?:[A-Za-z-]+ ){0,3}[a-z]+))?"
-    r"(?P<until_eot> until end of turn)?\.?"
+    r"(?P<until_eot> until end of turn)?"
+    r"(?P<while_tapped> for as long as this (?:land|permanent|artifact|creature|enchantment) "
+    r"remains tapped)?\.?"
     r"(?:\s+[Ii]t's still an? (?P<retained>(?:[A-Za-z-]+ ){0,3}[a-z]+)\.?)?$"
 )
 
@@ -2799,8 +2823,14 @@ def _animation_builder(
     granted: str | None = None,
     granted_effects: EffectBuilder | None = None,
     every_creature_type: bool = False,
+    while_source_tapped: bool = False,
 ) -> EffectBuilder:
     """`_ANIMATION_RE`'s shape.
+
+    `while_source_tapped` is "for as long as this creature remains tapped"
+    (CR 611.2b): every effect it builds carries `RemainsTapped` of the
+    resolving ability's source, so it ends the first time that source is
+    untapped and never starts if it is not tapped as the ability resolves.
 
     `every_creature_type` is the keyword slot's "all creature types" item
     (Mutavault's "a 2/2 creature with all creature types"): CR 205.3m's whole
@@ -2930,6 +2960,16 @@ def _animation_builder(
                     )
                     for effect in granted_effects(target, timestamp, [target], context)
                 )
+        if while_source_tapped:
+            if source.zone_change_stamp is None:
+                return []
+            lasting = RemainsTapped(card_id=source.id, stamp=source.zone_change_stamp)
+            return [
+                effect.model_copy(
+                    update={"duration": Duration.FOR_AS_LONG_AS, "condition": lasting}
+                )
+                for effect in effects
+            ]
         return effects
 
     return builder
@@ -3008,6 +3048,7 @@ def _parse_animation_sentence(sentence: str) -> EffectBuilder | None:
         granted=granted,
         granted_effects=granted_effects,
         every_creature_type=every_creature_type,
+        while_source_tapped=bool(match.group("while_tapped")),
     )
 
 
@@ -3221,7 +3262,7 @@ def _keyword_grant_for_as_long_builder(
                 duration=Duration.FOR_AS_LONG_AS,
                 condition=condition,
                 selector=only_this_incarnation(target, target.zone_change_stamp),
-                modification=grant_ability(keyword),
+                modification=grant_keyword(keyword),
             )
             for target in targets
             for keyword in keywords
@@ -3900,7 +3941,7 @@ def _pump_and_keyword_builder(
                         duration=duration,
                         until_next_turn_of=until_next_turn_of,
                         selector=only_this_incarnation(target, target.zone_change_stamp),
-                        modification=grant_ability(keyword),
+                        modification=grant_keyword(keyword),
                     )
                 )
         return effects
@@ -3955,7 +3996,7 @@ def _pump_and_keyword_per_target_power_builder(
                         timestamp=timestamp,
                         duration=Duration.UNTIL_END_OF_TURN,
                         selector=only_this_incarnation(target, target.zone_change_stamp),
-                        modification=grant_ability(keyword),
+                        modification=grant_keyword(keyword),
                     )
                 )
         return effects
@@ -4124,7 +4165,7 @@ def _keyword_grant_builder(keywords: Sequence[str]) -> EffectBuilder:
                 timestamp=timestamp,
                 duration=Duration.UNTIL_END_OF_TURN,
                 selector=only_this_incarnation(target, target.zone_change_stamp),
-                modification=grant_ability(keyword),
+                modification=grant_keyword(keyword),
             )
             for target in targets
             for keyword in keywords
@@ -4245,7 +4286,7 @@ def _self_protection_from_chosen_color_builder(*, line: str) -> EffectBuilder:
                 source_id=source.id,
                 source_ability=_source_line_for(source, line),
                 selector=_only(source.id),
-                modification=grant_ability(ability),
+                modification=grant_keyword(ability),
             )
         ]
 
@@ -4273,7 +4314,7 @@ def _paired_both_builder(
                 source_id=source.id,
                 source_ability=line,
                 selector=selector,
-                modification=grant_ability(keyword),
+                modification=grant_keyword(keyword),
             )
             for keyword in keywords
         ]
@@ -4404,7 +4445,7 @@ def _anthem_and_keyword_grant_builder(
                 source_id=source.id,
                 source_ability=line,
                 selector=selector,
-                modification=grant_ability(keyword),
+                modification=grant_keyword(keyword),
             )
             for keyword in keywords
         )
@@ -4464,7 +4505,7 @@ def _mass_pump_until_eot_builder(
                         timestamp=timestamp,
                         duration=Duration.UNTIL_END_OF_TURN,
                         selector=only_this_incarnation(target, target.zone_change_stamp),
-                        modification=grant_ability(keyword),
+                        modification=grant_keyword(keyword),
                     )
                 )
         return effects
@@ -4655,7 +4696,7 @@ def _chosen_type_anthem_builder(
                     source_id=source.id,
                     source_ability=_source_line_for(source, line),
                     selector=selector,
-                    modification=grant_ability(keyword),
+                    modification=grant_keyword(keyword),
                 )
             )
         return effects
@@ -4823,7 +4864,7 @@ def _indefinite_keyword_grant_builder(
                 source_id=source.id,
                 source_ability=source_ability,
                 selector=selector,
-                modification=grant_ability(ability),
+                modification=grant_keyword(ability),
             )
             for ability in abilities
         ]
@@ -4870,7 +4911,7 @@ def _during_your_turn_multi_type_keyword_grant_builder(
                 source_id=source.id,
                 source_ability=line,
                 selector=selector,
-                modification=grant_ability(ability),
+                modification=grant_keyword(ability),
             )
             for ability in abilities
         ]
@@ -4910,7 +4951,7 @@ def _counter_gated_keyword_grant_builder(
                 source_id=source.id,
                 source_ability=_source_line_for(source, line),
                 selector=selector,
-                modification=grant_ability(keyword),
+                modification=grant_keyword(keyword),
             )
             for keyword in keywords
         ]
@@ -4939,7 +4980,7 @@ def _lands_keyword_grant_builder(keywords: list[str], *, line: str) -> EffectBui
                 source_id=source.id,
                 source_ability=_source_line_for(source, line),
                 selector=selector,
-                modification=grant_ability(keyword),
+                modification=grant_keyword(keyword),
             )
             for keyword in keywords
         ]
@@ -5298,7 +5339,7 @@ def _becomes_type_in_addition_builder(
                     timestamp=timestamp,
                     duration=Duration.UNTIL_END_OF_TURN,
                     selector=selector,
-                    modification=grant_ability(keyword),
+                    modification=grant_keyword(keyword),
                 )
                 for keyword in keywords
             )
@@ -5344,7 +5385,7 @@ def _becomes_subtype_in_addition_builder(
                     timestamp=timestamp,
                     duration=duration,
                     selector=selector,
-                    modification=grant_ability(keyword),
+                    modification=grant_keyword(keyword),
                 )
                 for keyword in keywords
             )
@@ -6615,7 +6656,7 @@ def _context_gated_group_pump_and_keyword_builder(
                 source_id=source.id,
                 source_ability=_source_line_for(source, line),
                 selector=selector,
-                modification=grant_ability(ability),
+                modification=grant_keyword(ability),
             )
             for ability in granted
         )
@@ -7347,7 +7388,7 @@ def _filtered_anthem_builder(
                 source_id=source.id,
                 source_ability=_source_line_for(source, line),
                 selector=selector,
-                modification=grant_ability(keyword),
+                modification=grant_keyword(keyword),
             )
             for keyword in keywords
         )
@@ -8092,7 +8133,7 @@ def _attached_creature_static_builder(
                 source_id=source.id,
                 source_ability=_source_line_for(source, line),
                 selector=_only(attached),
-                modification=grant_ability(keyword),
+                modification=grant_keyword(keyword),
             )
             for keyword in keywords
         )
@@ -8209,7 +8250,7 @@ def _attached_creature_gated_grant_builder(
                 source_id=source.id,
                 source_ability=_source_line_for(source, line),
                 selector=selector,
-                modification=grant_ability(keyword),
+                modification=grant_keyword(keyword),
             )
             for keyword in keywords
         ]
@@ -8491,6 +8532,8 @@ def quoted_ability_grants(
     grants nothing and must still be able to take its own line back off the
     creature it used to be on.
     """
+    from .group_grants import equipment_by_mana_value_group
+
     grantable: set[str] = set()
     wanted: dict[UUID, set[str]] = {}
     text_to_read = source.class_ability_text
@@ -8508,6 +8551,17 @@ def quoted_ability_grants(
         legendary=Supertype.LEGENDARY in source.card.supertypes,
     ):
         normalized = _strip_ability_word(_normalize_duration_first(sentence))
+        if equipment_group := equipment_by_mana_value_group(normalized, source):
+            # Bludgeon Brawl: the static pump each such artifact has as an
+            # Equipment (the equip ability itself is a layer 6 line,
+            # `GrantAbilitiesByManaValue`).
+            for permanent in permanents:
+                printed = printed_characteristics(permanent)
+                if equipment_group(printed, {}):
+                    text = f"Equipped creature gets +{int(printed.mana_value)}/+0."
+                    grantable.add(text)
+                    wanted.setdefault(permanent.id, set()).add(text)
+            continue
         if match := _ATTACHED_CREATURE_STATIC_RE.fullmatch(normalized):
             text = (match.group("granted") or "").strip()
             if not text:
@@ -9208,7 +9262,7 @@ def _other_creatures_are_type_builder(
                     source_id=source.id,
                     source_ability=printed,
                     selector=selector,
-                    modification=grant_ability(ability),
+                    modification=grant_keyword(ability),
                 )
             )
         return effects
@@ -9398,7 +9452,7 @@ def _attacking_tokens_keyword_grant_builder(
                 source_id=source.id,
                 source_ability=_source_line_for(source, line),
                 selector=selector,
-                modification=grant_ability(keyword),
+                modification=grant_keyword(keyword),
             )
             for keyword in keywords
         ]
@@ -9480,7 +9534,7 @@ def _graveyard_count_gated_self_static_builder(
                 source_id=source.id,
                 source_ability=_source_line_for(source, line),
                 selector=_only(source.id),
-                modification=grant_ability(ability),
+                modification=grant_keyword(ability),
             )
             for ability in granted
         )
@@ -9537,7 +9591,7 @@ def _graveyard_card_count_gated_self_static_builder(
                 source_id=source.id,
                 source_ability=_source_line_for(source, line),
                 selector=_only(source.id),
-                modification=grant_ability(ability),
+                modification=grant_keyword(ability),
             )
             for ability in granted
         )
@@ -9607,7 +9661,7 @@ def _conditional_self_type_change_builder(change: _SelfTypeChange, *, line: str)
             ContinuousEffect(
                 description=f"{described}, has {ability}",
                 layer=Layer.ABILITY,
-                modification=grant_ability(ability),
+                modification=grant_keyword(ability),
                 **common,
             )
             for ability in change.granted
@@ -9786,7 +9840,7 @@ def _self_gated_by_controlling_any_of_builder(
                 source_id=source.id,
                 source_ability=_source_line_for(source, line),
                 selector=selector,
-                modification=grant_ability(keyword),
+                modification=grant_keyword(keyword),
             )
             for keyword in keywords
         ]
@@ -9827,7 +9881,7 @@ def _self_gated_by_controlling_keyword_grant_builder(
                 source_id=source.id,
                 source_ability=_source_line_for(source, line),
                 selector=selector,
-                modification=grant_ability(keyword),
+                modification=grant_keyword(keyword),
             )
             for keyword in keywords
         ]
@@ -9877,7 +9931,7 @@ def _self_gated_by_controlling_counted_keyword_grant_builder(
                 source_id=source.id,
                 source_ability=_source_line_for(source, line),
                 selector=selector,
-                modification=grant_ability(keyword),
+                modification=grant_keyword(keyword),
             )
             for keyword in keywords
         ]
@@ -10308,7 +10362,7 @@ def _context_gated_self_pump_builder(
                 source_id=source.id,
                 source_ability=_source_line_for(source, line),
                 selector=_only(source.id),
-                modification=grant_ability(ability),
+                modification=grant_keyword(ability),
             )
             for ability in granted
         )
@@ -10359,7 +10413,7 @@ def _context_gated_self_base_pt_builder(
                 source_id=source.id,
                 source_ability=_source_line_for(source, line),
                 selector=_only(source.id),
-                modification=grant_ability(ability),
+                modification=grant_keyword(ability),
             )
             for ability in granted
         )
@@ -10441,7 +10495,7 @@ def _context_gated_self_static_builder(
                 source_id=source.id,
                 source_ability=_source_line_for(source, line),
                 selector=_only(source.id),
-                modification=grant_ability(ability),
+                modification=grant_keyword(ability),
             )
             for ability in granted
         ]
@@ -10477,7 +10531,7 @@ def _per_color_keyword_grant_builder(
                 source_id=source.id,
                 source_ability=_source_line_for(source, line),
                 selector=creatures_controlled_by_with_color(source.controller, color),
-                modification=grant_ability(keyword),
+                modification=grant_keyword(keyword),
             )
             for keyword, color in grants
         ]
@@ -11176,6 +11230,15 @@ def _parse_layer_sentence_ungated(sentence: str) -> EffectBuilder | None:
         return _becomes_creature_type_with_base_pt_builder(
             (), (), None, None, loses_abilities=False, artifact_creature=True
         )
+    if match := _MASS_BECOMES_SIZED_ARTIFACT_CREATURES_RE.fullmatch(sentence):
+        return _becomes_creature_type_with_base_pt_builder(
+            (),
+            (),
+            int(match.group("p1") or match.group("p2")),
+            int(match.group("t1") or match.group("t2")),
+            loses_abilities=False,
+            artifact_creature=True,
+        )
     if match := _BASE_PT_SET_RE.fullmatch(sentence) or _MASS_BASE_PT_SET_RE.fullmatch(sentence):
         return _base_pt_set_builder(int(match.group("power")), int(match.group("toughness")))
     if match := _BASE_PT_SET_AND_TYPE_RE.fullmatch(sentence):
@@ -11408,11 +11471,13 @@ _HAS_ALL_ACTIVATED_ABILITIES_RE = re.compile(
     r"battlefield), )?"
     r"(?P<subject>this (?:creature|permanent|artifact)|it"
     r"|creatures you control with (?:an? )?(?P<counter>[+-]\d+/[+-]\d+|[a-z]+) counters? on them)"
-    r" (?:has|have) all activated abilities of all "
+    r" (?:has|have) all activated abilities of (?:all )?"
     r"(?:(?:(?P<pile_types>[a-z]+(?:,? (?:and |or )?[a-z]+)*) )?cards exiled with (?:this \w+|it)"
+    r"|(?P<the_exiled>the exiled cards?)"
     r"|(?:(?P<graveyard_types>[a-z]+(?:,? (?:and |or )?[a-z]+)*) )?cards in "
     r"(?P<graveyard_whose>your graveyard|all graveyards)"
-    r"|(?P<board_types>[a-z]+)(?P<board_whose> your opponents control| you control)?)\.?$",
+    r"|(?P<board_types>[a-z]+)(?P<board_whose> your opponents control| you control)?"
+    r"(?P<except_mana> except mana abilities)?)\.?$",
     re.IGNORECASE,
 )
 
@@ -11444,6 +11509,7 @@ def all_activated_abilities_grant(sentence: str) -> AllActivatedAbilitiesGrant |
     if match.group("subject").lower() == "it" and match.group("on_battlefield") is None:
         return None
     from_exile = match.group("board_types") is None and not from_graveyard
+    except_mana = match.group("except_mana") is not None
     exile_types = types_of(match.group("pile_types"))
     board_types = types_of(match.group("board_types"))
     if exile_types is None or board_types is None:
@@ -11478,6 +11544,7 @@ def all_activated_abilities_grant(sentence: str) -> AllActivatedAbilitiesGrant |
         graveyard_whose="you" if graveyard_whose_text == "your graveyard" else "any",
         graveyard_types=tuple(graveyard_types),
         graveyard_subtypes=tuple(graveyard_subtypes),
+        except_mana=except_mana,
     )
 
 
@@ -11541,6 +11608,17 @@ def _all_activated_abilities_builder(
 
 @functools.lru_cache(maxsize=16384)
 def _parse_static_layer_sentence(sentence: str) -> EffectBuilder | None:
+    """`_parse_narrow_static_layer_sentence`, then EP-01 R2 T1's generic group
+    subject (`group_grants.py`) - tried last, and also when a narrow shape
+    matched the sentence but declined it (a "<subtype>s you control have ..."
+    regex reading "Artifacts you control"), so nothing the older shapes read
+    changes."""
+    from .group_grants import parse_group_static_sentence
+
+    return _parse_narrow_static_layer_sentence(sentence) or parse_group_static_sentence(sentence)
+
+
+def _parse_narrow_static_layer_sentence(sentence: str) -> EffectBuilder | None:
     """The board-wide and filtered *static* shapes (CR 611.3), split out of
     `_parse_layer_sentence` only to keep either function readable - the two are
     one lookup, tried in this order.
@@ -12957,6 +13035,7 @@ from .model import (  # noqa: E402
     PermanentsOfTypesControlledBy,
     PermanentsWithName,
     RemainsOnBattlefield,
+    RemainsTapped,
     RemoveType,
     Selector,
     SelfIfAttachedCount,
@@ -12993,6 +13072,7 @@ from .model import (  # noqa: E402
     every_land,
     grant_ability,
     grant_ability_instance,
+    grant_keyword,
     lands_controlled_by,
     lose_all_abilities,
     lose_keyword,

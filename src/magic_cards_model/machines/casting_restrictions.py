@@ -403,6 +403,11 @@ _STATIC_SPELLS_CANT_BE_COUNTERED_RE = re.compile(
 )
 
 
+#: CR 101.2 / CR 604.2: "Spells and abilities can't be countered." (Spider-Punk)
+#: names no controller, so it covers every spell on the stack.
+_GLOBAL_UNCOUNTERABLE_RE = re.compile(r"spells and abilities can't be countered\.?", re.IGNORECASE)
+
+
 def _static_uncounterable_quality(line: str) -> str | None:
     """The quality phrase of a static "`<Quality>` spells you control can't
     be countered." line (`""` for any spell), or None when the line is not
@@ -424,7 +429,10 @@ def _static_uncounterable_quality(line: str) -> str | None:
 def reads_static_spells_cant_be_countered_line(text: str) -> bool:
     """Whether one static line is a "`<Quality>` spells you control can't be
     countered." this module enforces - `support.py`'s credit for it."""
-    return _static_uncounterable_quality(text) is not None
+    return (
+        _static_uncounterable_quality(text) is not None
+        or _GLOBAL_UNCOUNTERABLE_RE.fullmatch(text.strip()) is not None
+    )
 
 
 def static_uncounterable_source(game: Any, spell: Any) -> Any:
@@ -443,10 +451,21 @@ def static_uncounterable_source(game: Any, spell: Any) -> Any:
     if controller is None or getattr(spell, "card", None) is None:
         return None
     board = game.computed_board()
+    for permanent in game.battlefield:
+        if permanent.controller == controller:
+            continue
+        if any(
+            _GLOBAL_UNCOUNTERABLE_RE.fullmatch(line.strip())
+            for line in board.of(permanent).abilities
+            if "countered" in line
+        ):
+            return permanent
     for permanent in game.permanents_controlled_by(controller):
         for line in board.of(permanent).abilities:
             if "countered" not in line:
                 continue
+            if _GLOBAL_UNCOUNTERABLE_RE.fullmatch(line.strip()):
+                return permanent
             quality = _static_uncounterable_quality(line)
             if quality is None:
                 # "Spells with flash you cast cost {1} less to cast and can't

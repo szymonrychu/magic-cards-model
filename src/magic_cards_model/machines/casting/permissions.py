@@ -332,8 +332,17 @@ _GRANTED_KEYWORD_AS_YOU_CAST = re.compile(
 #: own zone check is what enforces that, exactly as it does for every other
 #: grant here.
 _GRANTED_KEYWORD_SPELL_YOU_CAST_HAS = re.compile(
-    r"^each (?P<what>[\w' -]+?) spell you cast has "
-    r"(?P<keyword>[A-Za-z]+)(?P<cost>[^.]*)\.(?P<tail>.*)$",
+    r"^each (?P<what>[\w' -]+?) spell you cast(?P<cond> that's one or more colors)? has "
+    r"(?P<keyword>[A-Za-z-]+)(?P<cost>[^.]*)\.(?P<tail>.*)$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+#: "Assassin spells you cast have freerunning {B}{B}." (Ezio Auditore da
+#: Firenze) - `_GRANTED_KEYWORD_SPELL_YOU_CAST_HAS`'s plural twin: the quality
+#: may be empty ("Spells you cast have ...") and the cast may be "from exile".
+_GRANTED_KEYWORD_SPELLS_YOU_CAST_HAVE = re.compile(
+    r"^(?P<what>[\w' -]*?)\s*spells you cast(?: from (?P<zone>your hand|your graveyard|exile))? "
+    r"have (?P<keyword>[A-Za-z-]+)(?P<cost>[^.]*)\.(?P<tail>.*)$",
     re.IGNORECASE | re.DOTALL,
 )
 
@@ -357,10 +366,17 @@ _ZONE_WORDS_FOR_GRANTS: dict[str, Zone] = {"hand": Zone.HAND, "graveyard": Zone.
 #: (CR 113.6f, CR 702.34a).
 #: Ninja Teen's level 3 prints the plural of the same shape: "Creature cards
 #: in your graveyard have sneak {3}{B}."
+_EXACT_COLOR_COUNT_WORDS = {"one": 1, "two": 2, "three": 3, "four": 4, "five": 5}
+
+#: Granted keywords whose rule names no cost of their own (CR 702.133a's
+#: jump-start casts for the card's mana cost and adds a discard).
+_COSTLESS_GRANTED_KEYWORDS = frozenset({"jump-start"})
+
 _GRANTED_KEYWORD_ON_A_CARD_IN_A_ZONE = re.compile(
     r"^(?P<during>During your turn, )?(?:[Ee]ach (?P<what>[\w' -]+?) card in your "
-    r"(?P<zone>hand|graveyard) has|(?P<whats>[\w' -]+?) cards in your "
-    r"(?P<zones>hand|graveyard) have) (?P<keyword>[A-Za-z]+)(?P<cost>[^.]*)\.(?P<tail>.*)$",
+    r"(?P<zone>hand|graveyard)(?: that's exactly (?P<ncolors>one|two|three|four|five) colors?)? has"
+    r"|(?P<whats>[\w' -]+?) cards in your "
+    r"(?P<zones>hand|graveyard) have) (?P<keyword>[A-Za-z-]+)(?P<cost>[^.]*)\.(?P<tail>.*)$",
     re.DOTALL,
 )
 
@@ -513,9 +529,11 @@ def _spell_matches_grant_filter(spell: CardState, what: str) -> bool:
         word = raw_word.strip(",").lower()
         if not word or word in {"and", "or"}:
             continue
-        negated = word.startswith("non-")
+        negated = word.startswith("non-") or (
+            word.startswith("non") and word[3:].rstrip("s") in type_words
+        )
         if negated:
-            word = word[len("non-") :]
+            word = word[len("non-") :] if word.startswith("non-") else word[len("non") :]
         singular = word.rstrip("s")
         if word in {"permanent", "permanents"}:
             matched = bool(types & _PERMANENT_TYPES)
@@ -2163,7 +2181,17 @@ def _grant_spell_you_cast_has_keyword(
     own zone check narrows this to, exactly as it does for every grant here.
     """
     match = _GRANTED_KEYWORD_SPELL_YOU_CAST_HAS.match(text)
+    plural = False
     if match is None:
+        match = _GRANTED_KEYWORD_SPELLS_YOU_CAST_HAVE.match(text)
+        plural = True
+    if match is None:
+        return None
+    if plural:
+        zone_word = (match.group("zone") or "").lower().removeprefix("your ")
+        if zone_word and _ZONE_WORDS_FOR_GRANTS.get(zone_word, Zone.EXILE) is not origin_zone:
+            return None
+    elif match.group("cond") and not spell.colors:
         return None
     if not _spell_matches_grant_filter(spell, match.group("what")):
         return None
@@ -2214,9 +2242,14 @@ def _grant_on_a_card_in_a_zone(
         return None
     if not _spell_matches_grant_filter(spell, match.group("what") or match.group("whats")):
         return None
+    if (
+        match.group("ncolors")
+        and len(spell.colors) != _EXACT_COLOR_COUNT_WORDS[match.group("ncolors")]
+    ):
+        return None
     keyword = match.group("keyword")
     printed = match.group("cost").strip() or None
-    if printed is None:
+    if printed is None and keyword.lower() not in _COSTLESS_GRANTED_KEYWORDS:
         tail = _COST_IS_THE_CARDS_MANA_COST.search(match.group("tail") or "")
         if tail is None or tail.group("keyword").lower() != keyword.lower():
             return None

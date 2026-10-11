@@ -1,0 +1,143 @@
+{
+  "object": "card",
+  "id": "386ce3c9-869d-461c-a3de-c8add3786f73",
+  "oracle_id": "18e856b5-aab7-4802-8cec-1d44dd95d9f7",
+  "multiverse_ids": [
+    607142
+  ],
+  "mtgo_id": 110056,
+  "arena_id": 84378,
+  "tcgplayer_id": 490572,
+  "cardmarket_id": 704027,
+  "name": "Hoarding Broodlord",
+  "lang": "en",
+  "released_at": "2023-04-21",
+  "uri": "https://api.scryfall.com/cards/386ce3c9-869d-461c-a3de-c8add3786f73",
+  "scryfall_uri": "https://scryfall.com/card/mom/110/hoarding-broodlord?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T04:30:06Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/3/8/386ce3c9-869d-461c-a3de-c8add3786f73.jpg?1783917006",
+    "normal": "https://cards.scryfall.io/normal/front/3/8/386ce3c9-869d-461c-a3de-c8add3786f73.jpg?1783917006",
+    "large": "https://cards.scryfall.io/large/front/3/8/386ce3c9-869d-461c-a3de-c8add3786f73.jpg?1783917006",
+    "png": "https://cards.scryfall.io/png/front/3/8/386ce3c9-869d-461c-a3de-c8add3786f73.png?1783917006",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/3/8/386ce3c9-869d-461c-a3de-c8add3786f73.jpg?1783917006",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/3/8/386ce3c9-869d-461c-a3de-c8add3786f73.jpg?1783917006",
+    "thumb": "https://cards.scryfall.io/thumb/front/3/8/386ce3c9-869d-461c-a3de-c8add3786f73.webp?1783917006",
+    "grid": "https://cards.scryfall.io/grid/front/3/8/386ce3c9-869d-461c-a3de-c8add3786f73.webp?1783917006",
+    "display": "https://cards.scryfall.io/display/front/3/8/386ce3c9-869d-461c-a3de-c8add3786f73.webp?1783917006",
+    "art": "https://cards.scryfall.io/art/front/3/8/386ce3c9-869d-461c-a3de-c8add3786f73.webp?1783917006",
+    "crop": "https://cards.scryfall.io/crop/front/3/8/386ce3c9-869d-461c-a3de-c8add3786f73.webp?1783917006"
+  },
+  "mana_cost": "{5}{B}{B}{B}",
+  "cmc": 8.0,
+  "type_line": "Creature \u2014 Dragon",
+  "oracle_text": "Convoke\nFlying\nWhen this creature enters, search your library for a card, exile it face down, then shuffle. For as long as that card remains exiled, you may play it.\nSpells you cast from exile have convoke.",
+  "power": "7",
+  "toughness": "6",
+  "colors": [
+    "B"
+  ],
+  "color_identity": [
+    "B"
+  ],
+  "keywords": [
+    "Flying",
+    "Convoke"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "392f7315-dc53-40a3-a2cc-5482dbd498b3",
+  "set": "mom",
+  "set_name": "March of the Machine",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/392f7315-dc53-40a3-a2cc-5482dbd498b3",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Amom&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/mom?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/386ce3c9-869d-461c-a3de-c8add3786f73/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A18e856b5-aab7-4802-8cec-1d44dd95d9f7&unique=prints",
+  "collector_number": "110",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Filip Burburan",
+  "artist_ids": [
+    "66082c3b-a623-4d34-be51-2475214b85d3"
+  ],
+  "illustration_id": "4f1cd767-fff7-48a8-a868-eac996bec527",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 1718,
+  "penny_rank": 4904,
+  "preview": {
+    "source": "Wizards of the Coast",
+    "source_uri": "https://twitter.com/MTG_Arena/status/1641168435764658176",
+    "previewed_at": "2023-03-29"
+  },
+  "prices": {
+    "usd": "5.36",
+    "usd_foil": "5.36",
+    "usd_etched": null,
+    "eur": "4.34",
+    "eur_foil": "6.07",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=607142&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DHoarding%2BBroodlord",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DHoarding%2BBroodlord",
+    "edhrec": "https://edhrec.com/route/?cc=Hoarding+Broodlord"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F490572%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=704027&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/110056?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

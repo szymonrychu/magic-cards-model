@@ -1,0 +1,130 @@
+{
+  "object": "card",
+  "id": "9859d07b-d7df-4fc3-895a-6b2749c562ad",
+  "oracle_id": "822cecd9-f93e-4fd4-a496-9bec653b4099",
+  "multiverse_ids": [
+    430378
+  ],
+  "tcgplayer_id": 132199,
+  "cardmarket_id": 298108,
+  "name": "Tornado Elemental",
+  "lang": "en",
+  "released_at": "2017-06-09",
+  "uri": "https://api.scryfall.com/cards/9859d07b-d7df-4fc3-895a-6b2749c562ad",
+  "scryfall_uri": "https://scryfall.com/card/cma/159/tornado-elemental?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T09:50:41Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/9/8/9859d07b-d7df-4fc3-895a-6b2749c562ad.jpg?1783936241",
+    "normal": "https://cards.scryfall.io/normal/front/9/8/9859d07b-d7df-4fc3-895a-6b2749c562ad.jpg?1783936241",
+    "large": "https://cards.scryfall.io/large/front/9/8/9859d07b-d7df-4fc3-895a-6b2749c562ad.jpg?1783936241",
+    "png": "https://cards.scryfall.io/png/front/9/8/9859d07b-d7df-4fc3-895a-6b2749c562ad.png?1783936241",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/9/8/9859d07b-d7df-4fc3-895a-6b2749c562ad.jpg?1783936241",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/9/8/9859d07b-d7df-4fc3-895a-6b2749c562ad.jpg?1783936241",
+    "thumb": "https://cards.scryfall.io/thumb/front/9/8/9859d07b-d7df-4fc3-895a-6b2749c562ad.webp?1783936241",
+    "grid": "https://cards.scryfall.io/grid/front/9/8/9859d07b-d7df-4fc3-895a-6b2749c562ad.webp?1783936241",
+    "display": "https://cards.scryfall.io/display/front/9/8/9859d07b-d7df-4fc3-895a-6b2749c562ad.webp?1783936241",
+    "art": "https://cards.scryfall.io/art/front/9/8/9859d07b-d7df-4fc3-895a-6b2749c562ad.webp?1783936241",
+    "crop": "https://cards.scryfall.io/crop/front/9/8/9859d07b-d7df-4fc3-895a-6b2749c562ad.webp?1783936241"
+  },
+  "mana_cost": "{5}{G}{G}",
+  "cmc": 7.0,
+  "type_line": "Creature \u2014 Elemental",
+  "oracle_text": "When this creature enters, it deals 6 damage to each creature with flying.\nYou may have this creature assign its combat damage as though it weren't blocked.",
+  "power": "6",
+  "toughness": "6",
+  "colors": [
+    "G"
+  ],
+  "color_identity": [
+    "G"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": false,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "fd4d8463-0156-4c60-a40e-778762bb90e4",
+  "set": "cma",
+  "set_name": "Commander Anthology",
+  "set_type": "commander",
+  "set_uri": "https://api.scryfall.com/sets/fd4d8463-0156-4c60-a40e-778762bb90e4",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Acma&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/cma?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/9859d07b-d7df-4fc3-895a-6b2749c562ad/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A822cecd9-f93e-4fd4-a496-9bec653b4099&unique=prints",
+  "collector_number": "159",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Richard Wright",
+  "artist_ids": [
+    "7b1b0ce9-2c58-4321-a2a7-cdc94feae082"
+  ],
+  "illustration_id": "0e1b8f75-d2dc-4cca-a3b2-c2244d85dcbb",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "edhrec_rank": 18625,
+  "penny_rank": 12187,
+  "prices": {
+    "usd": "0.36",
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": "0.23",
+    "eur_foil": null,
+    "tix": null
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=430378&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DTornado%2BElemental",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DTornado%2BElemental",
+    "edhrec": "https://edhrec.com/route/?cc=Tornado+Elemental"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F132199%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=298108&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards?affiliate_id=scryfall&data%5Bsearch%5D=Tornado+Elemental&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

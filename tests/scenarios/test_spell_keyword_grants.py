@@ -91,13 +91,15 @@ def test_each_printed_grant_reads_as_its_keyword_line():
 
 
 def test_a_keyword_no_machine_here_executes_is_not_read_as_a_grant():
-    """Convoke and an affinity whose "[text]" nothing counts are left to
-    whatever reads them - never credited on a guess. (Conspire is read since
-    ecl T7: `tests/scenarios/test_conspire_grant.py`.)"""
-    assert not reads_spell_keyword_grant_line("Creature spells you cast have convoke.")
-    assert not reads_spell_keyword_grant_line(
-        "Enchantment spells you cast have affinity for Auras."
-    )
+    """A keyword nothing executes as a grant (delve, undaunted, ...) is left to
+    whatever reads it - never credited on a guess. (Conspire is read since
+    ecl T7: `tests/scenarios/test_conspire_grant.py`; convoke and affinity for
+    Auras are read since EP-01 R2 T1: `test_ep01_r2_hoarding_broodlord.py` and
+    `test_ep01_r2_spell_keyword_grants.py` play them.)"""
+    assert not reads_spell_keyword_grant_line("Creature spells you cast have delve.")
+    assert not reads_spell_keyword_grant_line("Creature spells you cast have undaunted.")
+    assert reads_spell_keyword_grant_line("Creature spells you cast have convoke.")
+    assert reads_spell_keyword_grant_line("Enchantment spells you cast have affinity for Auras.")
 
 
 # -- storm (Prismari, the Inspiration) ----------------------------------------------

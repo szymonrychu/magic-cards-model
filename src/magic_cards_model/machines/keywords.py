@@ -60,10 +60,12 @@ from .abilities import (
     Cost,
     CostKind,
     KeywordAbility,
+    StaticAbility,
     TriggeredAbility,
     TriggerEvent,
     TriggerWord,
     keyword_abilities,
+    parse_abilities,
     target_cost_reduction_amount,
 )
 from .combat import has_keyword
@@ -115,6 +117,7 @@ from .triggers import (
     triggers_for,
 )
 from .turn import DayNight
+from .zone_grants import effective_card
 
 
 class KeywordRule(StrEnum):
@@ -622,6 +625,29 @@ def _cascade_ability(ability: KeywordAbility) -> TriggeredAbility:
     )
 
 
+def _ripple_ability(ability: KeywordAbility) -> TriggeredAbility:
+    """CR 702.60a: "Ripple N" means "When you cast this spell, you may reveal
+    the top N cards of your library, or, if there are fewer than N cards in
+    your library, you may reveal all the cards in your library. If you reveal
+    cards from your library this way, you may cast any of those cards with the
+    same name as this spell without paying their mana costs, then put all
+    revealed cards not cast this way on the bottom of your library in any
+    order." CR 702.60b: each instance triggers separately."""
+    count = ability.count if ability.count is not None else 1
+    return _expansion(
+        ability,
+        keyword="ripple",
+        word=TriggerWord.WHEN,
+        condition="you cast this spell",
+        effect=(
+            f"you may reveal the top {count} cards of your library. You may cast any of "
+            "those cards with the same name as this spell without paying their mana costs. "
+            "Put all revealed cards not cast this way on the bottom of your library in any order"
+        ),
+        event=TriggerEvent.CAST_SPELL,
+    )
+
+
 def _storm_ability(ability: KeywordAbility) -> TriggeredAbility:
     """CR 702.40a: "Storm" means "When you cast this spell, copy it for each
     other spell that was cast before it this turn. If the spell has any
@@ -729,16 +755,50 @@ def printed_conspire_count(card: Card) -> int:
     return sum(1 for ability in keyword_abilities(card) if ability.canonical.lower() == "conspire")
 
 
-def printed_casualty_numbers(card: Card) -> list[int]:
+#: "Casualty X. The copy isn't legendary and has starting loyalty X." (Ob
+#: Nixilis, the Adversary): a casualty instance whose N is the X its caster
+#: announces as the spell is cast (CR 107.3a, CR 702.153a), plus - on that
+#: printing - what the casualty copy is (CR 707.2's copiable values).
+_CASUALTY_X_LINE_RE = re.compile(
+    r"^casualty x\.(?P<copy> the copy isn't legendary and has starting loyalty x\.)?$",
+    re.IGNORECASE,
+)
+
+
+def casualty_x_instances(card: Card) -> int:
+    """How many "Casualty X" lines `card` prints (CR 702.153a)."""
+    return sum(
+        1
+        for ability in parse_abilities(card)
+        if isinstance(ability, StaticAbility)
+        and _CASUALTY_X_LINE_RE.fullmatch((ability.text or "").strip())
+    )
+
+
+def casualty_copy_is_nonlegendary_with_x_loyalty(card: Card) -> bool:
+    """Whether the card's casualty line says "The copy isn't legendary and has
+    starting loyalty X"."""
+    return any(
+        isinstance(ability, StaticAbility)
+        and (match := _CASUALTY_X_LINE_RE.fullmatch((ability.text or "").strip())) is not None
+        and match.group("copy") is not None
+        for ability in parse_abilities(card)
+    )
+
+
+def printed_casualty_numbers(card: Card, x_value: int | None = None) -> list[int]:
     """The N of every "Casualty N" `card` prints, in printed order (CR
-    702.153a). A casualty whose N is not a number ("Casualty X") is left
-    out - no reader here announces that X."""
+    702.153a). A "Casualty X" instance counts as `x_value` once its caster has
+    announced it (CR 107.3a), and is left out until then - nothing can be
+    sacrificed for an X nobody has chosen."""
     numbers: list[int] = []
     for ability in keyword_abilities(card):
         if ability.canonical.lower() != "casualty":
             continue
         if ability.count is not None:
             numbers.append(ability.count)
+    if x_value is not None:
+        numbers.extend(x_value for _ in range(casualty_x_instances(card)))
     return numbers
 
 
@@ -1106,6 +1166,52 @@ def _flanking_ability(ability: KeywordAbility) -> TriggeredAbility:
         word=TriggerWord.WHENEVER,
         condition="this creature becomes blocked by a creature without flanking",
         effect="the blocking creature gets -1/-1 until end of turn",
+        event=TriggerEvent.BLOCKS,
+    )
+
+
+def _exalted_ability(ability: KeywordAbility) -> TriggeredAbility:
+    """CR 702.83a: "Exalted" means "Whenever a creature you control attacks
+    alone, that creature gets +1/+1 until end of turn." CR 702.83b: each
+    instance of exalted on a permanent triggers separately, which is
+    `keyword_triggered_abilities`' one ability per instance (a granted one
+    included, so two Slivers granted exalted are two instances)."""
+    return _expansion(
+        ability,
+        keyword="exalted",
+        word=TriggerWord.WHENEVER,
+        condition="a creature you control attacks alone",
+        effect="that creature gets +1/+1 until end of turn",
+        event=TriggerEvent.ATTACKS,
+    )
+
+
+def _frenzy_ability(ability: KeywordAbility) -> TriggeredAbility:
+    """CR 702.68a: "Frenzy N" means "Whenever this creature attacks and isn't
+    blocked, it gets +N/+0 until end of turn." CR 702.68b: multiple instances
+    each trigger."""
+    count = ability.count if ability.count is not None else 1
+    return _expansion(
+        ability,
+        keyword="frenzy",
+        word=TriggerWord.WHENEVER,
+        condition="this creature attacks and isn't blocked",
+        effect=f"it gets +{count}/+0 until end of turn",
+        event=TriggerEvent.ATTACKS_UNBLOCKED,
+    )
+
+
+def _bushido_ability(ability: KeywordAbility) -> TriggeredAbility:
+    """CR 702.45a: "Bushido N" means "Whenever this creature blocks or becomes
+    blocked, it gets +N/+N until end of turn." CR 702.45b: multiple instances
+    each trigger."""
+    count = ability.count if ability.count is not None else 1
+    return _expansion(
+        ability,
+        keyword="bushido",
+        word=TriggerWord.WHENEVER,
+        condition="this creature blocks or becomes blocked",
+        effect=f"it gets +{count}/+{count} until end of turn",
         event=TriggerEvent.BLOCKS,
     )
 
@@ -1710,6 +1816,7 @@ _TRIGGER_EXPANSIONS: dict[str, Callable[[KeywordAbility], list[TriggeredAbility]
     "ward": _single(_ward_ability),
     "prowess": _single(_prowess_ability),
     "cascade": _single(_cascade_ability),
+    "ripple": _single(_ripple_ability),
     "storm": _single(_storm_ability),
     "replicate": _single(_replicate_ability),
     "persist": _single(_persist_ability),
@@ -1735,6 +1842,9 @@ _TRIGGER_EXPANSIONS: dict[str, Callable[[KeywordAbility], list[TriggeredAbility]
     "extort": _single(_extort_ability),
     "increment": _single(_increment_ability),
     "flanking": _single(_flanking_ability),
+    "exalted": _single(_exalted_ability),
+    "frenzy": _single(_frenzy_ability),
+    "bushido": _single(_bushido_ability),
     "ingest": _single(_ingest_ability),
     "decayed": _single(_decayed_ability),
 }
@@ -2105,6 +2215,13 @@ class KeywordActivation(EngineModel):
             prohibited = self.game.activation_prohibition(self.card, is_mana=False)
             if prohibited is not None:
                 return prohibited
+            from .attached_restrictions import enchanted_player_activation_prohibition
+
+            barred = enchanted_player_activation_prohibition(
+                self.game, self.player, is_mana=False, is_loyalty=False
+            )
+            if barred is not None:
+                return barred
         if (
             self.zone is Zone.BATTLEFIELD
             and self.game is not None
@@ -2324,6 +2441,8 @@ class KeywordActivation(EngineModel):
                 subject_types=types,
                 origin_zone=self.zone,
                 player=self.player,
+                # "Whenever you activate a ninjutsu ability" (Satoru Umezawa)
+                keyword_action=self.keyword.lower(),
             )
         )
         if self.rule in (str(KeywordRule.CYCLING), str(KeywordRule.TYPECYCLING)):
@@ -2416,7 +2535,7 @@ def cycling_activation(
     continues to exist while the object is on the battlefield and in all other
     zones."
     """
-    printed = cycling_abilities(card.card)
+    printed = cycling_abilities(effective_card(game, card))
     if index >= len(printed):
         raise ValueError(
             f"{card.name} has no cycling ability number {index} ({KeywordRule.CYCLING})"
@@ -2617,7 +2736,7 @@ def unearth_activation(
     effect, not the activation (`_parse_delayed_reanimate_haste_exile_
     clauses`, `machines/casting.exile_warped`).
     """
-    printed = unearth_abilities(card.card)
+    printed = unearth_abilities(effective_card(game, card))
     if index >= len(printed):
         raise ValueError(
             f"{card.name} has no unearth ability number {index} ({KeywordRule.UNEARTH})"
@@ -3152,6 +3271,45 @@ def is_equip_discount_for_this_line(line: str) -> bool:
     return _EQUIP_ABILITIES_TARGETING_THIS_COST_LESS_RE.fullmatch(line.strip()) is not None
 
 
+_ATTACHED_ONLY_TO_RE = re.compile(
+    r"can be attached only to (?:an? )?(?P<quality>[a-z ]+?)(?:\.|$)", re.IGNORECASE | re.MULTILINE
+)
+
+
+def attach_only_quality(card: Card) -> str | None:
+    """The quality in a "`<name>` can be attached only to a <quality>." line
+    (Konda's Banner: "legendary creature", CR 702.6c), or None."""
+    match = _ATTACHED_ONLY_TO_RE.search(card.oracle_text or "")
+    return None if match is None else match["quality"].lower()
+
+
+def attach_restriction_refusal(game: Any, equipment: CardState, target: CardState) -> str | None:
+    """Why `target` is not a thing `equipment` can be attached to, or None."""
+    from .layers.group_grants import group_selector, parse_group
+
+    quality = attach_only_quality(equipment.card)
+    if quality is None:
+        return None
+    spec = parse_group(quality)
+    if spec is None:
+        return f"{equipment.name} can be attached only to a {quality}, which cannot be read"
+    board = game.computed_board()
+    if group_selector({**spec, "scope": "any"}, equipment)(board.of(target), board.characteristics):
+        return None
+    return (
+        f"{equipment.name} can be attached only to a {quality}; "
+        f"{target.name} is not one (CR 702.6c)"
+    )
+
+
+def _equip_ability_price(ability: KeywordAbility) -> float:
+    """The mana value of an equip ability's cost, for CR 702.6c's choice."""
+    try:
+        return float(ManaCost.parse(ability.cost or "").converted)
+    except Exception:  # an unreadable cost sorts last, as before
+        return float("inf")
+
+
 def equip_activation(
     game: Any,
     equipment: CardState,
@@ -3191,20 +3349,26 @@ def equip_activation(
     # target has is the one activated.
     candidates = [
         ability
-        for ability in keyword_abilities(equipment.card)
+        for ability in keyword_abilities(effective_card(game, equipment))
         if ability.canonical.lower() == "equip"
     ]
     refusals = [equip_quality_refusal(game, ability.parameter, target) for ability in candidates]
-    chosen = next(
-        (ability for ability, refusal in zip(candidates, refusals, strict=True) if refusal is None),
-        None,
-    )
+    # CR 702.6c: the player picks which equip ability to activate, so of the
+    # abilities whose quality the target has, the cheapest (printed order
+    # breaking ties) is the one a granted "equip {1}" is for.
+    usable = [
+        ability for ability, refusal in zip(candidates, refusals, strict=True) if refusal is None
+    ]
+    chosen = min(usable, key=_equip_ability_price, default=None)
     if candidates and chosen is None:
         raise ValueError(next(refusal for refusal in refusals if refusal is not None))
     activation = unannounced_equip_activation(
         game, equipment, player, ability=chosen, pay_zero=pay_zero, target=target
     )
     profile_for_text(EQUIP_EFFECT).check([target], player, game, source_id=equipment.id)
+    refusal = attach_restriction_refusal(game, equipment, target)
+    if refusal is not None:
+        raise ValueError(refusal)
     # CR 702.16b: the equip ability is "from a source with the stated quality"
     # whenever the Equipment has it, and a bare-text profile carries no source
     # card to ask - so the protection half of the target check is made here.
@@ -3258,7 +3422,7 @@ def unannounced_equip_activation(
     `pay_zero` is the player's "you may" on a `free_first_equip_source`
     permission (CR 118.9's alternative cost): taken by default whenever one
     applies, `False` to pay the printed cost instead."""
-    ability = ability or _keyword(equipment.card, "equip")
+    ability = ability or _keyword(effective_card(game, equipment), "equip")
     if ability is None:
         raise ValueError(f"{equipment.name} has no equip ability ({KeywordRule.EQUIP})")
     cost = _keyword_cost(ability, player)
@@ -3429,7 +3593,7 @@ def outlast_activation(
     card, through `Game.can_activate_tap_ability` - the same method
     `Game.why_cannot_activate` already calls for a printed `{T}` ability.
     """
-    printed = outlast_abilities(creature.card)
+    printed = outlast_abilities(effective_card(game, creature))
     if index >= len(printed):
         raise ValueError(
             f"{creature.name} has no outlast ability number {index} ({KeywordRule.OUTLAST})"
@@ -3517,7 +3681,7 @@ def crew_activation(
     continuous control of the permanent and not about how long it has been a
     creature.
     """
-    number = crew_number(vehicle.card)
+    number = crew_number(effective_card(game, vehicle))
     if number is None:
         raise ValueError(f"{vehicle.name} has no crew ability ({KeywordRule.CREW})")
 
@@ -3948,7 +4112,8 @@ def ninjutsu_activation(
     not model, so the ordinary hand-only activation is what a real game
     reaches either way.
     """
-    ability = _keyword(card.card, "ninjutsu") or _keyword(card.card, "commander ninjutsu")
+    granted = effective_card(game, card)
+    ability = _keyword(granted, "ninjutsu") or _keyword(granted, "commander ninjutsu")
     if ability is None:
         raise ValueError(f"{card.name} has no ninjutsu ability ({KeywordRule.NINJUTSU})")
     if card.zone is not Zone.HAND:
@@ -4737,7 +4902,7 @@ def off_zone_activation(
     anything: a card with one off-zone ability has no number 1, and a card
     with none has no number 0.
     """
-    pool = off_zone_abilities(card.card)
+    pool = off_zone_abilities(effective_card(game, card))
     if index < 0 or index >= len(pool):
         raise ValueError(
             f"{card.name} has no activated ability functioning off the battlefield, "
@@ -5437,7 +5602,16 @@ def has_rebound_now(card_state: CardState) -> bool:
     swap, `Game._create_rebound_delayed_trigger`'s own guard) both ask this
     instead, so a granted rebound reaches the same two effects a printed one
     does."""
-    return has_rebound(card_state.card) or card_state.granted_rebound
+    if has_rebound(card_state.card) or card_state.granted_rebound:
+        return True
+    game = getattr(card_state, "_board_source", None)
+    if game is None or card_state.zone is not Zone.STACK:
+        return False
+    # CR 702.88a: "Instant and sorcery spells you control have rebound" -
+    # a static ability read while the spell is on the stack (CR 611.3a).
+    from .spell_grants import granted_lines_of_stack_spell
+
+    return "Rebound" in granted_lines_of_stack_spell(game, card_state)
 
 
 # --------------------------------------------------------------------------
@@ -5480,7 +5654,7 @@ def why_cannot_dredge(game: Any, card: CardState, player: str) -> str | None:
     CR 702.52b: "A player with fewer cards in their library than the number
     required by a dredge ability can't mill any of them this way."
     """
-    count = dredge_count(card.card)
+    count = dredge_count(effective_card(game, card))
     if count is None:
         return f"{card.name} has no dredge ability ({KeywordRule.DREDGE})"
     if card.zone is not Zone.GRAVEYARD:
@@ -5510,7 +5684,7 @@ def dredge(game: Any, card: CardState, player: str) -> list[CardState]:
         refusal = why_cannot_dredge(game, card, player)
         if refusal is not None:
             raise ValueError(refusal)
-        count = dredge_count(card.card)
+        count = dredge_count(effective_card(game, card))
         assert count is not None
 
         owner = game.player(player)
@@ -5838,7 +6012,11 @@ def discard(game: Any, card: CardState, player: str) -> CardState:
             # replacement (Rest in Peace's "from anywhere", Leyline of the
             # Void's) still gets its look at a discarded card; that also feeds
             # the CR 700.11/CR 400.6 arrival ledger.
-            game.put_into_graveyard(card)
+            game._discarding = True  # noqa: SLF001
+            try:
+                game.put_into_graveyard(card)
+            finally:
+                game._discarding = False  # noqa: SLF001
             if card.zone is not Zone.GRAVEYARD:
                 return card
             # CR 702.187b's "as long as you discarded this card this turn", recorded
@@ -6221,6 +6399,65 @@ def _cascade_effect(game: Any, ability: AbilityOnStack) -> CascadeResult | None:
     return cascade(game, source)
 
 
+_RIPPLE_COUNT_RE = re.compile(r"ripple\s+(?P<n>\d+)", re.IGNORECASE)
+
+
+def ripple(game: Any, spell: CardState, count: int) -> list[CardState]:
+    """CR 702.60a's resolution: reveal the top `count` cards of the caster's
+    library (all of it when it is shorter), offer a free cast of each revealed
+    card sharing `spell`'s name during this resolution (CR 608.2g), then put
+    every revealed card not cast on the bottom of the library, in the order they
+    were revealed (the "any order" is the caster's, and the engine keeps the
+    revealed order)."""
+    with game._id_allocator_scope():  # noqa: SLF001
+        controller = spell.controller or game.active_player.username
+        owner = game.player(controller)
+        revealed = list(owner.library[:count])
+        if not revealed:
+            return []
+        for state in revealed:
+            game.reveal(state, source=spell.name)
+        cast: list[CardState] = []
+        for state in revealed:
+            if state.name != spell.name:
+                continue
+            castable = game.can_cast_during_resolution(state, controller)
+            decision = Decision(
+                kind=DecisionKind.MAY,
+                player=controller,
+                prompt=f"cast {state.name} without paying its mana cost (ripple)",
+                source=spell.name,
+                source_id=source_id_of(spell),
+                affirmative_is_legal=castable,
+            )
+            if game.ask(decision) and (
+                game.cast_during_resolution(
+                    state,
+                    controller,
+                    source_name=f"{spell.name}'s ripple",
+                    rule="CR 702.60a",
+                )
+                is not None
+            ):
+                cast.append(state)
+        for state in revealed:
+            if state in cast:
+                continue
+            owner.cards_in(Zone.LIBRARY).remove(state)
+            owner.add(state, Zone.LIBRARY)  # the bottom of the library
+        return cast
+
+
+def _ripple_effect(game: Any, ability: AbilityOnStack) -> list[CardState]:
+    """CR 702.60a: the trigger sits above the spell that caused it (CR 603.3b),
+    so `ability.source` is still that spell on the stack."""
+    source = ability.source(game)
+    match = _RIPPLE_COUNT_RE.search(ability.ability.raw or "")
+    if source is None or match is None:
+        return []
+    return ripple(game, source, int(match["n"]))
+
+
 def _storm_effect(game: Any, ability: AbilityOnStack) -> list[CardState]:
     """CR 702.40a's copy half.
 
@@ -6315,10 +6552,29 @@ def _casualty_effect(game: Any, ability: AbilityOnStack) -> CardState | None:
     copy = game.copy_spell(source, controller=ability.controller)
     if copy is None:
         return None
+    if casualty_copy_is_nonlegendary_with_x_loyalty(source.card):
+        # "The copy isn't legendary and has starting loyalty X" (CR 707.2:
+        # these are copiable values of the copy, set by the effect that made it).
+        record = game.cast_record_of(source)
+        copy.card = _casualty_x_copy_of(source.card, record.x_value if record else 0)
     game.offer_new_targets_for_copy(
         copy, ability.controller, source_name=source.name, source_id=source_id_of(source)
     )
     return copy
+
+
+def _casualty_x_copy_of(card: Card, x_value: int) -> Card:
+    """`card` as the copy of Ob Nixilis, the Adversary's casualty has it: no
+    legendary supertype and X for its printed (starting) loyalty."""
+    import uuid
+
+    return card.model_copy(
+        update={
+            "id": uuid.uuid5(card.id, f"casualty-copy|{x_value}"),
+            "type_line": card.type_line.replace("Legendary ", "", 1),
+            "loyalty": str(x_value),
+        }
+    )
 
 
 def _ward_effect(game: Any, ability: AbilityOnStack) -> bool:
@@ -6873,6 +7129,7 @@ KEYWORD_TRIGGER_EFFECTS: dict[str, Callable[[Any, AbilityOnStack], Any]] = {
     "undying": _undying_effect,
     "modular": _modular_effect,
     "cascade": _cascade_effect,
+    "ripple": _ripple_effect,
     "storm": _storm_effect,
     "replicate": _replicate_effect,
     "casualty": _casualty_effect,

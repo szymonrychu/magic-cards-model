@@ -890,6 +890,25 @@ class DamageLifeFloorReplacement(EngineModel):
         event.amount = max(event.player.life - self.floor, 0)
 
 
+_ABSORB_LINE_RE = re.compile(r"^absorb (?P<n>\d+)$", re.IGNORECASE)
+
+
+def _absorb_expanded(lines: list[str]) -> list[str]:
+    """CR 702.64a: "Absorb N" means "If a source would deal damage to this
+    creature, prevent N of that damage." Written out beside the keyword line so
+    the damage-prevention reader (`prevention_statics`) applies it - one
+    replacement per instance, each preventing N (CR 702.64b)."""
+    expanded = list(lines)
+    for line in lines:
+        match = _ABSORB_LINE_RE.match(line.strip())
+        if match is not None:
+            expanded.append(
+                "If a source would deal damage to this creature, "
+                f"prevent {match['n']} of that damage."
+            )
+    return expanded
+
+
 def replacements_of_state(
     game: "Game", permanent: CardState, board: "ComputedBoard | None" = None
 ) -> list[CardReplacement]:
@@ -928,7 +947,9 @@ def replacements_of_state(
         + _double_all_damage_replacements(_rules_lines("\n".join(chars.abilities)))
         + _leave_exile_line_replacements(chars.abilities)
         + _damage_life_floor_replacements(_rules_lines("\n".join(chars.abilities)))
-        + damage_static_replacements(card, _rules_lines("\n".join(chars.abilities)))
+        + damage_static_replacements(
+            card, _absorb_expanded(_rules_lines("\n".join(chars.abilities)))
+        )
         + _granted_line_replacements(card, permanent.granted_ability_texts)
     )
     if "Class" not in chars.subtypes:
@@ -1217,6 +1238,18 @@ def _stack_replacements(game: "Game", event: ReplaceableEvent) -> list[Applicabl
                 key=f"{card.id}:exile_instead_of_graveyard",
                 source=card,
                 label="if that spell would be put into a graveyard, exile it instead",
+                apply=_exile_instead,
+            )
+        )
+    if record.keyword is not None and record.keyword.lower() == "jump-start":
+        # CR 702.133a's second static ability: "If this spell was cast using
+        # its jump-start ability, exile this card instead of putting it
+        # anywhere else any time it would leave the stack."
+        found.append(
+            ApplicableEffect(
+                key=f"{card.id}:jump-start",
+                source=card,
+                label="if cast with jump-start, exile this card instead (CR 702.133a)",
                 apply=_exile_instead,
             )
         )

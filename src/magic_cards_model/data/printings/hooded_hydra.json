@@ -1,0 +1,160 @@
+{
+  "object": "card",
+  "id": "828f752e-cf94-4d0e-913d-aa425a005849",
+  "oracle_id": "637ddd65-112d-40f7-9bab-a61724d9165c",
+  "multiverse_ids": [
+    650265
+  ],
+  "mtgo_id": 122482,
+  "tcgplayer_id": 535842,
+  "cardmarket_id": 753554,
+  "name": "Hooded Hydra",
+  "lang": "en",
+  "released_at": "2024-02-09",
+  "uri": "https://api.scryfall.com/cards/828f752e-cf94-4d0e-913d-aa425a005849",
+  "scryfall_uri": "https://scryfall.com/card/mkc/171/hooded-hydra?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T03:23:11Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/8/2/828f752e-cf94-4d0e-913d-aa425a005849.jpg?1783912991",
+    "normal": "https://cards.scryfall.io/normal/front/8/2/828f752e-cf94-4d0e-913d-aa425a005849.jpg?1783912991",
+    "large": "https://cards.scryfall.io/large/front/8/2/828f752e-cf94-4d0e-913d-aa425a005849.jpg?1783912991",
+    "png": "https://cards.scryfall.io/png/front/8/2/828f752e-cf94-4d0e-913d-aa425a005849.png?1783912991",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/8/2/828f752e-cf94-4d0e-913d-aa425a005849.jpg?1783912991",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/8/2/828f752e-cf94-4d0e-913d-aa425a005849.jpg?1783912991",
+    "thumb": "https://cards.scryfall.io/thumb/front/8/2/828f752e-cf94-4d0e-913d-aa425a005849.webp?1783912991",
+    "grid": "https://cards.scryfall.io/grid/front/8/2/828f752e-cf94-4d0e-913d-aa425a005849.webp?1783912991",
+    "display": "https://cards.scryfall.io/display/front/8/2/828f752e-cf94-4d0e-913d-aa425a005849.webp?1783912991",
+    "art": "https://cards.scryfall.io/art/front/8/2/828f752e-cf94-4d0e-913d-aa425a005849.webp?1783912991",
+    "crop": "https://cards.scryfall.io/crop/front/8/2/828f752e-cf94-4d0e-913d-aa425a005849.webp?1783912991"
+  },
+  "mana_cost": "{X}{G}{G}",
+  "cmc": 2.0,
+  "type_line": "Creature \u2014 Snake Hydra",
+  "oracle_text": "This creature enters with X +1/+1 counters on it.\nWhen this creature dies, create a 1/1 green Snake creature token for each +1/+1 counter on it.\nMorph {3}{G}{G}\nAs this creature is turned face up, put five +1/+1 counters on it.",
+  "power": "0",
+  "toughness": "0",
+  "colors": [
+    "G"
+  ],
+  "color_identity": [
+    "G"
+  ],
+  "keywords": [
+    "Morph"
+  ],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "828f752e-cf94-4d0e-913d-aa425a005849",
+      "component": "combo_piece",
+      "name": "Hooded Hydra",
+      "type_line": "Creature \u2014 Snake Hydra",
+      "uri": "https://api.scryfall.com/cards/828f752e-cf94-4d0e-913d-aa425a005849"
+    },
+    {
+      "object": "related_card",
+      "id": "5430da88-b72e-4d64-bd3c-b21062cac1c2",
+      "component": "combo_piece",
+      "name": "Morph",
+      "type_line": "Creature",
+      "uri": "https://api.scryfall.com/cards/5430da88-b72e-4d64-bd3c-b21062cac1c2"
+    },
+    {
+      "object": "related_card",
+      "id": "26614a86-55df-48d2-bb88-9a2895a33458",
+      "component": "token",
+      "name": "Snake",
+      "type_line": "Token Creature \u2014 Snake",
+      "uri": "https://api.scryfall.com/cards/26614a86-55df-48d2-bb88-9a2895a33458"
+    }
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": false,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "286c37ca-ba65-4d3e-8c5d-d1878d88fd95",
+  "set": "mkc",
+  "set_name": "Murders at Karlov Manor Commander",
+  "set_type": "commander",
+  "set_uri": "https://api.scryfall.com/sets/286c37ca-ba65-4d3e-8c5d-d1878d88fd95",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Amkc&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/mkc?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/828f752e-cf94-4d0e-913d-aa425a005849/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A637ddd65-112d-40f7-9bab-a61724d9165c&unique=prints",
+  "collector_number": "171",
+  "digital": false,
+  "rarity": "mythic",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Chase Stone",
+  "artist_ids": [
+    "2d753f61-5f5b-468e-97ea-8e0fdd347340"
+  ],
+  "illustration_id": "972dbeb0-7f5c-4232-ab32-9e6d728dba5e",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "edhrec_rank": 3423,
+  "penny_rank": 7851,
+  "prices": {
+    "usd": "0.92",
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": "0.45",
+    "eur_foil": null,
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=650265&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DHooded%2BHydra",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DHooded%2BHydra",
+    "edhrec": "https://edhrec.com/route/?cc=Hooded+Hydra"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F535842%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=753554&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/122482?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

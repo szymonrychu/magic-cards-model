@@ -31,6 +31,7 @@ import re
 from collections.abc import Sequence
 
 from ..models.card_state import CardState
+from .combat import _parse_creature_description
 from .layers import (
     AttackingGroupControlledBy,
     ContinuousEffect,
@@ -43,6 +44,7 @@ from .layers import (
     _split_and_validate_keywords,
     grant_ability,
 )
+from .layers.model import grant_keyword
 from .triggers import _parse_subtype_list
 
 #: "Attacking creatures you control have double strike[, deathtouch, ...]."
@@ -531,6 +533,10 @@ def parse_keyword_filtered_group_keyword_grant(sentence: str) -> EffectBuilder |
     if keywords is None:
         return None
     quality = f"creatures with {match.group('filter').lower()}"
+    if _parse_creature_description(quality) is None:
+        # The closed grammar does not know this keyword (flanking, ...): the
+        # generic group subject (`layers/group_grants.py`) reads it instead.
+        return None
 
     def builder(
         source: CardState,
@@ -548,7 +554,7 @@ def parse_keyword_filtered_group_keyword_grant(sentence: str) -> EffectBuilder |
                 selector=CreaturesControlledByQuality(
                     username=source.controller, quality=quality, excluding_card_id=source.id
                 ),
-                modification=grant_ability(keyword),
+                modification=grant_keyword(keyword),
             )
             for keyword in keywords
         ]

@@ -69,6 +69,7 @@ from ...machines.triggers import (
     ExtraTriggerEvent,
     GameEvent,
 )
+from ...machines.zone_grants import apply_zone_characteristics
 from ...snapshot import board_snapshot, cached_board
 from ..card import (
     Card,
@@ -188,6 +189,12 @@ _PLAYER_COUNTERS_PROHIBITION_RE = re.compile(
     r"^(?:players|each player) can'?t get counters\.?$", re.IGNORECASE
 )
 
+#: Melira, Sylvok Outcast's "You can't get poison counters." - the same CR
+#: 122.6 prohibition, scoped to its controller and to one kind of counter.
+_OWN_KIND_COUNTERS_PROHIBITION_RE = re.compile(
+    r"^you can'?t get (?P<kind>[a-z]+) counters\.?$", re.IGNORECASE
+)
+
 
 def is_player_rules_static_line(text: str) -> bool:
     """Whether a permanent's static line is one of the rules-of-the-game
@@ -204,6 +211,7 @@ def is_player_rules_static_line(text: str) -> bool:
         or _DRAW_OR_LIFE_GAIN_PROHIBITION_RE.match(line)
         or _DAMAGE_CANT_BE_PREVENTED_RE.fullmatch(line)
         or _PLAYER_COUNTERS_PROHIBITION_RE.match(line)
+        or _OWN_KIND_COUNTERS_PROHIBITION_RE.match(line)
     )
 
 
@@ -593,7 +601,7 @@ class ContinuousMixin:
         with self._id_allocator_scope():
             if amount <= 0:
                 return permanent.counter_count(kind)
-            if permanent.cant_have_counters_put_on_it:
+            if permanent.cant_have_counters_put_on_it or permanent.cant_have_counter_kind(kind):
                 return permanent.counter_count(kind)
 
             event = ReplaceableEvent(
@@ -661,7 +669,9 @@ class ContinuousMixin:
                     if count > 0:
                         self.add_player_counters(player, kind, 1)
 
-    def player_counters_prohibited(self: "Game", username: str) -> str | None:
+    def player_counters_prohibited(
+        self: "Game", username: str, kind: str | None = None
+    ) -> str | None:
         """Why `username` can't get counters right now, or None - Solemnity's
         "Players can't get counters." on the battlefield, or Suncleanser's
         recorded "That player can't get counters for as long as this creature
@@ -673,6 +683,19 @@ class ContinuousMixin:
                 if line.kind is not AbilityKind.STATIC:
                     continue
                 text = (line.text or "").strip()
+                own_kind = _OWN_KIND_COUNTERS_PROHIBITION_RE.match(text)
+                if own_kind is not None:
+                    if (
+                        kind is not None
+                        and source.controller == username
+                        and own_kind["kind"].lower() == str(kind).lower()
+                        and self._still_has_static_line(source, text)
+                    ):
+                        return (
+                            f"{username} can't get {kind} counters: "
+                            f"{source.name} says so (CR 101.2)"
+                        )
+                    continue
                 if not _PLAYER_COUNTERS_PROHIBITION_RE.match(text):
                     continue
                 if self._still_has_static_line(source, text):
@@ -717,7 +740,7 @@ class ContinuousMixin:
         with self._id_allocator_scope():
             if isinstance(player, str):
                 player = self.player(player)
-            if amount <= 0 or self.player_counters_prohibited(player.username) is not None:
+            if amount <= 0 or self.player_counters_prohibited(player.username, kind) is not None:
                 return player.counter_count(kind)
 
             event = ReplaceableEvent(
@@ -1051,7 +1074,10 @@ class ContinuousMixin:
             # CR 113.6c: plus an "as long as this isn't on the battlefield"
             # grant, which applies exactly here (Grist, the Hunger Tide).
             return self._with_defined_power_toughness(
-                permanent, off_battlefield_characteristics_of(permanent)
+                permanent,
+                apply_zone_characteristics(
+                    self, permanent, off_battlefield_characteristics_of(permanent)
+                ),
             )
         board = self.computed_board()
         return self._supplement_characteristics(permanent, board.of(permanent), board)

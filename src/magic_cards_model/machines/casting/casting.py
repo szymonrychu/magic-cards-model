@@ -66,6 +66,7 @@ from ..cost.statics import object_quality
 from ..cost.text import printed_cost_total
 from ..decisions import source_id_of
 from ..keywords import (
+    casualty_x_instances,
     enchant_restrictions,
     face_down_characteristics,
     why_cannot_enchant,
@@ -88,6 +89,7 @@ from ..targeting import (
 from ..teamwork import teamwork_ability, teamwork_instead_target_text, teamwork_payment_refusal
 from ..triggers import ExtraTriggerEvent, GameEvent
 from ..turn import Step
+from ..zone_grants import effective_card
 from .granted_life_costs import GrantedLifeCost, granted_life_costs
 from .options import AlternativeCostOption, KeywordCastOption
 from .permissions import GrantedCastOption, PlayPermission
@@ -435,8 +437,8 @@ def why_cannot_cast_now(
         )
     if Type.INSTANT in types:
         return None  # CR 304.1
-    if has_flash(spell.card):
-        return None  # CR 702.8a
+    if has_flash(effective_card(game, spell)):
+        return None  # CR 702.8a (printed, or granted off the battlefield, CR 613.1f)
     if Type.SORCERY in types and has_sorcery_speed_flash_grant(game, caster):
         return None  # Teferi, Time Raveler's +1
     condition = conditional_flash_condition(spell.oracle_text or "")
@@ -963,6 +965,8 @@ class Casting(EngineModel):
     casualty_paid: int = 0
     """How many of this spell's casualty instances were paid (CR 702.153a,
     CR 702.153b: "each is paid separately"), set by `pay_casualty`."""
+    casualty_x: int | None = None
+    """The X announced for a "Casualty X" instance (CR 107.3a), or None."""
     conspire_paid: int = 0
     """How many of this spell's conspire instances were paid (CR 702.78a),
     set by `pay_conspire`."""
@@ -1248,10 +1252,14 @@ class Casting(EngineModel):
                 self.announced_library_index = library.index(self.spell)
         self._lift_out_of_every_zone()
         self.spell.move_to(Zone.STACK)
+        self.spell._announced_from = self.announced_zone
         # CR 712.11a: `move_to` turns a card leaving for the stack front face
         # up; one cast transformed goes there back face up.
         self.spell.transformed = self.transformed
         game.stack.append(self.spell)
+        from ..text_changes import sync_text_changes
+
+        sync_text_changes(game)  # CR 612.1: a spell's text is changed from the stack on
 
     def _lift_out_of_every_zone(self) -> None:
         """Take the card out of whatever list is holding it, shared zones
@@ -2995,7 +3003,22 @@ class Casting(EngineModel):
         """The N of every casualty instance this spell has as it is cast
         (CR 702.153a): printed, then granted ("Each instant and sorcery spell
         you cast has casualty 1.", `machines/spell_grants.py`)."""
-        return casualty_numbers(self.game, self.spell, self.caster, self.origin_zone)
+        return casualty_numbers(
+            self.game, self.spell, self.caster, self.origin_zone, self.casualty_x
+        )
+
+    def announce_casualty_x(self, value: int) -> CastingStep:
+        """CR 107.3a: the caster of a spell with "Casualty X" chooses and
+        announces X as part of casting it; while the spell is on the stack that
+        X is its value (`x_value`, which the casualty copy's starting loyalty
+        reads back off the cast record)."""
+        if not casualty_x_instances(self.spell.card):
+            raise ValueError(f"{self.spell.name} has no 'Casualty X' to announce (CR 702.153a)")
+        if value < 0:
+            raise ValueError("X cannot be negative (CR 107.1b)")
+        self.casualty_x = value
+        self.x_value = value
+        return self.step
 
     def pay_casualty(self, creature: CardState) -> CastingStep:
         """CR 702.153a: "As an additional cost to cast this spell, you may
@@ -4338,6 +4361,9 @@ class Casting(EngineModel):
             ).model_copy(
                 update={
                     "treasure_only": self.treasure_mana_only,
+                    "color_rule": (
+                        None if self.game is None else self.game.mana_color_rule(self.caster)
+                    ),
                     # CR 609.4b: Chromatic Orrery, Oath of Nissa, Case File
                     # Auditor - "spend mana as though it were mana of any color".
                     "any_color": self.keyword_any_color

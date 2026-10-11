@@ -426,7 +426,8 @@ class ManaCost(EngineModel):
                 colored_reduction[color] -= 1
                 continue
             kept.append(symbol)
-        generic_reduction += sum(colored_reduction.values())
+        if not isinstance(other, ColoredOnlyReduction):
+            generic_reduction += sum(colored_reduction.values())
 
         reduced: list[ManaSymbol] = []
         for symbol in kept:
@@ -445,6 +446,14 @@ class ManaCost(EngineModel):
         left = "".join(str(s) for s in self.symbols[: self.split_after])
         right = "".join(str(s) for s in self.symbols[self.split_after :])
         return f"{left}{_SPLIT}{right}"
+
+
+class ColoredOnlyReduction(ManaCost):
+    """A cost reduction that "reduces only the amount of colored mana you pay"
+    (Morophon, the Boundless): CR 118.7c-d would spill a colored reduction the
+    cost has no symbol for into generic mana, and this one says it does not.
+    Applied by `ManaCost.minus`; never persisted (it exists while a total cost
+    is being determined, CR 601.2f)."""
 
 
 def _fold_generic(symbols: list[ManaSymbol], amount: int) -> list[ManaSymbol]:
@@ -551,6 +560,32 @@ def reads_cant_spend_mana_line(oracle_text: str) -> bool:
     return _CANT_SPEND_MANA_RE.search(oracle_text) is not None
 
 
+class ManaColorRule(EngineModel):
+    """CR 609.4b through a static ability that re-reads what colour specific
+    mana counts as: Celestial Dawn's "You may spend white mana as though it
+    were mana of any color. You may spend other mana only as though it were
+    colorless mana." and Quicksilver Elemental's "You may spend blue mana as
+    though it were mana of any color to pay the activation costs of this
+    creature's abilities."
+
+    `any_from` is the colours spendable as though they were any colour;
+    `others_colorless` is the second Dawn sentence - every mana outside
+    `any_from` is only colorless (it still pays generic and {C}, never a
+    coloured symbol); `any_type` is Sharkey's "Mana of any type can be spent",
+    which lets every bucket pay {C} as well."""
+
+    any_from: frozenset[Color] = frozenset()
+    others_colorless: bool = False
+    any_type: bool = False
+
+    def merged(self, other: "ManaColorRule") -> "ManaColorRule":
+        return ManaColorRule(
+            any_from=self.any_from | other.any_from,
+            others_colorless=self.others_colorless or other.others_colorless,
+            any_type=self.any_type or other.any_type,
+        )
+
+
 class ManaSpend(EngineModel):
     """The object mana is about to be spent on, reduced to what a restriction
     can ask about: whether it is being cast or activated, and the
@@ -597,6 +632,9 @@ class ManaSpend(EngineModel):
     the coloured demands `_demand_list` builds and nothing about the cost or
     the mana itself. A `{C}` symbol still wants colorless mana (colorless is
     not a color, CR 105.1) and `{S}` still wants snow mana."""
+    color_rule: ManaColorRule | None = None
+    """A static ability's `ManaColorRule` for this spend (Celestial Dawn,
+    Quicksilver Elemental), set by the caller from `Game.mana_color_rule`."""
     snow_any_color: bool = False
     """CR 609.4b narrowed to snow sources: "you may spend mana from snow
     sources as though it were mana of any color to cast those spells" (Draugr
@@ -1131,6 +1169,7 @@ def _demand_list(
     *,
     any_color: bool = False,
     snow_any_color: bool = False,
+    color_rule: ManaColorRule | None = None,
 ) -> list[tuple[int, list[_Bucket]]]:
     """The demand list `_assign` (and `machines/cost.py`'s source-picking
     `_assign_sources`) solve against, built from one resolution of a cost's
@@ -1161,18 +1200,40 @@ def _demand_list(
     colors: Counter[Color] = Counter(
         option.color for option in options if option.color is not None and not option.snow
     )
-    demands: list[tuple[int, list[_Bucket]]] = [
-        (
-            count,
-            list(buckets)
-            if any_color and color is not Color.COLORLESS
-            else [
+
+    def allowed(color: Color) -> list[_Bucket]:
+        if color_rule is not None:
+            # CR 609.4b through `ManaColorRule`: a bucket of an `any_from`
+            # colour pays any coloured symbol; "other mana only as though it
+            # were colorless" keeps every other bucket off coloured symbols.
+            as_colorless = [
                 b
                 for b in buckets
-                if b[0] == color or (snow_any_color and b[1] and color is not Color.COLORLESS)
-            ],
-        )
-        for color, count in colors.items()
+                if color_rule.others_colorless and b[0] not in color_rule.any_from
+            ]
+            if color is Color.COLORLESS:
+                if color_rule.any_type:
+                    return list(buckets)
+                return [b for b in buckets if b[0] == color or b in as_colorless]
+            return [
+                b
+                for b in buckets
+                if b[0] in color_rule.any_from
+                or color_rule.any_type
+                or (b[0] == color and b not in as_colorless)
+                or any_color
+                or (snow_any_color and b[1])
+            ]
+        if any_color and color is not Color.COLORLESS:
+            return list(buckets)
+        return [
+            b
+            for b in buckets
+            if b[0] == color or (snow_any_color and b[1] and color is not Color.COLORLESS)
+        ]
+
+    demands: list[tuple[int, list[_Bucket]]] = [
+        (count, allowed(color)) for color, count in colors.items()
     ]
     if snow_needed:
         demands.append((snow_needed, [b for b in buckets if b[1]]))
@@ -1593,6 +1654,7 @@ class ManaPool(EngineModel):
             buckets,
             any_color=spend_on is not None and spend_on.any_color,
             snow_any_color=spend_on is not None and spend_on.snow_any_color,
+            color_rule=None if spend_on is None else spend_on.color_rule,
         )
         spent = _assign(buckets, demands)
         if spent is None:

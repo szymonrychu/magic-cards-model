@@ -31,6 +31,7 @@ from ...machines.layers import (
     ComputedBoard,
     Duration,
 )
+from ...machines.mulligan_time import mulligan_time_lines, perform_exile_hand_and_redraw
 from ...machines.opening_hand import (
     OpeningHandAction,
     OpeningHandActionKind,
@@ -62,6 +63,9 @@ from ..card import (
     Type,
 )
 from ..card_state import (
+    LETHAL_BY_POWER_TEXT,
+    MAY_STAY_TAPPED_TEXT,
+    UNTAPS_IN_OTHER_UNTAP_TEXT,
     CardState,
     Counter,
     annihilate_counters_on,
@@ -266,7 +270,14 @@ class TurnSbaMixin:
         # CR 502.2: second, the day/night check (CR 731.2) - after CR 502.1's
         # phasing and before CR 502.3's untap, and skipped with the step.
         self._day_night_untap_check()
-        untappable = verdict.permanents
+        untappable = [
+            state
+            for state in (
+                *verdict.permanents,
+                *self._untapping_in_others_untap_step(active.username),
+            )
+            if not self._chooses_not_to_untap(state)
+        ]
         tapped = [state for state in untappable if state.tapped]
         active.untap_all(untappable)
         for state in tapped:
@@ -294,6 +305,41 @@ class TurnSbaMixin:
                     step=Step.UNTAP,
                 )
             )
+
+    def _chooses_not_to_untap(self: "Game", state: CardState) -> bool:
+        """CR 502.3, CR 604.2: "You may choose not to untap this <permanent>
+        during your untap step." - asked of the controller only while the
+        permanent is tapped, and an unscripted player declines (it untaps)."""
+        if not state.tapped or state.controller is None:
+            return False
+        if not self.characteristics_of(state).has_ability(MAY_STAY_TAPPED_TEXT):
+            return False
+        return bool(
+            self.ask(
+                Decision(
+                    kind=DecisionKind.MAY,
+                    player=state.controller,
+                    prompt=f"leave {state.name} tapped instead of untapping it (CR 502.3)?",
+                    source=state.name,
+                    source_id=source_id_of(state),
+                    default_may=False,
+                )
+            )
+        )
+
+    def _untapping_in_others_untap_step(self: "Game", active: str) -> list[CardState]:
+        """CR 502.3, CR 604.2: the permanents "Untap all <group> you control
+        during each other player's untap step." (Seedborn Muse) reaches - those
+        controlled by someone other than the active player that carry the
+        marker the group sentence grants. Stun (CR 122.1d) and "can't become
+        untapped" apply as they do to any untap."""
+        return [
+            state
+            for state in self.battlefield
+            if state.controller != active
+            and not state.cant_become_untapped
+            and self.characteristics_of(state).has_ability(UNTAPS_IN_OTHER_UNTAP_TEXT)
+        ]
 
     def _day_night_untap_check(self: "Game") -> None:
         """CR 502.2's turn-based action: the previous turn's active player's
@@ -950,6 +996,38 @@ class TurnSbaMixin:
             self.mulligan_declarations[username] = take
             self._resolve_mulligan_round_if_ready()
             return self.turn.step
+
+    def mulligan_time_options(self: "Game", username: str) -> list[Decision]:
+        """CR 103.5b: the actions a seat may take "any time [it] could mulligan"
+        right now - while it still owes a declaration, one per card in its hand
+        that allows one (Serum Powder). Read fresh off the hand every time."""
+        if username not in self.awaiting_mulligan_declarations:
+            return []
+        return [
+            Decision(
+                kind=DecisionKind.OPENING_HAND_ACTION,
+                player=username,
+                prompt=line,
+                source=card_state.name,
+                source_id=source_id_of(card_state),
+                card=card_state.id,
+            )
+            for card_state in self.player(username).hand
+            for line in mulligan_time_lines(card_state.card)
+        ]
+
+    def take_mulligan_time_action(self: "Game", username: str, card: UUID) -> None:
+        """CR 103.5b: perform the mulligan-time action of `card`, in this seat's
+        hand, and leave the seat's declaration still owed (they then declare)."""
+        self._refuse_if_over()
+        options = [d for d in self.mulligan_time_options(username) if d.card == card]
+        if not options:
+            raise ValueError(
+                f"no card in {username}'s hand allows an action at this mulligan (CR 103.5b)"
+            )
+        with self._id_allocator_scope():
+            card_state = next(c for c in self.player(username).hand if c.id == card)
+            perform_exile_hand_and_redraw(self, username, card_state)
 
     def _resolve_mulligan_round_if_ready(self: "Game") -> None:
         """Carry out one round of CR 103.5 once every declaration is in.
@@ -1711,6 +1789,19 @@ class TurnSbaMixin:
         if toughness <= 0:
             return True  # CR 704.5f
         # CR 704.5g's arithmetic, plus CR 704.5h's deathtouch, which needs none.
+        return self._damage_is_lethal(state, board, toughness)
+
+    def _damage_is_lethal(
+        self: "Game", state: CardState, board: ComputedBoard, toughness: int
+    ) -> bool:
+        """CR 704.5g / 704.5h against `toughness`, or against power while an
+        effect says lethal damage is determined by power (Zilortha) - which
+        still needs damage marked on the creature (CR 704.5g)."""
+        chars = board.of(state)
+        if LETHAL_BY_POWER_TEXT in chars.abilities and chars.power is not None:
+            return (
+                state.damage > 0 and state.damage >= chars.power
+            ) or state.dealt_deathtouch_damage
         return state.damage >= toughness or state.dealt_deathtouch_damage
 
     def _destroyed_by_state_based_action(
@@ -1739,7 +1830,7 @@ class TurnSbaMixin:
             toughness = state.toughness
         if toughness is None:
             return state.dealt_deathtouch_damage  # CR 704.5h needs no arithmetic
-        return state.damage >= toughness or state.dealt_deathtouch_damage
+        return self._damage_is_lethal(state, board, toughness)
 
     def _legend_rule_losers(self: "Game", board: ComputedBoard) -> list[CardState]:
         """The legendary permanents the legend rule puts into graveyards (CR 704.5j).

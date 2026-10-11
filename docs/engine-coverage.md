@@ -7918,3 +7918,62 @@ Read by `machines/block_statics.py` off every battlefield permanent's computed a
 | "<Verb> target X. If this spell was kicked, [instead] <verb> target Y [instead]." - the kicked sentence's targets replace the unkicked ones (before: both "target" words were demanded, so the unkicked cast needed two targets) | CR 601.2c, 702.33d | `machines/targeting._KICKED_INSTEAD_IMPERATIVE_TARGETS_RE` via `kicked_instead_target_text` | Tear Asunder; Bloodchief's Thirst (second printing, "instead" before the verb) in `scenarios/test_kicker_changes_exile_target.py` |
 | Class level 1 attack trigger (may discard, if you do draw), level 2 discard damage, level 3 search-then-random-discard | CR 716.2a, 508.3d, 701.9b, 118.12 | existing readers, scenario-proven | Cool but Rude in `scenarios/test_class_attack_discard_draw_levels.py` |
 | "Destroy target nonartifact creature." refusal, indestructible, regeneration | CR 701.8a, 702.12b, 701.19a | existing reader, scenario-proven | Go for the Throat in `scenarios/test_destroy_target_nonartifact_creature.py` |
+
+## EP-01-R2-T1: group anthems, group keyword grants, type and base P/T statics (in progress)
+
+| Mechanic | CR | Where | Proof |
+|---|---|---|---|
+| "[Other] [colour/type/subtype/non-X/legendary/token] <creatures/permanents/lands> [you control / your opponents control / all] get +N/+N [and have <keywords>]" | CR 611.3a, 613.4c, 613.1f | `machines/layers/group_grants.py` (`parse_group` + `GroupMatch` selector), tried last by `_parse_static_layer_sentence` | Wilt-Leaf Liege, Murkfiend Liege in `scenarios/test_ep01_r2_anthem_group_pumps.py` |
+| "... of the chosen type" groups, "with <keyword>" / "with <counter> counters on them" groups | CR 614.12a, 611.3a | same | Morophon, Cover of Darkness, Sludge Monster |
+| "<group> have <keyword>" (All Rats, artifacts you control, legendary Humans you control, other permanents you control, Sliver creatures you control) | CR 613.1f | same | `scenarios/test_ep01_r2_group_keyword_grants.py` |
+| "this creature is also a Cleric, Rogue, ..."; "All lands are Islands in addition ..."; "All nonland permanents are legendary" | CR 613.1d, 205.1b, 305.6 | same | `scenarios/test_ep01_r2_type_and_base_pt_statics.py` |
+| "<group> have base power and toughness N/N"; "<group> lose all abilities and have base power and toughness N/N" | CR 613.4b, 613.1f | same | Harmonious Archon, Godhead of Awe, Poppet Stitcher, Sludge Monster |
+| "All creatures get -X/-0, where X is the number of cards in your hand" | CR 613.4c, 613.5 | same (`LayerContext.hand_size_of`) | Meishin, the Mind Cage |
+| "You may have this creature assign its combat damage as though it weren't blocked." audit credit | CR 510.1c | `static_audit/anthems_grants.py` asks `combat.may_assign_as_though_unblocked` | Lone Wolf, Rhox, Spinebiter, Thorn Elemental, Tornado Elemental |
+
+### EP-01-R2-T1 additions: grants that reach cards off the battlefield, and spells
+
+- `machines/zone_grants.py`: "Each creature card in your graveyard has unearth {2}{B}", "Each land card in your hand has cycling {R}", "Land cards in your graveyard have dredge 2", "Each creature card in your hand has ninjutsu ...", "Each Sliver card in each player's hand has slivercycling {3}", "Creature cards you own that aren't on the battlefield have flash", and the "The same is true for ..." type/colour sentences (Maskwood Nexus, Conspiracy, Celestial Dawn, Mycosynth Lattice). `effective_card(game, card)` appends the granted keyword lines to the printing every keyword reader takes (unearth, cycling, dredge, ninjutsu, outlast, flash), `Game.characteristics_of` applies the layer 4 / 5 parts off the battlefield. CR 604.2, CR 613.1d, CR 613.1e, CR 613.1f.
+- Granted keywords with a machine of their own: flanking, exalted (CR 702.83a), frenzy N (CR 702.68a), bushido N (CR 702.45a), absorb N (CR 702.64a, written out as the damage-prevention line), riot (CR 702.136a, counted off the group grant for the entering permanent), outlast (CR 702.107a); `INSTANCE_KEYWORDS` grants add one instance per grant (CR 702.25b).
+- Spell grants: freerunning (CR 702.173a; the Assassin half of the condition, commander is not a format here), web-slinging, affinity for any readable quality, rebound (CR 702.88a), ripple N (CR 702.60a), convoke from exile, jump-start (CR 702.133a: graveyard permission, discard as additional cost, exile on leaving the stack).
+
+## EP-01 R2 T1, continuation 2 (static group and rule readers)
+
+| Static line | CR | Reader | Scenario |
+|---|---|---|---|
+| "Spells and abilities can't be countered." | CR 101.2, CR 604.2 | `casting_restrictions.static_uncounterable_source` | `scenarios/test_ep01_r2_global_uncounterable.py` |
+| "Creatures ... can't have +1/+1 counters put on them." | CR 122.6 | `CardState.cant_have_counter_kind`, `Game.add_counters` | `scenarios/test_ep01_r2_group_counter_prohibition.py` |
+| "You can't get poison counters." / "lose infect" | CR 122.6, CR 613.1f | `Game.player_counters_prohibited(kind)`, group `lose_keyword` | `scenarios/test_ep01_r2_controller_rules_statics.py` |
+| "All damage is dealt as though its source had wither." / "Lethal damage ... determined by their power" | CR 702.80a, CR 120.6 | `combat.all_damage_has_wither`, `CardState.lethal_threshold` | `scenarios/test_ep01_r2_damage_statics.py` |
+| "You may spend white mana as though ..." / "Mana of any type can be spent" | CR 609.4b | `Game.mana_color_rule`, `ManaColorRule` | `scenarios/test_ep01_r2_mana_colour_statics.py` |
+| "has all activated abilities of ... except mana abilities" / "gains all activated abilities of target creature until end of turn" | CR 613.1f, CR 605.1a | `GrantActivatedAbilitiesOf.except_mana`, continuous rung | `scenarios/test_ep01_r2_copied_activated_abilities.py`, `..._gain_activated_abilities_until_eot.py` |
+| "Equipment you control have equip {1}." / "Vehicles you control have crew 1." | CR 702.6c, CR 702.122a | `zone_grants` battlefield grants, `equip_activation` | `scenarios/test_ep01_r2_equip_and_crew_grants.py` |
+| "Equipment named ... have indestructible" | CR 201.2 | `GroupMatch.named` | `scenarios/test_ep01_r2_named_group_grants.py` |
+| Konda's Banner | CR 702.6c, CR 613.4c | `GroupMatch.shares_with`, `keywords.attach_restriction_refusal` | `scenarios/test_ep01_r2_konda_banner_statics.py` |
+| X from speed / graveyards; "without a +1/+1 counter"; "During turns other than yours" | CR 613.4c, CR 702.179f | `group_grants` builders | `test_ep01_r2_counted_group_pumps.py`, `..._group_without_counter.py`, `..._turn_gated_creature.py` |
+| "Untap all <group> you control during each other player's untap step" | CR 502.3, CR 604.2 | `Game._untapping_in_others_untap_step` | `scenarios/test_ep01_r2_untap_and_discard_statics.py` |
+| "If a spell or ability an opponent controls causes you to discard this card, put it onto the battlefield instead" | CR 701.9a, CR 614.1a | `replacement/discard_statics.py` | `scenarios/test_ep01_r2_untap_and_discard_statics.py` |
+| "You may choose not to untap this X"; "becomes ... for as long as this X remains tapped" | CR 502.3, CR 611.2b | `Game._chooses_not_to_untap`, `layers/parse._animation_builder` | `scenarios/test_ep01_r2_optional_untap_and_tapped_duration.py` |
+| "As this is turned face up, put N +1/+1 counters on it" | CR 614.1e | `enters_choices._fixed_counters_on_it` | `scenarios/test_ep01_r2_turned_face_up_counters.py` |
+| "Any time you could mulligan ... exile all the cards from your hand, then draw that many" | CR 103.5b | `machines/mulligan_time.py`, `Game.mulligan_time_options` | `scenarios/test_ep01_r2_mulligan_time_actions.py` |
+| "Your devotion to each color and each combination of colors is increased by one" | CR 700.5, CR 604.2 | `DEVOTION_BONUS_TEXT` in `amounts.devotion_to` and `layers.model.devotion_to` | `scenarios/test_ep01_r2_devotion_increase.py` |
+| "Spells of the chosen type you cast cost {W}{U}{B}{R}{G} less ... only the amount of colored mana" | CR 601.2f, CR 118.7 | `cost/groups.GroupModifier.chosen_type/colored_only`, `ColoredOnlyReduction` | `scenarios/test_ep01_r2_chosen_type_colored_reduction.py` |
+| "target creature gains your choice of A or B ... If equipped, both instead" | CR 608.2d, CR 301.5 | `effects/continuous._parse_target_keyword_choice_unless_equipped_trigger` | `scenarios/test_ep01_r2_choice_grant_unless_equipped.py` |
+
+## EP-01 R2 T1, continuation 4 (planeswalker, aura, equipment and text-change statics)
+
+| Static line / ability | CR | Reader | Scenario |
+|---|---|---|---|
+| "You may activate the loyalty abilities of Urza twice each turn rather than only once." | CR 606.3, CR 604.2 | `Game._loyalty_activations_allowed` | `scenarios/test_ep01_r2_urza_planeswalker.py` |
+| "Artifact, instant, and sorcery spells you cast this turn cost {2} less"; "Artifacts and planeswalkers you control gain indestructible until end of turn" | CR 601.2f, CR 611.2c | `dispatch._spell_kind_list_as_or`, `continuous._mass_group_filter` | same, `test_ep01_r2_boom_scholar.py` |
+| "Auras attached to permanents you control have umbra armor." | CR 702.89a, CR 613.1f | `GroupMatch.attached_to_scope` | `scenarios/test_ep01_r2_umbra_mystic.py` |
+| "Creatures enchanted player controls lose all abilities and have base power and toughness 1/1"; "Enchanted player can't activate abilities that aren't mana abilities or loyalty abilities" | CR 303.4m, CR 613.4b, CR 602.5 | `group_selector` (enchanted_player), `attached_restrictions.enchanted_player_activation_prohibition` | `scenarios/test_ep01_r2_overwhelming_splendor.py` |
+| "Each noncreature, non-Equipment artifact is an Equipment with equip {X} and 'Equipped creature gets +X/+0'" | CR 613.1d, 613.1f, 702.6a | `GrantAbilitiesByManaValue`, `parse.quoted_ability_grants` | `scenarios/test_ep01_r2_bludgeon_brawl.py` |
+| "Each other planeswalker you control has the loyalty abilities of Kasmina"; "-8: search ... exile that card ... You may cast that card without paying its mana cost" | CR 613.1f, 606, 701.23, 608.2g | `GrantLoyaltyAbilitiesOf`, `impulse_choice.parse_search_exile_then_cast_free` | `scenarios/test_ep01_r2_kasmina_enigma_sage.py` |
+| "At the beginning of your first main phase, you may discard a card. If you do, exile the top two ..., then choose one of them. You may play that card this turn."; "Noncreature spells you cast from exile have convoke" | CR 118.12, 608.2d, 702.51a | `impulse_choice.parse_exile_top_choose_one_play`, `objects_as_costs.has_convoke_now` | `scenarios/test_ep01_r2_party_thrasher.py`, `test_ep01_r2_hoarding_broodlord.py` |
+| "Search your library for a card, exile it face down, then shuffle. For as long as that card remains exiled, you may play it." | CR 701.23, 406.3, 400.7 | `effects/search._parse_search_and_exile_then_shuffle_clause` | `scenarios/test_ep01_r2_hoarding_broodlord.py` |
+| "Reveal the top six cards ... a card that shares a creature type with it ... Put the rest on the bottom in a random order." | CR 701.20a, 205.3m | `impulse_choice.parse_reveal_top_take_one_rest_bottom` | `scenarios/test_ep01_r2_tajuru_paragon.py` |
+| "Casualty X. The copy isn't legendary and has starting loyalty X."; "Each opponent loses 2 life unless they discard a card" | CR 702.153a, 107.3a, 707.2 | `Casting.announce_casualty_x`, `keywords._casualty_effect`, `merges._merge_each_player_clauses` | `scenarios/test_ep01_r2_ob_nixilis_casualty_x.py` |
+| "Whenever you activate a ninjutsu ability, look at the top three ..." | CR 602.2, 702.49a, 603.2h | `GameEvent.keyword_action`, `triggers._common._ABILITY_ACTIVATED_CONDITION` | `scenarios/test_ep01_r2_satoru_umezawa_trigger.py` |
+| "you may pay {W}{U}{B}{R}{G} if that player has 10 or less life. When you do, that player loses the game." | CR 603.12, 118.3 | `modal._parse_reflexive_pay_mana_clause` | `scenarios/test_ep01_r2_ezio_pays_for_the_loss.py` |
+| "All instances of color words in the text of spells and permanents are changed to the chosen color word." | CR 612.1, 613.1c, 612.2 | `machines/text_changes.sync_text_changes`, `Game.text_change_originals` | `scenarios/test_ep01_r2_swirl_the_mists.py` |
