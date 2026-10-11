@@ -1,0 +1,72 @@
+{
+  "ability": "When this Class becomes level 3, search your library for a card, put it into your hand, shuffle, then discard a card at random.",
+  "action": {
+    "controller": "alice",
+    "modes": [],
+    "on_stack": true,
+    "source": "Cool but Rude@alice#1",
+    "targets": [],
+    "x": 0
+  },
+  "board": {
+    "busy_turn": false,
+    "entering": [],
+    "order": ["alice", "bob"],
+    "players": {
+      "alice": {
+        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Wastes", "Memnite", "Icehide Golem", "Bonesplitter", "Icy Manipulator", "Cool but Rude"],
+        "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel"],
+        "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt"],
+        "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
+      },
+      "bob": {
+        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Kaito, Bane of Nightmares", "Fleecemane Lion", "Icehide Golem", "Shadowspear", "Dragonfire Blade"],
+        "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel"],
+        "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt"],
+        "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
+      }
+    },
+    "step": "precombat_main",
+    "tapped": [],
+    "tokens": [],
+    "variant": "quiet",
+    "war_turn": false
+  },
+  "card": "Cool but Rude",
+  "delta": {
+    "created": {},
+    "decisions": [
+      {
+        "amount": 1,
+        "cards": ["Forest@alice#6", "Grizzly Bears@alice#3", "Island@alice#5", "Lightning Bolt@alice#3", "Swamp@alice#5", "Opt@alice#3", "Forest@alice#7", "Grizzly Bears@alice#4", "Island@alice#6", "Lightning Bolt@alice#4", "Swamp@alice#6", "Opt@alice#4", "Forest@alice#8", "Grizzly Bears@alice#5", "Island@alice#7", "Lightning Bolt@alice#5", "Swamp@alice#7", "Opt@alice#5", "Forest@alice#9", "Grizzly Bears@alice#6", "Island@alice#8", "Lightning Bolt@alice#6", "Swamp@alice#8", "Opt@alice#6", "Forest@alice#10", "Grizzly Bears@alice#7", "Island@alice#9", "Lightning Bolt@alice#7", "Swamp@alice#9", "Opt@alice#7"],
+        "kind": "choose_cards",
+        "player": "alice",
+        "players": [],
+        "prompt": "choose up to 1 card(s) to find while searching your library",
+        "source": "Cool but Rude"
+      }
+    ],
+    "fields_changed": ["cards_discarded_this_turn", "graveyard_arrivals_announced", "graveyard_arrivals_this_turn", "shuffles_performed"],
+    "notices": {},
+    "objects": {
+      "Forest@alice#6": {
+        "zone": ["library", "hand"]
+      },
+      "Grizzly Bears@alice#1": {
+        "zone": ["hand", "graveyard"]
+      }
+    },
+    "players": {},
+    "stack": ["ability of Cool but Rude@alice#1: Whenever you discard a card, this Class deals 2 damage to each opponent."]
+  },
+  "family": "triggered",
+  "format": 1,
+  "kind": "class_becomes_level",
+  "number": 2,
+  "recipe": {
+    "attempt": "level_up",
+    "index": 0,
+    "params": {},
+    "variant": "quiet"
+  }
+}

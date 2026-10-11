@@ -7911,3 +7911,10 @@ Read by `machines/block_statics.py` off every battlefield permanent's computed a
 | "When this creature enters or dies, mill three cards." (CR 701.17a, 701.17b) | existing mill reader | Stitcher's Supplier | `scenarios/test_mill_on_enter_or_dies.py` |
 | "Create a Treasure token." with Flashback (CR 111.10a, 702.34a) | existing token + flashback machinery | Strike It Rich | `scenarios/test_treasure_creating_sorcery_with_flashback.py` |
 | Modal "search basic land / your creature fights target creature you don't control" (CR 700.2, 701.23, 701.14) | existing modal, search and fight readers | Bushwhack | `scenarios/test_modal_search_basic_or_fight.py` |
+
+## R0c-T5: kicker that changes an imperative's target; Class attack/discard levels; nonartifact destroy
+
+| Mechanic | CR | Where | Proof |
+| "<Verb> target X. If this spell was kicked, [instead] <verb> target Y [instead]." - the kicked sentence's targets replace the unkicked ones (before: both "target" words were demanded, so the unkicked cast needed two targets) | CR 601.2c, 702.33d | `machines/targeting._KICKED_INSTEAD_IMPERATIVE_TARGETS_RE` via `kicked_instead_target_text` | Tear Asunder; Bloodchief's Thirst (second printing, "instead" before the verb) in `scenarios/test_kicker_changes_exile_target.py` |
+| Class level 1 attack trigger (may discard, if you do draw), level 2 discard damage, level 3 search-then-random-discard | CR 716.2a, 508.3d, 701.9b, 118.12 | existing readers, scenario-proven | Cool but Rude in `scenarios/test_class_attack_discard_draw_levels.py` |
+| "Destroy target nonartifact creature." refusal, indestructible, regeneration | CR 701.8a, 702.12b, 701.19a | existing reader, scenario-proven | Go for the Throat in `scenarios/test_destroy_target_nonartifact_creature.py` |
