@@ -74,7 +74,9 @@ def test_it_is_offered_again_in_a_later_round():
     scenario.game.declare_mulligan("alice", True)
     scenario.game.declare_mulligan("bob", False)
     assert scenario.game.turn.step is Step.MULLIGAN
-    assert len(scenario.game.mulligan_time_options("alice")) == 7
+    hand = scenario.player("alice").hand
+    assert hand and all(c.name == "Serum Powder" for c in hand)
+    assert len(scenario.game.mulligan_time_options("alice")) == len(hand)
 
 
 def test_an_unattended_seat_declines_by_default():
