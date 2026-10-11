@@ -39,6 +39,7 @@ from .model import (
     add_type,
     grant_ability,
     grant_keyword,
+    lose_keyword,
     modify_power_toughness,
     set_basic_land_type,
     set_colors,
@@ -72,7 +73,7 @@ _GROUP_TYPE_WORDS = {
 }
 
 #: Cheap lowercase gate: a group sentence names one of these verbs.
-_VERB_RE = re.compile(r" (?:gets?|have|has|are|is) ")
+_VERB_RE = re.compile(r" (?:gets?|have|has|are|is|loses?) ")
 
 _SUFFIX_CONTROL_RE = re.compile(r" (?P<who>you control|your opponents control)$")
 _SUFFIX_CHOSEN_RE = re.compile(r" of the chosen type$")
@@ -244,6 +245,7 @@ _LETHAL_BY_POWER_RE = re.compile(
     r"^lethal damage dealt to (?P<subject>.+?) is determined by (?:their|its) power "
     r"rather than (?:their|its) toughness$"
 )
+_GROUP_LOSE_KEYWORDS_RE = re.compile(r"^(?P<subject>.+?) loses? (?P<keywords>[a-z ,]+)$")
 _SAME_IS_TRUE_RE = re.compile(r"^the same is true for (?P<subjects>.+)$")
 _OFF_ZONE_WORD_RE = re.compile(r"\b(?:cards?|spells?)\b")
 _ARE_LEGENDARY_RE = re.compile(r"^(?P<subject>.+?) (?:are|is) legendary$")
@@ -349,6 +351,19 @@ def parse_group_static_sentence(sentence: str):
             match["subject"],
             "lethal damage is determined by power",
             lambda: [(Layer.ABILITY, None, grant_ability(LETHAL_BY_POWER_TEXT))],
+        )
+    if (
+        (match := _GROUP_LOSE_KEYWORDS_RE.fullmatch(lowered))
+        and not match["keywords"].startswith("all ")
+        and (lost := _split_keywords(match["keywords"])) is not None
+    ):
+        if _subject_ok(match["subject"]) is False:
+            return None
+        return _builder(
+            sentence,
+            match["subject"],
+            f"lose {', '.join(lost)}",
+            lambda: [(Layer.ABILITY, None, lose_keyword(keyword)) for keyword in lost],
         )
     if match := _LOSE_ALL_RE.fullmatch(lowered):
         if _subject_ok(match["subject"]) is False or _is_bare_all_creatures(match["subject"]):
