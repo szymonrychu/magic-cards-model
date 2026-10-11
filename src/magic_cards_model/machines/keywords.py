@@ -3226,6 +3226,14 @@ def is_equip_discount_for_this_line(line: str) -> bool:
     return _EQUIP_ABILITIES_TARGETING_THIS_COST_LESS_RE.fullmatch(line.strip()) is not None
 
 
+def _equip_ability_price(ability: KeywordAbility) -> float:
+    """The mana value of an equip ability's cost, for CR 702.6c's choice."""
+    try:
+        return float(ManaCost.parse(ability.cost or "").converted)
+    except Exception:  # an unreadable cost sorts last, as before
+        return float("inf")
+
+
 def equip_activation(
     game: Any,
     equipment: CardState,
@@ -3265,14 +3273,17 @@ def equip_activation(
     # target has is the one activated.
     candidates = [
         ability
-        for ability in keyword_abilities(equipment.card)
+        for ability in keyword_abilities(effective_card(game, equipment))
         if ability.canonical.lower() == "equip"
     ]
     refusals = [equip_quality_refusal(game, ability.parameter, target) for ability in candidates]
-    chosen = next(
-        (ability for ability, refusal in zip(candidates, refusals, strict=True) if refusal is None),
-        None,
-    )
+    # CR 702.6c: the player picks which equip ability to activate, so of the
+    # abilities whose quality the target has, the cheapest (printed order
+    # breaking ties) is the one a granted "equip {1}" is for.
+    usable = [
+        ability for ability, refusal in zip(candidates, refusals, strict=True) if refusal is None
+    ]
+    chosen = min(usable, key=_equip_ability_price, default=None)
     if candidates and chosen is None:
         raise ValueError(next(refusal for refusal in refusals if refusal is not None))
     activation = unannounced_equip_activation(
@@ -3332,7 +3343,7 @@ def unannounced_equip_activation(
     `pay_zero` is the player's "you may" on a `free_first_equip_source`
     permission (CR 118.9's alternative cost): taken by default whenever one
     applies, `False` to pay the printed cost instead."""
-    ability = ability or _keyword(equipment.card, "equip")
+    ability = ability or _keyword(effective_card(game, equipment), "equip")
     if ability is None:
         raise ValueError(f"{equipment.name} has no equip ability ({KeywordRule.EQUIP})")
     cost = _keyword_cost(ability, player)
@@ -3591,7 +3602,7 @@ def crew_activation(
     continuous control of the permanent and not about how long it has been a
     creature.
     """
-    number = crew_number(vehicle.card)
+    number = crew_number(effective_card(game, vehicle))
     if number is None:
         raise ValueError(f"{vehicle.name} has no crew ability ({KeywordRule.CREW})")
 

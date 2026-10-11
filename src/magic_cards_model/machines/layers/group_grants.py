@@ -38,6 +38,7 @@ from .model import (
     add_subtype,
     add_type,
     grant_ability,
+    grant_ability_instance,
     grant_keyword,
     lose_keyword,
     modify_power_toughness,
@@ -246,6 +247,9 @@ _LETHAL_BY_POWER_RE = re.compile(
     r"rather than (?:their|its) toughness$"
 )
 _GROUP_LOSE_KEYWORDS_RE = re.compile(r"^(?P<subject>.+?) loses? (?P<keywords>[a-z ,]+)$")
+_GROUP_EQUIP_CREW_RE = re.compile(
+    r"^(?P<subject>.+?) (?:have|has) (?P<ability>equip(?: [a-z]+)* (?:\{[^{}]+\})+|crew \d+)$"
+)
 _SAME_IS_TRUE_RE = re.compile(r"^the same is true for (?P<subjects>.+)$")
 _OFF_ZONE_WORD_RE = re.compile(r"\b(?:cards?|spells?)\b")
 _ARE_LEGENDARY_RE = re.compile(r"^(?P<subject>.+?) (?:are|is) legendary$")
@@ -333,6 +337,18 @@ def parse_group_static_sentence(sentence: str):
     lowered = text.lower()
     if not _VERB_RE.search(lowered) or '"' in text:
         return None
+    if match := _GROUP_EQUIP_CREW_RE.fullmatch(lowered):
+        if _subject_ok(match["subject"]) is False:
+            return None
+        granted = " ".join(
+            w.upper() if w[0] == "{" else w.capitalize() for w in match["ability"].split()
+        )
+        return _builder(
+            sentence,
+            match["subject"],
+            f"have {granted}",
+            lambda: [(Layer.ABILITY, None, grant_ability_instance(granted))],
+        )
     if match := _GROUP_NO_COUNTERS_RE.fullmatch(lowered):
         if _subject_ok(match["subject"]) is False:
             return None

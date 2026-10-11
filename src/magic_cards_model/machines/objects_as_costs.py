@@ -553,15 +553,18 @@ def improvise_payment(card: Card) -> ObjectOffer | None:
 
 def crew_number(card: Card) -> int | None:
     """The N of `Crew N`, or None if the card has no crew ability (CR 702.122a)."""
+    numbers: list[int] = []
     for ability in keyword_abilities(card):
         if ability.canonical.lower() != "crew":
             continue
         printed = (ability.cost or ability.parameter or "").strip()
         try:
-            return int(printed)
+            numbers.append(int(printed))
         except ValueError:
             return None
-    return None
+    # CR 702.122a: a Vehicle with a granted second Crew N lets its controller
+    # activate whichever it likes, so the smaller N is the one that matters.
+    return min(numbers, default=None)
 
 
 def is_vehicle(card: Card) -> bool:

@@ -116,11 +116,13 @@ ZONE_GRANTABLE_KEYWORDS = frozenset(
         "web-slinging",
         "affinity",
         "transmute",
+        "equip",
+        "crew",
     }
 )
 _KEYWORD_ITEM_RE = re.compile(
     r"^(?P<keyword>[a-z]+(?:-[a-z]+)?)"
-    r"(?: (?P<arg>(?:\{[^{}]+\})+|\d+|for [a-z ]+))?$"
+    r"(?: (?P<arg>(?:[a-z]+ )*(?:\{[^{}]+\})+|\d+|for [a-z ]+))?$"
 )
 
 
@@ -132,11 +134,17 @@ def _keyword_line(item: str) -> str | None:
     if keyword not in ZONE_GRANTABLE_KEYWORDS and not _is_cycling(keyword):
         return None
     line = keyword.capitalize()
-    return (
-        f"{line} {match['arg'].upper()}"
-        if match["arg"] and match["arg"][0] == "{"
-        else (f"{line} {match['arg']}" if match["arg"] else line)
-    )
+    arg = match["arg"]
+    if not arg:
+        return line
+    if arg[0] == "{":
+        return f"{line} {arg.upper()}"
+    if "{" in arg:
+        # "equip Knight {0}": a quality word before the cost (CR 702.6a).
+        return f"{line} " + " ".join(
+            w.upper() if w[0] == "{" else w.capitalize() for w in arg.split()
+        )
+    return f"{line} {arg}"
 
 
 def _is_cycling(keyword: str) -> bool:
