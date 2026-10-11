@@ -1,0 +1,132 @@
+{
+  "object": "card",
+  "id": "8637d263-5d7e-45bc-aad3-d97f57e6898e",
+  "oracle_id": "34dd789c-4d80-4ccc-a4f7-2e5388a9689d",
+  "multiverse_ids": [
+    489570
+  ],
+  "tcgplayer_id": 216542,
+  "cardmarket_id": 474214,
+  "name": "Angelic Arbiter",
+  "lang": "en",
+  "released_at": "2020-07-17",
+  "uri": "https://api.scryfall.com/cards/8637d263-5d7e-45bc-aad3-d97f57e6898e",
+  "scryfall_uri": "https://scryfall.com/card/jmp/86/angelic-arbiter?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T08:14:40Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/8/6/8637d263-5d7e-45bc-aad3-d97f57e6898e.jpg?1783930480",
+    "normal": "https://cards.scryfall.io/normal/front/8/6/8637d263-5d7e-45bc-aad3-d97f57e6898e.jpg?1783930480",
+    "large": "https://cards.scryfall.io/large/front/8/6/8637d263-5d7e-45bc-aad3-d97f57e6898e.jpg?1783930480",
+    "png": "https://cards.scryfall.io/png/front/8/6/8637d263-5d7e-45bc-aad3-d97f57e6898e.png?1783930480",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/8/6/8637d263-5d7e-45bc-aad3-d97f57e6898e.jpg?1783930480",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/8/6/8637d263-5d7e-45bc-aad3-d97f57e6898e.jpg?1783930480",
+    "thumb": "https://cards.scryfall.io/thumb/front/8/6/8637d263-5d7e-45bc-aad3-d97f57e6898e.webp?1783930480",
+    "grid": "https://cards.scryfall.io/grid/front/8/6/8637d263-5d7e-45bc-aad3-d97f57e6898e.webp?1783930480",
+    "display": "https://cards.scryfall.io/display/front/8/6/8637d263-5d7e-45bc-aad3-d97f57e6898e.webp?1783930480",
+    "art": "https://cards.scryfall.io/art/front/8/6/8637d263-5d7e-45bc-aad3-d97f57e6898e.webp?1783930480",
+    "crop": "https://cards.scryfall.io/crop/front/8/6/8637d263-5d7e-45bc-aad3-d97f57e6898e.webp?1783930480"
+  },
+  "mana_cost": "{5}{W}{W}",
+  "cmc": 7.0,
+  "type_line": "Creature \u2014 Angel",
+  "oracle_text": "Flying\nEach opponent who cast a spell this turn can't attack with creatures.\nEach opponent who attacked with a creature this turn can't cast spells.",
+  "power": "5",
+  "toughness": "6",
+  "colors": [
+    "W"
+  ],
+  "color_identity": [
+    "W"
+  ],
+  "keywords": [
+    "Flying"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": false,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "0f6ccf25-a627-4263-86df-5757137f1696",
+  "set": "jmp",
+  "set_name": "Jumpstart",
+  "set_type": "draft_innovation",
+  "set_uri": "https://api.scryfall.com/sets/0f6ccf25-a627-4263-86df-5757137f1696",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Ajmp&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/jmp?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/8637d263-5d7e-45bc-aad3-d97f57e6898e/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A34dd789c-4d80-4ccc-a4f7-2e5388a9689d&unique=prints",
+  "collector_number": "86",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Steve Argyle",
+  "artist_ids": [
+    "a44ddda4-5331-4f83-aac9-3e00ed36bd7b"
+  ],
+  "illustration_id": "2a2dd416-3433-4837-9335-16fdd649abe6",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 5136,
+  "penny_rank": 13362,
+  "prices": {
+    "usd": "4.51",
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": "3.32",
+    "eur_foil": null,
+    "tix": null
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=489570&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DAngelic%2BArbiter",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DAngelic%2BArbiter",
+    "edhrec": "https://edhrec.com/route/?cc=Angelic+Arbiter"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F216542%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=474214&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards?affiliate_id=scryfall&data%5Bsearch%5D=Angelic+Arbiter&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

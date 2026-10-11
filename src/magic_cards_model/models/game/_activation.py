@@ -1003,6 +1003,11 @@ class ActivationMixin:
                 )
 
         if ability.loyalty is not None:
+            from ...machines.static_cast_bans import activation_ban_reason
+
+            locked_by_static = activation_ban_reason(self, permanent, controller, is_loyalty=True)
+            if locked_by_static is not None:
+                return locked_by_static
             # CR 602.5 / CR 606.3: a resolved "Your opponents can't ...
             # activate planeswalkers' loyalty abilities this turn" (Revel in
             # Silence), recorded on `casting_rule_effects` (CR 611.2c).
@@ -1451,6 +1456,11 @@ class ActivationMixin:
         attached = attached_activation_prohibition(self, obj, is_mana=is_mana)
         if attached is not None:
             return attached
+        from ...machines.static_cast_bans import activation_ban_reason
+
+        static_ban = activation_ban_reason(self, obj, self.controller_of(obj).username)
+        if static_ban is not None:
+            return static_ban
         for source in list(self.battlefield):
             for line in parse_abilities(source.card):
                 if line.kind is not AbilityKind.STATIC:

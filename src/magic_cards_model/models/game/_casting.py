@@ -1812,7 +1812,9 @@ class CastingMixin:
                 f"{username} cannot play a land: {played} of the {allowance} they may play "
                 f"this turn already used (CR 305.2a, 305.2b)"
             )
-        return None
+        from ...machines.static_cast_bans import land_play_ban_reason
+
+        return land_play_ban_reason(self, username)
 
     def play_permission_for(
         self: "Game", card: CardState, player: str, action: PlayAction = PlayAction.CAST

@@ -1,0 +1,140 @@
+{
+  "object": "card",
+  "id": "3d0d5a41-8251-437c-a4a0-3b712281ebb0",
+  "oracle_id": "143a269a-b9ee-48ba-bd7b-4aa46eb36778",
+  "multiverse_ids": [
+    676103
+  ],
+  "mtgo_id": 131085,
+  "tcgplayer_id": 578908,
+  "cardmarket_id": 788969,
+  "name": "Rakdos, Lord of Riots",
+  "lang": "en",
+  "released_at": "2024-09-27",
+  "uri": "https://api.scryfall.com/cards/3d0d5a41-8251-437c-a4a0-3b712281ebb0",
+  "scryfall_uri": "https://scryfall.com/card/dsc/230/rakdos-lord-of-riots?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T02:26:32Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/3/d/3d0d5a41-8251-437c-a4a0-3b712281ebb0.jpg?1783909592",
+    "normal": "https://cards.scryfall.io/normal/front/3/d/3d0d5a41-8251-437c-a4a0-3b712281ebb0.jpg?1783909592",
+    "large": "https://cards.scryfall.io/large/front/3/d/3d0d5a41-8251-437c-a4a0-3b712281ebb0.jpg?1783909592",
+    "png": "https://cards.scryfall.io/png/front/3/d/3d0d5a41-8251-437c-a4a0-3b712281ebb0.png?1783909592",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/3/d/3d0d5a41-8251-437c-a4a0-3b712281ebb0.jpg?1783909592",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/3/d/3d0d5a41-8251-437c-a4a0-3b712281ebb0.jpg?1783909592",
+    "thumb": "https://cards.scryfall.io/thumb/front/3/d/3d0d5a41-8251-437c-a4a0-3b712281ebb0.webp?1783909592",
+    "grid": "https://cards.scryfall.io/grid/front/3/d/3d0d5a41-8251-437c-a4a0-3b712281ebb0.webp?1783909592",
+    "display": "https://cards.scryfall.io/display/front/3/d/3d0d5a41-8251-437c-a4a0-3b712281ebb0.webp?1783909592",
+    "art": "https://cards.scryfall.io/art/front/3/d/3d0d5a41-8251-437c-a4a0-3b712281ebb0.webp?1783909592",
+    "crop": "https://cards.scryfall.io/crop/front/3/d/3d0d5a41-8251-437c-a4a0-3b712281ebb0.webp?1783909592"
+  },
+  "mana_cost": "{B}{B}{R}{R}",
+  "cmc": 4.0,
+  "type_line": "Legendary Creature \u2014 Demon",
+  "oracle_text": "You can't cast Rakdos unless an opponent lost life this turn.\nFlying, trample\nCreature spells you cast cost {1} less to cast for each 1 life your opponents have lost this turn.",
+  "power": "6",
+  "toughness": "6",
+  "colors": [
+    "B",
+    "R"
+  ],
+  "color_identity": [
+    "B",
+    "R"
+  ],
+  "keywords": [
+    "Flying",
+    "Trample"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": false,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "4c822528-83c3-42c7-8708-dd1d37166819",
+  "set": "dsc",
+  "set_name": "Duskmourn: House of Horror Commander",
+  "set_type": "commander",
+  "set_uri": "https://api.scryfall.com/sets/4c822528-83c3-42c7-8708-dd1d37166819",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Adsc&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/dsc?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/3d0d5a41-8251-437c-a4a0-3b712281ebb0/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A143a269a-b9ee-48ba-bd7b-4aa46eb36778&unique=prints",
+  "collector_number": "230",
+  "digital": false,
+  "rarity": "mythic",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Yigit Koroglu",
+  "artist_ids": [
+    "a24479f8-6d9e-40f9-bede-f29899922b97"
+  ],
+  "illustration_id": "b1f9fa6b-86cb-4678-aa98-d3cb5e0a02a9",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "edhrec_rank": 2639,
+  "penny_rank": 13203,
+  "prices": {
+    "usd": "1.76",
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": "1.42",
+    "eur_foil": null,
+    "tix": "0.12"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=676103&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DRakdos%252C%2BLord%2Bof%2BRiots",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DRakdos%252C%2BLord%2Bof%2BRiots",
+    "edhrec": "https://edhrec.com/route/?cc=Rakdos%2C+Lord+of+Riots"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F578908%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=788969&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/131085?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

@@ -587,7 +587,9 @@ def why_cannot_cast_restriction(
             f"{prohibited_from} prohibits casting {spell.name} from the "
             f"{spell.zone.value} (CR 601.3, CR 101.2)"
         )
-    return None
+    from ..static_cast_bans import spell_ban_reason
+
+    return spell_ban_reason(game, spell, caster, face, types)
 
 
 def why_mana_cost_unpayable(

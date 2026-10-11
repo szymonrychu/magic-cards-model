@@ -745,10 +745,17 @@ class _SubjectProbe:
 
 
 def extra_attack_refusal(game: "Game", creature: CardState, defender) -> str | None:
-    from . import attached_restrictions, attack_block_costs, attacking_statics, group_attack_statics
+    from . import (
+        attached_restrictions,
+        attack_block_costs,
+        attacking_statics,
+        group_attack_statics,
+        static_cast_bans,
+    )
 
     return (
         attached_restrictions.attached_attack_refusal(game, creature)
+        or static_cast_bans.attack_ban_reason(game, creature)
         or attack_block_costs.return_cost_refusal(game, creature)
         or attacking_statics.self_attack_condition_refusal(game, creature, defender)
         or group_attack_statics.group_attack_refusal(game, creature, defender)
