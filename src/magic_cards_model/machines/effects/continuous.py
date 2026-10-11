@@ -5638,7 +5638,7 @@ def _parse_target_get_energy_pay_damage(text: str) -> Effect | None:
 #: "you control" restriction destroy-all effects never have (Wrath of God
 #: hits every player's creatures; this hits only the controller's).
 _UNTAP_ALL_YOU_CONTROL_RE = re.compile(
-    r"^untap all (?P<qualifier>.+?) you control\.?$", re.IGNORECASE
+    r"^untap all (?P<other>other )?(?P<qualifier>.+?) you control\.?$", re.IGNORECASE
 )
 
 
@@ -5653,11 +5653,17 @@ def _parse_untap_all_you_control_clause(sentence: str) -> TargetedClause | None:
     type_matches = _parse_mass_type_qualifier(match.group("qualifier"))
     if type_matches is None:
         return None
+    excludes_source = match.group("other") is not None
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
         controller = game.controller_of(stack_object)
+        source = (
+            stack_object if isinstance(stack_object, CardState) else stack_object.source(game)  # type: ignore[union-attr]
+        )
         for permanent in list(game.battlefield):
             if permanent.zone is not Zone.BATTLEFIELD:
+                continue
+            if excludes_source and source is not None and permanent.id == source.id:
                 continue
             if game.controller_of(permanent).username != controller.username:
                 continue

@@ -895,6 +895,10 @@ def count_expression(phrase: str) -> Callable[["Game", str], int] | None:
 
     if (history_count := counter_history_count(stripped)) is not None:
         return history_count
+    if "counters on" in stripped.lower() and (
+        counters_held := _COUNTERS_ON_YOUR_PERMANENTS_RE.fullmatch(stripped)
+    ):
+        return _counters_on_permanents_you_control(counters_held)
     if (player_counters := player_counter_count(stripped)) is not None:
         return player_counters
     if "devoured" in stripped.lower() and (devoured := _devoured_count(stripped)) is not None:
@@ -1666,6 +1670,37 @@ def _damage_those_creatures_dealt(game: "Game", controller: str) -> int:
 _ITS_MANA_VALUE_RE = re.compile(
     r"^(?:its|this (?:creature|permanent|artifact|token)(?:'|\u2019)s) mana value$", re.IGNORECASE
 )
+
+
+#: "the number of counters on permanents you control" / "the number of +1/+1
+#: counters on creatures you control" (Hydra Trainer's X) - CR 122.1: every
+#: counter of the named kind (any kind when none is printed) on the permanents
+#: of that type the controller has, read off the computed board (CR 613.5).
+_COUNTERS_ON_YOUR_PERMANENTS_RE = re.compile(
+    r"^the (?:total )?number of (?:(?P<kind>\+1/\+1|-1/-1|[a-z]+) )?counters on "
+    r"(?P<what>permanents|creatures|artifacts|enchantments|lands|planeswalkers) you control$",
+    re.IGNORECASE,
+)
+
+
+def _counters_on_permanents_you_control(match: re.Match[str]) -> Callable[["Game", str], int]:
+    kind = None if match.group("kind") is None else _counter_kind(match.group("kind"))
+    what = match.group("what").lower()
+    wanted = None if what == "permanents" else _singular_card_type(what.removesuffix("s"))
+
+    def count(game: "Game", controller: str) -> int:
+        total = 0
+        for permanent in game.permanents_controlled_by(controller):
+            if wanted is not None and wanted not in game.characteristics_of(permanent).types:
+                continue
+            total += (
+                sum(permanent.counters.counts.values())
+                if kind is None
+                else (permanent.counters[kind])
+            )
+        return total
+
+    return count
 
 
 def _amount_term(term: str) -> AmountReader | None:

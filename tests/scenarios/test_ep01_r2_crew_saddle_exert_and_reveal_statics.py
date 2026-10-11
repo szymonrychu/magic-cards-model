@@ -332,3 +332,92 @@ def test_surveil_shows_only_n_cards_without_it():
     scenario.game.surveil("alice", 1)
     asked = [d for d in scenario.questions_asked() if d.kind.value == "surveil"]
     assert len(asked[-1].cards) == 1
+
+
+# ---- exert as it attacks, with a linked reflexive trigger (CR 701.43d) ----------
+
+
+def _attack_exerting(attacker_name, exert, *, others=(), bob=("Plains",), counters=()):
+    scenario = _board([attacker_name, *others], bob=list(bob))
+    attacker = scenario.creature(attacker_name, "alice")
+    attacker.summoning_sick = False
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    scenario.will_take_the_may(exert)
+    scenario.attack_with(attacker, defending="bob")
+    return scenario, attacker
+
+
+def test_exerting_ahn_crop_champion_untaps_the_other_creatures_you_control():
+    scenario, champion = _attack_exerting("Ahn-Crop Champion", True, others=["Grizzly Bears"])
+    bears = scenario.creature("Grizzly Bears", "alice")
+    bears.tap()
+    assert champion.exerted
+    _resolve_all(scenario)
+    assert not bears.tapped
+
+
+def test_not_exerting_ahn_crop_champion_leaves_the_others_tapped_and_adds_no_trigger():
+    scenario, champion = _attack_exerting("Ahn-Crop Champion", False, others=["Grizzly Bears"])
+    bears = scenario.creature("Grizzly Bears", "alice")
+    bears.tap()
+    assert not champion.exerted
+    assert scenario.stack_names() == []
+    assert bears.tapped
+
+
+def test_an_exerted_attacker_skips_exactly_its_next_untap_step():
+    scenario, champion = _attack_exerting("Ahn-Crop Champion", True)
+    _resolve_all(scenario)
+    assert champion.tapped
+    scenario.player("alice").untap_all(scenario.game.permanents_controlled_by("alice"))
+    assert champion.tapped
+    assert not champion.exerted
+    scenario.player("alice").untap_all(scenario.game.permanents_controlled_by("alice"))
+    assert not champion.tapped
+
+
+def test_hydra_trainer_exerted_gives_a_creature_plus_x_for_the_counters_you_control():
+    scenario = _board(["Hydra Trainer", "Grizzly Bears", "Walking Ballista"], bob=["Plains"])
+    trainer = scenario.creature("Hydra Trainer", "alice")
+    trainer.summoning_sick = False
+    bears = scenario.creature("Grizzly Bears", "alice")
+    bears.add_counters(Counter.PLUS_ONE, 2)
+    scenario.creature("Walking Ballista", "alice").add_counters("oil", 1)
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    scenario.will_take_the_may(True)
+    scenario.will_choose_targets(bears, source="Hydra Trainer")
+    base = scenario.game.power_of(bears)
+    scenario.attack_with(trainer, defending="bob")
+    scenario.resolve_top()
+    assert trainer.exerted
+    assert scenario.game.power_of(bears) == base + 3
+
+
+def test_hydra_trainer_not_exerted_pumps_nothing():
+    scenario = _board(["Hydra Trainer", "Grizzly Bears"], bob=["Plains"])
+    trainer = scenario.creature("Hydra Trainer", "alice")
+    trainer.summoning_sick = False
+    bears = scenario.creature("Grizzly Bears", "alice")
+    bears.add_counters(Counter.PLUS_ONE, 2)
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    scenario.will_take_the_may(False)
+    base = scenario.game.power_of(bears)
+    scenario.attack_with(trainer, defending="bob")
+    assert scenario.stack_names() == []
+    assert scenario.game.power_of(bears) == base
+
+
+def test_hydra_trainers_x_ignores_counters_on_permanents_an_opponent_controls():
+    scenario = _board(["Hydra Trainer", "Grizzly Bears"], bob=["Walking Ballista"])
+    trainer = scenario.creature("Hydra Trainer", "alice")
+    trainer.summoning_sick = False
+    bears = scenario.creature("Grizzly Bears", "alice")
+    bears.add_counters(Counter.PLUS_ONE, 1)
+    scenario.creature("Walking Ballista", "bob").add_counters(Counter.PLUS_ONE, 4)
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    scenario.will_take_the_may(True)
+    scenario.will_choose_targets(bears, source="Hydra Trainer")
+    base = scenario.game.power_of(bears)
+    scenario.attack_with(trainer, defending="bob")
+    scenario.resolve_top()
+    assert scenario.game.power_of(bears) == base + 1
