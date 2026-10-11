@@ -440,6 +440,11 @@ def _parse_activation_prohibition(text: str) -> ActivationProhibition | None:
     )
 
 
+def _mana_list_spelling(text: str) -> str:
+    """`{G}, {W}, or {U}` and `{G} or {W} or {U}` as one spelling."""
+    return text.replace(", or ", " or ").replace(", ", " or ")
+
+
 class ActivationMixin:
     def _loyalty_instant_speed_permitted(
         self: "Game", permanent: CardState, controller: str
@@ -1538,7 +1543,14 @@ class ActivationMixin:
             # having lost every ability when it never had raw text to begin
             # with (same family as `effect_for` above).
             return not (permanent.oracle_text or "").strip()
-        return any(ability.text in line or line in ability.text for line in computed.abilities)
+        # A three-colour mana ability is printed "Add {G}, {W}, or {U}." while
+        # the parsed ability joins every option with "or", so the two spellings
+        # of the same list are compared with the separators made alike.
+        text = _mana_list_spelling(ability.text)
+        return any(
+            text in _mana_list_spelling(line) or _mana_list_spelling(line) in text
+            for line in computed.abilities
+        )
 
     def _activation_key(self: "Game", permanent: CardState, index: int) -> str:
         """The key `activations`/`exhausted` key an ability's bookkeeping by.

@@ -7902,3 +7902,12 @@ Read by `machines/block_statics.py` off every battlefield permanent's computed a
 | Mechanic | CR | Where | Printings | Tests |
 | "Look at the top card of target player's library. You may put that card on the bottom of that player's library / into (that player's / their) graveyard." The controller alone looks and chooses; a decline leaves the card on top; an empty library does nothing | CR 701.20e, 701.20b, 608.2d, 609.3 | `effects/library._parse_look_top_of_target_library_may_move_clause` (ABILITY_TEXT s35) | Jace, the Mind Sculptor (`+2`); Lurking Informant, Draugr Thought-Thief (graveyard wording) | `tests/scenarios/test_look_top_card_of_target_library_may_bottom.py` |
 | "Exile all cards from target player's / your library[, then that player shuffles their hand into their library]": one exile batch, then the hand goes into the library and it is shuffled (even with an empty hand) | CR 609.3, 701.24a, 701.24d, 603.2c | `effects/library._parse_exile_all_cards_from_library_clause` (ABILITY_TEXT s35) | Jace, the Mind Sculptor (`-12`); Leveler (bare "your library") | `tests/scenarios/test_exile_target_library_shuffle_hand_in.py`, `tests/scenarios/test_jace_the_mind_sculptor.py` |
+
+## R0c-T4: triome lands, enters-or-dies mill, Treasure flashback sorcery, search-or-fight modal
+
+| Mechanic | Where | Cards | Proof |
+|---|---|---|---|
+| Triome: three basic land types, three-colour mana ability read as removed-by-layer-6 when printed "{G}, {W}, or {U}" (list spelling now compared alike), "This land enters tapped." (CR 614.1c), Cycling {3} (CR 702.29a) | `models/game/_activation.py:_still_has_ability` | Spara's Headquarters, Zagoth Triome | `scenarios/test_triome_land_cycling.py` |
+| "When this creature enters or dies, mill three cards." (CR 701.17a, 701.17b) | existing mill reader | Stitcher's Supplier | `scenarios/test_mill_on_enter_or_dies.py` |
+| "Create a Treasure token." with Flashback (CR 111.10a, 702.34a) | existing token + flashback machinery | Strike It Rich | `scenarios/test_treasure_creating_sorcery_with_flashback.py` |
+| Modal "search basic land / your creature fights target creature you don't control" (CR 700.2, 701.23, 701.14) | existing modal, search and fight readers | Bushwhack | `scenarios/test_modal_search_basic_or_fight.py` |
