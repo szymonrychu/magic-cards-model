@@ -244,6 +244,10 @@ _HAND_PUMP_RE = re.compile(
     r"^(?P<subject>.+?) gets? (?P<p>[+-](?:x|0))/(?P<t>[+-](?:x|0)), "
     r"where x is the number of cards in your hand$"
 )
+_COUNT_PUMP_RE = re.compile(
+    r"^(?P<subject>.+?) gets? (?P<p>[+-](?:x|0))/(?P<t>[+-](?:x|0)), where x is "
+    r"(?P<count>your speed|the number of creature cards in all graveyards)$"
+)
 _GROUP_GRANT_RE = re.compile(r"^(?P<subject>.+?) (?:have|has) (?P<keywords>.+)$")
 _GROUP_BASE_PT_RE = re.compile(
     r"^(?P<subject>.+?) (?:have|has) base power and toughness (?P<power>\d+)/(?P<toughness>\d+)$"
@@ -432,6 +436,12 @@ def parse_group_static_sentence(sentence: str):
             f"have base P/T {power}/{toughness}",
             lambda: [(Layer.POWER_TOUGHNESS, Sublayer.SET, set_power_toughness(power, toughness))],
         )
+    if match := _COUNT_PUMP_RE.fullmatch(lowered):
+        if not _count_subject_ok(match["subject"]):
+            return None
+        return _count_pump_builder(
+            sentence, match["subject"], match["p"], match["t"], match["count"]
+        )
     if match := _HAND_PUMP_RE.fullmatch(lowered):
         if _subject_ok(match["subject"]) is False:
             return None
@@ -571,6 +581,74 @@ def _builder(sentence: str, subject: str, what: str, parts):
         if selector is None:
             return []
         return _effects(source, timestamp, sentence, selector, f"{subject} {what}", parts())
+
+    return build
+
+
+_THIS_AND_ENCHANTED_RE = re.compile(
+    r"^this (?:creature|permanent) and enchanted (?:creature|permanent) each$"
+)
+
+
+def _count_subject_ok(subject: str) -> bool:
+    return bool(_THIS_AND_ENCHANTED_RE.fullmatch(subject.strip())) or _subject_ok(subject) is not False
+
+
+def _count_of(kind: str, source: CardState, context: LayerContext) -> int:
+    """The number a "where X is ..." pump counts, as the effects are rebuilt
+    (CR 613.5): CR 702.179f's speed (none reads as 0), or the creature cards in
+    every graveyard (`LayerContext.graveyards`, which the layer engine never
+    sees on its own)."""
+    if kind == "your speed":
+        game = source._board_source
+        player = None if game is None or source.controller is None else game.player(source.controller)
+        return 0 if player is None or player.speed is None else player.speed
+    return sum(1 for card in context.graveyards if Type.CREATURE in card.card.types)
+
+
+def _count_pump_builder(sentence: str, subject: str, power: str, toughness: str, kind: str):
+    """ "... get +X/+0, where X is your speed" / "... each get +X/+X, where X is
+    the number of creature cards in all graveyards" (CR 613.4c): X is read every
+    time the effects are rebuilt, so it follows the count continuously."""
+
+    def amount(token: str, size: int) -> int:
+        return 0 if token[1] == "0" else (size if token[0] == "+" else -size)
+
+    def build(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        size = _count_of(kind, source, context)
+        selectors: list[Any] = []
+        if _THIS_AND_ENCHANTED_RE.fullmatch(subject.strip()):
+            selectors.append(Only(card_id=source.id))
+            if source.attached_to is not None:
+                selectors.append(Only(card_id=source.attached_to))
+        else:
+            selector = _subject_selector(subject, source)
+            if selector is not None:
+                selectors.append(selector)
+        found: list[ContinuousEffect] = []
+        for selector in selectors:
+            found.extend(
+                _effects(
+                    source,
+                    timestamp,
+                    sentence,
+                    selector,
+                    f"{subject} get {amount(power, size):+d}/{amount(toughness, size):+d}",
+                    [
+                        (
+                            Layer.POWER_TOUGHNESS,
+                            Sublayer.MODIFY,
+                            modify_power_toughness(amount(power, size), amount(toughness, size)),
+                        )
+                    ],
+                )
+            )
+        return found
 
     return build
 
