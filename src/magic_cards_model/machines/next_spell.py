@@ -27,6 +27,7 @@ search-quality reader every other "`<quality>` card" phrase uses
 phrase `spell_quality_is_readable` refuses is never recorded.
 """
 
+import re
 from typing import TYPE_CHECKING
 
 from pydantic import ConfigDict
@@ -39,10 +40,19 @@ if TYPE_CHECKING:  # pragma: no cover - import cycle: Game builds on the machine
 _COLOR_WORDS = {"white": "W", "blue": "U", "black": "B", "red": "R", "green": "G"}
 
 
+def _comma_list_as_or(quality: str) -> str:
+    """ "Artifact, instant, and sorcery" is one disjunction of spell kinds (a
+    spell is never two of them at once, so "and" lists what is covered):
+    "artifact or instant or sorcery"."""
+    if "," not in quality:
+        return quality
+    return re.sub(r",?\s+(?:and|or)\s+|,\s*", " or ", quality.strip(), flags=re.IGNORECASE)
+
+
 def _split_colors(quality: str) -> tuple[set[str], str]:
     """The colour letters a quality phrase names, and the rest of it with the
     colours and the "or"/"and" between them taken out."""
-    words = quality.strip().lower().split()
+    words = _comma_list_as_or(quality).strip().lower().split()
     colors = {_COLOR_WORDS[word.strip(",")] for word in words if word.strip(",") in _COLOR_WORDS}
     if not colors:
         return colors, " ".join(words)

@@ -4420,6 +4420,25 @@ def _reorder_token_named_after_tail(text: str) -> str:
     return _TOKEN_WITH_TAIL_THEN_NAMED_RE.sub(swap, text)
 
 
+#: "Artifact, instant, and sorcery spells you cast this turn cost {2} less to
+#: cast." (Urza, Planeswalker): a list of spell kinds whose ", and" would
+#: otherwise be cut into a clause of its own by `_CLAUSE_SEPARATOR`.
+_SPELL_KIND_LIST_RE = re.compile(
+    r"(?<![\w,])(?P<kinds>[A-Za-z]+(?:, [A-Za-z]+)+,? (?:and|or) [A-Za-z]+)"
+    r"(?= spells you cast this turn cost )"
+)
+
+
+def _spell_kind_list_as_or(text: str) -> str:
+    """CR 601.2f: the list is one disjunction of spell kinds (a spell is never
+    two of them at once), written "a or b or c" before the clause split."""
+    if " spells you cast this turn cost " not in text:
+        return text
+    return _SPELL_KIND_LIST_RE.sub(
+        lambda m: re.sub(r",? (?:and|or) |, ", " or ", m.group("kinds")), text
+    )
+
+
 @memoised_clauses
 def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] | None:
     """Every clause of `text`, or `None` the moment one clause (or one
@@ -4456,6 +4475,7 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
     # the sentence before it created, folded into one token clause first.
     text = _fold_following_token_grant(text)
     text = _reorder_token_named_after_tail(text)
+    text = _spell_kind_list_as_or(text)
     shuffle_self_and_targets = _parse_shuffle_self_and_targets_into_owners_libraries_clause(
         text, for_spell=for_spell
     )

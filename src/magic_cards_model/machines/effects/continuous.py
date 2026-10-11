@@ -791,9 +791,53 @@ _MASS_SUBJECT_RE = re.compile(
 #: creature types already gets from a bare type list everywhere else in this
 #: file.
 _MASS_SUBTYPE_SUBJECT_RE = re.compile(
-    r"^(?![Cc]reatures?\b)(?P<subtypes>[A-Z][a-z]+(?:(?:,\s*| and )[A-Z][a-z]+)*) "
+    r"^(?![Cc]reatures?\b)(?!(?:Artifacts|Enchantments|Lands|Planeswalkers|Battles)\b)"
+    r"(?P<subtypes>[A-Z][a-z]+(?:(?:,\s*| and )[A-Z][a-z]+)*) "
     r"(?P<whose>you control|your opponents control)\b"
 )
+#: "Artifacts and planeswalkers you control gain indestructible until end of
+#: turn." (Urza, Planeswalker), "Creatures and Vehicles you control gain
+#: trample until end of turn." (Boom Scholar): a group of card types (CR 205.2a)
+#: read by the one subject grammar the static anthems use
+#: (`layers/group_grants.parse_group`), fixed once as the effect begins.
+_MASS_GROUP_SUBJECT_RE = re.compile(
+    r"^(?P<subject>[A-Za-z][A-Za-z' -]*? (?P<whose>you control|your opponents control)) "
+    r"(?P<verb>gains?|gets?)\b"
+)
+
+
+def _mass_group_filter(
+    text: str,
+) -> "tuple[re.Match[str], Callable[[Characteristics], bool]] | None":
+    """`_MASS_GROUP_SUBJECT_RE`'s subject and the `GroupMatch` it names, when
+    that subject names a card type other than the bare "creatures" (which the
+    ordinary mass subjects above already read)."""
+    from ..layers.group_grants import parse_group
+    from ..layers.model import GroupMatch
+
+    match = _MASS_GROUP_SUBJECT_RE.match(text.strip())
+    if match is None:
+        return None
+    spec = parse_group(match.group("subject"))
+    if spec is None or spec["chosen"] or spec["other"] or spec.get("named"):
+        return None
+    if not (spec["all_types"] or spec["any_types"]) or (
+        spec["all_types"] == (Type.CREATURE,)
+        and not any(value for key, value in spec.items() if key not in ("scope", "all_types"))
+    ):
+        return None
+    # Whose permanents is the caller's question (`group_match["whose"]`).
+    fields = {
+        key: value for key, value in spec.items() if key not in ("other", "chosen", "scope")
+    }
+    selector = GroupMatch(username=None, scope="any", **fields)
+
+    def matches(chars: "Characteristics") -> bool:
+        return selector(chars, None)  # type: ignore[arg-type]
+
+    return match, matches
+
+
 #: Ravenous Robots: "Creature tokens you control gain haste until end of
 #: turn." - CR 111.1's token-ness narrowing the ordinary "creatures [you|your
 #: opponents] control" subject, read the identical "known only here, off the
@@ -1063,6 +1107,21 @@ def _mass_creature_group_targets(
             if base_selector(board.of(permanent), board.characteristics)
             and (board.of(permanent).power or 0) >= minimum_power
         ]
+    group_filter = _mass_group_filter(text)
+    if group_filter is not None:
+        group_match, matches = group_filter
+        board = game.computed_board()
+        you = group_match.group("whose") == "you control"
+        return [
+            permanent
+            for permanent in game.battlefield
+            if (
+                board.of(permanent).controller == controller
+                if you
+                else board.of(permanent).controller not in (None, controller)
+            )
+            and matches(board.of(permanent))
+        ]
     if _MASS_OTHER_CREATURES_RE.match(text.strip()) is not None:
         # Harvester of Misery's "other creatures" / Shefet Archfiend's "all
         # other creatures": every creature on the battlefield but the source,
@@ -1203,6 +1262,7 @@ def _parse_mass_pump_clause(
         and _MASS_EACH_SUBJECT_RE.match(text) is None
         and _MASS_TYPE_FILTER_RE.match(text) is None
         and _mass_word_filter(text) is None
+        and _mass_group_filter(text) is None
     ):
         return None
     if Duration.UNTIL_END_OF_TURN not in text.lower():
@@ -1305,6 +1365,10 @@ def _mass_pump_parseable(literal: str) -> str:
         # `targets` (`_mass_creature_group_targets`), the same rewrite the
         # card-type filter above needs.
         parseable = "creatures " + literal.strip()[word_filter[0].start("whose") :]
+    elif (group_filter := _mass_group_filter(literal)) is not None:
+        # The card-type group is already `targets`; the layer parser only
+        # needs the plural "creatures" shape.
+        parseable = "creatures " + literal.strip()[group_filter[0].start("whose") :]
     elif (token_match := _MASS_TOKEN_SUBJECT_RE.match(literal.strip())) is not None:
         # Ravenous Robots: "Creature tokens you control gain haste until end
         # of turn." - `targets` (`_mass_creature_group_targets`) already

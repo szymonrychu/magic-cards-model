@@ -1771,6 +1771,9 @@ class GroupMatch(SelectorBase):
     share_kind: Literal["color", "creature_type"] = "color"
     """Konda's Banner: only creatures sharing a color / a creature type with the
     permanent `shares_with` (its equipped creature) are in the group."""
+    or_subtypes: tuple[str, ...] = ()
+    """ "Creatures and Vehicles you control": a permanent with one of these
+    subtypes is in the group whether or not it passes the type clauses."""
     named: tuple[str, ...] = ()
     """Lowercased card names: "Equipment named Sword of Kaldra, Shield of
     Kaldra, and Helm of Kaldra" (CR 201.2)."""
@@ -1799,13 +1802,18 @@ class GroupMatch(SelectorBase):
                     return False
             elif not {t.lower() for t in reference.subtypes} & {t.lower() for t in chars.subtypes}:
                 return False
-        if any(card_type not in chars.types for card_type in self.all_types):
+        have = {subtype.lower() for subtype in chars.subtypes}
+        listed_subtype = any(subtype.lower() in have for subtype in self.or_subtypes)
+        if not listed_subtype and any(card_type not in chars.types for card_type in self.all_types):
             return False
-        if self.any_types and not any(card_type in chars.types for card_type in self.any_types):
+        if (
+            not listed_subtype
+            and self.any_types
+            and not any(card_type in chars.types for card_type in self.any_types)
+        ):
             return False
         if any(card_type in chars.types for card_type in self.not_types):
             return False
-        have = {subtype.lower() for subtype in chars.subtypes}
         if self.any_subtypes and not any(subtype.lower() in have for subtype in self.any_subtypes):
             return False
         if any(subtype.lower() in have for subtype in self.not_subtypes):

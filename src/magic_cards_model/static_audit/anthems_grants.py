@@ -23,6 +23,7 @@ _GATES = (
     "mana of any type can be spent",
     "can be attached only to",
     "could mulligan",
+    "twice each turn rather than only once",
 )
 
 
@@ -88,6 +89,17 @@ def _reads_attach_restriction(printing) -> bool:
     return quality is not None and parse_group(quality) is not None
 
 
+_TWICE_CACHE: dict[str, bool] = {}
+
+
+def _loyalty_twice(printing) -> bool:
+    """CR 606.3: `Game._loyalty_activations_allowed` really answers two."""
+    if printing.name not in _TWICE_CACHE:
+        game, state = _staged(printing)
+        _TWICE_CACHE[printing.name] = game._loyalty_activations_allowed(state) == 2
+    return _TWICE_CACHE[printing.name]
+
+
 def reads_anthems_grants_line(printing, text, *, card_name=None, legendary=False) -> bool:
     lowered = text.lower()
     # A static ability granting a keyword (or a type or colour) to cards off the
@@ -104,6 +116,8 @@ def reads_anthems_grants_line(printing, text, *, card_name=None, legendary=False
         return mulligan_time_line(card_name or printing.name, text) is not None
     if "can be attached only to" in lowered:
         return _reads_attach_restriction(printing)
+    if "twice each turn rather than only once" in lowered:
+        return _loyalty_twice(printing)
     if "had wither" in lowered:
         return _all_damage_has_wither(printing)
     return _may_assign_as_though_unblocked(printing)

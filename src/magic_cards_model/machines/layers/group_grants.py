@@ -161,6 +161,7 @@ def parse_group(subject: str) -> dict[str, Any] | None:
     any_types: list[Type] = []
     not_types: list[Type] = []
     any_subtypes: list[str] = []
+    or_subtypes: list[str] = []
     not_subtypes: list[str] = []
     any_colors: list[Color] = []
     not_colors: list[Color] = []
@@ -198,7 +199,11 @@ def parse_group(subject: str) -> dict[str, Any] | None:
             if joined and all_types:
                 any_types.insert(0, all_types.pop())
         elif _singular(word) in vocabulary:
-            any_subtypes.append(_singular(word))
+            # "Creatures and Vehicles": the subtype joins the type, it does
+            # not narrow it.
+            (or_subtypes if joined and (all_types or any_types) else any_subtypes).append(
+                _singular(word)
+            )
         else:
             return None
         joined = False
@@ -206,6 +211,7 @@ def parse_group(subject: str) -> dict[str, Any] | None:
     fields["any_types"] = tuple(any_types)
     fields["not_types"] = tuple(not_types)
     fields["any_subtypes"] = tuple(any_subtypes)
+    fields["or_subtypes"] = tuple(or_subtypes)
     fields["not_subtypes"] = tuple(not_subtypes)
     fields["any_colors"] = tuple(any_colors)
     fields["not_colors"] = tuple(not_colors)
