@@ -126,6 +126,74 @@ def _parse_copy_cast_spell_clause(text: str) -> AbilityEffect | None:
     return effect
 
 
+#: "you may copy it. If you do, you may choose new targets for the copy. If
+#: the copy is a permanent spell, it gains haste." (Spider-Verse, its "Do this
+#: only once each turn." already stripped into `TriggeredAbility.
+#: once_per_turn`) - `_COPY_CAST_SPELL_RE`'s optional sibling. "it" is the
+#: spell whose cast triggered the ability (CR 603.10, `ability.event`). A copy
+#: of a permanent spell becomes a token as it resolves (CR 707.10f) and keeps
+#: the keyword granted to it on the stack (CR 400.7b). Declining the "may"
+#: hands CR 603.2h's once-each-turn budget back: it is spent by the action.
+_MAY_COPY_CAST_SPELL_RE = re.compile(
+    r"^you may copy it\."
+    r"(?P<retarget>\s*if you do, you may choose new targets for the copy\.)?"
+    r"(?:\s*if the copy is a permanent spell, it gains (?P<keyword>[a-z]+(?: [a-z]+)?)\.)?$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s36")
+def _parse_may_copy_cast_spell_clause(text: str) -> AbilityEffect | None:
+    """`_MAY_COPY_CAST_SPELL_RE`'s shape - see its own docstring."""
+    match = _MAY_COPY_CAST_SPELL_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    may_retarget = match.group("retarget") is not None
+    keyword = match.group("keyword")
+    if keyword is not None:
+        keyword = keyword.strip().title()
+        if keyword.lower() not in {k.value.lower() for k in Keyword}:
+            return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        from ..connive import _release_once_per_turn
+
+        spell: CardState | None = None
+        event = ability.event
+        if event is not None and event.subject_id is not None:
+            found = game.find_by_id(event.subject_id)
+            if isinstance(found, CardState) and found.zone is Zone.STACK:
+                spell = found
+        if spell is None:
+            return
+        taken = game.ask(
+            Decision(
+                kind=DecisionKind.MAY,
+                player=ability.controller,
+                prompt=f"copy {spell.name}",
+                source=ability.source_name,
+                source_id=source_id_of(ability),
+            )
+        )
+        if not taken:
+            _release_once_per_turn(game, ability)
+            return
+        copy = game.copy_spell(spell, ability.controller)
+        if copy is None:
+            return
+        if may_retarget:
+            game.offer_new_targets_for_copy(
+                copy,
+                ability.controller,
+                source_name=ability.source_name,
+                source_id=str(ability.source_id) if ability.source_id is not None else None,
+            )
+        if keyword is not None and copy.is_permanent:
+            copy.granted_ability_texts = (*copy.granted_ability_texts, keyword)
+
+    return effect
+
+
 #: "Exchange control of two target creatures." (Switcheroo), "... two target
 #: nonland permanents that share a card type." (Burglar's Plot), "... two
 #: target permanents that share a card type." (Shifting Loyalties) - CR

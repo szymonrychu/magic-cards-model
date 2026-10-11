@@ -27,6 +27,7 @@ Every CR number here was looked up with `mise run rules:find`.
 import pytest
 
 from magic_cards_model.machines import Step
+from magic_cards_model.machines.combat import Keyword, has_keyword
 from magic_cards_model.models import Zone
 from magic_cards_model.models.card_state import Counter
 from magic_cards_model.support import card_support
@@ -666,4 +667,114 @@ def test_aettir_line_is_handled():
     handled(
         "Aettir and Priwen",
         "Equipped creature has base power and toughness X/X, where X is your life total.",
+    )
+
+
+# -- Spider-Verse's copy trigger (CR 603.2h, CR 707.10, CR 707.10c) ----------
+#
+# "Whenever you cast a spell from anywhere other than your hand, you may copy
+# it. If you do, you may choose new targets for the copy. If the copy is a
+# permanent spell, it gains haste. Do this only once each turn." The copy of
+# a permanent spell becomes a token as it resolves (CR 707.10, CR 608.3f);
+# CR 603.2h spends "only once each turn" on the copy, so declining leaves it
+# untaken.
+
+
+def _verse(graveyard, lands, hand=()):
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player(
+            "alice",
+            battlefield=["Spider-Verse", *lands],
+            graveyard=list(graveyard),
+            hand=list(hand),
+            library=["Island"] * 10,
+        )
+        .player("bob", library=["Island"] * 10)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    return scenario
+
+
+def _flashback(scenario, name, *lands):
+    casting = scenario.cast(name, from_zone=Zone.GRAVEYARD)
+    casting.use_keyword("Flashback")
+    scenario.pay_with(casting.begin_paying(), *scenario.untapped_sources(*lands))
+    return scenario.put_on_stack(casting)
+
+
+def _resolve_trigger(scenario):
+    scenario.game.put_triggers_on_stack()
+    scenario.resolve_top()
+
+
+def test_spider_verse_copies_a_spell_cast_from_the_graveyard():
+    scenario = _verse(["Faithless Looting"], ["Mountain"] * 3)
+    original = _flashback(scenario, "Faithless Looting", "Mountain", "Mountain", "Mountain")
+    scenario.will_take_the_may(True)
+    _resolve_trigger(scenario)
+    spells = [s for s in scenario.game.stack if s.name == "Faithless Looting"]
+    assert len(spells) == 2
+    assert original in spells
+
+
+def test_spider_verse_declined_copy_leaves_the_once_each_turn_untaken():
+    scenario = _verse(["Faithless Looting", "Faithless Looting"], ["Mountain"] * 6)
+    _flashback(scenario, "Faithless Looting", "Mountain", "Mountain", "Mountain")
+    scenario.will_take_the_may(False)
+    _resolve_trigger(scenario)
+    assert len([s for s in scenario.game.stack if s.name == "Faithless Looting"]) == 1
+    _flashback(scenario, "Faithless Looting", "Mountain", "Mountain", "Mountain")
+    scenario.will_take_the_may(True)
+    _resolve_trigger(scenario)
+    assert len([s for s in scenario.game.stack if s.name == "Faithless Looting"]) == 3
+
+
+def test_spider_verse_copies_only_once_each_turn():
+    scenario = _verse(["Faithless Looting", "Faithless Looting"], ["Mountain"] * 6)
+    _flashback(scenario, "Faithless Looting", "Mountain", "Mountain", "Mountain")
+    scenario.will_take_the_may(True)
+    _resolve_trigger(scenario)
+    _flashback(scenario, "Faithless Looting", "Mountain", "Mountain", "Mountain")
+    scenario.game.put_triggers_on_stack()
+    assert len([s for s in scenario.game.stack if s.name == "Faithless Looting"]) == 3
+    assert all(s.name == "Faithless Looting" for s in scenario.game.stack)
+
+
+def test_spider_verse_ignores_a_spell_cast_from_the_hand():
+    scenario = _verse([], ["Mountain"], hand=["Faithless Looting"])
+    casting = scenario.cast("Faithless Looting")
+    scenario.pay_with(casting.begin_paying(), *scenario.untapped_sources("Mountain"))
+    scenario.put_on_stack(casting)
+    scenario.game.put_triggers_on_stack()
+    assert [s.name for s in scenario.game.stack] == ["Faithless Looting"]
+
+
+def test_spider_verse_copy_of_a_permanent_spell_is_a_hasty_token():
+    scenario = _verse(["Beloved Beggar"], ["Plains"] * 6)
+    casting = scenario.cast("Beloved Beggar", from_zone=Zone.GRAVEYARD)
+    casting.use_keyword("Disturb")
+    scenario.pay_with(casting.begin_paying(), *scenario.untapped_sources(*["Plains"] * 6))
+    scenario.put_on_stack(casting)
+    scenario.will_take_the_may(True)
+    _resolve_trigger(scenario)
+    scenario.resolve_top()  # the copy
+    tokens = [s for s in scenario.game.battlefield if s.token and s.name == "Generous Soul"]
+    assert len(tokens) == 1
+    assert has_keyword(tokens[0], Keyword.HASTE, scenario.game)
+    scenario.resolve_top()  # the original
+    (original,) = [
+        s for s in scenario.game.battlefield if not s.token and s.name == "Generous Soul"
+    ]
+    assert not has_keyword(original, Keyword.HASTE, scenario.game)
+
+
+def test_spider_verse_copy_line_is_handled():
+    handled(
+        "Spider-Verse",
+        "Whenever you cast a spell from anywhere other than your hand, you may copy it. If "
+        "you do, you may choose new targets for the copy. If the copy is a permanent spell, "
+        "it gains haste. Do this only once each turn.",
     )

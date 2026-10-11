@@ -1052,6 +1052,10 @@ class StackPriorityMixin:
                 # `machines/triggers.py`'s CAST_SPELL condition, though a
                 # copy made here is never itself cast (CR 707.10).
                 prepare_spell_face=spell.prepare_spell_face,
+                # CR 707.10g: a copy of a double-faced spell with its back
+                # face up (a disturbed one, CR 702.146b) is created back face
+                # up too.
+                transformed=spell.transformed,
             )
             self.stack.append(copy)
             self.note_cast(

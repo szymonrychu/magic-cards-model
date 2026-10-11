@@ -322,6 +322,7 @@
       "_parse_create_token_copy_of_cost_exiled_card_clause",
       "_parse_draw_then_delayed_discard_at_random_clause",
       "_parse_copy_cast_spell_clause",
+      "_parse_may_copy_cast_spell_clause",
       "_parse_mass_return_entered_this_turn_clause",
       "_parse_return_target_and_same_name_from_graveyard_clause",
       "_parse_reflexive_may_exile_dead_self_clause",
