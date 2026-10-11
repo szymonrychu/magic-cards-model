@@ -14,6 +14,7 @@ Missing Out (delirium extra combat) and Nova Hellkite (warp).
 import pytest
 
 from magic_cards_model.machines import Step
+from magic_cards_model.machines.casting import keyword_cast_options
 from magic_cards_model.models import Zone
 from magic_cards_model.models.card_state import Counter
 from tests.scenarios.harness import Scenario
@@ -306,9 +307,17 @@ def test_a_warped_nova_hellkite_can_be_cast_from_exile_on_a_later_turn_for_full_
     scenario.pass_until_resolved()
     assert nova.zone is Zone.EXILE
 
-    again = scenario.cast("Nova Hellkite", from_zone=Zone.EXILE)
-    with pytest.raises(ValueError, match="later turn"):
-        again.use_keyword("Warp")
+    # Still the turn it was exiled on: warp's exile cast waits for a later
+    # turn (CR 702.185a), and a creature is not cast in the end step anyway
+    # (CR 117.1a - the exile permission changes the zone, not the timing).
+    (warp_exile,) = [
+        option
+        for option in keyword_cast_options(nova.card)
+        if option.keyword == "Warp" and option.zone is Zone.EXILE
+    ]
+    assert "later turn" in (warp_exile.why_not(nova, "alice", scenario.game) or "")
+    with pytest.raises(ValueError, match="main phase"):
+        scenario.cast("Nova Hellkite", from_zone=Zone.EXILE)
 
     for _ in range(60):
         scenario.advance()

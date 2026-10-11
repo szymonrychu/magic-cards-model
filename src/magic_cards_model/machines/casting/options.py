@@ -63,6 +63,10 @@ class CastTiming(StrEnum):
     #: `why_cannot_cast_now` of the card as a hand card, so flash (CR 702.8a)
     #: and every flash grant still count.
     OWN = "own"
+    #: "as though it had flash" (CR 702.8a): any time the caster has priority,
+    #: whatever the card's own type. A pile permission that says so
+    #: (`permissions._linked_exile_play_option`) is the only source here.
+    FLASH = "flash"
 
 
 class KeywordCastOption(EngineModel):

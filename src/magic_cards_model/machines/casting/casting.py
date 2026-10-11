@@ -90,7 +90,7 @@ from ..teamwork import teamwork_ability, teamwork_instead_target_text, teamwork_
 from ..triggers import ExtraTriggerEvent, GameEvent
 from ..turn import Step
 from .granted_life_costs import GrantedLifeCost, granted_life_costs
-from .options import AlternativeCostOption, KeywordCastOption
+from .options import AlternativeCostOption, CastTiming, KeywordCastOption
 from .permissions import GrantedCastOption, PlayPermission
 
 
@@ -347,6 +347,18 @@ def flash_by_alternative_cost(game: Any, spell: CardState, caster: str) -> bool:
     return bool(flash_grant_sources(game, spell, caster))
 
 
+def _keyword_option_answers_timing(option: KeywordCastOption) -> bool:
+    """Whether `option` decides its own timing in `KeywordCastOption.why_not`
+    rather than leaving the card's own CR 117.1a timing in force.
+
+    Madness is the one `CastTiming.ANY` keyword that does: CR 702.35a's cast
+    happens while its triggered ability resolves (CR 608.2g), timing ignored;
+    the engine models that window as the card sitting in its madness pile."""
+    if option.timing is not CastTiming.ANY:
+        return True
+    return option.marker is ExileMarker.MADNESS
+
+
 def why_cannot_cast_now(
     spell: CardState,
     caster: str,
@@ -449,16 +461,19 @@ def why_cannot_cast_now(
         return None  # Radagast of Rhosgobel's own first-creature-spell flash grant
     if not without_alternative_flash and flash_by_alternative_cost(game, spell, caster):
         return None  # Primal Prayers: flash while paying its alternative cost
-    if spell.zone is not Zone.HAND and (
-        # Disturb (CR 702.146a) carries no timing of its own: the face it
-        # casts is timed by its own type, so it is not exempt here.
-        any(not option.casts_transformed for option in castable_from(spell.card, spell.zone))
-        or granted_cast_options(game, spell, caster, spell.zone)
+    if spell.zone is not Zone.HAND and any(
+        _keyword_option_answers_timing(option)
+        for option in [
+            *(o for o in castable_from(spell.card, spell.zone) if not o.casts_transformed),
+            *(granted.option for granted in granted_cast_options(game, spell, caster, spell.zone)),
+        ]
     ):
-        # A keyword is what allows this cast at all (CR 601.3), and each one
-        # carries its own timing - plot's "only as a sorcery" (CR 702.170a),
-        # flashback's "any time you could cast a sorcery" (CR 702.34a). Let
-        # `KeywordCastOption.why_not` answer instead of guessing over it.
+        # Only an option carrying a timing of its own answers here - plot's
+        # "only as a sorcery" (CR 702.170a), sneak's declare blockers window
+        # (CR 702.190a), a pile's "as though it had flash" (CR 702.8a) - and
+        # `KeywordCastOption.why_not` asks it. `CastTiming.ANY` is the card's
+        # own timing (flashback CR 702.34a, escape CR 702.138a, disturb CR
+        # 702.146a change the zone and cost, never when): CR 117.1a, above.
         return None
     return (
         f"{face or spell.name} is not an instant and has no flash, so {caster} can only cast "
@@ -5650,7 +5665,6 @@ from ._common import (  # noqa: E402
 )
 from .options import (  # noqa: E402
     AlternativeCostSource,
-    CastTiming,
     _describe_keyword_cost,
     _keyword,
     _matches_splice_quality,

@@ -2068,7 +2068,7 @@ def _linked_exile_play_option(
         rule="CR 601.3, CR 607.2a",
         zone=Zone.EXILE,
         pays_mana_cost=not read.free,
-        timing=CastTiming.ANY if read.flash else CastTiming.OWN,
+        timing=CastTiming.FLASH if read.flash else CastTiming.OWN,
         once_per_turn_key=once_per_turn_key(permanent) if read.once_each_turn else None,
         any_color=read.any_color,
         any_type_mana=read.any_mana,

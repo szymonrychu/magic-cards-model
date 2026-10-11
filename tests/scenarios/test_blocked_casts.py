@@ -68,6 +68,17 @@ def _advance_to(scenario, username: str, step: Step) -> None:
         scenario.advance()
 
 
+def _silence_from_bob(scenario) -> None:
+    """Bob casts and resolves Silence in alice's main phase, leaving the stack
+    empty and alice's own sorcery timing open: a CR 611.1 prohibition on
+    alice that applies while CR 117.1a would allow her cast."""
+    scenario.pass_priority("alice")
+    scenario.cast_and_resolve(
+        "Silence", *scenario.untapped_sources("Plains", username="bob"), username="bob"
+    )
+    assert scenario.game.can_cast_sorcery("alice")
+
+
 # -- CR 117.1a timing: a non-flash noninstant with the stack non-empty ------
 
 
@@ -271,11 +282,13 @@ def test_an_exiled_adventure_creature_blocked_by_a_prohibition_is_reported():
     """CR 715.3d: once Bonecrusher Giant's Adventure half (Stomp) resolves,
     the creature half is castable from exile through the same keyword-
     cast-option loop, `pays_mana_cost=True` this time (the creature's own
-    `{2}{R}`). Voice of Victory's "Your opponents can't cast spells during
-    your turn" is a CR 611.1 prohibition on bob's turn, computed by that
-    branch and used to `continue` past without recording - and this card
-    sits in exile, never hand, so no other loop in `_cast_actions` covers
-    it either.
+    `{2}{R}`). Silence, cast by bob in alice's own main phase ("Your
+    opponents can't cast spells this turn"), is a CR 611.1 prohibition,
+    computed by that branch and used to `continue` past without recording -
+    and this card sits in exile, never hand, so no other loop in
+    `_cast_actions` covers it either. (Voice of Victory's "during your turn"
+    could never show it: on bob's turn the creature is refused on CR 117.1a
+    timing first - CR 715.3d's permission changes the zone, not the timing.)
 
     CR 715.3d's permission covers the creature face only ("It can't be
     cast as an Adventure this way"), so that option enumerates no Stomp
@@ -285,7 +298,7 @@ def test_an_exiled_adventure_creature_blocked_by_a_prohibition_is_reported():
         Scenario()
         .manual_turn_based_actions()
         .player("alice", hand=["Bonecrusher Giant"], battlefield=["Mountain"] * 5)
-        .player("bob", battlefield=["Grizzly Bears", "Voice of Victory"])
+        .player("bob", hand=["Silence"], battlefield=["Grizzly Bears", "Plains"])
         .build()
     )
     scenario.start_at(Step.PRECOMBAT_MAIN)
@@ -298,12 +311,12 @@ def test_an_exiled_adventure_creature_blocked_by_a_prohibition_is_reported():
     stomp = scenario.resolve_top()
     exile_adventured(scenario.game, stomp, "alice")
 
-    _advance_to(scenario, "bob", Step.PRECOMBAT_MAIN)
+    _silence_from_bob(scenario)
     giant = scenario.find("Bonecrusher Giant", Zone.EXILE, "alice")
 
     expected_reason = why_cannot_cast_restriction(giant, "alice", scenario.game)
     assert expected_reason is not None
-    assert "Voice of Victory" in expected_reason
+    assert "Silence" in expected_reason
 
     rows = {b.spell_face: b for b in _blocked(scenario, "alice") if b.card_id == giant.id}
     assert set(rows) == {None}
@@ -318,12 +331,13 @@ def test_an_exiled_adventure_creature_blocked_by_a_prohibition_is_reported():
 
 
 def test_the_stomp_face_of_an_exiled_adventure_card_is_never_a_legal_cast_not_merely_blocked():
-    """Same board as the prohibition test above, but without Voice of
-    Victory: nothing refuses the exiled Bonecrusher Giant's creature face
-    or its Stomp face on CR 117.1a timing (Stomp is an instant) or a CR
-    611.1 prohibition, so neither is a `blocked_casts` row - but CR 715.3d
-    still makes recasting Stomp from exile illegal, and `legal_actions`
-    should not list it as a legal CAST either."""
+    """Same board as the prohibition test above, but without Silence: in
+    alice's own main phase with the stack empty nothing refuses the exiled
+    Bonecrusher Giant's creature face or its Stomp face on CR 117.1a timing
+    (Stomp is an instant) or a CR 611.1 prohibition, so neither is a
+    `blocked_casts` row - but CR 715.3d still makes recasting Stomp from
+    exile illegal, and `legal_actions` should not list it as a legal CAST
+    either."""
     scenario = (
         Scenario()
         .manual_turn_based_actions()
@@ -341,7 +355,6 @@ def test_the_stomp_face_of_an_exiled_adventure_card_is_never_a_legal_cast_not_me
     stomp = scenario.resolve_top()
     exile_adventured(scenario.game, stomp, "alice")
 
-    _advance_to(scenario, "bob", Step.PRECOMBAT_MAIN)
     giant = scenario.find("Bonecrusher Giant", Zone.EXILE, "alice")
 
     rows = {b.spell_face: b for b in _blocked(scenario, "alice") if b.card_id == giant.id}
@@ -354,15 +367,15 @@ def test_another_exiled_adventurers_sorcery_half_is_never_a_row_or_a_cast():
     """The same CR 715.3d limit on a different adventurer, Lovestruck Beast
     (Heart's Desire is a `Sorcery - Adventure` for {G}): a mechanic of the
     permission, not of Bonecrusher Giant. In alice's own main phase the
-    creature is a legal cast from exile and Heart's Desire is not; on bob's
-    turn Voice of Victory's CR 611.1 prohibition refuses the creature, and
+    creature is a legal cast from exile and Heart's Desire is not; once bob
+    resolves Silence, its CR 611.1 prohibition refuses the creature, and
     that refusal is the only row - Heart's Desire is never offered this way,
     so it is never "blocked"."""
     scenario = (
         Scenario()
         .manual_turn_based_actions()
         .player("alice", hand=["Lovestruck Beast"], battlefield=["Forest"] * 4)
-        .player("bob", battlefield=["Voice of Victory"])
+        .player("bob", hand=["Silence"], battlefield=["Plains"])
         .build()
     )
     scenario.start_at(Step.PRECOMBAT_MAIN)
@@ -377,11 +390,11 @@ def test_another_exiled_adventurers_sorcery_half_is_never_a_row_or_a_cast():
     assert (beast.id, None) in kinds
     assert (beast.id, "Heart's Desire") not in kinds
 
-    _advance_to(scenario, "bob", Step.PRECOMBAT_MAIN)
+    _silence_from_bob(scenario)
     rows = {b.spell_face: b for b in _blocked(scenario, "alice") if b.card_id == beast.id}
     assert set(rows) == {None}
     assert rows[None].rule == "611.1"
-    assert "Voice of Victory" in rows[None].reason
+    assert "Silence" in rows[None].reason
 
 
 # -- CR 611.1: a rules-modifying prohibition, not a timing question ---------

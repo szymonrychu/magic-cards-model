@@ -36,6 +36,9 @@ def _discard_electros_bolt(scenario: Scenario) -> CardState:
     bolt = scenario.find("Electro's Bolt", Zone.HAND, "alice")
     mongrel = scenario.creature("Wild Mongrel")
     scenario.activate(mongrel, discarding=[bolt])
+    # Mayhem's reminder: "Timing rules still apply." Electro's Bolt is a
+    # sorcery (CR 307.1), so Wild Mongrel's ability resolves first.
+    scenario.pass_until_resolved()
     return bolt
 
 

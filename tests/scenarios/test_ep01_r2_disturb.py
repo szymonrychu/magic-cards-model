@@ -254,6 +254,63 @@ def test_disturb_is_sorcery_speed_for_a_creature_back_face():
         casting.cast()
 
 
+@pytest.mark.parametrize("step", [Step.END_STEP, Step.BEGINNING_OF_COMBAT, Step.UPKEEP])
+def test_flashback_keeps_the_sorcerys_own_timing(step):
+    """CR 702.34a: flashback changes the zone and the cost, never the timing -
+    Faithless Looting is still a sorcery (CR 307.1, CR 117.1a), so it is not
+    cast outside its controller's main phase."""
+    scenario = board({"graveyard": ["Faithless Looting"], "battlefield": ["Mountain"] * 3}).build()
+    scenario.start_at(step)
+    looting = scenario.find("Faithless Looting", Zone.GRAVEYARD)
+
+    assert not [
+        action
+        for action in legal_actions(scenario.game, "alice")
+        if action.card_id == looting.id and action.kind is ActionKind.CAST
+    ]
+    with pytest.raises(ValueError, match="(?i)main phase"):
+        casting = scenario.cast("Faithless Looting", from_zone=Zone.GRAVEYARD)
+        casting.use_keyword("Flashback")
+        scenario.pay_with(casting.begin_paying(), *scenario.untapped_sources(*["Mountain"] * 3))
+        casting.cast()
+
+
+def test_escape_keeps_the_creatures_own_timing():
+    """CR 702.138a: escape is a permission to cast from the graveyard; Uro is
+    a creature spell (CR 302.1, CR 117.1a), so not in the end step."""
+    filler = ["Grizzly Bears"] * 5
+    scenario = board(
+        {
+            "graveyard": ["Uro, Titan of Nature's Wrath", *filler],
+            "battlefield": ["Forest", "Forest", "Island", "Island"],
+        }
+    ).build()
+    scenario.start_at(Step.END_STEP)
+    fuel = [c for c in scenario.player("alice").graveyard if c.name == "Grizzly Bears"]
+
+    with pytest.raises(ValueError, match="(?i)main phase"):
+        casting = scenario.cast("Uro, Titan of Nature's Wrath", from_zone=Zone.GRAVEYARD)
+        casting.use_keyword("Escape", choosing=fuel)
+        scenario.pay_with(
+            casting.begin_paying(),
+            *scenario.untapped_sources("Forest", "Forest", "Island", "Island"),
+        )
+        casting.cast()
+
+
+def test_flashback_on_an_instant_is_still_instant_speed():
+    """CR 304.1: Faithful Mending is an instant, so flashback casts it in the
+    end step exactly as it could be cast from the hand."""
+    lands = ("Plains", "Island", "Island")
+    scenario = board({"graveyard": ["Faithful Mending"], "battlefield": list(lands)}).build()
+    scenario.start_at(Step.END_STEP)
+
+    casting = scenario.cast("Faithful Mending", from_zone=Zone.GRAVEYARD)
+    casting.use_keyword("Flashback")
+    scenario.pay_with(casting.begin_paying(), *scenario.untapped_sources(*lands))
+    assert scenario.put_on_stack(casting).zone is Zone.STACK
+
+
 # -- the exile --------------------------------------------------------------
 
 

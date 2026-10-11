@@ -720,27 +720,34 @@ def test_spider_verse_copies_a_spell_cast_from_the_graveyard():
     assert original in spells
 
 
+# The second cast lands on a non-empty stack, so these two use an instant
+# with flashback (Faithful Mending): a sorcery could not be cast there at all
+# (CR 117.1a, CR 307.1).
+MENDING = "Faithful Mending"
+MENDING_LANDS = ["Plains", "Island", "Island"] * 2
+
+
 def test_spider_verse_declined_copy_leaves_the_once_each_turn_untaken():
-    scenario = _verse(["Faithless Looting", "Faithless Looting"], ["Mountain"] * 6)
-    _flashback(scenario, "Faithless Looting", "Mountain", "Mountain", "Mountain")
+    scenario = _verse([MENDING, MENDING], MENDING_LANDS)
+    _flashback(scenario, MENDING, "Plains", "Island", "Island")
     scenario.will_take_the_may(False)
     _resolve_trigger(scenario)
-    assert len([s for s in scenario.game.stack if s.name == "Faithless Looting"]) == 1
-    _flashback(scenario, "Faithless Looting", "Mountain", "Mountain", "Mountain")
+    assert len([s for s in scenario.game.stack if s.name == MENDING]) == 1
+    _flashback(scenario, MENDING, "Plains", "Island", "Island")
     scenario.will_take_the_may(True)
     _resolve_trigger(scenario)
-    assert len([s for s in scenario.game.stack if s.name == "Faithless Looting"]) == 3
+    assert len([s for s in scenario.game.stack if s.name == MENDING]) == 3
 
 
 def test_spider_verse_copies_only_once_each_turn():
-    scenario = _verse(["Faithless Looting", "Faithless Looting"], ["Mountain"] * 6)
-    _flashback(scenario, "Faithless Looting", "Mountain", "Mountain", "Mountain")
+    scenario = _verse([MENDING, MENDING], MENDING_LANDS)
+    _flashback(scenario, MENDING, "Plains", "Island", "Island")
     scenario.will_take_the_may(True)
     _resolve_trigger(scenario)
-    _flashback(scenario, "Faithless Looting", "Mountain", "Mountain", "Mountain")
+    _flashback(scenario, MENDING, "Plains", "Island", "Island")
     scenario.game.put_triggers_on_stack()
-    assert len([s for s in scenario.game.stack if s.name == "Faithless Looting"]) == 3
-    assert all(s.name == "Faithless Looting" for s in scenario.game.stack)
+    assert len([s for s in scenario.game.stack if s.name == MENDING]) == 3
+    assert all(s.name == MENDING for s in scenario.game.stack)
 
 
 def test_spider_verse_ignores_a_spell_cast_from_the_hand():
