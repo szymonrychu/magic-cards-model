@@ -480,3 +480,30 @@ def apply_zone_characteristics(game: Game | None, card: CardState, chars: Any) -
         elif part.startswith("color:"):
             chars = SetColors(colors=(_COLOR_WORDS[part.split(":", 1)[1]],))(chars, board)
     return chars
+
+
+def _quality_fields(quality: str) -> dict[str, Any] | None:
+    from .layers.group_grants import parse_group
+
+    read = parse_group(quality)
+    if read is None or read["other"] or read["chosen"]:
+        return None
+    return {key: value for key, value in read.items() if key not in ("scope", "other", "chosen")}
+
+
+def group_quality_is_readable(quality: str) -> bool:
+    """Whether the group grammar reads a spell quality ("artifact creature",
+    "legendary", "nonland") that `next_spell`'s closed one does not."""
+    return _quality_fields(quality) is not None
+
+
+def group_quality_matches(state: CardState, quality: str) -> bool:
+    """Whether `state` (a spell) has `quality` under the group grammar, asked of
+    its printed characteristics (CR 109.3)."""
+    from .layers.group_grants import group_selector
+    from .layers.model import GroupMatch, printed_characteristics
+
+    fields = _quality_fields(quality)
+    if fields is None:
+        return False
+    return bool(GroupMatch(scope="any", **fields)(printed_characteristics(state), {}))

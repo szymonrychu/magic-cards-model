@@ -161,3 +161,56 @@ def test_web_slinging_grant_skips_a_nonlegendary_spell():
             choosing=[bears],
             mana_sources=scenario.untapped_sources("Forest", "Plains", "Island"),
         )
+
+
+# -- affinity (CR 702.41a) ----------------------------------------------------
+
+
+def test_mycosynth_golem_gives_artifact_creature_spells_affinity_for_artifacts():
+    """Sliver Construct ({3}) with two artifacts out costs {1}; a plain creature
+    spell does not get the discount."""
+    scenario = board(["Mycosynth Golem", "Sol Ring"], hand=["Sliver Construct", "Grizzly Bears"])
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    construct = scenario.cast("Sliver Construct")
+    discounted = str(construct.total_cost.mana)
+    construct.cancel()
+    bears = scenario.cast("Grizzly Bears")
+
+    assert discounted == "{1}", "{3} less the Golem and the Sol Ring"
+    assert str(bears.total_cost.mana) == "{1}{G}"
+
+
+def test_the_affinity_grant_ends_with_the_golem():
+    scenario = board(["Mycosynth Golem", "Sol Ring"], hand=["Sliver Construct"])
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scenario.game.put_into_graveyard(scenario.creature("Mycosynth Golem"))
+    construct = scenario.cast("Sliver Construct")
+
+    assert str(construct.total_cost.mana) == "{3}", "no affinity without the Golem"
+
+
+# -- rebound (CR 702.88a) -----------------------------------------------------
+
+
+def test_cast_through_time_gives_instants_rebound():
+    scenario = board(["Cast Through Time", "Mountain"], bob=["Grizzly Bears"], hand=["Lightning Bolt"])
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    (mountain,) = scenario.untapped_sources("Mountain")
+
+    bolt = scenario.cast_and_resolve(
+        "Lightning Bolt", mountain, targets=[scenario.creature("Grizzly Bears", "bob")]
+    )
+
+    assert bolt.zone is Zone.EXILE, "exiled by rebound instead of the graveyard"
+
+
+def test_without_the_grant_the_instant_goes_to_the_graveyard():
+    scenario = board(["Mountain"], bob=["Grizzly Bears"], hand=["Lightning Bolt"])
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    (mountain,) = scenario.untapped_sources("Mountain")
+
+    bolt = scenario.cast_and_resolve(
+        "Lightning Bolt", mountain, targets=[scenario.creature("Grizzly Bears", "bob")]
+    )
+
+    assert bolt.zone is Zone.GRAVEYARD

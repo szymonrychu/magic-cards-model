@@ -5488,7 +5488,16 @@ def has_rebound_now(card_state: CardState) -> bool:
     swap, `Game._create_rebound_delayed_trigger`'s own guard) both ask this
     instead, so a granted rebound reaches the same two effects a printed one
     does."""
-    return has_rebound(card_state.card) or card_state.granted_rebound
+    if has_rebound(card_state.card) or card_state.granted_rebound:
+        return True
+    game = getattr(card_state, "_board_source", None)
+    if game is None or card_state.zone is not Zone.STACK:
+        return False
+    # CR 702.88a: "Instant and sorcery spells you control have rebound" -
+    # a static ability read while the spell is on the stack (CR 611.3a).
+    from .spell_grants import granted_lines_of_stack_spell
+
+    return "Rebound" in granted_lines_of_stack_spell(game, card_state)
 
 
 # --------------------------------------------------------------------------

@@ -497,7 +497,7 @@ def has_convoke_now(spell: CardState) -> bool:
     return False
 
 
-_ZONE_WORDS_FOR_CONVOKE = {"hand": Zone.HAND, "graveyard": Zone.GRAVEYARD}
+_ZONE_WORDS_FOR_CONVOKE = {"hand": Zone.HAND, "graveyard": Zone.GRAVEYARD, "exile": Zone.EXILE}
 
 
 def granted_convoke_line_is_readable(text: str) -> bool:
