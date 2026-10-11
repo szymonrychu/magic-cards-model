@@ -1,0 +1,138 @@
+{
+  "object": "card",
+  "id": "71a98efb-9b0a-496b-ac21-8d70527ea544",
+  "oracle_id": "437cfd16-94bc-43ba-afd8-e9e9d028a4ca",
+  "multiverse_ids": [
+    662214
+  ],
+  "mtgo_id": 126141,
+  "arena_id": 90911,
+  "tcgplayer_id": 548596,
+  "cardmarket_id": 768037,
+  "name": "Flare of Denial",
+  "lang": "en",
+  "released_at": "2024-06-14",
+  "uri": "https://api.scryfall.com/cards/71a98efb-9b0a-496b-ac21-8d70527ea544",
+  "scryfall_uri": "https://scryfall.com/card/mh3/62/flare-of-denial?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T02:54:50Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/7/1/71a98efb-9b0a-496b-ac21-8d70527ea544.jpg?1783911290",
+    "normal": "https://cards.scryfall.io/normal/front/7/1/71a98efb-9b0a-496b-ac21-8d70527ea544.jpg?1783911290",
+    "large": "https://cards.scryfall.io/large/front/7/1/71a98efb-9b0a-496b-ac21-8d70527ea544.jpg?1783911290",
+    "png": "https://cards.scryfall.io/png/front/7/1/71a98efb-9b0a-496b-ac21-8d70527ea544.png?1783911290",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/7/1/71a98efb-9b0a-496b-ac21-8d70527ea544.jpg?1783911290",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/7/1/71a98efb-9b0a-496b-ac21-8d70527ea544.jpg?1783911290",
+    "thumb": "https://cards.scryfall.io/thumb/front/7/1/71a98efb-9b0a-496b-ac21-8d70527ea544.webp?1783911290",
+    "grid": "https://cards.scryfall.io/grid/front/7/1/71a98efb-9b0a-496b-ac21-8d70527ea544.webp?1783911290",
+    "display": "https://cards.scryfall.io/display/front/7/1/71a98efb-9b0a-496b-ac21-8d70527ea544.webp?1783911290",
+    "art": "https://cards.scryfall.io/art/front/7/1/71a98efb-9b0a-496b-ac21-8d70527ea544.webp?1783911290",
+    "crop": "https://cards.scryfall.io/crop/front/7/1/71a98efb-9b0a-496b-ac21-8d70527ea544.webp?1783911290"
+  },
+  "mana_cost": "{1}{U}{U}",
+  "cmc": 3.0,
+  "type_line": "Instant",
+  "oracle_text": "You may sacrifice a nontoken blue creature rather than pay this spell's mana cost.\nCounter target spell.",
+  "colors": [
+    "U"
+  ],
+  "color_identity": [
+    "U"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "banned",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "3ed80bb6-77e8-4aa7-8262-95377a38aba1",
+  "set": "mh3",
+  "set_name": "Modern Horizons 3",
+  "set_type": "draft_innovation",
+  "set_uri": "https://api.scryfall.com/sets/3ed80bb6-77e8-4aa7-8262-95377a38aba1",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Amh3&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/mh3?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/71a98efb-9b0a-496b-ac21-8d70527ea544/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A437cfd16-94bc-43ba-afd8-e9e9d028a4ca&unique=prints",
+  "collector_number": "62",
+  "digital": false,
+  "rarity": "rare",
+  "flavor_text": "\"I see where you're going with that, and I don't like it.\"",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Jason A. Engle",
+  "artist_ids": [
+    "02e2b5de-4341-464c-8fdb-a1adbf873bc0"
+  ],
+  "illustration_id": "43ff3ff2-3522-49ed-a9ff-3cc394e2e5db",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 1445,
+  "preview": {
+    "source": "Wizards of the Coast",
+    "source_uri": "https://magic.wizards.com/en/news/announcements/the-modern-horizons-3-leaks-nulldrifters-and-you",
+    "previewed_at": "2024-04-30"
+  },
+  "prices": {
+    "usd": "3.66",
+    "usd_foil": "4.91",
+    "usd_etched": null,
+    "eur": "4.19",
+    "eur_foil": "5.28",
+    "tix": "0.40"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=662214&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DFlare%2Bof%2BDenial",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DFlare%2Bof%2BDenial",
+    "edhrec": "https://edhrec.com/route/?cc=Flare+of+Denial"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F548596%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=768037&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/126141?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}
