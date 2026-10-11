@@ -152,7 +152,8 @@ _LORE_RE = re.compile(
     r"^there are (?P<n>\w+) or more lore counters among sagas you control$", re.IGNORECASE
 )
 _SELF_TAPPED_RE = re.compile(
-    r"^(?:this (?:creature|permanent|artifact|enchantment|land)|it) (?:is|'s) (?P<status>un)?tapped$",
+    r"^(?:this (?:creature|permanent|artifact|enchantment|land)|it) "
+    r"(?:is|'s) (?P<status>un)?tapped$",
     re.IGNORECASE,
 )
 _ENTERED_RE = re.compile(
@@ -752,7 +753,8 @@ _RESTRICTION_RE = re.compile(
     r"^(?P<subject>.+?) can't be the targets? of (?P<body>.+?)\.?$", re.IGNORECASE
 )
 _ZONE_PART_RE = re.compile(
-    r"^(?:(?P<type>[a-z]+) )?(?:cards?|(?P<plural>[a-z]+s)) (?P<where>on the battlefield|in graveyards)$",
+    r"^(?:(?P<type>[a-z]+) )?(?:cards?|(?P<plural>[a-z]+s)) "
+    r"(?P<where>on the battlefield|in graveyards)$",
     re.IGNORECASE,
 )
 
