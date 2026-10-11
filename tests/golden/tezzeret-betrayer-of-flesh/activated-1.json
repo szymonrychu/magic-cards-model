@@ -1,11 +1,11 @@
 {
-  "ability": "−6: You get an emblem with \"Whenever an artifact you control becomes tapped, draw a card.\"",
+  "ability": "−2: Target artifact becomes an artifact creature. If it isn't a Vehicle, it has base power and toughness 4/4.",
   "action": {
     "controller": "alice",
     "modes": [],
     "on_stack": true,
     "source": "Tezzeret, Betrayer of Flesh@alice#1",
-    "targets": [],
+    "targets": ["Memnite@alice#1"],
     "x": 0
   },
   "board": {
@@ -34,16 +34,16 @@
   },
   "card": "Tezzeret, Betrayer of Flesh",
   "delta": {
-    "created": {
-      "Tezzeret, Betrayer of Flesh emblem@alice+1": {
-        "counters": {},
-        "zone": "command"
-      }
-    },
+    "created": {},
     "decisions": [],
     "fields_changed": ["continuous_effects"],
     "notices": {},
-    "objects": {},
+    "objects": {
+      "Memnite@alice#1": {
+        "power": [1, 4],
+        "toughness": [1, 4]
+      }
+    },
     "players": {},
     "stack": []
   },
