@@ -21,6 +21,7 @@ from magic_cards_model.machines import Step
 from magic_cards_model.machines.casting.permissions import granted_cast_options
 from magic_cards_model.machines.keywords import equip_activation
 from magic_cards_model.models import Zone
+from magic_cards_model.models.card_state import Counter
 from tests.scenarios.harness import Scenario
 
 
@@ -555,3 +556,98 @@ def test_retrace_refuses_a_nonland_card_as_the_discard():
     casting.use_keyword("Retrace", choosing=[opt])
     with pytest.raises(ValueError, match="land|discard"):
         scenario.pay_with(casting.begin_paying(), *scenario.untapped_sources("Forest", "Forest"))
+
+
+# -- Elvish Refueler: re-activate an exhaust ability once, during your turn --------------
+
+FORESTS = ["Forest"] * 12
+
+
+def _refueler(extra=()):
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=["Elvish Refueler", *extra, *FORESTS],
+            library=["Forest"] * 10,
+        )
+        .player("bob", library=["Forest"] * 10)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    return scenario
+
+
+def _exhaust(scenario, name, index, mana, username="alice"):
+    permanent = scenario.creature(name, username)
+    sources = scenario.untapped_sources(*(["Forest"] * mana), username=username)
+    scenario.activate(permanent, *sources, index=index, username=username)
+    scenario.pass_until_resolved()
+    return permanent
+
+
+def _alices_next_turn(scenario):
+    for _ in range(2):
+        turns = scenario.turn.turns_taken
+        while scenario.turn.turns_taken == turns:
+            scenario.advance()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+
+def _refusal(scenario, name, index):
+    return scenario.why_cannot_activate(scenario.creature(name, "alice"), index=index)
+
+
+def test_refueler_allows_one_reactivation_of_a_used_exhaust_ability_on_your_turn():
+    scenario = _refueler()
+    refueler = _exhaust(scenario, "Elvish Refueler", 0, 2)
+    assert refueler.counters[Counter.PLUS_ONE] == 1
+    assert _refusal(scenario, "Elvish Refueler", 0) is not None, "already activated one this turn"
+    _alices_next_turn(scenario)
+    assert _refusal(scenario, "Elvish Refueler", 0) is None
+    _exhaust(scenario, "Elvish Refueler", 0, 2)
+    assert refueler.counters[Counter.PLUS_ONE] == 2
+    assert _refusal(scenario, "Elvish Refueler", 0) is not None, "only one per turn"
+    assert _notices(scenario) == []
+
+
+def test_refueler_applies_to_other_exhaust_abilities_too():
+    scenario = _refueler(["Greenbelt Guardian"])
+    guardian = _exhaust(scenario, "Greenbelt Guardian", 1, 4)
+    assert guardian.counters[Counter.PLUS_ONE] == 3
+    _alices_next_turn(scenario)
+    assert _refusal(scenario, "Greenbelt Guardian", 1) is None
+
+
+def test_without_the_refueler_an_exhaust_ability_stays_used():
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Greenbelt Guardian", *FORESTS], library=["Forest"] * 10)
+        .player("bob", library=["Forest"] * 10)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    _exhaust(scenario, "Greenbelt Guardian", 1, 4)
+    _alices_next_turn(scenario)
+    assert "already been activated" in (_refusal(scenario, "Greenbelt Guardian", 1) or "")
+
+
+def test_the_refueler_does_not_help_an_opponents_exhaust_ability():
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Elvish Refueler", *FORESTS], library=["Forest"] * 10)
+        .player("bob", battlefield=["Greenbelt Guardian", *FORESTS], library=["Forest"] * 10)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    _next_turn(scenario)
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    assert scenario.game.active_player.username == "bob"
+    guardian = _exhaust(scenario, "Greenbelt Guardian", 1, 4, username="bob")
+    assert guardian.counters[Counter.PLUS_ONE] == 3
+    turns = scenario.turn.turns_taken
+    while scenario.turn.turns_taken == turns:
+        scenario.advance()
+    assert scenario.game.active_player.username == "alice"
+    refusal = scenario.why_cannot_activate(guardian, index=1, username="bob")
+    assert "already been activated" in (refusal or "")

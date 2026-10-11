@@ -3113,6 +3113,43 @@ _INSTANT_SPEED_EQUIP_RE = re.compile(
 )
 
 
+#: "During your turn, as long as you haven't activated an exhaust ability this
+#: turn, you may activate exhaust abilities as though they haven't been
+#: activated." (Elvish Refueler): CR 702.177a's "activate only once", lifted once
+#: a turn by a static ability (CR 604.2).
+_EXHAUST_REACTIVATION_RE = re.compile(
+    r"^during your turn, as long as you haven'?t activated an exhaust ability this turn, "
+    r"you may activate exhaust abilities as though they haven'?t been activated\.?$",
+    re.IGNORECASE,
+)
+
+#: `Game.turn_facts`' key for "has activated an exhaust ability this turn".
+ACTIVATED_EXHAUST_FACT = "activated_exhaust"
+
+
+def is_exhaust_reactivation_line(line: str) -> bool:
+    """Whether a static line is `_EXHAUST_REACTIVATION_RE`'s permission."""
+    return _EXHAUST_REACTIVATION_RE.fullmatch(line.strip()) is not None
+
+
+def exhaust_reactivation_allowed(game: Any, player: str) -> bool:
+    """Whether `player` may activate an exhaust ability that was already
+    activated right now: a permanent they control has the permission on the
+    computed board (CR 613.5), it is their turn, and they have activated no
+    exhaust ability yet this turn (`ACTIVATED_EXHAUST_FACT`). Re-read at every
+    question (CR 611.3a)."""
+    if game.turn is None or game.turn.active_player != player:
+        return False
+    if game.turn_fact_holds(ACTIVATED_EXHAUST_FACT, player):
+        return False
+    board = game.computed_board()
+    return any(
+        is_exhaust_reactivation_line(line)
+        for permanent in game.permanents_controlled_by(player)
+        for line in board.of(permanent).abilities
+    )
+
+
 def is_instant_speed_equip_line(line: str) -> bool:
     """Whether a static line is `_INSTANT_SPEED_EQUIP_RE`'s permission - what the
     static audit counts handled."""

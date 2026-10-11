@@ -56,6 +56,8 @@ from ...machines.effects import (
     devotion_to,
 )
 from ...machines.keywords import (
+    ACTIVATED_EXHAUST_FACT,
+    exhaust_reactivation_allowed,
     morph_ability,
     turn_face_up_ban,
     turn_face_up_cost,
@@ -1139,7 +1141,11 @@ class ActivationMixin:
                     "(CR 716.2a)"
                 )
 
-        if ability.exhaust and self._activation_key(permanent, index) in self.exhausted:
+        if (
+            ability.exhaust
+            and self._activation_key(permanent, index) in self.exhausted
+            and not exhaust_reactivation_allowed(self, controller)
+        ):
             return f"{permanent.name}'s exhaust ability has already been activated (CR 702.177a)"
 
         if ability.power_up:
@@ -2847,6 +2853,7 @@ class ActivationMixin:
             )
             self.activations[key] = self.activations.get(key, 0) + 1
             if ability.exhaust:
+                self.record_turn_fact(ACTIVATED_EXHAUST_FACT, self.controller_of(permanent).username)
                 # CR 702.177a: "Activate only once" - unlike `activations`
                 # above, this is never cleared on a new turn (`exhausted`
                 # persists for the object's whole existence on the
