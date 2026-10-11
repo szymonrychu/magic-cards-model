@@ -14,10 +14,9 @@ The pool carries no second printing of any of these four shapes (the two
 import pytest
 
 from magic_cards_model.machines import Step
-from magic_cards_model.machines.casting import why_cannot_cast_restriction
+from magic_cards_model.machines.casting import PlayAction, why_cannot_cast_restriction
 from magic_cards_model.machines.legal_actions import legal_actions
 from magic_cards_model.models import Zone
-from magic_cards_model.machines.casting import PlayAction
 from magic_cards_model.models.action import ActionKind, Affordability
 from magic_cards_model.support import HANDLED, classify_clauses
 from tests.cards import card
