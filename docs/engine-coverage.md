@@ -7918,3 +7918,22 @@ Read by `machines/block_statics.py` off every battlefield permanent's computed a
 | "<Verb> target X. If this spell was kicked, [instead] <verb> target Y [instead]." - the kicked sentence's targets replace the unkicked ones (before: both "target" words were demanded, so the unkicked cast needed two targets) | CR 601.2c, 702.33d | `machines/targeting._KICKED_INSTEAD_IMPERATIVE_TARGETS_RE` via `kicked_instead_target_text` | Tear Asunder; Bloodchief's Thirst (second printing, "instead" before the verb) in `scenarios/test_kicker_changes_exile_target.py` |
 | Class level 1 attack trigger (may discard, if you do draw), level 2 discard damage, level 3 search-then-random-discard | CR 716.2a, 508.3d, 701.9b, 118.12 | existing readers, scenario-proven | Cool but Rude in `scenarios/test_class_attack_discard_draw_levels.py` |
 | "Destroy target nonartifact creature." refusal, indestructible, regeneration | CR 701.8a, 702.12b, 701.19a | existing reader, scenario-proven | Go for the Throat in `scenarios/test_destroy_target_nonartifact_creature.py` |
+
+## EP01-R2-T8: other static abilities (trigger doubling, prohibitions, crew/saddle, exert, reveals, equip, block-as-though, graveyard statics)
+
+Audit credit lives in `static_audit/other_statics.py`: a line reads handled only when the production reader of its family performs it.
+
+| Mechanic | CR | Where | Proof |
+|---|---|---|---|
+| Trigger multipliers and suppression (extra trigger, "doesn't cause abilities to trigger") | 603.2d | `machines/trigger_doubling.py`, applied inside `triggers_for` | `scenarios/test_ep01_r2_trigger_doubling_statics.py` |
+| Player-action prohibitions ("can't pay life or sacrifice creatures to cast spells or activate abilities", "can't cast spells with ...") | 101.2, 118.3, 701.21 | `machines/player_action_prohibitions.py` | `scenarios/test_ep01_r2_player_action_prohibitions.py` |
+| Crew/saddle/station contribution statics; exert "as it attacks" linked effects (untap all other creatures, +X/+X per counter) | 702.122, 702.171, 702.139 | `machines/crew_saddle_statics.py`, `machines/exert_on_attack.py` | `scenarios/test_ep01_r2_crew_saddle_exert_and_reveal_statics.py` |
+| Revealed hands and top cards | 400.2, 701.20a | `machines/revealed_information.py` | same file |
+| Equip restrictions, once-per-turn equip, instant-speed equip, block-as-though statics, extra loyalty activations | 301.5, 602.5b, 509.1a, 606.3 | `machines/equip_block_statics.py` | `scenarios/test_ep01_r2_equip_and_block_ability_statics.py` |
+| Cleanup damage kept, can't-transform groups, forced-defender attack requirements, first coin flip heads, Blood Sun mana-ability line, remove-supertype, Mishra ward grant | 514.2, 701.27a, 508.1d, 705.1, 613.1f, 205.4 | `machines/cleanup_damage_statics.py`, `transform_prohibitions.py`, `defender_attack_requirements.py`, `coin_flip_statics.py`, `mana_ability_lines.py`, `layers/other_statics.py` | `scenarios/test_ep01_r2_layer_and_misc_statics.py` |
+| "Cards in graveyards lose all abilities": printed graveyard cast keywords (flashback and kin), unearth and dredge stop functioning, granted unearth too | 113.6b, 613.1f, 702.34a, 702.84a, 702.52a | `machines/graveyard_statics.py`, `KeywordCastOption.why_not`, `keywords.off_zone_abilities`, `why_cannot_dredge` | `scenarios/test_ep01_r2_graveyard_ability_statics.py` (Yixlid Jailer) |
+| "Each artifact card in your graveyard has unearth {1}{B}{R}": a state-aware unearth list (`keywords.unearth_abilities_of`, `off_zone_abilities(card, state=, game=)`) | 702.84a, 613.1f | `machines/graveyard_statics.granted_unearth_abilities` | same file (Mishra, Tamer of Mak Fawa) |
+| "As long as this card is in your graveyard, if you would learn, you may instead return this card to the battlefield": `EventKind.LEARN` raised by `learn`, graveyard-sourced replacement effects | 701.48a, 614.1a, 113.6b | `replacement/graveyard_statics.py`, `model._graveyard_source_effects` | same file (Retriever Phoenix) |
+| "As this permanent transforms into <face>, attach it to a player": the Aura's controller picks the player | 712.20, 303.4d, 303.4m | `effects/continuous._attach_permanent_to_a_player` | same file (Curse of Leeches // Leeching Lurker) |
+
+Notes: CR 702.122 and 702.171 contain no "as though" text, so the crew/saddle statics are contribution and restriction statics only. A Jailer-style removal is applied over a granted unearth without comparing timestamps. Schema bumped 141 -> 149 (new `Modification` members `RemoveSupertype`, `LoseAllAbilitiesExceptManaAbilities`; the integrator renumbers).
