@@ -357,6 +357,10 @@ _DURING_AN_OPPONENTS_TURN_RE = re.compile(r"\s*during an opponent'?s turn", re.I
 #: CR 115.9a.
 _WITH_A_SINGLE_TARGET_RE = re.compile(r"\s*with a single target\b", re.IGNORECASE)
 _SPELL_THAT_TARGETS_RE = re.compile(r"\bthat targets (?P<target>.+)$", re.IGNORECASE)
+_MODIFIED_TARGET_RE = re.compile(
+    r"modified (?P<noun>permanent|creature)(?: (?P<who>you control|an opponent controls))?",
+    re.IGNORECASE,
+)
 
 #: Geometer's Arthropod's and Matterbending Mage's own "a spell with {X} in
 #: its mana cost" (CR 107.3's X, CR 202.1's mana cost as printed symbols).
@@ -478,6 +482,35 @@ def _cast_spell_targets_condition_holds(
             not target_ref.is_player and target_ref.card_id == source.id
             for target_ref in spell.targets
         )
+
+    modified = _MODIFIED_TARGET_RE.fullmatch(stripped)
+    if modified is not None:
+        # Pearl-Ear, Imperial Advisor's "an Aura spell that targets a modified
+        # permanent you control" (CR 700.9: a counter, an Equipment, or an Aura
+        # its controller controls). Read off the computed board (CR 613.5).
+        from ..conditions.board import permanent_is_modified
+
+        spell = game.find_by_id(event.subject_id) if event.subject_id is not None else None
+        if spell is None:
+            return False
+        board = game.computed_board()
+        for target_ref in spell.targets:
+            if target_ref.is_player:
+                continue
+            found = game.find_by_id(target_ref.card_id)
+            if found is None or found.zone is not Zone.BATTLEFIELD:
+                continue
+            chars = board.of(found)
+            who = (modified.group("who") or "").lower()
+            if who == "you control" and chars.controller != controller:
+                continue
+            if who == "an opponent controls" and chars.controller in (None, controller):
+                continue
+            if modified.group("noun") == "creature" and Type.CREATURE not in chars.types:
+                continue
+            if permanent_is_modified(game, found, chars):
+                return True
+        return False
 
     requirement = _read_phrase("", stripped, strict=True)
     if requirement is None:

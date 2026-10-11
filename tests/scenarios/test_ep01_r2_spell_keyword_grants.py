@@ -314,3 +314,52 @@ def test_ripple_with_no_same_name_card_just_bottoms_the_revealed_cards():
 
     assert [state.name for state in scenario.player("alice").graveyard] == ["Lightning Bolt"]
     assert [state.name for state in scenario.player("alice").library][0] == "Forest"
+
+
+def test_pearl_ear_draws_when_an_aura_targets_a_modified_permanent_you_control():
+    """ "Whenever you cast an Aura spell that targets a modified permanent you
+    control, draw a card." (Equipment, Auras you control and counters are
+    modifications, CR 700.9.) A creature with a +1/+1 counter is modified."""
+    scenario = board(
+        ["Pearl-Ear, Imperial Advisor", "Grizzly Bears", "Forest"],
+        hand=["Rancor"],
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.creature("Grizzly Bears")
+    bears.add_counters("+1/+1", 1)
+    hand_before = len(scenario.player("alice").hand)
+    (forest,) = scenario.untapped_sources("Forest")
+
+    scenario.cast_onto_stack("Rancor", forest, targets=[bears])
+    scenario.pass_until_resolved()
+
+    assert len(scenario.player("alice").hand) == hand_before - 1 + 1, "Rancor left, one drawn"
+
+
+def test_pearl_ear_does_not_draw_for_an_unmodified_permanent():
+    scenario = board(["Pearl-Ear, Imperial Advisor", "Grizzly Bears", "Forest"], hand=["Rancor"])
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.creature("Grizzly Bears")
+    hand_before = len(scenario.player("alice").hand)
+    (forest,) = scenario.untapped_sources("Forest")
+
+    scenario.cast_onto_stack("Rancor", forest, targets=[bears])
+    scenario.pass_until_resolved()
+
+    assert len(scenario.player("alice").hand) == hand_before - 1, "Rancor left, nothing drawn"
+
+
+def test_pearl_ear_does_not_draw_for_a_non_aura_spell():
+    scenario = board(
+        ["Pearl-Ear, Imperial Advisor", "Grizzly Bears", "Forest"], hand=["Giant Growth"]
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.creature("Grizzly Bears")
+    bears.add_counters("+1/+1", 1)
+    hand_before = len(scenario.player("alice").hand)
+    (forest,) = scenario.untapped_sources("Forest")
+
+    scenario.cast_onto_stack("Giant Growth", forest, targets=[bears])
+    scenario.pass_until_resolved()
+
+    assert len(scenario.player("alice").hand) == hand_before - 1

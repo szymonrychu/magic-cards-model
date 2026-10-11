@@ -4654,6 +4654,20 @@ class DriverGap:
 
 
 SWEEP_DRIVER_GAPS: tuple[DriverGap, ...] = (
+    # EP01-R2-T1: Pearl-Ear needs an Aura cast at a modified permanent its
+    # controller has, and Satoru Umezawa needs a ninjutsu activation by its
+    # controller; proven by tests/scenarios/test_ep01_r2_spell_keyword_grants.py
+    # and tests/scenarios/test_ep01_r2_satoru_umezawa_trigger.py.
+    DriverGap(
+        kind="cast_spell",
+        event="an Aura spell cast at a modified permanent its controller has",
+        precondition=r"aura spell that targets a modified permanent",
+    ),
+    DriverGap(
+        kind="ability_activated",
+        event="the controller activating a ninjutsu ability",
+        precondition=r"activate a ninjutsu ability",
+    ),
     # NW06-T5: CR 614.12a's as-enters choice of a player and a card name
     # (Booby Trap), which the stock board's source never made - proven by
     # tests/scenarios/test_nw06_chosen_player_and_name.py.
