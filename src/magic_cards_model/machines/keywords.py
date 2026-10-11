@@ -2333,6 +2333,7 @@ class KeywordActivation(EngineModel):
             self.sorcery_only
             and self.game is not None
             and not self.game.can_cast_sorcery(self.player)
+            and not (self.keyword == "Equip" and equip_at_instant_speed(self.game, self.player))
         ):
             # CR 307.5: "only as a sorcery" means priority, own main phase,
             # empty stack - and nothing about actually casting a sorcery.
@@ -3269,6 +3270,76 @@ def is_free_first_equip_line(line: str) -> bool:
     return _free_first_equip_match(line) is not None
 
 
+#: "During your turn, you may activate equip abilities any time you could cast
+#: an instant." (Forge Anew): CR 702.6a's "Activate only as a sorcery" lifted by
+#: a static ability (CR 604.2), the permission itself gated on whose turn it is.
+_INSTANT_SPEED_EQUIP_RE = re.compile(
+    r"^(?P<your_turn>during your turn, )?you may activate equip abilities any time you could "
+    r"cast an instant\.?$",
+    re.IGNORECASE,
+)
+
+
+#: "During your turn, as long as you haven't activated an exhaust ability this
+#: turn, you may activate exhaust abilities as though they haven't been
+#: activated." (Elvish Refueler): CR 702.177a's "activate only once", lifted once
+#: a turn by a static ability (CR 604.2).
+_EXHAUST_REACTIVATION_RE = re.compile(
+    r"^during your turn, as long as you haven'?t activated an exhaust ability this turn, "
+    r"you may activate exhaust abilities as though they haven'?t been activated\.?$",
+    re.IGNORECASE,
+)
+
+#: `Game.turn_facts`' key for "has activated an exhaust ability this turn".
+ACTIVATED_EXHAUST_FACT = "activated_exhaust"
+
+
+def is_exhaust_reactivation_line(line: str) -> bool:
+    """Whether a static line is `_EXHAUST_REACTIVATION_RE`'s permission."""
+    return _EXHAUST_REACTIVATION_RE.fullmatch(line.strip()) is not None
+
+
+def exhaust_reactivation_allowed(game: Any, player: str) -> bool:
+    """Whether `player` may activate an exhaust ability that was already
+    activated right now: a permanent they control has the permission on the
+    computed board (CR 613.5), it is their turn, and they have activated no
+    exhaust ability yet this turn (`ACTIVATED_EXHAUST_FACT`). Re-read at every
+    question (CR 611.3a)."""
+    if game.turn is None or game.turn.active_player != player:
+        return False
+    if game.turn_fact_holds(ACTIVATED_EXHAUST_FACT, player):
+        return False
+    board = game.computed_board()
+    return any(
+        is_exhaust_reactivation_line(line)
+        for permanent in game.permanents_controlled_by(player)
+        for line in board.of(permanent).abilities
+    )
+
+
+def is_instant_speed_equip_line(line: str) -> bool:
+    """Whether a static line is `_INSTANT_SPEED_EQUIP_RE`'s permission - what the
+    static audit counts handled."""
+    return _INSTANT_SPEED_EQUIP_RE.fullmatch(line.strip()) is not None
+
+
+def equip_at_instant_speed(game: Any, player: str) -> bool:
+    """Whether a static ability `player` controls lets them activate equip
+    abilities whenever they could cast an instant right now. Read off the
+    computed board (CR 613.5), so a permanent that lost the ability grants
+    nothing, and re-read at every question (CR 611.3a)."""
+    board = game.computed_board()
+    for permanent in game.permanents_controlled_by(player):
+        for line in board.of(permanent).abilities:
+            match = _INSTANT_SPEED_EQUIP_RE.fullmatch(line.strip())
+            if match is None:
+                continue
+            if match["your_turn"] and (game.turn is None or game.turn.active_player != player):
+                continue
+            return True
+    return False
+
+
 def free_first_equip_source(game: Any, player: str) -> CardState | None:
     """The permanent whose "you may pay {0} rather than pay the equip cost of
     the first equip ability you activate ..." applies to `player`'s next
@@ -3452,6 +3523,26 @@ def equip_activation(
     return activation
 
 
+_GRANTED_EQUIP_RE = re.compile(r"^equip (?P<cost>(?:\{[^}]+\})+)$", re.IGNORECASE)
+
+
+def _cheaper_granted_equip_cost(game: Any, equipment: CardState, printed: TotalCost) -> TotalCost:
+    """An Equipment with several equip abilities is equipped through whichever
+    the player picks (CR 702.6c, CR 113.2c), so a mana-only "Equip {N}" granted
+    to it in layer 6 (CR 613.1f; Puresteel Paladin's metalcraft "Equipment you
+    control have equip {0}") competes with the printed one on cost. Read off
+    the computed board, so it exists only while the grant does (CR 611.3a)."""
+    best = printed
+    for line in game.computed_board().of(equipment).abilities:
+        match = _GRANTED_EQUIP_RE.fullmatch(line.strip())
+        if match is None:
+            continue
+        granted = TotalCost(mana=ManaCost.parse(match.group("cost")))
+        if granted.mana.converted < best.mana.converted:
+            best = granted
+    return best
+
+
 def unannounced_equip_activation(
     game: Any,
     equipment: CardState,
@@ -3479,6 +3570,8 @@ def unannounced_equip_activation(
             f"{equipment.name}'s equip cost {ability.cost!r} could not be read, "
             f"so it cannot be paid"
         )
+    if game is not None:
+        cost = _cheaper_granted_equip_cost(game, equipment, cost)
     free_from = free_first_equip_source(game, player) if pay_zero and game is not None else None
     if free_from is not None:
         cost = TotalCost(mana=ManaCost.parse("{0}"))

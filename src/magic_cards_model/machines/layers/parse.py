@@ -10785,10 +10785,15 @@ def _if_gated_builder(base: EffectBuilder, condition: str) -> EffectBuilder:
 
 def _parse_layer_sentence(sentence: str) -> EffectBuilder | None:
     """`_parse_layer_sentence_ungated`, then - for a sentence that is none of
-    those shapes - `_parse_if_gated_layer_sentence`'s trailing "if" rider."""
+    those shapes - `_parse_if_gated_layer_sentence`'s trailing "if" rider, then
+    `conditional_statics`' "as long as" / "during your turn" template, then
+    `_parse_protection_static`."""
+    from .conditional_statics import parse_conditional_static
+
     return (
         _parse_layer_sentence_ungated(sentence)
         or _parse_if_gated_layer_sentence(sentence)
+        or parse_conditional_static(sentence)
         or _parse_protection_static(sentence)
     )
 
@@ -12590,6 +12595,8 @@ def _split_subtype_list(raw: str) -> list[str] | None:
     entirely, and guessing at it would grant the wrong group.
     """
     parts = [part.strip() for part in re.split(r",\s*|\s+or\s+", raw) if part.strip()]
+    # "that's a Soldier or a Knight": the article repeats before each item.
+    parts = [re.sub(r"^(?:an?)\s+", "", part, flags=re.IGNORECASE) for part in parts]
     subtypes = [_subtype_word(part) for part in parts]
     if not subtypes or any(subtype is None for subtype in subtypes):
         return None

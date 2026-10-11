@@ -2977,6 +2977,12 @@ def _parse_mass_destroy_predicate(
     if without_match is not None:
         counter_kind = without_match.group("kind").lower()
         text = without_match.group("qualifier").strip()
+    # "other" (Myojin of Cleansing Fire's "Destroy all other creatures"): every
+    # match except the clause's own source permanent.
+    excludes_source = False
+    if (other := re.match(r"^other\s+", text, re.IGNORECASE)) is not None:
+        excludes_source = True
+        text = text[other.end() :].strip()
     # CR 111.1: "token"/"nontoken" - Aether Snap's "exile all tokens", a
     # "creature token", a "nontoken creature". A bare "tokens" is every
     # token permanent.
@@ -2998,6 +3004,8 @@ def _parse_mass_destroy_predicate(
         source: CardState | None,
         x_value: int | None = None,
     ) -> bool:
+        if excludes_source and source is not None and permanent.id == source.id:
+            return False
         if controller_scope is not None:
             if source is None:
                 return False

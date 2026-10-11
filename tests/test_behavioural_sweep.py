@@ -2487,6 +2487,33 @@ def _extra_lands_for(card: Card, cost: str | None = None) -> tuple[str, ...]:
     )
 
 
+_ENCHANTED_CREATURE_COLOR = re.compile(
+    r"\benchanted creature is (?:a |an )?(?P<color>white|blue|black|red|green)\b", re.IGNORECASE
+)
+
+
+def _enchanted_host(scenario: PlayedScenario, condition: str | None) -> CardState | None:
+    """The creature an Aura is cast on when its own intervening "if" asks the
+    enchanted creature's colour (Ray of Frost, CR 603.4): the simplest real
+    creature of that colour, put on alice's side of the stock board."""
+    found = _ENCHANTED_CREATURE_COLOR.search(condition or "")
+    if found is None:
+        return None
+    color = next(c for c in Color if c.name.lower() == found.group("color").lower())
+    candidates = [
+        card
+        for card in _format_pool()
+        if Type.CREATURE in card.types and not card.card_faces and card.colors == [color]
+    ]
+    if not candidates:
+        return None
+    pick = min(candidates, key=lambda card: (len(card.oracle_text or ""), card.name))
+    host = card_state(pick.name, Zone.BATTLEFIELD, controller=ALICE, owner=ALICE)
+    host.bind_to_game(scenario.game)
+    scenario.game.battlefield.append(host)
+    return host
+
+
 def _self_entering(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
     card = case.printing
     lowered = (ability.condition + " " + (ability.intervening_if or "")).lower()
@@ -2552,7 +2579,14 @@ def _self_entering(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
                 _stack_material(scenario)
                 _board_threshold(scenario, None, ability.intervening_if or "")
                 _player_state_threshold(scenario, ability.intervening_if)
-                _cast(scenario, card.name, kicked=kicked, paying_with=paying_with)
+                host = _enchanted_host(scenario, ability.intervening_if)
+                _cast(
+                    scenario,
+                    card.name,
+                    kicked=kicked,
+                    paying_with=paying_with,
+                    prefer=host.id if host is not None else None,
+                )
                 return scenario, None
 
             yield cast
@@ -4135,6 +4169,18 @@ def _graveyard_leaving(case: Case, ability: TriggeredAbility) -> Iterator[Attemp
             return scenario, source_id
 
         yield exile
+
+    # "leaves an opponent's graveyard" (Erebos's Titan): the same cards
+    # leaving bob's graveyard instead, after the attempts above so every
+    # recorded attempt index stays put.
+    for name in ["Lightning Bolt", "Grizzly Bears"]:
+
+        def exile_from_opponent(name: str = name) -> tuple[PlayedScenario, Any]:
+            scenario, source_id = _home(case, ability)
+            scenario.game.exile_cards([_last(scenario, name, Zone.GRAVEYARD, BOB)])
+            return scenario, source_id
+
+        yield exile_from_opponent
 
 
 def _playing_exiled(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:

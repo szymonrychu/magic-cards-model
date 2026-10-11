@@ -576,6 +576,21 @@ def _mode_gated_text(text: str | None, source: CardState) -> tuple[str | None, d
     return "\n".join(kept), printed
 
 
+def _combined_builders(first: EffectBuilder, second: EffectBuilder) -> EffectBuilder:
+    def combined(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        return [
+            *first(source, timestamp, targets, context),
+            *second(source, timestamp, targets, context),
+        ]
+
+    return combined
+
+
 def effects_for(
     source: CardState,
     timestamp: int,
@@ -646,8 +661,10 @@ def effects_for(
         builder = parsed_layer_effects(
             ability_text, static_only=static_only, card_name=source.name, legendary=legendary
         )
+    granted_builder: EffectBuilder | None = None
     if builder is None:
-        builder = _granted_ability_effects(source, static_only=static_only)
+        granted_builder = _granted_ability_effects(source, static_only=static_only)
+        builder = granted_builder
     # `oracle_text` reads the up face (CR 712.8d/712.8f); `card.oracle_text`
     # is the raw Scryfall field, null for a modal-DFC/transform permanent -
     # same family as `effect_for`'s fix in `Game.resolve_top`. Without this,
@@ -674,10 +691,18 @@ def effects_for(
         if static_only
         else []
     )
-    if builder is None:
-        builder = parsed_layer_effects(
+    if builder is None or granted_builder is not None:
+        # A granted static line (CR 613.1f) rides *beside* the permanent's own
+        # printed statics, never instead of them: Sedge Sliver is granted a
+        # conditional pump by its own "All Sliver creatures have ..." line and
+        # still has to apply that line.
+        own = parsed_layer_effects(
             text, static_only=static_only, card_name=source.name, legendary=legendary
         )
+        if builder is None:
+            builder = own
+        elif own is not None:
+            builder = _combined_builders(builder, own)
     if builder is None:
         if (
             notices is not None

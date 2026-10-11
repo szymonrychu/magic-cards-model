@@ -368,9 +368,10 @@ _ZONE_WORDS_FOR_GRANTS: dict[str, Zone] = {"hand": Zone.HAND, "graveyard": Zone.
 #: in your graveyard have sneak {3}{B}."
 _EXACT_COLOR_COUNT_WORDS = {"one": 1, "two": 2, "three": 3, "four": 4, "five": 5}
 
-#: Granted keywords whose rule names no cost of their own (CR 702.133a's
-#: jump-start casts for the card's mana cost and adds a discard).
-_COSTLESS_GRANTED_KEYWORDS = frozenset({"jump-start"})
+#: Granted keywords whose rule names no cost of their own: CR 702.133a's
+#: jump-start casts for the card's mana cost and adds a discard; CR 702.81a's
+#: retrace ("Instant and sorcery cards in your graveyard have retrace.").
+COSTLESS_GRANTED_KEYWORDS = frozenset({"jump-start", "retrace"})
 
 _GRANTED_KEYWORD_ON_A_CARD_IN_A_ZONE = re.compile(
     r"^(?P<during>During your turn, )?(?:[Ee]ach (?P<what>[\w' -]+?) card in your "
@@ -681,8 +682,11 @@ def granted_cast_options(
         for ability in parse_abilities(emblem.card):
             if ability.kind is not AbilityKind.STATIC:
                 continue
+            text = (ability.text or "").strip()
             option = _cast_spells_from_a_zone(
-                (ability.text or "").strip(), spell, origin_zone, game, caster
+                text, spell, origin_zone, game, caster
+            ) or _grant_on_a_card_in_a_zone(
+                text, game, spell, caster, origin_zone, emblem.name, ability.raw
             )
             if option is not None:
                 found.append(GrantedCastOption(source_name=emblem.name, option=option))
@@ -2249,7 +2253,7 @@ def _grant_on_a_card_in_a_zone(
         return None
     keyword = match.group("keyword")
     printed = match.group("cost").strip() or None
-    if printed is None and keyword.lower() not in _COSTLESS_GRANTED_KEYWORDS:
+    if printed is None and keyword.lower() not in COSTLESS_GRANTED_KEYWORDS:
         tail = _COST_IS_THE_CARDS_MANA_COST.search(match.group("tail") or "")
         if tail is None or tail.group("keyword").lower() != keyword.lower():
             return None
@@ -2288,7 +2292,10 @@ def reads_granted_zone_keyword_line(card: Card, text: str) -> bool:
     keyword = match.group("keyword")
     printed = match.group("cost").strip() or None
     tail = (match.group("tail") or "").strip()
-    if printed is None:
+    if printed is None and keyword.lower() in COSTLESS_GRANTED_KEYWORDS:
+        if tail:
+            return False
+    elif printed is None:
         cost_tail = _COST_IS_THE_CARDS_MANA_COST.fullmatch(tail)
         if cost_tail is None or cost_tail.group("keyword").lower() != keyword.lower():
             return False
@@ -3001,6 +3008,13 @@ _CONDITIONAL_FLASH_RES = (
     re.compile(
         r"^if (?P<condition>.+?), you may cast this (?:spell|creature) without paying its "
         r"mana cost and as though it had flash\.?$",
+        re.IGNORECASE,
+    ),
+    # Supernatural Rescue: "This spell has flash as long as you control a
+    # Spirit." - the grant worded as the spell's own static ability (CR 604.2,
+    # CR 702.8a), so the same cast-time condition read as the others above.
+    re.compile(
+        r"^this (?:spell|creature) has flash as long as (?P<condition>[^.]+)\.?$",
         re.IGNORECASE,
     ),
 )

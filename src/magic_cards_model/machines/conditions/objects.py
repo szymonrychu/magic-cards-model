@@ -157,7 +157,9 @@ def _subject(context: "ConditionContext", phrase: str) -> "CardState | None":
         return context.source
     if re.fullmatch(_ATTACHED_TO, phrase):
         return _attached_to_of(context)
-    if re.fullmatch(_EVENT_PRONOUN, phrase):
+    if re.fullmatch(_EVENT_PRONOUN, phrase) or phrase == "the creature":
+        # "the creature" is the trigger event's own subject too (Anax's "If the
+        # creature had power 4 or greater, ..."): the object that died.
         return _event_subject(context)
     if _names_source(phrase, context.source):
         return context.source
@@ -696,7 +698,7 @@ def _stat_compared_with_number(context: "ConditionContext", match: re.Match[str]
     test = quantity_test(match.group("q"))
     if subject is None or test is None:
         return False
-    seen = _Seen(context, subject, past=match.group("tense") == "was")
+    seen = _Seen(context, subject, past=match.group("tense") in ("was", "had"))
     value = seen.power if match.group("stat") == "power" else seen.toughness
     return value is not None and test(value)
 
@@ -1209,6 +1211,16 @@ READERS: tuple[ConditionReader, ...] = (
         re.compile(
             rf"(?P<subject>{POSSESSIVE}) (?P<stat>power|toughness) (?P<tense>is|was) "
             rf"(?P<q>{QUANTITY})"
+        ),
+        _stat_compared_with_number,
+    ),
+    # "the creature had power 4 or greater" (Anax, Hardened in the Forge): the
+    # same comparison, worded with "had" and the event's subject as "the
+    # creature" (CR 603.10a, CR 608.2h: last known information).
+    ConditionReader(
+        re.compile(
+            r"(?P<subject>the creature|it|that creature) (?P<tense>had|has) "
+            rf"(?P<stat>power|toughness) (?P<q>{QUANTITY})"
         ),
         _stat_compared_with_number,
     ),

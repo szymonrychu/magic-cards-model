@@ -307,3 +307,35 @@ def test_two_library_copies_of_one_printing_are_still_one_question():
     # is stamped differently, which is what `land_id` and `assumed_land` are.
     assert _without_land_ids(first) == _without_land_ids(second)
     assert payable(ahead, stock_up, buried[0]), "two untapped Islands plus the one entering"
+
+
+def test_storage_matrix_keeps_the_lookahead_to_what_untaps_under_any_choice():
+    """CR 502.3: Storage Matrix makes the player choose artifact, creature or
+    land. The look-ahead cannot ask, so it assumes only what untaps whichever
+    is chosen: a tapped Island is not promised, and the hypothetical says so."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Counterspell"],
+            battlefield=["Storage Matrix", "Island", "Island"],
+            library=LIBRARY,
+        )
+        .player("bob", battlefield=["Island"], library=["Forest"] * 12)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    for state in scenario.game.battlefield:
+        if state.name != "Storage Matrix":
+            state.tapped = True
+    counterspell = hand_card(scenario, "Counterspell")
+    asked_before = len(scenario.questions_asked())
+
+    ahead = payability_matrix(scenario.game, "alice", [counterspell], [], assuming_untapped=True)
+
+    assert not payable(ahead, counterspell), "no Island is promised to untap"
+    assert any("Storage Matrix" in note for row in rows(ahead) for note in row.notices)
+    assert len(scenario.questions_asked()) == asked_before, "a hypothetical never asks the player"
+    assert all(state.tapped for state in scenario.game.battlefield if state.name == "Island"), (
+        "the caller's game is untouched"
+    )

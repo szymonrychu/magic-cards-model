@@ -399,14 +399,19 @@ _CLAUSE_SPLIT_RE = re.compile(r",\s*(?:and\s+)?|\s+and\s+", re.IGNORECASE)
 
 def compound_clauses(sentence: str, subjects) -> frozenset[str] | None:
     """The clauses of a compound self sentence made only of the three above
-    (at least two of them), or None."""
+    (at least two of them, or "can't be sacrificed" alone), or None."""
     text = sentence.strip().rstrip(".")
     for subject in sorted(subjects, key=len, reverse=True):
         lead = subject.lower() + " "
         if not text.lower().startswith(lead):
             continue
         parts = [part.strip().lower() for part in _CLAUSE_SPLIT_RE.split(text[len(lead) :])]
-        if len(parts) >= 2 and all(part in _COMPOUND_CLAUSES for part in parts):
+        # One clause is enough only for "can't be sacrificed": the other two
+        # are read as single sentences elsewhere, and a granted "This token
+        # can't be sacrificed." (Zurgo, Thunder's Decree) is read nowhere else.
+        if all(part in _COMPOUND_CLAUSES for part in parts) and (
+            len(parts) >= 2 or parts == [_NO_SACRIFICE_CLAUSE]
+        ):
             return frozenset(parts)
     return None
 

@@ -115,6 +115,17 @@ _CARDS_IN_YOUR_HAND_HAVE_RE = re.compile(
     re.IGNORECASE,
 )
 
+#: "This spell has `<keyword>` as long as `<condition>`." - the spell's own
+#: static ability (CR 604.2) granting itself a keyword while it is cast
+#: (Bloodbraid Marauder's delirium cascade). Not a grant to anything else: it
+#: is read off the cast spell's own printed lines, never off a permanent.
+_THIS_SPELL_HAS_RE = re.compile(
+    r"^this spell has (?P<keyword>.+?) as long as (?P<condition>[^.]+?)\.?$", re.IGNORECASE
+)
+
+#: A leading ability word (CR 207.2c): "Delirium - ", no rules meaning of its own.
+_LEADING_ABILITY_WORD_RE = re.compile(r"^[A-Za-z' ]{2,30} \u2014 ")
+
 #: Reminder text (CR 207.2) trailing the grant: italics, no game function.
 _TRAILING_REMINDER_RE = re.compile(r"\s*\([^()]*\)\s*$")
 
@@ -137,6 +148,8 @@ class SpellKeywordGrant(EngineModel):
     """The quality phrase the granted-to object must have, `""` for any."""
     from_zone: Zone | None = None
     """The zone the spell must be cast from ("from your hand"), or None."""
+    condition: str | None = None
+    """For `"self_spell"`: the "as long as" condition, judged as the spell is cast."""
     keyword: str
     """The keyword, lower case."""
     line: str
@@ -216,7 +229,19 @@ def spell_keyword_grant(text: str) -> SpellKeywordGrant | None:
     Fails closed: an unreadable quality phrase or a keyword outside
     `SPELL_GRANT_KEYWORDS`/`HAND_GRANT_KEYWORDS` is no grant at all.
     """
-    line = _TRAILING_REMINDER_RE.sub("", text.strip()).strip()
+    line = _LEADING_ABILITY_WORD_RE.sub("", _TRAILING_REMINDER_RE.sub("", text.strip()).strip())
+    if own := _THIS_SPELL_HAS_RE.fullmatch(line):
+        read = _keyword_line(own.group("keyword"), SPELL_GRANT_KEYWORDS)
+        if read is None:
+            return None
+        return SpellKeywordGrant(
+            subject="self_spell",
+            quality="",
+            condition=own.group("condition").strip(),
+            keyword=read[0],
+            line=read[1],
+            rule=SPELL_GRANT_KEYWORDS[read[0]],
+        )
     for pattern, subject in (
         (_SPELLS_YOU_CAST_HAVE_RE, "spell"),
         (_EACH_SPELL_YOU_CAST_HAS_RE, "spell"),
@@ -318,8 +343,9 @@ def granted_spell_keyword_lines(
         # live while this spell is being cast (CR 601.2f), gone the moment it
         # becomes cast (CR 601.2i), so a spell already cast reads none.
         lines.extend(grant.line for grant in next_spell_keyword_grants_for(game, spell, caster))
+    lines.extend(_own_spell_keyword_lines(game, spell, caster))
     for _name, grant in _grants_of(game, caster):
-        if grant.subject == "hand_card":
+        if grant.subject in ("hand_card", "self_spell"):
             continue
         if grant.subject == "first_spell" and not first_spell:
             continue
@@ -328,6 +354,24 @@ def granted_spell_keyword_lines(
         if not _object_has_quality(spell, grant.quality):
             continue
         lines.append(grant.line)
+    return lines
+
+
+def _own_spell_keyword_lines(game: Any, spell: CardState, caster: str) -> list[str]:
+    """The keyword lines the spell's own "This spell has `<keyword>` as long as
+    `<condition>`." static lines give it (CR 604.2) while `caster` casts it:
+    judged on the board as it stands now, never remembered (CR 611.3a)."""
+    from .casting.permissions import cast_condition_holds
+
+    lines: list[str] = []
+    for raw in (spell.card.oracle_text or "").split("\n"):
+        if "this spell has" not in raw.lower():
+            continue
+        grant = spell_keyword_grant(raw)
+        if grant is None or grant.subject != "self_spell" or grant.condition is None:
+            continue
+        if cast_condition_holds(game, caster, grant.condition, spell):
+            lines.append(grant.line)
     return lines
 
 

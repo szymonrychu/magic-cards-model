@@ -57,6 +57,7 @@ from ...machines.turn import (
     Step,
     day_night_after_untap_check,
 )
+from ...machines.untap_choices import untap_type_restrictions
 from ...snapshot import scan_pin
 from ..card import (
     Supertype,
@@ -270,12 +271,12 @@ class TurnSbaMixin:
         # CR 502.2: second, the day/night check (CR 731.2) - after CR 502.1's
         # phasing and before CR 502.3's untap, and skipped with the step.
         self._day_night_untap_check()
+        # Storage Matrix's choice (`machines/untap_choices`): each untapped one
+        # narrows what this step untaps to a chosen type.
+        own = untap_type_restrictions(self, active.username, verdict.permanents)
         untappable = [
             state
-            for state in (
-                *verdict.permanents,
-                *self._untapping_in_others_untap_step(active.username),
-            )
+            for state in (*own, *self._untapping_in_others_untap_step(active.username))
             if not self._chooses_not_to_untap(state)
         ]
         tapped = [state for state in untappable if state.tapped]

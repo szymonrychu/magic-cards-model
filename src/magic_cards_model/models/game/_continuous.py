@@ -959,6 +959,7 @@ class ContinuousMixin:
                 for player in self.players_in_game
             },
             active_player=self.turn.active_player if self.turn is not None else None,
+            current_step=self.turn.step.value if self.turn is not None else None,
             turn_facts={
                 **{fact: frozenset(players) for fact, players in self.turn_facts.items()},
                 # CR 119.3's life lost this turn (Essence Channeler's "as long
@@ -1020,6 +1021,11 @@ class ContinuousMixin:
                 player.username: len(player.library) for player in self.players_in_game
             },
             cards_drawn_this_turn=dict(self.cards_drawn_this_turn),
+            top_card_by_player={
+                player.username: player.library[0]
+                for player in self.players_in_game
+                if player.library
+            },
             # CR 702.195b's enduring story, which "As long as you have an
             # enduring story, ..." statics read off their controller.
             enduring_story_players=frozenset(

@@ -4215,6 +4215,9 @@ def _parse_triggered(text: str, common: dict) -> list[TriggeredAbility] | None:
                 ].strip()
                 rest = ", ".join(clause_parts[end:])
 
+    if intervening_if is not None:
+        rest = _resolve_attached_object_pronoun(intervening_if, rest)
+
     once_per_turn = condition_once_per_turn
     stripped = _strip_once_per_turn_trailer(rest).strip()
     if stripped != rest.strip():
@@ -4276,6 +4279,34 @@ def _parse_triggered(text: str, common: dict) -> list[TriggeredAbility] | None:
             )
         )
     return abilities
+
+
+#: The attached-object subject an intervening "if" leads with ("enchanted
+#: creature is red", "equipped creature has flying") and the bare "tap it"
+#: style instruction after it: the only noun phrase in the sentence, so "it"
+#: is that object (CR 608.2c reads the instruction in the light of the whole
+#: ability), not the Aura or Equipment itself. Ray of Frost's "When this Aura
+#: enters, if enchanted creature is red, tap it."
+_ATTACHED_SUBJECT_OF_IF = re.compile(
+    r"^(?P<subject>(?:enchanted|equipped|fortified) [a-z]+)\s+(?:is|are|has|have)\b",
+    re.IGNORECASE,
+)
+_BARE_PRONOUN_OBJECT_INSTRUCTION = re.compile(
+    r"^(?P<verb>tap|untap|destroy|exile) it(?P<tail>(?:[.\s].*)?)$", re.IGNORECASE | re.DOTALL
+)
+
+
+def _resolve_attached_object_pronoun(intervening_if: str, effect: str) -> str:
+    """`effect` with its bare "it" object named, when the intervening "if"
+    above it is about an enchanted/equipped/fortified object and the
+    instruction has no other referent; unchanged otherwise."""
+    subject = _ATTACHED_SUBJECT_OF_IF.match(intervening_if.strip())
+    instruction = _BARE_PRONOUN_OBJECT_INSTRUCTION.match(effect.strip())
+    if subject is None or instruction is None:
+        return effect
+    return (
+        f"{instruction.group('verb')} {subject.group('subject').lower()}{instruction.group('tail')}"
+    )
 
 
 #: What follows "while" when it describes how the trigger event happened

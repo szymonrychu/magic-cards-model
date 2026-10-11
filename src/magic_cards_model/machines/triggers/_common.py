@@ -96,12 +96,14 @@ _YOU_PUT_A_COUNTER_ON_QUALITY_CONDITION = re.compile(
     r"(?P<article>another|an?) (?P<quality>[a-z][a-z -]*?)(?P<yours> you control)?$"
 )
 
-#: Hardened Academic's "one or more cards leave your graveyard" and Murktide
-#: Regent's "an instant or sorcery card leaves your graveyard" - one shape with
-#: an optional type restriction (CR 603.10a's own "abilities that trigger when
+#: Hardened Academic's "one or more cards leave your graveyard", Murktide
+#: Regent's "an instant or sorcery card leaves your graveyard" and Erebos's
+#: Titan's "a creature card leaves an opponent's graveyard" - one shape with
+#: an optional type restriction and whose graveyard (CR 603.10a's own "abilities that trigger when
 #: a card leaves a graveyard").
 _LEAVES_GRAVEYARD_CONDITION = re.compile(
-    r"^(?:one or more cards leave|(?:an?|one) (?P<types>[a-z ]+?) card leaves) your graveyard$"
+    r"^(?:one or more cards leave|(?:an?|one) (?P<types>[a-z ]+?) card leaves)"
+    r" (?P<whose>your|an opponent's) graveyard$"
 )
 
 #: Wan Shi Tong, All-Knowing's "one or more cards are put into a library from
