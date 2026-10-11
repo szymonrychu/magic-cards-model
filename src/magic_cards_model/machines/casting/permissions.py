@@ -24,6 +24,7 @@ from ..cost import (
     total_cost_for_phrase,
 )
 from ..keywords import (
+    _keyword,
     printed_casualty_numbers,
     printed_conspire_count,
 )
@@ -34,7 +35,7 @@ from ..layers import (
     only_this_incarnation,
     plays_lands_from_graveyard_line,
 )
-from ..spell_grants import casualty_numbers, conspire_count
+from ..spell_grants import casualty_numbers, conspire_count, replicate_costs
 from ..turn import Step
 from .options import KeywordCastOption, OptionalAdditionalCost
 
@@ -467,9 +468,18 @@ def _rezoned_by_using(
 #: card's" for one and "its" for the other, English grammar rather than a
 #: rules difference.
 _COST_IS_THE_CARDS_MANA_COST = re.compile(
-    r"The (?P<keyword>[A-Za-z]+) cost is equal to (?:that card's|its) mana cost\.",
+    r"The (?P<keyword>[A-Za-z]+) cost is equal to (?:that card's|its|the card's) mana cost"
+    r"(?: plus (?P<extra>exile [a-z]+ other cards? from your graveyard))?\.",
     re.IGNORECASE,
 )
+
+
+def _completed_cost(tail: re.Match[str], mana_cost: str) -> str:
+    """The cost "The `<keyword>` cost is equal to that card's mana cost[ plus
+    exile three other cards from your graveyard]." spells out: the mana cost,
+    then the extra component the sentence adds (Underworld Breach's escape)."""
+    extra = tail.group("extra")
+    return f"{mana_cost}, {extra.capitalize()}" if extra else mana_cost
 
 
 class GrantedCastOption(EngineModel):
@@ -502,7 +512,8 @@ def _spell_matches_grant_filter(spell: CardState, what: str) -> bool:
       both, and a subtype or supertype is simply had.
 
     A `non-` prefix negates the word it is attached to ("non-Lesson instant and
-    sorcery card"): the spell must *not* match it.
+    sorcery card"), and so does the closed "non" of a card type ("nonland
+    card"): the spell must *not* match it.
     """
     types = set(spell.types)
     subtypes = {subtype.lower() for subtype in spell.subtypes}
@@ -513,9 +524,11 @@ def _spell_matches_grant_filter(spell: CardState, what: str) -> bool:
         word = raw_word.strip(",").lower()
         if not word or word in {"and", "or"}:
             continue
-        negated = word.startswith("non-")
+        negated = word.startswith("non-") or (
+            word.startswith("non") and word[len("non") :].rstrip("s") in type_words
+        )
         if negated:
-            word = word[len("non-") :]
+            word = word[len("non-") :] if word.startswith("non-") else word[len("non") :]
         singular = word.rstrip("s")
         if word in {"permanent", "permanents"}:
             matched = bool(types & _PERMANENT_TYPES)
@@ -2257,9 +2270,10 @@ def _grant_on_a_card_in_a_zone(
         tail = _COST_IS_THE_CARDS_MANA_COST.search(match.group("tail") or "")
         if tail is None or tail.group("keyword").lower() != keyword.lower():
             return None
-        printed = spell.mana_cost or spell.card.mana_cost or None
-        if printed is None:
+        mana_cost = spell.mana_cost or spell.card.mana_cost or None
+        if mana_cost is None:
             return None
+        printed = _completed_cost(tail, mana_cost)
     option = _granted_option(
         keyword, printed, zone, face, raw, "CR 611.3d, CR 400.7g", any_zone=True
     )
@@ -2296,7 +2310,7 @@ def reads_granted_zone_keyword_line(card: Card, text: str) -> bool:
         cost_tail = _COST_IS_THE_CARDS_MANA_COST.fullmatch(tail)
         if cost_tail is None or cost_tail.group("keyword").lower() != keyword.lower():
             return False
-        printed = "{0}"
+        printed = _completed_cost(cost_tail, "{0}")
     elif tail:
         return False
     option = _granted_option(keyword, printed, zone, card.name, text, "CR 611.3d", any_zone=True)
@@ -2959,6 +2973,14 @@ def granted_optional_additional_costs(
             for number in casualty_numbers(game, card, caster, card.zone)[printed:]
         ]
         + [conspire_cost_option() for _ in range(max(granted_conspire, 0))]
+        + [
+            OptionalAdditionalCost(
+                keyword="replicate", cost=cost, rule="CR 702.56a", repeatable=True
+            )
+            for cost in replicate_costs(game, card, caster, card.zone)[
+                int(_keyword(card.card, "replicate") is not None) :
+            ]
+        ]
         + [
             OptionalAdditionalCost(keyword=None, cost=f"pay {grant.life} life", rule="CR 118.8b")
             for grant in granted_life_costs(game, card, caster)

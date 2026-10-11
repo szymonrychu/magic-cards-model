@@ -5833,7 +5833,15 @@ def discard(game: Any, card: CardState, player: str) -> CardState:
 
         turn = getattr(getattr(game, "turn", None), "turn_number", None)
 
-        if not madness_replaces_discard(card):
+        # CR 702.35a is a static ability of the card in hand: printed on it, or
+        # granted by a static ability that gives it madness (Falkenrath
+        # Gorger's "has madness. The madness cost is equal to its mana cost.").
+        # The grant is read while the card is still in hand, and rides on the
+        # exiled card so the trigger and the cast option find it there.
+        from .spell_grants import granted_zone_keyword_lines
+
+        granted_madness = tuple(granted_zone_keyword_lines(game, card, "madness"))
+        if not (madness_replaces_discard(card) or granted_madness):
             # CR 614.1a: through `Game.put_into_graveyard`, so a graveyard
             # replacement (Rest in Peace's "from anywhere", Leyline of the
             # Void's) still gets its look at a discarded card; that also feeds
@@ -5854,6 +5862,8 @@ def discard(game: Any, card: CardState, player: str) -> CardState:
         owner.cards_in(Zone.HAND).remove(card)
         card.move_to(Zone.EXILE)
         card.exile_annotation = madness_annotation(card, turn)
+        if not has_madness(card.card):
+            card.granted_ability_texts = granted_madness[:1]
         game.exile.append(card)
 
         # CR 702.35a's second ability: "When this card is exiled this way ...".

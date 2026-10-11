@@ -30,6 +30,7 @@ from ..cost import (
 )
 from ..keywords import (
     FACE_DOWN_CAST_COST,
+    granted_keyword_ability,
     printed_casualty_numbers,
     printed_conspire_count,
 )
@@ -952,6 +953,17 @@ def marker_cast_options(spell: CardState) -> list[KeywordCastOption]:
     have it cease to exist before anybody could ask.
     """
     annotation = spell.exile_annotation
+    if annotation is not None and annotation.marker is ExileMarker.MADNESS:
+        # CR 702.35a: a madness the card was granted when it was discarded
+        # (Falkenrath Gorger) rides on the exiled card; its printed madness is
+        # `keyword_cast_options`'s.
+        return [
+            option
+            for line in spell.granted_ability_texts
+            if (granted := granted_keyword_ability(line)) is not None
+            and granted.canonical.lower() == "madness"
+            and (option := _option_from_keyword(granted)) is not None
+        ]
     if annotation is None or annotation.marker is not ExileMarker.AIRBENT:
         return []
     return [

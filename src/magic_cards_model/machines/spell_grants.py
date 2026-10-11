@@ -61,6 +61,16 @@ SPELL_GRANT_KEYWORDS: dict[str, str] = {
     "casualty": "CR 702.153a",
     "affinity": "CR 702.41a",
     "conspire": "CR 702.78a",
+    "replicate": "CR 702.56a",
+}
+
+#: The keywords a grant to the cards of a zone is read for, each with the rule
+#: of the machine that executes it: madness (`keywords.discard`), scavenge
+#: (`keywords.scavenge_activation`) and foretell (`Casting.foretell`).
+ZONE_GRANT_KEYWORDS: dict[str, str] = {
+    "madness": "CR 702.35a",
+    "scavenge": "CR 702.97a",
+    "foretell": "CR 702.143a",
 }
 
 #: The keywords a card-in-hand grant is read for.
@@ -71,7 +81,7 @@ HAND_GRANT_KEYWORDS: dict[str, str] = {
 #: The keyword phrase itself, as printed after "have"/"has": a bare keyword,
 #: "casualty N", "affinity for <text>", or "miracle <mana cost>".
 _KEYWORD_PHRASE_RE = re.compile(
-    r"^(?:(?P<bare>storm|cascade|improvise|conspire)"
+    r"^(?:(?P<bare>storm|cascade|improvise|conspire|replicate)"
     r"|(?P<casualty>casualty) (?P<n>\d+)"
     r"|(?P<affinity>affinity) for (?P<what>[a-z]+)"
     r"|(?P<miracle>miracle) (?P<cost>(?:\{[^{}]+\})+))$",
@@ -90,7 +100,7 @@ _SPELLS_YOU_CAST_HAVE_RE = re.compile(
 #: "Each `<quality>` spell you cast[ from your hand] has `<keyword>`."
 _EACH_SPELL_YOU_CAST_HAS_RE = re.compile(
     r"^each (?P<what>(?:[\w'-]+ )*?)spell you cast(?: from your (?P<zone>hand|graveyard))? "
-    r"has (?P<keyword>.+?)\.?$",
+    r"has (?P<keyword>[^.]+?)\.?(?: The (?P<cost_keyword>[a-z]+) cost is equal to its mana cost\.?)?$",
     re.IGNORECASE,
 )
 
@@ -109,6 +119,24 @@ _CARDS_IN_YOUR_HAND_HAVE_RE = re.compile(
     re.IGNORECASE,
 )
 
+#: "Each `<quality>` card you own that isn't on the battlefield has `<keyword>`.
+#: The `<keyword>` cost is equal to its mana cost." (Falkenrath Gorger) and
+#: "Each `<quality>` card in your `<zone>` has `<keyword>`. The `<keyword>` cost
+#: is equal to its mana cost." (Varolz, the Scar-Striped), and "Each
+#: `<quality>` card in your hand without `<keyword>` has `<keyword>`. Its
+#: `<keyword>` cost is equal to its mana cost reduced by {N}." (Dream
+#: Devourer). The second sentence is the keyword's cost; it is read here, so
+#: the line a card would print ("Madness {1}{B}{B}") is computed per card.
+_EACH_CARD_OF_A_ZONE_HAS_RE = re.compile(
+    r"^each (?P<what>(?:[\w'-]+ )*?)card "
+    r"(?:(?P<own>you own that isn't on the battlefield)"
+    r"|in your (?P<zone>hand|graveyard)(?: without (?P<without>[a-z]+))?) "
+    r"has (?P<keyword>[a-z]+)\. "
+    r"(?:the|its) (?P<cost_keyword>[a-z]+) cost is equal to its mana cost"
+    r"(?: reduced by (?P<reduction>\{\d+\}))?\.?$",
+    re.IGNORECASE,
+)
+
 #: Reminder text (CR 207.2) trailing the grant: italics, no game function.
 _TRAILING_REMINDER_RE = re.compile(r"\s*\([^()]*\)\s*$")
 
@@ -122,7 +150,8 @@ class SpellKeywordGrant(EngineModel):
 
     subject: str
     """`"spell"` (spells you cast), `"first_spell"` (the first spell you cast
-    each turn) or `"hand_card"` (cards in your hand)."""
+    each turn), `"hand_card"` (cards in your hand) or `"zone_card"` (the cards
+    you own in the `zones` below)."""
     quality: str
     """The quality phrase the granted-to object must have, `""` for any."""
     from_zone: Zone | None = None
@@ -132,6 +161,38 @@ class SpellKeywordGrant(EngineModel):
     line: str
     """The keyword written back out the way a card prints it."""
     rule: str
+    zones: tuple[Zone, ...] = ()
+    """For a `"zone_card"` grant, the zones whose cards have the keyword."""
+    reduction: str = ""
+    """For a `"zone_card"` grant, the generic reduction its cost is written
+    with ("{2}" for Dream Devourer's foretell), `""` for none."""
+    without_keyword: str = ""
+    """For a `"zone_card"` grant, the keyword the card must not already have
+    ("Each nonland card in your hand **without foretell**")."""
+    cost_is_mana_cost: bool = False
+    """The grant's second sentence ("The replicate cost is equal to its mana
+    cost.") makes the keyword's cost each spell's own mana cost, so the line
+    is completed per spell by `SpellKeywordGrant.line_for`."""
+
+    def line_for(self, spell: CardState) -> str | None:
+        """The keyword line this grant gives `spell`: `line` itself, or - for
+        a cost equal to the spell's mana cost - the line with that cost
+        written in. None when the spell has no mana cost to be equal to."""
+        if not self.cost_is_mana_cost:
+            return self.line
+        mana_cost = spell.mana_cost or spell.card.mana_cost
+        if not mana_cost:
+            return None
+        if self.reduction:
+            parsed = ManaCost.try_parse(mana_cost)
+            if parsed is None:
+                return None
+            mana_cost = str(parsed.minus(ManaCost.parse(self.reduction)))
+        return f"{self.line} {mana_cost}"
+
+
+#: Keywords whose grant must say what they cost (CR 702.56a's replicate cost).
+_COST_KEYWORDS = frozenset({"replicate", "madness", "scavenge", "foretell"})
 
 
 def _keyword_line(phrase: str, allowed: dict[str, str]) -> tuple[str, str] | None:
@@ -207,6 +268,13 @@ def spell_keyword_grant(text: str) -> SpellKeywordGrant | None:
         quality = _normalized_quality(match.group("what"))
         if read is None or not _quality_is_readable(quality):
             return None
+        cost_keyword = (match.groupdict().get("cost_keyword") or "").lower()
+        # Replicate carries a cost of its own: only the sentence that makes it
+        # the spell's mana cost gives it one, and that sentence names it.
+        if (read[0] in _COST_KEYWORDS) != bool(cost_keyword) or (
+            cost_keyword and cost_keyword != read[0]
+        ):
+            return None
         zone_word = match.groupdict().get("zone")
         return SpellKeywordGrant(
             subject=subject,
@@ -215,7 +283,11 @@ def spell_keyword_grant(text: str) -> SpellKeywordGrant | None:
             keyword=read[0],
             line=read[1],
             rule=SPELL_GRANT_KEYWORDS[read[0]],
+            cost_is_mana_cost=bool(cost_keyword),
         )
+    match = _EACH_CARD_OF_A_ZONE_HAS_RE.fullmatch(line)
+    if match is not None:
+        return _zone_card_grant(match)
     match = _CARDS_IN_YOUR_HAND_HAVE_RE.fullmatch(line)
     if match is None:
         return None
@@ -232,6 +304,38 @@ def spell_keyword_grant(text: str) -> SpellKeywordGrant | None:
     )
 
 
+def _zone_card_grant(match: re.Match[str]) -> SpellKeywordGrant | None:
+    """`_EACH_CARD_OF_A_ZONE_HAS_RE`'s grant, or None when the keyword is not
+    one a zone grant is read for, the cost sentence names another keyword, or
+    the quality is not one this reads."""
+    keyword = match.group("keyword").lower()
+    quality = _normalized_quality(match.group("what"))
+    without = (match.group("without") or "").lower()
+    if (
+        keyword not in ZONE_GRANT_KEYWORDS
+        or match.group("cost_keyword").lower() != keyword
+        or (without and without != keyword)
+        or not _quality_is_readable(quality)
+    ):
+        return None
+    if match.group("own"):
+        # CR 108.3: "you own"; "isn't on the battlefield" is every other zone.
+        zones = tuple(zone for zone in Zone if zone is not Zone.BATTLEFIELD)
+    else:
+        zones = (_ZONE_WORDS[match.group("zone").lower()],)
+    return SpellKeywordGrant(
+        subject="zone_card",
+        quality=quality,
+        keyword=keyword,
+        line=keyword.capitalize(),
+        rule=ZONE_GRANT_KEYWORDS[keyword],
+        zones=zones,
+        reduction=match.group("reduction") or "",
+        without_keyword=without,
+        cost_is_mana_cost=True,
+    )
+
+
 def reads_spell_keyword_grant_line(text: str) -> bool:
     """Whether one static line is a grant this module reads - what
     `support.py` asks before crediting the line."""
@@ -240,7 +344,7 @@ def reads_spell_keyword_grant_line(text: str) -> bool:
 
 #: A cheap test a line must pass before it is read at all: every shape above
 #: says "you cast" or "in your hand".
-_MIGHT_GRANT_RE = re.compile(r"you cast|in your hand", re.IGNORECASE)
+_MIGHT_GRANT_RE = re.compile(r"you cast|in your hand|you own|in your graveyard", re.IGNORECASE)
 
 
 def _grants_of(game: Any, controller: str) -> Iterator[tuple[str, SpellKeywordGrant]]:
@@ -297,7 +401,7 @@ def granted_spell_keyword_lines(
         # becomes cast (CR 601.2i), so a spell already cast reads none.
         lines.extend(grant.line for grant in next_spell_keyword_grants_for(game, spell, caster))
     for _name, grant in _grants_of(game, caster):
-        if grant.subject == "hand_card":
+        if grant.subject in ("hand_card", "zone_card"):
             continue
         if grant.subject == "first_spell" and not first_spell:
             continue
@@ -305,7 +409,9 @@ def granted_spell_keyword_lines(
             continue
         if not _object_has_quality(spell, grant.quality):
             continue
-        lines.append(grant.line)
+        line = grant.line_for(spell)
+        if line is not None:
+            lines.append(line)
     return lines
 
 
@@ -340,6 +446,39 @@ def granted_hand_keyword_lines(game: Any, card: CardState) -> list[str]:
     ]
 
 
+def granted_zone_keyword_lines(game: Any, card: CardState, keyword: str | None = None) -> list[str]:
+    """The keyword lines the owner's "Each `<quality>` card ... has
+    `<keyword>`" grants give `card` where it is now - "Madness {1}{B}{B}",
+    "Scavenge {2}{G}", "Foretell {1}{B}" - the cost computed from the card's
+    own mana cost (CR 604.2, CR 611.3d). Only the owner's permanents grant
+    (CR 108.3: "you own", "your graveyard"/"your hand"). `keyword` narrows to
+    one keyword."""
+    if game is None or card.owner is None:
+        return []
+    from .keywords import _keyword
+
+    lines: list[str] = []
+    for _name, grant in _grants_of(game, card.owner):
+        if grant.subject != "zone_card" or card.zone not in grant.zones:
+            continue
+        if keyword is not None and grant.keyword != keyword:
+            continue
+        if grant.without_keyword and (
+            _keyword(card.card, grant.without_keyword) is not None
+            or any(
+                line.lower().startswith(grant.without_keyword)
+                for line in card.granted_ability_texts
+            )
+        ):
+            continue
+        if not _object_has_quality(card, grant.quality):
+            continue
+        line = grant.line_for(card)
+        if line is not None:
+            lines.append(line)
+    return lines
+
+
 def granted_triggered_abilities_for(game: Any, source: CardState) -> list[Any]:
     """The triggered abilities a spell on the stack or a card in hand has
     from `granted_spell_keyword_lines`/`granted_hand_keyword_lines` - storm,
@@ -352,7 +491,7 @@ def granted_triggered_abilities_for(game: Any, source: CardState) -> list[Any]:
     )
 
     if source.zone is Zone.STACK:
-        lines = granted_lines_of_stack_spell(game, source)
+        lines = _one_replicate_trigger(source, granted_lines_of_stack_spell(game, source))
         record = game.cast_record_of(source)
         paid = 0 if record is None or record.is_copy else record.casualty_paid
         conspired = 0 if record is None or record.is_copy else record.conspire_paid
@@ -363,6 +502,25 @@ def granted_triggered_abilities_for(game: Any, source: CardState) -> list[Any]:
     else:
         return []
     return (granted_keyword_triggered_abilities(lines) if lines else []) + casualty
+
+
+def _one_replicate_trigger(spell: CardState, lines: list[str]) -> list[str]:
+    """`lines` with the replicate instances beyond the spell's first dropped.
+
+    `keywords._replicate_effect` copies the spell once per replicate cost
+    paid, summed over every instance (`CastRecord.replicated`), so a second
+    replicate trigger - printed or granted - would copy it all over again."""
+    from .keywords import _keyword
+
+    seen = _keyword(spell.card, "replicate") is not None
+    kept: list[str] = []
+    for line in lines:
+        if _REPLICATE_LINE_RE.fullmatch(line):
+            if seen:
+                continue
+            seen = True
+        kept.append(line)
+    return kept
 
 
 #: "Casualty N" as `granted_spell_keyword_lines` writes it.
@@ -406,6 +564,34 @@ def conspire_count(game: Any, spell: CardState, caster: str, origin_zone: Zone) 
         )
         if line == "Conspire"
     )
+
+
+#: "Replicate {cost}" as `granted_spell_keyword_lines` writes it.
+_REPLICATE_LINE_RE = re.compile(r"^Replicate (?P<cost>\{.+\})$")
+
+
+def replicate_costs(game: Any, spell: CardState, caster: str, origin_zone: Zone) -> list[str]:
+    """The cost of every replicate instance `spell` has as `caster` casts it
+    from `origin_zone` (CR 702.56a): the printed one, then one per grant
+    ("Each instant and sorcery spell you cast has replicate. The replicate
+    cost is equal to its mana cost."). CR 702.56b: each instance is paid, and
+    triggers, on its own."""
+    from .keywords import _keyword
+
+    costs: list[str] = []
+    printed = _keyword(spell.card, "replicate")
+    if printed is not None and printed.cost:
+        costs.append(printed.cost)
+    if game is None:
+        return costs
+    first_spell = not game.spells_cast_this_turn.get(caster)
+    for line in granted_spell_keyword_lines(
+        game, spell, caster, origin_zone, first_spell=first_spell
+    ):
+        match = _REPLICATE_LINE_RE.fullmatch(line)
+        if match is not None:
+            costs.append(match.group("cost"))
+    return costs
 
 
 #: "Affinity for <text>" as `granted_spell_keyword_lines` writes it.

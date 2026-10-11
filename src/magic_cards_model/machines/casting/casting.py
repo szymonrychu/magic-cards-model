@@ -73,7 +73,12 @@ from ..keywords import (
 )
 from ..modes import ModalProfile, Mode, modal_profile, substitute_x, x_restriction_refusal
 from ..objects_as_costs import power_of
-from ..spell_grants import casualty_numbers, conspire_count, granted_affinity_reductions
+from ..spell_grants import (
+    casualty_numbers,
+    conspire_count,
+    granted_affinity_reductions,
+    replicate_costs,
+)
 from ..targeting import (
     TargetingProfile,
     face_spell_profile,
@@ -451,6 +456,7 @@ def why_cannot_cast_now(
         return None  # Primal Prayers: flash while paying its alternative cost
     if spell.zone is not Zone.HAND and (
         castable_from(spell.card, spell.zone)
+        or marker_cast_options(spell)
         or granted_cast_options(game, spell, caster, spell.zone)
     ):
         # A keyword is what allows this cast at all (CR 601.3), and each one
@@ -1073,6 +1079,10 @@ class Casting(EngineModel):
     """The exile pile the card was in before that move (CR 406.5): plot,
     foretell, madness and warp all cast out of a *particular* pile, and the
     move to the stack drops the annotation."""
+    announced_granted_ability_texts: tuple[str, ...] = ()
+    """The keyword lines the card was granted before that move (a madness it
+    was discarded with, CR 702.35a): CR 400.7 clears them on the move, and the
+    cast option they name is asked of `_as_announced`."""
     announced_counters: Counters | None = None
     """The counters the card carried before that move (CR 122.1; CR 122.2 and
     CR 400.7 strip them as CR 601.2a moves it to the stack): Draugr
@@ -1246,6 +1256,7 @@ class Casting(EngineModel):
         self.announced_stamp = self.spell.zone_change_stamp
         self.announced_exile_annotation = self.spell.exile_annotation
         self.announced_counters = self.spell.counters.model_copy(deep=True)
+        self.announced_granted_ability_texts = self.spell.granted_ability_texts
         self.announced_discarded_by = self.spell.discarded_by
         self.announced_discarded_on_turn = self.spell.discarded_on_turn
         if self.spell.zone is Zone.LIBRARY:
@@ -1330,6 +1341,7 @@ class Casting(EngineModel):
                 "zone": self.announced_zone,
                 "zone_change_stamp": self.announced_stamp,
                 "exile_annotation": self.announced_exile_annotation,
+                "granted_ability_texts": self.announced_granted_ability_texts,
                 **(
                     {"counters": self.announced_counters}
                     if self.announced_counters is not None
@@ -3418,7 +3430,11 @@ class Casting(EngineModel):
         return self.step
 
     def pay_replicate(
-        self, times: int = 1, *, choosing: list[CardState] | None = None
+        self,
+        times: int = 1,
+        *,
+        choosing: list[CardState] | None = None,
+        which: str | None = None,
     ) -> CastingStep:
         """CR 702.56a: pay this spell's replicate cost as an additional cost,
         any number of times.
@@ -3438,18 +3454,21 @@ class Casting(EngineModel):
         was paid for it" clause and by `machines/keywords._replicate_effect`,
         the same way `kicked` is read by "if it was kicked".
         """
-        ability = _keyword(self.spell.card, "replicate")
-        if ability is None:
+        costs = replicate_costs(self.game, self.spell, self.caster, self.origin_zone)
+        if not costs:
             raise ValueError(f"{self.spell.name} has no replicate ability (CR 702.56a)")
+        if which is not None and which not in costs:
+            raise ValueError(f"{self.spell.name} has no replicate cost {which!r} (CR 702.56a)")
+        replicate_cost = which if which is not None else costs[0]
         if times < 1:
             raise ValueError("replicate is paid at least once or not at all")
 
         remaining = list(choosing or [])
         for _ in range(times):
-            cost = total_cost_for_phrase(ability.cost or "", self.caster)
+            cost = total_cost_for_phrase(replicate_cost, self.caster)
             if cost is None:
                 raise ValueError(
-                    f"{self.spell.name}'s replicate cost {ability.cost!r} could not be read, "
+                    f"{self.spell.name}'s replicate cost {replicate_cost!r} could not be read, "
                     f"so it cannot be paid"
                 )
             for component in cost.components:
@@ -5072,6 +5091,7 @@ class Casting(EngineModel):
         self.spell.zone = self.announced_zone
         self.spell.zone_change_stamp = self.announced_stamp
         self.spell.exile_annotation = self.announced_exile_annotation
+        self.spell.granted_ability_texts = self.announced_granted_ability_texts
         self.spell.discarded_by = self.announced_discarded_by
         self.spell.discarded_on_turn = self.announced_discarded_on_turn
         self.announced_zone = None
