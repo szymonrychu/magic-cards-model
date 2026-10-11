@@ -3579,6 +3579,9 @@ def _unread_condition_matches(
             return False
         if not _acting_player_matches(match.group("who"), controller, event.player):
             return False
+        keyword = match.group("keyword")
+        if keyword is not None:
+            return event.keyword_action == keyword.lower()
         if match.group("not_mana") is not None and event.mana_ability:
             return False
         types = match.group("types")

@@ -2441,6 +2441,8 @@ class KeywordActivation(EngineModel):
                 subject_types=types,
                 origin_zone=self.zone,
                 player=self.player,
+                # "Whenever you activate a ninjutsu ability" (Satoru Umezawa)
+                keyword_action=self.keyword.lower(),
             )
         )
         if self.rule in (str(KeywordRule.CYCLING), str(KeywordRule.TYPECYCLING)):
