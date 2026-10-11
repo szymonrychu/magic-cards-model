@@ -63,8 +63,10 @@ _TIMES = {"twice": 2, "thrice": 3}
 
 
 def reads_equip_block_line(text: str) -> bool:
+    from .keywords import is_instant_speed_equip_line
+
     line = " ".join(text.split())
-    return any(pattern.match(line) for pattern in _PATTERNS)
+    return any(pattern.match(line) for pattern in _PATTERNS) or is_instant_speed_equip_line(line)
 
 
 def _lines(game: "Game", permanent: CardState) -> list[str]:

@@ -499,16 +499,6 @@ LISTED_DISTURB = [
     (TWINBLADE, "Twinblade Invocation", "creature"),
 ]
 
-#: A line on a listed disturb card that the round assigns to a sibling task
-#: (the plan: "The card's remaining static lines (e.g. Gutter Skulker's 'can't
-#: be blocked as long as it's attacking alone') are T4's/T3's"). Those lines
-#: are audited by their own task; every other clause here must read handled.
-SIBLING_OWNED_LINES = {
-    "Cards in graveyards can't be the targets of spells or abilities.",
-    "This creature can't be blocked as long as it's attacking alone.",
-    "Enchanted creature can't be blocked as long as it's attacking alone.",
-}
-
 _LANDS = ["Plains"] * 7 + ["Island"] * 5 + ["Swamp"] * 2
 _PIP_LAND = {"W": "Plains", "U": "Island", "B": "Swamp"}
 
@@ -564,17 +554,8 @@ def test_every_listed_disturb_card_is_cast_transformed_and_enters_back_face_up(n
 def test_every_listed_disturb_card_reads_handled(name, back, target):
     support = card_support(card(name))
 
-    unhandled = [
-        clause
-        for clause in support.clauses
-        if clause.status != "handled" and clause.text not in SIBLING_OWNED_LINES
-    ]
+    unhandled = [clause for clause in support.clauses if clause.status != "handled"]
     assert not unhandled, unhandled
-    assert all(
-        clause.status in {"handled", "unaudited"}
-        for clause in support.clauses
-        if clause.text in SIBLING_OWNED_LINES
-    )
 
 
 @pytest.mark.parametrize(

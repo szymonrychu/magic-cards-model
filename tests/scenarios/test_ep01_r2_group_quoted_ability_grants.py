@@ -469,8 +469,8 @@ def test_cursed_wombat_gives_every_permanent_the_extra_counter_trigger():
 # The audit: every listed static line is read by the engine's own readers
 # --------------------------------------------------------------------------
 
-#: (card, start of the static line this task owns). Cards with a second line
-#: that belongs to another task are named for this line only.
+#: (card, start of the static line this task owns). Every other clause of
+#: each card reads handled too (`test_every_clause_of_the_listed_card_is_handled`).
 LISTED_LINES = [
     ("Honest Work", "Enchanted creature loses all abilities and is a Citizen"),
     ("Kasmina's Transmutation", "Enchanted creature loses all abilities and has base"),
@@ -550,6 +550,15 @@ def test_the_listed_static_line_is_handled(name, prefix):
         name,
         [(c.text, c.category) for c in clauses],
     )
+
+
+@pytest.mark.parametrize("name", sorted({row[0] for row in LISTED_LINES}))
+def test_every_clause_of_the_listed_card_is_handled(name):
+    from magic_cards_model.support import card_support
+    from tests.cards import card
+
+    support = card_support(card(name))
+    assert [c for c in support.clauses if c.status != "handled"] == [], name
 
 
 # --------------------------------------------------------------------------
