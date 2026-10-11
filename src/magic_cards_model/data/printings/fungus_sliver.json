@@ -1,0 +1,139 @@
+{
+  "object": "card",
+  "id": "864a67e4-5deb-45d5-bd42-3078716e142b",
+  "oracle_id": "885c47cb-64fb-4c83-a9ca-4f2eecb7d3e5",
+  "multiverse_ids": [
+    509568
+  ],
+  "mtgo_id": 86781,
+  "tcgplayer_id": 233997,
+  "cardmarket_id": 546766,
+  "name": "Fungus Sliver",
+  "lang": "en",
+  "released_at": "2021-03-19",
+  "uri": "https://api.scryfall.com/cards/864a67e4-5deb-45d5-bd42-3078716e142b",
+  "scryfall_uri": "https://scryfall.com/card/tsr/203/fungus-sliver?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T07:29:42Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/8/6/864a67e4-5deb-45d5-bd42-3078716e142b.jpg?1783927782",
+    "normal": "https://cards.scryfall.io/normal/front/8/6/864a67e4-5deb-45d5-bd42-3078716e142b.jpg?1783927782",
+    "large": "https://cards.scryfall.io/large/front/8/6/864a67e4-5deb-45d5-bd42-3078716e142b.jpg?1783927782",
+    "png": "https://cards.scryfall.io/png/front/8/6/864a67e4-5deb-45d5-bd42-3078716e142b.png?1783927782",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/8/6/864a67e4-5deb-45d5-bd42-3078716e142b.jpg?1783927782",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/8/6/864a67e4-5deb-45d5-bd42-3078716e142b.jpg?1783927782",
+    "thumb": "https://cards.scryfall.io/thumb/front/8/6/864a67e4-5deb-45d5-bd42-3078716e142b.webp?1783927782",
+    "grid": "https://cards.scryfall.io/grid/front/8/6/864a67e4-5deb-45d5-bd42-3078716e142b.webp?1783927782",
+    "display": "https://cards.scryfall.io/display/front/8/6/864a67e4-5deb-45d5-bd42-3078716e142b.webp?1783927782",
+    "art": "https://cards.scryfall.io/art/front/8/6/864a67e4-5deb-45d5-bd42-3078716e142b.webp?1783927782",
+    "crop": "https://cards.scryfall.io/crop/front/8/6/864a67e4-5deb-45d5-bd42-3078716e142b.webp?1783927782"
+  },
+  "mana_cost": "{3}{G}",
+  "cmc": 4.0,
+  "type_line": "Creature \u2014 Fungus Sliver",
+  "oracle_text": "All Sliver creatures have \"Whenever this creature is dealt damage, put a +1/+1 counter on it.\" (It must survive the damage to get the counter.)",
+  "power": "2",
+  "toughness": "2",
+  "colors": [
+    "G"
+  ],
+  "color_identity": [
+    "G"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "11e90d1b-0502-43e6-b056-e24836523c13",
+  "set": "tsr",
+  "set_name": "Time Spiral Remastered",
+  "set_type": "masters",
+  "set_uri": "https://api.scryfall.com/sets/11e90d1b-0502-43e6-b056-e24836523c13",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Atsr&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/tsr?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/864a67e4-5deb-45d5-bd42-3078716e142b/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A885c47cb-64fb-4c83-a9ca-4f2eecb7d3e5&unique=prints",
+  "collector_number": "203",
+  "digital": false,
+  "rarity": "rare",
+  "flavor_text": "\"When a sliver of this breed enters the hive, the others claw each other in frenzied fits, thereby ensuring their rapid growth.\"\n\u2014Rukarumel, field journal",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Daniel Gelon",
+  "artist_ids": [
+    "63ac31a8-dd1a-4679-9f82-ece89429a084"
+  ],
+  "illustration_id": "2b5e7d07-4e13-40f8-aab1-ecd6637eacfa",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 13384,
+  "penny_rank": 12679,
+  "preview": {
+    "source": "Eurogamer",
+    "source_uri": "https://www.eurogamer.de/articles/mtg-hier-sind-8-spoilerkarten-zu-time-spiral-remastered",
+    "previewed_at": "2021-03-03"
+  },
+  "prices": {
+    "usd": "0.57",
+    "usd_foil": "1.17",
+    "usd_etched": null,
+    "eur": "0.32",
+    "eur_foil": "0.62",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=509568&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DFungus%2BSliver",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DFungus%2BSliver",
+    "edhrec": "https://edhrec.com/route/?cc=Fungus+Sliver"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F233997%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=546766&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/86781?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

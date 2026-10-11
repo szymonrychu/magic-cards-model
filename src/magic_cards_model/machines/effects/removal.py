@@ -2297,6 +2297,48 @@ def _parse_sacrifice_unless_pay_energy(text: str) -> AbilityEffect | None:
     return effect
 
 
+#: "Sacrifice this <type> unless you pay {1}." - the upkeep tax Kataki, War's
+#: Wage and Magus of the Tabernacle hand every artifact/creature as a quoted
+#: trigger (and Phyrexian Soulgorger-style printed upkeep costs). CR 118.12a:
+#: "'[Do something] unless [a player does something else].' This means the same
+#: thing as '[A player may do something else]. If [that player] doesn't,
+#: [do something].'" - the controller is asked to pay the mana (CR 608.2g lets
+#: untapped sources be tapped for it) and the source is sacrificed when they
+#: decline or cannot. Mana symbols only: `{E}` is the energy twin above.
+_SACRIFICE_UNLESS_PAY_MANA_RE = re.compile(
+    r"^sacrifice this (?:creature|permanent|artifact|enchantment|planeswalker|land|token) "
+    r"unless you pay (?P<cost>(?:\{(?!e\})[^}]+\})+)\.?$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s25")
+def _parse_sacrifice_unless_pay_mana(text: str) -> AbilityEffect | None:
+    """`_SACRIFICE_UNLESS_PAY_MANA_RE`'s shape (CR 118.12a, CR 701.21a)."""
+    match = _SACRIFICE_UNLESS_PAY_MANA_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    cost = ManaCost.parse(match.group("cost"))
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        source = ability.source(game)
+        if source is None or source.zone is not Zone.BATTLEFIELD:
+            return
+        if ability.source_stamp is not None and source.zone_change_stamp != ability.source_stamp:
+            return
+        paid = game.may_pay_mana_cost(
+            game.player(ability.controller),
+            cost,
+            source=ability.source_name,
+            source_id=source_id_of(ability),
+            prompt=f"pay {cost} or sacrifice {source.name}",
+        )
+        if not paid:
+            game.sacrifice(source)
+
+    return effect
+
+
 # --------------------------------------------------------------------------
 # "Exile the top N cards of your library. [You may ]put <any number of|all>
 # <quality> cards from among them onto the battlefield." (CR 406.1's exile,

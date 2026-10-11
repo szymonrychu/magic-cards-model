@@ -8491,6 +8491,9 @@ def quoted_ability_grants(
     grants nothing and must still be able to take its own line back off the
     creature it used to be on.
     """
+    from .attached_grants import attached_quoted_texts
+    from .quoted_grants import group_quoted_grant_of
+
     grantable: set[str] = set()
     wanted: dict[UUID, set[str]] = {}
     text_to_read = source.class_ability_text
@@ -8573,6 +8576,20 @@ def quoted_ability_grants(
             for permanent in permanents:
                 if group_selector(printed_characteristics(permanent), {}):
                     wanted.setdefault(permanent.id, set()).add(text)
+            continue
+        if (texts := attached_quoted_texts(normalized)) and (
+            "enchanted " in normalized.lower() or "equipped " in normalized.lower()
+        ):
+            grantable.update(texts)
+            if source.attached_to is not None:
+                wanted.setdefault(source.attached_to, set()).update(texts)
+            continue
+        if (group := group_quoted_grant_of(normalized)) is not None:
+            grantable.add(group.ability)
+            selector = group.selector(source)
+            for permanent in permanents:
+                if selector(printed_characteristics(permanent), {}):
+                    wanted.setdefault(permanent.id, set()).add(group.ability)
     return grantable, wanted
 
 
@@ -11311,7 +11328,12 @@ def _parse_layer_sentence_ungated(sentence: str) -> EffectBuilder | None:
         return _self_becomes_type_until_next_turn_builder(extra_type, match.group("ability"))
     if (animation := _parse_animation_sentence(sentence)) is not None:
         return animation
-    return _parse_static_layer_sentence(sentence)
+    if (builder := _parse_static_layer_sentence(sentence)) is not None:
+        return builder
+    from .attached_grants import parse_attached_sentence
+    from .quoted_grants import parse_group_quoted_sentence
+
+    return parse_attached_sentence(sentence) or parse_group_quoted_sentence(sentence)
 
 
 #: CR 701.54e's "your Ring-bearer" as the subject of a static ability - The

@@ -52,7 +52,7 @@ from pydantic import ConfigDict, Field
 from magic_cards_model.phrases import with_indefinite_article
 
 from ..data.subtypes import canonical_subtype
-from ..models.card import Color, Type
+from ..models.card import Color, Supertype, Type
 from ..models.card_state import CardState, Counter, TargetRef
 from ..models.mana import ManaCost
 from ..models.token import is_token
@@ -2673,6 +2673,55 @@ def landwalk_refusal(game: "Game", attacker: CardState, defending: str | None) -
                 f"{attacker.name} has {keyword.value} and {defending} controls "
                 f"{with_indefinite_article(land_type)}, so it cannot be blocked (CR 702.14c)"
             )
+    return typed_landwalk_refusal(game, attacker, defending, board)
+
+
+#: CR 702.14a: landwalk "can also be the card type land plus any combination of
+#: land types, card types, and/or supertypes" - "nonbasic landwalk" (Trailblazer's
+#: Boots), "legendary landwalk", "snow landwalk", "artifact landwalk" and "snow
+#: swampwalk". CR 702.14c: the creature can't be blocked as long as the defending
+#: player controls a land with the specified type or supertype, without it ("non"),
+#: or with both it and the land type.
+_TYPED_LANDWALK_RE = re.compile(
+    r"^(?:(?P<non>non)?(?P<qualifier>basic|legendary|snow)|(?P<card_type>artifact)) landwalk$"
+    r"|^(?P<snow>snow) (?P<land_type>plains|island|swamp|mountain|forest)walk$",
+    re.IGNORECASE,
+)
+
+
+def typed_landwalk_refusal(
+    game: "Game", attacker: CardState, defending: str, board=None
+) -> str | None:
+    """Why a supertype- or card-type-qualified landwalk (CR 702.14a, 702.14c)
+    stops this attacker being blocked, or None."""
+    board = board if board is not None else game.computed_board()
+    abilities = board.of(attacker).abilities
+    if not any("walk" in line.lower() for line in abilities):
+        return None
+    for line in abilities:
+        bare = re.sub(r"\s*\([^)]*\)", "", line).strip().rstrip(".")
+        for part in (piece.strip() for piece in bare.split(",")):
+            match = _TYPED_LANDWALK_RE.fullmatch(part)
+            if match is None:
+                continue
+            for land in game.permanents_controlled_by(defending):
+                chars = board.of(land)
+                if Type.LAND not in chars.types:
+                    continue
+                if match["card_type"] is not None:
+                    holds = Type.ARTIFACT in chars.types
+                elif match["snow"] is not None:
+                    holds = Supertype.SNOW in chars.supertypes and (
+                        match["land_type"].capitalize() in chars.subtypes
+                    )
+                else:
+                    wanted = Supertype(match["qualifier"].lower())
+                    holds = (wanted in chars.supertypes) != (match["non"] is not None)
+                if holds:
+                    return (
+                        f"{attacker.name} has {part.lower()} and {defending} controls "
+                        f"{land.name}, so it cannot be blocked (CR 702.14c)"
+                    )
     return None
 
 
