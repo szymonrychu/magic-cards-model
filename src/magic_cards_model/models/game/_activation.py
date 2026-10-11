@@ -821,8 +821,11 @@ class ActivationMixin:
         whose printed lines all survive, so an ordinary grant still appends and
         every printed ability's index stays where it was.
         """
-        granted = granted_activated_abilities_of(permanent.granted_ability_texts)
+        # Asked first: computing the board is what reconciles a conditional
+        # static's quoted grant onto `granted_ability_texts` (CR 613.1f), so the
+        # list is read only after it.
         rewritten = rewritten_ability_lines(self, permanent)
+        granted = granted_activated_abilities_of(permanent.granted_ability_texts)
         if rewritten is not None:
             # A rewrite replaces the *printed* text, and nothing more. An
             # ability granted to this object by something that already resolved

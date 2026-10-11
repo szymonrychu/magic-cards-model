@@ -15,7 +15,7 @@ CR 613.1f (layer 6 grants), CR 613.4c (7c pump), CR 613.4b (7b base P/T),
 CR 700.9 (modified).
 """
 
-from magic_cards_model.machines import Step
+from magic_cards_model.machines import Step, soulbond
 from magic_cards_model.models import Zone
 from tests.scenarios.harness import Scenario
 
@@ -176,3 +176,105 @@ def test_diviner_alone_is_not_its_own_other_wizard():
         "When this creature dies, draw a card."
         not in _chars(scenario, "Expedition Diviner").abilities
     )
+
+
+# -- Deadeye Navigator / Tandem Lookout / Galvanic Alchemist: "As long as ~ is paired" ----
+
+
+def _paired(partner_name, navigator, *, alice_extra=(), bob=()):
+    scenario = _board([navigator, partner_name, *alice_extra], bob)
+    soulbond.pair(
+        scenario.game,
+        scenario.find(navigator, Zone.BATTLEFIELD, "alice"),
+        scenario.find(partner_name, Zone.BATTLEFIELD, "alice"),
+    )
+    return scenario
+
+
+NAVIGATOR_LINE = "{1}{U}: Exile this creature, then return it to the battlefield under your control."
+LOOKOUT_LINE = "Whenever this creature deals damage to an opponent, draw a card."
+ALCHEMIST_LINE = "{2}{U}: Untap this creature."
+
+
+def test_deadeye_navigator_grants_its_ability_to_both_paired_creatures():
+    scenario = _paired("Grizzly Bears", "Deadeye Navigator")
+    assert NAVIGATOR_LINE in _chars(scenario, "Grizzly Bears").abilities
+    assert NAVIGATOR_LINE in _chars(scenario, "Deadeye Navigator").abilities
+    assert scenario.game.continuous_effects.layer_notices == []
+
+
+def test_deadeye_navigator_grants_nothing_while_unpaired():
+    scenario = _board(["Deadeye Navigator", "Grizzly Bears"])
+    assert NAVIGATOR_LINE not in _chars(scenario, "Grizzly Bears").abilities
+    assert NAVIGATOR_LINE not in _chars(scenario, "Deadeye Navigator").abilities
+
+
+def test_deadeye_navigator_grant_ends_when_the_pair_breaks():
+    scenario = _paired("Grizzly Bears", "Deadeye Navigator")
+    scenario.game.destroy(scenario.find("Grizzly Bears", Zone.BATTLEFIELD, "alice"))
+    assert NAVIGATOR_LINE not in _chars(scenario, "Deadeye Navigator").abilities
+
+
+def test_deadeye_navigator_does_not_grant_to_an_unpaired_bystander():
+    scenario = _paired("Grizzly Bears", "Deadeye Navigator", alice_extra=["Llanowar Elves"])
+    assert NAVIGATOR_LINE not in _chars(scenario, "Llanowar Elves").abilities
+
+
+def test_a_paired_creature_can_really_blink_itself_with_the_granted_ability():
+    scenario = _paired("Grizzly Bears", "Deadeye Navigator", alice_extra=["Island", "Island"])
+    bears = scenario.find("Grizzly Bears", Zone.BATTLEFIELD, "alice")
+    bears.add_counters("+1/+1")
+    sources = scenario.untapped_sources("Island", "Island", username="alice")
+    scenario.activate(bears, *sources, index=0)
+    scenario.pass_until_resolved()
+    again = scenario.find("Grizzly Bears", Zone.BATTLEFIELD, "alice")
+    assert again is not bears or not again.counters, "it left and came back as a new object"
+    assert again.counter_count("+1/+1") == 0
+
+
+def test_galvanic_alchemist_grants_untap_to_both_paired_creatures():
+    scenario = _paired("Grizzly Bears", "Galvanic Alchemist")
+    assert ALCHEMIST_LINE in _chars(scenario, "Grizzly Bears").abilities
+    assert ALCHEMIST_LINE in _chars(scenario, "Galvanic Alchemist").abilities
+
+
+def test_galvanic_alchemist_untap_ability_works_on_the_partner():
+    scenario = _paired("Grizzly Bears", "Galvanic Alchemist", alice_extra=["Island", "Island", "Island"])
+    bears = scenario.find("Grizzly Bears", Zone.BATTLEFIELD, "alice")
+    bears.tapped = True
+    sources = scenario.untapped_sources("Island", "Island", "Island", username="alice")
+    scenario.activate(bears, *sources, index=0)
+    scenario.pass_until_resolved()
+    assert not bears.tapped
+
+
+def test_tandem_lookout_grants_a_damage_draw_trigger_to_the_pair():
+    scenario = _paired("Grizzly Bears", "Tandem Lookout")
+    assert LOOKOUT_LINE in _chars(scenario, "Grizzly Bears").abilities
+    assert LOOKOUT_LINE in _chars(scenario, "Tandem Lookout").abilities
+
+
+def test_tandem_lookout_partner_draws_when_it_hits_an_opponent():
+    scenario = _paired("Grizzly Bears", "Tandem Lookout")
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    bears = scenario.find("Grizzly Bears", Zone.BATTLEFIELD, "alice")
+    bears.summoning_sick = False
+    hand_before = len(scenario.player("alice").hand)
+    scenario.attack_with(bears, defending="bob")
+    scenario.no_blocks()
+    scenario.combat_damage()
+    scenario.pass_until_resolved()
+    assert len(scenario.player("alice").hand) == hand_before + 1
+
+
+def test_tandem_lookout_unpaired_bears_draw_nothing():
+    scenario = _board(["Tandem Lookout", "Grizzly Bears"])
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    bears = scenario.find("Grizzly Bears", Zone.BATTLEFIELD, "alice")
+    bears.summoning_sick = False
+    hand_before = len(scenario.player("alice").hand)
+    scenario.attack_with(bears, defending="bob")
+    scenario.no_blocks()
+    scenario.combat_damage()
+    scenario.pass_until_resolved()
+    assert len(scenario.player("alice").hand) == hand_before

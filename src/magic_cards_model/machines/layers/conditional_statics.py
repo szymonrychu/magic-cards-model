@@ -174,6 +174,7 @@ _ATTACHED_IS_RE = re.compile(
     re.IGNORECASE,
 )
 _YOUR_TURN_RE = re.compile(r"^it(?:'s| is) your turn$", re.IGNORECASE)
+_PAIRED_RE = re.compile(rf"^{_SELF} is paired with another creature$", re.IGNORECASE)
 
 
 def _subtype(word: str) -> str | None:
@@ -294,6 +295,11 @@ def _parse_condition(text: str) -> _Condition | None:
     lowered = clause.lower()
     if match := _YOUR_TURN_RE.fullmatch(clause):
         return _Condition(gates=(_your_turn_gate,))
+    if _PAIRED_RE.fullmatch(clause):
+        # CR 702.95a-e: the pair itself is the condition - the paired-partners
+        # selector (the subject) only matches while both creatures point at each
+        # other under one controller, so nothing further is asked of the source.
+        return _Condition()
     if match := _TOP_CARD_RE.fullmatch(clause):
         alternatives = _quality_alternatives(match.group("quality"))
         if alternatives is None:
