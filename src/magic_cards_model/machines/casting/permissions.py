@@ -366,10 +366,17 @@ _ZONE_WORDS_FOR_GRANTS: dict[str, Zone] = {"hand": Zone.HAND, "graveyard": Zone.
 #: (CR 113.6f, CR 702.34a).
 #: Ninja Teen's level 3 prints the plural of the same shape: "Creature cards
 #: in your graveyard have sneak {3}{B}."
+_EXACT_COLOR_COUNT_WORDS = {"one": 1, "two": 2, "three": 3, "four": 4, "five": 5}
+
+#: Granted keywords whose rule names no cost of their own (CR 702.133a's
+#: jump-start casts for the card's mana cost and adds a discard).
+_COSTLESS_GRANTED_KEYWORDS = frozenset({"jump-start"})
+
 _GRANTED_KEYWORD_ON_A_CARD_IN_A_ZONE = re.compile(
     r"^(?P<during>During your turn, )?(?:[Ee]ach (?P<what>[\w' -]+?) card in your "
-    r"(?P<zone>hand|graveyard) has|(?P<whats>[\w' -]+?) cards in your "
-    r"(?P<zones>hand|graveyard) have) (?P<keyword>[A-Za-z]+)(?P<cost>[^.]*)\.(?P<tail>.*)$",
+    r"(?P<zone>hand|graveyard)(?: that's exactly (?P<ncolors>one|two|three|four|five) colors?)? has"
+    r"|(?P<whats>[\w' -]+?) cards in your "
+    r"(?P<zones>hand|graveyard) have) (?P<keyword>[A-Za-z-]+)(?P<cost>[^.]*)\.(?P<tail>.*)$",
     re.DOTALL,
 )
 
@@ -2235,9 +2242,11 @@ def _grant_on_a_card_in_a_zone(
         return None
     if not _spell_matches_grant_filter(spell, match.group("what") or match.group("whats")):
         return None
+    if match.group("ncolors") and len(spell.colors) != _EXACT_COLOR_COUNT_WORDS[match.group("ncolors")]:
+        return None
     keyword = match.group("keyword")
     printed = match.group("cost").strip() or None
-    if printed is None:
+    if printed is None and keyword.lower() not in _COSTLESS_GRANTED_KEYWORDS:
         tail = _COST_IS_THE_CARDS_MANA_COST.search(match.group("tail") or "")
         if tail is None or tail.group("keyword").lower() != keyword.lower():
             return None

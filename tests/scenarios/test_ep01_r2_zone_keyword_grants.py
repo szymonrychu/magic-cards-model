@@ -14,6 +14,8 @@ printed keyword (CR 702.84a unearth, CR 702.29a cycling, CR 702.52a dredge,
 CR 702.49a ninjutsu).
 """
 
+import pytest
+
 from magic_cards_model.machines import Step
 from magic_cards_model.machines.casting import why_cannot_cast_now
 from magic_cards_model.machines.keywords import (
@@ -219,3 +221,56 @@ def test_without_teferi_the_creature_card_cannot_be_cast_in_the_beginning_of_com
     scenario.start_at(Step.BEGINNING_OF_COMBAT)
 
     assert why_cannot_cast_now(bears, "alice", scenario.game) is not None
+
+
+# -- jump-start (CR 702.133a) -------------------------------------------------
+
+
+def jump_start_board():
+    return build(
+        {
+            "battlefield": ["Niv-Mizzet, Supreme", "Mountain", "Plains", "Island"],
+            "graveyard": ["Lightning Helix", "Lightning Bolt"],
+            "hand": ["Island"],
+        }
+    )
+
+
+def test_niv_mizzet_gives_a_two_color_instant_jump_start_discarding_a_card():
+    """Lightning Helix is exactly two colors; casting it from the graveyard
+    discards the Island and the Helix is exiled afterwards."""
+    scenario = jump_start_board()
+    helix = scenario.find("Lightning Helix", Zone.GRAVEYARD, "alice")
+    island = scenario.find("Island", Zone.HAND, "alice")
+    casting = scenario.cast("Lightning Helix", from_zone=Zone.GRAVEYARD)
+    casting.use_keyword("Jump-start", choosing=[island])
+    casting.choose_targets(["bob"])
+    scenario.pay_with(casting.begin_paying(), *scenario.untapped_sources("Mountain", "Plains"))
+    scenario.put_on_stack(casting)
+    scenario.resolve_top()
+
+    assert island.zone is Zone.GRAVEYARD, "the additional cost"
+    assert helix.zone is Zone.EXILE, "CR 702.133a: exiled instead of the graveyard"
+    assert scenario.player("bob").life == 17
+
+
+def test_jump_start_is_refused_for_a_single_color_card():
+    scenario = jump_start_board()
+    with pytest.raises(ValueError):
+        casting = scenario.cast("Lightning Bolt", from_zone=Zone.GRAVEYARD)
+        casting.use_keyword("Jump-start")
+
+
+def test_jump_start_needs_a_card_to_discard():
+    scenario = build(
+        {
+            "battlefield": ["Niv-Mizzet, Supreme", "Mountain", "Plains"],
+            "graveyard": ["Lightning Helix"],
+        }
+    )
+    with pytest.raises(ValueError):
+        casting = scenario.cast("Lightning Helix", from_zone=Zone.GRAVEYARD)
+        casting.use_keyword("Jump-start")
+        casting.choose_targets(["bob"])
+        scenario.pay_with(casting.begin_paying(), *scenario.untapped_sources("Mountain", "Plains"))
+        scenario.put_on_stack(casting)

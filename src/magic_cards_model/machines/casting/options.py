@@ -537,6 +537,29 @@ def _option_from_keyword(ability: KeywordAbility) -> KeywordCastOption | None:
             understood=cost is not None,
         )
 
+    if canonical == "jump-start":
+        # CR 702.133a: "You may cast this card from your graveyard if the
+        # resulting spell is an instant or sorcery spell by discarding a card
+        # as an additional cost to cast it" and "If this spell was cast using
+        # its jump-start ability, exile this card instead of putting it
+        # anywhere else any time it would leave the stack." The graveyard half
+        # is this permission, paying the card's own mana cost with the discard
+        # as an additional cost (CR 601.2f); the exile half is the replacement
+        # `machines/replacement` applies to a spell recorded as cast with it.
+        from ..cost import discard_cost
+
+        return KeywordCastOption(
+            keyword=ability.canonical,
+            rule="CR 702.133a",
+            zone=Zone.GRAVEYARD,
+            cost=None,
+            pays_mana_cost=True,
+            additional_cost=TotalCost(
+                components=[discard_cost(required=1, description="Discard a card")]
+            ),
+            understood=True,
+        )
+
     if canonical == "harmonize":
         # CR 702.180a: "Harmonize represents three static abilities: one that
         # functions while the card is in a player's graveyard and two that

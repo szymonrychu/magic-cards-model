@@ -1238,6 +1238,18 @@ def _stack_replacements(game: "Game", event: ReplaceableEvent) -> list[Applicabl
                 apply=_exile_instead,
             )
         )
+    if record.keyword is not None and record.keyword.lower() == "jump-start":
+        # CR 702.133a's second static ability: "If this spell was cast using
+        # its jump-start ability, exile this card instead of putting it
+        # anywhere else any time it would leave the stack."
+        found.append(
+            ApplicableEffect(
+                key=f"{card.id}:jump-start",
+                source=card,
+                label="if cast with jump-start, exile this card instead (CR 702.133a)",
+                apply=_exile_instead,
+            )
+        )
     if record.keyword is not None and record.keyword.lower() == "harmonize":
         # CR 702.180a's third static ability: "If the harmonize cost was
         # paid, exile this card instead of putting it anywhere else any
