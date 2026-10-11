@@ -33,11 +33,14 @@ from .model import (
     Layer,
     LoseAllAbilities,
     Only,
+    SetCreatureTypes,
     Sublayer,
     add_subtype,
     add_type,
     grant_keyword,
     modify_power_toughness,
+    set_basic_land_type,
+    set_colors,
     set_power_toughness,
 )
 
@@ -229,6 +232,12 @@ _GROUP_ARE_RE = re.compile(
     r"^(?P<subject>.+?) (?:are|is) (?P<tail>.+?)"
     r"(?: in addition to (?:their|its) other (?:creature )?types)$"
 )
+_GROUP_ARE_PLAIN_RE = re.compile(
+    r"^(?P<subject>.+?) (?:are|is) (?P<tail>every creature type|the chosen type|colorless|"
+    r"white|blue|black|red|green|plains|islands|swamps|mountains|forests)$"
+)
+_SAME_IS_TRUE_RE = re.compile(r"^the same is true for (?P<subjects>.+)$")
+_OFF_ZONE_WORD_RE = re.compile(r"\b(?:cards?|spells?)\b")
 _ARE_LEGENDARY_RE = re.compile(r"^(?P<subject>.+?) (?:are|is) legendary$")
 _GROUP_SELF_RE = re.compile(r"^this (?:creature|permanent|artifact|enchantment|land|token)$")
 _SELF_ALSO_RE = re.compile(
@@ -275,8 +284,8 @@ _SELF_WORD_FOR_TYPE_RE = re.compile(r"\bthis permanent(?= [a-z]+s\b)")
 def _subject_selector(subject: str, source: CardState) -> Any | None:
     if _GROUP_SELF_RE.fullmatch(subject.strip().lower()):
         return Only(card_id=source.id)
-    subject = _SELF_WORD_FOR_TYPE_RE.sub(source.name.split()[0].lower(), subject)
-    spec = parse_group(subject)
+    subject = _battlefield_part(_SELF_WORD_FOR_TYPE_RE.sub(source.name.split()[0].lower(), subject))
+    spec = parse_group(subject) if subject else None
     return None if spec is None else group_selector(spec, source)
 
 
@@ -375,6 +384,20 @@ def parse_group_static_sentence(sentence: str):
                 *[(Layer.ABILITY, None, grant_keyword(keyword)) for keyword in keywords],
             ],
         )
+    if match := _SAME_IS_TRUE_RE.fullmatch(lowered):
+        # "The same is true for creature spells you control and creature cards
+        # you own that aren't on the battlefield." (Maskwood Nexus): the
+        # off-battlefield half of the sentence before it, applied by
+        # `machines/zone_grants.py`; nothing for the battlefield here.
+        from ..zone_grants import line_grants_off_zone
+
+        if not line_grants_off_zone(f"creatures are every creature type. {lowered}"):
+            return None
+        return lambda source, timestamp, targets, context: []
+    if match := _GROUP_ARE_PLAIN_RE.fullmatch(lowered):
+        if not _subject_ok(match["subject"]) or not _battlefield_part(match["subject"]):
+            return None
+        return _plain_are_builder(sentence, match["subject"], match["tail"])
     if match := _ARE_LEGENDARY_RE.fullmatch(lowered):
         if _subject_ok(match["subject"]) is False:
             return None
@@ -404,10 +427,62 @@ def parse_group_static_sentence(sentence: str):
     return None
 
 
+def _battlefield_part(subject: str) -> str:
+    """The permanents of a subject that also names cards off the battlefield
+    ("all cards that aren't on the battlefield, spells, and permanents" ->
+    "permanents"); the off-battlefield items are `zone_grants`' (CR 613.1d,
+    CR 613.1e reach them there)."""
+    if not _OFF_ZONE_WORD_RE.search(subject):
+        return subject
+    items = [re.sub(r"^(?:and|all|each)\s+", "", item.strip()) for item in subject.split(",")]
+    return " and ".join(item for item in items if item and not _OFF_ZONE_WORD_RE.search(item))
+
+
 def _subject_ok(subject: str) -> bool:
     if _GROUP_SELF_RE.fullmatch(subject.strip().lower()):
         return True
-    return parse_group(_SELF_WORD_FOR_TYPE_RE.sub("human", subject)) is not None
+    subject = _battlefield_part(subject)
+    return bool(subject) and parse_group(_SELF_WORD_FOR_TYPE_RE.sub("human", subject)) is not None
+
+
+def _plain_are_builder(sentence: str, subject: str, tail: str):
+    """ "`<group>` are every creature type / the chosen type / white /
+    colorless / Plains" - the sets, not the additions (CR 205.1a, CR 305.7,
+    CR 613.1d, CR 613.1e)."""
+    singular = _singular(tail)
+
+    def build(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        selector = _subject_selector(subject, source)
+        if selector is None:
+            return []
+        if tail == "every creature type":
+            parts: list[tuple[Layer, Sublayer | None, Any]] = [
+                (Layer.TYPE, None, AddEveryCreatureType())
+            ]
+        elif tail == "the chosen type":
+            from .parse import chosen_creature_type_of
+
+            chosen = chosen_creature_type_of(source)
+            if chosen is None:
+                return []
+            parts = [(Layer.TYPE, None, SetCreatureTypes(subtypes=(chosen.title(),)))]
+        elif tail == "colorless":
+            parts = [(Layer.COLOR, None, set_colors())]
+        elif tail in _GROUP_COLORS:
+            parts = [(Layer.COLOR, None, set_colors(_GROUP_COLORS[tail]))]
+        else:
+            from ._common import BASIC_LAND_TYPES
+
+            name = _GROUP_BASIC_LAND_TYPES[tail if tail in _GROUP_BASIC_LAND_TYPES else singular]
+            parts = [(Layer.TYPE, None, set_basic_land_type(name, BASIC_LAND_TYPES[name]))]
+        return _effects(source, timestamp, sentence, selector, f"{subject} are {tail}", parts)
+
+    return build
 
 
 def _builder(sentence: str, subject: str, what: str, parts):

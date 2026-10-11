@@ -9,6 +9,7 @@ performs: each predicate stages a throwaway permanent of the printing on a real
 """
 
 from magic_cards_model.machines.combat import may_assign_as_though_unblocked
+from magic_cards_model.machines.zone_grants import line_grants_off_zone
 from magic_cards_model.models.game import Game
 from magic_cards_model.models.player import Player
 from magic_cards_model.models.zone import Zone
@@ -45,6 +46,11 @@ def _may_assign_as_though_unblocked(printing) -> bool:
 
 def reads_anthems_grants_line(printing, text, *, card_name=None, legendary=False) -> bool:
     lowered = text.lower()
+    # A static ability granting a keyword (or a type or colour) to cards off the
+    # battlefield: `machines/zone_grants.py` reads it, every consumer (unearth,
+    # cycling, dredge, ninjutsu, flash, `characteristics_of`) asks that reader.
+    if line_grants_off_zone(text):
+        return True
     if not any(gate in lowered for gate in _GATES):
         return False
     return _may_assign_as_though_unblocked(printing)

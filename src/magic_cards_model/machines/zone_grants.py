@@ -65,11 +65,11 @@ _ZONE_PHRASES: dict[str, tuple[frozenset[Zone], str]] = {
     "in each graveyard": (frozenset({Zone.GRAVEYARD}), "each"),
     "in all graveyards": (frozenset({Zone.GRAVEYARD}), "each"),
     "you own that aren't on the battlefield": (
-        frozenset({Zone.HAND, Zone.GRAVEYARD, Zone.EXILE, Zone.LIBRARY, Zone.COMMAND}),
+        frozenset({Zone.HAND, Zone.GRAVEYARD, Zone.EXILE, Zone.LIBRARY, Zone.COMMAND, Zone.STACK}),
         "you",
     ),
     "that aren't on the battlefield": (
-        frozenset({Zone.HAND, Zone.GRAVEYARD, Zone.EXILE, Zone.LIBRARY, Zone.COMMAND}),
+        frozenset({Zone.HAND, Zone.GRAVEYARD, Zone.EXILE, Zone.LIBRARY, Zone.COMMAND, Zone.STACK}),
         "each",
     ),
 }
@@ -206,9 +206,7 @@ def _subject(text: str) -> ZoneSubject | None:
             return None
         zones, whose = _ZONE_PHRASES[where]
     else:
-        if where not in ("you control", "you cast"):
-            return None
-        zones, whose = frozenset({Zone.STACK}), "you"
+        zones, whose = frozenset({Zone.STACK}), ("you" if where else "each")
     colors_exactly, colored = None, False
     tail = match["tail"].strip()
     if tail:
@@ -262,6 +260,8 @@ def _predicate(verb: str, predicate: str) -> tuple[tuple[str, ...], tuple[str, .
         return (), ("every_creature_type",)
     if cleaned == "the chosen type":
         return (), ("chosen_type",)
+    if cleaned == "permanents":
+        return (), ()
     if cleaned == "colorless":
         return (), ("colorless",)
     if cleaned in _COLOR_WORDS:
@@ -321,7 +321,10 @@ def _split_subjects(text: str) -> list[str]:
     battlefield" as separate subjects, but "instant and sorcery cards in your
     graveyard" as one."""
     parts = re.split(r",\s*(?:and\s+)?|\s+and\s+(?=[a-z' -]*?(?:spells?|cards?) )", text.strip())
-    return [part for part in parts if part]
+    items = [re.sub(r"^(?:and|all|each)\s+", "", part.strip()) for part in parts if part]
+    # A bare "permanents" is the battlefield half of the sentence
+    # (`layers/group_grants._battlefield_part`), not an off-battlefield group.
+    return [item for item in items if item not in ("permanents", "permanent")]
 
 
 def line_grants_off_zone(line: str) -> bool:
@@ -452,6 +455,7 @@ def apply_zone_characteristics(game: Game | None, card: CardState, chars: Any) -
     from .layers.model import (
         AddEveryCreatureType,
         SetColors,
+        SetCreatureTypes,
         add_subtype,
     )
 
@@ -467,7 +471,7 @@ def apply_zone_characteristics(game: Game | None, card: CardState, chars: Any) -
         elif part == "chosen_type":
             chosen = chosen_creature_type_of(source)
             if chosen is not None:
-                chars = chars.with_(subtypes=(chosen,))
+                chars = SetCreatureTypes(subtypes=(chosen.title(),))(chars, board)
         elif part.startswith("subtype:"):
             chars = add_subtype(part.split(":", 1)[1])(chars, board)
     for _source, part in parts:

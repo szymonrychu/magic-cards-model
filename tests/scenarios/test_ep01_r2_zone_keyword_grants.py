@@ -15,6 +15,7 @@ CR 702.49a ninjutsu).
 """
 
 from magic_cards_model.machines import Step
+from magic_cards_model.machines.casting import why_cannot_cast_now
 from magic_cards_model.machines.keywords import (
     cycling_activation,
     dredge,
@@ -188,3 +189,33 @@ def test_satoru_umezawa_gives_creature_cards_in_hand_ninjutsu():
 
     assert elves.zone is Zone.BATTLEFIELD
     assert bears.zone is Zone.HAND
+
+
+# -- flash (CR 702.8a) for cards that are not on the battlefield -------------
+
+
+def test_teferi_gives_creature_cards_flash_in_the_beginning_of_combat():
+    """Teferi, Mage of Zhalfir: creature cards you own that aren't on the
+    battlefield have flash; a noncreature sorcery stays sorcery-speed."""
+    scenario = build(
+        {
+            "battlefield": ["Teferi, Mage of Zhalfir", "Forest", "Forest"],
+            "hand": ["Grizzly Bears", "Divination"],
+        }
+    )
+    bears = scenario.find("Grizzly Bears", Zone.HAND, "alice")
+    divination = scenario.find("Divination", Zone.HAND, "alice")
+    scenario.start_at(Step.BEGINNING_OF_COMBAT)
+
+    assert why_cannot_cast_now(bears, "alice", scenario.game) is None
+    assert why_cannot_cast_now(divination, "alice", scenario.game) is not None
+
+
+def test_without_teferi_the_creature_card_cannot_be_cast_in_the_beginning_of_combat():
+    scenario = build(
+        {"battlefield": ["Forest", "Forest"], "hand": ["Grizzly Bears"]},
+    )
+    bears = scenario.find("Grizzly Bears", Zone.HAND, "alice")
+    scenario.start_at(Step.BEGINNING_OF_COMBAT)
+
+    assert why_cannot_cast_now(bears, "alice", scenario.game) is not None

@@ -19,6 +19,7 @@ from ...models.card_state import (
 from ...models.mana import ManaCost, ManaSpend
 from ...models.zone import Zone
 from ...numbers import VariableX, parse_amount, parse_count
+from ..zone_grants import effective_card
 from ...phrases import with_indefinite_article
 from ...snapshot import EngineModel
 from ..abilities import (
@@ -435,8 +436,8 @@ def why_cannot_cast_now(
         )
     if Type.INSTANT in types:
         return None  # CR 304.1
-    if has_flash(spell.card):
-        return None  # CR 702.8a
+    if has_flash(effective_card(game, spell)):
+        return None  # CR 702.8a (printed, or granted off the battlefield, CR 613.1f)
     if Type.SORCERY in types and has_sorcery_speed_flash_grant(game, caster):
         return None  # Teferi, Time Raveler's +1
     condition = conditional_flash_condition(spell.oracle_text or "")
