@@ -8411,8 +8411,15 @@ def _parse_player_sacrifices_one_of_each_clause(
 #: ("sacrifices", CR 701.21a) and Blot Out/End of the Hunt's identical shape
 #: with "exiles" (CR 701.10a) in its place - the same selection, a different
 #: verb for what happens to the one chosen.
+#:
+#: The untargeted "each opponent"/"each player" subject is the same selection
+#: run once per player (Flare of Malice, Soul Shatter: "Each opponent
+#: sacrifices a creature or planeswalker with the greatest mana value among
+#: creatures and planeswalkers they control."): CR 101.4 has every such player
+#: choose in APNAP order and the sacrifices then happen simultaneously, the
+#: greatest computed per player (CR 202.3).
 _TARGET_OPPONENT_SACRIFICE_GREATEST_MV_RE = re.compile(
-    r"^target opponent (?P<verb>sacrifices|exiles) an? "
+    r"^(?P<who>target opponent|each opponent|each player) (?P<verb>sacrifices|exiles) an? "
     r"(?P<kinds>[a-z]+(?:\s+or\s+[a-z]+)*)"
     r"(?: they control)? with the greatest mana value among "
     r"(?P<pool>[a-z]+(?:\s+(?:and|or)\s+[a-z]+)*) they control\.?$",
@@ -8426,49 +8433,62 @@ def _parse_target_opponent_sacrifice_greatest_mv_clause(
 ) -> TargetedClause | None:
     """`_TARGET_OPPONENT_SACRIFICE_GREATEST_MV_RE`'s shape; see the banner
     above. CR 701.21a/701.10a: "That player chooses which ... " - the
-    resolving player is the *target*, not this ability's controller, so any
-    real choice among a tie for the greatest mana value is theirs.
+    resolving player is the *target* (or, untargeted, each player the subject
+    names), not this ability's controller, so any real choice among a tie for
+    the greatest mana value is theirs.
     """
     match = _TARGET_OPPONENT_SACRIFICE_GREATEST_MV_RE.fullmatch(clause.strip())
     if match is None:
         return None
     verb = match.group("verb").lower()
-    if not _targets_understood("target opponent", allow_player_targets=True):
+    who = match.group("who").lower()
+    targeted = who == "target opponent"
+    if targeted and not _targets_understood("target opponent", allow_player_targets=True):
         return None
     pool_words = re.split(r"\s+(?:and|or)\s+", match.group("pool"))
     pool_types = {_singular_card_type(word) for word in pool_words}
     if None in pool_types or not pool_types:
         return None
+    opponents_only = who == "each opponent"
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
-        targets = [
-            target for target in game.resolve_targets(stack_object) if isinstance(target, Player)
-        ]
-        if not targets:
-            return
-        opponent = targets[0]
+        if targeted:
+            players = [
+                target
+                for target in game.resolve_targets(stack_object)
+                if isinstance(target, Player)
+            ][:1]
+        else:
+            controller = game.controller_of(stack_object).username
+            players = [
+                player
+                for player in _players_in_apnap_order(game)
+                if not (opponents_only and player.username == controller)
+            ]
         board = game.computed_board()
-        candidates = [
-            permanent
-            for permanent in game.permanents_controlled_by(opponent.username)
-            if pool_types & set(board.of(permanent).types)
-        ]
-        if not candidates:
-            return
-        highest = max(permanent.mana_value for permanent in candidates)
-        tied = [permanent for permanent in candidates if permanent.mana_value == highest]
         source_name = (
             stack_object.source_name
             if isinstance(stack_object, AbilityOnStack)
             else stack_object.name
         )
-        if len(tied) == 1:
-            chosen = tied[0]
-        else:
+        chosen: list[CardState] = []
+        for player in players:
+            candidates = [
+                permanent
+                for permanent in game.permanents_controlled_by(player.username)
+                if pool_types & set(board.of(permanent).types)
+            ]
+            if not candidates:
+                continue
+            highest = max(permanent.mana_value for permanent in candidates)
+            tied = [permanent for permanent in candidates if permanent.mana_value == highest]
+            if len(tied) == 1:
+                chosen.append(tied[0])
+                continue
             chosen_ids = game.ask(
                 Decision(
                     kind=DecisionKind.CHOOSE_CARDS,
-                    player=opponent.username,
+                    player=player.username,
                     prompt=f"{verb[:-1]} a permanent with the greatest mana value",
                     source=source_name,
                     amount=1,
@@ -8478,12 +8498,16 @@ def _parse_target_opponent_sacrifice_greatest_mv_clause(
                 )
             )
             by_id = {permanent.id: permanent for permanent in tied}
-            chosen = by_id.get(chosen_ids[0]) if chosen_ids else None
-        if chosen is not None and chosen.zone is Zone.BATTLEFIELD:
+            pick = by_id.get(chosen_ids[0]) if chosen_ids else None
+            if pick is not None:
+                chosen.append(pick)
+        for permanent in chosen:
+            if permanent.zone is not Zone.BATTLEFIELD:
+                continue
             if verb == "exiles":
-                game.exile_permanent(chosen)
+                game.exile_permanent(permanent)
             else:
-                game.sacrifice(chosen)
+                game.sacrifice(permanent)
 
     return effect
 

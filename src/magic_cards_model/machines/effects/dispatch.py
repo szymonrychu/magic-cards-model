@@ -4926,9 +4926,11 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
     # among creatures and planeswalkers they control.") is a single sentence
     # whose own internal "and" the ordinary clause split would still cut
     # through - tried whole here for the identical reason, ahead of any
-    # sentence-count branch.
+    # sentence-count branch. Preamble stripped first, as the pump check above
+    # does: Flare of Malice prints its CR 118.9 alternative-cost line ahead of
+    # the edict, and that cost is never part of what the spell does.
     greatest_mv_sacrifice_whole = _parse_target_opponent_sacrifice_greatest_mv_clause(
-        text, for_spell=for_spell
+        _strip_non_effect_preamble(text).strip(), for_spell=for_spell
     )
     if greatest_mv_sacrifice_whole is not None:
         return [greatest_mv_sacrifice_whole]
