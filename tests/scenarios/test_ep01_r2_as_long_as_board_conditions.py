@@ -278,3 +278,277 @@ def test_tandem_lookout_unpaired_bears_draw_nothing():
     scenario.combat_damage()
     scenario.pass_until_resolved()
     assert len(scenario.player("alice").hand) == hand_before
+
+
+# -- Auriok Steelshaper: as long as this creature is equipped -------------------------------
+
+
+def test_steelshaper_pumps_soldiers_and_knights_only_while_it_is_equipped():
+    scenario = _board(["Auriok Steelshaper", "Bonesplitter", "Accorder Paladin", "Grizzly Bears"])
+    assert _chars(scenario, "Accorder Paladin").power_toughness == (3, 1)
+    _equip(scenario, "Bonesplitter", "Auriok Steelshaper")
+    assert _chars(scenario, "Auriok Steelshaper").power_toughness == (4, 2)
+    assert _chars(scenario, "Grizzly Bears").power_toughness == (2, 2)
+    assert scenario.game.continuous_effects.layer_notices == []
+
+
+def test_steelshaper_is_not_equipped_when_another_creature_wears_the_equipment():
+    scenario = _board(["Auriok Steelshaper", "Bonesplitter", "Grizzly Bears"])
+    _equip(scenario, "Bonesplitter", "Grizzly Bears")
+    assert _chars(scenario, "Auriok Steelshaper").power_toughness == (1, 1)
+
+
+def test_steelshaper_pump_ends_when_the_equipment_leaves():
+    scenario = _board(["Auriok Steelshaper", "Bonesplitter", "Accorder Paladin"])
+    _equip(scenario, "Bonesplitter", "Auriok Steelshaper")
+    assert _chars(scenario, "Accorder Paladin").power_toughness == (4, 2)
+    scenario.game.destroy(scenario.find("Bonesplitter", Zone.BATTLEFIELD, "alice"))
+    assert _chars(scenario, "Accorder Paladin").power_toughness == (3, 1)
+
+
+# -- Orochi Merge-Keeper: modified -----------------------------------------------------------
+
+
+def test_orochi_merge_keeper_gets_the_double_mana_ability_when_modified_by_a_counter():
+    scenario = _board(["Orochi Merge-Keeper"])
+    keeper = scenario.find("Orochi Merge-Keeper", Zone.BATTLEFIELD, "alice")
+    assert "{T}: Add {G}{G}." not in _chars(scenario, "Orochi Merge-Keeper").abilities
+    keeper.add_counters("+1/+1")
+    assert "{T}: Add {G}{G}." in _chars(scenario, "Orochi Merge-Keeper").abilities
+    assert scenario.game.continuous_effects.layer_notices == []
+
+
+def test_orochi_merge_keeper_is_modified_by_its_own_equipment():
+    scenario = _board(["Orochi Merge-Keeper", "Bonesplitter"])
+    _equip(scenario, "Bonesplitter", "Orochi Merge-Keeper")
+    assert "{T}: Add {G}{G}." in _chars(scenario, "Orochi Merge-Keeper").abilities
+
+
+def test_orochi_merge_keeper_is_not_modified_by_an_opponents_aura_or_counter_on_another_creature():
+    scenario = _board(["Orochi Merge-Keeper", "Grizzly Bears"])
+    scenario.find("Grizzly Bears", Zone.BATTLEFIELD, "alice").add_counters("+1/+1")
+    assert "{T}: Add {G}{G}." not in _chars(scenario, "Orochi Merge-Keeper").abilities
+
+
+def test_the_granted_double_mana_ability_is_a_real_activated_ability():
+    scenario = _board(["Orochi Merge-Keeper"])
+    keeper = scenario.find("Orochi Merge-Keeper", Zone.BATTLEFIELD, "alice")
+    keeper.add_counters("+1/+1")
+    assert any(
+        ability.raw == "{T}: Add {G}{G}." for ability in scenario.game.activated_abilities(keeper)
+    )
+
+
+# -- Sedge Sliver: a quoted conditional pump granted to every Sliver ----------------------
+
+SLIVER_PUMP = "This creature gets +1/+1 as long as you control a Swamp."
+
+
+def test_sedge_sliver_grants_every_sliver_the_swamp_pump_line():
+    scenario = _board(["Sedge Sliver", "Cautery Sliver", "Grizzly Bears"], ["Pulmonic Sliver"])
+    for name, who in (("Sedge Sliver", "alice"), ("Cautery Sliver", "alice"), ("Pulmonic Sliver", "bob")):
+        assert SLIVER_PUMP in _chars(scenario, name, who).abilities
+    assert SLIVER_PUMP not in _chars(scenario, "Grizzly Bears").abilities
+    assert scenario.game.continuous_effects.layer_notices == []
+
+
+def test_the_slivers_pump_applies_only_to_a_sliver_whose_controller_has_a_swamp():
+    scenario = _board(["Sedge Sliver", "Swamp"], ["Pulmonic Sliver"])
+    assert _chars(scenario, "Sedge Sliver").power_toughness == (3, 3)
+    assert _chars(scenario, "Pulmonic Sliver", "bob").power_toughness == (3, 3), "bob has no Swamp"
+
+
+def test_the_slivers_pump_follows_the_swamp_in_and_out():
+    scenario = _board(["Sedge Sliver", "Cautery Sliver", "Swamp"])
+    assert _chars(scenario, "Cautery Sliver").power_toughness == (3, 3)
+    scenario.game.destroy(scenario.find("Swamp", Zone.BATTLEFIELD, "alice"))
+    assert _chars(scenario, "Cautery Sliver").power_toughness == (2, 2)
+    assert _chars(scenario, "Sedge Sliver").power_toughness == (2, 2)
+
+
+def test_each_slivers_pump_reads_its_own_controllers_board():
+    scenario = _board(["Sedge Sliver"], ["Pulmonic Sliver", "Swamp"])
+    assert _chars(scenario, "Sedge Sliver").power_toughness == (2, 2)
+    assert _chars(scenario, "Pulmonic Sliver", "bob").power_toughness == (4, 4)
+
+
+# -- Sardian Cliffstomper: your turn and four Mountains, +X/+0 for the Mountains ------------
+
+MOUNTAINS = ["Mountain"] * 4
+
+
+def test_cliffstomper_gets_plus_x_where_x_is_the_mountains_on_its_controllers_turn():
+    scenario = _board(["Sardian Cliffstomper", *MOUNTAINS, "Mountain"])
+    assert _chars(scenario, "Sardian Cliffstomper").power_toughness == (5, 4)
+
+
+def test_cliffstomper_needs_four_mountains():
+    scenario = _board(["Sardian Cliffstomper", "Mountain", "Mountain", "Mountain"])
+    assert _chars(scenario, "Sardian Cliffstomper").power_toughness == (0, 4)
+
+
+def test_cliffstomper_is_unpumped_on_the_opponents_turn_and_flips_back():
+    scenario = _board(["Sardian Cliffstomper", *MOUNTAINS])
+    assert _chars(scenario, "Sardian Cliffstomper").power_toughness == (4, 4)
+    scenario.turn.advance_to(Step.CLEANUP)
+    scenario.advance()
+    scenario.advance()
+    assert scenario.game.active_player.username == "bob"
+    assert _chars(scenario, "Sardian Cliffstomper").power_toughness == (0, 4)
+    assert scenario.game.continuous_effects.layer_notices == []
+
+
+def test_cliffstomper_counts_only_mountains_it_controls():
+    scenario = _board(["Sardian Cliffstomper", "Mountain", "Mountain", "Mountain", "Forest"], ["Mountain"])
+    assert _chars(scenario, "Sardian Cliffstomper").power_toughness == (0, 4)
+
+
+# -- Doc Ock: another Villain gives hexproof; Bolg's Company: another Goblin gives haste ----
+
+
+def test_doc_ock_has_hexproof_only_with_another_villain():
+    scenario = _board(["Doc Ock, Sinister Scientist", "Doc Ock's Henchmen"])
+    assert any(a.lower() == "hexproof" for a in _chars(scenario, "Doc Ock, Sinister Scientist").abilities)
+    alone = _board(["Doc Ock, Sinister Scientist"])
+    assert not any(a.lower() == "hexproof" for a in _chars(alone, "Doc Ock, Sinister Scientist").abilities)
+
+
+def test_doc_ock_does_not_count_an_opponents_villain():
+    scenario = _board(["Doc Ock, Sinister Scientist"], ["Doc Ock's Henchmen"])
+    assert not any(a.lower() == "hexproof" for a in _chars(scenario, "Doc Ock, Sinister Scientist").abilities)
+
+
+def test_bolgs_company_has_haste_only_while_another_goblin_is_around():
+    with_goblin = _board(["Bolg's Company", "Goblin Artillery"])
+    assert any(a.lower() == "haste" for a in _chars(with_goblin, "Bolg's Company").abilities)
+    alone = _board(["Bolg's Company"])
+    assert not any(a.lower() == "haste" for a in _chars(alone, "Bolg's Company").abilities)
+
+
+# -- The World Tree: six lands give every land a mana ability -----------------------------
+
+
+def test_world_tree_grants_any_color_mana_to_all_your_lands_with_six_lands():
+    scenario = _board(["The World Tree", *["Forest"] * 5])
+    assert "{T}: Add one mana of any color." in _chars(scenario, "The World Tree").abilities
+    assert "{T}: Add one mana of any color." in _chars(scenario, "Forest").abilities
+
+
+def test_world_tree_grants_nothing_with_five_lands():
+    scenario = _board(["The World Tree", *["Forest"] * 4])
+    assert "{T}: Add one mana of any color." not in _chars(scenario, "Forest").abilities
+
+
+def test_world_tree_flips_when_a_land_is_lost_and_ignores_the_opponents_lands():
+    scenario = _board(["The World Tree", *["Forest"] * 5], ["Forest"])
+    assert "{T}: Add one mana of any color." in _chars(scenario, "Forest").abilities
+    assert "{T}: Add one mana of any color." not in _chars(scenario, "Forest", "bob").abilities
+    scenario.game.destroy(scenario.find("Forest", Zone.BATTLEFIELD, "alice"))
+    assert "{T}: Add one mana of any color." not in _chars(scenario, "The World Tree").abilities
+
+
+def test_world_trees_granted_mana_ability_is_activatable():
+    scenario = _board(["The World Tree", *["Forest"] * 5])
+    forest = scenario.find("Forest", Zone.BATTLEFIELD, "alice")
+    _chars(scenario, "Forest")
+    assert any(
+        ability.raw == "{T}: Add one mana of any color."
+        for ability in scenario.game.activated_abilities(forest)
+    )
+
+
+# -- Relic Vial and Oculus Whelp: a quoted triggered ability behind a board condition -------
+
+
+VIAL_LINE = "Whenever a creature you control dies, each opponent loses 1 life and you gain 1 life."
+
+
+def test_relic_vial_gains_its_drain_trigger_with_a_cleric():
+    scenario = _board(["Relic Vial", "Voice of the Blessed"])
+    assert VIAL_LINE in _chars(scenario, "Relic Vial").abilities
+    alone = _board(["Relic Vial", "Grizzly Bears"])
+    assert VIAL_LINE not in _chars(alone, "Relic Vial").abilities
+
+
+def test_relic_vial_drains_when_a_creature_dies_only_with_a_cleric():
+    scenario = _board(["Relic Vial", "Voice of the Blessed", "Grizzly Bears"])
+    scenario.game.destroy(scenario.find("Grizzly Bears", Zone.BATTLEFIELD, "alice"))
+    scenario.game.put_triggers_on_stack()
+    scenario.pass_until_resolved()
+    assert scenario.player("bob").life == 19
+    assert scenario.player("alice").life == 21
+
+
+def test_relic_vial_drain_is_off_without_a_cleric():
+    scenario = _board(["Relic Vial", "Grizzly Bears"])
+    scenario.game.destroy(scenario.find("Grizzly Bears", Zone.BATTLEFIELD, "alice"))
+    scenario.game.put_triggers_on_stack()
+    scenario.pass_until_resolved()
+    assert scenario.player("bob").life == 20
+
+
+WHELP_LINE = "When this creature dies, draw a card."
+
+
+def test_oculus_whelp_draws_when_it_dies_only_with_a_transformed_permanent():
+    plain = _board(["Oculus Whelp", "Delver of Secrets"])
+    assert WHELP_LINE not in _chars(plain, "Oculus Whelp").abilities
+    scenario = _board(["Oculus Whelp", "Delver of Secrets"])
+    scenario.find("Delver of Secrets", Zone.BATTLEFIELD, "alice").transform()
+    assert WHELP_LINE in _chars(scenario, "Oculus Whelp").abilities
+    assert scenario.game.continuous_effects.layer_notices == []
+
+
+def test_oculus_whelp_death_trigger_really_draws():
+    scenario = _board(["Oculus Whelp", "Delver of Secrets"])
+    scenario.find("Delver of Secrets", Zone.BATTLEFIELD, "alice").transform()
+    hand_before = len(scenario.player("alice").hand)
+    scenario.game.destroy(scenario.find("Oculus Whelp", Zone.BATTLEFIELD, "alice"))
+    scenario.game.put_triggers_on_stack()
+    scenario.pass_until_resolved()
+    assert len(scenario.player("alice").hand) == hand_before + 1
+
+
+# -- Flip and negative coverage for the earlier families ----------------------------------
+
+
+def test_kolvori_loses_its_pump_when_a_legend_leaves():
+    scenario = _board(["Kolvori, God of Kinship", "Kalitas, Traitor of Ghet", "Six"])
+    assert _chars(scenario, "Kolvori, God of Kinship").power_toughness == (6, 6)
+    scenario.game.destroy(scenario.find("Six", Zone.BATTLEFIELD, "alice"))
+    assert _chars(scenario, "Kolvori, God of Kinship").power_toughness == (2, 4)
+    assert not _has(_chars(scenario, "Kolvori, God of Kinship"), "Vigilance")
+
+
+def test_kolvori_does_not_count_an_opponents_legends():
+    scenario = _board(["Kolvori, God of Kinship"], ["Kalitas, Traitor of Ghet", "Six"])
+    assert not _has(_chars(scenario, "Kolvori, God of Kinship"), "Vigilance")
+
+
+def test_ogre_loses_regenerate_when_the_demon_leaves():
+    scenario = _board(["Villainous Ogre", "Razorjaw Oni"])
+    assert "{B}: Regenerate this creature." in _chars(scenario, "Villainous Ogre").abilities
+    scenario.game.destroy(scenario.find("Razorjaw Oni", Zone.BATTLEFIELD, "alice"))
+    assert "{B}: Regenerate this creature." not in _chars(scenario, "Villainous Ogre").abilities
+
+
+def test_diviner_loses_its_ability_when_the_other_wizard_leaves():
+    scenario = _board(["Expedition Diviner", "Fugitive Wizard"])
+    assert "When this creature dies, draw a card." in _chars(scenario, "Expedition Diviner").abilities
+    scenario.game.destroy(scenario.find("Fugitive Wizard", Zone.BATTLEFIELD, "alice"))
+    assert "When this creature dies, draw a card." not in _chars(scenario, "Expedition Diviner").abilities
+
+
+def test_hundred_battle_veteran_needs_different_kinds_not_more_counters():
+    scenario = _board(["Hundred-Battle Veteran", "Grizzly Bears"])
+    scenario.find("Grizzly Bears", Zone.BATTLEFIELD, "alice").add_counters("+1/+1", 5)
+    scenario.find("Hundred-Battle Veteran", Zone.BATTLEFIELD, "alice").add_counters("+1/+1", 5)
+    assert _chars(scenario, "Hundred-Battle Veteran").power_toughness == (9, 7)
+
+
+def test_hundred_battle_veteran_ignores_an_opponents_counters():
+    scenario = _board(["Hundred-Battle Veteran"], ["Grizzly Bears", "Llanowar Elves"])
+    scenario.find("Grizzly Bears", Zone.BATTLEFIELD, "bob").add_counters("+1/+1")
+    scenario.find("Llanowar Elves", Zone.BATTLEFIELD, "bob").add_counters("flying")
+    scenario.find("Llanowar Elves", Zone.BATTLEFIELD, "bob").add_counters("deathtouch")
+    assert _chars(scenario, "Hundred-Battle Veteran").power_toughness == (4, 2)

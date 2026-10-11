@@ -48,6 +48,7 @@ from .model import (
     Characteristics,
     ConditionedSelector,
     ContinuousEffect,
+    CountBoardWhere,
     ControlsAtom,
     CounterKindsAmongAtom,
     Layer,
@@ -55,6 +56,7 @@ from .model import (
     NotSourceAtom,
     Only,
     PairedPartners,
+    PermanentsOfTypes,
     QualityTest,
     Selector,
     SetCreatureTypes,
@@ -68,6 +70,7 @@ from .model import (
     grant_ability,
     lose_all_abilities,
     modify_power_toughness,
+    modify_power_toughness_per,
     set_power_toughness,
 )
 from .parse import (
@@ -494,14 +497,26 @@ def _parse_subject(text: str, condition: _Condition) -> tuple[_Subject, _Conditi
             )
             return _group_subject(merged, other=bool(match.group("other"))), condition
         quality = _group_quality(match.group("group"))
-        if quality is None or not match.group("mine"):
+        if quality is None:
             return None
-        return _group_subject(quality, other=bool(match.group("other"))), condition
+        return (
+            _group_subject(
+                quality, other=bool(match.group("other")), anyone=not match.group("mine")
+            ),
+            condition,
+        )
     return None
 
 
-def _group_subject(quality: QualityTest, *, other: bool, includes_self: bool = False) -> _Subject:
+def _group_subject(
+    quality: QualityTest, *, other: bool, includes_self: bool = False, anyone: bool = False
+) -> _Subject:
+    """A filtered group; `anyone` is "All Sliver creatures" with no "you control" -
+    every permanent whoever controls it."""
+
     def selectors(source: CardState) -> list[Selector]:
+        if anyone:
+            return [PermanentsOfTypes(card_types=tuple(Type))]
         return [AllPermanentsControlledBy(username=source.controller)]
 
     atoms: list[StaticAtom] = [SubjectQualityAtom(of="target", quality=quality)]
@@ -536,6 +551,21 @@ _LOSES_ALL_RE = re.compile(r"^loses? all abilities$", re.IGNORECASE)
 _ALL_ACTIVATED_RE = re.compile(
     r"^(?:has|have) all activated abilities of that card$", re.IGNORECASE
 )
+
+
+def _count_what(what: str) -> CountBoardWhere | None:
+    """ "Mountains" / "artifacts" / "Goblins" -> the permanents you control that
+    it counts (CR 205.2a card types, CR 205.3 subtypes), read off the board."""
+    words = what.strip().split()
+    if len(words) != 1:
+        return None
+    word = words[0]
+    singular = word[:-1] if word.lower().endswith("s") else word
+    if (card_type := _card_type(singular)) is not None:
+        return CountBoardWhere(scope="you", types_any=(card_type,))
+    if (subtype := _subtype(singular)) is not None or (subtype := _subtype(word)) is not None:
+        return CountBoardWhere(scope="you", subtypes_any=(subtype.lower(),))
+    return None
 
 
 def _top_card_activated_texts(source: CardState, context: LayerContext) -> list[str]:
@@ -578,6 +608,37 @@ def _parse_predicate(text: str) -> tuple[_Change, ...] | None:
                     f"{power:+d}/{toughness:+d}",
                 )
             )
+            continue
+        if match := _PUMP_PER_RE.fullmatch(piece):
+            counted = _count_what(match.group("what"))
+            if counted is None:
+                return None
+            fixed = [0, 0]
+            per = [0, 0]
+            for index, part in enumerate((match.group("power"), match.group("toughness"))):
+                if part[1:].upper() == "X":
+                    per[index] = 1 if part[0] == "+" else -1
+                else:
+                    fixed[index] = int(part)
+            changes.append(
+                _Change(
+                    Layer.POWER_TOUGHNESS,
+                    Sublayer.MODIFY,
+                    lambda source, context, c=counted, p=tuple(per): modify_power_toughness_per(
+                        c, p[0], p[1]
+                    ),
+                    f"{match.group('power')}/{match.group('toughness')} for each {match.group('what')}",
+                )
+            )
+            if any(fixed):
+                changes.append(
+                    _Change(
+                        Layer.POWER_TOUGHNESS,
+                        Sublayer.MODIFY,
+                        lambda source, context, f=tuple(fixed): modify_power_toughness(f[0], f[1]),
+                        f"{fixed[0]:+d}/{fixed[1]:+d}",
+                    )
+                )
             continue
         if match := _BASE_PT_RE.fullmatch(piece):
             base = (int(match.group("power")), int(match.group("toughness")))
@@ -770,6 +831,22 @@ def _split_subject_predicate(body: str) -> list[tuple[str, str]]:
     return [(match.group("subject"), match.group("predicate"))] if match else []
 
 
+def _lift_quotes(text: str) -> tuple[str, list[str]]:
+    """`text` with each quoted ability replaced by a placeholder, so a condition
+    inside a quoted ability is never read as the sentence's own."""
+    quotes: list[str] = []
+
+    def lift(match: re.Match[str]) -> str:
+        quotes.append(match.group(0))
+        return f"\0{len(quotes) - 1}\0"
+
+    return _QUOTE_RE.sub(lift, text), quotes
+
+
+def _restore_quotes(text: str, quotes: list[str]) -> str:
+    return re.sub(r"\0(\d+)\0", lambda match: quotes[int(match.group(1))], text)
+
+
 @functools.lru_cache(maxsize=4096)
 def _parse(sentence: str) -> _Parsed | None:
     line = (
@@ -778,8 +855,9 @@ def _parse(sentence: str) -> _Parsed | None:
         .rstrip(".")
     )
     full_line = line
+    line, quotes = _lift_quotes(line)
     lowered = line.lower()
-    if "as long as" not in lowered and not lowered.startswith("during your "):
+    if "as long as" not in lowered and not lowered.startswith("during your ") and not quotes:
         return None
     condition = _Condition()
     if match := _DURING_YOUR_TURN_RE.fullmatch(line):
@@ -787,7 +865,7 @@ def _parse(sentence: str) -> _Parsed | None:
         condition = _Condition(gates=(_your_step_gate(steps) if steps else _your_turn_gate,))
         line = match.group("rest")
     candidates: list[tuple[str | None, str]] = []
-    if not condition.gates == () and "as long as" not in line.lower():
+    if (condition.gates or quotes) and "as long as" not in line.lower():
         candidates.append((None, line))
     if match := _LEADING_RE.fullmatch(line):
         candidates.append((match.group("condition"), match.group("body")))
@@ -798,15 +876,16 @@ def _parse(sentence: str) -> _Parsed | None:
         if head.lower().startswith("as long as "):
             candidates.append((head[len("as long as ") :], tail))
     for condition_text, body in candidates:
+        body = _restore_quotes(body, quotes)
         if condition_text is None:
             merged = condition
         else:
-            parsed_condition = _parse_condition(condition_text)
+            parsed_condition = _parse_condition(_restore_quotes(condition_text, quotes))
             if parsed_condition is None:
                 continue
             merged = condition.merged(parsed_condition)
         inner = _parse_layer_sentence_ungated(body[:1].upper() + body[1:] + ".")
-        if inner is not None:
+        if inner is not None and (merged.gates or merged.atoms):
             return _Parsed(merged, _Subject("inner", lambda source: []), (), full_line, inner)
         for subject_text, predicate_text in _split_subject_predicate(body):
             subject = _parse_subject(subject_text, merged)
