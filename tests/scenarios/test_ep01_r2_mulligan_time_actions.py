@@ -70,7 +70,7 @@ def test_it_is_not_offered_once_the_seat_has_kept():
 
 
 def test_it_is_offered_again_in_a_later_round():
-    scenario = _pregame(["Serum Powder", *SEVEN[:6]], ["Serum Powder"] * 20)
+    scenario = _pregame(["Serum Powder"] * 7, ["Serum Powder"] * 20)
     scenario.game.declare_mulligan("alice", True)
     scenario.game.declare_mulligan("bob", False)
     assert scenario.game.turn.step is Step.MULLIGAN
