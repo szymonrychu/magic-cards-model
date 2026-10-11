@@ -488,6 +488,19 @@ def _option_from_keyword(ability: KeywordAbility) -> KeywordCastOption | None:
             understood=cost is not None,
         )
 
+    if canonical == "retrace":
+        # CR 702.81a: "Retrace is a static ability that functions while the card
+        # with retrace is in a player's graveyard. 'Retrace' means 'You may cast
+        # this card from your graveyard by discarding a land card as an
+        # additional cost to cast it.'" The mana cost is paid as usual and the
+        # card keeps its own timing; the discard is the one additional cost.
+        return KeywordCastOption(
+            keyword=ability.canonical,
+            rule="CR 702.81a",
+            zone=Zone.GRAVEYARD,
+            additional_cost=total_cost_for_phrase("Discard a land card"),
+        )
+
     if canonical == "escape":
         # CR 702.138a: "Escape represents a static ability that functions
         # while the card with escape is in a player's graveyard. 'Escape

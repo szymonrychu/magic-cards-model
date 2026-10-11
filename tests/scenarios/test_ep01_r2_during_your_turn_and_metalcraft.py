@@ -18,6 +18,7 @@ CR 207.2c (an ability word has no rules meaning), CR 702.6a (equip).
 import pytest
 
 from magic_cards_model.machines import Step
+from magic_cards_model.machines.casting.permissions import granted_cast_options
 from magic_cards_model.machines.keywords import equip_activation
 from magic_cards_model.models import Zone
 from tests.scenarios.harness import Scenario
@@ -466,3 +467,91 @@ def test_zurgo_does_not_protect_non_warrior_tokens_or_opponents_warriors():
     assert scenario.step is Step.END_STEP
     bears = scenario.find("Grizzly Bears", Zone.BATTLEFIELD, "alice")
     assert not _has(scenario.game.characteristics_of(bears), ZURGO_TOKEN_LINE)
+
+
+# -- Six: "During your turn, nonland permanent cards in your graveyard have retrace." ----
+
+
+def _six(
+    *,
+    alice_board=("Six", "Forest", "Forest"),
+    graveyard=("Grizzly Bears", "Lightning Bolt"),
+    hand=("Island", "Mountain"),
+):
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=list(alice_board),
+            hand=list(hand),
+            graveyard=list(graveyard),
+            library=["Island"] * 5,
+        )
+        .player("bob", battlefield=["Forest"], graveyard=["Llanowar Elves"], library=["Mountain"] * 5)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    return scenario
+
+
+def _retrace(scenario, name, land="Island", username="alice"):
+    discard = scenario.find(land, Zone.HAND, username)
+    casting = scenario.cast(name, username=username, from_zone=Zone.GRAVEYARD)
+    casting.use_keyword("Retrace", choosing=[discard])
+    return casting, discard
+
+
+def test_six_lets_a_nonland_permanent_card_be_cast_from_the_graveyard_by_discarding_a_land():
+    scenario = _six()
+    bears = scenario.find("Grizzly Bears", Zone.GRAVEYARD, "alice")
+    casting, island = _retrace(scenario, "Grizzly Bears")
+    scenario.pay_with(casting.begin_paying(), *scenario.untapped_sources("Forest", "Forest"))
+    scenario.put_on_stack(casting)
+    scenario.resolve_top()
+    assert bears.zone is Zone.BATTLEFIELD
+    assert island.zone is Zone.GRAVEYARD, "the land card was discarded as an additional cost"
+
+
+def test_six_gives_an_instant_no_retrace():
+    scenario = _six()
+    casting = scenario.cast("Lightning Bolt", from_zone=Zone.GRAVEYARD)
+    with pytest.raises(ValueError, match="Retrace"):
+        casting.use_keyword("Retrace")
+
+
+def test_six_gives_retrace_only_on_its_controllers_turn():
+    scenario = _six()
+    _next_turn(scenario)
+    assert scenario.game.active_player.username == "bob"
+    bears = scenario.find("Grizzly Bears", Zone.GRAVEYARD, "alice")
+    assert not granted_cast_options(scenario.game, bears, "alice", Zone.GRAVEYARD)
+
+
+def test_six_grants_retrace_to_its_controllers_cards_only():
+    scenario = _six()
+    elves = scenario.find("Llanowar Elves", Zone.GRAVEYARD, "bob")
+    assert not granted_cast_options(scenario.game, elves, "alice", Zone.GRAVEYARD)
+
+
+def test_without_six_a_graveyard_permanent_has_no_retrace():
+    scenario = _six(alice_board=("Forest", "Forest"))
+    casting = scenario.cast("Grizzly Bears", from_zone=Zone.GRAVEYARD)
+    with pytest.raises(ValueError, match="Retrace"):
+        casting.use_keyword("Retrace")
+
+
+def test_retrace_needs_a_land_card_to_discard():
+    scenario = _six(hand=())
+    casting = scenario.cast("Grizzly Bears", from_zone=Zone.GRAVEYARD)
+    casting.use_keyword("Retrace")
+    with pytest.raises(ValueError, match="discard"):
+        scenario.pay_with(casting.begin_paying(), *scenario.untapped_sources("Forest", "Forest"))
+
+
+def test_retrace_refuses_a_nonland_card_as_the_discard():
+    scenario = _six(hand=("Opt",))
+    opt = scenario.find("Opt", Zone.HAND, "alice")
+    casting = scenario.cast("Grizzly Bears", from_zone=Zone.GRAVEYARD)
+    casting.use_keyword("Retrace", choosing=[opt])
+    with pytest.raises(ValueError, match="land|discard"):
+        scenario.pay_with(casting.begin_paying(), *scenario.untapped_sources("Forest", "Forest"))

@@ -516,6 +516,10 @@ def _spell_matches_grant_filter(spell: CardState, what: str) -> bool:
         negated = word.startswith("non-")
         if negated:
             word = word[len("non-") :]
+        elif word.startswith("non") and word[3:].rstrip("s") in type_words:
+            # The unhyphenated card-type negation ("nonland permanent card").
+            negated = True
+            word = word[3:]
         singular = word.rstrip("s")
         if word in {"permanent", "permanents"}:
             matched = bool(types & _PERMANENT_TYPES)
@@ -663,8 +667,11 @@ def granted_cast_options(
         for ability in parse_abilities(emblem.card):
             if ability.kind is not AbilityKind.STATIC:
                 continue
+            text = (ability.text or "").strip()
             option = _cast_spells_from_a_zone(
-                (ability.text or "").strip(), spell, origin_zone, game, caster
+                text, spell, origin_zone, game, caster
+            ) or _grant_on_a_card_in_a_zone(
+                text, game, spell, caster, origin_zone, emblem.name, ability.raw
             )
             if option is not None:
                 found.append(GrantedCastOption(source_name=emblem.name, option=option))
@@ -2179,6 +2186,11 @@ def _grant_spell_you_cast_has_keyword(
     return _granted_option(keyword, printed, origin_zone, face, raw, "CR 611.3d")
 
 
+#: Keywords that print no cost, so a grant of one needs none ("Instant and
+#: sorcery cards in your graveyard have retrace.", CR 702.81a).
+COSTLESS_GRANTED_KEYWORDS = frozenset({"retrace"})
+
+
 def _grant_on_a_card_in_a_zone(
     text: str,
     game: Any,
@@ -2216,7 +2228,7 @@ def _grant_on_a_card_in_a_zone(
         return None
     keyword = match.group("keyword")
     printed = match.group("cost").strip() or None
-    if printed is None:
+    if printed is None and keyword.lower() not in COSTLESS_GRANTED_KEYWORDS:
         tail = _COST_IS_THE_CARDS_MANA_COST.search(match.group("tail") or "")
         if tail is None or tail.group("keyword").lower() != keyword.lower():
             return None
@@ -2255,7 +2267,10 @@ def reads_granted_zone_keyword_line(card: Card, text: str) -> bool:
     keyword = match.group("keyword")
     printed = match.group("cost").strip() or None
     tail = (match.group("tail") or "").strip()
-    if printed is None:
+    if printed is None and keyword.lower() in COSTLESS_GRANTED_KEYWORDS:
+        if tail:
+            return False
+    elif printed is None:
         cost_tail = _COST_IS_THE_CARDS_MANA_COST.fullmatch(tail)
         if cost_tail is None or cost_tail.group("keyword").lower() != keyword.lower():
             return False
