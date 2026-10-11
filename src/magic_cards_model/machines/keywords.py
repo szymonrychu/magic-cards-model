@@ -3251,7 +3251,10 @@ def attach_restriction_refusal(game: Any, equipment: CardState, target: CardStat
     board = game.computed_board()
     if group_selector({**spec, "scope": "any"}, equipment)(board.of(target), board.characteristics):
         return None
-    return f"{equipment.name} can be attached only to a {quality}; {target.name} is not one (CR 301.5c)"
+    return (
+        f"{equipment.name} can be attached only to a {quality}; "
+        f"{target.name} is not one (CR 301.5c)"
+    )
 
 
 def _equip_ability_price(ability: KeywordAbility) -> float:
