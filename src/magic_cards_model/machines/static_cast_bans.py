@@ -356,9 +356,7 @@ def _who_applies(game: Any, source: Any, controller: str, ban: StaticBan, player
         }
         if player not in defenders:
             return False
-    if ban.whocond is not None and not _whocond_holds(game, controller, ban, player):
-        return False
-    return True
+    return ban.whocond is None or _whocond_holds(game, controller, ban, player)
 
 
 def _whocond_holds(game: Any, controller: str, ban: StaticBan, player: str) -> bool:
@@ -562,7 +560,8 @@ def attack_ban_reason(game: Any, attacker: Any) -> str | None:
 _ORDINALS = {"first": 1, "second": 2, "third": 3, "fourth": 4, "fifth": 5}
 _OWN_TURN_GATE_RE = re.compile(
     r"you can'?t cast (?:this \w+|[^.]+?) during your "
-    r"(?P<ords>(?:first|second|third|fourth|fifth)(?:(?:,? or|,| and) (?:first|second|third|fourth|fifth))*) "
+    r"(?P<ords>(?:first|second|third|fourth|fifth)"
+    r"(?:(?:,? or|,| and) (?:first|second|third|fourth|fifth))*) "
     r"turns? of the game",
     re.IGNORECASE,
 )
