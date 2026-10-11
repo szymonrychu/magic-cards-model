@@ -476,7 +476,7 @@ def why_cannot_cast_now(
 #: Battalion) is CR 601.3's same prohibition worded as a permission; "only
 #: during ..." timing restrictions are read elsewhere and never match.
 _CANNOT_CAST_UNLESS_RE = re.compile(
-    r"(?:you can'?t cast this spell unless|cast this spell only if) (?P<condition>[^.]+)\.",
+    r"(?:you can'?t cast this \w+ unless|cast this spell only if) (?P<condition>[^.]+)\.",
     re.IGNORECASE,
 )
 
@@ -496,7 +496,12 @@ def why_cannot_cast_self_restriction(spell: CardState, caster: str, game: Any = 
     restriction"."""
     if game is None:
         return None
-    match = _CANNOT_CAST_UNLESS_RE.search(spell.oracle_text or "")
+    from ..static_cast_bans import self_normalized_oracle, self_turn_gate_reason
+
+    gate = self_turn_gate_reason(spell, caster, game)
+    if gate is not None:
+        return gate
+    match = _CANNOT_CAST_UNLESS_RE.search(self_normalized_oracle(spell))
     if match is None:
         return None
     condition = match.group("condition").strip()

@@ -553,3 +553,65 @@ def attack_ban_reason(game: Any, attacker: Any) -> str | None:
         if ban.verb == "attack" and _who_applies(game, source, controller, ban, player):
             return f'{source.name} says "{ban.sentence}" (CR 508.1c)'
     return None
+
+
+# --------------------------------------------------------------------------
+# A spell's own casting restriction (CR 601.2e, CR 601.3)
+# --------------------------------------------------------------------------
+
+_ORDINALS = {"first": 1, "second": 2, "third": 3, "fourth": 4, "fifth": 5}
+_OWN_TURN_GATE_RE = re.compile(
+    r"you can'?t cast (?:this \w+|[^.]+?) during your "
+    r"(?P<ords>(?:first|second|third|fourth|fifth)(?:(?:,? or|,| and) (?:first|second|third|fourth|fifth))*) "
+    r"turns? of the game",
+    re.IGNORECASE,
+)
+_SELF_UNLESS_RE = re.compile(
+    r"(?:you can'?t cast this \w+ unless|cast this spell only if) (?P<condition>[^.]+)\.",
+    re.IGNORECASE,
+)
+
+
+def self_normalized_oracle(spell: Any) -> str:
+    """The spell's oracle text with its own name read as "this <type>"."""
+    from ..models.card import Supertype
+
+    return self_normalized_effect_text(
+        spell.card.name,
+        spell.oracle_text or "",
+        legendary=Supertype.LEGENDARY in spell.card.supertypes,
+    )
+
+
+def self_turn_gate_reason(spell: Any, caster: str, game: Any) -> str | None:
+    """ "You can't cast ~ during your first, second, or third turns of the
+    game." (Serra Avenger, Spider-Man 2099): refused while the number of
+    turns `caster` has begun (`TurnMachine.own_turns_taken`, CR 102.1) is one
+    of the printed ordinals."""
+    match = _OWN_TURN_GATE_RE.search(self_normalized_oracle(spell))
+    if match is None or game.turn is None:
+        return None
+    banned = {
+        _ORDINALS[word]
+        for word in re.findall(r"first|second|third|fourth|fifth", match["ords"].lower())
+    }
+    taken = game.turn.own_turns_taken(caster)
+    if taken in banned:
+        return (
+            f"{spell.name} can't be cast during {caster}'s turn number {taken} of the game "
+            f'("{match.group(0)}") (CR 601.3, CR 101.2)'
+        )
+    return None
+
+
+def reads_self_cast_restriction_line(text: str, *, card_name: str, legendary: bool) -> bool:
+    """Whether a spell's own "Cast this spell only if <readable condition>" /
+    "You can't cast ~ unless <readable condition>" / "... during your first
+    turns of the game" line is one `Casting` enforces (the audit's question)."""
+    from ..models.game._conditions import condition_is_readable
+
+    normalized = self_normalized_effect_text(card_name, text, legendary=legendary)
+    if _OWN_TURN_GATE_RE.fullmatch(normalized.strip().rstrip(".")):
+        return True
+    match = _SELF_UNLESS_RE.fullmatch(normalized.strip())
+    return match is not None and condition_is_readable(match["condition"].strip())
