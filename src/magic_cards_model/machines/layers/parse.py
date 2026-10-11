@@ -2137,7 +2137,7 @@ _GROUP_EVASION_GRANT_RE = re.compile(
 #: excluded (`other_creatures_controlled_by`), so it keeps only its printed
 #: ward rather than gaining a second instance from its own line.
 _GROUP_QUOTED_ABILITY_GRANT_RE = re.compile(
-    r"^(?:(?P<other>other )?(?P<subject>planeswalkers|creatures|lands|artifacts|enchantments)"
+    r"^(?:(?P<other>other )?(?P<subject>planeswalkers|creatures|lands|artifacts|enchantments|permanents)"
     r"(?P<scope> you control)?(?P<named> with the chosen name)?"
     # CR 205.3m: "All Slivers have "..."" (Cautery Sliver) - every creature of
     # the subtype, whoever controls it.
@@ -2165,6 +2165,12 @@ def group_quoted_ability_grant_selector(match: re.Match[str], source: CardState)
         if subtype is None:
             return None
         return creatures_controlled_by_with_subtype(None, [subtype], any_controller=True)
+    if match.group("subject").lower() == "permanents":
+        # "Permanents you control have ..." (Mishra, Tamer of Mak Fawa): every
+        # permanent type, so no card-type narrowing at all.
+        if match.group("scope") is None or match.group("other") or match.group("named"):
+            return None
+        return all_permanents_controlled_by(source.controller)
     card_type = _card_type_word(match.group("subject"))
     if card_type is None:
         return None
@@ -12383,9 +12389,10 @@ def _parse_static_layer_sentence(sentence: str) -> EffectBuilder | None:
         if match.group("all_subtype") is not None:
             if _singular_subtype_word(match.group("all_subtype")) is None:
                 return None
-        elif _card_type_word(match.group("subject")) is None or (
-            match.group("scope") is None and match.group("named") is None
-        ):
+        elif (
+            match.group("subject").lower() != "permanents"
+            and _card_type_word(match.group("subject")) is None
+        ) or (match.group("scope") is None and match.group("named") is None):
             return None
         return _group_quoted_ability_grant_builder(granted, match, line=sentence)
     for gained_life_re in (

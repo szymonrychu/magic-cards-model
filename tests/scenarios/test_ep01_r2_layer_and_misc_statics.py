@@ -291,3 +291,16 @@ def test_an_opponents_edgar_does_not_bias_my_flip():
     _seed_where_the_first_flips_land_tails(scenario.game)
     assert scenario.game.flip_coin("alice") is False
     assert scenario.game.flip_coin("bob") is True
+
+
+# ---- "Permanents you control have "Ward-Sacrifice a permanent."" (Mishra) ----------
+
+
+def test_mishra_gives_every_permanent_i_control_the_ward_line():
+    scenario = _board(["Mishra, Tamer of Mak Fawa", "Forest", "Grizzly Bears"], bob=["Mountain"])
+    wanted = "Ward—Sacrifice a permanent."
+    for name, owner in (("Forest", "alice"), ("Grizzly Bears", "alice")):
+        permanent = scenario.find(name, Zone.BATTLEFIELD, owner)
+        assert wanted in scenario.game.characteristics_of(permanent).abilities
+    mountain = scenario.find("Mountain", Zone.BATTLEFIELD, "bob")
+    assert wanted not in scenario.game.characteristics_of(mountain).abilities
