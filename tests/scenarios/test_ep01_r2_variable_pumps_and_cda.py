@@ -427,3 +427,38 @@ def test_cloud_without_an_equipment_has_neither():
 def test_cloud_equipped_on_the_opponents_turn_has_neither():
     cloud = _cloud_board(equipped=True, active="bob")
     assert not cloud.has_ability("Double strike") and not cloud.has_ability("Indestructible")
+
+
+# --- Adaptive Automaton: "Other creatures you control of the chosen type get +1/+1" ---
+
+
+def _automaton_board():
+    scenario = build(
+        alice={
+            "hand": ["Adaptive Automaton"],
+            "battlefield": ["Plains"] * 3 + ["Llanowar Elves", "Grizzly Bears"],
+        },
+        bob={"battlefield": ["Elvish Mystic"]},
+    )
+    automaton = _cast(scenario, "Adaptive Automaton", "Elf", 3)
+    return scenario, automaton
+
+
+def test_adaptive_automaton_pumps_its_controllers_other_creatures_of_the_chosen_type():
+    scenario, _automaton = _automaton_board()
+    elves = scenario.creature("Llanowar Elves", "alice")
+    assert scenario.game.power_of(elves) == 2 and scenario.game.toughness_of(elves) == 2
+
+
+def test_adaptive_automaton_does_not_pump_itself_other_types_or_opposing_creatures():
+    scenario, automaton = _automaton_board()
+    assert scenario.game.power_of(automaton) == 2, "'other' excludes the Automaton itself"
+    assert scenario.game.power_of(scenario.creature("Grizzly Bears", "alice")) == 2
+    assert scenario.game.power_of(scenario.creature("Elvish Mystic", "bob")) == 1
+
+
+def test_adaptive_automaton_clauses_are_handled():
+    from magic_cards_model.support import HANDLED, classify_clauses
+    from tests.cards import card
+
+    assert {o.category for o in classify_clauses(card("Adaptive Automaton"))} == {HANDLED}

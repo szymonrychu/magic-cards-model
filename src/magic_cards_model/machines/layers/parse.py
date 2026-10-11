@@ -4872,7 +4872,7 @@ def chosen_basic_land_type_of(source: CardState) -> str | None:
 #: pattern `_self_protection_from_chosen_color_builder` already gives a
 #: colour choice, just for CR 205.3m's own kind of choice instead.
 _CHOSEN_TYPE_ANTHEM_RE = re.compile(
-    r"^creatures you control of the chosen type get "
+    r"^(?P<other>other )?creatures you control of the chosen type get "
     r"(?P<power>[+-]\d+)/(?P<toughness>[+-]\d+)"
     r"(?: and have (?P<keywords>[a-z ,]+?))?\.?$",
     re.IGNORECASE,
@@ -4880,7 +4880,7 @@ _CHOSEN_TYPE_ANTHEM_RE = re.compile(
 
 
 def _chosen_type_anthem_builder(
-    power: int, toughness: int, *, keywords: Sequence[str] = (), line: str
+    power: int, toughness: int, *, keywords: Sequence[str] = (), line: str, other: bool = False
 ) -> EffectBuilder:
     """`_CHOSEN_TYPE_ANTHEM_RE`'s shape: layer 7c (CR 613.4c), timestamped
     off the source (CR 613.7a) and live (CR 611.3a) like every other anthem
@@ -4916,9 +4916,11 @@ def _chosen_type_anthem_builder(
         chosen_type = chosen_creature_type_of(source)
         if chosen_type is None:
             return []
-        selector = creatures_controlled_by_with_subtype(source.controller, [chosen_type])
+        selector = creatures_controlled_by_with_subtype(
+            source.controller, [chosen_type], other_than=source.id if other else None
+        )
         description = (
-            f"{source.name}: creatures you control of the chosen type "
+            f"{source.name}: {'other ' if other else ''}creatures you control of the chosen type "
             f"({chosen_type}) get {power:+d}/{toughness:+d}"
         )
         effects = [
@@ -12032,6 +12034,7 @@ def _parse_static_layer_sentence(sentence: str) -> EffectBuilder | None:
             int(match.group("toughness")),
             keywords=chosen_type_keywords,
             line=sentence,
+            other=match.group("other") is not None,
         )
     if match := _SUBTYPE_ANTHEM_AND_KEYWORD_GRANT_RE.fullmatch(sentence):
         subtypes = _subtype_list_words(match.group("subtypes"))
