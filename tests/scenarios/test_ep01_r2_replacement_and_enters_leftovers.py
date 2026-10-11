@@ -10,6 +10,7 @@ and on the all-creatures wording (Doran, the Siege Tower).
 import pytest
 
 from magic_cards_model.machines import Step
+from magic_cards_model.models import Zone
 from magic_cards_model.models.card_state import Choice, ChoiceKind
 from magic_cards_model.models.token import PREDEFINED, TokenDefinition, create_tokens
 from magic_cards_model.support import HANDLED, classify_clauses
@@ -304,3 +305,158 @@ def test_nephalia_academy_puts_the_discarded_card_on_top_of_the_library():
 def test_discard_replacement_lines_are_handled():
     for name in ("Obstinate Baloth", "Dodecapod", "Loxodon Smiter", "Nephalia Academy"):
         _handled(name, "causes you to discard")
+
+
+# --- "Creatures you control enter as a copy of ..." (CR 614.1c, 614.12, 707.2) -
+
+
+def _copy_name(scenario, card_):
+    return scenario.game.characteristics_of(card_).name
+
+
+def test_essence_of_the_wild_makes_a_creature_you_cast_a_copy_of_it():
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Grizzly Bears"],
+            battlefield=["Essence of the Wild", "Forest", "Forest"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.cast_and_resolve("Grizzly Bears", username="alice", auto=True)
+    assert _copy_name(scenario, bears) == "Essence of the Wild"
+    chars = scenario.game.characteristics_of(bears)
+    assert (chars.power, chars.toughness) == (6, 6)
+
+
+def test_essence_of_the_wild_leaves_an_opponents_creature_alone():
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Essence of the Wild"])
+        .player("bob", hand=["Grizzly Bears"], battlefield=["Forest", "Forest"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.game.put_onto_battlefield(
+        scenario.find("Grizzly Bears", Zone.HAND, "bob"), "bob"
+    )
+    assert _copy_name(scenario, bears) == "Grizzly Bears"
+
+
+def test_infinite_reflection_copies_the_enchanted_creature_onto_nontoken_entrants():
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Grizzly Bears", "Infinite Reflection"],
+            battlefield=["Serra Angel", "Island", "Island", "Island", "Island", "Island", "Island"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    angel = scenario.creature("Serra Angel", "alice")
+    scenario.cast_and_resolve("Infinite Reflection", username="alice", targets=[angel], auto=True)
+    bears = scenario.game.put_onto_battlefield(
+        scenario.find("Grizzly Bears", Zone.HAND, "alice"), "alice"
+    )
+    assert _copy_name(scenario, bears) == "Serra Angel"
+
+
+def test_infinite_reflection_does_not_copy_a_token_that_enters():
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Infinite Reflection"],
+            battlefield=["Serra Angel", "Island", "Island", "Island", "Island", "Island", "Island"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    angel = scenario.creature("Serra Angel", "alice")
+    scenario.cast_and_resolve("Infinite Reflection", username="alice", targets=[angel], auto=True)
+    create_tokens(
+        scenario.game, TokenDefinition(power=1, toughness=1, subtypes=("Soldier",)), "alice", 1
+    )
+    soldiers = [c for c in scenario.game.battlefield if "Soldier" in c.subtypes]
+    assert soldiers and _copy_name(scenario, soldiers[0]) != "Serra Angel"
+
+
+def test_group_copy_lines_are_handled():
+    _handled("Essence of the Wild", "enter as a copy")
+    _handled("Infinite Reflection", "enter as a copy")
+
+
+def test_infinite_reflection_enters_turns_your_other_nontoken_creatures_into_copies():
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Infinite Reflection"],
+            battlefield=[
+                "Serra Angel",
+                "Grizzly Bears",
+                "Island",
+                "Island",
+                "Island",
+                "Island",
+                "Island",
+                "Island",
+            ],
+        )
+        .player("bob", battlefield=["Wall of Omens"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    angel = scenario.creature("Serra Angel", "alice")
+    scenario.cast_and_resolve("Infinite Reflection", username="alice", targets=[angel], auto=True)
+    scenario.pass_until_resolved()
+    bears = scenario.creature("Grizzly Bears", "alice")
+    wall = scenario.creature("Wall of Omens", "bob")
+    assert _copy_name(scenario, bears) == "Serra Angel"
+    assert _copy_name(scenario, wall) == "Wall of Omens"
+
+
+# --- Protean Raider: Raid-gated enter-as-a-copy (CR 614.12a, 707.2) -----------
+
+
+def _raider_board(*, attack: bool):
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Protean Raider"],
+            battlefield=["Serra Angel", "Island", "Mountain", "Island"],
+        )
+        .player("bob", life=20)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    if attack:
+        scenario.attack_with(scenario.creature("Serra Angel", "alice"), defending="bob")
+        scenario.no_blocks()
+        scenario.combat_damage()
+        scenario.turn.advance_to(Step.POSTCOMBAT_MAIN)
+        scenario.game.sync_priority_with_step()
+    return scenario
+
+
+def test_protean_raider_copies_a_creature_when_you_attacked_this_turn():
+    scenario = _raider_board(attack=True)
+    raider = scenario.cast_and_resolve("Protean Raider", username="alice", auto=True)
+    assert _copy_name(scenario, raider) == "Serra Angel"
+
+
+def test_protean_raider_enters_as_itself_when_you_did_not_attack():
+    scenario = _raider_board(attack=False)
+    raider = scenario.cast_and_resolve("Protean Raider", username="alice", auto=True)
+    assert _copy_name(scenario, raider) == "Protean Raider"
+
+
+def test_protean_raider_line_is_handled():
+    _handled("Protean Raider", "Raid")

@@ -375,6 +375,7 @@ def _compile_zone_change(effect: ReplacementEffect) -> CardReplacement | None:
 
 
 from .counter_token_statics import COUNTER_TOKEN_COMPILERS  # noqa: E402
+from .copy_statics import COPY_COMPILERS  # noqa: E402
 from .destroy_statics import DESTROY_COMPILERS  # noqa: E402
 from .discard_statics import DISCARD_COMPILERS  # noqa: E402
 from .draw_statics import DRAW_COMPILERS  # noqa: E402
@@ -387,6 +388,7 @@ OTHER_COMPILERS: tuple[Callable[[ReplacementEffect], CardReplacement | None], ..
     *EVENT_COMPILERS,
     *DESTROY_COMPILERS,
     *DISCARD_COMPILERS,
+    *COPY_COMPILERS,
 )
 
 #: Compilers that read `ReplacementEffect.condition` (or the whole printed

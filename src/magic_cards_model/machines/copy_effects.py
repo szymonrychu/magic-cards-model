@@ -684,7 +684,7 @@ _EACH_BECOMES_A_COPY_RE = re.compile(
     r"^each (?P<other>other )?(?P<group>(?:non(?:land|creature|token|artifact) )?"
     r"(?:permanent|creature|artifact|enchantment|land|token))"
     r"(?P<whose> you control| your opponents control)?"
-    r" becomes a copy of (?P<object>target [^.]+?)"
+    r" becomes a copy of (?P<object>target [^.]+?|that creature)"
     r"(?P<trail> until end of turn| until your next turn)?\.?$",
     re.IGNORECASE,
 )
@@ -732,13 +732,21 @@ def _parse_each_becomes_a_copy_clause(
     other = match.group("other") is not None
     whose = (match.group("whose") or "").strip().lower()
     duration = _copy_duration(match.group("trail"))
+    enchanted = match.group("object").lower() == "that creature"
 
     def effect(game: Game, stack_object: StackObject) -> None:
         from .triggers import AbilityOnStack as StackAbility
 
         is_ability = isinstance(stack_object, StackAbility)
         controller = game.controller_of(stack_object).username
-        targets = game.resolve_card_targets(stack_object)
+        if enchanted:
+            # Infinite Reflection: "that creature" is the creature the Aura
+            # just entered attached to (CR 303.4).
+            source = stack_object.source_or_last_known(game) if is_ability else None
+            host = game.find_by_id(source.attached_to) if source is not None else None
+            targets = [host] if isinstance(host, CardState) and host.zone is Zone.BATTLEFIELD else []
+        else:
+            targets = game.resolve_card_targets(stack_object)
         if not targets:
             return  # CR 608.2b: the only target is gone or illegal
         copied_object = targets[0]
