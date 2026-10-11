@@ -128,10 +128,68 @@ def maximum_hand_size_of_line(line: str) -> int | None:
     return None if match is None else parse_count(match.group("n"))
 
 
+#: The other maximum-hand-size statics (CR 402.2, CR 613.11), each one step
+#: of the timestamp-ordered fold `Player._permanents_maximum_hand_size` does:
+#:
+#: - "Your maximum hand size is increased/reduced by N." (Minamo
+#:   Scrollkeeper, Trusted Advisor) and "Each opponent's maximum hand size is
+#:   reduced by N." (Gnat Miser, Locust Miser, Jin-Gitaxias, Core Augur);
+#: - "Your maximum hand size is equal to the number of <kind> counters on
+#:   this <permanent>." (Midnight Oil's hour counters), read live;
+#: - "[As long as <condition>, ]each opponent's maximum hand size is equal to
+#:   seven minus the number of those card types." (Winter, Misanthropic
+#:   Guide's Delirium) - the condition asked through `Game.condition_holds`;
+#: - "You have no maximum hand size and don't lose the game for having 0 or
+#:   less life." (Marina Vendrell's Grimoire), whose second half
+#:   `machines/game_rule_statics.py` reads.
+_HAND_SIZE_DELTA_RE = re.compile(
+    rf"^(?P<who>your|each opponent's) maximum hand size is (?P<dir>increased|reduced) "
+    rf"by (?P<n>{COUNT})$"
+)
+_HAND_SIZE_COUNTERS_RE = re.compile(
+    r"^(?P<who>your|each opponent's) maximum hand size is equal to the number of "
+    r"(?P<kind>[\w+/-]+) counters on (?:this|that) [a-z]+$"
+)
+_HAND_SIZE_CARD_TYPES_RE = re.compile(
+    r"^as long as (?P<condition>there are (?:\w+) or more card types among cards in your "
+    r"graveyard), (?P<who>your|each opponent's) maximum hand size is equal to "
+    rf"(?P<n>{COUNT}) minus the number of those card types$"
+)
+_NO_MAXIMUM_AND_RE = re.compile(
+    r"^you have no maximum hand size and don't lose the game for having 0 or less life$"
+)
+_ABILITY_WORD_RE = re.compile(r"^[A-Za-z][\w' ]* — ")
+_REMINDER_TEXT_RE = re.compile(r"\s*\([^)]*\)")
+
+
+def _hand_size_line(line: str) -> str:
+    line = _REMINDER_TEXT_RE.sub("", _ABILITY_WORD_RE.sub("", line.strip()))
+    return " ".join(line.replace("’", "'").split()).rstrip(".").lower()
+
+
+def _hand_size_shape(line: str) -> tuple[str, re.Match[str]] | None:
+    if "maximum hand size" not in line:
+        return None
+    text = _hand_size_line(line)
+    for kind, pattern in (
+        ("delta", _HAND_SIZE_DELTA_RE),
+        ("counters", _HAND_SIZE_COUNTERS_RE),
+        ("card_types", _HAND_SIZE_CARD_TYPES_RE),
+        ("none", _NO_MAXIMUM_AND_RE),
+    ):
+        if (match := pattern.fullmatch(text)) is not None:
+            return kind, match
+    return None
+
+
 def reads_maximum_hand_size_line(line: str) -> bool:
-    """Whether `line` is one of the two maximum-hand-size statics
+    """Whether `line` is one of the maximum-hand-size statics
     `Player.cards_over_maximum_hand_size` performs - `support.py`'s credit."""
-    return _is_no_maximum_hand_size_line(line) or maximum_hand_size_of_line(line) is not None
+    return (
+        _is_no_maximum_hand_size_line(line)
+        or maximum_hand_size_of_line(line) is not None
+        or _hand_size_shape(line) is not None
+    )
 
 
 def _computed_ability_lines(game: Any, permanent: CardState) -> tuple[str, ...]:
@@ -750,32 +808,64 @@ class Player(EngineModel):
             return True
         return self._permanents_maximum_hand_size() is None
 
-    def _permanent_hand_size_statics(self) -> list[int | None]:
-        """Each maximum-hand-size static line of this player's permanents, in
-        timestamp order (CR 613.7a: a static ability's effect has its
-        permanent's timestamp; the battlefield is kept in that order): the
-        number "Your maximum hand size is N." sets, or `None` for "You have no
-        maximum hand size." (Reliquary Tower)."""
+    def _permanent_hand_size_statics(self) -> list[tuple[str, int | None]]:
+        """Every maximum-hand-size static on the battlefield that applies to
+        this player, in timestamp order (CR 613.7a: a static ability's effect
+        has its permanent's timestamp; the battlefield is kept in that order;
+        CR 613.11: "applied in timestamp order"). Each is `("set", N)`,
+        `("set", None)` for "no maximum", or `("delta", N)`."""
         game = self.game
         if game is None:
             return []
-        found: list[int | None] = []
+        found: list[tuple[str, int | None]] = []
         for permanent in game.battlefield:
-            if game.controller_of(permanent).username != self.username:
-                continue
+            controller = game.controller_of(permanent).username
+            mine = controller == self.username
             for line in _computed_ability_lines(game, permanent):
-                if _is_no_maximum_hand_size_line(line):
-                    found.append(None)
-                elif (size := maximum_hand_size_of_line(line)) is not None:
-                    found.append(size)
+                if mine and _is_no_maximum_hand_size_line(line):
+                    found.append(("set", None))
+                    continue
+                if mine and (size := maximum_hand_size_of_line(line)) is not None:
+                    found.append(("set", size))
+                    continue
+                shape = _hand_size_shape(line)
+                if shape is None:
+                    continue
+                kind, match = shape
+                if kind == "none":
+                    if mine:
+                        found.append(("set", None))
+                    continue
+                applies = mine if match.group("who") == "your" else not mine
+                if not applies:
+                    continue
+                if kind == "delta":
+                    n = parse_count(match.group("n")) or 0
+                    found.append(("delta", n if match.group("dir") == "increased" else -n))
+                elif kind == "counters":
+                    found.append(("set", permanent.counter_count(match.group("kind"))))
+                elif kind == "card_types":
+                    if game.condition_holds(controller, match.group("condition"), permanent):
+                        types = {
+                            t for state in game.player(controller).graveyard for t in state.types
+                        }
+                        found.append(
+                            ("set", max(0, (parse_count(match.group("n")) or 0) - len(types)))
+                        )
         return found
 
     def _permanents_maximum_hand_size(self) -> int | None:
-        """CR 613.11: this player's permanents' maximum-hand-size effects
-        applied in timestamp order - the last one wins - over CR 402.2's
-        own `maximum_hand_size`. `None` is "no maximum"."""
-        statics = self._permanent_hand_size_statics()
-        return statics[-1] if statics else self.maximum_hand_size
+        """CR 613.11: the maximum-hand-size effects that apply to this player
+        folded in timestamp order over CR 402.2's own `maximum_hand_size` - a
+        set replaces what came before, an increase or reduction adjusts it.
+        `None` is "no maximum", which an adjustment leaves alone."""
+        maximum: int | None = self.maximum_hand_size
+        for kind, value in self._permanent_hand_size_statics():
+            if kind == "set":
+                maximum = value
+            elif maximum is not None and value is not None:
+                maximum = max(0, maximum + value)
+        return maximum
 
     def remove_maximum_hand_size_for_rest_of_game(self) -> None:
         """ "You have no maximum hand size for the rest of the game." (CR

@@ -2625,8 +2625,8 @@ class TurnSbaMixin:
         return self.turn.step
 
 
-from ...machines.layers.parse import read_cant_lose_cant_win  # noqa: E402
 from ...machines import game_rule_statics  # noqa: E402
+from ...machines.layers.parse import read_cant_lose_cant_win  # noqa: E402
 from ...machines.turn_scoped_riders import (  # noqa: E402
     CANT_LOSE_THE_GAME,
     OPPONENTS_CANT_WIN_THE_GAME,

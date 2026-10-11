@@ -320,3 +320,201 @@ def test_melira_takes_infect_from_opponents_creatures():
 )
 def test_melira_lines_are_handled(line):
     handled("Melira, Sylvok Outcast", line)
+
+
+# -- uncounterable spells (CR 101.2) ------------------------------------------
+
+
+def _counter_war(spell: str, *, alice=(), bob=()):
+    """Alice casts `spell`; Bob answers with Counterspell."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=[spell],
+            battlefield=[*alice, *["Forest"] * 6, *["Island"] * 3],
+            library=["Island"] * 5,
+        )
+        .player("bob", hand=["Counterspell"], battlefield=[*bob, "Island", "Island"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    cast = scenario.cast_onto_stack(spell, auto=True, username="alice")
+    scenario.pass_priority("alice")
+    scenario.cast_onto_stack("Counterspell", auto=True, username="bob", targets=[cast])
+    scenario.resolve_top()
+    return cast
+
+
+def test_gaeas_herald_stops_a_creature_spell_being_countered():
+    assert _counter_war("Grizzly Bears", alice=["Gaea's Herald"]).zone is Zone.STACK
+
+
+def test_gaeas_herald_covers_every_players_creature_spells():
+    """No "you control": Bob's own Herald protects Alice's creature spell."""
+    assert _counter_war("Grizzly Bears", bob=["Gaea's Herald"]).zone is Zone.STACK
+
+
+def test_gaeas_herald_does_not_cover_a_noncreature_spell():
+    assert _counter_war("Divination", alice=["Gaea's Herald"]).zone is Zone.GRAVEYARD
+
+
+def test_lier_stops_any_spell_being_countered():
+    assert _counter_war("Divination", bob=["Lier, Disciple of the Drowned"]).zone is Zone.STACK
+
+
+def test_spellbreaker_behemoth_protects_a_power_five_creature_spell():
+    assert _counter_war("Craw Wurm", alice=["Spellbreaker Behemoth"]).zone is Zone.STACK
+
+
+def test_spellbreaker_behemoth_does_not_protect_a_small_creature_spell():
+    """The "with power 5 or greater" rider is read, never dropped."""
+    assert _counter_war("Grizzly Bears", alice=["Spellbreaker Behemoth"]).zone is Zone.GRAVEYARD
+
+
+def test_spellbreaker_behemoth_does_not_protect_an_opponents_spell():
+    """ "you control": Bob's Behemoth does not cover Alice's Craw Wurm."""
+    assert _counter_war("Craw Wurm", bob=["Spellbreaker Behemoth"]).zone is Zone.GRAVEYARD
+
+
+@pytest.mark.parametrize(
+    ("name", "line"),
+    [
+        ("Gaea's Herald", "Creature spells can't be countered."),
+        ("Leyline of Lifeforce", "Creature spells can't be countered."),
+        ("Lier, Disciple of the Drowned", "Spells can't be countered."),
+        (
+            "Spellbreaker Behemoth",
+            "Creature spells you control with power 5 or greater can't be countered.",
+        ),
+    ],
+)
+def test_uncounterable_lines_are_handled(name, line):
+    handled(name, line)
+
+
+# -- maximum hand size (CR 402.2, CR 613.11) ----------------------------------
+
+
+def _hands(alice=(), bob=(), *, alice_graveyard=()):
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=list(alice),
+            hand=["Island"] * 10,
+            graveyard=list(alice_graveyard),
+            library=["Island"] * 5,
+        )
+        .player("bob", battlefield=list(bob), hand=["Island"] * 10, library=["Island"] * 5)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    return scenario
+
+
+def over(scenario, username):
+    return scenario.player(username).cards_over_maximum_hand_size
+
+
+def test_minamo_scrollkeeper_increases_only_its_controllers_maximum():
+    scenario = _hands(["Minamo Scrollkeeper"])
+    assert over(scenario, "alice") == 2  # ten cards, maximum eight
+    assert over(scenario, "bob") == 3
+
+
+def test_gnat_miser_reduces_each_opponents_maximum_only():
+    scenario = _hands(["Gnat Miser"])
+    assert over(scenario, "bob") == 4  # maximum six
+    assert over(scenario, "alice") == 3
+
+
+def test_two_misers_stack():
+    scenario = _hands(["Gnat Miser", "Locust Miser"])
+    assert over(scenario, "bob") == 6  # 7 - 1 - 2
+
+
+def test_jin_gitaxias_reduces_to_zero():
+    scenario = _hands(["Jin-Gitaxias, Core Augur"])
+    assert over(scenario, "bob") == 10
+
+
+def test_a_reduction_and_an_increase_add_up():
+    scenario = _hands(["Minamo Scrollkeeper"], ["Gnat Miser"])
+    assert over(scenario, "alice") == 3  # 7 + 1 - 1
+
+
+def test_winter_with_delirium_sets_each_opponents_maximum():
+    graveyard = ["Island", "Grizzly Bears", "Lightning Bolt", "Divination", "Mirror Gallery"]
+    scenario = _hands(["Winter, Misanthropic Guide"], alice_graveyard=graveyard)
+    # land, creature, instant, sorcery, artifact: five types, maximum two
+    assert over(scenario, "bob") == 8
+    assert over(scenario, "alice") == 3
+
+
+def test_winter_without_delirium_changes_nothing():
+    """The "as long as" condition is read, never dropped."""
+    scenario = _hands(["Winter, Misanthropic Guide"], alice_graveyard=["Island", "Grizzly Bears"])
+    assert over(scenario, "bob") == 3
+
+
+@pytest.mark.parametrize(
+    ("name", "line"),
+    [
+        ("Minamo Scrollkeeper", "Your maximum hand size is increased by one."),
+        ("Gnat Miser", "Each opponent's maximum hand size is reduced by one."),
+        ("Locust Miser", "Each opponent's maximum hand size is reduced by two."),
+        ("Jin-Gitaxias, Core Augur", "Each opponent's maximum hand size is reduced by seven."),
+        (
+            "Winter, Misanthropic Guide",
+            "Delirium — As long as there are four or more card types among cards in your "
+            "graveyard, each opponent's maximum hand size is equal to seven minus the number "
+            "of those card types.",
+        ),
+    ],
+)
+def test_hand_size_lines_are_handled(name, line):
+    handled(name, line)
+
+
+def test_trusted_advisor_increases_by_two():
+    scenario = _hands(["Trusted Advisor"])
+    assert over(scenario, "alice") == 1
+
+
+def test_midnight_oil_maximum_is_its_hour_counters_read_live():
+    scenario = _hands(["Midnight Oil"])
+    oil = scenario.find("Midnight Oil", Zone.BATTLEFIELD, "alice")
+    oil.counters.remove("hour", oil.counter_count("hour"))
+    scenario.game.add_counters(oil, "hour", 4)
+    assert over(scenario, "alice") == 6
+    oil.counters.remove("hour", 2)
+    assert over(scenario, "alice") == 8
+    assert over(scenario, "bob") == 3
+
+
+def test_marina_vendrells_grimoire_no_maximum_and_no_zero_life_loss():
+    scenario = _hands(["Marina Vendrell's Grimoire"])
+    assert over(scenario, "alice") == 0
+    assert over(scenario, "bob") == 3
+    scenario.game.lose_life("alice", 25)
+    scenario.state_based_actions()
+    assert scenario.game.is_in_game("alice")
+
+
+@pytest.mark.parametrize(
+    ("name", "line"),
+    [
+        ("Trusted Advisor", "Your maximum hand size is increased by two."),
+        (
+            "Midnight Oil",
+            "Your maximum hand size is equal to the number of hour counters on this enchantment.",
+        ),
+        (
+            "Marina Vendrell's Grimoire",
+            "You have no maximum hand size and don't lose the game for having 0 or less life.",
+        ),
+    ],
+)
+def test_x_card_hand_size_lines_are_handled(name, line):
+    handled(name, line)

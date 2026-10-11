@@ -62,7 +62,7 @@ anything to Supreme Verdict.
 
 import re
 from collections.abc import Callable, Sequence
-from typing import Any
+from typing import Any, NamedTuple
 from uuid import UUID
 
 from pydantic import ConfigDict, Field
@@ -397,17 +397,33 @@ def spell_protected_from_countering(game: Any, spell: Any) -> bool:
 #: "... this turn" (a recorded CR 611.2c effect), this is CR 604.2's static:
 #: active exactly while its permanent is on the battlefield, so it is read
 #: live off the board and never recorded.
+#:
+#: Widened (EP01-R2-T6): the controller clause is optional - Gaea's Herald's
+#: and Leyline of Lifeforce's "Creature spells can't be countered." and Lier,
+#: Disciple of the Drowned's "Spells can't be countered." cover every
+#: player's spells - and a "with power N or greater" rider (Spellbreaker
+#: Behemoth's "Creature spells you control with power 5 or greater ...") is
+#: read off the spell's own power on the stack (CR 208.1).
 _STATIC_SPELLS_CANT_BE_COUNTERED_RE = re.compile(
-    r"^(?P<what>(?:[\w'-]+ )*?)spells you control can'?t be countered\.?$",
+    r"^(?P<what>(?:[\w'-]+ )*?)spells(?P<yours> you control)?"
+    r"(?: with power (?P<power>\d+) or greater)? can'?t be countered\.?$",
     re.IGNORECASE,
 )
 
 
-def _static_uncounterable_quality(line: str) -> str | None:
-    """The quality phrase of a static "`<Quality>` spells you control can't
-    be countered." line (`""` for any spell), or None when the line is not
-    that shape or names a quality `next_spell.spell_has_quality` cannot read.
-    CR 205.1's "and" in a type list names one spell that is either type."""
+class _StaticUncounterable(NamedTuple):
+    quality: str
+    everyones: bool
+    min_power: int | None
+
+
+def _static_uncounterable(line: str) -> _StaticUncounterable | None:
+    """A static "`<Quality>` spells [you control] [with power N or greater]
+    can't be countered." line: its quality phrase (`""` for any spell),
+    whether it covers every player's spells, and the power floor - or None
+    when the line is not that shape or names a quality
+    `next_spell.spell_has_quality` cannot read. CR 205.1's "and" in a type
+    list names one spell that is either type."""
     from .next_spell import spell_quality_is_readable
 
     match = _STATIC_SPELLS_CANT_BE_COUNTERED_RE.fullmatch(line.strip())
@@ -418,7 +434,23 @@ def _static_uncounterable_quality(line: str) -> str | None:
         return None
     if quality and not spell_quality_is_readable(quality):
         return None
-    return quality
+    power = match.group("power")
+    return _StaticUncounterable(
+        quality=quality,
+        everyones=match.group("yours") is None,
+        min_power=None if power is None else int(power),
+    )
+
+
+def _static_uncounterable_quality(line: str) -> str | None:
+    read = _static_uncounterable(line)
+    return None if read is None else read.quality
+
+
+def _spell_power(spell: Any) -> int | None:
+    """The spell's power on the stack (CR 208.1), None for `*`."""
+    power = getattr(spell, "power", None)
+    return power if isinstance(power, int) else None
 
 
 def reads_static_spells_cant_be_countered_line(text: str) -> bool:
@@ -443,27 +475,37 @@ def static_uncounterable_source(game: Any, spell: Any) -> Any:
     if controller is None or getattr(spell, "card", None) is None:
         return None
     board = game.computed_board()
-    for permanent in game.permanents_controlled_by(controller):
-        for line in board.of(permanent).abilities:
+    for permanent in list(game.battlefield):
+        chars = board.of(permanent)
+        mine = (chars.controller or permanent.controller) == controller
+        for line in chars.abilities:
             if "countered" not in line:
                 continue
-            quality = _static_uncounterable_quality(line)
-            if quality is None:
-                # "Spells with flash you cast cost {1} less to cast and can't
-                # be countered." (Cunning Nightbonder, Thryx): the cost-
-                # modification grammar reads the quality and the rider.
-                from .cost.groups import group_spell_modifier
-
-                group = group_spell_modifier(line)
-                if (
-                    group is not None
-                    and group.cant_be_countered
-                    and group.scope == "you"
-                    and (group.quality is None or group.quality(game, spell))
-                ):
+            read = _static_uncounterable(line)
+            if read is not None:
+                if not (mine or read.everyones):
+                    continue
+                if read.min_power is not None:
+                    power = _spell_power(spell)
+                    if power is None or power < read.min_power:
+                        continue
+                if not read.quality or spell_has_quality(spell, read.quality):
                     return permanent
                 continue
-            if not quality or spell_has_quality(spell, quality):
+            if not mine:
+                continue
+            # "Spells with flash you cast cost {1} less to cast and can't be
+            # countered." (Cunning Nightbonder, Thryx): the cost-modification
+            # grammar reads the quality and the rider.
+            from .cost.groups import group_spell_modifier
+
+            group = group_spell_modifier(line)
+            if (
+                group is not None
+                and group.cant_be_countered
+                and group.scope == "you"
+                and (group.quality is None or group.quality(game, spell))
+            ):
                 return permanent
     return None
 

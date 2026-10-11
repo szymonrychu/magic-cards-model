@@ -987,6 +987,7 @@ class DamageLifeMixin:
         self.monarch = None
 
 
+from ...machines import game_rule_statics  # noqa: E402
 from ._common import (  # noqa: E402
     _DAMAGE_CANT_BE_PREVENTED_RE,
     _DRAW_OR_LIFE_GAIN_PROHIBITION_RE,
@@ -994,6 +995,3 @@ from ._common import (  # noqa: E402
     _OPPONENTS_LIFE_GAIN_PROHIBITION_RE,
 )
 from .records import ShieldKind  # noqa: E402
-
-
-from ...machines import game_rule_statics  # noqa: E402
