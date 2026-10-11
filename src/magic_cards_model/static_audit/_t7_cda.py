@@ -12,7 +12,7 @@ from magic_cards_model.models.deck import DeckLimits
 from magic_cards_model.models.game._costs_mana import additional_mana_ability_life
 
 
-def reads_line(
+def reads_cda_line(
     printing, text: str, *, card_name: str | None = None, legendary: bool = False
 ) -> bool:
     lowered = text.lower()

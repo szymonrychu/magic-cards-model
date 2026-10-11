@@ -17,13 +17,12 @@ from magic_cards_model.static_audit import (
     _t7_cost,
 )
 
-_FAMILIES = (_t7_cda, _t7_casting, _t7_cost)
+_READERS = (_t7_cda.reads_cda_line, _t7_casting.reads_casting_line, _t7_cost.reads_cost_line)
 
 
 def reads_pumps_cda_cost_replacement_line(
     printing, text: str, *, card_name: str | None = None, legendary: bool = False
 ) -> bool:
     return any(
-        family.reads_line(printing, text, card_name=card_name, legendary=legendary)
-        for family in _FAMILIES
+        reader(printing, text, card_name=card_name, legendary=legendary) for reader in _READERS
     )

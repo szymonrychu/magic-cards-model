@@ -1,6 +1,6 @@
 """EP-01 round 2, task T7: audit rules for the cost family of static lines.
 
-`reads_line` asks the PRODUCTION reader whether it performs the line (never a
+`reads_cost_line` asks the PRODUCTION reader whether it performs the line (never a
 regex of its own); see `static_audit/__init__.py`.
 """
 
@@ -15,7 +15,7 @@ from magic_cards_model.models.game._common import _SPEND_AS_ANY_COLOR_STATIC_RE
 from magic_cards_model.models.mana import spend_only_from
 
 
-def reads_line(
+def reads_cost_line(
     printing, text: str, *, card_name: str | None = None, legendary: bool = False
 ) -> bool:
     lowered = text.lower()
