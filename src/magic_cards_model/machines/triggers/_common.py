@@ -294,7 +294,7 @@ _ABILITY_ACTIVATED_CONDITION = re.compile(
     r"^(?P<who>you|a player|an opponent) activates? "
     # "you activate a ninjutsu ability" (Satoru Umezawa): a keyword's own
     # activated ability (CR 702.49a), named by the keyword.
-    r"(?:an? (?P<keyword>[a-z]+(?: [a-z]+)?) ability|an ability"
+    r"(?:an? (?!loyalty |mana )(?P<keyword>[a-z]+(?: [a-z]+)?) ability|an ability"
     r"(?: of (?P<types>an? [a-z]+(?:(?:,\s*(?:or\s+)?|\s+or\s+)(?:an? )?[a-z]+)*)"
     r"(?: on the battlefield)?)?"
     r"(?P<not_mana> that isn't a mana ability)?)$"

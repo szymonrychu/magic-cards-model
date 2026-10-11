@@ -181,6 +181,7 @@ def test_satoru_umezawa_gives_creature_cards_in_hand_ninjutsu():
                 "Swamp",
             ],
             "hand": ["Llanowar Elves"],
+            "library": ["Island"] * 4,
         },
         {},
     )
@@ -196,6 +197,7 @@ def test_satoru_umezawa_gives_creature_cards_in_hand_ninjutsu():
     activation.payment.auto_tap(scenario.game.permanents_controlled_by("alice"))
     activation.payment.pay()
     activation.activate()
+    scenario.resolve_top()  # Satoru's own "whenever you activate a ninjutsu ability" trigger
     activation.resolve()
 
     assert elves.zone is Zone.BATTLEFIELD
