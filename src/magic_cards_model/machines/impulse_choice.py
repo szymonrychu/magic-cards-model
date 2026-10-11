@@ -172,3 +172,73 @@ def parse_reveal_top_take_one_rest_bottom(text: str) -> Any:
             game.shuffles_performed += 1
 
     return effect
+
+
+_SEARCH_EXILE_CAST_RE = re.compile(
+    r"^search your library for an? (?P<quality>.+?) card"
+    r"(?P<shares> that shares a color with this planeswalker)?, "
+    r"exile (?:it|that card), then shuffle\.\s*"
+    r"you may cast (?:it|that card) without paying its mana cost\.?$",
+    re.IGNORECASE,
+)
+
+
+def parse_search_exile_then_cast_free(text: str) -> Any:
+    """ "Search your library for an `<instant or sorcery>` card[ that shares a
+    color with this planeswalker], exile that card, then shuffle. You may cast
+    that card without paying its mana cost." (Kasmina, Enigma Sage's -8).
+
+    CR 701.23a/b: the search is for a stated quality, so it may find nothing;
+    CR 105.? "shares a color" is a color both objects have, read for "this
+    planeswalker" as the ability's source as it is now (a granted copy of the
+    ability on another planeswalker is that planeswalker's); CR 608.2g casts
+    the exiled card during resolution, paying no mana cost (CR 118.9).
+    """
+    if "without paying its mana cost" not in text.lower():
+        return None
+    match = _SEARCH_EXILE_CAST_RE.fullmatch(" ".join(text.split()))
+    if match is None:
+        return None
+    from .effects import _quality_matcher, _search_quality_is_readable
+
+    quality = match.group("quality")
+    if not _search_quality_is_readable(quality):
+        return None
+    quality_matches = _quality_matcher(quality)
+    needs_shared_color = match.group("shares") is not None
+
+    def effect(game: "Game", ability: Any) -> None:
+        from ..models.zone import Zone
+        from .effects.merges import _offer_free_casts_from_among
+
+        player = game.controller_of(ability)
+        source = ability.source(game)
+        if needs_shared_color:
+            colors = set(game.characteristics_of(source).colors) if source is not None else set()
+
+            def matches(card: Any) -> bool:
+                return quality_matches(card) and bool(colors & set(card.colors))
+        else:
+            matches = quality_matches
+        found = game.search_library(
+            player,
+            matches,
+            count=1,
+            optional=True,
+            shuffle=True,
+            source=ability.source_name,
+            source_id=source_id_of(ability),
+        )
+        exiled = list(game.exile_cards(found))
+        _offer_free_casts_from_among(
+            game,
+            exiled,
+            player.username,
+            source_name=ability.source_name,
+            source_id=source_id_of(ability),
+            play=False,
+            limit=1,
+            zone=Zone.EXILE,
+        )
+
+    return effect

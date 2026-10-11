@@ -2656,11 +2656,40 @@ class GrantActivatedAbilitiesOf(ModificationBase):
         return chars.with_(abilities=chars.abilities + added)
 
 
+_LOYALTY_LINE_RE = re.compile(r"^(?:[+\u2212\u2013-]\s?(?:\d+|x)|0)\s*:", re.IGNORECASE)
+
+
+class GrantLoyaltyAbilitiesOf(ModificationBase):
+    """Layer 6 addition (CR 613.1f) of the loyalty abilities (CR 606) of one
+    other permanent - Kasmina, Enigma Sage's "Each other planeswalker you
+    control has the loyalty abilities of Kasmina."
+
+    Read off the board as layer 6 finds it (CR 613.5), so what Kasmina has
+    now - not what she printed - is what the others get."""
+
+    kind: Literal["grant_loyalty_abilities_of"] = "grant_loyalty_abilities_of"
+    source_id: UUID
+
+    def __call__(self, chars: Characteristics, board: Board) -> Characteristics:
+        source = board.get(self.source_id)
+        if source is None or source.card_id == chars.card_id:
+            return chars
+        added = tuple(
+            line
+            for line in dict.fromkeys(source.abilities)
+            if _LOYALTY_LINE_RE.match(line) and not chars.has_ability(line)
+        )
+        if not added:
+            return chars
+        return chars.with_(abilities=chars.abilities + added)
+
+
 Modification = Annotated[
     LoseAllAbilities
     | LoseKeyword
     | GrantAbility
     | GrantActivatedAbilitiesOf
+    | GrantLoyaltyAbilitiesOf
     | GrantAbilityInstance
     | GrantAbilitiesByManaValue
     | AddType

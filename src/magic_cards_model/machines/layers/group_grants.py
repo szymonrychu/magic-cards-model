@@ -38,6 +38,7 @@ from .model import (
     AddSupertype,
     ContinuousEffect,
     GrantAbilitiesByManaValue,
+    GrantLoyaltyAbilitiesOf,
     GroupMatch,
     Layer,
     LoseAllAbilities,
@@ -330,6 +331,9 @@ _EQUIPMENT_BY_MANA_VALUE_RE = re.compile(
     r"^each (?P<group>[a-z, -]+) is an equipment with equip \{x\} and "
     r"\"equipped creature gets \+x/\+0,\" where x is that artifact's mana value$"
 )
+_LOYALTY_ABILITIES_OF_RE = re.compile(
+    r"^(?P<subject>.+?) (?:has|have) the loyalty abilities of (?P<name>[a-z',\- ]+)$"
+)
 _GROUP_EQUIP_CREW_RE = re.compile(
     r"^(?P<subject>.+?) (?:have|has) (?P<ability>equip(?: [a-z]+)* (?:\{[^{}]+\})+|crew \d+)$"
 )
@@ -455,6 +459,10 @@ def parse_group_static_sentence(sentence: str):
         if parse_group(match["group"]) is None:
             return None
         return _equipment_by_mana_value_builder(sentence, match["group"])
+    if match := _LOYALTY_ABILITIES_OF_RE.fullmatch(lowered):
+        if _subject_ok(match["subject"]) is False:
+            return None
+        return _loyalty_abilities_of_builder(sentence, match["subject"], match["name"])
     if not _VERB_RE.search(lowered) or '"' in text:
         return None
     if match := _GROUP_EQUIP_CREW_RE.fullmatch(lowered):
@@ -674,6 +682,32 @@ def _plain_are_builder(sentence: str, subject: str, tail: str):
             name = _GROUP_BASIC_LAND_TYPES[tail if tail in _GROUP_BASIC_LAND_TYPES else singular]
             parts = [(Layer.TYPE, None, set_basic_land_type(name, BASIC_LAND_TYPES[name]))]
         return _effects(source, timestamp, sentence, selector, f"{subject} are {tail}", parts)
+
+    return build
+
+
+def _loyalty_abilities_of_builder(sentence: str, subject: str, name: str):
+    """Kasmina, Enigma Sage: the group has the loyalty abilities of the source
+    ("of Kasmina" - the source's name or its legend-name first word)."""
+
+    def build(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        names = {source.name.lower(), source.name.split(",")[0].strip().lower(), "this permanent"}
+        selector = _subject_selector(subject, source)
+        if name.strip() not in names or selector is None:
+            return []
+        return _effects(
+            source,
+            timestamp,
+            sentence,
+            selector,
+            f"{subject} have the loyalty abilities of {source.name}",
+            [(Layer.ABILITY, None, GrantLoyaltyAbilitiesOf(source_id=source.id))],
+        )
 
     return build
 

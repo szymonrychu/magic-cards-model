@@ -4503,6 +4503,7 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
     for whole_text_reader in (
         impulse_choice.parse_exile_top_choose_one_play,
         impulse_choice.parse_reveal_top_take_one_rest_bottom,
+        impulse_choice.parse_search_exile_then_cast_free,
         parse_search_exile_then_play_whole_text,
         _parse_remove_all_counters_then_cant_have_clause,
         _parse_player_loses_all_counters_clause,
