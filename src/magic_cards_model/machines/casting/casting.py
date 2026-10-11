@@ -30,6 +30,7 @@ from ..casting_restrictions import (
     CastingRuleKind,
     combat_lockdown_restriction_source,
     has_sorcery_speed_flash_grant,
+    own_play_prohibition_source,
     restricted_from_noncreature_casting,
     sorcery_speed_restriction_source,
     targeted_cant_cast_restriction,
@@ -571,6 +572,12 @@ def why_cannot_cast_restriction(
     if targeted is not None:
         which = "noncreature spells" if targeted.noncreature_only else "spells"
         return f"{targeted.source_name} says {caster} can't cast {which} this turn (CR 611.1)"
+    own_ban = own_play_prohibition_source(game, caster, zone=spell.zone, land=False)
+    if own_ban is not None:
+        return (
+            f"{own_ban} says {caster} can't cast spells from their {spell.zone.value} "
+            f"(CR 601.3, CR 101.2)"
+        )
     prohibited_from = zone_cast_prohibition_source(game, spell.card, spell.zone, types=types)
     if prohibited_from is not None:
         # Grafdigger's Cage's "Players can't cast spells from graveyards or

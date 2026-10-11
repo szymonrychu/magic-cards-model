@@ -1179,7 +1179,7 @@ def _land_actions(game: Any, player: str, card: CardState) -> list[Action]:
     `me.hand`, so a land under a live PLAY permission never appeared here at
     all even though playing it would have succeeded.
     """
-    if game.why_cannot_play_land(player) is not None:
+    if game.why_cannot_play_land(player, card) is not None:
         return []
     if (
         card.zone is not Zone.HAND

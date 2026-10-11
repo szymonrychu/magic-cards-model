@@ -31,6 +31,7 @@ from ...machines.casting import (
     marker_cast_options,
     once_per_turn_key,
     optional_additional_costs,
+    own_play_prohibition_source,
     play_permissions_on,
     record_graveyard_land_use,
     static_free_cast_grants,
@@ -149,6 +150,25 @@ def conditional_additional_land_plays_of_line(text: str) -> tuple[int, str] | No
     if n is None:
         return None
     return n, match.group("condition").strip()
+
+
+#: Ghirapur Orrery's and Rites of Flourishing's "Each player may play an
+#: additional land on each of their turns." - the each-player twin of
+#: `machines.layers.additional_land_plays_of_line` (CR 305.2, CR 611.3d): the
+#: grant reaches every player, whoever controls its source.
+_EACH_PLAYER_ADDITIONAL_LAND_PLAYS_RE = re.compile(
+    rf"^each player may play {count_pattern('n')} additional lands? on each of their turns\.?$",
+    re.IGNORECASE,
+)
+
+
+def each_player_additional_land_plays_of_line(text: str) -> int | None:
+    """How many additional lands one static line lets *each player* play on
+    each of their turns, or `None` when the line is not that grant."""
+    match = _EACH_PLAYER_ADDITIONAL_LAND_PLAYS_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    return parse_count(match.group("n"), article=True)
 
 
 #: "spells that are one or more colors" (Emrakul, the Aeons Torn): CR 112.1's
@@ -1721,6 +1741,9 @@ class CastingMixin:
                 amount, condition = conditional
                 if self.condition_holds(username, condition, permanent):
                     total += amount
+        for permanent in self.battlefield:
+            for line in board.of(permanent).abilities:
+                total += each_player_additional_land_plays_of_line(line) or 0
         return total
 
     def _plays_lands_from_top_of_library_line(self: "Game", text: str) -> bool:
@@ -1769,7 +1792,9 @@ class CastingMixin:
                     return permanent
         return None
 
-    def why_cannot_play_land(self: "Game", username: str) -> str | None:
+    def why_cannot_play_land(
+        self: "Game", username: str, land: CardState | None = None
+    ) -> str | None:
         """Why `username` cannot play a land right now, or None (CR 305.1-305.3).
 
         The checks, in the order the rules number them:
@@ -1804,6 +1829,14 @@ class CastingMixin:
             return (
                 f"{username} cannot play a land, for any reason, if it isn't their turn "
                 f"(CR 305.3); it is {self.turn.active_player}'s turn"
+            )
+        banned_by = own_play_prohibition_source(
+            self, username, zone=land.zone if land is not None else Zone.HAND, land=True
+        )
+        if banned_by is not None:
+            return (
+                f"{username} can't play lands: {banned_by} says so, and a prohibition beats "
+                f"any permission (CR 305.1, CR 101.2)"
             )
         played = self.lands_played.get(username, 0)
         allowance = self.land_allowance(username)
@@ -2298,7 +2331,7 @@ class CastingMixin:
             land_face = chosen
         if not land.card.is_land and land_face is None:
             raise ValueError(f"{land.name} is not a land")
-        refusal = self.why_cannot_play_land(username)
+        refusal = self.why_cannot_play_land(username, land)
         if refusal is not None:
             raise ValueError(refusal)
         permission: PlayPermission | None = None

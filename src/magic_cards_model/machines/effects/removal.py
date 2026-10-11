@@ -4250,6 +4250,28 @@ def _parse_cast_exiled_card_free_clause(clause: str, *, for_spell: bool) -> Targ
     return effect
 
 
+#: "Destroy this enchantment." (Experimental Frenzy's `{3}{R}` ability) - CR 701.8a's
+#: destroy on the ability's own source, a self-reference (CR 201.5, CR 115.1a) rather
+#: than a target. Ability-only: a spell is never a permanent on the battlefield.
+_DESTROY_SELF_RE = re.compile(r"^destroy this \w+$", re.IGNORECASE)
+
+
+@MIXED_CLAUSE.rung("s26", for_spell=FORWARD)
+def _parse_destroy_self_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
+    """`_DESTROY_SELF_RE`'s shape: destroy the ability's source if it is still
+    the permanent on the battlefield (CR 400.7: a source that already left is a
+    new object, so there is nothing to destroy)."""
+    if for_spell or _DESTROY_SELF_RE.fullmatch(clause.strip().rstrip(".")) is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        source = stack_object.source(game)
+        if source is not None and source.zone is Zone.BATTLEFIELD:
+            game.destroy(source)
+
+    return effect
+
+
 #: Every noun `_sacrifice_restriction` accepts after "this " - a card type
 #: (CR 205.2a) or the bare word "permanent" itself. Slayer of the Wicked's
 #: "target Vampire, Werewolf, or Zombie" kind of compound restriction is not

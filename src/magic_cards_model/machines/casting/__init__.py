@@ -131,6 +131,9 @@ from ..keywords import why_cannot_enchant as why_cannot_enchant
 from ..cost import why_not_unblocked as why_not_unblocked
 from ...phrases import with_indefinite_article as with_indefinite_article
 from ..modes import x_restriction_refusal as x_restriction_refusal
+from ..casting_restrictions import (
+    own_play_prohibition_source as own_play_prohibition_source,
+)
 from ..casting_restrictions import zone_cast_prohibition_source as zone_cast_prohibition_source
 from .granted_life_costs import GrantedLifeCost as GrantedLifeCost
 from .granted_life_costs import granted_life_costs as granted_life_costs
