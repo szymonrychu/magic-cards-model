@@ -2741,7 +2741,7 @@ def _fold_attached_pronoun_riders(sentences: list[str]) -> list[str]:
 #: sentence rather than granting half of it.
 _ANIMATION_RE = re.compile(
     r"^(?P<subject>[Tt]his (?:land|permanent|artifact|creature|enchantment)"
-    r"|(?:[Uu]p to (?:one|two|three) )?(?:target|another target) [a-z]+(?: [a-z]+)*?"
+    r"|(?:[Uu]p to (?:one|two|three) )?(?:[Tt]arget|[Aa]nother target) [a-z]+(?: [a-z]+)*?"
     r"|[Ii]t|[Tt]hat (?:land|permanent|creature|artifact))"
     r" becomes an? (?P<power>\d+)/(?P<toughness>\d+) "
     r"(?P<colors>(?:white|blue|black|red|green)(?:(?:,| and|, and) "
@@ -2751,7 +2751,9 @@ _ANIMATION_RE = re.compile(
     r"(?: with (?:(?:(?P<quoted_keywords>[^\"]+?) and )?\"(?P<granted>[^\"]+?)\.?\""
     r"|(?P<keywords>[^\"]+?)))?"
     r"(?: that's still an? (?P<retained_inline>(?:[A-Za-z-]+ ){0,3}[a-z]+))?"
-    r"(?P<until_eot> until end of turn)?\.?"
+    r"(?P<until_eot> until end of turn)?"
+    r"(?P<while_tapped> for as long as this (?:land|permanent|artifact|creature|enchantment) "
+    r"remains tapped)?\.?"
     r"(?:\s+[Ii]t's still an? (?P<retained>(?:[A-Za-z-]+ ){0,3}[a-z]+)\.?)?$"
 )
 
@@ -2806,8 +2808,14 @@ def _animation_builder(
     granted: str | None = None,
     granted_effects: EffectBuilder | None = None,
     every_creature_type: bool = False,
+    while_source_tapped: bool = False,
 ) -> EffectBuilder:
     """`_ANIMATION_RE`'s shape.
+
+    `while_source_tapped` is "for as long as this creature remains tapped"
+    (CR 611.2b): every effect it builds carries `RemainsTapped` of the
+    resolving ability's source, so it ends the first time that source is
+    untapped and never starts if it is not tapped as the ability resolves.
 
     `every_creature_type` is the keyword slot's "all creature types" item
     (Mutavault's "a 2/2 creature with all creature types"): CR 205.3m's whole
@@ -2937,6 +2945,16 @@ def _animation_builder(
                     )
                     for effect in granted_effects(target, timestamp, [target], context)
                 )
+        if while_source_tapped:
+            if source.zone_change_stamp is None:
+                return []
+            lasting = RemainsTapped(card_id=source.id, stamp=source.zone_change_stamp)
+            return [
+                effect.model_copy(
+                    update={"duration": Duration.FOR_AS_LONG_AS, "condition": lasting}
+                )
+                for effect in effects
+            ]
         return effects
 
     return builder
@@ -3015,6 +3033,7 @@ def _parse_animation_sentence(sentence: str) -> EffectBuilder | None:
         granted=granted,
         granted_effects=granted_effects,
         every_creature_type=every_creature_type,
+        while_source_tapped=bool(match.group("while_tapped")),
     )
 
 
@@ -12979,6 +12998,7 @@ from .model import (  # noqa: E402
     PermanentsOfTypesControlledBy,
     PermanentsWithName,
     RemainsOnBattlefield,
+    RemainsTapped,
     RemoveType,
     Selector,
     SelfIfAttachedCount,

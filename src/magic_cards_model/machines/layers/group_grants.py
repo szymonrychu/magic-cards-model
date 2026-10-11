@@ -27,6 +27,7 @@ from ...models.card import Color, Supertype, Type
 from ...models.card_state import (
     CANT_HAVE_KIND_COUNTERS_TEXT,
     LETHAL_BY_POWER_TEXT,
+    MAY_STAY_TAPPED_TEXT,
     UNTAPS_IN_OTHER_UNTAP_TEXT,
     CardState,
 )
@@ -295,6 +296,10 @@ _GROUP_EQUIP_CREW_RE = re.compile(
 _UNTAP_OTHER_STEP_RE = re.compile(
     r"^untap all (?P<subject>.+?) during each other player's untap step$"
 )
+_MAY_STAY_TAPPED_RE = re.compile(
+    r"^you may choose not to untap (?P<subject>this (?:creature|permanent|artifact|enchantment|land))"
+    r" during your untap step$"
+)
 _SAME_IS_TRUE_RE = re.compile(r"^the same is true for (?P<subjects>.+)$")
 _OFF_ZONE_WORD_RE = re.compile(r"\b(?:cards?|spells?)\b")
 _ARE_LEGENDARY_RE = re.compile(r"^(?P<subject>.+?) (?:are|is) legendary$")
@@ -388,6 +393,13 @@ def parse_group_static_sentence(sentence: str):
             match["subject"],
             "untap during each other player's untap step",
             lambda: [(Layer.ABILITY, None, grant_ability(UNTAPS_IN_OTHER_UNTAP_TEXT))],
+        )
+    if match := _MAY_STAY_TAPPED_RE.fullmatch(lowered):
+        return _builder(
+            sentence,
+            match["subject"],
+            "may choose not to untap",
+            lambda: [(Layer.ABILITY, None, grant_ability(MAY_STAY_TAPPED_TEXT))],
         )
     if not _VERB_RE.search(lowered) or '"' in text:
         return None

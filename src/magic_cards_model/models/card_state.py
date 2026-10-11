@@ -66,6 +66,10 @@ CANT_HAVE_KIND_COUNTERS_TEXT = "Can't have {kind} counters put on it."
 #: other player's untap step." grants each permanent of the group, read by
 #: `Game.untap_step` for every player whose step it is not.
 UNTAPS_IN_OTHER_UNTAP_TEXT = "Untaps during each other player's untap step."
+#: CR 502.3 and CR 604.2: the marker "You may choose not to untap this
+#: <permanent> during your untap step." grants itself; `Game.untap_step` asks
+#: its controller whether to leave it tapped.
+MAY_STAY_TAPPED_TEXT = "You may choose not to untap this permanent during your untap step."
 LETHAL_BY_POWER_TEXT = "Lethal damage is determined by power rather than toughness."
 
 

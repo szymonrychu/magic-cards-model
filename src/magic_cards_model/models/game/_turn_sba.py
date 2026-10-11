@@ -63,6 +63,7 @@ from ..card import (
 )
 from ..card_state import (
     LETHAL_BY_POWER_TEXT,
+    MAY_STAY_TAPPED_TEXT,
     UNTAPS_IN_OTHER_UNTAP_TEXT,
     CardState,
     Counter,
@@ -268,7 +269,14 @@ class TurnSbaMixin:
         # CR 502.2: second, the day/night check (CR 731.2) - after CR 502.1's
         # phasing and before CR 502.3's untap, and skipped with the step.
         self._day_night_untap_check()
-        untappable = [*verdict.permanents, *self._untapping_in_others_untap_step(active.username)]
+        untappable = [
+            state
+            for state in (
+                *verdict.permanents,
+                *self._untapping_in_others_untap_step(active.username),
+            )
+            if not self._chooses_not_to_untap(state)
+        ]
         tapped = [state for state in untappable if state.tapped]
         active.untap_all(untappable)
         for state in tapped:
@@ -296,6 +304,27 @@ class TurnSbaMixin:
                     step=Step.UNTAP,
                 )
             )
+
+    def _chooses_not_to_untap(self: "Game", state: CardState) -> bool:
+        """CR 502.3, CR 604.2: "You may choose not to untap this <permanent>
+        during your untap step." - asked of the controller only while the
+        permanent is tapped, and an unscripted player declines (it untaps)."""
+        if not state.tapped or state.controller is None:
+            return False
+        if not self.characteristics_of(state).has_ability(MAY_STAY_TAPPED_TEXT):
+            return False
+        return bool(
+            self.ask(
+                Decision(
+                    kind=DecisionKind.MAY,
+                    player=state.controller,
+                    prompt=f"leave {state.name} tapped instead of untapping it (CR 502.3)?",
+                    source=state.name,
+                    source_id=source_id_of(state),
+                    default_may=False,
+                )
+            )
+        )
 
     def _untapping_in_others_untap_step(self: "Game", active: str) -> list[CardState]:
         """CR 502.3, CR 604.2: the permanents "Untap all <group> you control
