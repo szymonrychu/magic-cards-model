@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 37 | 15.1% |
-| Works (untested) | 158 | 64.5% |
+| Works (untested) | 159 | 64.9% |
 | Partial (unaudited) | 5 | 2.0% |
-| Not working | 45 | 18.4% |
+| Not working | 44 | 18.0% |
 
 ## Cards needing work
 
@@ -63,7 +63,6 @@
 | Vance's Blasting Cannons // Spitfire Bastion | silent | At the beginning of your upkeep, exile the top card of your library. If it's a nonland card, you may cast that card this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Wakening Sun's Avatar | silent | When this creature enters, if you cast it from your hand, destroy all non-Dinosaur creatures. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Wildgrowth Walker | silent | Whenever a creature you control explores, put a +1/+1 counter on this creature and you gain 3 life. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
-| Drover of the Mighty | notice | This creature gets +2/+2 as long as you control a Dinosaur. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Emergent Growth | notice | Target creature gets +5/+5 until end of turn and must be blocked this turn if able. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Kumena's Speaker | notice | This creature gets +1/+1 as long as you control another Merfolk or an Island. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Siren's Ruse | notice | Exile target creature you control, then return that card to the battlefield under its owner's control. If a Pirate was exiled this way, draw a card. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -112,6 +111,7 @@
 | Dire Fleet Hoarder | handled | When this creature dies, create a Treasure token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Dire Fleet Interloper | handled | When this creature enters, it explores. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Dive Down | handled | Target creature you control gets +0/+3 and gains hexproof until end of turn. (It can't be the target of spells or abilities your opponents control.) | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Drover of the Mighty | handled | This creature gets +2/+2 as long as you control a Dinosaur. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Dusk Legion Dreadnought | handled | Vigilance | machines/combat.py | Y/Y/- | not_tested |
 | Duskborne Skymarcher | handled | {W}, {T}: Target attacking Vampire gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Elaborate Firecannon | handled | This artifact doesn't untap during your untap step. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -332,7 +332,6 @@
 | you gain twice N life. put ~ on the bottom of its owner's library. | 1 | Sanguine Sacrament | xln |
 | your opponents can't cast spells with the same name as the exiled card. | 1 | Ixalan's Binding | xln |
 | {M}: untap target attacking creature an opponent controls and remove it from combat. | 1 | Thaumatic Compass // Spires of Orazca | xln |
-| ~ gets +N/+N as long as you control a dinosaur. | 1 | Drover of the Mighty | xln |
 | ~ gets +N/+N as long as you control another merfolk or an island. | 1 | Kumena's Speaker | xln |
 
 ## Notes

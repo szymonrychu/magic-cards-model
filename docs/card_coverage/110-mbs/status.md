@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 20 | 14.1% |
-| Works (untested) | 91 | 64.1% |
+| Tested | 21 | 14.8% |
+| Works (untested) | 90 | 63.4% |
 | Partial (unaudited) | 0 | 0.0% |
 | Not working | 31 | 21.8% |
 
@@ -79,7 +79,6 @@
 | Glissa's Courier | handled | Landwalk | no code needed | Y/-/- | not_tested |
 | Glissa, the Traitor | handled | Whenever a creature an opponent controls dies, you may return target artifact card from your graveyard to your hand. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Gnathosaur | handled | Sacrifice an artifact: This creature gains trample until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
-| Go for the Throat | handled | Destroy target nonartifact creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Goblin Wardriver | handled | Battle Cry | machines/keywords.py | Y/-/- | not_tested |
 | Gruesome Encore | handled | Put target creature card from an opponent's graveyard onto the battlefield under your control. It gains haste. Exile it at the beginning of the next end step. I | the engine reads this text and performs it | Y/-/- | not_tested |
 | Gust-Skimmer | handled | {U}: This creature gains flying until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -152,13 +151,14 @@
 ## Fully supported
 
 <details>
-<summary>20 cards</summary>
+<summary>21 cards</summary>
 
 - Accorder Paladin
 - Blightsteel Colossus
 - Burn the Impure
 - Concussive Bolt
 - Fuel for the Cause
+- Go for the Throat
 - Green Sun's Zenith
 - Ichor Wellspring
 - Kemba's Legion

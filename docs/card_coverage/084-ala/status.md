@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 24 | 10.8% |
+| Tested | 25 | 11.2% |
 | Works (untested) | 143 | 64.1% |
 | Partial (unaudited) | 4 | 1.8% |
-| Not working | 52 | 23.3% |
+| Not working | 51 | 22.9% |
 
 ## Cards needing work
 
@@ -76,7 +76,6 @@
 | Bant Charm | notice | Choose one — • Destroy target artifact. • Put target creature on the bottom of its owner's library. • Counter target instant spell. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Ooze Garden | notice | {1}{G}, Sacrifice a non-Ooze creature: Create an X/X green Ooze creature token, where X is the sacrificed creature's power. Activate only as a sorcery. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Sigil Blessing | notice | Until end of turn, target creature you control gets +3/+3 and other creatures you control get +1/+1. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Wild Nacatl | notice | This creature gets +1/+1 as long as you control a Mountain. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Windwright Mage | notice | This creature has flying as long as an artifact card is in your graveyard. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Ethersworn Canonist | unaudited | Each player who has cast a nonartifact spell this turn can't cast additional nonartifact spells. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Mindlock Orb | unaudited | Players can't search libraries. | a static ability no support check audits - not verified either way | Y/-/- | partial |
@@ -229,7 +228,7 @@
 ## Fully supported
 
 <details>
-<summary>24 cards</summary>
+<summary>25 cards</summary>
 
 - Angelsong
 - Blightning
@@ -255,6 +254,7 @@
 - Soul's Grace
 - Thunder-Thrash Elder
 - Vein Drinker
+- Wild Nacatl
 
 </details>
 
@@ -305,7 +305,6 @@
 | {M}{M}, {M}, sacrifice a white creature, a blue creature, and a black creature: search your library for a card named sphinx sovereign, put it onto the battlefie | 1 | Sphinx's Herald | ala |
 | {M}{M}, {M}: target player loses N life and reveals their hand. | 1 | Thoughtcutter Agent | ala |
 | {M}{M}{M}{M}, {M}: look at the top five cards of your library. you may put a creature card with power N or greater from among them onto the battlefield. put the | 1 | Mayael the Anima | ala |
-| ~ gets +N/+N as long as you control a mountain. | 1 | Wild Nacatl | ala |
 | ~ has flying as long as an artifact card is in your graveyard. | 1 | Windwright Mage | ala |
 
 ## Notes

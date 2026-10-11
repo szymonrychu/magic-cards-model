@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 15 | 10.5% |
-| Works (untested) | 74 | 51.7% |
+| Works (untested) | 79 | 55.2% |
 | Partial (unaudited) | 3 | 2.1% |
-| Not working | 51 | 35.7% |
+| Not working | 46 | 32.2% |
 
 ## Cards needing work
 
@@ -69,13 +69,8 @@
 | Xathrid Slyblade | silent | {3}{B}: Until end of turn, this creature loses hexproof and gains first strike and deathtouch. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Yisan, the Wanderer Bard | silent | {2}{G}, {T}, Put a verse counter on Yisan: Search your library for a creature card with mana value equal to the number of verse counters on Yisan, put it onto t | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Blastfire Bolt | notice | Blastfire Bolt deals 5 damage to target creature. Destroy all Equipment attached to that creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Dauntless River Marshal | notice | This creature gets +1/+1 as long as you control an Island. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Jorubai Murk Lurker | notice | This creature gets +1/+1 as long as you control a Swamp. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Kird Chieftain | notice | This creature gets +1/+1 as long as you control a Forest. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Life's Legacy | notice | As an additional cost to cast this spell, sacrifice a creature. Draw cards equal to the sacrificed creature's power. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Nightfire Giant | notice | This creature gets +1/+1 as long as you control a Mountain. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Rotfeaster Maggot | notice | When this creature enters, exile target creature card from a graveyard. You gain life equal to that card's toughness. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Sunblade Elf | notice | This creature gets +1/+1 as long as you control a Plains. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Warden of the Beyond | notice | This creature gets +2/+2 as long as an opponent owns a card in exile. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Aggressive Mining | unaudited | You can't play lands. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Constricting Sliver | unaudited | Sliver creatures you control have "When this creature enters, you may exile target creature an opponent controls until this creature leaves the battlefield." | a static ability no support check audits - not verified either way | Y/Y/- | partial |
@@ -94,6 +89,7 @@
 | Covenant of Blood | handled | Convoke (Your creatures can help cast this spell. Each creature you tap while casting this spell pays for {1} or one mana of that creature's color.) Covenant of | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Crowd's Favor | handled | Convoke (Your creatures can help cast this spell. Each creature you tap while casting this spell pays for {1} or one mana of that creature's color.) Target crea | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Cruel Sadist | handled | {B}, {T}, Pay 1 life: Put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Dauntless River Marshal | handled | This creature gets +1/+1 as long as you control an Island. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Diffusion Sliver | handled | Whenever a Sliver creature you control becomes the target of a spell or ability an opponent controls, counter that spell or ability unless its controller pays { | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Endless Obedience | handled | Convoke (Your creatures can help cast this spell. Each creature you tap while casting this spell pays for {1} or one mana of that creature's color.) Put target  | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ephemeral Shields | handled | Convoke (Your creatures can help cast this spell. Each creature you tap while casting this spell pays for {1} or one mana of that creature's color.) Target crea | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -108,8 +104,10 @@
 | Hornet Nest | handled | Whenever this creature is dealt damage, create that many 1/1 green Insect creature tokens with flying and deathtouch. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Hornet Queen | handled | When this creature enters, create four 1/1 green Insect creature tokens with flying and deathtouch. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Inferno Fist | handled | Enchanted creature gets +2/+0. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Jorubai Murk Lurker | handled | This creature gets +1/+1 as long as you control a Swamp. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Kalonian Twingrove | handled | Kalonian Twingrove's power and toughness are each equal to the number of Forests you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Kapsho Kitefins | handled | Whenever this creature or another creature you control enters, tap target creature an opponent controls. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Kird Chieftain | handled | This creature gets +1/+1 as long as you control a Forest. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Krenko's Enforcer | handled | Intimidate | machines/keywords.py | Y/Y/- | not_tested |
 | Living Totem | handled | When this creature enters, you may put a +1/+1 counter on another target creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Marked by Honor | handled | Enchanted creature gets +2/+2 and has vigilance. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -120,6 +118,7 @@
 | Miner's Bane | handled | {2}{R}: This creature gets +1/+0 and gains trample until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Necromancer's Assistant | handled | When this creature enters, mill three cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Netcaster Spider | handled | Whenever this creature blocks a creature with flying, this creature gets +2/+0 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Nightfire Giant | handled | This creature gets +1/+1 as long as you control a Mountain. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Nimbus of the Isles | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
 | Nissa's Expedition | handled | Convoke (Your creatures can help cast this spell. Each creature you tap while casting this spell pays for {1} or one mana of that creature's color.) Search your | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Obelisk of Urd | handled | As this artifact enters, choose a creature type. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -144,6 +143,7 @@
 | Spirit Bonds | handled | Whenever a nontoken creature you control enters, you may pay {W}. If you do, create a 1/1 white Spirit creature token with flying. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Statute of Denial | handled | Counter target spell. If you control a blue creature, draw a card, then discard a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Stoke the Flames | handled | Convoke (Your creatures can help cast this spell. Each creature you tap while casting this spell pays for {1} or one mana of that creature's color.) Stoke the F | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Sunblade Elf | handled | This creature gets +1/+1 as long as you control a Plains. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Sungrace Pegasus | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
 | Triplicate Spirits | handled | Convoke (Your creatures can help cast this spell. Each creature you tap while casting this spell pays for {1} or one mana of that creature's color.) Create thre | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Tyrant's Machine | handled | {4}, {T}: Tap target creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -229,11 +229,6 @@
 | ~ can't attack unless there is a mountain on the battlefield. | 1 | Glacial Crasher | m15 |
 | ~ deals N damage to target creature. destroy all equipment attached to that creature. | 1 | Blastfire Bolt | m15 |
 | ~ gets +N/+N as long as an opponent owns a card in exile. | 1 | Warden of the Beyond | m15 |
-| ~ gets +N/+N as long as you control a forest. | 1 | Kird Chieftain | m15 |
-| ~ gets +N/+N as long as you control a mountain. | 1 | Nightfire Giant | m15 |
-| ~ gets +N/+N as long as you control a plains. | 1 | Sunblade Elf | m15 |
-| ~ gets +N/+N as long as you control a swamp. | 1 | Jorubai Murk Lurker | m15 |
-| ~ gets +N/+N as long as you control an island. | 1 | Dauntless River Marshal | m15 |
 | −N: destroy target creature. you gain life equal to its toughness. | 1 | Garruk, Apex Predator | m15 |
 | −N: put a +N/+N counter on each creature you control and a loyalty counter on each other planeswalker you control. | 1 | Ajani Steadfast | m15 |
 

@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 26 | 16.0% |
-| Works (untested) | 78 | 48.1% |
+| Works (untested) | 79 | 48.8% |
 | Partial (unaudited) | 2 | 1.2% |
-| Not working | 56 | 34.6% |
+| Not working | 55 | 34.0% |
 
 ## Cards needing work
 
@@ -77,7 +77,6 @@
 | Venarian Glimmer | silent | Target player reveals their hand. You choose a nonland card with mana value X or less from it. That player discards that card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Wild Pair | silent | Whenever a creature enters, if you cast it from your hand, you may search your library for a creature card with the same total power and toughness, put it onto  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Fatal Frenzy | notice | Until end of turn, target creature you control gains trample and gets +X/+0, where X is its power. Sacrifice it at the beginning of the next end step. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Hedge Troll | notice | This creature gets +1/+1 as long as you control a Plains. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Magus of the Arena | notice | {3}, {T}: Tap target creature you control and target creature of an opponent's choice they control. Those creatures fight each other. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Pongify | notice | Destroy target creature. It can't be regenerated. Its controller creates a 3/3 green Ape creature token. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Timecrafting | notice | Choose one — • Remove X time counters from target permanent or suspended card. • Put X time counters on target permanent with a time counter on it or suspended  | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
@@ -115,6 +114,7 @@
 | Groundbreaker | handled | At the beginning of the end step, sacrifice this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Hammerheim Deadeye | handled | When this creature enters, destroy target creature with flying. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Healing Leaves | handled | Choose one — • Target player gains 3 life. • Prevent the next 3 damage that would be dealt to any target this turn. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Hedge Troll | handled | This creature gets +1/+1 as long as you control a Plains. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Heroes Remembered | handled | You gain 20 life. Suspend 10—{W} (Rather than cast this card from your hand, you may pay {W} and exile it with ten time counters on it. At the beginning of your | the engine reads this text and performs it | Y/-/- | not_tested |
 | Kavu Predator | handled | Whenever an opponent gains life, put that many +1/+1 counters on this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Keen Sense | handled | Whenever enchanted creature deals damage to an opponent, you may draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -255,7 +255,6 @@
 | {M}{M}, {M}, discard a card: target creature can't be blocked ~ except by artifact creatures and/or red creatures. | 1 | Firefright Mage | plc |
 | {M}{M}: exile ~. | 1 | Molten Firebird | plc |
 | {M}{M}{M}, {M}, discard a card: you gain N life for each card in your hand. | 1 | Sophic Centaur | plc |
-| ~ gets +N/+N as long as you control a plains. | 1 | Hedge Troll | plc |
 | ~'s power and toughness are each equal to the number of cards in your hand. | 1 | Aeon Chronicler | plc |
 | ~'s power and toughness are each equal to the number of time counters on it. | 1 | Tidewalker | plc |
 | ~'s power and toughness are each equal to your life total minus the life total of an opponent with the most life. | 1 | Roiling Horror | plc |

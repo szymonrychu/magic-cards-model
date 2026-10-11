@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 13 | 12.1% |
-| Works (untested) | 58 | 54.2% |
+| Works (untested) | 63 | 58.9% |
 | Partial (unaudited) | 1 | 0.9% |
-| Not working | 35 | 32.7% |
+| Not working | 30 | 28.0% |
 
 ## Cards needing work
 
@@ -54,17 +54,13 @@
 | Sublime Archangel | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Tricks of the Trade | silent | Enchanted creature gets +2/+0 and can't be blocked. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Void Stalker | silent | {2}{U}, {T}: Put this creature and target creature on top of their owners' libraries, then those players shuffle their libraries. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Arctic Aven | notice | This creature gets +1/+1 as long as you control a Plains. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Crimson Muckwader | notice | This creature gets +1/+1 as long as you control a Swamp. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Flinthoof Boar | notice | This creature gets +1/+1 as long as you control a Mountain. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Harbor Bandit | notice | This creature gets +1/+1 as long as you control an Island. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Prized Elephant | notice | This creature gets +1/+1 as long as you control a Forest. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Timberpack Wolf | notice | This creature gets +1/+1 for each other creature you control named Timberpack Wolf. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Xathrid Gorgon | notice | {2}{B}, {T}: Put a petrification counter on target creature. It gains defender and becomes a colorless artifact in addition to its other types. Its activated ab | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Encrust | unaudited | Enchanted permanent doesn't untap during its controller's untap step and its activated abilities can't be activated. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Ajani's Sunstriker | handled | Lifelink | machines/combat.py | Y/-/- | not_tested |
 | Ajani, Caller of the Pride | handled | +1: Put a +1/+1 counter on up to one target creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Archaeomancer | handled | When this creature enters, return target instant or sorcery card from your graveyard to your hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Arctic Aven | handled | This creature gets +1/+1 as long as you control a Plains. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Attended Knight | handled | When this creature enters, create a 1/1 white Soldier creature token. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Battleflight Eagle | handled | When this creature enters, target creature gets +2/+2 and gains flying until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Bloodhunter Bat | handled | When this creature enters, target player loses 2 life and you gain 2 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -76,6 +72,7 @@
 | Courtly Provocateur | handled | {T}: Target creature attacks this turn if able. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Cower in Fear | handled | Creatures your opponents control get -1/-1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Craterize | handled | Destroy target land. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Crimson Muckwader | handled | This creature gets +1/+1 as long as you control a Swamp. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Crusader of Odric | handled | Crusader of Odric's power and toughness are each equal to the number of creatures you control. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Diabolic Revelation | handled | Search your library for up to X cards, put those cards into your hand, then shuffle. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Downpour | handled | Tap up to three target creatures. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -83,10 +80,12 @@
 | Faerie Invaders | handled | Flying | machines/combat.py | Y/-/- | not_tested |
 | Firewing Phoenix | handled | {1}{R}{R}{R}: Return this card from your graveyard to your hand. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Flames of the Firebrand | handled | Flames of the Firebrand deals 3 damage divided as you choose among one, two, or three targets. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Flinthoof Boar | handled | This creature gets +1/+1 as long as you control a Mountain. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Fungal Sprouting | handled | Create X 1/1 green Saproling creature tokens, where X is the greatest power among creatures you control. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Goblin Battle Jester | handled | Whenever you cast a red spell, target creature can't block this turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Griffin Protector | handled | Whenever another creature you control enters, this creature gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Guardian Lions | handled | Vigilance | machines/combat.py | Y/-/- | not_tested |
+| Harbor Bandit | handled | This creature gets +1/+1 as long as you control an Island. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Healer of the Pride | handled | Whenever another creature you control enters, you gain 2 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Hellion Crucible | handled | {1}{R}, {T}: Put a pressure counter on this land. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Hydrosurge | handled | Target creature gets -5/-0 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -97,6 +96,7 @@
 | Mark of the Vampire | handled | Enchanted creature gets +2/+2 and has lifelink. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Murder | handled | Destroy target creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Primal Huntbeast | handled | Hexproof | machines/casting.py (target legality) | Y/-/- | not_tested |
+| Prized Elephant | handled | This creature gets +1/+1 as long as you control a Forest. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ranger's Path | handled | Search your library for up to two Forest cards, put them onto the battlefield tapped, then shuffle. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Reckless Brute | handled | This creature attacks each combat if able. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Rhox Faithmender | handled | If you would gain life, you gain twice that much life instead. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -169,11 +169,6 @@
 | {M}: regenerate equipped creature. | 1 | Ring of Xathrid | m13 |
 | {M}{M}, {M}: put a petrification counter on target creature. it gains defender and becomes a colorless artifact in addition to its other types. its activated ab | 1 | Xathrid Gorgon | m13 |
 | {M}{M}, {M}: put ~ and target creature on top of their owners' libraries, then those players shuffle their libraries. | 1 | Void Stalker | m13 |
-| ~ gets +N/+N as long as you control a forest. | 1 | Prized Elephant | m13 |
-| ~ gets +N/+N as long as you control a mountain. | 1 | Flinthoof Boar | m13 |
-| ~ gets +N/+N as long as you control a plains. | 1 | Arctic Aven | m13 |
-| ~ gets +N/+N as long as you control a swamp. | 1 | Crimson Muckwader | m13 |
-| ~ gets +N/+N as long as you control an island. | 1 | Harbor Bandit | m13 |
 | ~ gets +N/+N for each other creature you control named ~. | 1 | Timberpack Wolf | m13 |
 | −N: target creature gets +N/+N or -N/-N until end of turn, where N is the number of swamps you control. | 1 | Liliana of the Dark Realms | m13 |
 

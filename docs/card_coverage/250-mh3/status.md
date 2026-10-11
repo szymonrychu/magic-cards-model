@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 80 | 30.5% |
-| Works (untested) | 94 | 35.9% |
+| Tested | 82 | 31.3% |
+| Works (untested) | 93 | 35.5% |
 | Partial (unaudited) | 10 | 3.8% |
-| Not working | 78 | 29.8% |
+| Not working | 77 | 29.4% |
 
 ## Cards needing work
 
@@ -46,7 +46,6 @@
 | Fangs of Kalonia | silent | Overload | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Flare of Cultivation | silent | You may sacrifice a nontoken green creature rather than pay this spell's mana cost. Search your library for up to two basic land cards, reveal those cards, put  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Flare of Fortitude | silent | You may sacrifice a nontoken white creature rather than pay this spell's mana cost. Until end of turn, your life total can't change, and permanents you control  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Flare of Malice | silent | You may sacrifice a nontoken black creature rather than pay this spell's mana cost. Each opponent sacrifices a creature or planeswalker with the greatest mana v | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Fowl Strike | silent | Reinforce | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Frogmyr Enforcer | silent | Prototype | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Genku, Future Shaper | silent | Whenever another nontoken permanent you control leaves the battlefield, choose one that hasn't been chosen this turn. Create a creature token with those charact | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -142,7 +141,6 @@
 | Faithful Watchdog | handled | This creature enters with three +1/+1 counters on it. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Fanged Flames | handled | Devoid (This card has no color.) Fanged Flames deals 4 damage to target creature or planeswalker. If that creature or planeswalker would die this turn, exile it | the engine reads this text and performs it | Y/-/- | not_tested |
 | Fetid Gargantua | handled | {2}{B}: Adapt 2. | the engine reads this text and performs it | Y/-/- | not_tested |
-| Flare of Denial | handled | You may sacrifice a nontoken blue creature rather than pay this spell's mana cost. Counter target spell. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Flare of Duplication | handled | You may sacrifice a nontoken red creature rather than pay this spell's mana cost. Copy target instant or sorcery spell. You may choose new targets for the copy. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Foreboding Landscape | handled | {T}, Sacrifice this land: Search your library for a basic Swamp, Forest, or Island card, put it onto the battlefield tapped, then shuffle. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Furnace Hellkite | handled | {R}: This creature gets +1/+0 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -212,7 +210,7 @@
 ## Fully supported
 
 <details>
-<summary>80 cards</summary>
+<summary>82 cards</summary>
 
 - Aether Revolt
 - Ajani, Nacatl Pariah // Ajani, Nacatl Avenger
@@ -240,6 +238,8 @@
 - Etherium Pteramander
 - Fanatic of Rhonas
 - Fell the Profane // Fell Mire
+- Flare of Denial
+- Flare of Malice
 - Galvanic Discharge
 - Glaring Fleshraker
 - Guide of Souls
@@ -372,7 +372,6 @@
 | you get {M}{M}{M} (three energy counters), then you may pay any amount of {M}. each player may exile their hand and draw a number of cards equal to the amount o | 1 | Wheel of Potential | mh3 |
 | you may exert ~ as it attacks. when you do, target creature gets +N/+N until end of turn, where N is the number of counters on permanents you control. | 1 | Hydra Trainer | mh3 |
 | you may have ~ enter as a copy of an enchantment you control, except it has "..." | 1 | Estrid's Invocation | mh3 |
-| you may sacrifice a nontoken black creature rather than pay ~ mana cost. each opponent sacrifices a creature or planeswalker with the greatest mana value among  | 1 | Flare of Malice | mh3 |
 | you may sacrifice a nontoken green creature rather than pay ~ mana cost. search your library for up to two basic land cards, reveal those cards, put one onto th | 1 | Flare of Cultivation | mh3 |
 | you may sacrifice a nontoken white creature rather than pay ~ mana cost. until end of turn, your life total can't change, and permanents you control gain hexpro | 1 | Flare of Fortitude | mh3 |
 | {M}, pay {M}{M}: exile the top card of your library. you may play it until you exile another card with ~. | 1 | Unstable Amulet | mh3 |

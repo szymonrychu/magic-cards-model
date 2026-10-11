@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 40 | 15.6% |
+| Tested | 41 | 16.0% |
 | Works (untested) | 138 | 53.9% |
 | Partial (unaudited) | 3 | 1.2% |
-| Not working | 75 | 29.3% |
+| Not working | 74 | 28.9% |
 
 ## Cards needing work
 
@@ -89,7 +89,6 @@
 | Urza, Powerstone Prodigy | silent | Whenever you discard one or more artifact cards, create a tapped Powerstone token. This ability triggers only once each turn. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Woodcaller Automaton | silent | Prototype | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Arms Race | notice | {3}{R}: You may put an artifact card from your hand onto the battlefield. That artifact gains haste. Sacrifice it at the beginning of the next end step. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Coastal Bulwark | notice | This creature gets +2/+0 as long as you control an Island. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Feldon, Ronom Excavator | notice | Whenever Feldon is dealt damage, exile that many cards from the top of your library. Choose one of them. Until the end of your next turn, you may play that card | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Gix's Command | notice | Choose two — • Put two +1/+1 counters on up to one creature. It gains lifelink until end of turn. • Destroy each creature with power 2 or less. • Return up to t | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Kayla's Command | notice | Choose two — • Create a 2/2 colorless Construct artifact creature token. • Put a +1/+1 counter on a creature you control. It gains double strike until end of tu | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -118,10 +117,10 @@
 | Battery Bearer | handled | Creatures you control have "{T}: Add {C}. This mana can't be spent to cast a nonartifact spell." | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Blanchwood Prowler | handled | When this creature enters, mill three cards. You may put a land card from among the cards milled this way into your hand. If you don't, put a +1/+1 counter on t | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Burrowing Razormaw | handled | When this creature dies, mill four cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Bushwhack | handled | Choose one — • Search your library for a basic land card, reveal it, put it into your hand, then shuffle. • Target creature you control fights target creature y | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Carrion Locust | handled | When this creature enters, exile target card from an opponent's graveyard. If it was a creature card, that player loses 1 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Citanul Stalwart | handled |  |  | Y/Y/- | not_tested |
 | Clay Revenant | handled | This creature enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Coastal Bulwark | handled | This creature gets +2/+0 as long as you control an Island. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Combat Courier | handled | {2}, Sacrifice this creature: Draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Conscripted Infantry | handled | When this creature dies, create a 1/1 colorless Soldier artifact creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Deadly Riposte | handled | Deadly Riposte deals 3 damage to target tapped creature and you gain 2 life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -246,7 +245,7 @@
 ## Fully supported
 
 <details>
-<summary>40 cards</summary>
+<summary>41 cards</summary>
 
 - Aeronaut Cavalry
 - Alloy Animist
@@ -254,6 +253,7 @@
 - Awaken the Woods
 - Bitter Reunion
 - Brotherhood's End
+- Bushwhack
 - Cityscape Leveler
 - Demolition Field
 - Drafna, Founder of Lat-Nam
@@ -356,7 +356,6 @@
 | {M}{M}{M}, {M}, exile ~: each player chooses six lands they control. destroy all other permanents. activate only as a sorcery. | 1 | Urza's Sylex | bro |
 | {M}{M}{M}: return ~ from your graveyard to the battlefield with a +N/+N counter on it. ~ costs {M} less to activate if an opponent controls four or more nonbasi | 1 | Razorlash Transmogrant | bro |
 | ~ can't be countered. destroy target artifact. if its mana value was N or less, draw a card. | 1 | Raze to the Ground | bro |
-| ~ gets +N/+N as long as you control an island. | 1 | Coastal Bulwark | bro |
 | −N: target opponent chooses a permanent they control and returns it to its owner"..."s library. | 1 | Teferi, Temporal Pilgrim | bro |
 
 ## Notes

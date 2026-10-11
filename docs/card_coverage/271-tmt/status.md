@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 90 | 48.1% |
-| Works (untested) | 97 | 51.9% |
+| Tested | 91 | 48.7% |
+| Works (untested) | 96 | 51.3% |
 | Partial (unaudited) | 0 | 0.0% |
 | Not working | 0 | 0.0% |
 
@@ -37,7 +37,6 @@
 | Bot Bashing Time | handled | Bot Bashing Time deals 6 damage to target creature. If that creature would die this turn, exile it instead. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Buzz Bots | handled | When this creature dies, draw a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Casey Jones, Jury-Rig Justiciar | handled | When Casey Jones enters, look at the top four cards of your library. You may reveal an artifact card from among them and put it into your hand. Put the rest on  | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Cool but Rude | handled | Whenever you attack, you may discard a card. If you do, draw a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Cowabunga! | handled | Look at the top four cards of your library. You may reveal a Mutant, Ninja, Turtle, or land card from among them and put it into your hand. Put the rest on the  | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Death in the Family | handled | Exile target creature with mana value 3 or less. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Dimension X | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -127,7 +126,7 @@
 ## Fully supported
 
 <details>
-<summary>90 cards</summary>
+<summary>91 cards</summary>
 
 - April O'Neil, Hacktivist
 - April O'Neil, Kunoichi Trainee
@@ -136,6 +135,7 @@
 - Broadcast Takeover
 - Casey Jones, Vigilante
 - Chrome Dome
+- Cool but Rude
 - Courier of Comestibles
 - Crustacean Commando
 - Dark Leo & Shredder

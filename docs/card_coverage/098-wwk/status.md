@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 27 | 19.0% |
-| Works (untested) | 60 | 42.3% |
+| Tested | 28 | 19.7% |
+| Works (untested) | 61 | 43.0% |
 | Partial (unaudited) | 9 | 6.3% |
-| Not working | 46 | 32.4% |
+| Not working | 44 | 31.0% |
 
 ## Cards needing work
 
@@ -64,8 +64,6 @@
 | Dead Reckoning | notice | You may put target creature card from your graveyard on top of your library. If you do, Dead Reckoning deals damage equal to that card's power to target creatur | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Death's Shadow | notice | This creature gets -X/-X, where X is your life total. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Feral Contest | notice | Put a +1/+1 counter on target creature you control. Another target creature blocks it this turn if able. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Jace, the Mind Sculptor | notice | +2: Look at the top card of target player's library. You may put that card on the bottom of that player's library. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Loam Lion | notice | This creature gets +1/+2 as long as you control a Forest. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Nemesis Trap | notice | If a white creature is attacking, you may pay {B}{B} rather than pay this spell's mana cost. Exile target attacking creature. Create a token that's a copy of th | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Quest for the Goblin Lord | notice | As long as this enchantment has five or more quest counters on it, creatures you control get +2/+0. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Roiling Terrain | notice | Destroy target land, then Roiling Terrain deals damage to that land's controller equal to the number of land cards in that player's graveyard. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
@@ -114,6 +112,7 @@
 | Kitesail | handled | Equipped creature gets +1/+0 and has flying. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Lavaclaw Reaches | handled | This land enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Leatherback Baloth | handled |  |  | Y/-/- | not_tested |
+| Loam Lion | handled | This creature gets +1/+2 as long as you control a Forest. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Marsh Threader | handled | Landwalk | no code needed | Y/-/- | not_tested |
 | Marshal's Anthem | handled | Creatures you control get +1/+1. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Mysteries of the Deep | handled | Draw two cards. Landfall — If you had a land enter the battlefield under your control this turn, draw three cards instead. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -145,7 +144,7 @@
 ## Fully supported
 
 <details>
-<summary>27 cards</summary>
+<summary>28 cards</summary>
 
 - Amulet of Vigor
 - Apex Hawks
@@ -161,6 +160,7 @@
 - Explore
 - Gnarlid Pack
 - Hada Freeblade
+- Jace, the Mind Sculptor
 - Kor Firewalker
 - Lodestone Golem
 - Mordant Dragon
@@ -182,7 +182,6 @@
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
 | Landfall | 3 | Avenger of Zendikar, Calcite Snapper, Caustic Crawler | wwk |
-| +N: look at the top card of target player"..."s library. | 1 | Jace, the Mind Sculptor | wwk |
 | all lands have indestructible. | 1 | Terra Eternal | wwk |
 | as long as there are four or more quest counters on ~, untap all creatures you control during each other player's untap step. | 1 | Quest for Renewal | wwk |
 | as long as ~ has five or more quest counters on it, creatures you control get +N/+N. | 1 | Quest for the Goblin Lord | wwk |
@@ -232,7 +231,6 @@
 | {M}: target land you control becomes an N/N elemental creature until end of turn, where N is the number of allies you control. it's still a land. | 1 | Vastwood Animist | wwk |
 | {M}: target player gains control of target artifact, creature, or land you control. | 1 | Bazaar Trader | wwk |
 | ~ costs {M} less to cast for each attacking creature. create a N/N colorless construct artifact creature token with trample. exile it at the beginning of your n | 1 | Stone Idol Trap | wwk |
-| ~ gets +N/+N as long as you control a forest. | 1 | Loam Lion | wwk |
 | ~ gets -N/-N, where N is your life total. | 1 | Death's Shadow | wwk |
 
 ## Notes

@@ -82,7 +82,7 @@
 | Hour of Eternity | notice | Exile X target creature cards from your graveyard. For each card exiled this way, create a token that's a copy of that card, except it's a 4/4 black Zombie. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Hour of Glory | notice | Exile target creature. If that creature was a God, its controller reveals their hand and exiles all cards from it with the same name as that creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Jace's Defeat | notice | Counter target blue spell. If it was a Jace planeswalker spell, scry 2. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Ramunap Hydra | notice | This creature gets +1/+1 as long as you control a Desert. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
+| Ramunap Hydra | notice | This creature gets +1/+1 as long as there is a Desert card in your graveyard. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Samut, the Tested | notice | −7: Search your library for up to two creature and/or planeswalker cards, put them onto the battlefield, then shuffle. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Solitary Camel | notice | This creature has lifelink as long as you control a Desert or there is a Desert card in your graveyard. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Thorned Moloch | notice | This creature has first strike as long as it's attacking. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -270,7 +270,7 @@
 | whenever ~ deals combat damage to a player, that player discards that many cards. | 1 | Dreamstealer | hou |
 | you may exert ~ as it attacks. when you do, it gets +N/+N until end of turn and can't be blocked by creatures with power N or less ~. | 1 | Rhonas's Stalwart | hou |
 | you may exert ~ as it attacks. when you do, it gets +N/+N until end of turn. | 1 | Khenra Scrapper | hou |
-| ~ gets +N/+N as long as you control a desert. | 1 | Ramunap Hydra | hou |
+| ~ gets +N/+N as long as there is a desert card in your graveyard. | 1 | Ramunap Hydra | hou |
 | ~ gets +N/+N for each card with cycling in your graveyard. | 1 | Vile Manifestation | hou |
 | ~ has first strike as long as it's attacking. | 1 | Thorned Moloch | hou |
 | ~ has lifelink as long as you control a desert or there is a desert card in your graveyard. | 1 | Solitary Camel | hou |

@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 33 | 12.3% |
+| Tested | 34 | 12.6% |
 | Works (untested) | 158 | 58.7% |
 | Partial (unaudited) | 4 | 1.5% |
-| Not working | 74 | 27.5% |
+| Not working | 73 | 27.1% |
 
 ## Cards needing work
 
@@ -50,7 +50,6 @@
 | Grim Reminder | silent | Search your library for a nonland card and reveal it. Each opponent who cast a spell this turn with the same name as that card loses 6 life. Then shuffle. {B}{B | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Jinxed Choker | silent | At the beginning of your end step, target opponent gains control of this artifact and puts a charge counter on it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Leonin Den-Guard | silent | As long as this creature is equipped, it gets +1/+1 and has vigilance. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Leveler | silent | When this creature enters, exile all cards from your library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Liar's Pendulum | silent | {2}, {T}: Choose a card name. Target opponent guesses whether a card with that name is in your hand. You may reveal your hand. If you do and your opponent guess | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Loxodon Peacekeeper | silent | At the beginning of your upkeep, the player with the lowest life total gains control of this creature. If two or more players are tied for lowest life total, yo | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Lumengrid Augur | silent | {1}, {T}: Target player draws a card, then discards a card. If that player discards an artifact card this way, untap this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -266,7 +265,7 @@
 ## Fully supported
 
 <details>
-<summary>33 cards</summary>
+<summary>34 cards</summary>
 
 - Aether Spellbomb
 - Awe Strike
@@ -282,6 +281,7 @@
 - Groffskithur
 - Isochron Scepter
 - Krark's Thumb
+- Leveler
 - Lightning Coils
 - Lightning Greaves
 - Loxodon Punisher
@@ -343,7 +343,6 @@
 | unattach all equipment from target creature. | 1 | Disarm | mrd |
 | when ~ dies, target opponent puts a card from their hand on top of their library. | 1 | Chimney Imp | mrd |
 | when ~ enters, attach all equipment on the battlefield to it. | 1 | Vulshok Battlemaster | mrd |
-| when ~ enters, exile all cards from your library. | 1 | Leveler | mrd |
 | when ~ enters, if you cast it from your hand, destroy all nonartifact, nonblack creatures. they can't be regenerated. | 1 | Reiver Demon | mrd |
 | when ~ enters, look at target opponent's hand. | 1 | Wanderguard Sentry | mrd |
 | when ~ enters, you may pay {M}. if you do, search your library for an equipment card with mana value N or less, put that card onto the battlefield, then shuffle | 1 | Taj-Nar Swordsmith | mrd |

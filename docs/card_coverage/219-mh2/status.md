@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 52 | 20.2% |
-| Works (untested) | 132 | 51.2% |
+| Tested | 53 | 20.5% |
+| Works (untested) | 131 | 50.8% |
 | Partial (unaudited) | 6 | 2.3% |
 | Not working | 68 | 26.4% |
 
@@ -212,7 +212,6 @@
 | Steelfin Whale | handled | Whenever an artifact you control enters, untap this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Step Through | handled | Return two target creatures to their owners' hands. Wizardcycling {2} ({2}, Discard this card: Search your library for a Wizard card, reveal it, put it into you | the engine reads this text and performs it | Y/-/- | not_tested |
 | Storm God's Oracle | handled | {1}: This creature gets +1/-1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
-| Strike It Rich | handled | Create a Treasure token. (It's an artifact with "{T}, Sacrifice this token: Add one mana of any color.") Flashback {2}{R} (You may cast this card from your grav | the engine reads this text and performs it | Y/-/- | not_tested |
 | Sudden Edict | handled | Split second (As long as this spell is on the stack, players can't cast spells or activate abilities that aren't mana abilities.) Target player sacrifices a cre | the engine reads this text and performs it | Y/-/- | not_tested |
 | Sythis, Harvest's Hand | handled | Whenever you cast an enchantment spell, you gain 1 life and draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Tanglepool Bridge | handled | This land enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -236,7 +235,7 @@
 ## Fully supported
 
 <details>
-<summary>52 cards</summary>
+<summary>53 cards</summary>
 
 - Abiding Grace
 - Academy Manufactor
@@ -277,6 +276,7 @@
 - Scion of Draco
 - Skyblade's Boon
 - Solitude
+- Strike It Rich
 - Subtlety
 - Suspend
 - Svyelun of Sea and Sky

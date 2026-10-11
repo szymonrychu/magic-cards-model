@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 51 | 20.0% |
-| Works (untested) | 129 | 50.6% |
+| Tested | 53 | 20.8% |
+| Works (untested) | 128 | 50.2% |
 | Partial (unaudited) | 7 | 2.7% |
-| Not working | 68 | 26.7% |
+| Not working | 67 | 26.3% |
 
 ## Cards needing work
 
@@ -73,7 +73,6 @@
 | Skyclave Shade | silent | Landfall — Whenever a land you control enters, if this card is in your graveyard and it's your turn, you may cast it from your graveyard this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Skyclave Squid | silent | Landfall — Whenever a land you control enters, this creature can attack this turn as though it didn't have defender. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Soaring Thought-Thief | silent | As long as an opponent has eight or more cards in their graveyard, Rogues you control get +1/+0. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Soul Shatter | silent | Each opponent sacrifices a creature or planeswalker with the greatest mana value among creatures and planeswalkers they control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Squad Commander | silent | When this creature enters, create a 1/1 white Kor Warrior creature token for each creature in your party. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Strength of Solidarity | silent | Choose target creature you control. Put a +1/+1 counter on it for each creature in your party. (Your party consists of up to one each of Cleric, Rogue, Warrior, | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Tajuru Paragon | silent | When this creature enters, if it was kicked, reveal the top six cards of your library. You may put a card that shares a creature type with it from among them in | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -110,7 +109,6 @@
 | Base Camp | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Blood Beckoning | handled | Kicker {3} (You may pay an additional {3} as you cast this spell.) Return target creature card from your graveyard to your hand. If this spell was kicked, inste | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Blood Price | handled | Look at the top four cards of your library. Put two of them into your hand and the rest on the bottom of your library in any order. You lose 2 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Bloodchief's Thirst | handled | Kicker {2}{B} (You may pay an additional {2}{B} as you cast this spell.) Destroy target creature or planeswalker with mana value 2 or less. If this spell was ki | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Broken Wings | handled | Destroy target artifact, enchantment, or creature with flying. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Brushfire Elemental | handled | This creature can't be blocked by creatures with power 2 or less. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Bubble Snare | handled | When this Aura enters, if it was kicked, tap enchanted creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -234,7 +232,7 @@
 ## Fully supported
 
 <details>
-<summary>51 cards</summary>
+<summary>53 cards</summary>
 
 - Agadeem's Awakening // Agadeem, the Undercrypt
 - Akoum Hellhound
@@ -244,6 +242,7 @@
 - Archpriest of Iona
 - Beyeen Veil // Beyeen Coast
 - Blackbloom Rogue // Blackbloom Bog
+- Bloodchief's Thirst
 - Branchloft Pathway // Boulderloft Pathway
 - Brightclimb Pathway // Grimclimb Pathway
 - Cleansing Wildfire
@@ -281,6 +280,7 @@
 - Shatterskull Charger
 - Shatterskull Smashing // Shatterskull, the Hammer Pass
 - Skyclave Apparition
+- Soul Shatter
 - Springmantle Cleric
 - Synchronized Spellcraft
 - Tazri, Beacon of Unity
@@ -311,7 +311,6 @@
 | cowards can't block warriors. | 1 | Kargan Intimidator | znr |
 | create two N/N white angel warrior creature tokens with flying. non-angel creatures you control gain indestructible until your next turn. | 1 | Emeria's Call // Emeria, Shattered Skyclave | znr |
 | during turns other than yours, ~ gets +N/+N. | 1 | Mesa Lynx | znr |
-| each opponent sacrifices a creature or planeswalker with the greatest mana value among creatures and planeswalkers they control. | 1 | Soul Shatter | znr |
 | enchanted land is a N/N elemental creature with reach and haste. it's still a land. | 1 | Nissa's Zendikon | znr |
 | enchanted land loses all land types and abilities and has "..." and "..." | 1 | Lithoform Blight | znr |
 | equipped creature gets +N/+N for each creature in your party and has menace. | 1 | Ravager's Mace | znr |

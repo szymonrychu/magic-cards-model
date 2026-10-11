@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 49 | 19.8% |
+| Tested | 50 | 20.2% |
 | Works (untested) | 124 | 50.2% |
 | Partial (unaudited) | 4 | 1.6% |
-| Not working | 70 | 28.3% |
+| Not working | 69 | 27.9% |
 
 ## Cards needing work
 
@@ -89,7 +89,6 @@
 | Gate Hound | notice | Creatures you control have vigilance as long as this creature is enchanted. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Gaze of the Gorgon | notice | ({B/G} can be paid with either {B} or {G}.) Regenerate target creature. At this turn's next end of combat, destroy all creatures that blocked or were blocked by | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Leave No Trace | notice | Radiance — Destroy target enchantment and each other enchantment that shares a color with it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Lurking Informant | notice | {2}, {T}: Look at the top card of target player's library. You may put that card into that player's graveyard. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Rally the Righteous | notice | Radiance — Untap target creature and each other creature that shares a color with it. Those creatures get +2/+0 until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Remand | notice | Counter target spell. If that spell is countered this way, put it into its owner's hand instead of into that player's graveyard. Draw a card. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Transluminant | notice | {W}, Sacrifice this creature: Create a 1/1 white Spirit creature token with flying at the beginning of the next end step. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
@@ -228,7 +227,7 @@
 ## Fully supported
 
 <details>
-<summary>49 cards</summary>
+<summary>50 cards</summary>
 
 - Blazing Archon
 - Boros Fury-Shield
@@ -259,6 +258,7 @@
 - Light of Sanction
 - Lightning Helix
 - Loxodon Gatekeeper
+- Lurking Informant
 - Mausoleum Turnkey
 - Mnemonic Nexus
 - Molten Sentry
@@ -341,7 +341,6 @@
 | {M}, sacrifice a creature: look at the top two cards of target opponent's library, then exile one of them. | 1 | Thoughtpicker Witch | rav |
 | {M}, sacrifice ~: create a N/N white spirit creature token with flying at the beginning of the next end step. | 1 | Transluminant | rav |
 | {M}, sacrifice ~: exile target creature. return the exiled card to the battlefield under its owner's control at the beginning of the next end step. | 1 | Voyager Staff | rav |
-| {M}, {M}: look at the top card of target player"..."s graveyard. | 1 | Lurking Informant | rav |
 | {M}: choose a basic land type. each land you control becomes that type until end of turn. | 1 | Terraformer | rav |
 | {M}: choose a player. that player adds one mana of any color they choose. | 1 | Spectral Searchlight | rav |
 | {M}: prevent the next N damage that would be dealt to ~ ~. | 1 | Ordruun Commando | rav |

@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 45 | 15.7% |
+| Tested | 46 | 16.0% |
 | Works (untested) | 139 | 48.4% |
 | Partial (unaudited) | 8 | 2.8% |
-| Not working | 95 | 33.1% |
+| Not working | 94 | 32.8% |
 
 ## Cards needing work
 
@@ -109,7 +109,6 @@
 | Absorb Identity | notice | Return target creature to its owner's hand. You may have Shapeshifters you control become copies of that creature until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Axgard Armory | notice | {1}{R}{R}{W}, {T}, Sacrifice this land: Search your library for an Aura card and/or an Equipment card, reveal them, put them into your hand, then shuffle. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Divine Gambit | notice | Exile target artifact, creature, or enchantment an opponent controls. That player may put a permanent card from their hand onto the battlefield. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Draugr Thought-Thief | notice | When this creature enters, look at the top card of target player's library. You may put that card into their graveyard. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Forging the Tyrite Sword | notice | III — Search your library for a card named Halvar, God of Battle or an Equipment card, reveal it, put it into your hand, then shuffle. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Kaya the Inexorable | notice | +1: Put a ghostform counter on up to one target nontoken creature. It gains "When this creature dies or is put into exile, return it to its owner's hand and cre | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | King Harald's Revenge | notice | Until end of turn, target creature gets +1/+1 for each creature you control and gains trample. It must be blocked this turn if able. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -272,7 +271,7 @@
 ## Fully supported
 
 <details>
-<summary>45 cards</summary>
+<summary>46 cards</summary>
 
 - Armed and Armored
 - Axgard Braggart
@@ -290,6 +289,7 @@
 - Deathknell Berserker
 - Dragonkin Berserker
 - Draugr Necromancer
+- Draugr Thought-Thief
 - Dual Strike
 - Duskwielder
 - Esika's Chariot
@@ -392,7 +392,6 @@
 | when ~ enters, artifacts and creatures target opponent controls don"..."s next untap step. | 1 | Icebreaker Kraken | khm |
 | when ~ enters, choose one — • remove N counters from target permanent, where N is the number of elves you control. • target creature an opponent controls gets - | 1 | Thornmantle Striker | khm |
 | when ~ enters, if you cast it from your hand, return all permanents to their owners' hands except for giants, wizards, and lands. | 1 | Cyclone Summoner | khm |
-| when ~ enters, look at the top card of target player's library. you may put that card into their graveyard. | 1 | Draugr Thought-Thief | khm |
 | when ~ enters, search your library for an instant or sorcery card with the same name as a card in your graveyard, reveal it, put it into your hand, then shuffle | 1 | Frostpyre Arcanist | khm |
 | when ~ enters, you may exile any number of non-angel creatures you control until ~ leaves the battlefield. | 1 | Glorious Protector | khm |
 | when ~ enters, you may pay {M}. if you do, create a N/N green elf warrior creature token, then attach ~ to it. | 1 | Elven Bow | khm |

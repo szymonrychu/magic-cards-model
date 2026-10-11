@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 44 | 17.4% |
-| Works (untested) | 140 | 55.3% |
+| Tested | 45 | 17.8% |
+| Works (untested) | 139 | 54.9% |
 | Partial (unaudited) | 3 | 1.2% |
 | Not working | 66 | 26.1% |
 
@@ -212,7 +212,6 @@
 | Sleep with the Fishes | handled | When this Aura enters, tap enchanted creature and you create a 1/1 blue Fish creature token with "This token can't be blocked." | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Social Climber | handled | Alliance — Whenever another creature you control enters, you gain 1 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Spara's Adjudicators | handled | When this creature enters, target creature an opponent controls can't attack or block until your next turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Spara's Headquarters | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Speakeasy Server | handled | When this creature enters, you gain 1 life for each other creature you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Sticky Fingers | handled | Enchanted creature has menace and "Whenever this creature deals combat damage to a player, create a Treasure token." | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Stimulus Package | handled | When this enchantment enters, create two Treasure tokens. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -239,7 +238,7 @@
 ## Fully supported
 
 <details>
-<summary>44 cards</summary>
+<summary>45 cards</summary>
 
 - An Offer You Can't Refuse
 - Angel of Suffering
@@ -280,6 +279,7 @@
 - Scuttling Butler
 - Security Rhox
 - Shadow of Mortality
+- Spara's Headquarters
 - Structural Assault
 - Take to the Streets
 - Urabrask, Heretic Praetor

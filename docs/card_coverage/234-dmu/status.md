@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 44 | 18.0% |
-| Works (untested) | 119 | 48.8% |
+| Tested | 45 | 18.4% |
+| Works (untested) | 118 | 48.4% |
 | Partial (unaudited) | 2 | 0.8% |
 | Not working | 79 | 32.4% |
 
@@ -209,7 +209,6 @@
 | Tangled Islet | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Tattered Apparition | handled | {1}{B}: This creature gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Tatyova, Steward of Tides | handled | Land creatures you control have flying. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Tear Asunder | handled | Kicker {1}{B} (You may pay an additional {1}{B} as you cast this spell.) Exile target artifact or enchantment. If this spell was kicked, exile target nonland pe | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Tidepool Turtle | handled | {2}{U}: Scry 1. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Timeless Lotus | handled | Timeless Lotus enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Tolarian Geyser | handled | Kicker {W} (You may pay an additional {W} as you cast this spell.) Return target creature to its owner's hand. Draw a card. If this spell was kicked, you gain 3 | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -230,7 +229,7 @@
 ## Fully supported
 
 <details>
-<summary>44 cards</summary>
+<summary>45 cards</summary>
 
 - Aggressive Sabotage
 - Ajani, Sleeper Agent
@@ -268,6 +267,7 @@
 - Squee, Dubious Monarch
 - Stenn, Paranoid Partisan
 - Tail Swipe
+- Tear Asunder
 - Temporal Firestorm
 - The Raven Man
 - Tyrannical Pitlord

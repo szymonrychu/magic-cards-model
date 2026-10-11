@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 15 | 8.3% |
-| Works (untested) | 130 | 72.2% |
+| Tested | 16 | 8.9% |
+| Works (untested) | 129 | 71.7% |
 | Partial (unaudited) | 1 | 0.6% |
 | Not working | 34 | 18.9% |
 
@@ -167,7 +167,6 @@
 | Sparktongue Dragon | handled | When this creature enters, you may pay {2}{R}. When you do, it deals 3 damage to any target. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Spit Flame | handled | Spit Flame deals 4 damage to target creature. Whenever a Dragon you control enters, you may pay {R}. If you do, return this card from your graveyard to your han | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Star-Crowned Stag | handled | Whenever this creature attacks, tap target creature defending player controls. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Stitcher's Supplier | handled | When this creature enters or dies, mill three cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Strangling Spores | handled | Target creature gets -3/-3 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Surge Mare | handled | This creature can't be blocked by green creatures. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Suspicious Bookcase | handled | {3}, {T}: Target creature can't be blocked this turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -195,7 +194,7 @@
 ## Fully supported
 
 <details>
-<summary>15 cards</summary>
+<summary>16 cards</summary>
 
 - Alpine Moon
 - Arisen Gorgon
@@ -209,6 +208,7 @@
 - Nicol Bolas, the Ravager // Nicol Bolas, the Arisen
 - One with the Machine
 - Sarkhan, Fireblood
+- Stitcher's Supplier
 - Suncleanser
 - Supreme Phantom
 - Vine Mare

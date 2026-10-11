@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 38 | 16.7% |
-| Works (untested) | 101 | 44.3% |
+| Tested | 39 | 17.1% |
+| Works (untested) | 100 | 43.9% |
 | Partial (unaudited) | 9 | 3.9% |
 | Not working | 80 | 35.1% |
 
@@ -215,12 +215,11 @@
 | Whirlwind of Thought | handled | Whenever you cast a noncreature spell, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Wilt | handled | Destroy target artifact or enchantment. Cycling {2} ({2}, Discard this card: Draw a card.) | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Zagoth Crystal | handled | Cycling | machines/keywords.py (off_zone_abilities: cycling) | Y/Y/- | not_tested |
-| Zagoth Triome | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
 
 ## Fully supported
 
 <details>
-<summary>38 cards</summary>
+<summary>39 cards</summary>
 
 - Back for More
 - Blade Banish
@@ -259,6 +258,7 @@
 - Unpredictable Cyclone
 - Wingfold Pteron
 - Yorion, Sky Nomad
+- Zagoth Triome
 - Zenith Flare
 
 </details>
