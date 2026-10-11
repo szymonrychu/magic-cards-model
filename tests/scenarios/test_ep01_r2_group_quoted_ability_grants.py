@@ -29,8 +29,8 @@ import pytest
 
 from magic_cards_model.machines import Step
 from magic_cards_model.models import Zone
-from magic_cards_model.models.card import Color
-from magic_cards_model.models.token import create_predefined_tokens
+from magic_cards_model.models.card import Color, Supertype
+from magic_cards_model.models.token import TokenState, create_predefined_tokens
 from tests.scenarios.harness import Scenario
 
 
@@ -653,3 +653,192 @@ def test_valley_floodcaller_ignores_a_creature_spell():
     scenario.pass_until_resolved()
     assert chars(scenario, birds).power_toughness == (0, 1)
     assert birds.tapped
+
+
+# --------------------------------------------------------------------------
+# A d20 results table that makes tapped and attacking token copies (Delina)
+# --------------------------------------------------------------------------
+
+
+def die_seed_for(rolls: list[int]) -> int:
+    """A `shuffle_seed` under which the next dice rolled come out as `rolls`
+    (CR 706.2's randomness is seeded by `Game.roll_dice`; this only picks the
+    seed, the engine still rolls)."""
+    from random import Random
+
+    for seed in range(200000):
+        if all(
+            Random(f"{seed}:{index}:die").randint(1, 20) == roll  # noqa: S311
+            for index, roll in enumerate(rolls)
+        ):
+            return seed
+    raise AssertionError(f"no seed found for {rolls}")
+
+
+def delina_attack(rolls: list[int], *, may_roll_again: bool = True):
+    scenario = board(
+        ["Delina, Wild Mage", "Serra Angel"], ["Grizzly Bears"], step=Step.DECLARE_ATTACKERS
+    )
+    scenario.game.shuffle_seed = die_seed_for(rolls)
+    delina = find_all(scenario, "Delina, Wild Mage", "alice")[0]
+    angel = find_all(scenario, "Serra Angel", "alice")[0]
+    scenario.will_take_the_may(may_roll_again, times=None)
+    scenario.will_choose_targets(angel)
+    scenario.attack_with(delina, defending="bob")
+    scenario.game.put_triggers_on_stack()
+    scenario.pass_until_resolved()
+    return scenario, delina, angel
+
+
+def angel_tokens(scenario):
+    return [
+        card
+        for card in scenario.game.battlefield
+        if card.name == "Serra Angel" and isinstance(card, TokenState)
+    ]
+
+
+def test_delina_low_roll_makes_one_tapped_attacking_copy_that_is_exiled_at_end_of_combat():
+    """1-14: a token copy of the chosen creature, tapped and attacking, with
+    "At end of combat, exile this token." (CR 707.9a, CR 508.4)."""
+    scenario, _, angel = delina_attack([7])
+    (token,) = angel_tokens(scenario)
+    assert token.tapped
+    assert scenario.game.combat.attack_by(token.id) is not None
+    assert chars(scenario, token).has_ability("Flying")
+    assert not angel.tapped or angel is not token
+    assert len(angel_tokens(scenario)) == 1, "still there before end of combat"
+    while scenario.step is not Step.END_OF_COMBAT:
+        scenario.advance()
+        scenario.game.put_triggers_on_stack()
+        scenario.pass_until_resolved()
+    assert angel_tokens(scenario) == []
+    assert angel.zone is Zone.BATTLEFIELD, "only the copy is exiled"
+
+
+def test_delina_copying_herself_makes_a_nonlegendary_copy():
+    scenario = board(["Delina, Wild Mage"], [], step=Step.DECLARE_ATTACKERS)
+    scenario.game.shuffle_seed = die_seed_for([3])
+    delina = find_all(scenario, "Delina, Wild Mage", "alice")[0]
+    scenario.will_choose_targets(delina)
+    scenario.attack_with(delina, defending="bob")
+    scenario.game.put_triggers_on_stack()
+    scenario.pass_until_resolved()
+    copies = [
+        c for c in scenario.game.battlefield if c.name == delina.name and isinstance(c, TokenState)
+    ]
+    assert len(copies) == 1
+    assert Supertype.LEGENDARY not in scenario.game.characteristics_of(copies[0]).supertypes
+    assert delina.zone is Zone.BATTLEFIELD, "the legend rule did not take Delina"
+
+
+def test_delina_high_roll_makes_a_token_and_may_roll_again():
+    """15-20: one token, then "You may roll again": a second roll of 4 makes a
+    second token, and a second high roll would go on."""
+    scenario, _, _ = delina_attack([16, 4])
+    assert len(angel_tokens(scenario)) == 2
+
+
+def test_delina_high_roll_declining_to_roll_again_stops_at_one_token():
+    scenario, _, _ = delina_attack([16, 4], may_roll_again=False)
+    assert len(angel_tokens(scenario)) == 1
+
+
+def test_delina_keeps_rolling_while_it_rolls_high_and_chooses_to():
+    scenario, _, _ = delina_attack([20, 15, 2])
+    assert len(angel_tokens(scenario)) == 3
+
+
+def test_delina_low_roll_never_offers_another_roll():
+    scenario, _, _ = delina_attack([14, 20])
+    assert len(angel_tokens(scenario)) == 1
+
+
+def scourge_targeted_by_alice(scourge_owner: str):
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Shock"],
+            battlefield=["Mountain", *(["Eternal Scourge"] if scourge_owner == "alice" else [])],
+        )
+        .player("bob", battlefield=["Eternal Scourge"] if scourge_owner == "bob" else [])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scourge = find_all(scenario, "Eternal Scourge", scourge_owner)[0]
+    (mountain,) = scenario.untapped_sources("Mountain", username="alice")
+    scenario.cast_onto_stack("Shock", mountain, username="alice", targets=[scourge])
+    scenario.pass_until_resolved()
+    return scenario, scourge
+
+
+def test_exile_this_creature_exiles_its_own_source_when_an_opponent_targets_it():
+    """The reader behind Delina's token line ("exile this token") also reads
+    Eternal Scourge's "exile this creature": the source leaves for exile
+    before the Shock that targeted it resolves (CR 406.1)."""
+    scenario, scourge = scourge_targeted_by_alice("bob")
+    assert scourge.zone is Zone.EXILE
+
+
+def test_exile_this_creature_is_not_triggered_by_its_controllers_own_spell():
+    scenario, scourge = scourge_targeted_by_alice("alice")
+    assert scourge.zone is not Zone.EXILE
+
+
+# --------------------------------------------------------------------------
+# The audit module itself: it asks the production readers, so a line neither
+# reads stays unaudited
+# --------------------------------------------------------------------------
+
+#: Ability-word prefixes ("Delirium - ...") are not part of the sentence read.
+ATTACHED_OR_GROUP_PREFIXES = (
+    "Enchanted ",
+    "Equipped ",
+    "Elves you control have",
+    "All ",
+    "Other ",
+    "Foods you control",
+    "Delirium",
+    "Fathomless descent",
+    "Hellbent",
+)
+
+
+def audited_lines():
+    from magic_cards_model.support import classify_clauses
+    from tests.cards import card
+
+    for name, prefix in LISTED_LINES:
+        printing = card(name)
+        for clause in classify_clauses(printing):
+            if clause.text.startswith(prefix):
+                yield pytest.param(printing, clause.text, id=f"{name}: {prefix}")
+
+
+@pytest.mark.parametrize(("printing", "text"), list(audited_lines()))
+def test_the_audit_module_credits_every_listed_attached_and_group_line(printing, text):
+    from magic_cards_model.static_audit.attached_and_quoted_grants import (
+        reads_attached_and_quoted_grants_line,
+    )
+
+    assert reads_attached_and_quoted_grants_line(printing, text, card_name=printing.name)
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "Enchanted creature gets +X/+X, where X is the number of flumphs in the bar.",
+        "Enchanted land is a 4/4 creature and then explodes.",
+        'Elves you control have "Whenever you chant, summon a thing" unless you blink.',
+        "Creatures you control get +1/+1.",
+        "Flying",
+    ],
+)
+def test_the_audit_module_refuses_a_line_the_readers_do_not_read(text):
+    from magic_cards_model.static_audit.attached_and_quoted_grants import (
+        reads_attached_and_quoted_grants_line,
+    )
+    from tests.cards import card
+
+    assert not reads_attached_and_quoted_grants_line(card("Grizzly Bears"), text)

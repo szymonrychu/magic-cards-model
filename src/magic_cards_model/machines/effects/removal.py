@@ -6823,6 +6823,34 @@ def _readable_ability_effect(text: str) -> AbilityEffect | None:
     return effect
 
 
+#: "Exile this token." / "Exile this creature." - the ability's own source
+#: leaves the battlefield for exile (CR 406.1), but only if it is still the
+#: object the ability came from (CR 400.7): the closing line of a granted or
+#: copied "At end of combat, exile this token." (CR 707.9a).
+_EXILE_SELF_RE = re.compile(r"^exile this (?P<noun>[a-z]+)\.?$", re.IGNORECASE)
+
+
+@ABILITY_TEXT.rung("s27")
+def _parse_exile_self(text: str) -> AbilityEffect | None:
+    """`_EXILE_SELF_RE`'s shape."""
+    match = _EXILE_SELF_RE.fullmatch(" ".join(text.split()))
+    if match is None:
+        return None
+    if match.group("noun").lower() not in _SACRIFICE_SELF_NOUNS | {"token"}:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        source = ability.source(game)
+        if (
+            source is not None
+            and source.zone is Zone.BATTLEFIELD
+            and (ability.source_stamp is None or source.zone_change_stamp == ability.source_stamp)
+        ):
+            game.exile_permanent(source)
+
+    return effect
+
+
 #: "tap this creature" / "tap this creature and it deals 9 damage to you" /
 #: "tap this creature and you lose 4 life" - the "If you can't" rider of a
 #: Demon's upkeep sacrifice (CR 701.26a: tapping turns the permanent sideways).

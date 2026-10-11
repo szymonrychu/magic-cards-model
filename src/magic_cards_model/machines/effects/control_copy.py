@@ -1075,6 +1075,10 @@ _EXCEPT_SUBTYPE_PART_RE = re.compile(
     r"(?P<subtype>[A-Z][a-z]+) in addition to its other (?:creature )?types$"
 )
 _EXCEPT_HAS_PART_RE = re.compile(r"^(?:it )?has (?P<keywords>[a-z][a-z ]*)$", re.IGNORECASE)
+#: CR 707.9a's quoted form, stashed out of the list before it is split on
+#: commas (Delina: `it has "At end of combat, exile this token."`).
+_EXCEPT_QUOTE_RE = re.compile(r'["\u201c](?P<ability>[^"\u201d]+)["\u201d]')
+_EXCEPT_HAS_QUOTE_PART_RE = re.compile(r"^(?:it )?has \x00(?P<index>\d+)\x00$", re.IGNORECASE)
 
 
 def _read_copy_exception_list(except_text: str | None) -> _CopyExceptionList | None:
@@ -1086,7 +1090,14 @@ def _read_copy_exception_list(except_text: str | None) -> _CopyExceptionList | N
     `_read_token_copy_except` already reads keep their own reader."""
     if except_text is None:
         return None
-    stripped = " ".join(except_text.strip().split()).rstrip(".")
+    quoted: list[str] = []
+
+    def stash(match: re.Match[str]) -> str:
+        quoted.append(match.group("ability").strip())
+        return f"\x00{len(quoted) - 1}\x00"
+
+    stripped = _EXCEPT_QUOTE_RE.sub(stash, " ".join(except_text.strip().split()))
+    stripped = stripped.rstrip(".")
     parts = [part.strip() for part in re.split(r",\s*(?:and\s+)?|\s+and\s+", stripped) if part]
     not_legendary = False
     subtype: str | None = None
@@ -1100,6 +1111,8 @@ def _read_copy_exception_list(except_text: str | None) -> _CopyExceptionList | N
             subtype = typed.group("subtype")
             if typed.group("power") is not None:
                 power, toughness = int(typed.group("power")), int(typed.group("toughness"))
+        elif (granted := _EXCEPT_HAS_QUOTE_PART_RE.fullmatch(part)) is not None:
+            abilities.append(quoted[int(granted.group("index"))])
         elif (has := _EXCEPT_HAS_PART_RE.fullmatch(part)) is not None:
             keywords = split_and_validate_keywords(has.group("keywords"))
             if keywords is None:
