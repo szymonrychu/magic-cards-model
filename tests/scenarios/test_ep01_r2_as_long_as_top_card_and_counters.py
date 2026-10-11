@@ -102,10 +102,7 @@ def test_other_creatures_are_not_pumped_by_the_channelers_line():
 def test_granted_mana_ability_actually_taps_for_two_mana_of_one_color():
     scenario = _board([MUL_DAYA], ["Forest"])
     channelers = scenario.find(MUL_DAYA, Zone.BATTLEFIELD, "alice")
-    assert any(
-        ability.raw == TWO_MANA
-        for ability in scenario.game.activated_abilities(channelers)
-    )
+    assert any(ability.raw == TWO_MANA for ability in scenario.game.activated_abilities(channelers))
 
 
 # -- Vampire Nocturnus ---------------------------------------------------------

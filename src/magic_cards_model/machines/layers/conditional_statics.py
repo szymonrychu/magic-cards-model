@@ -134,7 +134,7 @@ class _Parsed(NamedTuple):
 # -- conditions ---------------------------------------------------------------
 
 _SELF = r"(?:this (?:creature|permanent|artifact|enchantment|land|vehicle|token|equipment|aura))"
-_ARTICLE = r"(?:a|an|another)"
+_ARTICLE = r"(?:another|an|a)"
 
 _TOP_CARD_RE = re.compile(
     r"^the top card of your library is (?:an? )?(?P<quality>.+?)(?: card)?$", re.IGNORECASE
@@ -147,7 +147,8 @@ _SOURCE_COUNTER_RE = re.compile(
 _YOU_CONTROL_RE = re.compile(
     r"^(?P<who>you|an opponent|any player|your opponents?) controls? "
     rf"(?:(?P<count>{COUNT}) or more(?P<other_n> other)?"
-    rf"|(?P<article>{_ARTICLE})"
+    rf"|(?P<article>{_ARTICLE})\b"
+    r"|(?P<none>no)\b"
     rf"|(?P<at_least>at least {COUNT})(?P<other_al> other)?) ?"
     r"(?P<quality>.+)$",
     re.IGNORECASE,
@@ -376,9 +377,11 @@ def _controls_atom(match: re.Match[str]) -> ControlsAtom | None:
             return None
         threshold = counted
         other = bool(match.group("other_al"))
-    quality = _quality(match.group("quality"))
+    quality = _quality(match.group("quality").strip())
     if quality is None:
         return None
+    if match.group("none"):
+        return ControlsAtom(who=who, quality=quality, threshold=0, maximum=0, other=other)
     return ControlsAtom(who=who, quality=quality, threshold=threshold, other=other)
 
 

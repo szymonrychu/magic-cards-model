@@ -1965,6 +1965,8 @@ class ControlsAtom(EngineModel):
     who: Literal["you", "opponent", "any"] = "you"
     quality: QualityTest = Field(default_factory=QualityTest)
     threshold: int = 1
+    maximum: int | None = None
+    """ "controls no creatures": at most this many (0)."""
     other: bool = False
 
     def holds(self, source: Characteristics, target: Characteristics, board: Board) -> bool:
@@ -1979,7 +1981,7 @@ class ControlsAtom(EngineModel):
                 continue
             if self.quality.matches(each):
                 count += 1
-        return count >= self.threshold
+        return count >= self.threshold and (self.maximum is None or count <= self.maximum)
 
 
 class SourceCountersAtom(EngineModel):
