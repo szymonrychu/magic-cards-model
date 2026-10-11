@@ -310,7 +310,7 @@ def test_narcolepsy_taps_an_untapped_creature_at_upkeep():
     _step_begins(scenario, Step.UPKEEP, "bob")
     assert scenario.stack_names() == ["Narcolepsy's triggered ability"]
     scenario.pass_until_resolved()
-    bears.tap()
+    assert bears.tapped, "the trigger's 'tap it' taps the enchanted creature (CR 303.4b)"
     _step_begins(scenario, Step.UPKEEP, "bob")
     assert scenario.stack_names() == []
 

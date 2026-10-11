@@ -881,6 +881,11 @@ def _restore_quotes(text: str, quotes: list[str]) -> str:
 
 
 @functools.lru_cache(maxsize=4096)
+def _is_conditional(text: str) -> bool:
+    lowered = text.lower()
+    return "as long as" in lowered or lowered.startswith("during your ")
+
+
 def _parse(sentence: str) -> _Parsed | None:
     line = (
         _ABILITY_WORD_RE.sub(lambda m: m.group("rest"), sentence.strip(), count=1)
@@ -890,7 +895,13 @@ def _parse(sentence: str) -> _Parsed | None:
     full_line = line
     line, quotes = _lift_quotes(line)
     lowered = line.lower()
-    if "as long as" not in lowered and not lowered.startswith("during your ") and not quotes:
+    # A sentence with no condition of its own is read only for a granted
+    # quoted ability that carries one (Sedge Sliver's "All Sliver creatures
+    # have "This creature gets +1/+1 as long as you control a Swamp.""); a
+    # plain quoted grant ("It has "Sacrifice this token: Add {C}."", a token's
+    # own text) is no conditional static.
+    conditional_quote = any(_is_conditional(q) for q in quotes)
+    if not _is_conditional(lowered) and not conditional_quote:
         return None
     condition = _Condition()
     if match := _DURING_YOUR_TURN_RE.fullmatch(line):
@@ -898,7 +909,7 @@ def _parse(sentence: str) -> _Parsed | None:
         condition = _Condition(gates=(_your_step_gate(steps) if steps else _your_turn_gate,))
         line = match.group("rest")
     candidates: list[tuple[str | None, str]] = []
-    if (condition.gates or quotes) and "as long as" not in line.lower():
+    if (condition.gates or conditional_quote) and "as long as" not in line.lower():
         candidates.append((None, line))
     if match := _LEADING_RE.fullmatch(line):
         candidates.append((match.group("condition"), match.group("body")))

@@ -1843,7 +1843,11 @@ def additional_trigger_times(
         # every shape but "equipped creature", which names its object outright.
         yours = controller == ability.controller
         for printed in _computed_ability_lines(game, permanent):
-            if gated := _SELF_GATED_ADDITIONAL_TRIGGER_RE.match(printed.strip()):
+            gated = _SELF_GATED_ADDITIONAL_TRIGGER_RE.match(printed.strip())
+            # Only Cloud's "<self> or an Equipment attached to it" is this
+            # shape's; Bifur's "a Dwarf you control" behind its enduring-story
+            # designation is `_multiplier_line`'s, below.
+            if gated and _SELF_OR_ATTACHED_WHOSE_RE.match(gated["whose"].strip()):
                 if (
                     yours
                     and _self_or_attached_matches(gated["whose"], permanent, source)

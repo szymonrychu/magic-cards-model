@@ -2808,6 +2808,37 @@ def _synthetic_permanent(
     )
 
 
+class _ProbePermanentMemo:
+    """`_synthetic_permanent` for `_condition_can_fire`'s probe board, memoised
+    per (probe printing, controller, token, tapped, counter kind): the probes
+    are pool printings that recur across most triggers, every one is only read
+    (each call re-binds it to that call's throwaway `Game`), and building a
+    `CardState` is most of what the closure costs. The instance's
+    `cache_clear`/`cache_info` let a cold-cache measurement empty it like every
+    `functools` memo."""
+
+    def __init__(self) -> None:
+        self._states: dict[tuple[int, str, bool, bool, str | None], tuple[Card, CardState]] = {}
+        self.cache_clear: Callable[[], None] = self._states.clear
+        self.cache_info: Callable[[], int] = self._states.__len__
+
+    def __call__(
+        self, card: Card, *, controller: str, token: bool, tapped: bool, counter_kind: str | None
+    ) -> CardState:
+        key = (id(card), controller, token, tapped, counter_kind)
+        held = self._states.get(key)
+        if held is None or held[0] is not card:
+            state = _synthetic_permanent(
+                card, controller=controller, token=token, tapped=tapped, counter_kind=counter_kind
+            )
+            held = (card, state)
+            self._states[key] = held
+        return held[1]
+
+
+_probe_permanent = _ProbePermanentMemo()
+
+
 def _condition_can_fire(printing: Card, ability: TriggeredAbility) -> bool | None:
     """Whether some real, reachable permanent could satisfy `ability`'s own
     parsed condition through the production `condition_matches` (CR 603.2) -
@@ -2899,7 +2930,7 @@ def _condition_can_fire(printing: Card, ability: TriggeredAbility) -> bool | Non
         for controller_name in ("sweep_you", "sweep_opp"):
             for token in token_choices:
                 for tapped in tapped_choices:
-                    state = _synthetic_permanent(
+                    state = _probe_permanent(
                         probe,
                         controller=controller_name,
                         token=token,
