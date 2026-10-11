@@ -20,12 +20,14 @@ from ...models.card_state import (
 from ...numbers import COUNT, parse_count, where_x_pattern
 from ..abilities import (
     ActivatedAbility,
-    _is_activated_mana_ability as is_activated_mana_ability,
     _split_top_level_sentences,
     layer_readable_sentences,
     leveler_lines,
     parse_granted_ability_lines,
     self_normalized_effect_text,
+)
+from ..abilities import (
+    _is_activated_mana_ability as is_activated_mana_ability,
 )
 from ..combat import (
     ASSIGN_AS_THOUGH_UNBLOCKED_TEXT,
