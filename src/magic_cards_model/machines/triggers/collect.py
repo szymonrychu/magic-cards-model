@@ -1693,6 +1693,36 @@ _TYPED_ADDITIONAL_TRIGGER_RE = re.compile(
 )
 
 
+#: CR 603.2d's shape behind a board condition on the multiplier itself: "As
+#: long as Cloud is equipped, if a triggered ability of Cloud or an Equipment
+#: attached to it triggers, that ability triggers an additional time." (Cloud,
+#: Midgar Mercenary). The condition is read by `Game.condition_holds` about the
+#: multiplier's controller, the "whose" as the multiplier itself or an Equipment
+#: or Aura attached to it.
+_SELF_GATED_ADDITIONAL_TRIGGER_RE = re.compile(
+    r"^as long as (?P<condition>[^,]+), if a triggered ability of (?P<whose>.+?) triggers, "
+    r"that ability triggers an additional time\.?$",
+    re.IGNORECASE,
+)
+_SELF_OR_ATTACHED_WHOSE_RE = re.compile(
+    r"^(?P<self>.+?) or an? (?P<kind>equipment|aura) attached to (?:it|him|her|them)$",
+    re.IGNORECASE,
+)
+
+
+def _self_or_attached_matches(whose: str, multiplier: CardState, source: CardState) -> bool:
+    """Whether `source` is the multiplier itself or the Equipment/Aura attached
+    to it that a "<self> or an Equipment attached to it" names."""
+    match = _SELF_OR_ATTACHED_WHOSE_RE.match(whose.strip())
+    if match is None:
+        return False
+    if source.id == multiplier.id:
+        return True
+    return source.attached_to == multiplier.id and any(
+        subtype.lower() == match["kind"].lower() for subtype in source.subtypes
+    )
+
+
 def _multiplier_line(line: str) -> tuple[str, str | None]:
     """A static line with its designation gate split off, and the gate."""
     gated = split_as_long_as(line.strip())
@@ -1712,7 +1742,10 @@ def is_additional_trigger_line(text: str) -> bool:
         cause = _ENTERING_CAUSE_RE.match(match["cause"].strip())
         return cause is not None and _cause_words(cause["types"]) is not None
     typed = _TYPED_ADDITIONAL_TRIGGER_RE.match(line)
-    return typed is not None and _typed_whose(typed["whose"]) is not None
+    if typed is not None and _typed_whose(typed["whose"]) is not None:
+        return True
+    gated = _SELF_GATED_ADDITIONAL_TRIGGER_RE.match(text.strip())
+    return gated is not None and _SELF_OR_ATTACHED_WHOSE_RE.match(gated["whose"].strip()) is not None
 
 
 def _computed_ability_lines(game: "Game", permanent: CardState) -> tuple[str, ...]:
@@ -1769,6 +1802,14 @@ def additional_trigger_times(
         # every shape but "equipped creature", which names its object outright.
         yours = controller == ability.controller
         for printed in _computed_ability_lines(game, permanent):
+            if gated := _SELF_GATED_ADDITIONAL_TRIGGER_RE.match(printed.strip()):
+                if (
+                    yours
+                    and _self_or_attached_matches(gated["whose"], permanent, source)
+                    and game.condition_holds(controller, gated["condition"], permanent) is True
+                ):
+                    extra += 1
+                continue
             line, condition = _multiplier_line(printed)
             if condition is not None and not designation_holds(condition, game.player(controller)):
                 continue

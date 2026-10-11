@@ -666,3 +666,56 @@ def test_the_satyr_really_cannot_block():
     scenario.attack_with(giant, defending="alice")
     with pytest.raises(ValueError, match="block"):
         scenario.block(giant, satyr)
+
+
+# -- Cloud, Midgar Mercenary: equipped, so triggers of Cloud or its Equipment double -------
+
+CLOUD = "Cloud, Midgar Mercenary"
+
+
+def _attack_trigger_damage(scenario, attacker_name):
+    """Attack bob with `attacker_name` and resolve its triggers; return bob's life
+    lost before combat damage."""
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    attacker = scenario.find(attacker_name, Zone.BATTLEFIELD, "alice")
+    attacker.summoning_sick = False
+    scenario.attack_with(attacker, defending="bob")
+    scenario.game.put_triggers_on_stack()
+    triggers = len(scenario.game.stack)
+    while scenario.game.stack:
+        scenario.resolve_top()
+    return triggers, 20 - scenario.player("bob").life
+
+
+def test_cloud_equipped_triggers_an_equipments_attack_trigger_an_additional_time():
+    scenario = _board([CLOUD, "Mage Slayer"])
+    _equip(scenario, "Mage Slayer", CLOUD)
+    triggers, lost = _attack_trigger_damage(scenario, CLOUD)
+    assert triggers == 2
+    assert lost == 4
+    assert scenario.game.continuous_effects.layer_notices == []
+
+
+def test_an_unequipped_cloud_multiplies_nothing():
+    scenario = _board([CLOUD, "Mage Slayer", "Grizzly Bears"])
+    _equip(scenario, "Mage Slayer", "Grizzly Bears")
+    triggers, lost = _attack_trigger_damage(scenario, "Grizzly Bears")
+    assert triggers == 1
+    assert lost == 2
+
+
+def test_cloud_does_not_multiply_the_triggers_of_equipment_on_another_creature():
+    scenario = _board([CLOUD, "Bonesplitter", "Mage Slayer", "Grizzly Bears"])
+    _equip(scenario, "Bonesplitter", CLOUD)
+    _equip(scenario, "Mage Slayer", "Grizzly Bears")
+    triggers, lost = _attack_trigger_damage(scenario, "Grizzly Bears")
+    assert triggers == 1
+    assert lost == 2
+
+
+def test_cloud_stops_multiplying_when_the_equipment_moves_to_another_creature():
+    scenario = _board([CLOUD, "Mage Slayer", "Grizzly Bears"])
+    _equip(scenario, "Mage Slayer", CLOUD)
+    _equip(scenario, "Mage Slayer", "Grizzly Bears")
+    triggers, _lost = _attack_trigger_damage(scenario, "Grizzly Bears")
+    assert triggers == 1
