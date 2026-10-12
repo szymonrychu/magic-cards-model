@@ -1308,3 +1308,103 @@ def test_tibalts_emblem_does_not_open_cards_exiled_with_something_else():
     (stray,) = scenario.game.exile_cards([scenario.player("bob").library[0]])
     with pytest.raises(ValueError):
         scenario.game.play_land(stray, "alice")
+
+
+# -- proof printings of the graveyard readers (not listed, Modern/Pioneer) ----
+
+
+def test_elspeths_nightmare_chapter_three_exiles_the_opponents_graveyard():
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Elspeth's Nightmare"], graveyard=["Hill Giant"], library=FILLER)
+        .player("bob", graveyard=["Grizzly Bears", "Lightning Bolt"], library=FILLER)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    saga = scenario.put_onto_battlefield("Elspeth's Nightmare", "alice")
+    scenario.pass_until_resolved()
+    scenario.game.add_counters(saga, "lore", 2)  # chapter III
+    scenario.pass_until_resolved()
+    assert scenario.player("bob").graveyard == []
+    assert _graveyard_names(scenario, "alice") == ["Hill Giant"]
+    assert sorted(c.card.name for c in scenario.game.exile) == ["Grizzly Bears", "Lightning Bolt"]
+
+
+def _cemetery_creature(name, alice_graveyard=(), bob_graveyard=(), extra_hand=()):
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=[name, *extra_hand],
+            battlefield=["Plains"] * 5,
+            graveyard=list(alice_graveyard),
+            library=FILLER,
+        )
+        .player("bob", graveyard=list(bob_graveyard), library=FILLER)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    return scenario
+
+
+@pytest.mark.parametrize("name", ["Cemetery Gatekeeper", "Cemetery Protector"])
+def test_a_cemetery_creature_exiles_a_chosen_graveyard_card_on_entering(name):
+    scenario = _cemetery_creature(name, ["Hill Giant"], ["Grizzly Bears", "Lightning Bolt"])
+    bolt = next(c for c in scenario.player("bob").graveyard if c.name == "Lightning Bolt")
+    scenario.will_choose_cards(bolt, username="alice")
+    creature = scenario.put_onto_battlefield(name, "alice")
+    _resolve_everything(scenario)
+    assert _exiled_with(scenario, creature) == [bolt]
+    assert bolt.zone is Zone.EXILE
+
+
+def test_cemetery_protector_makes_a_token_for_a_land_when_a_land_was_exiled():
+    scenario = _cemetery_creature(
+        "Cemetery Protector", bob_graveyard=["Mountain"], extra_hand=["Forest"]
+    )
+    scenario.put_onto_battlefield("Cemetery Protector", "alice")
+    _resolve_everything(scenario)
+    scenario.play_land("Forest", "alice")
+    _resolve_everything(scenario)
+    tokens = [c for c in scenario.game.battlefield if c.token and c.controller == "alice"]
+    assert [(t.power, t.toughness) for t in tokens] == [(1, 1)]
+
+
+def _quest():
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=["Quest for Ancient Secrets"],
+            hand=["Grizzly Bears"],
+            library=["Forest", "Island", "Hill Giant"],
+        )
+        .player("bob", library=FILLER)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    quest = next(c for c in scenario.game.battlefield if c.name == "Quest for Ancient Secrets")
+    return scenario, quest
+
+
+def test_quest_for_ancient_secrets_counts_each_card_put_into_its_controllers_graveyard():
+    scenario, quest = _quest()
+    scenario.game.put_into_graveyard(scenario.player("alice").library[0])  # from a library
+    scenario.will_take_the_may(True, username="alice")
+    _resolve_everything(scenario)
+    (bears,) = scenario.player("alice").hand
+    scenario.game.discard_cards("alice", [bears])  # from a hand
+    scenario.will_take_the_may(True, username="alice")
+    _resolve_everything(scenario)
+    assert quest.counter_count("quest") == 2
+
+
+def test_quest_for_ancient_secrets_ignores_an_opponents_graveyard_and_may_be_declined():
+    scenario, quest = _quest()
+    scenario.game.put_into_graveyard(scenario.player("bob").library[0])
+    _resolve_everything(scenario)
+    assert quest.counter_count("quest") == 0
+    scenario.game.put_into_graveyard(scenario.player("alice").library[0])
+    scenario.will_take_the_may(False, username="alice")
+    _resolve_everything(scenario)
+    assert quest.counter_count("quest") == 0
