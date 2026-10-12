@@ -1336,10 +1336,15 @@ _MARKED_EXILE_BUILDERS: tuple[tuple[ActionKind, Any], ...] = (
 def _marked_exile_actions(
     game: Any, player: str, card: CardState, candidate_scan: list[_ScannedCandidate]
 ) -> list[Action]:
-    if card.zone is not Zone.HAND:
+    if card.zone is Zone.HAND:
+        builders = _MARKED_EXILE_BUILDERS
+    elif card.zone is Zone.LIBRARY:
+        # CR 702.170f: plot granted to the top card of the library.
+        builders = ((ActionKind.PLOT, MarkedExile.plot),)
+    else:
         return []
     actions: list[Action] = []
-    for kind, builder in _MARKED_EXILE_BUILDERS:
+    for kind, builder in builders:
         try:
             marked = builder(game, card, player)
         except ValueError:
@@ -1358,7 +1363,7 @@ def _marked_exile_actions(
                 player=player,
                 rule=marked.rule,
                 card_id=card.id,
-                from_zone=Zone.HAND,
+                from_zone=card.zone,
                 cost=cost_str,
                 mana_cost=mana_cost_str,
                 affordable=affordable,
@@ -2261,6 +2266,7 @@ def _legal_actions(
         top = me.library[0]
         actions.extend(_cast_actions(game, player, top, candidate_scan))
         actions.extend(_land_actions(game, player, top))
+        actions.extend(_marked_exile_actions(game, player, top, candidate_scan))
 
     # One board for the whole battlefield sweep (CR 613.5's answer is the same
     # for every permanent in it): `Game.computed_board` re-runs the entire

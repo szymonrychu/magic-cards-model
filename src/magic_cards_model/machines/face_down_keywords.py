@@ -366,9 +366,65 @@ def mutate_cast_zones(card: Card) -> frozenset[str]:
     return frozenset()
 
 
+# --------------------------------------------------------------------------
+# Plot granted to the top card of the library (CR 702.170f)
+# --------------------------------------------------------------------------
+
+#: "The top card of your library has plot. The plot cost is equal to its mana
+#: cost." - the keyword granted to whatever card is on top (CR 611.3d).
+LIBRARY_TOP_HAS_PLOT_RE = re.compile(
+    r"^the top card of your library has plot\. the plot cost is equal to its mana cost\.?$",
+    re.IGNORECASE,
+)
+
+#: "You may plot `<quality>` cards from the top of your library." - CR
+#: 702.170f's "an effect may allow the plot ability of a card to function in a
+#: zone other than a player's hand".
+PLOT_FROM_LIBRARY_TOP_RE = re.compile(
+    r"^you may plot (?P<quality>[\w -]+?) cards from the top of your library\.?$",
+    re.IGNORECASE,
+)
+
+
+@cache
+def _plot_from_top_quality(text: str) -> Any:
+    from .casting.permissions import spell_quality_predicate
+
+    match = PLOT_FROM_LIBRARY_TOP_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    return spell_quality_predicate(match.group("quality"))
+
+
 def reads_library_plot_grant_line(text: str) -> bool:
-    """Placeholder replaced by the plot section below."""
-    return False
+    """Whether `text` is one of the two lines `library_top_plot_cost` reads."""
+    stripped = text.strip()
+    if LIBRARY_TOP_HAS_PLOT_RE.fullmatch(stripped) is not None:
+        return True
+    return _plot_from_top_quality(stripped) is not None
+
+
+def library_top_plot_cost(game: Game | None, card: CardState, player: str) -> str | None:
+    """The plot cost `card` has on top of `player`'s library, or None when no
+    permanent `player` controls both gives the top card plot and lets a card
+    of its quality be plotted from there (CR 702.170f). The cost is the card's
+    own mana cost (the grant's "The plot cost is equal to its mana cost.").
+    """
+    if game is None or card.zone is not Zone.LIBRARY or card.owner != player:
+        return None
+    library = game.player(player).library
+    if not library or library[0] is not card:
+        return None
+    board = game.computed_board()
+    for permanent in game.permanents_controlled_by(player):
+        lines = [line.strip() for line in board.of(permanent).abilities]
+        if not any(LIBRARY_TOP_HAS_PLOT_RE.fullmatch(line) for line in lines):
+            continue
+        for line in lines:
+            allows = _plot_from_top_quality(line)
+            if allows is not None and allows(card):
+                return card.card.mana_cost or "{0}"
+    return None
 
 
 def prints_cloak_clause(card: Card) -> bool:

@@ -157,6 +157,7 @@ from magic_cards_model.machines.effects import (
 from magic_cards_model.machines.effects.counters import _SUPPORT_RE
 from magic_cards_model.machines.face_down_keywords import (
     prints_cloak_clause,
+    reads_library_plot_grant_line,
     token_copy_keyword_abilities,
 )
 from magic_cards_model.machines.keyword_counters import (
@@ -515,6 +516,14 @@ def executed_keywords(printing: Card) -> dict[str, str]:
     # through `machines/effects/library._parse_cloak_clause`.
     if any(k.lower() == "cloak" for k in printing.keywords) and prints_cloak_clause(printing):
         found["cloak"] = "machines/face_down_keywords.py (cloak, CR 701.58a)"
+
+    # Plot granted to the top card of the library (CR 702.170f): the card's
+    # own grant lines, read by `machines/face_down_keywords.
+    # library_top_plot_cost`, which `MarkedExile.plot` consults.
+    if any(k.lower() == "plot" for k in printing.keywords) and any(
+        reads_library_plot_grant_line(line) for line in (printing.oracle_text or "").splitlines()
+    ):
+        found["plot"] = "machines/face_down_keywords.py (library_top_plot_cost, CR 702.170f)"
 
     for keyword_name in printing.keywords:
         lowered = keyword_name.lower()
