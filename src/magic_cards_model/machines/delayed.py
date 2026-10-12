@@ -333,6 +333,43 @@ class ReturnSubjectToBattlefieldUnderOwner(DelayedEffectSpecBase):
         game.put_onto_battlefield(permanent, permanent.owner, tapped=self.tapped)
 
 
+class ReturnSubjectThenDiscardItsStat(DelayedEffectSpecBase):
+    """ "At the beginning of your next upkeep, return that card to the
+    battlefield under its owner's control. If you do, discard cards equal to
+    that creature's toughness." (Vanish into Memory) - the blink return
+    (`ReturnSubjectToBattlefieldUnderOwner`) plus a rider that spends the
+    returned object's own characteristic.
+
+    "If you do" is the return itself (CR 603.7c: the card is no longer where
+    it was exiled to, or is a new object, and nothing returns). "That
+    creature" is the object that just returned - a new object (CR 400.7) read
+    on the battlefield, so it counts its own counters-free printed values and
+    whatever continuous effects apply to it now (CR 613.5). The discard is the
+    delayed trigger's controller's, of their own choice (CR 701.9b).
+    """
+
+    kind: Literal["return_subject_then_discard_its_stat"] = "return_subject_then_discard_its_stat"
+    stat: Literal["power", "toughness", "mana value", "power plus toughness"]
+
+    def __call__(self, game: "Game", ability: AbilityOnStack, trigger: "DelayedTrigger") -> None:
+        from .ep02_r1_referenced_stat import discard_equal_to_stat, snapshot_of
+
+        permanent = trigger.still_affects(game)
+        if permanent is None or permanent.owner is None:
+            return
+        game.put_onto_battlefield(permanent, permanent.owner)
+        if permanent.zone is not Zone.BATTLEFIELD:
+            return
+        discard_equal_to_stat(
+            game,
+            trigger.controller,
+            snapshot_of(game, permanent),
+            self.stat,
+            trigger.source_name,
+            trigger.source_id,
+        )
+
+
 class ReturnSubjectToBattlefieldUnderController(DelayedEffectSpecBase):
     """ "Return it to the battlefield under your control at the beginning of
     the next end step" (Argent Sphinx) - CR 610.3c's "unless otherwise
@@ -2485,6 +2522,7 @@ DelayedEffectSpec = Annotated[
     | SacrificeEach
     | ExileSubjectAtNextEndStep
     | ReturnSubjectToBattlefieldUnderOwner
+    | ReturnSubjectThenDiscardItsStat
     | ReturnSubjectToBattlefieldUnderController
     | ReturnSubjectToHand
     | ReboundRecast

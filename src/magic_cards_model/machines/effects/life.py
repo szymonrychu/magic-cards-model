@@ -17,6 +17,7 @@ from ...numbers import (
 )
 from ..decisions import Decision, DecisionKind, source_id_of
 from ..ep01_r3_amounts import event_player_username, event_terms
+from ..ep02_r1_referenced_stat import referenced_stat_effect
 from ..targeting import (
     permanent_description,
 )
@@ -1403,3 +1404,13 @@ def _parse_lose_life_equal_to_cast_spell_mana_value_text(text: str) -> AbilityEf
 
     with event_terms():
         return parse_mixed_effect(stripped)
+
+
+@ABILITY_TEXT.rung("s1", for_spell=False)
+@SPELL_TEXT.rung("s1", for_spell=True)
+def _parse_referenced_stat_text(text: str, *, for_spell: bool) -> Effect | AbilityEffect | None:
+    """ "You gain life equal to its power", "draw cards equal to that
+    creature's power", "deals damage equal to the sacrificed creature's
+    power": an amount that is a characteristic of an object the text or its
+    trigger names (`ep02_r1_referenced_stat`)."""
+    return referenced_stat_effect(text, for_spell=for_spell)

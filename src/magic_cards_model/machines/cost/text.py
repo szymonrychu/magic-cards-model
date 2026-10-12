@@ -1212,6 +1212,12 @@ def _requirement(quality: str) -> CardRequirement | None:
         word = raw_word.strip(",")
         if not word:
             continue
+        if word.lower() == "colorless":
+            # CR 105.2c: no colour at all (Barrage Tyrant's "another colorless
+            # creature"). Before the plural-stripping below, which would turn
+            # the word into "colorles".
+            colors.append(Color.COLORLESS)
+            continue
         lowered = word.lower().rstrip("s")
         if lowered in _QUALITY_CONNECTORS:
             continue

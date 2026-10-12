@@ -1,0 +1,131 @@
+{
+  "object": "card",
+  "id": "0643fb9a-8284-4dfc-836a-c2c69ef09f32",
+  "oracle_id": "aac711d1-2fa0-42f9-9eda-a1642f3ff016",
+  "multiverse_ids": [
+    262854
+  ],
+  "mtgo_id": 43427,
+  "mtgo_foil_id": 43428,
+  "tcgplayer_id": 57809,
+  "cardmarket_id": 252577,
+  "name": "Death's Caress",
+  "lang": "en",
+  "released_at": "2012-02-03",
+  "uri": "https://api.scryfall.com/cards/0643fb9a-8284-4dfc-836a-c2c69ef09f32",
+  "scryfall_uri": "https://scryfall.com/card/dka/59/deaths-caress?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T11:07:11Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/0/6/0643fb9a-8284-4dfc-836a-c2c69ef09f32.jpg?1783940831",
+    "normal": "https://cards.scryfall.io/normal/front/0/6/0643fb9a-8284-4dfc-836a-c2c69ef09f32.jpg?1783940831",
+    "large": "https://cards.scryfall.io/large/front/0/6/0643fb9a-8284-4dfc-836a-c2c69ef09f32.jpg?1783940831",
+    "png": "https://cards.scryfall.io/png/front/0/6/0643fb9a-8284-4dfc-836a-c2c69ef09f32.png?1783940831",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/0/6/0643fb9a-8284-4dfc-836a-c2c69ef09f32.jpg?1783940831",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/0/6/0643fb9a-8284-4dfc-836a-c2c69ef09f32.jpg?1783940831",
+    "thumb": "https://cards.scryfall.io/thumb/front/0/6/0643fb9a-8284-4dfc-836a-c2c69ef09f32.webp?1783940831",
+    "grid": "https://cards.scryfall.io/grid/front/0/6/0643fb9a-8284-4dfc-836a-c2c69ef09f32.webp?1783940831",
+    "display": "https://cards.scryfall.io/display/front/0/6/0643fb9a-8284-4dfc-836a-c2c69ef09f32.webp?1783940831",
+    "art": "https://cards.scryfall.io/art/front/0/6/0643fb9a-8284-4dfc-836a-c2c69ef09f32.webp?1783940831",
+    "crop": "https://cards.scryfall.io/crop/front/0/6/0643fb9a-8284-4dfc-836a-c2c69ef09f32.webp?1783940831"
+  },
+  "mana_cost": "{3}{B}{B}",
+  "cmc": 5.0,
+  "type_line": "Sorcery",
+  "oracle_text": "Destroy target creature. If that creature was a Human, you gain life equal to its toughness.",
+  "colors": [
+    "B"
+  ],
+  "color_identity": [
+    "B"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "8052750a-aaf2-46fc-b46d-633f14124017",
+  "set": "dka",
+  "set_name": "Dark Ascension",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/8052750a-aaf2-46fc-b46d-633f14124017",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Adka&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/dka?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/0643fb9a-8284-4dfc-836a-c2c69ef09f32/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Aaac711d1-2fa0-42f9-9eda-a1642f3ff016&unique=prints",
+  "collector_number": "59",
+  "digital": false,
+  "rarity": "common",
+  "flavor_text": "The faint smell of cloves, the rustling of the wind, and a paralyzing descent into an airless, fathomless tomb.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "James Ryman",
+  "artist_ids": [
+    "3852bbc9-11c0-4fe3-8722-a06ad7e2bcc5"
+  ],
+  "illustration_id": "db52ab22-2aa8-49b9-b2c8-72a5d4a44bd8",
+  "border_color": "black",
+  "frame": "2003",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 28869,
+  "prices": {
+    "usd": "0.07",
+    "usd_foil": "0.49",
+    "usd_etched": null,
+    "eur": "0.06",
+    "eur_foil": "0.29",
+    "tix": "0.04"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=262854&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DDeath%2527s%2BCaress",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DDeath%2527s%2BCaress",
+    "edhrec": "https://edhrec.com/route/?cc=Death%27s+Caress"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F57809%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=252577&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/43427?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

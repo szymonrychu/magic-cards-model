@@ -1,0 +1,132 @@
+{
+  "object": "card",
+  "id": "98c80584-b7b5-4dcd-8a00-812b9dd9b1b9",
+  "oracle_id": "9086d8ff-e375-4149-996d-2a88a7596c1c",
+  "multiverse_ids": [
+    50210
+  ],
+  "mtgo_id": 20748,
+  "mtgo_foil_id": 20749,
+  "tcgplayer_id": 11840,
+  "cardmarket_id": 542,
+  "name": "Devour in Shadow",
+  "lang": "en",
+  "released_at": "2004-06-04",
+  "uri": "https://api.scryfall.com/cards/98c80584-b7b5-4dcd-8a00-812b9dd9b1b9",
+  "scryfall_uri": "https://scryfall.com/card/5dn/46/devour-in-shadow?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T12:06:40Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/9/8/98c80584-b7b5-4dcd-8a00-812b9dd9b1b9.jpg?1783944400",
+    "normal": "https://cards.scryfall.io/normal/front/9/8/98c80584-b7b5-4dcd-8a00-812b9dd9b1b9.jpg?1783944400",
+    "large": "https://cards.scryfall.io/large/front/9/8/98c80584-b7b5-4dcd-8a00-812b9dd9b1b9.jpg?1783944400",
+    "png": "https://cards.scryfall.io/png/front/9/8/98c80584-b7b5-4dcd-8a00-812b9dd9b1b9.png?1783944400",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/9/8/98c80584-b7b5-4dcd-8a00-812b9dd9b1b9.jpg?1783944400",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/9/8/98c80584-b7b5-4dcd-8a00-812b9dd9b1b9.jpg?1783944400",
+    "thumb": "https://cards.scryfall.io/thumb/front/9/8/98c80584-b7b5-4dcd-8a00-812b9dd9b1b9.webp?1783944400",
+    "grid": "https://cards.scryfall.io/grid/front/9/8/98c80584-b7b5-4dcd-8a00-812b9dd9b1b9.webp?1783944400",
+    "display": "https://cards.scryfall.io/display/front/9/8/98c80584-b7b5-4dcd-8a00-812b9dd9b1b9.webp?1783944400",
+    "art": "https://cards.scryfall.io/art/front/9/8/98c80584-b7b5-4dcd-8a00-812b9dd9b1b9.webp?1783944400",
+    "crop": "https://cards.scryfall.io/crop/front/9/8/98c80584-b7b5-4dcd-8a00-812b9dd9b1b9.webp?1783944400"
+  },
+  "mana_cost": "{B}{B}",
+  "cmc": 2.0,
+  "type_line": "Instant",
+  "oracle_text": "Destroy target creature. It can't be regenerated. You lose life equal to that creature's toughness.",
+  "colors": [
+    "B"
+  ],
+  "color_identity": [
+    "B"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "e4bc1b87-5476-463c-8640-4c414ecf1763",
+  "set": "5dn",
+  "set_name": "Fifth Dawn",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/e4bc1b87-5476-463c-8640-4c414ecf1763",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3A5dn&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/5dn?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/98c80584-b7b5-4dcd-8a00-812b9dd9b1b9/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A9086d8ff-e375-4149-996d-2a88a7596c1c&unique=prints",
+  "collector_number": "46",
+  "digital": false,
+  "rarity": "uncommon",
+  "flavor_text": "\"Feel the burn of the mists. Master them. They will devour your enemies.\"\n\u2014Geth, keeper of the Vault",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Thomas M. Baxa",
+  "artist_ids": [
+    "ff346569-557d-4043-ae44-97c2c7cabd7d"
+  ],
+  "illustration_id": "66b134a8-5f2b-4dcd-b3e0-24635bf28fad",
+  "border_color": "black",
+  "frame": "2003",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 18234,
+  "penny_rank": 7086,
+  "prices": {
+    "usd": "0.20",
+    "usd_foil": "0.80",
+    "usd_etched": null,
+    "eur": "0.13",
+    "eur_foil": "0.76",
+    "tix": "0.03"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=50210&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DDevour%2Bin%2BShadow",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DDevour%2Bin%2BShadow",
+    "edhrec": "https://edhrec.com/route/?cc=Devour+in+Shadow"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F11840%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=542&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/20748?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}
