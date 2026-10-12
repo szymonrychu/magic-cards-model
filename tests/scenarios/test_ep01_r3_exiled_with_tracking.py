@@ -1141,9 +1141,9 @@ def test_grolnok_triggers_exactly_once_per_permanent_card_milled():
         and "graveyard" in (getattr(getattr(item, "ability", None), "condition", None) or "")
     ]
     assert len(croaks) == 2
-    assert sorted(item.event.subject_id for item in croaks) == sorted(
-        c.id for c in scenario.player("alice").graveyard if c.card.name in ("Grizzly Bears", "Forest")
-    )
+    milled = scenario.player("alice").graveyard
+    permanents = [c.id for c in milled if c.card.name in ("Grizzly Bears", "Forest")]
+    assert sorted(item.event.subject_id for item in croaks) == sorted(permanents)
 
 
 def test_grolnok_ignores_cards_milled_from_an_opponents_library():

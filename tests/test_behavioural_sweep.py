@@ -4714,10 +4714,7 @@ def _milled_cards(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
     a library" (Grolnok, Undead Alchemist; CR 603.2c, CR 400.6): the source on
     the battlefield, the top cards of one player's library milled, one
     attempt for each library."""
-    if (
-        _A_CARD_INTO_GRAVEYARD_CONDITION.match((ability.condition or "").lower())
-        is None
-    ):
+    if _A_CARD_INTO_GRAVEYARD_CONDITION.match((ability.condition or "").lower()) is None:
         return
     for owner in (ALICE, BOB):
 

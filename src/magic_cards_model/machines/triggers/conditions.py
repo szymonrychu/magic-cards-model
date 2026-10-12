@@ -18,8 +18,8 @@ from ..abilities import (
     self_reference_pattern,
     self_reference_re,
 )
-from ..exert_triggers import EXERT_CONDITION, exert_condition_matches
 from ..counter_event_triggers import counter_event_matches, counter_event_watched
+from ..exert_triggers import EXERT_CONDITION, exert_condition_matches
 from ..state_triggers import reads_state_condition, state_condition_holds
 from ..turn import Step
 

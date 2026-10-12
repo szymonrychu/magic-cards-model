@@ -1645,8 +1645,6 @@ def single_card_graveyard_arrivals(
     graveyard ("your"), an opponent's, or any ("graveyards"), and only during
     the controller's turn when the condition says so. [] when `condition` is
     another shape."""
-    from .conditions import _types_match
-
     match = _A_CARD_INTO_GRAVEYARD_CONDITION.match(condition.lower().strip())
     if match is None:
         return []

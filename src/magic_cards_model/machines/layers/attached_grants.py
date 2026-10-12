@@ -64,8 +64,6 @@ from .model import (
     CountAttachedWithAnySubtype,
     CountByControllerOfObject,
     CountObjectManaValue,
-    CountPermanentsControlledBy,
-    CountPermanentsWithSubtypeControlledBy,
     Duration,
     FixedCount,
     Layer,
@@ -161,7 +159,7 @@ def _count_factory(phrase: str) -> CountFactory | None:
     if _MANA_VALUE_RE.fullmatch(text):
         return lambda source, context: CountObjectManaValue()
     if controlled := _CONTROLLED_NUMBER_RE.fullmatch(text):
-        return _controlled_count_factory(controlled["kind"])
+        return _controlled_source_count_factory(controlled["kind"])
     match = _ZONE_COUNT_RE.fullmatch(text)
     if match is None:
         return None
@@ -334,26 +332,16 @@ _CONTROLLED_COUNT_RE = re.compile(
 )
 
 
-def _controlled_count_factory(kind: str) -> CountFactory | None:
+def _controlled_source_count_factory(kind: str) -> CountFactory | None:
     """A card type or subtype word as the count of that many permanents the
-    attachment's controller controls (CR 109.4), or `None` for a word that is
-    neither."""
-    from .parse import _card_type_word
+    attachment's controller controls (CR 109.4) - `parse._controlled_count_factory`
+    keyed on the source's controller - or `None` for a word that is neither."""
+    from .parse import _controlled_count_factory
 
-    word = kind.lower()
-    card_type = _card_type_word(word)
-    subtype = None if card_type is not None else canonical_subtype(word)
-    if card_type is None and subtype is None:
+    by_controller = _controlled_count_factory(kind)
+    if by_controller is None:
         return None
-
-    def factory(source, context):
-        if card_type is not None:
-            return CountPermanentsControlledBy(username=source.controller, card_type=card_type)
-        return CountPermanentsWithSubtypeControlledBy(
-            username=source.controller, subtype=subtype.lower()
-        )
-
-    return factory
+    return lambda source, context: by_controller(source.controller)
 
 
 def _parse_pump_per_controlled(match: re.Match[str], sentence: str) -> EffectBuilder | None:
@@ -367,7 +355,7 @@ def _parse_pump_per_controlled(match: re.Match[str], sentence: str) -> EffectBui
     counted = _CONTROLLED_COUNT_RE.fullmatch(match["phrase"].strip())
     if counted is None:
         return None
-    factory = _controlled_count_factory(counted["kind"])
+    factory = _controlled_source_count_factory(counted["kind"])
     if factory is None:
         return None
     keywords: list[str] = []
