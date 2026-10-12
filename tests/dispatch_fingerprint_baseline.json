@@ -1384,7 +1384,6 @@
         "Target player mills two cards. Draw a card.": "parse_mixed_effect",
         "Target player mills two cards.\"": "<none>",
         "Target player sacrifices a creature.": "parse_mixed_effect",
-        "Target player shuffles their graveyard into their library.": "parse_mixed_effect",
         "Target player shuffles their graveyard into their library. Draw a card.": "parse_mixed_effect",
         "Target player shuffles.": "parse_mixed_effect",
         "Target player's life total becomes 1.": "parse_mixed_effect",
