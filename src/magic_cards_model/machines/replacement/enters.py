@@ -3692,11 +3692,20 @@ def _bloodthirst_entering_counters(game: "Game", event: ReplaceableEvent) -> lis
     return found
 
 
+#: Keywords whose static half is "enters with N +1/+1 counters" (CR 702.43a, CR 702.58a).
+_ENTERS_WITH_COUNTERS_KEYWORDS = frozenset({"modular", "graft"})
+
+
 def _modular_entering_counters(game: "Game", event: ReplaceableEvent) -> list[ApplicableEffect]:
     """CR 702.43a's first ability: "'Modular N' means 'This permanent enters with N
     +1/+1 counters on it'" - a CR 614.1c "enters with" replacement on the entering
     permanent itself, cast or not, each instance separately. (The dying half is a
-    triggered ability, `machines/keywords._modular_ability`.)"""
+    triggered ability, `machines/keywords._modular_ability`.)
+
+    CR 702.58a's graft has the identical static half - "'Graft N' means 'This
+    permanent enters with N +1/+1 counters on it'" and CR 702.58b has each
+    instance work separately - so it is read here too; its moving half is the
+    triggered ability `machines/legacy_keywords._graft_ability`."""
     from ...models.card_state import Counter
     from ..abilities import keyword_abilities
 
@@ -3707,7 +3716,7 @@ def _modular_entering_counters(game: "Game", event: ReplaceableEvent) -> list[Ap
     amounts = [
         ability.count
         for ability in keyword_abilities(entering.card)
-        if ability.canonical.lower() == "modular" and ability.count is not None
+        if ability.canonical.lower() in _ENTERS_WITH_COUNTERS_KEYWORDS and ability.count is not None
     ]
     for index, amount in enumerate(amounts):
 
@@ -3720,7 +3729,7 @@ def _modular_entering_counters(game: "Game", event: ReplaceableEvent) -> list[Ap
             ApplicableEffect(
                 key=f"{entering.id}:modular:{index}",
                 source=entering,
-                label=f"modular: enters with {amount} +1/+1 counters (CR 702.43a)",
+                label=f"modular/graft: enters with {amount} +1/+1 counters (CR 702.43a, 702.58a)",
                 apply=apply,
             )
         )

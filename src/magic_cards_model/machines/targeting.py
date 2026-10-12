@@ -284,6 +284,13 @@ class ComparisonCount(StrEnum):
     `SOURCE_LOYALTY` just above already uses for Nahiri's own activated
     ability."""
 
+    SOURCE_POWER = "source_power"
+    """"this creature's power" - mentor's "target attacking creature with power
+    less than this creature's power" (CR 702.134a). Like `SOURCE_LOYALTY` the
+    count belongs to the *ability's source*, not the target, so it is read off
+    `source_id` through the computed board (`Game.characteristics_of`) every
+    time the restriction is asked (CR 613.5), never fixed once."""
+
 
 class CombatState(StrEnum):
     """Being in combat, which is a game state rather than a characteristic.
@@ -1876,6 +1883,13 @@ class TargetRequirement(EngineModel):
                 return None
             source = find_by_id(source_id)
             return None if source is None else source.loyalty
+        if self.comparison_count is ComparisonCount.SOURCE_POWER:
+            find_by_id = getattr(game, "find_by_id", None)
+            characteristics_of = getattr(game, "characteristics_of", None)
+            if source_id is None or find_by_id is None or characteristics_of is None:
+                return None
+            source = find_by_id(source_id)
+            return None if source is None else characteristics_of(source).power
         if self.comparison_count is ComparisonCount.SOURCE_COLORS_SPENT:
             if source_id is None:
                 return None
@@ -6520,6 +6534,7 @@ _COMPARISON_COUNTS = {
     "controllers_graveyard": ComparisonCount.CONTROLLERS_GRAVEYARD_CARDS,
     "source_loyalty": ComparisonCount.SOURCE_LOYALTY,
     "colors_spent_source": ComparisonCount.SOURCE_COLORS_SPENT,
+    "source_power": ComparisonCount.SOURCE_POWER,
 }
 
 #: The comparison itself, once `_COMPARISON_ATTEMPT` says one is being made.
@@ -6547,7 +6562,8 @@ _COMPARISON_CLAUSE = re.compile(
     r"|(?P<expr_dir>less|greater) than or equal to (?P<expr>the number of [^,.]+? you control)"
     r"|less than or equal to\s+(?P<le_num>x|\d+)\b"
     r"|greater than or equal to\s+(?P<ge_num>x|\d+)\b"
-    r"|(?P<strict_dir>less|greater) than (?P<source_loyalty>.+?)'s loyalty\b"
+    r"|(?P<strict_dir>less|greater) than "
+    r"(?:(?P<source_loyalty>.+?)'s loyalty|(?P<source_power>this creature)'s power)\b"
     r"|equal to\s+(?P<eq_num>x|\d+)\b"
     r"|(?P<bare_num>x|\d+)\b"
     r")",

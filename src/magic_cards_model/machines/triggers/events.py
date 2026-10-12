@@ -221,6 +221,11 @@ class ExtraTriggerEvent(StrEnum):
     #: `GameEvent.subject_id` is the foretold card, `GameEvent.player` who
     #: foretold it. **Emitted by:** `MarkedExile.take` for the foretell marker.
     FORETOLD = "foretold"
+    #: CR 701.43a: a permanent was exerted. `GameEvent.subject_id` is the
+    #: exerted permanent, `GameEvent.player` its controller, the exerting
+    #: player (CR 701.43d). **Emitted by:** `machines/exert_triggers.
+    #: exert_permanent`, which every exert goes through.
+    EXERTED = "exerted"
     #: CR 602.2: "To activate an ability is to put it onto the stack and pay
     #: its costs" - raised for every activated ability that does that, and
     #: so never for a mana ability (CR 605.3b: it does not use the stack).

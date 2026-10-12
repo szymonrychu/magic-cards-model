@@ -1047,9 +1047,14 @@ class CostComponent(EngineModel):
             for card in self.cards:
                 self._remember(card)
                 card.exerted = True  # CR 701.43a
-                if game is not None and card.id not in game.exerted_this_turn:
-                    game.exerted_this_turn.add(card.id)
-                    self._exerted_recorded.append(card.id)
+                if game is not None:
+                    if card.id not in game.exerted_this_turn:
+                        self._exerted_recorded.append(card.id)
+                    # The keyword action itself: records the exert and raises
+                    # the event "Whenever you exert a creature" watches.
+                    from ..exert_triggers import exert_permanent
+
+                    exert_permanent(game, card)
         elif self.kind is ComponentKind.TAP:
             for card in self.cards:
                 self._remember(card)

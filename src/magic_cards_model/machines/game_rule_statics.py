@@ -10,6 +10,10 @@ is applied - never applied in advance:
   doesn't apply.", Mirror Gallery) or for one subtype a player controls
   ("... doesn't apply to Spiders you control.", Spider-Verse) -
   `Game._legend_rule_losers`;
+- the legend rule off for exactly two permanents sharing one name ("If there are
+  exactly two permanents named Brothers Yamazaki on the battlefield, the "legend
+  rule" doesn't apply to them.") - `Game._legend_rule_losers` via
+  `legend_rule_pair_names`;
 - Abyssal Persecutor's reversed "You can't win the game and your opponents
   can't lose the game." (CR 101.2 over CR 104.2b/104.3) -
   `Game._game_outcome_prohibition`;
@@ -90,6 +94,39 @@ def legend_rule_exemption_of_line(line: str) -> LegendRuleExemption | None:
     if subtype not in creature_types():
         return None
     return LegendRuleExemption(everyone=False, subtype=subtype)
+
+
+_LEGEND_RULE_PAIR_RE = re.compile(
+    r"^if there are exactly two permanents named (?P<name>.+?) on the battlefield, "
+    r"the \"legend rule\" doesn't apply to them\.?$",
+    re.IGNORECASE,
+)
+
+
+@cache
+def legend_rule_pair_name_of_line(line: str) -> str | None:
+    """The name a "exactly two permanents named X ... the legend rule doesn't
+    apply to them" line (Brothers Yamazaki) exempts, or None."""
+    if "legend rule" not in line.lower():
+        return None
+    match = _LEGEND_RULE_PAIR_RE.fullmatch(_norm(line))
+    return None if match is None else match.group("name")
+
+
+def legend_rule_pair_names(game: Game, board: Any) -> set[str]:
+    """The names for which the legend rule is off right now: a permanent on the
+    battlefield carries the pair exemption for its own name and exactly two
+    permanents (any controllers) have that name (CR 604.2, CR 613.5)."""
+    exempt: set[str] = set()
+    named: dict[str, int] = {}
+    for state in game.battlefield:
+        chars = board.of(state)
+        named[chars.name] = named.get(chars.name, 0) + 1
+        for line in chars.abilities:
+            name = legend_rule_pair_name_of_line(line)
+            if name is not None and name == chars.name:
+                exempt.add(name)
+    return {name for name in exempt if named.get(name) == 2}
 
 
 def legend_rule_exemptions(game: Game, board: Any) -> tuple[bool, dict[str, set[str]]]:
@@ -382,6 +419,7 @@ def reads_game_rule_line(line: str) -> bool:
     audit credit (`static_audit/game_rules_untap.py`)."""
     return bool(
         legend_rule_exemption_of_line(line)
+        or legend_rule_pair_name_of_line(line)
         or reversed_outcome_prohibition_of_line(line)
         or ignores_zero_life_loss_line(line)
         or damage_as_infect_at_zero_life_line(line)

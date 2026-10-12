@@ -8139,3 +8139,22 @@ Scenarios: `scenarios/test_ep01_r3_d20_choice_rows.py`. Static-line audit credit
 | "Activate only if this card is in your graveyard" | 113.6b | `abilities._ACTIVATE_ONLY_IF_IN_GRAVEYARD` | Loathsome Troll |
 
 Sweep: the player-loses-the-game event and "the chosen creature leaves" are `SWEEP_DRIVER_GAPS` entries (a loss needs a third player still in the game; the chosen creature needs the source's own choice), both played in the scenario file.
+
+## EP-01-R3-T2: exert-event triggers and combat/trigger keywords
+
+Closed mechanics (each proven by `scenarios/test_ep01_r3_exert_and_keywords.py` on the listed cards and at least one second printing):
+
+| Mechanic | CR | Where | Proof printings |
+| "Whenever you exert a creature": `ExtraTriggerEvent.EXERTED`, raised by the one `exert_permanent` every exert (as it attacks, as a cost) goes through; exerting a non-creature (Arena of Glory) does not count | 701.43a, 701.43b, 701.43d, 603.2 | `machines/exert_triggers.py`, `triggers/collect.py`, `triggers/conditions.py`, `cost/components.py`, `exert_on_attack.py` | Tah-Crop Elite, Arena of Glory |
+| Bushido (trigger reads "this creature gets", not "it": the event subject is the other creature when this one becomes blocked), afterlife, mentor ("power less than this creature's power": `ComparisonCount.SOURCE_POWER`) | 702.45a, 702.135a, 702.134a | `keywords._bushido_ability`, `legacy_keywords.py`, `targeting.py` | Devoted Retainer, Ministrant of Obligation, Barging Sergeant |
+| Graft: enters-with counters share modular's replacement; the move trigger uses a new "move a counter onto that creature" rung | 702.58a, 702.58b, 122.5 | `legacy_keywords._graft_ability`, `replacement/enters._modular_entering_counters`, `effects/counters._parse_move_counter_onto_event_subject_clause` | Simic Initiate |
+| Backup: counters, then the lines printed below the keyword granted until end of turn (layer 6 `GrantAbility`) | 702.165a-d | `legacy_keywords._backup_ability`/`backup_granted_lines`, `effects/counters._parse_backup_clause` | Sigiled Sentinel, Cragsmasher Yeti |
+| "This creature assigns combat damage equal to its toughness rather than its power" (self static, also the backup grant) | 510.1a | `layers/parse._self_assigns_damage_as_toughness_builder` | Pillarfield Ox (granted) |
+| Connive as a keyword on a granted quoted trigger; "As long as enchanted creature is attacking alone, it can't be blocked" | 701.50a, 506.5, 509.1b | `support` (connive credit through quoted statics), `layers/parse._ATTACHED_CREATURE_CANT_BE_BLOCKED_WHILE_ATTACKING_ALONE_RE` | Raffine's Informant |
+| Champion: two linked triggers, exile linked with the shared `linked_exile_annotation` | 702.72a-b, 607.2a | `legacy_keywords._champion_abilities`/`parse_champion_clause` | Nova Chaser, Changeling Hero, Lightning Crafter |
+| Fateseal | 701.29a | `legacy_keywords.fateseal`, `effects/dispatch.py` (`_FATESEAL_RE`) | Spin into Myth |
+| Clash with an opponent (win/otherwise branches) | 701.30a-d | `legacy_keywords.clash`/`parse_clash_clause` | Oaken Brawler |
+| Legend rule off for exactly two permanents sharing a name | 704.5j | `game_rule_statics.legend_rule_pair_names`, `_turn_sba._legend_rule_losers` | Brothers Yamazaki |
+| Assemble: the keyword action is `Game.assembling_count` (replacement layer); no Modern/Pioneer/Standard card has a Contraption deck, so nothing is ever put onto the battlefield | 701.45a, 614.1a | `keywords.executes` | Steamflogger Boss |
+
+No new persisted `Game` field, so no schema bump.

@@ -5,6 +5,7 @@
   "multiverse_ids": [
     677987
   ],
+  "resource_id": "25A4B7694DC2FFE6CC4DF5B7E31009EA3D126570C86C11F3B45BAC2C9DC8970B",
   "mtgo_id": 134868,
   "arena_id": 93697,
   "tcgplayer_id": 591838,
@@ -113,12 +114,12 @@
   "promo_types": [
     "beginnerbox"
   ],
-  "edhrec_rank": 25203,
+  "edhrec_rank": 25370,
   "prices": {
-    "usd": "0.11",
+    "usd": "0.10",
     "usd_foil": null,
     "usd_etched": null,
-    "eur": "0.07",
+    "eur": "0.05",
     "eur_foil": null,
     "tix": "0.03"
   },

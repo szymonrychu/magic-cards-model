@@ -71,7 +71,7 @@ def offer_exert_as_it_attacks(game: "Game", creature: CardState) -> None:
     """Ask the attacking player whether to exert `creature` (CR 508.1g) for
     each such line it prints, and queue the linked trigger when they do."""
     from .delayed import ReflexiveWhenYouDoConsequence
-    from .keywords import exert
+    from .exert_triggers import exert_permanent
 
     for line in game.characteristics_of(creature).abilities:
         printed, effect = exert_as_it_attacks_effect(strip_reminder(line))
@@ -93,8 +93,7 @@ def offer_exert_as_it_attacks(game: "Game", creature: CardState) -> None:
         )
         if not chose:
             continue
-        exert(creature)
-        game.exerted_this_turn.add(creature.id)
+        exert_permanent(game, creature)
         if effect:
             game.create_reflexive_trigger(
                 text=f"When you do, {effect}",
