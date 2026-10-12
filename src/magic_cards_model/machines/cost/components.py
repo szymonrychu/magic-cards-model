@@ -547,7 +547,9 @@ class CostComponent(EngineModel):
     chosen permanent (`cards`), not a count taken from each (CR 118.3: the
     counters have to be there, summed over the chosen permanents)."""
     every_matching: bool = False
-    """`ComponentKind.SACRIFICE` only: "sacrifice all creatures you control"
+    """`ComponentKind.SACRIFICE` and `ComponentKind.DISCARD` only: "Discard your
+    hand" (Bomat Courier's activation cost) takes every card in the hand when
+    it is paid; "sacrifice all creatures you control"
     (Soulblast's additional cost), "Sacrifice all lands you control" (Tomb of
     Urami's activation cost). Nobody chooses: CR 601.2h pays it with every
     permanent the payer controls that meets `requirement` at the moment the
@@ -963,9 +965,12 @@ class CostComponent(EngineModel):
 
     def _every_matching_permanent(self, game: Any) -> list[CardState]:
         """`every_matching`'s objects: each permanent the payer controls that
-        meets `requirement`, read off the computed board (CR 613.5)."""
+        meets `requirement`, read off the computed board (CR 613.5) - or, for
+        a discard, every card in the payer's hand ("Discard your hand")."""
         if self.payer is None:
             return []
+        if self.kind is ComponentKind.DISCARD:
+            return list(game.player(self.payer).hand)
         return [
             permanent
             for permanent in game.permanents_controlled_by(self.payer)

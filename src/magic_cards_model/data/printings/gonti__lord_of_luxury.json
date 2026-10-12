@@ -1,0 +1,137 @@
+{
+  "object": "card",
+  "id": "fbbb3aef-af1f-4b77-b7d6-64cfd706a9d9",
+  "oracle_id": "d5be0ff6-39d9-4f9f-a028-e62dc38463f2",
+  "multiverse_ids": [
+    658579
+  ],
+  "mtgo_id": 124729,
+  "tcgplayer_id": 545181,
+  "cardmarket_id": 764948,
+  "name": "Gonti, Lord of Luxury",
+  "lang": "en",
+  "released_at": "2024-04-19",
+  "uri": "https://api.scryfall.com/cards/fbbb3aef-af1f-4b77-b7d6-64cfd706a9d9",
+  "scryfall_uri": "https://scryfall.com/card/otc/135/gonti-lord-of-luxury?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T03:05:30Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/f/b/fbbb3aef-af1f-4b77-b7d6-64cfd706a9d9.jpg?1783911930",
+    "normal": "https://cards.scryfall.io/normal/front/f/b/fbbb3aef-af1f-4b77-b7d6-64cfd706a9d9.jpg?1783911930",
+    "large": "https://cards.scryfall.io/large/front/f/b/fbbb3aef-af1f-4b77-b7d6-64cfd706a9d9.jpg?1783911930",
+    "png": "https://cards.scryfall.io/png/front/f/b/fbbb3aef-af1f-4b77-b7d6-64cfd706a9d9.png?1783911930",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/f/b/fbbb3aef-af1f-4b77-b7d6-64cfd706a9d9.jpg?1783911930",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/f/b/fbbb3aef-af1f-4b77-b7d6-64cfd706a9d9.jpg?1783911930",
+    "thumb": "https://cards.scryfall.io/thumb/front/f/b/fbbb3aef-af1f-4b77-b7d6-64cfd706a9d9.webp?1783911930",
+    "grid": "https://cards.scryfall.io/grid/front/f/b/fbbb3aef-af1f-4b77-b7d6-64cfd706a9d9.webp?1783911930",
+    "display": "https://cards.scryfall.io/display/front/f/b/fbbb3aef-af1f-4b77-b7d6-64cfd706a9d9.webp?1783911930",
+    "art": "https://cards.scryfall.io/art/front/f/b/fbbb3aef-af1f-4b77-b7d6-64cfd706a9d9.webp?1783911930",
+    "crop": "https://cards.scryfall.io/crop/front/f/b/fbbb3aef-af1f-4b77-b7d6-64cfd706a9d9.webp?1783911930"
+  },
+  "mana_cost": "{2}{B}{B}",
+  "cmc": 4.0,
+  "type_line": "Legendary Creature \u2014 Aetherborn Rogue",
+  "oracle_text": "Deathtouch\nWhen Gonti enters, look at the top four cards of target opponent's library, exile one of them face down, then put the rest on the bottom of that library in a random order. You may cast that card for as long as it remains exiled, and mana of any type can be spent to cast that spell.",
+  "power": "2",
+  "toughness": "3",
+  "colors": [
+    "B"
+  ],
+  "color_identity": [
+    "B"
+  ],
+  "keywords": [
+    "Deathtouch"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": false,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "d6548798-0c10-4509-b71a-2d8b1d14665a",
+  "set": "otc",
+  "set_name": "Outlaws of Thunder Junction Commander",
+  "set_type": "commander",
+  "set_uri": "https://api.scryfall.com/sets/d6548798-0c10-4509-b71a-2d8b1d14665a",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Aotc&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/otc?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/fbbb3aef-af1f-4b77-b7d6-64cfd706a9d9/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Ad5be0ff6-39d9-4f9f-a028-e62dc38463f2&unique=prints",
+  "collector_number": "135",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Daarken",
+  "artist_ids": [
+    "e607a0d4-fc12-4c01-9e3f-501f5269b9cb"
+  ],
+  "illustration_id": "1a52d6b3-8d42-44ed-b63c-25276f88e145",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "edhrec_rank": 2092,
+  "penny_rank": 2119,
+  "prices": {
+    "usd": "0.37",
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": "0.29",
+    "eur_foil": null,
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=658579&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DGonti%252C%2BLord%2Bof%2BLuxury",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DGonti%252C%2BLord%2Bof%2BLuxury",
+    "edhrec": "https://edhrec.com/route/?cc=Gonti%2C+Lord+of+Luxury"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F545181%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=764948&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/124729?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

@@ -1022,6 +1022,7 @@ _PHRASE_SACRIFICE_ALL = re.compile(
 #: is a second demand on the *same* card - CR 201.2a's "at least one name in
 #: common" against something the payer controls - not a second card to choose,
 #: so it becomes a nested `CardRequirement` rather than another component.
+_PHRASE_DISCARD_HAND = re.compile(r"^discard your hand$", re.IGNORECASE)
 _PHRASE_DISCARD = re.compile(
     rf"^discard {_COST_COUNT} (?P<quality>[\w ]*?)cards?"
     r"(?: with the same name as (?:a|an) (?P<same_name>[\w ]+?) you control)?$",
@@ -1567,6 +1568,13 @@ def cost_component_for_phrase(phrase: str, payer: str | None = None) -> CostComp
         )
         component.requirement = requirement
         component.variable_count = read[1]
+        return component
+
+    if _PHRASE_DISCARD_HAND.match(text):
+        # "Discard your hand" (Bomat Courier): nobody chooses, CR 601.2h pays
+        # it with every card in the hand at that moment (possibly none).
+        component = discard_cost(payer=payer, required=0, description=text)
+        component.every_matching = True
         return component
 
     discard = _PHRASE_DISCARD.match(text)
