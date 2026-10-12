@@ -3031,7 +3031,9 @@ def _condition_can_fire(printing: Card, ability: TriggeredAbility) -> bool | Non
     # "an equipped creature you control attacks" is the equipment-block case
     # above - the source is not the Equipment, so it is not attached.
     attached_condition = equipment is None and (
-        "enchanted" in ability.condition.lower() or "equipped" in ability.condition.lower()
+        "enchanted" in ability.condition.lower()
+        or "equipped" in ability.condition.lower()
+        or "fortified" in ability.condition.lower()
     )
     for subject in states:
         if attached_condition:

@@ -1075,7 +1075,7 @@ _PHRASE_RETURN_TO_HAND = re.compile(
 #: activation_cost`'s self-reference fill-in, like "Exert this land".
 _PHRASE_RETURN_SELF_TO_HAND = re.compile(
     r"^return this (?P<self_noun>artifact|creature|enchantment|land|permanent|planeswalker"
-    r"|battle) to its owner's hand$",
+    r"|battle|aura|equipment|fortification|vehicle) to its owner's hand$",
     re.IGNORECASE,
 )
 #: `Collect evidence 6` (Detective's Phoenix's `Bestow-{R}, Collect evidence

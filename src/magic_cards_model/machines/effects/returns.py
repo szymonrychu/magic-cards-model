@@ -295,8 +295,8 @@ def _parse_return_self_then_create_tokens_clause(text: str) -> AbilityEffect | N
 #: bounces the permanent it is printed on (CR 201.5: "this creature" is that
 #: object).
 _RETURN_SELF_TO_OWNERS_HAND_RE = re.compile(
-    r"^return this (?:creature|permanent|artifact|enchantment|land|planeswalker) "
-    r"to its owner'?s hand\.?$",
+    r"^return this (?:creature|permanent|artifact|enchantment|land|planeswalker|aura"
+    r"|equipment|fortification|vehicle) to its owner'?s hand\.?$",
     re.IGNORECASE,
 )
 

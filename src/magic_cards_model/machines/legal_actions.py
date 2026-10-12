@@ -98,6 +98,12 @@ from ..models.player import Player
 from ..models.zone import Zone
 from ..snapshot import board_snapshot
 from .abilities import keyword_ability, printed_production
+from .attach_keywords import (
+    FORTIFY_EFFECT,
+    FORTIFY_RULE,
+    has_fortify,
+    unannounced_fortify_activation,
+)
 from .casting import (
     AlternativeCostSource,
     CastTiming,
@@ -1633,6 +1639,41 @@ def _equip_action(
     )
 
 
+def _fortify_action(
+    game: Any,
+    player: str,
+    permanent: CardState,
+    candidate_scan: list[_ScannedCandidate],
+    board: Any,
+) -> Action | None:
+    """CR 702.67a's fortify, as an `ACTIVATE` row with `keyword="Fortify"`: the
+    equip row's land twin (CR 301.6), its "target land you control" slot read
+    off `FORTIFY_EFFECT`, taken with `attach_keywords.fortify_activation(game,
+    fortification, land, player)`."""
+    if permanent.controller != player or not has_fortify(permanent.card):
+        return None
+    target_slots = _target_slots(
+        game, player, permanent, profile_for_text(FORTIFY_EFFECT), source_is_spell=False
+    )
+    try:
+        activation = unannounced_fortify_activation(game, permanent, player)
+    except ValueError as error:
+        return Action(
+            kind=ActionKind.ACTIVATE,
+            player=player,
+            rule=FORTIFY_RULE,
+            card_id=permanent.id,
+            from_zone=Zone.BATTLEFIELD,
+            keyword="Fortify",
+            affordable=Affordability.UNKNOWN,
+            unaffordable_reason=str(error),
+            target_slots=target_slots,
+        )
+    return _keyword_activation_row(
+        game, player, permanent, activation, target_slots, candidate_scan, board
+    )
+
+
 def _keyword_activation_row(
     game: Any,
     player: str,
@@ -2272,6 +2313,9 @@ def _legal_actions(
         equip = _equip_action(game, player, permanent, candidate_scan, board)
         if equip is not None:
             actions.append(equip)
+        fortify = _fortify_action(game, player, permanent, candidate_scan, board)
+        if fortify is not None:
+            actions.append(fortify)
         level_up = _level_up_action(game, player, permanent, candidate_scan, board)
         if level_up is not None:
             actions.append(level_up)

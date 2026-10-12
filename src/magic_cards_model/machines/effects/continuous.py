@@ -8053,27 +8053,65 @@ def _parse_goad_for_each_opponent_then_counters_clause(
 #: the ordinary `ENTERS_THE_BATTLEFIELD` machinery, and is no part of this
 #: effect body at all.
 _MAY_ATTACH_TO_ENTERING_CREATURE_RE = re.compile(
-    r"^you may attach this (?:equipment|permanent) to it\.?$", re.IGNORECASE
+    r"^you may attach (?P<what>it|this (?:equipment|aura|fortification|permanent)"
+    r"|target (?P<kind>equipment|aura|fortification) you control"
+    r"(?: with mana value (?P<mv>\d+)(?: or (?P<mv2>\d+))?)?) "
+    r"to (?P<where>it|that (?:creature|permanent)|this (?:creature|permanent)"
+    r"|target creature you control)\.?$",
+    re.IGNORECASE,
 )
 
 
 @ABILITY_TEXT.rung("s20")
 def _parse_may_attach_to_entering_creature_clause(text: str) -> AbilityEffect | None:
-    """`_MAY_ATTACH_TO_ENTERING_CREATURE_RE`'s shape, or `None`."""
-    if (
-        _MAY_ATTACH_TO_ENTERING_CREATURE_RE.fullmatch(_strip_non_effect_preamble(text).strip())
-        is None
-    ):
+    """`_MAY_ATTACH_TO_ENTERING_CREATURE_RE`'s shape, or `None`.
+
+    The attachment is "it" (the trigger subject: Sigarda's Aid's entering
+    Equipment), the source ("this Equipment"/"this Aura", Prison Term), or a
+    targeted Equipment you control ("target Equipment you control with mana
+    value 2 or 3", Frodo, Determined Hero; Kor Outfitter); the host is "it" /
+    "that creature" (the trigger subject), the source itself ("this creature",
+    Frodo's own name once normalised), or a second target. Targets are
+    announced by the ordinary trigger-target machinery
+    (`targeting.profile_for_text`, CR 603.3d), in the order the text names
+    them, and rechecked as the ability resolves (CR 608.2b)."""
+    match = _MAY_ATTACH_TO_ENTERING_CREATURE_RE.fullmatch(_strip_non_effect_preamble(text).strip())
+    if match is None:
         return None
+    what = match.group("what").lower()
+    where = match.group("where").lower()
+    values = {int(value) for value in (match.group("mv"), match.group("mv2")) if value is not None}
+    wanted = (match.group("kind") or "").capitalize()
 
     def effect(game: "Game", ability: AbilityOnStack) -> None:
         event = ability.event
-        if event is None or event.subject_id is None:
-            return
-        entered = game.find_by_id(event.subject_id)
-        if not isinstance(entered, CardState) or entered.zone is not Zone.BATTLEFIELD:
-            return  # CR 608.2b: no longer there to attach to.
+        entered = (
+            game.find_by_id(event.subject_id)
+            if event is not None and event.subject_id is not None
+            else None
+        )
         source = ability.source(game)
+        targets = [t for t in game.resolve_targets(ability) if isinstance(t, CardState)]
+        attachment = host = None
+        if what == "it":
+            attachment = entered
+        elif what.startswith("this "):
+            attachment = source
+        elif targets:
+            attachment = targets.pop(0)
+            if wanted not in game.characteristics_of(attachment).subtypes or (
+                values and int(game.characteristics_of(attachment).mana_value) not in values
+            ):
+                return  # CR 608.2b: no longer what the target asked for
+        if where in ("it", "that creature", "that permanent"):
+            host = entered
+        elif where.startswith("this "):
+            host = source
+        elif targets:
+            host = targets.pop(0)
+        for found in (attachment, host):
+            if not isinstance(found, CardState) or found.zone is not Zone.BATTLEFIELD:
+                return  # CR 608.2b: no longer there to attach (or to attach to)
         if source is None or source.zone is not Zone.BATTLEFIELD:
             return
         controller = game.controller_of(ability)
@@ -8081,14 +8119,14 @@ def _parse_may_attach_to_entering_creature_clause(text: str) -> AbilityEffect | 
             Decision(
                 kind=DecisionKind.MAY,
                 player=controller.username,
-                prompt=f"attach {source.name} to {entered.name}",
+                prompt=f"attach {attachment.name} to {host.name}",
                 source=ability.source_name,
                 source_id=source_id_of(ability),
                 affirmative_is_legal=True,
             )
         )
         if decision:
-            attach_permanent(game, source, entered)
+            attach_permanent(game, attachment, host)
 
     return effect
 

@@ -90,7 +90,7 @@ from .model import (
     set_power_toughness,
 )
 
-_ATTACHED_SUBJECT = r"(?P<attachment>enchanted|equipped) (?P<noun>[a-z]+)"
+_ATTACHED_SUBJECT = r"(?P<attachment>enchanted|equipped|fortified) (?P<noun>[a-z]+)"
 _PT = r"(?P<power>[+-](?:\d+|x))/(?P<toughness>[+-](?:\d+|x))"
 
 
@@ -123,8 +123,14 @@ def _multiplier(box: str) -> int:
 
 _ZONE_COUNT_RE = re.compile(
     r"^the number of (?:(?P<kind>[a-z]+) )?cards in "
-    r"(?P<whose>your|its controller's) (?P<zone>graveyard|hand)$",
+    r"(?P<whose>your|its controller's|all) (?P<zone>graveyards?|hand)$",
     re.IGNORECASE,
+)
+#: "the number of artifacts you control" / "... Equipment you control" - the
+#: attached object's own Aura or Equipment controller's permanents, recounted
+#: on every board computation (CR 611.3a, CR 613.5).
+_CONTROLLED_NUMBER_RE = re.compile(
+    r"^the number of (?P<kind>[a-z]+?)s? you control$", re.IGNORECASE
 )
 _MANA_VALUE_RE = re.compile(r"^its mana value$", re.IGNORECASE)
 _ATTACHED_COUNT_RE = re.compile(
@@ -154,14 +160,17 @@ def _count_factory(phrase: str) -> CountFactory | None:
     text = phrase.strip().rstrip(".")
     if _MANA_VALUE_RE.fullmatch(text):
         return lambda source, context: CountObjectManaValue()
+    if controlled := _CONTROLLED_NUMBER_RE.fullmatch(text):
+        return _controlled_count_factory(controlled["kind"])
     match = _ZONE_COUNT_RE.fullmatch(text)
     if match is None:
         return None
     kinds = _card_kinds(match.group("kind"))
-    zone = match.group("zone").lower()
-    if kinds is None or (zone == "hand" and kinds):
+    zone = match.group("zone").lower().rstrip("s")
+    whose = match.group("whose").lower()
+    if kinds is None or (zone == "hand" and (kinds or whose == "all")):
         return None
-    yours = match.group("whose").lower() == "your"
+    yours = whose == "your"
 
     def qualifying(cards: Sequence[CardState]) -> int:
         return sum(1 for card in cards if not kinds or any(kind in card.types for kind in kinds))
@@ -175,6 +184,12 @@ def _count_factory(phrase: str) -> CountFactory | None:
     if yours:
         return lambda source, context: FixedCount(
             value=qualifying(context.graveyard_of(source.controller))
+        )
+    if whose == "all":
+        # CR 404.1: each player has their own graveyard; "all graveyards" is
+        # every one of them, whoever the asking object's controller is.
+        return lambda source, context: FixedCount(
+            value=sum(qualifying(cards) for cards in context.graveyard_by_controller.values())
         )
     return lambda source, context: CountByControllerOfObject(
         counts=tuple(
@@ -247,25 +262,43 @@ _PERMANENT_STATIC_RE = re.compile(
 
 
 def _pump_per_count_builder(
-    factory: CountFactory, power: int, toughness: int, *, subject: str, line: str
+    factory: CountFactory,
+    power: int,
+    toughness: int,
+    *,
+    subject: str,
+    line: str,
+    fixed: tuple[int, int] = (0, 0),
 ) -> EffectBuilder:
+    """`power`/`toughness` are per counted object; `fixed` is added once on top
+    ("+X/+1": X per object, the 1 flat - CR 613.4c)."""
+
     def builder(source, timestamp, targets, context):
         attached = source.attached_to
         if attached is None:
             return []
+        effect = ContinuousEffect(
+            description=(
+                f"{source.name}: {subject} gets {power:+d}/{toughness:+d} per counted object"
+            ),
+            layer=Layer.POWER_TOUGHNESS,
+            sublayer=Sublayer.MODIFY,
+            timestamp=timestamp,
+            source_id=source.id,
+            source_ability=_source_line(source, line),
+            selector=_only(attached),
+            modification=modify_power_toughness_per(factory(source, context), power, toughness),
+        )
+        if fixed == (0, 0):
+            return [effect]
         return [
-            ContinuousEffect(
-                description=(
-                    f"{source.name}: {subject} gets {power:+d}/{toughness:+d} per counted object"
-                ),
-                layer=Layer.POWER_TOUGHNESS,
-                sublayer=Sublayer.MODIFY,
-                timestamp=timestamp,
-                source_id=source.id,
-                source_ability=_source_line(source, line),
-                selector=_only(attached),
-                modification=modify_power_toughness_per(factory(source, context), power, toughness),
-            )
+            effect,
+            effect.model_copy(
+                update={
+                    "description": f"{source.name}: {subject} gets {fixed[0]:+d}/{fixed[1]:+d}",
+                    "modification": modify_power_toughness(*fixed),
+                }
+            ),
         ]
 
     return builder
@@ -301,28 +334,17 @@ _CONTROLLED_COUNT_RE = re.compile(
 )
 
 
-def _parse_pump_per_controlled(match: re.Match[str], sentence: str) -> EffectBuilder | None:
-    """ "Enchanted creature gets +1/+1 for each enchantment you control[ and has
-    first strike]" (Ethereal Armor): one permanent of the named card type or
-    subtype counts per object the Aura's controller controls (CR 109.4,
-    CR 613.4c), recounted on every board computation (CR 611.3a). The keyword
-    tail, when there is one, is the same attached grant a plain "has" reads."""
-    from .parse import _attached_creature_static_builder, _card_type_word
+def _controlled_count_factory(kind: str) -> CountFactory | None:
+    """A card type or subtype word as the count of that many permanents the
+    attachment's controller controls (CR 109.4), or `None` for a word that is
+    neither."""
+    from .parse import _card_type_word
 
-    counted = _CONTROLLED_COUNT_RE.fullmatch(match["phrase"].strip())
-    if counted is None:
-        return None
-    kind = counted["kind"].lower()
-    card_type = _card_type_word(kind)
-    subtype = None if card_type is not None else canonical_subtype(kind)
+    word = kind.lower()
+    card_type = _card_type_word(word)
+    subtype = None if card_type is not None else canonical_subtype(word)
     if card_type is None and subtype is None:
         return None
-    keywords: list[str] = []
-    if counted["keywords"] is not None:
-        parsed = keywords_of(counted["keywords"])
-        if parsed is None:
-            return None
-        keywords = parsed
 
     def factory(source, context):
         if card_type is not None:
@@ -330,6 +352,30 @@ def _parse_pump_per_controlled(match: re.Match[str], sentence: str) -> EffectBui
         return CountPermanentsWithSubtypeControlledBy(
             username=source.controller, subtype=subtype.lower()
         )
+
+    return factory
+
+
+def _parse_pump_per_controlled(match: re.Match[str], sentence: str) -> EffectBuilder | None:
+    """ "Enchanted creature gets +1/+1 for each enchantment you control[ and has
+    first strike]" (Ethereal Armor): one permanent of the named card type or
+    subtype counts per object the Aura's controller controls (CR 109.4,
+    CR 613.4c), recounted on every board computation (CR 611.3a). The keyword
+    tail, when there is one, is the same attached grant a plain "has" reads."""
+    from .parse import _attached_creature_static_builder
+
+    counted = _CONTROLLED_COUNT_RE.fullmatch(match["phrase"].strip())
+    if counted is None:
+        return None
+    factory = _controlled_count_factory(counted["kind"])
+    if factory is None:
+        return None
+    keywords: list[str] = []
+    if counted["keywords"] is not None:
+        parsed = keywords_of(counted["keywords"])
+        if parsed is None:
+            return None
+        keywords = parsed
 
     subject = f"{match['attachment'].lower()} {match['noun'].lower()}"
     pump = _pump_per_count_builder(
@@ -359,12 +405,21 @@ def _parse_pump(sentence: str) -> EffectBuilder | None:
         factory = _count_factory(match["phrase"])
         if factory is None:
             return None
+        # A box that says X scales with the count; a numeral box is flat.
+        scaled = [box.lower().endswith("x") for box in (match["power"], match["toughness"])]
+        if not any(scaled):
+            return None
+        flat = [
+            0 if is_x else int(box)
+            for box, is_x in zip((match["power"], match["toughness"]), scaled, strict=True)
+        ]
         return _pump_per_count_builder(
             factory,
-            _multiplier(match["power"]),
-            _multiplier(match["toughness"]),
+            _multiplier(match["power"]) if scaled[0] else 0,
+            _multiplier(match["toughness"]) if scaled[1] else 0,
             subject=f"{match['attachment'].lower()} {match['noun'].lower()}",
             line=sentence,
+            fixed=(flat[0], flat[1]),
         )
     if match := _PUMP_FOR_EACH_RE.fullmatch(sentence):
         if not _subject_ok(match["noun"].lower()):
@@ -921,12 +976,15 @@ def _parse_one_shot(sentence: str) -> EffectBuilder | None:
 # --------------------------------------------------------------------------
 
 
+_ATTACHED_WORD_RE = re.compile(r"\b(?:enchanted|equipped|fortified) ")
+
+
 @functools.lru_cache(maxsize=4096)
 def parse_attached_sentence(sentence: str) -> EffectBuilder | None:
     """`sentence` as one of the attached shapes above, or `None`."""
     lowered = sentence.lower()
     text = sentence.strip()
-    if "enchanted " not in lowered and "equipped " not in lowered:
+    if not _ATTACHED_WORD_RE.search(lowered):
         return _parse_one_shot(text)
     return _parse_pump(text) or _parse_permanent_static(text) or _parse_change(text)
 
@@ -937,7 +995,7 @@ def attached_quoted_texts(sentence: str) -> tuple[str, ...]:
     other sentence) - what `parse.quoted_ability_grants` stores on the
     enchanted permanent so each is a working ability (CR 113.10a)."""
     lowered = sentence.lower()
-    if '"' not in sentence or ("enchanted " not in lowered and "equipped " not in lowered):
+    if '"' not in sentence or not _ATTACHED_WORD_RE.search(lowered):
         return ()
     read = _read_change(sentence.strip())
     return tuple(read[2]) if read is not None else ()
