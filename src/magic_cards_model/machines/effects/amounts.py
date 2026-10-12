@@ -49,6 +49,7 @@ from ..ep01_r3_amounts import (
     creatures_blocked_by,
     creatures_blocking,
     event_subject_stat,
+    event_terms_enabled,
 )
 from ..layers import (
     BASIC_LAND_TYPES,
@@ -1688,7 +1689,8 @@ def _damage_those_creatures_dealt(game: "Game", controller: str) -> int:
 #: "its mana value" / "this permanent's mana value" - the object the
 #: expression is evaluated for (Terminal Velocity's granted leaves trigger).
 _ITS_MANA_VALUE_RE = re.compile(
-    r"^(?:its|(?:this (?:creature|permanent|artifact|token)|that spell)(?:'|\u2019)s) mana value$", re.IGNORECASE
+    r"^(?:its|this (?:creature|permanent|artifact|token)(?:'|\u2019)s) mana value$",
+    re.IGNORECASE,
 )
 
 
@@ -1782,20 +1784,28 @@ def _amount_term(term: str) -> AmountReader | None:
     ):
         sourced = filtered[0]
         return lambda game, controller, obj, _x: sourced(game, controller, obj)
-    if "mana value" in lowered and _ITS_MANA_VALUE_RE.fullmatch(text):
-        # CR 202.3: the object's mana value, as it last existed if it has left
-        # the battlefield (CR 603.10a looks back in time for a leaves trigger).
-        # Off a "whenever you cast a spell" trigger "its" is that spell (Teval,
-        # Arbiter of Virtue): the cast event's own mana value (CR 202.3e - X
-        # counted as announced).
-        def read_mana_value(game: "Game", _controller: str, obj: CardState | None, _x: int) -> int:
+    if (
+        "mana value" in lowered
+        and event_terms_enabled()
+        and _CAST_SPELL_MANA_VALUE_RE.fullmatch(text)
+    ):
+        # Off a "whenever you cast a spell" trigger "its" / "that spell's" is the
+        # spell the cast event names (Teval, Arbiter of Virtue): the event's own
+        # mana value (CR 202.3e - X counted as announced).
+        def read_cast_mana_value(
+            game: "Game", _controller: str, obj: CardState | None, _x: int
+        ) -> int:
             cast_value = cast_spell_mana_value(game)
             if cast_value is not None:
                 return cast_value
             return 0 if obj is None else int(obj.mana_value)
 
-        return read_mana_value
-    if (event_stat := _EVENT_SUBJECT_STAT_RE.fullmatch(text)) is not None:
+        return read_cast_mana_value
+    if "mana value" in lowered and _ITS_MANA_VALUE_RE.fullmatch(text):
+        # CR 202.3: the object's mana value, as it last existed if it has left
+        # the battlefield (CR 603.10a looks back in time for a leaves trigger).
+        return lambda _game, _controller, obj, _x: 0 if obj is None else int(obj.mana_value)
+    if event_terms_enabled() and (event_stat := _EVENT_SUBJECT_STAT_RE.fullmatch(text)) is not None:
         # "that creature's power" off a trigger whose event names a creature
         # (Terror of the Peaks' "another creature you control enters"): the
         # subject as it last existed (CR 608.2h).
@@ -2779,8 +2789,8 @@ def _parse_counted_life_change_clause(clause: str) -> ClauseEffect | None:
     if third_person == bool(match.group("you")):
         return None
     expression = (match.group("where") or match.group("equal")).strip()
-    if _ANAPHORIC_OBJECT_TERM_RE.search(expression) and not _CAST_SPELL_MANA_VALUE_RE.fullmatch(
-        expression
+    if _ANAPHORIC_OBJECT_TERM_RE.search(expression) and not (
+        event_terms_enabled() and _CAST_SPELL_MANA_VALUE_RE.fullmatch(expression)
     ):
         # "you gain life equal to its toughness" (Momentous Fall) names an
         # object an earlier clause chose - an anaphora (CR 608.2c) this
@@ -3158,7 +3168,7 @@ def _for_each_multiplier(phrase: str) -> Callable[["Game", str, str | None], int
     if types_among is not None:
         # CR 608.2h: counted once, as the effect applies.
         return lambda game, controller, _source_id: len(types_among(game, controller))
-    if (blocking := _CREATURES_BLOCKING_RE.fullmatch(stripped)) is not None:
+    if "blocking" in stripped and (blocking := _CREATURES_BLOCKING_RE.fullmatch(stripped)):
         # "for each creature it's blocking" (Guardian of the Gateless) / "for
         # each creature blocking it" (Elvish Berserker): the combat count at
         # resolution (CR 608.2h), the ability's source being the creature.

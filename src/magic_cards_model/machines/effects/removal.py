@@ -9978,7 +9978,7 @@ _DESTROY_ALL_DEALT_DAMAGE_RE = re.compile(
 @ABILITY_TEXT.rung("s9")
 def _parse_destroy_all_dealt_damage_this_turn_text(text: str) -> AbilityEffect | None:
     """`_DESTROY_ALL_DEALT_DAMAGE_RE`'s shape."""
-    if "dealt damage this turn" not in text.lower():
+    if "dealt damage this turn" not in text:
         return None
     match = _DESTROY_ALL_DEALT_DAMAGE_RE.fullmatch(" ".join(text.strip().split()))
     if match is None:
@@ -10021,7 +10021,7 @@ _DESTROY_EVENT_REFERENT_RE = re.compile(
 @MIXED_CLAUSE.rung("s26", for_spell=FORWARD)
 def _parse_destroy_event_referent_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
     """`_DESTROY_EVENT_REFERENT_RE`'s shape. Ability-only: a spell has no event."""
-    if for_spell or not clause.lower().startswith("destroy that "):
+    if for_spell or not clause.startswith(("destroy that ", "Destroy that ")):
         return None
     if _DESTROY_EVENT_REFERENT_RE.fullmatch(clause.strip()) is None:
         return None
@@ -10046,7 +10046,7 @@ _SACRIFICE_PER_LIFE_LOST_RE = re.compile(
 @MIXED_CLAUSE.rung("s26", for_spell=FORWARD)
 def _parse_sacrifice_per_life_lost_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
     """`_SACRIFICE_PER_LIFE_LOST_RE`'s shape (ability-only: it reads the event)."""
-    if for_spell or "for each 1 life you lost" not in clause.lower():
+    if for_spell or "for each 1 life you lost" not in clause:
         return None
     match = _SACRIFICE_PER_LIFE_LOST_RE.fullmatch(clause.strip())
     if match is None or permanent_description(match.group("what")) is None:

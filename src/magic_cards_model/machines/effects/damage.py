@@ -46,6 +46,7 @@ from ..delayed import (
     DrawACardForController,
     return_earthbent_land,
 )
+from ..ep01_r3_amounts import event_terms
 from ..layers import (
     ContinuousEffect,
     CreaturesControlledByWhereToughnessExceedsPower,
@@ -8688,3 +8689,28 @@ from .text import (  # noqa: E402
     _strip_non_effect_preamble,
 )
 from .tokens import _is_notice_only  # noqa: E402
+
+#: "This creature deals damage equal to that creature's power to any target." -
+#: Terror of the Peaks' "another creature you control enters" trigger. "That
+#: creature" is the trigger event's subject (CR 603.2), read as it last existed
+#: (CR 608.2h); the event-anaphoric amount term is switched on only for this
+#: whole-text shape (`ep01_r3_amounts.event_terms`).
+_DAMAGE_EQUAL_TO_EVENT_SUBJECT_POWER_RE = re.compile(
+    r"^this (?:creature|permanent|artifact|enchantment) deals damage equal to that creature'?s "
+    r"power to (?P<phrase>.+?)\.?$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s40", before=["dispatch.parse_mixed_effect"])
+def _parse_damage_equal_to_event_subject_power_text(text: str) -> AbilityEffect | None:
+    """`_DAMAGE_EQUAL_TO_EVENT_SUBJECT_POWER_RE`'s shape."""
+    if "equal to that creature" not in text:
+        return None
+    stripped = " ".join(text.strip().split())
+    if _DAMAGE_EQUAL_TO_EVENT_SUBJECT_POWER_RE.fullmatch(stripped) is None:
+        return None
+    from . import parse_mixed_effect
+
+    with event_terms():
+        return parse_mixed_effect(stripped)

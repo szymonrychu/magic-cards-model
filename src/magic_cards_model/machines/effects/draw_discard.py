@@ -29,13 +29,13 @@ from ..casting import (
     PlayAction,
 )
 from ..decisions import Decision, DecisionKind, source_id_of
-from ..ep01_r3_amounts import event_player_username
 from ..delayed import (
     DelayedTrigger,
     DiscardCardsAtRandomForController,
     ReflexiveConsequence,
 )
 from ..designations import designation_holds, split_if
+from ..ep01_r3_amounts import event_player_username
 from ..layers import (
     Characteristics,
 )
@@ -3012,7 +3012,6 @@ from .search import _search_quality_is_readable  # noqa: E402
 from .text import _plain_resolution_sentences, _strip_non_effect_preamble  # noqa: E402
 from .tokens import _is_notice_only, _parse_generic_token_descriptor  # noqa: E402
 
-
 #: "That creature's controller draws a card." (Nessian Boar) - CR 603.2: the
 #: controller of the creature the trigger's event concerns (the blocker, for
 #: "becomes blocked by a creature").
@@ -3026,7 +3025,7 @@ def _parse_event_referent_controller_draws_clause(
     clause: str, *, for_spell: bool
 ) -> TargetedClause | None:
     """`_EVENT_REFERENT_CONTROLLER_DRAWS_RE`'s shape (ability-only)."""
-    if for_spell or " controller draw" not in clause.lower():
+    if for_spell or " controller draw" not in clause:
         return None
     match = _EVENT_REFERENT_CONTROLLER_DRAWS_RE.fullmatch(clause.strip())
     count = parse_count(match.group("n")) if match else None

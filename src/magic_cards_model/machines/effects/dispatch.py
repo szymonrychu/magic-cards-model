@@ -946,7 +946,9 @@ def parse_clause_effect(clause: str) -> ClauseEffect | None:
         equal_their_hand = equal is not None and equal.strip().lower() == (
             "the number of cards in their hand"
         )
-        equal_reader = count_expression(equal) if equal is not None and not equal_their_hand else None
+        equal_reader = (
+            count_expression(equal) if equal is not None and not equal_their_hand else None
+        )
         if equal is not None and equal_reader is None and not equal_their_hand:
             return None
 

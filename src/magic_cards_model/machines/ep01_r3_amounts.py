@@ -108,3 +108,32 @@ def event_subject_stat(game, *, wants_power):
     power, toughness = subject.last_known_power_toughness()
     value = power if wants_power else toughness
     return max(value or 0, 0)
+
+
+# --------------------------------------------------------------------------
+# Event-anaphoric amount terms ("that creature's power", "its mana value" off a
+# cast trigger) are meaningful only for a trigger whose event names that
+# object. Parsing them everywhere would read a text like "sacrifice another
+# creature. When you do, ~ deals damage equal to that creature's power" (where
+# "that creature" is the sacrificed one) as the event's subject. A rung that
+# knows its whole text is such a trigger turns them on for its own parse only.
+# --------------------------------------------------------------------------
+
+import contextlib
+import contextvars
+
+_EVENT_TERMS = contextvars.ContextVar("ep01_r3_event_terms", default=False)
+
+
+def event_terms_enabled() -> bool:
+    return _EVENT_TERMS.get()
+
+
+@contextlib.contextmanager
+def event_terms():
+    """Parse with the event-anaphoric amount terms on."""
+    token = _EVENT_TERMS.set(True)
+    try:
+        yield
+    finally:
+        _EVENT_TERMS.reset(token)

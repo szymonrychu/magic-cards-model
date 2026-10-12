@@ -29,7 +29,6 @@ from ..turn import Step
 if TYPE_CHECKING:
     from ...models.game import Game
 from ._common import AbilityEffect, Effect
-from .removal import hangarback_dies
 
 #: The narrower half of the pattern above, on its own: CR 602.5d's "Activate
 #: only as a sorcery." / "Activate only once each turn." printed as a trailing
@@ -545,7 +544,6 @@ TRIGGER_EFFECTS: dict[TriggerKey, AbilityEffect] = {
     # the card's own printed text, so `trigger_effect_for`'s fallback reaches
     # it and a future card sharing the template with a different discard,
     # draw, or token count is covered for free.
-    ("Hangarback Walker", TriggerEvent.DIES, ""): hangarback_dies,
     # Ragavan, Nimble Pilferer's, Nashi, Searcher in the Dark's, and Questing
     # Beast's combat-damage-to-a-player triggers are not entered here at all
     # (CR 120.2a): the condition - "whenever [this creature] deals combat

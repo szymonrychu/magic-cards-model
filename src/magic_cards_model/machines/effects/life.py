@@ -16,7 +16,7 @@ from ...numbers import (
     parse_count,
 )
 from ..decisions import Decision, DecisionKind, source_id_of
-from ..ep01_r3_amounts import event_player_username
+from ..ep01_r3_amounts import event_player_username, event_terms
 from ..targeting import (
     permanent_description,
 )
@@ -892,7 +892,20 @@ _EVENT_PLAYER_LIFE_RE = re.compile(
 @MIXED_CLAUSE.rung("s26", for_spell=FORWARD)
 def _parse_event_player_life_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
     """`_EVENT_PLAYER_LIFE_RE`'s shape. Ability-only: a spell has no event."""
-    if for_spell or " life" not in clause.lower():
+    if for_spell or not clause.startswith(
+        (
+            "they ",
+            "They ",
+            "that player",
+            "That player",
+            "its controller",
+            "Its controller",
+            "that creature",
+            "That creature",
+            "that permanent",
+            "That permanent",
+        )
+    ):
         return None
     match = _EVENT_PLAYER_LIFE_RE.fullmatch(clause.strip())
     if match is None:
@@ -1369,3 +1382,24 @@ from .removal import (  # noqa: E402
 from .search import _search_library  # noqa: E402
 from .text import _strip_non_effect_preamble  # noqa: E402
 from .tokens import _is_notice_only  # noqa: E402
+
+#: "You lose life equal to its mana value." off a "whenever you cast a spell"
+#: trigger (Teval, Arbiter of Virtue) - "its" is the spell the cast event names
+#: (CR 603.2, CR 202.3e).
+_LOSE_LIFE_EQUAL_TO_CAST_SPELL_MV_RE = re.compile(
+    r"^you lose life equal to (?:its|that spell'?s) mana value\.?$", re.IGNORECASE
+)
+
+
+@ABILITY_TEXT.rung("s40", before=["dispatch.parse_mixed_effect"])
+def _parse_lose_life_equal_to_cast_spell_mana_value_text(text: str) -> AbilityEffect | None:
+    """`_LOSE_LIFE_EQUAL_TO_CAST_SPELL_MV_RE`'s shape."""
+    if "mana value" not in text:
+        return None
+    stripped = " ".join(text.strip().split())
+    if _LOSE_LIFE_EQUAL_TO_CAST_SPELL_MV_RE.fullmatch(stripped) is None:
+        return None
+    from . import parse_mixed_effect
+
+    with event_terms():
+        return parse_mixed_effect(stripped)

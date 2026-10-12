@@ -100,11 +100,12 @@ def test_the_four_token_rows_this_wave_removed_are_gone():
     assert ("Wurmcoil Engine", TriggerEvent.DIES, "") not in TRIGGER_EFFECTS
     # Ocelot Pride's row is gone too, now that ascend and the city's blessing
     # are built (see test_ascend.py): both of its sentences are readable off
-    # its own printed text with no row. Hangarback Walker keeps its row - its
-    # count depends on the permanent's own counters at the moment it dies,
-    # which no clause shape here reads.
+    # its own printed text with no row. Hangarback Walker's row went with EP-01
+    # R3 T8: the token "for each counter on it/this creature" reader counts
+    # the permanent's own last-known counters at resolution, so its printed
+    # text reads with no row (test_registry_is_minimal.py's dead-weight rule).
     assert ("Ocelot Pride", TriggerEvent.BEGINNING_OF_STEP, "") not in TRIGGER_EFFECTS
-    assert ("Hangarback Walker", TriggerEvent.DIES, "") in TRIGGER_EFFECTS
+    assert ("Hangarback Walker", TriggerEvent.DIES, "") not in TRIGGER_EFFECTS
 
 
 # --------------------------------------------------------------------------
@@ -251,17 +252,19 @@ def test_ocelot_prides_full_text_now_parses_as_one_ability():
     assert parse_mixed_effect(text) is not None
 
 
-def test_hangarback_walkers_full_text_fails_closed_because_of_its_count():
+def test_hangarback_walkers_full_text_reads_its_count_off_its_own_counters():
     """Hangarback Walker: "create a 1/1 colorless Thopter artifact creature
-    token with flying for each +1/+1 counter on this creature." The count is
-    not a `_COUNT` word this parser reads - it depends on the permanent's own
-    counters, read at resolution by `hangarback_dies` - so the whole clause,
-    tail included, must fail rather than create exactly one Thopter and drop
-    the "for each" silently.
+    token with flying for each +1/+1 counter on this creature." The count
+    depends on the permanent's own counters (last known, CR 603.10a), which the
+    token "for each ... counter on it/this creature" reader now counts at
+    resolution - so the clause reads whole, "for each" included, rather than
+    failing closed (the earlier version of this test, which asserted the
+    fail-closed state, stood in for the reader that did not exist yet; the
+    counts are proven in test_ep01_r3_amounts_and_riders.py).
     """
     text = _triggered_effect_text("Hangarback Walker", TriggerEvent.DIES)
     assert "for each" in text.lower()
-    assert parse_mixed_effect(text) is None
+    assert parse_mixed_effect(text) is not None
 
 
 def test_repudiates_copy_clause_fails_closed():

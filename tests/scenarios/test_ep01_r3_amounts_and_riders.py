@@ -22,9 +22,7 @@ def _settle(scenario, limit=12):
 
 
 def _count(scenario, name, username="alice"):
-    return len(
-        [c for c in scenario.game.permanents_controlled_by(username) if c.card.name == name]
-    )
+    return len([c for c in scenario.game.permanents_controlled_by(username) if c.card.name == name])
 
 
 # -- "for each counter on it" (any kind), on the departing / sacrificed source
@@ -127,9 +125,7 @@ def _combat(attacker_names, blocker_names, blocks):
     attackers = [
         scenario.game.permanents_controlled_by("alice")[i] for i in range(len(attacker_names))
     ]
-    blockers = [
-        scenario.game.permanents_controlled_by("bob")[i] for i in range(len(blocker_names))
-    ]
+    blockers = [scenario.game.permanents_controlled_by("bob")[i] for i in range(len(blocker_names))]
     scenario.attack_with(*attackers)
     scenario.game.declare_blockers([(blockers[b], attackers[a]) for b, a in blocks])
     return scenario, attackers, blockers
@@ -227,8 +223,11 @@ def _bob(scenario, name):
 
 
 def _combat_at_walker(attackers):
-    scenario = _board(["Zagras, Thief of Heartbeats", *attackers], ["Ajani Unrelenting"],
-                      step=Step.DECLARE_ATTACKERS)
+    scenario = _board(
+        ["Zagras, Thief of Heartbeats", *attackers],
+        ["Ajani Unrelenting"],
+        step=Step.DECLARE_ATTACKERS,
+    )
     return scenario
 
 
@@ -406,7 +405,8 @@ def test_death_rattle_oni_destroys_only_creatures_dealt_damage_this_turn():
 
 def test_golden_tail_trainer_pumps_other_modified_creatures_by_its_power():
     scenario = _board(
-        ["Golden-Tail Trainer", "Hill Giant", "Grizzly Bears"], ["Elvish Berserker"],
+        ["Golden-Tail Trainer", "Hill Giant", "Grizzly Bears"],
+        ["Elvish Berserker"],
         step=Step.DECLARE_ATTACKERS,
     )
     trainer = _alice(scenario, "Golden-Tail Trainer")
@@ -433,8 +433,12 @@ def test_terror_of_the_peaks_deals_damage_equal_to_the_entering_creatures_power(
     scenario = (
         Scenario()
         .manual_turn_based_actions()
-        .player("alice", hand=["Hill Giant"], battlefield=["Terror of the Peaks"],
-                library=["Forest"] * 3)
+        .player(
+            "alice",
+            hand=["Hill Giant"],
+            battlefield=["Terror of the Peaks"],
+            library=["Forest"] * 3,
+        )
         .player("bob", library=["Forest"] * 3)
         .build()
     )
@@ -463,8 +467,12 @@ def test_teval_cast_trigger_costs_life_equal_to_the_spells_mana_value():
     scenario = (
         Scenario()
         .manual_turn_based_actions()
-        .player("alice", hand=["Serra Angel"], battlefield=["Teval, Arbiter of Virtue"] +
-                ["Plains"] * 5, library=["Forest"] * 3)
+        .player(
+            "alice",
+            hand=["Serra Angel"],
+            battlefield=["Teval, Arbiter of Virtue"] + ["Plains"] * 5,
+            library=["Forest"] * 3,
+        )
         .player("bob", library=["Forest"] * 3)
         .build()
     )
@@ -482,8 +490,11 @@ def test_folio_of_fancies_each_opponent_mills_cards_equal_to_their_hand():
     scenario = (
         Scenario()
         .manual_turn_based_actions()
-        .player("alice", battlefield=["Folio of Fancies", "Island", "Island", "Island"],
-                library=["Forest"] * 3)
+        .player(
+            "alice",
+            battlefield=["Folio of Fancies", "Island", "Island", "Island"],
+            library=["Forest"] * 3,
+        )
         .player("bob", hand=["Forest"] * 4, library=["Mountain"] * 9)
         .build()
     )

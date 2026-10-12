@@ -4195,7 +4195,7 @@ def _parse_create_tokens_equal_to_amount_clause(
 ) -> TargetedClause | None:
     """`_TOKENS_EQUAL_TO_AMOUNT_RE`'s shape, or `None`. CR 107.1b: a zero count
     creates nothing."""
-    if "tokens equal to the number of" not in text.lower():
+    if "tokens equal to the number of" not in text:
         return None
     match = _TOKENS_EQUAL_TO_AMOUNT_RE.fullmatch(" ".join(text.strip().split()))
     if match is None:

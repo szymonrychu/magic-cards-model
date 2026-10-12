@@ -960,6 +960,14 @@ _MASS_STATE_SUBJECT_RE = re.compile(
 )
 
 
+def _is_mass_state_subject(text: str) -> bool:
+    """Cheap literal gate before `_MASS_STATE_SUBJECT_RE` (hot on the pool)."""
+    head = text[:30].lower()
+    return " creatures" in head and head.startswith(
+        ("attacking", "blocking", "modified", "tapped", "untapped", "other ")
+    )
+
+
 def _mass_state_group(game: "Game", controller: str, source_id: UUID, match) -> list[CardState]:
     """The creatures `_MASS_STATE_SUBJECT_RE` names, on the board right now."""
     from ..conditions.board import permanent_is_modified
@@ -1082,7 +1090,9 @@ def _mass_creature_group_targets(
     here. `None` if `text`'s subject is none of the three - the caller's
     ordinary target resolution stays in charge for everything else.
     """
-    state_match = _MASS_STATE_SUBJECT_RE.match(text.strip())
+    state_match = (
+        _MASS_STATE_SUBJECT_RE.match(text.strip()) if _is_mass_state_subject(text) else None
+    )
     if state_match is not None:
         return _mass_state_group(game, controller, source_id, state_match)
     each_match = _MASS_EACH_SUBJECT_RE.match(text.strip())
@@ -1372,7 +1382,7 @@ def _parse_mass_pump_clause(
         and _MASS_TYPE_FILTER_RE.match(text) is None
         and _mass_word_filter(text) is None
         and _mass_group_filter(text) is None
-        and _MASS_STATE_SUBJECT_RE.match(text) is None
+        and not _is_mass_state_subject(text)
     ):
         return None
     if Duration.UNTIL_END_OF_TURN not in text.lower():
@@ -1435,7 +1445,9 @@ def _mass_pump_parseable(literal: str) -> str:
     type_filter_match = _MASS_TYPE_FILTER_RE.match(literal.strip())
     each_match = _MASS_EACH_SUBJECT_RE.match(literal.strip())
     other_match = _MASS_OTHER_CREATURES_RE.match(literal.strip())
-    state_match = _MASS_STATE_SUBJECT_RE.match(literal.strip())
+    state_match = (
+        _MASS_STATE_SUBJECT_RE.match(literal.strip()) if _is_mass_state_subject(literal) else None
+    )
     if state_match is not None:
         # The group (state, "other", controller) is already `targets`.
         parseable = "all creatures" + literal.strip()[state_match.end() :]
