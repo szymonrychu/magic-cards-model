@@ -6,7 +6,7 @@ from uuid import UUID
 from magic_cards_model.phrases import with_indefinite_article
 
 from ...data.subtypes import canonical_subtype, creature_type_vocabulary
-from ...models.card import Color, Type, types_of
+from ...models.card import Color, Supertype, Type, types_of
 from ...models.card_state import (
     CardState,
     Counter,
@@ -1026,7 +1026,8 @@ def _mass_word_filter(
 #: The two whole-board subjects `_MASS_SUBJECT_RE` reads that also open
 #: sentences which are not a pump at all - see `_parse_mass_pump_clause`.
 _MASS_WHOLE_BOARD_SUBJECT_RE = re.compile(
-    r"^(?:all creatures|creatures that are|(?:all )?other creatures (?=get |gain ))\b",
+    r"^(?:all creatures|all (?:non)?snow creatures|creatures that are"
+    r"|(?:all )?other creatures (?=get |gain ))\b",
     re.IGNORECASE,
 )
 #: "Creatures that are green and/or white" - Glistening Deluge's second
@@ -1039,6 +1040,12 @@ _MASS_COLOR_FILTER_RE = re.compile(
     r"^creatures that are (?P<colors>(?:white|blue|black|red|green)"
     r"(?:(?:,\s*|\s+and/or\s+|\s+or\s+)(?:white|blue|black|red|green))*)\b",
     re.IGNORECASE,
+)
+#: "All nonsnow creatures get -X/-X until end of turn" (Dead of Winter), "All
+#: snow creatures ..." - the whole board narrowed by CR 205.4g's snow supertype,
+#: read once against the computed board as the effect begins (CR 611.2c).
+_MASS_SUPERTYPE_SUBJECT_RE = re.compile(
+    r"^(?:all )?(?P<negated>non)?snow creatures\b(?= (?:get|gain)\b)", re.IGNORECASE
 )
 #: The trailing computed-magnitude clause - "..., where X is <expr>." - split
 #: off so the rest of the sentence can be handed to `machines/layers.py`'s
@@ -1154,6 +1161,16 @@ def _mass_creature_group_targets(
                 else board.of(permanent).controller not in (None, controller)
             )
             and subtypes & {word.lower() for word in board.of(permanent).subtypes}
+        ]
+    supertype_match = _MASS_SUPERTYPE_SUBJECT_RE.match(text.strip())
+    if supertype_match is not None:
+        board = game.computed_board()
+        wants_snow = supertype_match.group("negated") is None
+        return [
+            permanent
+            for permanent in game.battlefield
+            if board.of(permanent).is_creature
+            and (Supertype.SNOW in board.of(permanent).supertypes) == wants_snow
         ]
     color_filter_match = _MASS_COLOR_FILTER_RE.match(text.strip())
     if color_filter_match is not None:
@@ -1379,6 +1396,7 @@ def _parse_mass_pump_clause(
         _MASS_SUBJECT_RE.match(text) is None
         and _MASS_SUBTYPE_SUBJECT_RE.match(text) is None
         and _MASS_EACH_SUBJECT_RE.match(text) is None
+        and _MASS_SUPERTYPE_SUBJECT_RE.match(text) is None
         and _MASS_TYPE_FILTER_RE.match(text) is None
         and _mass_word_filter(text) is None
         and _mass_group_filter(text) is None
@@ -1463,6 +1481,9 @@ def _mass_pump_parseable(literal: str) -> str:
             f"creatures {each_match.group('whose')} {each_match.group('verb')[:-1]}"
             + re.sub(r"\bgains\b", "gain", literal.strip()[each_match.end() :])
         )
+    elif (supertype_match := _MASS_SUPERTYPE_SUBJECT_RE.match(literal.strip())) is not None:
+        # The snow filter is already applied to `targets`.
+        parseable = "all creatures" + literal.strip()[supertype_match.end() :]
     elif color_filter_match is not None:
         # The colour filter, like the power filter below, is already applied
         # to `targets`; `machines/layers.py` only needs the group shape.

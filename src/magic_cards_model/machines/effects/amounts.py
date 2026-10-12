@@ -309,7 +309,7 @@ _THIS_WAY_VERB_KINDS = {
 #: cards that have been drawn"), so every card in it counts, whatever it is.
 #: CR 700.8's party, counted (Practiced Tactics, Allied Assault).
 _COUNT_CREATURES_IN_YOUR_PARTY_RE = re.compile(
-    r"^(?:the )?number of creatures in your party$", re.IGNORECASE
+    r"^(?:the )?(?:number of )?creatures? in your party$", re.IGNORECASE
 )
 _COUNT_CARDS_IN_YOUR_HAND_RE = re.compile(r"^(?:the )?number of cards in your hand$", re.IGNORECASE)
 #: "the number of cards in your library" - Tamiyo, Seasoned Scholar's own -7
@@ -1458,6 +1458,11 @@ def count_expression(phrase: str) -> Callable[["Game", str], int] | None:
     if colors_among is not None:
         return colors_among
 
+    from ..ep02_r1_counted_permanents import counted_group_reader
+
+    if (counted := counted_group_reader(stripped)) is not None:
+        return lambda game, controller: counted(game, controller, None)
+
     return None
 
 
@@ -1785,6 +1790,12 @@ def _amount_term(term: str) -> AmountReader | None:
     ):
         sourced = filtered[0]
         return lambda game, controller, obj, _x: sourced(game, controller, obj)
+    from ..ep02_r1_counted_permanents import counted_group_reader
+
+    if (counted := counted_group_reader(text)) is not None:
+        return lambda game, controller, obj, _x: counted(
+            game, controller, None if obj is None else str(obj.id)
+        )
     if (
         "mana value" in lowered
         and event_terms_enabled()
@@ -2380,6 +2391,11 @@ def _parse_where_x_is_continuous_effect(effect_text: str) -> AbilityEffect | Non
     if pump_index is None:
         return None
     pump_sentence = sentences[pump_index]
+    if parsed_layer_effects(_X_TOKEN_RE.sub("1", pump_sentence)) is None:
+        # The X sentence is no pump itself ("You gain X life and draw X cards,
+        # where X is ..." beside a pump of its own): reading the whole text's
+        # pump as this sentence's would drop the instruction (Camaraderie).
+        return None
     if re.search(r"\bcounters?\b", pump_sentence, re.IGNORECASE):
         # "Distribute X +1/+1 counters among ..." (Undercity Upheaval) names an
         # X but modifies no power or toughness: placing counters is not a layer
@@ -2498,6 +2514,11 @@ def _parse_where_x_is_continuous_effect_for_spell(effect_text: str) -> Effect | 
     if pump_index is None:
         return None
     pump_sentence = sentences[pump_index]
+    if parsed_layer_effects(_X_TOKEN_RE.sub("1", pump_sentence)) is None:
+        # The X sentence is no pump itself ("You gain X life and draw X cards,
+        # where X is ..." beside a pump of its own): reading the whole text's
+        # pump as this sentence's would drop the instruction (Camaraderie).
+        return None
     if re.search(r"\bcounters?\b", pump_sentence, re.IGNORECASE):
         # "Distribute X +1/+1 counters among ..." (Undercity Upheaval) names an
         # X but modifies no power or toughness: placing counters is not a layer
@@ -3295,7 +3316,9 @@ def _for_each_multiplier(phrase: str) -> Callable[["Game", str, str | None], int
     generic = count_expression(stripped)
     if generic is not None:
         return lambda game, controller, _source_id: generic(game, controller)
-    return _for_each_described_count(stripped)
+    from ..ep02_r1_counted_permanents import counted_group_reader
+
+    return counted_group_reader(stripped) or _for_each_described_count(stripped)
 
 
 #: "`<description>` you control", the control clause anywhere in it -
@@ -5538,6 +5561,26 @@ def _readable_effect(effect: object) -> bool:
         and not _is_notice_only(effect)
         and getattr(effect, "unparsed_remainder", None) is None
     )
+
+
+@SPELL_TEXT.rung(
+    "s23",
+    after=["dispatch.parse_mixed_effect_for_spell", "amounts._parse_where_x_is_pump_spell_text"],
+)
+def _parse_counted_amount_spell_text(text: str) -> Effect | None:
+    """A spell body whose count is printed after the verb, see
+    `ep02_r1_counted_permanents.parse_counted_amount_text`."""
+    from ..ep02_r1_counted_permanents import parse_counted_amount_text
+
+    return parse_counted_amount_text(text, for_spell=True)
+
+
+@ABILITY_TEXT.rung("s40", after=["dispatch.parse_mixed_effect"])
+def _parse_counted_amount_ability_text(text: str) -> AbilityEffect | None:
+    """The ability side of the reader above."""
+    from ..ep02_r1_counted_permanents import parse_counted_amount_text
+
+    return parse_counted_amount_text(text, for_spell=False)
 
 
 @SPELL_TEXT.rung("s21")

@@ -8245,3 +8245,16 @@ Notes: face-down piles have no characteristics (CR 406.3a), so a scenario reads 
 | Terror of the Peaks' life-cost static; Teval's granted delve; Clay Champion / Bladecoil Serpent mana-pair counts | 118.8, 601.2f, 702.66a | `cost/text`, `casting/casting`, `keyword_counters` | same file |
 
 Notes: schema bumped 149 -> 157 (R3 T8). `draw_equal_to` now reads the source. Protected edits: `tests/scenarios/test_token_effect_parser.py` two pins updated and the Hangarback Walker `TRIGGER_EFFECTS` row deleted (its text is now parsed). Proof printings: Hare Apparent's "named" reader has no second legal printing (Food Fight is only partly similar), recorded as a substitution.
+
+## EP-02-R1-T3: counted permanents as an amount (for each / number of / where X is)
+
+| Mechanic | CR | Where |
+|---|---|---|
+| A counted group of permanents with a keyword before or after the control clause ("creatures with defender you control", "creatures you control with defender"), a status word ("tapped artifact, creature, and land you control"), "other" with a subtype list, and snow/nonsnow | 702.3, 110.5, 205.4g, 613.5 | `ep02_r1_counted_permanents.counted_group_reader`, hooked into `amounts.count_expression`, `amounts._for_each_multiplier`, `amounts._amount_term` |
+| A count printed after the verb read sentence by sentence, the count taken when its own instruction is performed: "loses/gains N life", "draws/discards/mills N cards", "deals N damage" for each; "Add {R} for each"; "an amount of {E} equal to"; "gets +P/+T for each" (targeted or mass); "..., where X is the count" | 608.2c, 608.2h, 119.3, 121.1, 701.9, 701.17, 106.4, 107.14, 611.2 | `ep02_r1_counted_permanents.parse_counted_amount_text`, rungs `amounts._parse_counted_amount_spell_text` / `_parse_counted_amount_ability_text` |
+| "You" in a "for each ... you control" tail is the controller of the resolving object, not the player the clause acts on ("target opponent loses 1 life for each Vampire you control") | 608.2h | `ep02_r1_counted_permanents.counting_controller`, used by the gain/lose life, draw and mill clause readers |
+| Mass pump of the snow supertype: "All nonsnow creatures get -X/-X" | 205.4g, 611.2c | `continuous._MASS_SUPERTYPE_SUBJECT_RE` |
+| "for each creature in your party" (singular), party size | 700.8 | `amounts._COUNT_CREATURES_IN_YOUR_PARTY_RE` |
+| A "with <keyword>" inside the amount ("equal to the number of creatures you control with defender") is no restriction on the target | 702.3 | `targeting._TARGET_CLAUSE_VERB_RE` |
+
+Cards handled (scenario tests in `tests/scenarios/test_ep02_r1_counted_permanents.py`): Battle Hymn, Aetherwind Basker, Black Market Tycoon, Blight Pile, Coral Colony, Doorkeeper, Dreadwaters, Gruesome Fate, Graveborn Muse, Lich Lord of Unx, Minions' Murmurs, Mind Sludge, Mutilate, Nissa Voice of Zendikar, Shaman of the Pack, Smitten Swordmaster // Curry Favor, Tezzeret Master of Metal, Toil to Renown, Valley Rotcaller, Vent Sentinel, Voices from the Void, Honden of Night's Reach, Gold Rush, Dead of Winter, Mana Geyser, Scurry of Gremlins, Wandering Goblins, Slumbering Keepguard, Kabira Outrider, Shepherd of Heroes. Second printings: Camaraderie, Ardent Electromancer, Bishop of the Bloodstained, Peema Aether-Seer, Wingmantle Chaplain, Might of Alara, Malakir Blood-Priest, Honden of Seeing Winds, Honden of Cleansing Fire.
