@@ -109,6 +109,7 @@ from magic_cards_model.machines.counter_effects import singular_subtype
 from magic_cards_model.machines.decisions import Decision, DecisionKind, ScriptedAnswer
 from magic_cards_model.machines.effects import transform_permanent
 from magic_cards_model.machines.enlist import eligible_enlist_creatures
+from magic_cards_model.machines.exert_triggers import exert_permanent
 from magic_cards_model.machines.keywords import (
     craft_abilities,
     craft_activation,
@@ -4610,6 +4611,22 @@ def _foretelling(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
     yield foretell
 
 
+def _exerting(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
+    """ "Whenever you exert a creature": the source on the battlefield exerts
+    itself, the keyword action every exert goes through (CR 701.43a)."""
+
+    def exert() -> tuple[PlayedScenario, Any]:
+        scenario, source_id = _home(case, ability)
+        game = scenario.game
+        try:
+            exert_permanent(game, game.find_by_id(source_id))
+        except (ValueError, AssertionError) as error:
+            raise _Unavailable(f"exerting: {error}") from error
+        return scenario, source_id
+
+    yield exert
+
+
 def _enlisting(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
     """The source attacks and enlists another creature its controller could
     have attacked with (CR 702.154a)."""
@@ -4835,6 +4852,8 @@ def _attempts(case: Case) -> Iterator[Attempt]:
             yield from _removing_time_counter(case, ability)
         elif kind == "foretold":
             yield from _foretelling(case, ability)
+        elif kind == "exerted":
+            yield from _exerting(case, ability)
 
 
 #: Attempts whose event happens later in the turn (or in the next ones), so
