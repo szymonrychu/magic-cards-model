@@ -16,6 +16,7 @@ from magic_cards_model.machines.casting.options import (
 )
 from magic_cards_model.machines.cost.abilities import ability_cost_modifier
 from magic_cards_model.machines.cost.groups import group_spell_modifier
+from magic_cards_model.machines.cost.text import targeting_this_life_cost
 from magic_cards_model.machines.keywords import echo_alternative_cost, is_first_draw_reveal_line
 
 #: Cheap lowercase gate: every shape this module can credit carries one of these.
@@ -28,6 +29,7 @@ _GATES = (
     "cards from your hand costs",
     "equip ability costs",
     "additional cost",
+    "life to cast",
     "rather than pay",
     "echo cost",
     "spend mana as though",
@@ -39,6 +41,7 @@ _GATES = (
 def _reads(text: str) -> bool:
     return (
         group_spell_modifier(text) is not None
+        or targeting_this_life_cost(text) is not None
         or ability_cost_modifier(text) is not None
         or echo_alternative_cost(text) is not None
         or is_first_draw_reveal_line(text)

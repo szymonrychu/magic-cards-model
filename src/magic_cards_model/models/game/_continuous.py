@@ -1520,6 +1520,35 @@ class ContinuousMixin:
             self.play_permissions.append(permission)
             return permission
 
+    def static_life_costs_for(
+        self: "Game",
+        spell: CardState,
+        caster: str,
+        targets: Sequence[TargetRef] | None = None,
+    ) -> list[tuple[int, str]]:
+        """The additional life costs (amount, source name) the board's static
+        abilities put on `spell` as `caster` casts it (CR 118.8, CR 601.2f):
+        Terror of the Peaks' "Spells your opponents cast that target this
+        creature cost an additional 3 life to cast." - keyed on the targets
+        announced at CR 601.2c, and only an opponent of the permanent's
+        controller pays it."""
+        from ...machines.cost.text import targeting_this_life_cost
+
+        costs: list[tuple[int, str]] = []
+        if not targets:
+            return costs
+        board = self.computed_board()
+        for permanent in self.battlefield:
+            if permanent.controller == caster:
+                continue
+            if not any(target.card_id == permanent.id for target in targets):
+                continue
+            for line in board.of(permanent).abilities:
+                amount = targeting_this_life_cost(self._static_line_without_ability_word(line))
+                if amount is not None:
+                    costs.append((amount, permanent.name))
+        return costs
+
     def static_cost_modifiers_for(
         self: "Game",
         spell: CardState,

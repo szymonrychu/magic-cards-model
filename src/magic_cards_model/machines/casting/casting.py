@@ -4138,6 +4138,19 @@ class Casting(EngineModel):
             )
         for extra in extras:
             components.extend(extra.components)
+        if self.game is not None:
+            # CR 118.8: a life cost another permanent's static ability adds to
+            # the spell (Terror of the Peaks), keyed on the announced targets.
+            for life, source_name in self.game.static_life_costs_for(
+                self.spell, self.caster, self.targets
+            ):
+                components.append(
+                    pay_life_cost(
+                        life,
+                        payer=self.caster,
+                        description=f"pay {life} life ({source_name})",
+                    )
+                )
         # CR 701.67b: the tap method reaches only the waterbend cost's own
         # generic, summed over every waterbend cost among the additional ones
         # (`pay_waterbend`) - never the rest of the total cost's generic.

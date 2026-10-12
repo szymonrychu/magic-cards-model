@@ -9,7 +9,7 @@ import pytest
 
 from magic_cards_model.machines import Step
 from magic_cards_model.models import Zone
-from magic_cards_model.models.card_state import Counter
+from magic_cards_model.models.card_state import Counter, TargetRef
 from tests.scenarios.harness import Scenario
 
 
@@ -947,3 +947,61 @@ def test_without_teval_a_plain_spell_cannot_delve():
     payment = casting.begin_paying()
     with pytest.raises(ValueError, match="delve"):
         delve(payment, casting.spell, scenario.player("alice").graveyard[0])
+
+
+# -- "Spells your opponents cast that target this creature cost an additional 3
+# -- life to cast" (Terror of the Peaks)
+
+
+def _terror_board(alice_life=20):
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player(
+            "alice",
+            life=alice_life,
+            hand=["Lightning Bolt"],
+            battlefield=["Mountain", "Grizzly Bears"],
+        )
+        .player("bob", battlefield=["Terror of the Peaks", "Grizzly Bears"], hand=["Lightning Bolt"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    return scenario
+
+
+def test_terror_of_the_peaks_makes_an_opponents_targeting_spell_cost_three_life():
+    scenario = _terror_board()
+    terror = scenario.creature("Terror of the Peaks", "bob")
+    scenario.cast_onto_stack(
+        "Lightning Bolt", *scenario.untapped_sources("Mountain"), targets=[terror]
+    )
+    assert scenario.player("alice").life == 17
+
+
+def test_terror_of_the_peaks_does_not_tax_a_spell_aimed_elsewhere():
+    scenario = _terror_board()
+    other = scenario.creature("Grizzly Bears", "bob")
+    scenario.cast_onto_stack(
+        "Lightning Bolt", *scenario.untapped_sources("Mountain"), targets=[other]
+    )
+    assert scenario.player("alice").life == 20
+
+
+def test_terror_of_the_peaks_taxed_spell_cannot_be_cast_without_the_life():
+    scenario = _terror_board(alice_life=2)
+    terror = scenario.creature("Terror of the Peaks", "bob")
+    with pytest.raises(ValueError):
+        scenario.cast_onto_stack(
+            "Lightning Bolt", *scenario.untapped_sources("Mountain"), targets=[terror]
+        )
+
+
+def test_terror_of_the_peaks_does_not_tax_its_own_controllers_spells():
+    scenario = _terror_board()
+    terror = scenario.creature("Terror of the Peaks", "bob")
+    bolt = scenario.find("Lightning Bolt", Zone.HAND, "bob")
+    taxed = scenario.find("Lightning Bolt", Zone.HAND, "alice")
+    aimed = [TargetRef.coerce(terror)]
+    assert scenario.game.static_life_costs_for(bolt, "bob", aimed) == []
+    assert [life for life, _source in scenario.game.static_life_costs_for(taxed, "alice", aimed)] == [3]
