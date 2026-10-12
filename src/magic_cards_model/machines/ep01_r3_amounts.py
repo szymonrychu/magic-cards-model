@@ -87,7 +87,12 @@ def event_player_username(game, ability, who):
     if event is None:
         return None
     if who in ("its controller", "that creature's controller", "that permanent's controller"):
-        if who == "its controller" and event.subject_controller is not None:
+        condition = getattr(getattr(ability, "ability", None), "condition", "") or ""
+        # "Whenever enchanted creature is dealt damage, its controller loses
+        # that much life" (Ragged Veins): "its" is the creature dealt damage,
+        # not the damage source (CR 120.3).
+        dealt = "is dealt damage" in condition.lower()
+        if who == "its controller" and not dealt and event.subject_controller is not None:
             return event.subject_controller
         referent = event_referent_permanent(game, ability)
         return None if referent is None else game.controller_of(referent).username

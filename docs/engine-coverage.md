@@ -8115,3 +8115,19 @@ Audit credit lives in `static_audit/other_statics.py`: a line reads handled only
 | "As this permanent transforms into <face>, attach it to a player": the Aura's controller picks the player | 712.20, 303.4d, 303.4m | `effects/continuous._attach_permanent_to_a_player` | same file (Curse of Leeches // Leeching Lurker) |
 
 Notes: CR 702.122 and 702.171 contain no "as though" text, so the crew/saddle statics are contribution and restriction statics only. A Jailer-style removal is applied over a granted unearth without comparing timestamps. Schema bumped 141 -> 149 (new `Modification` members `RemoveSupertype`, `LoseAllAbilitiesExceptManaAbilities`; the integrator renumbers).
+
+## EP01-R3-T8: variable amounts (for each, equal to, that much) and damage/life/destroy riders
+
+| Mechanic | CR | Where | Proof |
+|---|---|---|---|
+| "For each counter on it" (any kind), read from the departing or sacrificed source as it last existed | 122.1, 122.2, 603.10a, 608.2h | `machines/ep01_r3_amounts.counters_on_it_total`, `effects/amounts` | `scenarios/test_ep01_r3_amounts_and_riders.py` (Kinsbaile Borderguard, Twitching Doll) |
+| Event-read amounts: "that much", "that creature's power", "its mana value", gated by `event_terms` so no other card's text is reread | 603.2, 202.3e, 608.2h | `machines/ep01_r3_amounts.event_terms`, `resolving_event` | same file (Terror of the Peaks, Teval, Thor, Ragged Veins) |
+| Damage-event riders: planeswalker named by the damage event ("destroy that planeswalker"), "its controller loses that much life", "half their life, rounded up" | 120.2b, 120.3, 119.3, 303.4b, 303.4m | `effects/life._parse_event_player_life_clause`, `triggers/conditions` DEALS_DAMAGE | same file (Zagras, Hooded Blightfang, Visions of Brutality, Ragged Veins, Grievous Wound, Sleep Magic) |
+| Block-count amounts ("for each creature it blocks / blocking it"), "each creature that blocks it" destroyed; 509.3a once-per-event trigger gate | 509.1a, 509.3a-d | `ep01_r3_amounts.creatures_blocked_by`, `creatures_blocking`, `triggers/conditions` | same file (Guardian of the Gateless, Elvish Berserker, Nessian Boar, Evil Eye of Urborg) |
+| State-group pumps: "attacking", "blocking", "modified" creatures | 611.2c, 508.1k, 700.9 | `effects/continuous._mass_creature_group_targets` | same file (Thunderstaff, Hold the Line, Rally the Forces, Dinosaur Stampede, Golden-Tail Trainer) |
+| Life lost triggers a sacrifice per life ("Lich's Tomb"), draws per life (Vilis, Lich's Mastery) | 119.3, 701.21a | `effects/life`, `effects/draw_discard` | same file |
+| Players' rules statics: "Enchanted player can't gain life", "Players have no maximum hand size"; credited through `static_audit/amounts_and_riders.py` | 119.7, 303.4m, 402.2, 613.11 | `models/game/_continuous`, `models/player` | same file (Grievous Wound, Folio of Fancies) |
+| "Crew N" once per turn; crew-count amounts | 702.122a, 702.122b, 602.5b | `keywords`, `ep01_r3_amounts.creatures_that_crewed` | same file (Luxurious Locomotive) |
+| Terror of the Peaks' life-cost static; Teval's granted delve; Clay Champion / Bladecoil Serpent mana-pair counts | 118.8, 601.2f, 702.66a | `cost/text`, `casting/casting`, `keyword_counters` | same file |
+
+Notes: schema bumped 149 -> 157 (R3 T8). `draw_equal_to` now reads the source. Protected edits: `tests/scenarios/test_token_effect_parser.py` two pins updated and the Hangarback Walker `TRIGGER_EFFECTS` row deleted (its text is now parsed). Proof printings: Hare Apparent's "named" reader has no second legal printing (Food Fight is only partly similar), recorded as a substitution.

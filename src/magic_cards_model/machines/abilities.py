@@ -3624,6 +3624,8 @@ _CREW_ONCE_EACH_TURN = re.compile(r"^Crew (?P<n>\d+)\. Activate only once each t
 
 
 def _parse_crew_once_each_turn(text: str, common: dict) -> KeywordAbility | None:
+    if "Activate only once" not in text or not text.startswith("Crew"):
+        return None
     match = _CREW_ONCE_EACH_TURN.match(text.strip())
     if match is None:
         return None

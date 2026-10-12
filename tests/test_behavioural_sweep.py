@@ -1582,6 +1582,17 @@ def _attach(scenario: PlayedScenario, source: CardState) -> None:
     if "player" in restriction or "opponent" in restriction:
         source.attachment = TargetRef.to_player(scenario.game.player(BOB))
         return
+    if "equipment" in restriction:
+        # "Enchant Equipment" (Artificer's Hex): the Aura goes on an Equipment
+        # that is itself attached to a creature (CR 301.5a).
+        held = [p for p in scenario.game.permanents_controlled_by(ALICE) if p is not source]
+        equipment = next((p for p in held if _is_equipment(p.card)), None)
+        creature = next((p for p in held if Type.CREATURE in p.types), None)
+        if equipment is not None:
+            if creature is not None:
+                equipment.attachment = TargetRef.to_card(creature)
+            source.attachment = TargetRef.to_card(equipment)
+        return
     wanted = next((word for word in _BASICS if word.lower() in restriction), None)
     for permanent in scenario.game.permanents_controlled_by(ALICE):
         if permanent is source:
@@ -2436,8 +2447,13 @@ _STAGED_EQUIPMENT = "Bonesplitter"
 def _equipment_partner(ability: Any) -> tuple[str, ...]:
     """The Equipment a board stages beside a source whose intervening "if"
     asks that it be equipped."""
-    if _EQUIPPED_SELF_CONDITION.search(getattr(ability, "intervening_if", None) or ""):
+    condition = getattr(ability, "intervening_if", None) or ""
+    if _EQUIPPED_SELF_CONDITION.search(condition):
         return (_STAGED_EQUIPMENT,)
+    if re.search(r"\benchanted equipment is attached to a creature\b", condition, re.IGNORECASE):
+        # Artificer's Hex (CR 301.5a, CR 303.4): the Equipment it enchants,
+        # and the creature that Equipment is attached to.
+        return (_STAGED_EQUIPMENT, "Grizzly Bears")
     return ()
 
 
@@ -3195,6 +3211,11 @@ def _combat(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
     # (Tetsuko Umezawa, Pursuer, CR 509.1a): the probe is the opponent's
     # blocker, and the source (or any creature of its controller) attacks.
     opposing_blocker = re.match(r"^an? [^,]*\ban opponent controls\b.*\bblocks\b", lowered)
+    # "Whenever a creature you control deals combat damage to a planeswalker"
+    # (Zagras, Thief of Heartbeats, CR 510.1): the opponent's probe
+    # planeswalker is the one attacked, not the opponent (CR 508.1b).
+    at_walker = re.search(r"\bdamage to a planeswalker\b", lowered) is not None
+    walkers: tuple[str, ...] = (_LOYALTY_PROBE,) if at_walker else ()
     for side in _combat_sides(ability):
         attackers: list[str | None] = []
         if side == ALICE and (_is(card, Type.CREATURE) or is_vehicle or back_creature):
@@ -3225,6 +3246,7 @@ def _combat(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
                             *equipment,
                             *_equipment_partner(ability),
                         ),
+                        bob_battlefield=walkers,
                         step=Step.DECLARE_ATTACKERS,
                     )
                 else:
@@ -3240,7 +3262,7 @@ def _combat(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
                 attacker = (
                     source if probe is None or opposing_blocker else _staged(scenario, probe, side)
                 )
-                if attacker is not source and "equipped" in lowered:
+                if attacker is not source and re.search(r"\b(?:equipped|enchanted)\b", lowered):
                     holder = _staged(scenario, _EQUIPMENT, ALICE) if equipment else source
                     holder.attachment = TargetRef.to_card(attacker)
                 defender = BOB if side == ALICE else ALICE
@@ -3253,7 +3275,11 @@ def _combat(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
                     if crew_number(partner.card) is not None:
                         _crew(scenario, partner, crewers)
                 try:
-                    scenario.attack_with(attacker, *alongside, defending=defender)
+                    scenario.attack_with(
+                        attacker,
+                        *alongside,
+                        defending=_first(scenario, _LOYALTY_PROBE, BOB) if at_walker else defender,
+                    )
                 except (ValueError, AssertionError) as error:
                     raise _Unavailable(str(error)) from error
                 return scenario, source, attacker, defender
@@ -3350,8 +3376,20 @@ def _combat_stages(
                     ),
                     None,
                 )
+        # "All creatures able to block this creature do so" (Nessian Boar, CR
+        # 509.1c): every untapped creature the defender has blocks it.
+        lure = blocker is not None and "able to block" in (attacker.card.oracle_text or "").lower()
         try:
-            if blocker is not None:
+            if lure:
+                scenario.block(
+                    attacker,
+                    *(
+                        p
+                        for p in game.permanents_controlled_by(defender)
+                        if Type.CREATURE in p.types and not p.tapped
+                    ),
+                )
+            elif blocker is not None:
                 scenario.block(attacker, blocker)
             else:
                 scenario.no_blocks()
@@ -3728,7 +3766,12 @@ def _about_the_source(case: Case, ability: TriggeredAbility, action: str) -> Ite
         game = scenario.game
         source = game.find_by_id(source_id)
         if action == "dealt damage":
-            game.deal_damage(source, 1, source=_staged(scenario, "Icehide Golem", BOB))
+            victim = source
+            if "enchanted player" in lowered and source.attachment is not None:
+                # "Whenever enchanted player is dealt damage" (Grievous Wound,
+                # CR 303.4m): the damage goes to the player the Aura is on.
+                victim = game.player(source.attachment.username)
+            game.deal_damage(victim, 1, source=_staged(scenario, "Icehide Golem", BOB))
         elif action == "counters":
             nth = re.search(r"the ([a-z]+) (\S+) counter is put on", lowered)
             if nth is not None and parse_ordinal(nth.group(1)) is not None:
@@ -5100,11 +5143,6 @@ SWEEP_DRIVER_GAPS: tuple[DriverGap, ...] = (
     # own scenario file (tests/scenarios/test_nw06_*).
     DriverGap(
         kind="deals_damage",
-        event="a creature of the subtype the condition names dealing damage to a creature",
-        precondition=r"an? [A-Z][a-z]+ you control deals damage to a creature",
-    ),
-    DriverGap(
-        kind="deals_damage",
         event="an instant or sorcery spell dealing damage to an opponent",
         precondition=r"an instant or sorcery spell you control deals damage to an opponent",
     ),
@@ -5392,7 +5430,7 @@ def run_trigger_case(case: Case, only: dict[str, Any] | None = None) -> Outcome:
         return outcome
     if closed is not None:
         return Outcome("failed", closed)
-    return Outcome("failed", "the ability never reached the stack: " + "; ".join(tried[-8:]))
+    return Outcome("failed", "the ability never reached the stack: " + "; ".join(tried[-60:]))
 
 
 @pytest.mark.parametrize("case", _params(trigger_cases()))

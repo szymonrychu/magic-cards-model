@@ -1054,3 +1054,165 @@ def test_sigardas_splendor_does_not_draw_when_life_fell_below_the_noted_total():
     _settle(scenario)
     assert len(scenario.player("alice").hand) == hand_before
     assert splendor.choice.value == "17"
+
+
+# -- proof printings: the same readers on cards that were not the reported ones
+
+
+def _hand_board(hand, alice, bob, *, step):
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("alice", hand=list(hand), battlefield=list(alice), library=["Forest"] * 6)
+        .player("bob", battlefield=list(bob), library=["Forest"] * 6)
+        .build()
+    )
+    scenario.start_at(step)
+    return scenario
+
+
+def test_hold_the_line_pumps_blocking_creatures_only():
+    scenario = _hand_board(
+        ["Hold the Line"],
+        ["Elvish Berserker", "Plains", "Plains", "Plains", "Plains"],
+        ["Grizzly Bears", "Hill Giant"],
+        step=Step.DECLARE_ATTACKERS,
+    )
+    attacker, blocker = _alice(scenario, "Elvish Berserker"), _bob(scenario, "Grizzly Bears")
+    idle = _bob(scenario, "Hill Giant")
+    scenario.attack_with(attacker, defending="bob")
+    scenario.block(attacker, blocker)
+    base = (attacker.power, blocker.power, idle.power)
+    scenario.cast_and_resolve("Hold the Line", *scenario.untapped_sources(*(["Plains"] * 4)))
+    assert blocker.power == base[1] + 7
+    assert attacker.power == base[0]
+    assert idle.power == base[2]
+
+
+def test_rally_the_forces_pumps_attacking_creatures_only():
+    scenario = _hand_board(
+        ["Rally the Forces"],
+        ["Elvish Berserker", "Hill Giant", "Mountain", "Mountain", "Mountain"],
+        [],
+        step=Step.DECLARE_ATTACKERS,
+    )
+    attacker, idle = _alice(scenario, "Elvish Berserker"), _alice(scenario, "Hill Giant")
+    scenario.attack_with(attacker, defending="bob")
+    base = (attacker.power, idle.power)
+    scenario.cast_and_resolve("Rally the Forces", *scenario.untapped_sources(*(["Mountain"] * 3)))
+    assert attacker.power == base[0] + 1
+    assert idle.power == base[1]
+
+
+def test_dinosaur_stampede_pumps_attacking_creatures_only():
+    scenario = _hand_board(
+        ["Dinosaur Stampede"],
+        ["Elvish Berserker", "Hill Giant", "Mountain", "Mountain", "Mountain"],
+        [],
+        step=Step.DECLARE_ATTACKERS,
+    )
+    attacker, idle = _alice(scenario, "Elvish Berserker"), _alice(scenario, "Hill Giant")
+    scenario.attack_with(attacker, defending="bob")
+    base = (attacker.power, idle.power)
+    scenario.cast_and_resolve("Dinosaur Stampede", *scenario.untapped_sources(*(["Mountain"] * 3)))
+    assert attacker.power == base[0] + 2
+    assert idle.power == base[1]
+
+
+def test_the_water_crystal_mills_each_opponent_cards_equal_to_the_hand_you_hold():
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player(
+            "alice",
+            hand=["Forest"] * 3,
+            battlefield=["The Water Crystal"] + ["Island"] * 6,
+            library=["Forest"] * 3,
+        )
+        .player("bob", library=["Mountain"] * 12)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    lands = scenario.untapped_sources(*(["Island"] * 6))
+    scenario.activate(_alice(scenario, "The Water Crystal"), *lands)
+    scenario.pass_until_resolved()
+    # three cards in alice's hand, plus the Crystal's own "mill that many plus four"
+    assert len(scenario.game.player("bob").library) == 12 - 3 - 4
+
+
+def test_thor_god_of_thunder_deals_damage_equal_to_the_cast_spells_mana_value():
+    scenario = _hand_board(
+        ["Lightning Bolt"],
+        ["Thor, God of Thunder", "Mountain"],
+        [],
+        step=Step.PRECOMBAT_MAIN,
+    )
+    scenario.will_choose_targets(scenario.player("bob"), username="alice")
+    scenario.cast_and_resolve(
+        "Lightning Bolt",
+        *scenario.untapped_sources("Mountain"),
+        targets=[scenario.player("bob")],
+    )
+    _settle(scenario)
+    assert scenario.player("bob").life == 20 - 3 - 1
+
+
+def test_hooded_blightfang_destroys_a_planeswalker_it_deals_damage_to():
+    scenario = _board(["Hooded Blightfang"], ["Ajani Unrelenting"], step=Step.DECLARE_ATTACKERS)
+    ajani = _bob(scenario, "Ajani Unrelenting")
+    scenario.attack_with(_alice(scenario, "Hooded Blightfang"), defending=ajani)
+    _settle(scenario)
+    scenario.no_blocks()
+    scenario.combat_damage()
+    _settle(scenario)
+    assert ajani.zone is Zone.GRAVEYARD
+
+
+def test_ragged_veins_costs_the_enchanted_creatures_controller_that_much_life():
+    scenario = _board(["Ragged Veins", "Hill Giant"], ["Grizzly Bears"])
+    bears = _bob(scenario, "Grizzly Bears")
+    _alice(scenario, "Ragged Veins").attach_to(bears)
+    scenario.game.deal_damage(bears, 2, source=_alice(scenario, "Hill Giant"))
+    _settle(scenario)
+    assert scenario.player("bob").life == 18
+    assert scenario.player("alice").life == 20
+
+
+def test_sleep_magic_is_sacrificed_when_the_enchanted_creature_is_dealt_damage():
+    scenario = _board(["Sleep Magic", "Hill Giant"], ["Grizzly Bears"])
+    bears = _bob(scenario, "Grizzly Bears")
+    aura = _alice(scenario, "Sleep Magic")
+    aura.attach_to(bears)
+    scenario.game.deal_damage(_alice(scenario, "Hill Giant"), 1, source=bears)
+    _settle(scenario)
+    assert aura.zone is Zone.BATTLEFIELD
+    scenario.game.deal_damage(bears, 1, source=_alice(scenario, "Hill Giant"))
+    _settle(scenario)
+    assert aura.zone is Zone.GRAVEYARD
+
+
+def test_vilis_draws_a_card_for_each_life_you_lose():
+    scenario = _board(["Vilis, Broker of Blood"], [])
+    hand_before = len(scenario.game.player("alice").hand)
+    scenario.game.lose_life(scenario.player("alice"), 2)
+    _settle(scenario)
+    assert len(scenario.game.player("alice").hand) == hand_before + 2
+
+
+def test_lich_s_mastery_draws_that_many_cards_when_you_gain_life():
+    scenario = _board(["Lich's Mastery"], [])
+    hand_before = len(scenario.game.player("alice").hand)
+    scenario.game.gain_life(scenario.player("alice"), 3)
+    _settle(scenario)
+    assert len(scenario.game.player("alice").hand) == hand_before + 3
+
+
+def test_grievous_wound_static_line_is_credited_through_classify_clauses():
+    from magic_cards_model.support import card_support
+    from tests.cards import card
+
+    support = card_support(card("Grievous Wound"))
+    statics = [c for c in support.clauses if c.kind == "static"]
+    assert [c.text for c in statics] == ["Enchanted player can't gain life."]
+    assert [c.outcome for c in statics] == ["handled"]
+    assert support.status == "handled"

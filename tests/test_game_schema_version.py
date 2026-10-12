@@ -2423,3 +2423,24 @@ def test_a_snapshot_written_before_the_t8_modifications_is_refused() -> None:
         match=f"schema_version={_SCHEMA_VERSION_BEFORE_EP01_R2_T8_MODIFICATIONS}",
     ):
         Game.model_validate(dumped)
+
+
+#: The version stamped before EP01-R3-T8: event-read amounts ("that much",
+#: "its mana value"), a planeswalker named by a damage event, and the player
+#: rules statics of Grievous Wound and Folio of Fancies. The last shape without
+#: them is the R3 base, 149.
+_SCHEMA_VERSION_BEFORE_EP01_R3_T8_AMOUNTS = 149
+
+
+def test_a_snapshot_written_before_the_r3_t8_amount_readers_is_refused() -> None:
+    """A version-149 dump could hold a pending trigger these readers resolve
+    differently (a no-op before, an amount now): refused, not decoded."""
+    assert Game.CURRENT_SCHEMA_VERSION > _SCHEMA_VERSION_BEFORE_EP01_R3_T8_AMOUNTS
+    dumped = _a_played_game().model_dump(mode="json")
+    dumped["schema_version"] = _SCHEMA_VERSION_BEFORE_EP01_R3_T8_AMOUNTS
+
+    with pytest.raises(
+        SchemaVersionMismatch,
+        match=f"schema_version={_SCHEMA_VERSION_BEFORE_EP01_R3_T8_AMOUNTS}",
+    ):
+        Game.model_validate(dumped)

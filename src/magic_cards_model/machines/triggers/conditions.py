@@ -2735,7 +2735,7 @@ def _condition_matches(
         if not _subject_has_required_counter(condition, game, event.subject_id):
             return False
         if "noncombat damage" in lowered:
-            # CR 120.2a: damage not dealt as a result of combat.
+            # CR 120.2b: damage dealt as an effect of a spell or ability, not combat.
             if event.combat:
                 return False
         elif "combat damage" in lowered and not event.combat:
