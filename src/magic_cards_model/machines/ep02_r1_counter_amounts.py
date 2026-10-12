@@ -106,6 +106,16 @@ def _for_each_pump(names: tuple[str, ...]) -> re.Pattern[str]:
     )
 
 
+def _a_number_of_counters(names: tuple[str, ...]) -> re.Pattern[str]:
+    # "distribute a number of +1/+1 counters equal to the number of +1/+1
+    # counters on this creature among ..." (a dies trigger spreading its own)
+    return re.compile(
+        rf"\ba number of (?P<ck>\+1/\+1|-1/-1|[a-z]+) counters equal to the number of "
+        rf"{_KIND}{_COUNTERS} on {_self(names)}\b",
+        re.IGNORECASE,
+    )
+
+
 def _for_each_verb(names: tuple[str, ...]) -> re.Pattern[str]:
     # "discards a card for each charge counter on this artifact"
     return re.compile(
@@ -151,6 +161,9 @@ def counters_counted_text(text: str, names: tuple[str, ...] = ()) -> str:
         number = n_of(where)
         rest = text[: where.start()] + text[where.end() :]
         text = re.sub(r"\bX\b", str(number), rest)
+    text = _a_number_of_counters(names).sub(
+        lambda m: _plural(n_of(m), f"{m.group('ck')} counter"), text
+    )
     equal = _equal_to(names).search(text)
     if equal is not None:
         # "... and that much damage to up to one target creature" repeats the

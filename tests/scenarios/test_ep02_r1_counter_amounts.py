@@ -258,3 +258,67 @@ def test_high_sentinels_does_not_count_itself_or_other_counter_kinds_or_opponent
     scenario.creature("Hill Giant", "bob").add_counters(Counter.PLUS_ONE, 2)
     # Its own two counters pump it directly (+2/+2); none of the rest counts.
     assert _stats(scenario, sentinels) == (base[0] + 2, base[1] + 2)
+
+
+# -- a dies trigger reads the counters the creature had (CR 603.10a, CR 122.2)
+
+
+def test_chasm_skulker_dies_into_a_squid_per_plus_one_counter():
+    scenario = _board(["Chasm Skulker"])
+    skulker = scenario.creature("Chasm Skulker", "alice")
+    skulker.add_counters(Counter.PLUS_ONE, 3)
+    scenario.game.put_into_graveyard(skulker)
+    _settle(scenario)
+    assert _count(scenario, "Squid Token") == 3
+
+
+def test_chasm_skulker_squids_have_islandwalk():
+    scenario = _board(["Chasm Skulker"])
+    skulker = scenario.creature("Chasm Skulker", "alice")
+    skulker.add_counters(Counter.PLUS_ONE, 1)
+    scenario.game.put_into_graveyard(skulker)
+    _settle(scenario)
+    squid = scenario.creature("Squid Token", "alice")
+    assert scenario.game.computed_board().of(squid).has_ability("Islandwalk")
+
+
+def test_chasm_skulker_without_counters_makes_nothing():
+    scenario = _board(["Chasm Skulker"])
+    scenario.game.put_into_graveyard(scenario.creature("Chasm Skulker", "alice"))
+    _settle(scenario)
+    assert _count(scenario, "Squid Token") == 0
+
+
+def test_grief_tyrant_spreads_its_minus_counters_onto_a_target_creature():
+    scenario = _board(["Grief Tyrant"], ["Craw Wurm"])
+    tyrant = scenario.creature("Grief Tyrant", "alice")
+    tyrant.add_counters(Counter.MINUS_ONE, 3)
+    wurm = scenario.creature("Craw Wurm", "bob")
+    scenario.game.put_into_graveyard(tyrant)
+    scenario.choose_trigger_targets("Grief Tyrant", [wurm])
+    _settle(scenario)
+    assert wurm.counter_count(Counter.MINUS_ONE) == 3
+
+
+def test_soulstinger_asks_before_putting_its_counters_on_a_creature():
+    scenario = _board(["Soulstinger"], ["Craw Wurm"])
+    stinger = scenario.creature("Soulstinger", "alice")
+    stinger.add_counters(Counter.MINUS_ONE, 2)
+    wurm = scenario.creature("Craw Wurm", "bob")
+    scenario.will_take_the_may(True)
+    scenario.game.put_into_graveyard(stinger)
+    scenario.choose_trigger_targets("Soulstinger", [wurm])
+    _settle(scenario)
+    assert wurm.counter_count(Counter.MINUS_ONE) == 2
+
+
+def test_soulstinger_declined_puts_nothing():
+    scenario = _board(["Soulstinger"], ["Craw Wurm"])
+    stinger = scenario.creature("Soulstinger", "alice")
+    stinger.add_counters(Counter.MINUS_ONE, 2)
+    wurm = scenario.creature("Craw Wurm", "bob")
+    scenario.will_take_the_may(False)
+    scenario.game.put_into_graveyard(stinger)
+    scenario.choose_trigger_targets("Soulstinger", [wurm])
+    _settle(scenario)
+    assert wurm.counter_count(Counter.MINUS_ONE) == 0

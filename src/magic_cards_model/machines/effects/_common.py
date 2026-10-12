@@ -1384,6 +1384,13 @@ _TOKEN_KEYWORDS = {
     # reads it off `has_keyword`/the computed board once it is on the token;
     # Deadly Grub's own Insect is the pool's first token to print it).
     "shroud",
+    # CR 702.14a: the five landwalks, bare keyword lines like the rest of this
+    # set (Chasm Skulker's Squid tokens have islandwalk).
+    "plainswalk",
+    "islandwalk",
+    "swampwalk",
+    "mountainwalk",
+    "forestwalk",
     # CR 702.147a - Jadar, Ghoulcaller of Nephalia's own "create a 2/2 black
     # Zombie creature token with decayed." `TokenDefinition.keywords` puts
     # "Decayed" on the token exactly as a real printing carries it, so
