@@ -214,8 +214,9 @@ _HIDEAWAY_LOOK_EXILE_ONE_RE = re.compile(
 
 #: "exile the top card of your library. For as long as it remains exiled, it
 #: has "`<ability>`"." (Monk Class, level 3) - the exiled card is granted an
-#: ability of its own (CR 611.3d's "grant an ability to a ... card that allows
-#: it to be cast"), read by the same reader as a printed self-zone permission.
+#: ability of its own by a resolution effect lasting "for as long as" it stays
+#: exiled (CR 611.2b), read by the same reader as a printed self-zone
+#: permission (CR 601.3).
 _EXILE_TOP_GRANTING_WHILE_EXILED_RE = re.compile(
     r"^exile the top card of your library\. for as long as it remains exiled, it has "
     r"[\"\u201c](?P<granted>[^\"\u201d]+)[\"\u201d]\.?$",
