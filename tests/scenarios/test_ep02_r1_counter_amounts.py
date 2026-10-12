@@ -899,3 +899,146 @@ def test_ooze_flux_cannot_remove_more_counters_than_the_creatures_hold():
 def test_ooze_flux_has_to_remove_at_least_one_counter():
     with pytest.raises(ValueError):
         _ooze_flux(1, 1, 0)
+
+
+# -- second printings of each family, so no family rests on one card alone
+
+
+def _to_step(scenario, step):
+    while scenario.step is not step:
+        scenario.advance()
+
+
+def test_savanti_romero_counts_the_counter_it_just_put_on_itself():
+    # CR 608.2c: "Put a +1/+1 counter on Savanti Romero. Then you draw X cards
+    # and lose X life, where X is the number of counters on Savanti Romero."
+    scenario = _board(["Savanti Romero, Time's Exile"])
+    savanti = scenario.creature("Savanti Romero, Time's Exile", "alice")
+    savanti.add_counters(Counter.PLUS_ONE, 2)
+    _to_step(scenario, Step.BEGINNING_OF_COMBAT)
+    _settle(scenario)
+    assert savanti.counter_count(Counter.PLUS_ONE) == 3
+    assert len(scenario.player("alice").hand) == 3
+    assert scenario.player("alice").life == 17
+
+
+def test_savanti_romero_starts_at_one():
+    scenario = _board(["Savanti Romero, Time's Exile"])
+    _to_step(scenario, Step.BEGINNING_OF_COMBAT)
+    _settle(scenario)
+    assert len(scenario.player("alice").hand) == 1
+    assert scenario.player("alice").life == 19
+
+
+def test_quirion_beastcaller_distributes_the_counters_it_died_with():
+    scenario = _board(["Quirion Beastcaller", "Grizzly Bears", "Hill Giant"])
+    beastcaller = scenario.creature("Quirion Beastcaller", "alice")
+    beastcaller.add_counters(Counter.PLUS_ONE, 3)
+    bears, giant = scenario.creature("Grizzly Bears", "alice"), scenario.creature("Hill Giant")
+    scenario.choose_trigger_targets("Quirion Beastcaller", [bears, giant])
+    scenario.game.put_into_graveyard(beastcaller)
+    _settle(scenario)
+    assert bears.counter_count(Counter.PLUS_ONE) + giant.counter_count(Counter.PLUS_ONE) == 3
+
+
+def test_otherworld_atlas_draws_per_charge_counter_for_each_player():
+    scenario = _board(["Otherworld Atlas"], library=12)
+    atlas = scenario.find("Otherworld Atlas", Zone.BATTLEFIELD, "alice")
+    atlas.add_counters("charge", 3)
+    scenario.activate(atlas, index=1)
+    _settle(scenario)
+    assert len(scenario.player("alice").hand) == 3
+    assert len(scenario.player("bob").hand) == 3
+
+
+def test_walking_archive_draws_per_plus_one_counter_at_each_upkeep():
+    scenario = _board(["Walking Archive"])
+    archive = scenario.creature("Walking Archive", "alice")
+    archive.add_counters(Counter.PLUS_ONE, 2)
+    _to_step(scenario, Step.UPKEEP)
+    while scenario.game.active_player.username != "bob":
+        scenario.advance()
+        if scenario.step is Step.UPKEEP and scenario.game.active_player.username != "bob":
+            _settle(scenario)
+            continue
+    _settle(scenario)
+    assert len(scenario.player("bob").hand) >= 2
+
+
+def test_joraga_warcaller_pumps_other_elves_per_plus_one_counter_on_itself():
+    scenario = _board(["Joraga Warcaller", "Llanowar Elves", "Grizzly Bears"], ["Llanowar Elves"])
+    warcaller = scenario.creature("Joraga Warcaller", "alice")
+    elves = scenario.creature("Llanowar Elves", "alice")
+    assert _stats(scenario, elves) == (1, 1)
+    warcaller.add_counters(Counter.PLUS_ONE, 2)
+    assert _stats(scenario, elves) == (3, 3)
+    assert _stats(scenario, scenario.creature("Grizzly Bears", "alice")) == (2, 2)
+    assert _stats(scenario, scenario.creature("Llanowar Elves", "bob")) == (1, 1)
+    # "Other": the Warcaller's own pump is only its counters.
+    assert _stats(scenario, warcaller) == (3, 3)
+
+
+def test_glittering_stockpile_adds_one_mana_per_stash_counter():
+    scenario = _board(["Glittering Stockpile"])
+    stockpile = scenario.find("Glittering Stockpile", Zone.BATTLEFIELD, "alice")
+    stockpile.add_counters("stash", 3)
+    scenario.activate(stockpile, index=1, color=Color.BLUE)
+    assert scenario.player("alice").mana_pool.floating == {Color.BLUE: 3}
+
+
+def test_coral_barrier_makes_a_squid_with_islandwalk():
+    scenario = _board(["Island", "Island", "Island"], alice_hand=["Coral Barrier"])
+    scenario.cast_and_resolve("Coral Barrier", auto=True)
+    _settle(scenario)
+    squid = scenario.creature("Squid Token", "alice")
+    assert scenario.game.computed_board().of(squid).has_ability("Islandwalk")
+
+
+def test_jedit_ojanen_makes_a_cat_warrior_with_forestwalk_when_it_attacks():
+    scenario = _board(["Jedit Ojanen of Efrava"])
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    scenario.attack_with(scenario.creature("Jedit Ojanen of Efrava", "alice"))
+    _settle(scenario)
+    cat = scenario.creature("Cat Warrior Token", "alice")
+    assert scenario.game.computed_board().of(cat).has_ability("Forestwalk")
+
+
+def test_inspiring_call_draws_per_creature_with_a_plus_one_counter():
+    scenario = _board(
+        ["Grizzly Bears", "Hill Giant", "Forest", "Forest", "Forest"], alice_hand=["Inspiring Call"]
+    )
+    scenario.creature("Grizzly Bears", "alice").add_counters(Counter.PLUS_ONE, 1)
+    scenario.cast_and_resolve("Inspiring Call", auto=True)
+    _settle(scenario)
+    assert len(scenario.player("alice").hand) == 1
+
+
+def test_armorcraft_judge_draws_per_creature_with_a_plus_one_counter():
+    scenario = _board(
+        ["Grizzly Bears", "Hill Giant", "Forest", "Forest", "Forest", "Forest"],
+        alice_hand=["Armorcraft Judge"],
+    )
+    scenario.creature("Grizzly Bears", "alice").add_counters(Counter.PLUS_ONE, 2)
+    scenario.creature("Hill Giant", "alice").add_counters(Counter.PLUS_ONE, 1)
+    scenario.cast_and_resolve("Armorcraft Judge", auto=True)
+    _settle(scenario)
+    assert len(scenario.player("alice").hand) == 2
+
+
+def test_avatar_of_the_resolute_enters_with_a_counter_per_other_creature_with_one():
+    scenario = _board(
+        ["Grizzly Bears", "Hill Giant", "Forest", "Forest"], alice_hand=["Avatar of the Resolute"]
+    )
+    scenario.creature("Grizzly Bears", "alice").add_counters(Counter.PLUS_ONE, 2)
+    scenario.creature("Hill Giant", "alice").add_counters(Counter.PLUS_ONE, 1)
+    scenario.cast_and_resolve("Avatar of the Resolute", auto=True)
+    assert scenario.creature("Avatar of the Resolute", "alice").counter_count(Counter.PLUS_ONE) == 2
+
+
+def test_glittering_stockpile_marks_itself_with_a_stash_counter_as_it_makes_red():
+    # CR 405.6c: the counter is the mana ability's own immediate effect.
+    scenario = _board(["Glittering Stockpile"])
+    stockpile = scenario.find("Glittering Stockpile", Zone.BATTLEFIELD, "alice")
+    assert scenario.activate(stockpile, index=0) is None
+    assert scenario.player("alice").mana_pool.floating == {Color.RED: 1}
+    assert stockpile.counter_count("stash") == 1

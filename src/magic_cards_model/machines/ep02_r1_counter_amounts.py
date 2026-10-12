@@ -241,7 +241,7 @@ def _placed_first(text: str) -> tuple[str, int] | None:
     <itself>, then ..." instruction adds before the rest of the text is read."""
     match = re.match(
         rf"\s*put (?P<n>an?|one|two|three|\d+) (?P<kind>\+1/\+1|-1/-1|[a-z]+) counters? "
-        rf"on {_self()}, then ",
+        rf"on {_self()}[,.] then ",
         text,
         re.IGNORECASE,
     )
@@ -355,6 +355,16 @@ def counters_self_reference_normalised(text: str, names: tuple[str, ...]) -> str
         return text
     named = "|".join(re.escape(name) for name in names)
     return re.sub(rf"(\bcounters? on )(?:{named})\b", r"\1this permanent", text)
+
+
+def counters_mana_lines_self_normalised(text: str, names: tuple[str, ...]) -> str:
+    """`counters_self_reference_normalised` for the mana-ability lines of `text`
+    only (activated-ability lines; CR 605.1a: "{T}: Add X mana ..., where X is the number of charge
+    counters on <its own name>"); every other line keeps the name it prints."""
+    return "\n".join(
+        counters_self_reference_normalised(line, names) if ":" in line else line
+        for line in text.split("\n")
+    )
 
 
 def counters_counted_for(text: str, source, names: tuple[str, ...]) -> str:

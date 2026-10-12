@@ -57,7 +57,7 @@ from ...machines.effects import (
     devotion_to,
     modal_trigger_profile,
 )
-from ...machines.ep02_r1_counter_amounts import counters_self_reference_normalised
+from ...machines.ep02_r1_counter_amounts import counters_mana_lines_self_normalised
 from ...machines.equip_block_statics import additional_loyalty_cost, loyalty_activation_limit
 from ...machines.keywords import (
     ACTIVATED_EXHAUST_FACT,
@@ -1632,7 +1632,7 @@ class ActivationMixin:
             permanent.card.name, legendary=Supertype.LEGENDARY in permanent.supertypes
         )
         lines = [
-            _mana_list_spelling(counters_self_reference_normalised(line, names))
+            _mana_list_spelling(counters_mana_lines_self_normalised(line, names))
             for line in computed.abilities
         ]
         return any(text in line or line in text for line in lines)
