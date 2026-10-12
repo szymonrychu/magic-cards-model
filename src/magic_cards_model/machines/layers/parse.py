@@ -4051,7 +4051,14 @@ def _normalize_duration_first(sentence: str) -> str:
         body = rest[: retention.start()].rstrip()
         body = f"{body}.{quote}" if quote else body.rstrip(".")
         return f"{body} until end of turn. {retention.group('clause')}."
-    return f"{rest} {match.group('duration').lower()}."
+    duration = match.group("duration").lower()
+    rewritten = f"{rest} {duration}."
+    if duration == "until your next turn" and _KEYWORD_GRANT_RE.fullmatch(rewritten) is None:
+        # Only a keyword grant (Vivien, Champion of the Wilds' +1) reads this
+        # duration trailing; every other "Until your next turn, ..." sentence
+        # (Karn's +1, Gideon's) has its own leading-duration reader.
+        return sentence
+    return rewritten
 
 
 #: An ability word and the em dash that follows it - "Domain — ", "Delirium — "
