@@ -1,5 +1,5 @@
 {
-  "ability": "{T}, Put a stun counter on Jessica Jones: Exile the top X cards of your library, where X is Jessica Jones's power. You may play those cards this turn.",
+  "ability": "{T}, Put a stun counter on this permanent: Exile the top X cards of your library, where X is Jessica Jones's power. You may play those cards this turn.",
   "action": {
     "controller": "alice",
     "modes": [],

@@ -1495,6 +1495,18 @@ def batched_attackers(game: "Game", condition: str, controller: str) -> list[Car
     requirement = None if keywords is not None else permanent_description(bare)
     if requirement is None and keywords is None:
         return None
+    if requirement is not None and requirement.required_subtypes:
+        # A bare plural creature type ("one or more Elves") names the singular
+        # subtype a type line prints (CR 205.3m): "elves" matches no creature.
+        from ...data.subtypes import canonical_subtype
+
+        requirement = requirement.model_copy(
+            update={
+                "required_subtypes": frozenset(
+                    canonical_subtype(word) or word for word in requirement.required_subtypes
+                )
+            }
+        )
     defender = match.group("defender")
     opponent_only = False
     if defender is not None:

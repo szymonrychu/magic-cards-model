@@ -1737,6 +1737,7 @@ def _prime(scenario: PlayedScenario, source: CardState, ability: Any) -> CardSta
         increase_speed(player, by=4 - effective_speed(player))
     _counter_threshold(scenario, source, getattr(ability, "intervening_if", None))
     _counter_to_remove(scenario, source, getattr(ability, "text", None))
+    _counters_to_count(scenario, source, getattr(ability, "text", None))
     _above_board_power(scenario, source, getattr(ability, "text", None))
     _history_threshold(scenario, source, getattr(ability, "intervening_if", None))
     _target_damage_history(scenario, source, getattr(ability, "text", None))
@@ -1790,6 +1791,25 @@ def _counter_to_remove(scenario: PlayedScenario, source: CardState, text: str | 
     if found is None or source.zone is not Zone.BATTLEFIELD:
         return
     kind = found.group("kind")
+    if source.counters[kind] == 0:
+        scenario.game.add_counters(source, kind, 1)
+
+
+_COUNTS_OWN_COUNTERS = re.compile(
+    r"(?:number of|for each|equal to the number of) (?P<kind>\+1/\+1|-1/-1|[a-z]+) counters? on "
+    r"(?:this|it)\b",
+    re.IGNORECASE,
+)
+
+
+def _counters_to_count(scenario: PlayedScenario, source: CardState, text: str | None) -> None:
+    """ "X is the number of `<kind>` counters on this permanent" (CR 122.1,
+    608.2h): a source that carries none reads 0 - nothing to distribute, no
+    targets to announce - so it is staged carrying one."""
+    found = _COUNTS_OWN_COUNTERS.search(text or "")
+    if found is None or source.zone is not Zone.BATTLEFIELD:
+        return
+    kind = found.group("kind").lower()
     if source.counters[kind] == 0:
         scenario.game.add_counters(source, kind, 1)
 
@@ -5676,6 +5696,7 @@ def _x_for(ability: ActivatedAbility) -> int:
         if "{x}" in cost
         or " x " in f" {cost} "
         or "remove any number of" in cost
+        or "remove one or more" in cost
         or _LOYALTY_X_RE.match(cost.strip())
         else 0
     )

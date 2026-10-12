@@ -718,6 +718,17 @@ def test_celeborn_gets_plus_two_for_two_cards_looked_at_while_scrying():
     assert now == (base[0] + looked, base[1] + looked)
 
 
+def test_celeborn_scries_when_the_controller_attacks_with_an_elf():
+    scenario = _board(["Celeborn the Wise"])
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    celeborn = scenario.creature("Celeborn the Wise", "alice")
+    scenario.scry_keeping_everything_on_top()
+    scenario.attack_with(celeborn)
+    _settle(scenario)
+    # The attack trigger scried one card, which pumped Celeborn by one.
+    assert _stats(scenario, celeborn) == (4, 4)
+
+
 def test_celeborn_pump_ends_at_end_of_turn():
     scenario = _board(["Celeborn the Wise", "Island"], alice_hand=["Opt"])
     celeborn = scenario.creature("Celeborn the Wise", "alice")
