@@ -1,0 +1,137 @@
+{
+  "object": "card",
+  "id": "ca527a9e-3a01-4e0b-add4-a6882f1c89d1",
+  "oracle_id": "8a960cc2-3802-42bc-ba28-941bfe9743be",
+  "multiverse_ids": [
+    438619
+  ],
+  "mtgo_id": 65985,
+  "mtgo_foil_id": 65986,
+  "tcgplayer_id": 145310,
+  "cardmarket_id": 301439,
+  "name": "Doorkeeper",
+  "lang": "en",
+  "released_at": "2017-11-17",
+  "uri": "https://api.scryfall.com/cards/ca527a9e-3a01-4e0b-add4-a6882f1c89d1",
+  "scryfall_uri": "https://scryfall.com/card/ima/53/doorkeeper?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T09:39:09Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/c/a/ca527a9e-3a01-4e0b-add4-a6882f1c89d1.jpg?1783935549",
+    "normal": "https://cards.scryfall.io/normal/front/c/a/ca527a9e-3a01-4e0b-add4-a6882f1c89d1.jpg?1783935549",
+    "large": "https://cards.scryfall.io/large/front/c/a/ca527a9e-3a01-4e0b-add4-a6882f1c89d1.jpg?1783935549",
+    "png": "https://cards.scryfall.io/png/front/c/a/ca527a9e-3a01-4e0b-add4-a6882f1c89d1.png?1783935549",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/c/a/ca527a9e-3a01-4e0b-add4-a6882f1c89d1.jpg?1783935549",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/c/a/ca527a9e-3a01-4e0b-add4-a6882f1c89d1.jpg?1783935549",
+    "thumb": "https://cards.scryfall.io/thumb/front/c/a/ca527a9e-3a01-4e0b-add4-a6882f1c89d1.webp?1783935549",
+    "grid": "https://cards.scryfall.io/grid/front/c/a/ca527a9e-3a01-4e0b-add4-a6882f1c89d1.webp?1783935549",
+    "display": "https://cards.scryfall.io/display/front/c/a/ca527a9e-3a01-4e0b-add4-a6882f1c89d1.webp?1783935549",
+    "art": "https://cards.scryfall.io/art/front/c/a/ca527a9e-3a01-4e0b-add4-a6882f1c89d1.webp?1783935549",
+    "crop": "https://cards.scryfall.io/crop/front/c/a/ca527a9e-3a01-4e0b-add4-a6882f1c89d1.webp?1783935549"
+  },
+  "mana_cost": "{1}{U}",
+  "cmc": 2.0,
+  "type_line": "Creature \u2014 Homunculus",
+  "oracle_text": "Defender\n{2}{U}, {T}: Target player mills X cards, where X is the number of creatures you control with defender.",
+  "power": "0",
+  "toughness": "4",
+  "colors": [
+    "U"
+  ],
+  "color_identity": [
+    "U"
+  ],
+  "keywords": [
+    "Mill",
+    "Defender"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "741bcd30-7709-4133-8919-f4b46483bed7",
+  "set": "ima",
+  "set_name": "Iconic Masters",
+  "set_type": "masters",
+  "set_uri": "https://api.scryfall.com/sets/741bcd30-7709-4133-8919-f4b46483bed7",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Aima&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/ima?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/ca527a9e-3a01-4e0b-add4-a6882f1c89d1/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A8a960cc2-3802-42bc-ba28-941bfe9743be&unique=prints",
+  "collector_number": "53",
+  "digital": false,
+  "rarity": "common",
+  "flavor_text": "One piercing stare usually convinces thieves to go elsewhere.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Kev Walker",
+  "artist_ids": [
+    "f366a0ee-a0cd-466d-ba6a-90058c7a31a6"
+  ],
+  "illustration_id": "e4d32fec-8d96-4311-bec5-d7e40f7e2705",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 18098,
+  "penny_rank": 11168,
+  "prices": {
+    "usd": "0.21",
+    "usd_foil": "0.35",
+    "usd_etched": null,
+    "eur": "0.13",
+    "eur_foil": "0.23",
+    "tix": "0.04"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=438619&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DDoorkeeper",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DDoorkeeper",
+    "edhrec": "https://edhrec.com/route/?cc=Doorkeeper"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F145310%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=301439&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/65985?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}
