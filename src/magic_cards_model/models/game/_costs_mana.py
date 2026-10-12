@@ -1331,11 +1331,11 @@ class CostsManaMixin:
             delve_offer,
             has_convoke,
             has_crew_loyalty_alternative,
-            offers_delve,
             has_improvise,
             has_station,
             improvise_offer,
             is_vehicle_permanent,
+            offers_delve,
             station_offer,
         )
 
