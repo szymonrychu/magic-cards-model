@@ -1053,6 +1053,16 @@ def executed_keywords(printing: Card) -> dict[str, str]:
             for ability in parse_abilities(printing)
             if ability.kind is not AbilityKind.STATIC
         ]
+        # A quoted trigger a static ability grants (Security Bypass: 'Enchanted
+        # creature has "Whenever this creature deals combat damage to a player,
+        # it connives."') carries its connive clause after the trigger's comma.
+        texts.extend(
+            quoted.split(", ", 1)[1]
+            for ability in parse_abilities(printing)
+            if ability.kind is AbilityKind.STATIC
+            for quoted in re.findall(r'"([^"]+)"', ability.text)
+            if ", " in quoted
+        )
         if not texts:
             text, _ = strip_reminder_text(printing.oracle_text or "")
             texts.append(text)

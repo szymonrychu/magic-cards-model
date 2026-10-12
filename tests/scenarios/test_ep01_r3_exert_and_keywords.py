@@ -8,6 +8,8 @@ wrote this file:
 - CR 702.66 graft is looked up where its tests live below.
 """
 
+import pytest
+
 from magic_cards_model.machines import Step
 from magic_cards_model.machines.combat import has_keyword
 from magic_cards_model.machines.cost import exert_cost
@@ -552,4 +554,97 @@ def test_streetwise_negotiator_without_the_counter_assigns_toughness_two():
 
 def test_backup_cards_read_handled():
     for name in ("Streetwise Negotiator", "Sigiled Sentinel", "Cragsmasher Yeti"):
+        _support_is_handled(name)
+
+
+# -- connive as a keyword on a granted trigger (CR 701.50), attacking alone --
+
+
+def _aura_board(*, attackers, blockers=(), hand=("Security Bypass",)):
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player(
+            "alice",
+            battlefield=["Island", "Island", *attackers],
+            hand=[*hand, "Forest", "Grizzly Bears"],
+            library=["Plains"] * 6,
+        )
+        .player("bob", battlefield=list(blockers), library=["Plains"] * 6)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    for creature in scenario.game.permanents_controlled_by("alice"):
+        creature.summoning_sick = False
+    return scenario
+
+
+def _enchant(scenario, creature):
+    scenario.cast_and_resolve(
+        "Security Bypass", *scenario.untapped_sources("Island", "Island"), targets=[creature]
+    )
+
+
+def _to_attackers(scenario):
+    while scenario.step is not Step.DECLARE_ATTACKERS:
+        scenario.advance()
+
+
+def test_security_bypass_attacking_alone_cannot_be_blocked():
+    scenario = _aura_board(attackers=["Hill Giant"], blockers=["Grizzly Bears"])
+    giant = scenario.creature("Hill Giant", "alice")
+    _enchant(scenario, giant)
+    _to_attackers(scenario)
+    scenario.attack_with(giant)
+    scenario.advance()
+    bears = scenario.creature("Grizzly Bears", "bob")
+    with pytest.raises(ValueError, match="(?i)block"):
+        scenario.block(giant, bears)
+
+
+def test_security_bypass_does_nothing_when_it_attacks_with_a_friend():
+    scenario = _aura_board(attackers=["Hill Giant", "Llanowar Elves"], blockers=["Grizzly Bears"])
+    giant = scenario.creature("Hill Giant", "alice")
+    elves = scenario.creature("Llanowar Elves", "alice")
+    _enchant(scenario, giant)
+    _to_attackers(scenario)
+    scenario.attack_with(giant, elves)
+    scenario.advance()
+    bears = scenario.creature("Grizzly Bears", "bob")
+    scenario.block(giant, bears)  # legal: the enchanted creature is not attacking alone
+
+
+def test_security_bypass_enchanted_creature_connives_on_combat_damage_to_a_player():
+    scenario = _aura_board(attackers=["Hill Giant"])
+    giant = scenario.creature("Hill Giant", "alice")
+    _enchant(scenario, giant)
+    _to_attackers(scenario)
+    scenario.attack_with(giant)
+    scenario.advance()
+    scenario.no_blocks()
+    hand_size = len(scenario.player("alice").hand)
+    scenario.will_discard(scenario.find("Forest", Zone.HAND, "alice"))
+    scenario.combat_damage()
+    _resolve_everything(scenario)
+    assert len(scenario.player("alice").hand) == hand_size  # drew one, discarded one
+    assert scenario.find("Forest", Zone.GRAVEYARD, "alice")
+    assert giant.counter_count(Counter.PLUS_ONE) == 0  # a land discarded: no counter
+
+
+def test_connive_counter_for_a_nonland_discard_via_the_granted_trigger():
+    scenario = _aura_board(attackers=["Hill Giant"])
+    giant = scenario.creature("Hill Giant", "alice")
+    _enchant(scenario, giant)
+    _to_attackers(scenario)
+    scenario.attack_with(giant)
+    scenario.advance()
+    scenario.no_blocks()
+    scenario.will_discard(scenario.find("Grizzly Bears", Zone.HAND, "alice"))
+    scenario.combat_damage()
+    _resolve_everything(scenario)
+    assert giant.counter_count(Counter.PLUS_ONE) == 1
+
+
+def test_connive_keyword_on_security_bypass_and_raffines_informant_reads_handled():
+    for name in ("Security Bypass", "Raffine's Informant"):
         _support_is_handled(name)

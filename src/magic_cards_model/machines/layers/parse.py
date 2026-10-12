@@ -6453,6 +6453,16 @@ _ATTACHED_CREATURE_CANT_BE_BLOCKED_RE = re.compile(
     re.IGNORECASE,
 )
 
+#: Security Bypass: "As long as enchanted creature is attacking alone, it can't
+#: be blocked." - the same CR 509.1b grant as `_ATTACHED_CREATURE_CANT_BE_
+#: BLOCKED_RE`, gated on CR 506.5's "attacks alone" (`machines/conditions/
+#: objects`'s "it's attacking alone"), read live by the evasion reader.
+_ATTACHED_CREATURE_CANT_BE_BLOCKED_WHILE_ATTACKING_ALONE_RE = re.compile(
+    r"^as long as (?P<attachment>equipped|enchanted) creature is attacking alone, "
+    r"it can'?t be blocked\.?$",
+    re.IGNORECASE,
+)
+
 #: Uneasy Alliance: "Enchanted creature can't attack or block." - CR 508.1c's
 #: and CR 509.1b's restrictions granted together in layer 6 (CR 613.1f), the
 #: identical family `_ATTACHED_CREATURE_CANT_BE_BLOCKED_RE` above already
@@ -12653,6 +12663,14 @@ def _parse_narrow_static_layer_sentence(sentence: str) -> EffectBuilder | None:
             0,
             0,
             [f"This creature can't be blocked{tail}."],
+            subject=match.group("attachment").lower(),
+            line=sentence,
+        )
+    if match := _ATTACHED_CREATURE_CANT_BE_BLOCKED_WHILE_ATTACKING_ALONE_RE.fullmatch(sentence):
+        return _attached_creature_static_builder(
+            0,
+            0,
+            ["This creature can't be blocked as long as it's attacking alone."],
             subject=match.group("attachment").lower(),
             line=sentence,
         )
