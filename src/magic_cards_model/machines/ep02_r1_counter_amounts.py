@@ -139,7 +139,7 @@ def _for_each_target(names: tuple[str, ...]) -> re.Pattern[str]:
     # an opponent controls until ..." - one target per counter (CR 601.2c).
     return re.compile(
         rf"for each {_KIND}{_COUNTERS} on {_self(names)}, (?P<verb>[a-z]+) up to one target "
-        rf"(?P<noun>[a-z ]+?)(?P<tail> an opponent controls|you control|[ ,.]|$)",
+        rf"(?P<noun>[a-z]+(?: [a-z]+)*?)(?P<tail> an opponent controls| you control| until|[,.]|$)",
         re.IGNORECASE,
     )
 
@@ -233,3 +233,12 @@ def counters_self_reference_normalised(text: str, names: tuple[str, ...]) -> str
         return text
     named = "|".join(re.escape(name) for name in names)
     return re.sub(rf"(\bcounters? on )(?:{named})\b", r"\1this permanent", text)
+
+
+def counters_counted_for(text: str, source, names: tuple[str, ...]) -> str:
+    """`counters_counted_text` with each count read off `source` right now - the
+    form a target announcement needs (CR 601.2c: "for each isolation counter on
+    it, exile up to one target ..." names as many targets as there are counters
+    as the ability goes on the stack)."""
+    with counters_read_from(source):
+        return counters_counted_text(text, names)

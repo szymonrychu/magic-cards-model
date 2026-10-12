@@ -541,3 +541,89 @@ def test_brain_in_a_jar_casts_nothing_when_no_spell_has_the_mana_value():
     _settle(scenario)
     assert jar.counter_count("charge") == 6
     assert _hand_names(scenario) == ["Divination"]
+
+
+# -- an X cost sets the counters, and the counters then set a number of targets
+
+
+def _cast_with_x(scenario, name, x, *, lands):
+    card = scenario.find(name, Zone.HAND, "alice")
+    scenario.game.cast(card, "alice", x_value=x, mana_sources=lands)
+    return scenario.resolve_top()
+
+
+def _lands(scenario):
+    return [p for p in scenario.game.permanents_controlled_by("alice") if "Land" in p.card.type_line]
+
+
+def test_quarantine_field_exiles_one_target_per_isolation_counter():
+    scenario = _board(
+        ["Plains"] * 6,
+        ["Grizzly Bears", "Hill Giant", "Craw Wurm"],
+        alice_hand=["Quarantine Field"],
+    )
+    bears, giant = scenario.creature("Grizzly Bears", "bob"), scenario.creature("Hill Giant", "bob")
+    scenario.choose_trigger_targets("Quarantine Field", [bears, giant])
+    field = _cast_with_x(scenario, "Quarantine Field", 2, lands=_lands(scenario))
+    assert field.counter_count("isolation") == 2
+    _settle(scenario)
+    assert _count(scenario, "Grizzly Bears", "bob") == 0
+    assert _count(scenario, "Hill Giant", "bob") == 0
+    assert _count(scenario, "Craw Wurm", "bob") == 1
+
+
+def test_quarantine_field_returns_what_it_exiled_when_it_leaves():
+    scenario = _board(["Plains"] * 4, ["Grizzly Bears"], alice_hand=["Quarantine Field"])
+    scenario.choose_trigger_targets("Quarantine Field", [scenario.creature("Grizzly Bears", "bob")])
+    field = _cast_with_x(scenario, "Quarantine Field", 1, lands=_lands(scenario))
+    _settle(scenario)
+    assert _count(scenario, "Grizzly Bears", "bob") == 0
+    scenario.game.put_into_graveyard(field)
+    _settle(scenario)
+    assert _count(scenario, "Grizzly Bears", "bob") == 1
+
+
+def test_quarantine_field_with_x_of_zero_exiles_nothing():
+    scenario = _board(["Plains"] * 2, ["Grizzly Bears"], alice_hand=["Quarantine Field"])
+    field = _cast_with_x(scenario, "Quarantine Field", 0, lands=_lands(scenario))
+    assert field.counter_count("isolation") == 0
+    _settle(scenario)
+    assert _count(scenario, "Grizzly Bears", "bob") == 1
+    assert scenario.stack_names() == []
+
+
+def test_quarantine_field_exiles_fewer_when_there_are_fewer_legal_targets():
+    scenario = _board(["Plains"] * 6, ["Grizzly Bears"], alice_hand=["Quarantine Field"])
+    scenario.choose_trigger_targets("Quarantine Field", [scenario.creature("Grizzly Bears", "bob")])
+    _cast_with_x(scenario, "Quarantine Field", 2, lands=_lands(scenario))
+    _settle(scenario)
+    assert _count(scenario, "Grizzly Bears", "bob") == 0
+
+
+# -- Vastwood Hydra: spreads the counters it died with (CR 603.10a, CR 122.2)
+
+
+def _hydra_dies(*, take_the_may):
+    scenario = _board(
+        ["Forest"] * 5 + ["Grizzly Bears", "Llanowar Elves"], [], alice_hand=["Vastwood Hydra"]
+    )
+    bears, elves = scenario.creature("Grizzly Bears"), scenario.creature("Llanowar Elves")
+    hydra = _cast_with_x(scenario, "Vastwood Hydra", 3, lands=_lands(scenario))
+    assert hydra.counter_count(Counter.PLUS_ONE) == 3
+    scenario.will_take_the_may(take_the_may)
+    scenario.choose_trigger_targets("Vastwood Hydra", [bears, elves])
+    scenario.game.put_into_graveyard(hydra)
+    _settle(scenario)
+    return bears.counter_count(Counter.PLUS_ONE), elves.counter_count(Counter.PLUS_ONE)
+
+
+def test_vastwood_hydra_distributes_every_counter_it_died_with():
+    assert sum(_hydra_dies(take_the_may=True)) == 3
+
+
+def test_vastwood_hydra_gives_each_chosen_creature_at_least_one():
+    assert all(n >= 1 for n in _hydra_dies(take_the_may=True))
+
+
+def test_vastwood_hydra_declined_distributes_nothing():
+    assert _hydra_dies(take_the_may=False) == (0, 0)

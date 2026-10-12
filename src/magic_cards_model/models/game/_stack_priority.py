@@ -11,6 +11,7 @@ from ...machines.abilities import (
     parse_abilities,
     parse_triggered_mana,
     self_normalized_effect_text,
+    self_reference_names,
 )
 from ...machines.blitz import create_blitz_delayed_trigger
 from ...machines.casting import (
@@ -56,7 +57,7 @@ from ...machines.effects import (
     modal_trigger_profile,
     trigger_effect_for,
 )
-from ...machines.ep02_r1_counter_amounts import counters_read_from
+from ...machines.ep02_r1_counter_amounts import counters_counted_for, counters_read_from
 from ...machines.keywords import (
     ascend_as_a_spell_resolves,
     awaken_as_the_spell_resolves,
@@ -2305,8 +2306,17 @@ class StackPriorityMixin:
             if isinstance(ability, ActivatedAbility)
         ]
         reasons: list[str] = []
+        names = self_reference_names(
+            source.name, legendary=Supertype.LEGENDARY in source.supertypes
+        )
         for ability in printed:
-            profile = profile_for_text(ability.text)
+            counted = counters_counted_for(ability.text, source, names)
+            if counted != ability.text and source.zone is not Zone.BATTLEFIELD:
+                # The number of targets is a count of counters the card does not
+                # have yet (CR 601.2c reads it as the trigger goes on the stack),
+                # so a scripted-ahead choice cannot be judged here.
+                continue
+            profile = profile_for_text(counted)
             if profile.understood and profile.requirements:
                 try:
                     profile.check(list(targets), controller, self, source_id=source.id)

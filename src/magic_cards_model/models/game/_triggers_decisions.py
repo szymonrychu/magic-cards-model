@@ -9,6 +9,7 @@ from ...machines import combat as combat_rules
 from ...machines.abilities import (
     TriggeredAbility,
     TriggerEvent,
+    self_reference_names,
 )
 from ...machines.combat import (
     Attack,
@@ -49,6 +50,7 @@ from ...machines.effects import (
     UnmodeledTriggerEffectNotice,
     mode_effect_body,
 )
+from ...machines.ep02_r1_counter_amounts import counters_counted_for
 from ...machines.keywords import (
     grant_enduring_stories,
     grant_the_citys_blessing,
@@ -87,6 +89,7 @@ from ...machines.turn import (
 )
 from ..card import (
     Layout,
+    Supertype,
     Type,
 )
 from ..card_state import (
@@ -1008,6 +1011,15 @@ class TriggersDecisionsMixin:
         # read into the targets too ("target artifact with mana value X or
         # less", Thieving Skydiver), not only into the effect.
         text = self.etb_x_substituted(ability, text) or text
+        source_card = ability.source_or_last_known(self)
+        if source_card is not None:
+            text = counters_counted_for(
+                text,
+                source_card,
+                self_reference_names(
+                    ability.source_name, legendary=Supertype.LEGENDARY in source_card.supertypes
+                ),
+            )
         profile = (
             profile_for_text(text)
             .for_event_player(_that_player_of(ability))
