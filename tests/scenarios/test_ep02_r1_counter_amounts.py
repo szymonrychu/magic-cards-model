@@ -1,0 +1,193 @@
+"""EP-02 R1 T8: an amount read off the counters on an object ("X is the number
+of <kind> counters on this artifact", "equal to the number of <kind> counters
+on it", "for each <kind> counter on it").
+
+CR 122.1 (a counter is a marker on an object; the kind is its name) and, for a
+source that has left the battlefield, CR 603.10a (a leaves-the-battlefield
+trigger looks back in time) with CR 122.2 (counters cease to exist as the
+object moves). Every number below is the live count when the ability resolves.
+"""
+
+from magic_cards_model.machines import Step
+from magic_cards_model.models import Zone
+from tests.scenarios.harness import Scenario
+
+
+def _settle(scenario, limit=12):
+    """Put triggers on the stack and resolve until the stack is empty."""
+    for _ in range(limit):
+        scenario.game.put_triggers_on_stack()
+        if not scenario.stack_names():
+            return
+        scenario.pass_until_resolved()
+    raise AssertionError(f"stack never emptied: {scenario.stack_names()}")
+
+
+def _board(alice, bob=None, *, alice_hand=(), bob_hand=(), library=12):
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player(
+            "alice",
+            battlefield=list(alice),
+            hand=list(alice_hand),
+            library=["Forest"] * library,
+        )
+        .player(
+            "bob",
+            battlefield=list(bob or ()),
+            hand=list(bob_hand),
+            library=["Forest"] * library,
+        )
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    return scenario
+
+
+def _count(scenario, name, username="alice"):
+    return len([c for c in scenario.game.permanents_controlled_by(username) if c.card.name == name])
+
+
+# -- mill X, where X is the number of <kind> counters on this artifact
+
+
+def test_font_of_progress_mills_one_card_per_oil_counter():
+    scenario = _board(["Font of Progress", "Island", "Island", "Island"])
+    font = scenario.find("Font of Progress", Zone.BATTLEFIELD, "alice")
+    font.add_counters("oil", 3)
+    scenario.activate(font, auto=True, targets=[scenario.player("bob")])
+    _settle(scenario)
+    assert len(scenario.player("bob").library) == 12 - 3
+    assert len(scenario.player("bob").graveyard) == 3
+
+
+def test_font_of_progress_with_no_oil_counters_mills_nothing():
+    scenario = _board(["Font of Progress", "Island", "Island", "Island"])
+    font = scenario.find("Font of Progress", Zone.BATTLEFIELD, "alice")
+    scenario.activate(font, auto=True, targets=[scenario.player("bob")])
+    _settle(scenario)
+    assert len(scenario.player("bob").library) == 12
+
+
+def test_font_of_progress_counts_only_oil_counters():
+    scenario = _board(["Font of Progress", "Island", "Island", "Island"])
+    font = scenario.find("Font of Progress", Zone.BATTLEFIELD, "alice")
+    font.add_counters("oil", 2)
+    font.add_counters("charge", 5)
+    scenario.activate(font, auto=True, targets=[scenario.player("alice")])
+    _settle(scenario)
+    assert len(scenario.player("alice").library) == 12 - 2
+
+
+def test_grindclock_mills_per_charge_counter_on_a_chosen_player():
+    scenario = _board(["Grindclock"])
+    clock = scenario.find("Grindclock", Zone.BATTLEFIELD, "alice")
+    clock.add_counters("charge", 4)
+    scenario.activate(clock, targets=[scenario.player("bob")], index=1)
+    _settle(scenario)
+    assert len(scenario.player("bob").library) == 12 - 4
+
+
+# -- loses life equal to the number of <kind> counters on this artifact
+
+
+def test_ravenous_amulet_drains_each_opponent_by_its_soul_counters():
+    scenario = _board(["Ravenous Amulet", "Island", "Island", "Island", "Island"])
+    amulet = scenario.find("Ravenous Amulet", Zone.BATTLEFIELD, "alice")
+    amulet.add_counters("soul", 3)
+    scenario.activate(amulet, auto=True, index=1, sacrificing=[amulet])
+    _settle(scenario)
+    assert scenario.player("bob").life == 17
+    assert scenario.player("alice").life == 20
+    assert amulet.zone is Zone.GRAVEYARD
+
+
+def test_ravenous_amulet_with_no_soul_counters_costs_the_opponent_nothing():
+    scenario = _board(["Ravenous Amulet", "Island", "Island", "Island", "Island"])
+    amulet = scenario.find("Ravenous Amulet", Zone.BATTLEFIELD, "alice")
+    scenario.activate(amulet, auto=True, index=1, sacrificing=[amulet])
+    _settle(scenario)
+    assert scenario.player("bob").life == 20
+
+
+# -- discards a card for each <kind> counter on this artifact
+
+
+def test_shrine_of_limitless_power_makes_the_target_discard_per_charge_counter():
+    scenario = _board(
+        ["Shrine of Limitless Power", "Island", "Island", "Island", "Island"],
+        bob_hand=["Forest"] * 4,
+    )
+    shrine = scenario.find("Shrine of Limitless Power", Zone.BATTLEFIELD, "alice")
+    shrine.add_counters("charge", 3)
+    scenario.activate(shrine, auto=True, targets=[scenario.player("bob")], sacrificing=[shrine])
+    _settle(scenario)
+    assert len(scenario.player("bob").hand) == 1
+
+
+def test_shrine_of_limitless_power_discards_no_more_than_the_hand_holds():
+    scenario = _board(
+        ["Shrine of Limitless Power", "Island", "Island", "Island", "Island"],
+        bob_hand=["Forest"],
+    )
+    shrine = scenario.find("Shrine of Limitless Power", Zone.BATTLEFIELD, "alice")
+    shrine.add_counters("charge", 5)
+    scenario.activate(shrine, auto=True, targets=[scenario.player("bob")], sacrificing=[shrine])
+    _settle(scenario)
+    assert len(scenario.player("bob").hand) == 0
+
+
+# -- damage equal to the number of <kind> counters on it, and that much again
+
+
+def test_dragonspark_reactor_deals_its_charge_counters_to_a_player_and_a_creature():
+    scenario = _board(
+        ["Dragonspark Reactor", "Mountain", "Mountain", "Mountain", "Mountain"],
+        ["Grizzly Bears", "Hill Giant"],
+    )
+    reactor = scenario.find("Dragonspark Reactor", Zone.BATTLEFIELD, "alice")
+    reactor.add_counters("charge", 3)
+    giant = scenario.creature("Hill Giant", "bob")
+    scenario.activate(
+        reactor,
+        auto=True,
+        targets=[scenario.player("bob"), giant],
+        sacrificing=[reactor],
+    )
+    _settle(scenario)
+    assert scenario.player("bob").life == 17
+    assert giant.zone is Zone.GRAVEYARD  # 3 damage kills a 3/3
+
+
+def test_dragonspark_reactor_marks_the_same_amount_on_a_creature_that_survives():
+    scenario = _board(
+        ["Dragonspark Reactor", "Mountain", "Mountain", "Mountain", "Mountain"],
+        ["Hill Giant"],
+    )
+    reactor = scenario.find("Dragonspark Reactor", Zone.BATTLEFIELD, "alice")
+    reactor.add_counters("charge", 2)
+    giant = scenario.creature("Hill Giant", "bob")
+    scenario.activate(
+        reactor, auto=True, targets=[scenario.player("bob"), giant], sacrificing=[reactor]
+    )
+    _settle(scenario)
+    assert scenario.player("bob").life == 18
+    assert giant.damage == 2
+
+
+# -- draw X cards, where X is the number of <kind> counters on it
+
+
+def test_surrakar_spellblade_draws_per_charge_counter_on_combat_damage():
+    scenario = _board(["Surrakar Spellblade"])
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    blade = scenario.creature("Surrakar Spellblade", "alice")
+    blade.add_counters("charge", 2)
+    scenario.attack_with(blade)
+    scenario.no_blocks()
+    scenario.will_take_the_may(True)
+    scenario.combat_damage()
+    _settle(scenario)
+    assert len(scenario.player("alice").hand) == 2
+    assert len(scenario.player("alice").library) == 10

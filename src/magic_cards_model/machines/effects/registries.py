@@ -7,6 +7,7 @@ from ...models.zone import Zone
 from ..abilities import (
     TriggerEvent,
     legendary_self_pronoun_normalized,
+    self_reference_names,
 )
 from ..delayed import (
     DelayedTrigger,
@@ -28,6 +29,7 @@ from ..turn import Step
 
 if TYPE_CHECKING:
     from ...models.game import Game
+from ..ep02_r1_counter_amounts import counters_counted_text
 from ._common import AbilityEffect, Effect
 
 #: The narrower half of the pattern above, on its own: CR 602.5d's "Activate
@@ -700,6 +702,9 @@ def trigger_effect_for(
     if not entries:
         if effect_text is None:
             return None
+        effect_text = counters_counted_text(
+            effect_text, self_reference_names(card_name, legendary=legendary)
+        )
         if x_value is not None:
             substituted = _ability_effect_or_notice(substitute_x(effect_text, x_value))
             if substituted is not None:
@@ -829,6 +834,9 @@ def activated_effect_for(
     if effect_text is None:
         return None
     effect_text = activation_resolution_text(effect_text)
+    effect_text = counters_counted_text(
+        effect_text, self_reference_names(card_name, legendary=legendary)
+    )
     effect_text = _self_normalized_effect_text(card_name, effect_text, legendary=legendary)
     if x_value is not None:
         substituted = _ability_effect_or_notice(substitute_x(effect_text, x_value))

@@ -56,6 +56,7 @@ from ...machines.effects import (
     modal_trigger_profile,
     trigger_effect_for,
 )
+from ...machines.ep02_r1_counter_amounts import counters_read_from
 from ...machines.keywords import (
     ascend_as_a_spell_resolves,
     awaken_as_the_spell_resolves,
@@ -1875,9 +1876,12 @@ class StackPriorityMixin:
             legendary = trigger_source_card is not None and (
                 Supertype.LEGENDARY in trigger_source_card.supertypes
             )
-            return trigger_effect_for(
-                ability.source_name, ability.ability.event, effect_text, legendary=legendary
-            )
+            # CR 122.1/CR 603.10a: "the number of <kind> counters on it" is
+            # read off this ability's source (last known when it has left).
+            with counters_read_from(ability.source_or_last_known(self)):
+                return trigger_effect_for(
+                    ability.source_name, ability.ability.event, effect_text, legendary=legendary
+                )
         if isinstance(ability.ability, ActivatedAbility):
             if ability.ability.class_level_target is not None:
                 # CR 716.2a's own mechanical half - "This Class's level
@@ -1933,13 +1937,14 @@ class StackPriorityMixin:
                 legendary = activated_source_card is not None and (
                     Supertype.LEGENDARY in activated_source_card.supertypes
                 )
-                return activated_effect_for(
-                    ability.source_name,
-                    index,
-                    ability.ability.effect,
-                    x_value=x_value,
-                    legendary=legendary,
-                )
+                with counters_read_from(ability.source_or_last_known(self)):
+                    return activated_effect_for(
+                        ability.source_name,
+                        index,
+                        ability.ability.effect,
+                        x_value=x_value,
+                        legendary=legendary,
+                    )
         return None
 
     def _intervening_if_still_true(self: "Game", ability: AbilityOnStack) -> bool:

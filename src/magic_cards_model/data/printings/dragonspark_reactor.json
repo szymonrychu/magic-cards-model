@@ -1,0 +1,137 @@
+{
+  "object": "card",
+  "id": "5cf531dd-0a93-43e3-880b-f705fa5f533d",
+  "oracle_id": "a8acb0b0-7265-42f6-8143-62d0c02d5a28",
+  "multiverse_ids": [
+    548439
+  ],
+  "mtgo_id": 97202,
+  "arena_id": 79566,
+  "tcgplayer_id": 262672,
+  "cardmarket_id": 608232,
+  "name": "Dragonspark Reactor",
+  "lang": "en",
+  "released_at": "2022-02-18",
+  "uri": "https://api.scryfall.com/cards/5cf531dd-0a93-43e3-880b-f705fa5f533d",
+  "scryfall_uri": "https://scryfall.com/card/neo/137/dragonspark-reactor?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T06:24:29Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/5/c/5cf531dd-0a93-43e3-880b-f705fa5f533d.jpg?1783923869",
+    "normal": "https://cards.scryfall.io/normal/front/5/c/5cf531dd-0a93-43e3-880b-f705fa5f533d.jpg?1783923869",
+    "large": "https://cards.scryfall.io/large/front/5/c/5cf531dd-0a93-43e3-880b-f705fa5f533d.jpg?1783923869",
+    "png": "https://cards.scryfall.io/png/front/5/c/5cf531dd-0a93-43e3-880b-f705fa5f533d.png?1783923869",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/5/c/5cf531dd-0a93-43e3-880b-f705fa5f533d.jpg?1783923869",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/5/c/5cf531dd-0a93-43e3-880b-f705fa5f533d.jpg?1783923869",
+    "thumb": "https://cards.scryfall.io/thumb/front/5/c/5cf531dd-0a93-43e3-880b-f705fa5f533d.webp?1783923869",
+    "grid": "https://cards.scryfall.io/grid/front/5/c/5cf531dd-0a93-43e3-880b-f705fa5f533d.webp?1783923869",
+    "display": "https://cards.scryfall.io/display/front/5/c/5cf531dd-0a93-43e3-880b-f705fa5f533d.webp?1783923869",
+    "art": "https://cards.scryfall.io/art/front/5/c/5cf531dd-0a93-43e3-880b-f705fa5f533d.webp?1783923869",
+    "crop": "https://cards.scryfall.io/crop/front/5/c/5cf531dd-0a93-43e3-880b-f705fa5f533d.webp?1783923869"
+  },
+  "mana_cost": "{1}{R}",
+  "cmc": 2.0,
+  "type_line": "Artifact",
+  "oracle_text": "Whenever this artifact or another artifact you control enters, put a charge counter on this artifact.\n{4}, Sacrifice this artifact: It deals damage equal to the number of charge counters on it to target player and that much damage to up to one target creature.",
+  "colors": [
+    "R"
+  ],
+  "color_identity": [
+    "R"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "59a2059f-5482-433f-8761-eb2e17859b71",
+  "set": "neo",
+  "set_name": "Kamigawa: Neon Dynasty",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/59a2059f-5482-433f-8761-eb2e17859b71",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Aneo&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/neo?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/5cf531dd-0a93-43e3-880b-f705fa5f533d/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Aa8acb0b0-7265-42f6-8143-62d0c02d5a28&unique=prints",
+  "collector_number": "137",
+  "digital": false,
+  "rarity": "uncommon",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Billy Christian",
+  "artist_ids": [
+    "10f26f94-64fc-4174-856e-701bea4f1521"
+  ],
+  "illustration_id": "75bca008-50e3-4b54-a388-065e0355362f",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 9035,
+  "penny_rank": 5139,
+  "preview": {
+    "source": "Joseph Johnson",
+    "source_uri": "https://twitter.com/Blackneto_/status/1489254234570694662",
+    "previewed_at": "2022-02-03"
+  },
+  "prices": {
+    "usd": "0.37",
+    "usd_foil": "0.43",
+    "usd_etched": null,
+    "eur": "0.15",
+    "eur_foil": "0.16",
+    "tix": "0.03"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=548439&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DDragonspark%2BReactor",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DDragonspark%2BReactor",
+    "edhrec": "https://edhrec.com/route/?cc=Dragonspark+Reactor"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F262672%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=608232&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/97202?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}
