@@ -342,3 +342,10 @@ Every Modern-legal expansion, newest to oldest. Each row links to its `status.md
   - api tests: 261 wrapper pass, lint/test/test:pg green against the new engine; added: +0
   - goldens added: 13; no protected test or golden changed; ratchet 0 offenders over 22688 oracle cards
   - integration fixes: none needed beyond union-merging MEMORY.md/engine-coverage.md; T4 fixed _still_has_ability in models/game/_activation.py, T5 added the kicked-instead targeting reader
+- 2026-10-12: EP-01-R2 (not-working epic EP-01 static-ability audit, round 2: group anthems/grants, hexproof/protection, conditional statics, casting/attack-block restrictions, Aura/Equipment and quoted grants, disturb + untap/game-rule statics, pumps/CDA/cast-permission/cost, other statics)
+  - cards in round: 553 (docs/not-working-campaign/EP-01-R2.txt; 134 deferred to EP-01-R3, 17 of which flipped incidentally); needing fix at plan time: 553; dropped (already handled): 0; fixed: 553 (541 pool printings + 12 oracle-only); remaining: 0
+  - pool-wide Not working after refresh: 5322 (was 5990); Partial (unaudited) 0 (was 423); Tested 5147 (was 4560), Works 12301 (was 11797); not-working list (derive.py): 6419 -> 5308
+  - engine tests: 38283 total (pass 37595, skip 638, xfail 50); added since R0c: +3249
+  - api tests: 8876 passed, 183 skipped + 261 wrapper; test:pg 9044 passed; added: +8 (T7 suspend X / cast-cost names)
+  - goldens added: 285; 34 protected goldens and 8 protected assertions changed plus 2 api budgets, all 49 items approved by fresh sonnet reviewers; ratchet 0 offenders over 22688 oracle cards, 1093 improved
+  - integration fixes: 16 cross-task duplicate parts reconciled to one reader each (untap-in-others-untap, can't-have-counters, Sliver quoted grants, cards in two tasks), T3 regressions red on its own branch, a 3x sweep slowdown, Volition Reins ratchet regression; schema renumbered to 149
