@@ -106,6 +106,7 @@ from .layers import (
     modify_power_toughness,
     only_this_incarnation,
 )
+from .legacy_keywords import LEGACY_EXPANSIONS
 from .objects_as_costs import (
     ObjectAction,
     ObjectOffer,
@@ -312,6 +313,11 @@ def executes(keyword: str) -> bool:
         "flanking",
         # CR 702.115a: `_ingest_ability` above (`_TRIGGER_EXPANSIONS`).
         "ingest",
+        # CR 702.45a, CR 702.135a, CR 702.134a: `_bushido_ability` above and
+        # `machines/legacy_keywords.LEGACY_EXPANSIONS` (`_TRIGGER_EXPANSIONS`).
+        "bushido",
+        "afterlife",
+        "mentor",
         # CR 702.145b / CR 702.145e. Static abilities driven by the game's
         # day/night designation (CR 731): `apply_daybound_nightbound` below
         # transforms and sets the designation, `enters_transformed_at_night`
@@ -1217,7 +1223,9 @@ def _bushido_ability(ability: KeywordAbility) -> TriggeredAbility:
         keyword="bushido",
         word=TriggerWord.WHENEVER,
         condition="this creature blocks or becomes blocked",
-        effect=f"it gets +{count}/+{count} until end of turn",
+        # "this creature", not "it": the event's subject is the *other* creature
+        # of the blocking pair when this one becomes blocked.
+        effect=f"this creature gets +{count}/+{count} until end of turn",
         event=TriggerEvent.BLOCKS,
     )
 
@@ -1873,6 +1881,7 @@ _TRIGGER_EXPANSIONS: dict[str, Callable[[KeywordAbility], list[TriggeredAbility]
     "poisonous": _single(_poisonous_ability),
     "decayed": _single(_decayed_ability),
 }
+_TRIGGER_EXPANSIONS.update(LEGACY_EXPANSIONS)
 
 
 #: God-Eternal Kefnet's whole line - the static "You may reveal the first card

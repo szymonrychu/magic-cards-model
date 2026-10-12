@@ -23,6 +23,7 @@ from ..abilities import (
     self_reference_pattern,
 )
 from ..designations import designation_holds, split_as_long_as
+from ..exert_triggers import EXERT_CONDITION
 
 if TYPE_CHECKING:  # pragma: no cover - import cycle: Game builds on the machines
     from ...models.game import Game
@@ -106,6 +107,8 @@ def _unread_trigger_events(condition: str) -> frozenset[TriggerEvent | ExtraTrig
         return frozenset({ExtraTriggerEvent.CYCLED})
     if _FORETELL_CONDITION.match(lowered):
         return frozenset({ExtraTriggerEvent.FORETOLD})
+    if EXERT_CONDITION.match(lowered):
+        return frozenset({ExtraTriggerEvent.EXERTED})
     if _ABILITY_ACTIVATED_CONDITION.match(lowered):
         return frozenset({ExtraTriggerEvent.ABILITY_ACTIVATED})
     if _RING_TEMPTS_YOU_CONDITION.match(lowered):

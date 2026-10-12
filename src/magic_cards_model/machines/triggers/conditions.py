@@ -18,6 +18,7 @@ from ..abilities import (
     self_reference_pattern,
     self_reference_re,
 )
+from ..exert_triggers import EXERT_CONDITION, exert_condition_matches
 from ..turn import Step
 
 if TYPE_CHECKING:  # pragma: no cover - import cycle: Game builds on the machines
@@ -3670,6 +3671,9 @@ def _unread_condition_matches(
         if match.group("what") == "another card":
             return event.subject_id != source.id
         return True
+
+    if EXERT_CONDITION.match(condition):
+        return exert_condition_matches(condition, controller, event)
 
     match = _FORETELL_CONDITION.match(condition)
     if match is not None:

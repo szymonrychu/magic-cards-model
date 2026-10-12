@@ -155,6 +155,7 @@ from magic_cards_model.machines.effects import (
     trigger_effect_for,
 )
 from magic_cards_model.machines.effects.counters import _SUPPORT_RE
+from magic_cards_model.machines.exert_on_attack import reads_exert_as_it_attacks_line
 from magic_cards_model.machines.keyword_counters import (
     conditional_group_keyword_grant_of_line,
     enters_with_counters_pronoun_fallback,
@@ -2039,6 +2040,11 @@ def _static_ability_category(
         # CR 702.30a: "<this> has echo {X}, where X is ..." -
         # `keywords.self_echo_lines` writes it out as the echo upkeep trigger
         # and `keywords._echo_effect` evaluates X as the cost is paid.
+        return HANDLED
+    if "exert" in text.lower() and reads_exert_as_it_attacks_line(text):
+        # CR 701.43d: `exert_on_attack.offer_exert_as_it_attacks` - before the
+        # layer-effect near miss, which would read the "When you do, ... get
+        # +1/+1" consequence (Tah-Crop Elite) as an unparsed continuous effect.
         return HANDLED
     if looks_like_unparsed_layer_effect(
         text, static_only=True, card_name=effective_name, legendary=legendary
