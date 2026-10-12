@@ -793,6 +793,25 @@ def _option_from_keyword(ability: KeywordAbility) -> KeywordCastOption | None:
             understood=cost is not None,
         )
 
+    if canonical == "mutate":
+        # CR 702.140a: "'Mutate [cost]' means 'You may pay [cost] rather than
+        # pay this spell's mana cost. If you do, it becomes a mutating creature
+        # spell and targets a non-Human creature with the same owner as this
+        # spell.'" An alternative cost (CR 118.9) from the hand, bestow's
+        # reading; the target is `with_keyword_spell_ability_target`'s, the
+        # merge at resolution `face_down_keywords.resolve_mutating_spell`'s,
+        # and a printed "from your graveyard using its mutate ability" copies
+        # this option to that zone (`permissions._printed_zone_permissions`).
+        cost = total_cost_for_phrase(printed) if printed else None
+        return KeywordCastOption(
+            keyword=ability.canonical,
+            rule="CR 702.140a",
+            zone=Zone.HAND,
+            cost=cost,
+            pays_mana_cost=False,
+            understood=cost is not None,
+        )
+
     if canonical == "impending":
         # CR 702.176a: "'Impending N-[cost]' means 'You may choose to pay
         # [cost] rather than pay this spell's mana cost,'" - the first of its
@@ -1062,6 +1081,13 @@ def _granted_cost_keyword(line: str, keyword: str) -> KeywordAbility | None:
 
 
 def marker_cast_options(spell: CardState) -> list[KeywordCastOption]:
+    """The cast options a card has for reasons not printed on it: a
+    self-zone cast permission it was granted (`granted_self_zone_cast_options`)
+    and the exile pile it is in (`_exile_marker_cast_options`)."""
+    return granted_self_zone_cast_options(spell) + _exile_marker_cast_options(spell)
+
+
+def _exile_marker_cast_options(spell: CardState) -> list[KeywordCastOption]:
     """The cast options a card has because of the *pile of exile it is in*
     (CR 406.4), rather than because of anything printed on it.
 
@@ -1410,14 +1436,20 @@ def conditional_alternative_cost_offers(text: str) -> list[ConditionalAlternativ
 #: CR 702.113b: the awaken spell ability's own target, required only when the
 #: awaken cost was chosen ("Otherwise the spell is cast as if it didn't have
 #: that target"). It follows every target the spell's own text names.
-_KEYWORD_SPELL_ABILITY_TARGETS = {"awaken": "target land you control"}
+_KEYWORD_SPELL_ABILITY_TARGETS = {
+    "awaken": "target land you control",
+    # CR 702.140a: "targets a non-Human creature with the same owner as this
+    # spell" - the reminder text's own "you own".
+    "mutate": "target non-Human creature you own",
+}
 
 
 def with_keyword_spell_ability_target(profile: Any, keyword_used: str | None) -> Any:
     """`profile` with the target a keyword's spell ability adds, when that
     keyword's cost was the one chosen (CR 601.2c: "A spell may require some
     targets only if an alternative or additional cost ... was chosen for
-    it"). Awaken's "target land you control" (CR 702.113b) is the one."""
+    it"). Awaken's "target land you control" (CR 702.113b) and mutate's
+    "target non-Human creature you own" (CR 702.140a)."""
     phrase = _KEYWORD_SPELL_ABILITY_TARGETS.get((keyword_used or "").lower())
     if phrase is None:
         return profile
@@ -1973,4 +2005,5 @@ from .permissions import (  # noqa: E402
     _printed_self_zone_cast_with_counters,
     _printed_zone_permissions,
     adventure_face,
+    granted_self_zone_cast_options,
 )

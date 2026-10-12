@@ -37,6 +37,7 @@ from .. import combat as combat_rules
 from ..casting import (
     PlayAction,
 )
+from ..casting.permissions import printed_self_zone_cast
 from ..decisions import Decision, DecisionKind, source_id_of
 from ..delayed import (
     ReflexiveWhenYouDoConsequence,
@@ -209,6 +210,51 @@ _HIDEAWAY_LOOK_EXILE_ONE_RE = re.compile(
     r"library in a random order\.?$",
     re.IGNORECASE,
 )
+
+
+#: "exile the top card of your library. For as long as it remains exiled, it
+#: has "`<ability>`"." (Monk Class, level 3) - the exiled card is granted an
+#: ability of its own by a resolution effect lasting "for as long as" it stays
+#: exiled (CR 611.2b), read by the same reader as a printed self-zone
+#: permission (CR 601.3).
+_EXILE_TOP_GRANTING_WHILE_EXILED_RE = re.compile(
+    r"^exile the top card of your library\. for as long as it remains exiled, it has "
+    r"[\"\u201c](?P<granted>[^\"\u201d]+)[\"\u201d]\.?$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s35")
+def _parse_exile_top_granting_while_exiled_clause(text: str) -> AbilityEffect | None:
+    """`_EXILE_TOP_GRANTING_WHILE_EXILED_RE`'s shape. The grant is a line on
+    `CardState.granted_ability_texts`, which `CardState.move_to` drops at the
+    card's next zone change (CR 400.7) - exactly "for as long as it remains
+    exiled". A granted line `printed_self_zone_cast` reads becomes the cast
+    option (`casting.options.marker_cast_options`); any other is not granted,
+    and the clause is marked and noticed as half-played (CR 608.2c) rather
+    than handing the card an ability nothing executes.
+    """
+    match = _EXILE_TOP_GRANTING_WHILE_EXILED_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    granted = match.group("granted").strip()
+    readable = printed_self_zone_cast(granted) is not None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        player = game.player(ability.controller)
+        for card_state in game.exile_cards(list(player.library[:1])):
+            if card_state.zone is not Zone.EXILE:
+                continue
+            if readable:
+                card_state.granted_ability_texts = (*card_state.granted_ability_texts, granted)
+            else:
+                game.layer_remainder_notices.append(
+                    LayerRemainderNotice(
+                        source_id=ability.source_id, source_name=ability.source_name, text=granted
+                    )
+                )
+
+    return effect if readable else _with_unparsed_remainder(effect, granted)
 
 
 @ABILITY_TEXT.rung("s35")
@@ -3310,6 +3356,58 @@ def _parse_manifest_top_card_clause(clause: str, *, for_spell: bool) -> Targeted
             top = player.library[0]
             player.zones[Zone.LIBRARY].remove(top)
             manifest(game, player.username, top)
+
+    return effect
+
+
+@MIXED_CLAUSE.rung("s26", for_spell=FORWARD)
+def _parse_cloak_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
+    """CR 701.58a's keyword action: "cloak the top card of your library",
+    "cloak the top card of that player's library" (the player the trigger
+    event names, CR 603.2), "cloak a card from your hand" - read by
+    `machines/face_down_keywords.read_cloak_clause`, performed by its
+    `cloak`. The cloaked permanent is always the controller's: the one who
+    cloaks puts the card onto the battlefield (CR 701.58a)."""
+    from ..face_down_keywords import cloak, cloak_from_library, read_cloak_clause
+
+    read = read_cloak_clause(clause)
+    if read is None:
+        return None
+    count, whose = read
+    if for_spell and whose == "that player's":
+        return None  # "that player" is a trigger event's player (CR 603.2).
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        controller = game.controller_of(stack_object).username
+        source = stack_object.name if for_spell else stack_object.source_name  # type: ignore[union-attr]
+        if whose == "hand":
+            hand = list(game.player(controller).hand)
+            if not hand:
+                return
+            chosen = _choose_one_card(
+                game,
+                game.player(controller),
+                hand,
+                prompt="choose a card from your hand to cloak",
+                source=source,
+                source_id=source_id_of(stack_object),
+            )
+            game.player(controller).zones[Zone.HAND].remove(chosen)
+            cloak(game, controller, chosen)
+            return
+        if whose == "your":
+            owners = [controller]
+        elif whose == "each opponent's":
+            owners = [p.username for p in _opponents(game, controller)]
+        elif whose == "target player's":
+            owners = [
+                t.username for t in game.resolve_targets(stack_object) if isinstance(t, Player)
+            ]
+        else:
+            event = getattr(stack_object, "event", None)
+            owners = [event.player] if event is not None and event.player else []
+        for owner in owners:
+            cloak_from_library(game, controller, owner, count)
 
     return effect
 
@@ -6718,6 +6816,7 @@ def _parse_put_top_card_on_bottom_clause(text: str, *, for_spell: bool) -> Targe
 from ._common import (  # noqa: E402
     _SELECT_FROM_TOP_KINDS,
     ConditionalClauseNotice,
+    LayerRemainderNotice,
     _effect_condition_is_readable,
     _opponents,
     _parse_card_group_qualifier,
@@ -6734,7 +6833,7 @@ from .amounts import (  # noqa: E402
     amount_expression,
     that_many,
 )
-from .continuous import _defender_of_controllers_attack  # noqa: E402
+from .continuous import _defender_of_controllers_attack, _with_unparsed_remainder  # noqa: E402
 from .counters import _counter_kind  # noqa: E402
 from .dispatch import (  # noqa: E402
     _parse_mixed_clause,

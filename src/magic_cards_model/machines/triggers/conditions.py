@@ -2507,6 +2507,14 @@ def _condition_matches(
         # problem with "opponent"/"creature you control" - both are already
         # gone from `caster_condition`, computed above.
         type_condition = caster_condition
+        if _KICKED_SPELL_RE.search(lowered) is not None:
+            # CR 702.33d: "kicked" once the kicker cost was declared paid -
+            # read off the spell's own `CastRecord` (Verazol, the Split
+            # Current's "Whenever you cast a kicked spell").
+            spell = game.find_by_id(event.subject_id) if event.subject_id else None
+            record = game.cast_record_of(spell) if spell is not None else None
+            if record is None or not record.kicked:
+                return False
         if not _types_match(event.subject_types, type_condition):
             return False
         if not _color_matches(event.subject_colors, type_condition):
@@ -2863,6 +2871,13 @@ def _condition_matches(
         if "an opponent" in lowered:
             return event.player is not None and event.player != controller
         return event.player == controller
+
+    if ability.event is TriggerEvent.MUTATES:
+        # CR 702.140d. "Whenever this creature mutates" is the form the
+        # mutate creatures print: the merged permanent is the subject
+        # (`Game.merge`), and the merged permanent has every component's
+        # abilities (CR 702.140e), so this fires off whichever card printed it.
+        return mine and event.subject_id == source.id
 
     if ability.event is TriggerEvent.BECOMES_MONSTROUS:
         # CR 701.37a. Every printing in the pool - Polukranos, World Eater;
@@ -4105,6 +4120,10 @@ def _cast_record_for_clause(
         # the ability came from, even if that object has since moved on.
         return game.cast_record_as_last_known(source_stamp)
     return game.cast_record_of(source)
+
+
+#: "a kicked spell" - CR 702.33d's adjective on a cast trigger's spell.
+_KICKED_SPELL_RE = re.compile(r"\bkicked (?:[a-z]+ )?spells?\b")
 
 
 #: Ruby, Daring Tracker's own clause, split off `condition` into

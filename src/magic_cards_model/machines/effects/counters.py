@@ -3500,7 +3500,8 @@ def _parse_counter_exile_then_cast_free_clauses(
 #: deals 1 damage to any target." is the same shape without "you may": the
 #: consequence runs only if the counter was actually removed.
 _MAY_REMOVE_COUNTER_FROM_SELF_IF_YOU_DO_RE = re.compile(
-    r"^(?P<may>you may )?remove (?P<n>a|an|one|\d+) (?P<kind>\+1/\+1|-1/-1|[a-z]+) counters? from "
+    r"^(?P<may>you may )?remove (?P<n>a|an|one|two|three|\d+) "
+    r"(?P<kind>\+1/\+1|-1/-1|[a-z]+) counters? from "
     r"(?:this (?:creature|permanent|artifact)|it)"
     r"\.\s*if you do,\s*(?P<consequence>.+?)\.?$",
     re.IGNORECASE | re.DOTALL,
@@ -3530,6 +3531,10 @@ def _parse_conditional_remove_counter_from_self_clause(
     kind = _counter_kind(match.group("kind"))
     consequence_text = match.group("consequence").strip()
     clause = parse_mixed_effect(consequence_text)
+    if clause is None:
+        from ..if_you_do_chains import if_you_do_consequence
+
+        clause = if_you_do_consequence(consequence_text + ".")
     if clause is None:
         return None
     optional = match.group("may") is not None
@@ -4562,3 +4567,17 @@ from .text import (  # noqa: E402
     _strip_non_effect_preamble,
 )
 from .tokens import _parse_generic_token_descriptor, _parse_token_clause  # noqa: E402
+
+
+@ABILITY_TEXT.rung("s19", for_spell=False)
+def _parse_remove_counter_from_each_of_n_clause(
+    text: str, *, for_spell: bool
+) -> AbilityEffect | None:
+    """ "you may remove a <kind> counter from each of <N> creatures you
+    control. If you do, <consequence>." - `machines/if_you_do_chains.
+    parse_remove_counter_from_each_of_n`."""
+    if for_spell or "counter from each of" not in text.lower():
+        return None
+    from ..if_you_do_chains import parse_remove_counter_from_each_of_n
+
+    return parse_remove_counter_from_each_of_n(text)

@@ -2423,3 +2423,26 @@ def test_a_snapshot_written_before_the_t8_modifications_is_refused() -> None:
         match=f"schema_version={_SCHEMA_VERSION_BEFORE_EP01_R2_T8_MODIFICATIONS}",
     ):
         Game.model_validate(dumped)
+
+
+#: The version stamped before EP01-R3-T4: `CardState` gained `merged_order`,
+#: `Game` gained `merged_components` (mutate, CR 702.140). The
+#: last shape without them is main's 149.
+_SCHEMA_VERSION_BEFORE_EP01_R3_T4_MERGED_PERMANENTS = 149
+
+
+def test_a_snapshot_written_before_merged_permanents_is_refused() -> None:
+    """A version-149 dump cannot hold a mutated permanent's other components:
+    decoded as current, the permanent would read as its bottom card alone.
+    Refused instead."""
+    assert "merged_order" in CardState.model_fields
+    assert "merged_components" in Game.model_fields
+    assert Game.CURRENT_SCHEMA_VERSION > _SCHEMA_VERSION_BEFORE_EP01_R3_T4_MERGED_PERMANENTS
+    dumped = _a_played_game().model_dump(mode="json")
+    dumped["schema_version"] = _SCHEMA_VERSION_BEFORE_EP01_R3_T4_MERGED_PERMANENTS
+
+    with pytest.raises(
+        SchemaVersionMismatch,
+        match=f"schema_version={_SCHEMA_VERSION_BEFORE_EP01_R3_T4_MERGED_PERMANENTS}",
+    ):
+        Game.model_validate(dumped)

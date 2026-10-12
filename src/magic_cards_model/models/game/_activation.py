@@ -2379,7 +2379,7 @@ class ActivationMixin:
         if refusal is not None:
             raise ValueError(refusal)
         controller = controller or self.controller_of(permanent).username
-        total = turn_face_up_cost(permanent, controller, procedure=procedure)
+        total = turn_face_up_cost(permanent, controller, procedure=procedure, game=self)
         assert total is not None  # `why_cannot_turn_face_up` already checked this
         return CostPayment.for_total(total, game=self, payer=controller)
 

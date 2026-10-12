@@ -218,9 +218,9 @@ def reads_printed_self_zone_cast_line(text: str) -> bool:
     return printed_self_zone_cast(text) is not None
 
 
-def _printed_self_zone_cast_with_additional_cost(card: Card) -> list[KeywordCastOption]:
+def _self_zone_cast_options(lines: Sequence[str]) -> list[KeywordCastOption]:
     found: list[KeywordCastOption] = []
-    for line in (card.oracle_text or "").splitlines():
+    for line in lines:
         read = printed_self_zone_cast(line)
         if read is None:
             continue
@@ -239,6 +239,21 @@ def _printed_self_zone_cast_with_additional_cost(card: Card) -> list[KeywordCast
                 )
             )
     return found
+
+
+def _printed_self_zone_cast_with_additional_cost(card: Card) -> list[KeywordCastOption]:
+    return _self_zone_cast_options((card.oracle_text or "").splitlines())
+
+
+def granted_self_zone_cast_options(spell: CardState) -> list[KeywordCastOption]:
+    """The same CR 601.3 permission granted to the card rather than printed on
+    it (Monk Class's "For as long as it remains exiled, it has 'You may cast
+    this card from exile as long as ...'"): a line on
+    `CardState.granted_ability_texts`, gone at its next zone change (CR 400.7).
+    """
+    if not spell.granted_ability_texts:
+        return []
+    return _self_zone_cast_options(spell.granted_ability_texts)
 
 
 #: "You may cast this card from your graveyard[ if `<condition>`][ by paying

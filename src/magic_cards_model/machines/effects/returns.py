@@ -2907,3 +2907,16 @@ from .dispatch import parse_mixed_effect  # noqa: E402
 from .library import _dead_self_found, _reveal_and_bring_into_hand  # noqa: E402
 from .text import _singular_card_type, _strip_non_effect_preamble  # noqa: E402
 from .tokens import _parse_token_clause  # noqa: E402
+
+
+@MIXED_CLAUSE.rung("s1", for_spell=FORWARD)
+def _parse_return_put_from_hand_or_graveyard_clause(
+    clause: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """ "you may put a <quality> card from your hand or graveyard onto the
+    battlefield" - `machines/if_you_do_chains.parse_put_from_hand_or_graveyard`."""
+    if "hand or graveyard onto the battlefield" not in clause.lower():
+        return None
+    from ..if_you_do_chains import parse_put_from_hand_or_graveyard
+
+    return parse_put_from_hand_or_graveyard(clause)

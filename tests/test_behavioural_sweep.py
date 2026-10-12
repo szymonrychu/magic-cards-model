@@ -3590,7 +3590,11 @@ def _casting(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
 
             yield cast_probe
 
-    if ALICE in casters and _claims_cast_record(ability.intervening_if or ""):
+    # "Whenever you cast a kicked spell" (CR 702.33d) names how the spell was
+    # paid for in the condition itself, so the kicked probe is cast for it too.
+    if ALICE in casters and (
+        _claims_cast_record(ability.intervening_if or "") or "kicked spell" in lowered
+    ):
         yield from _paid_probes(case, ability)
 
 
@@ -4656,6 +4660,21 @@ def _enlisting(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
     yield enlist
 
 
+def _mutating(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
+    """A creature card merges with the source (CR 702.140c), raising CR
+    702.140d's "whenever this creature mutates" through `Game.mutate`."""
+
+    def mutate() -> tuple[PlayedScenario, Any]:
+        scenario, source_id = _home(case, ability, hand=("Grizzly Bears",))
+        game = scenario.game
+        source = game.find_by_id(source_id)
+        component = _last(scenario, "Grizzly Bears", Zone.HAND, ALICE)
+        game.mutate(source, component, on_top=False)
+        return scenario, source_id
+
+    yield mutate
+
+
 def _finishing_a_saga(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
     """ "Whenever the final chapter ability of a Saga you control resolves"
     (Tom Bombadil, CR 714.2e): a real three-chapter Saga of the controller's
@@ -4863,6 +4882,8 @@ def _attempts(case: Case) -> Iterator[Attempt]:
             yield from _foretelling(case, ability)
         elif kind == "exerted":
             yield from _exerting(case, ability)
+        elif kind == "mutates":
+            yield from _mutating(case, ability)
 
 
 #: Attempts whose event happens later in the turn (or in the next ones), so

@@ -641,6 +641,10 @@ def _parse_may_pay_mana_if_you_do_clause(text: str) -> AbilityEffect | None:
         return None
     consequence = pay_consequence_effect(match.group("consequence").strip())
     if consequence is None:
+        from ..if_you_do_chains import if_you_do_consequence
+
+        consequence = if_you_do_consequence(match.group("consequence").strip() + ".")
+    if consequence is None:
         return None
 
     def effect(game: "Game", ability: AbilityOnStack) -> None:

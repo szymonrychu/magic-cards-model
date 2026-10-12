@@ -1805,6 +1805,16 @@ class Game(
     guards against.
     """
 
+    merged_components: dict[UUID, list[CardState]] = Field(default_factory=dict)
+    """The components of each merged permanent other than the battlefield
+    object itself (CR 730.2), keyed by that object's `CardState.id` - the one
+    still in `Game.battlefield`, carrying `CardState.merged_order`. The same
+    held-off-the-battlefield shape as `melded_pairs`, for the same reason:
+    a merged permanent is one object (CR 702.140c), so every reader of
+    `Game.battlefield` sees exactly one. `Game.merge` puts a component in;
+    `Game._accompany_meld_partner` sends every one of them to the zone the
+    permanent left for (CR 730.3)."""
+
     cast_records: dict[UUID, "CastRecord"] = Field(default_factory=dict)
     """How each spell now on the stack was cast (CR 601.2b), keyed by the
     `CardState.zone_change_stamp` of the object the record describes - never
@@ -1968,7 +1978,7 @@ class Game(
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 149
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 153
     #: 67: `machines/cost.CostComponent` gained `link_to_permanent_id` (CR
     #: 607.2q), reachable from `Game` through a pending `AbilityOnStack.
     #: keyword_activation`/`.unless_payment`'s own `CostPayment.components`.
@@ -2312,6 +2322,10 @@ class Game(
     #: `LoseAllAbilitiesExceptManaAbilities` (Blood Sun), both stored in a
     #: continuous effect; an older dump would refuse to decode an effect of
     #: either kind. T8's reserved number (main at the cut + 8).
+    #: 153 (EP01-R3-T4, reserved: 149 + task 4): `CardState` gained
+    #: `merged_order`, and `Game` gained `merged_components`
+    #: (mutate, CR 702.140, 730.2); an older dump would decode a mutated
+    #: permanent as its bottom card alone, with its other components lost.
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a

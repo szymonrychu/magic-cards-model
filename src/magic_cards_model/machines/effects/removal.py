@@ -4228,6 +4228,82 @@ _PUT_TIME_COUNTERS_ON_IT_RE = re.compile(
 )
 
 
+#: "it gains suspend" (Epochrasite) beside the conditional "if it doesn't have
+#: suspend, it gains suspend" (Taigam, Master Opportunist) - the bare form is
+#: printed only where the exiled card cannot already have suspend.
+_GAINS_SUSPEND_EITHER_RE = re.compile(
+    r"^(?:if it doesn'?t have suspend, )?it gains suspend\.?$", re.IGNORECASE
+)
+
+#: "exile it with three time counters on it" (Epochrasite's dies trigger, "it"
+#: the dead creature) and "exile the spell you cast with four time counters on
+#: it" (Taigam's cast trigger, the spell whose cast triggered it).
+_EXILE_REFERENT_WITH_TIME_COUNTERS_RE = re.compile(
+    rf"^(?:then )?exile (?P<ref>it|the spell you cast|that spell) with (?P<n>{COUNT}) "
+    r"time counters? on it\.?$",
+    re.IGNORECASE,
+)
+
+_COPY_IT_RE = re.compile(r"^copy (?:it|that spell)\.?$", re.IGNORECASE)
+
+
+def _parse_exile_referent_into_suspend_clauses(
+    clauses: list[str], index: int, *, for_spell: bool
+) -> tuple[int, TargetedClause] | None:
+    """A triggered ability's own referent exiled with time counters, then
+    granted suspend (CR 702.62a, CR 702.62b), one CR 608.2c instruction:
+
+    - "exile it with N time counters on it and it gains suspend" - "it" is
+      the ability's source, found by CR 603.10a's look-back only while it is
+      still the graveyard incarnation its dies event made (CR 400.7e,
+      `_dead_self_found`).
+    - "copy it, then exile the spell you cast with N time counters on it. If
+      it doesn't have suspend, it gains suspend." - the spell whose cast
+      triggered the ability (`ability.event`), copied first (CR 707.10), then
+      exiled off the stack (CR 701.13a, not countered) while it is still there.
+
+    Ability-only: both referents are found through `AbilityOnStack`.
+    """
+    if for_spell:
+        return None
+    start = index
+    copy_first = _COPY_IT_RE.fullmatch(clauses[index].strip()) is not None
+    if copy_first:
+        index += 1
+    if index + 1 >= len(clauses):
+        return None
+    exile = _EXILE_REFERENT_WITH_TIME_COUNTERS_RE.fullmatch(clauses[index].strip())
+    if exile is None or not _GAINS_SUSPEND_EITHER_RE.fullmatch(clauses[index + 1].strip()):
+        return None
+    counters = parse_count(exile.group("n"))
+    if counters is None:
+        return None
+    self_referent = exile.group("ref").lower() == "it" and not copy_first
+
+    def exile_referent_into_suspend(game: "Game", stack_object: "StackObject") -> None:
+        ability = stack_object
+        assert isinstance(ability, AbilityOnStack)
+        if self_referent:
+            source = _dead_self_found(game, ability)
+            if source is None or source.zone is Zone.BATTLEFIELD:
+                return
+            game.exile_permanent(source)
+            grant_suspend(game, source, counters)
+            return
+        event = ability.event
+        if event is None or event.subject_id is None:
+            return
+        spell = game.find_by_id(event.subject_id)
+        if not isinstance(spell, CardState) or spell.zone is not Zone.STACK:
+            return
+        if copy_first:
+            game.copy_spell(spell, ability.controller)
+        game.exile_from_stack(spell)
+        grant_suspend(game, spell, counters)
+
+    return index + 2 - start, exile_referent_into_suspend
+
+
 def _parse_exile_into_suspend_clauses(
     clauses: list[str], index: int, *, for_spell: bool
 ) -> tuple[int, TargetedClause] | None:
@@ -4246,7 +4322,12 @@ def _parse_exile_into_suspend_clauses(
       battlefield (CR 406.2), counters placed once it is there.
 
     In both, a target gone by resolution (CR 608.2b) is simply not touched.
+    A triggered ability's own referent (Epochrasite, Taigam) is
+    `_parse_exile_referent_into_suspend_clauses`.
     """
+    referent = _parse_exile_referent_into_suspend_clauses(clauses, index, for_spell=for_spell)
+    if referent is not None:
+        return referent
     if index + 2 >= len(clauses):
         return None
     first = clauses[index].strip()

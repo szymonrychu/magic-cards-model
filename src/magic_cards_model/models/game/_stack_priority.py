@@ -498,6 +498,15 @@ class StackPriorityMixin:
             return self._resolve_ability(top)
 
         spell = top
+        # CR 702.140b/c: a mutating creature spell checks its own target as
+        # it begins resolving - merged when legal, otherwise a plain creature
+        # spell with that target dropped, so never a CR 608.2b fizzle.
+        from ...machines.face_down_keywords import resolve_mutating_spell
+
+        if isinstance(spell, CardState) and resolve_mutating_spell(self, spell):
+            self.forget_cast_record(spell)
+            self._before_priority()
+            return spell
         if self.spell_fizzles(spell):
             # CR 608.2b: it does not resolve. None of its effects happen, not
             # even the untargeted ones, and it is put into its owner's

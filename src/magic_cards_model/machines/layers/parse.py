@@ -9124,6 +9124,18 @@ def quoted_ability_grants(
                 if printed_characteristics(permanent).is_creature:
                     wanted.setdefault(permanent.id, set()).add(text)
             continue
+        from ..face_down_keywords import face_down_group_grant_targets
+
+        if (
+            face_down := face_down_group_grant_targets(normalized, source, list(permanents))
+        ) is not None:
+            # "Face-down creatures you control have "..."" (Etrata, Deadly
+            # Fugitive): reached by the CR 708.2 face-down status itself.
+            text, reached = face_down
+            grantable.add(text)
+            for permanent in reached:
+                wanted.setdefault(permanent.id, set()).add(text)
+            continue
         if match := _GROUP_QUOTED_ABILITY_GRANT_RE.fullmatch(normalized):
             text = (match.group("ability") or "").strip()
             if not text:

@@ -1,0 +1,162 @@
+{
+  "object": "card",
+  "id": "b682bf8a-06dc-4828-bc46-9e1427bf981f",
+  "oracle_id": "af2b36ee-2945-41d3-a186-8fd28f3cde16",
+  "multiverse_ids": [
+    646685
+  ],
+  "mtgo_id": 121732,
+  "arena_id": 89042,
+  "tcgplayer_id": 533887,
+  "cardmarket_id": 751860,
+  "name": "Fugitive Codebreaker",
+  "lang": "en",
+  "released_at": "2024-02-09",
+  "uri": "https://api.scryfall.com/cards/b682bf8a-06dc-4828-bc46-9e1427bf981f",
+  "scryfall_uri": "https://scryfall.com/card/mkm/127/fugitive-codebreaker?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T03:21:21Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/b/6/b682bf8a-06dc-4828-bc46-9e1427bf981f.jpg?1783912881",
+    "normal": "https://cards.scryfall.io/normal/front/b/6/b682bf8a-06dc-4828-bc46-9e1427bf981f.jpg?1783912881",
+    "large": "https://cards.scryfall.io/large/front/b/6/b682bf8a-06dc-4828-bc46-9e1427bf981f.jpg?1783912881",
+    "png": "https://cards.scryfall.io/png/front/b/6/b682bf8a-06dc-4828-bc46-9e1427bf981f.png?1783912881",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/b/6/b682bf8a-06dc-4828-bc46-9e1427bf981f.jpg?1783912881",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/b/6/b682bf8a-06dc-4828-bc46-9e1427bf981f.jpg?1783912881",
+    "thumb": "https://cards.scryfall.io/thumb/front/b/6/b682bf8a-06dc-4828-bc46-9e1427bf981f.webp?1783912881",
+    "grid": "https://cards.scryfall.io/grid/front/b/6/b682bf8a-06dc-4828-bc46-9e1427bf981f.webp?1783912881",
+    "display": "https://cards.scryfall.io/display/front/b/6/b682bf8a-06dc-4828-bc46-9e1427bf981f.webp?1783912881",
+    "art": "https://cards.scryfall.io/art/front/b/6/b682bf8a-06dc-4828-bc46-9e1427bf981f.webp?1783912881",
+    "crop": "https://cards.scryfall.io/crop/front/b/6/b682bf8a-06dc-4828-bc46-9e1427bf981f.webp?1783912881"
+  },
+  "mana_cost": "{1}{R}",
+  "cmc": 2.0,
+  "type_line": "Creature \u2014 Goblin Rogue",
+  "oracle_text": "Prowess, haste\nDisguise {5}{R}. This cost is reduced by {1} for each instant and sorcery card in your graveyard. (You may cast this card face down for {3} as a 2/2 creature with ward {2}. Turn it face up any time for its disguise cost.)\nWhen this creature is turned face up, discard your hand, then draw three cards.",
+  "power": "2",
+  "toughness": "1",
+  "colors": [
+    "R"
+  ],
+  "color_identity": [
+    "R"
+  ],
+  "keywords": [
+    "Prowess",
+    "Haste",
+    "Disguise"
+  ],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "241b3b6d-a25f-4a43-b5d6-1d1079e7e498",
+      "component": "combo_piece",
+      "name": "A Mysterious Creature",
+      "type_line": "Creature",
+      "uri": "https://api.scryfall.com/cards/241b3b6d-a25f-4a43-b5d6-1d1079e7e498"
+    },
+    {
+      "object": "related_card",
+      "id": "3cbb3378-291c-4de6-be98-dd09daa3b828",
+      "component": "combo_piece",
+      "name": "Fugitive Codebreaker",
+      "type_line": "Creature \u2014 Goblin Rogue",
+      "uri": "https://api.scryfall.com/cards/3cbb3378-291c-4de6-be98-dd09daa3b828"
+    }
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "2b17794b-15c3-4796-ad6f-0887a0eceeca",
+  "set": "mkm",
+  "set_name": "Murders at Karlov Manor",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/2b17794b-15c3-4796-ad6f-0887a0eceeca",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Amkm&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/mkm?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/b682bf8a-06dc-4828-bc46-9e1427bf981f/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Aaf2b36ee-2945-41d3-a186-8fd28f3cde16&unique=prints",
+  "collector_number": "127",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Joseph Weston",
+  "artist_ids": [
+    "50365a81-fa9f-4fcf-aa83-6a57c63ad43e"
+  ],
+  "illustration_id": "9d511aac-7499-496a-9713-468866a09312",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 19213,
+  "penny_rank": 2158,
+  "preview": {
+    "source": "Mani Davoudi",
+    "source_uri": "https://vxtwitter.com/Zapgaze/status/1748202158032552204",
+    "previewed_at": "2024-01-18"
+  },
+  "prices": {
+    "usd": "0.19",
+    "usd_foil": "0.28",
+    "usd_etched": null,
+    "eur": "0.13",
+    "eur_foil": "0.32",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=646685&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DFugitive%2BCodebreaker",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DFugitive%2BCodebreaker",
+    "edhrec": "https://edhrec.com/route/?cc=Fugitive+Codebreaker"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F533887%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=751860&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/121732?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

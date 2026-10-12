@@ -6865,3 +6865,15 @@ from .tokens import (  # noqa: E402
     _read_token_copy_except,
     create_continuous_effect_of_ability,
 )
+
+
+@ABILITY_TEXT.rung("s20")
+def _parse_choose_target_may_sacrifice_return_chosen_clause(text: str) -> AbilityEffect | None:
+    """ "choose target <card> in your graveyard. You may sacrifice <quality>.
+    If you do, return the chosen card to the battlefield." -
+    `machines/if_you_do_chains.parse_chosen_target_sacrifice_return`."""
+    if "the chosen card" not in text.lower():
+        return None
+    from ..if_you_do_chains import parse_chosen_target_sacrifice_return
+
+    return parse_chosen_target_sacrifice_return(text)

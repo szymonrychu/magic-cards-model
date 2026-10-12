@@ -3282,6 +3282,74 @@ class ZonesMixin:
             self.melded_pairs[source.id] = partner
             return source
 
+    def mutate(self: "Game", permanent: CardState, component: CardState, *, on_top: bool) -> None:
+        """CR 702.140c-d: `component` (the resolving mutating creature spell)
+        merges with `permanent`, then CR 702.140d's "whenever a creature
+        mutates" event is raised with the merged permanent as its subject."""
+        from ...machines.abilities import TriggerEvent
+        from ...machines.triggers.events import GameEvent
+
+        with self._id_allocator_scope():
+            self.merge(permanent, component, on_top=on_top)
+            self.emit(
+                GameEvent(
+                    event=TriggerEvent.MUTATES,
+                    subject_id=permanent.id,
+                    subject_name=permanent.name,
+                    subject_controller=permanent.controller,
+                    subject_card=permanent.card,
+                    subject_types=permanent.types,
+                    subject_subtypes=permanent.subtypes,
+                    player=permanent.controller,
+                )
+            )
+
+    def merge(self: "Game", permanent: CardState, component: CardState, *, on_top: bool) -> None:
+        """CR 730.2: merge `component` (a resolving mutating creature spell,
+        CR 702.140c) with `permanent`, over or under it.
+
+        `permanent` stays the one `CardState` in `Game.battlefield` - CR
+        730.2c: "a merged permanent is the same object that it was before",
+        so its id, counters, attachments and the turn it came under its
+        controller's control are untouched, and CR 730.2b: it "isn't
+        considered to have just entered the battlefield", so no enters
+        event. `component` is held in `Game.merged_components` (the
+        `melded_pairs` shape), and the permanent's CR 730.2a copy effect is
+        rebuilt from the new order: the topmost component's characteristics
+        with every component's abilities (CR 702.140e).
+        """
+        from ...machines.face_down_keywords import merged_permanent_effect
+
+        with self._id_allocator_scope():
+            controller = permanent.controller
+            self._take_out_of_every_zone(component)
+            component.move_to(Zone.BATTLEFIELD)
+            component.controller = controller
+            order = list(permanent.merged_order) or [permanent.id]
+            if on_top:
+                order.insert(0, component.id)
+            else:
+                order.append(component.id)
+            held = [*self.merged_components.get(permanent.id, []), component]
+            self.merged_components[permanent.id] = held
+            permanent.merged_order = order
+            by_id = {state.id: state for state in (permanent, *held)}
+            effects = merged_permanent_effect(self, permanent, [by_id[i] for i in order])
+            self._end_merged_permanent_effect(permanent)
+            for effect in effects:
+                self.continuous_effects.add(effect, self)
+
+    def _end_merged_permanent_effect(self: "Game", permanent: CardState) -> None:
+        """Drop `permanent`'s CR 730.2a copy effect (a new merge replaces it;
+        CR 730.3's departure ends it)."""
+        from ...machines.face_down_keywords import MERGED_PERMANENT_EFFECT
+
+        self.continuous_effects.effects = [
+            effect
+            for effect in self.continuous_effects.effects
+            if effect.description != MERGED_PERMANENT_EFFECT or effect.source_id != permanent.id
+        ]
+
     def _accompany_meld_partner(self: "Game", primary: CardState, destination: Zone) -> None:
         """CR 712.21: "If a melded permanent leaves the battlefield, one
         permanent leaves the battlefield and two cards are put into the
@@ -3301,6 +3369,17 @@ class ZonesMixin:
         live decision - recorded, not silently dropped, in `docs/engine-
         coverage.md`'s Not-modelled table.
         """
+        # CR 730.3: "If a merged permanent leaves the battlefield, one
+        # permanent leaves the battlefield and each of the individual
+        # components are put into the appropriate zone." CR 730.3a's
+        # owner's-choice order is simplified to the merge order, as CR
+        # 712.21a's is for a melded pair.
+        components = self.merged_components.pop(primary.id, None)
+        if components is not None:
+            self._end_merged_permanent_effect(primary)
+            primary.merged_order = []
+            for component in components:
+                self._accompany_into(component, destination)
         partner = self.melded_pairs.pop(primary.id, None)
         if partner is None:
             return
@@ -3308,14 +3387,18 @@ class ZonesMixin:
         primary.melded_partner_id = None
         primary.meld_combined_mana_value = None
         partner.melded_partner_id = None
+        self._accompany_into(partner, destination)
+
+    def _accompany_into(self: "Game", card: CardState, destination: Zone) -> None:
+        """Put a melded partner or merged component into `destination`."""
         if destination.is_shared:
             # A shared zone is appended to directly (there is no `Player.add`
             # for it), so this is the one place that has to call `move_to`
             # itself - `Player.add` below already does, for a per-player one.
-            partner.move_to(destination)
-            self.shared_zones[destination].append(partner)
+            card.move_to(destination)
+            self.shared_zones[destination].append(card)
         else:
-            self._owner_of(partner).add(partner, destination)
+            self._owner_of(card).add(card, destination)
 
     def exile_permanent(self: "Game", permanent: CardState) -> CardState:
         """Move a permanent to the shared exile zone.

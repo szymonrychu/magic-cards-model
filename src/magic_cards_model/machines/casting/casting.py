@@ -5507,14 +5507,26 @@ class MarkedExile(EngineModel):
         casting a sorcery, so `Game.can_cast_sorcery` answers it.
         """
         ability = _keyword(card.card, "plot")
-        if ability is None:
+        granted = library_top_plot_cost(game, card, player)
+        if granted is not None:
+            # CR 702.170f: the top card's granted plot functions from the
+            # library, for its mana cost.
+            printed = granted
+        elif ability is None:
             raise ValueError(f"{card.name} has no plot ability (CR 702.170a)")
+        elif card.zone is not Zone.HAND:
+            raise ValueError(
+                f"{card.name} is in the {card.zone.value}; plot exiles a card from "
+                f"its owner's hand (CR 702.170a, CR 702.170f)"
+            )
+        else:
+            printed = ability.cost or ""
         if game is not None and not game.can_cast_sorcery(player):
             raise ValueError(
                 f"{player} can only plot during their own main phase with the stack "
                 f"empty (CR 116.2k, CR 702.170a)"
             )
-        cost = total_cost_for_phrase(ability.cost or "") or TotalCost()
+        cost = total_cost_for_phrase(printed) or TotalCost()
         cost = _marked_exile_cost(game, card, player, cost, "plot")
         return cls(
             card=card,
@@ -5846,6 +5858,7 @@ def exile_adventured(game: Any, spell: CardState, owner: str | None = None) -> C
 
 
 from ..aftermath import aftermath_face_only_refusal, aftermath_face_refusal  # noqa: E402
+from ..face_down_keywords import library_top_plot_cost  # noqa: E402
 from ._common import (  # noqa: E402
     _BLIGHT_PHRASE,
     _OPTIONAL_BEHOLD,
