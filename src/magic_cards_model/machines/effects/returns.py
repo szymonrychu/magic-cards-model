@@ -21,10 +21,12 @@ from ..abilities import (
 )
 from ..decisions import Decision, DecisionKind, source_id_of
 from ..delayed import (
+    ANAPHORIC_TIMING_STEPS,
     DelayedBlinkReturnWithRider,
     DelayedTrigger,
     ReturnEachExiledToBattlefieldUnderOwner,
     ReturnRiderCounter,
+    ReturnSubjectFromGraveyardWithCounters,
     ReturnSubjectToBattlefieldUnderOwner,
     StaticPrisonReturn,
     anaphoric_delayed_trigger,
@@ -1566,6 +1568,65 @@ def _parse_return_dead_self_to_hand_clause(
         if source is None:
             return
         game.return_to_hand(source)
+
+    return effect
+
+
+#: "Return it to the battlefield with one fewer `<kind>` counter on it at the
+#: beginning of the next end step." - Nine-Lives Familiar's dies trigger. "It"
+#: is the object that died (CR 603.10a's look-back), found in the graveyard by
+#: `_dead_self_found`'s CR 400.7e lookup. The "fewer" is worked out now, from
+#: the counters it had as it last existed on the battlefield
+#: (`CardState.last_known_counters`, CR 122.2 having ended the live ones), and
+#: frozen into the delayed return (CR 603.7a), which puts it back with that
+#: many (none when the subtraction reaches zero) when the step arrives. A fixed
+#: "with N `<kind>` counters on it" is the same shape without the subtraction.
+_RETURN_DEAD_SELF_WITH_COUNTERS_AT_STEP_RE = re.compile(
+    rf"^return (?:it|this card|that card) to the battlefield(?P<tapped> tapped)? with "
+    rf"(?:(?P<fewer>{COUNT}) fewer|(?P<fixed>{COUNT}|an?)) (?P<kind>[a-z0-9+/-]+) counters? "
+    rf"on it at (?P<timing>{'|'.join(map(re.escape, ANAPHORIC_TIMING_STEPS))})\.?$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s26")
+def _parse_return_dead_self_with_counters_at_step_clause(text: str) -> AbilityEffect | None:
+    """`_RETURN_DEAD_SELF_WITH_COUNTERS_AT_STEP_RE`'s shape (CR 603.7, 122.6)."""
+    if " with " not in text:
+        return None
+    match = _RETURN_DEAD_SELF_WITH_COUNTERS_AT_STEP_RE.fullmatch(" ".join(text.split()))
+    if match is None:
+        return None
+    fewer = parse_count(match.group("fewer")) if match.group("fewer") else None
+    fixed = parse_count(match.group("fixed")) if match.group("fixed") else None
+    if fewer is None and fixed is None:
+        return None
+    kind = str(match.group("kind").lower())
+    step = ANAPHORIC_TIMING_STEPS[match.group("timing").lower()]
+    tapped = match.group("tapped") is not None
+    clause = text.strip().rstrip(".")
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        card = _dead_self_found(game, ability)
+        if card is None or card.zone is not Zone.GRAVEYARD:
+            return
+        amount = fixed if fixed is not None else card.last_known_counters[kind] - (fewer or 0)
+        game.create_delayed_trigger(
+            DelayedTrigger(
+                text=clause,
+                event=TriggerEvent.BEGINNING_OF_STEP,
+                step=step,
+                controller=ability.controller,
+                source_id=ability.source_id,
+                source_name=ability.source_name,
+                subject_id=card.id,
+                expected_zone=Zone.GRAVEYARD,
+                expected_stamp=card.zone_change_stamp,
+                effect=ReturnSubjectFromGraveyardWithCounters(
+                    counters=((kind, max(amount, 0)),), tapped=tapped
+                ),
+            )
+        )
 
     return effect
 

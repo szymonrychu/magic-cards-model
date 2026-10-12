@@ -786,6 +786,24 @@ class ConditionsMixin:
         times"."""
         self.turn_facts.setdefault(fact, set()).add(player)
 
+    def note_counters_removed(self: "Game", permanent: CardState, kind: str, amount: int) -> None:
+        """`amount` counters of `kind` were just taken off `permanent`: raise
+        `ExtraTriggerEvent.COUNTERS_REMOVED` (CR 122.1), once per removal with
+        the whole amount (CR 603.2c). `CardState.remove_counters` calls this
+        for every removal from a permanent on the battlefield."""
+        self.emit(
+            GameEvent(
+                event=ExtraTriggerEvent.COUNTERS_REMOVED,
+                subject_id=permanent.id,
+                subject_name=permanent.name,
+                subject_controller=permanent.controller,
+                subject_card=permanent.card,
+                player=self.controller_of(permanent).username,
+                counter_kind=kind,
+                amount=amount,
+            )
+        )
+
     def note_last_counter_removed(self: "Game", permanent: CardState, kind: str) -> None:
         """`permanent`'s last `kind` counter was just removed: raise
         `ExtraTriggerEvent.LAST_COUNTER_REMOVED` - CR 310.12b's Siege defeat

@@ -36,9 +36,11 @@ from ..chosen_type import (
 )
 from ..decisions import Decision, DecisionKind, source_id_of
 from ..delayed import (
+    ANAPHORIC_TIMING_STEPS,
     AddManaAmountForController,
     AddManaInAnyCombinationForController,
     DelayedTrigger,
+    PutCountersOnSubject,
     ReflexiveWhenYouDoConsequence,
     put_counters_and_grant_keywords_to_event_subject,
 )
@@ -98,6 +100,58 @@ def _parse_counter_removal_then_return_self_clause(text: str) -> AbilityEffect |
         source.remove_counters(kind, 1)
         if source.counter_count(kind) == 0:
             game.put_onto_battlefield(source, source.owner)
+
+    return effect
+
+
+#: "Put N `<kind>` counters on it at the beginning of the next end step." -
+#: Protean Hydra's payoff for each counter removed from it. The counters are a
+#: delayed triggered ability (CR 603.7a) created as this one resolves, about
+#: the permanent "it" names - the ability's own source - and CR 603.7c has it
+#: add nothing to a permanent that left the battlefield (or came back as a new
+#: object, CR 400.7) before the step arrives. The timing phrase is any
+#: `ANAPHORIC_TIMING_STEPS` entry.
+_PUT_COUNTERS_ON_SELF_AT_STEP_RE = re.compile(
+    rf"^put (?P<n>{COUNT}|an?) (?P<kind>\+1/\+1|-1/-1|[a-z]+) counters? on "
+    rf"(?P<object>it|this [a-z]+) at (?P<timing>{'|'.join(map(re.escape, ANAPHORIC_TIMING_STEPS))})"
+    r"\.?$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s26")
+def _parse_put_counters_on_self_at_step_clause(text: str) -> AbilityEffect | None:
+    """`_PUT_COUNTERS_ON_SELF_AT_STEP_RE`'s shape (CR 122.1, 603.7)."""
+    if " at " not in text:
+        return None
+    match = _PUT_COUNTERS_ON_SELF_AT_STEP_RE.fullmatch(" ".join(text.split()))
+    if match is None:
+        return None
+    amount = parse_count(match.group("n"))
+    step = ANAPHORIC_TIMING_STEPS[match.group("timing").lower()]
+    if amount is None:
+        return None
+    kind = str(_counter_kind(match.group("kind")))
+    clause = text.strip().rstrip(".")
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        source = ability.source(game)
+        if source is None or source.zone is not Zone.BATTLEFIELD:
+            return
+        game.create_delayed_trigger(
+            DelayedTrigger(
+                text=clause,
+                event=TriggerEvent.BEGINNING_OF_STEP,
+                step=step,
+                controller=ability.controller,
+                source_id=ability.source_id,
+                source_name=ability.source_name,
+                subject_id=source.id,
+                expected_zone=Zone.BATTLEFIELD,
+                expected_stamp=source.zone_change_stamp,
+                effect=PutCountersOnSubject(counter_kind=kind, amount=amount),
+            )
+        )
 
     return effect
 

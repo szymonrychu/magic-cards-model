@@ -131,6 +131,14 @@ class ExtraTriggerEvent(StrEnum):
     #: removed them - damage to a battle (CR 120.3h), a cost, an effect -
     #: with `GameEvent.counter_kind` naming the kind.
     LAST_COUNTER_REMOVED = "last_counter_removed"
+    #: "Whenever a +1/+1 counter is removed from this creature" (Protean
+    #: Hydra) - CR 122.1's counters leaving a permanent, whatever took them: a
+    #: cost, an effect, or a damage replacement. `GameEvent.subject_id` is the
+    #: permanent, `counter_kind` the kind, `amount` how many left in this one
+    #: removal (CR 603.2c: each is an occurrence of a singular condition).
+    #: **Emitted by:** `Game.note_counters_removed`, called from
+    #: `CardState.remove_counters`.
+    COUNTERS_REMOVED = "counters_removed"
     #: CR 502.3: "the active player determines which permanents they control
     #: will untap. Then they untap them all simultaneously." The Millennium
     #: Calendar's "Whenever you untap one or more permanents during your untap

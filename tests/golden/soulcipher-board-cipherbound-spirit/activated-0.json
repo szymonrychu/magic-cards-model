@@ -1,10 +1,10 @@
 {
-  "ability": "{3}{U}: Draw two cards, then discard a card.",
+  "ability": "{1}{U}, {T}: Look at the top two cards of your library. Put one of them into your graveyard.",
   "action": {
     "controller": "alice",
     "modes": [],
     "on_stack": true,
-    "source": "Cipherbound Spirit@alice#1",
+    "source": "Soulcipher Board@alice#1",
     "targets": [],
     "x": 0
   },
@@ -38,21 +38,18 @@
     "decisions": [
       {
         "amount": 1,
-        "cards": ["Forest@alice#4", "Grizzly Bears@alice#1", "Lightning Bolt@alice#1", "Opt@alice#1", "Forest@alice#6", "Grizzly Bears@alice#3"],
-        "kind": "choose_cards",
+        "cards": ["Forest@alice#6", "Grizzly Bears@alice#3"],
+        "kind": "scry",
         "player": "alice",
         "players": [],
-        "prompt": "discard 1 card(s)",
-        "source": "Cipherbound Spirit"
+        "prompt": "put 1 of the top 2 cards into your graveyard",
+        "source": "Soulcipher Board"
       }
     ],
-    "fields_changed": ["cards_discarded_this_turn", "cards_drawn_this_turn", "graveyard_arrivals_announced", "graveyard_arrivals_this_turn"],
+    "fields_changed": ["graveyard_arrivals_announced", "graveyard_arrivals_this_turn", "reveals"],
     "notices": {},
     "objects": {
       "Forest@alice#6": {
-        "zone": ["library", "hand"]
-      },
-      "Grizzly Bears@alice#3": {
         "zone": ["library", "graveyard"]
       }
     },

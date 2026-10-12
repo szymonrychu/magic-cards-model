@@ -2002,7 +2002,11 @@ def _parse_token_with_keywords_and_quoted_ability_sentences(
                 return None
             clauses.extend(parsed)
             continue
-        token_clause = _parse_token_clause(sentence.strip().rstrip("."), for_spell=for_spell)
+        token_clause = _parse_token_clause(
+            sentence.strip().rstrip("."), for_spell=for_spell
+        ) or _parse_create_copies_of_self_attacking_clause(
+            sentence.strip().rstrip("."), for_spell=for_spell
+        )
         if token_clause is None:
             return None
         if riders:
@@ -3546,6 +3550,77 @@ def _token_copy_tapped_and_attacking(
     if defender is not None:
         options["attacking"] = defender
     return options
+
+
+#: "Create X tokens that are copies of it and that are tapped and attacking,
+#: where X is the number of creatures defending player controls." - Nacatl
+#: War-Pride's attack trigger (CR 508.4: the copies enter tapped and attacking
+#: and are never declared as attackers, so no "whenever this attacks" ability
+#: of a copy triggers). "It" is the ability's own source, copied as it last
+#: existed (CR 707.2, 608.2h): a source that has left the battlefield by now
+#: still gives its copiable values. The count is a fixed number, or X defined
+#: by the number of `<quality>` defending player controls (CR 508.5's
+#: defending player, from the attack that triggered the ability). The rider
+#: sentence ("Exile the tokens at the beginning of the next end step.") is
+#: read with it by `_parse_token_with_keywords_and_quoted_ability_sentences`.
+_CREATE_COPIES_OF_SELF_ATTACKING_RE = re.compile(
+    rf"^create (?P<n>x|{COUNT}|an?) tokens? that(?:['’]s| is| are) "
+    r"(?:a copy|copies) of (?P<object>it|this [a-z]+),? and that(?:['’]s| is| are) "
+    r"tapped and attacking(?:, where x is the number of (?P<quality>[a-z -]+?) "
+    r"defending player controls)?\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_create_copies_of_self_attacking_clause(
+    sentence: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`_CREATE_COPIES_OF_SELF_ATTACKING_RE`'s shape, or `None`."""
+    if for_spell or "tapped and attacking" not in sentence.lower():
+        return None
+    match = _CREATE_COPIES_OF_SELF_ATTACKING_RE.fullmatch(" ".join(sentence.split()))
+    if match is None:
+        return None
+    from ...models.game import _permanent_quality
+    from ..combat import defending_player
+
+    quality = match.group("quality")
+    if (match.group("n").lower() == "x") != (quality is not None):
+        return None  # an X with no definition, or a definition with no X
+    fixed = None if quality is not None else parse_count(match.group("n"))
+    counts = _permanent_quality(quality) if quality is not None else None
+    if (quality is not None and counts is None) or (quality is None and fixed is None):
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        assert isinstance(stack_object, AbilityOnStack)
+        source = stack_object.source(game)
+        if source is None:
+            return
+        controller = stack_object.controller
+        options = _token_copy_tapped_and_attacking(game, source, controller)
+        if counts is None:
+            amount = fixed or 0
+        else:
+            event = stack_object.event
+            defender = options.get("attacking")
+            defending = (
+                event.defender_controller
+                if event is not None and event.defender_controller is not None
+                else defending_player(game, defender)
+                if defender is not None
+                else None
+            )
+            if defending is None:
+                return
+            amount = sum(
+                1
+                for permanent in game.permanents_controlled_by(defending)
+                if counts(game.characteristics_of(permanent))
+            )
+        token_copy_of(game, source, controller, count=amount, **options)
+
+    return effect
 
 
 _CREATE_TOKEN_COPY_OF_TARGET_RE = re.compile(

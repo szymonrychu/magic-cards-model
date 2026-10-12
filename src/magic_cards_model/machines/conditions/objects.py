@@ -169,9 +169,11 @@ def _subject(context: "ConditionContext", phrase: str) -> "CardState | None":
 # -- quantities ----------------------------------------------------------------
 
 #: How many: "no", "a", "one or more", "N or more", "N or fewer", "fewer
-#: than N", "more than N", "at least N", "exactly N".
+#: than N", "more than N", "at least N", "exactly N", and the parity forms
+#: "an odd number of" / "an even number of" (Sab-Sunen; zero is even).
 QUANTITY = (
-    rf"(?:no|one or more|(?:fewer than|more than|greater than|less than|at least|at most"
+    rf"(?:no|one or more|an (?:odd|even) number of"
+    rf"|(?:fewer than|more than|greater than|less than|at least|at most"
     rf"|exactly) {COUNT}"
     rf"|{COUNT} or (?:more|fewer|greater|less)|{COUNT})"
 )
@@ -187,6 +189,9 @@ def quantity_test(text: str | None, *, plural_default: bool = True) -> Callable[
         return lambda count: count == 0
     if text == "one or more":
         return lambda count: count >= 1
+    if text in ("an odd number of", "an even number of"):
+        remainder = 1 if "odd" in text else 0
+        return lambda count: count % 2 == remainder
     for prefix, test in (
         ("fewer than ", lambda have, need: have < need),
         ("less than ", lambda have, need: have < need),

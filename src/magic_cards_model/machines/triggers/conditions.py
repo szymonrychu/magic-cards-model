@@ -18,6 +18,8 @@ from ..abilities import (
     self_reference_pattern,
     self_reference_re,
 )
+from ..counter_event_triggers import counter_event_matches, counter_event_watched
+from ..state_triggers import reads_state_condition, state_condition_holds
 from ..turn import Step
 
 if TYPE_CHECKING:  # pragma: no cover - import cycle: Game builds on the machines
@@ -3309,7 +3311,7 @@ def _unread_condition_matches(
             card = game.find_by_id(arrival.card_id) if arrival.card_id else None
             if card is None or getattr(card, "token", False):
                 continue  # CR 108.2: a token is not a card.
-            if _types_match(tuple(card.types), match.group("types")):
+            if _types_match(tuple(card.types), match.group("types") or match.group("single_types")):
                 return True
         return False
 
@@ -3609,6 +3611,9 @@ def _unread_condition_matches(
             and event.subject_id == source.id
             and event.counter_kind == last_counter.group("kind")
         )
+
+    if counter_event_watched(condition):
+        return counter_event_matches(game, condition, source, controller, event, mine=mine)
 
     if _REVEALED_THIS_WAY_CONDITION.match(condition):
         # CR 702.94a / CR 607.2h: "this card ... this way" - the source
@@ -5906,7 +5911,9 @@ def _state_condition_holds(game: "Game", ability: TriggeredAbility, source: Card
     """Whether this permanent's game state matches its CR 603.8 condition."""
     match = _STATE_COUNTER_TRIGGER_RE.match(ability.condition.strip())
     if match is None:
-        return False
+        return reads_state_condition(ability.condition) and state_condition_holds(
+            game, source, source.controller or game.active_player.username, ability.condition
+        )
     subject = match["subject"].strip().rstrip(".").lower()
     names = {source.name.lower(), "it", "this permanent", "this creature", "this artifact"}
     # CR 603.8 reads the source by whichever type word the card prints for

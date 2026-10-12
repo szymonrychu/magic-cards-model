@@ -2206,6 +2206,56 @@ class ReturnSubjectFromGraveyardToBattlefield(DelayedEffectSpecBase):
         game.put_onto_battlefield(card, trigger.controller, tapped=self.tapped)
 
 
+class PutCountersOnSubject(DelayedEffectSpecBase):
+    """ "Put two +1/+1 counters on it at the beginning of the next end step" -
+    Protean Hydra's delayed payoff. The subject is the permanent the creating
+    ability named ("it" - the ability's own source), and CR 603.7c is the
+    zone check: a Hydra that died or left and came back since is not given the
+    counters."""
+
+    kind: Literal["put_counters_on_subject"] = "put_counters_on_subject"
+
+    counter_kind: str
+    amount: int
+
+    def __call__(self, game: "Game", ability: AbilityOnStack, trigger: "DelayedTrigger") -> None:
+        permanent = trigger.still_affects(game)
+        if permanent is not None:
+            game.add_counters(permanent, self.counter_kind, self.amount)
+
+
+class ReturnSubjectFromGraveyardWithCounters(DelayedEffectSpecBase):
+    """ "Return it to the battlefield with one fewer revival counter on it at
+    the beginning of the next end step" - Nine-Lives Familiar's delayed
+    return of the creature that died.
+
+    `counters` is `(kind, amount)` already worked out when the creating
+    ability resolved (the object's last-known counters, CR 603.10a, minus the
+    "fewer"); a zero amount puts none. CR 603.7c's zone check keeps it from
+    pulling a card that was exiled from the graveyard in the meantime, and it
+    returns under its owner's control (CR 110.2a), tapped when the clause
+    says so.
+    """
+
+    kind: Literal["return_subject_from_graveyard_with_counters"] = (
+        "return_subject_from_graveyard_with_counters"
+    )
+
+    counters: tuple[tuple[str, int], ...] = ()
+    tapped: bool = False
+
+    def __call__(self, game: "Game", ability: AbilityOnStack, trigger: "DelayedTrigger") -> None:
+        card = trigger.still_affects(game)
+        if card is None or card.owner is None:
+            return
+        game.put_onto_battlefield(
+            card,
+            card.owner,
+            tapped=self.tapped,
+            counters={kind: amount for kind, amount in self.counters if amount > 0},
+        )
+
+
 #: What a delayed (or reflexive) triggered ability does when it resolves -
 #: `DelayedTrigger.effect`'s own type. Every string this task's requirement 2
 #: names (`"warp:exile"`, `"grant_extra_turn"`, `"sacrifice"`) is a member's
@@ -2487,7 +2537,9 @@ DelayedEffectSpec = Annotated[
     | ThatCreatureDiesConsequence
     | ChosenObjectTriggeredAbility
     | CounterOnSubjectWhileSourceTapped
-    | RemoveCountersFromLinkedCreature,
+    | RemoveCountersFromLinkedCreature
+    | PutCountersOnSubject
+    | ReturnSubjectFromGraveyardWithCounters,
     Field(discriminator="kind"),
 ]
 
@@ -2972,12 +3024,13 @@ _ANAPHOR_AGREEMENT: dict[str, Callable[[CardState, "Game | None"], bool]] = {
     # "Those tokens gain haste. Exile them" - each checked object by object.
     "them": lambda state, game: True,
     "those tokens": lambda state, game: state.token,
+    "the tokens": lambda state, game: state.token,
     "those creatures": lambda state, game: Type.CREATURE in _agreement_types(state, game),
 }
 
 #: The pronouns that name several objects at once: one delayed triggered
 #: ability about all of them (`ActOnEachSubject`), not one per object.
-_PLURAL_ANAPHORS = frozenset({"them", "those tokens", "those creatures"})
+_PLURAL_ANAPHORS = frozenset({"them", "those tokens", "the tokens", "those creatures"})
 
 #: What `ActOnEachSubject` does for each verb a plural pronoun can take.
 _PLURAL_ACTIONS: dict[str, Literal["exile", "sacrifice", "destroy", "return_to_hand"]] = {
