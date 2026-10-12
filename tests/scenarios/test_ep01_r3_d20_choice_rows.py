@@ -1132,3 +1132,20 @@ def test_withengar_unbound_grows_when_any_player_loses():
     scenario.game.put_triggers_on_stack()
     scenario.pass_until_resolved()
     assert elbrus.counter_count(Counter.PLUS_ONE) == 13
+
+
+def test_bogardan_dragonheart_becomes_a_dragon_until_end_of_turn():
+    # Second printing for the Skinshifter "becomes a <type> with base power and
+    # toughness N/N[, keywords]" reader: a sacrifice cost, two keywords.
+    scenario = board(["Bogardan Dragonheart", "Grizzly Bears"])
+    heart = scenario.creature("Bogardan Dragonheart", "alice")
+    bears = scenario.creature("Grizzly Bears", "alice")
+    scenario.activate(heart, sacrificing=[bears])
+    scenario.pass_until_resolved()
+    stats = scenario.game.characteristics_of(heart)
+    assert (stats.power, stats.toughness) == (4, 4)
+    assert set(stats.subtypes) == {"Dragon"}
+    assert has_keyword(heart, "flying", scenario.game)
+    assert has_keyword(heart, "haste", scenario.game)
+    scenario.game.cleanup_step()
+    assert "Dragon" not in scenario.game.characteristics_of(heart).subtypes
