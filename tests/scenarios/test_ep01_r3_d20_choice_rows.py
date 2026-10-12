@@ -803,3 +803,72 @@ def test_sarpadian_empires_another_answer_another_token():
     scenario.pass_until_resolved()
     (saproling,) = on_battlefield(scenario, "Saproling", "alice")
     assert {c.value for c in scenario.game.characteristics_of(saproling).colors} == {"G"}
+
+
+def test_tamiyo_plus_one_takes_every_card_with_the_chosen_name():
+    scenario = board(
+        ["Tamiyo, Collector of Tales"],
+        alice_zones={"library": ["Lightning Bolt", "Island", "Lightning Bolt", "Forest", "Plains"]},
+    )
+    tamiyo = scenario.creature("Tamiyo, Collector of Tales", "alice")
+    scenario.will_choose("Lightning Bolt", source="Tamiyo, Collector of Tales")
+    scenario.activate(tamiyo, index=0)
+    scenario.pass_until_resolved()
+    alice = scenario.player("alice")
+    assert names(alice.hand) == ["Lightning Bolt", "Lightning Bolt"]
+    assert names(alice.graveyard) == ["Forest", "Island"]
+    assert names(alice.library) == ["Plains"]
+
+
+def test_tamiyo_plus_one_naming_a_missing_card_bins_all_four():
+    scenario = board(
+        ["Tamiyo, Collector of Tales"],
+        alice_zones={"library": ["Island", "Forest", "Swamp", "Mountain"]},
+    )
+    tamiyo = scenario.creature("Tamiyo, Collector of Tales", "alice")
+    scenario.will_choose("Lightning Bolt", source="Tamiyo, Collector of Tales")
+    scenario.activate(tamiyo, index=0)
+    scenario.pass_until_resolved()
+    assert scenario.player("alice").hand == []
+    assert len(scenario.player("alice").graveyard) == 4
+
+
+def test_tamiyo_plus_one_refuses_a_land_name():
+    import pytest
+
+    scenario = board(["Tamiyo, Collector of Tales"], alice_zones={"library": ["Island"] * 4})
+    tamiyo = scenario.creature("Tamiyo, Collector of Tales", "alice")
+    scenario.will_choose("Island", source="Tamiyo, Collector of Tales")
+    scenario.activate(tamiyo, index=0)
+    with pytest.raises(ValueError, match="nonland"):
+        scenario.pass_until_resolved()
+
+
+# --------------------------------------------------------------------------
+# War's Toll: an opponent's mana tap taps all their lands
+# --------------------------------------------------------------------------
+
+
+def test_wars_toll_taps_all_lands_of_the_opponent_who_tapped_for_mana():
+    scenario = (
+        Scenario()
+        .player("bob", battlefield=["Forest", "Forest", "Mountain"], library=["Wastes"] * 3)
+        .player("alice", battlefield=["War's Toll", "Island"], library=["Wastes"] * 3)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    forest = scenario.untapped_sources("Forest", username="bob")[0]
+    scenario.activate(forest, username="bob", color=Color.GREEN)
+    scenario.game.put_triggers_on_stack()
+    scenario.pass_until_resolved()
+    assert all(land.tapped for land in scenario.game.battlefield if land.controller == "bob")
+    assert not scenario.creature("Island", "alice").tapped
+
+
+def test_wars_toll_ignores_its_controllers_own_mana():
+    scenario = board(["War's Toll", "Island", "Island"])
+    island = scenario.untapped_sources("Island")[0]
+    scenario.activate(island, color=Color.BLUE)
+    scenario.game.put_triggers_on_stack()
+    assert scenario.game.stack == []
+    assert len([c for c in scenario.game.battlefield if c.name == "Island" and not c.tapped]) == 1

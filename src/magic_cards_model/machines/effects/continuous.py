@@ -12778,3 +12778,47 @@ def _parse_chosen_object_gains_clause(clause: str, *, for_spell: bool) -> Target
         )
 
     return effect
+
+
+#: "tap all lands that player controls" (War's Toll) - CR 701.26a's tap of
+#: every permanent of the type the triggering event's player (CR 603.2, the
+#: opponent who tapped a land for mana) controls now.
+_TAP_ALL_THAT_PLAYER_CONTROLS_RE = re.compile(
+    r"^tap all (?P<what>lands|creatures|artifacts|permanents) that player controls\.?$",
+    re.IGNORECASE,
+)
+
+
+@MIXED_CLAUSE.rung("s26", for_spell=FORWARD)
+def _parse_tap_all_that_player_controls_clause(
+    clause: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`_TAP_ALL_THAT_PLAYER_CONTROLS_RE`'s shape; ability-only (a spell has
+    no triggering event to name "that player")."""
+    if for_spell or "that player controls" not in clause.lower():
+        return None
+    match = _TAP_ALL_THAT_PLAYER_CONTROLS_RE.fullmatch(clause.strip())
+    if match is None:
+        return None
+    what = match.group("what").lower()
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        event = getattr(stack_object, "event", None)
+        player = None if event is None else (event.player or event.subject_controller)
+        if player is None or not game.is_in_game(player):
+            return
+        board = game.computed_board()
+        for permanent in list(game.battlefield):
+            if game.controller_of(permanent).username != player:
+                continue
+            stats = board.of(permanent)
+            kind = {
+                "lands": stats.is_land,
+                "creatures": stats.is_creature,
+                "artifacts": Type.ARTIFACT in stats.types,
+                "permanents": True,
+            }[what]
+            if kind:
+                game.tap_permanent(permanent)
+
+    return effect
