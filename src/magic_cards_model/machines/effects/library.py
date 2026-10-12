@@ -37,6 +37,7 @@ from .. import combat as combat_rules
 from ..casting import (
     PlayAction,
 )
+from ..casting.permissions import printed_self_zone_cast
 from ..decisions import Decision, DecisionKind, source_id_of
 from ..delayed import (
     ReflexiveWhenYouDoConsequence,
@@ -209,6 +210,50 @@ _HIDEAWAY_LOOK_EXILE_ONE_RE = re.compile(
     r"library in a random order\.?$",
     re.IGNORECASE,
 )
+
+
+#: "exile the top card of your library. For as long as it remains exiled, it
+#: has "`<ability>`"." (Monk Class, level 3) - the exiled card is granted an
+#: ability of its own (CR 611.3d's "grant an ability to a ... card that allows
+#: it to be cast"), read by the same reader as a printed self-zone permission.
+_EXILE_TOP_GRANTING_WHILE_EXILED_RE = re.compile(
+    r"^exile the top card of your library\. for as long as it remains exiled, it has "
+    r"[\"\u201c](?P<granted>[^\"\u201d]+)[\"\u201d]\.?$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s35")
+def _parse_exile_top_granting_while_exiled_clause(text: str) -> AbilityEffect | None:
+    """`_EXILE_TOP_GRANTING_WHILE_EXILED_RE`'s shape. The grant is a line on
+    `CardState.granted_ability_texts`, which `CardState.move_to` drops at the
+    card's next zone change (CR 400.7) - exactly "for as long as it remains
+    exiled". A granted line `printed_self_zone_cast` reads becomes the cast
+    option (`casting.options.marker_cast_options`); any other is not granted,
+    and the clause is marked and noticed as half-played (CR 608.2c) rather
+    than handing the card an ability nothing executes.
+    """
+    match = _EXILE_TOP_GRANTING_WHILE_EXILED_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    granted = match.group("granted").strip()
+    readable = printed_self_zone_cast(granted) is not None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        player = game.player(ability.controller)
+        for card_state in game.exile_cards(list(player.library[:1])):
+            if card_state.zone is not Zone.EXILE:
+                continue
+            if readable:
+                card_state.granted_ability_texts = (*card_state.granted_ability_texts, granted)
+            else:
+                game.layer_remainder_notices.append(
+                    LayerRemainderNotice(
+                        source_id=ability.source_id, source_name=ability.source_name, text=granted
+                    )
+                )
+
+    return effect if readable else _with_unparsed_remainder(effect, granted)
 
 
 @ABILITY_TEXT.rung("s35")
@@ -6711,6 +6756,7 @@ def _parse_put_top_card_on_bottom_clause(text: str, *, for_spell: bool) -> Targe
 from ._common import (  # noqa: E402
     _SELECT_FROM_TOP_KINDS,
     ConditionalClauseNotice,
+    LayerRemainderNotice,
     _effect_condition_is_readable,
     _opponents,
     _parse_card_group_qualifier,
@@ -6727,7 +6773,7 @@ from .amounts import (  # noqa: E402
     amount_expression,
     that_many,
 )
-from .continuous import _defender_of_controllers_attack  # noqa: E402
+from .continuous import _defender_of_controllers_attack, _with_unparsed_remainder  # noqa: E402
 from .counters import _counter_kind  # noqa: E402
 from .dispatch import (  # noqa: E402
     _parse_mixed_clause,

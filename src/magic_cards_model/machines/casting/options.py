@@ -1062,6 +1062,13 @@ def _granted_cost_keyword(line: str, keyword: str) -> KeywordAbility | None:
 
 
 def marker_cast_options(spell: CardState) -> list[KeywordCastOption]:
+    """The cast options a card has for reasons not printed on it: a
+    self-zone cast permission it was granted (`granted_self_zone_cast_options`)
+    and the exile pile it is in (`_exile_marker_cast_options`)."""
+    return granted_self_zone_cast_options(spell) + _exile_marker_cast_options(spell)
+
+
+def _exile_marker_cast_options(spell: CardState) -> list[KeywordCastOption]:
     """The cast options a card has because of the *pile of exile it is in*
     (CR 406.4), rather than because of anything printed on it.
 
@@ -1969,6 +1976,7 @@ from ._common import (  # noqa: E402
 )
 from .casting import _why_not_in_own_declare_blockers_step, why_cannot_cast_now  # noqa: E402
 from .permissions import (  # noqa: E402
+    granted_self_zone_cast_options,
     _printed_self_zone_cast_with_additional_cost,
     _printed_self_zone_cast_with_counters,
     _printed_zone_permissions,
