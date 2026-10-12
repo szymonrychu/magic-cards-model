@@ -994,7 +994,9 @@ def _azula(bob_battlefield, bob_graveyard):
             battlefield=["Mountain"] * 4,
             library=FILLER,
         )
-        .player("bob", battlefield=list(bob_battlefield), graveyard=list(bob_graveyard), library=FILLER)
+        .player(
+            "bob", battlefield=list(bob_battlefield), graveyard=list(bob_graveyard), library=FILLER
+        )
         .build()
     )
     scenario.start_at(Step.PRECOMBAT_MAIN)
@@ -1044,7 +1046,11 @@ def test_azula_exiled_cards_may_be_cast_as_though_they_had_flash():
 def _tinybones(opponent_hand):
     scenario = (
         Scenario()
-        .player("alice", battlefield=["Tinybones, Bauble Burglar", "Swamp"] * 1 + ["Swamp"] * 3, library=FILLER)
+        .player(
+            "alice",
+            battlefield=["Tinybones, Bauble Burglar", "Swamp"] * 1 + ["Swamp"] * 3,
+            library=FILLER,
+        )
         .player("bob", hand=list(opponent_hand), library=FILLER)
         .build()
     )
@@ -1067,7 +1073,12 @@ def test_tinybones_exiles_each_card_an_opponent_discards_with_a_stash_counter():
 def test_tinybones_does_not_trigger_on_its_controllers_own_discard():
     scenario = (
         Scenario()
-        .player("alice", battlefield=["Tinybones, Bauble Burglar"], hand=["Grizzly Bears"], library=FILLER)
+        .player(
+            "alice",
+            battlefield=["Tinybones, Bauble Burglar"],
+            hand=["Grizzly Bears"],
+            library=FILLER,
+        )
         .player("bob", library=FILLER)
         .build()
     )
@@ -1102,9 +1113,11 @@ def _grolnok(library):
     return scenario, grolnok
 
 
-def test_grolnok_exiles_each_permanent_card_milled_from_its_controllers_library_with_a_croak_counter():
+def test_grolnok_exiles_each_permanent_card_it_mills_with_a_croak_counter():
     scenario, grolnok = _grolnok(["Grizzly Bears", "Lightning Bolt", "Forest", "Island"])
-    _attack_and_resolve(scenario, grolnok)  # "Whenever a Frog you control attacks, mill three cards."
+    _attack_and_resolve(
+        scenario, grolnok
+    )  # "Whenever a Frog you control attacks, mill three cards."
     exiled = [c for c in scenario.game.exile if c.card.name in ("Grizzly Bears", "Forest")]
     assert sorted(_names(exiled)) == ["Forest", "Grizzly Bears"]
     for card in exiled:
@@ -1166,9 +1179,7 @@ def test_undead_alchemist_exiles_each_creature_card_milled_from_an_opponent_and_
     assert scenario.player("bob").life == 20
     assert sorted(_graveyard_names(scenario, "bob")) == ["Forest", "Lightning Bolt"]
     assert sorted(c.card.name for c in scenario.game.exile) == ["Grizzly Bears", "Hill Giant"]
-    zombies = [
-        c for c in scenario.game.battlefield if c.token and c.controller == "alice"
-    ]
+    zombies = [c for c in scenario.game.battlefield if c.token and c.controller == "alice"]
     assert len(zombies) == 2
     assert all(z.token and (z.power, z.toughness) == (2, 2) for z in zombies)
 

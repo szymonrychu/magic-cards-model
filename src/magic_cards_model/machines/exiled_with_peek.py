@@ -306,9 +306,8 @@ def parse_opponent_exiles_permanent_then_graveyard_card(text: str):
         return None
 
     def effect(game: Game, ability) -> None:
-        from .exile_top_marked import mark_exiled
-
         from ..models.player import Player
+        from .exile_top_marked import mark_exiled
 
         for target in game.resolve_targets(ability):
             if not isinstance(target, Player):

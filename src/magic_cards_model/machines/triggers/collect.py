@@ -1630,7 +1630,7 @@ def library_graveyard_arrivals(
     if match is None:
         return []
     types = match.group("types")
-    found: "list[tuple[GraveyardArrival, CardState]]" = []
+    found: list[tuple[GraveyardArrival, CardState]] = []
     for arrival in game.graveyard_batch:
         if arrival.origin_zone is not Zone.LIBRARY or arrival.card_id is None:
             continue
