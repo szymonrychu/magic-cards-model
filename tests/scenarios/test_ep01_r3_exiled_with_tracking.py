@@ -629,3 +629,118 @@ def test_thief_of_sanity_puts_the_rest_into_the_damaged_players_graveyard():
     assert _names(_exiled_with(scenario, thief)) == ["Lightning Bolt"]
     assert sorted(c.name for c in scenario.player("bob").graveyard) == ["Grizzly Bears", "Hill Giant"]
     assert [c.name for c in scenario.player("bob").library] == ["Island"]
+
+
+def _keywords(scenario, permanent):
+    return {line.lower() for line in scenario.game.characteristics_of(permanent).abilities}
+
+
+def _vivien_plus_one(*, target):
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Vivien, Champion of the Wilds", "Grizzly Bears"], library=FILLER)
+        .player("bob", battlefield=["Hill Giant"], library=FILLER)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    (vivien,) = [p for p in scenario.game.battlefield if p.name.startswith("Vivien")]
+    creature = scenario.creature(target[0], target[1])
+    scenario.activate(vivien, index=0, targets=[creature])
+    scenario.pass_until_resolved()
+    return scenario, creature
+
+
+def test_vivien_plus_one_gives_reach_and_vigilance():
+    scenario, bears = _vivien_plus_one(target=("Grizzly Bears", "alice"))
+    assert {"reach", "vigilance"} <= _keywords(scenario, bears)
+
+
+def test_vivien_plus_one_can_target_an_opponents_creature():
+    scenario, giant = _vivien_plus_one(target=("Hill Giant", "bob"))
+    assert {"reach", "vigilance"} <= _keywords(scenario, giant)
+
+
+def test_vivien_plus_one_lasts_through_the_opponents_turn_and_ends_on_alices_next_turn():
+    scenario, bears = _vivien_plus_one(target=("Grizzly Bears", "alice"))
+    start = scenario.game.turn.turns_taken
+    seen_on_bobs_turn = False
+    for _ in range(120):
+        scenario.advance()
+        turn = scenario.game.turn
+        if turn.turns_taken == start + 1 and turn.active_player == "bob":
+            seen_on_bobs_turn = {"reach", "vigilance"} <= _keywords(scenario, bears)
+        if turn.turns_taken >= start + 2 and turn.active_player == "alice":
+            break
+    assert seen_on_bobs_turn
+    assert not {"reach", "vigilance"} & _keywords(scenario, bears)
+
+
+# -- Jacob Hauken, Inspector // Hauken's Insight ------------------------------
+
+
+def _jacob(*, hand=("Lightning Bolt",), library=("Grizzly Bears", "Forest", "Forest")):
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=["Jacob Hauken, Inspector", *["Island"] * 6],
+            hand=list(hand),
+            library=list(library),
+        )
+        .player("bob", library=FILLER)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    jacob = scenario.creature("Jacob Hauken, Inspector", "alice")
+    jacob.summoning_sick = False
+    return scenario, jacob
+
+
+def test_jacob_exiles_a_hand_card_face_down_and_its_controller_may_look():
+    scenario, jacob = _jacob()
+    (bolt,) = scenario.player("alice").hand
+    scenario.will_choose_cards(bolt, username="alice")
+    scenario.will_pay_the_mana_cost(False)
+    scenario.activate(jacob, index=0)
+    scenario.pass_until_resolved()
+    assert _exiled_with(scenario, jacob) == [bolt]
+    assert not bolt.face_up
+    assert bolt.id in _known(scenario, "alice") and bolt.id not in _known(scenario, "bob")
+    assert not jacob.transformed
+
+
+def test_jacob_transforms_when_its_controller_pays_four_blue_blue():
+    scenario, jacob = _jacob()
+    (bolt,) = scenario.player("alice").hand
+    scenario.will_choose_cards(bolt, username="alice")
+    scenario.will_pay_the_mana_cost(True)
+    scenario.activate(jacob, index=0)
+    scenario.pass_until_resolved()
+    assert jacob.transformed
+
+
+def test_jacobs_back_face_exiles_the_top_card_each_upkeep_and_may_play_one_free_per_turn():
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=["Jacob Hauken, Inspector"],
+            library=["Island", "Forest", "Mountain", "Plains"],
+        )
+        .player("bob", library=FILLER)
+        .build()
+    )
+    jacob = scenario.creature("Jacob Hauken, Inspector", "alice")
+    jacob.transformed = True
+    scenario.start_at(Step.UNTAP)
+    while scenario.step is not Step.UPKEEP:
+        scenario.advance()
+    _resolve_everything(scenario)
+    (pile_card,) = _exiled_with(scenario, jacob)
+    assert pile_card.card.name == "Island" and not pile_card.face_up
+    assert pile_card.id in _known(scenario, "alice")
+    while scenario.step is not Step.PRECOMBAT_MAIN:
+        scenario.advance()
+        _resolve_everything(scenario)
+    land = scenario.play_land("Island", "alice", from_zone=Zone.EXILE)
+    assert land.zone is Zone.BATTLEFIELD
