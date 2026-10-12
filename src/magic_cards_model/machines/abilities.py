@@ -116,7 +116,7 @@ from uuid import UUID
 
 from pydantic import Field
 
-from ..models.card import Card, Color, Supertype, Type, subtypes_of, types_of
+from ..models.card import Card, Color, Type, subtypes_of, types_of
 from ..models.card_state import CardState
 from ..models.zone import Zone
 from ..numbers import COUNT, count_pattern, parse_count, where_x_pattern
@@ -2437,9 +2437,7 @@ def parse_abilities(card: Card) -> list[Ability]:
     if cached is not None:
         return cached
     abilities: list[Ability] = []
-    own_names = self_reference_names(card.name, legendary=Supertype.LEGENDARY in card.supertypes)
     for face_name, text in _faces(card):
-        text = counters_mana_lines_self_normalised(text, own_names)
         face_abilities: list[Ability] = []
         merged = _merge_roll_table_lines(
             _merge_modal_bullet_lines(fold_choice_rows(text.split("\n")))
@@ -5438,5 +5436,4 @@ def _is_triggered_mana_ability(ability: TriggeredAbility) -> bool:
 
 
 from .ep01_r3_amounts import counters_on_it_total  # noqa: E402
-from .ep02_r1_counter_amounts import counters_mana_lines_self_normalised  # noqa: E402
 from .named_choice_rows import fold_choice_rows  # noqa: E402

@@ -91,21 +91,21 @@ _COUNTERS = r"counters?"
 
 
 def _self(names: tuple[str, ...] = ()) -> str:
-    # The card's own name is swapped for a `\x00<index>\x00` token before the
+    # The card's own name is swapped for a `\x00<index>x` token before the
     # patterns run (`_tokenised`), so each pattern compiles once, not per card.
-    return r"(?:it|this [a-z]+|\x00\d+\x00)"
+    return r"(?:it|this [a-z]+|\x00\d+x)"
 
 
 def _tokenised(text: str, names: tuple[str, ...]) -> str:
     """`text` with the card's own name after "on " as a name-independent token."""
     for index, name in enumerate(names):
-        token = f"\x00{index}\x00"
+        token = f"\x00{index}x"
         text = re.sub(rf"(\bon ){re.escape(name)}\b", lambda m, t=token: m.group(1) + t, text)
     return text
 
 
 def _restored(text: str, names: tuple[str, ...]) -> str:
-    return re.sub(r"\x00(\d+)\x00", lambda m: names[int(m.group(1))], text)
+    return re.sub(r"\x00(\d+)x", lambda m: names[int(m.group(1))], text)
 
 
 @functools.cache
@@ -366,31 +366,6 @@ def counters_self_reference_normalised(text: str, names: tuple[str, ...]) -> str
         return text
     named = "|".join(re.escape(name) for name in names)
     return re.sub(rf"(\bcounters? on )(?:{named})\b", r"\1this permanent", text)
-
-
-def counters_mana_lines_self_normalised(text: str, names: tuple[str, ...]) -> str:
-    """`counters_self_reference_normalised` for the parts of `text` a counter
-    count reads: the cost of an activated ability ("Put a verse counter on
-    Yisan:") and the whole of a mana ability (CR 605.1a: "{T}: Add X mana ...,
-    where X is the number of charge counters on <its own name>"). The effect
-    half of any other line keeps the name it prints."""
-    return "\n".join(map(lambda line: _normalised_line(line, names), text.split("\n")))
-
-
-def _normalised_line(line: str, names: tuple[str, ...]) -> str:
-    cost, colon, effect = line.partition(":")
-    if not colon:
-        return line
-    if ": add " in line.lower():
-        return counters_self_reference_normalised(line, names)
-    if names:
-        named = "|".join(re.escape(name) for name in names)
-        effect = re.sub(
-            rf"(\bnumber of (?:\+1/\+1 |-1/-1 |[a-z]+ )?counters? on )(?:{named})\b",
-            r"\1this permanent",
-            effect,
-        )
-    return counters_self_reference_normalised(cost, names) + colon + effect
 
 
 def counters_counted_for(text: str, source, names: tuple[str, ...]) -> str:

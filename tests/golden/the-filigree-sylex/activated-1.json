@@ -1,5 +1,5 @@
 {
-  "ability": "{T}, Sacrifice The Filigree Sylex: Destroy each nonland permanent with mana value equal to the number of oil counters on this permanent.",
+  "ability": "{T}, Sacrifice The Filigree Sylex: Destroy each nonland permanent with mana value equal to the number of oil counters on The Filigree Sylex.",
   "action": {
     "controller": "alice",
     "modes": [],
