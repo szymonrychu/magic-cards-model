@@ -422,7 +422,7 @@ def parse_reveal_hands_exile_creature_until_leaves(text: str):
     opponent's hand is shown to all (CR 701.20a), the controller picks a card of
     the quality from each (CR 608.2d), and it is exiled linked to the source
     (CR 607.2a) and returned to its owner's hand when the source leaves (CR
-    610.3). A source that already left exiles nothing (CR 610.3b)."""
+    610.3). A source that already left exiles nothing (CR 610.3a)."""
     match = _REVEAL_HANDS_EXILE_CREATURE_UNTIL_LEAVES_RE.fullmatch(" ".join(text.split()))
     if match is None:
         return None
