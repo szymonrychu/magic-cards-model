@@ -22,8 +22,13 @@ from ..abilities import (
     self_reference_names,
     self_reference_pattern,
 )
+from ..counter_event_triggers import (
+    counter_event_occurrences,
+    counter_event_watched,
+)
 from ..designations import designation_holds, split_as_long_as
 from ..exert_triggers import EXERT_CONDITION
+from ..state_triggers import reads_state_condition
 
 if TYPE_CHECKING:  # pragma: no cover - import cycle: Game builds on the machines
     from ...models.game import Game
@@ -78,7 +83,7 @@ def _unread_trigger_events(condition: str) -> frozenset[TriggerEvent | ExtraTrig
         return frozenset({ExtraTriggerEvent.PERMANENTS_TAPPED})
     if _ONE_OR_MORE_CARDS_INTO_YOUR_GRAVEYARD_CONDITION.match(
         lowered
-    ) or _A_CARD_INTO_GRAVEYARD_FROM_LIBRARY_CONDITION.match(lowered):
+    ) or _A_CARD_INTO_GRAVEYARD_CONDITION.match(lowered):
         return frozenset({ExtraTriggerEvent.PUT_INTO_GRAVEYARD})
     if _LAND_ADDED_CHOSEN_MANA_CONDITION.match(lowered):
         return frozenset({ExtraTriggerEvent.MANA_ADDED})
@@ -88,6 +93,8 @@ def _unread_trigger_events(condition: str) -> frozenset[TriggerEvent | ExtraTrig
         return frozenset({ExtraTriggerEvent.TIME_COUNTER_REMOVED})
     if _LAST_COUNTER_CONDITION.match(lowered):
         return frozenset({ExtraTriggerEvent.LAST_COUNTER_REMOVED})
+    if counter_events := counter_event_watched(lowered):
+        return counter_events
     if _REVEALED_THIS_WAY_CONDITION.match(lowered):
         return frozenset({ExtraTriggerEvent.REVEALED_FOR_MIRACLE})
     if _REVEALED_FIRST_DRAW_CONDITION.match(lowered):
@@ -259,8 +266,14 @@ def zones_ability_functions_in(
         ability.event is TriggerEvent.ENTERS_THE_BATTLEFIELD
         and entering_origin_zone(lowered) is not None
     )
-    if "in your graveyard" in lowered or (
-        "from your graveyard" in lowered and not cast_origin and not enters_origin
+    # CR 603.8: "When there are no cards in your graveyard, ..." (Immortal
+    # Coil) is a state about the player's graveyard, not a statement of where
+    # its own source works - it functions from the battlefield like any state
+    # trigger.
+    state_about_a_zone = ability.event is None and reads_state_condition(ability.condition)
+    if not state_about_a_zone and (
+        "in your graveyard" in lowered
+        or ("from your graveyard" in lowered and not cast_origin and not enters_origin)
     ):
         return frozenset({Zone.GRAVEYARD})
     if "opening hand" in lowered:
@@ -1620,26 +1633,35 @@ def discard_occurrences(
     return len(ids)
 
 
-def library_graveyard_arrivals(
+def single_card_graveyard_arrivals(
     game: "Game", condition: str, controller: str
 ) -> "list[tuple[GraveyardArrival, CardState]]":
     """The cards of `game.graveyard_batch` a singular "a `<type>` card is put
-    into `<whose>` graveyard from `<their>` library" condition (Grolnok, Undead
-    Alchemist) is about, each with its arrival: put from a library (CR 400.6),
-    a card and not a token (CR 108.2), of the named type ("permanent" is CR
-    110.4a's permanent card), into the controller's own
-    graveyard ("your") or an opponent's. [] when `condition` is another shape."""
+    into `<whose>` graveyard from `<origin>`" condition (Grolnok, Undead
+    Alchemist, Soulcipher Board) is about, each with its arrival - one
+    occurrence per card (CR 603.2c): from a library when the origin names one
+    (CR 400.6), a card and not a token (CR 108.2), of the named type
+    ("permanent" is CR 110.4a's permanent card), into the controller's own
+    graveyard ("your"), an opponent's, or any ("graveyards"), and only during
+    the controller's turn when the condition says so. [] when `condition` is
+    another shape."""
     from .conditions import _types_match
 
-    match = _A_CARD_INTO_GRAVEYARD_FROM_LIBRARY_CONDITION.match(condition.lower().strip())
+    match = _A_CARD_INTO_GRAVEYARD_CONDITION.match(condition.lower().strip())
     if match is None:
         return []
+    if match.group("your_turn") and game.active_player.username != controller:
+        return []
     types = match.group("types")
+    whose = match.group("whose")
+    from_library = match.group("origin") != "anywhere"
     found: list[tuple[GraveyardArrival, CardState]] = []
     for arrival in game.graveyard_batch:
-        if arrival.origin_zone is not Zone.LIBRARY or arrival.card_id is None:
+        if arrival.card_id is None:
             continue
-        if (arrival.player == controller) != (match.group("whose") == "your"):
+        if from_library and arrival.origin_zone is not Zone.LIBRARY:
+            continue
+        if whose != "graveyards" and (arrival.player == controller) != (whose == "your graveyard"):
             continue
         card = game.find_by_id(arrival.card_id)
         if card is None or card.token:
@@ -1732,9 +1754,9 @@ def triggers_for(game: "Game", event: GameEvent, sources: list[CardState]) -> li
             event=_event_for(game, ability, controller, event, source),
         )
         triggered.append(on_stack)
-        # CR 603.2c: a singular "a card is put into a graveyard from a library"
-        # is one occurrence per card, each about its own card ("it", "that card").
-        arrivals = library_graveyard_arrivals(game, ability.condition, controller)
+        # CR 603.2c: a singular "a card is put into a graveyard" is one
+        # occurrence per card, each about its own card ("it", "that card").
+        arrivals = single_card_graveyard_arrivals(game, ability.condition, controller)
         for index, (arrival, card) in enumerate(arrivals):
             about = event.model_copy(
                 update={
@@ -1752,6 +1774,10 @@ def triggers_for(game: "Game", event: GameEvent, sources: list[CardState]) -> li
         # CR 603.2c: one discard instruction of several cards is several
         # occurrences of a per-card "discard a card" condition.
         for _ in range(discard_occurrences(game, ability, source, event) - 1):
+            triggered.append(on_stack.model_copy(update={"id": new_id()}, deep=True))
+        # CR 603.2c, likewise: "a counter is put on / removed from" is one
+        # occurrence per counter an event carries.
+        for _ in range(counter_event_occurrences(ability, event) - 1):
             triggered.append(on_stack.model_copy(update={"id": new_id()}, deep=True))
         # CR 603.2d: "determine how many times it should trigger, then
         # trigger it that many times" - Panharmonicon. Each extra time is a
@@ -1952,7 +1978,10 @@ def _state_trigger_abilities(game: "Game", source: CardState) -> list[TriggeredA
         for ability in parsed
         if isinstance(ability, TriggeredAbility)
         and ability.event is None
-        and _STATE_COUNTER_TRIGGER_RE.match(ability.condition.strip())
+        and (
+            _STATE_COUNTER_TRIGGER_RE.match(ability.condition.strip())
+            or reads_state_condition(ability.condition)
+        )
     ]
 
 
@@ -2033,7 +2062,7 @@ def apnap_order(triggered: list[AbilityOnStack], turn_order: list[str]) -> list[
 
 
 from ._common import (  # noqa: E402
-    _A_CARD_INTO_GRAVEYARD_FROM_LIBRARY_CONDITION,
+    _A_CARD_INTO_GRAVEYARD_CONDITION,
     _ABILITY_ACTIVATED_CONDITION,
     _CLASS_BECOMES_LEVEL_CONDITION,
     _COUNTERS_PUT_CONDITION,
@@ -2087,6 +2116,7 @@ from .conditions import (  # noqa: E402
     _state_condition_holds,
     _typed_source_matches,
     _typed_whose,
+    _types_match,
     condition_matches,
     controller_of_source,
     entering_origin_zone,

@@ -19,6 +19,8 @@ from ..abilities import (
     self_reference_re,
 )
 from ..exert_triggers import EXERT_CONDITION, exert_condition_matches
+from ..counter_event_triggers import counter_event_matches, counter_event_watched
+from ..state_triggers import reads_state_condition, state_condition_holds
 from ..turn import Step
 
 if TYPE_CHECKING:  # pragma: no cover - import cycle: Game builds on the machines
@@ -3401,10 +3403,10 @@ def _unread_condition_matches(
                 return True
         return False
 
-    if _A_CARD_INTO_GRAVEYARD_FROM_LIBRARY_CONDITION.match(condition):
+    if _A_CARD_INTO_GRAVEYARD_CONDITION.match(condition):
         if event.event is not ExtraTriggerEvent.PUT_INTO_GRAVEYARD:
             return False
-        return bool(library_graveyard_arrivals(game, condition, controller))
+        return bool(single_card_graveyard_arrivals(game, condition, controller))
 
     match = _SELF_PUT_INTO_GRAVEYARD_FROM_ANYWHERE_CONDITION.match(condition)
     if match is not None and mine:
@@ -3702,6 +3704,9 @@ def _unread_condition_matches(
             and event.subject_id == source.id
             and event.counter_kind == last_counter.group("kind")
         )
+
+    if counter_event_watched(condition):
+        return counter_event_matches(game, condition, source, controller, event, mine=mine)
 
     if _REVEALED_THIS_WAY_CONDITION.match(condition):
         # CR 702.94a / CR 607.2h: "this card ... this way" - the source
@@ -6017,7 +6022,9 @@ def _state_condition_holds(game: "Game", ability: TriggeredAbility, source: Card
     """Whether this permanent's game state matches its CR 603.8 condition."""
     match = _STATE_COUNTER_TRIGGER_RE.match(ability.condition.strip())
     if match is None:
-        return False
+        return reads_state_condition(ability.condition) and state_condition_holds(
+            game, source, source.controller or game.active_player.username, ability.condition
+        )
     subject = match["subject"].strip().rstrip(".").lower()
     names = {source.name.lower(), "it", "this permanent", "this creature", "this artifact"}
     # CR 603.8 reads the source by whichever type word the card prints for
@@ -6037,7 +6044,7 @@ def _state_condition_holds(game: "Game", ability: TriggeredAbility, source: Card
 
 
 from ._common import (  # noqa: E402
-    _A_CARD_INTO_GRAVEYARD_FROM_LIBRARY_CONDITION,
+    _A_CARD_INTO_GRAVEYARD_CONDITION,
     _ABILITY_ACTIVATED_CONDITION,
     _CLASS_BECOMES_LEVEL_CONDITION,
     _COUNTERS_PUT_CONDITION,
@@ -6087,6 +6094,6 @@ from .collect import (  # noqa: E402
     batched_attackers,
     batched_combat_damage_sources,
     discard_occurrences,
-    library_graveyard_arrivals,
+    single_card_graveyard_arrivals,
 )
 from .events import CastConditionNotice, InterveningIfNotice  # noqa: E402

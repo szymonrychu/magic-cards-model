@@ -202,6 +202,7 @@ from magic_cards_model.machines.replacement import (
     strip_reminder_text,
 )
 from magic_cards_model.machines.spell_grants import reads_spell_keyword_grant_line
+from magic_cards_model.machines.state_triggers import reads_state_condition
 from magic_cards_model.machines.targeting import profile_for_text
 from magic_cards_model.machines.triggers import (
     _ENTERS_TAPPED_RE as _CONDITION_ENTERS_TAPPED_RE,
@@ -3027,6 +3028,13 @@ def _condition_can_fire(printing: Card, ability: TriggeredAbility) -> bool | Non
             # simulates a whole combat to derive these two flags from.
             attacking_alone=ability.event is TriggerEvent.ATTACKS,
             attacking_player_alone=ability.event is TriggerEvent.ATTACKS,
+            # CR 506.2: "attacks you [or a planeswalker you control]" is
+            # satisfied by an attack whose defender is the source's controller
+            # (Slumbering Dragon) - declared at that player here, so the
+            # condition is tried the one way it can be true.
+            defender=TargetRef.to_player(controller)
+            if ability.event is TriggerEvent.ATTACKS and " attacks you" in ability.condition.lower()
+            else None,
             # Agent Maria Hill's own "becomes tapped to pay a teamwork
             # cost" (`GameEvent.tapped_for_teamwork`) - the same reasoning
             # as the two flags above: this synthetic probe never pays a
@@ -4312,6 +4320,7 @@ def classify_clauses(printing: Card) -> list[ClauseOutcome]:
                 ability.event is None
                 and not _unread_trigger_events(ability.condition)
                 and _STATE_COUNTER_TRIGGER_RE.match(ability.condition.strip()) is None
+                and not reads_state_condition(ability.condition)
             ):
                 clauses.append(ClauseOutcome(SILENT, ability.text, "triggered (unread condition)"))
                 continue

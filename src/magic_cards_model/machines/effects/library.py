@@ -4376,6 +4376,68 @@ def _parse_look_top_split_conditional_instead_clause(effect_text: str) -> Effect
     return effect
 
 
+#: "Look at the top N cards of your library. Put K of them into your
+#: graveyard[ and the rest back on top in any order]." - Soulcipher Board's
+#: activated ability. CR 701.20e ("look at") then the controller picks which
+#: K go to the graveyard (CR 608.2d); a card not moved is left where it was, on
+#: top (nothing in the text moves it), in the order the controller keeps. The
+#: destination can be the hand too, which is the same instruction with another
+#: zone. The bottom of the library is the one other place the rest can go.
+_LOOK_TOP_PUT_SOME_INTO_ZONE_RE = re.compile(
+    rf"^look at the top (?P<n>{COUNT}) cards of your library\.\s*"
+    rf"put (?P<k>{COUNT}) of them into your (?P<zone>graveyard|hand)"
+    r"(?: and the (?:rest|other) (?P<rest>on the bottom of your library"
+    r"|back on top in any order))?\.?$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s34")
+def _parse_look_top_put_some_into_zone_clause(text: str) -> AbilityEffect | None:
+    """`_LOOK_TOP_PUT_SOME_INTO_ZONE_RE`'s shape."""
+    if "look at the top" not in text.lower():
+        return None
+    match = _LOOK_TOP_PUT_SOME_INTO_ZONE_RE.fullmatch(
+        " ".join(_strip_non_effect_preamble(text).split())
+    )
+    if match is None:
+        return None
+    count = parse_count(match.group("n"))
+    moved_count = parse_count(match.group("k"))
+    if count is None or moved_count is None:
+        return None
+    zone = Zone.GRAVEYARD if match.group("zone").lower() == "graveyard" else Zone.HAND
+    to_bottom = (match.group("rest") or "").lower().startswith("on the bottom")
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        player = game.player(ability.controller)
+        moved, rest = game.look_at_top_and_split(
+            player,
+            count,
+            source=ability.source_name,
+            source_id=source_id_of(ability),
+            prompt=f"put {moved_count} of the top {count} cards into your {zone.value}",
+            moved_label=f"your {zone.value}",
+            kept_label="the bottom of your library" if to_bottom else "the top of your library",
+            moved_amount=moved_count,
+            moved_exact=True,
+        )
+        for state in moved:
+            if zone is Zone.GRAVEYARD:
+                game.put_into_graveyard(state)
+            else:
+                player.add(state, Zone.HAND)
+        if to_bottom:
+            player.library.extend(rest)
+        else:
+            for index, state in enumerate(rest):
+                player.library.insert(index, state)
+        if rest:
+            player.note_library_changed(placed=rest)  # CR 701.20d
+
+    return effect
+
+
 def _dead_self_object_id(ability: "AbilityOnStack") -> UUID | None:
     """The id a dead-self clause's "it" names: `ability.event.subject_id`
     when there is a triggering event to read (CR 603.10a's look-back),

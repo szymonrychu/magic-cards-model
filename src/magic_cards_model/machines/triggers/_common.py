@@ -166,12 +166,15 @@ _ONE_OR_MORE_CARDS_INTO_YOUR_GRAVEYARD_CONDITION = re.compile(
 
 #: The singular, per-card sibling: "a permanent card is put into your graveyard
 #: from your library" (Grolnok), "a creature card is put into an opponent's
-#: graveyard from their library" (Undead Alchemist). Unlike the batched "one or
-#: more" form above, each card is its own occurrence (CR 603.2c), so the ability
-#: triggers once per matching card and each carries the card it is about.
-_A_CARD_INTO_GRAVEYARD_FROM_LIBRARY_CONDITION = re.compile(
+#: graveyard from their library" (Undead Alchemist), "a creature card is put
+#: into your graveyard from anywhere" (Soulcipher Board). Unlike the batched
+#: "one or more" form above, each card is its own occurrence (CR 603.2c), so the
+#: ability triggers once per matching card and each carries the card it is
+#: about (`single_card_graveyard_arrivals`).
+_A_CARD_INTO_GRAVEYARD_CONDITION = re.compile(
     r"^an? (?P<types>[a-z]+(?: or [a-z]+)*) card is put into "
-    r"(?P<whose>your|an opponent's) graveyard from (?:your|their) library$"
+    r"(?P<whose>your graveyard|an opponent's graveyard|graveyards)"
+    r" from (?P<origin>anywhere|your library|their library)(?P<your_turn> during your turn)?$"
 )
 
 #: The Plans' "the fourth plan counter is put on this enchantment" (Claim the

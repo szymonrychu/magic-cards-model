@@ -1125,6 +1125,27 @@ def test_grolnok_exiles_each_permanent_card_it_mills_with_a_croak_counter():
     assert _graveyard_names(scenario, "alice") == ["Lightning Bolt"], "a nonpermanent card stays"
 
 
+def test_grolnok_triggers_exactly_once_per_permanent_card_milled():
+    """CR 603.2c: one trigger per matching card, read by one reader only - two
+    readers of the singular graveyard condition would stack extra copies."""
+    scenario, grolnok = _grolnok(["Grizzly Bears", "Lightning Bolt", "Forest", "Island"])
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    scenario.attack_with(grolnok)
+    scenario.game.put_triggers_on_stack()
+    scenario.resolve_top()  # "mill three cards"
+    scenario.game.put_triggers_on_stack()
+    croaks = [
+        item
+        for item in scenario.game.stack
+        if getattr(item, "source_name", None) == "Grolnok, the Omnivore"
+        and "graveyard" in (getattr(getattr(item, "ability", None), "condition", None) or "")
+    ]
+    assert len(croaks) == 2
+    assert sorted(item.event.subject_id for item in croaks) == sorted(
+        c.id for c in scenario.player("alice").graveyard if c.card.name in ("Grizzly Bears", "Forest")
+    )
+
+
 def test_grolnok_ignores_cards_milled_from_an_opponents_library():
     scenario, grolnok = _grolnok(["Forest"] * 4)
     scenario.game.put_into_graveyard(scenario.player("bob").library[0])

@@ -3340,6 +3340,10 @@ class CardState(EngineModel):
         before = self.counters[kind]
         left = self.counters.remove(kind, amount)
         self._note_counters_removed(kind, amount)
+        if amount > 0 and self.zone is Zone.BATTLEFIELD:
+            note_removed = getattr(self._board_source, "note_counters_removed", None)
+            if note_removed is not None:
+                note_removed(self, str(kind), amount)
         if before > 0 and left == 0 and self.zone is Zone.BATTLEFIELD:
             note_last = getattr(self._board_source, "note_last_counter_removed", None)
             if note_last is not None:

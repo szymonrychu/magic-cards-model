@@ -339,7 +339,7 @@ from .conditions import (
     total_power_attack_threshold,
 )
 from ._common import (
-    _A_CARD_INTO_GRAVEYARD_FROM_LIBRARY_CONDITION,
+    _A_CARD_INTO_GRAVEYARD_CONDITION,
     _ABILITY_ACTIVATED_CONDITION,
     _CLASS_BECOMES_LEVEL_CONDITION,
     _COUNTERS_PUT_CONDITION,
@@ -455,7 +455,7 @@ __all__ = [
     "TargetingNotice",
     "TargetingNoticeKind",
     "TriggerReadability",
-    "_A_CARD_INTO_GRAVEYARD_FROM_LIBRARY_CONDITION",
+    "_A_CARD_INTO_GRAVEYARD_CONDITION",
     "_ABILITY_ACTIVATED_CONDITION",
     "_ADDITIONAL_TRIGGER_RE",
     "_ANOTHER_SPELL_THIS_TURN",

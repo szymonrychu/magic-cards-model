@@ -130,6 +130,7 @@ from magic_cards_model.machines.layers import (
 from magic_cards_model.machines.legal_actions import legal_actions
 from magic_cards_model.machines.special_actions import locked_doors
 from magic_cards_model.machines.speed import effective_speed, increase_speed
+from magic_cards_model.machines.state_triggers import reads_state_condition, state_condition_holds
 from magic_cards_model.machines.targeting import (
     _KEYWORD_FAMILIES,
     CombatState,
@@ -139,7 +140,7 @@ from magic_cards_model.machines.targeting import (
 )
 from magic_cards_model.machines.teamwork import teamwork_ability
 from magic_cards_model.machines.triggers import (
-    _A_CARD_INTO_GRAVEYARD_FROM_LIBRARY_CONDITION,
+    _A_CARD_INTO_GRAVEYARD_CONDITION,
     AbilityOnStack,
     _required_cast_origin_zone,
     _singular_subtype,
@@ -159,6 +160,7 @@ from magic_cards_model.models.card_state import (
 )
 from magic_cards_model.models.game import (
     _STEP_NAMES,
+    Game,
     builtin_condition_readable,
     colored_symbol_count,
     read_activation_instructions,
@@ -3806,7 +3808,10 @@ def _about_the_source(case: Case, ability: TriggeredAbility, action: str) -> Ite
                 r"there are (?P<count>[\w,]+) or more (?P<kind>[a-z]+) counters", lowered
             )
             if match is None:
-                raise _Unavailable("no counter threshold in the condition")
+                if not reads_state_condition(ability.condition):
+                    raise _Unavailable("no counter threshold in the condition")
+                _make_the_state_true(game, source, ability.condition)
+                return scenario, source_id
             raw = match.group("count").replace(",", "")
             count = int(raw) if raw.isdigit() else parse_count(raw, article=False)
             if count is None:
@@ -3815,6 +3820,28 @@ def _about_the_source(case: Case, ability: TriggeredAbility, action: str) -> Ite
         return scenario, source_id
 
     yield happen
+
+
+def _make_the_state_true(game: Game, source: CardState, condition: str) -> None:
+    """CR 603.8: take away whatever keeps a "you control no X" / "there are no
+    X" state false - the controller's graveyard cards, then permanents other
+    than the source, one at a time - until the printed condition holds."""
+    controller = game.controller_of(source).username
+
+    def holds() -> bool:
+        return state_condition_holds(game, source, controller, condition)
+
+    for card in list(game.player(controller).graveyard):
+        if holds():
+            break
+        game.exile_cards([card])
+    for permanent in list(game.battlefield):
+        if holds():
+            break
+        if permanent is not source:
+            game.exile_permanent(permanent)
+    if not holds():
+        raise _Unavailable("the state cannot be made true with the source in play")
 
 
 def _counters_you_put(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
@@ -3834,8 +3861,8 @@ def _counters_you_put(case: Case, ability: TriggeredAbility) -> Iterator[Attempt
         # Brawler, Stalwart Successor; the plural without an article is
         # Bioessence Hydra's "planeswalkers you control"): no kind is any
         # kind, a +1/+1 counter.
-        r"^one or more (?:(\+1/\+1|-1/-1|[a-z]+) )?counters are put on"
-        r" ((?:(?:another|an?) )?[a-z ]+ you control)$",
+        r"^(?:one or more|an?) (?:(\+1/\+1|-1/-1|[a-z]+) )?counters? (?:are|is) put on"
+        r" ((?:(?:another|an?) )?[a-z ]+(?: you control)?)$",
         ability.condition,
         re.IGNORECASE,
     )
@@ -3880,6 +3907,40 @@ def _counters_you_put(case: Case, ability: TriggeredAbility) -> Iterator[Attempt
         return scenario, source_id
 
     yield put_on_another
+
+
+def _counters_leaving(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
+    """ "Whenever a[n] `<kind>` counter is removed from `<a permanent>`"
+    (CR 122.1): the counters are put on first, then one taken off the source
+    itself (a "this creature" subject) or a Grizzly Bears of the controller's
+    (any other subject)."""
+    match = re.search(
+        r"(?:an?|one or more) (?:(\+1/\+1|-1/-1|[a-z]+) )?counters? (?:are|is) removed from (.+)$",
+        ability.condition,
+        re.IGNORECASE,
+    )
+    if match is None:
+        return
+    kind = match.group(1) or "+1/+1"
+    on_source = bool(re.match(r"(?:it|this \w+)$", match.group(2).strip(), re.IGNORECASE))
+
+    def take_one_off() -> tuple[PlayedScenario, Any]:
+        scenario, source_id = _home(
+            case, ability, battlefield=() if on_source else ("Grizzly Bears",)
+        )
+        if on_source:
+            target = scenario.game.find_by_id(source_id)
+        else:
+            target = next(
+                permanent
+                for permanent in reversed(scenario.game.permanents_controlled_by(ALICE))
+                if permanent.name == "Grizzly Bears" and permanent.id != source_id
+            )
+        scenario.game.add_counters(target, kind, 2)
+        target.remove_counters(kind, 1)
+        return scenario, source_id
+
+    yield take_one_off
 
 
 def _untapping(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
@@ -4611,7 +4672,7 @@ def _milled_cards(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
     the battlefield, the top cards of one player's library milled, one
     attempt for each library."""
     if (
-        _A_CARD_INTO_GRAVEYARD_FROM_LIBRARY_CONDITION.match((ability.condition or "").lower())
+        _A_CARD_INTO_GRAVEYARD_CONDITION.match((ability.condition or "").lower())
         is None
     ):
         return
@@ -4893,6 +4954,8 @@ def _attempts(case: Case) -> Iterator[Attempt]:
         elif kind == "counters_put":
             yield from _about_the_source(case, ability, "counters")
             yield from _counters_you_put(case, ability)
+        elif kind == "counters_removed":
+            yield from _counters_leaving(case, ability)
         elif kind == "becomes_monstrous":
             yield from _about_the_source(case, ability, "monstrous")
         elif kind == "transforms":
