@@ -1842,6 +1842,45 @@ def _pile_permissions_for(
             ):
                 continue
             found.append((permanent, read))
+    found += _emblem_pile_permissions_for(game, card, player)
+    return found
+
+
+def _emblem_pile_permissions_for(
+    game: Any, card: CardState, player: str
+) -> list[tuple[CardState, ExilePilePermission]]:
+    """The emblem half of `_pile_permissions_for` (CR 114.4: an emblem's
+    abilities function in the command zone). Tibalt's "You may play cards
+    exiled with Tibalt, Cosmic Impostor, and you may spend mana as though it
+    were mana of any color to cast those spells." names the object it counts
+    cards of, not "this permanent": the pile is whatever was exiled with an
+    object `player` owns that bears that face name (CR 607.2a), and it stays
+    theirs after that object left, since the emblem does not."""
+    annotation = card.exile_annotation
+    if annotation is None or annotation.linked_permanent_id is None:
+        return []
+    linked = game.find_by_id(annotation.linked_permanent_id)
+    if not isinstance(linked, CardState) or linked.owner != player:
+        return []
+    found: list[tuple[CardState, ExilePilePermission]] = []
+    for emblem in game.emblems_of(player):
+        for line in (emblem.card.oracle_text or "").split("\n"):
+            if "exiled with" not in line.lower():
+                continue
+            read = next(
+                (
+                    parsed
+                    for face in linked.card.name.split(" // ")
+                    if (parsed := exile_pile_permission(face, line.strip(), True)) is not None
+                ),
+                None,
+            )
+            if read is None or read.counter is not None:
+                continue
+            turn = getattr(game, "turn", None)
+            if read.during_your_turn and (turn is None or turn.active_player != player):
+                continue
+            found.append((emblem, read))
     return found
 
 

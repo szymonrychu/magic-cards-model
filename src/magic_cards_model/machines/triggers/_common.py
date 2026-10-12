@@ -164,6 +164,16 @@ _ONE_OR_MORE_CARDS_INTO_YOUR_GRAVEYARD_CONDITION = re.compile(
     r" from (?P<origin>anywhere|your library)(?P<your_turn> during your turn)?$"
 )
 
+#: The singular, per-card sibling: "a permanent card is put into your graveyard
+#: from your library" (Grolnok), "a creature card is put into an opponent's
+#: graveyard from their library" (Undead Alchemist). Unlike the batched "one or
+#: more" form above, each card is its own occurrence (CR 603.2c), so the ability
+#: triggers once per matching card and each carries the card it is about.
+_A_CARD_INTO_GRAVEYARD_FROM_LIBRARY_CONDITION = re.compile(
+    r"^an? (?P<types>[a-z]+(?: or [a-z]+)*) card is put into "
+    r"(?P<whose>your|an opponent's) graveyard from (?:your|their) library$"
+)
+
 #: The Plans' "the fourth plan counter is put on this enchantment" (Claim the
 #: Kingdom, Political Triumph; Robot Domination's "third", Doom Reigns
 #: Supreme's "fifth", Construct a Cosmic Cube's "seventh") - CR 122.6's

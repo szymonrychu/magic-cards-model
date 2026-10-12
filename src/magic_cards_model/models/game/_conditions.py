@@ -897,13 +897,17 @@ class ConditionsMixin:
         # Shared Fate (and Colfenor's Plans): a face-down card in a pile the
         # viewer's permission lets them look at is known to them.
         from ...machines.casting import may_look_at_linked_exile
+        from ...machines.exiled_with_peek import may_look_at_exiled_with
 
         for card in self.exile:
             if (
                 not card.face_up
                 and card.exile_annotation is not None
                 and card.id not in found
-                and may_look_at_linked_exile(self, card, viewer)
+                and (
+                    may_look_at_linked_exile(self, card, viewer)
+                    or may_look_at_exiled_with(self, card, viewer)
+                )
             ):
                 found[card.id] = KnownCard(
                     card_id=card.id,

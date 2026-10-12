@@ -4389,10 +4389,15 @@ def _hand_exile_quality_matcher(quality: str) -> Callable[[CardState], bool] | N
         if color is None:
             return lambda state: not state.colors
         return lambda state: color in state.colors
+    # "a nonland card" (Semblance Anvil): the negation of a card type word -
+    # every card whose types lack it.
+    negated = lowered.startswith("non")
     try:
-        card_type = Type(lowered)
+        card_type = Type(lowered[3:] if negated else lowered)
     except ValueError:
         return None
+    if negated:
+        return lambda state: card_type not in state.types
     return lambda state: card_type in state.types
 
 

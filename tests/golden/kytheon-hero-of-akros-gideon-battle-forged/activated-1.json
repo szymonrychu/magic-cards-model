@@ -1,11 +1,11 @@
 {
-  "ability": "0: Until end of turn, Gideon becomes a 4/4 Human Soldier creature with indestructible that's still a planeswalker. Prevent all damage that would be dealt to him this turn.",
+  "ability": "+1: Until your next turn, target creature gains indestructible. Untap that creature.",
   "action": {
     "controller": "alice",
     "modes": [],
     "on_stack": true,
     "source": "Gideon, Battle-Forged@alice#1",
-    "targets": [],
+    "targets": ["Memnite@alice#1"],
     "x": 0
   },
   "board": {
@@ -36,16 +36,14 @@
   "delta": {
     "created": {},
     "decisions": [],
-    "fields_changed": ["continuous_effects", "prevention_shields"],
+    "fields_changed": ["continuous_effects"],
     "notices": {},
     "objects": {
-      "Gideon, Battle-Forged@alice#1": {
+      "Memnite@alice#1": {
         "granted": [
           [],
           ["Indestructible"]
-        ],
-        "power": [null, 4],
-        "toughness": [null, 4]
+        ]
       }
     },
     "players": {},

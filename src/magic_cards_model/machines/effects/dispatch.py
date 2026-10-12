@@ -24,6 +24,8 @@ from ...numbers import (
 )
 from .. import (
     block_reassignment,
+    exile_top_marked,
+    exiled_with_peek,
     impulse_choice,
     map_tokens,
     mass_pump_conditions,
@@ -1124,7 +1126,7 @@ _BECOMES_PREPARED_TARGET_RE = re.compile(
 #: 107.1c's "any number" (zero included) is simply how many player targets
 #: the stack object carries.
 _EXILE_TARGET_PLAYERS_GRAVEYARD_RE = re.compile(
-    r"^exile (?P<phrase>.*target (?:player's graveyard|players' graveyards))\.?$",
+    r"^exile (?P<phrase>.*target (?:(?:player|opponent)'s graveyard|players' graveyards))\.?$",
     re.IGNORECASE,
 )
 #: "Exile all graveyards." (Rest in Peace) and "Exile all cards that are
@@ -4512,6 +4514,17 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
     # Read whole: the second sentence's "It"/"That player" is the first
     # sentence's target, with a CR 611.2b duration tied to the source.
     for whole_text_reader in (
+        exile_top_marked.parse_exile_top_marked,
+        exile_top_marked.parse_look_top_exile_one_face_down,
+        exiled_with_peek.parse_exile_from_hand_face_down,
+        exiled_with_peek.parse_return_exiled_with_to_hand,
+        exiled_with_peek.parse_turn_exiled_with_face_up,
+        exiled_with_peek.parse_exile_a_card_from_a_graveyard,
+        exiled_with_peek.parse_opponent_exiles_permanent_then_graveyard_card,
+        exiled_with_peek.parse_exile_discarded_card_with_counter,
+        exiled_with_peek.parse_exile_the_triggering_card,
+        exiled_with_peek.parse_reveal_hands_exile_creature_until_leaves,
+        exiled_with_peek.parse_become_a_copy_of_an_exiled_card,
         impulse_choice.parse_exile_top_choose_one_play,
         impulse_choice.parse_reveal_top_take_one_rest_bottom,
         impulse_choice.parse_search_exile_then_cast_free,

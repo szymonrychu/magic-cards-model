@@ -113,20 +113,20 @@
   "textless": false,
   "booster": true,
   "story_spotlight": false,
-  "edhrec_rank": 7555,
-  "penny_rank": 2495,
+  "edhrec_rank": 7687,
+  "penny_rank": 2493,
   "preview": {
     "source": "Tomoharu Saito",
     "source_uri": "https://www.youtube.com/watch?v=O5fbr2eppDo",
     "previewed_at": "2021-11-04"
   },
   "prices": {
-    "usd": "3.31",
-    "usd_foil": "3.73",
+    "usd": "2.90",
+    "usd_foil": "3.78",
     "usd_etched": null,
-    "eur": "2.82",
-    "eur_foil": "3.63",
-    "tix": "0.03"
+    "eur": "2.96",
+    "eur_foil": "3.57",
+    "tix": "0.02"
   },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=541003&printed=false",

@@ -35,7 +35,17 @@
   "card": "Grolnok, the Omnivore",
   "delta": {
     "created": {},
-    "decisions": [],
+    "decisions": [
+      {
+        "amount": 0,
+        "cards": ["?", "?", "?"],
+        "kind": "order_triggers",
+        "player": "alice",
+        "players": [],
+        "prompt": "order your triggered abilities on the stack, bottom of the stack first: 1. Grolnok, the Omnivore, 2. Grolnok, the Omnivore, 3. Grolnok, the Omnivore",
+        "source": null
+      }
+    ],
     "fields_changed": ["graveyard_arrivals_announced", "graveyard_arrivals_this_turn"],
     "notices": {},
     "objects": {
@@ -50,7 +60,7 @@
       }
     },
     "players": {},
-    "stack": []
+    "stack": ["ability of Grolnok, the Omnivore@alice#1: Whenever a permanent card is put into your graveyard from your library, exile it with a croak counter on it.", "ability of Grolnok, the Omnivore@alice#1: Whenever a permanent card is put into your graveyard from your library, exile it with a croak counter on it.", "ability of Grolnok, the Omnivore@alice#1: Whenever a permanent card is put into your graveyard from your library, exile it with a croak counter on it."]
   },
   "family": "triggered",
   "format": 1,

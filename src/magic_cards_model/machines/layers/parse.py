@@ -1704,7 +1704,7 @@ _KEYWORD_GRANT_RE = re.compile(
     # until end of turn"); `_split_and_validate_keywords` admits a numbered
     # item only for a keyword some machine reads the N of.
     r"(?P<keywords>[a-z]+(?: (?:[a-z]+|\d+))?(?:(?:,\s*| and )[a-z]+(?: (?:[a-z]+|\d+))?)*) "
-    r"until end of turn\.?$",
+    r"(?P<duration>until end of turn|until your next turn)\.?$",
     re.IGNORECASE,
 )
 
@@ -4014,7 +4014,9 @@ _LOOKS_LIKE_LAYER_EFFECT_RE = re.compile(
 #: duration "as stated by the spell or ability" with no rule that fixes its
 #: position in the sentence, so this is a phrasing this wave's shapes must
 #: read regardless of where "until end of turn" sits.
-_DURATION_FIRST_RE = re.compile(r"^until end of turn,\s*(?P<rest>.+)$", re.IGNORECASE)
+_DURATION_FIRST_RE = re.compile(
+    r"^(?P<duration>until end of turn|until your next turn),\s*(?P<rest>.+)$", re.IGNORECASE
+)
 
 #: A sentence-initial sequencing word (CR 608.2c: "the controller ... follows
 #: its instructions in the order written") - "Then creatures you control gain
@@ -4060,7 +4062,14 @@ def _normalize_duration_first(sentence: str) -> str:
         body = rest[: retention.start()].rstrip()
         body = f"{body}.{quote}" if quote else body.rstrip(".")
         return f"{body} until end of turn. {retention.group('clause')}."
-    return f"{rest} until end of turn."
+    duration = match.group("duration").lower()
+    rewritten = f"{rest} {duration}."
+    if duration == "until your next turn" and _KEYWORD_GRANT_RE.fullmatch(rewritten) is None:
+        # Only a keyword grant (Vivien, Champion of the Wilds' +1) reads this
+        # duration trailing; every other "Until your next turn, ..." sentence
+        # (Karn's +1, Gideon's) has its own leading-duration reader.
+        return sentence
+    return rewritten
 
 
 #: An ability word and the em dash that follows it - "Domain — ", "Delirium — "
@@ -4504,10 +4513,15 @@ def _self_has_counted_trigger_keyword_builder(
     return builder
 
 
-def _keyword_grant_builder(keywords: Sequence[str]) -> EffectBuilder:
+def _keyword_grant_builder(
+    keywords: Sequence[str], *, until_next_turn: bool = False
+) -> EffectBuilder:
     """ "[Subject] gains <keyword>[, <keyword>, and <keyword>] until end of
-    turn." (CR 613.1f, CR 113.10) - one or more keywords, each its own layer
-    6 grant."""
+    turn[/until your next turn]." (CR 613.1f, CR 113.10) - one or more
+    keywords, each its own layer 6 grant. `until_next_turn` is CR 611.2a's
+    longer stated duration (Vivien, Champion of the Wilds' +1), ending when
+    the resolving source's controller's next turn begins
+    (`ContinuousEffect.until_next_turn_of`)."""
 
     def builder(
         source: CardState,
@@ -4520,7 +4534,10 @@ def _keyword_grant_builder(keywords: Sequence[str]) -> EffectBuilder:
                 description=f"{source.name}: {target.name} gains {keyword}",
                 layer=Layer.ABILITY,
                 timestamp=timestamp,
-                duration=Duration.UNTIL_END_OF_TURN,
+                duration=Duration.UNTIL_YOUR_NEXT_TURN
+                if until_next_turn
+                else Duration.UNTIL_END_OF_TURN,
+                until_next_turn_of=source.controller if until_next_turn else None,
                 selector=only_this_incarnation(target, target.zone_change_stamp),
                 modification=grant_keyword(keyword),
             )
@@ -11737,7 +11754,9 @@ def _parse_layer_sentence_ungated(sentence: str) -> EffectBuilder | None:
         keywords = _split_and_validate_keywords(match.group("keywords"))
         if keywords is None:
             return None
-        return _keyword_grant_builder(keywords)
+        return _keyword_grant_builder(
+            keywords, until_next_turn=match.group("duration").lower() == "until your next turn"
+        )
     if " lose" in sentence.lower() and (match := _KEYWORD_LOSS_RE.fullmatch(sentence)):
         keywords = _split_and_validate_keywords(match.group("keywords"))
         if keywords is not None:

@@ -2964,6 +2964,8 @@ def _condition_matches(
         # every other "you [verb]" condition does.
         if not _controller_clause_holds(condition, controller, event.player):
             return False
+        if "an opponent discards" in lowered and event.player in (None, controller):
+            return False  # Tinybones: "whenever an opponent discards a card"
         return discard_occurrences(game, ability, source, event) > 0
 
     if ability.event is TriggerEvent.LORE_COUNTERS_ADDED:
@@ -3398,6 +3400,11 @@ def _unread_condition_matches(
             if _types_match(tuple(card.types), match.group("types")):
                 return True
         return False
+
+    if _A_CARD_INTO_GRAVEYARD_FROM_LIBRARY_CONDITION.match(condition):
+        if event.event is not ExtraTriggerEvent.PUT_INTO_GRAVEYARD:
+            return False
+        return bool(library_graveyard_arrivals(game, condition, controller))
 
     match = _SELF_PUT_INTO_GRAVEYARD_FROM_ANYWHERE_CONDITION.match(condition)
     if match is not None and mine:
@@ -6030,6 +6037,7 @@ def _state_condition_holds(game: "Game", ability: TriggeredAbility, source: Card
 
 
 from ._common import (  # noqa: E402
+    _A_CARD_INTO_GRAVEYARD_FROM_LIBRARY_CONDITION,
     _ABILITY_ACTIVATED_CONDITION,
     _CLASS_BECOMES_LEVEL_CONDITION,
     _COUNTERS_PUT_CONDITION,
@@ -6079,5 +6087,6 @@ from .collect import (  # noqa: E402
     batched_attackers,
     batched_combat_damage_sources,
     discard_occurrences,
+    library_graveyard_arrivals,
 )
 from .events import CastConditionNotice, InterveningIfNotice  # noqa: E402
