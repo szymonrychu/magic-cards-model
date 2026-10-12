@@ -89,6 +89,10 @@ def rider_effect(
     """The whole mass pump `template` followed by gated riders in `remainder`,
     or None when `remainder` is not made only of the shapes above (the caller's
     other readers, and ultimately its fail-closed notice, then keep it)."""
+    subject_match = _SUBJECT_RE.match(template)
+    if not remainder or subject_match is None:
+        return None
+
     from . import conditions
     from .effects import (
         LayerRemainderNotice,
@@ -97,9 +101,6 @@ def rider_effect(
         parse_count,
     )
 
-    subject_match = _SUBJECT_RE.match(template)
-    if not remainder or subject_match is None:
-        return None
     subject = subject_match.group("subject")
     instead: list[tuple[str, str]] = []
     additive: list[tuple] = []

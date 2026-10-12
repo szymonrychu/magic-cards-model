@@ -555,11 +555,12 @@ def condition_is_readable(condition: str) -> bool:
     `_CONDITION_PATTERNS`, in the same order, so a `True` here is read the
     same way once resolution actually asks.
     """
-    from ...machines import conditions
-
     text = condition.strip().rstrip(".").strip()
     if (alternatives := _condition_alternatives(text)) is not None:
         return all(condition_is_readable(part) for part in alternatives)
+
+    from ...machines import conditions
+
     return builtin_condition_readable(text) or conditions.claims(text)
 
 

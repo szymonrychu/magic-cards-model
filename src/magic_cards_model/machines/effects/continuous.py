@@ -6658,11 +6658,12 @@ def _parse_attach_referent_to_chosen_clause(rider: str) -> ReferentObjectClause 
     (CR 301.5c: "An Equipment can't equip itself"); CR 701.3b's refusals are
     `attach_permanent`'s own. Nothing to choose, or a declined "may", leaves
     the referent where it is."""
-    from ...models.game import _permanent_quality
-
     match = _RIDER_ATTACH_TO_CHOSEN_RE.fullmatch(rider)
     if match is None:
         return None
+
+    from ...models.game import _permanent_quality
+
     quality = _permanent_quality(match.group("quality"))
     if quality is None:
         return None

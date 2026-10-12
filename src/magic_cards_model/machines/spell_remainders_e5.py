@@ -351,12 +351,13 @@ def _threaten_triple_reader(sentences: list[str], index: int) -> tuple[_Step, in
     of turn. Untap it. It gains haste until end of turn." - Act of Treason's
     three instructions as separate sentences ahead of a sentence this module
     reads, so the splitter never hands them over as one clause."""
-    from .effects import _parse_untap_and_gain_control_clause
-
     if index + 3 > len(sentences) or not sentences[index].strip().lower().startswith(
         "gain control of "
     ):
         return None
+
+    from .effects import _parse_untap_and_gain_control_clause
+
     effect = _parse_untap_and_gain_control_clause(
         " ".join(s.strip() for s in sentences[index : index + 3])
     )

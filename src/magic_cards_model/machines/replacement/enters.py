@@ -3381,10 +3381,11 @@ def self_enters_effects_read(card: Card, effects: Sequence[ReplacementEffect]) -
     be credited without a synthetic cast or a board where the condition
     happens to hold.
     """
-    from ..effects import amount_expression
-
     if not effects:
         return False
+
+    from ..effects import amount_expression
+
     parsed = parse_replacement_effects(card)
     for effect in effects:
         if effect.kind is ReplacementKind.AS_ENTERS:

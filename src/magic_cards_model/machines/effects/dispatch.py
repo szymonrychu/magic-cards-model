@@ -2848,6 +2848,9 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     resolved and did nothing: no exile, no `Notice`, the gap invisible.
     Possibility Storm shares the identical opening and is read the same way.
     """
+    if (seg_hit := ABILITY_TEXT.run("s1", effect_text)) is not None:
+        return seg_hit
+
     from ..meld import parse_meld_activation_clause, parse_meld_resolution_clause
     from ..plans import (
         parse_put_counters_on_two_objects,
@@ -2855,8 +2858,6 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
         parse_sacrifice_self_when_you_do,
     )
 
-    if (seg_hit := ABILITY_TEXT.run("s1", effect_text)) is not None:
-        return seg_hit
     counter_resolution = _parse_counter_resolution_text(effect_text)
     if counter_resolution is not None:
         return counter_resolution

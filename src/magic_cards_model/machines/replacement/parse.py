@@ -3609,10 +3609,11 @@ def _compile_exile_self_and_life_total_becomes(
     effect: "ReplacementEffect",
 ) -> "CardReplacement | None":
     """Exquisite Archangel's own shape - see the section banner above."""
-    from ..effects import life_total_becomes_effect_for
-
     if effect.kind is not ReplacementKind.IF_WOULD_INSTEAD:
         return None
+
+    from ..effects import life_total_becomes_effect_for
+
     if _LOSE_THE_GAME_EVENT_RE.fullmatch((effect.event or "").strip()) is None:
         return None
     match = _EXILE_SELF_AND_LIFE_TOTAL_BECOMES_RE.fullmatch(
@@ -3646,10 +3647,11 @@ def _compile_shuffle_hand_graveyard_permanents_then_draw_and_life_total(
     effect: "ReplacementEffect",
 ) -> "CardReplacement | None":
     """Lich's Mirror's own shape - see the section banner above."""
-    from ..effects import life_total_becomes_effect_for
-
     if effect.kind is not ReplacementKind.IF_WOULD_INSTEAD:
         return None
+
+    from ..effects import life_total_becomes_effect_for
+
     if _LOSE_THE_GAME_EVENT_RE.fullmatch((effect.event or "").strip()) is None:
         return None
     match = _SHUFFLE_HAND_GRAVEYARD_PERMANENTS_THEN_DRAW_AND_LIFE_TOTAL_RE.fullmatch(
@@ -3726,10 +3728,11 @@ def _compile_life_reduced_to_threshold_transform(
     effect: "ReplacementEffect",
 ) -> "CardReplacement | None":
     """Enduring Angel's own shape - see the section banner above."""
-    from ..effects import life_total_becomes_effect_for
-
     if effect.kind is not ReplacementKind.IF_WOULD_INSTEAD:
         return None
+
+    from ..effects import life_total_becomes_effect_for
+
     event_match = _LIFE_REDUCED_TO_THRESHOLD_INSTEAD_EVENT_RE.fullmatch(
         (effect.event or "").strip()
     )

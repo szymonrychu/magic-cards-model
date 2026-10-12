@@ -157,11 +157,12 @@ def claims(text: str) -> bool:
     """Whether some reader recognises `text`'s shape - a text-only check, with
     no game in sight, for a parser deciding what it can gate on. A compound is
     claimed only when every half is."""
-    from ...models.game import builtin_condition_readable
-
     clause = _normalized(text)
     if not clause:
         return False
+
+    from ...models.game import builtin_condition_readable
+
     if _claiming(clause) is not None or builtin_condition_readable(clause):
         return True
     return any(claims(left) and claims(right) for _joiner, left, right in _binary_splits(clause))
