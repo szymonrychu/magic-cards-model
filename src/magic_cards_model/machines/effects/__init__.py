@@ -2798,6 +2798,8 @@ from .amounts import (
 )
 # isort: on
 
+# Registers its rungs into the dispatch ladders; needs every family loaded first.
+from .. import ep02_r1_this_way_counts as ep02_r1_this_way_counts  # noqa: E402
 
 __all__ = [
     "ACTIVATED_EFFECTS",

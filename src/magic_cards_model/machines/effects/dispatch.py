@@ -1150,7 +1150,8 @@ _BECOMES_PREPARED_TARGET_RE = re.compile(
 #: 107.1c's "any number" (zero included) is simply how many player targets
 #: the stack object carries.
 _EXILE_TARGET_PLAYERS_GRAVEYARD_RE = re.compile(
-    r"^exile (?P<phrase>.*target (?:(?:player|opponent)'s graveyard|players' graveyards))\.?$",
+    r"^exile (?P<phrase>(?!all ).*target "
+    r"(?:(?:player|opponent)'s graveyard|players' graveyards))\.?$",
     re.IGNORECASE,
 )
 #: "Exile all graveyards." (Rest in Peace) and "Exile all cards that are
