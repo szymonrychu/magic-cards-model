@@ -903,3 +903,47 @@ def test_chandras_incinerator_ignores_combat_damage_and_damage_to_its_controller
     _settle(scenario)
     assert angel.damage == 0
     assert scenario.player("alice").life == 18
+
+
+# -- "Spells you cast have delve" (Teval, Arbiter of Virtue)
+
+
+def _teval_board(with_teval):
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player(
+            "alice",
+            hand=["Grizzly Bears"],
+            graveyard=["Mountain", "Mountain"],
+            battlefield=["Forest", *(["Teval, Arbiter of Virtue"] if with_teval else [])],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    return scenario
+
+
+def test_teval_lets_the_spells_you_cast_delve():
+    from magic_cards_model.machines.objects_as_costs import delve
+
+    scenario = _teval_board(with_teval=True)
+    casting = scenario.cast("Grizzly Bears")
+    payment = casting.begin_paying()
+    delve(payment, casting.spell, scenario.player("alice").graveyard[0])
+    scenario.pay_with(payment, *scenario.untapped_sources("Forest"))
+    scenario.put_on_stack(casting)
+    _settle(scenario)
+    assert scenario.creature("Grizzly Bears", "alice").zone is Zone.BATTLEFIELD
+    assert len(scenario.player("alice").graveyard) == 1
+
+
+def test_without_teval_a_plain_spell_cannot_delve():
+    from magic_cards_model.machines.objects_as_costs import delve
+
+    scenario = _teval_board(with_teval=False)
+    casting = scenario.cast("Grizzly Bears")
+    payment = casting.begin_paying()
+    with pytest.raises(ValueError, match="delve"):
+        delve(payment, casting.spell, scenario.player("alice").graveyard[0])

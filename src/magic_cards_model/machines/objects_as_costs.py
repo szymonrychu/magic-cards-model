@@ -464,7 +464,26 @@ def has_convoke_now(spell: CardState) -> bool:
     """
     if has_convoke(spell.card):
         return True
-    if spell.zone is not Zone.STACK:
+    return _has_granted_cost_keyword_now(spell, "convoke")
+
+
+def offers_delve(card: CardState) -> bool:
+    """Whether `card` - on the stack or still in hand, being offered its cost
+    methods - has delve, printed or granted (`has_delve_now`)."""
+    return has_delve(card.card) or _has_granted_cost_keyword_now(card, "delve", anywhere=True)
+
+
+def has_delve_now(spell: CardState) -> bool:
+    """CR 702.66a: whether `spell`, on the stack, has delve - printed or granted
+    by a static ability of a permanent its controller controls (Teval, Arbiter
+    of Virtue's "Spells you cast have delve."; CR 113.6, CR 611.3a)."""
+    return has_delve(spell.card) or _has_granted_cost_keyword_now(spell, "delve")
+
+
+def _has_granted_cost_keyword_now(spell: CardState, keyword: str, *, anywhere: bool = False) -> bool:
+    """Whether a static \"`<quality>` spells you cast have `<keyword>`\" line of a
+    permanent `spell`'s controller controls applies to `spell` right now."""
+    if spell.zone is not Zone.STACK and not anywhere:
         return False
     game = getattr(spell, "_board_source", None)
     if game is None:
@@ -486,7 +505,7 @@ def has_convoke_now(spell: CardState) -> bool:
         for line in board.of(permanent).abilities:
             stripped = _TRAILING_REMINDER_RE.sub("", line.strip()).strip()
             match = _SPELLS_YOU_CAST_HAVE_RE.fullmatch(stripped)
-            if match is None or match.group("keyword").strip().lower() != "convoke":
+            if match is None or match.group("keyword").strip().lower() != keyword:
                 continue
             zone_word = match.groupdict().get("zone")
             if zone_word is not None and (
@@ -503,6 +522,16 @@ _ZONE_WORDS_FOR_CONVOKE = {"hand": Zone.HAND, "graveyard": Zone.GRAVEYARD, "exil
 
 
 def granted_convoke_line_is_readable(text: str) -> bool:
+    return granted_cost_keyword_line_is_readable(text, "convoke")
+
+
+def granted_delve_line_is_readable(text: str) -> bool:
+    """Whether `text` is a "`<quality>` spells you cast have delve." line
+    `has_delve_now` reads at a real cast (Teval, Arbiter of Virtue)."""
+    return granted_cost_keyword_line_is_readable(text, "delve")
+
+
+def granted_cost_keyword_line_is_readable(text: str, keyword: str) -> bool:
     """Whether `text` is a "`<quality>` spells you cast[ from your hand/
     graveyard] have convoke." line `has_convoke_now` genuinely reads at a
     real cast (Eirdu, Carrier of Dawn's "Creature spells you cast have
@@ -527,7 +556,7 @@ def granted_convoke_line_is_readable(text: str) -> bool:
 
     line = _TRAILING_REMINDER_RE.sub("", text.strip()).strip()
     match = _SPELLS_YOU_CAST_HAVE_RE.fullmatch(line)
-    if match is None or match.group("keyword").strip().lower() != "convoke":
+    if match is None or match.group("keyword").strip().lower() != keyword:
         return False
     return _quality_is_readable(_normalized_quality(match.group("what")))
 
@@ -646,7 +675,7 @@ def delve(payment: CostPayment, spell: CardState, *cards: CardState) -> list[Cos
     unclaimed `ExileAnnotation.linked_permanent_id` already sits harmlessly
     on every other exiled card in this engine.
     """
-    if not has_delve(spell.card):
+    if not has_delve_now(spell):
         raise ValueError(f"{spell.name} does not have delve ({DELVE_RULE})")
     offer = delve_offer()
     substitutions = [_substitute(payment, offer, card, None) for card in cards]

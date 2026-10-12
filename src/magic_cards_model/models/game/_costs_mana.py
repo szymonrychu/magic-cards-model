@@ -1331,7 +1331,7 @@ class CostsManaMixin:
             delve_offer,
             has_convoke,
             has_crew_loyalty_alternative,
-            has_delve,
+            offers_delve,
             has_improvise,
             has_station,
             improvise_offer,
@@ -1347,7 +1347,7 @@ class CostsManaMixin:
                 rule="CR 702.51a",
                 candidates=[c for c in battlefield if offer.why_not(c, player, self) is None],
             )
-        if has_delve(card.card):
+        if offers_delve(card):
             offer = delve_offer()
             out["delve"] = ObjectCostOffer(
                 rule="CR 702.66a",
