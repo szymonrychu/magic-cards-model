@@ -1,11 +1,11 @@
 {
-  "ability": "−3: Exile target artifact or creature.",
+  "ability": "+2: Exile the top card of each player's library.",
   "action": {
     "controller": "alice",
     "modes": [],
     "on_stack": true,
     "source": "Tibalt, Cosmic Impostor@alice#1",
-    "targets": ["Memnite@alice#1"],
+    "targets": [],
     "x": 0
   },
   "board": {
@@ -36,11 +36,14 @@
   "delta": {
     "created": {},
     "decisions": [],
-    "fields_changed": ["exile_residents_seen", "permanents_left_battlefield_this_turn", "turn_counts", "turn_history"],
+    "fields_changed": [],
     "notices": {},
     "objects": {
-      "Memnite@alice#1": {
-        "zone": ["battlefield", "exile"]
+      "Forest@alice#6": {
+        "zone": ["library", "exile"]
+      },
+      "Forest@bob#4": {
+        "zone": ["library", "exile"]
       }
     },
     "players": {},

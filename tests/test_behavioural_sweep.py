@@ -138,6 +138,7 @@ from magic_cards_model.machines.targeting import (
 )
 from magic_cards_model.machines.teamwork import teamwork_ability
 from magic_cards_model.machines.triggers import (
+    _A_CARD_INTO_GRAVEYARD_FROM_LIBRARY_CONDITION,
     AbilityOnStack,
     _required_cast_origin_zone,
     _singular_subtype,
@@ -4547,6 +4548,27 @@ def _to_graveyard(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
     yield discarded
 
 
+def _milled_cards(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
+    """ "Whenever a `<type>` card is put into your/an opponent's graveyard from
+    a library" (Grolnok, Undead Alchemist; CR 603.2c, CR 400.6): the source on
+    the battlefield, the top cards of one player's library milled, one
+    attempt for each library."""
+    if (
+        _A_CARD_INTO_GRAVEYARD_FROM_LIBRARY_CONDITION.match((ability.condition or "").lower())
+        is None
+    ):
+        return
+    for owner in (ALICE, BOB):
+
+        def mill(owner: str = owner) -> tuple[PlayedScenario, Any]:
+            scenario, source_id = _home(case, ability)
+            for card in list(scenario.game.player(owner).library[:4]):
+                scenario.game.put_into_graveyard(card)
+            return scenario, source_id
+
+        yield mill
+
+
 def _special_exile(scenario: PlayedScenario, state: CardState, action: MarkedExile) -> None:
     """Pay a CR 116.2 special action's cost with the stock lands and take it."""
     payment = action.begin_paying()
@@ -4823,6 +4845,7 @@ def _attempts(case: Case) -> Iterator[Attempt]:
             yield from _unlocking(case, ability)
         elif kind == "put_into_graveyard":
             yield from _to_graveyard(case, ability)
+            yield from _milled_cards(case, ability)
         elif kind == "enlists":
             yield from _enlisting(case, ability)
         elif kind == "final_chapter_resolved":

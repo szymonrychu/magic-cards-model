@@ -1,12 +1,12 @@
 {
-  "ability": "+2: Exile the top card of each player's library.",
+  "ability": "{X}: Choose a creature card exiled with Valki with mana value X. Valki becomes a copy of that card.",
   "action": {
     "controller": "alice",
     "modes": [],
     "on_stack": true,
-    "source": "Tibalt, Cosmic Impostor@alice#1",
+    "source": "Valki, God of Lies@alice#1",
     "targets": [],
-    "x": 0
+    "x": 1
   },
   "board": {
     "busy_turn": false,
@@ -38,14 +38,7 @@
     "decisions": [],
     "fields_changed": [],
     "notices": {},
-    "objects": {
-      "Forest@alice#6": {
-        "zone": ["library", "exile"]
-      },
-      "Forest@bob#4": {
-        "zone": ["library", "exile"]
-      }
-    },
+    "objects": {},
     "players": {},
     "stack": []
   },

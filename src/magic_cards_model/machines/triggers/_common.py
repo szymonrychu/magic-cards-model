@@ -170,9 +170,8 @@ _ONE_OR_MORE_CARDS_INTO_YOUR_GRAVEYARD_CONDITION = re.compile(
 #: more" form above, each card is its own occurrence (CR 603.2c), so the ability
 #: triggers once per matching card and each carries the card it is about.
 _A_CARD_INTO_GRAVEYARD_FROM_LIBRARY_CONDITION = re.compile(
-    r"^an? (?:(?P<types>[a-z]+(?: or [a-z]+)*) )?card is put into "
-    r"(?P<whose>your|an opponent's) graveyard from "
-    r"(?P<origin>your library|their library|anywhere)$"
+    r"^an? (?P<types>[a-z]+(?: or [a-z]+)*) card is put into "
+    r"(?P<whose>your|an opponent's) graveyard from (?:your|their) library$"
 )
 
 #: The Plans' "the fourth plan counter is put on this enchantment" (Claim the

@@ -1,11 +1,11 @@
 {
-  "ability": "−8: Exile all graveyards. Add {R}{R}{R}.",
+  "ability": "−3: Exile target artifact or creature.",
   "action": {
     "controller": "alice",
     "modes": [],
     "on_stack": true,
     "source": "Tibalt, Cosmic Impostor@alice#1",
-    "targets": [],
+    "targets": ["Memnite@alice#1"],
     "x": 0
   },
   "board": {
@@ -36,85 +36,14 @@
   "delta": {
     "created": {},
     "decisions": [],
-    "fields_changed": ["exile_residents_seen", "turn_counts"],
+    "fields_changed": ["exile_residents_seen", "permanents_left_battlefield_this_turn", "turn_counts", "turn_history"],
     "notices": {},
     "objects": {
-      "Bonesplitter@alice#2": {
-        "zone": ["graveyard", "exile"]
-      },
-      "Bonesplitter@bob#1": {
-        "zone": ["graveyard", "exile"]
-      },
-      "Forest@alice#5": {
-        "zone": ["graveyard", "exile"]
-      },
-      "Forest@bob#3": {
-        "zone": ["graveyard", "exile"]
-      },
-      "Grizzly Bears@alice#2": {
-        "zone": ["graveyard", "exile"]
-      },
-      "Grizzly Bears@bob#2": {
-        "zone": ["graveyard", "exile"]
-      },
-      "Island@alice#4": {
-        "zone": ["graveyard", "exile"]
-      },
-      "Island@bob#2": {
-        "zone": ["graveyard", "exile"]
-      },
-      "Lightning Bolt@alice#2": {
-        "zone": ["graveyard", "exile"]
-      },
-      "Lightning Bolt@bob#2": {
-        "zone": ["graveyard", "exile"]
-      },
-      "Llanowar Elves@alice#1": {
-        "zone": ["graveyard", "exile"]
-      },
-      "Llanowar Elves@bob#1": {
-        "zone": ["graveyard", "exile"]
-      },
-      "Memnite@alice#2": {
-        "zone": ["graveyard", "exile"]
-      },
-      "Memnite@bob#1": {
-        "zone": ["graveyard", "exile"]
-      },
-      "Opt@alice#2": {
-        "zone": ["graveyard", "exile"]
-      },
-      "Opt@bob#2": {
-        "zone": ["graveyard", "exile"]
-      },
-      "Serra Angel@alice#1": {
-        "zone": ["graveyard", "exile"]
-      },
-      "Serra Angel@bob#1": {
-        "zone": ["graveyard", "exile"]
-      },
-      "Swamp@alice#4": {
-        "zone": ["graveyard", "exile"]
-      },
-      "Swamp@bob#2": {
-        "zone": ["graveyard", "exile"]
-      },
-      "Tibalt, Cosmic Impostor@alice#1": {
-        "zone": ["graveyard", "exile"]
+      "Memnite@alice#1": {
+        "zone": ["battlefield", "exile"]
       }
     },
-    "players": {
-      "alice": {
-        "mana_pool": [
-          {},
-          {
-            "floating": {
-              "R": 3
-            }
-          }
-        ]
-      }
-    },
+    "players": {},
     "stack": []
   },
   "family": "activated",

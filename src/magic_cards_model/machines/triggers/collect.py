@@ -1619,11 +1619,10 @@ def library_graveyard_arrivals(
     game: "Game", condition: str, controller: str
 ) -> "list[tuple[GraveyardArrival, CardState]]":
     """The cards of `game.graveyard_batch` a singular "a `<type>` card is put
-    into `<whose>` graveyard from `<their>` library/anywhere" condition
-    (Grolnok, Undead Alchemist, Quest for Ancient Secrets) is about, each with
-    its arrival: from a library or from anywhere (CR 400.6), a card and not a
-    token (CR 108.2), of the named type if any ("permanent" is CR 110.4a's
-    permanent card), into the controller's own
+    into `<whose>` graveyard from `<their>` library" condition (Grolnok, Undead
+    Alchemist) is about, each with its arrival: put from a library (CR 400.6),
+    a card and not a token (CR 108.2), of the named type ("permanent" is CR
+    110.4a's permanent card), into the controller's own
     graveyard ("your") or an opponent's. [] when `condition` is another shape."""
     from .conditions import _types_match
 
@@ -1631,19 +1630,16 @@ def library_graveyard_arrivals(
     if match is None:
         return []
     types = match.group("types")
-    from_library = match.group("origin") != "anywhere"
     found: list[tuple[GraveyardArrival, CardState]] = []
     for arrival in game.graveyard_batch:
-        if arrival.card_id is None or (from_library and arrival.origin_zone is not Zone.LIBRARY):
+        if arrival.origin_zone is not Zone.LIBRARY or arrival.card_id is None:
             continue
         if (arrival.player == controller) != (match.group("whose") == "your"):
             continue
         card = game.find_by_id(arrival.card_id)
         if card is None or card.token:
             continue
-        if types is None:
-            matches = True
-        elif types == "permanent":
+        if types == "permanent":
             matches = arrival.is_permanent_card
         else:
             matches = _types_match(tuple(card.types), types)
