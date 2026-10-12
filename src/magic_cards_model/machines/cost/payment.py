@@ -3272,7 +3272,7 @@ class CostPayment(EngineModel):
     nothing when that matters (see its own docstring)."""
 
     _nested: list[tuple["CostPayment", UUID, str, int | None, frozenset[str]]] = PrivateAttr(
-        default_factory=list
+        default=[]
     )
     """The mana abilities `activate_mana_ability` activated during this
     payment, oldest first, for CR 733.1's reversal (`_undo_nested_activations`):
@@ -3282,7 +3282,7 @@ class CostPayment(EngineModel):
     survive a dump/decode round trip; a payment is never persisted
     mid-activation."""
 
-    _tapped_sources: dict[UUID, CardState] = PrivateAttr(default_factory=dict)
+    _tapped_sources: dict[UUID, CardState] = PrivateAttr(default={})
     """The live objects behind `tapped_for_mana`'s ids, for the one case that
     still needs them by reference: a `CostPayment` used with no `game` at all
     (a unit test tapping a bare `CardState` directly). `_undo_everything`

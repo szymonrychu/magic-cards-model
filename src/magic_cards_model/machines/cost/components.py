@@ -569,7 +569,7 @@ class CostComponent(EngineModel):
     """The card whose cost this is, by name - the `Reveal.source` a paid
     `ComponentKind.REVEAL` records (CR 701.20a)."""
 
-    _undo: list[tuple[CardState, dict[str, Any]]] = PrivateAttr(default_factory=list)
+    _undo: list[tuple[CardState, dict[str, Any]]] = PrivateAttr(default=[])
     """What `pay` changed, so `unpay` can put it back (CR 733.1). A
     `PrivateAttr`, so - unlike every `Field` above it - it does not survive a
     dump/decode round trip at all: a decoded `CostComponent` with `paid=True`
@@ -577,8 +577,8 @@ class CostComponent(EngineModel):
     silently restoring nothing when that state was needed and is gone; see its
     own docstring."""
 
-    _reveals_recorded: list[Any] = PrivateAttr(default_factory=list)
-    _exerted_recorded: list[Any] = PrivateAttr(default_factory=list)
+    _reveals_recorded: list[Any] = PrivateAttr(default=[])
+    _exerted_recorded: list[Any] = PrivateAttr(default=[])
     """The `Reveal` records a paid `ComponentKind.REVEAL` wrote, so `unpay` can
     take exactly those back (CR 733.1). Private for the same reason `_undo` is."""
 

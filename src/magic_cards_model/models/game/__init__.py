@@ -1091,17 +1091,13 @@ class Game(
     announced as the cost is chosen, and the ability on the stack is built by
     a second call, so this is the value that crosses from one to the other."""
 
-    _announced_targets: dict[str, tuple[list[TargetRef], CostPayment]] = PrivateAttr(
-        default_factory=dict
-    )
-    _announced_modes: dict[str, tuple[list[int], list[list[TargetRef]]]] = PrivateAttr(
-        default_factory=dict
-    )
+    _announced_targets: dict[str, tuple[list[TargetRef], CostPayment]] = PrivateAttr(default={})
+    _announced_modes: dict[str, tuple[list[int], list[list[TargetRef]]]] = PrivateAttr(default={})
     """The modes (and each one's targets) `begin_activating` announced for a
     modal activated ability (CR 700.2a), taken back by `activate_ability`
     together with `_announced_targets`. Not persisted, for the same reason."""
-    _opened_payments: dict[str, CostPayment] = PrivateAttr(default_factory=dict)
-    _activation_source_stamps: dict[str, UUID] = PrivateAttr(default_factory=dict)
+    _opened_payments: dict[str, CostPayment] = PrivateAttr(default={})
+    _activation_source_stamps: dict[str, UUID] = PrivateAttr(default={})
     """The source's `zone_change_stamp` as `begin_activating` opened each
     payment - before a cost that moves the source (Pyxis of Pandemonium's own
     "Sacrifice this artifact") made it a new object (CR 400.7). Read once by
@@ -1129,9 +1125,7 @@ class Game(
     (CR 603.10a's own example); one that left in an earlier batch is just a
     card in a graveyard (CR 113.6). Not persisted: it only compares objects
     within one command."""
-    _left_battlefield_characteristics: dict[UUID, Characteristics] = PrivateAttr(
-        default_factory=dict
-    )
+    _left_battlefield_characteristics: dict[UUID, Characteristics] = PrivateAttr(default={})
     """What each permanent was as it last left the battlefield (CR 603.10a's
     look-back), taken by `_note_left_battlefield` while it was still there,
     so a departure event its move did not stamp with types still carries
@@ -1146,7 +1140,7 @@ class Game(
     `returning_together`, raised together once the last of them has moved
     (CR 603.10a). `None` outside one. Not persisted: the block opens and
     closes within one resolving effect or one cost payment."""
-    _damage_recorders: dict[UUID, list[UUID]] = PrivateAttr(default_factory=dict)
+    _damage_recorders: dict[UUID, list[UUID]] = PrivateAttr(default={})
     """Per damage source currently being watched by `recording_damage_from`,
     the permanents it has actually dealt damage to (CR 120.3), in order. Not
     persisted: the block opens and closes within one resolving effect."""
@@ -1172,7 +1166,7 @@ class Game(
     #: `enter_the_battlefield` and the enters event it raises (`_enters_event`
     #: reads it into `GameEvent.origin_zone`) - never across a call, so not
     #: game state and not persisted.
-    _entry_origins: dict[UUID, Zone] = PrivateAttr(default_factory=dict)
+    _entry_origins: dict[UUID, Zone] = PrivateAttr(default={})
     """Permanents put onto the battlefield inside `entering_together`, whose
     enters events wait for the last of them (CR 603.6a). `None` outside one.
     Not persisted: the block opens and closes within one resolving effect."""
@@ -1720,7 +1714,7 @@ class Game(
     never outlives the object that wrote it. Not persisted: a command that
     pauses is replayed from its start, and the same clauses write it again."""
 
-    _linked_counts_by_player: dict[str, int] = PrivateAttr(default_factory=dict)
+    _linked_counts_by_player: dict[str, int] = PrivateAttr(default={})
     """The same count, one per player, for an "each player ..." instruction
     whose later "that many" is each player's own (Awaken the Erstwhile's
     "Each player discards all the cards in their hand, then creates that many

@@ -2881,6 +2881,7 @@ def self_reference_names(card_name: str, *, legendary: bool = True) -> tuple[str
     return tuple(sorted((name for name in candidates if name), key=len, reverse=True))
 
 
+@functools.lru_cache(maxsize=16384)
 def self_normalized_effect_text(card_name: str, effect_text: str, *, legendary: bool = True) -> str:
     """`effect_text` with every CR 201.5/201.5c self-reference to `card_name`
     rewritten to CR 700.7's own "this permanent" - The Filigree Sylex's "Put

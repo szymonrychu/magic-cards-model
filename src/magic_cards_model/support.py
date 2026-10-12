@@ -22,7 +22,6 @@ moved here verbatim from the sweep; the measurement defects they describe
 are pinned by `tests/test_sweep_pool.py` and `tests/test_card_support.py`.
 """
 
-import json
 import operator
 import re
 import sys
@@ -286,7 +285,7 @@ _PRINTINGS_DIR = Path(__file__).parent / "data" / "printings"
 def _probe_pool() -> dict[str, Card]:
     cards: dict[str, Card] = {}
     for path in sorted(_PRINTINGS_DIR.glob("*.json")):
-        card_data = Card.model_validate(json.loads(path.read_text()))
+        card_data = Card.model_validate_json(path.read_bytes())
         cards[card_data.name] = card_data
         cards.setdefault(card_data.name.split("//")[0].strip(), card_data)
     return cards
@@ -485,8 +484,9 @@ def executed_keywords(printing: Card) -> dict[str, str]:
     """
     found: dict[str, str] = {}
 
+    printed = {k.lower() for k in printing.keywords}
     for keyword in Keyword:
-        if any(k.lower() == keyword.value for k in printing.keywords):
+        if keyword.value in printed:
             found[keyword.value] = "machines/combat.py"
 
     for option in keyword_cast_options(printing):

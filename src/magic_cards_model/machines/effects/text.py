@@ -933,6 +933,17 @@ _IF_SENTENCE_CONSEQUENCE_RE = re.compile(
 
 
 def split_effect_clauses(text: str) -> list[str]:
+    """`_split_effect_clauses`, memoised per text (a pure string split the
+    effect ladder repeats per reader); every caller gets its own list."""
+    return list(_split_effect_clauses_memo(text))
+
+
+@functools.lru_cache(maxsize=16384)
+def _split_effect_clauses_memo(text: str) -> tuple[str, ...]:
+    return tuple(_split_effect_clauses(text))
+
+
+def _split_effect_clauses(text: str) -> list[str]:
     """Break an effect into the clauses CR 608.2c executes in order.
 
     "The controller of the spell or ability follows its instructions in the
@@ -1400,6 +1411,18 @@ _SENTENCE_BOUNDARY_RE = re.compile(r"(?<=[.!?])\s+(?=[A-Z(0-9]|this permanent\b)
 
 
 def _plain_resolution_sentences(text: str) -> list[str]:
+    """`_plain_resolution_sentences_uncached`, memoised per text (a pure
+    split asked about the same body by several readers); every caller gets
+    its own list."""
+    return list(_plain_resolution_sentences_memo(text))
+
+
+@functools.lru_cache(maxsize=16384)
+def _plain_resolution_sentences_memo(text: str) -> tuple[str, ...]:
+    return tuple(_plain_resolution_sentences_uncached(text))
+
+
+def _plain_resolution_sentences_uncached(text: str) -> list[str]:
     """`text` - a single spell's or ability's own already-isolated resolution
     effect body - split into sentences on plain full-stop/line-break
     boundaries, with reminder text (`_REMINDER_LINE_RE`/`_INLINE_REMINDER_RE`)

@@ -386,8 +386,16 @@ def types_of(type_line: str) -> list[Type]:
     `CardFace.type_line` directly - a modal double-faced card's chosen face
     (CR 712.8f) needs the same parse, not just the front one.
     """
+    return list(_types_of_cached(type_line))
+
+
+@cache
+def _types_of_cached(type_line: str) -> tuple[Type, ...]:
+    """`types_of`'s parse, memoised on the string the way
+    `_supertypes_of_cached` is: a card type is a printed constant (CR 205.2a),
+    so one `type_line` always parses to the same answer."""
     words = _words_before_dash(type_line)
-    return [t for t in Type if t.value in words]
+    return tuple(t for t in Type if t.value in words)
 
 
 @cache
