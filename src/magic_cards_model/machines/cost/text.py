@@ -1020,9 +1020,12 @@ _PHRASE_EXILE_AND_PAY_MANA_COST = re.compile(
 #: one phrase rather than being split by `_split_cost_phrase`'s own comma cut;
 #: `_requirement` is what turns the list into a `CardRequirement` disjunction.
 #: "Sacrifice another creature or artifact" (Vanguard of the Rose) reads
-#: "another" as `_PHRASE_EXILE` does below: one, excluding the source.
+#: "another" as `_PHRASE_EXILE` does below: one, excluding the source. A
+#: trailing "named <name>" (CR 201.2) restricts the sacrifice to that name.
 _PHRASE_SACRIFICE = re.compile(
-    rf"^sacrifice (?:(?P<another>another)|{_COST_COUNT}) (?P<quality>[\w ,]+)$", re.IGNORECASE
+    rf"^sacrifice (?:(?P<another>another)|{_COST_COUNT}) (?P<quality>[\w ,]+?)"
+    r"(?: named (?P<named>.+))?$",
+    re.IGNORECASE,
 )
 #: "sacrifice all creatures you control" (Soulblast's additional cost),
 #: "Sacrifice all lands you control" (Tomb of Urami's activation cost) - no
@@ -1629,6 +1632,9 @@ def cost_component_for_phrase(phrase: str, payer: str | None = None) -> CostComp
         # CR 601.2c/113.6's "another": `Game.activation_cost` fills in which
         # permanent is excluded, the same as for "Exile another ...".
         requirement.excludes_source = another
+        # CR 201.2: "Sacrifice a creature named Festering Newt" (Bubbling
+        # Cauldron) - a name comparison, as for the tap cost below.
+        requirement.named = sacrifice.group("named")
         component = sacrifice_cost(payer=payer, required=read[0], description=text)
         component.requirement = requirement
         component.variable_count = read[1]

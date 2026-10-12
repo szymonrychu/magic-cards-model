@@ -1,0 +1,150 @@
+{
+  "object": "card",
+  "id": "6c97f5a9-6e04-45c3-aa8d-dcf0fd81d5b9",
+  "oracle_id": "4e6238d8-bd6a-4952-a7dd-9c41a78a2cba",
+  "multiverse_ids": [
+    423730
+  ],
+  "mtgo_id": 62691,
+  "mtgo_foil_id": 62692,
+  "tcgplayer_id": 126486,
+  "cardmarket_id": 294877,
+  "name": "Gonti's Machinations",
+  "lang": "en",
+  "released_at": "2017-01-20",
+  "uri": "https://api.scryfall.com/cards/6c97f5a9-6e04-45c3-aa8d-dcf0fd81d5b9",
+  "scryfall_uri": "https://scryfall.com/card/aer/63/gontis-machinations?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T09:59:23Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/6/c/6c97f5a9-6e04-45c3-aa8d-dcf0fd81d5b9.jpg?1783936763",
+    "normal": "https://cards.scryfall.io/normal/front/6/c/6c97f5a9-6e04-45c3-aa8d-dcf0fd81d5b9.jpg?1783936763",
+    "large": "https://cards.scryfall.io/large/front/6/c/6c97f5a9-6e04-45c3-aa8d-dcf0fd81d5b9.jpg?1783936763",
+    "png": "https://cards.scryfall.io/png/front/6/c/6c97f5a9-6e04-45c3-aa8d-dcf0fd81d5b9.png?1783936763",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/6/c/6c97f5a9-6e04-45c3-aa8d-dcf0fd81d5b9.jpg?1783936763",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/6/c/6c97f5a9-6e04-45c3-aa8d-dcf0fd81d5b9.jpg?1783936763",
+    "thumb": "https://cards.scryfall.io/thumb/front/6/c/6c97f5a9-6e04-45c3-aa8d-dcf0fd81d5b9.webp?1783936763",
+    "grid": "https://cards.scryfall.io/grid/front/6/c/6c97f5a9-6e04-45c3-aa8d-dcf0fd81d5b9.webp?1783936763",
+    "display": "https://cards.scryfall.io/display/front/6/c/6c97f5a9-6e04-45c3-aa8d-dcf0fd81d5b9.webp?1783936763",
+    "art": "https://cards.scryfall.io/art/front/6/c/6c97f5a9-6e04-45c3-aa8d-dcf0fd81d5b9.webp?1783936763",
+    "crop": "https://cards.scryfall.io/crop/front/6/c/6c97f5a9-6e04-45c3-aa8d-dcf0fd81d5b9.webp?1783936763"
+  },
+  "mana_cost": "{B}",
+  "cmc": 1.0,
+  "type_line": "Enchantment",
+  "oracle_text": "Whenever you lose life for the first time each turn, you get {E}. (You get an energy counter. Damage causes loss of life.)\nPay {E}{E}, Sacrifice this enchantment: Each opponent loses 3 life. You gain life equal to the life lost this way.",
+  "colors": [
+    "B"
+  ],
+  "color_identity": [
+    "B"
+  ],
+  "keywords": [],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "6c97f5a9-6e04-45c3-aa8d-dcf0fd81d5b9",
+      "component": "combo_piece",
+      "name": "Gonti's Machinations",
+      "type_line": "Enchantment",
+      "uri": "https://api.scryfall.com/cards/6c97f5a9-6e04-45c3-aa8d-dcf0fd81d5b9"
+    },
+    {
+      "object": "related_card",
+      "id": "6a2c1fa5-deed-48ba-afe4-6c8ea8d9135e",
+      "component": "combo_piece",
+      "name": "Energy Reserve",
+      "type_line": "Card",
+      "uri": "https://api.scryfall.com/cards/6a2c1fa5-deed-48ba-afe4-6c8ea8d9135e"
+    }
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "a4a0db50-8826-4e73-833c-3fd934375f96",
+  "set": "aer",
+  "set_name": "Aether Revolt",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/a4a0db50-8826-4e73-833c-3fd934375f96",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Aaer&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/aer?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/6c97f5a9-6e04-45c3-aa8d-dcf0fd81d5b9/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A4e6238d8-bd6a-4952-a7dd-9c41a78a2cba&unique=prints",
+  "collector_number": "63",
+  "digital": false,
+  "rarity": "uncommon",
+  "flavor_text": "\"I am confident that all our enterprises can benefit from this little revolution.\"",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Daarken",
+  "artist_ids": [
+    "e607a0d4-fc12-4c01-9e3f-501f5269b9cb"
+  ],
+  "illustration_id": "1c68854d-6a5d-4353-a21f-a35a2ea44669",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 15903,
+  "penny_rank": 8064,
+  "prices": {
+    "usd": "0.29",
+    "usd_foil": "4.88",
+    "usd_etched": null,
+    "eur": "0.17",
+    "eur_foil": "1.85",
+    "tix": "0.03"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=423730&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DGonti%2527s%2BMachinations",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DGonti%2527s%2BMachinations",
+    "edhrec": "https://edhrec.com/route/?cc=Gonti%27s+Machinations"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F126486%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=294877&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/62691?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

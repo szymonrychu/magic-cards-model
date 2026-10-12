@@ -52,6 +52,7 @@ from ..ep01_r3_amounts import (
     event_subject_stat,
     event_terms_enabled,
 )
+from ..ep02_r1_life_amounts import life_this_turn_count
 from ..layers import (
     BASIC_LAND_TYPES,
     Characteristics,
@@ -1256,6 +1257,9 @@ def count_expression(phrase: str) -> Callable[["Game", str], int] | None:
 
         return count_in_library
 
+    if (life_total := life_this_turn_count(stripped)) is not None:
+        return life_total
+
     if _AMOUNT_OF_LIFE_GAINED_THIS_TURN_RE.fullmatch(stripped):
 
         def life_gained_amount(game: "Game", controller: str) -> int:
@@ -2224,7 +2228,7 @@ def _parse_devotion_drain_clauses(
             game.lose_life(opponent, amount)
             total_lost += before - opponent.life
         if total_lost > 0:
-            controller.gain_life(total_lost)
+            game.gain_life(controller, total_lost)  # CR 119.10: replacements apply
 
     return 2, effect
 

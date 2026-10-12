@@ -17,6 +17,7 @@ from ...numbers import (
 )
 from ..decisions import Decision, DecisionKind, source_id_of
 from ..ep01_r3_amounts import event_player_username, event_terms
+from ..ep02_r1_life_amounts import parse_life_loss_text
 from ..targeting import (
     permanent_description,
 )
@@ -77,6 +78,22 @@ def _parse_each_opponent_loses_life_equal_to(text: str) -> AbilityEffect | None:
             game.lose_life(opponent, amount)
 
     return effect
+
+
+@ABILITY_TEXT.rung("s35", after=[_parse_each_opponent_loses_life_equal_to])
+def _parse_life_loss_then_follow_up(text: str) -> AbilityEffect | None:
+    """ "<who> loses <amount> life[. You gain life equal to the life lost this
+    way | . Put N counters on this creature for each 1 life lost this way]" for
+    an ability, and "... loses life equal to the life they lost this turn" -
+    `ep02_r1_life_amounts.parse_life_loss_text` (CR 119.3, 608.2c, 608.2h)."""
+    return parse_life_loss_text(text, for_spell=False)
+
+
+@SPELL_TEXT.rung("s14")
+def _parse_spell_life_loss_then_follow_up(effect_text: str) -> Effect | None:
+    """`_parse_life_loss_then_follow_up` for a spell, where "X" is the X
+    announced at cast (CR 107.3a)."""
+    return parse_life_loss_text(effect_text, for_spell=True)
 
 
 #: "Whenever a creature deals combat damage to one of your opponents, its

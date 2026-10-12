@@ -1,0 +1,156 @@
+{
+  "object": "card",
+  "id": "955aa79b-448e-4752-8e36-0fe80c18280c",
+  "oracle_id": "ca9dde44-fdee-4bc1-a2ea-ef171737b9e4",
+  "multiverse_ids": [
+    489443
+  ],
+  "arena_id": 72522,
+  "tcgplayer_id": 215971,
+  "cardmarket_id": 472589,
+  "name": "Bubbling Cauldron",
+  "lang": "en",
+  "released_at": "2020-07-17",
+  "uri": "https://api.scryfall.com/cards/955aa79b-448e-4752-8e36-0fe80c18280c",
+  "scryfall_uri": "https://scryfall.com/card/jmp/460/bubbling-cauldron?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T08:12:21Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/9/5/955aa79b-448e-4752-8e36-0fe80c18280c.jpg?1783930341",
+    "normal": "https://cards.scryfall.io/normal/front/9/5/955aa79b-448e-4752-8e36-0fe80c18280c.jpg?1783930341",
+    "large": "https://cards.scryfall.io/large/front/9/5/955aa79b-448e-4752-8e36-0fe80c18280c.jpg?1783930341",
+    "png": "https://cards.scryfall.io/png/front/9/5/955aa79b-448e-4752-8e36-0fe80c18280c.png?1783930341",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/9/5/955aa79b-448e-4752-8e36-0fe80c18280c.jpg?1783930341",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/9/5/955aa79b-448e-4752-8e36-0fe80c18280c.jpg?1783930341",
+    "thumb": "https://cards.scryfall.io/thumb/front/9/5/955aa79b-448e-4752-8e36-0fe80c18280c.webp?1783930341",
+    "grid": "https://cards.scryfall.io/grid/front/9/5/955aa79b-448e-4752-8e36-0fe80c18280c.webp?1783930341",
+    "display": "https://cards.scryfall.io/display/front/9/5/955aa79b-448e-4752-8e36-0fe80c18280c.webp?1783930341",
+    "art": "https://cards.scryfall.io/art/front/9/5/955aa79b-448e-4752-8e36-0fe80c18280c.webp?1783930341",
+    "crop": "https://cards.scryfall.io/crop/front/9/5/955aa79b-448e-4752-8e36-0fe80c18280c.webp?1783930341"
+  },
+  "mana_cost": "{2}",
+  "cmc": 2.0,
+  "type_line": "Artifact",
+  "oracle_text": "{1}, {T}, Sacrifice a creature: You gain 4 life.\n{1}, {T}, Sacrifice a creature named Festering Newt: Each opponent loses 4 life. You gain life equal to the life lost this way.",
+  "colors": [],
+  "color_identity": [],
+  "keywords": [],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "c9d7d31e-eaa7-4edf-8e98-5a191ec3b91d",
+      "component": "combo_piece",
+      "name": "Festering Newt",
+      "type_line": "Creature \u2014 Salamander",
+      "uri": "https://api.scryfall.com/cards/c9d7d31e-eaa7-4edf-8e98-5a191ec3b91d"
+    },
+    {
+      "object": "related_card",
+      "id": "6ce1aa49-fe00-4390-8c4b-d1203cc337cd",
+      "component": "combo_piece",
+      "name": "Bogbrew Witch",
+      "type_line": "Creature \u2014 Human Wizard",
+      "uri": "https://api.scryfall.com/cards/6ce1aa49-fe00-4390-8c4b-d1203cc337cd"
+    },
+    {
+      "object": "related_card",
+      "id": "955aa79b-448e-4752-8e36-0fe80c18280c",
+      "component": "combo_piece",
+      "name": "Bubbling Cauldron",
+      "type_line": "Artifact",
+      "uri": "https://api.scryfall.com/cards/955aa79b-448e-4752-8e36-0fe80c18280c"
+    }
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "arena",
+    "paper"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": false,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "0f6ccf25-a627-4263-86df-5757137f1696",
+  "set": "jmp",
+  "set_name": "Jumpstart",
+  "set_type": "draft_innovation",
+  "set_uri": "https://api.scryfall.com/sets/0f6ccf25-a627-4263-86df-5757137f1696",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Ajmp&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/jmp?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/955aa79b-448e-4752-8e36-0fe80c18280c/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Aca9dde44-fdee-4bc1-a2ea-ef171737b9e4&unique=prints",
+  "collector_number": "460",
+  "digital": false,
+  "rarity": "uncommon",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Eric Deschamps",
+  "artist_ids": [
+    "37970e22-9cee-44c1-af44-5ee27cf26b76"
+  ],
+  "illustration_id": "fa736caf-8bc1-408c-b1ab-83bfc8bf9f37",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 17108,
+  "penny_rank": 9708,
+  "preview": {
+    "source": "GameStar",
+    "source_uri": "https://www.gamestar.de/galerien/magic_the_gathering_jumpstart,134800.html",
+    "previewed_at": "2020-06-17"
+  },
+  "prices": {
+    "usd": "0.32",
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": "0.10",
+    "eur_foil": null,
+    "tix": null
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=489443&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DBubbling%2BCauldron",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DBubbling%2BCauldron",
+    "edhrec": "https://edhrec.com/route/?cc=Bubbling+Cauldron"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F215971%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=472589&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards?affiliate_id=scryfall&data%5Bsearch%5D=Bubbling+Cauldron&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

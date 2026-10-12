@@ -5978,6 +5978,10 @@ def _cost_card(component: Any) -> Material | None:
         zone = component.zone
     else:
         zone = Zone.BATTLEFIELD
+    if requirement is not None and requirement.named is not None:
+        # "Sacrifice a creature named Festering Newt" (Bubbling Cauldron),
+        # CR 201.2: only a card of that name pays it.
+        return Material(requirement.named, ALICE, zone)
     if requirement is not None and requirement.token and zone is Zone.BATTLEFIELD:
         # "Sacrifice a token" (Fountainport): any predefined token (CR 111.10).
         return Material("Treasure", ALICE, Zone.BATTLEFIELD)

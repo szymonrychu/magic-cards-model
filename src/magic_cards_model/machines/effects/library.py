@@ -42,6 +42,7 @@ from ..decisions import Decision, DecisionKind, source_id_of
 from ..delayed import (
     ReflexiveWhenYouDoConsequence,
 )
+from ..ep02_r1_life_amounts import parse_mill_x
 from ..replacement import EventKind, ReplaceableEvent, apply_replacements
 from ..triggers import (
     AbilityOnStack,
@@ -582,6 +583,19 @@ def _parse_that_player_mills_that_many_clause(
         _mill(game, game.player(username), count)
 
     return effect
+
+
+@ABILITY_TEXT.rung("s35")
+def _parse_mill_x_where_x_is(text: str) -> AbilityEffect | None:
+    """ "<who> mills X cards, where X is <expr>" (Hope Estheim's end step
+    trigger), CR 701.17a - `ep02_r1_life_amounts.parse_mill_x`."""
+    return parse_mill_x(text)
+
+
+@SPELL_TEXT.rung("s14")
+def _parse_spell_mill_x_where_x_is(effect_text: str) -> Effect | None:
+    """`_parse_mill_x_where_x_is` for a spell."""
+    return parse_mill_x(effect_text)
 
 
 #: Ingest's "that player exiles the top card of their library" (CR 702.115a):
