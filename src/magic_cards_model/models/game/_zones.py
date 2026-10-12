@@ -1005,12 +1005,16 @@ class ZonesMixin:
             # fact below is recorded only past the count-0 refusal above
             # (Proctor of Potential's own "Activate only if you've scried or
             # surveilled this turn").
-            self.emit(GameEvent(event=TriggerEvent.SCRY_OR_SURVEIL, player=player.username))
+            # CR 701.22a: the scry looks at the top N cards (plus any extra the
+            # effects in play add); the event carries that number for "for each
+            # card looked at while scrying this way" (Celeborn the Wise).
+            looks = count + additional_looks(self, player.username, "scry")
+            self.emit(
+                GameEvent(event=TriggerEvent.SCRY_OR_SURVEIL, player=player.username, amount=looks)
+            )
             self.record_turn_fact("scried_or_surveilled", player.username)
 
-            looked_at = self._look_at_top(
-                player, count + additional_looks(self, player.username, "scry")
-            )
+            looked_at = self._look_at_top(player, looks)
             pending_looks = self._look_before_choosing(player, looked_at, source)
             answer = self.ask(
                 Decision(

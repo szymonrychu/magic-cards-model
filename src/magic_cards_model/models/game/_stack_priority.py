@@ -1879,7 +1879,10 @@ class StackPriorityMixin:
             )
             # CR 122.1/CR 603.10a: "the number of <kind> counters on it" is
             # read off this ability's source (last known when it has left).
-            with counters_read_from(ability.source_or_last_known(self)):
+            with counters_read_from(
+                ability.source_or_last_known(self),
+                None if ability.event is None else ability.event.amount,
+            ):
                 return trigger_effect_for(
                     ability.source_name, ability.ability.event, effect_text, legendary=legendary
                 )

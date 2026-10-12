@@ -37,21 +37,29 @@ PLACEHOLDER = 2
 _COUNTS: contextvars.ContextVar[Callable[[str | None], int] | None] = contextvars.ContextVar(
     "ep02_r1_counters_counted", default=None
 )
+#: The number the triggering event carried - how many cards a scry looked at.
+_EVENT_AMOUNT: contextvars.ContextVar[int | None] = contextvars.ContextVar(
+    "ep02_r1_event_amount", default=None
+)
 
 
 @contextlib.contextmanager
-def counters_read_from(source) -> Iterator[None]:
+def counters_read_from(source, event_amount: int | None = None) -> Iterator[None]:
     """Resolve "the number of <kind> counters on it" against `source` (last
     known information when it has left the battlefield, CR 603.10a); a `None`
-    source - gone with no record - counts nothing."""
+    source - gone with no record - counts nothing. `event_amount` is the number
+    the triggering event carried, for "for each card looked at while scrying
+    this way"."""
 
     def count(kind: str | None) -> int:
         return 0 if source is None else counters_on_it_total(source, kind)
 
     token = _COUNTS.set(count)
+    amount_token = _EVENT_AMOUNT.set(event_amount)
     try:
         yield
     finally:
+        _EVENT_AMOUNT.reset(amount_token)
         _COUNTS.reset(token)
 
 
@@ -144,6 +152,26 @@ def _for_each_target(names: tuple[str, ...]) -> re.Pattern[str]:
     )
 
 
+_FOR_EACH_SCRIED = re.compile(
+    r"\b(?P<verb>gets?) (?P<p>[+-]\d+)/(?P<t>[+-]\d+)(?P<mid>(?: until end of turn)?)"
+    r" for each card looked at while scrying this way\b",
+    re.IGNORECASE,
+)
+
+
+def _for_each_scried(text: str) -> str:
+    """ "gets +1/+1 until end of turn for each card looked at while scrying this
+    way" (Celeborn the Wise) read as the pump for the scry's own number of cards
+    (CR 701.22a: it looks at the top N); `PLACEHOLDER` when classifying."""
+    looked = _EVENT_AMOUNT.get()
+    n = PLACEHOLDER if looked is None else looked
+
+    def pump(m: re.Match[str]) -> str:
+        return f"{m.group('verb')} {int(m.group('p')) * n:+d}/{int(m.group('t')) * n:+d}{m.group('mid')}"
+
+    return _FOR_EACH_SCRIED.sub(pump, text)
+
+
 def _placed_first(text: str, names: tuple[str, ...]) -> tuple[str, int] | None:
     """The kind and number of counters a leading "Put <n> <kind> counter(s) on
     <itself>, then ..." instruction adds before the rest of the text is read."""
@@ -160,12 +188,23 @@ def _placed_first(text: str, names: tuple[str, ...]) -> tuple[str, int] | None:
     return match.group("kind").lower(), number if number is not None else int(word)
 
 
+def _put_for_each_controlled(names: tuple[str, ...]) -> re.Pattern[str]:
+    # "put a loyalty counter on this permanent for each creature you control"
+    return re.compile(
+        rf"\bput (?:a|an|one) (?P<ck>\+1/\+1|-1/-1|[a-z]+) counter on {_self(names)}"
+        rf" for each (?P<other>other )?(?P<noun>[a-z]+) you control\b",
+        re.IGNORECASE,
+    )
+
+
 def counters_counted_text(text: str, names: tuple[str, ...] = ()) -> str:
     """`text` with each "number of <kind> counters on <the source>" phrase read
     as the number it is now (CR 122.1, CR 608.2h); unchanged when it has none.
 
     `names` are the strings the card's own text uses to mean itself (CR 201.5)."""
     lowered = text.lower()
+    if "scrying this way" in lowered:
+        text = _for_each_scried(text)
     if "counter" not in lowered or " on " not in lowered:
         return text
 
@@ -221,7 +260,17 @@ def counters_counted_text(text: str, names: tuple[str, ...] = ()) -> str:
         wording = "one target " + noun if n == 1 else f"{n} target {noun}s"
         return f"{m.group('verb')} up to {wording}{m.group('tail')}"
 
-    return _for_each_target(names).sub(targets, text)
+    text = _for_each_target(names).sub(targets, text)
+
+    def put_for_each(m: re.Match[str]) -> str:
+        # CR 122.1: the same count "where X is the number of <things> you control"
+        # the put-X-counters reader already knows, in the plural it wants.
+        return (
+            f"put X {m.group('ck')} counters on this permanent, where X is the number of "
+            f"{m.group('other') or ''}{m.group('noun')}s you control"
+        )
+
+    return _put_for_each_controlled(names).sub(put_for_each, text)
 
 
 def counters_self_reference_normalised(text: str, names: tuple[str, ...]) -> str:

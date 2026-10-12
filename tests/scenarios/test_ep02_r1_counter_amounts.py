@@ -627,3 +627,102 @@ def test_vastwood_hydra_gives_each_chosen_creature_at_least_one():
 
 def test_vastwood_hydra_declined_distributes_nothing():
     assert _hydra_dies(take_the_may=False) == (0, 0)
+
+
+# -- Necroplasm: destroy each creature whose mana value equals its counters
+
+
+def _to_end_step(scenario):
+    while scenario.step is not Step.END_STEP:
+        scenario.advance()
+
+
+def _necroplasm_end_step(counters, alice=(), bob=()):
+    scenario = _board(["Necroplasm", *alice], list(bob))
+    necroplasm = scenario.creature("Necroplasm", "alice")
+    necroplasm.add_counters(Counter.PLUS_ONE, counters)
+    _to_end_step(scenario)
+    _settle(scenario)
+    return scenario
+
+
+def test_necroplasm_destroys_every_creature_with_the_counter_count_as_mana_value():
+    scenario = _necroplasm_end_step(2, ["Grizzly Bears"], ["Grizzly Bears", "Hill Giant"])
+    assert _count(scenario, "Grizzly Bears", "alice") == 0
+    assert _count(scenario, "Grizzly Bears", "bob") == 0
+    assert _count(scenario, "Hill Giant", "bob") == 1
+    assert _count(scenario, "Necroplasm", "alice") == 1
+
+
+def test_necroplasm_destroys_itself_when_its_counters_equal_its_own_mana_value():
+    scenario = _necroplasm_end_step(3, [], ["Hill Giant", "Grizzly Bears"])
+    assert _count(scenario, "Necroplasm", "alice") == 0
+    assert _count(scenario, "Hill Giant", "bob") == 1
+    assert _count(scenario, "Grizzly Bears", "bob") == 1
+
+
+def test_necroplasm_ignores_other_counter_kinds():
+    scenario = _board(["Necroplasm"], ["Grizzly Bears"])
+    scenario.creature("Necroplasm", "alice").add_counters("charge", 2)
+    _to_end_step(scenario)
+    _settle(scenario)
+    assert _count(scenario, "Grizzly Bears", "bob") == 1
+
+
+# -- Huatli, Radiant Champion: a loyalty counter for each creature you control
+
+
+def test_huatli_plus_one_adds_a_loyalty_counter_for_each_creature_you_control():
+    scenario = _board(["Huatli, Radiant Champion", "Grizzly Bears", "Hill Giant"], ["Craw Wurm"])
+    huatli = scenario.find("Huatli, Radiant Champion", Zone.BATTLEFIELD, "alice")
+    before = huatli.counter_count(Counter.LOYALTY)
+    scenario.activate(huatli, index=0)
+    _settle(scenario)
+    # +1 as the cost, then two creatures (the opponent's does not count).
+    assert huatli.counter_count(Counter.LOYALTY) == before + 1 + 2
+
+
+def test_huatli_plus_one_with_no_creatures_only_pays_its_cost():
+    scenario = _board(["Huatli, Radiant Champion"])
+    huatli = scenario.find("Huatli, Radiant Champion", Zone.BATTLEFIELD, "alice")
+    before = huatli.counter_count(Counter.LOYALTY)
+    scenario.activate(huatli, index=0)
+    _settle(scenario)
+    assert huatli.counter_count(Counter.LOYALTY) == before + 1
+
+
+# -- Celeborn the Wise: +1/+1 for each card looked at while scrying
+
+
+def _celeborn_scries(spell, scry_n_looked):
+    scenario = _board(["Celeborn the Wise", "Island"], alice_hand=[spell])
+    celeborn = scenario.creature("Celeborn the Wise", "alice")
+    base = _stats(scenario, celeborn)
+    scenario.scry_keeping_everything_on_top()
+    scenario.cast_and_resolve(spell, auto=True)
+    _settle(scenario)
+    return base, _stats(scenario, celeborn), scry_n_looked
+
+
+def test_celeborn_gets_plus_one_for_one_card_looked_at_while_scrying():
+    base, now, looked = _celeborn_scries("Opt", 1)
+    assert now == (base[0] + looked, base[1] + looked)
+
+
+def test_celeborn_gets_plus_two_for_two_cards_looked_at_while_scrying():
+    base, now, looked = _celeborn_scries("Preordain", 2)
+    assert now == (base[0] + looked, base[1] + looked)
+
+
+def test_celeborn_pump_ends_at_end_of_turn():
+    scenario = _board(["Celeborn the Wise", "Island"], alice_hand=["Opt"])
+    celeborn = scenario.creature("Celeborn the Wise", "alice")
+    base = _stats(scenario, celeborn)
+    scenario.scry_keeping_everything_on_top()
+    scenario.cast_and_resolve("Opt", auto=True)
+    _settle(scenario)
+    assert _stats(scenario, celeborn) != base
+    _to_end_step(scenario)
+    scenario.advance()  # cleanup
+    scenario.turn_based_actions()  # CR 514.2 ends "until end of turn"
+    assert _stats(scenario, celeborn) == base
