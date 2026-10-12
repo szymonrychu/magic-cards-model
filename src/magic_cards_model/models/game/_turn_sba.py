@@ -2000,12 +2000,15 @@ class TurnSbaMixin:
         everyone_exempt, exempt_subtypes = game_rule_statics.legend_rule_exemptions(self, board)
         if everyone_exempt:
             return []
+        pair_exempt_names = game_rule_statics.legend_rule_pair_names(self, board)
 
         losers: list[CardState] = []
         for username in self._turn_order_from_active():
             if username in exempt_players:
                 continue
             for name, copies in groups.get(username, {}).items():
+                if name in pair_exempt_names:
+                    continue
                 subtypes = exempt_subtypes.get(username)
                 if subtypes:
                     copies = [s for s in copies if not subtypes & set(board.of(s).subtypes)]

@@ -321,6 +321,9 @@ def executes(keyword: str) -> bool:
         "graft",
         "backup",
         "champion",
+        # CR 701.45a: assemble is the keyword action `Game.assembling_count` asks
+        # the replacement layer about (Steamflogger Boss doubles it).
+        "assemble",
         # CR 701.29a / CR 701.30b: the keyword actions `legacy_keywords.fateseal`
         # and `legacy_keywords.clash`, read by the clause rungs in
         # `machines/effects` (`_SCRY_RE`'s fateseal twin, `_parse_clash_clause`).

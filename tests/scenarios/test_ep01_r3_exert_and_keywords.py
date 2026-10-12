@@ -939,3 +939,242 @@ def test_oaken_brawler_second_printing_of_the_clash_template():
 def test_clash_cards_read_handled():
     for name in ("Nath's Elite", "Oaken Brawler"):
         _support_is_handled(name)
+
+
+# -- Brothers Yamazaki: the legend rule off for exactly two (CR 704.5j) ------
+
+
+def _yamazaki_board(count):
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player(
+            "alice",
+            battlefield=["Brothers Yamazaki"] * count,
+            library=["Plains"] * 4,
+        )
+        .player("bob", library=["Plains"] * 4)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    return scenario
+
+
+def _yamazakis(scenario):
+    return [
+        c for c in scenario.game.permanents_controlled_by("alice") if c.name == "Brothers Yamazaki"
+    ]
+
+
+def test_two_brothers_yamazaki_both_survive_the_legend_rule():
+    scenario = _yamazaki_board(2)
+    scenario.state_based_actions()
+    assert len(_yamazakis(scenario)) == 2
+
+
+def test_the_other_brother_gets_plus_two_plus_two_and_haste():
+    scenario = _yamazaki_board(2)
+    scenario.state_based_actions()
+    first, second = _yamazakis(scenario)
+    # Each is "another creature named Brothers Yamazaki" to the other.
+    assert scenario.game.characteristics_of(first).power_toughness == (4, 3)
+    assert scenario.game.characteristics_of(second).power_toughness == (4, 3)
+    assert has_keyword(first, "haste", scenario.game)
+
+
+def test_three_brothers_yamazaki_fall_back_to_the_legend_rule():
+    """CR 704.5j: 'exactly two' - with three, the player keeps one."""
+    scenario = _yamazaki_board(3)
+    scenario.state_based_actions()
+    assert len(_yamazakis(scenario)) == 1
+
+
+def test_one_brother_is_just_a_legend():
+    scenario = _yamazaki_board(1)
+    scenario.state_based_actions()
+    assert len(_yamazakis(scenario)) == 1
+    assert scenario.game.characteristics_of(_yamazakis(scenario)[0]).power_toughness == (2, 1)
+
+
+def test_other_legends_still_obey_the_legend_rule_beside_two_brothers():
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player(
+            "alice",
+            battlefield=["Brothers Yamazaki", "Brothers Yamazaki", "Kentaro, the Smiling Cat"] * 1
+            + ["Kentaro, the Smiling Cat"],
+            library=["Plains"] * 4,
+        )
+        .player("bob", library=["Plains"] * 4)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scenario.state_based_actions()
+    names = sorted(c.name for c in scenario.game.permanents_controlled_by("alice"))
+    assert names == ["Brothers Yamazaki", "Brothers Yamazaki", "Kentaro, the Smiling Cat"]
+
+
+def test_brothers_yamazaki_reads_handled():
+    _support_is_handled("Brothers Yamazaki")
+
+
+# -- assemble (CR 701.45) ----------------------------------------------------
+
+
+def _boss_board(alice, bob=()):
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("alice", battlefield=list(alice), library=["Plains"] * 4)
+        .player("bob", battlefield=list(bob), library=["Plains"] * 4)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    return scenario
+
+
+def test_a_rigger_assembles_two_contraptions_with_steamflogger_boss():
+    """CR 701.45a + CR 614.1a: the Boss is a Rigger you control, so it assembles two."""
+    scenario = _boss_board(["Steamflogger Boss"])
+    boss = scenario.creature("Steamflogger Boss", "alice")
+    assert scenario.game.assembling_count("alice", boss) == 2
+
+
+def test_a_non_rigger_assembles_one_contraption():
+    scenario = _boss_board(["Steamflogger Boss", "Grizzly Bears"])
+    bears = scenario.creature("Grizzly Bears", "alice")
+    assert scenario.game.assembling_count("alice", bears) == 1
+
+
+def test_an_opponents_boss_does_not_double_my_rigger():
+    scenario = _boss_board(["Steamflogger Boss"], ["Steamflogger Boss"])
+    mine = scenario.creature("Steamflogger Boss", "alice")
+    theirs = scenario.creature("Steamflogger Boss", "bob")
+    assert scenario.game.assembling_count("alice", mine) == 2
+    assert scenario.game.assembling_count("bob", theirs) == 2
+    scenario.game.destroy(theirs)
+    assert scenario.game.assembling_count("alice", mine) == 2
+
+
+def test_other_riggers_get_plus_one_plus_zero_and_haste():
+    scenario = _boss_board(["Steamflogger Boss", "Steamflogger Boss"])
+    first, second = scenario.creatures("Steamflogger Boss", "Steamflogger Boss", username="alice")
+    assert scenario.game.characteristics_of(first).power_toughness == (4, 3)
+    assert has_keyword(second, "haste", scenario.game)
+
+
+def test_steamflogger_boss_reads_handled():
+    _support_is_handled("Steamflogger Boss")
+
+
+# -- the other statics on the listed cards -----------------------------------
+
+
+def test_samurai_of_the_pale_curtain_exiles_permanents_headed_for_a_graveyard():
+    scenario = _boss_board(["Samurai of the Pale Curtain", "Grizzly Bears"])
+    bears = scenario.creature("Grizzly Bears", "alice")
+    scenario.game.destroy(bears)
+    assert bears.zone is Zone.EXILE
+
+
+def test_kentaro_lets_you_pay_x_for_samurai_spells_with_x_their_mana_value():
+    """Kentaro: pay {X} rather than the mana cost of a Samurai spell, X its mana value."""
+    scenario = _main_board(
+        ["Kentaro, the Smiling Cat", "Plains", "Plains", "Plains"],
+        hand=["Samurai of the Pale Curtain"],
+    )
+    scenario.cast_and_resolve(
+        "Samurai of the Pale Curtain", *scenario.untapped_sources("Plains", "Plains")
+    )
+    assert scenario.creature("Samurai of the Pale Curtain", "alice").zone is Zone.BATTLEFIELD
+
+
+def test_knight_of_sorrows_can_block_an_additional_creature():
+    scenario = _combat_board(["Grizzly Bears", "Hill Giant"], ["Knight of Sorrows"])
+    bears = scenario.creature("Grizzly Bears", "alice")
+    giant = scenario.creature("Hill Giant", "alice")
+    bears.summoning_sick = giant.summoning_sick = False
+    knight = scenario.creature("Knight of Sorrows", "bob")
+    scenario.attack_with(bears, giant)
+    scenario.advance()
+    scenario.block(bears, knight)
+    scenario.block(giant, knight)
+    assert scenario.game.combat.attack_by(bears.id).blockers
+    assert scenario.game.combat.attack_by(giant.id).blockers
+
+
+def test_thoughtweft_trio_can_block_any_number_of_creatures():
+    scenario = _combat_board(
+        ["Grizzly Bears", "Hill Giant", "Llanowar Elves"], ["Thoughtweft Trio"]
+    )
+    attackers = [
+        scenario.creature(n, "alice") for n in ("Grizzly Bears", "Hill Giant", "Llanowar Elves")
+    ]
+    for attacker in attackers:
+        attacker.summoning_sick = False
+    trio = scenario.creature("Thoughtweft Trio", "bob")
+    scenario.attack_with(*attackers)
+    scenario.advance()
+    for attacker in attackers:
+        scenario.block(attacker, trio)
+    assert all(scenario.game.combat.attack_by(a.id).blockers for a in attackers)
+
+
+def test_a_creature_without_the_ability_blocks_only_one():
+    scenario = _combat_board(["Grizzly Bears", "Hill Giant"], ["Grizzly Bears"])
+    bears, giant = (scenario.creature(n, "alice") for n in ("Grizzly Bears", "Hill Giant"))
+    bears.summoning_sick = giant.summoning_sick = False
+    blocker = scenario.creature("Grizzly Bears", "bob")
+    scenario.attack_with(bears, giant)
+    scenario.advance()
+    scenario.block(bears, blocker)
+    with pytest.raises(ValueError):
+        scenario.block(giant, blocker)
+
+
+def test_nath_s_elite_forces_every_able_creature_to_block_it():
+    scenario = _combat_board(["Nath's Elite"], ["Grizzly Bears", "Hill Giant"])
+    elite = scenario.creature("Nath's Elite", "alice")
+    elite.summoning_sick = False
+    scenario.attack_with(elite)
+    scenario.advance()
+    with pytest.raises(ValueError):
+        scenario.no_blocks()
+    bears = scenario.creature("Grizzly Bears", "bob")
+    giant = scenario.creature("Hill Giant", "bob")
+    scenario.block(elite, bears, giant)
+    assert len(scenario.game.combat.attack_by(elite.id).blockers) == 2
+
+
+def test_wojek_bodyguard_cannot_block_alone_either():
+    scenario = _combat_board(["Grizzly Bears"], ["Wojek Bodyguard"])
+    bears = scenario.creature("Grizzly Bears", "alice")
+    bears.summoning_sick = False
+    bodyguard = scenario.creature("Wojek Bodyguard", "bob")
+    scenario.attack_with(bears)
+    scenario.advance()
+    with pytest.raises(ValueError):
+        scenario.block(bears, bodyguard)
+
+
+def test_listed_cards_all_read_handled():
+    for name in (
+        "Battlefield Scavenger",
+        "Resolute Survivors",
+        "Trueheart Twins",
+        "Vizier of the True",
+        "Brothers Yamazaki",
+        "Kentaro, the Smiling Cat",
+        "Samurai of the Pale Curtain",
+        "Knight of Sorrows",
+        "Wojek Bodyguard",
+        "Vigean Hydropon",
+        "Streetwise Negotiator",
+        "Security Bypass",
+        "Mesmeric Sliver",
+        "Thoughtweft Trio",
+        "Nath's Elite",
+        "Steamflogger Boss",
+    ):
+        _support_is_handled(name)
