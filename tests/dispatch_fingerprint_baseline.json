@@ -5405,7 +5405,7 @@
         "If this spell was cast from a graveyard, amass Goblins 3 instead": "<none>",
         "If this spell was cast from a graveyard, copy that spell twice instead": "<none>",
         "If this spell was cast from a graveyard, draw two cards instead": "<none>",
-        "If this spell was cast from a graveyard, exile it": "_parse_condition_clause",
+        "If this spell was cast from a graveyard, exile it": "<none>",
         "If this spell was cast from a graveyard, investigate twice instead": "<none>",
         "If this spell was cast from a graveyard, put a +1/+1 counter on each of them for every three cards in your graveyard": "<none>",
         "If this spell was cast from anywhere other than your hand, put a +1/+1 counter on that creature": "<none>",
