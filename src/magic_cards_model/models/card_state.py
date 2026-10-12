@@ -1179,6 +1179,17 @@ class CardState(EngineModel):
     needs recomputing), and read by `CardState.mana_value` in place of
     `self.card.cmc` while `meld_result` is set."""
 
+    merged_order: list[UUID] = Field(default_factory=list)
+    """The `id`s of a merged permanent's components, topmost first, this
+    object's own among them (CR 730.2: "place that object on top of or under
+    that permanent"), while this `CardState` is the battlefield object of a
+    merged permanent; the other components live in `Game.merged_components`,
+    keyed by this object's `id` (the `melded_pairs` shape). Its
+    characteristics are CR 730.2a's copiable effect, a layer 1 copy effect
+    `Game.merge` registers: the topmost component's characteristics with
+    every component's abilities (CR 702.140e). Empty when nothing has merged
+    with it."""
+
     exerted: bool = False
     """True while this permanent will not untap during its controller's next
     untap step (CR 701.43a).

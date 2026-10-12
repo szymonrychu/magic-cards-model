@@ -361,9 +361,127 @@ def read_turn_up_or_exile_and_cast(text: str) -> Any:
     return effect
 
 
+# --------------------------------------------------------------------------
+# Mutate (CR 702.140) and merged permanents (rule 730)
+# --------------------------------------------------------------------------
+
+
 def mutate_cast_zones(card: Card) -> frozenset[str]:
-    """Placeholder replaced by the mutate section below."""
-    return frozenset()
+    """The zones `card` may be cast from for its mutate cost, understood.
+
+    The hand from CR 702.140a's own alternative cost, plus every zone a
+    printed "You may cast this card from your `<zone>` using its mutate
+    ability." opens (CR 604.6, `permissions._printed_zone_permissions`) -
+    read off the production cast options, not re-derived here."""
+    from .casting.options import keyword_cast_options
+
+    return frozenset(
+        option.zone.value
+        for option in keyword_cast_options(card)
+        if option.keyword.lower() == "mutate" and option.understood
+    )
+
+
+#: The description every merged permanent's copy effect carries, so
+#: `Game.merge` can replace it and CR 730.3's departure can end it.
+MERGED_PERMANENT_EFFECT = "merged permanent (CR 730.2a)"
+
+
+def merged_permanent_effect(game: Game, permanent: CardState, components: list[CardState]) -> Any:
+    """CR 730.2a's copiable effect for a merged permanent, `components`
+    topmost first.
+
+    "A merged permanent has only the characteristics of its topmost
+    component ... This is a copiable effect whose timestamp is the time the
+    objects merged" - and CR 702.140e: "A mutated permanent has all
+    abilities of each card and token that represents it. Its other
+    characteristics are derived from the topmost card or token." So the
+    topmost component's copiable values (CR 707.2) with every component's
+    ability lines, topmost first, as one layer 1 copy effect built by the
+    same builder every "becomes a copy" uses
+    (`layers.parse._become_a_copy_builder`), fixed to this incarnation of
+    the permanent (CR 400.7)."""
+    from .layers.apply import copiable_characteristics
+    from .layers.model import LayerContext, only_this_incarnation
+    from .layers.parse import _become_a_copy_builder
+
+    running = [
+        effect
+        for effect in game.continuous_effects.active(game)
+        if effect.description != MERGED_PERMANENT_EFFECT or effect.source_id != permanent.id
+    ]
+    values = [
+        copiable_characteristics(component, running if component is permanent else ())
+        for component in components
+    ]
+    abilities: list[str] = []
+    for value in values:
+        abilities.extend(line for line in value.abilities if line not in abilities)
+    merged = values[0].model_copy(update={"abilities": tuple(abilities)})
+    built = _become_a_copy_builder(until_eot=False, copiable_values=merged)(
+        permanent, game.continuous_effects.tick(), [permanent], LayerContext()
+    )
+    return [
+        effect.model_copy(
+            update={
+                "description": MERGED_PERMANENT_EFFECT,
+                "selector": only_this_incarnation(permanent, permanent.zone_change_stamp),
+            }
+        )
+        for effect in built
+    ]
+
+
+def _mutate_target_is_legal(game: Game, spell: CardState, target: Any) -> bool:
+    """CR 702.140a's target, rechecked as the spell begins resolving (CR
+    702.140b): still on the battlefield as the same object, a creature, not a
+    Human, with the same owner as the spell."""
+    if not isinstance(target, CardState) or target.zone is not Zone.BATTLEFIELD:
+        return False
+    view = game.characteristics_of(target)
+    if not view.is_creature or "Human" in view.subtypes:
+        return False
+    return target.owner == spell.owner
+
+
+def resolve_mutating_spell(game: Game, spell: CardState) -> bool:
+    """Resolve a mutating creature spell (CR 702.140b-d), or say it is not one.
+
+    Returns True when the spell merged with its target and is done. Returns
+    False for a spell not cast for its mutate cost, and for one whose target
+    is illegal: CR 702.140b, "it ceases to be a mutating creature spell and
+    continues resolving as a creature spell" - so the mutate target is
+    dropped from it (no CR 608.2b fizzle) and the caller resolves it as the
+    ordinary creature spell it now is.
+
+    A legal target: CR 702.140c, the spell "merges with the target creature";
+    "the spell's controller chooses whether the spell is put on top of the
+    creature or on the bottom" (`DecisionKind.PUT_ON_TOP_OR_BOTTOM`, True for
+    the top). `Game.mutate` merges and raises CR 702.140d's "whenever a
+    creature mutates".
+    """
+    from .decisions import Decision, DecisionKind
+
+    if (game.cast_record(spell).keyword or "").lower() != "mutate" or not spell.targets:
+        return False
+    slot = spell.targets[-1]
+    target = game.legal_target(spell, slot)
+    if not _mutate_target_is_legal(game, spell, target):
+        spell.targets = spell.targets[:-1]
+        return False
+    assert isinstance(target, CardState)
+    controller = spell.controller or game.controller_of(target).username
+    on_top = game.ask(
+        Decision(
+            kind=DecisionKind.PUT_ON_TOP_OR_BOTTOM,
+            player=controller,
+            prompt=f"put {spell.name} on top of {target.name} (yes) or under it (no)",
+            source=spell.name,
+            source_id=str(spell.id),
+        )
+    )
+    game.mutate(target, spell, on_top=bool(on_top))
+    return True
 
 
 # --------------------------------------------------------------------------

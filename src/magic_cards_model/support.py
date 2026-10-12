@@ -489,6 +489,10 @@ def executed_keywords(printing: Card) -> dict[str, str]:
     for option in keyword_cast_options(printing):
         where = "machines/casting.py" if option.understood else "machines/casting.py (unread cost)"
         found[option.keyword.lower()] = where
+    if found.get("mutate") == "machines/casting.py":
+        # CR 702.140a's cost is a cast option; CR 702.140b-d's merge as the
+        # spell resolves is `face_down_keywords.resolve_mutating_spell`.
+        found["mutate"] = "machines/face_down_keywords.py"
 
     if parse_mana_abilities(printing):
         for ability in keyword_abilities(printing):

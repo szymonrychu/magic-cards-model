@@ -1689,6 +1689,11 @@ class TriggerEvent(StrEnum):
     #: raises a second one of these. `GameEvent.amount` carries the N (or X)
     #: it became monstrous with (CR 701.37c).
     BECOMES_MONSTROUS = "becomes_monstrous"
+    #: CR 702.140d: "An ability that triggers whenever a creature mutates
+    #: triggers when a spell merges with a creature as a result of a resolving
+    #: mutating creature spell." Raised by `Game.merge` with the merged
+    #: permanent as the subject (Gemrazer's "Whenever this creature mutates").
+    MUTATES = "mutates"
     #: CR 701.27e: "Some triggered abilities trigger when an object
     #: 'transforms into' an object with a specified characteristic. Such an
     #: ability triggers if the object either transforms or converts ... and
@@ -4574,6 +4579,10 @@ def _trigger_event(condition: str) -> TriggerEvent | None:
     # shape and nothing else - "monstrous" never collides with either word.
     if "becomes monstrous" in lowered:
         return TriggerEvent.BECOMES_MONSTROUS
+    # CR 702.140d: "Whenever this creature mutates" (Gemrazer and the other
+    # mutate creatures' own payoffs).
+    if re.search(r"\bmutates\b", lowered):
+        return TriggerEvent.MUTATES
     # Aerie Worshippers prints "Whenever this creature becomes untapped".
     if "becomes untapped" in lowered:
         return TriggerEvent.BECOMES_UNTAPPED

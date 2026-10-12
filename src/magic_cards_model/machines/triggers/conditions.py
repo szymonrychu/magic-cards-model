@@ -2801,6 +2801,13 @@ def _condition_matches(
             return event.player is not None and event.player != controller
         return event.player == controller
 
+    if ability.event is TriggerEvent.MUTATES:
+        # CR 702.140d. "Whenever this creature mutates" is the form the
+        # mutate creatures print: the merged permanent is the subject
+        # (`Game.merge`), and the merged permanent has every component's
+        # abilities (CR 702.140e), so this fires off whichever card printed it.
+        return mine and event.subject_id == source.id
+
     if ability.event is TriggerEvent.BECOMES_MONSTROUS:
         # CR 701.37a. Every printing in the pool - Polukranos, World Eater;
         # Arbor Colossus - prints only the self-referential "When [this
