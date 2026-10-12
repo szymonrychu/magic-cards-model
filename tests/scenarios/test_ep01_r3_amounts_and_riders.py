@@ -1005,3 +1005,48 @@ def test_terror_of_the_peaks_does_not_tax_its_own_controllers_spells():
     aimed = [TargetRef.coerce(terror)]
     assert scenario.game.static_life_costs_for(bolt, "bob", aimed) == []
     assert [life for life, _source in scenario.game.static_life_costs_for(taxed, "alice", aimed)] == [3]
+
+
+# -- "As this enchantment enters, note your life total. At the beginning of your
+# -- upkeep, draw a card if your life total is greater than or equal to the last
+# -- noted life total for this enchantment. Then note your life total."
+# -- (Sigarda's Splendor)
+
+
+def _splendor_upkeep(life_after_entering):
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("alice", hand=["Sigarda's Splendor"], library=["Forest"] * 6)
+        .player("bob", library=["Forest"] * 6)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    splendor = scenario.put_onto_battlefield("Sigarda's Splendor")
+    scenario.player("alice").life = life_after_entering
+    return scenario, splendor
+
+
+def _advance_to_alices_upkeep(scenario):
+    scenario.advance()
+    while not (scenario.step is Step.UPKEEP and scenario.game.active_player.username == "alice"):
+        scenario.advance()
+
+
+def test_sigardas_splendor_draws_when_life_is_not_below_the_noted_total_and_renotes():
+    scenario, splendor = _splendor_upkeep(life_after_entering=23)
+    assert splendor.choice.value == "20"
+    hand_before = len(scenario.player("alice").hand)
+    _advance_to_alices_upkeep(scenario)
+    _settle(scenario)
+    assert len(scenario.player("alice").hand) == hand_before + 1
+    assert splendor.choice.value == "23"
+
+
+def test_sigardas_splendor_does_not_draw_when_life_fell_below_the_noted_total():
+    scenario, splendor = _splendor_upkeep(life_after_entering=17)
+    hand_before = len(scenario.player("alice").hand)
+    _advance_to_alices_upkeep(scenario)
+    _settle(scenario)
+    assert len(scenario.player("alice").hand) == hand_before
+    assert splendor.choice.value == "17"

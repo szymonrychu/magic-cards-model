@@ -9,6 +9,8 @@ from magic_cards_model.phrases import with_indefinite_article
 from ...models.card import Type
 from ...models.card_state import (
     CardState,
+    Choice,
+    ChoiceKind,
 )
 from ...models.player import Player
 from ...models.token import (
@@ -3037,5 +3039,45 @@ def _parse_event_referent_controller_draws_clause(
         username = event_player_username(game, stack_object, "that creature's controller")
         if username is not None:
             game.draw_cards(username, count)
+
+    return effect
+
+
+#: "Draw a card if your life total is greater than or equal to the last noted
+#: life total for this enchantment. Then note your life total." (Sigarda's
+#: Splendor) - the note is the number its "As this enchantment enters, note your
+#: life total." replacement recorded as the permanent's own `choice`
+#: (`machines/replacement/enters_choices._note_life_total`).
+_DRAW_IF_LIFE_AT_LEAST_NOTED_RE = re.compile(
+    r"^draw a card if your life total is greater than or equal to the last noted life total "
+    r"for this (?:enchantment|permanent|artifact|creature)\.\s*then note your life total\.?$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s28")
+def _parse_draw_if_life_at_least_noted_then_note_clause(text: str) -> AbilityEffect | None:
+    """`_DRAW_IF_LIFE_AT_LEAST_NOTED_RE`'s shape. A permanent with no noted
+    total has nothing to compare against, so it draws nothing; the new total is
+    noted either way."""
+    if "last noted life total" not in text:
+        return None
+    if _DRAW_IF_LIFE_AT_LEAST_NOTED_RE.fullmatch(" ".join(text.split())) is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        source = ability.source_or_last_known(game)
+        if source is None:
+            return
+        life = game.player(ability.controller).life
+        noted = source.choice
+        if (
+            noted is not None
+            and noted.kind is ChoiceKind.NUMBER
+            and noted.value.lstrip("-").isdigit()
+            and life >= int(noted.value)
+        ):
+            game.draw_cards(ability.controller, 1)
+        source.choice = Choice(kind=ChoiceKind.NUMBER, value=str(life))
 
     return effect
