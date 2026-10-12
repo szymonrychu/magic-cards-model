@@ -865,3 +865,41 @@ def test_bladecoil_serpent_draws_discards_and_pumps_per_mana_pair():
     assert len(scenario.player("alice").hand) == 1
     assert len(scenario.player("bob").hand) == 1
     assert scenario.game.power_of(serpent) == 6
+
+
+# -- "Whenever a source you control deals noncombat damage to an opponent, this
+# -- creature deals that much damage to target creature or planeswalker that
+# -- player controls" (Chandra's Incinerator)
+
+
+def _incinerator_board():
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("alice", battlefield=["Chandra's Incinerator", "Grizzly Bears"])
+        .player("bob", battlefield=["Serra Angel", "Grizzly Bears"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    return scenario
+
+
+def test_chandras_incinerator_repeats_noncombat_damage_to_an_opponents_creature():
+    scenario = _incinerator_board()
+    angel = scenario.creature("Serra Angel", "bob")
+    bears = scenario.creature("Grizzly Bears", "alice")
+    scenario.will_choose_targets(angel, source="Chandra's Incinerator")
+    scenario.game.deal_damage(scenario.player("bob"), 3, source=bears)
+    _settle(scenario)
+    assert angel.damage == 3
+    assert scenario.player("bob").life == 17
+
+
+def test_chandras_incinerator_ignores_combat_damage_and_damage_to_its_controller():
+    scenario = _incinerator_board()
+    angel = scenario.creature("Serra Angel", "bob")
+    bob_bears = scenario.creature("Grizzly Bears", "bob")
+    scenario.game.deal_damage(scenario.player("alice"), 2, source=bob_bears)
+    _settle(scenario)
+    assert angel.damage == 0
+    assert scenario.player("alice").life == 18

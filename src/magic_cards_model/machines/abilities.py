@@ -4565,9 +4565,10 @@ def _trigger_event(condition: str) -> TriggerEvent | None:
     # one batched trigger (`machines/triggers`' `_ONE_OR_MORE_DEAL_COMBAT_
     # DAMAGE_RE`), so the plural verb is read here only without "one or more".
     if re.search(
-        r"\bdeals (?:combat )?damage\b|\b(?:is|are) dealt (?:combat |noncombat )?damage\b", lowered
+        r"\bdeals (?:(?:non)?combat )?damage\b|\b(?:is|are) dealt (?:combat |noncombat )?damage\b",
+        lowered,
     ) or (
-        re.search(r"\bdeal (?:combat )?damage\b", lowered)
+        re.search(r"\bdeal (?:(?:non)?combat )?damage\b", lowered)
         and not re.search(r"\bone or more\b", lowered)
     ):
         return TriggerEvent.DEALS_DAMAGE
