@@ -2340,7 +2340,7 @@ _SEARCH_EXACT_MANA_VALUE_RE = re.compile(
     r"^search your library for an? (?P<quality>.+?) card with mana value equal to (?P<n>\d+)"
     r"(?P<reveal>,? reveal it,?)?(?:,| and)? put it (?P<dest>into your hand|onto the battlefield)"
     r"(?P<treasure>\.\s*if that card is legendary, create a treasure token)?"
-    r"(?:,? then shuffle|\.\s*then shuffle)?\.?$",
+    r"(?:,? then shuffle|\.\s*then shuffle)\.?$",
     re.IGNORECASE | re.DOTALL,
 )
 
