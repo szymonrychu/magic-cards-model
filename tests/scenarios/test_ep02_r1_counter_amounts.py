@@ -555,7 +555,9 @@ def _cast_with_x(scenario, name, x, *, lands):
 
 
 def _lands(scenario):
-    return [p for p in scenario.game.permanents_controlled_by("alice") if "Land" in p.card.type_line]
+    return [
+        p for p in scenario.game.permanents_controlled_by("alice") if "Land" in p.card.type_line
+    ]
 
 
 def test_quarantine_field_exiles_one_target_per_isolation_counter():
@@ -864,7 +866,10 @@ def test_garnet_with_no_sagas_gets_nothing():
 
 def _ooze_flux(first, second, x):
     scenario = _board(["Ooze Flux", "Forest", "Forest", "Grizzly Bears", "Hill Giant"])
-    bears, giant = scenario.creature("Grizzly Bears", "alice"), scenario.creature("Hill Giant", "alice")
+    bears, giant = (
+        scenario.creature("Grizzly Bears", "alice"),
+        scenario.creature("Hill Giant", "alice"),
+    )
     bears.add_counters(Counter.PLUS_ONE, first)
     giant.add_counters(Counter.PLUS_ONE, second)
     flux = scenario.find("Ooze Flux", Zone.BATTLEFIELD, "alice")

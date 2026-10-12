@@ -25,6 +25,7 @@ parsers accept in the plural.
 
 import contextlib
 import contextvars
+import functools
 import re
 from collections.abc import Callable, Iterator
 
@@ -89,73 +90,94 @@ _KIND = r"(?:(?P<kind>\+1/\+1|-1/-1|[a-z]+) )?"
 _COUNTERS = r"counters?"
 
 
-def _self(names: tuple[str, ...]) -> str:
-    named = "".join(f"|{re.escape(name)}" for name in names)
-    return rf"(?:it|this [a-z]+{named})"
+def _self(names: tuple[str, ...] = ()) -> str:
+    # The card's own name is swapped for a `\x00<index>\x00` token before the
+    # patterns run (`_tokenised`), so each pattern compiles once, not per card.
+    return r"(?:it|this [a-z]+|\x00\d+\x00)"
 
 
-def _where_x(names: tuple[str, ...]) -> re.Pattern[str]:
+def _tokenised(text: str, names: tuple[str, ...]) -> str:
+    """`text` with the card's own name after "on " as a name-independent token."""
+    for index, name in enumerate(names):
+        token = f"\x00{index}\x00"
+        text = re.sub(rf"(\bon ){re.escape(name)}\b", lambda m, t=token: m.group(1) + t, text)
+    return text
+
+
+def _restored(text: str, names: tuple[str, ...]) -> str:
+    return re.sub(r"\x00(\d+)\x00", lambda m: names[int(m.group(1))], text)
+
+
+@functools.cache
+def _where_x(names: tuple[str, ...] = ()) -> re.Pattern[str]:
     return re.compile(
-        rf",? where X is the number of {_KIND}{_COUNTERS} on {_self(names)}(?=[.,]|$)",
+        rf",? where X is the number of {_KIND}{_COUNTERS} on {_self()}(?=[.,]|$)",
         re.IGNORECASE,
     )
 
 
-def _number_of(names: tuple[str, ...]) -> re.Pattern[str]:
-    return re.compile(rf"the number of {_KIND}{_COUNTERS} on {_self(names)}\b", re.IGNORECASE)
+@functools.cache
+def _number_of(names: tuple[str, ...] = ()) -> re.Pattern[str]:
+    return re.compile(rf"the number of {_KIND}{_COUNTERS} on {_self()}\b", re.IGNORECASE)
 
 
-def _equal_to(names: tuple[str, ...]) -> re.Pattern[str]:
+@functools.cache
+def _equal_to(names: tuple[str, ...] = ()) -> re.Pattern[str]:
     # "loses life equal to the number of soul counters on this artifact",
     # "deals damage equal to the number of charge counters on it to ..."
     return re.compile(
-        rf"\b(?P<what>life|damage) equal to the number of {_KIND}{_COUNTERS} on {_self(names)}\b",
+        rf"\b(?P<what>life|damage) equal to the number of {_KIND}{_COUNTERS} on {_self()}\b",
         re.IGNORECASE,
     )
 
 
-def _for_each_pump(names: tuple[str, ...]) -> re.Pattern[str]:
+@functools.cache
+def _for_each_pump(names: tuple[str, ...] = ()) -> re.Pattern[str]:
     # "gets +1/+1 until end of turn for each lore counter on this artifact"
     return re.compile(
         rf"\b(?P<verb>gets?) (?P<p>[+-]\d+)/(?P<t>[+-]\d+)(?P<mid>(?: until end of turn)?)"
-        rf" for each {_KIND}{_COUNTERS} on {_self(names)}\b",
+        rf" for each {_KIND}{_COUNTERS} on {_self()}\b",
         re.IGNORECASE,
     )
 
 
-def _a_number_of_counters(names: tuple[str, ...]) -> re.Pattern[str]:
+@functools.cache
+def _a_number_of_counters(names: tuple[str, ...] = ()) -> re.Pattern[str]:
     # "distribute a number of +1/+1 counters equal to the number of +1/+1
     # counters on this creature among ..." (a dies trigger spreading its own)
     return re.compile(
         rf"\ba number of (?P<ck>\+1/\+1|-1/-1|[a-z]+) counters equal to the number of "
-        rf"{_KIND}{_COUNTERS} on {_self(names)}\b",
+        rf"{_KIND}{_COUNTERS} on {_self()}\b",
         re.IGNORECASE,
     )
 
 
-def _for_each_verb(names: tuple[str, ...]) -> re.Pattern[str]:
+@functools.cache
+def _for_each_verb(names: tuple[str, ...] = ()) -> re.Pattern[str]:
     # "discards a card for each charge counter on this artifact"
     return re.compile(
         rf"\b(?P<verb>discards?|draws?|mills?) (?:a|an|one) (?P<noun>card)"
-        rf"(?P<mid>[^.,]*?) for each {_KIND}{_COUNTERS} on {_self(names)}\b",
+        rf"(?P<mid>[^.,]*?) for each {_KIND}{_COUNTERS} on {_self()}\b",
         re.IGNORECASE,
     )
 
 
-def _for_each_put(names: tuple[str, ...]) -> re.Pattern[str]:
+@functools.cache
+def _for_each_put(names: tuple[str, ...] = ()) -> re.Pattern[str]:
     # "put a -1/-1 counter on target creature for each -1/-1 counter on this creature"
     return re.compile(
         rf"\b(?P<verb>puts?|distributes?) (?:a|an|one) (?P<ck>\+1/\+1|-1/-1|[a-z]+) counter"
-        rf"(?P<mid> [^.,]*?) for each {_KIND}{_COUNTERS} on {_self(names)}\b",
+        rf"(?P<mid> [^.,]*?) for each {_KIND}{_COUNTERS} on {_self()}\b",
         re.IGNORECASE,
     )
 
 
-def _for_each_target(names: tuple[str, ...]) -> re.Pattern[str]:
+@functools.cache
+def _for_each_target(names: tuple[str, ...] = ()) -> re.Pattern[str]:
     # "for each isolation counter on it, exile up to one target nonland permanent
     # an opponent controls until ..." - one target per counter (CR 601.2c).
     return re.compile(
-        rf"for each {_KIND}{_COUNTERS} on {_self(names)}, (?P<verb>[a-z]+) up to one target "
+        rf"for each {_KIND}{_COUNTERS} on {_self()}, (?P<verb>[a-z]+) up to one target "
         rf"(?P<noun>[a-z]+(?: [a-z]+)*?)(?P<tail> an opponent controls| you control| until|[,.]|$)",
         re.IGNORECASE,
     )
@@ -214,12 +236,12 @@ def _counters_removed_text(text: str) -> str:
     return _FOR_EACH_REMOVED.sub(pump, text)
 
 
-def _placed_first(text: str, names: tuple[str, ...]) -> tuple[str, int] | None:
+def _placed_first(text: str) -> tuple[str, int] | None:
     """The kind and number of counters a leading "Put <n> <kind> counter(s) on
     <itself>, then ..." instruction adds before the rest of the text is read."""
     match = re.match(
         rf"\s*put (?P<n>an?|one|two|three|\d+) (?P<kind>\+1/\+1|-1/-1|[a-z]+) counters? "
-        rf"on {_self(names)}, then ",
+        rf"on {_self()}, then ",
         text,
         re.IGNORECASE,
     )
@@ -230,10 +252,11 @@ def _placed_first(text: str, names: tuple[str, ...]) -> tuple[str, int] | None:
     return match.group("kind").lower(), number if number is not None else int(word)
 
 
-def _put_for_each_controlled(names: tuple[str, ...]) -> re.Pattern[str]:
+@functools.cache
+def _put_for_each_controlled(names: tuple[str, ...] = ()) -> re.Pattern[str]:
     # "put a loyalty counter on this permanent for each creature you control"
     return re.compile(
-        rf"\bput (?:a|an|one) (?P<ck>\+1/\+1|-1/-1|[a-z]+) counter on {_self(names)}"
+        rf"\bput (?:a|an|one) (?P<ck>\+1/\+1|-1/-1|[a-z]+) counter on {_self()}"
         rf" for each (?P<other>other )?(?P<noun>[a-z]+) you control\b",
         re.IGNORECASE,
     )
@@ -244,6 +267,12 @@ def counters_counted_text(text: str, names: tuple[str, ...] = ()) -> str:
     as the number it is now (CR 122.1, CR 608.2h); unchanged when it has none.
 
     `names` are the strings the card's own text uses to mean itself (CR 201.5)."""
+    if names and "counter" in text.lower():
+        return _restored(_counted_tokenised(_tokenised(text, names)), names)
+    return _counted_tokenised(text)
+
+
+def _counted_tokenised(text: str) -> str:
     lowered = text.lower()
     if "scrying this way" in lowered:
         text = _for_each_scried(text)
@@ -254,7 +283,7 @@ def counters_counted_text(text: str, names: tuple[str, ...] = ()) -> str:
     if "counter" not in lowered or " on " not in lowered:
         return text
 
-    placed = _placed_first(text, names)
+    placed = _placed_first(text)
 
     def n_of(match: re.Match[str]) -> int:
         kind = _kind(match.group("kind"))
@@ -264,41 +293,39 @@ def counters_counted_text(text: str, names: tuple[str, ...] = ()) -> str:
         extra = placed[1] if placed is not None and kind in (None, placed[0]) else 0
         return _counted(kind) + extra
 
-    where = _where_x(names).search(text)
+    where = _where_x().search(text)
     if where is not None:
         number = n_of(where)
         rest = text[: where.start()] + text[where.end() :]
         text = re.sub(r"\bX\b", str(number), rest)
-    text = _a_number_of_counters(names).sub(
-        lambda m: _plural(n_of(m), f"{m.group('ck')} counter"), text
-    )
-    equal = _equal_to(names).search(text)
+    text = _a_number_of_counters().sub(lambda m: _plural(n_of(m), f"{m.group('ck')} counter"), text)
+    equal = _equal_to().search(text)
     if equal is not None:
         # "... and that much damage to up to one target creature" repeats the
         # amount the first half was just read as (CR 608.2c).
         number = n_of(equal)
-        text = _equal_to(names).sub(lambda m: f"{number} {m.group('what')}", text)
+        text = _equal_to().sub(lambda m: f"{number} {m.group('what')}", text)
         text = re.sub(r"\bthat much (damage|life)\b", rf"{number} \1", text)
-    text = _number_of(names).sub(lambda m: str(n_of(m)), text)
+    text = _number_of().sub(lambda m: str(n_of(m)), text)
 
     def pump(m: re.Match[str]) -> str:
         n = n_of(m)
         power, toughness = int(m.group("p")) * n, int(m.group("t")) * n
         return f"{m.group('verb')} {power:+d}/{toughness:+d}{m.group('mid')}"
 
-    text = _for_each_pump(names).sub(pump, text)
+    text = _for_each_pump().sub(pump, text)
 
     def verb_noun(m: re.Match[str]) -> str:
         n = n_of(m)
         return f"{m.group('verb')} {_plural(n, m.group('noun'))}{m.group('mid')}"
 
-    text = _for_each_verb(names).sub(verb_noun, text)
+    text = _for_each_verb().sub(verb_noun, text)
 
     def put_counters(m: re.Match[str]) -> str:
         n = n_of(m)
         return f"{m.group('verb')} {_plural(n, m.group('ck') + ' counter')}{m.group('mid')}"
 
-    text = _for_each_put(names).sub(put_counters, text)
+    text = _for_each_put().sub(put_counters, text)
 
     def targets(m: re.Match[str]) -> str:
         n = n_of(m)
@@ -306,7 +333,7 @@ def counters_counted_text(text: str, names: tuple[str, ...] = ()) -> str:
         wording = "one target " + noun if n == 1 else f"{n} target {noun}s"
         return f"{m.group('verb')} up to {wording}{m.group('tail')}"
 
-    text = _for_each_target(names).sub(targets, text)
+    text = _for_each_target().sub(targets, text)
 
     def put_for_each(m: re.Match[str]) -> str:
         # CR 122.1: the same count "where X is the number of <things> you control"
@@ -316,7 +343,7 @@ def counters_counted_text(text: str, names: tuple[str, ...] = ()) -> str:
             f"{m.group('other') or ''}{m.group('noun')}s you control"
         )
 
-    return _put_for_each_controlled(names).sub(put_for_each, text)
+    return _put_for_each_controlled().sub(put_for_each, text)
 
 
 def counters_self_reference_normalised(text: str, names: tuple[str, ...]) -> str:
