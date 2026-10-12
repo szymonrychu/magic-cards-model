@@ -118,7 +118,11 @@ def _where_x(names: tuple[str, ...] = ()) -> re.Pattern[str]:
 
 @functools.cache
 def _number_of(names: tuple[str, ...] = ()) -> re.Pattern[str]:
-    return re.compile(rf"the number of {_KIND}{_COUNTERS} on {_self()}\b", re.IGNORECASE)
+    # "Double the number of +1/+1 counters on it" (CR 122.1) doubles the stack; it
+    # does not ask for the count, so the doubling readers keep the phrase whole.
+    return re.compile(
+        rf"(?<!double )(?<!triple )the number of {_KIND}{_COUNTERS} on {_self()}\b", re.IGNORECASE
+    )
 
 
 @functools.cache
