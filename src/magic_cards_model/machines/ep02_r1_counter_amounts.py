@@ -271,6 +271,13 @@ def counters_counted_text(text: str, names: tuple[str, ...] = ()) -> str:
     as the number it is now (CR 122.1, CR 608.2h); unchanged when it has none.
 
     `names` are the strings the card's own text uses to mean itself (CR 201.5)."""
+    if '"' in text:
+        # A granted ability's own count ("gains "... equal to the number of lore
+        # counters on it"") is read when that ability applies, not now (CR 611.3a).
+        return "".join(
+            piece if index % 2 else counters_counted_text(piece, names)
+            for index, piece in enumerate(re.split(r'("[^"]*")', text))
+        )
     if names and "counter" in text.lower():
         return _restored(_counted_tokenised(_tokenised(text, names)), names)
     return _counted_tokenised(text)
