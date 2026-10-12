@@ -349,3 +349,10 @@ Every Modern-legal expansion, newest to oldest. Each row links to its `status.md
   - api tests: 8876 passed, 183 skipped + 261 wrapper; test:pg 9044 passed; added: +8 (T7 suspend X / cast-cost names)
   - goldens added: 285; 34 protected goldens and 8 protected assertions changed plus 2 api budgets, all 49 items approved by fresh sonnet reviewers; ratchet 0 offenders over 22688 oracle cards, 1093 improved
   - integration fixes: 16 cross-task duplicate parts reconciled to one reader each (untap-in-others-untap, can't-have-counters, Sliver quoted grants, cards in two tasks), T3 regressions red on its own branch, a 3x sweep slowdown, Volition Reins ratchet regression; schema renumbered to 149
+- 2026-10-12: EP-01-R3 (not-working epic EP-01, round 3, closes the epic: d20/choice rows, exert and legacy keywords, attach keywords, alt-cast/face-down, control change, exiled-with, state triggers, variable amounts)
+  - cards in round: 134 deferred from R2; needing fix at plan time: 117; dropped (already handled): 17; fixed: 117; remaining: 0 (gaps found while building - Blood Tyrant, Magitek Scythe, enchanted-land-tapped Auras, Revenge of Ravens, Blood Reckoning, Lurebound Scarecrow, fortify/Aura-attach proofs - are in EP-02-R1 T1/T4)
+  - pool-wide Not working after refresh: 4899 (was 5322); Tested 5330 (was 5147), Works 12541 (was 12301); not-working list (derive.py): 5308 -> 4885
+  - engine tests: 39282 total (pass 38574, skip 655, xfail 53); added since EP-01-R2: +999
+  - api tests: 8877 passed, 183 skipped; added: +1
+  - goldens added: 180; 27 protected goldens/tests changed, all approved by fresh sonnet reviewers; ratchet 0 offenders over 22688 oracle cards
+  - integration fixes: T2/T5 source-power and T6/T7 graveyard-arrival duplicates reconciled to one reader each (Grolnok had fired 3x for 2 cards); Stridehangar Automaton and Nine Lives cross-task bugs; full-pool classify 13.3 -> 11.4 units. Post-land: api found the new attack-restriction scan computed the board per permanent and mutate missing from play-script cast costs - fixed (engine 9b2f6c82, api 20ac035)
