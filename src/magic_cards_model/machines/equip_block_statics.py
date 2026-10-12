@@ -32,7 +32,9 @@ _ATTACH_ONLY_RE = re.compile(
     re.IGNORECASE,
 )
 _CANT_BE_EQUIPPED_RE = re.compile(r"^(?:this [a-z]+|~) can't be equipped\.?$", re.IGNORECASE)
-_EQUIP_ONCE_RE = re.compile(r"^equip\b.*\bactivate only once each turn\.?$", re.IGNORECASE)
+_EQUIP_ONCE_RE = re.compile(
+    r"^(?:[^\u2014]+ \u2014 )?equip\b.*\bactivate only once each turn\.?$", re.IGNORECASE
+)
 _UNTAPPED_BLOCK_RE = re.compile(
     r"^tapped creatures you control can block as though they were untapped\.?$", re.IGNORECASE
 )

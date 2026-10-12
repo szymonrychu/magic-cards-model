@@ -507,6 +507,14 @@ def executes(keyword: str) -> bool:
         # `reconfigure_unattach_activation`/`_reconfigure_effect`, and the
         # attached not-a-creature `reconfigure_not_a_creature` (layer 4).
         "reconfigure",
+        # CR 702.92a, CR 702.163a, CR 702.182a: the "create a token, then
+        # attach this Equipment to it" triggers, written out by
+        # `machines/attach_keywords.py` into `_TRIGGER_EXPANSIONS`; CR 702.67a:
+        # `attach_keywords.fortify_activation`/`_fortify_effect`.
+        "living weapon",
+        "for mirrodin!",
+        "job select",
+        "fortify",
     }
 
 
@@ -7751,7 +7759,7 @@ AbilityOnStack.model_rebuild(
 # The keyword machines that live in their own modules register their
 # `KEYWORD_EFFECTS` rows as they load; imported last so each can build on
 # everything above.
-from . import blitz, level_up  # noqa: E402, F401
+from . import attach_keywords, blitz, level_up  # noqa: E402, F401
 from .free_cast_price import with_board_priced_cost  # noqa: E402
 from .reconfigure import (  # noqa: E402
     RECONFIGURE_UNATTACH_EFFECT,

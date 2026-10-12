@@ -2672,6 +2672,40 @@ def _parse_counters_more_if_subtype_clause(text: str) -> AbilityEffect | None:
     return effect
 
 
+#: "Put N `<kind>` counters on enchanted creature." / "... on equipped
+#: creature." - Krasis Incubation's "{1}{G}{U}, Return this Aura to its owner's
+#: hand: Put two +1/+1 counters on enchanted creature." The creature is the
+#: permanent the source is attached to, never a target (CR 303.4b, CR 301.5a),
+#: read through the source's last known attachment once the cost has moved it
+#: (CR 113.7a, CR 608.2h) - `continuous._attached_object`, the lookup Honest
+#: Work's "tap enchanted creature" already uses. CR 122.1: a counter is placed.
+_COUNTERS_ON_ATTACHED_RE = re.compile(
+    rf"^put (?P<n>{COUNT}) (?P<kind>\+1/\+1|-1/-1|[a-z]+) counters? on "
+    r"(?:enchanted|equipped|fortified) (?:creature|permanent|artifact|land)\.?$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s23")
+def _parse_counters_on_attached_clause(text: str) -> AbilityEffect | None:
+    """`_COUNTERS_ON_ATTACHED_RE`'s shape. Nothing attached, or a host that has
+    left the battlefield, is nothing to put counters on."""
+    match = _COUNTERS_ON_ATTACHED_RE.fullmatch(_strip_non_effect_preamble(text).strip())
+    if match is None:
+        return None
+    amount = parse_count(match.group("n"))
+    if amount is None:
+        return None
+    kind = _counter_kind(match.group("kind"))
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        host = _attached_object(game, ability)
+        if host is not None and amount > 0:
+            game.add_counters(host, kind, amount)
+
+    return effect
+
+
 #: "Whenever equipped creature attacks, put a +1/+1 counter on that creature
 #: and each other creature you control that shares a creature type with it."
 #: (Invasion of New Capenna // Holy Frazzle-Cannon) - CR 702.73a's shared-type
@@ -4500,6 +4534,7 @@ from .amounts import (  # noqa: E402
     amount_expression,
 )
 from .continuous import (  # noqa: E402
+    _attached_object,
     _attack_trigger_pump_subject,
     _for_each_opponent_target_phrase,
     _grant_keywords_to,

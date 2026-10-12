@@ -1313,6 +1313,10 @@ _SELF_AND_OTHER_CREATURE_ATTACKS_RE = re.compile(
 #: indefinite article is what separates it from an Equipment's own "equipped
 #: creature", the one creature that Equipment is attached to.
 _AN_EQUIPPED_CREATURE_RE = re.compile(r"\ban equipped creature\b")
+#: The attached object an Aura, Equipment or Fortification trigger names as its
+#: subject ("equipped creature", "enchanted land", "fortified land") - never
+#: "an enchanted creature you control", which is any of them.
+_ATTACHED_SUBJECT_RE = re.compile(r"(?<!\ban )(?<!\ba )\b(?:equipped|enchanted|fortified) [a-z]+")
 
 
 def _has_equipment_attached(game: "Game", subject_id: "UUID | None") -> bool:
@@ -2805,11 +2809,14 @@ def _condition_matches(
         ) and _types_match(event.subject_types, condition)
 
     if ability.event in (TriggerEvent.BECOMES_TAPPED, TriggerEvent.BECOMES_UNTAPPED):
-        if "equipped" in lowered and not _AN_EQUIPPED_CREATURE_RE.search(lowered):
+        if _ATTACHED_SUBJECT_RE.search(lowered) and not _AN_EQUIPPED_CREATURE_RE.search(lowered):
             # Hawkeye's Bow's own "Whenever equipped creature becomes
             # tapped, ..." - the same CR 301.5a "equipped creature" look-up
             # `TAPPED_FOR_MANA`'s own "enchanted [land]" branch already
-            # reads below, generalised to CR 703.4h's own Equipment case.
+            # reads below, generalised to CR 703.4h's own Equipment case, and
+            # to CR 301.6's Fortification: Darksteel Garrison's "Whenever
+            # fortified land becomes tapped" is the land it is attached to,
+            # not any land.
             return event.subject_id is not None and event.subject_id == source.attached_to
         if mine:
             if "teamwork cost" in lowered:

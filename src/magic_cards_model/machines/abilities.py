@@ -3619,6 +3619,24 @@ def _parse_equip_with_quality(
     )
 
 
+#: An equip line's own flavor label and its once-a-turn limit - Dark Knight's
+#: Greatsword's "Chaosbringer \u2014 Equip\u2014Pay 3 life. Activate only once each
+#: turn." The label is CR 207.2c's ability word (no rules meaning); the limit is
+#: CR 602.5b's activation instruction, read where the activation is checked
+#: (`equip_block_statics.equip_once_each_turn`), so the keyword line itself is
+#: the em-dash cost form `_parse_keyword_cost` reads.
+_EQUIP_ONCE_TAIL = re.compile(r"\s*Activate only once each turn\.?$")
+
+
+def _strip_equip_label_and_limit(text: str) -> str:
+    label = _ABILITY_WORD.match(text)
+    body = text[label.end() :] if label else text
+    if not body.startswith("Equip\u2014"):
+        return text
+    stripped = _EQUIP_ONCE_TAIL.sub("", body)
+    return stripped if stripped != body or label else text
+
+
 def _parse_keywords(text: str, keywords: list[str], common: dict) -> list[Ability]:
     """Read a line that is nothing but keywords (CR 702).
 
@@ -3631,6 +3649,7 @@ def _parse_keywords(text: str, keywords: list[str], common: dict) -> list[Abilit
     your hand.`, which is a keyword line *and* ends in a full stop. It is tried
     first, before the full stop disqualifies the line.
     """
+    text = _strip_equip_label_and_limit(text)
     equip_quality = _parse_equip_with_quality(text, keywords, common)
     if equip_quality is not None:
         return [equip_quality]

@@ -1577,6 +1577,15 @@ def _attach(scenario: PlayedScenario, source: CardState) -> None:
     """Stage an Aura on something it can enchant, as a board would have it:
     an unattached Aura is put into its owner's graveyard by CR 704.5m before
     anything else could happen."""
+    if "Fortification" in source.card.subtypes:
+        # CR 301.6: a Fortification is attached to a land (Darksteel Garrison's
+        # "Whenever fortified land becomes tapped" has no subject otherwise).
+        land = next(
+            (s for s in scenario.game.permanents_controlled_by(ALICE) if s.card.is_land), None
+        )
+        if land is not None:
+            source.attachment = TargetRef.to_card(land)
+        return
     restriction = _enchant_restriction(source.card)
     if restriction is None:
         return

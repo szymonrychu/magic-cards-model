@@ -291,7 +291,8 @@ class Action(EngineModel):
     """Which of `Game.activated_abilities(source)`'s entries this activates -
     `ACTIVATE`/`ACTIVATE_MANA` only. `None` on a keyword-ability row, which has
     no entry there: equip (`keyword="Equip"`, taken with
-    `keywords.equip_activation`), level up (`keyword="Level Up"`, taken with
+    `keywords.equip_activation`), fortify (`keyword="Fortify"`, taken with
+    `attach_keywords.fortify_activation`), level up (`keyword="Level Up"`, taken with
     `level_up.level_up_activation`) and reconfigure (`keyword="Reconfigure"`:
     the row with a target slot is the attach, taken with
     `reconfigure.reconfigure_attach_activation`; the row without is the
