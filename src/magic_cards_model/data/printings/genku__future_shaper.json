@@ -1,0 +1,174 @@
+{
+  "object": "card",
+  "id": "0cbcc962-65c4-496d-8034-75c8d204dba3",
+  "oracle_id": "ca16b735-26c7-4d0b-959b-b031f6cb376e",
+  "multiverse_ids": [
+    662338
+  ],
+  "mtgo_id": 126389,
+  "arena_id": 91036,
+  "tcgplayer_id": 552318,
+  "cardmarket_id": 771204,
+  "name": "Genku, Future Shaper",
+  "lang": "en",
+  "released_at": "2024-06-14",
+  "uri": "https://api.scryfall.com/cards/0cbcc962-65c4-496d-8034-75c8d204dba3",
+  "scryfall_uri": "https://scryfall.com/card/mh3/186/genku-future-shaper?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T02:54:10Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/0/c/0cbcc962-65c4-496d-8034-75c8d204dba3.jpg?1783911250",
+    "normal": "https://cards.scryfall.io/normal/front/0/c/0cbcc962-65c4-496d-8034-75c8d204dba3.jpg?1783911250",
+    "large": "https://cards.scryfall.io/large/front/0/c/0cbcc962-65c4-496d-8034-75c8d204dba3.jpg?1783911250",
+    "png": "https://cards.scryfall.io/png/front/0/c/0cbcc962-65c4-496d-8034-75c8d204dba3.png?1783911250",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/0/c/0cbcc962-65c4-496d-8034-75c8d204dba3.jpg?1783911250",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/0/c/0cbcc962-65c4-496d-8034-75c8d204dba3.jpg?1783911250",
+    "thumb": "https://cards.scryfall.io/thumb/front/0/c/0cbcc962-65c4-496d-8034-75c8d204dba3.webp?1783911250",
+    "grid": "https://cards.scryfall.io/grid/front/0/c/0cbcc962-65c4-496d-8034-75c8d204dba3.webp?1783911250",
+    "display": "https://cards.scryfall.io/display/front/0/c/0cbcc962-65c4-496d-8034-75c8d204dba3.webp?1783911250",
+    "art": "https://cards.scryfall.io/art/front/0/c/0cbcc962-65c4-496d-8034-75c8d204dba3.webp?1783911250",
+    "crop": "https://cards.scryfall.io/crop/front/0/c/0cbcc962-65c4-496d-8034-75c8d204dba3.webp?1783911250"
+  },
+  "mana_cost": "{2}{W}{U}",
+  "cmc": 4.0,
+  "type_line": "Legendary Creature \u2014 Moonfolk Wizard",
+  "oracle_text": "Whenever another nontoken permanent you control leaves the battlefield, choose one that hasn't been chosen this turn. Create a creature token with those characteristics.\n\u2022 2/2 white Fox with vigilance.\n\u2022 1/2 blue Moonfolk with flying.\n\u2022 1/1 black Rat with lifelink.\n{3}{W}{U}: Put a +1/+1 counter on each creature you control.",
+  "power": "2",
+  "toughness": "5",
+  "colors": [
+    "U",
+    "W"
+  ],
+  "color_identity": [
+    "U",
+    "W"
+  ],
+  "keywords": [],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "45c3f892-fffb-46ed-90c0-ade2fb4b9d19",
+      "component": "combo_piece",
+      "name": "Genku, Future Shaper",
+      "type_line": "Legendary Creature \u2014 Moonfolk Wizard",
+      "uri": "https://api.scryfall.com/cards/45c3f892-fffb-46ed-90c0-ade2fb4b9d19"
+    },
+    {
+      "object": "related_card",
+      "id": "f3054ecd-0f8a-439d-ab7c-129d5aa0ccb2",
+      "component": "token",
+      "name": "Rat",
+      "type_line": "Token Creature \u2014 Rat",
+      "uri": "https://api.scryfall.com/cards/f3054ecd-0f8a-439d-ab7c-129d5aa0ccb2"
+    },
+    {
+      "object": "related_card",
+      "id": "d31d906e-e5c2-48ad-b7b0-f740ea4447ff",
+      "component": "token",
+      "name": "Fox",
+      "type_line": "Token Creature \u2014 Fox",
+      "uri": "https://api.scryfall.com/cards/d31d906e-e5c2-48ad-b7b0-f740ea4447ff"
+    },
+    {
+      "object": "related_card",
+      "id": "10136b4b-ccc1-48ce-bc8c-295660464cf7",
+      "component": "token",
+      "name": "Moonfolk",
+      "type_line": "Token Creature \u2014 Moonfolk",
+      "uri": "https://api.scryfall.com/cards/10136b4b-ccc1-48ce-bc8c-295660464cf7"
+    }
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "3ed80bb6-77e8-4aa7-8262-95377a38aba1",
+  "set": "mh3",
+  "set_name": "Modern Horizons 3",
+  "set_type": "draft_innovation",
+  "set_uri": "https://api.scryfall.com/sets/3ed80bb6-77e8-4aa7-8262-95377a38aba1",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Amh3&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/mh3?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/0cbcc962-65c4-496d-8034-75c8d204dba3/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Aca16b735-26c7-4d0b-959b-b031f6cb376e&unique=prints",
+  "collector_number": "186",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Chuck Lukacs",
+  "artist_ids": [
+    "2bdf4da7-c66c-4c46-a253-284c856ccfab"
+  ],
+  "illustration_id": "4533dbd9-03fc-4a70-b6f7-b80717f4b4cb",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 11525,
+  "penny_rank": 9741,
+  "prices": {
+    "usd": "0.24",
+    "usd_foil": "0.27",
+    "usd_etched": null,
+    "eur": "0.15",
+    "eur_foil": "0.17",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=662338&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DGenku%252C%2BFuture%2BShaper",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DGenku%252C%2BFuture%2BShaper",
+    "edhrec": "https://edhrec.com/route/?cc=Genku%2C+Future+Shaper"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F552318%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=771204&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/126389?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

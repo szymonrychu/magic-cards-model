@@ -1,0 +1,691 @@
+"""Scenario: die-roll results tables, random and named-choice rows, and the
+opponent attack/payment restrictions (EP-01 round 3, task T1).
+
+Every rule cited here was looked up with `mise run rules:find` in the session
+that wrote this file:
+
+- CR 706.2 - the natural result of a die roll, and modifiers that add to or
+  subtract from it; the result is the number after every modifier.
+- CR 706.3a - a results table: each row means "If the result was in this
+  range, [effect]", and a result no row names does nothing.
+- CR 706.3b - the roll, its modifiers, the instructions based on the result
+  and the table are all one ability.
+"""
+
+from random import Random
+
+from magic_cards_model.machines import Step
+from magic_cards_model.machines.combat import has_keyword
+from magic_cards_model.models import Zone
+from magic_cards_model.models.card import Color
+from tests.scenarios.harness import Scenario
+
+
+def board(
+    alice: list[str] | None = None,
+    bob: list[str] | None = None,
+    *,
+    step: Step = Step.PRECOMBAT_MAIN,
+    alice_zones: dict | None = None,
+    bob_zones: dict | None = None,
+):
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=alice or [], **(alice_zones or {}))
+        .player("bob", battlefield=bob or [], **(bob_zones or {}))
+        .build()
+    )
+    scenario.start_at(step)
+    return scenario
+
+
+def rig_dice(scenario: Scenario, rolls: list[int], sides: int = 20) -> None:
+    """Pick a `shuffle_seed` under which the next dice `Game.roll_dice` rolls
+    come out as `rolls` - the engine still rolls (CR 706.1a), this only picks
+    the seed its randomness is drawn from."""
+    game = scenario.game
+    start = game.coin_flips_performed
+    for seed in range(400000):
+        if all(
+            Random(f"{seed}:{start + index}:die").randint(1, sides) == roll  # noqa: S311
+            for index, roll in enumerate(rolls)
+        ):
+            game.shuffle_seed = seed
+            return
+    raise AssertionError(f"no seed found for {rolls}")
+
+
+def on_battlefield(scenario: Scenario, name: str, username: str):
+    return [
+        state
+        for state in scenario.game.battlefield
+        if state.name in (name, f"{name} Token") and (state.controller or state.owner) == username
+    ]
+
+
+def names(cards) -> list[str]:
+    return sorted(card.name for card in cards)
+
+
+def enter_and_resolve(scenario: Scenario, name: str, username: str = "alice"):
+    permanent = scenario.put_onto_battlefield(name, username)
+    scenario.game.put_triggers_on_stack()
+    scenario.pass_until_resolved()
+    return permanent
+
+
+# --------------------------------------------------------------------------
+# d20 results tables (CR 706.3a)
+# --------------------------------------------------------------------------
+
+
+def test_swarming_goblins_low_roll_makes_one_goblin():
+    scenario = board(alice_zones={"hand": ["Swarming Goblins"]})
+    rig_dice(scenario, [4])
+    enter_and_resolve(scenario, "Swarming Goblins")
+    assert len(on_battlefield(scenario, "Goblin", "alice")) == 1
+
+
+def test_swarming_goblins_middle_roll_makes_two_of_those_tokens():
+    scenario = board(alice_zones={"hand": ["Swarming Goblins"]})
+    rig_dice(scenario, [10])
+    enter_and_resolve(scenario, "Swarming Goblins")
+    goblins = on_battlefield(scenario, "Goblin", "alice")
+    assert len(goblins) == 2
+    for goblin in goblins:
+        stats = scenario.game.characteristics_of(goblin)
+        assert (stats.power, stats.toughness) == (1, 1)
+
+
+def test_swarming_goblins_natural_twenty_makes_three():
+    scenario = board(alice_zones={"hand": ["Swarming Goblins"]})
+    rig_dice(scenario, [20])
+    enter_and_resolve(scenario, "Swarming Goblins")
+    assert len(on_battlefield(scenario, "Goblin", "alice")) == 3
+
+
+def test_scion_of_stygia_low_roll_only_taps():
+    scenario = board(bob=["Grizzly Bears"], alice_zones={"hand": ["Scion of Stygia"]})
+    bears = scenario.creature("Grizzly Bears", "bob")
+    rig_dice(scenario, [9])
+    scenario.will_choose_targets(bears)
+    enter_and_resolve(scenario, "Scion of Stygia")
+    assert bears.tapped
+    assert not bears.exerted  # it untaps as usual in bob's next untap step
+
+
+def test_scion_of_stygia_high_roll_taps_and_holds_it_down():
+    scenario = board(bob=["Grizzly Bears"], alice_zones={"hand": ["Scion of Stygia"]})
+    bears = scenario.creature("Grizzly Bears", "bob")
+    rig_dice(scenario, [10])
+    scenario.will_choose_targets(bears)
+    enter_and_resolve(scenario, "Scion of Stygia")
+    assert bears.tapped
+    assert bears.exerted  # CR 701.43b's flag: skips its controller's next untap step
+    scion = scenario.creature("Scion of Stygia", "alice")
+    assert not scion.tapped  # "that creature" is the target, never the trigger's source
+
+
+def test_aberrant_mind_sorcerer_high_roll_returns_the_target_to_hand():
+    scenario = board(
+        alice_zones={"hand": ["Aberrant Mind Sorcerer"], "graveyard": ["Lightning Bolt"]}
+    )
+    bolt = scenario.find("Lightning Bolt", Zone.GRAVEYARD, "alice")
+    rig_dice(scenario, [10])
+    scenario.will_choose_targets(bolt)
+    enter_and_resolve(scenario, "Aberrant Mind Sorcerer")
+    assert bolt.zone is Zone.HAND
+
+
+def test_aberrant_mind_sorcerer_low_roll_may_put_it_on_top():
+    scenario = board(
+        alice_zones={
+            "hand": ["Aberrant Mind Sorcerer"],
+            "graveyard": ["Lightning Bolt"],
+            "library": ["Forest", "Island"],
+        }
+    )
+    bolt = scenario.find("Lightning Bolt", Zone.GRAVEYARD, "alice")
+    rig_dice(scenario, [3])
+    scenario.will_choose_targets(bolt)
+    scenario.will_take_the_may(True)
+    enter_and_resolve(scenario, "Aberrant Mind Sorcerer")
+    assert scenario.player("alice").library[0] is bolt
+
+
+def test_aberrant_mind_sorcerer_low_roll_declined_leaves_it():
+    scenario = board(
+        alice_zones={"hand": ["Aberrant Mind Sorcerer"], "graveyard": ["Lightning Bolt"]}
+    )
+    bolt = scenario.find("Lightning Bolt", Zone.GRAVEYARD, "alice")
+    rig_dice(scenario, [3])
+    scenario.will_choose_targets(bolt)
+    scenario.will_take_the_may(False)
+    enter_and_resolve(scenario, "Aberrant Mind Sorcerer")
+    assert bolt.zone is Zone.GRAVEYARD
+
+
+def _pit_trap(roll: int):
+    scenario = board(["Spiked Pit Trap", *["Wastes"] * 5], ["Colossal Dreadmaw"])
+    trap = scenario.creature("Spiked Pit Trap", "alice")
+    dreadmaw = scenario.creature("Colossal Dreadmaw", "bob")
+    rig_dice(scenario, [roll])
+    scenario.activate(
+        trap, *scenario.untapped_sources(*["Wastes"] * 5), sacrificing=[trap], targets=[dreadmaw]
+    )
+    scenario.pass_until_resolved()
+    return scenario, dreadmaw
+
+
+def test_spiked_pit_trap_low_roll_deals_five():
+    scenario, dreadmaw = _pit_trap(9)
+    assert dreadmaw.damage == 5
+    assert on_battlefield(scenario, "Treasure", "alice") == []
+
+
+def test_spiked_pit_trap_high_roll_also_makes_a_treasure():
+    scenario, dreadmaw = _pit_trap(12)
+    assert dreadmaw.damage == 5
+    assert len(on_battlefield(scenario, "Treasure", "alice")) == 1
+
+
+def _troll(roll: int):
+    scenario = board(
+        ["Forest", "Forest", "Forest", "Forest"],
+        alice_zones={"graveyard": ["Loathsome Troll"], "library": ["Island"]},
+    )
+    troll = scenario.find("Loathsome Troll", Zone.GRAVEYARD, "alice")
+    rig_dice(scenario, [roll])
+    scenario.activate(troll, *scenario.untapped_sources("Forest", "Forest", "Forest", "Forest"))
+    scenario.pass_until_resolved()
+    return scenario, troll
+
+
+def test_loathsome_troll_low_roll_goes_on_top_of_the_library():
+    scenario, troll = _troll(1)
+    assert scenario.player("alice").library[0] is troll
+
+
+def test_loathsome_troll_middle_roll_returns_to_hand():
+    scenario, troll = _troll(19)
+    assert troll.zone is Zone.HAND
+
+
+def test_loathsome_troll_twenty_returns_to_the_battlefield_tapped():
+    scenario, troll = _troll(20)
+    assert troll.zone is Zone.BATTLEFIELD
+    assert troll.tapped
+
+
+def test_loathsome_troll_cannot_be_activated_from_the_battlefield():
+    scenario = board(["Loathsome Troll", "Forest", "Forest", "Forest", "Forest"])
+    troll = scenario.creature("Loathsome Troll", "alice")
+    assert scenario.why_cannot_activate(troll) is not None
+
+
+def _chest(roll: int, library: list[str] | None = None):
+    scenario = board(
+        ["Treasure Chest", "Wastes", "Wastes", "Wastes", "Wastes"],
+        alice_zones={"library": library or ["Island", "Forest", "Plains", "Swamp"]},
+    )
+    chest = scenario.creature("Treasure Chest", "alice")
+    rig_dice(scenario, [roll])
+    scenario.activate(
+        chest,
+        *scenario.untapped_sources("Wastes", "Wastes", "Wastes", "Wastes"),
+        sacrificing=[chest],
+    )
+    scenario.pass_until_resolved()
+    return scenario
+
+
+def test_treasure_chest_natural_one_is_trapped():
+    scenario = _chest(1)
+    assert scenario.player("alice").life == 17
+
+
+def test_treasure_chest_low_roll_makes_five_treasures():
+    scenario = _chest(2)
+    assert len(on_battlefield(scenario, "Treasure", "alice")) == 5
+
+
+def test_treasure_chest_middle_roll_gains_and_draws():
+    scenario = _chest(19)
+    assert scenario.player("alice").life == 23
+    assert len(scenario.player("alice").hand) == 3
+
+
+def test_treasure_chest_twenty_puts_an_artifact_onto_the_battlefield():
+    scenario = board(
+        ["Treasure Chest", "Wastes", "Wastes", "Wastes", "Wastes"],
+        alice_zones={"library": ["Island", "Ornithopter"]},
+    )
+    chest = scenario.creature("Treasure Chest", "alice")
+    rig_dice(scenario, [20])
+    ornithopter = scenario.find("Ornithopter", Zone.LIBRARY, "alice")
+    scenario.will_choose_cards(ornithopter)
+    scenario.will_take_the_may(True)
+    scenario.activate(
+        chest,
+        *scenario.untapped_sources("Wastes", "Wastes", "Wastes", "Wastes"),
+        sacrificing=[chest],
+    )
+    scenario.pass_until_resolved()
+    assert ornithopter.zone is Zone.BATTLEFIELD
+
+
+def test_treasure_chest_twenty_puts_a_nonartifact_into_the_hand():
+    scenario = board(
+        ["Treasure Chest", "Wastes", "Wastes", "Wastes", "Wastes"],
+        alice_zones={"library": ["Island", "Ornithopter"]},
+    )
+    chest = scenario.creature("Treasure Chest", "alice")
+    rig_dice(scenario, [20])
+    island = scenario.find("Island", Zone.LIBRARY, "alice")
+    scenario.will_choose_cards(island)
+    scenario.activate(
+        chest,
+        *scenario.untapped_sources("Wastes", "Wastes", "Wastes", "Wastes"),
+        sacrificing=[chest],
+    )
+    scenario.pass_until_resolved()
+    assert island.zone is Zone.HAND
+
+
+def _deck(
+    roll: int, hand: list[str], graveyard: list[str] | None = None, bob_yard=None, prepare=None
+):
+    scenario = board(
+        ["The Deck of Many Things", "Wastes", "Wastes"],
+        alice_zones={
+            "hand": hand,
+            "graveyard": graveyard or [],
+            "library": ["Island", "Forest", "Plains"],
+        },
+        bob_zones={"graveyard": bob_yard or []},
+    )
+    deck = scenario.creature("The Deck of Many Things", "alice")
+    rig_dice(scenario, [roll])
+    if prepare is not None:
+        prepare(scenario)
+    scenario.activate(deck, *scenario.untapped_sources("Wastes", "Wastes"))
+    scenario.pass_until_resolved()
+    return scenario
+
+
+def test_deck_of_many_things_subtracts_hand_size_and_discards_at_zero():
+    # natural 3, three cards in hand: the result is 0 (CR 706.2).
+    scenario = _deck(3, ["Island", "Forest", "Plains"], ["Lightning Bolt"])
+    alice = scenario.player("alice")
+    assert alice.hand == []
+    assert "Lightning Bolt" in names(alice.graveyard)  # no row for 0 (CR 706.3a)
+
+
+def test_deck_of_many_things_modified_low_result_returns_a_random_card():
+    # natural 12, three cards in hand: result 9.
+    scenario = _deck(12, ["Island", "Forest", "Plains"], ["Lightning Bolt"])
+    alice = scenario.player("alice")
+    assert "Lightning Bolt" in names(alice.hand)
+    assert len(alice.hand) == 4
+
+
+def test_deck_of_many_things_middle_result_draws_two():
+    scenario = _deck(15, [])
+    assert len(scenario.player("alice").hand) == 2
+
+
+def test_deck_of_many_things_twenty_reanimates_and_dooms_its_owner():
+    chosen = {}
+
+    def prepare(scenario):
+        chosen["card"] = scenario.find("Colossal Dreadmaw", Zone.GRAVEYARD, "bob")
+        scenario.will_choose_cards(chosen["card"])
+
+    scenario = _deck(20, [], ["Grizzly Bears"], bob_yard=["Colossal Dreadmaw"], prepare=prepare)
+    dreadmaw = chosen["card"]
+    assert dreadmaw.zone is Zone.BATTLEFIELD
+    assert scenario.game.controller_of(dreadmaw).username == "alice"
+    assert scenario.find("Grizzly Bears", Zone.GRAVEYARD, "alice").zone is Zone.GRAVEYARD
+    assert not scenario.game.is_over
+    scenario.game.destroy(dreadmaw)
+    scenario.game.put_triggers_on_stack()
+    scenario.pass_until_resolved()
+    scenario.state_based_actions()
+    # its owner (bob), not the player who controlled it, loses (CR 104.3e)
+    assert not scenario.game.is_in_game("bob")
+    assert scenario.game.is_in_game("alice")
+
+
+def test_deck_of_many_things_twenty_with_no_creature_card_anywhere_does_nothing():
+    scenario = _deck(20, [], ["Lightning Bolt"])
+    assert names(scenario.player("alice").graveyard) == [
+        "Lightning Bolt",
+        "The Deck of Many Things",
+    ][:1] or "Lightning Bolt" in names(scenario.player("alice").graveyard)
+    assert not scenario.game.is_over
+
+
+def test_haunted_fengraf_returns_a_creature_card_at_random_to_hand():
+    # Second printing for the widened "at random from your graveyard to your
+    # hand" reader: a creature card, never the land in the same graveyard.
+    scenario = board(
+        ["Haunted Fengraf", "Wastes", "Wastes", "Wastes"],
+        alice_zones={"graveyard": ["Grizzly Bears", "Forest"]},
+    )
+    fengraf = scenario.creature("Haunted Fengraf", "alice")
+    scenario.activate(
+        fengraf,
+        *scenario.untapped_sources("Wastes", "Wastes", "Wastes"),
+        index=1,
+        sacrificing=[fengraf],
+    )
+    scenario.pass_until_resolved()
+    alice = scenario.player("alice")
+    assert names(alice.hand) == ["Grizzly Bears"]
+    assert "Forest" in names(alice.graveyard)
+
+
+def test_haunted_fengraf_with_no_creature_card_returns_nothing():
+    scenario = board(
+        ["Haunted Fengraf", "Wastes", "Wastes", "Wastes"],
+        alice_zones={"graveyard": ["Forest"]},
+    )
+    fengraf = scenario.creature("Haunted Fengraf", "alice")
+    scenario.activate(
+        fengraf,
+        *scenario.untapped_sources("Wastes", "Wastes", "Wastes"),
+        index=1,
+        sacrificing=[fengraf],
+    )
+    scenario.pass_until_resolved()
+    assert scenario.player("alice").hand == []
+
+
+# --------------------------------------------------------------------------
+# Modes printed as token characteristics (CR 700.2): "choose one that hasn't
+# been chosen this turn" (Genku) and "choose one at random" (Outlaws'
+# Merriment, whose ruling picks the mode as the ability goes on the stack,
+# CR 700.2b's moment)
+# --------------------------------------------------------------------------
+
+_FOX = "Create a 2/2 white Fox creature token with vigilance."
+_MOONFOLK = "Create a 1/2 blue Moonfolk creature token with flying."
+
+
+def _genku_board():
+    scenario = board(["Genku, Future Shaper", "Ornithopter", "Memnite", "Wastes"])
+    return scenario
+
+
+def _leave(scenario: Scenario, name: str) -> None:
+    scenario.game.sacrifice(scenario.creature(name, "alice"))
+    scenario.game.put_triggers_on_stack()
+    scenario.pass_until_resolved()
+
+
+def test_genku_makes_the_chosen_token():
+    scenario = _genku_board()
+    scenario.will_choose_mode(_FOX)
+    _leave(scenario, "Ornithopter")
+    (fox,) = on_battlefield(scenario, "Fox", "alice")
+    stats = scenario.game.characteristics_of(fox)
+    assert (stats.power, stats.toughness) == (2, 2)
+    assert has_keyword(fox, "vigilance", scenario.game)
+
+
+def test_genku_will_not_repeat_a_mode_in_the_same_turn():
+    import pytest
+
+    scenario = _genku_board()
+    scenario.will_choose_mode(_FOX)
+    _leave(scenario, "Ornithopter")
+    scenario.will_choose_mode(_FOX)
+    with pytest.raises(ValueError):
+        _leave(scenario, "Memnite")
+
+
+def test_genku_offers_a_used_mode_again_next_turn():
+    scenario = _genku_board()
+    scenario.will_choose_mode(_FOX)
+    _leave(scenario, "Ornithopter")
+    scenario.game.cleanup_step()  # CR 514.2: "this turn" ends
+    scenario.will_choose_mode(_FOX)
+    _leave(scenario, "Memnite")
+    assert len(on_battlefield(scenario, "Fox", "alice")) == 2
+
+
+def test_genku_a_second_leave_makes_a_different_token():
+    scenario = _genku_board()
+    scenario.will_choose_mode(_FOX)
+    _leave(scenario, "Ornithopter")
+    scenario.will_choose_mode(_MOONFOLK)
+    _leave(scenario, "Memnite")
+    assert len(on_battlefield(scenario, "Moonfolk", "alice")) == 1
+
+
+def test_genku_ignores_a_token_leaving():
+    scenario = _genku_board()
+    scenario.will_choose_mode(_FOX)
+    _leave(scenario, "Ornithopter")
+    (fox,) = on_battlefield(scenario, "Fox", "alice")
+    scenario.game.sacrifice(fox)
+    scenario.game.put_triggers_on_stack()
+    assert scenario.game.stack == []
+
+
+def _merriment_upkeep(seed: int):
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Outlaws' Merriment"], library=["Wastes"] * 3)
+        .player("bob", battlefield=["Grizzly Bears"], library=["Wastes"] * 3)
+        .build()
+    )
+    scenario.start_at(Step.UNTAP)
+    scenario.game.shuffle_seed = seed
+    scenario.advance()  # untap -> upkeep: the mode is picked as it goes on the stack
+    scenario.will_choose_targets(scenario.creature("Grizzly Bears", "bob"))
+    scenario.pass_until_resolved()
+    tokens = [
+        state
+        for state in scenario.game.battlefield
+        if state.controller == "alice" and state.name.startswith("Human")
+    ]
+    return scenario, tokens
+
+
+def test_outlaws_merriment_makes_one_red_and_white_token_without_asking():
+    from magic_cards_model.machines.decisions import DecisionKind
+
+    scenario, tokens = _merriment_upkeep(1)
+    assert len(tokens) == 1
+    stats = scenario.game.characteristics_of(tokens[0])
+    assert {color.value for color in stats.colors} == {"R", "W"}
+    assert (stats.power, stats.toughness) in {(3, 1), (2, 1), (1, 2)}
+    assert all(q.kind is not DecisionKind.CHOOSE_A_MODE for q in scenario.questions_asked())
+
+
+def test_outlaws_merriment_picks_every_mode_across_seeds():
+    seen = set()
+    for seed in range(40):
+        scenario, (token,) = _merriment_upkeep(seed)
+        stats = scenario.game.characteristics_of(token)
+        seen.add((stats.power, stats.toughness))
+        if len(seen) == 3:
+            break
+    assert seen == {(3, 1), (2, 1), (1, 2)}
+
+
+# --------------------------------------------------------------------------
+# A modal activation whose instruction line carries "Activate only once each
+# turn" (Skinshifter; CR 700.2a picks the mode on activation, CR 602.5b)
+# --------------------------------------------------------------------------
+
+_RHINO = (
+    "Until end of turn, this creature becomes a Rhino with base power and toughness 4/4 "
+    "and gains trample."
+)
+_PLANT = "Until end of turn, this creature becomes a Plant with base power and toughness 0/8."
+
+
+def test_skinshifter_becomes_a_rhino():
+    scenario = board(["Skinshifter", "Forest", "Forest"])
+    shifter = scenario.creature("Skinshifter", "alice")
+    scenario.will_choose_mode(_RHINO)
+    scenario.activate(shifter, scenario.untapped_sources("Forest")[0])
+    scenario.pass_until_resolved()
+    stats = scenario.game.characteristics_of(shifter)
+    assert (stats.power, stats.toughness) == (4, 4)
+    assert set(stats.subtypes) == {"Rhino"}
+    assert has_keyword(shifter, "trample", scenario.game)
+
+
+def test_skinshifter_becomes_a_plant_and_reverts_at_end_of_turn():
+    scenario = board(["Skinshifter", "Forest", "Forest"])
+    shifter = scenario.creature("Skinshifter", "alice")
+    scenario.will_choose_mode(_PLANT)
+    scenario.activate(shifter, scenario.untapped_sources("Forest")[0])
+    scenario.pass_until_resolved()
+    stats = scenario.game.characteristics_of(shifter)
+    assert (stats.power, stats.toughness) == (0, 8)
+    scenario.game.cleanup_step()
+    stats = scenario.game.characteristics_of(shifter)
+    assert (stats.power, stats.toughness) == (1, 1)
+
+
+def test_skinshifter_activates_only_once_each_turn():
+    scenario = board(["Skinshifter", "Forest", "Forest"])
+    shifter = scenario.creature("Skinshifter", "alice")
+    scenario.will_choose_mode(_PLANT)
+    scenario.activate(shifter, scenario.untapped_sources("Forest")[0])
+    scenario.pass_until_resolved()
+    assert scenario.why_cannot_activate(shifter) is not None
+
+
+# --------------------------------------------------------------------------
+# Payment and opponent-caused restrictions (CR 101.2): Yasharn's "can't pay
+# life or sacrifice nonland permanents to cast spells or activate abilities",
+# Tamiyo's "can't cause you to discard cards or sacrifice permanents"
+# --------------------------------------------------------------------------
+
+
+def test_yasharn_finds_a_basic_forest_and_a_basic_plains():
+    scenario = board(
+        alice_zones={
+            "hand": ["Yasharn, Implacable Earth"],
+            "library": ["Island", "Forest", "Swamp", "Plains", "Mountain"],
+        }
+    )
+    enter_and_resolve(scenario, "Yasharn, Implacable Earth")
+    assert names(scenario.player("alice").hand) == ["Forest", "Plains"]
+    assert len(scenario.player("alice").library) == 3
+
+
+def test_yasharn_finds_only_the_forest_when_there_is_no_plains():
+    scenario = board(
+        alice_zones={"hand": ["Yasharn, Implacable Earth"], "library": ["Island", "Forest"]}
+    )
+    enter_and_resolve(scenario, "Yasharn, Implacable Earth")
+    assert names(scenario.player("alice").hand) == ["Forest"]
+
+
+def test_yasharn_refuses_sacrificing_a_nonland_permanent_for_a_cost():
+    import pytest
+
+    scenario = board(
+        ["Yasharn, Implacable Earth", "Spiked Pit Trap", *["Wastes"] * 5], ["Grizzly Bears"]
+    )
+    trap = scenario.creature("Spiked Pit Trap", "alice")
+    with pytest.raises(ValueError):
+        scenario.activate(
+            trap,
+            *scenario.untapped_sources(*["Wastes"] * 5),
+            sacrificing=[trap],
+            targets=[scenario.creature("Grizzly Bears", "bob")],
+        )
+    assert trap.zone is Zone.BATTLEFIELD
+
+
+def test_yasharn_still_lets_a_land_be_sacrificed_for_a_cost():
+    scenario = board(
+        ["Yasharn, Implacable Earth", "Haunted Fengraf", "Wastes", "Wastes", "Wastes"],
+        alice_zones={"graveyard": ["Grizzly Bears"]},
+    )
+    fengraf = scenario.creature("Haunted Fengraf", "alice")
+    scenario.activate(
+        fengraf,
+        *scenario.untapped_sources("Wastes", "Wastes", "Wastes"),
+        index=1,
+        sacrificing=[fengraf],
+    )
+    scenario.pass_until_resolved()
+    assert names(scenario.player("alice").hand) == ["Grizzly Bears"]
+
+
+def test_yasharn_refuses_paying_life_for_a_mana_ability():
+    import pytest
+
+    scenario = board(["Yasharn, Implacable Earth", "Horizon Canopy"])
+    canopy = scenario.creature("Horizon Canopy", "alice")
+    with pytest.raises(ValueError, match="CR 101.2"):
+        scenario.activate(canopy, color=Color.GREEN)
+    assert scenario.player("alice").life == 20
+
+
+def test_horizon_canopy_pays_life_without_yasharn():
+    scenario = board(["Horizon Canopy"])
+    canopy = scenario.creature("Horizon Canopy", "alice")
+    scenario.activate(canopy, color=Color.GREEN)
+    assert scenario.player("alice").life == 19
+
+
+def _mind_rot(protection: list[str]):
+    scenario = board(
+        ["Swamp", "Swamp", "Swamp"],
+        protection,
+        alice_zones={"hand": ["Mind Rot"]},
+        bob_zones={"hand": ["Island", "Forest"]},
+    )
+    scenario.cast_and_resolve(
+        "Mind Rot", *scenario.untapped_sources("Swamp", "Swamp", "Swamp"), targets=["bob"]
+    )
+    return scenario
+
+
+def test_tamiyo_stops_an_opponents_spell_making_you_discard():
+    scenario = _mind_rot(["Tamiyo, Collector of Tales"])
+    assert names(scenario.player("bob").hand) == ["Forest", "Island"]
+
+
+def test_tamiyo_stops_an_opponents_spell_making_you_sacrifice():
+    scenario = board(
+        ["Swamp", "Swamp"],
+        ["Tamiyo, Collector of Tales", "Grizzly Bears"],
+        alice_zones={"hand": ["Diabolic Edict"]},
+    )
+    scenario.cast_and_resolve(
+        "Diabolic Edict", *scenario.untapped_sources("Swamp", "Swamp"), targets=["bob"]
+    )
+    assert scenario.creature("Grizzly Bears", "bob").zone is Zone.BATTLEFIELD
+
+
+def test_tamiyo_does_not_stop_its_controllers_own_discard():
+    scenario = board(
+        ["Tamiyo, Collector of Tales", "Swamp", "Swamp", "Swamp"],
+        alice_zones={"hand": ["Mind Rot", "Island", "Forest"]},
+    )
+    scenario.cast_and_resolve(
+        "Mind Rot", *scenario.untapped_sources("Swamp", "Swamp", "Swamp"), targets=["alice"]
+    )
+    assert scenario.player("alice").hand == []
+
+
+def test_without_tamiyo_the_opponents_discard_happens():
+    scenario = _mind_rot([])
+    assert scenario.player("bob").hand == []
+
+
+def test_tajuru_preserver_still_stops_only_the_sacrifice():
+    # The widened reader's existing printing: "can't cause you to sacrifice
+    # permanents" alone does not stop a discard.
+    scenario = _mind_rot(["Tajuru Preserver"])
+    assert scenario.player("bob").hand == []

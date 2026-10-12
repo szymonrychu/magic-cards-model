@@ -11,9 +11,15 @@ computed ability lines of every permanent on the battlefield (CR 613.5):
   may pay {2} for that player to ignore this effect until end of turn."
   (Leonin Arbiter): `library_search_blocked`, asked by `Game.search_library`.
 - "Spells and abilities your opponents control can't cause you to sacrifice
-  permanents." (Sigarda, Host of Herons; Tajuru Preserver):
-  `sacrifice_caused_by_opponent`, asked by `Game.sacrifice` while a stack
-  object of an opponent resolves.
+  permanents." (Sigarda, Host of Herons; Tajuru Preserver) and "... can't
+  cause you to discard cards or sacrifice permanents." (Tamiyo, Collector of
+  Tales): `sacrifice_caused_by_opponent`, asked by `Game.sacrifice`, and
+  `discard_caused_by_opponent`, asked by `Game.discard_cards`, while a stack
+  object of an opponent resolves. A cleanup-step discard is the game's, not a
+  spell's or ability's, and is never stopped.
+- "Players can't pay life or sacrifice nonland permanents to cast spells or
+  activate abilities." (Yasharn, Implacable Earth): "nonland permanents" is
+  every permanent but a land (CR 205.2a).
 - "Each opponent can't venture into the dungeon more than once each turn."
   (Keen-Eared Sentry): `venture_refused`.
 """
@@ -40,7 +46,8 @@ _SEARCH_RE = re.compile(
     re.IGNORECASE,
 )
 _CAUSE_SACRIFICE_RE = re.compile(
-    r"^spells and abilities your opponents control can't cause you to sacrifice permanents\.?$",
+    r"^spells and abilities your opponents control can't cause you to "
+    r"(?P<acts>sacrifice permanents|discard cards|discard cards or sacrifice permanents)\.?$",
     re.IGNORECASE,
 )
 _VENTURE_RE = re.compile(
@@ -72,6 +79,8 @@ def _payment_ban(line: str) -> PaymentBan | None:
             singular = noun[:-1] if noun.endswith("s") else noun
             if noun == "permanents":
                 sacrifice.add("permanent")
+            elif noun == "nonland permanents":
+                sacrifice.add("nonland permanent")
             elif singular in _TYPES:
                 sacrifice.add(singular)
             else:
@@ -125,7 +134,8 @@ def payment_refusal(
                 words = {t.value.lower() for t in game.characteristics_of(victim).types}
             except KeyError:
                 words = {t.value.lower() for t in victim.types}
-            if "permanent" in ban.sacrifice or ban.sacrifice & words:
+            nonland = "nonland permanent" in ban.sacrifice and "land" not in words
+            if "permanent" in ban.sacrifice or nonland or ban.sacrifice & words:
                 return (
                     f"{permanent.name}: players can't sacrifice {victim.name} to cast spells "
                     "or activate abilities (CR 101.2)"
@@ -171,8 +181,23 @@ def sacrifice_caused_by_opponent(game: "Game", permanent: CardState) -> bool:
     owner = permanent.controller
     if cause is None or owner is None or cause == owner:
         return False
+    return _caused_by_opponent_banned(game, owner, cause, "sacrifice")
+
+
+def discard_caused_by_opponent(game: "Game", player: str | None) -> bool:
+    """Whether `player` is protected from the discard the resolving spell or
+    ability of an opponent would cause (CR 101.2)."""
+    resolving = game.resolving
+    cause = getattr(resolving, "controller", None) if resolving is not None else None
+    if cause is None or player is None or cause == player:
+        return False
+    return _caused_by_opponent_banned(game, player, cause, "discard")
+
+
+def _caused_by_opponent_banned(game: "Game", protected: str, cause: str, act: str) -> bool:
     for holder, line in _lines(game):
-        if holder.controller == owner and _CAUSE_SACRIFICE_RE.match(line):
+        match = _CAUSE_SACRIFICE_RE.match(line)
+        if holder.controller == protected and match and act in match["acts"].lower():
             return True
     return False
 

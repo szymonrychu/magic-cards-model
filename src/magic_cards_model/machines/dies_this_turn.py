@@ -52,6 +52,10 @@ _EXILE_TOP_THEN_CHOOSE_ONE_TO_PLAY_RE = re.compile(
 _EXILE_ITS_CONTROLLERS_GRAVEYARD_RE = re.compile(
     r"^exile its controller'?s graveyard\.?$", re.IGNORECASE
 )
+#: The Deck of Many Things' "When that creature dies, its owner loses the
+#: game." - CR 104.3e's loss, for the dead card's owner (CR 108.3), who may
+#: not be the player who controlled it.
+_ITS_OWNER_LOSES_THE_GAME_RE = re.compile(r"^its owner loses the game\.?$", re.IGNORECASE)
 #: Initiate of Blood's "flip this creature" (CR 710): the source that created
 #: the delayed trigger, not the creature that died.
 _FLIP_THIS_RE = re.compile(r"^flip this (?:creature|permanent)\.?$", re.IGNORECASE)
@@ -165,6 +169,15 @@ def dies_consequence_effect(text: str, *, source_stamp: UUID | None = None) -> A
                 game.exile_permanent(card)
 
         return exile_graveyard
+    if _ITS_OWNER_LOSES_THE_GAME_RE.fullmatch(cleaned):
+
+        def owner_loses(game: "Game", ability: Any) -> None:
+            dead = _dead_creature(game, ability)
+            owner = None if dead is None else dead.owner
+            if owner is not None and game.is_in_game(owner):
+                game.player_loses_the_game(owner)
+
+        return owner_loses
     from .effects import parse_mixed_effect
 
     return parse_mixed_effect(cleaned)

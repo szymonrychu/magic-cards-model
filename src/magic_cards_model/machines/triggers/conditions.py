@@ -2051,6 +2051,13 @@ def _condition_matches(
         )
         if counter_qualifier is False:
             return False
+        if _NONTOKEN_WORD.search(lowered):
+            # Genku, Future Shaper's "another nontoken permanent you control
+            # leaves the battlefield" - CR 111.1's token is excluded, read
+            # off the event's own subject as the DIES branch reads it.
+            subject = game.find_by_id(event.subject_id) if event.subject_id else None
+            if subject is None or getattr(subject, "token", False):
+                return False
         return (
             _controller_clause_holds(condition, controller, event.subject_controller)
             and _types_match(event.subject_types, condition)

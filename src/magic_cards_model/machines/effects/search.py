@@ -461,6 +461,60 @@ _SEARCH_HAND_OR_GRAVEYARD_RE = re.compile(
 )
 
 
+#: "search your library for a basic Forest card and a basic Plains card,
+#: reveal those cards, put them into your hand, then shuffle" (Yasharn,
+#: Implacable Earth) - one CR 701.23a search for one card of each of two
+#: qualities; CR 701.23b lets the searcher find either, both or neither (the
+#: card's own ruling), and CR 701.20a reveals what was found.
+_SEARCH_TWO_QUALITIES_TO_HAND_RE = re.compile(
+    r"^search your library for an? (?P<first>[^,.]+?) card and an? (?P<second>[^,.]+?) card"
+    r"(?:,|\.)\s*reveal (?:those cards|them), put them into your hand, then shuffle\.?$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s34")
+def _parse_search_two_qualities_to_hand_text(text: str) -> AbilityEffect | None:
+    """`_SEARCH_TWO_QUALITIES_TO_HAND_RE`'s shape, or `None` - read whole, ahead
+    of the clause splitter, which would cut the "and" between the qualities."""
+    if "card and a" not in text:
+        return None
+    match = _SEARCH_TWO_QUALITIES_TO_HAND_RE.fullmatch(
+        " ".join(_strip_non_effect_preamble(text).split())
+    )
+    if match is None:
+        return None
+    qualities = [match.group("first").strip(), match.group("second").strip()]
+    if not all(_card_description_is_readable(quality) for quality in qualities):
+        return None
+    matchers = [_quality_matcher(quality) for quality in qualities]
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        controller = game.controller_of(stack_object)
+        source = stack_object.source_name  # type: ignore[union-attr]
+        source_id = source_id_of(stack_object)
+        if library_search_blocked(game, controller.username) is not None:
+            return
+        found: list[CardState] = []
+        for matches in matchers:
+            found += game.search_library(
+                controller,
+                matches,
+                count=1,
+                optional=True,
+                shuffle=False,
+                source=source,
+                source_id=source_id,
+                caused_by=controller.username,
+            )
+        for card in found:
+            game.reveal(card, source=source)
+            controller.add(card, Zone.HAND)
+        game.shuffle_library(controller)
+
+    return effect
+
+
 @MIXED_CLAUSE.rung("s26", for_spell=FORWARD)
 def _parse_search_hand_or_graveyard_clause(
     clause: str, *, for_spell: bool
@@ -2240,6 +2294,7 @@ def _parse_search_library_and_outside_distinct_names_opponent_chooses_clause(
     return effect
 
 
+from ..player_action_prohibitions import library_search_blocked  # noqa: E402
 from ._common import (  # noqa: E402
     _COLOR_COUNT_WORDS,
     _HAND_EXILE_COLOR_WORDS,
