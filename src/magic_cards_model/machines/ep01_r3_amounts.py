@@ -8,6 +8,9 @@ known information (CR 603.10a), because CR 122.2 has emptied the live counters
 by the time a dies trigger resolves.
 """
 
+import contextlib
+import contextvars
+
 from ..models.zone import Zone
 
 
@@ -96,6 +99,23 @@ def cast_spell_mana_value(game):
     return None if spell is None else int(spell.mana_value)
 
 
+def event_card_mana_value(game):
+    """The mana value of the card the resolving ability's event names - the
+    spell of a cast event (`cast_spell_mana_value`) or the card of a discard
+    event ("When you discard a card this way, ... its mana value", read as it
+    last existed, CR 608.2h) - or `None` when the event names no card."""
+    from .abilities import TriggerEvent
+
+    cast_value = cast_spell_mana_value(game)
+    if cast_value is not None:
+        return cast_value
+    event = resolving_event(game)
+    if event is None or event.event is not TriggerEvent.DISCARDS_A_CARD or event.subject_id is None:
+        return None
+    card = game.find_by_id(event.subject_id)
+    return None if card is None else int(card.mana_value)
+
+
 def event_subject_stat(game, *, wants_power):
     """Power (or toughness) of the resolving trigger's event subject as it last
     existed, never negative (CR 107.1b, CR 608.2h)."""
@@ -118,9 +138,6 @@ def event_subject_stat(game, *, wants_power):
 # "that creature" is the sacrificed one) as the event's subject. A rung that
 # knows its whole text is such a trigger turns them on for its own parse only.
 # --------------------------------------------------------------------------
-
-import contextlib
-import contextvars
 
 _EVENT_TERMS = contextvars.ContextVar("ep01_r3_event_terms", default=False)
 

@@ -515,3 +515,147 @@ def test_folio_of_fancies_removes_every_players_maximum_hand_size():
 def test_without_folio_of_fancies_the_maximum_stays():
     scenario = _board([], [])
     assert not scenario.game.player("bob").has_no_maximum_hand_size
+
+
+# -- "Put a <kind> counter on target creature ... Its controller draws a card"
+
+
+def test_gwafa_hazid_bribes_a_creature_and_its_controller_draws():
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("alice", battlefield=["Gwafa Hazid, Profiteer", "Plains", "Island"])
+        .player("bob", battlefield=["Grizzly Bears"], library=["Forest", "Forest"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    gwafa = scenario.creature("Gwafa Hazid, Profiteer", "alice")
+    bears = scenario.creature("Grizzly Bears", "bob")
+    hand_before = len(scenario.player("bob").hand)
+    scenario.activate(gwafa, auto=True, targets=[bears])
+    _settle(scenario)
+    assert bears.counter_count("bribery") == 1
+    assert len(scenario.player("bob").hand) == hand_before + 1
+    assert len(scenario.player("alice").hand) == 0
+
+
+# -- "Draw a card, then you may return a land you control to its owner's hand"
+
+
+def _kefnet_scenario():
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player(
+            "alice",
+            battlefield=["Kefnet the Mindful", "Island", "Island", "Island", "Island", "Forest"],
+            library=["Mountain", "Mountain"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    return scenario
+
+
+def test_kefnet_draws_then_may_return_a_land():
+    scenario = _kefnet_scenario()
+    kefnet = scenario.creature("Kefnet the Mindful", "alice")
+    forest = scenario.find("Forest", Zone.BATTLEFIELD, "alice")
+    scenario.will_choose_cards(forest)
+    scenario.activate(kefnet, auto=True)
+    _settle(scenario)
+    assert scenario.find("Forest", Zone.HAND, "alice")
+    assert len(scenario.player("alice").hand) == 2
+
+
+def test_kefnet_may_decline_to_return_a_land():
+    scenario = _kefnet_scenario()
+    kefnet = scenario.creature("Kefnet the Mindful", "alice")
+    scenario.will_choose_cards()
+    scenario.activate(kefnet, auto=True)
+    _settle(scenario)
+    assert len(scenario.player("alice").hand) == 1
+    assert scenario.find("Forest", Zone.BATTLEFIELD, "alice")
+
+
+# -- "Mill seven cards. Then put all cards that have an Adventure from among
+# -- the milled cards into your hand" (Seek Thrills)
+
+
+def test_seek_thrills_mills_seven_and_takes_every_adventure_card():
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player(
+            "alice",
+            hand=["Beluna Grandsquall // Seek Thrills"],
+            battlefield=["Forest"] * 3 + ["Island"] * 2 + ["Mountain"] * 2,
+            library=[
+                "Bonecrusher Giant // Stomp",
+                "Forest",
+                "Brazen Borrower // Petty Theft",
+                "Forest",
+                "Forest",
+                "Forest",
+                "Forest",
+                "Murderous Rider",
+            ],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    casting = scenario.cast("Beluna Grandsquall // Seek Thrills")
+    casting.cast_as_adventure()
+    payment = casting.begin_paying()
+    payment.auto_tap(scenario.game.permanents_controlled_by("alice"))
+    payment.pay()
+    scenario.put_on_stack(casting)
+    scenario.resolve_top()
+    hand = {c.card.name for c in scenario.player("alice").hand}
+    assert hand == {"Bonecrusher Giant // Stomp", "Brazen Borrower // Petty Theft"}
+    assert len(scenario.player("alice").library) == 1
+    assert scenario.find("Murderous Rider", Zone.LIBRARY, "alice")
+
+
+# -- "Draw a card, then discard a card. When you discard a card this way,
+# -- target player mills cards equal to its mana value" (The Ancient One)
+
+
+def _ancient_one_scenario(hand):
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player(
+            "alice",
+            hand=hand,
+            battlefield=["The Ancient One", "Island", "Island", "Swamp", "Swamp"],
+            library=["Forest"],
+        )
+        .player("bob", library=["Plains"] * 10)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    return scenario
+
+
+def test_the_ancient_one_mills_the_target_by_the_discarded_cards_mana_value():
+    scenario = _ancient_one_scenario(["Serra Angel"])
+    one = scenario.find("The Ancient One", Zone.BATTLEFIELD, "alice")
+    scenario.will_discard(scenario.find("Serra Angel", Zone.HAND, "alice"))
+    scenario.will_choose_targets("bob")
+    scenario.activate(one, auto=True)
+    _settle(scenario)
+    assert len(scenario.player("bob").library) == 10 - 5
+    assert scenario.find("Serra Angel", Zone.GRAVEYARD, "alice")
+
+
+def test_the_ancient_one_with_a_land_discard_mills_nothing():
+    scenario = _ancient_one_scenario(["Forest"])
+    one = scenario.find("The Ancient One", Zone.BATTLEFIELD, "alice")
+    scenario.will_discard(scenario.find("Forest", Zone.HAND, "alice"))
+    scenario.will_choose_targets("bob")
+    scenario.activate(one, auto=True)
+    _settle(scenario)
+    assert len(scenario.player("bob").library) == 10

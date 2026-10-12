@@ -74,6 +74,7 @@ from ..zone_resets import (
 
 if TYPE_CHECKING:
     from ...models.game import Game, StackObject
+from ..ep01_r3_amounts import event_card_mana_value
 from ._chains import ABILITY_TEXT, FORWARD, MIXED_CLAUSE, MIXED_CLAUSES, SPELL_TEXT
 from ._common import (
     _SPELL_QUALIFIER_WORD,
@@ -946,16 +947,27 @@ def parse_clause_effect(clause: str) -> ClauseEffect | None:
         equal_their_hand = equal is not None and equal.strip().lower() == (
             "the number of cards in their hand"
         )
+        # "cards equal to its mana value" (The Ancient One): "its" is the card
+        # the reflexive ability's event names (CR 603.12, CR 608.2h).
+        equal_event_value = equal is not None and equal.strip().lower() == "its mana value"
         equal_reader = (
-            count_expression(equal) if equal is not None and not equal_their_hand else None
+            count_expression(equal)
+            if equal is not None and not equal_their_hand and not equal_event_value
+            else None
         )
-        if equal is not None and equal_reader is None and not equal_their_hand:
+        if (
+            equal is not None
+            and equal_reader is None
+            and not (equal_their_hand or equal_event_value)
+        ):
             return None
 
         def mill(game: "Game", player: Player, source: str, source_id: str | None) -> None:
             base = amount
             if equal_their_hand:
                 base = len(player.hand)
+            elif equal_event_value:
+                base = event_card_mana_value(game) or 0
             elif equal_reader is not None:
                 # CR 701.17a: "cards equal to the number of cards in your hand" -
                 # "your" is the ability's controller, not the player milled.
@@ -5726,6 +5738,13 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
                 parsed.append(paired)
                 index += 2
                 continue
+            paired = _parse_counter_on_target_then_controller_pair(
+                clauses[index], clauses[index + 1], for_spell=for_spell
+            )
+            if paired is not None:
+                parsed.append(paired)
+                index += 2
+                continue
             paired = _parse_counter_then_create_tokens_by_mana_value_pair(
                 clauses[index], clauses[index + 1], for_spell=for_spell
             )
@@ -6380,6 +6399,7 @@ from .counters import (  # noqa: E402
     _parse_counter_exile_then_cast_free_clauses,
     _parse_counter_if_mana_value_clause,
     _parse_counter_on_it_trigger_subject_clause,
+    _parse_counter_on_target_then_controller_pair,
     _parse_counter_on_trigger_subject_clause,
     _parse_counter_then_create_tokens_by_mana_value_pair,
     _parse_counter_then_delayed_any_combination_mana_pair,

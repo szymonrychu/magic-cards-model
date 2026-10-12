@@ -6,7 +6,7 @@ from uuid import UUID
 
 from magic_cards_model.phrases import with_indefinite_article
 
-from ...models.card import Color, Type
+from ...models.card import Color, Layout, Type
 from ...models.card_state import (
     CardState,
     ChoiceKind,
@@ -1372,6 +1372,36 @@ def _parse_target_player_mills_then_puts_milled_into_own_hand_clause(text: str) 
             for state in milled:
                 if state.zone is Zone.GRAVEYARD and quality_matches(state):
                     target.move(state, Zone.HAND)
+
+    return effect
+
+
+#: Seek Thrills: "Mill seven cards. Then put all cards that have an Adventure
+#: from among the milled cards into your hand." - the caster mills, then takes
+#: every milled card of the quality (CR 608.2d: no choice, "all"). A card "that
+#: has an Adventure" is an adventurer card (CR 715.1), found by its layout.
+_MILL_THEN_PUT_ALL_ADVENTURE_RE = re.compile(
+    rf"^mill (?P<n>{COUNT}) cards?\.\s*then put all (?P<quality>cards that have an adventure) "
+    r"from among the milled cards into your hand\.?$",
+    re.IGNORECASE,
+)
+
+
+@SPELL_TEXT.rung("s19")
+def _parse_mill_then_put_all_adventure_from_milled_clause(text: str) -> Effect | None:
+    """`_MILL_THEN_PUT_ALL_ADVENTURE_RE`'s shape - Seek Thrills."""
+    if "from among the milled cards" not in text:
+        return None
+    match = _MILL_THEN_PUT_ALL_ADVENTURE_RE.fullmatch(" ".join(text.split()))
+    count = parse_count(match.group("n")) if match else None
+    if count is None:
+        return None
+
+    def effect(game: "Game", spell: CardState) -> None:
+        player = game.player(game.controller_of(spell).username)
+        for state in _mill(game, player, count):
+            if state.zone is Zone.GRAVEYARD and state.card.layout is Layout.ADVENTURE:
+                player.move(state, Zone.HAND)
 
     return effect
 

@@ -2879,6 +2879,50 @@ def _parse_counter_then_referent_pair(
     return effect
 
 
+def _parse_counter_on_target_then_controller_pair(
+    first: str, second: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """ "Put a `<kind>` counter on target `<permanent>`. Its controller
+    `<referent clause>`." - Gwafa Hazid's "Put a bribery counter on target
+    creature you don't control. Its controller draws a card." as one CR 608.2c
+    instruction pair.
+
+    "Its controller" is CR 400.7's anaphora back to the permanent the first
+    sentence targeted (the same one `_parse_anaphoric_clause_pair` reads after a
+    destroy), read once the counter is on it, so a target that stopped being
+    legal (CR 608.2b) leaves both sentences undone.
+    """
+    if " controller " not in second or " counter" not in first:
+        return None
+    put = _COUNTER_TARGET_RE.fullmatch(first.strip())
+    subject = _ANAPHORIC_SUBJECT_RE.fullmatch(second.strip())
+    if put is None or subject is None or put.group("each") is not None:
+        return None
+    if not second.strip().lower().startswith(("its controller", "that creature's controller")):
+        return None
+    amount = parse_count(put.group("n"))
+    second_clause = _parse_referent_clause(subject.group("rest"))
+    if amount is None or second_clause is None:
+        return None
+    if not _targets_understood(put.group("phrase"), count_agnostic=True):
+        return None
+    put_counters = put_counters_on_ability_targets(_counter_kind(put.group("kind")), amount)
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        name = stack_object.name if for_spell else stack_object.source_name  # type: ignore[union-attr]
+        targets = [
+            target
+            for target in game.resolve_targets(stack_object)
+            if isinstance(target, CardState) and target.zone is Zone.BATTLEFIELD
+        ]
+        if not targets:
+            return
+        put_counters(game, stack_object)
+        second_clause(game, game.controller_of(targets[0]), None, name, source_id_of(stack_object))
+
+    return effect
+
+
 #: "Create X 1/1 colorless Thopter artifact creature tokens with flying, where
 #: X is that spell's mana value." (Access Denied) - CR 107.3's X, set by the
 #: very spell the paired first clause just countered, not chosen by the
@@ -4367,6 +4411,7 @@ from ._common import (  # noqa: E402
     _ANAPHORIC_SUBJECT_RE,
     _COLOR_COUNT_WORDS,
     _COLOR_LETTERS,
+    _COUNTER_TARGET_RE,
     _COUNTER_TARGET_SPELL_RE,
     _COUNTER_UNLESS_PAYS_RE,
     _HAND_EXILE_COLOR_WORDS,

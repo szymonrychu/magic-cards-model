@@ -4284,13 +4284,22 @@ def _parse_reflexive_discard_count_clause(text: str) -> AbilityEffect | None:
             return
         # CR 603.12a: "one or more" is one ability carrying the count; the
         # singular "a `<quality>` card" triggers once per qualifying card.
-        for _ in range(1 if batch else count):
+        # The reflexive ability's event names the discarded card (the first of
+        # the batch), which "its mana value" reads as it last existed (CR 608.2h).
+        for index in range(1 if batch else count):
             game.create_reflexive_trigger(
                 text=_substitute_reflexive_count(consequence_text, count),
                 controller=controller.username,
                 source_id=ability.source_id,
                 source_name=source_name,
                 callback=ReflexiveConsequence(),
+                event=GameEvent(
+                    event=TriggerEvent.DISCARDS_A_CARD,
+                    player=controller.username,
+                    amount=count,
+                    discarded_ids=tuple(card.id for card in discarded),
+                    subject_id=discarded[index].id,
+                ),
             )
 
     return effect
