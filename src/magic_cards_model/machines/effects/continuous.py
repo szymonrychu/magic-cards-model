@@ -4961,7 +4961,7 @@ def transform_permanent(game: "Game", permanent: CardState, *, day_night: bool =
         # The face's own name may hold a comma ("Sephiroth, One-Winged
         # Angel"), so it is matched as the name, not up to the first comma.
         # Shinryu, Transcendent Rival's own "As this creature transforms into
-        # Shinryu, ..." names the face by its short name (CR 201.4b).
+        # Shinryu, ..." names the face by its shortened name (CR 201.5c).
         rest = match.group("rest") if match is not None else ""
         lead = next(
             (
@@ -12990,9 +12990,9 @@ _UNATTACH_SELF_RE = re.compile(
 
 @ABILITY_TEXT.rung("s28")
 def _parse_unattach_self_then_transform_text(text: str) -> AbilityEffect | None:
-    """`_UNATTACH_SELF_RE`'s shape; a source that is gone does nothing (CR
-    608.2b), and the transform obeys CR 701.27f through the shared
-    self-transform reader."""
+    """`_UNATTACH_SELF_RE`'s shape; a source that has left the battlefield is
+    a new object (CR 400.7) and nothing happens, and the transform obeys CR
+    701.27f through the shared self-transform reader."""
     stripped = " ".join(text.strip().split())
     if not stripped.lower().startswith("unattach "):
         return None

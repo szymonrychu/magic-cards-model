@@ -107,7 +107,8 @@ def record_cant_attack(game: Game, restricted: str, protected: str, source_name:
 
 def _defender_player(game: Game, defender: Any) -> str | None:
     """The player attacked, or the controller of the planeswalker attacked;
-    None for a battle (CR 310: not "you or a planeswalker you control")."""
+    None for a battle, which is neither "you" nor "a planeswalker you
+    control"."""
     if defender is None:
         return None
     if getattr(defender, "is_player", False):
