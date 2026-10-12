@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 27 | 16.9% |
-| Works (untested) | 90 | 56.2% |
-| Partial (unaudited) | 2 | 1.2% |
-| Not working | 41 | 25.6% |
+| Tested | 30 | 18.8% |
+| Works (untested) | 91 | 56.9% |
+| Partial (unaudited) | 0 | 0.0% |
+| Not working | 39 | 24.4% |
 
 ## Cards needing work
 
@@ -38,7 +38,6 @@
 | Fated Intervention | silent | Create two 3/3 green Centaur enchantment creature tokens. If it's your turn, scry 2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Fated Retribution | silent | Destroy all creatures and planeswalkers. If it's your turn, scry 2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Flame-Wreathed Phoenix | silent | When this creature enters, if tribute wasn't paid, it gains haste and "When this creature dies, return it to its owner's hand." | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Flitterstep Eidolon | silent | Enchanted creature gets +1/+1 and can't be blocked. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Forlorn Pseudamma | silent | Inspired — Whenever this creature becomes untapped, you may pay {2}{B}. If you do, create a 2/2 black Zombie enchantment creature token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Gild | silent | Exile target creature. Create a Gold token. (It's an artifact with "Sacrifice this token: Add one mana of any color.") | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | God-Favored General | silent | Inspired — Whenever this creature becomes untapped, you may pay {2}{W}. If you do, create two 1/1 white Soldier enchantment creature tokens. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -65,10 +64,7 @@
 | Everflame Eidolon | notice | {R}: This creature gets +1/+0 until end of turn. If it's an Aura, enchanted creature gets +1/+0 until end of turn instead. | unparsed remainder: If it's an Aura, enchanted creature gets +1/+0 until end of turn instead. | Y/Y/- | not_working |
 | Eye Gouge | notice | Target creature gets -1/-1 until end of turn. If it's a Cyclops, destroy it. | unparsed remainder: If it's a Cyclops, destroy it. | Y/Y/- | not_working |
 | Fated Return | notice | Put target creature card from a graveyard onto the battlefield under your control. It gains indestructible. If it's your turn, scry 2. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Ragemonger | notice | Minotaur spells you cast cost {B}{R} less to cast. This effect reduces only the amount of colored mana you pay. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Retraction Helix | notice | Until end of turn, target creature gains "{T}: Return target nonland permanent to its owner's hand." | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Archetype of Endurance | unaudited | Creatures your opponents control lose hexproof and can't have or gain hexproof. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Tromokratis | unaudited | Tromokratis can't be blocked unless all creatures defending player controls block it. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Akroan Conscriptor | handled | Heroic — Whenever you cast a spell that targets this creature, gain control of another target creature until end of turn. Untap that creature. It gains haste un | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Akroan Phalanx | handled | {2}{R}: Creatures you control get +1/+0 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Akroan Skyguard | handled | Heroic — Whenever you cast a spell that targets this creature, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -98,6 +94,7 @@
 | Fated Infatuation | handled | Create a token that's a copy of target creature you control. If it's your turn, scry 2. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Fearsome Temper | handled | Enchanted creature gets +2/+2 and has "{2}{R}: Target creature can't block this creature this turn." | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Felhide Spiritbinder | handled | Inspired — Whenever this creature becomes untapped, you may pay {1}{R}. If you do, create a token that's a copy of another target creature, except it's an encha | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Flitterstep Eidolon | handled | This creature can't be blocked. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Forsaken Drifters | handled | When this creature dies, mill four cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ghostblade Eidolon | handled | Enchanted creature gets +1/+1 and has double strike. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Glimpse the Sun God | handled | Tap X target creatures. Scry 1. (Look at the top card of your library. You may put that card on the bottom.) | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -163,9 +160,10 @@
 ## Fully supported
 
 <details>
-<summary>27 cards</summary>
+<summary>30 cards</summary>
 
 - Acolyte's Reward
+- Archetype of Endurance
 - Courser of Kruphix
 - Deepwater Hypnotist
 - Ephara, God of the Polis
@@ -183,6 +181,7 @@
 - Noble Quarry
 - Ornitharch
 - Pain Seer
+- Ragemonger
 - Satyr Firedancer
 - Satyr Wayfinder
 - Searing Blood
@@ -191,6 +190,7 @@
 - Spirit of the Labyrinth
 - Stratus Walk
 - Temple of Enlightenment
+- Tromokratis
 - Xenagos, God of Revels
 
 </details>
@@ -209,12 +209,9 @@
 | creatures your opponents control lose deathtouch and can't have or gain deathtouch. | 1 | Archetype of Finality | bng |
 | creatures your opponents control lose first strike and can't have or gain first strike. | 1 | Archetype of Courage | bng |
 | creatures your opponents control lose flying and can't have or gain flying. | 1 | Archetype of Imagination | bng |
-| creatures your opponents control lose hexproof and can't have or gain hexproof. | 1 | Archetype of Endurance | bng |
 | creatures your opponents control lose trample and can't have or gain trample. | 1 | Archetype of Aggression | bng |
 | destroy all creatures and planeswalkers. if it's your turn, scry N. | 1 | Fated Retribution | bng |
-| enchanted creature gets +N/+N and can't be blocked. | 1 | Flitterstep Eidolon | bng |
 | exile target creature. create a gold token. (it's an artifact with "...") | 1 | Gild | bng |
-| minotaur spells you cast cost {M}{M} less to cast. ~ reduces only the amount of colored mana you pay. | 1 | Ragemonger | bng |
 | put target creature card from a graveyard onto the battlefield under your control. it gains indestructible. if it's your turn, scry N. | 1 | Fated Return | bng |
 | return all creatures to their owners' hands except for krakens, leviathans, octopuses, and serpents. | 1 | Whelming Wave | bng |
 | search your library for up to two basic land cards, reveal those cards, and put one onto the battlefield tapped and the other into your hand. shuffle, then scry | 1 | Peregrination | bng |
@@ -235,7 +232,6 @@
 | {M}: put ~ and each creature blocking or blocked by it on top of their owners' libraries, then those players shuffle. | 1 | Vortex Elemental | bng |
 | {M}: ~ gets +N/+N until end of turn. if it's an aura, enchanted creature gets +N/+N until end of turn instead. | 1 | Everflame Eidolon | bng |
 | ~ and enchanted creature each get +N/+N for each creature you control and +N/+N for each aura you control. | 1 | Eidolon of Countless Battles | bng |
-| ~ can't be blocked unless all creatures defending player controls block it. | 1 | Tromokratis | bng |
 
 ## Notes
 

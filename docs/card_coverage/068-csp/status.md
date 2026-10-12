@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 27 | 18.9% |
-| Works (untested) | 64 | 44.8% |
-| Partial (unaudited) | 4 | 2.8% |
-| Not working | 48 | 33.6% |
+| Tested | 32 | 22.4% |
+| Works (untested) | 66 | 46.2% |
+| Partial (unaudited) | 0 | 0.0% |
+| Not working | 45 | 31.5% |
 
 ## Cards needing work
 
@@ -29,7 +29,6 @@
 | Adarkar Valkyrie | silent | {T}: When target creature other than this creature dies this turn, return that card to the battlefield under your control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Arcum Dagsson | silent | {T}: Target artifact creature's controller sacrifices it. That player may search their library for a noncreature artifact card, put it onto the battlefield, the | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Balduvian Fallen | silent | Whenever this creature's cumulative upkeep is paid, it gets +1/+0 until end of turn for each {B} or {R} spent this way. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
-| Balduvian Frostwaker | silent | {U}, {T}: Target snow land becomes a 2/2 blue Elemental creature with flying. It's still a land. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Brooding Saurian | silent | At the beginning of each end step, each player gains control of all nontoken permanents they own. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Commandeer | silent | You may exile two blue cards from your hand rather than pay this spell's mana cost. Gain control of target noncreature spell. You may choose new targets for it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Controvert | silent | Recover | no machine in the engine executes this keyword | Y/-/- | not_working |
@@ -37,7 +36,6 @@
 | Darien, King of Kjeldor | silent | Whenever you're dealt damage, you may create that many 1/1 white Soldier creature tokens. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Dark Depths | silent | When Dark Depths has no ice counters on it, sacrifice it. If you do, create Marit Lage, a legendary 20/20 black Avatar creature token with flying and indestruct | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Diamond Faerie | silent | {1}{S}: Snow creatures you control get +1/+1 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Field Marshal | silent | Other Soldier creatures get +1/+1 and have first strike. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Fury of the Horde | silent | You may exile two red cards from your hand rather than pay this spell's mana cost. Untap all creatures that attacked this turn. After this main phase, there is  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Garza's Assassin | silent | Recover | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Glacial Plating | silent | Enchanted creature gets +3/+3 for each age counter on this Aura. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -53,7 +51,6 @@
 | Lightning Storm | silent | Lightning Storm deals X damage to any target, where X is 3 plus the number of charge counters on Lightning Storm. Discard a land card: Put two charge counters o | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Magmatic Core | silent | At the beginning of your end step, this enchantment deals X damage divided as you choose among any number of target creatures, where X is the number of age coun | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Resize | silent | Recover | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Rimefeather Owl | silent | Rimefeather Owl's power and toughness are each equal to the number of snow permanents on the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Rimehorn Aurochs | silent | {2}{S}: Target creature blocks target creature this turn if able. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Rite of Flame | silent | Add {R}{R}, then add {R} for each card named Rite of Flame in each graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Ronom Serpent | silent | When you control no snow lands, sacrifice this creature. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
@@ -74,12 +71,9 @@
 | Ohran Viper | notice | Whenever this creature deals combat damage to a creature, destroy that creature at end of combat. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Thermal Flux | notice | Choose one — • Target nonsnow permanent becomes snow until end of turn. • Target snow permanent isn't snow until end of turn. Draw a card at the beginning of th | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Vanish into Memory | notice | Exile target creature. You draw cards equal to that creature's power. At the beginning of your next upkeep, return that card to the battlefield under its owner' | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Freyalise's Radiance | unaudited | Snow permanents don't untap during their controllers' untap steps. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Karplusan Strider | unaudited | This creature can't be the target of blue or black spells. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Rimescale Dragon | unaudited | Creatures with ice counters on them don't untap during their controllers' untap steps. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Thrumming Stone | unaudited | Spells you cast have ripple 4. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Arctic Flats | handled | This land enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Aurochs Herd | handled | When this creature enters, you may search your library for an Aurochs card, reveal it, put it into your hand, then shuffle. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Balduvian Frostwaker | handled | {U}, {T}: Target snow land becomes a 2/2 blue Elemental creature with flying. It's still a land. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Boreal Centaur | handled | {S}: This creature gets +1/+1 until end of turn. Activate only once each turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Boreal Druid | handled |  |  | Y/-/- | not_tested |
 | Boreal Griffin | handled | {S}: This creature gains first strike until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -94,6 +88,7 @@
 | Disciple of Tevesh Szat | handled | {T}: Target creature gets -1/-1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Drelnoch | handled | Whenever this creature becomes blocked, you may draw two cards. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Earthen Goo | handled | This creature gets +1/+1 for each age counter on it. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Field Marshal | handled | Other Soldier creatures get +1/+1 and have first strike. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Flashfreeze | handled | Counter target red or green spell. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Frost Marsh | handled | This land enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Frost Raptor | handled | {S}{S}: This creature gains shroud until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -146,7 +141,7 @@
 ## Fully supported
 
 <details>
-<summary>27 cards</summary>
+<summary>32 cards</summary>
 
 - Adarkar Windform
 - Allosaurus Rider
@@ -154,8 +149,10 @@
 - Braid of Fire
 - Cover of Winter
 - Feast of Flesh
+- Freyalise's Radiance
 - Goblin Furrier
 - Haakon, Stromgald Scourge
+- Karplusan Strider
 - Kjeldoran Javelineer
 - Kjeldoran War Cry
 - Krovikan Scoundrel
@@ -165,12 +162,15 @@
 - Mishra's Bauble
 - Mystic Melting
 - Panglacial Wurm
+- Rimefeather Owl
+- Rimescale Dragon
 - Rimewind Cryomancer
 - Ronom Hulk
 - Skred
 - Soul Spike
 - Stalking Yeti
 - Swift Maneuver
+- Thrumming Stone
 - Tresserhorn Skyknight
 - Vexing Sphinx
 - Void Maw
@@ -190,13 +190,9 @@
 | at the beginning of each end step, each player gains control of all nontoken permanents they own. | 1 | Brooding Saurian | csp |
 | at the beginning of your end step, ~ deals N damage divided as you choose among any number of target creatures, where N is the number of age counters on it. | 1 | Magmatic Core | csp |
 | counter target spell unless its controller pays {M} plus an additional {M} for each card named ~ in each graveyard. | 1 | Rune Snag | csp |
-| creatures with ice counters on them don"..." untap steps. | 1 | Rimescale Dragon | csp |
 | enchanted creature gets +N/+N for each age counter on ~. | 1 | Glacial Plating | csp |
 | exile target creature. you draw cards equal to that creature"..."s control. if you do, discard cards equal to that creature's toughness. | 1 | Vanish into Memory | csp |
-| other soldier creatures get +N/+N and have first strike. | 1 | Field Marshal | csp |
 | remove a healing counter from ~: prevent the next N damage that would be dealt to ~ ~. | 1 | Ursine Fylgja | csp |
-| snow permanents don"..." untap steps. | 1 | Freyalise's Radiance | csp |
-| spells you cast have ripple N. | 1 | Thrumming Stone | csp |
 | when you control no snow lands, sacrifice ~. | 1 | Ronom Serpent | csp |
 | when ~ enters, exile the top five cards of target player's library face down. you may look at those cards for as long as they remain exiled. | 1 | Jester's Scepter | csp |
 | when ~ enters, put six +N/+N counters on enchanted creature. | 1 | Shape of the Wiitigo | csp |
@@ -215,15 +211,12 @@
 | whenever ~ deals damage, you gain that much life. | 1 | Kjeldoran Gargoyle | csp |
 | you may exile two blue cards from your hand rather than pay ~ mana cost. gain control of target noncreature spell. you may choose new targets for it. (if that s | 1 | Commandeer | csp |
 | you may exile two red cards from your hand rather than pay ~ mana cost. untap all creatures that attacked ~. after ~ phase, there is an additional combat phase  | 1 | Fury of the Horde | csp |
-| {M}, {M}: target snow land becomes a N/N blue elemental creature with flying. it's still a land. | 1 | Balduvian Frostwaker | csp |
 | {M}: target artifact creature's controller sacrifices it. that player may search their library for a noncreature artifact card, put it onto the battlefield, the | 1 | Arcum Dagsson | csp |
 | {M}: when target creature other than ~ dies ~, return that card to the battlefield under your control. | 1 | Adarkar Valkyrie | csp |
 | {M}{M}, {M}: look at the top card of your library. if that card is snow, you may reveal it and put it into your hand. | 1 | Scrying Sheets | csp |
 | {M}{M}: snow creatures you control get +N/+N until end of turn. | 1 | Diamond Faerie | csp |
 | {M}{M}: target creature blocks target creature ~ if able. | 1 | Rimehorn Aurochs | csp |
-| ~ can't be the target of blue or black spells. | 1 | Karplusan Strider | csp |
 | ~ deals N damage to any target, where N is N plus the number of charge counters on ~. discard a land card: put two charge counters on ~. you may choose a new ta | 1 | Lightning Storm | csp |
-| ~'s power and toughness are each equal to the number of snow permanents on the battlefield. | 1 | Rimefeather Owl | csp |
 
 ## Notes
 

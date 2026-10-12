@@ -17,17 +17,15 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 219 | 81.7% |
+| Tested | 221 | 82.5% |
 | Works (untested) | 47 | 17.5% |
-| Partial (unaudited) | 2 | 0.7% |
+| Partial (unaudited) | 0 | 0.0% |
 | Not working | 0 | 0.0% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
-| Proft, Sinister Mastermind | unaudited | Threshold — You can't cast this spell unless there are seven or more cards in your graveyard. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Sanctum Lurker | unaudited | Planeswalkers you control aren't put into their owners' graveyards for having 0 loyalty. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Afterthought Sentry | handled | {2}: This creature gains flying until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Archive Arbiter | handled | When this creature enters, choose one — • Destroy target noncreature, nonland permanent. • You gain 4 life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Arni, Humble Scribe | handled | Whenever another nontoken creature you control enters, untap Arni. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -79,7 +77,7 @@
 ## Fully supported
 
 <details>
-<summary>219 cards</summary>
+<summary>221 cards</summary>
 
 - Academic Ascent
 - Aerid Konstrari
@@ -214,6 +212,7 @@
 - Primal Witchstalker
 - Proctor of Potential
 - Proft, Consulting Detective
+- Proft, Sinister Mastermind
 - Prophesied End
 - Protege's Awakening
 - Prudent Fateseer // Peer Review
@@ -230,6 +229,7 @@
 - Ruric Thar, Magecrusher
 - Saheeli, Jewel of Avishkar
 - Samut, Tyrant of Naktamun
+- Sanctum Lurker
 - Screeching Soulbreaker
 - Seasoned Cryomancer
 - Semester Foreseer // Peer Review
@@ -305,10 +305,7 @@
 
 ## Missing mechanics
 
-| Mechanic (label / template) | Count | Example cards | Sets |
-|---|---|---|---|
-| Threshold | 1 | Proft, Sinister Mastermind | fra |
-| planeswalkers you control aren"..." graveyards for having N loyalty. | 1 | Sanctum Lurker | fra |
+None.
 
 ## Notes
 

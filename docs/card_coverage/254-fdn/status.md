@@ -17,17 +17,16 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 21 | 14.6% |
-| Works (untested) | 88 | 61.1% |
+| Tested | 22 | 15.3% |
+| Works (untested) | 90 | 62.5% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 35 | 24.3% |
+| Not working | 32 | 22.2% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
 | Alesha, Who Laughs at Fate | silent | Raid — At the beginning of your end step, if you attacked this turn, return target creature card with mana value less than or equal to Alesha's power from your  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Banner of Kinship | silent | Creatures you control of the chosen type get +1/+1 for each fellowship counter on this artifact. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Blasphemous Edict | silent | You may pay {B} rather than pay this spell's mana cost if there are thirteen or more creatures on the battlefield. Each player sacrifices thirteen creatures of  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Bloodthirsty Conqueror | silent | Whenever an opponent loses life, you gain that much life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Bulk Up | silent | Double target creature's power until end of turn. Flashback {4}{R}{R} (You may cast this card from your graveyard for its flashback cost. Then exile it.) | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -39,13 +38,11 @@
 | Fishing Pole | silent | Whenever equipped creature becomes untapped, remove a bait counter from this Equipment. If you do, create a 1/1 blue Fish creature token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Hare Apparent | silent | When this creature enters, create a number of 1/1 white Rabbit creature tokens equal to the number of other creatures you control named Hare Apparent. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Infernal Vessel | silent | When this creature dies, if it wasn't a Demon, return it to the battlefield under its owner's control with two +1/+1 counters on it. It's a Demon in addition to | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Inspiring Paladin | silent | During your turn, creatures you control with +1/+1 counters on them have first strike. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Kellan, Planar Trailblazer | silent | {1}{R}: If Kellan is a Scout, it becomes a Human Faerie Detective and gains "Whenever Kellan deals combat damage to a player, exile the top card of your library | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Loot, Exuberant Explorer | silent | {4}{G}{G}, {T}: Look at the top six cards of your library. You may reveal a creature card with mana value less than or equal to the number of lands you control  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Lunar Insight | silent | Draw a card for each different mana value among nonland permanents you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Midnight Snack | silent | {2}{B}, Sacrifice this enchantment: Target opponent loses X life, where X is the amount of life you gained this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Niv-Mizzet, Visionary | silent | Whenever a source you control deals noncombat damage to an opponent, you draw that many cards. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
-| Quick-Draw Katana | silent | During your turn, equipped creature gets +2/+0 and has first strike. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Ravenous Amulet | silent | {4}, {T}, Sacrifice this artifact: Each opponent loses life equal to the number of soul counters on this artifact. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Skyknight Squire | silent | As long as this creature has three or more +1/+1 counters on it, it has flying and is a Knight in addition to its other types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Sphinx of Forgotten Lore | silent | Whenever this creature attacks, target instant or sorcery card in your graveyard gains flashback until end of turn. The flashback cost is equal to that card's m | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -113,6 +110,7 @@
 | Icewind Elemental | handled | When this creature enters, draw a card, then discard a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Incinerating Blast | handled | Incinerating Blast deals 6 damage to target creature. You may discard a card. If you do, draw a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Infestation Sage | handled | When this creature dies, create a 1/1 black and green Insect creature token with flying. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Inspiring Paladin | handled | During your turn, this creature has first strike. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Joust Through | handled | Joust Through deals 3 damage to target attacking or blocking creature. You gain 1 life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Kaito, Cunning Infiltrator | handled | Whenever a creature you control deals combat damage to a player, put a loyalty counter on Kaito. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Kiora, the Rising Tide | handled | When Kiora enters, draw two cards, then discard two cards. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -125,6 +123,7 @@
 | Preposterous Proportions | handled | Creatures you control get +10/+10 and gain vigilance until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Prideful Parent | handled | When this creature enters, create a 1/1 white Cat creature token. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Quakestrider Ceratops | handled |  |  | Y/Y/Y | not_tested |
+| Quick-Draw Katana | handled | During your turn, equipped creature gets +2/+0 and has first strike. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Refute | handled | Counter target spell. Draw a card, then discard a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Revenge of the Rats | handled | Create a tapped 1/1 black Rat creature token for each creature card in your graveyard. Flashback {2}{B}{B} (You may cast this card from your graveyard for its f | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Rite of the Dragoncaller | handled | Whenever you cast an instant or sorcery spell, create a 5/5 red Dragon creature token with flying. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -153,9 +152,10 @@
 ## Fully supported
 
 <details>
-<summary>21 cards</summary>
+<summary>22 cards</summary>
 
 - Arbiter of Woe
+- Banner of Kinship
 - Crossway Troublemakers
 - Crystal Barricade
 - Curator of Destinies
@@ -188,11 +188,8 @@
 | +N: add {M}{M}{M}. exile the top three cards of your library. choose one. you may play that card ~. | 1 | Chandra, Flameshaper | fdn |
 | as long as ~ has three or more +N/+N counters on it, it has flying and is a knight in addition to its other types. | 1 | Skyknight Squire | fdn |
 | create two N/N blue faerie creature tokens with flying. when you do, tap target creature an opponent controls. | 1 | Faebloom Trick | fdn |
-| creatures you control of the chosen type get +N/+N for each fellowship counter on ~. | 1 | Banner of Kinship | fdn |
 | double target creature's power until end of turn. flashback {M}{M}{M} (you may cast ~ from your graveyard for its flashback cost. then exile it.) | 1 | Bulk Up | fdn |
 | draw a card for each different mana value among nonland permanents you control. | 1 | Lunar Insight | fdn |
-| during your turn, creatures you control with +N/+N counters on them have first strike. | 1 | Inspiring Paladin | fdn |
-| during your turn, equipped creature gets +N/+N and has first strike. | 1 | Quick-Draw Katana | fdn |
 | each player mills N cards. for each creature card put into a graveyard ~, you create a tapped N/N black zombie creature token. (to mill a card, a player puts th | 1 | Dread Summons | fdn |
 | kicker {M}{M} (you may pay an additional {M}{M} as you cast ~.) target creature you control gains indestructible until end of turn. if ~ was kicked, instead any | 1 | Divine Resilience | fdn |
 | when ~ dies, if it had a revival counter on it, return it to the battlefield with one fewer revival counter on it at the beginning of the next end step. | 1 | Nine-Lives Familiar | fdn |

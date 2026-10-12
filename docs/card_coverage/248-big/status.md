@@ -17,9 +17,9 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 6 | 22.2% |
+| Tested | 7 | 25.9% |
 | Works (untested) | 7 | 25.9% |
-| Partial (unaudited) | 1 | 3.7% |
+| Partial (unaudited) | 0 | 0.0% |
 | Not working | 13 | 48.1% |
 
 ## Cards needing work
@@ -39,7 +39,6 @@
 | Generous Plunderer | notice | At the beginning of your upkeep, you may create a Treasure token. When you do, target opponent creates a tapped Treasure token. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Loot, the Key to Everything | notice | At the beginning of your upkeep, exile the top X cards of your library, where X is the number of card types among other nonland permanents you control. You may  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Nexus of Becoming | notice | At the beginning of combat on your turn, draw a card. Then you may exile an artifact or creature card from your hand. If you do, create a token that's a copy of | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Territory Forge | unaudited | This artifact has all activated abilities of the exiled card. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Fomori Vault | handled | {3}, {T}, Discard a card: Look at the top X cards of your library, where X is the number of artifacts you control. Put one of those cards into your hand and the | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Greed's Gambit | handled | When this enchantment enters, you draw three cards, gain 6 life, and create three 2/1 black Bat creature tokens with flying. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Hostile Investigator | handled | When this creature enters, target opponent discards a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -51,13 +50,14 @@
 ## Fully supported
 
 <details>
-<summary>6 cards</summary>
+<summary>7 cards</summary>
 
 - Bristlebud Farmer
 - Harvester of Misery
 - Molten Duplication
 - Pest Control
 - Simulacrum Synthesizer
+- Territory Forge
 - Worldwalker Helm
 
 </details>
@@ -79,7 +79,6 @@
 | {M}, {M}: put a +N/+N counter on each creature token you control. they gain trample until end of turn. | 1 | Sandstorm Salvager | big |
 | {M}, {M}: put a +N/+N counter on target creature you control. then if you control three or more creatures with different powers, you may play the exiled card wi | 1 | Collector's Cage | big |
 | {M}: create your choice of a blood token, a clue token, or a food token. | 1 | Transmutation Font | big |
-| ~ has all activated abilities of the exiled card. | 1 | Territory Forge | big |
 
 ## Notes
 

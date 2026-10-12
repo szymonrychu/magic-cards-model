@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 5 | 6.3% |
-| Works (untested) | 52 | 65.8% |
-| Partial (unaudited) | 2 | 2.5% |
-| Not working | 20 | 25.3% |
+| Tested | 6 | 7.6% |
+| Works (untested) | 59 | 74.7% |
+| Partial (unaudited) | 0 | 0.0% |
+| Not working | 14 | 17.7% |
 
 ## Cards needing work
 
@@ -34,25 +34,18 @@
 | Fertile Imagination | silent | Choose a card type. Target opponent reveals their hand. Create two 1/1 green Saproling creature tokens for each card of the chosen type revealed this way. (Arti | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Infiltrator's Magemark | silent | Creatures you control that are enchanted get +1/+1 and can't be blocked except by creatures with defender. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Jedit Ojanen of Efrava | silent | Whenever Jedit Ojanen attacks or blocks, create a 2/2 green Cat Warrior creature token with forestwalk. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Leyline of the Meek | silent | Creature tokens get +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Lovisa Coldeyes | silent | Each creature that's a Barbarian, a Warrior, or a Berserker gets +2/+2 and has haste. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Martyr of Frost | silent | {2}, Reveal X blue cards from your hand, Sacrifice this creature: Counter target spell unless its controller pays {X}. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sanguine Praetor | silent | {B}, Sacrifice a creature: Destroy each creature with the same mana value as the sacrificed creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Seht's Tiger | silent | When this creature enters, you gain protection from the color of your choice until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Thelonite Hermit | silent | All Saprolings get +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Tolsimir Wolfblood | silent | Other green creatures you control get +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Undying Rage | silent | Enchanted creature gets +2/+2 and can't block. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Whitemane Lion | silent | When this creature enters, return a creature you control to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Wojek Apothecary | silent | Radiance — {T}: Prevent the next 1 damage that would be dealt to target creature and each other creature that shares a color with it this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Nacatl War-Pride | notice | Whenever this creature attacks, create X tokens that are copies of it and that are tapped and attacking, where X is the number of creatures defending player con | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Skyrider Trainee | notice | This creature has flying as long as it's enchanted. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Detainment Spell | unaudited | Enchanted creature's activated abilities can't be activated. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Freewind Equenaut | unaudited | As long as this creature is enchanted, it has "{T}: This creature deals 2 damage to target attacking or blocking creature." | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Balduvian Rage | handled | Target attacking creature gets +X/+0 until end of turn. Draw a card at the beginning of the next turn's upkeep. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Carrion Howler | handled | Pay 1 life: This creature gets +2/-1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Dimir Guildmage | handled | {3}{U}: Target player draws a card. Activate only as a sorcery. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Dimir Infiltrator | handled | This creature can't be blocked. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Flight of Fancy | handled | When this Aura enters, draw two cards. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Freewind Equenaut | handled | As long as this creature is enchanted, it has "{T}: This creature deals 2 damage to target attacking or blocking creature." | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ghor-Clan Savage | handled | Bloodthirst | machines/keywords.py | Y/-/- | not_tested |
 | Goblin Fire Fiend | handled | This creature must be blocked if able. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Golgari Guildmage | handled | {4}{B}, Sacrifice a creature: Return target creature card from your graveyard to your hand. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -66,6 +59,8 @@
 | Juniper Order Ranger | handled | Whenever another creature you control enters, put a +1/+1 counter on that creature and a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Karplusan Wolverine | handled | Whenever this creature becomes blocked, you may have it deal 1 damage to any target. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Keening Banshee | handled | When this creature enters, target creature gets -2/-2 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Leyline of the Meek | handled | If this card is in your opening hand, you may begin the game with it on the battlefield. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Martyr of Frost | handled | {2}, Reveal X blue cards from your hand, Sacrifice this creature: Counter target spell unless its controller pays {X}. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Necromantic Thirst | handled | Whenever enchanted creature deals combat damage to a player, you may return target creature card from your graveyard to your hand. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Nightguard Patrol | handled | Vigilance | machines/combat.py | Y/-/- | not_tested |
 | Nullmage Shepherd | handled | Tap four untapped creatures you control: Destroy target artifact or enchantment. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -93,20 +88,25 @@
 | Terrarion | handled | This artifact enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Thallid Germinator | handled | At the beginning of your upkeep, put a spore counter on this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Thallid Shell-Dweller | handled | At the beginning of your upkeep, put a spore counter on this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Thelonite Hermit | handled | All Saprolings get +1/+1. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Three Dreams | handled | Search your library for up to three Aura cards with different names, reveal them, put them into your hand, then shuffle. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Tolsimir Wolfblood | handled | Other green creatures you control get +1/+1. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Twilight Drover | handled | Whenever a creature token leaves the battlefield, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Undying Rage | handled | Enchanted creature gets +2/+2 and can't block. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ursapine | handled | {G}: Target creature gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Vacuumelt | handled | Replicate {2}{U} (When you cast this spell, copy it for each time you paid its replicate cost. You may choose new targets for the copies.) Return target creatur | the engine reads this text and performs it | Y/-/- | not_tested |
 | Vedalken Dismisser | handled | When this creature enters, put target creature on top of its owner's library. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Vedalken Entrancer | handled | {U}, {T}: Target player mills two cards. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Vesper Ghoul | handled |  |  | Y/-/- | not_tested |
+| Whitemane Lion | handled | When this creature enters, return a creature you control to its owner's hand. | the engine reads this text and performs it | Y/-/- | not_tested |
 
 ## Fully supported
 
 <details>
-<summary>5 cards</summary>
+<summary>6 cards</summary>
 
 - Arctic Nishoba
+- Detainment Spell
 - Frenzied Goblin
 - Grifter's Blade
 - Selesnya Sanctuary
@@ -119,24 +119,16 @@
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
 | Radiance | 1 | Wojek Apothecary | psal |
-| all saprolings get +N/+N. | 1 | Thelonite Hermit | psal |
-| as long as ~ is enchanted, it has "..." | 1 | Freewind Equenaut | psal |
 | choose a card type. target opponent reveals their hand. create two N/N green saproling creature tokens for each card of the chosen type revealed ~. (artifact, b | 1 | Fertile Imagination | psal |
-| creature tokens get +N/+N. | 1 | Leyline of the Meek | psal |
 | creatures you control that are enchanted get +N/+N and can't be blocked except by creatures with defender. | 1 | Infiltrator's Magemark | psal |
 | each creature that's a barbarian, a warrior, or a berserker gets +N/+N and has haste. | 1 | Lovisa Coldeyes | psal |
-| enchanted creature gets +N/+N and can't block. | 1 | Undying Rage | psal |
-| enchanted creature"..."t be activated. | 1 | Detainment Spell | psal |
-| other green creatures you control get +N/+N. | 1 | Tolsimir Wolfblood | psal |
 | return target permanent to its owner's hand. its controller loses N life. transmute {M}{M}{M} ({M}{M}{M}, discard ~: search your library for a card with the sam | 1 | Clutch of the Undercity | psal |
-| when ~ enters, return a creature you control to its owner's hand. | 1 | Whitemane Lion | psal |
 | when ~ enters, search your library for an aura card that could enchant it. if ~ is still on the battlefield, put that aura card onto the battlefield attached to | 1 | Auratouched Mage | psal |
 | when ~ enters, you gain protection from the color of your choice until end of turn. | 1 | Seht's Tiger | psal |
 | whenever a source deals damage to ~, that source's controller mills that many cards. | 1 | Belltower Sphinx | psal |
 | whenever an aura becomes attached to ~, create two N/N green saproling creature tokens. | 1 | Bramble Elemental | psal |
 | whenever jedit ojanen attacks or blocks, create a N/N green cat warrior creature token with forestwalk. | 1 | Jedit Ojanen of Efrava | psal |
 | whenever ~ attacks, create N tokens that are copies of it and that are tapped and attacking, where N is the number of creatures defending player controls. exile | 1 | Nacatl War-Pride | psal |
-| {M}, reveal N blue cards from your hand, sacrifice ~: counter target spell unless its controller pays {M}. | 1 | Martyr of Frost | psal |
 | {M}, sacrifice a creature: destroy each creature with the same mana value as the sacrificed creature. | 1 | Sanguine Praetor | psal |
 | {M}{M}: target creature can't block ~ ~. | 1 | Burning-Tree Bloodscale | psal |
 | ~ has flying as long as it's enchanted. | 1 | Skyrider Trainee | psal |

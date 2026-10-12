@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 35 | 19.9% |
-| Works (untested) | 94 | 53.4% |
-| Partial (unaudited) | 1 | 0.6% |
-| Not working | 46 | 26.1% |
+| Tested | 36 | 20.5% |
+| Works (untested) | 98 | 55.7% |
+| Partial (unaudited) | 0 | 0.0% |
+| Not working | 42 | 23.9% |
 
 ## Cards needing work
 
@@ -37,9 +37,7 @@
 | Chandra's Regulator | silent | Whenever you activate a loyalty ability of a Chandra planeswalker, you may pay {1}. If you do, copy that ability. You may choose new targets for the copy. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Chandra, Acolyte of Flame | silent | −2: You may cast target instant or sorcery card with mana value 3 or less from your graveyard. If that spell would be put into your graveyard, exile it instead. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Chandra, Awakened Inferno | silent | +2: Each opponent gets an emblem with "At the beginning of your upkeep, this emblem deals 1 damage to you." | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Colossus Hammer | silent | Equipped creature gets +10/+10 and loses flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Diviner's Lockbox | silent | {1}, {T}: Choose a card name, then reveal the top card of your library. If that card has the chosen name, sacrifice this artifact and draw three cards. Activate | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Empyrean Eagle | silent | Other creatures you control with flying get +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Eternal Isolation | silent | Put target creature with power 4 or greater on the bottom of its owner's library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ethereal Elk | silent | When this creature enters, you may search your library and/or graveyard for a card named Vivien, Nature's Avenger, reveal it, and put it into your hand. If you  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Flood of Tears | silent | Return all nonland permanents to their owners' hands. If you return four or more nontoken permanents you control this way, you may put a permanent card from you | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -63,16 +61,13 @@
 | Yanling's Harbinger | silent | When this creature enters, you may search your library and/or graveyard for a card named Mu Yanling, Celestial Wind, reveal it, and put it into your hand. If yo | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Yarok's Fenlurker | silent | When this creature enters, each opponent exiles a card from their hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Yarok's Wavecrasher | silent | When this creature enters, return another creature you control to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Celestial Messenger | notice | This creature gets +1/+1 as long as you control a Yanling planeswalker. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Elvish Reclaimer | notice | This creature gets +2/+2 as long as there are three or more land cards in your graveyard. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Growth Cycle | notice | Target creature gets +3/+3 until end of turn. It gets an additional +2/+2 until end of turn for each card named Growth Cycle in your graveyard. | unparsed remainder: It gets an additional +2/+2 until end of turn for each card named Growth Cycle in your graveyard. | Y/Y/- | not_working |
 | Legion's End | notice | Exile target creature an opponent controls with mana value 2 or less and all other creatures that player controls with the same name as that creature. Then that | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Masterful Replication | notice | Choose one — • Create two 3/3 colorless Golem artifact creature tokens. • Choose target artifact you control. Each other artifact you control becomes a copy of  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Thunderkin Awakener | notice | Whenever this creature attacks, choose target Elemental creature card in your graveyard with toughness less than this creature's toughness. Return that card to  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Unchained Berserker | notice | This creature gets +2/+0 as long as it's attacking. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Vivien's Crocodile | notice | This creature gets +1/+1 as long as you control a Vivien planeswalker. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Voracious Hydra | notice | When this creature enters, choose one — • Double the number of +1/+1 counters on this creature. • This creature fights target creature you don't control. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Blightbeetle | unaudited | Creatures your opponents control can't have +1/+1 counters put on them. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Aerial Assault | handled | Destroy target tapped creature. You gain 1 life for each creature you control with flying. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Agonizing Syphon | handled | Agonizing Syphon deals 3 damage to any target and you gain 3 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ajani, Inspiring Leader | handled | +2: You gain 2 life. Put two +1/+1 counters on up to one target creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -88,9 +83,11 @@
 | Captivating Gyre | handled | Return up to three target creatures to their owners' hands. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Cavalier of Dawn | handled | When this creature enters, destroy up to one target nonland permanent. Its controller creates a 3/3 colorless Golem artifact creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Cavalier of Night | handled | When this creature enters, you may sacrifice another creature. When you do, destroy target creature an opponent controls. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Celestial Messenger | handled | This creature gets +1/+1 as long as you control a Yanling planeswalker. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Chandra's Embercat | handled |  |  | Y/Y/- | not_tested |
 | Chandra, Novice Pyromancer | handled | +1: Elementals you control get +2/+0 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Cloudkin Seer | handled | When this creature enters, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Colossus Hammer | handled | Equipped creature gets +10/+10 and loses flying. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Corpse Knight | handled | Whenever another creature you control enters, each opponent loses 1 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Creeping Trailblazer | handled | Other Elementals you control get +1/+0. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Daggersail Aeronaut | handled | During your turn, this creature has flying. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -101,6 +98,7 @@
 | Drakuseth, Maw of Flames | handled | Whenever Drakuseth attacks, Drakuseth deals 4 damage to any target and 3 damage to each of up to two other targets. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Drawn from Dreams | handled | Look at the top seven cards of your library. Put two of them into your hand and the rest on the bottom of your library in a random order. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Dread Presence | handled | Whenever a Swamp you control enters, choose one — • You draw a card and you lose 1 life. • This creature deals 2 damage to any target and you gain 2 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Empyrean Eagle | handled | Other creatures you control with flying get +1/+1. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Engulfing Eruption | handled | Engulfing Eruption deals 5 damage to target creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ferocious Pup | handled | When this creature enters, create a 2/2 green Wolf creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Field of the Dead | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -161,6 +159,7 @@
 | Vampire of the Dire Moon | handled | Lifelink | machines/combat.py | Y/Y/- | not_tested |
 | Vengeful Warchief | handled | Whenever you lose life for the first time each turn, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Vilis, Broker of Blood | handled | {B}, Pay 2 life: Target creature gets -1/-1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Vivien's Crocodile | handled | This creature gets +1/+1 as long as you control a Vivien planeswalker. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Vivien, Nature's Avenger | handled | +1: Put three +1/+1 counters on up to one target creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Waterkin Shaman | handled | Whenever a creature you control with flying enters, this creature gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Winged Words | handled | This spell costs {1} less to cast if you control a creature with flying. Draw two cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -171,13 +170,14 @@
 ## Fully supported
 
 <details>
-<summary>35 cards</summary>
+<summary>36 cards</summary>
 
 - Aether Gust
 - Agent of Treachery
 - Ajani, Strength of the Pride
 - Angel of Vitality
 - Apostle of Purifying Light
+- Blightbeetle
 - Blood Burglar
 - Brineborn Cutthroat
 - Cavalier of Flame
@@ -223,11 +223,8 @@
 | choose two target players. each of them searches their library for a card, then shuffles and puts that card on top. | 1 | Scheming Symmetry | m20 |
 | choose up to two target permanent cards in your graveyard that were put there from the battlefield ~. return them to the battlefield tapped. | 1 | Brought Back | m20 |
 | counter target activated ability, triggered ability, or legendary spell. | 1 | Tale's End | m20 |
-| creatures your opponents control can't have +N/+N counters put on them. | 1 | Blightbeetle | m20 |
 | enchanted creature gets +N/+N and assigns combat damage equal to its toughness rather than its power. | 1 | Gauntlets of Light | m20 |
-| equipped creature gets +N/+N and loses flying. | 1 | Colossus Hammer | m20 |
 | exile target creature an opponent controls with mana value N or less and all other creatures that player controls with the same name as that creature. then that | 1 | Legion's End | m20 |
-| other creatures you control with flying get +N/+N. | 1 | Empyrean Eagle | m20 |
 | other multicolored creatures you control get +N/+N. | 1 | Rienne, Angel of Rebirth | m20 |
 | put target creature with power N or greater on the bottom of its owner's library. | 1 | Eternal Isolation | m20 |
 | return all nonland permanents to their owners' hands. if you return four or more nontoken permanents you control ~, you may put a permanent card from your hand  | 1 | Flood of Tears | m20 |
@@ -259,8 +256,6 @@
 | ~ deals N damage to target player and each creature that player controls. search your library and/or graveyard for a card named chandra, flame's fury, reveal it | 1 | Chandra's Flame Wave | m20 |
 | ~ gets +N/+N as long as it's attacking. | 1 | Unchained Berserker | m20 |
 | ~ gets +N/+N as long as there are three or more land cards in your graveyard. | 1 | Elvish Reclaimer | m20 |
-| ~ gets +N/+N as long as you control a vivien planeswalker. | 1 | Vivien's Crocodile | m20 |
-| ~ gets +N/+N as long as you control a yanling planeswalker. | 1 | Celestial Messenger | m20 |
 | −N: you may cast target instant or sorcery card with mana value N or less from your graveyard. if that spell would be put into your graveyard, exile it instead. | 1 | Chandra, Acolyte of Flame | m20 |
 
 ## Notes

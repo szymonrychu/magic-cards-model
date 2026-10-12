@@ -17,29 +17,25 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 15 | 15.3% |
-| Works (untested) | 58 | 59.2% |
-| Partial (unaudited) | 1 | 1.0% |
-| Not working | 24 | 24.5% |
+| Tested | 18 | 18.4% |
+| Works (untested) | 61 | 62.2% |
+| Partial (unaudited) | 0 | 0.0% |
+| Not working | 19 | 19.4% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
-| Adaptive Automaton | silent | This creature is the chosen type in addition to its other types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Angelic Destiny | silent | When enchanted creature dies, return this card to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Arachnus Spinner | silent | Tap an untapped Spider you control: Search your graveyard and/or library for a card named Arachnus Web and put it onto the battlefield attached to target creatu | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Arachnus Web | silent | At the beginning of the end step, if enchanted creature's power is 4 or greater, destroy this Aura. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Arbalest Elite | silent | {2}{W}, {T}: This creature deals 3 damage to target attacking or blocking creature. This creature doesn't untap during your next untap step. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Bloodlord of Vaasgoth | silent | Whenever you cast a Vampire creature spell, it gains bloodthirst 3. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Circle of Flame | silent | Whenever a creature without flying attacks you or a planeswalker you control, this enchantment deals 1 damage to that creature. | this trigger's condition can never be satisfied - it never triggers | Y/Y/- | not_working |
 | Doubling Chant | silent | For each creature you control, you may search your library for a creature card with the same name as that creature. Put those cards onto the battlefield, then s | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Druidic Satchel | silent | {2}, {T}: Reveal the top card of your library. If it's a creature card, create a 1/1 green Saproling creature token. If it's a land card, put that card onto the | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Goblin Bangchuckers | silent | {T}: Flip a coin. If you win the flip, this creature deals 2 damage to any target. If you lose the flip, this creature deals 2 damage to itself. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Griffin Rider | silent | As long as you control a Griffin creature, this creature gets +3/+3 and has flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Jace's Archivist | silent | {U}, {T}: Each player discards their hand, then draws cards equal to the greatest number of cards a player discarded this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Jace, Memory Adept | silent | −7: Any number of target players each draw twenty cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Lord of the Unreal | silent | Illusion creatures you control get +1/+1 and have hexproof. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Monomania | silent | Target player chooses a card in their hand and discards the rest. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Scrambleverse | silent | For each nonland permanent, choose a player at random. Then each player gains control of each permanent for which they were chosen. Untap those permanents. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Skinshifter | silent | {G}: Choose one. Activate only once each turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -49,8 +45,6 @@
 | Timely Reinforcements | silent | If you have less life than an opponent, you gain 6 life. If you control fewer creatures than an opponent, create three 1/1 white Soldier creature tokens. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Vengeful Pharaoh | silent | Whenever combat damage is dealt to you or a planeswalker you control, if this card is in your graveyard, destroy target attacking creature, then put this card o | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Visions of Beyond | silent | Draw a card. If a graveyard has twenty or more cards in it, draw three cards instead. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Primordial Hydra | notice | This creature has trample as long as it has ten or more +1/+1 counters on it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Grand Abolisher | unaudited | During your turn, your opponents can't cast spells or activate abilities of artifacts, creatures, or enchantments. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Alabaster Mage | handled | {1}{W}: Target creature you control gains lifelink until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Amphin Cutthroat | handled |  |  | Y/-/- | not_tested |
 | Armored Warhorse | handled |  |  | Y/-/- | not_tested |
@@ -79,10 +73,12 @@
 | Gideon's Lawkeeper | handled | {W}, {T}: Tap target creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Goblin Fireslinger | handled | {T}: This creature deals 1 damage to target player or planeswalker. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Greatsword | handled | Equipped creature gets +3/+0. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Griffin Rider | handled | As long as you control a Griffin creature, this creature gets +3/+3 and has flying. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Guardians' Pledge | handled | White creatures you control get +2/+2 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Hideous Visage | handled | Creatures you control gain intimidate until end of turn. (Each of those creatures can't be blocked except by artifact creatures and/or creatures that share a co | the engine reads this text and performs it | Y/-/- | not_tested |
 | Jade Mage | handled | {2}{G}: Create a 1/1 green Saproling creature token. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Kite Shield | handled | Equipped creature gets +0/+3. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Lord of the Unreal | handled | Illusion creatures you control get +1/+1 and have hexproof. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Lurking Crocodile | handled | Landwalk | no code needed | Y/-/- | not_tested |
 | Manalith | handled |  |  | Y/Y/- | not_tested |
 | Master Thief | handled | When this creature enters, gain control of target artifact for as long as you control this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -93,6 +89,7 @@
 | Phantasmal Bear | handled | When this creature becomes the target of a spell or ability, sacrifice it. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Phantasmal Dragon | handled | When this creature becomes the target of a spell or ability, sacrifice it. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Pride Guardian | handled | Whenever this creature blocks, you gain 3 life. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Primordial Hydra | handled | This creature enters with X +1/+1 counters on it. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Rune-Scarred Demon | handled | When this creature enters, search your library for a card, put it into your hand, then shuffle. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Rusted Sentinel | handled | This creature enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Sorin's Thirst | handled | Sorin's Thirst deals 2 damage to target creature and you gain 2 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -113,14 +110,17 @@
 ## Fully supported
 
 <details>
-<summary>15 cards</summary>
+<summary>18 cards</summary>
 
+- Adaptive Automaton
 - Aegis Angel
+- Arachnus Web
 - Crown of Empires
 - Dungrove Elder
 - Frost Breath
 - Gladecover Scout
 - Gorehorn Minotaurs
+- Grand Abolisher
 - Hunter's Insight
 - Personal Sanctuary
 - Phantasmal Image
@@ -137,15 +137,11 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| as long as you control a griffin creature, ~ gets +N/+N and has flying. | 1 | Griffin Rider | m12 |
-| at the beginning of the end step, if enchanted creature's power is N or greater, destroy ~. | 1 | Arachnus Web | m12 |
 | destroy target land. creatures without flying can't block ~. | 1 | Tectonic Rift | m12 |
 | draw a card. if a graveyard has twenty or more cards in it, draw three cards instead. | 1 | Visions of Beyond | m12 |
-| during your turn, your opponents can't cast spells or activate abilities of artifacts, creatures, or enchantments. | 1 | Grand Abolisher | m12 |
 | for each creature you control, you may search your library for a creature card with the same name as that creature. put those cards onto the battlefield, then s | 1 | Doubling Chant | m12 |
 | for each nonland permanent, choose a player at random. then each player gains control of each permanent for which they were chosen. untap those permanents. | 1 | Scrambleverse | m12 |
 | if you have less life than an opponent, you gain N life. if you control fewer creatures than an opponent, create three N/N white soldier creature tokens. | 1 | Timely Reinforcements | m12 |
-| illusion creatures you control get +N/+N and have hexproof. | 1 | Lord of the Unreal | m12 |
 | tap an untapped spider you control: search your graveyard and/or library for a card named arachnus web and put it onto the battlefield attached to target creatu | 1 | Arachnus Spinner | m12 |
 | target player chooses a card in their hand and discards the rest. | 1 | Monomania | m12 |
 | when enchanted creature dies, return ~ to its owner's hand. | 1 | Angelic Destiny | m12 |
@@ -159,8 +155,6 @@
 | {M}: choose one. activate only once each turn. | 1 | Skinshifter | m12 |
 | {M}: flip a coin. if you win the flip, ~ deals N damage to any target. if you lose the flip, ~ deals N damage to itself. | 1 | Goblin Bangchuckers | m12 |
 | {M}{M}, {M}: ~ deals N damage to target attacking or blocking creature. ~ doesn't untap during your next untap step. | 1 | Arbalest Elite | m12 |
-| ~ has trample as long as it has ten or more +N/+N counters on it. | 1 | Primordial Hydra | m12 |
-| ~ is the chosen type in addition to its other types. | 1 | Adaptive Automaton | m12 |
 | −N: any number of target players each draw twenty cards. | 1 | Jace, Memory Adept | m12 |
 
 ## Notes

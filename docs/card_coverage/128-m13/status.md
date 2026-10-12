@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 13 | 12.1% |
-| Works (untested) | 63 | 58.9% |
-| Partial (unaudited) | 1 | 0.9% |
-| Not working | 30 | 28.0% |
+| Tested | 14 | 13.1% |
+| Works (untested) | 67 | 62.6% |
+| Partial (unaudited) | 0 | 0.0% |
+| Not working | 26 | 24.3% |
 
 ## Cards needing work
 
@@ -28,7 +28,6 @@
 |---|---|---|---|---|---|
 | Blood Reckoning | silent | Whenever a creature attacks you or a planeswalker you control, that creature's controller loses 1 life. | this trigger's condition can never be satisfied - it never triggers | Y/-/- | not_working |
 | Cathedral of War | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Crippling Blight | silent | Enchanted creature gets -1/-1 and can't block. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Disciple of Bolas | silent | When this creature enters, sacrifice another creature. You gain X life and draw X cards, where X is that creature's power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Duskmantle Prowler | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Duty-Bound Dead | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
@@ -36,7 +35,6 @@
 | Knight of Glory | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Knight of Infamy | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Liliana of the Dark Realms | silent | −3: Target creature gets +X/+X or -X/-X until end of turn, where X is the number of Swamps you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Master of the Pearl Trident | silent | Other Merfolk creatures you control get +1/+1 and have islandwalk. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Mindclaw Shaman | silent | When this creature enters, target opponent reveals their hand. You may cast an instant or sorcery spell from among those cards without paying its mana cost. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Mwonvuli Beast Tracker | silent | When this creature enters, search your library for a creature card with deathtouch, hexproof, reach, or trample and reveal it. Shuffle and put that card on top. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Nefarox, Overlord of Grixis | silent | Whenever Nefarox attacks alone, defending player sacrifices a creature of their choice. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -47,16 +45,13 @@
 | Ring of Thune | silent | At the beginning of your upkeep, put a +1/+1 counter on equipped creature if it's white. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Ring of Valkas | silent | At the beginning of your upkeep, put a +1/+1 counter on equipped creature if it's red. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Ring of Xathrid | silent | {2}: Regenerate equipped creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Roaring Primadox | silent | At the beginning of your upkeep, return a creature you control to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Servant of Nefarox | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Slumbering Dragon | silent | Whenever a creature attacks you or a planeswalker you control, put a +1/+1 counter on this creature. | this trigger's condition can never be satisfied - it never triggers | Y/-/- | not_working |
 | Spelltwine | silent | Exile target instant or sorcery card from your graveyard and target instant or sorcery card from an opponent's graveyard. Copy those cards. Cast the copies if a | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sublime Archangel | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Tricks of the Trade | silent | Enchanted creature gets +2/+0 and can't be blocked. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Void Stalker | silent | {2}{U}, {T}: Put this creature and target creature on top of their owners' libraries, then those players shuffle their libraries. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Timberpack Wolf | notice | This creature gets +1/+1 for each other creature you control named Timberpack Wolf. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Xathrid Gorgon | notice | {2}{B}, {T}: Put a petrification counter on target creature. It gains defender and becomes a colorless artifact in addition to its other types. Its activated ab | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Encrust | unaudited | Enchanted permanent doesn't untap during its controller's untap step and its activated abilities can't be activated. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Ajani's Sunstriker | handled | Lifelink | machines/combat.py | Y/-/- | not_tested |
 | Ajani, Caller of the Pride | handled | +1: Put a +1/+1 counter on up to one target creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Archaeomancer | handled | When this creature enters, return target instant or sorcery card from your graveyard to your hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -73,6 +68,7 @@
 | Cower in Fear | handled | Creatures your opponents control get -1/-1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Craterize | handled | Destroy target land. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Crimson Muckwader | handled | This creature gets +1/+1 as long as you control a Swamp. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Crippling Blight | handled | Enchanted creature gets -1/-1 and can't block. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Crusader of Odric | handled | Crusader of Odric's power and toughness are each equal to the number of creatures you control. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Diabolic Revelation | handled | Search your library for up to X cards, put those cards into your hand, then shuffle. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Downpour | handled | Tap up to three target creatures. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -94,12 +90,14 @@
 | Liliana's Shade | handled | When this creature enters, you may search your library for a Swamp card, reveal it, put it into your hand, then shuffle. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Magmaquake | handled | Magmaquake deals X damage to each creature without flying and each planeswalker. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Mark of the Vampire | handled | Enchanted creature gets +2/+2 and has lifelink. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Master of the Pearl Trident | handled | Other Merfolk creatures you control get +1/+1 and have islandwalk. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Murder | handled | Destroy target creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Primal Huntbeast | handled | Hexproof | machines/casting.py (target legality) | Y/-/- | not_tested |
 | Prized Elephant | handled | This creature gets +1/+1 as long as you control a Forest. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ranger's Path | handled | Search your library for up to two Forest cards, put them onto the battlefield tapped, then shuffle. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Reckless Brute | handled | This creature attacks each combat if able. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Rhox Faithmender | handled | If you would gain life, you gain twice that much life instead. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Roaring Primadox | handled | At the beginning of your upkeep, return a creature you control to its owner's hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Rummaging Goblin | handled | {T}, Discard a card: Draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Sands of Delirium | handled | {X}, {T}: Target player mills X cards. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Searing Spear | handled | Searing Spear deals 3 damage to any target. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -113,6 +111,7 @@
 | Talrand, Sky Summoner | handled | Whenever you cast an instant or sorcery spell, create a 2/2 blue Drake creature token with flying. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Thragtusk | handled | When this creature enters, you gain 5 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Trading Post | handled | {1}, {T}, Discard a card: You gain 4 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Tricks of the Trade | handled | Enchanted creature gets +2/+0 and can't be blocked. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Veilborn Ghoul | handled | This creature can't block. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Vile Rebirth | handled | Exile target creature card from a graveyard. Create a 2/2 black Zombie creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | War Falcon | handled | This creature can't attack unless you control a Knight or a Soldier. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -124,11 +123,12 @@
 ## Fully supported
 
 <details>
-<summary>13 cards</summary>
+<summary>14 cards</summary>
 
 - Augur of Bolas
 - Chandra's Fury
 - Elderscale Wurm
+- Encrust
 - Faith's Reward
 - Jace's Phantasm
 - Mind Sculpt
@@ -151,13 +151,8 @@
 | at the beginning of your upkeep, put a +N/+N counter on equipped creature if it's green. | 1 | Ring of Kalonia | m13 |
 | at the beginning of your upkeep, put a +N/+N counter on equipped creature if it's red. | 1 | Ring of Valkas | m13 |
 | at the beginning of your upkeep, put a +N/+N counter on equipped creature if it's white. | 1 | Ring of Thune | m13 |
-| at the beginning of your upkeep, return a creature you control to its owner's hand. | 1 | Roaring Primadox | m13 |
 | destroy target creature an opponent controls. each other creature that player controls gets -N/-N until end of turn. | 1 | Public Execution | m13 |
-| enchanted creature gets +N/+N and can't be blocked. | 1 | Tricks of the Trade | m13 |
-| enchanted creature gets -N/-N and can't block. | 1 | Crippling Blight | m13 |
-| enchanted permanent doesn"..."s untap step and its activated abilities can't be activated. | 1 | Encrust | m13 |
 | exile target instant or sorcery card from your graveyard and target instant or sorcery card from an opponent's graveyard. copy those cards. cast the copies if a | 1 | Spelltwine | m13 |
-| other merfolk creatures you control get +N/+N and have islandwalk. | 1 | Master of the Pearl Trident | m13 |
 | when ~ enters, sacrifice another creature. you gain N life and draw N cards, where N is that creature's power. | 1 | Disciple of Bolas | m13 |
 | when ~ enters, search your library for a creature card with deathtouch, hexproof, reach, or trample and reveal it. shuffle and put that card on top. | 1 | Mwonvuli Beast Tracker | m13 |
 | when ~ enters, target opponent reveals their hand. you may cast an instant or sorcery spell from among those cards without paying its mana cost. | 1 | Mindclaw Shaman | m13 |

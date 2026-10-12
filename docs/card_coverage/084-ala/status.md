@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 25 | 11.2% |
-| Works (untested) | 143 | 64.1% |
-| Partial (unaudited) | 4 | 1.8% |
-| Not working | 51 | 22.9% |
+| Tested | 31 | 13.9% |
+| Works (untested) | 142 | 63.7% |
+| Partial (unaudited) | 0 | 0.0% |
+| Not working | 50 | 22.4% |
 
 ## Cards needing work
 
@@ -67,7 +67,6 @@
 | Sighted-Caste Sorcerer | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Sigil of Distinction | silent | Equipped creature gets +1/+1 for each charge counter on this Equipment. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sigiled Paladin | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Skill Borrower | silent | As long as the top card of your library is an artifact or creature card, this creature has all activated abilities of that card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Soul's Might | silent | Put X +1/+1 counters on target creature, where X is that creature's power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sphinx's Herald | silent | {2}{U}, {T}, Sacrifice a white creature, a blue creature, and a black creature: Search your library for a card named Sphinx Sovereign, put it onto the battlefie | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Tar Fiend | silent | When this creature enters, target player discards a card for each creature it devoured. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -77,10 +76,6 @@
 | Ooze Garden | notice | {1}{G}, Sacrifice a non-Ooze creature: Create an X/X green Ooze creature token, where X is the sacrificed creature's power. Activate only as a sorcery. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Sigil Blessing | notice | Until end of turn, target creature you control gets +3/+3 and other creatures you control get +1/+1. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Windwright Mage | notice | This creature has flying as long as an artifact card is in your graveyard. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Ethersworn Canonist | unaudited | Each player who has cast a nonartifact spell this turn can't cast additional nonartifact spells. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Mindlock Orb | unaudited | Players can't search libraries. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Sedris, the Traitor King | unaudited | Each creature card in your graveyard has unearth {2}{B}. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Stoic Angel | unaudited | Players can't untap more than one creature during their untap steps. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Agony Warp | handled | Target creature gets -3/-0 until end of turn. Target creature gets -0/-3 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Algae Gharial | handled | Whenever another creature dies, you may put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Arcane Sanctum | handled | This land enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -204,7 +199,6 @@
 | Steward of Valeron | handled | Vigilance | machines/combat.py | Y/-/- | not_tested |
 | Sunseed Nurturer | handled | At the beginning of your end step, if you control a creature with power 5 or greater, you may gain 2 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Swerve | handled | Change the target of target spell with a single target. | the engine reads this text and performs it | Y/-/- | not_tested |
-| Tezzeret the Seeker | handled | +1: Untap up to two target artifacts. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Thorn-Thrash Viashino | handled | {G}: This creature gains trample until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Tidehollow Sculler | handled | When this creature enters, target opponent reveals their hand and you choose a nonland card from it. Exile that card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Tidehollow Strix | handled | Deathtouch | machines/combat.py | Y/-/- | not_tested |
@@ -228,7 +222,7 @@
 ## Fully supported
 
 <details>
-<summary>25 cards</summary>
+<summary>31 cards</summary>
 
 - Angelsong
 - Blightning
@@ -236,6 +230,7 @@
 - Deft Duelist
 - Empyrial Archangel
 - Esper Battlemage
+- Ethersworn Canonist
 - Fatestitcher
 - Gather Specimens
 - Goblin Assault
@@ -243,15 +238,20 @@
 - Gustrider Exuberant
 - Invincible Hymn
 - Lich's Mirror
+- Mindlock Orb
 - Punish Ignorance
 - Qasali Ambusher
 - Relic of Progenitus
 - Rockcaster Platoon
 - Salvage Titan
+- Sedris, the Traitor King
 - Skeletonize
+- Skill Borrower
 - Skullmulcher
 - Soul's Fire
 - Soul's Grace
+- Stoic Angel
+- Tezzeret the Seeker
 - Thunder-Thrash Elder
 - Vein Drinker
 - Wild Nacatl
@@ -265,17 +265,12 @@
 | exalted | 12 | Akrasan Squire, Angelic Benediction, Battlegrace Angel, Court Archers, Dawnray Archer | ala |
 | Choose one | 1 | Bant Charm | ala |
 | +N: target permanent doesn"..."s next untap step. | 1 | Ajani Vengeant | ala |
-| as long as the top card of your library is an artifact or creature card, ~ has all activated abilities of that card. | 1 | Skill Borrower | ala |
 | at the beginning of your upkeep, create a N/N green saproling creature token for each +N/+N counter on ~. | 1 | Mycoloth | ala |
 | choose five permanents you control. for each of those permanents, you may search your library for a card with the same name as that permanent. put those cards o | 1 | Clarion Ultimatum | ala |
 | counter target spell that targets you or a permanent you control. draw a card. | 1 | Hindering Light | ala |
-| each creature card in your graveyard has unearth {M}{M}. | 1 | Sedris, the Traitor King | ala |
-| each player who has cast a nonartifact spell ~ can't cast additional nonartifact spells. | 1 | Ethersworn Canonist | ala |
 | enchanted land is a mountain, forest, and plains. | 1 | Lush Growth | ala |
 | equipped creature gets +N/+N for each charge counter on ~. | 1 | Sigil of Distinction | ala |
 | exile the top five cards of your library. an opponent separates those cards into two piles. you may play lands and cast spells from one of those piles. if you c | 1 | Brilliant Ultimatum | ala |
-| players can't search libraries. | 1 | Mindlock Orb | ala |
-| players can't untap more than one creature during their untap steps. | 1 | Stoic Angel | ala |
 | put N +N/+N counters on target creature, where N is that creature's power. | 1 | Soul's Might | ala |
 | return target creature to its owner's hand. its controller draws a card. | 1 | Call to Heel | ala |
 | reveal the top card of your library and put that card into your hand. you lose life equal to its mana value. you may repeat ~ any number of times. | 1 | Ad Nauseam | ala |

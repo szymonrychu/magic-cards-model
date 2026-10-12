@@ -17,35 +17,31 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 38 | 32.8% |
-| Works (untested) | 59 | 50.9% |
-| Partial (unaudited) | 1 | 0.9% |
-| Not working | 18 | 15.5% |
+| Tested | 40 | 34.5% |
+| Works (untested) | 62 | 53.4% |
+| Partial (unaudited) | 0 | 0.0% |
+| Not working | 14 | 12.1% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
-| Bad Moon | silent | Black creatures get +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Blessing | silent | {W}: Enchanted creature gets +1/+1 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Dingus Egg | silent | Whenever a land is put into a graveyard from the battlefield, this artifact deals 2 damage to that land's controller. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Evil Presence | silent | Enchanted land is a Swamp. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Firebreathing | silent | {R}: Enchanted creature gets +1/+0 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Flashfires | silent | Destroy all Plains. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Force of Nature | silent | At the beginning of your upkeep, this creature deals 8 damage to you unless you pay {G}{G}{G}{G}. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Gaea's Liege | silent | As long as Gaea's Liege isn't attacking, its power and toughness are each equal to the number of Forests you control. As long as Gaea's Liege is attacking, its  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Goblin King | silent | Other Goblins get +1/+1 and have mountainwalk. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Hypnotic Specter | silent | Whenever this creature deals damage to an opponent, that player discards a card at random. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Jade Statue | silent | {2}: This artifact becomes a 3/6 Golem artifact creature until end of combat. Activate only during combat. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Lord of Atlantis | silent | Other Merfolk get +1/+1 and have islandwalk. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Pirate Ship | silent | When you control no Islands, sacrifice this creature. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Regeneration | silent | {G}: Regenerate enchanted creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Cockatrice | notice | Whenever this creature blocks or becomes blocked by a non-Wall creature, destroy that creature at end of combat. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Disintegrate | notice | Disintegrate deals X damage to any target. If it's a creature, it can't be regenerated this turn, and if it would die this turn, exile it instead. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Dragon Whelp | notice | {R}: This creature gets +1/+0 until end of turn. If this ability has been activated four or more times this turn, sacrifice this creature at the beginning of th | unparsed remainder: If this ability has been activated four or more times this turn, sacrifice this creature at the beginning of the next end step. | Y/Y/- | not_working |
 | Stone Giant | notice | {T}: Target creature you control with toughness less than this creature's power gains flying until end of turn. Destroy that creature at the beginning of the ne | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Consecrate Land | unaudited | Enchanted land has indestructible and can't be enchanted by other Auras. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Air Elemental | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
+| Bad Moon | handled | Black creatures get +1/+1. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Bog Wraith | handled | Landwalk | no code needed | Y/-/- | not_tested |
 | Circle of Protection: Blue | handled | {1}: The next time a blue source of your choice would deal damage to you this turn, prevent that damage. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Circle of Protection: Green | handled | {1}: The next time a green source of your choice would deal damage to you this turn, prevent that damage. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -55,11 +51,13 @@
 | Drudge Skeletons | handled | {B}: Regenerate this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Dwarven Demolition Team | handled | {T}: Destroy target Wall. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Earth Elemental | handled |  |  | Y/-/- | not_tested |
+| Evil Presence | handled | Enchanted land is a Swamp. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Fear | handled | Enchanted creature has fear. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Fire Elemental | handled |  |  | Y/Y/Y | not_tested |
 | Flight | handled | Enchanted creature has flying. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Fungusaur | handled | Whenever this creature is dealt damage, put a +1/+1 counter on it. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Goblin Balloon Brigade | handled | {R}: This creature gains flying until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Goblin King | handled | Other Goblins get +1/+1 and have mountainwalk. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Holy Strength | handled | Enchanted creature gets +1/+2. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Howling Mine | handled | At the beginning of each player's draw step, if this artifact is untapped, that player draws an additional card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Iron Star | handled | Whenever a player casts a red spell, you may pay {1}. If you do, you gain 1 life. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -108,12 +106,13 @@
 ## Fully supported
 
 <details>
-<summary>38 cards</summary>
+<summary>40 cards</summary>
 
 - Birds of Paradise
 - Black Knight
 - Circle of Protection: Red
 - Clone
+- Consecrate Land
 - Counterspell
 - Craw Wurm
 - Disrupting Scepter
@@ -134,6 +133,7 @@
 - Karma
 - Lightning Bolt
 - Llanowar Elves
+- Lord of Atlantis
 - Lord of the Pit
 - Lure
 - Mountain
@@ -158,12 +158,7 @@
 | {M}: enchanted creature gets +N/+N until end of turn. | 2 | Blessing, Firebreathing | lea |
 | as long as ~ isn't attacking, its power and toughness are each equal to the number of forests you control. as long as ~ is attacking, its power and toughness ar | 1 | Gaea's Liege | lea |
 | at the beginning of your upkeep, ~ deals N damage to you unless you pay {M}{M}{M}{M}. | 1 | Force of Nature | lea |
-| black creatures get +N/+N. | 1 | Bad Moon | lea |
 | destroy all plains. | 1 | Flashfires | lea |
-| enchanted land has indestructible and can't be enchanted by other auras. | 1 | Consecrate Land | lea |
-| enchanted land is a swamp. | 1 | Evil Presence | lea |
-| other goblins get +N/+N and have mountainwalk. | 1 | Goblin King | lea |
-| other merfolk get +N/+N and have islandwalk. | 1 | Lord of Atlantis | lea |
 | when you control no islands, sacrifice ~. | 1 | Pirate Ship | lea |
 | whenever a land is put into a graveyard from the battlefield, ~ deals N damage to that land's controller. | 1 | Dingus Egg | lea |
 | whenever ~ blocks or becomes blocked by a non-wall creature, destroy that creature at end of combat. | 1 | Cockatrice | lea |

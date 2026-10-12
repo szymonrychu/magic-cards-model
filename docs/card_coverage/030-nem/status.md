@@ -17,21 +17,20 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 2 | 8.7% |
-| Works (untested) | 15 | 65.2% |
-| Partial (unaudited) | 1 | 4.3% |
-| Not working | 5 | 21.7% |
+| Tested | 3 | 13.0% |
+| Works (untested) | 16 | 69.6% |
+| Partial (unaudited) | 0 | 0.0% |
+| Not working | 4 | 17.4% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
-| Ascendant Evincar | silent | Other black creatures get +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Blinding Angel | silent | Whenever this creature deals combat damage to a player, that player skips their next combat phase. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Oracle's Attendants | silent | {T}: All damage that would be dealt to target creature this turn by a source of your choice is dealt to this creature instead. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Treetop Bracers | silent | Enchanted creature gets +1/+1 and can't be blocked except by creatures with flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Defiant Vanguard | notice | When this creature blocks, at end of combat, destroy it and all creatures it blocked this turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Rhox | unaudited | You may have this creature assign its combat damage as though it weren't blocked. | a static ability no support check audits - not verified either way | Y/-/- | partial |
+| Ascendant Evincar | handled | Other black creatures get +1/+1. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Carrion Wall | handled | {1}{B}: Regenerate this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Flame Rift | handled | Flame Rift deals 4 damage to each player. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Flowstone Crusher | handled | {R}: This creature gets +1/-1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -51,9 +50,10 @@
 ## Fully supported
 
 <details>
-<summary>2 cards</summary>
+<summary>3 cards</summary>
 
 - Death Pit Offering
+- Rhox
 - Stronghold Discipline
 
 </details>
@@ -63,10 +63,8 @@
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
 | enchanted creature gets +N/+N and can't be blocked except by creatures with flying. | 1 | Treetop Bracers | nem |
-| other black creatures get +N/+N. | 1 | Ascendant Evincar | nem |
 | when ~ blocks, at end of combat, destroy it and all creatures it blocked ~. | 1 | Defiant Vanguard | nem |
 | whenever ~ deals combat damage to a player, that player skips their next combat phase. | 1 | Blinding Angel | nem |
-| you may have ~ assign its combat damage as though it weren't blocked. | 1 | Rhox | nem |
 | {M}: all damage that would be dealt to target creature ~ by a source of your choice is dealt to ~ instead. | 1 | Oracle's Attendants | nem |
 
 ## Notes

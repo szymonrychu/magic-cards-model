@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 31 | 14.7% |
-| Works (untested) | 134 | 63.5% |
-| Partial (unaudited) | 4 | 1.9% |
-| Not working | 42 | 19.9% |
+| Tested | 36 | 17.1% |
+| Works (untested) | 137 | 64.9% |
+| Partial (unaudited) | 0 | 0.0% |
+| Not working | 38 | 18.0% |
 
 ## Cards needing work
 
@@ -43,24 +43,20 @@
 | Heliod, God of the Sun | silent | {2}{W}{W}: Create a 2/1 white Cleric enchantment creature token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Hundred-Handed One | silent | As long as this creature is monstrous, it has reach and can block an additional ninety-nine creatures each combat. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Hythonia the Cruel | silent | When Hythonia becomes monstrous, destroy all non-Gorgon creatures. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Kragma Warcaller | silent | Minotaur creatures you control have haste. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Master of Waves | silent | When this creature enters, create a number of 1/0 blue Elemental creature tokens equal to your devotion to blue. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Meletis Charlatan | silent | {2}{U}, {T}: The controller of target instant or sorcery spell copies it. That player may choose new targets for the copy. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Mogis's Marauder | silent | When this creature enters, up to X target creatures each gain intimidate and haste until end of turn, where X is your devotion to black. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Nemesis of Mortals | silent | {7}{G}{G}: Monstrosity 5. This ability costs {1} less to activate for each creature card in your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Nylea's Presence | silent | Enchanted land is every basic land type in addition to its other types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Psychic Intrusion | silent | Target opponent reveals their hand. You choose a nonland card from that player's graveyard or hand and exile it. You may cast that card for as long as it remain | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Rageblood Shaman | silent | Other Minotaur creatures you control get +1/+1 and have trample. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Returned Phalanx | silent | {1}{U}: This creature can attack this turn as though it didn't have defender. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Satyr Piper | silent | {3}{G}: Target creature must be blocked this turn if able. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Scholar of Athreos | silent | {2}{B}: Each opponent loses 1 life. You gain life equal to the life lost this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Sealock Monster | silent | When this creature becomes monstrous, target land becomes an Island in addition to its other types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Shipwreck Singer | silent | {1}{B}, {T}: Attacking creatures get -1/-1 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Steam Augury | silent | Reveal the top five cards of your library and separate them into two piles. An opponent chooses one of those piles. Put that pile into your hand and the other i | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Stoneshock Giant | silent | When this creature becomes monstrous, creatures without flying your opponents control can't block this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Tormented Hero | silent | Heroic — Whenever you cast a spell that targets this creature, each opponent loses 1 life. You gain life equal to the life lost this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Triton Tactics | silent | Up to two target creatures each get +0/+3 until end of turn. Untap those creatures. At this turn's next end of combat, tap each creature that was blocked by one | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Underworld Cerberus | silent | When this creature dies, exile it and each player returns all creature cards from their graveyard to their hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Viper's Kiss | silent | Enchanted creature gets -1/-1, and its activated abilities can't be activated. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Boon of Erebos | notice | Target creature gets +2/+0 until end of turn. Regenerate it. You lose 2 life. | unparsed remainder: Regenerate it. You lose 2 life. | Y/Y/- | not_working |
 | Daxos of Meletis | notice | Whenever Daxos deals combat damage to a player, exile the top card of that player's library. You gain life equal to that card's mana value. Until end of turn, y | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -68,10 +64,6 @@
 | Gift of Immortality | notice | When enchanted creature dies, return that card to the battlefield under its owner's control. Return this card to the battlefield attached to that creature at th | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Rage of Purphoros | notice | Rage of Purphoros deals 4 damage to target creature. It can't be regenerated this turn. Scry 1. (Look at the top card of your library. You may put that card on  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Rescue from the Underworld | notice | As an additional cost to cast this spell, sacrifice a creature. Choose target creature card in your graveyard. Return that card and the sacrificed card to the b | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Medomai the Ageless | unaudited | Medomai can't attack during extra turns. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Nighthowler | unaudited | This creature and enchanted creature each get +X/+X, where X is the number of creature cards in all graveyards. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Prophet of Kruphix | unaudited | Untap all creatures and lands you control during each other player's untap step. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Titan of Eternal Fire | unaudited | Each Human creature you control has "{R}, {T}: This creature deals 1 damage to any target." | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Agent of Horizons | handled | {2}{U}: This creature can't be blocked this turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Agent of the Fates | handled | Heroic — Whenever you cast a spell that targets this creature, each opponent sacrifices a creature of their choice. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Akroan Crusader | handled | Heroic — Whenever you cast a spell that targets this creature, create a 1/1 red Soldier creature token with haste. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -127,6 +119,7 @@
 | Ill-Tempered Cyclops | handled | {5}{R}: Monstrosity 3. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Insatiable Harpy | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
 | Keepsake Gorgon | handled | {5}{B}{B}: Monstrosity 1. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Kragma Warcaller | handled | Minotaur creatures you control have haste. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Labyrinth Champion | handled | Heroic — Whenever you cast a spell that targets this creature, this creature deals 2 damage to any target. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Lash of the Whip | handled | Target creature gets -4/-4 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Leafcrown Dryad | handled | Enchanted creature gets +2/+2 and has reach. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -159,6 +152,7 @@
 | Priest of Iroas | handled | {3}{W}, Sacrifice this creature: Destroy target enchantment. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Prognostic Sphinx | handled | Discard a card: This creature gains hexproof until end of turn. Tap it. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Purphoros's Emissary | handled | Enchanted creature gets +3/+3 and has menace. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Rageblood Shaman | handled | Other Minotaur creatures you control get +1/+1 and have trample. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ray of Dissolution | handled | Destroy target enchantment. You gain 3 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Read the Bones | handled | Scry 2, then draw two cards. You lose 2 life. (To scry 2, look at the top two cards of your library, then put any number of them on the bottom and the rest on t | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Reaper of the Wilds | handled | Whenever another creature dies, scry 1. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -189,6 +183,7 @@
 | Thassa's Bounty | handled | Draw three cards. Target player mills three cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Thassa's Emissary | handled | Whenever this creature or enchanted creature deals combat damage to a player, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Thassa, God of the Sea | handled | As long as your devotion to blue is less than five, Thassa isn't a creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Titan of Eternal Fire | handled | Each Human creature you control has "{R}, {T}: This creature deals 1 damage to any target." | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Titan's Strength | handled | Target creature gets +3/+1 until end of turn. Scry 1. (Look at the top card of your library. You may put that card on the bottom.) | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Traveling Philosopher | handled |  |  | Y/Y/- | not_tested |
 | Triad of Fates | handled | {1}, {T}: Put a fate counter on another target creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -210,7 +205,7 @@
 ## Fully supported
 
 <details>
-<summary>31 cards</summary>
+<summary>36 cards</summary>
 
 - Akroan Hoplite
 - Anger of the Gods
@@ -228,17 +223,22 @@
 - Hunt the Hunter
 - Karametra's Acolyte
 - Lagonna-Band Elder
+- Medomai the Ageless
 - Nessian Asp
+- Nighthowler
 - Nykthos, Shrine to Nyx
 - Polis Crusher
+- Prophet of Kruphix
 - Prowler's Helm
 - Purphoros, God of the Forge
 - Pyxis of Pandemonium
 - Reverent Hunter
+- Sealock Monster
 - Spellheart Chimera
 - Stormbreath Dragon
 - Swan Song
 - Time to Feed
+- Underworld Cerberus
 - Vaporkin
 - Warriors' Lesson
 - Whip of Erebos
@@ -255,24 +255,17 @@
 | as long as ~ is monstrous, it has reach and can block an additional ninety-nine creatures each combat. | 1 | Hundred-Handed One | ths |
 | as long as ~ is monstrous, it has trample and can attack as though it didn't have defender. | 1 | Colossus of Akros | ths |
 | discard a creature card: ~ gets +N/+N until end of turn. if ~ is an aura, enchanted creature gets +N/+N until end of turn instead. | 1 | Erebos's Emissary | ths |
-| each human creature you control has "..." | 1 | Titan of Eternal Fire | ths |
 | enchanted creature gets -N/-N, and its activated abilities can't be activated. | 1 | Viper's Kiss | ths |
 | enchanted land is every basic land type in addition to its other types. | 1 | Nylea's Presence | ths |
 | exile N target creatures. for each creature exiled ~, its controller creates a N/N green boar creature token. | 1 | Curse of the Swine | ths |
-| medomai can't attack during extra turns. | 1 | Medomai the Ageless | ths |
-| minotaur creatures you control have haste. | 1 | Kragma Warcaller | ths |
-| other minotaur creatures you control get +N/+N and have trample. | 1 | Rageblood Shaman | ths |
 | reveal the top five cards of your library and separate them into two piles. an opponent chooses one of those piles. put that pile into your hand and the other i | 1 | Steam Augury | ths |
 | target creature gets +N/+N until end of turn. regenerate it. you lose N life. | 1 | Boon of Erebos | ths |
 | target opponent reveals their hand. you choose a nonland card from that player's graveyard or hand and exile it. you may cast that card for as long as it remain | 1 | Psychic Intrusion | ths |
-| untap all creatures and lands you control during each other player's untap step. | 1 | Prophet of Kruphix | ths |
 | up to two target creatures each get +N/+N until end of turn. untap those creatures. at ~ next end of combat, tap each creature that was blocked by one of those  | 1 | Triton Tactics | ths |
 | when enchanted creature dies, its controller draws a card. | 1 | Fate Foretold | ths |
 | when enchanted creature dies, return that card to the battlefield under its owner's control. return ~ to the battlefield attached to that creature at the beginn | 1 | Gift of Immortality | ths |
 | when hythonia becomes monstrous, destroy all non-gorgon creatures. | 1 | Hythonia the Cruel | ths |
 | when ~ becomes monstrous, creatures without flying your opponents control can't block ~. | 1 | Stoneshock Giant | ths |
-| when ~ becomes monstrous, target land becomes an island in addition to its other types. | 1 | Sealock Monster | ths |
-| when ~ dies, exile it and each player returns all creature cards from their graveyard to their hand. | 1 | Underworld Cerberus | ths |
 | when ~ enters, an opponent gains control of it. | 1 | Akroan Horse | ths |
 | when ~ enters, create a number of N/N black harpy creature tokens with flying equal to your devotion to black. | 1 | Abhorrent Overlord | ths |
 | when ~ enters, create a number of N/N blue elemental creature tokens equal to your devotion to blue. | 1 | Master of Waves | ths |
@@ -291,7 +284,6 @@
 | {M}{M}: ~ can block an additional creature ~. | 1 | Coastline Chimera | ths |
 | {M}{M}{M}: create a N/N white cleric enchantment creature token. | 1 | Heliod, God of the Sun | ths |
 | {M}{M}{M}: monstrosity N. ~ costs {M} less to activate for each creature card in your graveyard. | 1 | Nemesis of Mortals | ths |
-| ~ and enchanted creature each get +N/+N, where N is the number of creature cards in all graveyards. | 1 | Nighthowler | ths |
 | ~ deals N damage to target creature. it can't be regenerated ~. scry N. (look at the top card of your library. you may put that card on the bottom.) | 1 | Rage of Purphoros | ths |
 | −N: put a creature card with mana value N exiled with ashiok onto the battlefield under your control. that creature is a nightmare in addition to its other type | 1 | Ashiok, Nightmare Weaver | ths |
 

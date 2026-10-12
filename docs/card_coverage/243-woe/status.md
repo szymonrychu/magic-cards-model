@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 49 | 18.4% |
-| Works (untested) | 144 | 54.1% |
-| Partial (unaudited) | 1 | 0.4% |
-| Not working | 72 | 27.1% |
+| Tested | 50 | 18.8% |
+| Works (untested) | 145 | 54.5% |
+| Partial (unaudited) | 0 | 0.0% |
+| Not working | 71 | 26.7% |
 
 ## Cards needing work
 
@@ -33,7 +33,6 @@
 | Bellowing Bruiser // Beat a Path | silent | Up to two target creatures can't block this turn. (Then exile this card. You may cast the creature later from exile.) | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Beluna Grandsquall // Seek Thrills | silent | Mill seven cards. Then put all cards that have an Adventure from among the milled cards into your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Beseech the Mirror | silent | Bargain (You may sacrifice an artifact, enchantment, or token as you cast this spell.) Search your library for a card, exile it face down, then shuffle. If this | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Bespoke Battlegarb | silent | Celebration — At the beginning of combat on your turn, if two or more nonland permanents entered the battlefield under your control this turn, attach this Equip | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Brave the Wilds | silent | Bargain (You may sacrifice an artifact, enchantment, or token as you cast this spell.) If this spell was bargained, target land you control becomes a 3/3 Elemen | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Break the Spell | silent | Destroy target enchantment. If a permanent you controlled or a token was destroyed this way, draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Charging Hooligan | silent | Whenever this creature attacks, it gets +1/+0 until end of turn for each attacking creature. If a Rat is attacking, this creature gains trample until end of tur | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -98,7 +97,6 @@
 | Specter of Mortality | notice | When this creature enters, you may exile one or more creature cards from your graveyard. When you do, each other creature gets -X/-X until end of turn, where X  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | The Huntsman's Redemption | notice | II — You may sacrifice a creature. If you do, search your library for a creature or basic land card, reveal it, put it into your hand, then shuffle. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Water Wings | notice | Until end of turn, target creature you control has base power and toughness 4/4 and gains flying and hexproof. (It can't be the target of spells or abilities yo | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Night of the Sweets' Revenge | unaudited | Foods you control have "{T}: Add {G}." | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Aquatic Alchemist // Bubble Up | handled | Put target instant or sorcery card from your graveyard on top of your library. (Then exile this card. You may cast the creature later from exile.) | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Archon's Glory | handled | Bargain (You may sacrifice an artifact, enchantment, or token as you cast this spell.) Target creature gets +2/+2 until end of turn. If this spell was bargained | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Ash, Party Crasher | handled | Celebration — Whenever Ash attacks, if two or more nonland permanents entered the battlefield under your control this turn, put a +1/+1 counter on Ash. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -108,6 +106,7 @@
 | Belligerent of the Ball | handled | Celebration — At the beginning of combat on your turn, if two or more nonland permanents entered the battlefield under your control this turn, target creature y | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Beluna's Gatekeeper // Entry Denied | handled | Return target creature you don't control with mana value 3 or less to its owner's hand. (Then exile this card. You may cast the creature later from exile.) | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Besotted Knight // Betroth the Beast | handled | Create a Royal Role token attached to target creature you control. (Enchanted creature gets +1/+1 and has ward {1}.) | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Bespoke Battlegarb | handled | Equipped creature gets +2/+0. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Bestial Bloodline | handled | Enchanted creature gets +2/+2. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Bitter Chill | handled | When this Aura enters, tap enchanted creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Blossoming Tortoise | handled | Whenever this creature enters or attacks, mill three cards, then return a land card from your graveyard to the battlefield tapped. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -247,7 +246,7 @@
 ## Fully supported
 
 <details>
-<summary>49 cards</summary>
+<summary>50 cards</summary>
 
 - Agatha of the Vile Cauldron
 - Agatha's Champion
@@ -283,6 +282,7 @@
 - Lord Skitter's Blessing
 - Misleading Motes
 - Monstrous Rage
+- Night of the Sweets' Revenge
 - Ogre Chitterlord
 - Pests of Honor
 - Protective Parents
@@ -305,7 +305,7 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| Celebration | 6 | Armory Mice, Bespoke Battlegarb, Gallant Pie-Wielder, Goddric, Cloaked Reveler, Grand Ball Guest | woe |
+| Celebration | 5 | Armory Mice, Gallant Pie-Wielder, Goddric, Cloaked Reveler, Grand Ball Guest, Tuinvale Guide | woe |
 | when ~ enters, create a royal role token attached to another target creature you control. | 2 | Charmed Clothier, Redtooth Genealogist | woe |
 | at the beginning of combat on your turn, if you control a creature with power N or greater, ~ gets +N/+N until end of turn and can attack ~ as though it didn't  | 1 | Territorial Witchstalker | woe |
 | at the beginning of your end step, put a +N/+N counter on each creature you control. untap those creatures. | 1 | Virtue of Loyalty // Ardenvale Fealty | woe |
@@ -322,7 +322,6 @@
 | counter target spell unless its controller pays {M} plus an additional {M} for each faerie you control. | 1 | Spell Stutter | woe |
 | destroy target enchantment. if a permanent you controlled or a token was destroyed ~, draw a card. | 1 | Break the Spell | woe |
 | enchanted creatures you control get +N/+N. | 1 | A Tale for the Ages | woe |
-| foods you control have "..." | 1 | Night of the Sweets' Revenge | woe |
 | instant and sorcery spells you control have lifelink. | 1 | Heartflame Duelist // Heartflame Slash | woe |
 | look at the top five cards of your library. you may exile a creature card from among them. put the rest on the bottom of your library in a random order. you may | 1 | Feral Encounter | woe |
 | mill seven cards. then put all cards that have an adventure from among the milled cards into your hand. | 1 | Beluna Grandsquall // Seek Thrills | woe |

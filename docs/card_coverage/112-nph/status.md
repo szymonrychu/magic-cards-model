@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 29 | 17.9% |
-| Works (untested) | 78 | 48.1% |
-| Partial (unaudited) | 9 | 5.6% |
-| Not working | 46 | 28.4% |
+| Tested | 38 | 23.5% |
+| Works (untested) | 82 | 50.6% |
+| Partial (unaudited) | 0 | 0.0% |
+| Not working | 42 | 25.9% |
 
 ## Cards needing work
 
@@ -37,11 +37,9 @@
 | Gremlin Mine | silent | {1}, {T}, Sacrifice this artifact: Remove up to four charge counters from target noncreature artifact. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Hex Parasite | silent | {X}{B/P}: Remove up to X counters from target permanent. For each counter removed this way, this creature gets +1/+0 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Isolation Cell | silent | Whenever an opponent casts a creature spell, that player loses 2 life unless they pay {2}. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Jor Kadeen, the Prevailer | silent | Metalcraft — Creatures you control get +3/+0 as long as you control three or more artifacts. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Karn Liberated | silent | +4: Target player exiles a card from their hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Lashwrithe | silent | Living weapon | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Life's Finale | silent | Destroy all creatures, then search target opponent's library for up to three creature cards and put them into their graveyard. Then that player shuffles. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Maul Splicer | silent | Golem creatures you control have trample. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Mortis Dogs | silent | When this creature dies, target player loses life equal to its power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Necropouncer | silent | Living weapon | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Omen Machine | silent | At the beginning of each player's draw step, that player exiles the top card of their library. If it's a land card, the player puts it onto the battlefield. Oth | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -52,7 +50,6 @@
 | Psychic Surgery | silent | Whenever an opponent shuffles their library, you may look at the top two cards of that library. You may exile one of those cards. Then put the rest on top of th | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Reaper of Sheoldred | silent | Whenever a source deals damage to this creature, that source's controller gets a poison counter. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Ruthless Invasion | silent | ({R/P} can be paid with either {R} or 2 life.) Nonartifact creatures can't block this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Sensor Splicer | silent | Golem creatures you control have vigilance. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Shrine of Limitless Power | silent | {4}, {T}, Sacrifice this artifact: Target player discards a card for each charge counter on this artifact. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Shrine of Loyal Legions | silent | {3}, {T}, Sacrifice this artifact: Create a 1/1 colorless Phyrexian Myr artifact creature token for each charge counter on this artifact. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sickleslicer | silent | Living weapon | no machine in the engine executes this keyword | Y/-/- | not_working |
@@ -61,7 +58,6 @@
 | Sword of War and Peace | silent | Whenever equipped creature deals combat damage to a player, this Equipment deals damage to that player equal to the number of cards in their hand and you gain 1 | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Vapor Snag | silent | Return target creature to its owner's hand. Its controller loses 1 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Viridian Harvest | silent | When enchanted artifact is put into a graveyard, you gain 6 life. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
-| Wing Splicer | silent | Golem creatures you control have flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Xenograft | silent | Each creature you control is the chosen type in addition to its other types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Apostle's Blessing | notice | ({W/P} can be paid with either {W} or 2 life.) Target artifact or creature you control gains protection from artifacts or from the color of your choice until en | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Auriok Survivors | notice | When this creature enters, you may return target Equipment card from your graveyard to the battlefield. If you do, you may attach it to this creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
@@ -72,15 +68,6 @@
 | Ichor Explosion | notice | As an additional cost to cast this spell, sacrifice a creature. All creatures get -X/-X until end of turn, where X is the sacrificed creature's power. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Phyrexian Ingester | notice | This creature gets +X/+Y, where X is the exiled creature card's power and Y is its toughness. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Viridian Betrayers | notice | This creature has infect as long as an opponent is poisoned. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Bludgeon Brawl | unaudited | Each noncreature, non-Equipment artifact is an Equipment with equip {X} and "Equipped creature gets +X/+0," where X is that artifact's mana value. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Exclusion Ritual | unaudited | Players can't cast spells with the same name as the exiled card. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Jin-Gitaxias, Core Augur | unaudited | Each opponent's maximum hand size is reduced by seven. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Melira, Sylvok Outcast | unaudited | You can't get poison counters. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Myr Superion | unaudited | Spend only mana produced by creatures to cast this spell. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Phyrexian Unlife | unaudited | You don't lose the game for having 0 or less life. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Puresteel Paladin | unaudited | Metalcraft — Equipment you control have equip {0} as long as you control three or more artifacts. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Spinebiter | unaudited | You may have this creature assign its combat damage as though it weren't blocked. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Unwinding Clock | unaudited | Untap all artifacts you control during each other player's untap step. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Act of Aggression | handled | ({R/P} can be paid with either {R} or 2 life.) Gain control of target creature an opponent controls until end of turn. Untap that creature. It gains haste until | the engine reads this text and performs it | Y/-/- | not_tested |
 | Alloy Myr | handled |  |  | Y/-/- | not_tested |
 | Artillerize | handled | As an additional cost to cast this spell, sacrifice an artifact or creature. Artillerize deals 5 damage to any target. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -112,11 +99,13 @@
 | Inquisitor Exarch | handled | When this creature enters, choose one — • You gain 2 life. • Target opponent loses 2 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Insatiable Souleater | handled | {G/P}: This creature gains trample until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Invader Parasite | handled | Imprint — When this creature enters, exile target land. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Jor Kadeen, the Prevailer | handled | Metalcraft — Creatures you control get +3/+0 as long as you control three or more artifacts. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Kiln Walker | handled | Whenever this creature attacks, it gets +3/+0 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Leeching Bite | handled | Target creature gets +1/+1 until end of turn. Another target creature gets -1/-1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Lost Leonin | handled | Infect | machines/combat.py | Y/-/- | not_tested |
 | Loxodon Convert | handled |  |  | Y/-/- | not_tested |
 | Master Splicer | handled | When this creature enters, create a 3/3 colorless Phyrexian Golem artifact creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Maul Splicer | handled | When this creature enters, create two 3/3 colorless Phyrexian Golem artifact creature tokens. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Mental Misstep | handled | ({U/P} can be paid with either {U} or 2 life.) Counter target spell with mana value 1. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Mindculling | handled | You draw two cards and target opponent discards two cards. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Moltensteel Dragon | handled | {R/P}: This creature gets +1/+0 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -136,6 +125,7 @@
 | Remember the Fallen | handled | Choose one or both — • Return target creature card from your graveyard to your hand. • Return target artifact card from your graveyard to your hand. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Rotted Hystrix | handled |  |  | Y/-/- | not_tested |
 | Scrapyard Salvo | handled | Scrapyard Salvo deals damage to target player or planeswalker equal to the number of artifact cards in your graveyard. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Sensor Splicer | handled | When this creature enters, create a 3/3 colorless Phyrexian Golem artifact creature token. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Shattered Angel | handled | Whenever a land an opponent controls enters, you may gain 3 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Shriek Raptor | handled | Flying | machines/combat.py | Y/-/- | not_tested |
 | Shrine of Boundless Growth | handled | At the beginning of your upkeep and whenever you cast a green spell, put a charge counter on this artifact. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -159,14 +149,16 @@
 | Vital Splicer | handled | When this creature enters, create a 3/3 colorless Phyrexian Golem artifact creature token. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Volt Charge | handled | Volt Charge deals 3 damage to any target. Proliferate. (Choose any number of permanents and/or players, then give each another counter of each kind already ther | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Vulshok Refugee | handled | Protection | models/game.py | Y/-/- | not_tested |
+| Wing Splicer | handled | When this creature enters, create a 3/3 colorless Phyrexian Golem artifact creature token. | the engine reads this text and performs it | Y/-/- | not_tested |
 
 ## Fully supported
 
 <details>
-<summary>29 cards</summary>
+<summary>38 cards</summary>
 
 - Argent Mutation
 - Arm with Aether
+- Bludgeon Brawl
 - Caged Sun
 - Cathedral Membrane
 - Chained Throatseeker
@@ -174,22 +166,30 @@
 - Darksteel Relic
 - Dismember
 - Elesh Norn, Grand Cenobite
+- Exclusion Ritual
 - Furnace Scamp
 - Gitaxian Probe
 - Glistener Elf
 - Greenhilt Trainee
 - Grim Affliction
+- Jin-Gitaxias, Core Augur
 - Marrow Shards
+- Melira, Sylvok Outcast
 - Mindcrank
 - Mutagenic Growth
 - Mycosynth Fiend
+- Myr Superion
 - Norn's Annex
 - Phyrexian Swarmlord
+- Phyrexian Unlife
 - Postmortem Lunge
+- Puresteel Paladin
 - Sheoldred, Whispering One
 - Spellskite
+- Spinebiter
 - Surgical Extraction
 - Torpor Orb
+- Unwinding Clock
 - Vorinclex, Voice of Hunger
 - War Report
 - Whipflare
@@ -202,7 +202,6 @@
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
 | living weapon | 3 | Lashwrithe, Necropouncer, Sickleslicer | nph |
-| Metalcraft | 2 | Jor Kadeen, the Prevailer, Puresteel Paladin | nph |
 | ({M} can be paid with either {M} or N life.) nonartifact creatures can't block ~. | 1 | Ruthless Invasion | nph |
 | ({M} can be paid with either {M} or N life.) target artifact or creature you control gains protection from artifacts or from the color of your choice until end  | 1 | Apostle's Blessing | nph |
 | +N: target player exiles a card from their hand. | 1 | Karn Liberated | nph |
@@ -214,18 +213,10 @@
 | create a N/N green beast creature token for each creature put into your graveyard from the battlefield ~. | 1 | Fresh Meat | nph |
 | destroy all creatures, then search target opponent's library for up to three creature cards and put them into their graveyard. then that player shuffles. | 1 | Life's Finale | nph |
 | each creature you control is the chosen type in addition to its other types. | 1 | Xenograft | nph |
-| each noncreature, non-equipment artifact is an equipment with equip {M} and "..." where N is that artifact's mana value. | 1 | Bludgeon Brawl | nph |
-| each opponent's maximum hand size is reduced by seven. | 1 | Jin-Gitaxias, Core Augur | nph |
-| golem creatures you control have flying. | 1 | Wing Splicer | nph |
-| golem creatures you control have trample. | 1 | Maul Splicer | nph |
-| golem creatures you control have vigilance. | 1 | Sensor Splicer | nph |
 | permanents enter tapped ~. draw a card. | 1 | Due Respect | nph |
-| players can't cast spells with the same name as the exiled card. | 1 | Exclusion Ritual | nph |
 | return target creature to its owner's hand. its controller loses N life. | 1 | Vapor Snag | nph |
 | search target opponent's library for a card and exile it face down. then that player shuffles. you may play that card for as long as it remains exiled. | 1 | Praetor's Grasp | nph |
-| spend only mana produced by creatures to cast ~. | 1 | Myr Superion | nph |
 | tap target creature. metalcraft — if you control three or more artifacts, exile that creature. | 1 | Dispatch | nph |
-| untap all artifacts you control during each other player's untap step. | 1 | Unwinding Clock | nph |
 | when enchanted artifact is put into a graveyard, you gain N life. | 1 | Viridian Harvest | nph |
 | when ~ dies, target player loses life equal to its power. | 1 | Mortis Dogs | nph |
 | when ~ enters, choose one — • search your library for a creature card, reveal it, then shuffle and put that card on top. • put target noncreature permanent on t | 1 | Brutalizer Exarch | nph |
@@ -238,9 +229,6 @@
 | whenever an opponent casts a spell, counter it unless that player pays {M}. | 1 | Chancellor of the Annex | nph |
 | whenever an opponent shuffles their library, you may look at the top two cards of that library. you may exile one of those cards. then put the rest on top of th | 1 | Psychic Surgery | nph |
 | whenever equipped creature deals combat damage to a player, ~ deals damage to that player equal to the number of cards in their hand and you gain N life for eac | 1 | Sword of War and Peace | nph |
-| you can't get poison counters. | 1 | Melira, Sylvok Outcast | nph |
-| you don't lose the game for having N or less life. | 1 | Phyrexian Unlife | nph |
-| you may have ~ assign its combat damage as though it weren't blocked. | 1 | Spinebiter | nph |
 | you may have ~ enter as a copy of any artifact or creature on the battlefield, except it's an artifact in addition to its other types. | 1 | Phyrexian Metamorph | nph |
 | you may reveal ~ from your opening hand. if you do, at the beginning of the first upkeep, each opponent loses N life, then you gain life equal to the life lost  | 1 | Chancellor of the Dross | nph |
 | you may reveal ~ from your opening hand. if you do, at the beginning of your first main phase of the game, add {M}. | 1 | Chancellor of the Tangle | nph |

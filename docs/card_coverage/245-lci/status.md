@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 74 | 26.9% |
-| Works (untested) | 137 | 49.8% |
-| Partial (unaudited) | 5 | 1.8% |
-| Not working | 59 | 21.5% |
+| Tested | 80 | 29.1% |
+| Works (untested) | 139 | 50.5% |
+| Partial (unaudited) | 0 | 0.0% |
+| Not working | 56 | 20.4% |
 
 ## Cards needing work
 
@@ -41,7 +41,6 @@
 | Deepfathom Echo | silent | Explore | no machine in the engine executes this keyword | Y/Y/Y | not_working |
 | Defossilize | silent | Explore | no machine in the engine executes this keyword | Y/Y/Y | not_working |
 | Glowcap Lantern | silent | Explore | no machine in the engine executes this keyword | Y/Y/Y | not_working |
-| Goblin Tomb Raider | silent | As long as you control an artifact, this creature gets +1/+0 and has haste. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Hit the Mother Lode | silent | Discover 10. If the discovered card's mana value is less than 10, create a number of tapped Treasure tokens equal to the difference. (To discover 10, exile card | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Hunter's Blowgun | silent | Equipped creature has deathtouch during your turn. Otherwise, it has reach. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Hurl into History | silent | Counter target artifact or creature spell. Discover X, where X is that spell's mana value. (Exile cards from the top of your library until you exile a nonland c | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -57,13 +56,11 @@
 | Ojer Kaslem, Deepest Growth // Temple of Cultivation | silent | Whenever Ojer Kaslem deals combat damage to a player, reveal that many cards from the top of your library. You may put a creature card and/or a land card from a | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Pit of Offerings | silent | {T}: Add one mana of any of the exiled cards' colors. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Relic's Roar | silent | Until end of turn, target artifact or creature becomes a Dinosaur artifact creature with base power and toughness 4/3 in addition to its other types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Roaming Throne | silent | This creature is the chosen type in addition to its other types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Shipwreck Sentry | silent | As long as an artifact entered the battlefield under your control this turn, this creature can attack as though it didn't have defender. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Sovereign Okinec Ahau | silent | Whenever Sovereign Okinec Ahau attacks, for each creature you control with power greater than that creature's base power, put a number of +1/+1 counters on that | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Squirming Emergence | silent | Fathomless descent — Return to the battlefield target nonland permanent card in your graveyard with mana value less than or equal to the number of permanent car | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Subterranean Schooner | silent | Whenever this Vehicle attacks, target creature that crewed it this turn explores. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Sunbird Standard // Sunbird Effigy | silent | Sunbird Effigy's power and toughness are each equal to the number of colors among the exiled cards used to craft it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Swashbuckler's Whip | silent | Equipped creature has reach, "{2}, {T}: Tap target artifact or creature," and "{8}, {T}: Discover 10." | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Tarrian's Journal // The Tomb of Aclazotz | silent | {T}: You may cast a creature spell from your graveyard this turn. If you do, it enters with a finality counter on it and is a Vampire in addition to its other t | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Tarrian's Soulcleaver | silent | Whenever another artifact or creature is put into a graveyard from the battlefield, put a +1/+1 counter on equipped creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Terror Tide | silent | Fathomless descent — All creatures get -X/-X until end of turn, where X is the number of permanent cards in your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -85,11 +82,6 @@
 | Quintorius Kand | notice | −6: Exile any number of target cards from your graveyard. Add {R} for each card exiled this way. You may play those cards this turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Scampering Surveyor | notice | When this creature enters, search your library for a basic land card or Cave card, put it onto the battlefield tapped, then shuffle. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | The Enigma Jewel // Locus of Enlightenment | notice | Locus of Enlightenment has each activated ability of the exiled cards used to craft it. You may activate each of those abilities only once each turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Bedrock Tortoise | unaudited | During your turn, creatures you control have hexproof. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Forgotten Monument | unaudited | Other Caves you control have "{T}, Pay 1 life: Add one mana of any color." | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Song of Stupefaction | unaudited | Fathomless descent — Enchanted permanent gets -X/-0, where X is the number of permanent cards in your graveyard. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Thousand Moons Infantry | unaudited | Untap this creature during each other player's untap step. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Waterlogged Hulk // Watertight Gondola | unaudited | Descend 8 — This Vehicle can't be blocked as long as there are eight or more permanent cards in your graveyard. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Abuelo, Ancestral Echo | handled | {1}{W}{U}: Exile another target creature or artifact you control. Return it to the battlefield under its owner's control at the beginning of the next end step. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Abyssal Gorestalker | handled | When this creature enters, each player sacrifices two creatures of their choice. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Aclazotz, Deepest Betrayal // Temple of the Dead | handled | Whenever Aclazotz attacks, each opponent discards a card. For each opponent who can't, you draw a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -140,6 +132,7 @@
 | Fungal Fortitude | handled | Enchanted creature gets +2/+0. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Gargantuan Leech | handled | This spell costs {1} less to cast for each Cave you control and each Cave card in your graveyard. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Glorifier of Suffering | handled | When this creature enters, you may sacrifice another creature or artifact. When you do, put a +1/+1 counter on each of up to two target creatures. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Goblin Tomb Raider | handled | As long as you control an artifact, this creature gets +1/+0 and has haste. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Goldfury Strider | handled | Tap two untapped artifacts and/or creatures you control: Target creature gets +2/+0 until end of turn. Activate only as a sorcery. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Helping Hand | handled | Return target creature card with mana value 3 or less from your graveyard to the battlefield tapped. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Hermitic Nautilus | handled | {1}{U}: This creature gets +3/-3 until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -214,6 +207,7 @@
 | Stinging Cave Crawler | handled | Descend 4 — Whenever this creature attacks, if there are four or more permanent cards in your graveyard, you draw a card and you lose 1 life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Sunfire Torch | handled | Equipped creature gets +1/+0 and has "Whenever this creature attacks, you may sacrifice Sunfire Torch. When you do, this creature deals 2 damage to any target." | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Sunshot Militia | handled | Tap two untapped artifacts and/or creatures you control: This creature deals 1 damage to each opponent. Activate only as a sorcery. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Swashbuckler's Whip | handled | Equipped creature has reach, "{2}, {T}: Tap target artifact or creature," and "{8}, {T}: Discover 10." | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Synapse Necromage | handled | When this creature dies, create two 1/1 black Fungus creature tokens with "This token can't block." | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Tectonic Hazard | handled | Tectonic Hazard deals 1 damage to each opponent and each creature they control. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Thousand Moons Crackshot | handled | Whenever this creature attacks, you may pay {2}{W}. When you do, tap target creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -231,12 +225,13 @@
 ## Fully supported
 
 <details>
-<summary>74 cards</summary>
+<summary>80 cards</summary>
 
 - Abuelo's Awakening
 - Akawalli, the Seething Tower
 - Amalia Benavides Aguirre
 - Basking Capybara
+- Bedrock Tortoise
 - Bitter Triumph
 - Bloodletter of Aclazotz
 - Braided Net // Braided Quipu
@@ -258,6 +253,7 @@
 - Eaten by Piranhas
 - Echoing Deeps
 - Fanatical Offering
+- Forgotten Monument
 - Geological Appraiser
 - Get Lost
 - Ghalta, Stampede Tyrant
@@ -284,10 +280,12 @@
 - Rampaging Ceratops
 - Restless Anchorage
 - Restless Reef
+- Roaming Throne
 - Ruin-Lurker Bat
 - Saheeli's Lattice // Mastercraft Raptor
 - Scytheclaw Raptor
 - Sentinel of the Nameless City
+- Song of Stupefaction
 - Souls of the Lost
 - Spelunking
 - Spring-Loaded Sawblades // Bladewheel Chariot
@@ -297,6 +295,7 @@
 - Tendril of the Mycotyrant
 - The Millennium Calendar
 - The Mycotyrant
+- Thousand Moons Infantry
 - Threefold Thunderhulk
 - Tishana's Tidebinder
 - Tithing Blade // Consuming Sepulcher
@@ -306,6 +305,7 @@
 - Vanguard of the Rose
 - Visage of Dread // Dread Osseosaur
 - Vito, Fanatic of Aclazotz
+- Waterlogged Hulk // Watertight Gondola
 - Zoetic Glyph
 
 </details>
@@ -314,27 +314,21 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| Fathomless descent | 4 | Chupacabra Echo, Song of Stupefaction, Squirming Emergence, Terror Tide | lci |
+| Fathomless descent | 3 | Chupacabra Echo, Squirming Emergence, Terror Tide | lci |
 | explore | 3 | Deepfathom Echo, Defossilize, Glowcap Lantern | lci |
 | as long as an artifact entered the battlefield under your control ~, ~ can attack as though it didn't have defender. | 1 | Shipwreck Sentry | lci |
-| as long as you control an artifact, ~ gets +N/+N and has haste. | 1 | Goblin Tomb Raider | lci |
 | as long as ~ has three or more counters on it, it has flying and vigilance. | 1 | Warden of the Inner Sky | lci |
 | at the beginning of your end step, if you descended ~, each opponent may discard a card or sacrifice a permanent of their choice. zoyowa deals N damage to each  | 1 | Zoyowa Lava-Tongue | lci |
 | at the beginning of your upkeep, exile the top two cards of your library. you may play them ~. if you exiled a land card ~, create a N/N red dinosaur creature t | 1 | Bonehoard Dracosaur | lci |
 | counter target artifact or creature spell. discover N, where N is that spell's mana value. (exile cards from the top of your library until you exile a nonland c | 1 | Hurl into History | lci |
 | create N map tokens, where N is one plus the number of opponents who control an artifact. (then exile ~. you may cast the creature later from exile.) | 1 | Kellan, Daring Traveler // Journey On | lci |
 | descend N — choose one. if there are eight or more permanent cards in your graveyard as you cast ~, choose one or more instead. • return target nonland permanen | 1 | Wail of the Forgotten | lci |
-| descend N — ~ can't be blocked as long as there are eight or more permanent cards in your graveyard. | 1 | Waterlogged Hulk // Watertight Gondola | lci |
 | discover N. if the discovered card's mana value is less than N, create a number of tapped treasure tokens equal to the difference. (to discover N, exile cards f | 1 | Hit the Mother Lode | lci |
-| during your turn, creatures you control have hexproof. | 1 | Bedrock Tortoise | lci |
 | equipped creature has deathtouch during your turn. otherwise, it has reach. | 1 | Hunter's Blowgun | lci |
-| equipped creature has reach, "..." and "..." | 1 | Swashbuckler's Whip | lci |
 | locus of enlightenment has each activated ability of the exiled cards used to craft it. you may activate each of those abilities only once each turn. | 1 | The Enigma Jewel // Locus of Enlightenment | lci |
-| other caves you control have "..." | 1 | Forgotten Monument | lci |
 | return target creature to its owner"..."s an artifact with "...") | 1 | Brackish Blunder | lci |
 | sunbird effigy's power and toughness are each equal to the number of colors among the exiled cards used to craft it. | 1 | Sunbird Standard // Sunbird Effigy | lci |
 | the owner of target artifact or creature with mana value N or greater shuffles it into their library. then that player discovers N, where N is its mana value. ( | 1 | Zoyowa's Justice | lci |
-| untap ~ during each other player's untap step. | 1 | Thousand Moons Infantry | lci |
 | until end of turn, target artifact or creature becomes a dinosaur artifact creature with base power and toughness N/N in addition to its other types. | 1 | Relic's Roar | lci |
 | until end of turn, target land you control becomes a N/N dinosaur creature with reach and haste. it's still a land. it must be blocked ~ if able. | 1 | Disturbed Slumber | lci |
 | up to three target creatures can't block ~. discover N. (exile cards from the top of your library until you exile a nonland card with mana value N or less. cast | 1 | Daring Discovery | lci |
@@ -371,7 +365,6 @@
 | {M}: you may cast a creature spell from your graveyard ~. if you do, it enters with a finality counter on it and is a vampire in addition to its other types. | 1 | Tarrian's Journal // The Tomb of Aclazotz | lci |
 | {M}{M}: ~ can't be blocked by creatures with power N or less ~. | 1 | Cavern Stomper | lci |
 | {M}{M}{M}: draw a card, then discard a card. when you discard a card ~, target player mills cards equal to its mana value. | 1 | The Ancient One | lci |
-| ~ is the chosen type in addition to its other types. | 1 | Roaming Throne | lci |
 | −N: exile any number of target cards from your graveyard. add {M} for each card exiled ~. you may play those cards ~. | 1 | Quintorius Kand | lci |
 
 ## Notes

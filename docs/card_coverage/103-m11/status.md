@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 20 | 19.0% |
-| Works (untested) | 63 | 60.0% |
-| Partial (unaudited) | 3 | 2.9% |
-| Not working | 19 | 18.1% |
+| Tested | 24 | 22.9% |
+| Works (untested) | 64 | 61.0% |
+| Partial (unaudited) | 0 | 0.0% |
+| Not working | 17 | 16.2% |
 
 ## Cards needing work
 
@@ -34,7 +34,6 @@
 | Hunters' Feast | silent | Any number of target players each gain 6 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Incite | silent | Target creature becomes red until end of turn and attacks this turn if able. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Jace's Erasure | silent | Whenever you draw a card, you may have target player mill a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Knight Exemplar | silent | Other Knight creatures you control get +1/+1 and have indestructible. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Mass Polymorph | silent | Exile all creatures you control, then reveal cards from the top of your library until you reveal that many creature cards. Put all creature cards revealed this  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Merfolk Spy | silent | Whenever this creature deals combat damage to a player, that player reveals a card at random from their hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Necrotic Plague | silent | When enchanted creature dies, its controller chooses target creature one of their opponents controls. Return this card from its owner's graveyard to the battlef | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -43,11 +42,7 @@
 | Redirect | silent | You may choose new targets for target spell. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Squadron Hawk | silent | When this creature enters, you may search your library for up to three cards named Squadron Hawk, reveal them, put them into your hand, then shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Steel Overseer | silent | {T}: Put a +1/+1 counter on each artifact creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Stormtide Leviathan | silent | All lands are Islands in addition to their other types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Wild Evocation | silent | At the beginning of each player's upkeep, that player reveals a card at random from their hand. If it's a land card, the player puts it onto the battlefield. Ot | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Angelic Arbiter | unaudited | Each opponent who cast a spell this turn can't attack with creatures. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Gaea's Revenge | unaudited | This creature can't be the target of nongreen spells or abilities from nongreen sources. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Obstinate Baloth | unaudited | If a spell or ability an opponent controls causes you to discard this card, put it onto the battlefield instead of putting it into your graveyard. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Air Servant | handled | {2}{U}: Tap target creature with flying. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ajani's Pridemate | handled | Whenever you gain life, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Ancient Hellkite | handled | {R}: This creature deals 1 damage to target creature defending player controls. Activate only if this creature is attacking. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -78,6 +73,7 @@
 | Hornet Sting | handled | Hornet Sting deals 1 damage to any target. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Inspired Charge | handled | Creatures you control get +2/+1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Jace's Ingenuity | handled | Draw three cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Knight Exemplar | handled | Other Knight creatures you control get +1/+1 and have indestructible. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Leyline of Anticipation | handled | If this card is in your opening hand, you may begin the game with it on the battlefield. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Leyline of Vitality | handled | If this card is in your opening hand, you may begin the game with it on the battlefield. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Liliana's Caress | handled | Whenever an opponent discards a card, that player loses 2 life. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -115,10 +111,11 @@
 ## Fully supported
 
 <details>
-<summary>20 cards</summary>
+<summary>24 cards</summary>
 
 - Aether Adept
 - Ajani's Mantra
+- Angelic Arbiter
 - Bloodcrazed Goblin
 - Brittle Effigy
 - Captivating Vampire
@@ -127,15 +124,18 @@
 - Cultivate
 - Fire Servant
 - Frost Titan
+- Gaea's Revenge
 - Harbor Serpent
 - Inferno Titan
 - Leyline of Punishment
 - Leyline of Sanctity
+- Obstinate Baloth
 - Preordain
 - Primeval Titan
 - Pyretic Ritual
 - Reverberate
 - Serra Ascendant
+- Stormtide Leviathan
 - Vengeful Archon
 
 </details>
@@ -144,15 +144,11 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| all lands are islands in addition to their other types. | 1 | Stormtide Leviathan | m11 |
 | any number of target players each gain N life. | 1 | Hunters' Feast | m11 |
 | at the beginning of each player"..."s a land card, the player puts it onto the battlefield. otherwise, the player casts it without paying its mana cost if able. | 1 | Wild Evocation | m11 |
 | at the beginning of your upkeep, put a +N/+N counter on enchanted creature. | 1 | Primal Cocoon | m11 |
 | each opponent loses N life. you gain life equal to the life lost ~. | 1 | Blood Tithe | m11 |
-| each opponent who cast a spell ~ can't attack with creatures. | 1 | Angelic Arbiter | m11 |
 | exile all creatures you control, then reveal cards from the top of your library until you reveal that many creature cards. put all creature cards revealed ~ ont | 1 | Mass Polymorph | m11 |
-| if a spell or ability an opponent controls causes you to discard ~, put it onto the battlefield instead of putting it into your graveyard. | 1 | Obstinate Baloth | m11 |
-| other knight creatures you control get +N/+N and have indestructible. | 1 | Knight Exemplar | m11 |
 | spells you control can"..."t be the targets of blue or black spells ~. | 1 | Autumn's Veil | m11 |
 | target creature becomes red until end of turn and attacks ~ if able. | 1 | Incite | m11 |
 | when enchanted creature dies, its controller chooses target creature one of their opponents controls. return ~ from its owner's graveyard to the battlefield att | 1 | Necrotic Plague | m11 |
@@ -165,7 +161,6 @@
 | {M}, {M}: you gain N life. shuffle ~ and your graveyard into their owner's library. | 1 | Elixir of Immortality | m11 |
 | {M}: put a +N/+N counter on each artifact creature you control. | 1 | Steel Overseer | m11 |
 | {M}: until end of turn, ~ loses defender and gains flying. | 1 | Gargoyle Sentinel | m11 |
-| ~ can't be the target of nongreen spells or abilities from nongreen sources. | 1 | Gaea's Revenge | m11 |
 
 ## Notes
 

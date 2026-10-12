@@ -17,16 +17,15 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 1 | 16.7% |
+| Tested | 2 | 33.3% |
 | Works (untested) | 4 | 66.7% |
-| Partial (unaudited) | 1 | 16.7% |
+| Partial (unaudited) | 0 | 0.0% |
 | Not working | 0 | 0.0% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
-| Orgg | unaudited | This creature can't attack if defending player controls an untapped creature with power 3 or greater. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Goblin Grenade | handled | As an additional cost to cast this spell, sacrifice a Goblin. Goblin Grenade deals 5 damage to any target. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Icatian Javelineers | handled | This creature enters with a javelin counter on it. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Icatian Priest | handled | {1}{W}{W}: Target creature gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -35,17 +34,16 @@
 ## Fully supported
 
 <details>
-<summary>1 cards</summary>
+<summary>2 cards</summary>
 
 - Orcish Spy
+- Orgg
 
 </details>
 
 ## Missing mechanics
 
-| Mechanic (label / template) | Count | Example cards | Sets |
-|---|---|---|---|
-| ~ can't attack if defending player controls an untapped creature with power N or greater. | 1 | Orgg | fem |
+None.
 
 ## Notes
 

@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 41 | 16.0% |
-| Works (untested) | 138 | 53.9% |
-| Partial (unaudited) | 3 | 1.2% |
-| Not working | 74 | 28.9% |
+| Tested | 45 | 17.6% |
+| Works (untested) | 141 | 55.1% |
+| Partial (unaudited) | 0 | 0.0% |
+| Not working | 70 | 27.3% |
 
 ## Cards needing work
 
@@ -48,7 +48,6 @@
 | Goring Warplow | silent | Prototype | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Great Desert Prospector | silent | When this creature enters, create a tapped Powerstone token for each other creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Gurgling Anointer | silent | When this creature dies, return another target creature card with mana value less than or equal to this creature's power from your graveyard to the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Hajar, Loyal Bodyguard | silent | Sacrifice Hajar: Legendary creatures you control get +1/+0 and gain indestructible until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Heavyweight Demolisher | silent | At the beginning of your upkeep, tap this creature unless you pay {3}. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Hero of the Dunes | silent | Creatures you control with mana value 3 or less get +1/+0. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Hostile Negotiations | silent | Exile the top three cards of your library in a face-down pile, then exile the top three cards of your library in another face-down pile. Look at the cards in ea | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -79,20 +78,17 @@
 | Terisian Mindbreaker | silent | Whenever this creature attacks, defending player mills half their library, rounded up. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | The Fall of Kroog | silent | Choose target opponent. Destroy target land that player controls. The Fall of Kroog deals 3 damage to that player and 1 damage to each creature they control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | The Stasis Coffin | silent | {2}, {T}, Exile The Stasis Coffin: You gain protection from everything until your next turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Thran Power Suit | silent | Equipped creature gets +1/+1 for each Aura and Equipment attached to it and has ward {2}. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Thran Spider | silent | When this creature enters, you and target opponent each create a tapped Powerstone token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Thran Vigil | silent | Whenever one or more artifact and/or creature cards leave your graveyard during your turn, put a +1/+1 counter on target creature you control. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Titania, Voice of Gaea | silent | At the beginning of your upkeep, if there are four or more land cards in your graveyard and you both own and control Titania, Voice of Gaea and a land named Arg | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Trench Stalker | silent | As long as you've drawn two or more cards this turn, this creature has deathtouch and lifelink. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Urza's Sylex | silent | {2}{W}{W}, {T}, Exile Urza's Sylex: Each player chooses six lands they control. Destroy all other permanents. Activate only as a sorcery. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Urza, Planeswalker | silent | +2: Artifact, instant, and sorcery spells you cast this turn cost {2} less to cast. You gain 2 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Urza, Powerstone Prodigy | silent | Whenever you discard one or more artifact cards, create a tapped Powerstone token. This ability triggers only once each turn. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Woodcaller Automaton | silent | Prototype | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Arms Race | notice | {3}{R}: You may put an artifact card from your hand onto the battlefield. That artifact gains haste. Sacrifice it at the beginning of the next end step. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Feldon, Ronom Excavator | notice | Whenever Feldon is dealt damage, exile that many cards from the top of your library. Choose one of them. Until the end of your next turn, you may play that card | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Gix's Command | notice | Choose two — • Put two +1/+1 counters on up to one creature. It gains lifelink until end of turn. • Destroy each creature with power 2 or less. • Return up to t | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Kayla's Command | notice | Choose two — • Create a 2/2 colorless Construct artifact creature token. • Put a +1/+1 counter on a creature you control. It gains double strike until end of tu | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Lay Down Arms | notice | Exile target creature with mana value less than or equal to the number of Plains you control. Its controller gains 3 life. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Legions to Ashes | notice | Exile target nonland permanent an opponent controls and all tokens that player controls with the same name as that permanent. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Meticulous Excavation | notice | {2}{W}: Return target permanent you control to its owner's hand. If it has unearth, instead exile it, then return that card to its owner's hand. Activate only d | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Mishra's Research Desk | notice | {1}, {T}, Sacrifice this artifact: Exile the top two cards of your library. Choose one of them. Until the end of your next turn, you may play that card. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -100,9 +96,6 @@
 | Portal to Phyrexia | notice | At the beginning of your upkeep, put target creature card from a graveyard onto the battlefield under your control. It's a Phyrexian in addition to its other ty | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Recommission | notice | Return target artifact or creature card with mana value 3 or less from your graveyard to the battlefield. If a creature enters this way, it enters with an addit | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Urza's Command | notice | Choose two — • Creatures you don't control get -2/-0 until end of turn. • Create a tapped Powerstone token. • Create a tapped 0/0 colorless Construct artifact c | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Mishra, Tamer of Mak Fawa | unaudited | Permanents you control have "Ward—Sacrifice a permanent." | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Myrel, Shield of Argive | unaudited | During your turn, your opponents can't cast spells or activate abilities of artifacts, creatures, or enchantments. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Sardian Cliffstomper | unaudited | As long as it's your turn and you control four or more Mountains, this creature gets +X/+0, where X is the number of Mountains you control. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Aeronaut's Wings | handled | Equipped creature gets +1/+0 and has flying. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Air Marshal | handled | {3}: Target Soldier gains flying until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ambush Paratrooper | handled | {5}: Creatures you control get +1/+1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -151,6 +144,7 @@
 | Goblin Firebomb | handled | {7}, {T}, Sacrifice this artifact: Destroy target permanent. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Gruesome Realization | handled | Choose one — • You draw two cards and you lose 2 life. • Creatures your opponents control get -1/-1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Gwenna, Eyes of Gaea | handled | Whenever you cast a creature spell with power 5 or greater, put a +1/+1 counter on Gwenna and untap it. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Hajar, Loyal Bodyguard | handled | Sacrifice Hajar: Legendary creatures you control get +1/+0 and gain indestructible until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Hall of Tagsin | handled | {4}, {T}: Create a tapped Powerstone token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Harbin, Vanguard Aviator | handled | Whenever you attack with five or more Soldiers, creatures you control get +1/+1 and gain flying until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Hoarding Recluse | handled | When this creature dies, put up to one other target card from a graveyard on the bottom of its owner's library. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -161,6 +155,7 @@
 | Kill-Zone Acrobat | handled | Whenever this creature attacks, you may sacrifice another creature or artifact. If you do, this creature gains flying until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Koilos Roc | handled | When this creature enters, create a tapped Powerstone token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Lat-Nam Adept | handled | Whenever you draw your second card each turn, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Lay Down Arms | handled | Exile target creature with mana value less than or equal to the number of Plains you control. Its controller gains 3 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Levitating Statue | handled | Whenever you cast a noncreature spell, put a +1/+1 counter on this artifact. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Loran of the Third Path | handled | When Loran enters, destroy up to one target artifact or enchantment. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Loran's Escape | handled | Target artifact or creature gains hexproof and indestructible until end of turn. Scry 1. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -217,6 +212,7 @@
 | Third Path Savant | handled | {7}: Draw two cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Thopter Architect | handled | Whenever an artifact you control enters, target creature gains flying until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Thopter Mechanic | handled | Whenever you draw your second card each turn, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Thran Power Suit | handled | Equipped creature gets +1/+1 for each Aura and Equipment attached to it and has ward {2}. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Thraxodemon | handled | {3}, {T}, Sacrifice another creature or artifact: Draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Titania's Command | handled | Choose two — • Exile target player's graveyard. You gain 1 life for each card exiled this way. • Search your library for up to two land cards, put them onto the | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Tocasia's Dig Site | handled | {3}, {T}: Surveil 1. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -245,7 +241,7 @@
 ## Fully supported
 
 <details>
-<summary>41 cards</summary>
+<summary>45 cards</summary>
 
 - Aeronaut Cavalry
 - Alloy Animist
@@ -269,6 +265,8 @@
 - Mechanized Warfare
 - Mine Worker
 - Mishra's Command
+- Mishra, Tamer of Mak Fawa
+- Myrel, Shield of Argive
 - One with the Multiverse
 - Penregon Strongbull
 - Phyrexian Dragon Engine
@@ -276,6 +274,7 @@
 - Prison Sentence
 - Recruitment Officer
 - Rescue Retriever
+- Sardian Cliffstomper
 - Soul Partition
 - Spectrum Sentinel
 - Steel Exemplar
@@ -285,6 +284,7 @@
 - Titania, Gaea Incarnate
 - Tocasia, Dig Site Mentor
 - Tower Worker
+- Urza, Planeswalker
 - Visions of Phyrexia
 - Warlord's Elite
 - Yotian Tactician
@@ -297,9 +297,7 @@
 |---|---|---|---|
 | prototype | 14 | Autonomous Assembler, Blitz Automaton, Combat Thresher, Cradle Clearcutter, Depth Charge Colossus | bro |
 | Choose two | 3 | Gix's Command, Kayla's Command, Urza's Command | bro |
-| +N: artifact, instant, and sorcery spells you cast ~ cost {M} less to cast. you gain N life. | 1 | Urza, Planeswalker | bro |
 | +N: scry N. you may tap an untapped artifact you control. if you do, draw a card. | 1 | Saheeli, Filigree Master | bro |
-| as long as it's your turn and you control four or more mountains, ~ gets +N/+N, where N is the number of mountains you control. | 1 | Sardian Cliffstomper | bro |
 | as long as you control enchanted creature, it gets +N/+N. otherwise, it can't block. | 1 | Mishra's Domination | bro |
 | as long as you've drawn two or more cards ~, ~ gets +N/+N and has menace. | 1 | Evangel of Synthesis | bro |
 | as long as you've drawn two or more cards ~, ~ has deathtouch and lifelink. | 1 | Trench Stalker | bro |
@@ -311,19 +309,14 @@
 | creatures you control with mana value N or less get +N/+N. | 1 | Hero of the Dunes | bro |
 | draw cards equal to the mana value of target artifact or creature you control. an opponent gains control of that permanent. | 1 | Fateful Handoff | bro |
 | during turns other than yours, ~ costs {M} more to cast. return all nonland permanents to their owners' hands. end the turn. (exile all spells and abilities fro | 1 | Hurkyl's Final Meditation | bro |
-| during your turn, your opponents can't cast spells or activate abilities of artifacts, creatures, or enchantments. | 1 | Myrel, Shield of Argive | bro |
 | each player reveals a number of cards from the top of their library equal to the number of nonland permanents they control, puts all permanent cards they reveal | 1 | Over the Top | bro |
 | each player who controls an artifact or enchantment creates a N/N green bear creature token. then destroy all artifacts and enchantments. | 1 | Fade from History | bro |
 | enchanted creature gets +N/+N and has flying, haste, and "..." it's a dragon in addition to its other types. | 1 | Draconic Destiny | bro |
-| equipped creature gets +N/+N for each aura and equipment attached to it and has ward {M}. | 1 | Thran Power Suit | bro |
 | exile all graveyards. players can't cast noncreature spells ~. exile ~. | 1 | Calamity's Wake | bro |
-| exile target creature with mana value less than or equal to the number of plains you control. its controller gains N life. | 1 | Lay Down Arms | bro |
 | exile target nonland permanent an opponent controls and all tokens that player controls with the same name as that permanent. | 1 | Legions to Ashes | bro |
 | exile the top three cards of your library in a face-down pile, then exile the top three cards of your library in another face-down pile. look at the cards in ea | 1 | Hostile Negotiations | bro |
 | look at the top seven cards of your library. put up to N artifact and/or creature cards with mana value N or less from among them onto the battlefield. put the  | 1 | Kayla's Reconstruction | bro |
-| permanents you control have "..." | 1 | Mishra, Tamer of Mak Fawa | bro |
 | return target artifact or creature card with mana value N or less from your graveyard to the battlefield. if a creature enters ~, it enters with an additional + | 1 | Recommission | bro |
-| sacrifice hajar: legendary creatures you control get +N/+N and gain indestructible until end of turn. | 1 | Hajar, Loyal Bodyguard | bro |
 | target opponent reveals their hand. you choose an artifact or creature card from it, then choose an artifact or creature card from their graveyard. exile the ch | 1 | Dreams of Steel and Oil | bro |
 | when ~ dies, add eight {M}. until end of turn, you don't lose ~ as steps and phases end. | 1 | Su-Chi Cave Guard | bro |
 | when ~ dies, return another target creature card with mana value less than or equal to ~ power from your graveyard to the battlefield. | 1 | Gurgling Anointer | bro |

@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 39 | 21.1% |
-| Works (untested) | 113 | 61.1% |
-| Partial (unaudited) | 1 | 0.5% |
-| Not working | 32 | 17.3% |
+| Tested | 41 | 22.2% |
+| Works (untested) | 114 | 61.6% |
+| Partial (unaudited) | 0 | 0.0% |
+| Not working | 30 | 16.2% |
 
 ## Cards needing work
 
@@ -41,12 +41,10 @@
 | Indomitable Creativity | silent | Destroy X target artifacts and/or creatures. For each permanent destroyed this way, its controller reveals cards from the top of their library until an artifact | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Lightning Runner | silent | Whenever this creature attacks, you get {E}{E} , then you may pay eight {E}. If you pay, untap all creatures you control, and after this phase, there is an addi | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Mechanized Production | silent | At the beginning of your upkeep, create a token that's a copy of enchanted artifact. Then if you control eight or more artifacts with the same name as one anoth | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Metallic Mimic | silent | This creature is the chosen type in addition to its other types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Natural Obsolescence | silent | Put target artifact on the bottom of its owner's library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Peacewalker Colossus | silent | {1}{W}: Another target Vehicle you control becomes an artifact creature until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Peema Aether-Seer | silent | When this creature enters, you get an amount of {E} equal to the greatest power among creatures you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Restoration Specialist | silent | {W}, Sacrifice this creature: Return up to one target artifact card and up to one target enchantment card from your graveyard to your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Salvage Scuttler | silent | Whenever this creature attacks, return an artifact you control to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Scrap Trawler | silent | Whenever this creature dies or another artifact you control is put into a graveyard from the battlefield, return to your hand target artifact card in your grave | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Siege Modification | silent | As long as enchanted permanent is a Vehicle, it's a creature in addition to its other types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Tezzeret's Touch | silent | When enchanted artifact is put into a graveyard, return that card to its owner's hand. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
@@ -58,7 +56,6 @@
 | Lifecraft Awakening | notice | Put X +1/+1 counters on target artifact you control. If it isn't a creature or Vehicle, it becomes a 0/0 Construct artifact creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Secret Salvage | notice | Exile target nonland card from your graveyard. Search your library for any number of cards with the same name as that card, reveal them, put them into your hand | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Treasure Keeper | notice | When this creature dies, reveal cards from the top of your library until you reveal a nonland card with mana value 3 or less. You may cast that card without pay | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Rishkar, Peema Renegade | unaudited | Each creature you control with a counter on it has "{T}: Add {G}." | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Aegis Automaton | handled | {4}{W}: Return another target creature you control to its owner's hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Aeronaut Admiral | handled | Vehicles you control have flying. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Aether Herder | handled | When this creature enters, you get {E}{E} . | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -145,6 +142,7 @@
 | Reverse Engineer | handled | Improvise (Your artifacts can help cast this spell. Each artifact you tap after you're done activating mana abilities pays for {1}.) Draw three cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ridgescale Tusker | handled | When this creature enters, put a +1/+1 counter on each other creature you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Rogue Refiner | handled | When this creature enters, draw a card and you get {E}{E} . | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Salvage Scuttler | handled | Whenever this creature attacks, return an artifact you control to its owner's hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Scrapper Champion | handled | When this creature enters, you get {E}{E} . | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Servo Schematic | handled | When this artifact enters or is put into a graveyard from the battlefield, create a 1/1 colorless Servo artifact creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Shielded Aether Thief | handled | Whenever this creature blocks, you get {E} . | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -176,7 +174,7 @@
 ## Fully supported
 
 <details>
-<summary>39 cards</summary>
+<summary>41 cards</summary>
 
 - Aether Chaser
 - Aether Swooper
@@ -203,6 +201,7 @@
 - Kari Zev's Expertise
 - Maulfist Revolutionary
 - Merchant's Dockhand
+- Metallic Mimic
 - Metallic Rebuke
 - Monstrous Onslaught
 - Night Market Guard
@@ -210,6 +209,7 @@
 - Quicksmith Spy
 - Renegade Rallier
 - Rishkar's Expertise
+- Rishkar, Peema Renegade
 - Scrounging Bandar
 - Skyship Plunderer
 - Sram's Expertise
@@ -231,7 +231,6 @@
 | at the beginning of your upkeep, create a token that's a copy of enchanted artifact. then if you control eight or more artifacts with the same name as one anoth | 1 | Mechanized Production | aer |
 | creatures you control get +N/+N for each unity counter on ~. | 1 | Call for Unity | aer |
 | destroy N target artifacts and/or creatures. for each permanent destroyed ~, its controller reveals cards from the top of their library until an artifact or cre | 1 | Indomitable Creativity | aer |
-| each creature you control with a counter on it has "..." | 1 | Rishkar, Peema Renegade | aer |
 | each opponent sacrifices a creature or planeswalker of their choice, then discards a card. you return a creature or planeswalker card from your graveyard to you | 1 | Dark Intimations | aer |
 | exile target nonland card from your graveyard. search your library for any number of cards with the same name as that card, reveal them, put them into your hand | 1 | Secret Salvage | aer |
 | pay {M}: ~ gains lifelink until end of turn. | 1 | Aethersphere Harvester | aer |
@@ -248,13 +247,11 @@
 | when ~ enters, you may search your library for an artifact card with mana value N, reveal it, put it into your hand, then shuffle. | 1 | Trophy Mage | aer |
 | whenever a spell or ability you control counters a spell, you may draw a card. if you do, discard a card. | 1 | Baral, Chief of Compliance | aer |
 | whenever kari zev attacks, create ragavan, a legendary N/N red monkey creature token. ragavan enters tapped and attacking. exile that token at end of combat. | 1 | Kari Zev, Skyship Raider | aer |
-| whenever ~ attacks, return an artifact you control to its owner's hand. | 1 | Salvage Scuttler | aer |
 | whenever ~ attacks, you get {M}{M} , then you may pay eight {M}. if you pay, untap all creatures you control, and after ~, there is an additional combat phase. | 1 | Lightning Runner | aer |
 | whenever ~ dies or another artifact you control is put into a graveyard from the battlefield, return to your hand target artifact card in your graveyard with le | 1 | Scrap Trawler | aer |
 | whenever ~ enters or attacks, you get {M} for each creature you control. | 1 | Aetherwind Basker | aer |
 | {M}, sacrifice ~: return up to one target artifact card and up to one target enchantment card from your graveyard to your hand. | 1 | Restoration Specialist | aer |
 | {M}{M}: another target vehicle you control becomes an artifact creature until end of turn. | 1 | Peacewalker Colossus | aer |
-| ~ is the chosen type in addition to its other types. | 1 | Metallic Mimic | aer |
 | −N: target opponent loses life equal to the number of artifacts you control. | 1 | Tezzeret, Master of Metal | aer |
 
 ## Notes

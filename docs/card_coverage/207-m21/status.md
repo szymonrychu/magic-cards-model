@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 29 | 15.9% |
-| Works (untested) | 105 | 57.7% |
-| Partial (unaudited) | 3 | 1.6% |
-| Not working | 45 | 24.7% |
+| Tested | 32 | 17.6% |
+| Works (untested) | 109 | 59.9% |
+| Partial (unaudited) | 0 | 0.0% |
+| Not working | 41 | 22.5% |
 
 ## Cards needing work
 
@@ -38,7 +38,6 @@
 | Discontinuity | silent | During your turn, this spell costs {2}{U}{U} less to cast. End the turn. (Exile all spells and abilities from the stack, including this card. The player whose t | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Drowsing Tyrannodon | silent | As long as you control a creature with power 4 or greater, this creature can attack as though it didn't have defender. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Experimental Overload | silent | Create an X/X blue and red Weird creature token, where X is the number of instant and sorcery cards in your graveyard. Then you may return an instant or sorcery | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Feline Sovereign | silent | Other Cats you control get +1/+1 and have protection from Dogs. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Fiery Emancipation | silent | Triple | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Gadrak, the Crown-Scourge | silent | At the beginning of your end step, create a Treasure token for each nontoken creature that died this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Garruk's Harbinger | silent | Whenever this creature deals combat damage to a player or planeswalker, look at that many cards from the top of your library. You may reveal a creature card or  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -48,7 +47,6 @@
 | Goremand | silent | When this creature enters, each opponent sacrifices a creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Hooded Blightfang | silent | Whenever a creature you control with deathtouch deals damage to a planeswalker, destroy that planeswalker. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Idol of Endurance | silent | When this artifact enters, exile all creature cards with mana value 3 or less from your graveyard until this artifact leaves the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Kaervek, the Spiteful | silent | Other creatures get -1/-1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Liliana's Scrounger | silent | At the beginning of each end step, if a creature died this turn, you may put a loyalty counter on a Liliana planeswalker you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Liliana, Death Mage | silent | −7: Target opponent loses 2 life for each creature card in their graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Malefic Scythe | silent | Equipped creature gets +1/+1 for each soul counter on this Equipment. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -66,14 +64,9 @@
 | Crypt Lurker | notice | When this creature enters, you may sacrifice a creature or discard a creature card. If you do, draw a card. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Niambi, Esteemed Speaker | notice | When Niambi enters, you may return another target creature you control to its owner's hand. If you do, you gain life equal to that creature's mana value. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Pestilent Haze | notice | Choose one — • All creatures get -2/-2 until end of turn. • Remove two loyalty counters from each planeswalker. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Predatory Wurm | notice | This creature gets +2/+2 as long as you control a Garruk planeswalker. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Rookie Mistake | notice | Until end of turn, target creature gets +0/+2 and another target creature gets -2/-0. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Sigiled Contender | notice | This creature has lifelink as long as it has a +1/+1 counter on it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Traitorous Greed | notice | Gain control of target creature until end of turn. Untap that creature. It gains haste until end of turn. Add two mana of any one color. (The creature can attac | unparsed remainder: Untap that creature. It gains haste until end of turn. Add two mana of any one color. | Y/Y/- | not_working |
 | Transmogrify | notice | Exile target creature. That creature's controller reveals cards from the top of their library until they reveal a creature card. That player puts that card onto | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Conspicuous Snoop | unaudited | As long as the top card of your library is a Goblin card, this creature has all activated abilities of that card. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Enthralling Hold | unaudited | You can't choose an untapped creature as this spell's target as you cast it. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Sanctum of All | unaudited | If a triggered ability of another Shrine you control triggers while you control six or more Shrines, that ability triggers an additional time. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Adherent of Hope | handled | At the beginning of combat on your turn, if you control a Basri planeswalker, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Alpine Watchdog | handled | Vigilance | machines/combat.py | Y/Y/- | not_tested |
 | Angelic Ascension | handled | Exile target creature or planeswalker. Its controller creates a 4/4 white Angel creature token with flying. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -96,6 +89,7 @@
 | Double Vision | handled | Whenever you cast your first instant or sorcery spell each turn, copy that spell. You may choose new targets for the copy. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Eliminate | handled | Destroy target creature or planeswalker with mana value 3 or less. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Falconer Adept | handled | Whenever this creature attacks, create a 1/1 white Bird creature token with flying that's tapped and attacking. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Feline Sovereign | handled | Other Cats you control get +1/+1 and have protection from Dogs. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Finishing Blow | handled | Destroy target creature or planeswalker. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Forgotten Sentinel | handled | This creature enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Frantic Inventory | handled | Draw a card, then draw cards equal to the number of cards named Frantic Inventory in your graveyard. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -117,6 +111,7 @@
 | Indulging Patrician | handled | At the beginning of your end step, if you gained 3 or more life this turn, each opponent loses 3 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Invigorating Surge | handled | Put a +1/+1 counter on target creature you control, then double the number of +1/+1 counters on that creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Jolrael, Mwonvuli Recluse | handled | Whenever you draw your second card each turn, create a 2/2 green Cat creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Kaervek, the Spiteful | handled | Other creatures get -1/-1. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Keen Glidemaster | handled | {2}{U}: Target creature gains flying until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Keral Keep Disciples | handled | Whenever you activate a loyalty ability of a Chandra planeswalker, this creature deals 1 damage to each opponent. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Library Larcenist | handled | Whenever this creature attacks, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -133,6 +128,7 @@
 | Mystic Skyfish | handled | Whenever you draw your second card each turn, this creature gains flying until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Obsessive Stitcher | handled | {T}: Draw a card, then discard a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ornery Dilophosaur | handled | Whenever this creature attacks, if you control a creature with power 4 or greater, this creature gets +2/+2 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Predatory Wurm | handled | This creature gets +2/+2 as long as you control a Garruk planeswalker. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Pridemalkin | handled | When this creature enters, put a +1/+1 counter on target creature you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Primal Might | handled | Target creature you control gets +X/+X until end of turn. Then it fights up to one target creature you don't control. (Each deals damage equal to its power to t | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Rambunctious Mutt | handled | When this creature enters, destroy target artifact or enchantment an opponent controls. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -149,6 +145,7 @@
 | Secure the Scene | handled | Exile target nonland permanent. Its controller creates a 1/1 white Soldier creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Selfless Savior | handled | Sacrifice this creature: Another target creature you control gains indestructible until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Shipwreck Dowser | handled | When this creature enters, return target instant or sorcery card from your graveyard to your hand. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Sigiled Contender | handled | This creature has lifelink as long as it has a +1/+1 counter on it. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Silversmote Ghoul | handled | At the beginning of your end step, if you gained 3 or more life this turn, return this card from your graveyard to the battlefield tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Skyway Sniper | handled | {2}{G}: This creature deals 1 damage to target creature with flying. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Sparkhunter Masticore | handled | As an additional cost to cast this spell, discard a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -183,7 +180,7 @@
 ## Fully supported
 
 <details>
-<summary>29 cards</summary>
+<summary>32 cards</summary>
 
 - Archfiend's Vessel
 - Barrin, Tolarian Archmage
@@ -192,8 +189,10 @@
 - Celestial Enforcer
 - Chromatic Orrery
 - Chrome Replicator
+- Conspicuous Snoop
 - Demonic Embrace
 - Elder Gargaroth
+- Enthralling Hold
 - Griffin Aerie
 - Kinetic Augur
 - Leafkin Avenger
@@ -205,6 +204,7 @@
 - Peer into the Abyss
 - Pursued Whale
 - Radha, Heart of Keld
+- Sanctum of All
 - Sanctum of Fruitful Harvest
 - Sanctum of Tranquil Light
 - Shacklegeist
@@ -223,7 +223,6 @@
 |---|---|---|---|
 | Choose one | 1 | Pestilent Haze | m21 |
 | +N: discard your hand, then exile the top three cards of your library. until end of turn, you may play cards exiled ~. | 1 | Chandra, Heart of Fire | m21 |
-| as long as the top card of your library is a goblin card, ~ has all activated abilities of that card. | 1 | Conspicuous Snoop | m21 |
 | as long as you control a creature with power N or greater, ~ can attack as though it didn't have defender. | 1 | Drowsing Tyrannodon | m21 |
 | as long as you've drawn two or more cards ~, ~ gets +N/+N and has vigilance. | 1 | Gnarled Sage | m21 |
 | at the beginning of each end step, if a creature died ~, you may put a loyalty counter on a liliana planeswalker you control. | 1 | Liliana's Scrounger | m21 |
@@ -237,10 +236,7 @@
 | equipped creature gets +N/+N for each soul counter on ~. | 1 | Malefic Scythe | m21 |
 | exile target creature. that creature's controller reveals cards from the top of their library until they reveal a creature card. that player puts that card onto | 1 | Transmogrify | m21 |
 | gain control of target creature until end of turn. untap that creature. it gains haste until end of turn. add two mana of any one color. (the creature can attac | 1 | Traitorous Greed | m21 |
-| if a triggered ability of another shrine you control triggers while you control six or more shrines, that ability triggers an additional time. | 1 | Sanctum of All | m21 |
 | look at the top three cards of your library. put one of those cards into your hand and the rest on the bottom of your library in any order. if ~ was cast from a | 1 | See the Truth | m21 |
-| other cats you control get +N/+N and have protection from dogs. | 1 | Feline Sovereign | m21 |
-| other creatures get -N/-N. | 1 | Kaervek, the Spiteful | m21 |
 | target creature gets +N/+N and gains your choice of deathtouch or lifelink until end of turn. (any amount of damage a creature with deathtouch deals to a creatu | 1 | Alchemist's Gift | m21 |
 | triple | 1 | Fiery Emancipation | m21 |
 | until end of turn, target creature gets +N/+N and another target creature gets -N/-N. | 1 | Rookie Mistake | m21 |
@@ -261,10 +257,7 @@
 | whenever ~ attacks, you may tap any number of untapped creatures you control. ~ gets +N/+N until end of turn for each creature tapped ~. | 1 | Siege Striker | m21 |
 | whenever ~ becomes blocked by a creature, that creature's controller loses N life and you gain N life. | 1 | Gloom Sower | m21 |
 | whenever ~ deals combat damage to a player or planeswalker, look at that many cards from the top of your library. you may reveal a creature card or garruk plane | 1 | Garruk's Harbinger | m21 |
-| you can't choose an untapped creature as ~ target as you cast it. | 1 | Enthralling Hold | m21 |
-| ~ gets +N/+N as long as you control a garruk planeswalker. | 1 | Predatory Wurm | m21 |
 | ~ gets +N/+N, where N is the greatest power among creature cards in your graveyard. | 1 | Carrion Grub | m21 |
-| ~ has lifelink as long as it has a +N/+N counter on it. | 1 | Sigiled Contender | m21 |
 | −N: discard your hand, then draw seven cards. until end of turn, you may cast spells from your hand without paying their mana costs. | 1 | Chandra, Flame's Catalyst | m21 |
 | −N: each creature target opponent controls phases out. until the end of your next turn, they can't phase in. | 1 | Teferi, Timeless Voyager | m21 |
 | −N: target opponent loses N life for each creature card in their graveyard. | 1 | Liliana, Death Mage | m21 |

@@ -17,17 +17,16 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 32 | 14.2% |
+| Tested | 36 | 16.0% |
 | Works (untested) | 163 | 72.4% |
-| Partial (unaudited) | 3 | 1.3% |
-| Not working | 27 | 12.0% |
+| Partial (unaudited) | 0 | 0.0% |
+| Not working | 26 | 11.6% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
 | Ashcloud Phoenix | silent | When this creature dies, return it to the battlefield face down under your control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Avalanche Tusker | silent | Whenever this creature attacks, target creature defending player controls blocks it this combat if able. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Bellowing Saddlebrute | silent | Raid — When this creature enters, you lose 4 life unless you attacked this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Dragon's Eye Savants | silent | When this creature is turned face up, look at target opponent's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Duneblast | silent | Choose up to one creature. Destroy the rest. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -53,9 +52,6 @@
 | Rite of the Serpent | notice | Destroy target creature. If that creature had a +1/+1 counter on it, create a 1/1 green Snake creature token. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Temur Charm | notice | Choose one — • Target creature you control gets +1/+1 until end of turn. It fights target creature you don't control. • Counter target spell unless its controll | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Villainous Wealth | notice | Target opponent exiles the top X cards of their library. You may cast any number of spells with mana value X or less from among them without paying their mana c | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Hooded Hydra | unaudited | As this creature is turned face up, put five +1/+1 counters on it. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Ivorytusk Fortress | unaudited | Untap each creature you control with a +1/+1 counter on it during each other player's untap step. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Lens of Clarity | unaudited | You may look at the top card of your library and at face-down creatures you don't control any time. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Abomination of Gudul | handled | Whenever this creature deals combat damage to a player, you may draw a card. If you do, discard a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Abzan Ascendancy | handled | When this enchantment enters, put a +1/+1 counter on each creature you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Abzan Banner | handled | {W}{B}{G}, {T}, Sacrifice this artifact: Draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -223,12 +219,13 @@
 ## Fully supported
 
 <details>
-<summary>32 cards</summary>
+<summary>36 cards</summary>
 
 - Abzan Charm
 - Abzan Falconer
 - Ainok Bond-Kin
 - Anafenza, the Foremost
+- Avalanche Tusker
 - Barrage of Boulders
 - Brave the Sands
 - Bring Low
@@ -243,11 +240,14 @@
 - Feat of Resistance
 - Ghostfire Blade
 - Hardened Scales
+- Hooded Hydra
 - Hooting Mandrills
+- Ivorytusk Fortress
 - Jeering Instigator
 - Jeskai Ascendancy
 - Kheru Dreadmaw
 - Kheru Spellsnatcher
+- Lens of Clarity
 - Monastery Swiftspear
 - Necropolis Fiend
 - Rush of Battle
@@ -269,7 +269,6 @@
 | +N: until end of turn, sarkhan becomes a legendary N/N red dragon creature with flying, indestructible, and haste. | 1 | Sarkhan, the Dragonspeaker | ktk |
 | +N: until your next turn, creatures you control get +N/+N and gain lifelink. | 1 | Sorin, Solemn Visitor | ktk |
 | all creatures able to block target creature ~ do so. ferocious — that creature gains indestructible until end of turn if you control a creature with power N or  | 1 | Roar of Challenge | ktk |
-| as ~ is turned face up, put five +N/+N counters on it. | 1 | Hooded Hydra | ktk |
 | at the beginning of your upkeep, you may pay {M}{M}. if you do, return a creature card at random from your graveyard to the battlefield. it gains flying, trampl | 1 | Kheru Lich Lord | ktk |
 | choose up to one creature. destroy the rest. | 1 | Duneblast | ktk |
 | counter target spell unless its controller pays {M}. ~ deals N damage to that spell's controller. | 1 | Mindswipe | ktk |
@@ -281,7 +280,6 @@
 | reveal the top eight cards of your library. you may put a creature card from among them onto the battlefield. put the rest into your graveyard. ferocious — if y | 1 | See the Unwritten | ktk |
 | tap N target creatures. ferocious — if you control a creature with power N or greater, those creatures don"..." next untap steps. | 1 | Icy Blast | ktk |
 | target opponent exiles the top N cards of their library. you may cast any number of spells with mana value N or less from among them without paying their mana c | 1 | Villainous Wealth | ktk |
-| untap each creature you control with a +N/+N counter on it during each other player's untap step. | 1 | Ivorytusk Fortress | ktk |
 | when you next cast an instant or sorcery spell ~, copy that spell. you may choose new targets for the copy. raid — if you attacked ~, when you next cast an inst | 1 | Howl of the Horde | ktk |
 | when ~ dies, return it to the battlefield face down under your control. | 1 | Ashcloud Phoenix | ktk |
 | when ~ is turned face up, look at target opponent's hand. | 1 | Dragon's Eye Savants | ktk |
@@ -289,9 +287,7 @@
 | whenever one or more cards are put into exile from your graveyard, put that many +N/+N counters on ~. | 1 | Rakshasa Vizier | ktk |
 | whenever you activate ~ outlast ability, create a N/N white warrior creature token. | 1 | Herald of Anafenza | ktk |
 | whenever ~ attacks, exile it. return it to the battlefield under your control tapped and attacking at the beginning of the declare attackers step on your next t | 1 | Meandering Towershell | ktk |
-| whenever ~ attacks, target creature defending player controls blocks it ~ if able. | 1 | Avalanche Tusker | ktk |
 | whenever ~ or another creature you control is turned face up, untap that creature. | 1 | Pine Walker | ktk |
-| you may look at the top card of your library and at face-down creatures you don't control any time. | 1 | Lens of Clarity | ktk |
 | {M}{M}: look at target face-down creature. | 1 | Smoke Teller | ktk |
 | ~ gets +N/+N for each other creature you control with a +N/+N counter on it. | 1 | High Sentinels of Arashin | ktk |
 

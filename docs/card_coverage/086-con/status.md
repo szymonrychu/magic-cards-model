@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 21 | 14.9% |
-| Works (untested) | 77 | 54.6% |
+| Tested | 22 | 15.6% |
+| Works (untested) | 86 | 61.0% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 43 | 30.5% |
+| Not working | 33 | 23.4% |
 
 ## Cards needing work
 
@@ -33,17 +33,13 @@
 | Corrupted Roots | silent | Whenever enchanted land becomes tapped, its controller loses 2 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Cylian Sunsinger | silent | {R}{G}{W}: This creature and each other creature with the same name as it get +3/+3 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Dragonsoul Knight | silent | {W}{U}{B}{R}{G}: Until end of turn, this creature becomes a Dragon, gets +5/+3, and gains flying and trample. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Ember Weaver | silent | As long as you control a red permanent, this creature gets +1/+0 and has first strike. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Esperzoa | silent | At the beginning of your upkeep, return an artifact you control to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Extractor Demon | silent | Whenever another creature leaves the battlefield, you may have target player mill two cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Frontline Sage | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Giltspire Avenger | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Grixis Illusionist | silent | {T}: Target land you control becomes the basic land type of your choice until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Gwafa Hazid, Profiteer | silent | {W}{U}, {T}: Put a bribery counter on target creature you don't control. Its controller draws a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Maelstrom Archangel | silent | Whenever this creature deals combat damage to a player, you may cast a spell from your hand without paying its mana cost. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Malfegor | silent | When Malfegor enters, discard your hand. Each opponent sacrifices a creature of their choice for each card discarded this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Manaforce Mace | silent | Domain — Equipped creature gets +1/+1 for each basic land type among lands you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Martial Coup | silent | Create X 1/1 white Soldier creature tokens. If X is 5 or more, destroy all other creatures. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Nicol Bolas, Planeswalker | silent | −9: Nicol Bolas deals 7 damage to target player or planeswalker. That player or that planeswalker's controller discards seven cards, then sacrifices seven perma | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Noble Hierarch | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Paragon of the Amesha | silent | {W}{U}{B}{R}{G}: Until end of turn, this creature becomes an Angel, gets +3/+3, and gains flying and lifelink. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -52,22 +48,16 @@
 | Shard Convergence | silent | Search your library for a Plains card, an Island card, a Swamp card, and a Mountain card. Reveal those cards, put them into your hand, then shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Soul's Majesty | silent | Draw cards equal to the power of target creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Telemin Performance | silent | Target opponent reveals cards from the top of their library until they reveal a creature card. That player puts all noncreature cards revealed this way into the | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Unstable Frontier | silent | {T}: Target land you control becomes the basic land type of your choice until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Vectis Agents | silent | {U}{B}: This creature gets -2/-0 until end of turn and can't be blocked this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Voices from the Void | silent | Domain — Target player discards a card for each basic land type among lands you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Wall of Reverence | silent | At the beginning of your end step, you may gain life equal to the power of target creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Wandering Goblins | silent | Domain — {3}: This creature gets +1/+0 until end of turn for each basic land type among lands you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Wild Leotau | silent | At the beginning of your upkeep, sacrifice this creature unless you pay {G}. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Wretched Banquet | silent | Destroy target creature if it has the least power or is tied for least power among creatures on the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Brackwater Elemental | notice | When this creature attacks or blocks, sacrifice it at the beginning of the next end step. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Cliffrunner Behemoth | notice | This creature has haste as long as you control a red permanent. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Court Homunculus | notice | This creature gets +1/+1 as long as you control another artifact. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Filigree Fracture | notice | Destroy target artifact or enchantment. If that permanent was blue or black, draw a card. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Hellkite Hatchling | notice | This creature has flying and trample if it devoured a creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Progenitus | notice | Protection | protection from a quality the engine does not read: everything | Y/Y/Y | not_working |
 | Quenchable Fire | notice | Quenchable Fire deals 3 damage to target player or planeswalker. It deals an additional 3 damage to that player or planeswalker at the beginning of your next up | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Sphinx Summoner | notice | When this creature enters, you may search your library for an artifact creature card, reveal it, put it into your hand, then shuffle. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Toxic Iguanar | notice | This creature has deathtouch as long as you control a green permanent. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | View from Above | notice | Target creature gains flying until end of turn. If you control a white permanent, return View from Above to its owner's hand. | unparsed remainder: If you control a white permanent, return View from Above to its owner's hand. | Y/-/- | not_working |
 | Absorb Vis | handled | Target player loses 4 life and you gain 4 life. Basic landcycling {1}{B} ({1}{B}, Discard this card: Search your library for a basic land card, reveal it, put i | the engine reads this text and performs it | Y/-/- | not_tested |
 | Armillary Sphere | handled | {2}, {T}, Sacrifice this artifact: Search your library for up to two basic land cards, reveal them, put them into your hand, then shuffle. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -76,16 +66,20 @@
 | Bloodhall Ooze | handled | At the beginning of your upkeep, if you control a black permanent, you may put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Bone Saw | handled | Equipped creature gets +1/+0. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Charnelhoard Wurm | handled | Whenever this creature deals damage to an opponent, you may return target card from your graveyard to your hand. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Cliffrunner Behemoth | handled | This creature has haste as long as you control a red permanent. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Constricting Tendrils | handled | Target creature gets -3/-0 until end of turn. Cycling {2} ({2}, Discard this card: Draw a card.) | the engine reads this text and performs it | Y/-/- | not_tested |
 | Controlled Instincts | handled | Enchanted creature doesn't untap during its controller's untap step. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Countersquall | handled | Counter target noncreature spell. Its controller loses 2 life. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Court Homunculus | handled | This creature gets +1/+1 as long as you control another artifact. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Cumber Stone | handled | Creatures your opponents control get -1/-0. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Dark Temper | handled | Dark Temper deals 2 damage to target creature. If you control a black permanent, destroy the creature instead. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Darklit Gargoyle | handled | {B}: This creature gets +2/-1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Drag Down | handled | Domain — Target creature gets -1/-1 until end of turn for each basic land type among lands you control. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Dreadwing | handled | {1}{U}{R}: This creature gets +3/+0 and gains flying until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Elder Mastery | handled | Enchanted creature gets +3/+3 and has flying. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Ember Weaver | handled | As long as you control a red permanent, this creature gets +1/+0 and has first strike. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Esper Cormorants | handled | Flying | machines/combat.py | Y/-/- | not_tested |
+| Esperzoa | handled | At the beginning of your upkeep, return an artifact you control to its owner's hand. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ethersworn Adjudicator | handled | {1}{W}{B}, {T}: Destroy target creature or enchantment. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Exploding Borders | handled | Domain — Search your library for a basic land card, put that card onto the battlefield tapped, then shuffle. Exploding Borders deals X damage to target player o | the engine reads this text and performs it | Y/-/- | not_tested |
 | Faerie Mechanist | handled | When this creature enters, look at the top three cards of your library. You may reveal an artifact card from among them and put it into your hand. Put the rest  | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -96,6 +90,7 @@
 | Gluttonous Slime | handled | Flash | machines/casting.py (timing) | Y/-/- | not_tested |
 | Goblin Outlander | handled | Protection | models/game.py | Y/-/- | not_tested |
 | Goblin Razerunners | handled | {1}{R}, Sacrifice a land: Put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Grixis Illusionist | handled | {T}: Target land you control becomes the basic land type of your choice until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Grixis Slavedriver | handled | When this creature leaves the battlefield, create a 2/2 black Zombie creature token. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Hellspark Elemental | handled | At the beginning of the end step, sacrifice this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Infectious Horror | handled | Whenever this creature attacks, each opponent loses 2 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -107,6 +102,7 @@
 | Knotvine Mystic | handled |  |  | Y/-/- | not_tested |
 | Kranioceros | handled | {1}{W}: This creature gets +0/+3 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Lapse of Certainty | handled | Counter target spell. If that spell is countered this way, put it on top of its owner's library instead of into that player's graveyard. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Martial Coup | handled | Create X 1/1 white Soldier creature tokens. If X is 5 or more, destroy all other creatures. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Master Transmuter | handled | {U}, {T}, Return an artifact you control to its owner's hand: You may put an artifact card from your hand onto the battlefield. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Matca Rioters | handled | Domain — Matca Rioters's power and toughness are each equal to the number of basic land types among lands you control. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Meglonoth | handled | Whenever this creature blocks a creature, this creature deals damage to that creature's controller equal to this creature's power. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -137,20 +133,23 @@
 | Sludge Strider | handled | Whenever another artifact you control enters or leaves the battlefield, you may pay {1}. If you do, target player loses 1 life and you gain 1 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Spore Burst | handled | Domain — Create a 1/1 green Saproling creature token for each basic land type among lands you control. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Sylvan Bounty | handled | Target player gains 8 life. Basic landcycling {1}{G} ({1}{G}, Discard this card: Search your library for a basic land card, reveal it, put it into your hand, th | the engine reads this text and performs it | Y/-/- | not_tested |
+| Toxic Iguanar | handled | This creature has deathtouch as long as you control a green permanent. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Traumatic Visions | handled | Counter target spell. Basic landcycling {1}{U} ({1}{U}, Discard this card: Search your library for a basic land card, reveal it, put it into your hand, then shu | the engine reads this text and performs it | Y/-/- | not_tested |
 | Tukatongue Thallid | handled | When this creature dies, create a 1/1 green Saproling creature token. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Unstable Frontier | handled | {T}: Target land you control becomes the basic land type of your choice until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Vagrant Plowbeasts | handled | {1}: Regenerate target creature with power 5 or greater. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Valeron Outlander | handled | Protection | models/game.py | Y/-/- | not_tested |
 | Valiant Guard | handled |  |  | Y/-/- | not_tested |
 | Vedalken Outlander | handled | Protection | models/game.py | Y/-/- | not_tested |
 | Viashino Slaughtermaster | handled | {B}{G}: This creature gets +1/+1 until end of turn. Activate only once each turn. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Wild Leotau | handled | At the beginning of your upkeep, sacrifice this creature unless you pay {G}. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Yoke of the Damned | handled | When a creature dies, destroy enchanted creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Zombie Outlander | handled | Protection | models/game.py | Y/-/- | not_tested |
 
 ## Fully supported
 
 <details>
-<summary>21 cards</summary>
+<summary>22 cards</summary>
 
 - Aerie Mystics
 - Ancient Ziggurat
@@ -166,6 +165,7 @@
 - Mark of Asylum
 - Nyxathid
 - Path to Exile
+- Progenitus
 - Reliquary Tower
 - Skyward Eye Prophets
 - Suicidal Charge
@@ -182,17 +182,11 @@
 |---|---|---|---|
 | exalted | 5 | Aven Squire, Frontline Sage, Giltspire Avenger, Noble Hierarch, Rhox Bodyguard | con |
 | Domain | 3 | Manaforce Mace, Voices from the Void, Wandering Goblins | con |
-| {M}: target land you control becomes the basic land type of your choice until end of turn. | 2 | Grixis Illusionist, Unstable Frontier | con |
-| as long as you control a red permanent, ~ gets +N/+N and has first strike. | 1 | Ember Weaver | con |
 | at the beginning of your end step, you may gain life equal to the power of target creature you control. | 1 | Wall of Reverence | con |
 | at the beginning of your upkeep, each player loses N life. put a +N/+N counter on ~ for each N life lost ~. | 1 | Blood Tyrant | con |
-| at the beginning of your upkeep, return an artifact you control to its owner's hand. | 1 | Esperzoa | con |
-| at the beginning of your upkeep, sacrifice ~ unless you pay {M}. | 1 | Wild Leotau | con |
-| create N N/N white soldier creature tokens. if N is N or more, destroy all other creatures. | 1 | Martial Coup | con |
 | destroy target artifact or enchantment. if that permanent was blue or black, draw a card. | 1 | Filigree Fracture | con |
 | destroy target creature if it has the least power or is tied for least power among creatures on the battlefield. | 1 | Wretched Banquet | con |
 | draw cards equal to the power of target creature you control. | 1 | Soul's Majesty | con |
-| protection | 1 | Progenitus | con |
 | search your library for a plains card, an island card, a swamp card, and a mountain card. reveal those cards, put them into your hand, then shuffle. | 1 | Shard Convergence | con |
 | search your library for a white card, a blue card, a black card, a red card, and a green card. reveal those cards, put them into your hand, then shuffle. | 1 | Conflux | con |
 | target creature gains flying until end of turn. if you control a white permanent, return ~ to its owner's hand. | 1 | View from Above | con |
@@ -211,10 +205,7 @@
 | {M}{M}{M}{M}{M}: until end of turn, ~ becomes a dragon, gets +N/+N, and gains flying and trample. | 1 | Dragonsoul Knight | con |
 | {M}{M}{M}{M}{M}: until end of turn, ~ becomes an angel, gets +N/+N, and gains flying and lifelink. | 1 | Paragon of the Amesha | con |
 | ~ deals N damage to target player or planeswalker. it deals an additional N damage to that player or planeswalker at the beginning of your next upkeep step unle | 1 | Quenchable Fire | con |
-| ~ gets +N/+N as long as you control another artifact. | 1 | Court Homunculus | con |
-| ~ has deathtouch as long as you control a green permanent. | 1 | Toxic Iguanar | con |
 | ~ has flying and trample if it devoured a creature. | 1 | Hellkite Hatchling | con |
-| ~ has haste as long as you control a red permanent. | 1 | Cliffrunner Behemoth | con |
 | −N: nicol bolas deals N damage to target player or planeswalker. that player or that planeswalker's controller discards seven cards, then sacrifices seven perma | 1 | Nicol Bolas, Planeswalker | con |
 
 ## Notes

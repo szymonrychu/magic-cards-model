@@ -17,23 +17,19 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 43 | 16.8% |
-| Works (untested) | 127 | 49.6% |
-| Partial (unaudited) | 5 | 2.0% |
-| Not working | 81 | 31.6% |
+| Tested | 52 | 20.3% |
+| Works (untested) | 143 | 55.9% |
+| Partial (unaudited) | 0 | 0.0% |
+| Not working | 61 | 23.8% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
 | Aatchik, Emerald Radian | silent | When Aatchik enters, create a 1/1 green Insect creature token for each artifact and/or creature card in your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Adrenaline Jockey | silent | Whenever you activate an exhaust ability, put a +1/+1 counter on this creature. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
-| Afterburner Expert | silent | Whenever you activate an exhaust ability, return this card from your graveyard to the battlefield. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
 | Alacrian Armory | silent | At the beginning of combat on your turn, choose up to one target Mount or Vehicle you control. Until end of turn, that permanent becomes saddled if it's a Mount | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Ancient Vendetta | silent | Choose a card name. Search target opponent's graveyard, hand, and library for up to four cards with that name and exile them. Then that player shuffles. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Boom Scholar | silent | Exhaust — {4}{R}{G}: Creatures and Vehicles you control gain trample until end of turn. Put two +1/+1 counters on this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Brightfield Mustang | silent | Whenever this creature attacks while saddled, untap it and put a +1/+1 counter on it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Burnout Bashtronaut | silent | Max speed — This creature has double strike. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Canyon Vaulter | silent | Whenever this creature saddles a Mount or crews a Vehicle during your main phase, that Mount or Vehicle gains flying until end of turn. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
 | Carrion Cruiser | silent | When this Vehicle enters, mill two cards. Then return a creature or Vehicle card from your graveyard to your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Chandra, Spark Hunter | silent | At the beginning of combat on your turn, choose up to one target Vehicle you control. Until end of turn, it becomes an artifact creature and gains haste. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -42,28 +38,21 @@
 | Cursecloth Wrappings | silent | {T}: Target creature card in your graveyard gains embalm until end of turn. The embalm cost is equal to its mana cost. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Daretti, Rocketeer Engineer | silent | Whenever Daretti enters or attacks, choose target artifact card in your graveyard. You may sacrifice an artifact. If you do, return the chosen card to the battl | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Detention Chariot | silent | When this Vehicle enters, exile target artifact or creature an opponent controls until this Vehicle leaves the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Diversion Unit | silent | {U}, Sacrifice this creature: Counter target instant or sorcery spell unless its controller pays {3}. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Dredger's Insight | silent | Whenever one or more artifact and/or creature cards leave your graveyard, you gain 1 life. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
 | Full Throttle | silent | After this main phase, there are two additional combat phases. At the beginning of each combat this turn, untap all creatures that attacked this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Gastal Raider | silent | Max speed — This creature gets +1/+1 and has menace. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Gastal Thrillroller | silent | When this Vehicle enters, it becomes an artifact creature until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Gastal Thrillseeker | silent | Max speed — This creature has deathtouch and haste. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Gonti, Night Minister | silent | Whenever a creature deals combat damage to one of your opponents, its controller looks at the top card of that opponent's library and exiles it face down. They  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Guidelight Matrix | silent | {2}, {T}: Target Mount you control becomes saddled until end of turn. Activate only as a sorcery. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Guidelight Pathmaker | silent | When this Vehicle enters, you may search your library for an artifact card and reveal it. Put it onto the battlefield if its mana value is 2 or less. Otherwise, | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Haunt the Network | silent | Choose target opponent. Create two 1/1 colorless Thopter artifact creature tokens with flying. Then the chosen player loses X life and you gain X life, where X  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Howlsquad Heavy | silent | At the beginning of combat on your turn, create a 1/1 red Goblin creature token. That token attacks this combat if able. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Kickoff Celebrations | silent | Max speed — Sacrifice this enchantment: Creatures and Vehicles you control gain haste until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Kolodin, Triumph Caster | silent | Mounts and Vehicles you control have haste. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Lifecraft Engine | silent | Vehicle creatures you control are the chosen creature type in addition to their other types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Lightwheel Enhancements | silent | Enchanted permanent gets +1/+1 and has vigilance. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Lotusguard Disciple | silent | When this creature enters, target creature or Vehicle gains lifelink and indestructible until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Mendicant Core, Guidelight | silent | Max speed — Whenever you cast an artifact spell, you may pay {1}. If you do, copy it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Midnight Mangler | silent | During turns other than yours, this Vehicle is an artifact creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Mindspring Merfolk | silent | Exhaust — {X}{U}{U}, {T}: Draw X cards. Put a +1/+1 counter on each Merfolk creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Momentum Breaker | silent | When this enchantment enters, each opponent sacrifices a creature or Vehicle of their choice. Each opponent who can't discards a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Mu Yanling, Wind Rider | silent | When Mu Yanling enters, create a 3/2 colorless Vehicle artifact token with crew 1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Nesting Bot | silent | Max speed — This creature gets +1/+0. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Ooze Patrol | silent | When this creature enters, mill two cards, then put a +1/+1 counter on this creature for each artifact and/or creature card in your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Outpace Oblivion | silent | {2}, Sacrifice this enchantment: It deals 2 damage to each player who doesn't have max speed. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Oviya, Automech Artisan | silent | Each creature that's attacking one of your opponents has trample. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -71,26 +60,18 @@
 | Point the Way | silent | {3}{G}, Sacrifice this enchantment: Search your library for up to X basic land cards, where X is your speed. Put those cards onto the battlefield tapped, then s | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Possession Engine | silent | When this Vehicle enters, gain control of target creature an opponent controls for as long as you control this Vehicle. That creature can't attack or block for  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Quag Feast | silent | Choose target creature, planeswalker, or Vehicle. Mill two cards, then destroy the chosen permanent if its mana value is less than or equal to the number of car | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Rangers' Aetherhive | silent | Whenever you activate an exhaust ability, create a 1/1 colorless Thopter artifact creature token with flying. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
-| Rangers' Refueler | silent | Whenever you activate an exhaust ability, draw a card. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
 | Reckless Velocitaur | silent | Whenever this creature saddles a Mount or crews a Vehicle during your main phase, that Mount or Vehicle gets +2/+0 and gains trample until end of turn. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
 | Rise from the Wreck | silent | Return up to one target creature card, up to one target Mount card, up to one target Vehicle card, and up to one target creature card with no abilities from you | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Riverchurn Monument | silent | {1}, {T}: Any number of target players each mill two cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Roadside Assistance | silent | Enchanted permanent gets +1/+1 and has lifelink. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Silken Strength | silent | When this Aura enters, untap enchanted permanent. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Sita Varma, Masked Racer | silent | Exhaust — {X}{G}{G}{U}: Put X +1/+1 counters on Sita Varma. Then you may have the base power and toughness of each other creature you control become equal to Si | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Spectacular Pileup | silent | All creatures and Vehicles lose indestructible until end of turn, then destroy all creatures and Vehicles. Cycling {2} ({2}, Discard this card: Draw a card.) | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Spikeshell Harrier | silent | When this creature enters, return target creature or Vehicle an opponent controls to its owner's hand. If that opponent's speed is greater than each other playe | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Streaking Oilgorger | silent | Max speed — This creature has lifelink. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Swiftwing Assailant | silent | Max speed — This creature gets +0/+1 and has vigilance. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| The Aetherspark | silent | +1: Attach The Aetherspark to up to one target creature you control. Put a +1/+1 counter on that creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | The Speed Demon | silent | At the beginning of your end step, you draw X cards and lose X life, where X is your speed. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Trade the Helm | silent | Exchange control of target artifact or creature you control and target artifact or creature an opponent controls. Cycling {2} ({2}, Discard this card: Draw a ca | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Transit Mage | silent | When this creature enters, you may search your library for an artifact card with mana value 4 or 5, reveal it, put it into your hand, then shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Valor's Flagship | silent | When you cycle this card, create X 1/1 colorless Pilot creature tokens with "This token saddles Mounts and crews Vehicles as though its power were 2 greater." | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Veteran Beastrider | silent | At the beginning of your end step, untap each creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Voyager Glidecar | silent | Tap three other untapped creatures you control: Until end of turn, this Vehicle becomes an artifact creature and gains flying. Put a +1/+1 counter on it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Walking Sarcophagus | silent | Max speed — This creature gets +1/+2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Waxen Shapethief | silent | You may have this creature enter as a copy of an artifact or creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Winter, Cursed Rider | silent | Exhaust — {2}{U}{B}, {T}, Exile X artifact cards from your graveyard: Each other nonartifact creature gets -X/-X until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Brightglass Gearhulk | notice | When this creature enters, you may search your library for up to two artifact, creature, and/or enchantment cards with mana value 1 or less, reveal them, put th | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
@@ -103,17 +84,13 @@
 | Racers' Scoreboard | notice | Max speed — Spells you cast cost {1} less to cast. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Riptide Gearhulk | notice | When this creature enters, for each opponent, put up to one target nonland permanent that player controls into its owner's library third from the top. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Sab-Sunen, Luxa Embodied | notice | At the beginning of your first main phase, put a +1/+1 counter on Sab-Sunen. Then if it has an odd number of counters on it, draw two cards. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Samut, the Driving Force | notice | Other creatures you control get +X/+0, where X is your speed. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Spire Mechcycle | notice | Exhaust — Tap another untapped Mount or Vehicle you control: This Vehicle becomes an artifact creature. Put a +1/+1 counter on it for each Mount and/or Vehicle  | unparsed remainder: Put a +1/+1 counter on it for each Mount and/or Vehicle you control other than this Vehicle. | Y/Y/Y | not_working |
 | The Last Ride | notice | The Last Ride gets -X/-X, where X is your life total. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Tune Up | notice | Return target artifact card from your graveyard to the battlefield. If it's a Vehicle, it becomes an artifact creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Cloudspire Captain | unaudited | This creature saddles Mounts and crews Vehicles as though its power were 2 greater. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Deathless Pilot | unaudited | This creature saddles Mounts and crews Vehicles as though its power were 2 greater. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Dynamite Diver | unaudited | This creature saddles Mounts and crews Vehicles as though its power were 2 greater. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Elvish Refueler | unaudited | During your turn, as long as you haven't activated an exhaust ability this turn, you may activate exhaust abilities as though they haven't been activated. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Interface Ace | unaudited | This creature saddles Mounts and crews Vehicles using its toughness rather than its power. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
+| Adrenaline Jockey | handled | Whenever a player casts a spell, if it's not their turn, this creature deals 4 damage to them. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Aether Syphon | handled | {2}, {T}: Draw a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Aetherjacket | handled | {2}, {T}, Sacrifice this creature: Destroy another target artifact. Activate only as a sorcery. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Afterburner Expert | handled | Exhaust — {2}{G}{G}: Put two +1/+1 counters on this creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Agonasaur Rex | handled | When you cycle this card, put two +1/+1 counters on up to one target creature or Vehicle. It gains trample and indestructible until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Air Response Unit | handled | Flying | machines/combat.py | Y/Y/Y | not_tested |
 | Alacrian Jaguar | handled | Whenever this creature attacks while saddled, it gets +2/+2 until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -132,6 +109,7 @@
 | Broadside Barrage | handled | Broadside Barrage deals 5 damage to target creature or planeswalker. Draw a card, then discard a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Broodheart Engine | handled | At the beginning of your upkeep, surveil 1. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Burner Rocket | handled | When this Vehicle enters, target creature you control gets +2/+0 and gains trample until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Burnout Bashtronaut | handled | {2}: This creature gets +1/+0 until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Caelorna, Coral Tyrant | handled |  |  | Y/Y/Y | not_tested |
 | Camera Launcher | handled | Exhaust — {3}: Put a +1/+1 counter on this creature. Create a 1/1 colorless Thopter artifact creature token with flying. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Clamorous Ironclad | handled | Crew | machines/keywords.py | Y/Y/Y | not_tested |
@@ -142,6 +120,7 @@
 | Debris Beetle | handled | When this Vehicle enters, each opponent loses 3 life and you gain 3 life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Defend the Rider | handled | Choose one — • Target permanent you control gains hexproof and indestructible until end of turn. • Create a 1/1 colorless Pilot creature token with "This token  | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | District Mascot | handled | This creature enters with a +1/+1 counter on it. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Diversion Unit | handled | {U}, Sacrifice this creature: Counter target instant or sorcery spell unless its controller pays {3}. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Draconautics Engineer | handled | Exhaust — {R}: Other creatures you control gain haste until end of turn. Put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Dracosaur Auxiliary | handled | Whenever this creature attacks while saddled, it deals 2 damage to any target. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Dune Drifter | handled | When this Vehicle enters, return target artifact or creature card with mana value X or less from your graveyard to the battlefield. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -156,6 +135,9 @@
 | Fuel the Flames | handled | Fuel the Flames deals 2 damage to each creature. Cycling {2} ({2}, Discard this card: Draw a card.) | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Gallant Strike | handled | Destroy target creature with toughness 4 or greater. Cycling {2} ({2}, Discard this card: Draw a card.) | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Gas Guzzler | handled | This creature enters tapped. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Gastal Raider | handled | When this creature enters, target opponent reveals their hand. You choose an instant or sorcery card from it. That player discards that card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Gastal Thrillroller | handled | When this Vehicle enters, it becomes an artifact creature until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Gastal Thrillseeker | handled | When this creature enters, it deals 1 damage to target opponent and you gain 1 life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Gilded Ghoda | handled | Whenever this creature attacks while saddled, create a Treasure token. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Glitch Ghost Surveyor | handled | Max speed — {3}, Exile this card from your graveyard: Draw a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Goblin Surveyor | handled | Max speed — {3}, Exile this card from your graveyard: Draw a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -173,6 +155,7 @@
 | Jibbirik Omnivore | handled |  |  | Y/Y/Y | not_tested |
 | Kalakscion, Hunger Tyrant | handled |  |  | Y/Y/Y | not_tested |
 | Keen Buccaneer | handled | Exhaust — {1}{U}: Draw a card, then discard a card. Put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Kickoff Celebrations | handled | When this enchantment enters, you may discard a card. If you do, draw two cards. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Lagorin, Soul of Alacria | handled | Whenever Lagorin attacks while saddled, put a +1/+1 counter on each of up to two target Mounts and/or Vehicles. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Leonin Surveyor | handled | During your turn, this creature has first strike. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Lightshield Parry | handled | Target creature gets +2/+2 until end of turn. Cycling {2} ({2}, Discard this card: Draw a card.) | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -187,6 +170,7 @@
 | Molt Tender | handled | {T}: Mill a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Muraganda Raceway | handled | Max speed | models/game.py (why_cannot_activate, CR 702.178a) | Y/Y/Y | not_tested |
 | Mutant Surveyor | handled | {2}: This creature gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Nesting Bot | handled | When this creature dies, create a 1/1 colorless Servo artifact creature token. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Night Market | handled | This land enters tapped. As it enters, choose a color. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Nimble Thopterist | handled | When this creature enters, create a 1/1 colorless Thopter artifact creature token with flying. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Pactdoll Terror | handled | Whenever this creature or another artifact you control enters, each opponent loses 1 life and you gain 1 life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -196,12 +180,15 @@
 | Pride of the Road | handled | Max speed — At the beginning of combat on your turn, target creature or Vehicle you control gains double strike until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Prowcatcher Specialist | handled | Exhaust — {3}{R}: Put two +1/+1 counters on this creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Pyrewood Gearhulk | handled | When this creature enters, other creatures you control get +2/+2 and gain vigilance and menace until end of turn. Damage can't be prevented this turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Rangers' Aetherhive | handled | Whenever you activate an exhaust ability, create a 1/1 colorless Thopter artifact creature token with flying. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Rangers' Refueler | handled | Whenever you activate an exhaust ability, draw a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Redshift, Rocketeer Chief | handled | Exhaust — {10}{R}{G}: Put any number of permanent cards from your hand onto the battlefield. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Regal Imperiosaur | handled | Other Dinosaurs you control get +1/+1. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Ride's End | handled | This spell costs {3} less to cast if it targets a tapped permanent. Exile target creature or Vehicle. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Ripclaw Wrangler | handled | When this Vehicle enters, each opponent discards a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Risen Necroregent | handled | Max speed — At the beginning of your end step, create a 2/2 black Zombie creature token. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Risky Shortcut | handled | Draw two cards. Each player loses 2 life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Roadside Assistance | handled | When this Aura enters, create a 1/1 colorless Pilot creature token with "This token saddles Mounts and crews Vehicles as though its power were 2 greater." | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Roadside Blowout | handled | This spell costs {2} less to cast if it targets a permanent with mana value 1. Return target creature or Vehicle an opponent controls to its owner's hand. Draw  | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Rocketeer Boostbuggy | handled | Whenever this Vehicle attacks, create a Treasure token. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Rover Blades | handled | Equipped creature has double strike. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -210,6 +197,7 @@
 | Salvation Engine | handled | Other artifact creatures you control get +2/+2. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Scrap Compactor | handled | {3}, {T}, Sacrifice this artifact: It deals 3 damage to target creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Scrounging Skyray | handled | Whenever you discard one or more cards, put that many +1/+1 counters on this creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Silken Strength | handled | When this Aura enters, untap enchanted permanent. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Skybox Ferry | handled | Flying | machines/combat.py | Y/Y/Y | not_tested |
 | Skycrash | handled | Destroy target artifact. Cycling {R} ({R}, Discard this card: Draw a card.) | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Skystreak Engineer | handled | Exhaust — {4}{U}: Put two +1/+1 counters on this creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -220,7 +208,9 @@
 | Stall Out | handled | Tap target creature or Vehicle, then put three stun counters on it. (If a permanent with a stun counter would become untapped, remove one from it instead.) Cycl | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Stampeding Scurryfoot | handled | Exhaust — {3}{G}: Put a +1/+1 counter on this creature. Create a 3/3 green Elephant creature token. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Starting Column | handled | Max speed — {T}, Sacrifice this artifact: Draw two cards, then discard a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Streaking Oilgorger | handled | Max speed — This creature has lifelink. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Sundial, Dawn Tyrant | handled |  |  | Y/Y/Y | not_tested |
+| Swiftwing Assailant | handled | Max speed — This creature gets +0/+1 and has vigilance. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Syphon Fuel | handled | Target creature gets -6/-6 until end of turn. You gain 2 life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Terrian, World Tyrant | handled |  |  | Y/Y/Y | not_tested |
 | Thopter Fabricator | handled | Whenever you draw your second card each turn, create a 1/1 colorless Thopter artifact creature token with flying. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -233,6 +223,7 @@
 | Vnwxt, Verbose Host | handled | You have no maximum hand size. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Voyage Home | handled | Affinity for artifacts (This spell costs {1} less to cast for each artifact you control.) You draw three cards and gain 3 life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Voyager Quickwelder | handled | Artifact spells you cast cost {1} less to cast. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Walking Sarcophagus | handled | Max speed — This creature gets +1/+2. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Webstrike Elite | handled | When you cycle this card, destroy up to one target artifact or enchantment with mana value X. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Willowrush Verge | handled |  |  | Y/Y/Y | not_tested |
 | Wreck Remover | handled | Whenever this creature enters or attacks, exile up to one target card from a graveyard. You gain 1 life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -243,16 +234,21 @@
 ## Fully supported
 
 <details>
-<summary>43 cards</summary>
+<summary>52 cards</summary>
 
 - Bleachbone Verge
+- Boom Scholar
 - Boommobile
 - Bulwark Ox
 - Captain Howler, Sea Scourge
 - Caradora, Heart of Alacria
 - Chitin Gravestalker
+- Cloudspire Captain
 - Collision Course
 - Country Roads
+- Deathless Pilot
+- Dynamite Diver
+- Elvish Refueler
 - Endrider Catalyzer
 - Fang-Druid Summoner
 - Fearless Swashbuckler
@@ -261,7 +257,9 @@
 - Greenbelt Guardian
 - Guardian Sunmare
 - Hazoret, Godseeker
+- Interface Ace
 - Ketramose, the New Dawn
+- Lightwheel Enhancements
 - Lumbering Worldwagon
 - Magmakin Artillerist
 - Marauding Mako
@@ -276,11 +274,13 @@
 - Riverpyre Verge
 - Road Rage
 - Rocky Roads
+- Samut, the Driving Force
 - Shefet Archfiend
 - Skyseer's Chariot
 - Skyserpent Seeker
 - Stock Up
 - Sunbillow Verge
+- The Aetherspark
 - Thundering Broodwagon
 - Thunderous Velocipede
 - Ticket Tortoise
@@ -295,11 +295,9 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| Max speed | 10 | Burnout Bashtronaut, Gastal Raider, Gastal Thrillseeker, Kickoff Celebrations, Mendicant Core, Guidelight | dft |
-| Exhaust | 5 | Boom Scholar, Mindspring Merfolk, Sita Varma, Masked Racer, Spire Mechcycle, Winter, Cursed Rider | dft |
-| ~ saddles mounts and crews vehicles as though its power were N greater. | 3 | Cloudspire Captain, Deathless Pilot, Dynamite Diver | dft |
+| Exhaust | 4 | Mindspring Merfolk, Sita Varma, Masked Racer, Spire Mechcycle, Winter, Cursed Rider | dft |
+| Max speed | 2 | Mendicant Core, Guidelight, Racers' Scoreboard | dft |
 | Choose one | 1 | Crash and Burn | dft |
-| +N: attach ~ to up to one target creature you control. put a +N/+N counter on that creature. | 1 | The Aetherspark | dft |
 | after ~ phase, there are two additional combat phases. at the beginning of each combat ~, untap all creatures that attacked ~. | 1 | Full Throttle | dft |
 | all creatures and vehicles lose indestructible until end of turn, then destroy all creatures and vehicles. cycling {M} ({M}, discard ~: draw a card.) | 1 | Spectacular Pileup | dft |
 | at the beginning of combat on your turn, choose up to one target mount or vehicle you control. until end of turn, that permanent becomes saddled if it"..."s a v | 1 | Alacrian Armory | dft |
@@ -312,13 +310,9 @@
 | choose target creature, planeswalker, or vehicle. mill two cards, then destroy the chosen permanent if its mana value is less than or equal to the number of car | 1 | Quag Feast | dft |
 | choose target opponent. create two N/N colorless thopter artifact creature tokens with flying. then the chosen player loses N life and you gain N life, where N  | 1 | Haunt the Network | dft |
 | during turns other than yours, ~ is an artifact creature. | 1 | Midnight Mangler | dft |
-| during your turn, as long as you haven"..."t been activated. | 1 | Elvish Refueler | dft |
 | each creature that's attacking one of your opponents has trample. | 1 | Oviya, Automech Artisan | dft |
-| enchanted permanent gets +N/+N and has lifelink. | 1 | Roadside Assistance | dft |
-| enchanted permanent gets +N/+N and has vigilance. | 1 | Lightwheel Enhancements | dft |
 | exchange control of target artifact or creature you control and target artifact or creature an opponent controls. cycling {M} ({M}, discard ~: draw a card.) | 1 | Trade the Helm | dft |
 | mounts and vehicles you control have haste. | 1 | Kolodin, Triumph Caster | dft |
-| other creatures you control get +N/+N, where N is your speed. | 1 | Samut, the Driving Force | dft |
 | return all mount and vehicle cards from your graveyard to the battlefield. sacrifice them at the beginning of the next end step. vehicles you control become art | 1 | Push the Limit | dft |
 | return target artifact card from your graveyard to the battlefield. if it's a vehicle, it becomes an artifact creature. | 1 | Tune Up | dft |
 | return up to one target creature card, up to one target mount card, up to one target vehicle card, and up to one target creature card with no abilities from you | 1 | Rise from the Wreck | dft |
@@ -332,14 +326,12 @@
 | when ~ enters, for each opponent, put up to one target nonland permanent that player controls into its owner's library third from the top. | 1 | Riptide Gearhulk | dft |
 | when ~ enters, for each player, destroy up to one target creature that player controls. if a creature you controlled was destroyed ~, put two +N/+N counters on  | 1 | Demonic Junker | dft |
 | when ~ enters, gain control of target creature an opponent controls for as long as you control ~. that creature can't attack or block for as long as you control | 1 | Possession Engine | dft |
-| when ~ enters, it becomes an artifact creature until end of turn. | 1 | Gastal Thrillroller | dft |
 | when ~ enters, look at target player's hand. you may choose a card from it. if you do, that player discards that card, then draws a card. | 1 | Oildeep Gearhulk | dft |
 | when ~ enters, mill two cards, then put a +N/+N counter on ~ for each artifact and/or creature card in your graveyard. | 1 | Ooze Patrol | dft |
 | when ~ enters, mill two cards. then return a creature or vehicle card from your graveyard to your hand. | 1 | Carrion Cruiser | dft |
 | when ~ enters, put target creature card with mana value N or less from a graveyard onto the battlefield under your control with a finality counter on it. that c | 1 | Coalstoke Gearhulk | dft |
 | when ~ enters, return target creature or vehicle an opponent controls to its owner"..."s speed is greater than each other player"..."s speed by N. ~ can't reduc | 1 | Spikeshell Harrier | dft |
 | when ~ enters, target creature or vehicle gains lifelink and indestructible until end of turn. | 1 | Lotusguard Disciple | dft |
-| when ~ enters, untap enchanted permanent. | 1 | Silken Strength | dft |
 | when ~ enters, you may sacrifice a creature or vehicle. when you do, destroy target artifact an opponent controls. | 1 | Gastal Blockbuster | dft |
 | when ~ enters, you may search your library for an artifact card and reveal it. put it onto the battlefield if its mana value is N or less. otherwise, put it int | 1 | Guidelight Pathmaker | dft |
 | when ~ enters, you may search your library for an artifact card with mana value N or N, reveal it, put it into your hand, then shuffle. | 1 | Transit Mage | dft |
@@ -347,16 +339,11 @@
 | whenever a creature deals combat damage to one of your opponents, its controller looks at the top card of that opponent's library and exiles it face down. they  | 1 | Gonti, Night Minister | dft |
 | whenever daretti enters or attacks, choose target artifact card in your graveyard. you may sacrifice an artifact. if you do, return the chosen card to the battl | 1 | Daretti, Rocketeer Engineer | dft |
 | whenever one or more artifact and/or creature cards leave your graveyard, you gain N life. | 1 | Dredger's Insight | dft |
-| whenever you activate an exhaust ability, create a N/N colorless thopter artifact creature token with flying. | 1 | Rangers' Aetherhive | dft |
-| whenever you activate an exhaust ability, draw a card. | 1 | Rangers' Refueler | dft |
-| whenever you activate an exhaust ability, put a +N/+N counter on ~. | 1 | Adrenaline Jockey | dft |
-| whenever you activate an exhaust ability, return ~ from your graveyard to the battlefield. | 1 | Afterburner Expert | dft |
 | whenever you attack, target attacking creature gets +N/+N until end of turn. when that creature dies ~, surveil N. | 1 | Grim Javelineer | dft |
 | whenever ~ attacks while saddled, untap it and put a +N/+N counter on it. | 1 | Brightfield Mustang | dft |
 | whenever ~ saddles a mount or crews a vehicle during your main phase, that mount or vehicle gains flying until end of turn. | 1 | Canyon Vaulter | dft |
 | whenever ~ saddles a mount or crews a vehicle during your main phase, that mount or vehicle gets +N/+N and gains trample until end of turn. | 1 | Reckless Velocitaur | dft |
 | you may have ~ enter as a copy of an artifact or creature you control. | 1 | Waxen Shapethief | dft |
-| {M}, sacrifice ~: counter target instant or sorcery spell unless its controller pays {M}. | 1 | Diversion Unit | dft |
 | {M}, sacrifice ~: it deals N damage to each player who doesn't have max speed. | 1 | Outpace Oblivion | dft |
 | {M}, {M}: any number of target players each mill two cards. | 1 | Riverchurn Monument | dft |
 | {M}, {M}: target mount you control becomes saddled until end of turn. activate only as a sorcery. | 1 | Guidelight Matrix | dft |
@@ -365,7 +352,6 @@
 | {M}: target creature card in your graveyard gains embalm until end of turn. the embalm cost is equal to its mana cost. | 1 | Cursecloth Wrappings | dft |
 | {M}{M}, sacrifice ~: search your library for up to N basic land cards, where N is your speed. put those cards onto the battlefield tapped, then shuffle. | 1 | Point the Way | dft |
 | ~ gets -N/-N, where N is your life total. | 1 | The Last Ride | dft |
-| ~ saddles mounts and crews vehicles using its toughness rather than its power. | 1 | Interface Ace | dft |
 
 ## Notes
 

@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 35 | 19.7% |
-| Works (untested) | 93 | 52.2% |
-| Partial (unaudited) | 5 | 2.8% |
-| Not working | 45 | 25.3% |
+| Tested | 41 | 23.0% |
+| Works (untested) | 97 | 54.5% |
+| Partial (unaudited) | 0 | 0.0% |
+| Not working | 40 | 22.5% |
 
 ## Cards needing work
 
@@ -45,13 +45,11 @@
 | Fathom Fleet Boarder | silent | When this creature enters, you lose 2 life unless you control another Pirate. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Golden Guardian // Gold-Forge Garrison | silent | {2}: This creature fights another target creature you control. When this creature dies this turn, return it to the battlefield transformed under your control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Gruesome Fate | silent | Each opponent loses 1 life for each creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Hardy Veteran | silent | During your turn, this creature gets +0/+2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Huatli, Radiant Champion | silent | +1: Put a loyalty counter on Huatli for each creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Induced Amnesia | silent | When this enchantment enters, target player exiles all cards from their hand face down, then draws that many cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Journey to Eternity // Atzal, Cave of Eternity | silent | When enchanted creature dies, return it to the battlefield under your control, then return this card to the battlefield transformed under your control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Kumena's Awakening | silent | At the beginning of your upkeep, each player draws a card. If you have the city's blessing, instead only you draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sea Legs | silent | Enchanted creature gets +0/+2 as long as it's a Pirate. Otherwise, it gets -2/-0. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Silent Gravestone | silent | {4}, {T}: Exile this artifact and all cards from all graveyards. Draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Slaughter the Strong | silent | Each player chooses any number of creatures they control with total power 4 or less, then sacrifices all other creatures they control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sphinx's Decree | silent | Each opponent can't cast instant or sorcery spells during that player's next turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Tendershoot Dryad | silent | Saprolings you control get +2/+2 as long as you have the city's blessing. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -59,23 +57,16 @@
 | Twilight Prophet | silent | At the beginning of your upkeep, if you have the city's blessing, reveal the top card of your library and put it into your hand. Each opponent loses X life and  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Vona's Hunger | silent | Ascend (If you control ten or more permanents, you get the city's blessing for the rest of the game.) Each opponent sacrifices a creature of their choice. If yo | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Warkite Marauder | silent | Whenever this creature attacks, target creature defending player controls loses all abilities and has base power and toughness 0/1 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Angrath's Ambusher | notice | This creature gets +2/+0 as long as you control an Angrath planeswalker. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Dusk Charger | notice | This creature gets +2/+2 as long as you have the city's blessing. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Expel from Orazca | notice | Ascend (If you control ten or more permanents, you get the city's blessing for the rest of the game.) Return target nonland permanent to its owner's hand. If yo | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Grasping Scoundrel | notice | This creature gets +1/+0 as long as it's attacking. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Hadana's Climb // Winged Temple of Orazca | notice | At the beginning of combat on your turn, put a +1/+1 counter on target creature you control. Then if that creature has three or more +1/+1 counters on it, trans | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Kitesail Corsair | notice | This creature has flying as long as it's attacking. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Profane Procession // Tomb of the Dusk Rose | notice | {3}{W}{B}: Exile target creature. Then if there are three or more cards exiled with Profane Procession, transform it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Skymarcher Aspirant | notice | This creature has flying as long as you have the city's blessing. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Snubhorn Sentry | notice | This creature gets +3/+0 as long as you have the city's blessing. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Spire Winder | notice | This creature gets +1/+1 as long as you have the city's blessing. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Storm Fleet Swashbuckler | notice | This creature has double strike as long as you have the city's blessing. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Tilonalli's Summoner | notice | Whenever this creature attacks, you may pay {X}{R}. If you do, create X 1/1 red Elemental creature tokens that are tapped and attacking. At the beginning of the | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Blood Sun | unaudited | All lands lose all abilities except mana abilities. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Protean Raider | unaudited | Raid — If you attacked this turn, you may have this creature enter as a copy of any creature on the battlefield. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Relentless Raptor | unaudited | This creature attacks or blocks each combat if able. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Slippery Scoundrel | unaudited | As long as you have the city's blessing, this creature has hexproof and can't be blocked. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| The Immortal Sun | unaudited | Players can't activate planeswalkers' loyalty abilities. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
+| Angrath's Ambusher | handled | This creature gets +2/+0 as long as you control an Angrath planeswalker. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Angrath's Fury | handled | Destroy target creature. Angrath's Fury deals 3 damage to target player or planeswalker. You may search your library and/or graveyard for a card named Angrath,  | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Aquatic Incursion | handled | When this enchantment enters, create two 1/1 blue Merfolk creature tokens with hexproof. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Arterial Flow | handled | Each opponent discards two cards. If you control a Vampire, each opponent loses 2 life and you gain 2 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -109,6 +100,7 @@
 | Giltgrove Stalker | handled | This creature can't be blocked by creatures with power 2 or less. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Gleaming Barrier | handled | When this creature dies, create a Treasure token. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Goblin Trailblazer | handled | Menace | machines/combat.py | Y/Y/- | not_tested |
+| Hardy Veteran | handled | During your turn, this creature gets +0/+2. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Hornswoggle | handled | Counter target creature spell. You create a Treasure token. (It's an artifact with "{T}, Sacrifice this token: Add one mana of any color.") | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Impale | handled | Destroy target creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Imperial Ceratops | handled | Enrage — Whenever this creature is dealt damage, you gain 2 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -146,9 +138,11 @@
 | Siegehorn Ceratops | handled | Enrage — Whenever this creature is dealt damage, put two +1/+1 counters on it. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Silverclad Ferocidons | handled | Enrage — Whenever this creature is dealt damage, each opponent sacrifices a permanent of their choice. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Siren Reaver | handled | Raid — This spell costs {1} less to cast if you attacked this turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Skymarcher Aspirant | handled | This creature has flying as long as you have the city's blessing. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Soul of the Rapids | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
 | Squire's Devotion | handled | Enchanted creature gets +1/+1 and has lifelink. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Storm Fleet Sprinter | handled | This creature can't be blocked. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Storm Fleet Swashbuckler | handled | This creature has double strike as long as you have the city's blessing. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Storm the Vault // Vault of Catlacan | handled | Whenever one or more creatures you control deal combat damage to a player, create a Treasure token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Strength of the Pack | handled | Put two +1/+1 counters on each creature you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Sun Sentinel | handled | Vigilance | machines/combat.py | Y/Y/- | not_tested |
@@ -173,9 +167,10 @@
 ## Fully supported
 
 <details>
-<summary>35 cards</summary>
+<summary>41 cards</summary>
 
 - Arch of Orazca
+- Blood Sun
 - Charging Tuskodon
 - Crafty Cutpurse
 - Curious Obsession
@@ -196,17 +191,22 @@
 - Paladin of Atonement
 - Path of Mettle // Metzali, Tower of Triumph
 - Pride of Conquerors
+- Protean Raider
 - Ravenous Chupacabra
 - Reckless Rage
 - Release to the Wind
+- Relentless Raptor
 - Resplendent Griffin
 - Secrets of the Golden City
 - See Red
+- Silent Gravestone
+- Slippery Scoundrel
 - Stampeding Horncrest
 - Sun-Collared Raptor
 - Swab Goblin
 - Swaggering Corsair
 - Temple Altisaur
+- The Immortal Sun
 - Tilonalli's Crown
 - Vraska, Scheming Gorgon
 - Wayward Swordtooth
@@ -218,17 +218,14 @@
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
 | ~ gets +N/+N as long as you have the city's blessing. | 3 | Dusk Charger, Snubhorn Sentry, Spire Winder | rix |
-| Raid | 2 | Admiral's Order, Protean Raider | rix |
+| Raid | 1 | Admiral's Order | rix |
 | +N: put a loyalty counter on huatli for each creature you control. | 1 | Huatli, Radiant Champion | rix |
-| all lands lose all abilities except mana abilities. | 1 | Blood Sun | rix |
-| as long as you have the city"..."t be blocked. | 1 | Slippery Scoundrel | rix |
 | ascend (if you control ten or more permanents, you get the city"..."s blessing, instead each opponent sacrifices half the creatures they control of their choice | 1 | Vona's Hunger | rix |
 | ascend (if you control ten or more permanents, you get the city"..."s hand. if you have the city"..."s library instead. | 1 | Expel from Orazca | rix |
 | at the beginning of combat on your turn, put a +N/+N counter on target creature you control. then if that creature has three or more +N/+N counters on it, trans | 1 | Hadana's Climb // Winged Temple of Orazca | rix |
 | at the beginning of your upkeep, each player draws a card. if you have the city's blessing, instead only you draw a card. | 1 | Kumena's Awakening | rix |
 | at the beginning of your upkeep, if you have the city"..."s mana value. | 1 | Twilight Prophet | rix |
 | attacking pirates you control get +N/+N. | 1 | Dire Fleet Neckbreaker | rix |
-| during your turn, ~ gets +N/+N. | 1 | Hardy Veteran | rix |
 | each opponent can"..."s next turn. | 1 | Sphinx's Decree | rix |
 | each opponent loses N life for each creature you control. | 1 | Gruesome Fate | rix |
 | each player chooses any number of creatures they control with total power N or less, then sacrifices all other creatures they control. | 1 | Slaughter the Strong | rix |
@@ -236,7 +233,6 @@
 | equipped creature gets +N/+N, has menace, and is a pirate in addition to its other creature types. | 1 | Captain's Hook | rix |
 | exile target creature with power greater than or equal to your life total. | 1 | Blazing Hope | rix |
 | for each land you control, create a treasure token. (it's an artifact with "...") | 1 | Brass's Bounty | rix |
-| players can"..." loyalty abilities. | 1 | The Immortal Sun | rix |
 | saprolings you control get +N/+N as long as you have the city's blessing. | 1 | Tendershoot Dryad | rix |
 | when azor enters, each opponent can"..."s next turn. | 1 | Azor, the Lawbringer | rix |
 | when enchanted creature dies, exile cards equal to its power from the top of its owner's library. you may cast spells from among those cards for as long as they | 1 | Dead Man's Chest | rix |
@@ -251,16 +247,11 @@
 | whenever ~ attacks, you may pay {M}{M}. if you do, create N N/N red elemental creature tokens that are tapped and attacking. at the beginning of the next end st | 1 | Tilonalli's Summoner | rix |
 | whenever ~ deals damage to a dinosaur, destroy that creature. | 1 | Dinosaur Hunter | rix |
 | {M}, {M}: draw a card, then exile a card from your hand. if cards with five or more different mana values are exiled with ~, you gain N life, untap ~, and trans | 1 | Azor's Gateway // Sanctum of the Sun | rix |
-| {M}, {M}: exile ~ and all cards from all graveyards. draw a card. | 1 | Silent Gravestone | rix |
 | {M}: ~ fights another target creature you control. when ~ dies ~, return it to the battlefield transformed under your control. | 1 | Golden Guardian // Gold-Forge Garrison | rix |
 | {M}{M}{M}: exile target creature. then if there are three or more cards exiled with ~, transform it. | 1 | Profane Procession // Tomb of the Dusk Rose | rix |
-| ~ attacks or blocks each combat if able. | 1 | Relentless Raptor | rix |
 | ~ gets +N/+N as long as it's attacking. | 1 | Grasping Scoundrel | rix |
-| ~ gets +N/+N as long as you control an angrath planeswalker. | 1 | Angrath's Ambusher | rix |
-| ~ has double strike as long as you have the city's blessing. | 1 | Storm Fleet Swashbuckler | rix |
 | ~ has flash as long as you control a merfolk. return target creature to its owner's hand. draw a card. | 1 | Crashing Tide | rix |
 | ~ has flying as long as it's attacking. | 1 | Kitesail Corsair | rix |
-| ~ has flying as long as you have the city's blessing. | 1 | Skymarcher Aspirant | rix |
 | ~'s power and toughness are each equal to the number of differently named lands you control. | 1 | Awakened Amalgam | rix |
 | −N: destroy all creatures target opponent controls. angrath deals damage to that player equal to their total power. | 1 | Angrath, Minotaur Pirate | rix |
 | −N: each opponent loses life equal to the number of cards in their graveyard. | 1 | Angrath, the Flame-Chained | rix |

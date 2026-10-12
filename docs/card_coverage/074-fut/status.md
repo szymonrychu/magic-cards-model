@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 37 | 20.8% |
-| Works (untested) | 75 | 42.1% |
-| Partial (unaudited) | 9 | 5.1% |
-| Not working | 57 | 32.0% |
+| Tested | 47 | 26.4% |
+| Works (untested) | 79 | 44.4% |
+| Partial (unaudited) | 0 | 0.0% |
+| Not working | 52 | 29.2% |
 
 ## Cards needing work
 
@@ -28,24 +28,20 @@
 |---|---|---|---|---|---|
 | Arcanum Wings | silent | Aura Swap | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Bitter Ordeal | silent | Search target player's library for a card and exile it. Then that player shuffles. Gravestorm (When you cast this spell, copy it for each permanent put into a g | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Boldwyr Intimidator | silent | {R}: Target creature becomes a Coward until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Bridge from Below | silent | When a creature is put into an opponent's graveyard from the battlefield, if this card is in your graveyard, exile this card. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Chronomantic Escape | silent | Until your next turn, creatures can't attack you. Exile Chronomantic Escape with three time counters on it. Suspend 3—{2}{W} (Rather than cast this card from yo | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Cloudseeder | silent | {U}, {T}, Discard a card: Create a 1/1 blue Faerie creature token named Cloud Sprite. It has flying and "This token can block only creatures with flying." | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Coalition Relic | silent | At the beginning of your first main phase, remove all charge counters from this artifact. Add one mana of any color for each charge counter removed this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Cutthroat il-Dal | silent | Hellbent — This creature has shadow as long as you have no cards in hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Darksteel Garrison | silent | Fortify | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Epochrasite | silent | When this creature dies, exile it with three time counters on it and it gains suspend. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Fleshwrither | silent | Transfigure | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Flowstone Embrace | silent | {T}: Enchanted creature gets +2/-2 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Gathan Raiders | silent | Hellbent — This creature gets +2/+2 as long as you have no cards in hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Goldmeadow Lookout | silent | {W}, {T}, Discard a card: Create a 1/1 white Kithkin Soldier creature token named Goldmeadow Harrier. It has "{W}, {T}: Tap target creature." | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Haze of Rage | silent | Buyback | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Heartwood Storyteller | silent | Whenever a player casts a noncreature spell, each of that player's opponents may draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Imperial Mask | silent | When this enchantment enters, if it's not a token, each of your teammates creates a token that's a copy of this enchantment. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Jhoira of the Ghitu | silent | {2}, Exile a nonland card from your hand: Put four time counters on the exiled card. If it doesn't have suspend, it gains suspend. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Judge Unworthy | silent | Choose target attacking or blocking creature. Scry 3, then reveal the top card of your library. Judge Unworthy deals damage equal to that card's mana value to t | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Leaden Fists | silent | Enchanted creature gets +3/+3 and doesn't untap during its controller's untap step. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Linessa, Zephyr Mage | silent | Grandeur — Discard another card named Linessa, Zephyr Mage: Target player returns a creature they control to its owner's hand, then repeats this process for an  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Llanowar Mentor | silent | {G}, {T}, Discard a card: Create a 1/1 green Elf Druid creature token named Llanowar Elves. It has "{T}: Add {G}." | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Llanowar Reborn | silent | Graft | no machine in the engine executes this keyword | Y/-/- | not_working |
@@ -66,7 +62,6 @@
 | Riftsweeper | silent | When this creature enters, choose target face-up exiled card. Its owner shuffles it into their library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Samite Censer-Bearer | silent | {W}, Sacrifice this creature: Prevent the next 1 damage that would be dealt to each creature you control this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Scout's Warning | silent | The next creature card you play this turn can be played as though it had flash. Draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Second Wind | silent | {T}: Untap enchanted creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Shah of Naar Isle | silent | When this creature's echo cost is paid, each opponent may draw up to three cards. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Shapeshifter's Marrow | silent | At the beginning of each opponent's upkeep, that player reveals the top card of their library. If it's a creature card, the player puts the card into their grav | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Shimian Specter | silent | Whenever this creature deals combat damage to a player, that player reveals their hand. You choose a nonland card from it. Search that player's graveyard, hand, | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -83,15 +78,6 @@
 | Grave Peril | notice | When a nonblack creature enters, sacrifice this enchantment. If you do, destroy that creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Saltskitter | notice | Whenever another creature enters, exile this creature. Return this creature to the battlefield under its owner's control at the beginning of the next end step. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Sword of the Meek | notice | Whenever a 1/1 creature you control enters, you may return this card from your graveyard to the battlefield, then attach it to that creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Frenzy Sliver | unaudited | All Sliver creatures have frenzy 1. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Gibbering Descent | unaudited | Hellbent — Skip your upkeep step if you have no cards in hand. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Homing Sliver | unaudited | Each Sliver card in each player's hand has slivercycling {3}. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Imperiosaur | unaudited | Spend only mana produced by basic lands to cast this spell. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Lymph Sliver | unaudited | All Sliver creatures have absorb 1. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Rites of Flourishing | unaudited | Each player may play an additional land on each of their turns. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Snake Cult Initiation | unaudited | Enchanted creature has poisonous 3. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Virulent Sliver | unaudited | All Sliver creatures have poisonous 1. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Yixlid Jailer | unaudited | Cards in graveyards lose all abilities. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Augur il-Vec | handled | Sacrifice this creature: You gain 4 life. Activate only during your upkeep. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Aven Augur | handled | Sacrifice this creature: Return up to two target creatures to their owners' hands. Activate only during your upkeep. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Barren Glory | handled | At the beginning of your upkeep, if you control no permanents other than this enchantment and have no cards in hand, you win the game. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -104,6 +90,7 @@
 | Centaur Omenreader | handled | As long as this creature is tapped, creature spells you cast cost {2} less to cast. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Char-Rumbler | handled | {R}: This creature gets +1/+0 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Cryptic Annelid | handled | When this creature enters, scry 1, then scry 2, then scry 3. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Cutthroat il-Dal | handled | Hellbent — This creature has shadow as long as you have no cards in hand. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Cyclical Evolution | handled | Target creature gets +3/+3 until end of turn. Exile Cyclical Evolution with three time counters on it. Suspend 3—{2}{G} (Rather than cast this card from your ha | the engine reads this text and performs it | Y/-/- | not_tested |
 | Daybreak Coronet | handled | Enchanted creature gets +3/+3 and has first strike, vigilance, and lifelink. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Death Rattle | handled | Delve (Each card you exile from your graveyard while casting this spell pays for {1}.) Destroy target nongreen creature. It can't be regenerated. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -115,6 +102,7 @@
 | Fomori Nomad | handled |  |  | Y/-/- | not_tested |
 | Force of Savagery | handled | Trample | machines/combat.py | Y/-/- | not_tested |
 | Foresee | handled | Scry 4, then draw two cards. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Gathan Raiders | handled | Hellbent — This creature gets +2/+2 as long as you have no cards in hand. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Gift of Granite | handled | Enchanted creature gets +0/+2. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Graven Cairns | handled |  |  | Y/-/- | not_tested |
 | Grinning Ignus | handled |  |  | Y/Y/- | not_tested |
@@ -123,6 +111,7 @@
 | Infiltrator il-Kor | handled | Shadow | machines/combat.py | Y/-/- | not_tested |
 | Knight of Sursi | handled | Flying | machines/combat.py | Y/-/- | not_tested |
 | Korlash, Heir to Blackblade | handled | Korlash's power and toughness are each equal to the number of Swamps you control. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Leaden Fists | handled | Enchanted creature gets +3/+3 and doesn't untap during its controller's untap step. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Llanowar Augur | handled | Sacrifice this creature: Target creature gets +3/+3 and gains trample until end of turn. Activate only during your upkeep. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Lost Auramancers | handled | When this creature dies, if it had no time counters on it, you may search your library for an enchantment card, put it onto the battlefield, then shuffle. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Lucent Liminid | handled | Flying | machines/combat.py | Y/-/- | not_tested |
@@ -147,6 +136,7 @@
 | Rift Elemental | handled | {1}{R}, Remove a time counter from a permanent you control or suspended card you own: This creature gets +2/+0 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | River of Tears | handled |  |  | Y/-/- | not_tested |
 | Sarcomite Myr | handled | {2}: This creature gains flying until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Second Wind | handled | {T}: Tap enchanted creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Shivan Sand-Mage | handled | When this creature enters, choose one — • Remove two time counters from target permanent or suspended card. • Put two time counters on target permanent with a t | the engine reads this text and performs it | Y/-/- | not_tested |
 | Skizzik Surger | handled | Haste | machines/combat.py | Y/-/- | not_tested |
 | Slaughter Pact | handled | Destroy target nonblack creature. At the beginning of your next upkeep, pay {2}{B}. If you don't, you lose the game. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -171,7 +161,7 @@
 ## Fully supported
 
 <details>
-<summary>37 cards</summary>
+<summary>47 cards</summary>
 
 - Akroma's Memorial
 - Angel of Salvation
@@ -179,29 +169,37 @@
 - Augur of Skulls
 - Aven Mindcensor
 - Bloodshot Trainee
+- Boldwyr Intimidator
 - Cloud Key
 - Dakmor Salvage
 - Delay
 - Dryad Arbor
 - Fatal Attraction
 - Festering March
+- Frenzy Sliver
 - Ghostfire
+- Gibbering Descent
 - Glittering Wish
 - Grave Scrabbler
 - Grove of the Burnwillows
+- Homing Sliver
 - Horizon Canopy
+- Imperiosaur
 - Intervention Pact
 - Kavu Primarch
 - Keldon Megaliths
 - Llanowar Empath
 - Logic Knot
+- Lymph Sliver
 - Magus of the Moat
 - Mistmeadow Skulk
 - Molten Disaster
 - Pact of Negation
 - Pyromancer's Swath
 - Ravaging Riftwurm
+- Rites of Flourishing
 - Scourge of Kher Ridges
+- Snake Cult Initiation
 - Spellwild Ouphe
 - Storm Entity
 - Street Wraith
@@ -209,7 +207,9 @@
 - Tarmogoyf
 - Tolaria West
 - Vedalken Aethermage
+- Virulent Sliver
 - Wrap in Vigor
+- Yixlid Jailer
 
 </details>
 
@@ -217,34 +217,24 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| Hellbent | 3 | Cutthroat il-Dal, Gathan Raiders, Gibbering Descent | fut |
 | buyback | 3 | Haze of Rage, Mystic Speculation, Sprout Swarm | fut |
 | Grandeur | 2 | Linessa, Zephyr Mage, Oriss, Samite Guardian | fut |
 | Choose one | 1 | Dust of Moments | fut |
 | Chroma | 1 | Phosphorescent Feast | fut |
 | all sliver creatures get +N/+N for each other sliver on the battlefield. | 1 | Sliver Legion | fut |
-| all sliver creatures have absorb N. | 1 | Lymph Sliver | fut |
-| all sliver creatures have frenzy N. | 1 | Frenzy Sliver | fut |
-| all sliver creatures have poisonous N. | 1 | Virulent Sliver | fut |
 | assemble | 1 | Steamflogger Boss | fut |
 | at the beginning of each opponent"..."s a creature card, the player puts the card into their graveyard and ~ becomes a copy of that card. | 1 | Shapeshifter's Marrow | fut |
 | at the beginning of your first main phase, remove all charge counters from ~. add one mana of any color for each charge counter removed ~. | 1 | Coalition Relic | fut |
 | aura swap | 1 | Arcanum Wings | fut |
-| cards in graveyards lose all abilities. | 1 | Yixlid Jailer | fut |
 | choose any target. scry N, then reveal the top card of your library. ~ deals damage equal to that card's mana value to that permanent or player. | 1 | Riddle of Lightning | fut |
 | choose target attacking or blocking creature. scry N, then reveal the top card of your library. ~ deals damage equal to that card's mana value to that creature. | 1 | Judge Unworthy | fut |
 | counter target spell if no mana was spent to cast it. | 1 | Nix | fut |
 | creatures with no abilities get +N/+N. | 1 | Muraganda Petroglyphs | fut |
-| each player may play an additional land on each of their turns. | 1 | Rites of Flourishing | fut |
-| each sliver card in each player's hand has slivercycling {M}. | 1 | Homing Sliver | fut |
-| enchanted creature gets +N/+N and doesn"..."s untap step. | 1 | Leaden Fists | fut |
-| enchanted creature has poisonous N. | 1 | Snake Cult Initiation | fut |
 | fateseal | 1 | Mesmeric Sliver | fut |
 | fortify | 1 | Darksteel Garrison | fut |
 | graft | 1 | Llanowar Reborn | fut |
 | put target creature on top of its owner"..."s library, then put any number of them on the bottom of that player's library and the rest on top in any order.) | 1 | Spin into Myth | fut |
 | search target player's library for a card and exile it. then that player shuffles. gravestorm (when you cast ~, copy it for each permanent put into a graveyard  | 1 | Bitter Ordeal | fut |
-| spend only mana produced by basic lands to cast ~. | 1 | Imperiosaur | fut |
 | target player reveals their hand. you choose a nonland card from it. that player puts that card into their library third from the top. | 1 | Lost Hours | fut |
 | the next creature card you play ~ can be played as though it had flash. draw a card. | 1 | Scout's Warning | fut |
 | transfigure | 1 | Fleshwrither | fut |
@@ -275,8 +265,6 @@
 | {M}, {M}, discard a card: create a N/N red elemental creature token named spark elemental. it has trample, haste, and "..." | 1 | Sparkspitter | fut |
 | {M}, {M}, discard a card: create a N/N white kithkin soldier creature token named goldmeadow harrier. it has "..." | 1 | Goldmeadow Lookout | fut |
 | {M}: enchanted creature gets +N/-N until end of turn. | 1 | Flowstone Embrace | fut |
-| {M}: target creature becomes a coward until end of turn. | 1 | Boldwyr Intimidator | fut |
-| {M}: untap enchanted creature. | 1 | Second Wind | fut |
 | ~ deals N damage to any target. whenever one or more creatures you control deal combat damage to a player, if ~ is in your graveyard, you may pay {M}{M}{M}{M}.  | 1 | Thunderblade Charge | fut |
 
 ## Notes

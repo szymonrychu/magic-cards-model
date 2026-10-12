@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 42 | 17.1% |
-| Works (untested) | 139 | 56.5% |
-| Partial (unaudited) | 6 | 2.4% |
-| Not working | 59 | 24.0% |
+| Tested | 49 | 19.9% |
+| Works (untested) | 142 | 57.7% |
+| Partial (unaudited) | 0 | 0.0% |
+| Not working | 55 | 22.4% |
 
 ## Cards needing work
 
@@ -28,7 +28,6 @@
 |---|---|---|---|---|---|
 | Agonizing Remorse | silent | Target opponent reveals their hand. You choose a nonland card from it or a card from their graveyard. Exile that card. You lose 1 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Allure of the Unknown | silent | Reveal the top six cards of your library. An opponent exiles a nonland card from among them, then you put the rest into your hand. That opponent may cast the ex | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Anax, Hardened in the Forge | silent | Whenever Anax or another nontoken creature you control dies, create a 1/1 red Satyr creature token with "This token can't block." If the creature had power 4 or | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Archon of Sun's Grace | silent | Pegasus creatures you control have lifelink. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ashiok's Forerunner | silent | When this creature enters, you may search your library and/or graveyard for a card named Ashiok, Sculptor of Fears, reveal it, and put it into your hand. If you | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ashiok, Nightmare Muse | silent | −3: Return target nonland permanent to its owner's hand, then that player exiles a card from their hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -37,7 +36,6 @@
 | Bronzehide Lion | silent | When this creature dies, return it to the battlefield. It's an Aura enchantment with enchant creature you control and "{G}{W}: Enchanted creature gains indestru | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Calix, Destiny's Hand | silent | −3: Exile target creature or enchantment you don't control until target enchantment you control leaves the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Dalakos, Crafter of Wonders | silent | Equipped creatures you control have flying and haste. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Destiny Spinner | silent | {3}{G}: Target land you control becomes an X/X Elemental creature with trample and haste until end of turn, where X is the number of enchantments you control. I | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Devourer of Memory | silent | Whenever one or more cards are put into your graveyard from your library, this creature gets +1/+1 until end of turn and can't be blocked this turn. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Dreamshaper Shaman | silent | At the beginning of your end step, you may pay {2}{R} and sacrifice a nonland permanent. If you do, reveal cards from the top of your library until you reveal a | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Elspeth Conquers Death | silent | II — Noncreature spells your opponents cast cost {2} more to cast until your next turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -49,7 +47,6 @@
 | Grasping Giant | silent | Whenever this creature becomes blocked by a creature, exile that creature until this creature leaves the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Hateful Eidolon | silent | Whenever an enchanted creature dies, draw a card for each Aura you controlled that was attached to it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Hydra's Growth | silent | When this Aura enters, put a +1/+1 counter on enchanted creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Impending Doom | silent | Enchanted creature gets +3/+3 and attacks each combat if able. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Inspire Awe | silent | Prevent all combat damage that would be dealt this turn except combat damage that would be dealt by enchanted creatures and enchantment creatures. Scry 2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Kiora Bests the Sea God | silent | III — Gain control of target permanent an opponent controls. Untap it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Lagonna-Band Storyteller | silent | When this creature enters, you may put target enchantment card from your graveyard on top of your library. If you do, you gain life equal to its mana value. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -79,18 +76,11 @@
 | Naiad of Hidden Coves | notice | During turns other than yours, spells you cast cost {1} less to cast. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Nylea's Intervention | notice | Choose one — • Search your library for up to X land cards, reveal them, put them into your hand, then shuffle. • Nylea's Intervention deals twice X damage to ea | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Purphoros, Bronze-Blooded | notice | {2}{R}: You may put a red creature card or an artifact creature card from your hand onto the battlefield. Sacrifice it at the beginning of the next end step. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Sunlit Hoplite | notice | This creature gets +1/+0 as long as you control an Elspeth planeswalker. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Swimmer in Nightmares | notice | This creature gets +3/+0 as long as there are ten or more cards in a single graveyard. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Taranika, Akroan Veteran | notice | Whenever Taranika attacks, untap another target creature you control. Until end of turn, that creature has base power and toughness 4/4 and gains indestructible | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Tectonic Giant | notice | Whenever this creature attacks or becomes the target of a spell an opponent controls, choose one — • This creature deals 3 damage to each opponent. • Exile the  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Thassa's Intervention | notice | Choose one — • Look at the top X cards of your library. Put up to two of them into your hand and the rest on the bottom of your library in a random order. • Cou | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Wings of Hubris | notice | Sacrifice this Equipment: Equipped creature can't be blocked this turn. Sacrifice it at the beginning of the next end step. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Alirios, Enraptured | unaudited | Alirios doesn't untap during your untap step if you control a Reflection. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Altar of the Pantheon | unaudited | Your devotion to each color and each combination of colors is increased by one. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Ashiok's Erasure | unaudited | Your opponents can't cast spells with the same name as the exiled card. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Entrancing Lyre | unaudited | You may choose not to untap this artifact during your untap step. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Haktos the Unscarred | unaudited | As Haktos enters, choose 2, 3, or 4 at random. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Underworld Breach | unaudited | Each nonland card in your graveyard has escape. The escape cost is equal to the card's mana cost plus exile three other cards from your graveyard. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Acolyte of Affliction | handled | When this creature enters, mill two cards, then you may return a permanent card from your graveyard to your hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Alseid of Life's Bounty | handled | {1}, Sacrifice this creature: Target creature or enchantment you control gains protection from the color of your choice until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Aphemia, the Cacophony | handled | At the beginning of your end step, you may exile an enchantment card from your graveyard. If you do, create a 2/2 black Zombie creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -112,6 +102,7 @@
 | Deathbellow War Cry | handled | Search your library for up to four Minotaur creature cards with different names, put them onto the battlefield, then shuffle. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Demon of Loathing | handled | Whenever this creature deals combat damage to a player, that player sacrifices a creature of their choice. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Deny the Divine | handled | Counter target creature or enchantment spell. If that spell is countered this way, exile it instead of putting it into its owner's graveyard. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Destiny Spinner | handled | Creature and enchantment spells you control can't be countered. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Discordant Piper | handled | When this creature dies, create a 0/1 white Goat creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Drag to the Underworld | handled | This spell costs {X} less to cast, where X is your devotion to black. (Each {B} in the mana costs of permanents you control counts toward your devotion to black | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Dreadful Apathy | handled | Enchanted creature can't attack or block. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -146,6 +137,7 @@
 | Hyrax Tower Scout | handled | When this creature enters, untap target creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ichthyomorphosis | handled | Enchanted creature loses all abilities and is a blue Fish with base power and toughness 0/1. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ilysian Caryatid | handled |  |  | Y/Y/- | not_tested |
+| Impending Doom | handled | Enchanted creature gets +3/+3 and attacks each combat if able. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Incendiary Oracle | handled | {1}{R}: This creature gets +1/+0 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Inevitable End | handled | Enchanted creature has "At the beginning of your upkeep, sacrifice a creature." | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Iroas's Blessing | handled | When this Aura enters, it deals 4 damage to target creature or planeswalker an opponent controls. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -209,6 +201,7 @@
 | Starlit Mantle | handled | When this Aura enters, enchanted creature gains hexproof until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Stern Dismissal | handled | Return target creature or enchantment an opponent controls to its owner's hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Stinging Lionfish | handled | Whenever you cast your first spell during each opponent's turn, you may tap or untap target nonland permanent. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Sunlit Hoplite | handled | During your turn, this creature has first strike. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Sunmane Pegasus | handled | {1}{W}: This creature gains vigilance and lifelink until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Sweet Oblivion | handled | Target player mills four cards. Escape—{3}{U}, Exile four other cards from your graveyard. (You may cast this card from your graveyard for its escape cost.) | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Terror of Mount Velus | handled | When this creature enters, creatures you control gain double strike until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -234,8 +227,12 @@
 ## Fully supported
 
 <details>
-<summary>42 cards</summary>
+<summary>49 cards</summary>
 
+- Alirios, Enraptured
+- Altar of the Pantheon
+- Anax, Hardened in the Forge
+- Ashiok's Erasure
 - Callaphe, Beloved of the Sea
 - Chainweb Aracnir
 - Cling to Dust
@@ -244,8 +241,10 @@
 - Dryad of the Ilysian Grove
 - Eidolon of Obstruction
 - Enigmatic Incarnation
+- Entrancing Lyre
 - Flicker of Fate
 - Flummoxed Cyclops
+- Haktos the Unscarred
 - Ironscale Hydra
 - Klothys, God of Destiny
 - Kroxa, Titan of Death's Hunger
@@ -270,6 +269,7 @@
 - The Akroan War
 - Treeshaker Chimera
 - Tymaret, Chosen from Death
+- Underworld Breach
 - Underworld Charger
 - Underworld Fires
 - Underworld Rage-Hound
@@ -287,15 +287,11 @@
 |---|---|---|---|
 | Choose one | 3 | Heliod's Intervention, Nylea's Intervention, Thassa's Intervention | thb |
 | Constellation | 1 | Protean Thaumaturge | thb |
-| alirios doesn't untap during your untap step if you control a reflection. | 1 | Alirios, Enraptured | thb |
-| as haktos enters, choose N, N, or N at random. | 1 | Haktos the Unscarred | thb |
 | at the beginning of your end step, if you control a creature with power N or greater, exile the top card of your library. you may play that card until you exile | 1 | Furious Rise | thb |
 | at the beginning of your end step, you may pay {M}{M} and sacrifice a nonland permanent. if you do, reveal cards from the top of your library until you reveal a | 1 | Dreamshaper Shaman | thb |
 | creatures you control get +N/+N until end of turn, where N is your devotion to green. (each {M} in the mana costs of permanents you control counts toward your d | 1 | Klothys's Design | thb |
 | during turns other than yours, spells you cast cost {M} less to cast. | 1 | Naiad of Hidden Coves | thb |
-| each nonland card in your graveyard has escape. the escape cost is equal to the card's mana cost plus exile three other cards from your graveyard. | 1 | Underworld Breach | thb |
 | each player who controls a creature with power N or greater draws a card. then destroy all creatures. | 1 | Shatter the Sky | thb |
-| enchanted creature gets +N/+N and attacks each combat if able. | 1 | Impending Doom | thb |
 | enchanted permanent is an enchantment and loses all other card types. | 1 | One with the Stars | thb |
 | equipped creatures you control have flying and haste. | 1 | Dalakos, Crafter of Wonders | thb |
 | exile target opponent's graveyard. | 1 | Elspeth's Nightmare | thb |
@@ -328,7 +324,6 @@
 | whenever a land card is put into your graveyard from anywhere, you gain N life. | 1 | Skola Grovedancer | thb |
 | whenever an aura you control becomes attached to a creature you control, create a N/N white human soldier creature token. | 1 | Siona, Captain of the Pyleas | thb |
 | whenever an enchanted creature dies, draw a card for each aura you controlled that was attached to it. | 1 | Hateful Eidolon | thb |
-| whenever anax or another nontoken creature you control dies, create a N/N red satyr creature token with "..." if the creature had power N or greater, create two | 1 | Anax, Hardened in the Forge | thb |
 | whenever another creature becomes the target of an ability of a land you control named labyrinth of skophos, you may have ~ fight that creature. | 1 | Skophos Maze-Warden | thb |
 | whenever another nontoken creature you control dies, you may exile it. if you do, create a token that"..."s N/N and it's a nightmare in addition to its other ty | 1 | Nightmare Shepherd | thb |
 | whenever one or more cards are put into your graveyard from your library, ~ gets +N/+N until end of turn and can't be blocked ~. | 1 | Devourer of Memory | thb |
@@ -337,13 +332,8 @@
 | whenever ~ attacks or becomes the target of a spell an opponent controls, choose one — • ~ deals N damage to each opponent. • exile the top two cards of your li | 1 | Tectonic Giant | thb |
 | whenever ~ becomes blocked by a creature, exile that creature until ~ leaves the battlefield. | 1 | Grasping Giant | thb |
 | whenever ~ becomes blocked by a creature, that creature's controller draws a card. | 1 | Nessian Boar | thb |
-| you may choose not to untap ~ during your untap step. | 1 | Entrancing Lyre | thb |
-| your devotion to each color and each combination of colors is increased by one. | 1 | Altar of the Pantheon | thb |
-| your opponents can't cast spells with the same name as the exiled card. | 1 | Ashiok's Erasure | thb |
-| {M}{M}: target land you control becomes an N/N elemental creature with trample and haste until end of turn, where N is the number of enchantments you control. i | 1 | Destiny Spinner | thb |
 | {M}{M}: you may put a red creature card or an artifact creature card from your hand onto the battlefield. sacrifice it at the beginning of the next end step. | 1 | Purphoros, Bronze-Blooded | thb |
 | ~ gets +N/+N as long as there are ten or more cards in a single graveyard. | 1 | Swimmer in Nightmares | thb |
-| ~ gets +N/+N as long as you control an elspeth planeswalker. | 1 | Sunlit Hoplite | thb |
 | ~ gets -N/-N for each card in your opponents' hands. | 1 | Enemy of Enlightenment | thb |
 | −N: exile target creature or enchantment you don't control until target enchantment you control leaves the battlefield. | 1 | Calix, Destiny's Hand | thb |
 | −N: return target nonland permanent to its owner's hand, then that player exiles a card from their hand. | 1 | Ashiok, Nightmare Muse | thb |

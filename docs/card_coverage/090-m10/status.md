@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 25 | 22.5% |
-| Works (untested) | 65 | 58.6% |
-| Partial (unaudited) | 2 | 1.8% |
-| Not working | 19 | 17.1% |
+| Tested | 28 | 25.2% |
+| Works (untested) | 71 | 64.0% |
+| Partial (unaudited) | 0 | 0.0% |
+| Not working | 12 | 10.8% |
 
 ## Cards needing work
 
@@ -29,24 +29,15 @@
 | Alluring Siren | silent | {T}: Target creature an opponent controls attacks you this turn if able. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Awakener Druid | silent | When this creature enters, target Forest becomes a 4/5 green Treefolk creature for as long as this creature remains on the battlefield. It's still a land. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Capricious Efreet | silent | At the beginning of your upkeep, choose target nonland permanent you control and up to two target nonland permanents you don't control. Destroy one of them at r | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Captain of the Watch | silent | Other Soldier creatures you control get +1/+1 and have vigilance. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Goblin Chieftain | silent | Other Goblin creatures you control get +1/+1 and have haste. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Hive Mind | silent | Whenever a player casts an instant or sorcery spell, each other player copies that spell. Each of those players may choose new targets for their copy. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Honor of the Pure | silent | White creatures you control get +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Ice Cage | silent | When enchanted creature becomes the target of a spell or ability, destroy this Aura. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Magebane Armor | silent | Equipped creature gets +2/+4 and loses flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Master of the Wild Hunt | silent | {T}: Tap all untapped Wolf creatures you control. Each Wolf tapped this way deals damage equal to its power to target creature. That creature deals damage equal | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Mirror of Fate | silent | {T}, Sacrifice this artifact: Choose up to seven face-up exiled cards you own. Exile all the cards from your library, then put the chosen cards on top of your l | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Open the Vaults | silent | Return all artifact and enchantment cards from all graveyards to the battlefield under their owners' control. (Auras with nothing to enchant remain in graveyard | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Protean Hydra | silent | Whenever a +1/+1 counter is removed from this creature, put two +1/+1 counters on it at the beginning of the next end step. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
-| Rhox Pikemaster | silent | Other Soldier creatures you control have first strike. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sphinx Ambassador | silent | Whenever this creature deals combat damage to a player, search that player's library for a card, then that player chooses a card name. If you searched for a cre | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Vampire Nocturnus | silent | As long as the top card of your library is black, this creature and other Vampire creatures you control get +2/+1 and have flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Djinn of Wishes | notice | {2}{U}{U}, Remove a wish counter from this creature: Reveal the top card of your library. You may play that card without paying its mana cost. If you don't, exi | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Rise from the Grave | notice | Put target creature card from a graveyard onto the battlefield under your control. That creature is a black Zombie in addition to its other colors and types. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Xathrid Demon | notice | At the beginning of your upkeep, sacrifice a creature other than this creature, then each opponent loses life equal to the sacrificed creature's power. If you c | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Convincing Mirage | unaudited | Enchanted land is the chosen type. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Indestructibility | unaudited | Enchanted permanent has indestructible. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Acolyte of Xathrid | handled | {1}{B}, {T}: Target player loses 1 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Angel's Mercy | handled | You gain 7 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ant Queen | handled | {1}{G}: Create a 1/1 green Insect creature token. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -56,6 +47,7 @@
 | Bountiful Harvest | handled | You gain 1 life for each land you control. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Bramble Creeper | handled | Whenever this creature attacks, it gets +5/+0 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Burst of Speed | handled | Creatures you control gain haste until end of turn. (They can attack and {T} even if they just came under your control.) | the engine reads this text and performs it | Y/-/- | not_tested |
+| Captain of the Watch | handled | Other Soldier creatures you control get +1/+1 and have vigilance. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Cemetery Reaper | handled | Other Zombie creatures you control get +1/+1. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Centaur Courser | handled |  |  | Y/Y/- | not_tested |
 | Cudgel Troll | handled | {G}: Regenerate this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -73,14 +65,18 @@
 | Gargoyle Castle | handled | {5}, {T}, Sacrifice this land: Create a 3/4 colorless Gargoyle artifact creature token with flying. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Glacial Fortress | handled | This land enters tapped unless you control a Plains or an Island. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Glorious Charge | handled | Creatures you control get +1/+1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Goblin Chieftain | handled | Other Goblin creatures you control get +1/+1 and have haste. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Gorgon Flail | handled | Equipped creature gets +1/+1 and has deathtouch. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Griffin Sentinel | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
+| Honor of the Pure | handled | White creatures you control get +1/+1. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Howling Banshee | handled | When this creature enters, each player loses 3 life. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Ice Cage | handled | Enchanted creature can't attack or block, and its activated abilities can't be activated. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Illusionary Servant | handled | When this creature becomes the target of a spell or ability, sacrifice it. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Kalonian Behemoth | handled | Shroud | models/game.py (Game.shroud_refusal), machines/targeting.py (TargetingProfile._check_shroud, CR 702.18a) | Y/-/- | not_tested |
 | Kelinore Bat | handled | Flying | machines/combat.py | Y/-/- | not_tested |
 | Lightwielder Paladin | handled | Whenever this creature deals combat damage to a player, you may exile target black or red permanent that player controls. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Lurking Predators | handled | Whenever an opponent casts a spell, reveal the top card of your library. If it's a creature card, put it onto the battlefield. Otherwise, you may put that card  | the engine reads this text and performs it | Y/-/- | not_tested |
+| Magebane Armor | handled | Equipped creature gets +2/+4 and loses flying. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Magma Phoenix | handled | When this creature dies, it deals 3 damage to each creature and each player. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Merfolk Sovereign | handled | Other Merfolk creatures you control get +1/+1. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Mind Control | handled | You control enchanted creature. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -90,6 +86,7 @@
 | Oakenform | handled | Enchanted creature gets +3/+3. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Planar Cleansing | handled | Destroy all nonland permanents. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Regenerate | handled | Regenerate target creature. (The next time that creature would be destroyed this turn, instead tap it, remove it from combat, and heal all damage on it.) | the engine reads this text and performs it | Y/-/- | not_tested |
+| Rhox Pikemaster | handled | Other Soldier creatures you control have first strike. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Rootbound Crag | handled | This land enters tapped unless you control a Mountain or a Forest. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Sanguine Bond | handled | Whenever you gain life, target opponent loses that much life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Seismic Strike | handled | Seismic Strike deals damage to target creature equal to the number of Mountains you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -116,13 +113,14 @@
 ## Fully supported
 
 <details>
-<summary>25 cards</summary>
+<summary>28 cards</summary>
 
 - Acidic Slime
 - Act of Treason
 - Baneslayer Angel
 - Burning Inquiry
 - Child of Night
+- Convincing Mirage
 - Divination
 - Dread Warlock
 - Elite Vanguard
@@ -131,6 +129,7 @@
 - Great Sable Stag
 - Guardian Seraph
 - Harm's Way
+- Indestructibility
 - Inferno Elemental
 - Jackal Familiar
 - Lifelink
@@ -142,6 +141,7 @@
 - Sign in Blood
 - Silence
 - Sleep
+- Vampire Nocturnus
 - Yawning Fissure
 
 </details>
@@ -150,23 +150,14 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| as long as the top card of your library is black, ~ and other vampire creatures you control get +N/+N and have flying. | 1 | Vampire Nocturnus | m10 |
 | at the beginning of your upkeep, choose target nonland permanent you control and up to two target nonland permanents you don't control. destroy one of them at r | 1 | Capricious Efreet | m10 |
 | at the beginning of your upkeep, sacrifice a creature other than ~, then each opponent loses life equal to the sacrificed creature"..."t sacrifice a creature, t | 1 | Xathrid Demon | m10 |
-| enchanted land is the chosen type. | 1 | Convincing Mirage | m10 |
-| enchanted permanent has indestructible. | 1 | Indestructibility | m10 |
-| equipped creature gets +N/+N and loses flying. | 1 | Magebane Armor | m10 |
-| other goblin creatures you control get +N/+N and have haste. | 1 | Goblin Chieftain | m10 |
-| other soldier creatures you control get +N/+N and have vigilance. | 1 | Captain of the Watch | m10 |
-| other soldier creatures you control have first strike. | 1 | Rhox Pikemaster | m10 |
 | put target creature card from a graveyard onto the battlefield under your control. that creature is a black zombie in addition to its other colors and types. | 1 | Rise from the Grave | m10 |
 | return all artifact and enchantment cards from all graveyards to the battlefield under their owners' control. (auras with nothing to enchant remain in graveyard | 1 | Open the Vaults | m10 |
-| when enchanted creature becomes the target of a spell or ability, destroy ~. | 1 | Ice Cage | m10 |
 | when ~ enters, target forest becomes a N/N green treefolk creature for as long as ~ remains on the battlefield. it's still a land. | 1 | Awakener Druid | m10 |
 | whenever a +N/+N counter is removed from ~, put two +N/+N counters on it at the beginning of the next end step. | 1 | Protean Hydra | m10 |
 | whenever a player casts an instant or sorcery spell, each other player copies that spell. each of those players may choose new targets for their copy. | 1 | Hive Mind | m10 |
 | whenever ~ deals combat damage to a player, search that player"..."t have that name, you may put it onto the battlefield under your control. then that player sh | 1 | Sphinx Ambassador | m10 |
-| white creatures you control get +N/+N. | 1 | Honor of the Pure | m10 |
 | {M}, sacrifice ~: choose up to seven face-up exiled cards you own. exile all the cards from your library, then put the chosen cards on top of your library. | 1 | Mirror of Fate | m10 |
 | {M}: tap all untapped wolf creatures you control. each wolf tapped ~ deals damage equal to its power to target creature. that creature deals damage equal to its | 1 | Master of the Wild Hunt | m10 |
 | {M}: target creature an opponent controls attacks you ~ if able. | 1 | Alluring Siren | m10 |

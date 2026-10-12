@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 11 | 31.4% |
+| Tested | 13 | 37.1% |
 | Works (untested) | 18 | 51.4% |
-| Partial (unaudited) | 1 | 2.9% |
-| Not working | 5 | 14.3% |
+| Partial (unaudited) | 0 | 0.0% |
+| Not working | 4 | 11.4% |
 
 ## Cards needing work
 
@@ -30,8 +30,6 @@
 | Kjeldoran Royal Guard | silent | {T}: All combat damage that would be dealt to you by unblocked creatures this turn is dealt to this creature instead. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Merieke Ri Berit | silent | {T}: Gain control of target creature for as long as you control Merieke Ri Berit. When Merieke Ri Berit leaves the battlefield or becomes untapped, destroy that | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Orcish Librarian | silent | {R}, {T}: Look at the top eight cards of your library. Exile four of them at random, then put the rest on top of your library in any order. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Wrath of Marit Lage | silent | When this enchantment enters, tap all red creatures. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Zur's Weirding | unaudited | Players play with their hands revealed. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Abyssal Specter | handled | Whenever this creature deals damage to a player, that player discards a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Adarkar Wastes | handled |  |  | Y/Y/- | not_tested |
 | Balduvian Barbarians | handled |  |  | Y/-/- | not_tested |
@@ -54,7 +52,7 @@
 ## Fully supported
 
 <details>
-<summary>11 cards</summary>
+<summary>13 cards</summary>
 
 - Enduring Renewal
 - Goblin Snowman
@@ -67,6 +65,8 @@
 - Snow-Covered Island
 - Snow-Covered Mountain
 - Vexing Arcanix
+- Wrath of Marit Lage
+- Zur's Weirding
 
 </details>
 
@@ -74,8 +74,6 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| players play with their hands revealed. | 1 | Zur's Weirding | ice |
-| when ~ enters, tap all red creatures. | 1 | Wrath of Marit Lage | ice |
 | {M}, {M}, sacrifice ~: search target player's library for three cards and exile them. then that player shuffles. | 1 | Jester's Cap | ice |
 | {M}, {M}: look at the top eight cards of your library. exile four of them at random, then put the rest on top of your library in any order. | 1 | Orcish Librarian | ice |
 | {M}: all combat damage that would be dealt to you by unblocked creatures ~ is dealt to ~ instead. | 1 | Kjeldoran Royal Guard | ice |

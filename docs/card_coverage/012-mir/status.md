@@ -17,18 +17,16 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 2 | 6.5% |
-| Works (untested) | 21 | 67.7% |
+| Tested | 3 | 9.7% |
+| Works (untested) | 22 | 71.0% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 8 | 25.8% |
+| Not working | 6 | 19.4% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
-| Celestial Dawn | silent | Lands you control are Plains. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Early Harvest | silent | Target player untaps all basic lands they control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Maro | silent | Maro's power and toughness are each equal to the number of cards in your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Mind Bend | silent | Change the text of target permanent by replacing all instances of one color word with another or one basic land type with another. (For example, you may change  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sacred Mesa | silent | At the beginning of your upkeep, sacrifice this enchantment unless you sacrifice a Pegasus. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Stupor | silent | Target opponent discards a card at random, then discards a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -42,6 +40,7 @@
 | Giant Mantis | handled | Reach | machines/combat.py | Y/Y/- | not_tested |
 | Goblin Elite Infantry | handled | Whenever this creature blocks or becomes blocked, it gets -1/-1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Hammer of Bogardan | handled | Hammer of Bogardan deals 3 damage to any target. {2}{R}{R}{R}: Return this card from your graveyard to your hand. Activate only during your upkeep. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Maro | handled | Maro's power and toughness are each equal to the number of cards in your hand. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Patagia Golem | handled | {3}: This creature gains flying until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Phyrexian Vault | handled | {2}, {T}, Sacrifice a creature: Draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Rampant Growth | handled | Search your library for a basic land card, put that card onto the battlefield tapped, then shuffle. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -59,8 +58,9 @@
 ## Fully supported
 
 <details>
-<summary>2 cards</summary>
+<summary>3 cards</summary>
 
+- Celestial Dawn
 - Cursed Totem
 - Pacifism
 
@@ -73,11 +73,9 @@
 | at the beginning of your upkeep, sacrifice ~ unless you sacrifice a pegasus. | 1 | Sacred Mesa | mir |
 | change the text of target permanent by replacing all instances of one color word with another or one basic land type with another. (for example, you may change  | 1 | Mind Bend | mir |
 | destroy target creature. it can't be regenerated. its controller reveals cards from the top of their library until they reveal a creature card. the player puts  | 1 | Polymorph | mir |
-| lands you control are plains. | 1 | Celestial Dawn | mir |
 | target opponent discards a card at random, then discards a card. | 1 | Stupor | mir |
 | target player untaps all basic lands they control. | 1 | Early Harvest | mir |
 | {M}, {M}, sacrifice ~: search target opponent"..."t played it, put it into its owner's graveyard. | 1 | Grinning Totem | mir |
-| ~'s power and toughness are each equal to the number of cards in your hand. | 1 | Maro | mir |
 
 ## Notes
 

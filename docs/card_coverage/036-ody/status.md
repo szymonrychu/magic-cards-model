@@ -17,9 +17,9 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 10 | 19.6% |
-| Works (untested) | 33 | 64.7% |
-| Partial (unaudited) | 1 | 2.0% |
+| Tested | 12 | 23.5% |
+| Works (untested) | 32 | 62.7% |
+| Partial (unaudited) | 0 | 0.0% |
 | Not working | 7 | 13.7% |
 
 ## Cards needing work
@@ -33,7 +33,6 @@
 | Haunting Echoes | silent | Exile all cards from target player's graveyard other than basic land cards. For each card exiled this way, search that player's library for all cards with the s | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Time Stretch | silent | Target player takes two extra turns after this one. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Squirrel Mob | notice | This creature gets +1/+1 for each other Squirrel on the battlefield. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Ground Seal | unaudited | Cards in graveyards can't be the targets of spells or abilities. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Afflict | handled | Target creature gets -1/-1 until end of turn. Draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Auramancer | handled | When this creature enters, you may return target enchantment card from your graveyard to your hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Aven Cloudchaser | handled | When this creature enters, destroy target enchantment. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -53,7 +52,6 @@
 | Firebolt | handled | Firebolt deals 2 damage to any target. Flashback {4}{R} (You may cast this card from your graveyard for its flashback cost. Then exile it.) | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ivy Elemental | handled | This creature enters with X +1/+1 counters on it. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Kamahl, Pit Fighter | handled | {T}: Kamahl deals 3 damage to any target. | the engine reads this text and performs it | Y/-/- | not_tested |
-| Mindslicer | handled | When this creature dies, each player discards their hand. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Mortivore | handled | Mortivore's power and toughness are each equal to the number of creature cards in all graveyards. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Mystic Enforcer | handled | Threshold — As long as there are seven or more cards in your graveyard, this creature gets +3/+3 and has flying. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Nantuko Disciple | handled | {G}, {T}: Target creature gets +2/+2 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -71,14 +69,16 @@
 ## Fully supported
 
 <details>
-<summary>10 cards</summary>
+<summary>12 cards</summary>
 
 - Barbarian Ring
 - Battle of Wits
 - Diabolic Tutor
 - Ember Beast
+- Ground Seal
 - Magnivore
 - Millikin
+- Mindslicer
 - Mirari
 - Peek
 - Syncopate
@@ -90,7 +90,6 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| cards in graveyards can't be the targets of spells or abilities. | 1 | Ground Seal | ody |
 | exile all cards from target player"..."s library for all cards with the same name as that card and exile them. then that player shuffles. | 1 | Haunting Echoes | ody |
 | gain control of target aura that's attached to a permanent. attach it to another permanent it can enchant. | 1 | Aura Graft | ody |
 | tap all creatures without flying. | 1 | Deluge | ody |

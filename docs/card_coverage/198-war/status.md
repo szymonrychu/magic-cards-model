@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 36 | 14.8% |
-| Works (untested) | 146 | 59.8% |
-| Partial (unaudited) | 5 | 2.0% |
-| Not working | 57 | 23.4% |
+| Tested | 41 | 16.8% |
+| Works (untested) | 149 | 61.1% |
+| Partial (unaudited) | 0 | 0.0% |
+| Not working | 54 | 22.1% |
 
 ## Cards needing work
 
@@ -33,9 +33,7 @@
 | Domri, Anarch of Bolas | silent | +1: Add {R} or {G}. Creature spells you cast this turn can't be countered. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Dovin, Hand of Control | silent | −1: Until your next turn, prevent all damage that would be dealt to and dealt by target permanent an opponent controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Dreadhorde Arcanist | silent | Whenever this creature attacks, you may cast target instant or sorcery card with mana value less than or equal to this creature's power from your graveyard with | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Dreadhorde Twins | silent | Zombie tokens you control have trample. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Emergence Zone | silent | {1}, {T}, Sacrifice this land: You may cast spells this turn as though they had flash. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Eternal Skylord | silent | Zombie tokens you control have flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Fblthp, the Lost | silent | When Fblthp enters, draw a card. If it entered from your library or was cast from your library, draw two cards instead. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Finale of Devastation | silent | Search your library and/or graveyard for a creature card with mana value X or less and put it onto the battlefield. If you search your library this way, shuffle | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Finale of Promise | silent | You may cast up to one target instant card and/or up to one target sorcery card from your graveyard each with mana value X or less without paying their mana cos | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -76,18 +74,12 @@
 | Ugin, the Ineffable | silent | +1: Exile the top card of your library face down and look at it. Create a 2/2 colorless Spirit creature token. When that token leaves the battlefield, put the e | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Vivien's Grizzly | silent | {3}{G}: Look at the top card of your library. If it's a creature or planeswalker card, you may reveal it and put it into your hand. If you don't put the card in | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Vivien, Champion of the Wilds | silent | +1: Until your next turn, up to one target creature gains reach and vigilance. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Vizier of the Scorpion | silent | Zombie tokens you control have deathtouch. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Widespread Brutality | silent | Amass Zombies 2, then the Army you amassed deals damage equal to its power to each non-Army creature. (To amass Zombies 2, put two +1/+1 counters on an Army you | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Awakening of Vitu-Ghazi | notice | Put nine +1/+1 counters on target land you control. It becomes a legendary 0/0 Elemental creature with haste named Vitu-Ghazi. It's still a land. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Planewide Celebration | notice | Choose four. You may choose the same mode more than once. • Create a 2/2 Citizen creature token that's all colors. • Return target permanent card from your grav | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Spark Double | notice | You may have this creature enter as a copy of a creature or planeswalker you control, except it enters with an additional +1/+1 counter on it if it's a creature | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Teferi's Time Twist | notice | Exile target permanent you control. Return that card to the battlefield under its owner's control at the beginning of the next end step. If it enters as a creat | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Topple the Statue | notice | Tap target permanent. If it's an artifact, destroy it. Draw a card. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Gleaming Overseer | unaudited | Zombie tokens you control have hexproof and menace. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Huatli, the Sun's Heart | unaudited | Each creature you control assigns combat damage equal to its toughness rather than its power. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Jiang Yanggu, Wildcrafter | unaudited | Each creature you control with a +1/+1 counter on it has "{T}: Add one mana of any color." | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Kasmina's Transmutation | unaudited | Enchanted creature loses all abilities and has base power and toughness 1/1. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Tomik, Distinguished Advokist | unaudited | Lands on the battlefield and land cards in graveyards can't be the targets of spells or abilities your opponents control. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Ahn-Crop Invader | handled | During your turn, this creature has first strike. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Aid the Fallen | handled | Choose one or both — • Return target creature card from your graveyard to your hand. • Return target planeswalker card from your graveyard to your hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Angrath's Rampage | handled | Choose one — • Target player sacrifices an artifact of their choice. • Target player sacrifices a creature of their choice. • Target player sacrifices a planesw | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -130,11 +122,13 @@
 | Dovin's Veto | handled | This spell can't be countered. Counter target noncreature spell. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Dreadhorde Butcher | handled | Whenever this creature deals combat damage to a player or planeswalker, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Dreadhorde Invasion | handled | At the beginning of your upkeep, you lose 1 life and amass Zombies 1. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Dreadhorde Twins | handled | When this creature enters, amass Zombies 2. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Dreadmalkin | handled | {2}{B}, Sacrifice another creature or planeswalker: Put two +1/+1 counters on this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Duskmantle Operative | handled | This creature can't be blocked by creatures with power 4 or greater. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Elite Guardmage | handled | When this creature enters, you gain 3 life and draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Enforcer Griffin | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
 | Erratic Visionary | handled | {1}{U}, {T}: Draw a card, then discard a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Eternal Skylord | handled | When this creature enters, amass Zombies 2. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Eternal Taskmaster | handled | This creature enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Evolution Sage | handled | Landfall — Whenever a land you control enters, proliferate. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Finale of Glory | handled | Create X 2/2 white Soldier creature tokens with vigilance. If X is 10 or more, also create X 4/4 white Angel creature tokens with flying and vigilance. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -228,6 +222,7 @@
 | Unlikely Aid | handled | Target creature gets +2/+0 and gains indestructible until end of turn. (Damage and effects that say "destroy" don't destroy it.) | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Vampire Opportunist | handled | {6}{B}: Each opponent loses 2 life and you gain 2 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Vivien's Arkbow | handled | {X}, {T}, Discard a card: Look at the top X cards of your library. You may put a creature card with mana value X or less from among them onto the battlefield. P | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Vizier of the Scorpion | handled | When this creature enters, amass Zombies 1. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Vraska's Finisher | handled | When this creature enters, destroy target creature or planeswalker an opponent controls that was dealt damage this turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Vraska, Swarm's Eminence | handled | Whenever a creature you control with deathtouch deals damage to a player or planeswalker, put a +1/+1 counter on that creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Wall of Runes | handled | When this creature enters, scry 1. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -238,7 +233,7 @@
 ## Fully supported
 
 <details>
-<summary>36 cards</summary>
+<summary>41 cards</summary>
 
 - Arboreal Grazer
 - Arlinn, Voice of the Pack
@@ -253,12 +248,16 @@
 - Enter the God-Eternals
 - Feather, the Redeemed
 - Finale of Eternity
+- Gleaming Overseer
 - God-Eternal Kefnet
 - Heartwarming Redemption
+- Huatli, the Sun's Heart
 - Ilharg, the Raze-Boar
 - Jace, Wielder of Mysteries
 - Jaya, Venerated Firemage
+- Jiang Yanggu, Wildcrafter
 - Karn, the Great Creator
+- Kasmina's Transmutation
 - Kronch Wrangler
 - Mayhem Devil
 - Mowu, Loyal Companion
@@ -274,6 +273,7 @@
 - Sorin, Vengeful Bloodlord
 - Storm the Citadel
 - Teferi, Time Raveler
+- Tomik, Distinguished Advokist
 - Turret Ogre
 - Ugin's Conjurant
 
@@ -295,15 +295,11 @@
 | destroy any number of target planeswalkers. choose a planeswalker you control. put two loyalty counters on it for each planeswalker destroyed ~. | 1 | The Elderspell | war |
 | draw N cards. if N is N or more, instead shuffle your graveyard into your library, draw N cards, untap up to five lands, and you have no maximum hand size for t | 1 | Finale of Revelation | war |
 | during your turn, creatures you control have first strike and equip abilities you activate cost {M} less to activate. | 1 | Nahiri, Storm of Stone | war |
-| each creature you control assigns combat damage equal to its toughness rather than its power. | 1 | Huatli, the Sun's Heart | war |
-| each creature you control with a +N/+N counter on it has "..." | 1 | Jiang Yanggu, Wildcrafter | war |
 | each opponent sacrifices a creature of their choice. if you control a liliana planeswalker, each opponent also discards a card. | 1 | Liliana's Triumph | war |
 | each player chooses a creature or planeswalker they control, then sacrifices the rest. players can't cast creature or planeswalker spells until the end of your  | 1 | Single Combat | war |
 | each player mills four cards. return up to two instant and/or sorcery cards from your graveyard to your hand. exile ~. | 1 | Bond of Insight | war |
-| enchanted creature loses all abilities and has base power and toughness N/N. | 1 | Kasmina's Transmutation | war |
 | exile all multicolored permanents. | 1 | Ravnica at War | war |
 | exile target permanent you control. return that card to the battlefield under its owner's control at the beginning of the next end step. if it enters as a creat | 1 | Teferi's Time Twist | war |
-| lands on the battlefield and land cards in graveyards can't be the targets of spells or abilities your opponents control. | 1 | Tomik, Distinguished Advokist | war |
 | put nine +N/+N counters on target land you control. it becomes a legendary N/N elemental creature with haste named vitu-ghazi. it's still a land. | 1 | Awakening of Vitu-Ghazi | war |
 | put target creature with flying on the bottom of its owner's library. | 1 | Forced Landing | war |
 | remove up to five counters from target artifact, creature, planeswalker, or opponent. | 1 | Price of Betrayal | war |
@@ -331,10 +327,6 @@
 | whenever ~ attacks, you may cast target instant or sorcery card with mana value less than or equal to ~ power from your graveyard without paying its mana cost.  | 1 | Dreadhorde Arcanist | war |
 | you may cast up to one target instant card and/or up to one target sorcery card from your graveyard each with mana value N or less without paying their mana cos | 1 | Finale of Promise | war |
 | you may have ~ enter as a copy of a creature or planeswalker you control, except it enters with an additional +N/+N counter on it if it"..."s a planeswalker, an | 1 | Spark Double | war |
-| zombie tokens you control have deathtouch. | 1 | Vizier of the Scorpion | war |
-| zombie tokens you control have flying. | 1 | Eternal Skylord | war |
-| zombie tokens you control have hexproof and menace. | 1 | Gleaming Overseer | war |
-| zombie tokens you control have trample. | 1 | Dreadhorde Twins | war |
 | {M}, {M}, sacrifice ~: add two mana of different colors. | 1 | Guild Globe | war |
 | {M}, {M}, sacrifice ~: you may cast spells ~ as though they had flash. | 1 | Emergence Zone | war |
 | {M}, {M}: add two mana of different colors. spend ~ only to cast planeswalker spells. | 1 | Interplanar Beacon | war |

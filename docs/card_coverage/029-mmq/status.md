@@ -17,9 +17,9 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 7 | 15.2% |
+| Tested | 8 | 17.4% |
 | Works (untested) | 26 | 56.5% |
-| Partial (unaudited) | 1 | 2.2% |
+| Partial (unaudited) | 0 | 0.0% |
 | Not working | 12 | 26.1% |
 
 ## Cards needing work
@@ -38,7 +38,6 @@
 | Deathgazer | notice | Whenever this creature blocks or becomes blocked by a nonblack creature, destroy that creature at end of combat. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Sever Soul | notice | Destroy target nonblack creature. It can't be regenerated. You gain life equal to its toughness. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Vendetta | notice | Destroy target nonblack creature. It can't be regenerated. You lose life equal to that creature's toughness. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Conspiracy | unaudited | Creatures you control are the chosen type. The same is true for creature spells you control and creature cards you own that aren't on the battlefield. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Arms Dealer | handled | {1}{R}, Sacrifice a Goblin: This creature deals 4 damage to target creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ballista Squad | handled | {X}{W}, {T}: This creature deals X damage to target attacking or blocking creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Battle Rampart | handled | {T}: Target creature gains haste until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -69,11 +68,12 @@
 ## Fully supported
 
 <details>
-<summary>7 cards</summary>
+<summary>8 cards</summary>
 
 - Arrest
 - Cho-Manno, Revolutionary
 - Cloud Sprite
+- Conspiracy
 - Distorting Lens
 - Ivory Mask
 - Last Breath
@@ -87,7 +87,6 @@
 |---|---|---|---|
 | all lands become N/N creatures until end of turn. they're still lands. | 1 | Natural Affinity | mmq |
 | at the beginning of your upkeep, if ~ is the only creature card in your graveyard, you may return ~ to the battlefield. | 1 | Nether Spirit | mmq |
-| creatures you control are the chosen type. the same is true for creature spells you control and creature cards you own that aren't on the battlefield. | 1 | Conspiracy | mmq |
 | destroy target nonblack creature. it can"..."s toughness. | 1 | Vendetta | mmq |
 | destroy target nonblack creature. it can't be regenerated. you gain life equal to its toughness. | 1 | Sever Soul | mmq |
 | exile N target creature cards from your graveyard. for each creature card exiled ~, create a N/N black zombie creature token. | 1 | Midnight Ritual | mmq |

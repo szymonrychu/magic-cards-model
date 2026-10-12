@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 45 | 19.6% |
-| Works (untested) | 131 | 57.0% |
-| Partial (unaudited) | 6 | 2.6% |
-| Not working | 48 | 20.9% |
+| Tested | 52 | 22.6% |
+| Works (untested) | 132 | 57.4% |
+| Partial (unaudited) | 0 | 0.0% |
+| Not working | 46 | 20.0% |
 
 ## Cards needing work
 
@@ -38,7 +38,6 @@
 | Gift of Growth | silent | Kicker {2} (You may pay an additional {2} as you cast this spell.) Untap target creature. It gets +2/+2 until end of turn. If this spell was kicked, that creatu | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Haphazard Bombardment | silent | When this enchantment enters, choose four nonenchantment permanents you don't control and put an aim counter on each of them. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Helm of the Host | silent | At the beginning of combat on your turn, create a token that's a copy of equipped creature, except the token isn't legendary. That token gains haste. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Jousting Lance | silent | During your turn, equipped creature has first strike. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Kamahl's Druidic Vow | silent | (You may cast a legendary sorcery only if you control a legendary creature or planeswalker.) Look at the top X cards of your library. You may put any number of  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Karn's Temporal Sundering | silent | (You may cast a legendary sorcery only if you control a legendary creature or planeswalker.) Target player takes an extra turn after this one. Return up to one  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Karn, Scion of Urza | silent | +1: Reveal the top two cards of your library. An opponent chooses one of them. Put that card into your hand and exile the other with a silver counter on it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -54,7 +53,6 @@
 | Slinn Voda, the Rising Deep | silent | When Slinn Voda enters, if it was kicked, return all creatures to their owners' hands except for Merfolk, Krakens, Leviathans, Octopuses, and Serpents. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Song of Freyalise | silent | I, II — Until your next turn, creatures you control gain "{T}: Add one mana of any color." | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sylvan Awakening | silent | Until your next turn, all lands you control become 2/2 Elemental creatures with reach, indestructible, and haste. They're still lands. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Teferi's Sentinel | silent | As long as you control a Teferi planeswalker, this creature gets +4/+0. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Teferi, Hero of Dominaria | silent | −3: Put target nonland permanent into its owner's library third from the top. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Thran Temporal Gateway | silent | {4}, {T}: You may put a historic permanent card from your hand onto the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Time of Ice | silent | III — Return all tapped creatures to their owners' hands. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -74,12 +72,6 @@
 | Tempest Djinn | notice | This creature gets +1/+0 for each basic Island you control. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Thallid Omnivore | notice | {1}, Sacrifice another creature: This creature gets +2/+2 until end of turn. If a Saproling was sacrificed this way, you gain 2 life. | unparsed remainder: If a Saproling was sacrificed this way, you gain 2 life. | Y/Y/- | not_working |
 | Valduk, Keeper of the Flame | notice | At the beginning of combat on your turn, for each Aura and Equipment attached to Valduk, create a 3/1 red Elemental creature token with trample and haste. Exile | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Curator's Ward | unaudited | Enchanted permanent has hexproof. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| In Bolas's Clutches | unaudited | Enchanted permanent is legendary. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Oath of Teferi | unaudited | You may activate the loyalty abilities of planeswalkers you control twice each turn rather than only once. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Rat Colony | unaudited | A deck can have any number of cards named Rat Colony. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Shalai, Voice of Plenty | unaudited | You, planeswalkers you control, and other creatures you control have hexproof. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Shanna, Sisay's Legacy | unaudited | Shanna can't be the target of abilities your opponents control. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Academy Journeymage | handled | This spell costs {1} less to cast if you control a Wizard. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Adeliz, the Cinder Wind | handled | Whenever you cast an instant or sorcery spell, Wizards you control get +1/+1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Amaranthine Wall | handled | {2}: This creature gains indestructible until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -140,6 +132,7 @@
 | Jaya's Immolating Inferno | handled | (You may cast a legendary sorcery only if you control a legendary creature or planeswalker.) Jaya's Immolating Inferno deals X damage to each of up to three tar | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Jhoira's Familiar | handled | Historic spells you cast cost {1} less to cast. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Jhoira, Weatherlight Captain | handled | Whenever you cast a historic spell, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Jousting Lance | handled | Equipped creature gets +2/+0. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Karplusan Hound | handled | Whenever this creature attacks, if you control a Chandra planeswalker, this creature deals 2 damage to any target. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Kazarov, Sengir Pureblood | handled | Whenever a creature an opponent controls is dealt damage, put a +1/+1 counter on Kazarov. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Keldon Overseer | handled | When this creature enters, if it was kicked, gain control of target creature until end of turn. Untap that creature. It gains haste until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -185,11 +178,11 @@
 | Sporecrown Thallid | handled | Each other creature you control that's a Fungus or Saproling gets +1/+1. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Steel Leaf Champion | handled | This creature can't be blocked by creatures with power 2 or less. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Tatyova, Benthic Druid | handled | Landfall — Whenever a land you control enters, you gain 1 life and draw a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Teferi's Sentinel | handled | As long as you control a Teferi planeswalker, this creature gets +4/+0. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Temporal Machinations | handled | Return target creature to its owner's hand. If you control an artifact, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Territorial Allosaurus | handled | When this creature enters, if it was kicked, it fights another target creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Teshar, Ancestor's Apostle | handled | Whenever you cast a historic spell, return target creature card with mana value 3 or less from your graveyard to the battlefield. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Thallid Soothsayer | handled | {2}, Sacrifice a creature: Draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| The Antiquities War | handled | I, II — Look at the top five cards of your library. You may reveal an artifact card from among them and put it into your hand. Put the rest on the bottom of you | the engine reads this text and performs it | Y/Y/- | not_tested |
 | The Eldest Reborn | handled | I — Each opponent sacrifices a creature or planeswalker of their choice. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | The Mending of Dominaria | handled | I, II — Mill two cards, then you may return a creature card from your graveyard to your hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | The Mirari Conjecture | handled | I — Return target instant card from your graveyard to your hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -215,7 +208,7 @@
 ## Fully supported
 
 <details>
-<summary>45 cards</summary>
+<summary>52 cards</summary>
 
 - Academy Drake
 - Adamant Will
@@ -227,6 +220,7 @@
 - Blessing of Belzenlok
 - Bloodstone Goblin
 - Cabal Stronghold
+- Curator's Ward
 - Damping Sphere
 - Darigaaz Reincarnated
 - Gaea's Protector
@@ -235,6 +229,7 @@
 - Hallar, the Firefletcher
 - Healing Grace
 - History of Benalia
+- In Bolas's Clutches
 - Jaya Ballard
 - Jodah, Archmage Eternal
 - Josu Vess, Lich Knight
@@ -245,17 +240,22 @@
 - Mox Amber
 - Muldrotha, the Gravetide
 - Naban, Dean of Iteration
+- Oath of Teferi
 - Powerstone Shard
 - Precognition Field
 - Radiating Lightning
 - Raff Capashen, Ship's Mage
+- Rat Colony
 - Rona, Disciple of Gix
 - Sentinel of the Pearl Trident
+- Shalai, Voice of Plenty
+- Shanna, Sisay's Legacy
 - Shield of the Realm
 - Squee, the Immortal
 - Stronghold Confessor
 - Teferi, Timebender
 - Tetsuko Umezawa, Fugitive
+- The Antiquities War
 - The First Eruption
 - The Flame of Keld
 - Torgaar, Famine Incarnate
@@ -274,20 +274,15 @@
 | (you may cast a legendary sorcery only if you control a legendary creature or planeswalker.) return all legendary permanent cards from your graveyard to the bat | 1 | Primevals' Glorious Rebirth | dom |
 | (you may cast a legendary sorcery only if you control a legendary creature or planeswalker.) target player takes an extra turn after ~. return up to one target  | 1 | Karn's Temporal Sundering | dom |
 | +N: reveal the top two cards of your library. an opponent chooses one of them. put that card into your hand and exile the other with a silver counter on it. | 1 | Karn, Scion of Urza | dom |
-| a deck can have any number of cards named ~. | 1 | Rat Colony | dom |
 | as long as there are two or more instant and/or sorcery cards in your graveyard, ~ gets +N/+N and has haste. | 1 | Ghitu Lavarunner | dom |
-| as long as you control a teferi planeswalker, ~ gets +N/+N. | 1 | Teferi's Sentinel | dom |
 | at the beginning of combat on your turn, create a token that"..."t legendary. that token gains haste. | 1 | Helm of the Host | dom |
 | at the beginning of combat on your turn, for each aura and equipment attached to valduk, create a N/N red elemental creature token with trample and haste. exile | 1 | Valduk, Keeper of the Flame | dom |
 | counter target noncreature spell. untap up to three lands. | 1 | Unwind | dom |
 | creatures you control with first strike have double strike. | 1 | Kwende, Pride of Femeref | dom |
 | destroy target land. up to two target creatures can't block ~. | 1 | Seismic Shift | dom |
-| during your turn, equipped creature has first strike. | 1 | Jousting Lance | dom |
 | each player returns two land cards from their graveyard to the battlefield. | 1 | Fall of the Thran | dom |
 | enchanted creature has base power and toughness N/N, has defender, loses all other abilities, and is a blue wall in addition to its other colors and types. | 1 | Deep Freeze | dom |
 | enchanted creature is legendary, gets +N/+N, and has flying, vigilance, and lifelink. | 1 | On Serra's Wings | dom |
-| enchanted permanent has hexproof. | 1 | Curator's Ward | dom |
-| enchanted permanent is legendary. | 1 | In Bolas's Clutches | dom |
 | exile all opponents' graveyards. | 1 | Phyrexian Scriptures | dom |
 | exile target creature. put two loyalty counters on a planeswalker you control. | 1 | Settle the Score | dom |
 | kicker {M} (you may pay an additional {M} as you cast ~.) create two N/N green saproling creature tokens. if ~ was kicked, create four of those tokens instead. | 1 | Saproling Migration | dom |
@@ -295,7 +290,6 @@
 | return all tapped creatures to their owners' hands. | 1 | Time of Ice | dom |
 | sacrifice ~: the chosen creature gains indestructible until end of turn. | 1 | Dauntless Bodyguard | dom |
 | search your library for two cards. put one into your hand and the other into your graveyard. then shuffle. | 1 | Final Parting | dom |
-| shanna can't be the target of abilities your opponents control. | 1 | Shanna, Sisay's Legacy | dom |
 | target creature you control with the greatest power gains flying, first strike, and lifelink until end of turn. | 1 | Triumph of Gerrard | dom |
 | until your next turn, all lands you control become N/N elemental creatures with reach, indestructible, and haste. they're still lands. | 1 | Sylvan Awakening | dom |
 | until your next turn, creatures you control gain "..." | 1 | Song of Freyalise | dom |
@@ -309,8 +303,6 @@
 | whenever you attack with three or more creatures, you may pay {M}{M}. if you do, return ~ from your graveyard to the battlefield tapped and attacking. | 1 | Warcry Phoenix | dom |
 | whenever ~ attacks, flip two coins. if both coins come up heads, ~ gains double strike until end of turn. if both coins come up tails, ~ gains menace until end  | 1 | Two-Headed Giant | dom |
 | whenever ~ blocks or becomes blocked by an equipped creature, destroy all equipment attached to that creature at end of combat. | 1 | Corrosive Ooze | dom |
-| you may activate the loyalty abilities of planeswalkers you control twice each turn rather than only once. | 1 | Oath of Teferi | dom |
-| you, planeswalkers you control, and other creatures you control have hexproof. | 1 | Shalai, Voice of Plenty | dom |
 | {M}, sacrifice another creature: ~ gets +N/+N until end of turn. if a saproling was sacrificed ~, you gain N life. | 1 | Thallid Omnivore | dom |
 | {M}, {M}: draw a card. then discard a card unless you exile a historic card from your graveyard. | 1 | Urza's Tome | dom |
 | {M}, {M}: you may put a historic permanent card from your hand onto the battlefield. | 1 | Thran Temporal Gateway | dom |

@@ -17,9 +17,9 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 24 | 13.1% |
+| Tested | 25 | 13.7% |
 | Works (untested) | 97 | 53.0% |
-| Partial (unaudited) | 1 | 0.5% |
+| Partial (unaudited) | 0 | 0.0% |
 | Not working | 61 | 33.3% |
 
 ## Cards needing work
@@ -87,7 +87,6 @@
 | Solitary Camel | notice | This creature has lifelink as long as you control a Desert or there is a Desert card in your graveyard. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Thorned Moloch | notice | This creature has first strike as long as it's attacking. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Vile Manifestation | notice | This creature gets +1/+0 for each card with cycling in your graveyard. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Overwhelming Splendor | unaudited | Creatures enchanted player controls lose all abilities and have base power and toughness 1/1. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Accursed Horde | handled | {1}{B}: Target attacking Zombie gains indestructible until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Aerial Guide | handled | Whenever this creature attacks, another target attacking creature gains flying until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ambuscade | handled | Target creature you control gets +1/+0 until end of turn. It deals damage equal to its power to target creature an opponent controls. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -189,7 +188,7 @@
 ## Fully supported
 
 <details>
-<summary>24 cards</summary>
+<summary>25 cards</summary>
 
 - Abandoned Sarcophagus
 - Abrade
@@ -208,6 +207,7 @@
 - Nissa's Defeat
 - Oketra's Avenger
 - Oketra's Last Mercy
+- Overwhelming Splendor
 - Pride Sovereign
 - Refuse // Cooperate
 - Sand Strangler
@@ -237,7 +237,6 @@
 | at the beginning of your upkeep, tap ~ unless you sacrifice another creature. | 1 | Apocalypse Demon | hou |
 | counter target blue spell. if it was a jace planeswalker spell, scry N. | 1 | Jace's Defeat | hou |
 | counter target spell unless its controller pays {M} for each card in your graveyard. cycling {M} ({M}, discard ~: draw a card.) | 1 | Countervailing Winds | hou |
-| creatures enchanted player controls lose all abilities and have base power and toughness N/N. | 1 | Overwhelming Splendor | hou |
 | creatures target opponent controls attack ~ if able. during that player"..."t untap. cycling {M} ({M}, discard ~: draw a card.) | 1 | Imaginary Threats | hou |
 | draw two cards. then discard a card unless you return a land you control to its owner's hand. | 1 | Tragic Lesson | hou |
 | equipped creature gets +N/+N and has afflict N. | 1 | Dagger of the Worthy | hou |

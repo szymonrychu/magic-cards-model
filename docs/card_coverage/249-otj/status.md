@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 40 | 15.4% |
-| Works (untested) | 130 | 50.2% |
-| Partial (unaudited) | 2 | 0.8% |
-| Not working | 87 | 33.6% |
+| Tested | 42 | 16.2% |
+| Works (untested) | 135 | 52.1% |
+| Partial (unaudited) | 0 | 0.0% |
+| Not working | 82 | 31.7% |
 
 ## Cards needing work
 
@@ -42,7 +42,6 @@
 | Bucolic Ranch | silent | {3}, {T}: Look at the top card of your library. If it's a Mount card, you may reveal it and put it into your hand. If you don't put it into your hand, you may p | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Caustic Bronco | silent | Whenever this creature attacks, reveal the top card of your library and put it into your hand. You lose life equal to that card's mana value if this creature is | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Claim Jumper | silent | When this creature enters, if an opponent controls more lands than you, you may search your library for a Plains card and put it onto the battlefield tapped. Th | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Emergent Haunting | silent | At the beginning of your end step, if you haven't cast a spell from your hand this turn and this enchantment isn't a creature, it becomes a 3/3 Spirit creature  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Eriette, the Beguiler | silent | Whenever an Aura you control becomes attached to a nonland permanent an opponent controls with mana value less than or equal to that Aura's mana value, gain con | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
 | Ertha Jo, Frontier Mentor | silent | Whenever you activate an ability that targets a creature or player, copy that ability. You may choose new targets for the copy. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
 | Fblthp, Lost on the Range | silent | Plot | no machine in the engine executes this keyword | Y/Y/Y | not_working |
@@ -56,7 +55,6 @@
 | Luxurious Locomotive | silent | Whenever this Vehicle attacks, create a Treasure token for each creature that crewed it this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Magebane Lizard | silent | Whenever a player casts a noncreature spell, this creature deals damage to that player equal to the number of noncreature spells they've cast this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Make Your Own Luck | silent | Look at the top three cards of your library. You may exile a nonland card from among them. If you do, it becomes plotted. Put the rest into your hand. (You may  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Mobile Homestead | silent | This Vehicle has haste as long as you control a Mount. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Nurturing Pixie | silent | When this creature enters, return up to one target non-Faerie, nonland permanent you control to its owner's hand. If a permanent was returned this way, put a +1 | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Obeka, Splitter of Seconds | silent | Whenever Obeka deals combat damage to a player, you get that many additional upkeep steps after this phase. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Oko, the Ringleader | silent | −5: For each other nonland permanent you control, create a token that's a copy of that permanent. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -78,7 +76,6 @@
 | The Key to the Vault | silent | Whenever equipped creature deals combat damage to a player, look at that many cards from the top of your library. You may exile a nonland card from among them.  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Tinybones Joins Up | silent | Whenever a legendary creature you control enters, any number of target players each mill a card and lose 1 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Tinybones, the Pickpocket | silent | Whenever Tinybones deals combat damage to a player, you may cast target nonland permanent card from that player's graveyard, and mana of any type can be spent t | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Vadmir, New Blood | silent | As long as Vadmir has four or more +1/+1 counters on it, it has menace and lifelink. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Vraska, the Silencer | silent | Whenever a nontoken creature an opponent controls dies, you may pay {1}. If you do, return that card to the battlefield tapped under your control. It's a Treasu | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Aven Interrupter | notice | When this creature enters, exile target spell. It becomes plotted. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Breeches, the Blastmaker | notice | Whenever you cast your second spell each turn, you may sacrifice an artifact. If you do, flip a coin. When you win the flip, copy that spell. You may choose new | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
@@ -89,14 +86,12 @@
 | Desert's Due | notice | Target creature gets -2/-2 until end of turn. It gets an additional -1/-1 until end of turn for each Desert you control. | unparsed remainder: It gets an additional -1/-1 until end of turn for each Desert you control. | Y/Y/Y | not_working |
 | Fleeting Reflection | notice | Target creature you control gains hexproof until end of turn. Untap that creature. Until end of turn, it becomes a copy of up to one other target creature. | unparsed remainder: Untap that creature. Until end of turn, it becomes a copy of up to one other target creature. | Y/Y/Y | not_working |
 | Fortune, Loyal Steed | notice | Whenever Fortune attacks while saddled, at end of combat, exile it and up to one creature that saddled it this turn, then return those cards to the battlefield  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Full Steam Ahead | notice | Until end of turn, each creature you control gets +2/+2 and gains trample and "This creature can't be blocked by more than one creature." | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Getaway Glamer | notice | Spree (Choose one or more additional costs.) + {1} — Exile target nontoken creature. Return it to the battlefield under its owner's control at the beginning of  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Geyser Drake | notice | During turns other than yours, spells you cast cost {1} less to cast. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Ghired, Mirror of the Wilds | notice | Nontoken creatures you control have "{T}: Create a token that's a copy of target token you control that entered this turn." | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Gold Rush | notice | Create a Treasure token. Until end of turn, up to one target creature gets +2/+2 for each Treasure you control. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Great Train Heist | notice | Spree (Choose one or more additional costs.) + {2}{R} — Untap all creatures you control. If it's your combat phase, there is an additional combat phase after th | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Kaervek, the Punisher | notice | Whenever you commit a crime, exile up to one target black card from your graveyard and copy it. You may cast the copy. If you do, you lose 2 life. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Kellan Joins Up | notice | When Kellan Joins Up enters, you may exile a nonland card with mana value 3 or less from your hand. If you do, it becomes plotted. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Map the Frontier | notice | Search your library for up to two basic land cards and/or Desert cards, put them onto the battlefield tapped, then shuffle. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Mystical Tether | notice | You may cast this spell as though it had flash if you pay {2} more to cast it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | One Last Job | notice | Spree (Choose one or more additional costs.) + {2} — Return target creature card from your graveyard to the battlefield. + {1} — Return target Mount or Vehicle  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
@@ -113,8 +108,6 @@
 | Take the Fall | notice | Target creature gets -1/-0 until end of turn. It gets -4/-0 until end of turn instead if you control an outlaw. (Assassins, Mercenaries, Pirates, Rogues, and Wa | unparsed remainder: It gets -4/-0 until end of turn instead if you control an outlaw. Draw a card. | Y/Y/Y | not_working |
 | The Gitrog, Ravenous Ride | notice | Whenever The Gitrog deals combat damage to a player, you may sacrifice a creature that saddled it this turn. If you do, draw X cards, then put up to X land card | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Trash the Town | notice | Spree (Choose one or more additional costs.) + {2} — Put two +1/+1 counters on target creature. + {1} — Target creature gains trample until end of turn. + {1} — | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Jace Reawakened | unaudited | You can't cast Jace Reawakened during your first, second, or third turns of the game. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Miriam, Herd Whisperer | unaudited | During your turn, Mounts and Vehicles you control have hexproof. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Abraded Bluffs | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Akul the Unrepentant | handled | Sacrifice three other creatures: You may put a creature card from your hand onto the battlefield. Activate only as a sorcery and only once each turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Ambush Gigapede | handled | When this creature enters, target creature an opponent controls gets -2/-2 until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -148,6 +141,7 @@
 | Discerning Peddler | handled | When this creature enters, you may discard a card. If you do, draw a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Djinn of Fool's Fall | handled | Flying | machines/combat.py | Y/Y/Y | not_tested |
 | Double Down | handled | Whenever you cast an outlaw spell, copy that spell. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Emergent Haunting | handled | At the beginning of your end step, if you haven't cast a spell from your hand this turn and this enchantment isn't a creature, it becomes a 3/3 Spirit creature  | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Eriette's Lullaby | handled | Destroy target tapped creature. You gain 2 life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Eroded Canyon | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Explosive Derailment | handled | Spree (Choose one or more additional costs.) + {2} — Explosive Derailment deals 4 damage to target creature. + {2} — Destroy target artifact. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -158,6 +152,7 @@
 | Form a Posse | handled | Create X 1/1 red Mercenary creature tokens with "{T}: Target creature you control gets +1/+0 until end of turn. Activate only as a sorcery." | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Freestrider Lookout | handled | Whenever you commit a crime, look at the top five cards of your library. You may put a land card from among them onto the battlefield tapped. Put the rest on th | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Frontier Seeker | handled | When this creature enters, look at the top five cards of your library. You may reveal a Mount creature card or a Plains card from among them and put it into you | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Full Steam Ahead | handled | Until end of turn, each creature you control gets +2/+2 and gains trample and "This creature can't be blocked by more than one creature." | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Gila Courser | handled | Whenever this creature attacks while saddled, exile the top card of your library. Until the end of your next turn, you may play that card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Gold Pan | handled | When this Equipment enters, create a Treasure token. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Hardbristle Bandit | handled | Whenever you commit a crime, untap this creature. This ability triggers only once each turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -174,6 +169,7 @@
 | Jailbreak Scheme | handled | Spree (Choose one or more additional costs.) + {3} — Put a +1/+1 counter on target creature. It can't be blocked this turn. + {2} — Target artifact or creature' | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Jem Lightfoote, Sky Explorer | handled | At the beginning of your end step, if you haven't cast a spell from your hand this turn, draw a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Jolene, Plundering Pugilist | handled | Whenever you attack with one or more creatures with power 4 or greater, create a Treasure token. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Kellan Joins Up | handled | When Kellan Joins Up enters, you may exile a nonland card with mana value 3 or less from your hand. If you do, it becomes plotted. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Kraum, Violent Cacophony | handled | Whenever you cast your second spell each turn, put a +1/+1 counter on Kraum and draw a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Lassoed by the Law | handled | When this enchantment enters, exile target nonland permanent an opponent controls until this enchantment leaves the battlefield. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Lonely Arroyo | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -182,6 +178,7 @@
 | Marauding Sphinx | handled | Whenever you commit a crime, surveil 2. This ability triggers only once each turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Marchesa, Dealer of Death | handled | Whenever you commit a crime, you may pay {1}. If you do, look at the top two cards of your library. Put one of them into your hand and the other into your grave | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Mirage Mesa | handled | This land enters tapped. As it enters, choose a color. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Mobile Homestead | handled | This Vehicle has haste as long as you control a Mount. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Mourner's Surprise | handled | Return up to one target creature card from your graveyard to your hand. Create a 1/1 red Mercenary creature token with "{T}: Target creature you control gets +1 | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Nezumi Linkbreaker | handled | When this creature dies, create a 1/1 red Mercenary creature token with "{T}: Target creature you control gets +1/+0 until end of turn. Activate only as a sorce | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Nimble Brigand | handled | This creature can't be blocked if you've committed a crime this turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -236,6 +233,7 @@
 | Tumbleweed Rising | handled | Create an X/X green Elemental creature token, where X is the greatest power among creatures you control. Plot {2}{G} (You may pay {2}{G} and exile this card fro | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Unfortunate Accident | handled | Spree (Choose one or more additional costs.) + {2}{B} — Destroy target creature. + {1} — Create a 1/1 red Mercenary creature token with "{T}: Target creature yo | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Unscrupulous Contractor | handled | When this creature enters, you may sacrifice a creature. When you do, target player draws two cards and loses 2 life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Vadmir, New Blood | handled | Whenever you commit a crime, put a +1/+1 counter on Vadmir. This ability triggers only once each turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Vault Plunderer | handled | When this creature enters, target player draws a card and loses 1 life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Vengeful Townsfolk | handled | Whenever one or more other creatures you control die, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Vial Smasher, Gleeful Grenadier | handled | Whenever another outlaw you control enters, Vial Smasher deals 1 damage to target opponent. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -249,7 +247,7 @@
 ## Fully supported
 
 <details>
-<summary>40 cards</summary>
+<summary>42 cards</summary>
 
 - Armored Armadillo
 - Betrayal at the Vault
@@ -267,6 +265,7 @@
 - High Noon
 - Highway Robbery
 - Insatiable Avarice
+- Jace Reawakened
 - Kambal, Profiteering Mayor
 - Lavaspur Boots
 - Lilah, Undefeated Slickshot
@@ -275,6 +274,7 @@
 - Magda, the Hoardmaster
 - Metamorphic Blast
 - Mine Raider
+- Miriam, Herd Whisperer
 - Neutralize the Guards
 - Omenport Vigilante
 - Outcaster Greenblade
@@ -298,13 +298,10 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| as long as vadmir has four or more +N/+N counters on it, it has menace and lifelink. | 1 | Vadmir, New Blood | otj |
 | as long as you control a creature with power N or greater, ~ can attack as though it didn't have defender. | 1 | Bristlepack Sentry | otj |
-| at the beginning of your end step, if you haven"..."t a creature, it becomes a N/N spirit creature with flying in addition to its other types. | 1 | Emergent Haunting | otj |
 | create a treasure token. until end of turn, up to one target creature gets +N/+N for each treasure you control. | 1 | Gold Rush | otj |
 | creatures you control but don't own are mercenaries in addition to their other types. | 1 | Laughing Jasper Flint | otj |
 | during turns other than yours, spells you cast cost {M} less to cast. | 1 | Geyser Drake | otj |
-| during your turn, mounts and vehicles you control have hexproof. | 1 | Miriam, Herd Whisperer | otj |
 | during your turn, outlaws you control have first strike. | 1 | At Knifepoint | otj |
 | exile any number of creatures you control, then return them to the battlefield under their owner's control. then repeat ~ N more times. | 1 | Another Round | otj |
 | exile target creature. if it had mana value N or less, surveil N. (look at the top two cards of your library, then put any number of them into your graveyard an | 1 | Consuming Ashes | otj |
@@ -328,7 +325,6 @@
 | target creature you control gains hexproof until end of turn. untap that creature. until end of turn, it becomes a copy of up to one other target creature. | 1 | Fleeting Reflection | otj |
 | target creature you control gets +N/+N and gains first strike until end of turn. creatures target opponent controls lose first strike and double strike until en | 1 | Quick Draw | otj |
 | target opponent reveals their hand. you may choose a nonland card from it. if you do, they discard it. otherwise, you may put a face-up exiled card they own int | 1 | Binding Negotiation | otj |
-| until end of turn, each creature you control gets +N/+N and gains trample and "..." | 1 | Full Steam Ahead | otj |
 | when ~ becomes plotted, it deals N damage to any target. | 1 | Longhorn Sharpshooter | otj |
 | when ~ becomes plotted, target creature gets +N/+N and gains trample until end of turn. | 1 | Aloe Alchemist | otj |
 | when ~ enters, any number of target opponents each discard a card. for each of those opponents who didn't discard a card with mana value N or greater, draw a ca | 1 | Hollow Marauder | otj |
@@ -341,7 +337,6 @@
 | when ~ enters, return target creature card from your graveyard to the battlefield with two additional +N/+N counters on it. | 1 | Rakdos Joins Up | otj |
 | when ~ enters, return target permanent card with mana value N or less from your graveyard to your hand. return that card to the battlefield instead if you contr | 1 | Shepherd of the Clouds | otj |
 | when ~ enters, return up to one target non-faerie, nonland permanent you control to its owner's hand. if a permanent was returned ~, put a +N/+N counter on ~. | 1 | Nurturing Pixie | otj |
-| when ~ enters, you may exile a nonland card with mana value N or less from your hand. if you do, it becomes plotted. | 1 | Kellan Joins Up | otj |
 | whenever a legendary creature you control enters, any number of target players each mill a card and lose N life. | 1 | Tinybones Joins Up | otj |
 | whenever a nontoken creature an opponent controls dies, you may pay {M}. if you do, return that card to the battlefield tapped under your control. it's a treasu | 1 | Vraska, the Silencer | otj |
 | whenever a player casts a noncreature spell, ~ deals damage to that player equal to the number of noncreature spells they've cast ~. | 1 | Magebane Lizard | otj |
@@ -374,7 +369,6 @@
 | whenever ~ attacks, reveal the top card of your library and put it into your hand. you lose life equal to that card"..."t saddled. otherwise, each opponent lose | 1 | Caustic Bronco | otj |
 | whenever ~ becomes saddled for the first time each turn, mill two cards, then ~ gets +N/+N until end of turn, where N is the number of creature cards in your gr | 1 | Stubborn Burrowfiend | otj |
 | whenever ~ deals combat damage to a player, target instant or sorcery card in your graveyard gains flashback until end of turn. the flashback cost is equal to i | 1 | Archmage's Newt | otj |
-| you can't cast ~ during your first, second, or third turns of the game. | 1 | Jace Reawakened | otj |
 | you may cast ~ as though it had flash if you pay {M} more to cast it. | 1 | Mystical Tether | otj |
 | {M}, {M}, sacrifice ~: destroy up to one target artifact, up to one target creature, and up to one target land. | 1 | Boom Box | otj |
 | {M}, {M}: look at the top card of your library. if it"..."t put it into your hand, you may put it on the bottom of your library. | 1 | Bucolic Ranch | otj |
@@ -384,7 +378,6 @@
 | ~ gets -N/-N for each card in your hand. | 1 | Stingerback Terror | otj |
 | ~ has flash as long as you control a desert. | 1 | Colossal Rattlewurm | otj |
 | ~ has flash as long as you've committed a crime ~. (targeting opponents, anything they control, and/or cards in their graveyards is a crime.) gain control of ta | 1 | Take for a Ride | otj |
-| ~ has haste as long as you control a mount. | 1 | Mobile Homestead | otj |
 | ~ has hexproof as long as you haven't cast a spell ~. | 1 | Stoic Sphinx | otj |
 | −N: for each other nonland permanent you control, create a token that's a copy of that permanent. | 1 | Oko, the Ringleader | otj |
 

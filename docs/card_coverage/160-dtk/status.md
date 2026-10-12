@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 30 | 12.9% |
-| Works (untested) | 130 | 55.8% |
-| Partial (unaudited) | 4 | 1.7% |
-| Not working | 69 | 29.6% |
+| Tested | 36 | 15.5% |
+| Works (untested) | 139 | 59.7% |
+| Partial (unaudited) | 0 | 0.0% |
+| Not working | 58 | 24.9% |
 
 ## Cards needing work
 
@@ -28,18 +28,14 @@
 |---|---|---|---|---|---|
 | Acid-Spewer Dragon | silent | When this creature is turned face up, put a +1/+1 counter on each other Dragon creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Anafenza, Kin-Tree Spirit | silent | Whenever another nontoken creature you control enters, bolster 1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Ancestral Statue | silent | When this creature enters, return a nonland permanent you control to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Arashin Sovereign | silent | When this creature dies, you may put it on your choice of the top or bottom of its owner's library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Assault Formation | silent | {G}: Target creature with defender can attack this turn as though it didn't have defender. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Aven Tactician | silent | When this creature enters, bolster 1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Belltoll Dragon | silent | When this creature is turned face up, put a +1/+1 counter on each other Dragon creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Crater Elemental | silent | Formidable — {2}{R}: This creature has base power 8 until end of turn. Activate only if creatures you control have total power 8 or greater. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Dance of the Skywise | silent | Until end of turn, target creature you control becomes a blue Dragon Illusion with base power and toughness 4/4, loses all abilities, and gains flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Deadly Wanderings | silent | As long as you control exactly one creature, that creature gets +2/+0 and has deathtouch and lifelink. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Deathbringer Regent | silent | When this creature enters, if you cast it from your hand and there are five or more other creatures on the battlefield, destroy all other creatures. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Deathmist Raptor | silent | Whenever a permanent you control is turned face up, you may return this card from your graveyard to the battlefield face up or face down. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Descent of the Dragons | silent | Destroy any number of target creatures. For each creature destroyed this way, its controller creates a 4/4 red Dragon creature token with flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Dragonloft Idol | silent | As long as you control a Dragon, this creature gets +1/+1 and has flying and trample. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Dromoka Captain | silent | Whenever this creature attacks, bolster 1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Dromoka's Gift | silent | Bolster 4. (Choose a creature with the least toughness among creatures you control and put four +1/+1 counters on it.) | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Echoes of the Kin Tree | silent | {2}{W}: Bolster 1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -52,7 +48,6 @@
 | Gurmag Drowner | silent | When this creature exploits a creature, look at the top four cards of your library. Put one of them into your hand and the rest into your graveyard. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Hardened Berserker | silent | Whenever this creature attacks, the next spell you cast this turn costs {1} less to cast. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Hedonist's Trove | silent | When this enchantment enters, exile target opponent's graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Herald of Dromoka | silent | Other Warrior creatures you control have vigilance. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Herdchaser Dragon | silent | When this creature is turned face up, put a +1/+1 counter on each other Dragon creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Illusory Gains | silent | Whenever a creature an opponent controls enters, attach this Aura to that creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Magmatic Chasm | silent | Creatures without flying can't block this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -67,7 +62,6 @@
 | Sandcrafter Mage | silent | When this creature enters, bolster 1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sandsteppe Scavenger | silent | When this creature enters, bolster 2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sarkhan Unbroken | silent | +1: Draw a card, then add one mana of any color. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Savage Ventmaw | silent | Whenever this creature attacks, add {R}{R}{R}{G}{G}{G}. Until end of turn, you don't lose this mana as steps and phases end. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Scale Blessing | silent | Bolster 1, then put a +1/+1 counter on each creature you control with a +1/+1 counter on it. (To bolster 1, choose a creature with the least toughness among cre | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Shieldhide Dragon | silent | When this creature is turned face up, put a +1/+1 counter on each other Dragon creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Shorecrasher Elemental | silent | {U}: Exile this creature, then return it to the battlefield face down under its owner's control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -75,19 +69,14 @@
 | Sidisi, Undead Vizier | silent | When Sidisi exploits a creature, you may search your library for a card, put it into your hand, then shuffle. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Silumgar Butcher | silent | When this creature exploits a creature, target creature gets -3/-3 until end of turn. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Silumgar Sorcerer | silent | When this creature exploits a creature, counter target creature spell. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
-| Silumgar Spell-Eater | silent | When this creature is turned face up, counter target spell unless its controller pays {3}. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Stormwing Dragon | silent | When this creature is turned face up, put a +1/+1 counter on each other Dragon creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sunbringer's Touch | silent | Bolster | no machine in the engine executes this keyword | Y/Y/- | not_working |
-| Virulent Plague | silent | Creature tokens get -2/-2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Volcanic Rush | silent | Attacking creatures get +2/+0 and gain trample until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Vulturous Aven | silent | When this creature exploits a creature, you draw two cards and you lose 2 life. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
-| Ainok Artillerist | notice | This creature has reach as long as it has a +1/+1 counter on it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Blessed Reincarnation | notice | Exile target creature an opponent controls. That player reveals cards from the top of their library until a creature card is revealed. The player puts that card | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Blood-Chin Fanatic | notice | {1}{B}, Sacrifice another Warrior creature: Target player loses X life and you gain X life, where X is the sacrificed creature's power. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Butcher's Glee | notice | Target creature gets +3/+0 and gains lifelink until end of turn. Regenerate it. (Damage dealt by a creature with lifelink also causes its controller to gain tha | unparsed remainder: Regenerate it. | Y/Y/- | not_working |
 | Display of Dominance | notice | Choose one — • Destroy target blue or black noncreature permanent. • Permanents you control can't be the targets of blue or black spells your opponents control  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Lightwalker | notice | This creature has flying as long as it has a +1/+1 counter on it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Living Lore | notice | Whenever this creature deals combat damage, you may sacrifice it. If you do, you may cast the exiled card without paying its mana cost. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Mirror Mockery | notice | Whenever enchanted creature attacks, you may create a token that's a copy of that creature. Exile that token at end of combat. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Ojutai Exemplars | notice | Whenever you cast a noncreature spell, choose one — • Tap target creature. • This creature gains first strike and lifelink until end of turn. • Exile this creat | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Risen Executioner | notice | You may cast this creature from your graveyard if you pay {1} more to cast it for each other creature card in your graveyard. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -95,12 +84,10 @@
 | Swift Warkite | notice | When this creature enters, you may put a creature card with mana value 3 or less from your hand or graveyard onto the battlefield. That creature gains haste. Re | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Taigam's Strike | notice | Target creature gets +2/+0 until end of turn and can't be blocked this turn. Rebound (If you cast this spell from your hand, exile it as it resolves. At the beg | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Volcanic Vision | notice | Return target instant or sorcery card from your graveyard to your hand. Volcanic Vision deals damage equal to that card's mana value to each creature your oppon | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Dragon Hunter | unaudited | This creature can block Dragons as though it had reach. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Gate Smasher | unaudited | This Equipment can be attached only to a creature with toughness 4 or greater. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Keeper of the Lens | unaudited | You may look at face-down creatures you don't control any time. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Silumgar Assassin | unaudited | Creatures with power greater than this creature's power can't block it. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Aerie Bowmasters | handled | Reach | machines/combat.py | Y/Y/- | not_tested |
+| Ainok Artillerist | handled | This creature has reach as long as it has a +1/+1 counter on it. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ainok Survivalist | handled | When this creature is turned face up, destroy target artifact or enchantment an opponent controls. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Ancestral Statue | handled | When this creature enters, return a nonland permanent you control to its owner's hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ancient Carp | handled |  |  | Y/Y/- | not_tested |
 | Arashin Foremost | handled | Whenever this creature enters or attacks, another target Warrior creature you control gains double strike until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Artful Maneuver | handled | Target creature gets +2/+2 until end of turn. Rebound (If you cast this spell from your hand, exile it as it resolves. At the beginning of your next upkeep, you | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -121,11 +108,13 @@
 | Cunning Breezedancer | handled | Whenever you cast a noncreature spell, this creature gets +2/+2 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Custodian of the Trove | handled | This creature enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Damnable Pact | handled | Target player draws X cards and loses X life. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Deathbringer Regent | handled | When this creature enters, if you cast it from your hand and there are five or more other creatures on the battlefield, destroy all other creatures. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Defeat | handled | Destroy target creature with power 2 or less. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Dirgur Nemesis | handled | Defender | machines/combat.py | Y/Y/- | not_tested |
 | Dragon Tempest | handled | Whenever a creature you control with flying enters, it gains haste until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Dragon Whisperer | handled | {R}: This creature gains flying until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Dragon's Eye Sentry | handled | First strike | machines/combat.py | Y/Y/- | not_tested |
+| Dragonloft Idol | handled | As long as you control a Dragon, this creature gets +1/+1 and has flying and trample. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Dragonlord Atarka | handled | When Dragonlord Atarka enters, it deals 5 damage divided as you choose among any number of target creatures and/or planeswalkers your opponents control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Dragonlord Dromoka | handled | This spell can't be countered. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Dragonlord Kolaghan | handled | Other creatures you control have haste. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -151,6 +140,7 @@
 | Gudul Lurker | handled | This creature can't be blocked. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Hand of Silumgar | handled | Deathtouch | machines/combat.py | Y/Y/- | not_tested |
 | Haven of the Spirit Dragon | handled | {2}, {T}, Sacrifice this land: Return target Dragon creature card or Ugin planeswalker card from your graveyard to your hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Herald of Dromoka | handled | Other Warrior creatures you control have vigilance. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Hidden Dragonslayer | handled | When this creature is turned face up, destroy target creature with power 4 or greater an opponent controls. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Icefall Regent | handled | When this creature enters, tap target creature an opponent controls. That creature doesn't untap during its controller's untap step for as long as you control t | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Inspiring Call | handled | Draw a card for each creature you control with a +1/+1 counter on it. Those creatures gain indestructible until end of turn. (Damage and effects that say "destr | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -160,6 +150,7 @@
 | Kolaghan Skirmisher | handled | Dash | machines/casting.py | Y/Y/- | not_tested |
 | Kolaghan Stormsinger | handled | When this creature is turned face up, target creature gains haste until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Lightning Berserker | handled | {R}: This creature gets +1/+0 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Lightwalker | handled | This creature has flying as long as it has a +1/+1 counter on it. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Lose Calm | handled | Gain control of target creature until end of turn. Untap that creature. It gains haste and menace until end of turn. (A creature with menace can't be blocked ex | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Lurking Arynx | handled | Formidable — {2}{G}: Target creature blocks this creature this turn if able. Activate only if creatures you control have total power 8 or greater. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Marsh Hulk | handled | Megamorph | machines/casting.py | Y/Y/- | not_tested |
@@ -189,6 +180,7 @@
 | Salt Road Quartermasters | handled | This creature enters with two +1/+1 counters on it. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Sandstorm Charger | handled | Megamorph | machines/casting.py | Y/Y/- | not_tested |
 | Sarkhan's Triumph | handled | Search your library for a Dragon creature card, reveal it, put it into your hand, then shuffle. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Savage Ventmaw | handled | Whenever this creature attacks, add {R}{R}{R}{G}{G}{G}. Until end of turn, you don't lose this mana as steps and phases end. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Scion of Ugin | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
 | Screamreach Brawler | handled | Dash | machines/casting.py | Y/Y/- | not_tested |
 | Secure the Wastes | handled | Create X 1/1 white Warrior creature tokens. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -203,6 +195,7 @@
 | Sight of the Scalelords | handled | At the beginning of combat on your turn, creatures you control with toughness 4 or greater get +2/+2 and gain vigilance until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Silkwrap | handled | When this enchantment enters, exile target creature with mana value 3 or less an opponent controls until this enchantment leaves the battlefield. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Silumgar Monument | handled | {4}{U}{B}: This artifact becomes a 4/4 blue and black Dragon artifact creature with flying until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Silumgar Spell-Eater | handled | When this creature is turned face up, counter target spell unless its controller pays {3}. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Silumgar's Command | handled | Choose two — • Counter target noncreature spell. • Return target permanent to its owner's hand. • Target creature gets -3/-3 until end of turn. • Destroy target | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Silumgar's Scorn | handled | As an additional cost to cast this spell, you may reveal a Dragon card from your hand. Counter target spell unless its controller pays {1}. If you revealed a Dr | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Skywise Teachings | handled | Whenever you cast a noncreature spell, you may pay {1}{U}. If you do, create a 2/2 blue Djinn Monk creature token with flying. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -225,6 +218,7 @@
 | Updraft Elemental | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
 | Vandalize | handled | Choose one or both — • Destroy target artifact. • Destroy target land. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Vial of Dragonfire | handled | {2}, {T}, Sacrifice this artifact: It deals 2 damage to target creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Virulent Plague | handled | Creature tokens get -2/-2. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Void Squall | handled | Return target nonland permanent to its owner's hand. Rebound (If you cast this spell from your hand, exile it as it resolves. At the beginning of your next upke | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Wandering Tombshell | handled |  |  | Y/Y/- | not_tested |
 | Youthful Scholar | handled | When this creature dies, draw two cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -233,10 +227,11 @@
 ## Fully supported
 
 <details>
-<summary>30 cards</summary>
+<summary>36 cards</summary>
 
 - Ambuscade Shaman
 - Anticipate
+- Assault Formation
 - Atarka Beastbreaker
 - Atarka's Command
 - Avatar of the Resolute
@@ -246,14 +241,18 @@
 - Corpseweft
 - Den Protector
 - Draconic Roar
+- Dragon Hunter
 - Dragon-Scarred Bear
 - Dromoka's Command
 - Epic Confrontation
+- Gate Smasher
 - Harbinger of the Hunt
 - Impact Tremors
+- Keeper of the Lens
 - Kolaghan Aspirant
 - Kolaghan's Command
 - Learn from the Past
+- Living Lore
 - Marang River Skeleton
 - Myth Realized
 - Orator of Ojutai
@@ -262,6 +261,7 @@
 - Sarkhan's Rage
 - Scaleguard Sentinels
 - Shaman of Forgotten Ways
+- Silumgar Assassin
 - Stampeding Elk Herd
 - Warbringer
 - Zurgo Bellstriker
@@ -278,21 +278,17 @@
 | Choose one | 1 | Display of Dominance | dtk |
 | +N: draw a card, then add one mana of any color. | 1 | Sarkhan Unbroken | dtk |
 | +N: look at the top card of your library. if it's a noncreature, nonland card, you may reveal it and put it into your hand. | 1 | Narset Transcendent | dtk |
-| as long as you control a dragon, ~ gets +N/+N and has flying and trample. | 1 | Dragonloft Idol | dtk |
 | as long as you control exactly one creature, that creature gets +N/+N and has deathtouch and lifelink. | 1 | Deadly Wanderings | dtk |
 | attacking creatures get +N/+N and gain trample until end of turn. | 1 | Volcanic Rush | dtk |
 | bolster | 1 | Sunbringer's Touch | dtk |
 | bolster N, then put a +N/+N counter on each creature you control with a +N/+N counter on it. (to bolster N, choose a creature with the least toughness among cre | 1 | Scale Blessing | dtk |
 | bolster N. (choose a creature with the least toughness among creatures you control and put four +N/+N counters on it.) | 1 | Dromoka's Gift | dtk |
-| creature tokens get -N/-N. | 1 | Virulent Plague | dtk |
-| creatures with power greater than ~ power can't block it. | 1 | Silumgar Assassin | dtk |
 | creatures without flying can't block ~. | 1 | Magmatic Chasm | dtk |
 | destroy any number of target creatures. for each creature destroyed ~, its controller creates a N/N red dragon creature token with flying. | 1 | Descent of the Dragons | dtk |
 | destroy target attacking or blocking creature. bolster N. (choose a creature with the least toughness among creatures you control and put a +N/+N counter on it. | 1 | Enduring Victory | dtk |
 | destroy target creature with flying. bolster N. (choose a creature with the least toughness among creatures you control and put two +N/+N counters on it.) | 1 | Pinion Feast | dtk |
 | enchanted creature gets +N/+N for each +N/+N counter on other creatures you control. | 1 | Gleam of Authority | dtk |
 | exile target creature an opponent controls. that player reveals cards from the top of their library until a creature card is revealed. the player puts that card | 1 | Blessed Reincarnation | dtk |
-| other warrior creatures you control have vigilance. | 1 | Herald of Dromoka | dtk |
 | prevent all combat damage that would be dealt ~. you may look at each face-down creature that's attacking or blocking. | 1 | Revealing Wind | dtk |
 | return target instant or sorcery card from your graveyard to your hand. ~ deals damage equal to that card's mana value to each creature your opponents control.  | 1 | Volcanic Vision | dtk |
 | target creature gets +N/+N and gains lifelink until end of turn. regenerate it. (damage dealt by a creature with lifelink also causes its controller to gain tha | 1 | Butcher's Glee | dtk |
@@ -303,8 +299,6 @@
 | when sidisi exploits a creature, you may search your library for a card, put it into your hand, then shuffle. | 1 | Sidisi, Undead Vizier | dtk |
 | when ~ dies, you may put it on your choice of the top or bottom of its owner's library. | 1 | Arashin Sovereign | dtk |
 | when ~ enters, exile target opponent's graveyard. | 1 | Hedonist's Trove | dtk |
-| when ~ enters, if you cast it from your hand and there are five or more other creatures on the battlefield, destroy all other creatures. | 1 | Deathbringer Regent | dtk |
-| when ~ enters, return a nonland permanent you control to its owner's hand. | 1 | Ancestral Statue | dtk |
 | when ~ enters, you may put a creature card with mana value N or less from your hand or graveyard onto the battlefield. that creature gains haste. return it to y | 1 | Swift Warkite | dtk |
 | when ~ exploits a creature, counter target creature spell. | 1 | Silumgar Sorcerer | dtk |
 | when ~ exploits a creature, create two N/N black zombie creature tokens. | 1 | Rakshasa Gravecaller | dtk |
@@ -315,7 +309,6 @@
 | when ~ exploits a creature, target creature gets -N/-N until end of turn. | 1 | Silumgar Butcher | dtk |
 | when ~ exploits a creature, target opponent loses N life and you gain N life. | 1 | Qarsi Sadist | dtk |
 | when ~ exploits a creature, you draw two cards and you lose N life. | 1 | Vulturous Aven | dtk |
-| when ~ is turned face up, counter target spell unless its controller pays {M}. | 1 | Silumgar Spell-Eater | dtk |
 | whenever a creature an opponent controls enters, attach ~ to that creature. | 1 | Illusory Gains | dtk |
 | whenever a creature you control fights, put two +N/+N counters on it at the beginning of the next end step. | 1 | Foe-Razer Regent | dtk |
 | whenever a permanent you control is turned face up, you may return ~ from your graveyard to the battlefield face up or face down. | 1 | Deathmist Raptor | dtk |
@@ -323,21 +316,13 @@
 | whenever enchanted creature attacks, you may create a token that's a copy of that creature. exile that token at end of combat. | 1 | Mirror Mockery | dtk |
 | whenever you cast a noncreature spell, choose one — • tap target creature. • ~ gains first strike and lifelink until end of turn. • exile ~, then return it to t | 1 | Ojutai Exemplars | dtk |
 | whenever you cast a noncreature spell, ~ gets +N/+N until end of turn and can't be blocked ~. | 1 | Elusive Spellfist | dtk |
-| whenever ~ attacks, add {M}{M}{M}{M}{M}{M}. until end of turn, you don't lose ~ as steps and phases end. | 1 | Savage Ventmaw | dtk |
 | whenever ~ attacks, bolster N. | 1 | Dromoka Captain | dtk |
 | whenever ~ attacks, the next spell you cast ~ costs {M} less to cast. | 1 | Hardened Berserker | dtk |
-| whenever ~ deals combat damage, you may sacrifice it. if you do, you may cast the exiled card without paying its mana cost. | 1 | Living Lore | dtk |
 | you may cast ~ from your graveyard if you pay {M} more to cast it for each other creature card in your graveyard. | 1 | Risen Executioner | dtk |
-| you may look at face-down creatures you don't control any time. | 1 | Keeper of the Lens | dtk |
 | {M}: exile ~, then return it to the battlefield face down under its owner's control. | 1 | Shorecrasher Elemental | dtk |
-| {M}: target creature with defender can attack ~ as though it didn't have defender. | 1 | Assault Formation | dtk |
 | {M}{M}, sacrifice another warrior creature: target player loses N life and you gain N life, where N is the sacrificed creature's power. | 1 | Blood-Chin Fanatic | dtk |
 | {M}{M}: bolster N. | 1 | Echoes of the Kin Tree | dtk |
 | {M}{M}: turn ~ face down. | 1 | Obscuring Aether | dtk |
-| ~ can be attached only to a creature with toughness N or greater. | 1 | Gate Smasher | dtk |
-| ~ can block dragons as though it had reach. | 1 | Dragon Hunter | dtk |
-| ~ has flying as long as it has a +N/+N counter on it. | 1 | Lightwalker | dtk |
-| ~ has reach as long as it has a +N/+N counter on it. | 1 | Ainok Artillerist | dtk |
 
 ## Notes
 

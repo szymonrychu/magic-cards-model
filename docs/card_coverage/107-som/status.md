@@ -17,40 +17,31 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 31 | 14.4% |
-| Works (untested) | 127 | 59.1% |
-| Partial (unaudited) | 6 | 2.8% |
-| Not working | 51 | 23.7% |
+| Tested | 38 | 17.7% |
+| Works (untested) | 136 | 63.3% |
+| Partial (unaudited) | 0 | 0.0% |
+| Not working | 41 | 19.1% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
 | Auriok Replica | silent | {W}, Sacrifice this creature: Prevent all damage a source of your choice would deal to you this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Auriok Sunchaser | silent | Metalcraft — As long as you control three or more artifacts, this creature gets +2/+2 and has flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Bellowing Tanglewurm | silent | Other green creatures you control have intimidate. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Carapace Forger | silent | Metalcraft — This creature gets +2/+2 as long as you control three or more artifacts. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Carnifex Demon | silent | {B}, Remove a -1/-1 counter from this creature: Put a -1/-1 counter on each other creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Cerebral Eruption | silent | Target opponent reveals the top card of their library. Cerebral Eruption deals damage equal to the revealed card's mana value to that player and each creature t | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Chimeric Mass | silent | {1}: Until end of turn, this artifact becomes a Construct artifact creature with "This creature's power and toughness are each equal to the number of charge cou | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Chrome Steed | silent | Metalcraft — This creature gets +2/+2 as long as you control three or more artifacts. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Clone Shell | silent | Imprint — When this creature enters, look at the top four cards of your library, exile one face down, then put the rest on the bottom of your library in any ord | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Contagion Engine | silent | {4}, {T}: Proliferate twice. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Copperhorn Scout | silent | Whenever this creature attacks, untap each other creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Elspeth Tirel | silent | −5: Destroy all other permanents except for lands and tokens. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Engulfing Slagwurm | silent | Whenever this creature blocks or becomes blocked by a creature, destroy that creature. You gain life equal to that creature's toughness. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Exsanguinate | silent | Each opponent loses X life. You gain life equal to the life lost this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Ezuri's Brigade | silent | Metalcraft — As long as you control three or more artifacts, this creature gets +4/+4 and has trample. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Fulgent Distraction | silent | Choose two target creatures. Tap those creatures, then unattach all Equipment from them. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Genesis Wave | silent | Reveal the top X cards of your library. You may put any number of permanent cards with mana value X or less from among them onto the battlefield. Then put all c | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Geth, Lord of the Vault | silent | {X}{B}: Put target artifact or creature card with mana value X from an opponent's graveyard onto the battlefield tapped under your control. Then that player mil | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Ghalma's Warden | silent | Metalcraft — This creature gets +2/+2 as long as you control three or more artifacts. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Glint Hawk | silent | When this creature enters, sacrifice it unless you return an artifact you control to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Glint Hawk Idol | silent | Whenever another artifact you control enters, you may have this artifact become a 2/2 Bird artifact creature with flying until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Grafted Exoskeleton | silent | Whenever this Equipment becomes unattached from a permanent, sacrifice that permanent. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
-| Grand Architect | silent | Other blue creatures you control get +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Grindclock | silent | {T}: Target player mills X cards, where X is the number of charge counters on this artifact. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Hand of the Praetors | silent | Other creatures you control with infect get +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Hoard-Smelter Dragon | silent | {3}{R}: Destroy target artifact. This creature gets +X/+0 until end of turn, where X is that artifact's mana value. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Kemba, Kha Regent | silent | At the beginning of your upkeep, create a 2/2 white Cat creature token for each Equipment attached to Kemba. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Liege of the Tangle | silent | Whenever this creature deals combat damage to a player, you may choose any number of target lands you control and put an awakening counter on each of them. Each | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -67,7 +58,6 @@
 | Shape Anew | silent | The controller of target artifact sacrifices it, then reveals cards from the top of their library until they reveal an artifact card. That player puts that card | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Strata Scythe | silent | Equipped creature gets +1/+1 for each land on the battlefield with the same name as the exiled card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sunblast Angel | silent | When this creature enters, destroy all tapped creatures. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Sunspear Shikari | silent | As long as this creature is equipped, it has first strike and lifelink. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Turn Aside | silent | Counter target spell that targets a permanent you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Venser's Journal | silent | At the beginning of your upkeep, you gain 1 life for each card in your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Venser, the Sojourner | silent | −1: Creatures can't be blocked this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -77,20 +67,16 @@
 | Quicksilver Gargantuan | notice | You may have this creature enter as a copy of any creature on the battlefield, except it's 7/7. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Semblance Anvil | notice | Imprint — When this artifact enters, you may exile a nonland card from your hand. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Turn to Slag | notice | Turn to Slag deals 5 damage to target creature. Destroy all Equipment attached to that creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Etched Champion | unaudited | Metalcraft — This creature has protection from each color as long as you control three or more artifacts. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Indomitable Archangel | unaudited | Metalcraft — Artifacts you control have shroud as long as you control three or more artifacts. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Leonin Arbiter | unaudited | Players can't search libraries. Any player may pay {2} for that player to ignore this effect until end of turn. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Platinum Emperion | unaudited | Your life total can't change. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Rust Tick | unaudited | You may choose not to untap this creature during your untap step. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Rusted Relic | unaudited | Metalcraft — This artifact is a 5/5 Golem artifact creature as long as you control three or more artifacts. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Abuna Acolyte | handled | {T}: Prevent the next 1 damage that would be dealt to any target this turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Accorder's Shield | handled | Equipped creature gets +0/+3 and has vigilance. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Acid Web Spider | handled | When this creature enters, you may destroy target Equipment. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Alpha Tyrranax | handled |  |  | Y/-/- | not_tested |
 | Argentum Armor | handled | Equipped creature gets +6/+6. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Auriok Edgewright | handled | Metalcraft — This creature has double strike as long as you control three or more artifacts. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Auriok Sunchaser | handled | Metalcraft — As long as you control three or more artifacts, this creature gets +2/+2 and has flying. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Barbed Battlegear | handled | Equipped creature gets +4/-1. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Barrage Ogre | handled | {T}, Sacrifice an artifact: This creature deals 2 damage to any target. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Bellowing Tanglewurm | handled | Other green creatures you control have intimidate. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Blackcleave Cliffs | handled | This land enters tapped unless you control two or fewer other lands. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Blackcleave Goblin | handled | Haste | machines/combat.py | Y/-/- | not_tested |
 | Blade-Tribe Berserkers | handled | Metalcraft — When this creature enters, if you control three or more artifacts, this creature gets +3/+3 and gains haste until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -100,6 +86,9 @@
 | Blistergrub | handled | When this creature dies, each opponent loses 2 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Blunt the Assault | handled | You gain 1 life for each creature on the battlefield. Prevent all combat damage that would be dealt this turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Bonds of Quicksilver | handled | Enchanted creature doesn't untap during its controller's untap step. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Carapace Forger | handled | Metalcraft — This creature gets +2/+2 as long as you control three or more artifacts. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Chimeric Mass | handled | This artifact enters with X charge counters on it. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Chrome Steed | handled | Metalcraft — This creature gets +2/+2 as long as you control three or more artifacts. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Contagious Nim | handled | Infect | machines/combat.py | Y/-/- | not_tested |
 | Copperline Gorge | handled | This land enters tapped unless you control two or fewer other lands. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Corpse Cur | handled | When this creature enters, you may return target creature card with infect from your graveyard to your hand. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -115,11 +104,13 @@
 | Dross Hopper | handled | Sacrifice a creature: This creature gains flying until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Embersmith | handled | Whenever you cast an artifact spell, you may pay {1}. If you do, this creature deals 1 damage to any target. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ezuri's Archers | handled | Whenever this creature blocks a creature with flying, this creature gets +3/+0 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Ezuri's Brigade | handled | Metalcraft — As long as you control three or more artifacts, this creature gets +4/+4 and has trample. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ferrovore | handled | {R}, Sacrifice an artifact: This creature gets +3/+0 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Flameborn Hellion | handled | This creature attacks each combat if able. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Flight Spellbomb | handled | {T}, Sacrifice this artifact: Target creature gains flying until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Fume Spitter | handled | Sacrifice this creature: Put a -1/-1 counter on target creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Furnace Celebration | handled | Whenever you sacrifice another permanent, you may pay {2}. If you do, this enchantment deals 2 damage to any target. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Ghalma's Warden | handled | Metalcraft — This creature gets +2/+2 as long as you control three or more artifacts. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Glimmerpoint Stag | handled | When this creature enters, exile another target permanent. Return that card to the battlefield under its owner's control at the beginning of the next end step. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Glimmerpost | handled | When this land enters, you gain 1 life for each Locus on the battlefield. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Goblin Gaveleer | handled | This creature gets +2/+0 for each Equipment attached to it. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -127,8 +118,10 @@
 | Golem Artisan | handled | {2}: Target artifact creature gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Golem Foundry | handled | Whenever you cast an artifact spell, you may put a charge counter on this artifact. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Golem's Heart | handled | Whenever a player casts an artifact spell, you may gain 1 life. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Grand Architect | handled | Other blue creatures you control get +1/+1. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Grasp of Darkness | handled | Target creature gets -4/-4 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Halt Order | handled | Counter target artifact spell. Draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Hand of the Praetors | handled | Other creatures you control with infect get +1/+1. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Heavy Arbalest | handled | Equipped creature doesn't untap during its controller's untap step. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Horizon Spellbomb | handled | {2}, {T}, Sacrifice this artifact: Search your library for a basic land card, reveal it, put it into your hand, then shuffle. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ichor Rats | handled | When this creature enters, each player gets a poison counter. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -186,6 +179,7 @@
 | Steady Progress | handled | Proliferate. (Choose any number of permanents and/or players, then give each another counter of each kind already there.) Draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Stoic Rebuttal | handled | Metalcraft — This spell costs {1} less to cast if you control three or more artifacts. Counter target spell. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Strider Harness | handled | Equipped creature gets +1/+1 and has haste. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Sunspear Shikari | handled | As long as this creature is equipped, it has first strike and lifelink. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Sylvok Lifestaff | handled | Equipped creature gets +1/+0. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Sylvok Replica | handled | {G}, Sacrifice this creature: Destroy target artifact or enchantment. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Tel-Jilad Defiance | handled | Target creature gains protection from artifacts until end of turn. Draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -203,7 +197,6 @@
 | Vault Skyward | handled | Target creature gains flying until end of turn. Untap it. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Vector Asp | handled | {B}: This creature gains infect until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Vedalken Certarch | handled | Metalcraft — {T}: Tap target artifact, creature, or land. Activate only if you control three or more artifacts. | the engine reads this text and performs it | Y/-/- | not_tested |
-| Volition Reins | handled | When this Aura enters, if enchanted permanent is tapped, untap it. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Vulshok Heartstoker | handled | When this creature enters, target creature gets +2/+0 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Vulshok Replica | handled | {1}{R}, Sacrifice this creature: It deals 3 damage to target player or planeswalker. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Wall of Tanglecord | handled | {G}: This creature gains reach until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -214,7 +207,7 @@
 ## Fully supported
 
 <details>
-<summary>31 cards</summary>
+<summary>38 cards</summary>
 
 - Arc Trail
 - Argent Sphinx
@@ -224,10 +217,13 @@
 - Darkslick Shores
 - Darksteel Myr
 - Echo Circlet
+- Etched Champion
 - Ezuri, Renegade Leader
 - Galvanic Blast
+- Indomitable Archangel
 - Koth of the Hammer
 - Kuldotha Phoenix
+- Leonin Arbiter
 - Liquimetal Coating
 - Memnite
 - Mimic Vat
@@ -236,7 +232,10 @@
 - Mox Opal
 - Necrotic Ooze
 - Nihil Spellbomb
+- Platinum Emperion
 - Riddlesmith
+- Rust Tick
+- Rusted Relic
 - Soul Parry
 - Spikeshot Elder
 - Steel Hellkite
@@ -246,6 +245,7 @@
 - True Conviction
 - Tunnel Ignus
 - Twisted Image
+- Volition Reins
 - Wurmcoil Engine
 
 </details>
@@ -254,10 +254,8 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| Metalcraft | 8 | Auriok Sunchaser, Carapace Forger, Chrome Steed, Etched Champion, Ezuri's Brigade | som |
 | Imprint | 2 | Clone Shell, Semblance Anvil | som |
 | as an additional cost to cast ~, sacrifice a creature. destroy target creature. its controller loses life equal to the number of creatures that died ~. | 1 | Flesh Allergy | som |
-| as long as ~ is equipped, it has first strike and lifelink. | 1 | Sunspear Shikari | som |
 | at the beginning of your upkeep, create a N/N white cat creature token for each equipment attached to kemba. | 1 | Kemba, Kha Regent | som |
 | at the beginning of your upkeep, you gain N life for each card in your hand. | 1 | Venser's Journal | som |
 | choose a nonland card name. search target player's graveyard, hand, and library for any number of cards with that name and exile them. then that player shuffles | 1 | Memoricide | som |
@@ -266,10 +264,6 @@
 | each opponent loses N life. you gain life equal to the life lost ~. | 1 | Exsanguinate | som |
 | equipped creature gets +N/+N for each land on the battlefield with the same name as the exiled card. | 1 | Strata Scythe | som |
 | equipped creature gets +N/+N, has intimidate, and is a black zombie. | 1 | Nim Deathmantle | som |
-| other blue creatures you control get +N/+N. | 1 | Grand Architect | som |
-| other creatures you control with infect get +N/+N. | 1 | Hand of the Praetors | som |
-| other green creatures you control have intimidate. | 1 | Bellowing Tanglewurm | som |
-| players can't search libraries. any player may pay {M} for that player to ignore ~ until end of turn. | 1 | Leonin Arbiter | som |
 | reveal the top N cards of your library. you may put any number of permanent cards with mana value N or less from among them onto the battlefield. then put all c | 1 | Genesis Wave | som |
 | target opponent reveals the top card of their library. ~ deals damage equal to the revealed card"..."s hand. | 1 | Cerebral Eruption | som |
 | target player discards a card. if a land card is discarded ~, return ~ to its owner's hand. | 1 | Psychic Miasma | som |
@@ -288,16 +282,13 @@
 | whenever ~ becomes unattached from a permanent, sacrifice that permanent. | 1 | Grafted Exoskeleton | som |
 | whenever ~ blocks or becomes blocked by a creature, destroy that creature. you gain life equal to that creature's toughness. | 1 | Engulfing Slagwurm | som |
 | whenever ~ deals combat damage to a player, you may choose any number of target lands you control and put an awakening counter on each of them. each of those la | 1 | Liege of the Tangle | som |
-| you may choose not to untap ~ during your untap step. | 1 | Rust Tick | som |
 | you may have ~ enter as a copy of any creature on the battlefield, except it's N/N. | 1 | Quicksilver Gargantuan | som |
-| your life total can't change. | 1 | Platinum Emperion | som |
 | {M}, remove a -N/-N counter from ~: put a -N/-N counter on each other creature. | 1 | Carnifex Demon | som |
 | {M}, sacrifice ~: prevent all damage a source of your choice would deal to you ~. | 1 | Auriok Replica | som |
 | {M}, {M}: create a token that's a copy of the exiled card. N is the mana value of that card. | 1 | Prototype Portal | som |
 | {M}, {M}: proliferate twice. | 1 | Contagion Engine | som |
 | {M}, {M}: untap each other myr you control. | 1 | Myr Galvanizer | som |
 | {M}: target player mills N cards, where N is the number of charge counters on ~. | 1 | Grindclock | som |
-| {M}: until end of turn, ~ becomes a construct artifact creature with "..." | 1 | Chimeric Mass | som |
 | {M}{M}: destroy target artifact. ~ gets +N/+N until end of turn, where N is that artifact's mana value. | 1 | Hoard-Smelter Dragon | som |
 | {M}{M}: put target artifact or creature card with mana value N from an opponent's graveyard onto the battlefield tapped under your control. then that player mil | 1 | Geth, Lord of the Vault | som |
 | ~ deals N damage to target creature. destroy all equipment attached to that creature. | 1 | Turn to Slag | som |

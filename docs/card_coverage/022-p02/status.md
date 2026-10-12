@@ -17,9 +17,9 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 2 | 7.7% |
+| Tested | 3 | 11.5% |
 | Works (untested) | 19 | 73.1% |
-| Partial (unaudited) | 1 | 3.8% |
+| Partial (unaudited) | 0 | 0.0% |
 | Not working | 4 | 15.4% |
 
 ## Cards needing work
@@ -30,7 +30,6 @@
 | Goblin Lore | silent | Draw four cards, then discard three cards at random. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sea Drake | silent | When this creature enters, return two target lands you control to their owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sylvan Basilisk | silent | Whenever this creature becomes blocked by a creature, destroy that creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Lone Wolf | unaudited | You may have this creature assign its combat damage as though it weren't blocked. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Angel of Mercy | handled | When this creature enters, you gain 3 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Angelic Wall | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
 | Bear Cub | handled |  |  | Y/Y/Y | not_tested |
@@ -54,9 +53,10 @@
 ## Fully supported
 
 <details>
-<summary>2 cards</summary>
+<summary>3 cards</summary>
 
 - Goblin Piker
+- Lone Wolf
 - Sleight of Hand
 
 </details>
@@ -69,7 +69,6 @@
 | when ~ enters, return each other creature you control to its owner's hand. | 1 | Denizen of the Deep | p02 |
 | when ~ enters, return two target lands you control to their owner's hand. | 1 | Sea Drake | p02 |
 | whenever ~ becomes blocked by a creature, destroy that creature. | 1 | Sylvan Basilisk | p02 |
-| you may have ~ assign its combat damage as though it weren't blocked. | 1 | Lone Wolf | p02 |
 
 ## Notes
 

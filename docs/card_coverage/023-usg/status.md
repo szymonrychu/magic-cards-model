@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 21 | 31.8% |
-| Works (untested) | 34 | 51.5% |
-| Partial (unaudited) | 1 | 1.5% |
-| Not working | 10 | 15.2% |
+| Tested | 22 | 33.3% |
+| Works (untested) | 35 | 53.0% |
+| Partial (unaudited) | 0 | 0.0% |
+| Not working | 9 | 13.6% |
 
 ## Cards needing work
 
@@ -28,7 +28,6 @@
 |---|---|---|---|---|---|
 | Academy Researchers | silent | When this creature enters, you may put an Aura card from your hand onto the battlefield attached to this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Fecundity | silent | Whenever a creature dies, that creature's controller may draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Hibernation | silent | Return all green permanents to their owners' hands. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | No Rest for the Wicked | silent | Sacrifice this enchantment: Return to your hand all creature cards in your graveyard that were put there from the battlefield this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Persecute | silent | Choose a color. Target player reveals their hand and discards all cards of that color. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Rewind | silent | Counter target spell. Untap up to four lands. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -36,7 +35,6 @@
 | Sleeper Agent | silent | When this creature enters, target opponent gains control of it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Spreading Algae | silent | When enchanted land becomes tapped, destroy it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Victimize | silent | Choose two target creature cards in your graveyard. Sacrifice a creature. If you do, return the chosen cards to the battlefield tapped. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Telepathy | unaudited | Your opponents play with their hands revealed. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Angelic Chorus | handled | Whenever a creature you control enters, you gain life equal to its toughness. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Angelic Page | handled | {T}: Target attacking or blocking creature gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Annul | handled | Counter target artifact or enchantment spell. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -55,6 +53,7 @@
 | Elvish Lyrist | handled | {G}, {T}, Sacrifice this creature: Destroy target enchantment. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Goblin Spelunkers | handled | Landwalk | no code needed | Y/-/- | not_tested |
 | Heat Ray | handled | Heat Ray deals X damage to target creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Hibernation | handled | Return all green permanents to their owners' hands. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Hollow Dogs | handled | Whenever this creature attacks, it gets +2/+0 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Horseshoe Crab | handled | {U}: Untap this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Intrepid Hero | handled | {T}: Destroy target creature with power 4 or greater. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -75,7 +74,7 @@
 ## Fully supported
 
 <details>
-<summary>21 cards</summary>
+<summary>22 cards</summary>
 
 - Abundance
 - Arc Lightning
@@ -95,6 +94,7 @@
 - Redeem
 - Reflexes
 - Sanctum Guardian
+- Telepathy
 - Urza's Armor
 - Vernal Bloom
 - Worship
@@ -108,13 +108,11 @@
 | choose a color. target player reveals their hand and discards all cards of that color. | 1 | Persecute | usg |
 | choose two target creature cards in your graveyard. sacrifice a creature. if you do, return the chosen cards to the battlefield tapped. | 1 | Victimize | usg |
 | counter target spell. untap up to four lands. | 1 | Rewind | usg |
-| return all green permanents to their owners' hands. | 1 | Hibernation | usg |
 | sacrifice ~: return to your hand all creature cards in your graveyard that were put there from the battlefield ~. | 1 | No Rest for the Wicked | usg |
 | when enchanted land becomes tapped, destroy it. | 1 | Spreading Algae | usg |
 | when ~ enters, target opponent gains control of it. | 1 | Sleeper Agent | usg |
 | when ~ enters, you may put an aura card from your hand onto the battlefield attached to ~. | 1 | Academy Researchers | usg |
 | whenever a creature dies, that creature's controller may draw a card. | 1 | Fecundity | usg |
-| your opponents play with their hands revealed. | 1 | Telepathy | usg |
 | {M}: enchanted creature gets +N/+N until end of turn. | 1 | Shiv's Embrace | usg |
 
 ## Notes

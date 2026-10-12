@@ -17,16 +17,15 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 1 | 12.5% |
+| Tested | 2 | 25.0% |
 | Works (untested) | 4 | 50.0% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 3 | 37.5% |
+| Not working | 2 | 25.0% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
-| Giant Oyster | silent | {T}: For as long as this creature remains tapped, target tapped creature doesn't untap during its controller's untap step, and at the beginning of each of your  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sengir Autocrat | silent | When this creature leaves the battlefield, exile all Serf tokens. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Torture | silent | {1}{B}: Put a -1/-1 counter on enchanted creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Anaba Bodyguard | handled | First strike | machines/combat.py | Y/-/- | not_tested |
@@ -37,8 +36,9 @@
 ## Fully supported
 
 <details>
-<summary>1 cards</summary>
+<summary>2 cards</summary>
 
+- Giant Oyster
 - Serrated Arrows
 
 </details>
@@ -48,7 +48,6 @@
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
 | when ~ leaves the battlefield, exile all serf tokens. | 1 | Sengir Autocrat | hml |
-| {M}: for as long as ~ remains tapped, target tapped creature doesn"..."s untap step, and at the beginning of each of your draw steps, put a -N/-N counter on tha | 1 | Giant Oyster | hml |
 | {M}{M}: put a -N/-N counter on enchanted creature. | 1 | Torture | hml |
 
 ## Notes

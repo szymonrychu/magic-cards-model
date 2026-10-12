@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 34 | 15.0% |
+| Tested | 36 | 15.9% |
 | Works (untested) | 168 | 74.3% |
-| Partial (unaudited) | 1 | 0.4% |
-| Not working | 23 | 10.2% |
+| Partial (unaudited) | 0 | 0.0% |
+| Not working | 22 | 9.7% |
 
 ## Cards needing work
 
@@ -42,14 +42,12 @@
 | Sire of Stagnation | silent | Whenever a land an opponent controls enters, that player exiles the top two cards of their library and you draw two cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Skyline Cascade | silent | When this land enters, target creature an opponent controls doesn't untap during its controller's next untap step. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Slab Hammer | silent | Whenever equipped creature attacks, you may return a land you control to its owner's hand. If you do, the creature gets +2/+2 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Tightening Coils | silent | Enchanted creature gets -6/-0 and loses flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Titan's Presence | silent | As an additional cost to cast this spell, reveal a colorless creature card from your hand. Exile target creature if its power is less than or equal to the revea | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Transgress the Mind | silent | Devoid (This card has no color.) Target player reveals their hand. You choose a card from it with mana value 3 or greater and exile that card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Zada, Hedron Grinder | silent | Whenever you cast an instant or sorcery spell that targets only Zada, copy that spell for each other creature you control that the spell could target. Each copy | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Barrage Tyrant | notice | {2}{R}, Sacrifice another colorless creature: This creature deals damage equal to the sacrificed creature's power to any target. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Emeria Shepherd | notice | Landfall — Whenever a land you control enters, you may return target nonland permanent card from your graveyard to your hand. If that land is a Plains, you may  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Unnatural Aggression | notice | Devoid (This card has no color.) Target creature you control fights target creature an opponent controls. If the creature an opponent controls would die this tu | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Void Winnower | unaudited | Your opponents can't cast spells with even mana values. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Adverse Conditions | handled | Devoid (This card has no color.) Tap up to two target creatures. Those creatures don't untap during their controller's next untap step. Create a 1/1 colorless E | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Akoum Firebird | handled | This creature attacks each combat if able. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Akoum Stonewaker | handled | Landfall — Whenever a land you control enters, you may pay {2}{R}. If you do, create a 3/1 red Elemental creature token with trample and haste. Exile that token | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -90,7 +88,6 @@
 | Deathless Behemoth | handled | Sacrifice two Eldrazi Scions: Return this card from your graveyard to your hand. Activate only as a sorcery. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Defiant Bloodlord | handled | Whenever you gain life, target opponent loses that much life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Demon's Grasp | handled | Target creature gets -5/-5 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Desolation Twin | handled | When you cast this spell, create a 10/10 colorless Eldrazi creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Drana's Emissary | handled | At the beginning of your upkeep, each opponent loses 1 life and you gain 1 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Drowner of Hope | handled | When this creature enters, create two 1/1 colorless Eldrazi Scion creature tokens. They have "Sacrifice this token: Add {C}." | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Earthen Arms | handled | Put two +1/+1 counters on target permanent. Awaken 4—{6}{G} (If you cast this spell for {6}{G}, also put four +1/+1 counters on target land you control and it b | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -202,6 +199,7 @@
 | Tajuru Stalwart | handled | Converge — This creature enters with a +1/+1 counter on it for each color of mana spent to cast it. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Tajuru Warcaller | handled | Rally — Whenever this creature or another Ally you control enters, creatures you control get +2/+2 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Tandem Tactics | handled | Up to two target creatures each get +1/+2 until end of turn. You gain 2 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Tightening Coils | handled | Enchanted creature gets -6/-0 and loses flying. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Touch of the Void | handled | Devoid (This card has no color.) Touch of the Void deals 3 damage to any target. If a creature dealt damage this way would die this turn, exile it instead. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Tunneling Geopede | handled | Landfall — Whenever a land you control enters, this creature deals 1 damage to each opponent. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Turn Against | handled | Devoid (This card has no color.) Gain control of target creature until end of turn. Untap that creature. It gains haste until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -222,7 +220,7 @@
 ## Fully supported
 
 <details>
-<summary>34 cards</summary>
+<summary>36 cards</summary>
 
 - Akoum Hellkite
 - Aligned Hedron Network
@@ -231,6 +229,7 @@
 - Canopy Vista
 - Clutch of Currents
 - Conduit of Ruin
+- Desolation Twin
 - Dust Stalker
 - Encircling Fissure
 - Endless One
@@ -257,6 +256,7 @@
 - Unified Front
 - Vampiric Rites
 - Vile Aggregate
+- Void Winnower
 - Wasteland Strangler
 
 </details>
@@ -274,7 +274,6 @@
 | devoid (~ has no color.) exile target nonbasic land. search its controller's graveyard, hand, and library for any number of cards with the same name as that lan | 1 | Crumble to Dust | bfz |
 | devoid (~ has no color.) target creature you control fights target creature an opponent controls. if the creature an opponent controls would die ~, exile it ins | 1 | Unnatural Aggression | bfz |
 | devoid (~ has no color.) target player reveals their hand. you choose a card from it with mana value N or greater and exile that card. | 1 | Transgress the Mind | bfz |
-| enchanted creature gets -N/-N and loses flying. | 1 | Tightening Coils | bfz |
 | when ~ enters, for each isolation counter on it, exile up to one target nonland permanent an opponent controls until ~ leaves the battlefield. | 1 | Quarantine Field | bfz |
 | when ~ enters, target creature an opponent controls doesn"..."s next untap step. | 1 | Skyline Cascade | bfz |
 | when ~ enters, you may look at the top five cards of your library. if you do, reveal up to one basic land card from among them, then put that card on top of you | 1 | Fertile Thicket | bfz |
@@ -284,7 +283,6 @@
 | whenever you cast an instant or sorcery spell that targets only zada, copy that spell for each other creature you control that the spell could target. each copy | 1 | Zada, Hedron Grinder | bfz |
 | whenever ~ attacks, defending player exiles two permanents they control. | 1 | Bane of Bala Ged | bfz |
 | whenever ~ attacks, defending player loses N life. | 1 | Silent Skimmer | bfz |
-| your opponents can't cast spells with even mana values. | 1 | Void Winnower | bfz |
 | {M}{M}, sacrifice another colorless creature: ~ deals damage equal to the sacrificed creature's power to any target. | 1 | Barrage Tyrant | bfz |
 | {M}{M}{M}: draw a card. each opponent exiles the top card of their library. | 1 | Fathom Feeder | bfz |
 

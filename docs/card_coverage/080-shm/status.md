@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 43 | 15.7% |
-| Works (untested) | 123 | 44.9% |
-| Partial (unaudited) | 5 | 1.8% |
-| Not working | 103 | 37.6% |
+| Tested | 50 | 18.2% |
+| Works (untested) | 147 | 53.6% |
+| Partial (unaudited) | 0 | 0.0% |
+| Not working | 77 | 28.1% |
 
 ## Cards needing work
 
@@ -28,39 +28,29 @@
 |---|---|---|---|---|---|
 | Advice from the Fae | silent | ({2/U} can be paid with any two mana or with {U}. This card's mana value is 6.) Look at the top five cards of your library. If you control more creatures than e | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Aphotic Wisps | silent | Target creature becomes black and gains fear until end of turn. (It can't be blocked except by artifact creatures and/or black creatures.) Draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Armored Ascension | silent | Enchanted creature gets +1/+1 for each Plains you control and has flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Ashenmoor Liege | silent | Other black creatures you control get +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Augury Adept | silent | Whenever this creature deals combat damage to a player, reveal the top card of your library and put that card into your hand. You gain life equal to its mana va | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Biting Tether | silent | At the beginning of your upkeep, put a -1/-1 counter on enchanted creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Bloodmark Mentor | silent | Red creatures you control have first strike. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Boartusk Liege | silent | Other red creatures you control get +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Cauldron of Souls | silent | {T}: Choose any number of target creatures. Each of those creatures gains persist until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Cemetery Puca | silent | Whenever a creature dies, you may pay {1}. If you do, this creature becomes a copy of that creature, except it has this ability. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Corrosive Mentor | silent | Black creatures you control have wither. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Counterbore | silent | Counter target spell. Search its controller's graveyard, hand, and library for all cards with the same name as that spell and exile them. Then that player shuff | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Cragganwick Cremator | silent | When this creature enters, discard a card at random. If you discard a creature card this way, this creature deals damage equal to that card's power to target pl | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Crimson Wisps | silent | Target creature becomes red and gains haste until end of turn. (It can attack and {T} this turn.) Draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Crowd of Cinders | silent | Crowd of Cinders's power and toughness are each equal to the number of black permanents you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Cursecatcher | silent | Sacrifice this creature: Counter target instant or sorcery spell unless its controller pays {1}. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Deus of Calamity | silent | Whenever this creature deals 6 or more damage to an opponent, destroy target land that player controls. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Din of the Fireherd | silent | Create a 5/5 black and red Elemental creature token. Target opponent sacrifices a creature of their choice for each black creature you control, then sacrifices  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Dire Undercurrents | silent | Whenever a blue creature you control enters, you may have target player draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Dream Salvage | silent | Draw cards equal to the number of cards target opponent discarded this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Drove of Elves | silent | Drove of Elves's power and toughness are each equal to the number of green permanents you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Elsewhere Flask | silent | Sacrifice this artifact: Choose a basic land type. Each land you control becomes that type until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Enchanted Evening | silent | All permanents are enchantments in addition to their other types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Faerie Swarm | silent | Faerie Swarm's power and toughness are each equal to the number of blue permanents you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Fate Transfer | silent | Move all counters from target creature onto another target creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Fists of the Demigod | silent | As long as enchanted creature is black, it gets +1/+1 and has wither. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Flourishing Defenses | silent | Whenever a -1/-1 counter is put on a creature, you may create a 1/1 green Elf Warrior creature token. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Fossil Find | silent | Return a card at random from your graveyard to your hand, then reorder your graveyard as you choose. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Fracturing Gust | silent | Destroy all artifacts and enchantments. You gain 2 life for each permanent destroyed this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Ghastlord of Fugue | silent | Whenever this creature deals combat damage to a player, that player reveals their hand. You choose a card from it. That player exiles that card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Glamer Spinners | silent | When this creature enters, attach all Auras enchanting target permanent to another permanent with the same controller. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Glen Elendra Liege | silent | Other blue creatures you control get +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Grief Tyrant | silent | When this creature dies, put a -1/-1 counter on target creature for each -1/-1 counter on this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Heartmender | silent | At the beginning of your upkeep, remove a -1/-1 counter from each creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Helm of the Ghastlord | silent | As long as enchanted creature is blue, it gets +1/+1 and has "Whenever this creature deals damage to an opponent, draw a card." | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Hollowsage | silent | Whenever this creature becomes untapped, you may have target player discard a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Horde of Boggarts | silent | Horde of Boggarts's power and toughness are each equal to the number of red permanents you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Incremental Blight | silent | Put a -1/-1 counter on target creature, two -1/-1 counters on another target creature, and three -1/-1 counters on a third target creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -72,7 +62,6 @@
 | Leech Bonder | silent | {U}, {Q}: Move a counter from target creature onto a second target creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Lockjaw Snapper | silent | When this creature dies, put a -1/-1 counter on each creature with a -1/-1 counter on it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Lurebound Scarecrow | silent | When you control no permanents of the chosen color, sacrifice this creature. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
-| Mass Calcify | silent | Destroy all nonwhite creatures. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Medicine Runner | silent | When this creature enters, you may remove a counter from target permanent. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Memory Plunder | silent | You may cast target instant or sorcery card from an opponent's graveyard without paying its mana cost. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Mercy Killing | silent | Target creature's controller sacrifices it, then creates X 1/1 green and white Elf Warrior creature tokens, where X is that creature's power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -89,15 +78,11 @@
 | Raking Canopy | silent | Whenever a creature with flying attacks you, this enchantment deals 4 damage to it. | this trigger's condition can never be satisfied - it never triggers | Y/-/- | not_working |
 | Repel Intruders | silent | Create two 1/1 white Kithkin Soldier creature tokens if {W} was spent to cast this spell. Counter up to one target creature spell if {U} was spent to cast this  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Rhys the Redeemed | silent | {4}{G/W}{G/W}, {T}: For each creature token you control, create a token that's a copy of that creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Roughshod Mentor | silent | Green creatures you control have trample. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Runes of the Deus | silent | As long as enchanted creature is red, it gets +1/+1 and has double strike. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Scuttlemutt | silent | {T}: Target creature becomes the color or colors of your choice until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Shield of the Oversoul | silent | As long as enchanted creature is green, it gets +1/+1 and has indestructible. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Spell Syphon | silent | Counter target spell unless its controller pays {1} for each blue permanent you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Steel of the Godhead | silent | As long as enchanted creature is white, it gets +1/+1 and has lifelink. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Steel of the Godhead | silent | As long as enchanted creature is blue, it gets +1/+1 and can't be blocked. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Strip Bare | silent | Destroy all Auras and Equipment attached to target creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Tattermunge Witch | silent | {R}{G}: Each blocked creature gets +1/+0 and gains trample until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Thistledown Liege | silent | Other white creatures you control get +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Toil to Renown | silent | You gain 1 life for each tapped artifact, creature, and land you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Torrent of Souls | silent | Return up to one target creature card from your graveyard to the battlefield if {B} was spent to cast this spell. Creatures target player controls get +2/+0 and | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Twilight Shepherd | silent | When this creature enters, return to your hand all cards in your graveyard that were put there from the battlefield this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -106,46 +91,40 @@
 | Vexing Shusher | silent | {R/G}: Target spell can't be countered. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Viridescent Wisps | silent | Target creature becomes green and gets +1/+0 until end of turn. Draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Wild Swing | silent | Choose three target nonenchantment permanents. Destroy one of them at random. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Wilt-Leaf Liege | silent | Other green creatures you control get +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Witherscale Wurm | silent | Whenever this creature deals damage to an opponent, remove all -1/-1 counters from it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Woeleecher | silent | {W}, {T}: Remove a -1/-1 counter from target creature. If you do, you gain 2 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Worldpurge | silent | Return all permanents to their owners' hands. Each player chooses up to seven cards in their hand, then shuffles the rest into their library. Each player loses  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Wound Reflection | silent | At the beginning of each end step, each opponent loses life equal to the life they lost this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Ashenmoor Cohort | notice | This creature gets +1/+1 as long as you control another black creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Ballynock Cohort | notice | This creature gets +1/+1 as long as you control another white creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Blazethorn Scarecrow | notice | This creature has haste as long as you control a red creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Briarberry Cohort | notice | This creature gets +1/+1 as long as you control another blue creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Consign to Dream | notice | Return target permanent to its owner's hand. If that permanent is red or green, put it on top of its owner's library instead. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Crabapple Cohort | notice | This creature gets +1/+1 as long as you control another green creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Gloomlance | notice | Destroy target creature. If that creature was green or white, its controller discards a card. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Gloomwidow's Feast | notice | Destroy target creature with flying. If that creature was blue or black, create a 1/2 green Spider creature token with reach. (It can block creatures with flyin | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Impromptu Raid | notice | {2}{R/G}: Reveal the top card of your library. If it isn't a creature card, put it into your graveyard. Otherwise, put that card onto the battlefield. That crea | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Isleback Spawn | notice | This creature gets +4/+8 as long as a library has twenty or fewer cards in it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Mudbrawler Cohort | notice | This creature gets +1/+1 as long as you control another red creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Puppeteer Clique | notice | When this creature enters, put target creature card from an opponent's graveyard onto the battlefield under your control. It gains haste. At the beginning of yo | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Rattleblaze Scarecrow | notice | This creature has persist as long as you control a black creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | River's Grasp | notice | If {U} was spent to cast this spell, return up to one target creature to its owner's hand. If {B} was spent to cast this spell, target player reveals their hand | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Thornwatch Scarecrow | notice | This creature has wither as long as you control a green creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Watchwing Scarecrow | notice | This creature has vigilance as long as you control a white creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Wicker Warcrawler | notice | Whenever this creature attacks or blocks, put a -1/-1 counter on it at end of combat. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Wingrattle Scarecrow | notice | This creature has flying as long as you control a blue creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Everlasting Torment | unaudited | All damage is dealt as though its source had wither. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Godhead of Awe | unaudited | Other creatures have base power and toughness 1/1. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Greater Auramancy | unaudited | Other enchantments you control have shroud. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Resplendent Mentor | unaudited | White creatures you control have "{T}: You gain 1 life." | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Runed Halo | unaudited | You have protection from the chosen card name. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Aethertow | handled | Put target attacking or blocking creature on top of its owner's library. Conspire (As you cast this spell, you may tap two untapped creatures you control that s | the engine reads this text and performs it | Y/-/- | not_tested |
 | Apothecary Initiate | handled | Whenever a player casts a white spell, you may pay {1}. If you do, you gain 1 life. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Armored Ascension | handled | Enchanted creature gets +1/+1 for each Plains you control and has flying. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Ashenmoor Cohort | handled | This creature gets +1/+1 as long as you control another black creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ashenmoor Gouger | handled | This creature can't block. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Ashenmoor Liege | handled | Other black creatures you control get +1/+1. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Ballynock Cohort | handled | This creature gets +1/+1 as long as you control another white creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Barkshell Blessing | handled | Target creature gets +2/+2 until end of turn. Conspire (As you cast this spell, you may tap two untapped creatures you control that share a color with it. When  | the engine reads this text and performs it | Y/-/- | not_tested |
 | Barrenton Cragtreads | handled | This creature can't be blocked by red creatures. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Barrenton Medic | handled | {T}: Prevent the next 1 damage that would be dealt to any target this turn. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Blazethorn Scarecrow | handled | This creature has haste as long as you control a red creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Blight Sickle | handled | Equipped creature gets +1/+0 and has wither. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Blistering Dieflyn | handled | {B/R}: This creature gets +1/+0 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Bloodmark Mentor | handled | Red creatures you control have first strike. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Boartusk Liege | handled | Other red creatures you control get +1/+1. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Boggart Arsonists | handled | {2}{R}, Sacrifice this creature: Destroy target Scarecrow or Plains. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Briarberry Cohort | handled | This creature gets +1/+1 as long as you control another blue creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Cerulean Wisps | handled | Target creature becomes blue until end of turn. Untap that creature. Draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Cinderbones | handled | {1}{B}: Regenerate this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Cinderhaze Wretch | handled | {T}: Target player discards a card. Activate only during your turn. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Corrosive Mentor | handled | Black creatures you control have wither. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Crabapple Cohort | handled | This creature gets +1/+1 as long as you control another green creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Cultbrand Cinder | handled | When this creature enters, put a -1/-1 counter on target creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Curse of Chains | handled | At the beginning of each upkeep, tap enchanted creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Deep-Slumber Titan | handled | This creature enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -156,8 +135,10 @@
 | Elemental Mastery | handled | Enchanted creature has "{T}: Create X 1/1 red Elemental creature tokens with haste, where X is this creature's power. Exile them at the beginning of the next en | the engine reads this text and performs it | Y/-/- | not_tested |
 | Elvish Hexhunter | handled | {G/W}, {T}, Sacrifice this creature: Destroy target enchantment. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Emberstrike Duo | handled | Whenever you cast a black spell, this creature gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Enchanted Evening | handled | All permanents are enchantments in addition to their other types. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Farhaven Elf | handled | When this creature enters, you may search your library for a basic land card, put it onto the battlefield tapped, then shuffle. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Fire-Lit Thicket | handled |  |  | Y/-/- | not_tested |
+| Fists of the Demigod | handled | As long as enchanted creature is black, it gets +1/+1 and has wither. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Flame Javelin | handled | ({2/R} can be paid with any two mana or with {R}. This card's mana value is 6.) Flame Javelin deals 4 damage to any target. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Foxfire Oak | handled | {R/G}{R/G}{R/G}: This creature gets +3/+0 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Fulminator Mage | handled | Sacrifice this creature: Destroy target nonbasic land. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -165,6 +146,7 @@
 | Ghastly Discovery | handled | Draw two cards, then discard a card. Conspire (As you cast this spell, you may tap two untapped creatures you control that share a color with it. When you do, c | the engine reads this text and performs it | Y/-/- | not_tested |
 | Giantbaiting | handled | Create a 4/4 red and green Giant Warrior creature token with haste. Exile it at the beginning of the next end step. Conspire (As you cast this spell, you may ta | the engine reads this text and performs it | Y/-/- | not_tested |
 | Gleeful Sabotage | handled | Destroy target artifact or enchantment. Conspire (As you cast this spell, you may tap two untapped creatures you control that share a color with it. When you do | the engine reads this text and performs it | Y/-/- | not_tested |
+| Glen Elendra Liege | handled | Other blue creatures you control get +1/+1. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Gnarled Effigy | handled | {4}, {T}: Put a -1/-1 counter on target creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Goldenglow Moth | handled | Whenever this creature blocks, you may gain 4 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Gravelgill Axeshark | handled | Persist | machines/keywords.py | Y/-/- | not_tested |
@@ -172,6 +154,7 @@
 | Grim Poppet | handled | This creature enters with three -1/-1 counters on it. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Guttural Response | handled | Counter target blue instant spell. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Heap Doll | handled | Sacrifice this creature: Exile target card from a graveyard. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Helm of the Ghastlord | handled | As long as enchanted creature is blue, it gets +1/+1 and has "Whenever this creature deals damage to an opponent, draw a card." | the engine reads this text and performs it | Y/-/- | not_tested |
 | Howl of the Night Pack | handled | Create a 2/2 green Wolf creature token for each Forest you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Hungry Spriggan | handled | Whenever this creature attacks, it gets +3/+3 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Inescapable Brute | handled | This creature must be blocked if able. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -187,6 +170,7 @@
 | Madblind Mountain | handled | This land enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Mana Reflection | handled | If you tap a permanent for mana, it produces twice as much of that mana instead. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Manaforge Cinder | handled |  |  | Y/-/- | not_tested |
+| Mass Calcify | handled | Destroy all nonwhite creatures. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Memory Sluice | handled | Target player mills four cards. Conspire (As you cast this spell, you may tap two untapped creatures you control that share a color with it. When you do, copy i | the engine reads this text and performs it | Y/-/- | not_tested |
 | Merrow Grimeblotter | handled | {1}{U/B}, {Q}: Target creature gets -2/-0 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Merrow Wavebreakers | handled | {1}{U}, {Q}: This creature gains flying until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -194,6 +178,7 @@
 | Mistmeadow Witch | handled | {2}{W}{U}: Exile target creature. Return that card to the battlefield under its owner's control at the beginning of the next end step. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Moonring Island | handled | This land enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Morselhoarder | handled | This creature enters with two -1/-1 counters on it. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Mudbrawler Cohort | handled | This creature gets +1/+1 as long as you control another red creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Mudbrawler Raiders | handled | This creature can't be blocked by blue creatures. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Murderous Redcap | handled | When this creature enters, it deals damage equal to its power to any target. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Niveous Wisps | handled | Target creature becomes white until end of turn. Tap that creature. Draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -214,12 +199,15 @@
 | Put Away | handled | Counter target spell. You may shuffle up to one target card from your graveyard into your library. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Pyre Charger | handled | {R}: This creature gets +1/+0 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Rage Reflection | handled | Creatures you control have double strike. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Rattleblaze Scarecrow | handled | This creature has persist as long as you control a black creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Raven's Run Dragoon | handled | This creature can't be blocked by black creatures. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Reaper King | handled | Other Scarecrow creatures you control get +1/+1. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Reknit | handled | Regenerate target permanent. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Revelsong Horn | handled | {1}, {T}, Tap an untapped creature you control: Target creature gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | River Kelpie | handled | Whenever this creature or another permanent enters from a graveyard, draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Roughshod Mentor | handled | Green creatures you control have trample. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Rune-Cervin Rider | handled | {G/W}{G/W}: This creature gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Runes of the Deus | handled | As long as enchanted creature is red, it gets +1/+1 and has double strike. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Rustrazor Butcher | handled | First strike | machines/combat.py | Y/-/- | not_tested |
 | Safehold Duo | handled | Whenever you cast a green spell, this creature gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Safehold Elite | handled | Persist | machines/keywords.py | Y/-/- | not_tested |
@@ -231,6 +219,7 @@
 | Scuzzback Marauders | handled | Persist | machines/keywords.py | Y/-/- | not_tested |
 | Scuzzback Scrapper | handled | Wither | machines/combat.py | Y/-/- | not_tested |
 | Seedcradle Witch | handled | {2}{G}{W}: Target creature gets +3/+3 until end of turn. Untap that creature. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Shield of the Oversoul | handled | As long as enchanted creature is green, it gets +1/+1 and has indestructible. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Sickle Ripper | handled | Wither | machines/combat.py | Y/-/- | not_tested |
 | Silkbind Faerie | handled | {1}{W/U}, {Q}: Tap target creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Sinking Feeling | handled | Enchanted creature doesn't untap during its controller's untap step. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -246,22 +235,26 @@
 | Tattermunge Duo | handled | Whenever you cast a red spell, this creature gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Tattermunge Maniac | handled | This creature attacks each combat if able. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Thistledown Duo | handled | Whenever you cast a white spell, this creature gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Thistledown Liege | handled | Other white creatures you control get +1/+1. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Thornwatch Scarecrow | handled | This creature has wither as long as you control a green creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Thoughtweft Gambit | handled | Tap all creatures your opponents control and untap all creatures you control. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Torpor Dust | handled | Enchanted creature gets -3/-0. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Trip Noose | handled | {2}, {T}: Tap target creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Turn to Mist | handled | Exile target creature. Return that card to the battlefield under its owner's control at the beginning of the next end step. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Wanderbrine Rootcutters | handled | This creature can't be blocked by green creatures. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Wasp Lancer | handled | Flying | machines/combat.py | Y/-/- | not_tested |
+| Watchwing Scarecrow | handled | This creature has vigilance as long as you control a white creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Wildslayer Elves | handled | Wither | machines/combat.py | Y/-/- | not_tested |
 | Wilt-Leaf Cavaliers | handled | Vigilance | machines/combat.py | Y/-/- | not_tested |
 | Windbrisk Raptor | handled | Attacking creatures you control have lifelink. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Wingrattle Scarecrow | handled | This creature has flying as long as you control a blue creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Wooded Bastion | handled |  |  | Y/-/- | not_tested |
 | Woodfall Primus | handled | When this creature enters, destroy target noncreature permanent. | the engine reads this text and performs it | Y/-/- | not_tested |
 
 ## Fully supported
 
 <details>
-<summary>43 cards</summary>
+<summary>50 cards</summary>
 
 - Beseech the Queen
 - Bloodshed Fever
@@ -270,14 +263,18 @@
 - Boon Reflection
 - Burn Trail
 - Chainbreaker
+- Cursecatcher
 - Dawnglow Infusion
 - Deepchannel Mentor
 - Demigod of Revenge
 - Devoted Druid
 - Ember Gale
+- Everlasting Torment
 - Faerie Macabre
 - Firespout
 - Gloomwidow
+- Godhead of Awe
+- Greater Auramancy
 - Hollowborn Barghest
 - Illuminated Folio
 - Jaws of Stone
@@ -288,8 +285,10 @@
 - Mistveil Plains
 - Mossbridge Troll
 - Mystic Gate
+- Resplendent Mentor
 - Rite of Consumption
 - Rosheen Meanderer
+- Runed Halo
 - Savor the Moment
 - Scrapbasket
 - Smash to Smithereens
@@ -304,6 +303,7 @@
 - Umbral Mantle
 - Wheel of Sun and Moon
 - Whimwader
+- Wilt-Leaf Liege
 - Wort, the Raidmother
 - Zealous Guardian
 
@@ -315,19 +315,12 @@
 |---|---|---|---|
 | ({M} can be paid with any two mana or with {M}. ~ mana value is N.) look at the top five cards of your library. if you control more creatures than each other pl | 1 | Advice from the Fae | shm |
 | all cards that aren't on the battlefield, spells, and permanents are the chosen color in addition to their other colors. | 1 | Painter's Servant | shm |
-| all damage is dealt as though its source had wither. | 1 | Everlasting Torment | shm |
-| all permanents are enchantments in addition to their other types. | 1 | Enchanted Evening | shm |
-| as long as enchanted creature is black, it gets +N/+N and has wither. | 1 | Fists of the Demigod | shm |
-| as long as enchanted creature is blue, it gets +N/+N and has "..." | 1 | Helm of the Ghastlord | shm |
-| as long as enchanted creature is green, it gets +N/+N and has indestructible. | 1 | Shield of the Oversoul | shm |
-| as long as enchanted creature is red, it gets +N/+N and has double strike. | 1 | Runes of the Deus | shm |
-| as long as enchanted creature is white, it gets +N/+N and has lifelink. | 1 | Steel of the Godhead | shm |
+| as long as enchanted creature is blue, it gets +N/+N and can't be blocked. | 1 | Steel of the Godhead | shm |
 | at the beginning of each end step, each opponent loses life equal to the life they lost ~. | 1 | Wound Reflection | shm |
 | at the beginning of your upkeep, put a -N/-N counter on each nonblack creature. | 1 | Midnight Banshee | shm |
 | at the beginning of your upkeep, put a -N/-N counter on enchanted creature. | 1 | Biting Tether | shm |
 | at the beginning of your upkeep, remove a -N/-N counter from each creature you control. | 1 | Heartmender | shm |
 | at the beginning of your upkeep, you may exchange control of target nonland permanent you control and target nonland permanent an opponent controls with equal o | 1 | Puca's Mischief | shm |
-| black creatures you control have wither. | 1 | Corrosive Mentor | shm |
 | choose three target nonenchantment permanents. destroy one of them at random. | 1 | Wild Swing | shm |
 | counter target spell unless its controller pays {M} for each blue permanent you control. | 1 | Spell Syphon | shm |
 | counter target spell. search its controller's graveyard, hand, and library for all cards with the same name as that spell and exile them. then that player shuff | 1 | Counterbore | shm |
@@ -335,31 +328,19 @@
 | create two N/N white kithkin soldier creature tokens if {M} was spent to cast ~. counter up to one target creature spell if {M} was spent to cast ~. (do both if | 1 | Repel Intruders | shm |
 | destroy all artifacts and enchantments. you gain N life for each permanent destroyed ~. | 1 | Fracturing Gust | shm |
 | destroy all auras and equipment attached to target creature. | 1 | Strip Bare | shm |
-| destroy all nonwhite creatures. | 1 | Mass Calcify | shm |
 | destroy target creature with flying. if that creature was blue or black, create a N/N green spider creature token with reach. (it can block creatures with flyin | 1 | Gloomwidow's Feast | shm |
 | destroy target creature. if that creature was green or white, its controller discards a card. | 1 | Gloomlance | shm |
 | draw cards equal to the number of cards target opponent discarded ~. | 1 | Dream Salvage | shm |
-| enchanted creature gets +N/+N for each plains you control and has flying. | 1 | Armored Ascension | shm |
-| green creatures you control have trample. | 1 | Roughshod Mentor | shm |
 | if {M} was spent to cast ~, return up to one target creature to its owner's hand. if {M} was spent to cast ~, target player reveals their hand, you choose a non | 1 | River's Grasp | shm |
 | move all counters from target creature onto another target creature. | 1 | Fate Transfer | shm |
-| other black creatures you control get +N/+N. | 1 | Ashenmoor Liege | shm |
-| other blue creatures you control get +N/+N. | 1 | Glen Elendra Liege | shm |
-| other creatures have base power and toughness N/N. | 1 | Godhead of Awe | shm |
-| other enchantments you control have shroud. | 1 | Greater Auramancy | shm |
-| other green creatures you control get +N/+N. | 1 | Wilt-Leaf Liege | shm |
-| other red creatures you control get +N/+N. | 1 | Boartusk Liege | shm |
-| other white creatures you control get +N/+N. | 1 | Thistledown Liege | shm |
 | prevent all damage target attacking or blocking creature would deal ~. if that creature is black or red, destroy it. | 1 | Inquisitor's Snare | shm |
 | protection from blue, from black, and from red | 1 | Oversoul of Dusk | shm |
 | put a -N/-N counter on target creature, two -N/-N counters on another target creature, and three -N/-N counters on a third target creature. | 1 | Incremental Blight | shm |
-| red creatures you control have first strike. | 1 | Bloodmark Mentor | shm |
 | return a card at random from your graveyard to your hand, then reorder your graveyard as you choose. | 1 | Fossil Find | shm |
 | return all permanents to their owners' hands. each player chooses up to seven cards in their hand, then shuffles the rest into their library. each player loses  | 1 | Worldpurge | shm |
 | return target permanent to its owner"..."s library instead. | 1 | Consign to Dream | shm |
 | return up to one target creature card from your graveyard to the battlefield if {M} was spent to cast ~. creatures target player controls get +N/+N and gain has | 1 | Torrent of Souls | shm |
 | sacrifice ~: choose a basic land type. each land you control becomes that type until end of turn. | 1 | Elsewhere Flask | shm |
-| sacrifice ~: counter target instant or sorcery spell unless its controller pays {M}. | 1 | Cursecatcher | shm |
 | starting with you, each player may pay any amount of life. repeat ~ until no one pays life. each player creates a N/N black rat creature token for each N life t | 1 | Plague of Vermin | shm |
 | target creature becomes black and gains fear until end of turn. (it can't be blocked except by artifact creatures and/or black creatures.) draw a card. | 1 | Aphotic Wisps | shm |
 | target creature becomes green and gets +N/+N until end of turn. draw a card. | 1 | Viridescent Wisps | shm |
@@ -388,9 +369,7 @@
 | whenever ~ deals combat damage to a player, reveal the top card of your library and put that card into your hand. you gain life equal to its mana value. | 1 | Augury Adept | shm |
 | whenever ~ deals combat damage to a player, that player reveals their hand. you choose a card from it. that player exiles that card. | 1 | Ghastlord of Fugue | shm |
 | whenever ~ deals damage to an opponent, remove all -N/-N counters from it. | 1 | Witherscale Wurm | shm |
-| white creatures you control have "..." | 1 | Resplendent Mentor | shm |
 | you gain N life for each tapped artifact, creature, and land you control. | 1 | Toil to Renown | shm |
-| you have protection from the chosen card name. | 1 | Runed Halo | shm |
 | you may cast target instant or sorcery card from an opponent's graveyard without paying its mana cost. | 1 | Memory Plunder | shm |
 | {M}, sacrifice a forest: choose a player. that player adds {M}{M}{M}. | 1 | Valleymaker | shm |
 | {M}, {M}: look at the top card of your library. you may exile that card. | 1 | Puresight Merrow | shm |
@@ -406,16 +385,6 @@
 | {M}{M}{M}, {M}: target creature gains protection from the color of its controller's choice until end of turn. | 1 | Pale Wayfarer | shm |
 | {M}{M}{M}: each unblocked creature has base power and toughness N/N until end of turn. | 1 | Inkfathom Witch | shm |
 | ~ gets +N/+N as long as a library has twenty or fewer cards in it. | 1 | Isleback Spawn | shm |
-| ~ gets +N/+N as long as you control another black creature. | 1 | Ashenmoor Cohort | shm |
-| ~ gets +N/+N as long as you control another blue creature. | 1 | Briarberry Cohort | shm |
-| ~ gets +N/+N as long as you control another green creature. | 1 | Crabapple Cohort | shm |
-| ~ gets +N/+N as long as you control another red creature. | 1 | Mudbrawler Cohort | shm |
-| ~ gets +N/+N as long as you control another white creature. | 1 | Ballynock Cohort | shm |
-| ~ has flying as long as you control a blue creature. | 1 | Wingrattle Scarecrow | shm |
-| ~ has haste as long as you control a red creature. | 1 | Blazethorn Scarecrow | shm |
-| ~ has persist as long as you control a black creature. | 1 | Rattleblaze Scarecrow | shm |
-| ~ has vigilance as long as you control a white creature. | 1 | Watchwing Scarecrow | shm |
-| ~ has wither as long as you control a green creature. | 1 | Thornwatch Scarecrow | shm |
 | ~'s power and toughness are each equal to the number of black permanents you control. | 1 | Crowd of Cinders | shm |
 | ~'s power and toughness are each equal to the number of blue permanents you control. | 1 | Faerie Swarm | shm |
 | ~'s power and toughness are each equal to the number of green permanents you control. | 1 | Drove of Elves | shm |

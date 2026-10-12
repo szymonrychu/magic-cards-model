@@ -17,16 +17,15 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 145 | 57.5% |
+| Tested | 146 | 57.9% |
 | Works (untested) | 106 | 42.1% |
-| Partial (unaudited) | 1 | 0.4% |
+| Partial (unaudited) | 0 | 0.0% |
 | Not working | 0 | 0.0% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
-| Wildvine Pummeler | unaudited | Vivid — This spell costs {1} less to cast for each color among permanents you control. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Aquitect's Defenses | handled | When this Aura enters, enchanted creature gains hexproof until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Assert Perfection | handled | Target creature you control gets +1/+0 until end of turn. It deals damage equal to its power to up to one target creature an opponent controls. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Barbed Bloodletter | handled | When this Equipment enters, attach it to target creature you control. That creature gains wither until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -137,7 +136,7 @@
 ## Fully supported
 
 <details>
-<summary>145 cards</summary>
+<summary>146 cards</summary>
 
 - Abigale, Eloquent First-Year
 - Adept Watershaper
@@ -282,6 +281,7 @@
 - Wanderwine Farewell
 - Warren Torchmaster
 - Wild Unraveling
+- Wildvine Pummeler
 - Winnowing
 - Wistfulness
 
@@ -289,9 +289,7 @@
 
 ## Missing mechanics
 
-| Mechanic (label / template) | Count | Example cards | Sets |
-|---|---|---|---|
-| Vivid | 1 | Wildvine Pummeler | ecl |
+None.
 
 ## Notes
 

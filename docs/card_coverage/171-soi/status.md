@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 29 | 11.1% |
-| Works (untested) | 176 | 67.4% |
-| Partial (unaudited) | 4 | 1.5% |
-| Not working | 52 | 19.9% |
+| Tested | 33 | 12.6% |
+| Works (untested) | 187 | 71.6% |
+| Partial (unaudited) | 0 | 0.0% |
+| Not working | 41 | 15.7% |
 
 ## Cards needing work
 
@@ -32,11 +32,9 @@
 | Corrupted Grafstone | silent | {T}: Choose a color of a card in your graveyard. Add one mana of that color. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Creeping Dread | silent | At the beginning of your upkeep, each player discards a card. Each opponent who discarded a card that shares a card type with the card you discarded loses 3 lif | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Cult of the Waxing Moon | silent | Whenever a permanent you control transforms into a non-Human creature, create a 2/2 green Wolf creature token. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
-| Deathcap Cultivator | silent | Delirium — This creature has deathtouch as long as there are four or more card types among cards in your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Elusive Tormentor // Insidious Mist | silent | Whenever this creature attacks and isn't blocked, you may pay {2}{B}. If you do, transform it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Engulf the Shore | silent | Return to their owners' hands all creatures with toughness less than or equal to the number of Islands you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Epiphany at the Drownyard | silent | Reveal the top X plus one cards of your library and separate them into two piles. An opponent chooses one of those piles. Put that pile into your hand and the o | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Equestrian Skill | silent | As long as enchanted creature is a Human, it has trample. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Erdwal Illuminator | silent | Whenever you investigate for the first time each turn, investigate an additional time. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Ever After | silent | Return up to two target creature cards from your graveyard to the battlefield. Each of those creatures is a black Zombie in addition to its other colors and typ | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Flameblade Angel | silent | Whenever a source an opponent controls deals damage to you or a permanent you control, you may have this creature deal 1 damage to that source's controller. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -44,23 +42,14 @@
 | From Under the Floorboards | silent | Madness {X}{B}{B} (If you discard this card, discard it into exile. When you do, cast it for its madness cost or put it into your graveyard.) Create three tappe | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Geier Reach Bandit // Vildin-Pack Alpha | silent | Whenever a Werewolf you control enters, you may transform it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Harness the Storm | silent | Whenever you cast an instant or sorcery spell from your hand, you may cast target card with the same name as that spell from your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Harvest Hand // Scrounged Scythe | silent | As long as equipped creature is a Human, it has menace. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Hope Against Hope | silent | As long as enchanted creature is a Human, it has first strike. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Hound of the Farbogs | silent | Delirium — This creature has menace as long as there are four or more card types among cards in your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Inquisitor's Ox | silent | Delirium — This creature gets +1/+0 and has vigilance as long as there are four or more card types among cards in your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Invasive Surgery | silent | Counter target sorcery spell. Delirium — If there are four or more card types among cards in your graveyard, search the graveyard, hand, and library of that spe | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Kessig Dire Swine | silent | Delirium — This creature has trample as long as there are four or more card types among cards in your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Liliana's Indignation | silent | Mill X cards. Target player loses 2 life for each creature card put into your graveyard this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Moldgraf Scavenger | silent | Delirium — This creature gets +3/+0 as long as there are four or more card types among cards in your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Moorland Drifter | silent | Delirium — This creature has flying as long as there are four or more card types among cards in your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Neglected Heirloom // Ashmouth Blade | silent | When equipped creature transforms, transform this Equipment. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Not Forgotten | silent | Put target card from a graveyard on your choice of the top or bottom of its owner's library. Create a 1/1 white Spirit creature token with flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Olivia, Mobilized for War | silent | Whenever another creature you control enters, you may discard a card. If you do, put a +1/+1 counter on that creature, it gains haste until end of turn, and it  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Paranoid Parish-Blade | silent | Delirium — This creature gets +1/+0 and has first strike as long as there are four or more card types among cards in your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Pick the Brain | silent | Target opponent reveals their hand. You choose a nonland card from it and exile that card. Delirium — If there are four or more card types among cards in your g | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Pieces of the Puzzle | silent | Reveal the top five cards of your library. Put up to two instant and/or sorcery cards from among them into your hand and the rest into your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Sage of Ancient Lore // Werewolf of Ancient Hunger | silent | Sage of Ancient Lore's power and toughness are each equal to the number of cards in your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Scourge Wolf | silent | Delirium — This creature has double strike as long as there are four or more card types among cards in your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
+| Sage of Ancient Lore // Werewolf of Ancient Hunger | silent | Werewolf of Ancient Hunger's power and toughness are each equal to the total number of cards in all players' hands. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Seasons Past | silent | Return any number of cards with different mana values from your graveyard to your hand. Put Seasons Past on the bottom of its owner's library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Second Harvest | silent | For each token you control, create a token that's a copy of that permanent. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sin Prodder | silent | At the beginning of your upkeep, reveal the top card of your library. Any opponent may have you put that card into your graveyard. If a player does, this creatu | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -78,10 +67,6 @@
 | Geralf's Masterpiece | notice | This creature gets -1/-1 for each card in your hand. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Malevolent Whispers | notice | Gain control of target creature until end of turn. Untap that creature. It gets +2/+0 and gains haste until end of turn. Madness {3}{R} (If you discard this car | unparsed remainder: Untap that creature. It gets +2/+0 and gains haste until end of turn. | Y/Y/- | not_working |
 | Triskaidekaphobia | notice | At the beginning of your upkeep, choose one — • Each player with exactly 13 life loses the game, then each player gains 1 life. • Each player with exactly 13 li | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Bound by Moonsilver | unaudited | Enchanted creature can't attack, block, or transform. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Falkenrath Gorger | unaudited | Each Vampire creature card you own that isn't on the battlefield has madness. The madness cost is equal to its mana cost. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Sigarda, Heron's Grace | unaudited | You and Humans you control have hexproof. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| True-Faith Censer | unaudited | As long as equipped creature is a Human, it gets an additional +1/+0. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Aberrant Researcher // Perfected Form | handled | At the beginning of your upkeep, mill a card. If an instant or sorcery card was milled this way, transform this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Aim High | handled | Untap target creature. It gets +2/+2 and gains reach until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Alms of the Vein | handled | Target opponent loses 3 life and you gain 3 life. Madness {B} (If you discard this card, discard it into exile. When you do, cast it for its madness cost or put | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -110,6 +95,7 @@
 | Dance with Devils | handled | Create two 1/1 red Devil creature tokens. They have "When this token dies, it deals 1 damage to any target." | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Daring Sleuth // Bearer of Overwhelming Truths | handled | When you sacrifice a Clue, transform this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Dauntless Cathar | handled | {1}{W}, Exile this card from your graveyard: Create a 1/1 white Spirit creature token with flying. Activate only as a sorcery. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Deathcap Cultivator | handled | Delirium — This creature has deathtouch as long as there are four or more card types among cards in your graveyard. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Deny Existence | handled | Counter target creature spell. If that spell is countered this way, exile it instead of putting it into its owner's graveyard. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Descend upon the Sinful | handled | Exile all creatures. Delirium — Create a 4/4 white Angel creature token with flying if there are four or more card types among cards in your graveyard. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Devils' Playground | handled | Create four 1/1 red Devil creature tokens. They have "When this token dies, it deals 1 damage to any target." | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -122,6 +108,7 @@
 | Ember-Eye Wolf | handled | {1}{R}: This creature gets +2/+0 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Emissary of the Sleepless | handled | When this creature enters, if a creature died this turn, create a 1/1 white Spirit creature token with flying. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Epitaph Golem | handled | {2}: Put target card from your graveyard on the bottom of your library. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Equestrian Skill | handled | Enchanted creature gets +3/+3. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ethereal Guidance | handled | Creatures you control get +2/+1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Explosive Apparatus | handled | {3}, {T}, Sacrifice this artifact: It deals 2 damage to any target. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Expose Evil | handled | Tap up to two target creatures. Investigate. (Create a Clue token. It's an artifact with "{2}, Sacrifice this token: Draw a card.") | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -144,11 +131,14 @@
 | Graf Mole | handled | Whenever you sacrifice a Clue, you gain 3 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Grotesque Mutation | handled | Target creature gets +3/+1 and gains lifelink until end of turn. (Damage dealt by the creature also causes its controller to gain that much life.) | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Hanweir Militia Captain // Westvale Cult Leader | handled | At the beginning of your upkeep, if you control four or more creatures, transform this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Harvest Hand // Scrounged Scythe | handled | When this creature dies, return it to the battlefield transformed under your control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Haunted Cloak | handled | Equipped creature has vigilance, trample, and haste. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Heir of Falkenrath // Heir to the Night | handled | Discard a card: Transform this creature. Activate only once each turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Hermit of the Natterknolls // Lone Wolf of the Natterknolls | handled | Whenever an opponent casts a spell during your turn, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Highland Lake | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Hinterland Logger // Timber Shredder | handled | At the beginning of each upkeep, if no spells were cast last turn, transform this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Hope Against Hope | handled | Enchanted creature gets +1/+1 for each creature you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Hound of the Farbogs | handled | Delirium — This creature has menace as long as there are four or more card types among cards in your graveyard. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Howlpack Resurgence | handled | Each creature you control that's a Wolf or a Werewolf gets +1/+1 and has trample. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Howlpack Wolf | handled | This creature can't block unless you control another Wolf or Werewolf. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Hulking Devil | handled |  |  | Y/Y/- | not_tested |
@@ -157,6 +147,7 @@
 | Indulgent Aristocrat | handled | {2}, Sacrifice a creature: Put a +1/+1 counter on each Vampire you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Inexorable Blob | handled | Delirium — Whenever this creature attacks, if there are four or more card types among cards in your graveyard, create a 3/3 green Ooze creature token that's tap | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Inner Struggle | handled | Target creature deals damage to itself equal to its power. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Inquisitor's Ox | handled | Delirium — This creature gets +1/+0 and has vigilance as long as there are four or more card types among cards in your graveyard. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Insolent Neonate | handled | Discard a card, Sacrifice this creature: Draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Inspiring Captain | handled | When this creature enters, creatures you control get +1/+1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Intrepid Provisioner | handled | When this creature enters, another target Human you control gets +2/+2 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -164,6 +155,7 @@
 | Jace's Scrutiny | handled | Target creature gets -4/-0 until end of turn. Investigate. (Create a Clue token. It's an artifact with "{2}, Sacrifice this token: Draw a card.") | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Jace, Unraveler of Secrets | handled | +1: Scry 1, then draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Just the Wind | handled | Return target creature to its owner's hand. Madness {U} (If you discard this card, discard it into exile. When you do, cast it for its madness cost or put it in | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Kessig Dire Swine | handled | Delirium — This creature has trample as long as there are four or more card types among cards in your graveyard. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Kessig Forgemaster // Flameheart Werewolf | handled | Whenever this creature blocks or becomes blocked by a creature, this creature deals 1 damage to that creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Kindly Stranger // Demon-Possessed Witch | handled | Delirium — {2}{B}: Transform this creature. Activate only if there are four or more card types among cards in your graveyard. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Lamplighter of Selhoff | handled | When this creature enters, if you control another Zombie, you may draw a card. If you do, discard a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -174,6 +166,8 @@
 | Merciless Resolve | handled | As an additional cost to cast this spell, sacrifice a creature or land. Draw two cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Might Beyond Reason | handled | Put two +1/+1 counters on target creature. Delirium — Put three +1/+1 counters on that creature instead if there are four or more card types among cards in your | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Militant Inquisitor | handled | This creature gets +1/+0 for each Equipment you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Moldgraf Scavenger | handled | Delirium — This creature gets +3/+0 as long as there are four or more card types among cards in your graveyard. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Moorland Drifter | handled | Delirium — This creature has flying as long as there are four or more card types among cards in your graveyard. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Morkrut Necropod | handled | Whenever this creature attacks or blocks, sacrifice another creature or land. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Murderer's Axe | handled | Equipped creature gets +2/+2. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Murderous Compulsion | handled | Destroy target tapped creature. Madness {1}{B} (If you discard this card, discard it into exile. When you do, cast it for its madness cost or put it into your g | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -188,6 +182,7 @@
 | Open the Armory | handled | Search your library for an Aura or Equipment card, reveal it, put it into your hand, then shuffle. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Pack Guardian | handled | When this creature enters, you may discard a land card. If you do, create a 2/2 green Wolf creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Pale Rider of Trostad | handled | When this creature enters, discard a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Paranoid Parish-Blade | handled | Delirium — This creature gets +1/+0 and has first strike as long as there are four or more card types among cards in your graveyard. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Pious Evangel // Wayward Disciple | handled | Whenever this creature or another creature you control enters, you gain 1 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Press for Answers | handled | Tap target creature. It doesn't untap during its controller's next untap step. Investigate. (Create a Clue token. It's an artifact with "{2}, Sacrifice this tok | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Pyre Hound | handled | Whenever you cast an instant or sorcery spell, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -204,6 +199,7 @@
 | Rush of Adrenaline | handled | Target creature gets +2/+1 and gains trample until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Sanguinary Mage | handled | Prowess | machines/keywords.py | Y/Y/- | not_tested |
 | Sanitarium Skeleton | handled | {2}{B}: Return this card from your graveyard to your hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Scourge Wolf | handled | Delirium — This creature has double strike as long as there are four or more card types among cards in your graveyard. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Seagraf Skaab | handled |  |  | Y/Y/- | not_tested |
 | Senseless Rage | handled | Enchanted creature gets +2/+2. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Shamble Back | handled | Exile target creature card from a graveyard. Create a 2/2 black Zombie creature token. You gain 2 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -262,12 +258,13 @@
 ## Fully supported
 
 <details>
-<summary>29 cards</summary>
+<summary>33 cards</summary>
 
 - Always Watching
 - Archangel Avacyn // Avacyn, the Purifier
 - Avacynian Missionaries // Lunarch Inquisitors
 - Behold the Beyond
+- Bound by Moonsilver
 - Briarbridge Patrol
 - Burn from Within
 - Clip Wings
@@ -275,6 +272,7 @@
 - Diregraf Colossus
 - Dual Shot
 - Duskwatch Recruiter // Krallenhorde Howler
+- Falkenrath Gorger
 - Fevered Visions
 - Goldnight Castigator
 - Gryff's Boon
@@ -286,12 +284,14 @@
 - Prized Amalgam
 - Rabid Bite
 - Rattlechains
+- Sigarda, Heron's Grace
 - Silburlind Snapper
 - Slayer's Plate
 - Tenacity
 - Thing in the Ice // Awoken Horror
 - Thraben Inspector
 - To the Slaughter
+- True-Faith Censer
 - Watcher in the Web
 
 </details>
@@ -300,20 +300,13 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| Delirium | 8 | Deathcap Cultivator, Hound of the Farbogs, Inquisitor's Ox, Kessig Dire Swine, Moldgraf Scavenger | soi |
 | +N: reveal the top card of your library and put that card into your hand. each opponent loses life equal to its mana value. | 1 | Sorin, Grim Nemesis | soi |
-| as long as enchanted creature is a human, it has first strike. | 1 | Hope Against Hope | soi |
-| as long as enchanted creature is a human, it has trample. | 1 | Equestrian Skill | soi |
-| as long as equipped creature is a human, it gets an additional +N/+N. | 1 | True-Faith Censer | soi |
-| as long as equipped creature is a human, it has menace. | 1 | Harvest Hand // Scrounged Scythe | soi |
 | at the beginning of your upkeep, choose one — • each player with exactly N life loses the game, then each player gains N life. • each player with exactly N life | 1 | Triskaidekaphobia | soi |
 | at the beginning of your upkeep, each player discards a card. each opponent who discarded a card that shares a card type with the card you discarded loses N lif | 1 | Creeping Dread | soi |
 | at the beginning of your upkeep, reveal the top card of your library. any opponent may have you put that card into your graveyard. if a player does, ~ deals dam | 1 | Sin Prodder | soi |
 | at the beginning of your upkeep, sacrifice ~ unless you sacrifice a land. | 1 | The Gitrog Monster | soi |
 | attacking creatures you control get +N/+N and have trample. | 1 | Breakneck Rider // Neck Breaker | soi |
 | counter target sorcery spell. delirium — if there are four or more card types among cards in your graveyard, search the graveyard, hand, and library of that spe | 1 | Invasive Surgery | soi |
-| each vampire creature card you own that isn't on the battlefield has madness. the madness cost is equal to its mana cost. | 1 | Falkenrath Gorger | soi |
-| enchanted creature can't attack, block, or transform. | 1 | Bound by Moonsilver | soi |
 | exile target creature and all other creatures its controller controls with the same name as that creature. that player investigates for each nontoken creature e | 1 | Declaration in Stone | soi |
 | exile target creature you control, then return that card to the battlefield under its owner"..."s a spirit, put a +N/+N counter on it. | 1 | Essence Flux | soi |
 | for each token you control, create a token that's a copy of that permanent. | 1 | Second Harvest | soi |
@@ -330,6 +323,7 @@
 | reveal the top five cards of your library. put up to two instant and/or sorcery cards from among them into your hand and the rest into your graveyard. | 1 | Pieces of the Puzzle | soi |
 | search your library for up to two basic land cards and reveal them. put one into your hand and the other into your graveyard. then shuffle. | 1 | Fork in the Road | soi |
 | target opponent reveals their hand. you choose a nonland card from it and exile that card. delirium — if there are four or more card types among cards in your g | 1 | Pick the Brain | soi |
+| werewolf of ancient hunger"..." hands. | 1 | Sage of Ancient Lore // Werewolf of Ancient Hunger | soi |
 | when enchanted creature dies, return ~ to the battlefield transformed under your control. | 1 | Skin Invasion // Skin Shedder | soi |
 | when equipped creature transforms, transform ~. | 1 | Neglected Heirloom // Ashmouth Blade | soi |
 | when ~ dies, return it to the battlefield transformed under your control attached to target opponent. | 1 | Accursed Witch // Infectious Curse | soi |
@@ -341,14 +335,12 @@
 | whenever you investigate for the first time each turn, investigate an additional time. | 1 | Erdwal Illuminator | soi |
 | whenever ~ attacks and isn't blocked, you may pay {M}{M}. if you do, transform it. | 1 | Elusive Tormentor // Insidious Mist | soi |
 | whenever ~ attacks, you may pay {M}{M} and discard a card. if you do, ~ deals damage to target creature or planeswalker equal to the discarded card's mana value | 1 | Wolf of Devil's Breach | soi |
-| you and humans you control have hexproof. | 1 | Sigarda, Heron's Grace | soi |
 | you may have ~ enter as a copy of any creature on the battlefield, except it enters with N additional +N/+N counters on it. | 1 | Altered Ego | soi |
 | {M}, {M}: put a charge counter on ~, then you may cast an instant or sorcery spell with mana value equal to the number of charge counters on ~ from your hand wi | 1 | Brain in a Jar | soi |
 | {M}: choose a color of a card in your graveyard. add one mana of that color. | 1 | Corrupted Grafstone | soi |
 | {M}{M}, sacrifice ~: reveal the top four cards of your library. you may put an artifact, creature, enchantment, land, or planeswalker card from among them into  | 1 | Vessel of Nascency | soi |
 | {M}{M}{M}: put ~ from your graveyard onto the battlefield transformed. activate only as a sorcery. | 1 | Startled Awake // Persistent Nightmare | soi |
 | ~ gets -N/-N for each card in your hand. | 1 | Geralf's Masterpiece | soi |
-| ~'s power and toughness are each equal to the number of cards in your hand. | 1 | Sage of Ancient Lore // Werewolf of Ancient Hunger | soi |
 
 ## Notes
 

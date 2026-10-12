@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 30 | 18.6% |
-| Works (untested) | 78 | 48.4% |
-| Partial (unaudited) | 2 | 1.2% |
-| Not working | 51 | 31.7% |
+| Tested | 32 | 19.9% |
+| Works (untested) | 81 | 50.3% |
+| Partial (unaudited) | 0 | 0.0% |
+| Not working | 48 | 29.8% |
 
 ## Cards needing work
 
@@ -31,7 +31,6 @@
 | Alesha, Who Smiles at Death | silent | Whenever Alesha attacks, you may pay {W/B}{W/B}. If you do, return target creature card with power 2 or less from your graveyard to the battlefield tapped and a | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ambush Krotiq | silent | When this creature enters, return another creature you control to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Archfiend of Depravity | silent | At the beginning of each opponent's end step, that player chooses up to two creatures they control, then sacrifices the rest. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Battle Brawler | silent | As long as you control a red or white permanent, this creature gets +1/+0 and has first strike. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Brutal Hordechief | silent | Whenever a creature you control attacks, defending player loses 1 life and you gain 1 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Cached Defenses | silent | Bolster 3. (Choose a creature with the least toughness among creatures you control and put three +1/+1 counters on it.) | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Cloudform | silent | When this enchantment enters, it becomes an Aura with enchant creature. Manifest the top card of your library and attach this enchantment to it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -53,7 +52,6 @@
 | Map the Wastes | silent | Search your library for a basic land card, put it onto the battlefield tapped, then shuffle. Bolster 1. (Choose a creature with the least toughness among creatu | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Rageform | silent | When this enchantment enters, it becomes an Aura with enchant creature. Manifest the top card of your library and attach this enchantment to it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Rakshasa's Disdain | silent | Counter target spell unless its controller pays {1} for each card in your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Renowned Weaponsmith | silent | {U}, {T}: Search your library for a card named Heart-Piercer Bow or Vial of Dragonfire, reveal it, put it into your hand, then shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Rite of Undoing | silent | Delve (Each card you exile from your graveyard while casting this spell pays for {1}.) Return target nonland permanent you control and target nonland permanent  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sage's Reverie | silent | When this Aura enters, draw a card for each Aura you control that's attached to a creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sandsteppe Mastodon | silent | When this creature enters, bolster 5. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -70,16 +68,14 @@
 | Wildcall | silent | Manifest the top card of your library, then put X +1/+1 counters on it. (To manifest a card, put it onto the battlefield face down as a 2/2 creature. Turn it fa | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Write into Being | silent | Look at the top two cards of your library. Manifest one of those cards, then put the other on the top or bottom of your library. (To manifest a card, put it ont | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Yasova Dragonclaw | silent | At the beginning of combat on your turn, you may pay {1}{U/R}{U/R}. If you do, gain control of target creature an opponent controls with power less than Yasova  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Abzan Kin-Guard | notice | This creature has lifelink as long as you control a white or black permanent. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Bloodfire Enforcers | notice | This creature has first strike and trample as long as an instant card and a sorcery card are in your graveyard. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Crux of Fate | notice | Choose one — • Destroy all Dragon creatures. • Destroy all non-Dragon creatures. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Fearsome Awakening | notice | Return target creature card from your graveyard to the battlefield. If it's a Dragon, put two +1/+1 counters on it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Rally the Ancestors | notice | Return each creature card with mana value X or less from your graveyard to the battlefield. Exile those creatures at the beginning of your next upkeep. Exile Ra | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Reality Shift | notice | Exile target creature. Its controller manifests the top card of their library. (That player puts the top card of their library onto the battlefield face down as | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Supplant Form | notice | Return target creature to its owner's hand. You create a token that's a copy of that creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Hewed Stone Retainers | unaudited | Cast this spell only if you've cast another spell this turn. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Wardscale Dragon | unaudited | As long as this creature is attacking, defending player can't cast spells. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Abzan Beastmaster | handled | At the beginning of your upkeep, draw a card if you control the creature with the greatest toughness or tied for the greatest toughness. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Abzan Kin-Guard | handled | This creature has lifelink as long as you control a white or black permanent. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Abzan Runemark | handled | Enchanted creature gets +2/+2. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Alesha's Vanguard | handled | Dash | machines/casting.py | Y/Y/- | not_tested |
 | Ancestral Vengeance | handled | When this Aura enters, put a +1/+1 counter on target creature you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -90,6 +86,7 @@
 | Aven Skirmisher | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
 | Aven Surveyor | handled | When this creature enters, choose one — • Put a +1/+1 counter on this creature. • Return target creature to its owner's hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Bathe in Dragonfire | handled | Bathe in Dragonfire deals 4 damage to target creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Battle Brawler | handled | As long as you control a red or white permanent, this creature gets +1/+0 and has first strike. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Collateral Damage | handled | As an additional cost to cast this spell, sacrifice a creature. Collateral Damage deals 3 damage to any target. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Cunning Strike | handled | Cunning Strike deals 2 damage to target creature and 2 damage to target player or planeswalker. Draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Defiant Ogre | handled | When this creature enters, choose one — • Put a +1/+1 counter on this creature. • Destroy target artifact. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -133,6 +130,7 @@
 | Qarsi High Priest | handled | {1}{B}, {T}, Sacrifice another creature: Manifest the top card of your library. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Reach of Shadows | handled | Destroy target creature that's one or more colors. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Refocus | handled | Untap target creature. Draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Renowned Weaponsmith | handled | {U}, {T}: Search your library for a card named Heart-Piercer Bow or Vial of Dragonfire, reveal it, put it into your hand, then shuffle. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Return to the Earth | handled | Destroy target artifact, enchantment, or creature with flying. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ruthless Instincts | handled | Choose one — • Target nonattacking creature gains reach and deathtouch until end of turn. Untap it. • Target attacking creature gets +2/+2 and gains trample unt | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Sage-Eye Avengers | handled | Whenever this creature attacks, you may return target creature to its owner's hand if its power is less than this creature's power. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -161,7 +159,7 @@
 ## Fully supported
 
 <details>
-<summary>30 cards</summary>
+<summary>32 cards</summary>
 
 - Ainok Guide
 - Arcbond
@@ -176,6 +174,7 @@
 - Frontier Mastodon
 - Frontier Siege
 - Grim Contest
+- Hewed Stone Retainers
 - Hungering Yeti
 - Marang River Prowler
 - Mardu Woe-Reaper
@@ -192,6 +191,7 @@
 - Wandering Champion
 - War Flare
 - Warden of the First Tree
+- Wardscale Dragon
 - Winds of Qal Sisma
 
 </details>
@@ -204,13 +204,10 @@
 | when ~ enters, bolster N. | 2 | Elite Scaleguard, Sandsteppe Mastodon | frf |
 | Choose one | 1 | Crux of Fate | frf |
 | add {M} for each attacking creature you control. until end of turn, attacking creatures you control gain "..." | 1 | Dragonrage | frf |
-| as long as you control a red or white permanent, ~ gets +N/+N and has first strike. | 1 | Battle Brawler | frf |
-| as long as ~ is attacking, defending player can't cast spells. | 1 | Wardscale Dragon | frf |
 | at the beginning of combat on your turn, you may pay {M}{M}{M}. if you do, gain control of target creature an opponent controls with power less than ~'s power u | 1 | Yasova Dragonclaw | frf |
 | at the beginning of each opponent's end step, that player chooses up to two creatures they control, then sacrifices the rest. | 1 | Archfiend of Depravity | frf |
 | at the beginning of your end step, bolster N, where N is the number of tapped creatures you control. | 1 | Dragonscale General | frf |
 | bolster N. (choose a creature with the least toughness among creatures you control and put three +N/+N counters on it.) | 1 | Cached Defenses | frf |
-| cast ~ only if you've cast another spell ~. | 1 | Hewed Stone Retainers | frf |
 | counter target spell unless its controller pays {M} for each card in your graveyard. | 1 | Rakshasa's Disdain | frf |
 | delve (each card you exile from your graveyard while casting ~ pays for {M}.) return target nonland permanent you control and target nonland permanent you don". | 1 | Rite of Undoing | frf |
 | exile all creature cards from target player"..."s a creature card.) | 1 | Ghastly Conscription | frf |
@@ -241,14 +238,12 @@
 | whenever alesha attacks, you may pay {M}{M}. if you do, return target creature card with power N or less from your graveyard to the battlefield tapped and attac | 1 | Alesha, Who Smiles at Death | frf |
 | whenever ~ attacks, tap all creatures defending player controls. | 1 | Torrent Elemental | frf |
 | you gain N life. bolster N. (choose a creature with the least toughness among creatures you control and put two +N/+N counters on it.) | 1 | Honor's Reward | frf |
-| {M}, {M}: search your library for a card named heart-piercer bow or vial of dragonfire, reveal it, put it into your hand, then shuffle. | 1 | Renowned Weaponsmith | frf |
 | {M}, {M}: target creature you control gets +N/+N until end of turn for each lore counter on ~. | 1 | Scroll of the Masters | frf |
 | {M}: draw two cards. target opponent gains control of ~. activate only during your turn. | 1 | Humble Defector | frf |
 | {M}{M}: you may return another creature you control to its owner's hand. if you do, ~ gains indestructible until end of turn. | 1 | Temur Sabertooth | frf |
 | {M}{M}{M}: mill two cards, then return a nonland card of an opponent's choice from your graveyard to your hand. | 1 | Tasigur, the Golden Fang | frf |
 | {M}{M}{M}: move a +N/+N counter from target creature onto a second target creature. | 1 | Daghatar the Adamant | frf |
 | ~ has first strike and trample as long as an instant card and a sorcery card are in your graveyard. | 1 | Bloodfire Enforcers | frf |
-| ~ has lifelink as long as you control a white or black permanent. | 1 | Abzan Kin-Guard | frf |
 | −N: exile each permanent with mana value N or less that's one or more colors. | 1 | Ugin, the Spirit Dragon | frf |
 
 ## Notes

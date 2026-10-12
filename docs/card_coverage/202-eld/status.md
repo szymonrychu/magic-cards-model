@@ -17,18 +17,16 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 67 | 24.9% |
-| Works (untested) | 140 | 52.0% |
-| Partial (unaudited) | 5 | 1.9% |
-| Not working | 57 | 21.2% |
+| Tested | 72 | 26.8% |
+| Works (untested) | 144 | 53.5% |
+| Partial (unaudited) | 0 | 0.0% |
+| Not working | 53 | 19.7% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
-| Alela, Artful Provocateur | silent | Other creatures you control with flying get +1/+0. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | All That Glitters | silent | Enchanted creature gets +1/+1 for each artifact and/or enchantment you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Animating Faerie // Bring to Life | silent | Target noncreature artifact you control becomes a 0/0 artifact creature. Put four +1/+1 counters on it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Belle of the Brawl | silent | Whenever this creature attacks, other Knights you control get +1/+0 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Blacklance Paragon | silent | When this creature enters, target Knight gains deathtouch and lifelink until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Blow Your House Down | silent | Up to three target creatures can't block this turn. Destroy any of them that are Walls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -57,12 +55,10 @@
 | Once and Future | silent | Return target card from your graveyard to your hand. Put up to one other target card from your graveyard on top of your library. Exile Once and Future. Adamant  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Opportunistic Dragon | silent | When this creature enters, choose target Human or artifact an opponent controls. For as long as this creature remains on the battlefield, gain control of that p | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Outlaws' Merriment | silent | At the beginning of your upkeep, choose one at random. Create a red and white creature token with those characteristics. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Queen of Ice // Rage of Winter | silent | Whenever this creature deals combat damage to a creature, tap that creature. It doesn't untap during its controller's next untap step. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Realm-Cloaked Giant // Cast Off | silent | Destroy all non-Giant creatures. (Then exile this card. You may cast the creature later from exile.) | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Revenge of Ravens | silent | Whenever a creature attacks you or a planeswalker you control, that creature's controller loses 1 life and you gain 1 life. | this trigger's condition can never be satisfied - it never triggers | Y/Y/- | not_working |
 | Robber of the Rich | silent | Whenever this creature attacks, if defending player has more cards in hand than you, exile the top card of their library. During any turn you attacked with a Ro | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Rosethorn Acolyte // Seasonal Ritual | silent | Add one mana of any color. (Then exile this card. You may cast the creature later from exile.) | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Rowan's Battleguard | silent | As long as you control a Rowan planeswalker, this creature gets +3/+0. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Rowan's Stalwarts | silent | When this creature enters, you may search your library and/or graveyard for a card named Rowan, Fearless Sparkmage, reveal it, and put it into your hand. If you | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Silverwing Squadron | silent | Whenever this creature attacks, create a number of 2/2 white Knight creature tokens with vigilance equal to the number of opponents you have. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Skullknocker Ogre | silent | Whenever this creature deals damage to an opponent, that player discards a card at random. If the player does, they draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -83,12 +79,9 @@
 | Syr Elenora, the Discerning | notice | Spells your opponents cast that target Syr Elenora cost {2} more to cast. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Wildborn Preserver | notice | Whenever another non-Human creature you control enters, you may pay {X}. When you do, put X +1/+1 counters on this creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Yorvo, Lord of Garenbrig | notice | Whenever another green creature you control enters, put a +1/+1 counter on Yorvo. Then if that creature's power is greater than Yorvo's power, put another +1/+1 | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Harmonious Archon | unaudited | Non-Archon creatures have base power and toughness 3/3. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Hushbringer | unaudited | Creatures entering or dying don't cause abilities to trigger. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Seven Dwarves | unaudited | A deck can have up to seven cards named Seven Dwarves. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Shimmer Dragon | unaudited | As long as you control four or more artifacts, this creature has hexproof. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Syr Gwyn, Hero of Ashvale | unaudited | Equipment you control have equip Knight {0}. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Acclaimed Contender | handled | When this creature enters, if you control another Knight, look at the top five cards of your library. You may reveal a Knight, Aura, Equipment, or legendary art | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Alela, Artful Provocateur | handled | Other creatures you control with flying get +1/+0. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Animating Faerie // Bring to Life | handled | Target noncreature artifact you control becomes a 0/0 artifact creature. Put four +1/+1 counters on it. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Arcane Signet | handled |  |  | Y/Y/- | not_tested |
 | Arcanist's Owl | handled | When this creature enters, look at the top four cards of your library. You may reveal an artifact or enchantment card from among them and put it into your hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ardenvale Tactician // Dizzying Swoop | handled | Tap up to two target creatures. (Then exile this card. You may cast the creature later from exile.) | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -175,11 +168,13 @@
 | Piper of the Swarm | handled | Rats you control have menace. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Prized Griffin | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
 | Prophet of the Peak | handled | When this creature enters, scry 2. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Queen of Ice // Rage of Winter | handled | Tap target creature. It doesn't untap during its controller's next untap step. (Then exile this card. You may cast the creature later from exile.) | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Raging Redcap | handled | Double strike | machines/combat.py | Y/Y/Y | not_tested |
 | Rampart Smasher | handled | This creature can't be blocked by Knights or Walls. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Redcap Raiders | handled | Whenever this creature attacks, you may tap an untapped non-Human creature you control. If you do, this creature gets +1/+1 and gains trample until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Resolute Rider | handled | {W/B}{W/B}: This creature gains lifelink until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Rosethorn Halberd | handled | When this Equipment enters, attach it to target non-Human creature you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Rowan's Battleguard | handled | As long as you control a Rowan planeswalker, this creature gets +3/+0. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Sage of the Falls | handled | Whenever this creature or another non-Human creature you control enters, you may draw a card. If you do, discard a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Savvy Hunter | handled | Whenever this creature attacks or blocks, create a Food token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Scalding Cauldron | handled | {3}, {T}, Sacrifice this artifact: It deals 3 damage to target creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -232,7 +227,7 @@
 ## Fully supported
 
 <details>
-<summary>67 cards</summary>
+<summary>72 cards</summary>
 
 - Archon of Absolution
 - Ardenvale Paladin
@@ -264,8 +259,10 @@
 - Gilded Goose
 - Grumgully, the Generous
 - Happily Ever After
+- Harmonious Archon
 - Henge Walker
 - Heraldic Banner
+- Hushbringer
 - Idyllic Grange
 - Joust
 - Kenrith's Transformation
@@ -289,10 +286,13 @@
 - Run Away Together
 - Scorching Dragonfire
 - Searing Barrage
+- Seven Dwarves
 - Shambling Suit
+- Shimmer Dragon
 - Slaying Fire
 - Steelclaw Lance
 - Sundering Stroke
+- Syr Gwyn, Hero of Ashvale
 - Tall as a Beanstalk
 - Torbran, Thane of Red Fell
 - Tournament Grounds
@@ -310,32 +310,24 @@
 |---|---|---|---|
 | Adamant | 1 | Cauldron's Gift | eld |
 | Choose one | 1 | Return of the Wildspeaker | eld |
-| a deck can have up to seven cards named ~. | 1 | Seven Dwarves | eld |
 | add one mana of any color. (then exile ~. you may cast the creature later from exile.) | 1 | Rosethorn Acolyte // Seasonal Ritual | eld |
 | add seven {M}. you can cast only one more spell ~. | 1 | Irencrag Feat | eld |
-| as long as you control a rowan planeswalker, ~ gets +N/+N. | 1 | Rowan's Battleguard | eld |
-| as long as you control four or more artifacts, ~ has hexproof. | 1 | Shimmer Dragon | eld |
 | at the beginning of combat on your turn, any opponent may sacrifice a creature of their choice. if a player does, tap ~, you gain N life, and you draw a card. | 1 | Clackbridge Troll | eld |
 | at the beginning of combat on your turn, you may have target noncreature artifact you control become a N/N artifact creature. if you do, put four +N/+N counters | 1 | Workshop Elders | eld |
 | at the beginning of each player"..."t, they discard a card, they lose N life, you draw a card, you gain N life, you create a N/N white knight creature token wit | 1 | Doom Foretold | eld |
 | at the beginning of your upkeep, choose one at random. create a red and white creature token with those characteristics. | 1 | Outlaws' Merriment | eld |
 | attacking non-human creatures you control get +N/+N and have trample. | 1 | Ferocity of the Wilds | eld |
 | counter target spell. its controller mills three cards. | 1 | Didn't Say Please | eld |
-| creatures entering or dying don't cause abilities to trigger. | 1 | Hushbringer | eld |
 | creatures of the creature type of your choice get -N/-N until end of turn. | 1 | Witch's Vengeance | eld |
 | destroy all non-giant creatures. (then exile ~. you may cast the creature later from exile.) | 1 | Realm-Cloaked Giant // Cast Off | eld |
 | enchanted creature gets +N/+N for each artifact and/or enchantment you control. | 1 | All That Glitters | eld |
-| equipment you control have equip knight {M}. | 1 | Syr Gwyn, Hero of Ashvale | eld |
 | equipped creature gets +N/+N for each charge counter on ~ and has vigilance. | 1 | Mace of the Valiant | eld |
 | exile the top five cards of your library. you may play cards exiled ~ until the end of your next turn. you may play an additional land ~. | 1 | Escape to the Wilds | eld |
 | if ~ is the first spell you've cast ~, you may cast it without paying its mana cost. look at the top five cards of your library. you may reveal a creature or la | 1 | Once Upon a Time | eld |
-| non-archon creatures have base power and toughness N/N. | 1 | Harmonious Archon | eld |
-| other creatures you control with flying get +N/+N. | 1 | Alela, Artful Provocateur | eld |
 | return target card from your graveyard to your hand. put up to one other target card from your graveyard on top of your library. exile ~. adamant — if at least  | 1 | Once and Future | eld |
 | return up to N target artifact and/or non-aura enchantment cards each with mana value N or less from your graveyard to the battlefield. if N is N or more, those | 1 | Dance of the Manse | eld |
 | spells your opponents cast that target syr elenora cost {M} more to cast. | 1 | Syr Elenora, the Discerning | eld |
 | target attacking creature gets +N/+N until end of turn. each attacking non-human creature gains trample until end of turn. | 1 | Barge In | eld |
-| target noncreature artifact you control becomes a N/N artifact creature. put four +N/+N counters on it. | 1 | Animating Faerie // Bring to Life | eld |
 | target opponent reveals their hand. you choose a nonland card from it. that player discards that card. you may put a card that has an adventure that player owns | 1 | Memory Theft | eld |
 | target opponent reveals their hand. you choose a nonland card from that player's graveyard or hand and exile it. you may cast that card for as long as it remain | 1 | Covetous Urge | eld |
 | target opponent reveals their hand. you may choose a nonland card from it. if you do, that player exiles that card. if a nonblack card is exiled ~, exile a card | 1 | Specter's Shriek | eld |
@@ -355,7 +347,6 @@
 | whenever ~ attacks, if defending player has more cards in hand than you, exile the top card of their library. during any turn you attacked with a rogue, you may | 1 | Robber of the Rich | eld |
 | whenever ~ attacks, other knights you control get +N/+N until end of turn. | 1 | Belle of the Brawl | eld |
 | whenever ~ attacks, you may pay {M}{M}. if you do, creatures you control get +N/+N until end of turn, where N is the number of opponents you have. | 1 | Embereth Skyblazer | eld |
-| whenever ~ deals combat damage to a creature, tap that creature. it doesn"..."s next untap step. | 1 | Queen of Ice // Rage of Winter | eld |
 | whenever ~ deals combat damage to a player, you may sacrifice it. when you do, destroy target artifact or enchantment. | 1 | Flaxen Intruder // Welcome Home | eld |
 | whenever ~ deals damage to an opponent, that player discards a card at random. if the player does, they draw a card. | 1 | Skullknocker Ogre | eld |
 | you gain N life and each opponent loses N life, where N is the number of knights you control. | 1 | Smitten Swordmaster // Curry Favor | eld |

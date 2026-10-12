@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 74 | 26.7% |
-| Works (untested) | 129 | 46.6% |
-| Partial (unaudited) | 4 | 1.4% |
-| Not working | 70 | 25.3% |
+| Tested | 80 | 28.9% |
+| Works (untested) | 131 | 47.3% |
+| Partial (unaudited) | 0 | 0.0% |
+| Not working | 66 | 23.8% |
 
 ## Cards needing work
 
@@ -28,7 +28,6 @@
 |---|---|---|---|---|---|
 | Aang's Journey | silent | Kicker {2} (You may pay an additional {2} as you cast this spell.) Search your library for a basic land card. If this spell was kicked, instead search your libr | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Accumulate Wisdom | silent | Look at the top three cards of your library. Put one of those cards into your hand and the rest on the bottom of your library in any order. Put each of those ca | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Air Nomad Legacy | silent | Creatures you control with flying get +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Avatar Destiny | silent | Enchanted creature gets +1/+1 for each creature card in your graveyard and is an Avatar in addition to its other types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Avatar's Wrath | silent | Choose up to one target creature, then airbend all other creatures. (Exile them. While each one is exiled, its owner may cast it for {2} rather than its mana co | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Azula, Cunning Usurper | silent | When Azula enters, target opponent exiles a nontoken creature they control, then they exile a nonland card from their graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -47,7 +46,6 @@
 | Earth Rumble | silent | Earthbend 2. When you do, up to one target creature you control fights target creature an opponent controls. (To earthbend 2, target land you control becomes a  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Elemental Teachings | silent | Search your library for up to four land cards with different names and reveal them. An opponent chooses two of those cards. Put the chosen cards into your grave | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Fancy Footwork | silent | Untap one or two target creatures. They each get +2/+2 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Fire Nation Palace | silent | {1}{R}, {T}: Target creature you control gains firebending 4 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Firebender Ascension | silent | Whenever a creature you control attacking causes a triggered ability of that creature to trigger, put a quest counter on this enchantment. Then if it has four o | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
 | Foggy Swamp Hunters | silent | As long as you've drawn two or more cards this turn, this creature has lifelink and menace. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Foggy Swamp Visions | silent | Waterbend | no machine in the engine executes this keyword | Y/Y/Y | not_working |
@@ -64,7 +62,6 @@
 | Rabaroo Troop | silent | Landfall — Whenever a land you control enters, this creature gains flying until end of turn and you gain 1 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Ran and Shaw | silent | When Ran and Shaw enter, if you cast them and there are three or more Dragon and/or Lesson cards in your graveyard, create a token that's a copy of Ran and Shaw | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Raven Eagle | silent | Whenever this creature enters or attacks, exile up to one target card from a graveyard. If a creature card is exiled this way, create a Clue token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Secret Tunnel | silent | {4}, {T}: Two target creatures you control that share a creature type can't be blocked this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Secret of Bloodbending | silent | As an additional cost to cast this spell, you may waterbend {10}. You control target opponent during their next combat phase. If this spell's additional cost wa | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Seismic Sense | silent | Look at the top X cards of your library, where X is the number of lands you control. You may reveal a creature or land card from among them and put it into your | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Sokka, Lateral Strategist | silent | Whenever Sokka and at least one other creature attack, draw a card. | this trigger's condition can never be satisfied - it never triggers | Y/Y/Y | not_working |
@@ -81,7 +78,6 @@
 | Waterbending Lesson | silent | Draw three cards. Then discard a card unless you waterbend {2}. (While paying a waterbend cost, you can tap your artifacts and creatures to help. Each one pays  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Watery Grasp | silent | Waterbend {5}: Enchanted creature's owner shuffles it into their library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Yue, the Moon Spirit | silent | Waterbend {5}, {T}: You may cast a noncreature spell from your hand without paying its mana cost. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Zhao, the Moon Slayer | silent | As long as Zhao has a conqueror counter on him, nonbasic lands are Mountains. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Earth Rumble Wrestlers | notice | This creature gets +1/+0 and has trample as long as you control a land creature or a land entered the battlefield under your control this turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Fire Nation Cadets | notice | This creature has firebending 2 as long as there's a Lesson card in your graveyard. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | First-Time Flyer | notice | This creature gets +1/+1 as long as there's a Lesson card in your graveyard. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
@@ -96,12 +92,9 @@
 | Yip Yip! | notice | Target creature you control gets +2/+2 until end of turn. If that creature is an Ally, it also gains flying until end of turn. | unparsed remainder: If that creature is an Ally, it also gains flying until end of turn. | Y/Y/Y | not_working |
 | Zuko's Conviction | notice | Kicker {4} (You may pay an additional {4} as you cast this spell.) Return target creature card from your graveyard to your hand. If this spell was kicked, inste | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Zuko, Conflicted | notice | At the beginning of your first main phase, choose one that hasn't been chosen and you lose 2 life — • Draw a card. • Put a +1/+1 counter on Zuko. • Add {R}. • E | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Bender's Waterskin | unaudited | Untap this artifact during each other player's untap step. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Great Divide Guide | unaudited | Each land and Ally you control has "{T}: Add one mana of any color." | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Honest Work | unaudited | Enchanted creature loses all abilities and is a Citizen with base power and toughness 1/1 and "{T}: Add {C}" named Humble Merchant. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| The Walls of Ba Sing Se | unaudited | Other permanents you control have indestructible. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Aang, the Last Airbender | handled | When Aang enters, airbend up to one other target nonland permanent. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Abandoned Air Temple | handled | This land enters tapped unless you control a basic land. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Air Nomad Legacy | handled | When this enchantment enters, create a Clue token. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Airbender Ascension | handled | When this enchantment enters, airbend up to one target creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Airbender's Reversal | handled | Choose one — • Destroy target attacking creature. • Airbend target creature you control. (Exile it. While it's exiled, its owner may cast it for {2} rather than | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Airship Engine Room | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -133,6 +126,7 @@
 | Fire Lord Zuko | handled | Whenever you cast a spell from exile and whenever a permanent you control enters from exile, put a +1/+1 counter on each creature you control. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Fire Nation Attacks | handled | Create two 2/2 red Soldier creature tokens with firebending 1. (Whenever a creature with firebending 1 attacks, add {R}. This mana lasts until end of combat.) F | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Fire Nation Engineer | handled | Raid — At the beginning of your end step, if you attacked this turn, put a +1/+1 counter on another target creature or Vehicle you control. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Fire Nation Palace | handled | This land enters tapped unless you control a basic land. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Fire Nation Raider | handled | Raid — When this creature enters, if you attacked this turn, create a Clue token. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Fire Nation Warship | handled | When this Vehicle dies, create a Clue token. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Fire Sages | handled | {1}{R}{R}: Put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -233,7 +227,7 @@
 ## Fully supported
 
 <details>
-<summary>74 cards</summary>
+<summary>80 cards</summary>
 
 - Aang's Iceberg
 - Aang, Swift Savior // Aang and La, Ocean's Fury
@@ -247,6 +241,7 @@
 - Ba Sing Se
 - Badgermole
 - Badgermole Cub
+- Bender's Waterskin
 - Boiling Rock Rioter
 - Boomerang Basics
 - Callous Inspector
@@ -270,6 +265,8 @@
 - Flopsie, Bumi's Buddy
 - Geyser Leaper
 - Gran-Gran
+- Great Divide Guide
+- Honest Work
 - Invasion Tactics
 - Iroh's Demonstration
 - Iroh, Grand Lotus
@@ -290,6 +287,7 @@
 - Redirect Lightning
 - Rockalanche
 - Ruinous Waterbending
+- Secret Tunnel
 - Serpent of the Pass
 - Shared Roots
 - Solstice Revelations
@@ -301,6 +299,7 @@
 - The Last Agni Kai
 - The Legend of Roku // Avatar Roku
 - The Lion-Turtle
+- The Walls of Ba Sing Se
 - Tiger-Dillo
 - Toph, the Blind Bandit
 - Toph, the First Metalbender
@@ -309,6 +308,7 @@
 - Wan Shi Tong, Librarian
 - Wartime Protestors
 - Waterbending Scroll
+- Zhao, the Moon Slayer
 
 </details>
 
@@ -323,22 +323,18 @@
 | as an additional cost to cast ~, you may waterbend {M}. you control target opponent during their next combat phase. if ~ additional cost was paid, you control t | 1 | Secret of Bloodbending | tla |
 | as long as there is a lesson card in your graveyard, ~ can attack as though it didn't have defender. | 1 | Platypus-Bear | tla |
 | as long as you've drawn two or more cards ~, ~ has lifelink and menace. | 1 | Foggy Swamp Hunters | tla |
-| as long as zhao has a conqueror counter on him, nonbasic lands are mountains. | 1 | Zhao, the Moon Slayer | tla |
 | at the beginning of combat on your turn, you may have target opponent gain control of target permanent you control. when you do, create a N/N white ally creatur | 1 | Iroh, Tea Master | tla |
 | at the beginning of your first main phase, choose one that hasn"..."s control. | 1 | Zuko, Conflicted | tla |
 | at the beginning of your upkeep, tap ~. | 1 | Tiger-Seal | tla |
 | choose a card name. search target opponent's graveyard, hand, and library for up to four cards with that name and exile them. then that player shuffles. | 1 | The Rise of Sozin // Fire Lord Sozin | tla |
 | choose up to one target creature, then airbend all other creatures. (exile them. while each one is exiled, its owner may cast it for {M} rather than its mana co | 1 | Avatar's Wrath | tla |
-| creatures you control with flying get +N/+N. | 1 | Air Nomad Legacy | tla |
 | draw a card if there's a creature or lesson card in your graveyard. | 1 | Leaves from the Vine | tla |
 | draw three cards. then discard a card unless you waterbend {M}. (while paying a waterbend cost, you can tap your artifacts and creatures to help. each one pays  | 1 | Waterbending Lesson | tla |
-| each land and ally you control has "..." | 1 | Great Divide Guide | tla |
 | each non-human creature you control gets +N/+N for each of its creature types, to a maximum of N. | 1 | Diligent Zookeeper | tla |
 | each player chooses any number of creatures they control with total power N or less, then sacrifices all other creatures they control. | 1 | Destined Confrontation | tla |
 | earthbend N, where N is the number of cards in your hand. that land becomes an island in addition to its other types. | 1 | The Legend of Kyoshi // Avatar Kyoshi | tla |
 | earthbend N. when you do, up to one target creature you control fights target creature an opponent controls. (to earthbend N, target land you control becomes a  | 1 | Earth Rumble | tla |
 | enchanted creature gets +N/+N for each creature card in your graveyard and is an avatar in addition to its other types. | 1 | Avatar Destiny | tla |
-| enchanted creature loses all abilities and is a citizen with base power and toughness N/N and "..." named humble merchant. | 1 | Honest Work | tla |
 | exile target creature. if it was dealt damage ~, create a clue token. (it's an artifact with "...") | 1 | Sold Out | tla |
 | kicker {M} (you may pay an additional {M} as you cast ~.) return target creature card from your graveyard to your hand. if ~ was kicked, instead put that card o | 1 | Zuko's Conviction | tla |
 | kicker {M} (you may pay an additional {M} as you cast ~.) search your library for a basic land card. if ~ was kicked, instead search your library for a basic la | 1 | Aang's Journey | tla |
@@ -346,13 +342,11 @@
 | look at the top N cards of your library, where N is the number of lands you control. you may reveal a creature or land card from among them and put it into your | 1 | Seismic Sense | tla |
 | look at the top three cards of your library. put one of those cards into your hand and the rest on the bottom of your library in any order. put each of those ca | 1 | Accumulate Wisdom | tla |
 | noble creatures you control and lesson spells you control have lifelink. | 1 | Lo and Li, Twin Tutors | tla |
-| other permanents you control have indestructible. | 1 | The Walls of Ba Sing Se | tla |
 | pay N life: choose a creature card exiled with koh. | 1 | Koh, the Face Stealer | tla |
 | search your library for up to four land cards with different names and reveal them. an opponent chooses two of those cards. put the chosen cards into your grave | 1 | Elemental Teachings | tla |
 | starting with you, each player chooses up to one permanent with mana value N or greater from among permanents your opponents control. exile those permanents. | 1 | The Legend of Yangchen // Avatar Yangchen | tla |
 | target creature you control gets +N/+N until end of turn. if that creature is an ally, it also gains flying until end of turn. | 1 | Yip Yip! | tla |
 | untap one or two target creatures. they each get +N/+N until end of turn. | 1 | Fancy Footwork | tla |
-| untap ~ during each other player's untap step. | 1 | Bender's Waterskin | tla |
 | waterbend {M}, {M}: you may cast a noncreature spell from your hand without paying its mana cost. | 1 | Yue, the Moon Spirit | tla |
 | waterbend {M}: enchanted creature's owner shuffles it into their library. | 1 | Watery Grasp | tla |
 | waterbend {M}: look at the top four cards of your library. you may reveal a creature card with power N or less from among them and put it into your hand. put th | 1 | Water Tribe Rallier | tla |
@@ -379,10 +373,8 @@
 | whenever ~ attacks, each opponent loses N life and you gain N life, where N is the number of creatures you control with +N/+N counters on them. | 1 | Dai Li Agents | tla |
 | whenever ~ becomes tapped, target player mills N cards, where N is the number of lesson cards in your graveyard. | 1 | Master Pakku | tla |
 | whenever ~ enters or attacks, exile up to one target card from a graveyard. if a creature card is exiled ~, create a clue token. | 1 | Raven Eagle | tla |
-| {M}, {M}: two target creatures you control that share a creature type can't be blocked ~. | 1 | Secret Tunnel | tla |
 | {M}: mill a card. you may put a land card milled ~ into your hand. you gain N life if a lesson card is milled ~. | 1 | Sparring Dummy | tla |
 | {M}: until end of turn, ~ has base power N and gains trample. | 1 | Turtle-Duck | tla |
-| {M}{M}, {M}: target creature you control gains firebending N until end of turn. | 1 | Fire Nation Palace | tla |
 | ~ gets +N/+N and has trample as long as you control a land creature or a land entered the battlefield under your control ~. | 1 | Earth Rumble Wrestlers | tla |
 | ~ gets +N/+N as long as there's a lesson card in your graveyard. | 1 | First-Time Flyer | tla |
 | ~ gets +N/+N as long as you've drawn two or more cards ~. | 1 | Messenger Hawk | tla |

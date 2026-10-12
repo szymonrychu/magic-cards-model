@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 2 | 11.8% |
-| Works (untested) | 8 | 47.1% |
-| Partial (unaudited) | 2 | 11.8% |
-| Not working | 5 | 29.4% |
+| Tested | 4 | 23.5% |
+| Works (untested) | 9 | 52.9% |
+| Partial (unaudited) | 0 | 0.0% |
+| Not working | 4 | 23.5% |
 
 ## Cards needing work
 
@@ -29,13 +29,11 @@
 | Dreamborn Muse | silent | At the beginning of each player's upkeep, that player mills X cards, where X is the number of cards in their hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Essence Sliver | silent | Whenever a Sliver deals damage, its controller gains that much life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Graveborn Muse | silent | At the beginning of your upkeep, you draw X cards and lose X life, where X is the number of Zombies you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Krosan Cloudscraper | silent | At the beginning of your upkeep, sacrifice this creature unless you pay {G}{G}. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Phage the Untouchable | silent | Whenever Phage deals combat damage to a creature, destroy that creature. It can't be regenerated. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Mistform Ultimus | unaudited | Mistform Ultimus is every creature type . | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Seedborn Muse | unaudited | Untap all permanents you control during each other player's untap step. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Akroma, Angel of Wrath | handled | Flying | machines/combat.py | Y/-/- | not_tested |
 | Enormous Baloth | handled |  |  | Y/-/- | not_tested |
 | Flamewave Invoker | handled | {7}{R}: This creature deals 5 damage to target player or planeswalker. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Krosan Cloudscraper | handled | At the beginning of your upkeep, sacrifice this creature unless you pay {G}{G}. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Merchant of Secrets | handled | When this creature enters, draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Starlight Invoker | handled | {7}{W}: You gain 5 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Willbender | handled | When this creature is turned face up, change the target of target spell or ability with a single target. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -45,10 +43,12 @@
 ## Fully supported
 
 <details>
-<summary>2 cards</summary>
+<summary>4 cards</summary>
 
 - Fugitive Wizard
 - Lavaborn Muse
+- Mistform Ultimus
+- Seedborn Muse
 
 </details>
 
@@ -57,12 +57,9 @@
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
 | at the beginning of each player's upkeep, that player mills N cards, where N is the number of cards in their hand. | 1 | Dreamborn Muse | lgn |
-| at the beginning of your upkeep, sacrifice ~ unless you pay {M}{M}. | 1 | Krosan Cloudscraper | lgn |
 | at the beginning of your upkeep, you draw N cards and lose N life, where N is the number of zombies you control. | 1 | Graveborn Muse | lgn |
-| untap all permanents you control during each other player's untap step. | 1 | Seedborn Muse | lgn |
 | whenever a sliver deals damage, its controller gains that much life. | 1 | Essence Sliver | lgn |
 | whenever phage deals combat damage to a creature, destroy that creature. it can't be regenerated. | 1 | Phage the Untouchable | lgn |
-| ~ is every creature type . | 1 | Mistform Ultimus | lgn |
 
 ## Notes
 

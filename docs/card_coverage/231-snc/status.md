@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 45 | 17.8% |
-| Works (untested) | 139 | 54.9% |
-| Partial (unaudited) | 3 | 1.2% |
-| Not working | 66 | 26.1% |
+| Tested | 50 | 19.8% |
+| Works (untested) | 141 | 55.7% |
+| Partial (unaudited) | 0 | 0.0% |
+| Not working | 62 | 24.5% |
 
 ## Cards needing work
 
@@ -39,13 +39,11 @@
 | Cemetery Tampering | silent | At the beginning of your upkeep, you may mill three cards. Then if there are twenty or more cards in your graveyard, you may play the exiled card without paying | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Corpse Appraiser | silent | When this creature enters, exile up to one target creature card from a graveyard. If a card is put into exile this way, look at the top three cards of your libr | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Corpse Explosion | silent | As an additional cost to cast this spell, exile a creature card from your graveyard. Corpse Explosion deals damage equal to the exiled card's power to each crea | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Dapper Shieldmate | silent | During your turn, this creature gets +2/+0. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Depopulate | silent | Each player who controls a multicolored creature draws a card. Then destroy all creatures. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Devilish Valet | silent | Alliance — Whenever another creature you control enters, double this creature's power until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Elspeth Resplendent | silent | +1: Choose up to one target creature. Put a +1/+1 counter and a counter from among flying, first strike, lifelink, or vigilance on it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Errant, Street Artist | silent | {1}{U}, {T}: Copy target spell you control that wasn't cast. You may choose new targets for the copy. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Evelyn, the Covetous | silent | Whenever Evelyn or another Vampire you control enters, exile the top card of each player's library with a collection counter on it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Evolving Door | silent | {1}, {T}, Sacrifice a creature: Count the colors of the sacrificed creature, then search your library for a creature card that's exactly that many colors plus o | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Exotic Pets | silent | Create two 1/1 blue Fish creature tokens with "This token can't be blocked." Then for each kind of counter among creatures you control, put a counter of that ki | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Fatal Grudge | silent | As an additional cost to cast this spell, sacrifice a nonland permanent. Each opponent chooses a permanent they control that shares a card type with the sacrifi | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Freelance Muscle | silent | Whenever this creature attacks or blocks, it gets +X/+X until end of turn, where X is the greatest power and/or toughness among other creatures you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -61,7 +59,6 @@
 | Meeting of the Five | silent | Exile the top ten cards of your library. You may cast spells with exactly three colors from among them this turn. Add {W}{W}{U}{U}{B}{B}{R}{R}{G}{G}. Spend this | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Mr. Orfeo, the Boulder | silent | Whenever you attack, double target creature's power until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Mysterious Limousine | silent | Whenever this Vehicle enters or attacks, exile up to one other target creature until this Vehicle leaves the battlefield. If a creature is put into exile this w | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Ob Nixilis, the Adversary | silent | +1: Each opponent loses 2 life unless they discard a card. If you control a Demon or Devil, you gain 2 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Obscura Interceptor | silent | When this creature enters, it connives. When it connives this way, return up to one target spell to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Psychic Pickpocket | silent | When this creature enters, it connives. When it connives this way, return up to one target nonland permanent to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Rabble Rousing | silent | Whenever you attack with one or more creatures, create that many 1/1 green and white Citizen creature tokens. Then if you control ten or more creatures, you may | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -84,7 +81,6 @@
 | Extract the Truth | notice | Choose one — • Target opponent reveals their hand. You may choose a creature, enchantment, or planeswalker card from it. That player discards that card. • Targe | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Extraction Specialist | notice | When this creature enters, return target creature card with mana value 2 or less from your graveyard to the battlefield. That creature can't attack or block for | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Jaxis, the Troublemaker | notice | {R}, {T}, Discard a card: Create a token that's a copy of another target creature you control. It gains haste and "When this token dies, draw a card." Sacrifice | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Rhox Pummeler | notice | This creature has trample as long as it has a shield counter on it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Sewer Crocodile | notice | {3}{U}: This creature can't be blocked this turn. This ability costs {3} less to activate if there are five or more mana values among cards in your graveyard. | unparsed remainder: This ability costs {3} less to activate if there are five or more mana values among cards in your graveyard. | Y/Y/- | not_working |
 | Sizzling Soloist | notice | Alliance — Whenever another creature you control enters, target creature an opponent controls can't block this turn. If this is the second time this ability has | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Slip Out the Back | notice | Put a +1/+1 counter on target creature. It phases out. (Treat it and anything attached to it as though they don't exist until its controller's next turn.) | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -92,9 +88,6 @@
 | Undercover Operative | notice | You may have this creature enter as a copy of any creature on the battlefield, except it enters with a shield counter on it if you control that creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Unleash the Inferno | notice | Unleash the Inferno deals 7 damage to target creature or planeswalker. When it deals excess damage this way, destroy target artifact or enchantment an opponent  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Venom Connoisseur | notice | Alliance — Whenever another creature you control enters, this creature gains deathtouch until end of turn. If this is the second time this ability has resolved  | unparsed remainder: If this is the second time this ability has resolved this turn, all creatures you control gain deathtouch until end of turn. | Y/Y/Y | not_working |
-| Public Enemy | unaudited | All creatures attack enchanted creature's controller each combat if able. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Scheming Fence | unaudited | Activated abilities of the chosen permanent can't be activated. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Witness Protection | unaudited | Enchanted creature loses all abilities and is a green and white Citizen creature with base power and toughness 1/1 named Legitimate Businessperson. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | A Little Chat | handled | Casualty 1 (As you cast this spell, you may sacrifice a creature with power 1 or greater. When you do, copy this spell.) Look at the top two cards of your libra | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Angelic Observer | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
 | Antagonize | handled | Target creature gets +4/+3 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -131,6 +124,7 @@
 | Cut Your Losses | handled | Casualty 2 (As you cast this spell, you may sacrifice a creature with power 2 or greater. When you do, copy this spell and you may choose a new target for the c | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Cut of the Profits | handled | Casualty 3 (As you cast this spell, you may sacrifice a creature with power 3 or greater. When you do, copy this spell.) You draw X cards and you lose X life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Cutthroat Contender | handled | Pay 1 life: This creature gets +1/+0 until end of turn. Activate only once each turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Dapper Shieldmate | handled | This creature enters with a shield counter on it. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Daring Escape | handled | Target creature gets +1/+0 and gains first strike until end of turn. Scry 1. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Darling of the Masses | handled | Other Citizens you control get +1/+0. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Deal Gone Bad | handled | Target creature gets -3/-3 until end of turn. Target player mills three cards. (They put the top three cards of their library into their graveyard.) | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -196,6 +190,7 @@
 | Refuse to Yield | handled | Target creature gets +2/+7 until end of turn. Untap it. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Revel Ruiner | handled | When this creature enters, it connives. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Revelation of Power | handled | Target creature gets +2/+2 until end of turn. If it has a counter on it, it also gains flying and lifelink until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Rhox Pummeler | handled | This creature enters with a shield counter on it. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Rigo, Streetwise Mentor | handled | Rigo enters with a shield counter on it. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Riveteers Ascendancy | handled | Whenever you sacrifice a creature, you may return target creature card with lesser mana value from your graveyard to the battlefield tapped. Do this only once e | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Riveteers Decoy | handled | This creature must be blocked if able. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -238,7 +233,7 @@
 ## Fully supported
 
 <details>
-<summary>45 cards</summary>
+<summary>50 cards</summary>
 
 - An Offer You Can't Refuse
 - Angel of Suffering
@@ -247,6 +242,7 @@
 - Brass Knuckles
 - Caldaia Strongarm
 - Dusk Mangler
+- Evolving Door
 - Expendable Lackey
 - Falco Spara, Pactweaver
 - Fight Rigging
@@ -267,15 +263,18 @@
 - Maestros Diabolist
 - Mayhem Patrol
 - Night Clubber
+- Ob Nixilis, the Adversary
 - Obscura Ascendancy
 - Paragon of Modernity
 - Psionic Snoop
+- Public Enemy
 - Pugnacious Pugilist
 - Quick-Draw Dagger
 - Raffine's Guidance
 - Riveteers Charm
 - Sanctuary Warden
 - Sanguine Spy
+- Scheming Fence
 - Scuttling Butler
 - Security Rhox
 - Shadow of Mortality
@@ -284,6 +283,7 @@
 - Take to the Streets
 - Urabrask, Heretic Praetor
 - Vivien on the Hunt
+- Witness Protection
 - Ziatora, the Incinerator
 
 </details>
@@ -295,9 +295,6 @@
 | Alliance | 4 | Devilish Valet, Rumor Gatherer, Sizzling Soloist, Venom Connoisseur | snc |
 | Choose one | 1 | Extract the Truth | snc |
 | +N: choose up to one target creature. put a +N/+N counter and a counter from among flying, first strike, lifelink, or vigilance on it. | 1 | Elspeth Resplendent | snc |
-| +N: each opponent loses N life unless they discard a card. if you control a demon or devil, you gain N life. | 1 | Ob Nixilis, the Adversary | snc |
-| activated abilities of the chosen permanent can't be activated. | 1 | Scheming Fence | snc |
-| all creatures attack enchanted creature's controller each combat if able. | 1 | Public Enemy | snc |
 | as an additional cost to cast ~, exile a creature card from your graveyard. ~ deals damage equal to the exiled card's power to each creature and each planeswalk | 1 | Corpse Explosion | snc |
 | as an additional cost to cast ~, sacrifice a nonland permanent. each opponent chooses a permanent they control that shares a card type with the sacrificed perma | 1 | Fatal Grudge | snc |
 | as long as there are five or more mana values among cards in your graveyard, ~ gets +N/+N and has deathtouch. | 1 | Aven Heartstabber | snc |
@@ -316,9 +313,7 @@
 | create two N/N blue fish creature tokens with "..." then for each kind of counter among creatures you control, put a counter of that kind on either of those tok | 1 | Exotic Pets | snc |
 | creatures you control also get +N/+N and have trample as long as you control six or more creatures. | 1 | Jetmir, Nexus of Revels | snc |
 | draw two cards, then look at the top card of each player's library. | 1 | Case the Joint | snc |
-| during your turn, ~ gets +N/+N. | 1 | Dapper Shieldmate | snc |
 | each player who controls a multicolored creature draws a card. then destroy all creatures. | 1 | Depopulate | snc |
-| enchanted creature loses all abilities and is a green and white citizen creature with base power and toughness N/N named legitimate businessperson. | 1 | Witness Protection | snc |
 | equipped creature gets +N/+N for each counter on it. | 1 | Luxior, Giada's Gift | snc |
 | exile the top ten cards of your library. you may cast spells with exactly three colors from among them ~. add {M}{M}{M}{M}{M}{M}{M}{M}{M}{M}. spend ~ only to ca | 1 | Meeting of the Five | snc |
 | for each color, return up to one target creature card of that color from your graveyard to your hand. | 1 | Rogues' Gallery | snc |
@@ -350,13 +345,11 @@
 | whenever ~ enters or attacks, exile up to one other target creature until ~ leaves the battlefield. if a creature is put into exile ~, return each other card ex | 1 | Mysterious Limousine | snc |
 | you may have ~ enter as a copy of any creature on the battlefield, except it enters with a shield counter on it if you control that creature. | 1 | Undercover Operative | snc |
 | {M}, {M}, discard a card: create a token that's a copy of another target creature you control. it gains haste and "..." sacrifice it at the beginning of the nex | 1 | Jaxis, the Troublemaker | snc |
-| {M}, {M}, sacrifice a creature: count the colors of the sacrificed creature, then search your library for a creature card that's exactly that many colors plus o | 1 | Evolving Door | snc |
 | {M}{M}, {M}: copy target spell you control that wasn't cast. you may choose new targets for the copy. | 1 | Errant, Street Artist | snc |
 | {M}{M}: ~ can't be blocked ~. ~ costs {M} less to activate if there are five or more mana values among cards in your graveyard. | 1 | Sewer Crocodile | snc |
 | ~ deals N damage to target creature or planeswalker. when it deals excess damage ~, destroy target artifact or enchantment an opponent controls with mana value  | 1 | Unleash the Inferno | snc |
 | ~ has flash as long as there are five or more mana values among cards in your graveyard. return target creature card from your graveyard to the battlefield. | 1 | Graveyard Shift | snc |
 | ~ has indestructible as long as it entered ~. | 1 | Crew Captain | snc |
-| ~ has trample as long as it has a shield counter on it. | 1 | Rhox Pummeler | snc |
 | ~'s power and toughness are each equal to the number of cards exiled with it. | 1 | Unlicensed Hearse | snc |
 
 ## Notes

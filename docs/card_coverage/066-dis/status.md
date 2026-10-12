@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 31 | 18.3% |
-| Works (untested) | 62 | 36.7% |
-| Partial (unaudited) | 2 | 1.2% |
-| Not working | 74 | 43.8% |
+| Tested | 33 | 19.5% |
+| Works (untested) | 66 | 39.1% |
+| Partial (unaudited) | 0 | 0.0% |
+| Not working | 70 | 41.4% |
 
 ## Cards needing work
 
@@ -40,21 +40,18 @@
 | Cytoplast Root-Kin | silent | When this creature enters, put a +1/+1 counter on each other creature you control with a +1/+1 counter on it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Cytoshape | silent | Choose a nonlegendary creature on the battlefield. Target creature becomes a copy of that creature until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Cytospawn Shambler | silent | Graft | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Demon's Jester | silent | Hellbent — This creature gets +2/+1 as long as you have no cards in hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Dovescape | silent | Whenever a player casts a noncreature spell, counter that spell. That player creates X 1/1 white and blue Bird creature tokens with flying, where X is the spell | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Drekavac | silent | When this creature enters, sacrifice it unless you discard a noncreature card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Elemental Resonance | silent | At the beginning of your first main phase, add mana equal to enchanted permanent's mana cost. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Evolution Vat | silent | {3}, {T}: Tap target creature and put a +1/+1 counter on it. Until end of turn, that creature gains "{2}{G}{U}: Double the number of +1/+1 counters on this crea | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Flaring Flame-Kin | silent | As long as this creature is enchanted, it gets +2/+2, has trample, and has "{R}: This creature gets +1/+0 until end of turn." | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Flash Foliage | silent | Cast this spell only during combat after blockers are declared. Create a 1/1 green Saproling creature token that's blocking target creature attacking you. Draw  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Gobhobbler Rats | silent | Hellbent — As long as you have no cards in hand, this creature gets +1/+0 and has "{B}: Regenerate this creature." | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Govern the Guildless | silent | Gain control of target monocolored creature. Forecast — {1}{U}, Reveal this card from your hand: Target creature becomes the color or colors of your choice unti | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Haazda Shield Mate | silent | At the beginning of your upkeep, sacrifice this creature unless you pay {W}{W}. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Helium Squirter | silent | Graft | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Hide // Seek | silent | Put target artifact or enchantment on the bottom of its owner's library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Hit // Run | silent | Attacking creatures you control get +1/+0 until end of turn for each other attacking creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Isperia the Inscrutable | silent | Whenever Isperia deals combat damage to a player, choose a card name. That player reveals their hand. If a card with the chosen name is revealed this way, searc | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Jagged Poppet | silent | Whenever this creature is dealt damage, discard that many cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Jagged Poppet | silent | Hellbent — Whenever this creature deals combat damage to a player, if you have no cards in hand, that player discards cards equal to the damage. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Kill-Suit Cultist | silent | {B}, Sacrifice this creature: The next time damage would be dealt to target creature this turn, destroy that creature instead. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Kindle the Carnage | silent | Discard a card at random. If you do, Kindle the Carnage deals damage equal to that card's mana value to each creature. You may repeat this process any number of | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Loaming Shaman | silent | When this creature enters, target player shuffles any number of target cards from their graveyard into their library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -72,7 +69,6 @@
 | Pure // Simple | silent | Destroy all Auras and Equipment. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Rakdos Augermage | silent | {T}: Reveal your hand and discard a card of target opponent's choice. Then that player reveals their hand and discards a card of your choice. Activate only as a | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Rakdos Ickspitter | silent | {T}: This creature deals 1 damage to target creature and that creature's controller loses 1 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Rakdos Pit Dragon | silent | Hellbent — This creature has double strike as long as you have no cards in hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Rakdos Riteknife | silent | Equipped creature gets +1/+0 for each blood counter on this Equipment and has "{T}, Sacrifice a creature: Put a blood counter on Rakdos Riteknife." | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Rakdos the Defiler | silent | Whenever Rakdos attacks, sacrifice half the non-Demon permanents you control, rounded up. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Research // Development | silent | Shuffle up to four cards you own from outside the game into your library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -100,8 +96,6 @@
 | Ignorant Bliss | notice | Exile all cards from your hand face down. At the beginning of the next end step, return those cards to your hand, then draw a card. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Infernal Tutor | notice | Reveal a card from your hand. Search your library for a card with the same name as that card, reveal it, put it into your hand, then shuffle. Hellbent — If you  | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Might of the Nephilim | notice | Target creature gets +2/+2 until end of turn for each of its colors. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Shielding Plax | unaudited | Enchanted creature can't be the target of spells or abilities your opponents control. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Taste for Mayhem | unaudited | Hellbent — Enchanted creature gets an additional +2/+0 as long as you have no cards in hand. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Assault Zeppelid | handled | Flying | machines/combat.py | Y/-/- | not_tested |
 | Aurora Eidolon | handled | {W}, Sacrifice this creature: Prevent the next 3 damage that would be dealt to any target this turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Azorius Chancery | handled | This land enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -114,10 +108,13 @@
 | Court Hussar | handled | When this creature enters, look at the top three cards of your library, then put one of them into your hand and the rest on the bottom of your library in any or | the engine reads this text and performs it | Y/-/- | not_tested |
 | Crime // Punishment | handled | Put target creature or enchantment card from an opponent's graveyard onto the battlefield under your control. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Delirium Skeins | handled | Each player discards three cards. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Demon's Jester | handled | Hellbent — This creature gets +2/+1 as long as you have no cards in hand. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Enigma Eidolon | handled | {U}, Sacrifice this creature: Target player mills three cards. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Entropic Eidolon | handled | {B}, Sacrifice this creature: Target player loses 1 life and you gain 1 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Gnat Alley Creeper | handled | This creature can't be blocked by creatures with flying. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Gobhobbler Rats | handled | Hellbent — As long as you have no cards in hand, this creature gets +1/+0 and has "{B}: Regenerate this creature." | the engine reads this text and performs it | Y/-/- | not_tested |
 | Haazda Exonerator | handled | {T}, Sacrifice this creature: Destroy target Aura. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Haazda Shield Mate | handled | At the beginning of your upkeep, sacrifice this creature unless you pay {W}{W}. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Leafdrake Roost | handled | Enchanted land has "{G}{U}, {T}: Create a 2/2 green and blue Drake creature token with flying." | the engine reads this text and performs it | Y/-/- | not_tested |
 | Lyzolda, the Blood Witch | handled | {2}, Sacrifice a creature: Lyzolda deals 2 damage to any target if the sacrificed creature was red. Draw a card if the sacrificed creature was black. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Macabre Waltz | handled | Return up to two target creature cards from your graveyard to your hand, then discard a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -136,6 +133,7 @@
 | Proper Burial | handled | Whenever a creature you control dies, you gain life equal to that creature's toughness. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Rakdos Carnarium | handled | This land enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Rakdos Guildmage | handled | {3}{B}, Discard a card: Target creature gets -2/-2 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Rakdos Pit Dragon | handled | {R}{R}: This creature gains flying until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ratcatcher | handled | At the beginning of your upkeep, you may search your library for a Rat card, reveal it, put it into your hand, then shuffle. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Riot Spikes | handled | Enchanted creature gets +2/-1. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Rix Maadi, Dungeon Palace | handled | {1}{B}{R}, {T}: Each player discards a card. Activate only as a sorcery. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -168,7 +166,7 @@
 ## Fully supported
 
 <details>
-<summary>31 cards</summary>
+<summary>33 cards</summary>
 
 - Anthem of Rakdos
 - Azorius Aethermage
@@ -196,8 +194,10 @@
 - Ragamuffyn
 - Rain of Gore
 - Rakdos Signet
+- Shielding Plax
 - Simic Growth Chamber
 - Spell Snare
+- Taste for Mayhem
 - Utopia Sprawl
 - Weight of Spires
 - Writ of Passage
@@ -209,11 +209,10 @@
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
 | graft | 10 | Aquastrand Spider, Cytoplast Manipulator, Cytospawn Shambler, Helium Squirter, Novijen Sages | dis |
-| Hellbent | 5 | Demon's Jester, Gobhobbler Rats, Rakdos Pit Dragon, Slithering Shade, Taste for Mayhem | dis |
+| Hellbent | 2 | Jagged Poppet, Slithering Shade | dis |
 | as an additional cost to cast ~, pay N life. each other player loses N life. | 1 | Bond of Agony | dis |
 | as long as ~ is enchanted, it gets +N/+N, has trample, and has "..." | 1 | Flaring Flame-Kin | dis |
 | at the beginning of your first main phase, add mana equal to enchanted permanent's mana cost. | 1 | Elemental Resonance | dis |
-| at the beginning of your upkeep, sacrifice ~ unless you pay {M}{M}. | 1 | Haazda Shield Mate | dis |
 | attacking creatures you control get +N/+N until end of turn for each other attacking creature. | 1 | Hit // Run | dis |
 | cast ~ only during combat after blockers are declared. create a N/N green saproling creature token that's blocking target creature attacking you. draw a card. | 1 | Flash Foliage | dis |
 | choose a card type, then reveal the top four cards of your library. put all cards of the chosen type revealed ~ into your hand and the rest into your graveyard. | 1 | Vigean Intuition | dis |
@@ -223,7 +222,6 @@
 | destroy all auras and equipment. | 1 | Pure // Simple | dis |
 | discard a card at random. if you do, ~ deals damage equal to that card's mana value to each creature. you may repeat ~ any number of times. | 1 | Kindle the Carnage | dis |
 | draw a card for each creature target player controls, then draw a card for each creature another target player controls. | 1 | Biomantic Mastery | dis |
-| enchanted creature can't be the target of spells or abilities your opponents control. | 1 | Shielding Plax | dis |
 | enchanted creature gets +N/+N and can block creatures with landwalk abilities as though they didn't have those abilities. | 1 | Street Savvy | dis |
 | enchanted creature gets +N/+N for each of its colors. | 1 | Blessing of the Nephilim | dis |
 | equipped creature gets +N/+N for each blood counter on ~ and has "..." | 1 | Rakdos Riteknife | dis |
@@ -256,7 +254,6 @@
 | whenever rakdos attacks, sacrifice half the non-demon permanents you control, rounded up. | 1 | Rakdos the Defiler | dis |
 | whenever you cast a blue creature spell, reveal the top card of your library. if it's a creature card, put that card into your hand. | 1 | Momir Vig, Simic Visionary | dis |
 | whenever ~ deals damage, you gain that much life. | 1 | Paladin of Prahv | dis |
-| whenever ~ is dealt damage, discard that many cards. | 1 | Jagged Poppet | dis |
 | {M}, sacrifice ~: the next time damage would be dealt to target creature ~, destroy that creature instead. | 1 | Kill-Suit Cultist | dis |
 | {M}, {M}: destroy target creature with power less than ~ power. | 1 | Unliving Psychopath | dis |
 | {M}, {M}: tap target creature and put a +N/+N counter on it. until end of turn, that creature gains "..." | 1 | Evolution Vat | dis |

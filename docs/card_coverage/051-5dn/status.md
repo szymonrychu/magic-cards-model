@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 18 | 11.1% |
-| Works (untested) | 99 | 61.1% |
-| Partial (unaudited) | 8 | 4.9% |
-| Not working | 37 | 22.8% |
+| Tested | 26 | 16.0% |
+| Works (untested) | 102 | 63.0% |
+| Partial (unaudited) | 0 | 0.0% |
+| Not working | 34 | 21.0% |
 
 ## Cards needing work
 
@@ -31,7 +31,6 @@
 | Avarice Totem | silent | {5}: Exchange control of this artifact and target nonland permanent. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Beacon of Immortality | silent | Double target player's life total. Shuffle Beacon of Immortality into its owner's library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Beacon of Tomorrows | silent | Target player takes an extra turn after this one. Shuffle Beacon of Tomorrows into its owner's library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Blinkmoth Infusion | silent | Affinity for artifacts (This spell costs {1} less to cast for each artifact you control.) Untap all artifacts. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Cosmic Larva | silent | At the beginning of your upkeep, sacrifice this creature unless you sacrifice two lands. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Door to Nothingness | silent | {W}{W}{U}{U}{B}{B}{R}{R}{G}{G}, {T}, Sacrifice this artifact: Target player loses the game. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Doubling Cube | silent | {3}, {T}: Double the amount of each type of unspent mana you have. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -46,7 +45,6 @@
 | Myr Quadropod | silent | {3}: Switch this creature's power and toughness until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Myr Servitor | silent | At the beginning of your upkeep, if this creature is on the battlefield, each player returns all cards named Myr Servitor from their graveyard to the battlefiel | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Possessed Portal | silent | At the beginning of each end step, each player sacrifices a permanent of their choice unless they discard a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Raksha Golden Cub | silent | As long as Raksha Golden Cub is equipped, Cat creatures you control get +2/+2 and have double strike. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Retaliate | silent | Destroy all creatures that dealt damage to you this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Reversal of Fortune | silent | Target opponent reveals their hand. You may copy an instant or sorcery card in it. If you do, you may cast the copy without paying its mana cost. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Roar of Reclamation | silent | Each player returns all artifact cards from their graveyard to the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -54,7 +52,6 @@
 | Spinal Parasite | silent | Remove two +1/+1 counters from this creature: Remove a counter from target permanent. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Summoner's Egg | silent | Imprint — When this creature enters, you may exile a card from your hand face down. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Synod Centurion | silent | When you control no other artifacts, sacrifice this creature. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
-| Vedalken Shackles | silent | {2}, {T}: Gain control of target creature with power less than or equal to the number of Islands you control for as long as this artifact remains tapped. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Bringer of the Red Dawn | notice | At the beginning of your upkeep, you may untap target creature and gain control of it until end of turn. That creature gains haste until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Chimeric Coils | notice | {X}{1}: This artifact becomes an X/X Construct artifact creature. Sacrifice it at the beginning of the next end step. | unparsed remainder: Sacrifice it at the beginning of the next end step. | Y/-/- | not_working |
 | Devour in Shadow | notice | Destroy target creature. It can't be regenerated. You lose life equal to that creature's toughness. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
@@ -63,14 +60,6 @@
 | Rude Awakening | notice | Choose one — • Untap all lands you control. • Until end of turn, lands you control become 2/2 creatures that are still lands. Entwine {2}{G} (Choose both if you | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Spectral Shift | notice | Choose one — • Change the text of target spell or permanent by replacing all instances of one basic land type with another. (This effect lasts indefinitely.) •  | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Tangle Asp | notice | Whenever this creature blocks or becomes blocked by a creature, destroy that creature at end of combat. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Endless Whispers | unaudited | Each creature has "When this creature dies, choose target opponent. That player puts this card from its owner's graveyard onto the battlefield under their contr | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Eon Hub | unaudited | Players skip their upkeep steps. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Goblin Brawler | unaudited | This creature can't be equipped. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Lantern of Insight | unaudited | Players play with the top card of their libraries revealed. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Mycosynth Golem | unaudited | Artifact creature spells you cast have affinity for artifacts. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Razorgrass Screen | unaudited | This creature blocks each combat if able. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Relentless Rats | unaudited | A deck can have any number of cards named Relentless Rats. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Tornado Elemental | unaudited | You may have this creature assign its combat damage as though it weren't blocked. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Abuna's Chant | handled | Choose one — • You gain 5 life. • Prevent the next 5 damage that would be dealt to target creature this turn. Entwine {2} (Choose both if you pay the entwine co | the engine reads this text and performs it | Y/-/- | not_tested |
 | Advanced Hoverguard | handled | {U}: This creature gains shroud until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Anodet Lurker | handled | When this creature dies, you gain 3 life. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -87,6 +76,7 @@
 | Beacon of Destruction | handled | Beacon of Destruction deals 5 damage to any target. Shuffle Beacon of Destruction into its owner's library. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Blasting Station | handled | {T}, Sacrifice a creature: This artifact deals 1 damage to any target. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Blind Creeper | handled | Whenever a player casts a spell, this creature gets -1/-1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Blinkmoth Infusion | handled | Affinity for artifacts (This spell costs {1} less to cast for each artifact you control.) Untap all artifacts. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Bringer of the Black Dawn | handled | You may pay {W}{U}{B}{R}{G} rather than pay this spell's mana cost. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Bringer of the Blue Dawn | handled | You may pay {W}{U}{B}{R}{G} rather than pay this spell's mana cost. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Bringer of the Green Dawn | handled | You may pay {W}{U}{B}{R}{G} rather than pay this spell's mana cost. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -104,6 +94,7 @@
 | Dross Crocodile | handled |  |  | Y/-/- | not_tested |
 | Early Frost | handled | Tap up to three target lands. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ebon Drake | handled | Whenever a player casts a spell, you lose 1 life. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Endless Whispers | handled | Each creature has "When this creature dies, choose target opponent. That player puts this card from its owner's graveyard onto the battlefield under their contr | the engine reads this text and performs it | Y/-/- | not_tested |
 | Energy Chamber | handled | At the beginning of your upkeep, choose one — • Put a +1/+1 counter on target artifact creature. • Put a charge counter on target noncreature artifact. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ensouled Scimitar | handled | {3}: This artifact becomes a 1/5 Spirit artifact creature with flying until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Etched Oracle | handled | {1}, Remove four +1/+1 counters from this creature: Target player draws three cards. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -141,6 +132,7 @@
 | Plasma Elemental | handled | This creature can't be blocked. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Qumulox | handled | Flying | machines/combat.py | Y/-/- | not_tested |
 | Rain of Rust | handled | Choose one — • Destroy target artifact. • Destroy target land. Entwine {3}{R} (Choose both if you pay the entwine cost.) | the engine reads this text and performs it | Y/-/- | not_tested |
+| Raksha Golden Cub | handled | As long as Raksha Golden Cub is equipped, Cat creatures you control get +2/+2 and have double strike. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Razormane Masticore | handled | At the beginning of your upkeep, sacrifice this creature unless you discard a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Salvaging Station | handled | {T}: Return target noncreature artifact card with mana value 1 or less from your graveyard to the battlefield. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Sawtooth Thresher | handled | Remove two +1/+1 counters from this creature: It gets +4/+4 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -174,24 +166,32 @@
 ## Fully supported
 
 <details>
-<summary>18 cards</summary>
+<summary>26 cards</summary>
 
 - Beacon of Unrest
 - Cranial Plating
 - Crucible of Worlds
 - Engineered Explosives
+- Eon Hub
 - Eternal Witness
 - Fist of Suns
+- Goblin Brawler
 - Grinding Station
+- Lantern of Insight
 - Magma Jet
+- Mycosynth Golem
 - Night's Whisper
 - Opaline Bracers
 - Paradise Mantle
+- Razorgrass Screen
+- Relentless Rats
 - Rite of Passage
 - Silent Arbiter
 - Solarion
 - Stasis Cocoon
+- Tornado Elemental
 - Trinket Mage
+- Vedalken Shackles
 - Vicious Betrayal
 - Viridian Lorebearers
 
@@ -203,11 +203,7 @@
 |---|---|---|---|
 | Choose one | 3 | Plunge into Darkness, Rude Awakening, Spectral Shift | 5dn |
 | Imprint | 1 | Summoner's Egg | 5dn |
-| a deck can have any number of cards named ~. | 1 | Relentless Rats | 5dn |
 | add {M} for each tapped land your opponents control. | 1 | Mana Geyser | 5dn |
-| affinity for artifacts (~ costs {M} less to cast for each artifact you control.) untap all artifacts. | 1 | Blinkmoth Infusion | 5dn |
-| artifact creature spells you cast have affinity for artifacts. | 1 | Mycosynth Golem | 5dn |
-| as long as ~ is equipped, cat creatures you control get +N/+N and have double strike. | 1 | Raksha Golden Cub | 5dn |
 | at the beginning of each end step, each player sacrifices a permanent of their choice unless they discard a card. | 1 | Possessed Portal | 5dn |
 | at the beginning of each opponent's upkeep, ~ deals N damage to that player unless they have exactly three or exactly four cards in hand. | 1 | Skullcage | 5dn |
 | at the beginning of your upkeep, if ~ is on the battlefield, each player returns all cards named ~ from their graveyard to the battlefield. | 1 | Myr Servitor | 5dn |
@@ -218,12 +214,9 @@
 | destroy all creatures that dealt damage to you ~. | 1 | Retaliate | 5dn |
 | destroy target creature. it can"..."s toughness. | 1 | Devour in Shadow | 5dn |
 | double target player"..."s library. | 1 | Beacon of Immortality | 5dn |
-| each creature has "..." | 1 | Endless Whispers | 5dn |
 | each creature you control is a vampire in addition to its other creature types and has "..." | 1 | Mephidross Vampire | 5dn |
 | each player returns all artifact cards from their graveyard to the battlefield. | 1 | Roar of Reclamation | 5dn |
 | for each color, return up to one target card of that color from your graveyard to your hand. exile ~. | 1 | All Suns' Dawn | 5dn |
-| players play with the top card of their libraries revealed. | 1 | Lantern of Insight | 5dn |
-| players skip their upkeep steps. | 1 | Eon Hub | 5dn |
 | remove two +N/+N counters from ~: remove a counter from target permanent. | 1 | Spinal Parasite | 5dn |
 | search target opponent's library for an artifact card and put that card onto the battlefield under your control. then that player shuffles. | 1 | Acquire | 5dn |
 | target opponent reveals their hand. you may copy an instant or sorcery card in it. if you do, you may cast the copy without paying its mana cost. | 1 | Reversal of Fortune | 5dn |
@@ -233,17 +226,13 @@
 | whenever ~ becomes unattached from a permanent, sacrifice that permanent. | 1 | Grafted Wargear | 5dn |
 | whenever ~ blocks or becomes blocked by a creature, destroy that creature at end of combat. | 1 | Tangle Asp | 5dn |
 | whenever ~ deals combat damage to a player, you may remove a counter from target permanent. | 1 | Ferropede | 5dn |
-| you may have ~ assign its combat damage as though it weren't blocked. | 1 | Tornado Elemental | 5dn |
 | {M}, sacrifice ~: counter target activated ability from an artifact source and destroy that artifact if it's on the battlefield. | 1 | Ouphe Vandals | 5dn |
 | {M}, {M}: double the amount of each type of unspent mana you have. | 1 | Doubling Cube | 5dn |
-| {M}, {M}: gain control of target creature with power less than or equal to the number of islands you control for as long as ~ remains tapped. | 1 | Vedalken Shackles | 5dn |
 | {M}: exchange control of ~ and target nonland permanent. | 1 | Avarice Totem | 5dn |
 | {M}: if you control equipment named ~, sword of kaldra, and shield of kaldra, create kaldra, a legendary N/N colorless avatar creature token. attach those equip | 1 | Helm of Kaldra | 5dn |
 | {M}: switch ~ power and toughness until end of turn. | 1 | Myr Quadropod | 5dn |
 | {M}{M}: ~ becomes an N/N construct artifact creature. sacrifice it at the beginning of the next end step. | 1 | Chimeric Coils | 5dn |
 | {M}{M}{M}{M}{M}{M}{M}{M}{M}{M}, {M}, sacrifice ~: target player loses the game. | 1 | Door to Nothingness | 5dn |
-| ~ blocks each combat if able. | 1 | Razorgrass Screen | 5dn |
-| ~ can't be equipped. | 1 | Goblin Brawler | 5dn |
 
 ## Notes
 

@@ -17,38 +17,32 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 38 | 18.1% |
-| Works (untested) | 102 | 48.6% |
-| Partial (unaudited) | 11 | 5.2% |
-| Not working | 59 | 28.1% |
+| Tested | 47 | 22.4% |
+| Works (untested) | 113 | 53.8% |
+| Partial (unaudited) | 0 | 0.0% |
+| Not working | 50 | 23.8% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
-| Abominable Treefolk | silent | Abominable Treefolk's power and toughness are each equal to the number of snow permanents you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Amorphous Axe | silent | Equipped creature gets +3/+0 and is every creature type. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Answered Prayers | silent | Whenever a creature you control enters, you gain 1 life. If this enchantment isn't a creature, it becomes a 3/3 Angel creature with flying in addition to its ot | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Aria of Flame | silent | When this enchantment enters, each opponent gains 10 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Astral Drift | silent | Whenever you cycle this card or cycle another card while this enchantment is on the battlefield, you may exile target creature. If you do, return that card to t | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Bellowing Elk | silent | As long as you had another creature enter the battlefield under your control this turn, this creature has trample and indestructible. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Cloudshredder Sliver | silent | Sliver creatures you control have flying and haste. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Collected Conjuring | silent | Exile the top six cards of your library. You may cast up to two sorcery spells with mana value 3 or less from among them without paying their mana costs. Put th | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Cunning Evasion | silent | Whenever a creature you control becomes blocked, you may return it to its owner's hand. | this trigger's condition can never be satisfied - it never triggers | Y/-/- | not_working |
 | Dead of Winter | silent | All nonsnow creatures get -X/-X until end of turn, where X is the number of snow permanents you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Face of Divinity | silent | As long as another Aura is attached to enchanted creature, it has first strike and lifelink. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Frostwalk Bastion | silent | Whenever this land deals combat damage to a creature, tap that creature and it doesn't untap during its controller's next untap step. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Gluttonous Slug | silent | Evolve | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Goblin Champion | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Goblin Oriflamme | silent | Attacking creatures you control get +1/+0. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Headless Specter | silent | Hellbent — Whenever this creature deals combat damage to a player, if you have no cards in hand, that player discards a card at random. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Iceberg Cancrix | silent | Whenever another snow permanent you control enters, you may have target player mill two cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Igneous Elemental | silent | This spell costs {2} less to cast if there is a land card in your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Lancer Sliver | silent | Sliver creatures you control have first strike. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Mind Rake | silent | Overload | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Morophon, the Boundless | silent | Other creatures you control of the chosen type get +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Phantasmal Form | silent | Until end of turn, up to two target creatures each have base power and toughness 3/3, gain flying, and become blue Illusions in addition to their other colors a | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Plague Engineer | silent | Creatures of the chosen type your opponents control get -1/-1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Quakefoot Cyclops | silent | When this creature enters, up to two target creatures can't block this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Reap the Past | silent | Return X cards at random from your graveyard to your hand. Exile Reap the Past. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Recruit the Worthy | silent | Buyback | no machine in the engine executes this keyword | Y/-/- | not_working |
@@ -63,9 +57,7 @@
 | Sword of Sinew and Steel | silent | Whenever equipped creature deals combat damage to a player, destroy up to one target planeswalker and up to one target artifact. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sword of Truth and Justice | silent | Whenever equipped creature deals combat damage to a player, put a +1/+1 counter on a creature you control, then proliferate. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Throatseeker | silent | Unblocked attacking Ninjas you control have lifelink. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Throes of Chaos | silent | Retrace | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Treefolk Umbra | silent | Enchanted creature gets +0/+2 and assigns combat damage equal to its toughness rather than its power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Trustworthy Scout | silent | {1}{W}, Exile this card from your graveyard: Search your library for a card named Trustworthy Scout, reveal it, put it into your hand, then shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Unbound Flourishing | silent | Whenever you cast a permanent spell with a mana cost that contains {X}, double the value of X. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Wall of One Thousand Cuts | silent | {W}: This creature can attack this turn as though it didn't have defender. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Winding Way | silent | Choose creature or land. Reveal the top four cards of your library. Put all cards of the chosen type revealed this way into your hand and the rest into your gra | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -75,7 +67,6 @@
 | Eyekite | notice | This creature gets +2/+0 as long as you've drawn two or more cards this turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Fallen Shinobi | notice | Whenever this creature deals combat damage to a player, that player exiles the top two cards of their library. Until end of turn, you may play those cards witho | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Goatnap | notice | Gain control of target creature until end of turn. Untap that creature. It gains haste until end of turn. If that creature is a Goat, it also gets +3/+0 until e | unparsed remainder: Untap that creature. It gains haste until end of turn. If that creature is a Goat, it also gets +3/+0 until end of turn. | Y/Y/Y | not_working |
-| Hexdrinker | notice | Protection | protection from a quality the engine does not read: everything | Y/-/- | not_working |
 | Ice-Fang Coatl | notice | This creature has deathtouch as long as you control at least three other snow permanents. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Kaya's Guile | notice | Choose two — • Each opponent sacrifices a creature of their choice. • Exile all opponents' graveyards. • Create a 1/1 white and black Spirit creature token with | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Murasa Behemoth | notice | This creature gets +3/+3 as long as there is a land card in your graveyard. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
@@ -85,17 +76,7 @@
 | Twisted Reflection | notice | Choose one — • Target creature gets -6/-0 until end of turn. • Switch target creature's power and toughness until end of turn. Entwine {B} (Choose both if you p | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Urza, Lord High Artificer | notice | {5}: Shuffle your library, then exile the top card. Until end of turn, you may play that card without paying its mana cost. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Volatile Claws | notice | Until end of turn, creatures you control get +2/+0 and gain all creature types. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Bladeback Sliver | unaudited | Hellbent — As long as you have no cards in hand, Sliver creatures you control have "{T}: This creature deals 1 damage to target player or planeswalker." | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Dregscape Sliver | unaudited | Each Sliver creature card in your graveyard has unearth {2}. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Enduring Sliver | unaudited | Other Sliver creatures you control have outlast {2}. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| First Sliver's Chosen | unaudited | Sliver creatures you control have exalted. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Hollowhead Sliver | unaudited | Sliver creatures you control have "{T}, Discard a card: Draw a card." | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Lavabelly Sliver | unaudited | Sliver creatures you control have "When this creature enters, it deals 1 damage to target player or planeswalker and you gain 1 life." | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Scuttling Sliver | unaudited | Sliver creatures you control have "{2}: Untap this creature." | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Spiteful Sliver | unaudited | Sliver creatures you control have "Whenever this creature is dealt damage, it deals that much damage to target player or planeswalker." | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Tectonic Reformation | unaudited | Each land card in your hand has cycling {R}. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Tempered Sliver | unaudited | Sliver creatures you control have "Whenever this creature deals combat damage to a player, put a +1/+1 counter on it." | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Winter's Rest | unaudited | As long as you control another snow permanent, enchanted creature doesn't untap during its controller's untap step. | a static ability no support check audits - not verified either way | Y/-/- | partial |
+| Abominable Treefolk | handled | Abominable Treefolk's power and toughness are each equal to the number of snow permanents you control. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Alpine Guide | handled | When this creature enters, you may search your library for a Mountain card, put that card onto the battlefield tapped, then shuffle. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Arcum's Astrolabe | handled | When this artifact enters, draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ayula's Influence | handled | Discard a land card: Create a 2/2 green Bear creature token. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -103,11 +84,13 @@
 | Azra Smokeshaper | handled | When this creature enters, target creature you control gains indestructible until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Bazaar Trademage | handled | When this creature enters, draw two cards, then discard three cards. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Birthing Boughs | handled | {4}, {T}: Create a 2/2 colorless Shapeshifter creature token with changeling. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Bladeback Sliver | handled | Hellbent — As long as you have no cards in hand, Sliver creatures you control have "{T}: This creature deals 1 damage to target player or planeswalker." | the engine reads this text and performs it | Y/-/- | not_tested |
 | Blizzard Strix | handled | When this creature enters, if you control another snow permanent, exile target permanent other than this creature. Return that card to the battlefield under its | the engine reads this text and performs it | Y/-/- | not_tested |
 | Bogardan Dragonheart | handled | Sacrifice another creature: Until end of turn, this creature becomes a Dragon with base power and toughness 4/4, flying, and haste. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Cave of Temptation | handled | {4}, {T}, Sacrifice this land: Put two +1/+1 counters on target creature. Activate only as a sorcery. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Chillerpillar | handled | {4}{S}{S}: Monstrosity 2. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Cleaving Sliver | handled | Sliver creatures you control get +2/+0. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Cloudshredder Sliver | handled | Sliver creatures you control have flying and haste. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Cordial Vampire | handled | Whenever this creature or another creature dies, put a +1/+1 counter on each Vampire you control. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Crashing Footfalls | handled | Suspend 4—{G} (Rather than cast this card from your hand, pay {G} and exile it with four time counters on it. At the beginning of your upkeep, remove a time cou | the engine reads this text and performs it | Y/-/- | not_tested |
 | Deep Forest Hermit | handled | When this creature enters, create four 1/1 green Squirrel creature tokens. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -122,6 +105,7 @@
 | First-Sphere Gargantua | handled | When this creature enters, you draw a card and you lose 1 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Force of Rage | handled | If it's not your turn, you may exile a red card from your hand rather than pay this spell's mana cost. Create two 3/1 red Elemental creature tokens with trample | the engine reads this text and performs it | Y/-/- | not_tested |
 | Fountain of Ichor | handled | {3}: This artifact becomes a 3/3 Dinosaur artifact creature until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Frostwalk Bastion | handled | {1}{S}: Until end of turn, this land becomes a 2/3 Construct artifact creature. It's still a land. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Frostwalla | handled | {S}: This creature gets +2/+2 until end of turn. Activate only once each turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Generous Gift | handled | Destroy target permanent. Its controller creates a 3/3 green Elephant creature token. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Geomancer's Gambit | handled | Destroy target land. Its controller may search their library for a basic land card, put it onto the battlefield, then shuffle. Draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -129,11 +113,14 @@
 | Good-Fortune Unicorn | handled | Whenever another creature you control enters, put a +1/+1 counter on that creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Graveshifter | handled | When this creature enters, you may return target creature card from your graveyard to your hand. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Hall of Heliod's Generosity | handled | {1}{W}, {T}: Put target enchantment card from your graveyard on top of your library. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Hexdrinker | handled | Level Up | machines/keywords.py | Y/-/- | not_tested |
 | Impostor of the Sixth Pride | handled | Changeling | machines/keywords.py | Y/-/- | not_tested |
 | Ingenious Infiltrator | handled | Whenever a Ninja you control deals combat damage to a player, draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Irregular Cohort | handled | When this creature enters, create a 2/2 colorless Shapeshifter creature token with changeling. | the engine reads this text and performs it | Y/-/- | not_tested |
 | King of the Pride | handled | Other Cats you control get +2/+1. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Knight of Old Benalia | handled | When this creature enters, other creatures you control get +1/+1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Lancer Sliver | handled | Sliver creatures you control have first strike. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Lavabelly Sliver | handled | Sliver creatures you control have "When this creature enters, it deals 1 damage to target player or planeswalker and you gain 1 life." | the engine reads this text and performs it | Y/-/- | not_tested |
 | Lesser Masticore | handled | As an additional cost to cast this spell, discard a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Lightning Skelemental | handled | Whenever this creature deals combat damage to a player, that player discards two cards. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Llanowar Tribe | handled |  |  | Y/-/- | not_tested |
@@ -153,6 +140,7 @@
 | Ore-Scale Guardian | handled | This spell costs {1} less to cast for each land card in your graveyard. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Pashalik Mons | handled | Whenever Pashalik Mons or another Goblin you control dies, Pashalik Mons deals 1 damage to any target. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Phantom Ninja | handled | This creature can't be blocked. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Plague Engineer | handled | As this creature enters, choose a creature type. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Planebound Accomplice | handled | {R}: You may put a planeswalker card from your hand onto the battlefield. Sacrifice it at the beginning of the next end step. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Prismatic Vista | handled | {T}, Pay 1 life, Sacrifice this land: Search your library for a basic land card, put it onto the battlefield, then shuffle. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Putrid Goblin | handled | Persist | machines/keywords.py | Y/-/- | not_tested |
@@ -176,15 +164,18 @@
 | Soul-Strike Technique | handled | Enchanted creature gets +1/+1 and has vigilance. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Soulherder | handled | Whenever a creature is exiled from the battlefield, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Spell Snuff | handled | Counter target spell. Fateful hour — If you have 5 or less life, draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Spiteful Sliver | handled | Sliver creatures you control have "Whenever this creature is dealt damage, it deals that much damage to target player or planeswalker." | the engine reads this text and performs it | Y/-/- | not_tested |
 | Splicer's Skill | handled | Create a 3/3 colorless Phyrexian Golem artifact creature token. Splice onto instant or sorcery {3}{W} (As you cast an instant or sorcery spell, you may reveal t | the engine reads this text and performs it | Y/-/- | not_tested |
 | Springbloom Druid | handled | When this creature enters, you may sacrifice a land. If you do, search your library for up to two basic land cards, put them onto the battlefield tapped, then s | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Talisman of Conviction | handled |  |  | Y/-/- | not_tested |
 | Talisman of Creativity | handled |  |  | Y/-/- | not_tested |
 | Talisman of Hierarchy | handled |  |  | Y/-/- | not_tested |
 | Thornado | handled | Destroy target creature with flying. Cycling {1}{G} ({1}{G}, Discard this card: Draw a card.) | the engine reads this text and performs it | Y/-/- | not_tested |
+| Throes of Chaos | handled | Retrace | machines/casting.py | Y/-/- | not_tested |
 | Thundering Djinn | handled | Whenever this creature attacks, it deals damage to any target equal to the number of cards you've drawn this turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Treetop Ambusher | handled | Whenever this creature attacks, target creature you control gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Trumpeting Herd | handled | Create a 3/3 green Elephant creature token. Rebound (If you cast this spell from your hand, exile it as it resolves. At the beginning of your next upkeep, you m | the engine reads this text and performs it | Y/-/- | not_tested |
+| Trustworthy Scout | handled | {1}{W}, Exile this card from your graveyard: Search your library for a card named Trustworthy Scout, reveal it, put it into your hand, then shuffle. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Twin-Silk Spider | handled | When this creature enters, create a 1/2 green Spider creature token with reach. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Umezawa's Charm | handled | Choose one — • Target creature gets +2/+2 until end of turn. • Target creature gets -1/-1 until end of turn. • You gain 2 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Undead Augur | handled | Whenever this creature or another Zombie you control dies, you draw a card and lose 1 life. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -202,14 +193,17 @@
 ## Fully supported
 
 <details>
-<summary>38 cards</summary>
+<summary>47 cards</summary>
 
 - Changeling Outcast
 - Collector Ouphe
 - Conifer Wurm
+- Dregscape Sliver
+- Enduring Sliver
 - Ephemerate
 - Everdream
 - Fiery Islet
+- First Sliver's Chosen
 - Fists of Flame
 - Force of Despair
 - Force of Negation
@@ -219,26 +213,32 @@
 - Glacial Revelation
 - Goblin Engineer
 - Hogaak, Arisen Necropolis
+- Hollowhead Sliver
 - Icehide Golem
 - Kess, Dissident Mage
 - Martyr's Soul
 - Mirrodin Besieged
+- Morophon, the Boundless
 - Nurturing Peatland
 - Pondering Mage
 - Pyrophobia
 - Ranger-Captain of Eos
 - Return from Extinction
 - Savage Swipe
+- Scuttling Sliver
 - Seasoned Pyromancer
 - Silent Clearing
 - Sisay, Weatherlight Captain
 - Sunbaked Canyon
 - Talisman of Curiosity
 - Talisman of Resilience
+- Tectonic Reformation
+- Tempered Sliver
 - The First Sliver
 - Valiant Changeling
 - Watcher for Tomorrow
 - Windcaller Aven
+- Winter's Rest
 - Wrenn and Six
 - Yawgmoth, Thran Physician
 - Zhalfirin Decoy
@@ -249,23 +249,18 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| sliver creatures you control have "..." | 5 | Hollowhead Sliver, Lavabelly Sliver, Scuttling Sliver, Spiteful Sliver, Tempered Sliver | mh1 |
 | Choose one | 3 | Archmage's Charm, Shatter Assumptions, Twisted Reflection | mh1 |
 | overload | 3 | Mind Rake, Scale Up, Stirring Address | mh1 |
-| Hellbent | 2 | Bladeback Sliver, Headless Specter | mh1 |
 | Choose two | 1 | Kaya's Guile | mh1 |
+| Hellbent | 1 | Headless Specter | mh1 |
 | all nonsnow creatures get -N/-N until end of turn, where N is the number of snow permanents you control. | 1 | Dead of Winter | mh1 |
 | as long as another aura is attached to enchanted creature, it has first strike and lifelink. | 1 | Face of Divinity | mh1 |
-| as long as you control another snow permanent, enchanted creature doesn"..."s untap step. | 1 | Winter's Rest | mh1 |
 | as long as you had another creature enter the battlefield under your control ~, ~ has trample and indestructible. | 1 | Bellowing Elk | mh1 |
 | as long as you've drawn two or more cards ~, ~ has double strike. | 1 | Spinehorn Minotaur | mh1 |
 | at the beginning of your first main phase, you may sacrifice a creature. when you do, choose a nonland card name, then target player reveals their hand and disc | 1 | Cabal Therapist | mh1 |
 | attacking creatures you control get +N/+N. | 1 | Goblin Oriflamme | mh1 |
 | buyback | 1 | Recruit the Worthy | mh1 |
 | choose creature or land. reveal the top four cards of your library. put all cards of the chosen type revealed ~ into your hand and the rest into your graveyard. | 1 | Winding Way | mh1 |
-| creatures of the chosen type your opponents control get -N/-N. | 1 | Plague Engineer | mh1 |
-| each land card in your hand has cycling {M}. | 1 | Tectonic Reformation | mh1 |
-| each sliver creature card in your graveyard has unearth {M}. | 1 | Dregscape Sliver | mh1 |
 | enchanted creature gets +N/+N and assigns combat damage equal to its toughness rather than its power. | 1 | Treefolk Umbra | mh1 |
 | equipped creature gets +N/+N and is every creature type. | 1 | Amorphous Axe | mh1 |
 | evolve | 1 | Gluttonous Slug | mh1 |
@@ -274,15 +269,8 @@
 | exile the top six cards of your library. you may cast up to two sorcery spells with mana value N or less from among them without paying their mana costs. put th | 1 | Collected Conjuring | mh1 |
 | exploit | 1 | Silumgar Scavenger | mh1 |
 | gain control of target creature until end of turn. untap that creature. it gains haste until end of turn. if that creature is a goat, it also gets +N/+N until e | 1 | Goatnap | mh1 |
-| other creatures you control of the chosen type get +N/+N. | 1 | Morophon, the Boundless | mh1 |
-| other sliver creatures you control have outlast {M}. | 1 | Enduring Sliver | mh1 |
-| protection | 1 | Hexdrinker | mh1 |
-| retrace | 1 | Throes of Chaos | mh1 |
 | return N cards at random from your graveyard to your hand. exile ~. | 1 | Reap the Past | mh1 |
 | return target creature to its owner"..."s controller may pay {M}{M}. if the player does, they may copy ~ and may choose a new target for that copy. | 1 | String of Disappearances | mh1 |
-| sliver creatures you control have exalted. | 1 | First Sliver's Chosen | mh1 |
-| sliver creatures you control have first strike. | 1 | Lancer Sliver | mh1 |
-| sliver creatures you control have flying and haste. | 1 | Cloudshredder Sliver | mh1 |
 | target player mills four cards. you shuffle up to four cards from your graveyard into your library. replicate {M}{M}{M} (when you cast ~, copy it for each time  | 1 | Stream of Thought | mh1 |
 | unblocked attacking ninjas you control have lifelink. | 1 | Throatseeker | mh1 |
 | until end of turn, creatures you control get +N/+N and gain all creature types. | 1 | Volatile Claws | mh1 |
@@ -298,18 +286,15 @@
 | whenever equipped creature deals combat damage to a player, put a +N/+N counter on a creature you control, then proliferate. | 1 | Sword of Truth and Justice | mh1 |
 | whenever you cast a permanent spell with a mana cost that contains {M}, double the value of N. | 1 | Unbound Flourishing | mh1 |
 | whenever you cycle ~ or cycle another card while ~ is on the battlefield, you may exile target creature. if you do, return that card to the battlefield under it | 1 | Astral Drift | mh1 |
-| whenever ~ deals combat damage to a creature, tap that creature and it doesn"..."s next untap step. | 1 | Frostwalk Bastion | mh1 |
 | whenever ~ deals combat damage to a player, that player exiles the top two cards of their library. until end of turn, you may play those cards without paying th | 1 | Fallen Shinobi | mh1 |
 | {M}: shuffle your library, then exile the top card. until end of turn, you may play that card without paying its mana cost. | 1 | Urza, Lord High Artificer | mh1 |
 | {M}: ~ can attack ~ as though it didn't have defender. | 1 | Wall of One Thousand Cuts | mh1 |
-| {M}{M}, exile ~ from your graveyard: search your library for a card named ~, reveal it, put it into your hand, then shuffle. | 1 | Trustworthy Scout | mh1 |
 | {M}{M}{M}, exile a creature card from your graveyard: create a N/N green spider creature token with reach, then each opponent loses N life for each spider you c | 1 | Rotwidow Pack | mh1 |
 | ~ costs {M} less to cast if there is a land card in your graveyard. | 1 | Igneous Elemental | mh1 |
 | ~ gets +N/+N as long as there is a land card in your graveyard. | 1 | Murasa Behemoth | mh1 |
 | ~ gets +N/+N as long as you had another creature enter the battlefield under your control ~. | 1 | Saddled Rimestag | mh1 |
 | ~ gets +N/+N as long as you've drawn two or more cards ~. | 1 | Eyekite | mh1 |
 | ~ has deathtouch as long as you control at least three other snow permanents. | 1 | Ice-Fang Coatl | mh1 |
-| ~'s power and toughness are each equal to the number of snow permanents you control. | 1 | Abominable Treefolk | mh1 |
 
 ## Notes
 

@@ -17,9 +17,9 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 2 | 8.0% |
+| Tested | 3 | 12.0% |
 | Works (untested) | 16 | 64.0% |
-| Partial (unaudited) | 1 | 4.0% |
+| Partial (unaudited) | 0 | 0.0% |
 | Not working | 6 | 24.0% |
 
 ## Cards needing work
@@ -32,7 +32,6 @@
 | Phantom Wings | silent | Sacrifice this Aura: Return enchanted creature to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Agonizing Memories | notice | Look at target player's hand and choose two cards from it. Put them on top of that player's library in any order. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Cinder Wall | notice | When this creature blocks, destroy it at end of combat. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Steel Golem | unaudited | You can't cast creature spells. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Aura of Silence | handled | Artifact and enchantment spells your opponents cast cost {2} more to cast. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Benalish Knight | handled | First strike | machines/combat.py | Y/-/- | not_tested |
 | Bloodrock Cyclops | handled | This creature attacks each combat if able. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -53,10 +52,11 @@
 ## Fully supported
 
 <details>
-<summary>2 cards</summary>
+<summary>3 cards</summary>
 
 - Cone of Flame
 - Mind Stone
+- Steel Golem
 
 </details>
 
@@ -70,7 +70,6 @@
 | when ~ blocks, destroy it at end of combat. | 1 | Cinder Wall | wth |
 | when ~ enters, sacrifice it unless you discard a creature card. | 1 | Hidden Horror | wth |
 | when ~ enters, you may pay {M}{M}. if you do, search your library for a card named ~, put that card onto the battlefield, then shuffle. | 1 | Llanowar Sentinel | wth |
-| you can't cast creature spells. | 1 | Steel Golem | wth |
 
 ## Notes
 

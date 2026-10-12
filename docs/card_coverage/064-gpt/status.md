@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 19 | 12.8% |
-| Works (untested) | 82 | 55.0% |
-| Partial (unaudited) | 3 | 2.0% |
-| Not working | 45 | 30.2% |
+| Tested | 22 | 14.8% |
+| Works (untested) | 84 | 56.4% |
+| Partial (unaudited) | 0 | 0.0% |
+| Not working | 43 | 28.9% |
 
 ## Cards needing work
 
@@ -59,7 +59,6 @@
 | Revenant Patriarch | silent | When this creature enters, if {W} was spent to cast it, target player skips their next combat phase. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Seize the Soul | silent | Destroy target nonwhite, nonblack creature. Create a 1/1 white Spirit creature token with flying. Haunt (When this spell card is put into a graveyard after reso | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Shadow Lance | silent | {1}{B}: Enchanted creature gets +2/+2 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Siege of Towers | silent | Replicate {1}{R} (When you cast this spell, copy it for each time you paid its replicate cost. You may choose new targets for the copies.) Target Mountain becom | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sky Swallower | silent | When this creature enters, target opponent gains control of all other permanents you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Smogsteed Rider | silent | Whenever this creature attacks, each other attacking creature gains fear until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Souls of the Faultless | silent | Whenever this creature is dealt combat damage, you gain that much life and attacking player loses that much life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -68,12 +67,8 @@
 | Storm Herd | silent | Create X 1/1 white Pegasus creature tokens with flying, where X is your life total. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sword of the Paruns | silent | As long as equipped creature is tapped, tapped creatures you control get +2/+0. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Vedalken Plotter | silent | When this creature enters, exchange control of target land you control and target land an opponent controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Vertigo Spawn | silent | Whenever this creature blocks a creature, tap that creature. That creature doesn't untap during its controller's next untap step. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Aetherplasm | notice | Whenever this creature blocks a creature, you may return this creature to its owner's hand. If you do, you may put a creature card from your hand onto the battl | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Ghostway | notice | Exile each creature you control. Return those cards to the battlefield under their owner's control at the beginning of the next end step. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Djinn Illuminatus | unaudited | Each instant and sorcery spell you cast has replicate. The replicate cost is equal to its mana cost. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Leyline of Lifeforce | unaudited | Creature spells can't be countered. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Leyline of Singularity | unaudited | All nonland permanents are legendary. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Abyssal Nocturnus | handled | Whenever an opponent discards a card, this creature gets +2/+2 and gains fear until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Angel of Despair | handled | When this creature enters, destroy target permanent. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Bloodscale Prowler | handled | Bloodthirst | machines/keywords.py | Y/-/- | not_tested |
@@ -134,6 +129,7 @@
 | Scorched Rusalka | handled | {R}, Sacrifice a creature: This creature deals 1 damage to target player or planeswalker. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Shattering Spree | handled | Replicate {R} (When you cast this spell, copy it for each time you paid its replicate cost. You may choose new targets for the copies.) Destroy target artifact. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Shrieking Grotesque | handled | When this creature enters, if {B} was spent to cast it, target player discards a card. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Siege of Towers | handled | Replicate {1}{R} (When you cast this spell, copy it for each time you paid its replicate cost. You may choose new targets for the copies.) Target Mountain becom | the engine reads this text and performs it | Y/-/- | not_tested |
 | Silhana Ledgewalker | handled | This creature can't be blocked except by creatures with flying. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Silhana Starfletcher | handled | As this creature enters, choose a color. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Skarrgan Skybreaker | handled | {1}, Sacrifice this creature: It deals damage equal to its power to any target. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -148,6 +144,7 @@
 | To Arms! | handled | Untap all creatures you control. Draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Torch Drake | handled | {1}{R}: This creature gets +1/+0 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Train of Thought | handled | Replicate {1}{U} (When you cast this spell, copy it for each time you paid its replicate cost.) Draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Vertigo Spawn | handled | Whenever this creature blocks a creature, tap that creature. That creature doesn't untap during its controller's next untap step. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Wee Dragonauts | handled | Whenever you cast an instant or sorcery spell, this creature gets +2/+0 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Wild Cantor | handled |  |  | Y/-/- | not_tested |
 | Wildsize | handled | Target creature gets +2/+2 and gains trample until end of turn. Draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -160,16 +157,19 @@
 ## Fully supported
 
 <details>
-<summary>19 cards</summary>
+<summary>22 cards</summary>
 
 - Battering Wurm
 - Burning-Tree Shaman
 - Cerebral Vortex
 - Crash Landing
+- Djinn Illuminatus
 - Electrolyze
 - Gigadrowse
 - Godless Shrine
 - Gruul Turf
+- Leyline of Lifeforce
+- Leyline of Singularity
 - Leyline of the Void
 - Necromancer's Magemark
 - Order of the Stars
@@ -189,22 +189,18 @@
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
 | haunt | 6 | Absolver Thrull, Belfry Spirit, Blind Hunter, Exhumer Thrull, Orzhov Euthanist | gpt |
-| all nonland permanents are legendary. | 1 | Leyline of Singularity | gpt |
 | as long as equipped creature is tapped, tapped creatures you control get +N/+N. | 1 | Sword of the Paruns | gpt |
 | at the beginning of your upkeep, each opponent loses N life. you gain life equal to the life lost ~. | 1 | Agent of Masks | gpt |
 | choose a card name. until your next turn, spells with the chosen name can"..."t be played. draw a card. | 1 | Conjurer's Ban | gpt |
 | create N N/N white pegasus creature tokens with flying, where N is your life total. | 1 | Storm Herd | gpt |
-| creature spells can't be countered. | 1 | Leyline of Lifeforce | gpt |
 | creatures you control that are enchanted get +N/+N and have first strike. | 1 | Fencer's Magemark | gpt |
 | destroy all enchantments target player controls. | 1 | Primeval Light | gpt |
 | destroy target nonwhite, nonblack creature. create a N/N white spirit creature token with flying. haunt (when ~ card is put into a graveyard after resolving, ex | 1 | Seize the Soul | gpt |
-| each instant and sorcery spell you cast has replicate. the replicate cost is equal to its mana cost. | 1 | Djinn Illuminatus | gpt |
 | each land gets +N/+N as long as it's a creature. | 1 | Earth Surge | gpt |
 | exile each creature you control. return those cards to the battlefield under their owner's control at the beginning of the next end step. | 1 | Ghostway | gpt |
 | flip a coin. if you win the flip, take an extra turn after ~. | 1 | Stitch in Time | gpt |
 | nonbasic landwalk | 1 | Dryad Sophisticate | gpt |
 | replicate {M}{M} (when you cast ~, copy it for each time you paid its replicate cost. you may choose new targets for the copies.) choose target permanent an opp | 1 | Mimeofacture | gpt |
-| replicate {M}{M} (when you cast ~, copy it for each time you paid its replicate cost. you may choose new targets for the copies.) target mountain becomes a N/N  | 1 | Siege of Towers | gpt |
 | target player discards a card. haunt (when ~ card is put into a graveyard after resolving, exile it haunting target creature.) when the creature ~ haunts dies,  | 1 | Cry of Contrition | gpt |
 | the next sorcery spell you cast ~ can be cast as though it had flash. (it can be cast any time you could cast an instant.) draw a card. | 1 | Quicken | gpt |
 | when ~ enters or the creature it haunts dies, each other creature has base power and toughness N/N until end of turn. | 1 | Graven Dominator | gpt |
@@ -218,7 +214,6 @@
 | whenever another creature enters, its controller loses N life. | 1 | Poisonbelly Ogre | gpt |
 | whenever ~ attacks, each other attacking creature gains fear until end of turn. | 1 | Smogsteed Rider | gpt |
 | whenever ~ attacks, exile the top card of your library. if it"..."s power and y is its toughness. | 1 | Bioplasm | gpt |
-| whenever ~ blocks a creature, tap that creature. that creature doesn"..."s next untap step. | 1 | Vertigo Spawn | gpt |
 | whenever ~ blocks a creature, you may return ~ to its owner's hand. if you do, you may put a creature card from your hand onto the battlefield blocking that cre | 1 | Aetherplasm | gpt |
 | whenever ~ deals damage, you gain that much life. | 1 | Mourning Thrull | gpt |
 | whenever ~ is dealt combat damage, you gain that much life and attacking player loses that much life. | 1 | Souls of the Faultless | gpt |

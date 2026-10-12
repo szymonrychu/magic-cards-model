@@ -18,17 +18,15 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 4 | 16.7% |
-| Works (untested) | 15 | 62.5% |
+| Works (untested) | 17 | 70.8% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 5 | 20.8% |
+| Not working | 3 | 12.5% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
 | Relentless Assault | silent | Untap all creatures that attacked this turn. After this main phase, there is an additional combat phase followed by an additional main phase. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Shrieking Drake | silent | When this creature enters, return a creature you control to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Stampeding Wildebeests | silent | At the beginning of your upkeep, return a green creature you control to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Summer Bloom | silent | You may play up to three additional lands this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Teferi's Puzzle Box | silent | At the beginning of each player's draw step, that player puts the cards in their hand on the bottom of their library in any order, then draws that many cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Archangel | handled | Flying | machines/combat.py | Y/-/- | not_tested |
@@ -44,6 +42,8 @@
 | Quicksand | handled | {T}, Sacrifice this land: Target attacking creature without flying gets -1/-2 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Quirion Ranger | handled | Return a Forest you control to its owner's hand: Untap target creature. Activate only once each turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | River Boa | handled | {G}: Regenerate this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Shrieking Drake | handled | When this creature enters, return a creature you control to its owner's hand. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Stampeding Wildebeests | handled | At the beginning of your upkeep, return a green creature you control to its owner's hand. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Tremor | handled | Tremor deals 1 damage to each creature without flying. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Warrior's Honor | handled | Creatures you control get +1/+1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 
@@ -64,9 +64,7 @@
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
 | at the beginning of each player's draw step, that player puts the cards in their hand on the bottom of their library in any order, then draws that many cards. | 1 | Teferi's Puzzle Box | vis |
-| at the beginning of your upkeep, return a green creature you control to its owner's hand. | 1 | Stampeding Wildebeests | vis |
 | untap all creatures that attacked ~. after ~ phase, there is an additional combat phase followed by an additional main phase. | 1 | Relentless Assault | vis |
-| when ~ enters, return a creature you control to its owner's hand. | 1 | Shrieking Drake | vis |
 | you may play up to three additional lands ~. | 1 | Summer Bloom | vis |
 
 ## Notes

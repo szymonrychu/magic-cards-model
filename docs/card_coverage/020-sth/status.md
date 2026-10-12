@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 10 | 32.3% |
+| Tested | 12 | 38.7% |
 | Works (untested) | 11 | 35.5% |
-| Partial (unaudited) | 1 | 3.2% |
-| Not working | 9 | 29.0% |
+| Partial (unaudited) | 0 | 0.0% |
+| Not working | 8 | 25.8% |
 
 ## Cards needing work
 
@@ -29,13 +29,11 @@
 | Conviction | silent | {W}: Return this Aura to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Duct Crawler | silent | {1}{R}: Target creature can't block this creature this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Grave Pact | silent | Whenever a creature you control dies, each other player sacrifices a creature of their choice. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Intruder Alarm | silent | Whenever a creature enters, untap all creatures. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Rolling Stones | silent | Wall creatures can attack as though they didn't have defender. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sacred Ground | silent | Whenever a spell or ability an opponent controls causes a land to be put into your graveyard from the battlefield, return that card to the battlefield. | this trigger's condition can never be satisfied - it never triggers | Y/-/- | not_working |
 | Smite | silent | Destroy target blocked creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Spined Sliver | silent | Whenever a Sliver becomes blocked, that Sliver gets +1/+1 until end of turn for each creature blocking it. | this trigger's condition can never be satisfied - it never triggers | Y/-/- | not_working |
 | Wall of Essence | silent | Whenever this creature is dealt combat damage, you gain that much life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Dream Prowler | unaudited | This creature can't be blocked as long as it's attacking alone. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Evacuation | handled | Return all creatures to their owners' hands. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Flowstone Shambler | handled | {R}: This creature gets +1/-1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Foul Imp | handled | When this creature enters, you lose 2 life. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -51,12 +49,14 @@
 ## Fully supported
 
 <details>
-<summary>10 cards</summary>
+<summary>12 cards</summary>
 
 - Bandage
+- Dream Prowler
 - Ensnaring Bridge
 - Flame Wave
 - Fling
+- Intruder Alarm
 - Mana Leak
 - Mogg Flunkies
 - Mulch
@@ -72,14 +72,12 @@
 |---|---|---|---|
 | destroy target blocked creature. | 1 | Smite | sth |
 | wall creatures can attack as though they didn't have defender. | 1 | Rolling Stones | sth |
-| whenever a creature enters, untap all creatures. | 1 | Intruder Alarm | sth |
 | whenever a creature you control dies, each other player sacrifices a creature of their choice. | 1 | Grave Pact | sth |
 | whenever a sliver becomes blocked, that sliver gets +N/+N until end of turn for each creature blocking it. | 1 | Spined Sliver | sth |
 | whenever a spell or ability an opponent controls causes a land to be put into your graveyard from the battlefield, return that card to the battlefield. | 1 | Sacred Ground | sth |
 | whenever ~ is dealt combat damage, you gain that much life. | 1 | Wall of Essence | sth |
 | {M}: return ~ to its owner's hand. | 1 | Conviction | sth |
 | {M}{M}: target creature can't block ~ ~. | 1 | Duct Crawler | sth |
-| ~ can"..."s attacking alone. | 1 | Dream Prowler | sth |
 
 ## Notes
 

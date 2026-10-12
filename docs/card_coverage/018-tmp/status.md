@@ -17,9 +17,9 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 12 | 21.1% |
+| Tested | 14 | 24.6% |
 | Works (untested) | 32 | 56.1% |
-| Partial (unaudited) | 2 | 3.5% |
+| Partial (unaudited) | 0 | 0.0% |
 | Not working | 11 | 19.3% |
 
 ## Cards needing work
@@ -37,8 +37,6 @@
 | Vhati il-Dal | silent | {T}: Until end of turn, target creature has base power 1 or base toughness 1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Whispers of the Muse | silent | Buyback | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Altar of Dementia | notice | Sacrifice a creature: Target player mills cards equal to the sacrificed creature's power. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Choke | unaudited | Islands don't untap during their controllers' untap steps. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Marble Titan | unaudited | Creatures with power 3 or greater don't untap during their controllers' untap steps. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Auratog | handled | Sacrifice an enchantment: This creature gets +2/+2 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Bottle Gnomes | handled | Sacrifice this creature: You gain 3 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Canopy Spider | handled | Reach | machines/combat.py | Y/Y/- | not_tested |
@@ -75,14 +73,16 @@
 ## Fully supported
 
 <details>
-<summary>12 cards</summary>
+<summary>14 cards</summary>
 
 - Booby Trap
+- Choke
 - Dauthi Slayer
 - Diabolic Edict
 - Furnace of Rath
 - Goblin Bombardment
 - Knight of Dusk
+- Marble Titan
 - Mogg Fanatic
 - Reflecting Pool
 - Root Maze
@@ -97,9 +97,7 @@
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
 | buyback | 2 | Elvish Fury, Whispers of the Muse | tmp |
-| creatures with power N or greater don"..." untap steps. | 1 | Marble Titan | tmp |
 | destroy all islands. | 1 | Boil | tmp |
-| islands don"..." untap steps. | 1 | Choke | tmp |
 | sacrifice a creature: target opponent gains control of ~. | 1 | Jinxed Idol | tmp |
 | sacrifice a creature: target player mills cards equal to the sacrificed creature's power. | 1 | Altar of Dementia | tmp |
 | target player takes an extra turn after ~. | 1 | Time Warp | tmp |

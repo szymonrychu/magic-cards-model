@@ -17,16 +17,15 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 43 | 16.1% |
-| Works (untested) | 129 | 48.3% |
-| Partial (unaudited) | 7 | 2.6% |
-| Not working | 88 | 33.0% |
+| Tested | 54 | 20.2% |
+| Works (untested) | 137 | 51.3% |
+| Partial (unaudited) | 0 | 0.0% |
+| Not working | 76 | 28.5% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
-| Akki War Paint | silent | As long as enchanted permanent is a creature, it gets +2/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Awakened Awareness | silent | When this Aura enters, put X +1/+1 counters on enchanted permanent. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Azusa's Many Journeys // Likeness of the Seeker | silent | Whenever this creature becomes blocked, untap up to three lands you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Banishing Slash | silent | Destroy up to one target artifact, enchantment, or tapped creature. Then if you control an artifact and an enchantment, create a 2/2 white Samurai creature toke | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -35,8 +34,6 @@
 | Blossom Prancer | silent | When this creature enters, look at the top five cards of your library. You may reveal a creature or enchantment card from among them and put it into your hand.  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Born to Drive | silent | As long as enchanted permanent is a creature, it gets +1/+1 for each creature and/or Vehicle you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Bronze Cudgels | silent | {2}: Until end of turn, equipped creature gets +X/+0, where X is the number of times this ability has resolved this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Careful Cultivation | silent | As long as enchanted permanent is a creature, it gets +1/+3 and has reach and "{T}: Add {G}{G}." | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Clawing Torment | silent | As long as enchanted permanent is a creature, it gets -1/-1 and can't block. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Covert Technician | silent | Whenever this creature deals combat damage to a player, you may put an artifact card with mana value less than or equal to that damage from your hand onto the b | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Discover the Impossible | silent | Look at the top five cards of your library. Exile one of them face down and put the rest on the bottom of your library in a random order. You may cast the exile | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Dragonspark Reactor | silent | {4}, Sacrifice this artifact: It deals damage equal to the number of charge counters on it to target player and that much damage to up to one target creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -44,11 +41,8 @@
 | Eater of Virtue | silent | As long as a card exiled with Eater of Virtue has flying, equipped creature has flying. The same is true for first strike, double strike, deathtouch, haste, hex | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Eiganjo Uprising | silent | Create X 2/2 white Samurai creature tokens with vigilance. They gain menace and haste until end of turn. Each opponent creates X minus one 2/2 white Samurai cre | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Enormous Energy Blade | silent | Whenever this Equipment becomes attached to a creature, tap that creature. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
-| Favor of Jukai | silent | As long as enchanted permanent is a creature, it gets +3/+3 and has reach. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Geothermal Kami | silent | When this creature enters, you may return an enchantment you control to its owner's hand. If you do, you gain 3 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Gift of Wrath | silent | As long as enchanted permanent is a creature, it gets +2/+2 and has menace. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Guardians of Oboro | silent | Modified creatures you control can attack as though they didn't have defender. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Historian's Wisdom | silent | As long as enchanted permanent is a creature, it gets +2/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Inventive Iteration // Living Breakthrough | silent | II — Return an artifact card from your graveyard to your hand. If you can't, draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Invigorating Hot Spring | silent | Modified creatures you control have haste. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Invoke Calamity | silent | You may cast up to two instant and/or sorcery spells with total mana value 6 or less from your graveyard and/or hand without paying their mana costs. If those s | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -64,7 +58,6 @@
 | Lion Sash | silent | Equipped creature gets +1/+1 for each +1/+1 counter on this Equipment. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | March of Burgeoning Life | silent | As an additional cost to cast this spell, you may exile any number of green cards from your hand. This spell costs {2} less to cast for each card exiled this wa | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | March of Reckless Joy | silent | As an additional cost to cast this spell, you may exile any number of red cards from your hand. This spell costs {2} less to cast for each card exiled this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Mech Hangar | silent | {3}, {T}: Target Vehicle becomes an artifact creature until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Mechtitan Core | silent | {5}, Exile this Vehicle and four other artifact creatures and/or Vehicles you control: Create Mechtitan, a legendary 10/10 Construct artifact creature token wit | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Michiko's Reign of Truth // Portrait of Michiko | silent | I, II — Target creature gets +1/+1 until end of turn for each artifact and/or enchantment you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Mindlink Mech | silent | Whenever this Vehicle becomes crewed for the first time each turn, until end of turn, this Vehicle becomes a copy of target nonlegendary creature that crewed it | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
@@ -76,21 +69,16 @@
 | Reckoner Shakedown | silent | Target opponent reveals their hand. You may choose a nonland card from it. If you do, that player discards that card. If you don't, put two +1/+1 counters on a  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Replication Specialist | silent | Whenever a nontoken artifact you control enters, you may pay {1}{U}. If you do, create a token that's a copy of that artifact. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Risona, Asari Commander | silent | Whenever combat damage is dealt to you, remove an indestructible counter from Risona. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
-| Satoru Umezawa | silent | Whenever you activate a ninjutsu ability, look at the top three cards of your library. Put one of them into your hand and the rest on the bottom of your library | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Scrap Welder | silent | {T}, Sacrifice an artifact with mana value X: Return target artifact card with mana value less than X from your graveyard to the battlefield. It gains haste unt | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Shigeki, Jukai Visionary | silent | {1}{G}, {T}, Return Shigeki to its owner's hand: Reveal the top four cards of your library. You may put a land card from among them onto the battlefield tapped. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Short Circuit | silent | As long as enchanted permanent is a creature, it gets -3/-0 and loses flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sokenzan Smelter | silent | At the beginning of combat on your turn, you may pay {1} and sacrifice an artifact. If you do, create a 3/1 red Construct artifact creature token with haste. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Spirit-Sister's Call | silent | At the beginning of your end step, choose target permanent card in your graveyard. You may sacrifice a permanent that shares a card type with the chosen card. I | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Suit Up | silent | Until end of turn, target creature or Vehicle becomes an artifact creature with base power and toughness 4/5. Draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Tatsunari, Toad Rider | silent | {1}{G/U}: Tatsunari and target Frog you control can't be blocked this turn except by creatures with flying or reach. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Tezzeret, Betrayer of Flesh | silent | −2: Target artifact becomes an artifact creature. If it isn't a Vehicle, it has base power and toughness 4/4. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | The Dragon-Kami Reborn // Dragon-Kami's Egg | silent | I, II — You gain 2 life. Look at the top three cards of your library. Exile one of them face down with a hatching counter on it, then put the rest on the bottom | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | The Fall of Lord Konda // Fragment of Konda | silent | II — Each player gains control of all permanents they own. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | The Long Reach of Night // Animus of Night's Reach | silent | I, II — Each opponent sacrifices a creature of their choice unless they discard a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Tribute to Horobi // Echo of Death's Wail | silent | When this creature enters, gain control of all Rat tokens. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Twisted Embrace | silent | As long as enchanted permanent is a creature, it gets +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Weaver of Harmony | silent | Other enchantment creatures you control get +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ancestral Katana | notice | Whenever a Samurai or Warrior you control attacks alone, you may pay {1}. When you do, attach this Equipment to it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Anchor to Reality | notice | As an additional cost to cast this spell, sacrifice an artifact or creature. Search your library for an Equipment or Vehicle card, put that card onto the battle | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Ao, the Dawn Sky | notice | When Ao dies, choose one — • Look at the top seven cards of your library. Put any number of nonland permanent cards with total mana value 4 or less from among t | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -114,16 +102,10 @@
 | Teachings of the Kirin // Kirin-Touched Orochi | notice | Whenever this creature attacks, choose one — • Exile target creature card from a graveyard. When you do, create a 1/1 colorless Spirit creature token. • Exile t | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | The Kami War // O-Kagachi Made Manifest | notice | Whenever this creature attacks, defending player chooses a nonland card in your graveyard. Return that card to your hand. This creature gets +X/+0 until end of  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Upriser Renegade | notice | This creature gets +2/+0 for each other modified creature you control. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Crackling Emergence | unaudited | Enchanted land is a 3/3 red Spirit creature with haste. It's still a land. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Futurist Operative | unaudited | As long as this creature is tapped, it's a Human Citizen with base power and toughness 1/1 and can't be blocked. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Harmonious Emergence | unaudited | Enchanted land is a 4/5 green Spirit creature with vigilance and haste. It's still a land. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Hotshot Mechanic | unaudited | This creature crews Vehicles as though its power were 2 greater. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Intercessor's Arrest | unaudited | Enchanted permanent can't attack, block, or crew Vehicles. Its activated abilities can't be activated unless they're mana abilities. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Isshin, Two Heavens as One | unaudited | If a creature attacking causes a triggered ability of a permanent you control to trigger, that ability triggers an additional time. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Orochi Merge-Keeper | unaudited | As long as this creature is modified, it has "{T}: Add {G}{G}." | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Acquisition Octopus | handled | Whenever this creature or equipped creature deals combat damage to a player, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Akki Ember-Keeper | handled | Whenever a nontoken modified creature you control dies, create a 1/1 colorless Spirit creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Akki Ronin | handled | Whenever a Samurai or Warrior you control attacks alone, you may discard a card. If you do, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Akki War Paint | handled | As long as enchanted permanent is a creature, it gets +2/+1. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ambitious Assault | handled | Creatures you control get +2/+0 until end of turn. If you control a modified creature, draw a card. (Equipment, Auras you control, and counters are modification | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Armguard Familiar | handled | Equipped creature gets +2/+1 and has ward {2}. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Asari Captain | handled | Whenever a Samurai or Warrior you control attacks alone, it gets +1/+0 until end of turn for each Samurai or Warrior you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -136,6 +118,7 @@
 | Blade-Blizzard Kitsune | handled | Ninjutsu | machines/keywords.py | Y/Y/- | not_tested |
 | Boseiju Reaches Skyward // Branch of Boseiju | handled | I — Search your library for up to two basic Forest cards, reveal them, put them into your hand, then shuffle. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Brute Suit | handled | Vigilance | machines/combat.py | Y/Y/- | not_tested |
+| Careful Cultivation | handled | As long as enchanted permanent is a creature, it gets +1/+3 and has reach and "{T}: Add {G}{G}." | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Chainflail Centipede | handled | Whenever this creature or equipped creature attacks, it gets +2/+0 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Circuit Mender | handled | When this creature enters, you gain 2 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Cloudsteel Kirin | handled | Equipped creature has flying and "You can't lose the game and your opponents can't win the game." | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -153,8 +136,10 @@
 | Explosive Singularity | handled | As an additional cost to cast this spell, you may tap any number of untapped creatures you control. This spell costs {1} less to cast for each creature tapped t | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Fang of Shigeki | handled | Deathtouch | machines/combat.py | Y/Y/- | not_tested |
 | Farewell | handled | Choose one or more — • Exile all artifacts. • Exile all creatures. • Exile all enchantments. • Exile all graveyards. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Favor of Jukai | handled | As long as enchanted permanent is a creature, it gets +3/+3 and has reach. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Futurist Sentinel | handled | Crew | machines/keywords.py | Y/Y/- | not_tested |
 | Generous Visitor | handled | Whenever you cast an enchantment spell, put a +1/+1 counter on target creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Gift of Wrath | handled | As long as enchanted permanent is a creature, it gets +2/+2 and has menace. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Gloomshrieker | handled | When this creature enters, return target permanent card from your graveyard to your hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Go-Shintai of Ancient Wars | handled | At the beginning of your end step, you may pay {1}. When you do, Go-Shintai of Ancient Wars deals X damage to target player or planeswalker, where X is the numb | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Go-Shintai of Hidden Cruelty | handled | At the beginning of your end step, you may pay {1}. When you do, destroy target creature with toughness X or less, where X is the number of Shrines you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -184,6 +169,7 @@
 | Light the Way | handled | Choose one — • Put a +1/+1 counter on target creature or Vehicle. Untap it. • Return target permanent you control to its owner's hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Lucky Offering | handled | Destroy target artifact with mana value 3 or less. You gain 3 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Master's Rebuke | handled | Target creature you control deals damage equal to its power to target creature or planeswalker you don't control. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Mech Hangar | handled | {3}, {T}: Target Vehicle becomes an artifact creature until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Mnemonic Sphere | handled | {1}{U}, Sacrifice this artifact: Draw two cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Moonfolk Puzzlemaker | handled | Whenever this creature becomes tapped, scry 1. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Moonsnare Specialist | handled | When this creature enters, return up to one target creature to its owner's hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -221,6 +207,7 @@
 | Seismic Wave | handled | Seismic Wave deals 2 damage to any target and 1 damage to each nonartifact creature target opponent controls. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Selfless Samurai | handled | Whenever a Samurai or Warrior you control attacks alone, it gains lifelink until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Seven-Tail Mentor | handled | When this creature enters or dies, put a +1/+1 counter on target creature or Vehicle you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Short Circuit | handled | As long as enchanted permanent is a creature, it gets -3/-0 and loses flying. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Shrine Steward | handled | When this creature enters, you may search your library for an Aura or Shrine card, reveal it, put it into your hand, then shuffle. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Sky-Blessed Samurai | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
 | Skyswimmer Koi | handled | Whenever an artifact you control enters, you may draw a card. If you do, discard a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -240,6 +227,7 @@
 | Towashi Guide-Bot | handled | When this creature enters, put a +1/+1 counter on target creature you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Towashi Songshaper | handled | Whenever another artifact you control enters, this creature gets +1/+0 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Twinshot Sniper | handled | When this creature enters, it deals 2 damage to any target. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Twisted Embrace | handled | When this Aura enters, destroy target creature or planeswalker an opponent controls. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Uncharted Haven | handled | This land enters tapped. As it enters, choose a color. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Undercity Scrounger | handled | {T}: Create a Treasure token. Activate only if a creature died this turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Unforgiving One | handled | Whenever this creature attacks, return target creature card with mana value X or less from your graveyard to the battlefield, where X is the number of modified  | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -247,6 +235,7 @@
 | Virus Beetle | handled | When this creature enters, each opponent discards a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Voltage Surge | handled | As an additional cost to cast this spell, you may sacrifice an artifact. Voltage Surge deals 2 damage to target creature or planeswalker. If this spell's additi | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Wanderer's Intervention | handled | Wanderer's Intervention deals 4 damage to target attacking or blocking creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Weaver of Harmony | handled | Other enchantment creatures you control get +1/+1. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Webspinner Cuff | handled | Equipped creature gets +1/+4 and has reach. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | When We Were Young | handled | Up to two target creatures each get +2/+2 until end of turn. If you control an artifact and an enchantment, those creatures also gain lifelink until end of turn | the engine reads this text and performs it | Y/Y/- | not_tested |
 | You Are Already Dead | handled | Destroy target creature that was dealt damage this turn. Draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -254,23 +243,31 @@
 ## Fully supported
 
 <details>
-<summary>43 cards</summary>
+<summary>54 cards</summary>
 
 - Boseiju, Who Endures
 - Brilliant Restoration
 - Bronzeplate Boar
+- Clawing Torment
 - Colossal Skyturtle
 - Containment Construct
+- Crackling Emergence
 - Eiganjo, Seat of the Empire
 - Experimental Synthesizer
 - Fable of the Mirror-Breaker // Reflection of Kiki-Jiki
 - Flame Discharge
+- Futurist Operative
 - Go-Shintai of Boundless Vigor
 - Goro-Goro, Disciple of Ryusei
 - Greasefang, Okiba Boss
+- Harmonious Emergence
 - Heir of the Ancient Fang
 - Hidetsugu Consumes All // Vessel of the All-Consuming
+- Historian's Wisdom
+- Hotshot Mechanic
+- Intercessor's Arrest
 - Iron Apprentice
+- Isshin, Two Heavens as One
 - Jin-Gitaxias, Progress Tyrant
 - Kami of Transience
 - Kami's Flare
@@ -284,15 +281,18 @@
 - Moon-Circuit Hacker
 - Moonsnare Prototype
 - Nashi, Moon Sage's Scion
+- Orochi Merge-Keeper
 - Otawara, Soaring City
 - Reality Heist
 - Roaring Earth
+- Satoru Umezawa
 - Silver-Fur Master
 - Simian Sling
 - Spinning Wheel Kick
 - Takenuma, Abandoned Mire
 - Tameshi, Reality Architect
 - Tamiyo, Compleated Sage
+- Tezzeret, Betrayer of Flesh
 - The Reality Chip
 - The Wandering Emperor
 - Thousand-Faced Shadow
@@ -306,22 +306,14 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| as long as enchanted permanent is a creature, it gets +N/+N. | 3 | Akki War Paint, Historian's Wisdom, Twisted Embrace | neo |
 | Choose one | 2 | Debt to the Kami, Storyweave | neo |
 | Channel | 1 | Mirrorshell Crab | neo |
 | as an additional cost to cast ~, sacrifice an artifact or creature. search your library for an equipment or vehicle card, put that card onto the battlefield, th | 1 | Anchor to Reality | neo |
 | as an additional cost to cast ~, you may exile any number of green cards from your hand. ~ costs {M} less to cast for each card exiled ~. choose target creature | 1 | March of Burgeoning Life | neo |
 | as an additional cost to cast ~, you may exile any number of red cards from your hand. ~ costs {M} less to cast for each card exiled ~. exile the top N cards of | 1 | March of Reckless Joy | neo |
 | as long as a card exiled with ~ has flying, equipped creature has flying. the same is true for first strike, double strike, deathtouch, haste, hexproof, indestr | 1 | Eater of Virtue | neo |
-| as long as enchanted permanent is a creature, it gets +N/+N and has menace. | 1 | Gift of Wrath | neo |
-| as long as enchanted permanent is a creature, it gets +N/+N and has reach and "..." | 1 | Careful Cultivation | neo |
-| as long as enchanted permanent is a creature, it gets +N/+N and has reach. | 1 | Favor of Jukai | neo |
 | as long as enchanted permanent is a creature, it gets +N/+N for each creature and/or vehicle you control. | 1 | Born to Drive | neo |
-| as long as enchanted permanent is a creature, it gets -N/-N and can't block. | 1 | Clawing Torment | neo |
-| as long as enchanted permanent is a creature, it gets -N/-N and loses flying. | 1 | Short Circuit | neo |
 | as long as you control five or more modified creatures, ~ gets +N/+N and has trample. | 1 | Jugan Defends the Temple // Remnant of the Rising Star | neo |
-| as long as ~ is modified, it has "..." | 1 | Orochi Merge-Keeper | neo |
-| as long as ~ is tapped, it"..."t be blocked. | 1 | Futurist Operative | neo |
 | at the beginning of combat on your turn, you may pay {M} and sacrifice an artifact. if you do, create a N/N red construct artifact creature token with haste. | 1 | Sokenzan Smelter | neo |
 | at the beginning of your end step, choose target permanent card in your graveyard. you may sacrifice a permanent that shares a card type with the chosen card. i | 1 | Spirit-Sister's Call | neo |
 | at the beginning of your end step, if kaito entered ~, he phases out. | 1 | Kaito Shizuki | neo |
@@ -332,18 +324,13 @@
 | destroy up to one target artifact, enchantment, or tapped creature. then if you control an artifact and an enchantment, create a N/N white samurai creature toke | 1 | Banishing Slash | neo |
 | each opponent sacrifices a creature of their choice unless they discard a card. | 1 | The Long Reach of Night // Animus of Night's Reach | neo |
 | each player gains control of all permanents they own. | 1 | The Fall of Lord Konda // Fragment of Konda | neo |
-| enchanted land is a N/N green spirit creature with vigilance and haste. it's still a land. | 1 | Harmonious Emergence | neo |
-| enchanted land is a N/N red spirit creature with haste. it's still a land. | 1 | Crackling Emergence | neo |
-| enchanted permanent can"..."t be activated unless they're mana abilities. | 1 | Intercessor's Arrest | neo |
 | equipped creature gets +N/+N for each +N/+N counter on ~. | 1 | Lion Sash | neo |
 | equipped creature has base power and toughness N/N, has menace, and is a black demon in addition to its other colors and types. | 1 | Blade of the Oni | neo |
 | gain control of target artifact or creature. untap it. | 1 | Invoke the Winds | neo |
-| if a creature attacking causes a triggered ability of a permanent you control to trigger, that ability triggers an additional time. | 1 | Isshin, Two Heavens as One | neo |
 | look at the top five cards of your library. exile one of them face down and put the rest on the bottom of your library in a random order. you may cast the exile | 1 | Discover the Impossible | neo |
 | modified creatures you control can attack as though they didn't have defender. | 1 | Guardians of Oboro | neo |
 | modified creatures you control have haste. | 1 | Invigorating Hot Spring | neo |
 | modified creatures you control have trample. | 1 | Kodama of the West Tree | neo |
-| other enchantment creatures you control get +N/+N. | 1 | Weaver of Harmony | neo |
 | return an artifact card from your graveyard to your hand. if you can't, draw a card. | 1 | Inventive Iteration // Living Breakthrough | neo |
 | return target creature or vehicle card from your graveyard to the battlefield. then put two +N/+N counters on that permanent if you control an artifact and an e | 1 | Okiba Salvage | neo |
 | return target permanent card from your graveyard to the battlefield, then distribute four +N/+N counters among any number of creatures and/or vehicles target pl | 1 | Invoke Justice | neo |
@@ -373,7 +360,6 @@
 | whenever an aura you control enters, if you cast it, you may search your library for an aura card with mana value less than or equal to that aura and with a dif | 1 | Light-Paws, Emperor's Voice | neo |
 | whenever combat damage is dealt to you, remove an indestructible counter from risona. | 1 | Risona, Asari Commander | neo |
 | whenever one or more artifacts you control leave the battlefield during your turn, create a N/N colorless construct artifact creature token. ~ triggers only onc | 1 | Oni-Cult Anvil | neo |
-| whenever you activate a ninjutsu ability, look at the top three cards of your library. put one of them into your hand and the rest on the bottom of your library | 1 | Satoru Umezawa | neo |
 | whenever ~ attacks, choose one — • exile target creature card from a graveyard. when you do, create a N/N colorless spirit creature token. • exile target noncre | 1 | Teachings of the Kirin // Kirin-Touched Orochi | neo |
 | whenever ~ attacks, defending player chooses a nonland card in your graveyard. return that card to your hand. ~ gets +N/+N until end of turn, where N is the man | 1 | The Kami War // O-Kagachi Made Manifest | neo |
 | whenever ~ becomes attached to a creature, tap that creature. | 1 | Enormous Energy Blade | neo |
@@ -389,15 +375,12 @@
 | {M}, exile ~ and four other artifact creatures and/or vehicles you control: create mechtitan, a legendary N/N construct artifact creature token with flying, vig | 1 | Mechtitan Core | neo |
 | {M}, sacrifice an artifact with mana value N: return target artifact card with mana value less than N from your graveyard to the battlefield. it gains haste unt | 1 | Scrap Welder | neo |
 | {M}, sacrifice ~: it deals damage equal to the number of charge counters on it to target player and that much damage to up to one target creature. | 1 | Dragonspark Reactor | neo |
-| {M}, {M}: target vehicle becomes an artifact creature until end of turn. | 1 | Mech Hangar | neo |
 | {M}: until end of turn, equipped creature gets +N/+N, where N is the number of times ~ has resolved ~. | 1 | Bronze Cudgels | neo |
 | {M}{M}, {M}, return shigeki to its owner's hand: reveal the top four cards of your library. you may put a land card from among them onto the battlefield tapped. | 1 | Shigeki, Jukai Visionary | neo |
 | {M}{M}, {M}: exile the top card of your library. you may play that card ~. when you exile a nonland card ~, hidetsugu deals damage equal to the exiled card's ma | 1 | Hidetsugu, Devouring Chaos | neo |
 | {M}{M}: tatsunari and target frog you control can't be blocked ~ except by creatures with flying or reach. | 1 | Tatsunari, Toad Rider | neo |
-| ~ crews vehicles as though its power were N greater. | 1 | Hotshot Mechanic | neo |
 | ~ gets +N/+N for each artifact and/or enchantment card in your graveyard. | 1 | Runaway Trash-Bot | neo |
 | ~ gets +N/+N for each other modified creature you control. | 1 | Upriser Renegade | neo |
-| −N: target artifact becomes an artifact creature. if it isn't a vehicle, it has base power and toughness N/N. | 1 | Tezzeret, Betrayer of Flesh | neo |
 
 ## Notes
 

@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 39 | 17.1% |
-| Works (untested) | 100 | 43.9% |
-| Partial (unaudited) | 9 | 3.9% |
-| Not working | 80 | 35.1% |
+| Tested | 47 | 20.6% |
+| Works (untested) | 103 | 45.2% |
+| Partial (unaudited) | 0 | 0.0% |
+| Not working | 78 | 34.2% |
 
 ## Cards needing work
 
@@ -67,7 +67,6 @@
 | Momentum Rumbler | silent | Whenever this creature attacks, if it doesn't have first strike, put a first strike counter on it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Mutual Destruction | silent | This spell has flash as long as you control a permanent with flash. As an additional cost to cast this spell, sacrifice a creature. Destroy target creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Mysterious Egg | silent | Whenever this creature mutates, put a +1/+1 counter on it. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
-| Mystic Subdual | silent | Enchanted creature gets -2/-0 and loses all abilities. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Mythos of Brokkos | silent | If {U}{B} was spent to cast this spell, search your library for a card, put that card into your graveyard, then shuffle. Return up to two permanent cards from y | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Mythos of Nethroi | silent | Destroy target nonland permanent if it's a creature or if {G}{W} was spent to cast this spell. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Mythos of Snapdax | silent | Each player chooses an artifact, a creature, an enchantment, and a planeswalker from among the nonland permanents they control, then sacrifices the rest. If {B} | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -100,21 +99,11 @@
 | Call of the Death-Dweller | notice | Return up to two target creature cards with total mana value 3 or less from your graveyard to the battlefield. Put a deathtouch counter on either of them. Then  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Dire Tactics | notice | Exile target creature. If you don't control a Human, you lose life equal to that creature's toughness. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Heightened Reflexes | notice | Target creature gets +1/+0 until end of turn. Put a first strike counter on it. | unparsed remainder: Put a first strike counter on it. | Y/Y/- | not_working |
-| Lavabrink Venturer | notice | This creature has protection from each mana value of the chosen quality. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Monstrous Step | notice | Target creature gets +7/+7 until end of turn. Up to one other target creature blocks it this turn if able. Cycling {2} ({2}, Discard this card: Draw a card.) | unparsed remainder: Up to one other target creature blocks it this turn if able. | Y/Y/- | not_working |
 | Mythos of Illuna | notice | Create a token that's a copy of target permanent. If {R}{G} was spent to cast this spell, instead create a token that's a copy of that permanent, except the tok | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Rooting Moloch | notice | When this creature enters, exile target card with a cycling ability from your graveyard. Until the end of your next turn, you may play that card. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Spelleater Wolverine | notice | This creature has double strike as long as there are three or more instant and/or sorcery cards in your graveyard. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Will of the All-Hunter | notice | Target creature gets +2/+2 until end of turn. If it's blocking, instead put two +1/+1 counters on it. Cycling {2} ({2}, Discard this card: Draw a card.) | unparsed remainder: If it's blocking, instead put two +1/+1 counters on it. | Y/Y/- | not_working |
-| Drannith Magistrate | unaudited | Your opponents can't cast spells from anywhere other than their hands. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Frondland Felidar | unaudited | Creatures you control with vigilance have "{1}, {T}: Tap target creature." | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| General's Enforcer | unaudited | Legendary Humans you control have indestructible. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Jegantha, the Wellspring | unaudited | Companion — No card in your starting deck has more than one of the same mana symbol in its mana cost. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Lutri, the Spellchaser | unaudited | Companion — Each nonland card in your starting deck has a different name. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Proud Wildbonder | unaudited | Creatures you control with trample have "You may have this creature assign its combat damage as though it weren't blocked." | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Umori, the Collector | unaudited | Companion — Each nonland card in your starting deck shares a card type. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Zilortha, Strength Incarnate | unaudited | Lethal damage dealt to creatures you control is determined by their power rather than their toughness. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Zirda, the Dawnwaker | unaudited | Companion — Each permanent card in your starting deck has an activated ability. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Adaptive Shimmerer | handled | This creature enters with three +1/+1 counters on it. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Aegis Turtle | handled |  |  | Y/Y/Y | not_tested |
 | Alert Heedbonder | handled | At the beginning of your end step, you gain 1 life for each creature you control with vigilance. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -144,6 +133,7 @@
 | Flourishing Fox | handled | Whenever you cycle another card, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Footfall Crater | handled | Enchanted land has "{T}: Target creature gains trample and haste until end of turn." | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Forbidden Friendship | handled | Create a 1/1 red Dinosaur creature token with haste and a 1/1 white Human Soldier creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Frondland Felidar | handled | Creatures you control with vigilance have "{1}, {T}: Tap target creature." | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Frostveil Ambush | handled | Tap up to two target creatures. Those creatures don't untap during their controller's next untap step. Cycling {1} ({1}, Discard this card: Draw a card.) | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Fully Grown | handled | Target creature gets +3/+3 until end of turn. Put a trample counter on it. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Garrison Cat | handled | When this creature dies, create a 1/1 white Human Soldier creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -163,12 +153,14 @@
 | Ketria Triome | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Kogla, the Titan Ape | handled | When Kogla enters, it fights up to one target creature you don't control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Lava Serpent | handled | Haste | machines/combat.py | Y/Y/- | not_tested |
+| Lavabrink Venturer | handled | As this creature enters, choose odd or even. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Light of Hope | handled | Choose one — • You gain 4 life. • Destroy target enchantment. • Put a +1/+1 counter on target creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Luminous Broodmoth | handled | Whenever a creature you control without flying dies, return it to the battlefield under its owner's control with a flying counter on it. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Lurking Deadeye | handled | When this creature enters, destroy target creature that was dealt damage this turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Maned Serval | handled | Vigilance | machines/combat.py | Y/Y/- | not_tested |
 | Migration Path | handled | Search your library for up to two basic land cards, put them onto the battlefield tapped, then shuffle. Cycling {2} ({2}, Discard this card: Draw a card.) | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Mosscoat Goriak | handled | Vigilance | machines/combat.py | Y/Y/- | not_tested |
+| Mystic Subdual | handled | Enchanted creature gets -2/-0 and loses all abilities. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Neutralize | handled | Counter target spell. Cycling {2} ({2}, Discard this card: Draw a card.) | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Nightsquad Commando | handled | When this creature enters, if you attacked this turn, create a 1/1 white Human Soldier creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Of One Mind | handled | This spell costs {2} less to cast if you control a Human creature and a non-Human creature. Draw two cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -219,7 +211,7 @@
 ## Fully supported
 
 <details>
-<summary>39 cards</summary>
+<summary>47 cards</summary>
 
 - Back for More
 - Blade Banish
@@ -227,25 +219,30 @@
 - Boot Nipper
 - Chevill, Bane of Monsters
 - Cunning Nightbonder
+- Drannith Magistrate
 - Ferocious Tigorilla
 - Fiend Artisan
 - Fight as One
 - Fire Prophecy
 - Flame Spill
 - Flycatcher Giraffid
+- General's Enforcer
 - Grimdancer
 - Gyruda, Doom of Depths
 - Heartless Act
 - Helica Glider
 - Indatha Triome
+- Jegantha, the Wellspring
 - Kaheera, the Orphanguard
 - Keruga, the Macrosage
 - Kinnan, Bonder Prodigy
 - Lurrus of the Dream-Den
+- Lutri, the Spellchaser
 - Mythos of Vadrok
 - Narset of the Ancient Way
 - Obosh, the Preypiercer
 - Offspring's Revenge
+- Proud Wildbonder
 - Quartzwood Crasher
 - Ram Through
 - Raugrin Triome
@@ -254,12 +251,15 @@
 - Stormwild Capridor
 - Swallow Whole
 - Thwart the Enemy
+- Umori, the Collector
 - Unbreakable Bond
 - Unpredictable Cyclone
 - Wingfold Pteron
 - Yorion, Sky Nomad
 - Zagoth Triome
 - Zenith Flare
+- Zilortha, Strength Incarnate
+- Zirda, the Dawnwaker
 
 </details>
 
@@ -267,7 +267,6 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| Companion | 4 | Jegantha, the Wellspring, Lutri, the Spellchaser, Umori, the Collector, Zirda, the Dawnwaker | iko |
 | mutate | 3 | Brokkos, Apex of Forever, Parcelbeast, Sea-Dasher Octopus | iko |
 | whenever ~ mutates, put a +N/+N counter on it. | 2 | Mysterious Egg, Vulpikeet | iko |
 | +N: create a N/N green beast creature token. put your choice of a reach counter, a vigilance counter, or a trample counter on it. | 1 | Vivien, Monsters' Advocate | iko |
@@ -279,16 +278,11 @@
 | choose odd or even. exile each creature with mana value of the chosen quality. (zero is even.) | 1 | Extinction Event | iko |
 | counter target spell that targets a permanent you control. draw a card. | 1 | Keep Safe | iko |
 | create a token that"..."s a copy of that permanent, except the token has "..." | 1 | Mythos of Illuna | iko |
-| creatures you control with trample have "..." | 1 | Proud Wildbonder | iko |
-| creatures you control with vigilance have "..." | 1 | Frondland Felidar | iko |
 | destroy target creature. put a menace counter on a creature you control. (it can't be blocked except by two or more creatures.) | 1 | Blood Curdle | iko |
 | destroy target nonland permanent if it's a creature or if {M}{M} was spent to cast ~. | 1 | Mythos of Nethroi | iko |
 | each player chooses an artifact, a creature, an enchantment, and a planeswalker from among the nonland permanents they control, then sacrifices the rest. if {M} | 1 | Mythos of Snapdax | iko |
-| enchanted creature gets -N/-N and loses all abilities. | 1 | Mystic Subdual | iko |
 | exile target creature. if you don"..."s toughness. | 1 | Dire Tactics | iko |
 | if {M}{M} was spent to cast ~, search your library for a card, put that card into your graveyard, then shuffle. return up to two permanent cards from your grave | 1 | Mythos of Brokkos | iko |
-| legendary humans you control have indestructible. | 1 | General's Enforcer | iko |
-| lethal damage dealt to creatures you control is determined by their power rather than their toughness. | 1 | Zilortha, Strength Incarnate | iko |
 | look at the top five cards of your library. put any number of permanent cards from among them onto the battlefield and the rest into your hand. exile ~. | 1 | Genesis Ultimatum | iko |
 | return any number of permanent cards with different names from your graveyard to the battlefield. | 1 | Eerie Ultimatum | iko |
 | return up to two target creature cards with total mana value N or less from your graveyard to the battlefield. put a deathtouch counter on either of them. then  | 1 | Call of the Death-Dweller | iko |
@@ -337,7 +331,6 @@
 | whenever ~ mutates, you may cast target noncreature card with mana value N or less from your graveyard without paying its mana cost. | 1 | Vadrok, Apex of Thunder | iko |
 | whenever ~ mutates, you may discard a card. if you do, draw a card. | 1 | Cloudpiercer | iko |
 | whenever ~ mutates, you may return target creature an opponent controls to its owner's hand. | 1 | Pouncing Shoreshark | iko |
-| your opponents can't cast spells from anywhere other than their hands. | 1 | Drannith Magistrate | iko |
 | {M}, sacrifice ~: target creature doesn"..."s next untap step. | 1 | Sleeper Dart | iko |
 | {M}, {M}, sacrifice another creature: you gain life equal to the sacrificed creature's toughness. draw a card. | 1 | Bushmeat Poacher | iko |
 | {M}: ~ deals N damage to any target, where N is the number of times ~ has mutated. | 1 | Porcuparrot | iko |
@@ -349,7 +342,6 @@
 | {M}{M}: search your library for a card named ~, put it onto the battlefield tapped, then shuffle. | 1 | Whisper Squad | iko |
 | ~ has double strike as long as there are three or more instant and/or sorcery cards in your graveyard. | 1 | Spelleater Wolverine | iko |
 | ~ has flash as long as you control a permanent with flash. as an additional cost to cast ~, sacrifice a creature. destroy target creature. | 1 | Mutual Destruction | iko |
-| ~ has protection from each mana value of the chosen quality. | 1 | Lavabrink Venturer | iko |
 
 ## Notes
 

@@ -17,9 +17,9 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 82 | 31.3% |
+| Tested | 92 | 35.1% |
 | Works (untested) | 93 | 35.5% |
-| Partial (unaudited) | 10 | 3.8% |
+| Partial (unaudited) | 0 | 0.0% |
 | Not working | 77 | 29.4% |
 
 ## Cards needing work
@@ -87,7 +87,7 @@
 | Sundering Eruption // Volcanic Fissure | silent | Destroy target land. Its controller may search their library for a basic land card, put it onto the battlefield tapped, then shuffle. Creatures without flying c | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Temperamental Oozewagg | silent | Modified creatures you control have trample. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Territory Culler | silent | Landfall — Whenever a land you control enters, look at the top card of your library. If it's a creature card, you may reveal it and put it into your hand. If yo | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| The Creation of Avacyn | silent | I — Search your library for a card, exile it face down, then shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| The Creation of Avacyn | silent | II — Turn the exiled card face up. If it's a creature card, you lose life equal to its mana value. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | The Hunger Tide Rises | silent | IV — Sacrifice any number of creatures. Search your library and/or graveyard for a creature card with mana value less than or equal to the number of creatures s | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Triton Wavebreaker | silent | As long as this permanent is a creature, it has prowess. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Ugin's Binding | silent | Devoid (This card has no color.) Return target nonland permanent you don't control to its owner's hand. Whenever you cast a colorless spell with mana value 7 or | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -103,16 +103,6 @@
 | Obstinate Gargoyle | notice | This creature has flying as long as it's modified. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Propagator Drone | notice | Creature tokens you control have evolve. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Pyretic Rebirth | notice | Return target artifact or creature card from your graveyard to your hand. Pyretic Rebirth deals damage equal to that card's mana value to up to one target creat | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Cursed Wombat | unaudited | Permanents you control have "Whenever one or more +1/+1 counters are put on this permanent, put an additional +1/+1 counter on it. This ability triggers only on | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Echoes of Eternity | unaudited | If a triggered ability of a colorless spell you control or another colorless permanent you control triggers, that ability triggers an additional time. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Hydra Trainer | unaudited | You may exert this creature as it attacks. When you do, target creature gets +X/+X until end of turn, where X is the number of counters on permanents you contro | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Party Thrasher | unaudited | Noncreature spells you cast from exile have convoke. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Path of Annihilation | unaudited | Eldrazi you control have "{T}: Add one mana of any color." | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Pearl-Ear, Imperial Advisor | unaudited | Enchantment spells you cast have affinity for Auras. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Six | unaudited | During your turn, nonland permanent cards in your graveyard have retrace. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| The Necrobloom | unaudited | Land cards in your graveyard have dredge 2. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Utter Insignificance | unaudited | Enchanted creature loses all abilities and has base power and toughness 1/1. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Winter Moon | unaudited | Players can't untap more than one nonbasic land during their untap steps. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Accursed Marauder | handled | When this creature enters, each player sacrifices a nontoken creature of their choice. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Aerie Auxiliary | handled | When this creature enters, support 2. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Amphibian Downpour | handled | Enchanted creature loses all abilities and is a blue Frog creature with base power and toughness 1/1. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -210,7 +200,7 @@
 ## Fully supported
 
 <details>
-<summary>82 cards</summary>
+<summary>92 cards</summary>
 
 - Aether Revolt
 - Ajani, Nacatl Pariah // Ajani, Nacatl Avenger
@@ -224,6 +214,7 @@
 - Conduit Goblin
 - Consign to Memory
 - Corrupted Shapeshifter
+- Cursed Wombat
 - Cyclops Superconductor
 - Deem Inferior
 - Detective's Phoenix
@@ -232,6 +223,7 @@
 - Disruptor Flute
 - Dog Umbra
 - Drowner of Truth // Drowned Jungle
+- Echoes of Eternity
 - Eldrazi Repurposer
 - Emperor of Bones
 - Emrakul, the World Anew
@@ -247,6 +239,7 @@
 - Herigast, Erupting Nullkite
 - Hexgold Slith
 - Hope-Ender Coatl
+- Hydra Trainer
 - Hydroelectric Specimen // Hydroelectric Laboratory
 - Idol of False Gods
 - It That Heralds the End
@@ -260,6 +253,9 @@
 - Nethergoyf
 - Null Elemental Blast
 - Ocelot Pride
+- Party Thrasher
+- Path of Annihilation
+- Pearl-Ear, Imperial Advisor
 - Petrifying Meddler
 - Phelia, Exuberant Shepherd
 - Planar Genesis
@@ -271,6 +267,7 @@
 - Shifting Woodland
 - Signature Slam
 - Sink into Stupor // Soporific Springs
+- Six
 - Smelted Chargebug
 - Sorin of House Markov // Sorin, Ravenous Neonate
 - Sowing Mycospawn
@@ -279,18 +276,21 @@
 - Suppression Ray // Orderly Plaza
 - Tamiyo Meets the Story Circle
 - Tamiyo, Inquisitive Student // Tamiyo, Seasoned Scholar
+- The Necrobloom
 - Thief of Existence
 - Thraben Charm
 - Titans' Vanguard
 - Tune the Narrative
 - Ugin's Labyrinth
 - Ulamog, the Defiler
+- Utter Insignificance
 - Vexing Bauble
 - Voidpouncer
 - Voltstorm Angel
 - Wastescape Battlemage
 - Waterlogged Teachings // Inundated Archive
 - White Orchid Phantom
+- Winter Moon
 - Witch Enchanter // Witch-Blessed Meadow
 - Wrath of the Skies
 - Wumpus Aberration
@@ -321,33 +321,24 @@
 | devoid (~ has no color.) exile target nonland permanent. you may cast that card for as long as it remains exiled, and you may spend colorless mana as though it  | 1 | Abstruse Appropriation | mh3 |
 | devoid (~ has no color.) return target nonland permanent you don"..."s hand. whenever you cast a colorless spell with mana value N or greater, you may exile ~ f | 1 | Ugin's Binding | mh3 |
 | draw two cards. then discard a card at random unless you pay {M}{M} (two energy counters). | 1 | Rush of Inspiration // Crackling Falls | mh3 |
-| during your turn, nonland permanent cards in your graveyard have retrace. | 1 | Six | mh3 |
-| eldrazi you control have "..." | 1 | Path of Annihilation | mh3 |
 | enchanted creature gets +N/+N and has afterlife N. | 1 | Indebted Spirit | mh3 |
 | enchanted creature gets +N/+N and has mentor. | 1 | Nyxborn Unicorn | mh3 |
 | enchanted creature gets +N/+N for each +N/+N counter on ~ and has reach and trample. | 1 | Nyxborn Hydra | mh3 |
 | enchanted creature gets +N/+N for each +N/+N counter on ~. | 1 | Glyph Elemental | mh3 |
 | enchanted creature gets +N/+N for each creature and/or enchantment you control. | 1 | Strength of the Harvest // Haven of the Harvest | mh3 |
-| enchanted creature loses all abilities and has base power and toughness N/N. | 1 | Utter Insignificance | mh3 |
-| enchantment spells you cast have affinity for auras. | 1 | Pearl-Ear, Imperial Advisor | mh3 |
 | exile the top three cards of your library. you may play those cards ~. at the beginning of the next end step, if any of those cards remain exiled, put them into | 1 | Glimpse the Impossible | mh3 |
 | fabricate | 1 | Marionette Apprentice | mh3 |
-| if a triggered ability of a colorless spell you control or another colorless permanent you control triggers, that ability triggers an additional time. | 1 | Echoes of Eternity | mh3 |
 | kicker {M}{M} (you may pay an additional {M}{M} as you cast ~.) choose target creature with mana value N or less. if ~ was kicked, instead choose target creatur | 1 | Expel the Unworthy | mh3 |
-| land cards in your graveyard have dredge N. | 1 | The Necrobloom | mh3 |
 | modified creatures you control have lifelink. | 1 | Envoy of the Ancestors | mh3 |
 | modified creatures you control have trample. | 1 | Temperamental Oozewagg | mh3 |
-| noncreature spells you cast from exile have convoke. | 1 | Party Thrasher | mh3 |
 | other creatures have base power and toughness N/N and are bears in addition to their other types. | 1 | Kudo, King Among Bears | mh3 |
 | overload | 1 | Fangs of Kalonia | mh3 |
-| permanents you control have "..." | 1 | Cursed Wombat | mh3 |
-| players can't untap more than one nonbasic land during their untap steps. | 1 | Winter Moon | mh3 |
 | prototype | 1 | Frogmyr Enforcer | mh3 |
 | reinforce | 1 | Fowl Strike | mh3 |
 | return target artifact or creature card from your graveyard to your hand. ~ deals damage equal to that card's mana value to up to one target creature or planesw | 1 | Pyretic Rebirth | mh3 |
 | sacrifice another creature: create a blood token. if you sacrificed an angel ~, create a number of blood tokens equal to its toughness instead. | 1 | Shilgengar, Sire of Famine | mh3 |
 | sacrifice any number of creatures. search your library and/or graveyard for a creature card with mana value less than or equal to the number of creatures sacrif | 1 | The Hunger Tide Rises | mh3 |
-| search your library for a card, exile it face down, then shuffle. | 1 | The Creation of Avacyn | mh3 |
+| turn the exiled card face up. if it's a creature card, you lose life equal to its mana value. | 1 | The Creation of Avacyn | mh3 |
 | until end of turn, double target creature's power and it gains first strike. | 1 | Legion Leadership // Legion Stronghold | mh3 |
 | when rosheen enters, mill six cards. you may put a card with {M} in its mana cost from among them into your hand. | 1 | Rosheen, Roaring Prophet | mh3 |
 | when ~ enters, create two N/N red gremlin creature tokens. then you get an amount of {M} equal to the number of creatures you control. | 1 | Scurry of Gremlins | mh3 |
@@ -370,7 +361,6 @@
 | whenever ~ attacks, you may draw cards equal to its power. if you do, discard that many cards. | 1 | Horrid Shadowspinner | mh3 |
 | whenever ~ deals combat damage to a player, put a +N/+N counter on it. when you do, you may remove a counter from another target permanent or opponent. | 1 | Etched Slith | mh3 |
 | you get {M}{M}{M} (three energy counters), then you may pay any amount of {M}. each player may exile their hand and draw a number of cards equal to the amount o | 1 | Wheel of Potential | mh3 |
-| you may exert ~ as it attacks. when you do, target creature gets +N/+N until end of turn, where N is the number of counters on permanents you control. | 1 | Hydra Trainer | mh3 |
 | you may have ~ enter as a copy of an enchantment you control, except it has "..." | 1 | Estrid's Invocation | mh3 |
 | you may sacrifice a nontoken green creature rather than pay ~ mana cost. search your library for up to two basic land cards, reveal those cards, put one onto th | 1 | Flare of Cultivation | mh3 |
 | you may sacrifice a nontoken white creature rather than pay ~ mana cost. until end of turn, your life total can't change, and permanents you control gain hexpro | 1 | Flare of Fortitude | mh3 |

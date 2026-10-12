@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 21 | 14.2% |
-| Works (untested) | 62 | 41.9% |
+| Tested | 22 | 14.9% |
+| Works (untested) | 64 | 43.2% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 65 | 43.9% |
+| Not working | 62 | 41.9% |
 
 ## Cards needing work
 
@@ -34,19 +34,16 @@
 | Countryside Crusher | silent | At the beginning of your upkeep, reveal the top card of your library. If it's a land card, put it into your graveyard and repeat this process. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Cream of the Crop | silent | Whenever a creature you control enters, you may look at the top X cards of your library, where X is that creature's power. If you do, put one of those cards on  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Daily Regimen | silent | {1}{W}: Put a +1/+1 counter on enchanted creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Door of Destinies | silent | Creatures you control of the chosen type get +1/+1 for each charge counter on this artifact. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Earthbrawn | silent | Reinforce | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Earwig Squad | silent | When this creature enters, if its prowl cost was paid, search target opponent's library for three cards and exile them. Then that player shuffles. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Fendeep Summoner | silent | {T}: Up to two target Swamps each become 3/5 Treefolk Warrior creatures in addition to their other types until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Fertilid | silent | {1}{G}, Remove a +1/+1 counter from this creature: Target player searches their library for a basic land card, puts it onto the battlefield tapped, then shuffle | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Fire Juggler | silent | Whenever this creature becomes blocked, clash with an opponent. If you win, this creature deals 4 damage to each creature blocking it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Floodchaser | silent | {U}, Remove a +1/+1 counter from this creature: Target land becomes an Island until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Graceful Reprieve | silent | When target creature dies this turn, return that card to the battlefield under its owner's control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Grimoire Thief | silent | Whenever this creature becomes tapped, exile the top three cards of target opponent's library face down. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Hunting Triad | silent | Reinforce | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Ink Dissolver | silent | Kinship — At the beginning of your upkeep, you may look at the top card of your library. If it shares a creature type with this creature, you may reveal it. If  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Kinsbaile Borderguard | silent | When this creature dies, create a 1/1 white Kithkin Soldier creature token for each counter on it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Kinsbaile Cavalier | silent | Knight creatures you control have double strike. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Kithkin Zephyrnaut | silent | Kinship — At the beginning of your upkeep, you may look at the top card of your library. If it shares a creature type with this creature, you may reveal it. If  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Knowledge Exploitation | silent | Prowl {3}{U} (You may cast this for its prowl cost if you dealt combat damage to a player this turn with a Rogue.) Search target opponent's library for an insta | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Leaf-Crowned Elder | silent | Kinship — At the beginning of your upkeep, you may look at the top card of your library. If it shares a creature type with this creature, you may reveal it. If  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -105,6 +102,7 @@
 | Dewdrop Spy | handled | When this creature enters, look at the top card of target player's library. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Disperse | handled | Return target nonland permanent to its owner's hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Diviner's Wand | handled | Equipped creature has "Whenever you draw a card, this creature gets +1/+1 and gains flying until end of turn" and "{4}: Draw a card." | the engine reads this text and performs it | Y/-/- | not_tested |
+| Door of Destinies | handled | As this artifact enters, choose a creature type. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Everbark Shaman | handled | {T}, Exile a Treefolk card from your graveyard: Search your library for up to two Forest cards, put them onto the battlefield tapped, then shuffle. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Fencer Clique | handled | {U}: Put this creature on top of its owner's library. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Festercreep | handled | This creature enters with a +1/+1 counter on it. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -118,6 +116,7 @@
 | Idyllic Tutor | handled | Search your library for an enchantment card, reveal it, put it into your hand, then shuffle. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Inspired Sprite | handled | Whenever you cast a Wizard spell, you may untap this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Kindled Fury | handled | Target creature gets +1/+0 and gains first strike until end of turn. (It deals combat damage before creatures without first strike.) | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Kinsbaile Cavalier | handled | Knight creatures you control have double strike. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Lunk Errant | handled | Whenever this creature attacks alone, it gets +1/+1 and gains trample until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Lys Alana Bowmaster | handled | Whenever you cast an Elf spell, you may have this creature deal 2 damage to target creature with flying. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Merrow Witsniper | handled | When this creature enters, target player mills a card. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -157,13 +156,14 @@
 ## Fully supported
 
 <details>
-<summary>21 cards</summary>
+<summary>22 cards</summary>
 
 - Battletide Alchemist
 - Bramblewood Paragon
 - Cenn's Tactician
 - Deglamer
 - Distant Melody
+- Floodchaser
 - Forfend
 - Greatbow Doyen
 - Indomitable Ancients
@@ -199,9 +199,7 @@
 | choose two target creatures that share no creature types. those creatures fight each other. (each deals damage equal to its power to the other.) | 1 | Rivals' Duel | mor |
 | clash | 1 | Redeem the Lost | mor |
 | clash with an opponent. if you win, target player discards two cards. otherwise, that player discards a card. (each clashing player reveals the top card of thei | 1 | Pulling Teeth | mor |
-| creatures you control of the chosen type get +N/+N for each charge counter on ~. | 1 | Door of Destinies | mor |
 | draw a card. clash with an opponent. if you win, return ~ to its owner's hand. (each clashing player reveals the top card of their library, then puts that card  | 1 | Research the Deep | mor |
-| knight creatures you control have double strike. | 1 | Kinsbaile Cavalier | mor |
 | prowl {M}{M} (you may cast ~ its prowl cost if you dealt combat damage to a player ~ with a rogue.) create N N/N black faerie rogue creature tokens with flying, | 1 | Notorious Throng | mor |
 | prowl {M}{M} (you may cast ~ its prowl cost if you dealt combat damage to a player ~ with a rogue.) search target opponent's library for an instant or sorcery c | 1 | Knowledge Exploitation | mor |
 | prowl {M}{M} (you may cast ~ its prowl cost if you dealt combat damage to a player ~ with a rogue.) target player reveals three cards from their hand. you choos | 1 | Noggin Whack | mor |
@@ -226,7 +224,6 @@
 | whenever ~ attacks, you may put a soldier creature card from your hand onto the battlefield tapped and attacking. | 1 | Preeminent Captain | mor |
 | whenever ~ becomes blocked, clash with an opponent. if you win, ~ deals N damage to each creature blocking it. | 1 | Fire Juggler | mor |
 | whenever ~ becomes tapped, exile the top three cards of target opponent's library face down. | 1 | Grimoire Thief | mor |
-| {M}, remove a +N/+N counter from ~: target land becomes an island until end of turn. | 1 | Floodchaser | mor |
 | {M}: up to two target swamps each become N/N treefolk warrior creatures in addition to their other types until end of turn. | 1 | Fendeep Summoner | mor |
 | {M}{M}, remove a +N/+N counter from ~: target player searches their library for a basic land card, puts it onto the battlefield tapped, then shuffles. | 1 | Fertilid | mor |
 | {M}{M}, {M}: search your library for an equipment card, put it onto the battlefield, attach it to a creature you control, then shuffle. | 1 | Stonehewer Giant | mor |

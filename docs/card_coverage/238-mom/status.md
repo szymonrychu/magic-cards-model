@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 73 | 26.8% |
+| Tested | 76 | 27.9% |
 | Works (untested) | 98 | 36.0% |
-| Partial (unaudited) | 2 | 0.7% |
-| Not working | 99 | 36.4% |
+| Partial (unaudited) | 0 | 0.0% |
+| Not working | 98 | 36.0% |
 
 ## Cards needing work
 
@@ -64,7 +64,6 @@
 | Halo-Charged Skaab | silent | When this creature enters, each player mills two cards. Then you may put an instant, sorcery, or battle card from your graveyard on top of your library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Hangar Scrounger | silent | Backup | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Hidetsugu and Kairi | silent | When Hidetsugu and Kairi dies, exile the top card of your library. Target opponent loses life equal to its mana value. If it's an instant or sorcery card, you m | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Hoarding Broodlord | silent | When this creature enters, search your library for a card, exile it face down, then shuffle. For as long as that card remains exiled, you may play it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ichor Drinker | silent | {B}, Exile this card from your graveyard: Incubate 2. Activate only as a sorcery. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Infected Defector | silent | When this creature dies, incubate 3. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Injector Crocodile | silent | When this creature dies, incubate 3. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -125,8 +124,6 @@
 | Terror of Towashi | notice | Whenever this creature attacks, you may pay {3}{B}. When you do, return target creature card from your graveyard to the battlefield. It's a Phyrexian in additio | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | War Historian | notice | This creature has indestructible as long as it attacked a battle this turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Wicked Slumber | notice | Convoke (Your creatures can help cast this spell. Each creature you tap while casting this spell pays for {1} or one mana of that creature's color.) Tap up to t | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Disturbing Conversion | unaudited | Enchanted creature gets -X/-0, where X is the number of cards in its controller's graveyard. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Oculus Whelp | unaudited | As long as you control a transformed permanent, this creature has "When this creature dies, draw a card." | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Aerial Boost | handled | Convoke (Your creatures can help cast this spell. Each creature you tap while casting this spell pays for {1} or one mana of that creature's color.) Target crea | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Aetherblade Agent // Gitaxian Mindstinger | handled | {4}{U/P}: Transform this creature. Activate only as a sorcery. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Akki Scrapchomper | handled | {1}{R}, {T}, Sacrifice an artifact or land: Draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -229,7 +226,7 @@
 ## Fully supported
 
 <details>
-<summary>73 cards</summary>
+<summary>76 cards</summary>
 
 - Ancient Imperiosaur
 - Angelic Intervention
@@ -237,6 +234,7 @@
 - Borborygmos and Fblthp
 - Botanical Brawler
 - Cosmic Hunger
+- Disturbing Conversion
 - Drana and Linvala
 - Errant and Giada
 - Etali, Primal Conqueror // Etali, Primal Sickness
@@ -244,6 +242,7 @@
 - Flywheel Racer
 - Furnace Reins
 - Glistening Deluge
+- Hoarding Broodlord
 - Ichor Shade
 - Inga and Esika
 - Invasion of Alara // Awaken the Maelstrom
@@ -285,6 +284,7 @@
 - Kami of Whispered Hopes
 - Kithkin Billyrider
 - Lithomantic Barrage
+- Oculus Whelp
 - Omnath, Locus of All
 - Orthion, Hero of Lavabrink
 - Phyrexian Censor
@@ -320,7 +320,6 @@
 | +N: exile the top five cards of your library. until the end of your next turn, you may cast an instant or sorcery spell from among those exiled cards. | 1 | Chandra, Hope's Beacon | mom |
 | +N: up to one target land you control becomes a N/N elemental creature with vigilance, hexproof, and haste until your next turn. it's still a land. | 1 | Wrenn and Realmbreaker | mom |
 | as long as an opponent has eight or more cards in their graveyard, ~ can attack as though it didn"..."t be blocked. | 1 | Expedition Lookout | mom |
-| as long as you control a transformed permanent, ~ has "..." | 1 | Oculus Whelp | mom |
 | as long as you have one or fewer cards in hand, ~ has vigilance and haste. | 1 | Djeru and Hazoret | mom |
 | as long as ~ power is N or greater, it can attack as though it didn't have defender. | 1 | Karsus Depthguard | mom |
 | convoke (your creatures can help cast ~. each creature you tap while casting ~ pays for {M} or one mana of that creature's color.) tap up to two target creature | 1 | Wicked Slumber | mom |
@@ -328,7 +327,6 @@
 | draw cards equal to the number of cards in your hand. you have no maximum hand size for as long as you control ~. | 1 | Jin-Gitaxias // The Great Synthesis | mom |
 | each player mills ten cards. for each player, choose a creature or planeswalker card in that player's graveyard. put those cards onto the battlefield under your | 1 | Breach the Multiverse | mom |
 | each player mills three cards. then you return up to two creature cards from your graveyard to your hand. (to mill three cards, a player puts the top three card | 1 | Unseal the Necropolis | mom |
-| enchanted creature gets -N/-N, where N is the number of cards in its controller's graveyard. | 1 | Disturbing Conversion | mom |
 | enchanted creature has base power and toughness N/N, has defender, and loses all other abilities. | 1 | Stasis Field | mom |
 | exile all creatures. incubate N, where N is the number of creatures exiled ~. (create an incubator token with N +N/+N counters on it and "..." it transforms int | 1 | Sunfall | mom |
 | exile target creature. incubate N. (create an incubator token with three +N/+N counters on it and "..." it transforms into a N/N phyrexian artifact creature.) | 1 | Merciless Repurposing | mom |
@@ -350,7 +348,6 @@
 | when ~ enters, incubate N N times. | 1 | Progenitor Exarch | mom |
 | when ~ enters, look at the top six cards of your library. you may reveal up to two creature cards with mana value N or less from among them, where N is the numb | 1 | Knight-Errant of Eos | mom |
 | when ~ enters, put a flying counter on each creature that convoked it. | 1 | Zephyr Singer | mom |
-| when ~ enters, search your library for a card, exile it face down, then shuffle. for as long as that card remains exiled, you may play it. | 1 | Hoarding Broodlord | mom |
 | when ~ enters, you gain N life and incubate N. | 1 | Tangled Skyline | mom |
 | when ~ enters, you may pay {M}. when you do, you may cast target instant or sorcery card with mana value N from a graveyard without paying its mana cost. if tha | 1 | Halo Forager | mom |
 | whenever a creature you control becomes the target of a backup ability, copy that ability. you may choose new targets for the copy. ~ triggers only once each tu | 1 | Mirror-Shield Hoplite | mom |

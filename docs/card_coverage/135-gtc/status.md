@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 26 | 11.2% |
-| Works (untested) | 121 | 52.2% |
-| Partial (unaudited) | 2 | 0.9% |
-| Not working | 83 | 35.8% |
+| Tested | 28 | 12.1% |
+| Works (untested) | 126 | 54.3% |
+| Partial (unaudited) | 0 | 0.0% |
+| Not working | 78 | 33.6% |
 
 ## Cards needing work
 
@@ -58,11 +58,8 @@
 | Gyre Sage | silent | Evolve | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Hands of Binding | silent | Cipher | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Hellkite Tyrant | silent | Whenever this creature deals combat damage to a player, gain control of all artifacts that player controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Hydroform | silent | Target land becomes a 3/3 Elemental creature with flying until end of turn. It's still a land. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Illness in the Ranks | silent | Creature tokens get -1/-1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Illusionist's Bracers | silent | Whenever an ability of equipped creature is activated, if it isn't a mana ability, copy that ability. You may choose new targets for the copy. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Incursion Specialist | silent | Whenever you cast your second spell each turn, this creature gets +2/+0 until end of turn and can't be blocked this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Keymaster Rogue | silent | When this creature enters, return a creature you control to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Last Thoughts | silent | Cipher | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Lazav, Dimir Mastermind | silent | Whenever a creature card is put into an opponent's graveyard from anywhere, you may have Lazav become a copy of that card, except its name is Lazav, Dimir Maste | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Lord of the Void | silent | Whenever this creature deals combat damage to a player, exile the top seven cards of that player's library, then put a creature card from among them onto the ba | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -83,9 +80,7 @@
 | Signal the Clans | silent | Search your library for three creature cards and reveal them. If you reveal three cards with different names, choose one of them at random and put that card int | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Simic Fluxmage | silent | Evolve | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Simic Manipulator | silent | {T}, Remove one or more +1/+1 counters from this creature: Gain control of target creature with power less than or equal to the number of +1/+1 counters removed | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Skarrg Guildmage | silent | {1}{R}{G}: Target land you control becomes a 4/4 Elemental creature until end of turn. It's still a land. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Slate Street Ruffian | silent | Whenever this creature becomes blocked, defending player discards a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Smog Elemental | silent | Creatures with flying your opponents control get -1/-1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Soul Ransom | silent | Discard two cards: This Aura's controller sacrifices it, then draws two cards. Only your opponents may activate this ability. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Spell Rupture | silent | Counter target spell unless its controller pays {X}, where X is the greatest power among creatures you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Stolen Identity | silent | Cipher | no machine in the engine executes this keyword | Y/Y/- | not_working |
@@ -109,8 +104,6 @@
 | Rapid Hybridization | notice | Destroy target creature. It can't be regenerated. That creature's controller creates a 3/3 green Frog Lizard creature token. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Sylvan Primordial | notice | When this creature enters, for each opponent, destroy target noncreature permanent that player controls. Search your library for up to X Forest cards, where X i | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Wight of Precinct Six | notice | This creature gets +1/+1 for each creature card in your opponents' graveyards. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Death's Approach | unaudited | Enchanted creature gets -X/-X, where X is the number of creature cards in its controller's graveyard. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Way of the Thief | unaudited | Enchanted creature can't be blocked as long as you control a Gate. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Alpha Authority | handled | Enchanted creature has hexproof and can't be blocked by more than one creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Angelic Edict | handled | Exile target creature or enchantment. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Arrows of Justice | handled | Arrows of Justice deals 4 damage to target attacking or blocking creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -162,8 +155,11 @@
 | High Priest of Penance | handled | Whenever this creature is dealt damage, you may destroy target nonland permanent. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Holy Mantle | handled | Enchanted creature gets +2/+2 and has protection from creatures. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Horror of the Dim | handled | {U}: This creature gains hexproof until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Hydroform | handled | Target land becomes a 3/3 Elemental creature with flying until end of turn. It's still a land. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Illness in the Ranks | handled | Creature tokens get -1/-1. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Immortal Servitude | handled | Return each creature card with mana value X from your graveyard to the battlefield. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ivy Lane Denizen | handled | Whenever another green creature you control enters, put a +1/+1 counter on target creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Keymaster Rogue | handled | This creature can't be blocked. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Killing Glare | handled | Destroy target creature with power X or less. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Kingpin's Pet | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
 | Knight Watch | handled | Create two 2/2 white Knight creature tokens with vigilance. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -207,10 +203,12 @@
 | Simic Charm | handled | Choose one — • Target creature gets +3/+3 until end of turn. • Permanents you control gain hexproof until end of turn. • Return target creature to its owner's h | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Simic Keyrune | handled | {G}{U}: This artifact becomes a 2/3 green and blue Crab artifact creature with hexproof until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Skarrg Goliath | handled | Bloodrush — {5}{G}{G}, Discard this card: Target attacking creature gets +9/+9 and gains trample until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Skarrg Guildmage | handled | {R}{G}: Creatures you control gain trample until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Skinbrand Goblin | handled | Bloodrush — {R}, Discard this card: Target attacking creature gets +2/+1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Skyblinder Staff | handled | Equipped creature gets +1/+0 and can't be blocked by creatures with flying. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Skygames | handled | Enchanted land has "{T}: Target creature gains flying until end of turn. Activate only as a sorcery." | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Slaughterhorn | handled | Bloodrush — {G}, Discard this card: Target attacking creature gets +3/+2 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Smog Elemental | handled | Creatures with flying your opponents control get -1/-1. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Spark Trooper | handled | At the beginning of the end step, sacrifice this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Sunhome Guildmage | handled | {1}{R}{W}: Creatures you control get +1/+0 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Syndicate Enforcer | handled | Extort | machines/keywords.py | Y/Y/- | not_tested |
@@ -236,7 +234,7 @@
 ## Fully supported
 
 <details>
-<summary>26 cards</summary>
+<summary>28 cards</summary>
 
 - Aerial Maneuver
 - Armored Transport
@@ -244,6 +242,7 @@
 - Biovisionary
 - Boros Guildgate
 - Boros Reckoner
+- Death's Approach
 - Deathcult Rogue
 - Dimir Guildgate
 - Executioner's Swing
@@ -264,6 +263,7 @@
 - Spire Tracer
 - Structural Collapse
 - Syndic of Tithes
+- Way of the Thief
 
 </details>
 
@@ -285,9 +285,7 @@
 | counter target spell unless its controller pays {M}, where N is the greatest power among creatures you control. | 1 | Spell Rupture | gtc |
 | counter target spell. create an N/N green ooze creature token, where N is that spell's mana value. | 1 | Mystic Genesis | gtc |
 | counter target spell. its controller mills two cards. | 1 | Psychic Strike | gtc |
-| creature tokens get -N/-N. | 1 | Illness in the Ranks | gtc |
 | creatures blocking or blocked by ~ have lifelink. | 1 | Alms Beast | gtc |
-| creatures with flying your opponents control get -N/-N. | 1 | Smog Elemental | gtc |
 | creatures you control have haste and attack each combat if able. | 1 | Hellraiser Goblin | gtc |
 | destroy target creature. it can"..."s controller creates a N/N green frog lizard creature token. | 1 | Rapid Hybridization | gtc |
 | destroy target nonartifact creature. its controller mills cards equal to that creature's power. | 1 | Grisly Spectacle | gtc |
@@ -296,8 +294,6 @@
 | each opponent reveals cards from the top of their library until they reveal N land cards, then puts all cards revealed ~ into their graveyard. N can't be N. | 1 | Mind Grind | gtc |
 | each other creature you control enters with a number of additional +N/+N counters on it equal to ~ power and as a mutant in addition to its other types. | 1 | Master Biomancer | gtc |
 | each player discards their hand, then draws cards equal to the greatest number of cards a player discarded ~. cipher (then you may exile ~ card encoded on a cre | 1 | Whispering Madness | gtc |
-| enchanted creature can't be blocked as long as you control a gate. | 1 | Way of the Thief | gtc |
-| enchanted creature gets -N/-N, where N is the number of creature cards in its controller's graveyard. | 1 | Death's Approach | gtc |
 | lands you control are the chosen type in addition to their other types. | 1 | Realmwright | gtc |
 | move any number of +N/+N counters from target creature onto another target creature with the same controller. | 1 | Bioshift | gtc |
 | remove two +N/+N counters from ~: regenerate it. | 1 | Experiment One | gtc |
@@ -306,7 +302,6 @@
 | sacrifice ~: counter target spell with {M} in its mana cost unless its controller pays {M}. | 1 | Frontline Medic | gtc |
 | search your library for three creature cards and reveal them. if you reveal three cards with different names, choose one of them at random and put that card int | 1 | Signal the Clans | gtc |
 | shuffle your library, then reveal the top card. if it"..."s a land card, you may put it onto the battlefield and return ~ to its owner's hand. | 1 | Unexpected Results | gtc |
-| target land becomes a N/N elemental creature with flying until end of turn. it's still a land. | 1 | Hydroform | gtc |
 | target player loses N life, discards a card, then sacrifices a permanent of their choice. cipher (then you may exile ~ card encoded on a creature you control. w | 1 | Undercity Plague | gtc |
 | target player mills four cards. you draw a card for each creature card put into their graveyard ~. | 1 | Coerced Confession | gtc |
 | target player sacrifices a creature of their choice, then gains life equal to that creature's toughness. | 1 | Devour Flesh | gtc |
@@ -315,7 +310,6 @@
 | when ~ enters, for each opponent, you may cast up to one target instant or sorcery card from that player's graveyard without paying its mana cost. if a spell ca | 1 | Diluvian Primordial | gtc |
 | when ~ enters, for each opponent, you may put up to one target creature card from that player's graveyard onto the battlefield under your control. | 1 | Sepulchral Primordial | gtc |
 | when ~ enters, pay any amount of life. target opponent reveals that many cards from their hand. you choose one of them and exile it. | 1 | Vizkopa Confessor | gtc |
-| when ~ enters, return a creature you control to its owner's hand. | 1 | Keymaster Rogue | gtc |
 | when ~ enters, target player reveals cards from the top of their library until they reveal a land card, then puts those cards into their graveyard. | 1 | Balustrade Spy | gtc |
 | whenever a +N/+N counter is put on ~, you may draw a card. | 1 | Fathom Mage | gtc |
 | whenever a creature card is put into an opponent"..."s legendary in addition to its other types, and it has hexproof and ~. | 1 | Lazav, Dimir Mastermind | gtc |
@@ -335,7 +329,6 @@
 | {M}{M}: return ~ to its owner's hand. | 1 | Agoraphobia | gtc |
 | {M}{M}: ~ becomes a N/N blue and black horror artifact creature until end of turn and can't be blocked ~. | 1 | Dimir Keyrune | gtc |
 | {M}{M}: ~, each creature you control enters with an additional +N/+N counter on it. | 1 | Zameck Guildmage | gtc |
-| {M}{M}{M}: target land you control becomes a N/N elemental creature until end of turn. it's still a land. | 1 | Skarrg Guildmage | gtc |
 | {M}{M}{M}: whenever a card is put into an opponent's graveyard from anywhere ~, that player loses N life. | 1 | Duskmantle Guildmage | gtc |
 | {M}{M}{M}: whenever you gain life ~, each opponent loses that much life. | 1 | Vizkopa Guildmage | gtc |
 | ~ gets +N/+N for each creature card in your opponents' graveyards. | 1 | Wight of Precinct Six | gtc |

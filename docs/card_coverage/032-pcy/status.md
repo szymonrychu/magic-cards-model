@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 4 | 21.1% |
-| Works (untested) | 11 | 57.9% |
-| Partial (unaudited) | 1 | 5.3% |
-| Not working | 3 | 15.8% |
+| Tested | 5 | 26.3% |
+| Works (untested) | 12 | 63.2% |
+| Partial (unaudited) | 0 | 0.0% |
+| Not working | 2 | 10.5% |
 
 ## Cards needing work
 
@@ -28,14 +28,13 @@
 |---|---|---|---|---|---|
 | Jolrael, Empress of Beasts | silent | {2}{G}, {T}, Discard two cards: All lands target player controls become 3/3 creatures until end of turn. They're still lands. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Panic Attack | silent | Up to three target creatures can't block this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Spiketail Hatchling | silent | Sacrifice this creature: Counter target spell unless its controller pays {1}. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Living Terrain | unaudited | Enchanted land is a 5/6 green Treefolk creature that's still a land. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Coastal Hornclaw | handled | Sacrifice a land: This creature gains flying until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Diving Griffin | handled | Flying | machines/combat.py | Y/-/- | not_tested |
 | Lesser Gargadon | handled | Whenever this creature attacks or blocks, sacrifice a land. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Plague Wind | handled | Destroy all creatures you don't control. They can't be regenerated. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ridgeline Rager | handled | {R}: This creature gets +1/+0 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Searing Wind | handled | Searing Wind deals 10 damage to any target. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Spiketail Hatchling | handled | Sacrifice this creature: Counter target spell unless its controller pays {1}. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Spitting Spider | handled | Sacrifice a land: This creature deals 1 damage to each creature with flying. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Spore Frog | handled | Sacrifice this creature: Prevent all combat damage that would be dealt this turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Sword Dancer | handled | {W}{W}: Target attacking creature gets -1/-0 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -45,12 +44,13 @@
 ## Fully supported
 
 <details>
-<summary>4 cards</summary>
+<summary>5 cards</summary>
 
 - Avatar of Hope
 - Avatar of Might
 - Avatar of Woe
 - Inflame
+- Living Terrain
 
 </details>
 
@@ -58,8 +58,6 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| enchanted land is a N/N green treefolk creature that's still a land. | 1 | Living Terrain | pcy |
-| sacrifice ~: counter target spell unless its controller pays {M}. | 1 | Spiketail Hatchling | pcy |
 | up to three target creatures can't block ~. | 1 | Panic Attack | pcy |
 | {M}{M}, {M}, discard two cards: all lands target player controls become N/N creatures until end of turn. they're still lands. | 1 | Jolrael, Empress of Beasts | pcy |
 

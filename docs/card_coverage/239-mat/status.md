@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 10 | 20.4% |
-| Works (untested) | 12 | 24.5% |
-| Partial (unaudited) | 4 | 8.2% |
-| Not working | 23 | 46.9% |
+| Tested | 14 | 28.6% |
+| Works (untested) | 13 | 26.5% |
+| Partial (unaudited) | 0 | 0.0% |
+| Not working | 22 | 44.9% |
 
 ## Cards needing work
 
@@ -28,7 +28,6 @@
 |---|---|---|---|---|---|
 | Arni Metalbrow | silent | Whenever a creature you control attacks or enters attacking, you may pay {1}{R}. If you do, you may put a creature card with mana value less than that creature' | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Calix, Guided by Fate | silent | Whenever Calix or an enchanted creature you control deals combat damage to a player, you may create a token that's a copy of a nonlegendary enchantment you cont | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Coppercoat Vanguard | silent | Each other Human you control gets +1/+0 and has ward {1}. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Cosmic Rebirth | silent | Choose target permanent card in your graveyard. If it has mana value 3 or less, you may put it onto the battlefield. If you don't put it onto the battlefield, p | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Death-Rattle Oni | silent | When this creature enters, destroy all other creatures that were dealt damage this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Feast of the Victorious Dead | silent | At the beginning of your end step, if one or more creatures died this turn, you gain that much life and distribute that many +1/+1 counters among any number of  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -49,12 +48,9 @@
 | Vesuvan Drifter | silent | At the beginning of each combat, you may reveal the top card of your library. If you reveal a creature card this way, this creature becomes a copy of that card  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Nahiri, Forged in Fury | notice | Whenever an equipped creature you control attacks, exile the top card of your library. You may play that card this turn. You may cast Equipment spells this way  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Urborg Scavengers | notice | This creature has flying as long as a card exiled with it has flying. The same is true for first strike, double strike, deathtouch, haste, hexproof, indestructi | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Deification | unaudited | Planeswalkers you control of the chosen type have hexproof. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Gold-Forged Thopteryx | unaudited | Each legendary permanent you control has ward {2}. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Niv-Mizzet, Supreme | unaudited | Each instant and sorcery card in your graveyard that's exactly two colors has jump-start. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Sigarda, Font of Blessings | unaudited | Other permanents you control have hexproof. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Animist's Might | handled | This spell costs {2} less to cast if it targets a legendary creature you control. Target creature you control deals damage equal to twice its power to target cr | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Campus Renovation | handled | Return up to one target artifact or enchantment card from your graveyard to the battlefield. Exile the top two cards of your library. Until the end of your next | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Coppercoat Vanguard | handled | Each other Human you control gets +1/+0 and has ward {1}. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Danitha, New Benalia's Light | handled | Once during each of your turns, you may cast an Aura or Equipment spell from your graveyard. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Drannith Ruins | handled | {2}, {T}: Put two +1/+1 counters on target non-Human creature that entered this turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Harnessed Snubhorn | handled | Whenever this creature deals combat damage to a player, return target artifact or enchantment card from your graveyard to the battlefield. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -69,17 +65,21 @@
 ## Fully supported
 
 <details>
-<summary>10 cards</summary>
+<summary>14 cards</summary>
 
 - Ayara's Oathsworn
 - Blot Out
+- Deification
+- Gold-Forged Thopteryx
 - Jolrael, Voice of Zhalfir
 - Leyline Immersion
 - Narset, Enlightened Exile
 - Nashi, Moon's Legacy
+- Niv-Mizzet, Supreme
 - Rebuild the City
 - Reckless Handling
 - Samut, Vizier of Naktamun
+- Sigarda, Font of Blessings
 - Undercity Upheaval
 
 </details>
@@ -95,12 +95,7 @@
 | at the beginning of your upkeep, add {M} for each artifact you control. ~ can"..."t lose ~ as steps and phases end. | 1 | Karn, Legacy Reforged | mat |
 | at the beginning of your upkeep, each player exiles cards from the top of their library until they exile a nonland card. an opponent chooses a nonland card exil | 1 | Plargg and Nassari | mat |
 | choose target permanent card in your graveyard. if it has mana value N or less, you may put it onto the battlefield. if you don't put it onto the battlefield, p | 1 | Cosmic Rebirth | mat |
-| each instant and sorcery card in your graveyard that's exactly two colors has jump-start. | 1 | Niv-Mizzet, Supreme | mat |
-| each legendary permanent you control has ward {M}. | 1 | Gold-Forged Thopteryx | mat |
-| each other human you control gets +N/+N and has ward {M}. | 1 | Coppercoat Vanguard | mat |
 | each planeswalker with one or more loyalty counters on it loses all abilities and is a creature with power and toughness each equal to the number of loyalty cou | 1 | Spark Rupture | mat |
-| other permanents you control have hexproof. | 1 | Sigarda, Font of Blessings | mat |
-| planeswalkers you control of the chosen type have hexproof. | 1 | Deification | mat |
 | return all noncreature, nonland permanents to their owners' hands. | 1 | Filter Out | mat |
 | when ~ enters, destroy all other creatures that were dealt damage ~. | 1 | Death-Rattle Oni | mat |
 | when ~ enters, exile up to two target legendary creature cards from your graveyard. you draw N cards and you lose N life, where N is the greatest mana value amo | 1 | The Kenriths' Royal Funeral | mat |

@@ -17,9 +17,9 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 20 | 14.0% |
+| Tested | 22 | 15.4% |
 | Works (untested) | 79 | 55.2% |
-| Partial (unaudited) | 2 | 1.4% |
+| Partial (unaudited) | 0 | 0.0% |
 | Not working | 42 | 29.4% |
 
 ## Cards needing work
@@ -39,7 +39,7 @@
 | Finest Hour | silent | Whenever a creature you control attacks alone, if it's the first combat phase of the turn, untap that creature. After this phase, there is an additional combat  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Giant Ambush Beetle | silent | When this creature enters, you may have target creature block it this turn if able. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Glassdust Hulk | silent | Whenever another artifact you control enters, this creature gets +1/+1 until end of turn and can't be blocked this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Glory of Warfare | silent | During your turn, creatures you control get +2/+0. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Glory of Warfare | silent | During turns other than yours, creatures you control get +0/+2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Grixis Grimblade | silent | As long as you control another multicolored permanent, this creature gets +1/+1 and has deathtouch. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Jund Hackblade | silent | As long as you control another multicolored permanent, this creature gets +1/+1 and has haste. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Karrthus, Tyrant of Jund | silent | When Karrthus enters, gain control of all Dragons, then untap all Dragons. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -68,8 +68,6 @@
 | Slave of Bolas | notice | Gain control of target creature. Untap that creature. It gains haste until end of turn. Sacrifice it at the beginning of the next end step. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Vengeful Rebirth | notice | Return target card from your graveyard to your hand. If you return a nonland card to your hand this way, Vengeful Rebirth deals damage equal to that card's mana | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Zealous Persecution | notice | Until end of turn, creatures you control get +1/+1 and creatures your opponents control get -1/-1. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Spellbreaker Behemoth | unaudited | Creature spells you control with power 5 or greater can't be countered. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Trace of Abundance | unaudited | Enchanted land has shroud. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Bant Sojourners | handled | When you cycle this card and when this creature dies, you may create a 1/1 white Soldier creature token. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Behemoth Sledge | handled | Equipped creature gets +2/+2 and has trample and lifelink. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Bituminous Blast | handled | Cascade (When you cast this spell, exile cards from the top of your library until you exile a nonland card that costs less. You may cast it without paying its m | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -153,7 +151,7 @@
 ## Fully supported
 
 <details>
-<summary>20 cards</summary>
+<summary>22 cards</summary>
 
 - Anathemancer
 - Architects of Will
@@ -174,6 +172,8 @@
 - Sages of the Anima
 - Sigil Captain
 - Spellbound Dragon
+- Spellbreaker Behemoth
+- Trace of Abundance
 - Violent Outburst
 
 </details>
@@ -193,12 +193,10 @@
 | at the beginning of your upkeep, you may put a feather counter on target creature. if you do, that creature has base power and toughness N/N and has flying for  | 1 | Aven Mimeomancer | arb |
 | choose a nonland card name. target player reveals their hand. ~ deals N damage to that player for each card with the chosen name revealed ~. search that player' | 1 | Thought Hemorrhage | arb |
 | counter up to two target spells. | 1 | Double Negative | arb |
-| creature spells you control with power N or greater can't be countered. | 1 | Spellbreaker Behemoth | arb |
 | destroy all blocking creatures and all blocked creatures. | 1 | Fight to the Death | arb |
 | discard your hand. draw seven cards, then discard three cards at random. | 1 | Drastic Revelation | arb |
-| during your turn, creatures you control get +N/+N. | 1 | Glory of Warfare | arb |
+| during turns other than yours, creatures you control get +N/+N. | 1 | Glory of Warfare | arb |
 | each other multicolored creature you control gets +N/+N for each of its colors. | 1 | Knight of New Alara | arb |
-| enchanted land has shroud. | 1 | Trace of Abundance | arb |
 | exile target creature card from a graveyard, then create N N/N green saproling creature tokens, where N is the exiled card's toughness. | 1 | Morbid Bloom | arb |
 | gain control of target creature. untap that creature. it gains haste until end of turn. sacrifice it at the beginning of the next end step. | 1 | Slave of Bolas | arb |
 | return all creatures on the battlefield and all creature cards in graveyards to their owners' hands. | 1 | Soulquake | arb |
