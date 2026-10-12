@@ -358,13 +358,28 @@ def counters_self_reference_normalised(text: str, names: tuple[str, ...]) -> str
 
 
 def counters_mana_lines_self_normalised(text: str, names: tuple[str, ...]) -> str:
-    """`counters_self_reference_normalised` for the mana-ability lines of `text`
-    only (activated-ability lines; CR 605.1a: "{T}: Add X mana ..., where X is the number of charge
-    counters on <its own name>"); every other line keeps the name it prints."""
-    return "\n".join(
-        counters_self_reference_normalised(line, names) if ":" in line else line
-        for line in text.split("\n")
-    )
+    """`counters_self_reference_normalised` for the parts of `text` a counter
+    count reads: the cost of an activated ability ("Put a verse counter on
+    Yisan:") and the whole of a mana ability (CR 605.1a: "{T}: Add X mana ...,
+    where X is the number of charge counters on <its own name>"). The effect
+    half of any other line keeps the name it prints."""
+    return "\n".join(map(lambda line: _normalised_line(line, names), text.split("\n")))
+
+
+def _normalised_line(line: str, names: tuple[str, ...]) -> str:
+    cost, colon, effect = line.partition(":")
+    if not colon:
+        return line
+    if ": add " in line.lower():
+        return counters_self_reference_normalised(line, names)
+    if names:
+        named = "|".join(re.escape(name) for name in names)
+        effect = re.sub(
+            rf"(\bnumber of (?:\+1/\+1 |-1/-1 |[a-z]+ )?counters? on )(?:{named})\b",
+            r"\1this permanent",
+            effect,
+        )
+    return counters_self_reference_normalised(cost, names) + colon + effect
 
 
 def counters_counted_for(text: str, source, names: tuple[str, ...]) -> str:
