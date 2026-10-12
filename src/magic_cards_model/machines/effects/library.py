@@ -3314,6 +3314,58 @@ def _parse_manifest_top_card_clause(clause: str, *, for_spell: bool) -> Targeted
     return effect
 
 
+@MIXED_CLAUSE.rung("s26", for_spell=FORWARD)
+def _parse_cloak_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
+    """CR 701.58a's keyword action: "cloak the top card of your library",
+    "cloak the top card of that player's library" (the player the trigger
+    event names, CR 603.2), "cloak a card from your hand" - read by
+    `machines/face_down_keywords.read_cloak_clause`, performed by its
+    `cloak`. The cloaked permanent is always the controller's: the one who
+    cloaks puts the card onto the battlefield (CR 701.58a)."""
+    from ..face_down_keywords import cloak, cloak_from_library, read_cloak_clause
+
+    read = read_cloak_clause(clause)
+    if read is None:
+        return None
+    count, whose = read
+    if for_spell and whose == "that player's":
+        return None  # "that player" is a trigger event's player (CR 603.2).
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        controller = game.controller_of(stack_object).username
+        source = stack_object.name if for_spell else stack_object.source_name  # type: ignore[union-attr]
+        if whose == "hand":
+            hand = list(game.player(controller).hand)
+            if not hand:
+                return
+            chosen = _choose_one_card(
+                game,
+                game.player(controller),
+                hand,
+                prompt="choose a card from your hand to cloak",
+                source=source,
+                source_id=source_id_of(stack_object),
+            )
+            game.player(controller).zones[Zone.HAND].remove(chosen)
+            cloak(game, controller, chosen)
+            return
+        if whose == "your":
+            owners = [controller]
+        elif whose == "each opponent's":
+            owners = [p.username for p in _opponents(game, controller)]
+        elif whose == "target player's":
+            owners = [
+                t.username for t in game.resolve_targets(stack_object) if isinstance(t, Player)
+            ]
+        else:
+            event = getattr(stack_object, "event", None)
+            owners = [event.player] if event is not None and event.player else []
+        for owner in owners:
+            cloak_from_library(game, controller, owner, count)
+
+    return effect
+
+
 #: CR 701.62a: "'Manifest dread' means 'Look at the top two cards of your
 #: library. Manifest one of them, then put the cards you looked at that were
 #: not manifested this way into your graveyard.'" A bare keyword action, the

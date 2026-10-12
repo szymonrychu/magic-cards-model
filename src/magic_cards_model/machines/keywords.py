@@ -5211,6 +5211,29 @@ def off_zone_abilities(
                 ),
             )
         )
+    # Embalm and eternalize (CR 702.128a, CR 702.129a), after scavenge so a
+    # granted scavenge never renumbers them either.
+    from .face_down_keywords import (
+        TOKEN_COPY_KEYWORDS,
+        token_copy_keyword_abilities,
+        token_copy_keyword_effect_text,
+    )
+
+    for index, kw_ability in enumerate(token_copy_keyword_abilities(card)):
+        pool.append(
+            OffZoneAbility(
+                family="token_copy",
+                index=index,
+                keyword=kw_ability.canonical,
+                zone=Zone.GRAVEYARD,
+                rule=TOKEN_COPY_KEYWORDS[kw_ability.canonical.lower()][0],
+                ability=_synthetic_ability(
+                    kw_ability,
+                    cost_text=f"{kw_ability.cost}, Exile this card from your graveyard",
+                    effect=token_copy_keyword_effect_text(kw_ability.canonical),
+                ),
+            )
+        )
     if state is not None and state.zone is Zone.GRAVEYARD:
         from .graveyard_statics import graveyard_abilities_lost_by
 
@@ -5270,6 +5293,17 @@ def off_zone_activation(
                 f"itself ({entry.rule})"
             )
         return scavenge_activation(game, card, player, entry.index, targets=targets)
+    if entry.family == "token_copy":
+        if targets or sacrificing or discarding or exiling:
+            # CR 702.128a / CR 702.129a spell the whole ability out: its only
+            # object cost is exiling the card itself, and it targets nothing.
+            raise ValueError(
+                f"{card.name}'s {entry.keyword} ability takes no targets and no object costs "
+                f"beyond exiling itself ({entry.rule})"
+            )
+        from .face_down_keywords import token_copy_keyword_activation
+
+        return token_copy_keyword_activation(game, card, player, entry.index)
     if entry.family in ("unearth", "transmute"):
         if targets or sacrificing or discarding or exiling:
             # Same fail-closed refusal as cycling above: CR 702.84a and
@@ -6286,7 +6320,7 @@ def turn_face_up_ban(game: Any, permanent: CardState) -> str | None:
 
 
 def turn_face_up_cost(
-    permanent: CardState, player: str, *, procedure: str | None = None
+    permanent: CardState, player: str, *, procedure: str | None = None, game: Any = None
 ) -> TotalCost | None:
     """The cost this permanent pays to be turned face up right now, or None.
 
@@ -6303,6 +6337,14 @@ def turn_face_up_cost(
     """
     ability = morph_ability(permanent.card)
     morph_cost = _keyword_cost(ability, player) if ability is not None else None
+    if morph_cost is not None and game is not None and ability is not None:
+        # CR 601.2f via CR 702.168d: the card's own "This cost is reduced by
+        # {N} for each ..." sentence, counted when the cost is determined.
+        from .face_down_keywords import face_up_cost_reduction
+
+        reduction = face_up_cost_reduction(game, permanent, player)
+        if reduction.symbols:
+            morph_cost = morph_cost.model_copy(update={"mana": morph_cost.mana.minus(reduction)})
     manifest_cost = manifest_turn_up_cost(permanent) if permanent.manifested else None
     if procedure == "manifest":
         return manifest_cost
@@ -7573,7 +7615,17 @@ KEYWORD_EFFECTS: dict[str, Callable[[KeywordActivation], Any]] = {
     "commander ninjutsu": _ninjutsu_effect,
     "outlast": _outlast_effect,
     "craft": _craft_effect,
+    "embalm": lambda activation: _token_copy_keyword_effect(activation),
+    "eternalize": lambda activation: _token_copy_keyword_effect(activation),
 }
+
+
+def _token_copy_keyword_effect(activation: KeywordActivation) -> Any:
+    """Embalm's and eternalize's effect (CR 702.128a, CR 702.129a) -
+    `machines/face_down_keywords.token_copy_keyword_effect`."""
+    from .face_down_keywords import token_copy_keyword_effect
+
+    return token_copy_keyword_effect(activation)
 
 
 def keyword_activation_effect(keyword: str) -> Callable[[KeywordActivation], Any] | None:

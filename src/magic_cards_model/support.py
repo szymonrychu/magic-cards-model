@@ -155,6 +155,10 @@ from magic_cards_model.machines.effects import (
     trigger_effect_for,
 )
 from magic_cards_model.machines.effects.counters import _SUPPORT_RE
+from magic_cards_model.machines.face_down_keywords import (
+    prints_cloak_clause,
+    token_copy_keyword_abilities,
+)
 from magic_cards_model.machines.keyword_counters import (
     conditional_group_keyword_grant_of_line,
     enters_with_counters_pronoun_fallback,
@@ -498,6 +502,19 @@ def executed_keywords(printing: Card) -> dict[str, str]:
         for ability in keyword_abilities(printing):
             if ability.canonical.lower() in {"equip", "adapt", "eternalize", "unearth"}:
                 found[ability.canonical.lower()] = "machines/abilities.py (activated)"
+
+    # Embalm / eternalize (CR 702.128a, CR 702.129a): the graveyard
+    # activation `machines/face_down_keywords.token_copy_keyword_activation`
+    # builds, reached through `keywords.off_zone_abilities`.
+    for ability in token_copy_keyword_abilities(printing):
+        found[ability.canonical.lower()] = (
+            "machines/face_down_keywords.py (token_copy_keyword_activation)"
+        )
+
+    # Cloak (CR 701.58a): a keyword action the card's own clause performs
+    # through `machines/effects/library._parse_cloak_clause`.
+    if any(k.lower() == "cloak" for k in printing.keywords) and prints_cloak_clause(printing):
+        found["cloak"] = "machines/face_down_keywords.py (cloak, CR 701.58a)"
 
     for keyword_name in printing.keywords:
         lowered = keyword_name.lower()

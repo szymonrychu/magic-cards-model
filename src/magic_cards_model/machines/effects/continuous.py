@@ -12653,6 +12653,18 @@ def _parse_antecedent_then_referent_rider_ability(text: str) -> TargetedClause |
     return _antecedent_then_referent_rider(text, for_spell=False)
 
 
+@ABILITY_TEXT.rung("s11")
+def _parse_turn_face_up_or_exile_and_cast_clause(text: str) -> AbilityEffect | None:
+    """ "Turn this creature face up. If you can't, exile it, then you may cast
+    the exiled card without paying its mana cost." - read and performed by
+    `machines/face_down_keywords.read_turn_up_or_exile_and_cast`."""
+    from ..face_down_keywords import read_turn_up_or_exile_and_cast
+
+    if "face up" not in text.lower():
+        return None
+    return read_turn_up_or_exile_and_cast(text)
+
+
 from ._common import (  # noqa: E402
     _ANAPHOR_GAINS_KEYWORDS_RE,
     _COLOR_LETTERS,

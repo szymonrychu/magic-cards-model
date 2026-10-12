@@ -2203,6 +2203,12 @@ class KeywordAbility(BaseAbility):
     #: sentence's full stop cannot disqualify the line from
     #: `_parse_keywords`'s "no full stop" rule.
     cost_reduction: ActivationCostReduction | None = None
+    #: A trailing "This cost is reduced by {N} for each <quality> card in
+    #: your graveyard." sentence sharing a disguise/morph line's paragraph -
+    #: Fugitive Codebreaker's own - kept as printed and read by
+    #: `machines/face_down_keywords.face_up_cost_reduction` when the
+    #: CR 702.168d turn-up cost is determined (CR 601.2f).
+    face_up_reduction: str | None = None
 
 
 class UnparsedAbility(BaseAbility):
@@ -3528,6 +3534,19 @@ def _parse_line(raw: str, keywords: list[str], face: str) -> list[Ability]:
                     else ability
                     for ability in retried
                 ]
+    if not keyword_abilities:
+        from .face_down_keywords import split_face_up_cost_reduction
+
+        split = split_face_up_cost_reduction(text)
+        if split is not None:
+            head, sentence = split
+            retried = _parse_keywords(head, keywords, {**common, "text": head})
+            keyword_abilities = [
+                ability.model_copy(update={"face_up_reduction": sentence})
+                if isinstance(ability, KeywordAbility)
+                else ability
+                for ability in retried
+            ]
     if keyword_abilities:
         return keyword_abilities
 

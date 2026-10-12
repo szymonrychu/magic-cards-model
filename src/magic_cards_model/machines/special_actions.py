@@ -86,7 +86,7 @@ def why_cannot_turn_face_up_as(
             f"{username} does not control {permanent.card.name}, so only {controller} "
             f"may turn it face up (CR 702.37e, CR 702.168d, CR 701.40b)"
         )
-    total = turn_face_up_cost(permanent, username, procedure=procedure)
+    total = turn_face_up_cost(permanent, username, procedure=procedure, game=game)
     # `Game.why_cannot_turn_face_up` already returned None above, which is
     # exactly the condition under which `turn_face_up_cost` returns a real
     # cost rather than None - see both functions' own docstrings.

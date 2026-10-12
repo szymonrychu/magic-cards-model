@@ -1065,6 +1065,7 @@ def token_copy_of(
     creature_types: Sequence[str] | None = None,
     enters_with_counters: Sequence[tuple[str, int]] = (),
     added_card_type: str | None = None,
+    no_mana_cost: bool = False,
     **options: Any,
 ) -> list[TokenState]:
     """ "Create a token that's a copy of [something]" (CR 701.7a, CR 707.2).
@@ -1136,6 +1137,10 @@ def token_copy_of(
     addition to" keeps every other type), so the copy is an artifact even
     though its original is not.
 
+    `no_mana_cost` is CR 707.9b's mana-cost exception - embalm's and
+    eternalize's own "it has no mana cost" (CR 702.128a, CR 702.129a): the
+    copiable mana cost is blanked, so the copy's mana value is 0.
+
     `tapped` and `attacking` (options) are Flamerush Rider's and Thousand-Faced
     Shadow's "tapped and attacking" (CR 508.4): the copies enter tapped and, with
     `attacking` naming the defender (`TargetRef | str`), already in combat
@@ -1197,8 +1202,12 @@ def token_copy_of(
             or not_legendary
             or colors is not None
             or creature_types is not None
+            or no_mana_cost
         ):
             update: dict[str, Any] = {}
+            if no_mana_cost:
+                update["mana_cost"] = ""
+                update["cmc"] = 0.0
             if power is not None:
                 update["power"] = str(power)
             if toughness is not None:
@@ -1275,7 +1284,8 @@ def token_copy_of(
                 + (":nonlegendary" if not_legendary else "")
                 + (f":cardtype:{added_card_type}" if added_card_type is not None else "")
                 + (f":colors:{''.join(c.value for c in colors)}" if colors is not None else "")
-                + (f":types:{' '.join(creature_types)}" if creature_types is not None else ""),
+                + (f":types:{' '.join(creature_types)}" if creature_types is not None else "")
+                + (":nomanacost" if no_mana_cost else ""),
             )
             copiable = copiable.model_copy(update={"id": new_card_id, **update})
 

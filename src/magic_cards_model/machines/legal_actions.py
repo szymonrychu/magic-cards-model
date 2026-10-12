@@ -1262,7 +1262,7 @@ def _turn_face_up_action(
 ) -> Action | None:
     if why_cannot_turn_face_up(permanent) is not None or turn_face_up_ban(game, permanent):
         return None
-    total = turn_face_up_cost(permanent, player) or TotalCost()
+    total = turn_face_up_cost(permanent, player, game=game) or TotalCost()
     affordable, reason, pays_with = _cost_affordability(game, player, total, candidate_scan)
     cost_str, mana_cost_str = _cost_strings(total)
     return Action(
