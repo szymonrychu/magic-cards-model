@@ -152,6 +152,12 @@ _OPPONENTS_LIFE_GAIN_PROHIBITION_RE = re.compile(
     r"^your opponents can't gain life\.?$", re.IGNORECASE
 )
 
+#: Grievous Wound's "Enchanted player can't gain life." (CR 303.4m, 119.7) - only
+#: the player the Aura is attached to.
+_ENCHANTED_PLAYER_LIFE_GAIN_PROHIBITION_RE = re.compile(
+    r"^enchanted player can't gain life\.?$", re.IGNORECASE
+)
+
 
 #: ecl-T8: a static ability that stops players drawing cards at all -
 #: Maralen of the Mornsong's "Players can't draw cards." CR 121.3: "if an

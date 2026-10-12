@@ -29,6 +29,7 @@ from ..casting import (
     PlayAction,
 )
 from ..decisions import Decision, DecisionKind, source_id_of
+from ..ep01_r3_amounts import event_player_username
 from ..delayed import (
     DelayedTrigger,
     DiscardCardsAtRandomForController,
@@ -3010,3 +3011,32 @@ from .removal import (  # noqa: E402
 from .search import _search_quality_is_readable  # noqa: E402
 from .text import _plain_resolution_sentences, _strip_non_effect_preamble  # noqa: E402
 from .tokens import _is_notice_only, _parse_generic_token_descriptor  # noqa: E402
+
+
+#: "That creature's controller draws a card." (Nessian Boar) - CR 603.2: the
+#: controller of the creature the trigger's event concerns (the blocker, for
+#: "becomes blocked by a creature").
+_EVENT_REFERENT_CONTROLLER_DRAWS_RE = re.compile(
+    rf"^that (?:creature|permanent)'?s controller draws? (?P<n>{COUNT}) cards?\.?$", re.IGNORECASE
+)
+
+
+@MIXED_CLAUSE.rung("s26", for_spell=FORWARD)
+def _parse_event_referent_controller_draws_clause(
+    clause: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`_EVENT_REFERENT_CONTROLLER_DRAWS_RE`'s shape (ability-only)."""
+    if for_spell or " controller draw" not in clause.lower():
+        return None
+    match = _EVENT_REFERENT_CONTROLLER_DRAWS_RE.fullmatch(clause.strip())
+    count = parse_count(match.group("n")) if match else None
+    if count is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        assert isinstance(stack_object, AbilityOnStack)
+        username = event_player_username(game, stack_object, "that creature's controller")
+        if username is not None:
+            game.draw_cards(username, count)
+
+    return effect

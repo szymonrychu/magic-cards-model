@@ -2669,6 +2669,13 @@ def _condition_matches(
             if mine:
                 if event.target_id != source.id:
                     return False
+            elif "enchanted player is dealt" in lowered:
+                # CR 303.4m: Grievous Wound's "Whenever enchanted player is
+                # dealt damage" - the player the Aura is attached to.
+                from ..group_attack_statics import _enchanted_player
+
+                if event.player is None or event.player != _enchanted_player(source):
+                    return False
             elif _HOST_IS_DEALT_DAMAGE_RE.match(lowered.strip()):
                 # CR 303.4b: Pain for All's and Spiteful Shadows' "Whenever
                 # enchanted creature is dealt damage" - the permanent the
@@ -2714,6 +2721,11 @@ def _condition_matches(
         if mine:
             if event.subject_id != source.id:
                 return False
+        elif "enchanted creature deals" in lowered:
+            # CR 303.4b: Visions of Brutality's "Whenever enchanted creature
+            # deals damage" - the permanent the Aura is attached to.
+            if source.attached_to is None or event.subject_id != source.attached_to:
+                return False
         elif not (
             _controller_clause_holds(condition, controller, event.subject_controller)
             and _types_match(event.subject_types, condition)
@@ -2722,7 +2734,13 @@ def _condition_matches(
             return False
         if not _subject_has_required_counter(condition, game, event.subject_id):
             return False
-        if "combat damage" in lowered and not event.combat:
+        if "noncombat damage" in lowered:
+            # CR 120.2a: damage not dealt as a result of combat.
+            if event.combat:
+                return False
+        elif "combat damage" in lowered and not event.combat:
+            return False
+        if "to a planeswalker" in lowered and Type.PLANESWALKER not in (event.target_types or ()):
             return False
         if _DEALS_DAMAGE_TO_A_CREATURE.search(lowered) and (
             event.target_id is None or Type.CREATURE not in (event.target_types or ())

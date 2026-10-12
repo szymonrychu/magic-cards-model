@@ -296,6 +296,15 @@ class DamageLifeMixin:
                 ):
                     continue
                 one_sided = _OPPONENTS_LIFE_GAIN_PROHIBITION_RE.match(text) is not None
+                if _ENCHANTED_PLAYER_LIFE_GAIN_PROHIBITION_RE.match(text):
+                    # CR 303.4m: only the player this Aura is attached to.
+                    from ...machines.group_attack_statics import _enchanted_player
+
+                    if _enchanted_player(source) == username and self._still_has_static_line(
+                        source, text
+                    ):
+                        return f"{username} can't gain life: {source.name} says so (CR 119.7)"
+                    continue
                 if not (
                     one_sided
                     or _LIFE_GAIN_PROHIBITION_RE.match(text)
@@ -1006,6 +1015,7 @@ from ...machines import game_rule_statics  # noqa: E402
 from ._common import (  # noqa: E402
     _DAMAGE_CANT_BE_PREVENTED_RE,
     _DRAW_OR_LIFE_GAIN_PROHIBITION_RE,
+    _ENCHANTED_PLAYER_LIFE_GAIN_PROHIBITION_RE,
     _LIFE_GAIN_PROHIBITION_RE,
     _OPPONENTS_LIFE_GAIN_PROHIBITION_RE,
 )

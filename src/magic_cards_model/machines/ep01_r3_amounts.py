@@ -30,3 +30,52 @@ def creatures_blocking(game, attacker) -> int:
     """How many creatures are blocking `attacker` right now (CR 509.1g)."""
     attack = game.combat.attack_by(attacker.id)
     return 0 if attack is None else len(attack.blockers)
+
+
+# --------------------------------------------------------------------------
+# The trigger's own event as the referent of "that creature", "its controller",
+# "that much", "they" (CR 603.2 - the event that triggered the ability; CR 608.2h
+# reads the object as it last existed).
+# --------------------------------------------------------------------------
+
+
+def resolving_event(game):
+    """The `GameEvent` that raised the ability now resolving, or `None`."""
+    return getattr(game.resolving, "event", None)
+
+
+def event_referent_permanent(game, ability):
+    """The permanent "that creature" / "that planeswalker" names for `ability`.
+
+    A block event names two objects: for "becomes blocked by a creature" the
+    blocker is the referent (CR 509.3d), for "blocks" the attacker. A damage
+    event's referent is the permanent that was dealt damage when there is one
+    (Zagras's "deals combat damage to a planeswalker"), else its source."""
+    from .abilities import TriggerEvent
+
+    event = ability.event
+    if event is None:
+        return None
+    condition = getattr(getattr(ability, "ability", None), "condition", "") or ""
+    if event.event is TriggerEvent.BLOCKS:
+        wanted = event.subject_id if "becomes blocked by" in condition.lower() else event.related_id
+    elif event.event is TriggerEvent.DEALS_DAMAGE:
+        wanted = event.target_id or event.subject_id
+    else:
+        wanted = event.subject_id
+    return None if wanted is None else game.find_by_id(wanted)
+
+
+def event_player_username(game, ability, who):
+    """The player a trigger's "they" / "that player" / "its controller" names:
+    the player the event concerns, or for "its controller" the controller of
+    the event's subject (the damage source, the blocker)."""
+    event = ability.event
+    if event is None:
+        return None
+    if who in ("its controller", "that creature's controller", "that permanent's controller"):
+        if who == "its controller" and event.subject_controller is not None:
+            return event.subject_controller
+        referent = event_referent_permanent(game, ability)
+        return None if referent is None else game.controller_of(referent).username
+    return event.player

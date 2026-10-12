@@ -119,8 +119,8 @@ def _combat(attacker_names, blocker_names, blocks):
     scenario = (
         Scenario()
         .manual_turn_based_actions()
-        .player("alice", battlefield=list(attacker_names))
-        .player("bob", battlefield=list(blocker_names))
+        .player("alice", battlefield=list(attacker_names), library=["Forest"] * 5)
+        .player("bob", battlefield=list(blocker_names), library=["Forest"] * 5)
         .build()
     )
     scenario.start_at(Step.DECLARE_ATTACKERS)
@@ -168,3 +168,174 @@ def test_elvish_berserker_blocked_by_one_gets_one():
     base = int(berserker.card.power)
     _settle(scenario)
     assert berserker.power == base + 1
+
+
+# -- event referents: "that creature", "destroy that planeswalker"
+
+
+def test_nessian_boar_blocker_controller_draws_a_card():
+    scenario, _a, _b = _combat(["Nessian Boar"], ["Grizzly Bears"], [(0, 0)])
+    bob_hand = len(scenario.game.player("bob").hand)
+    _settle(scenario)
+    assert len(scenario.game.player("bob").hand) == bob_hand + 1
+    assert len(scenario.game.player("alice").hand) == 0
+
+
+def test_nessian_boar_draws_once_per_blocker():
+    scenario, _a, _b = _combat(["Nessian Boar"], ["Grizzly Bears"] * 2, [(0, 0), (1, 0)])
+    before = len(scenario.game.player("bob").hand)
+    _settle(scenario)
+    assert len(scenario.game.player("bob").hand) == before + 2
+
+
+def test_evil_eye_of_urborg_destroys_each_creature_that_blocks_it():
+    scenario, _a, (bears,) = _combat(["Evil Eye of Urborg"], ["Grizzly Bears"], [(0, 0)])
+    _settle(scenario)
+    assert bears.zone is Zone.GRAVEYARD
+
+
+def test_evil_eye_of_urborg_spares_creatures_that_do_not_block():
+    scenario, _a, blockers = _combat(
+        ["Evil Eye of Urborg"], ["Grizzly Bears", "Hill Giant"], [(0, 0)]
+    )
+    _settle(scenario)
+    assert blockers[0].zone is Zone.GRAVEYARD
+    assert blockers[1].zone is Zone.BATTLEFIELD
+
+
+# -- damage / life event riders: "that much", "half their life", "destroy that planeswalker"
+
+
+def _board(alice, bob, *, step=Step.PRECOMBAT_MAIN, bob_life=20, alice_life=20):
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("alice", battlefield=list(alice), library=["Forest"] * 6, life=alice_life)
+        .player("bob", battlefield=list(bob), library=["Forest"] * 6, life=bob_life)
+        .build()
+    )
+    scenario.start_at(step)
+    return scenario
+
+
+def _alice(scenario, name):
+    return scenario.find(name, Zone.BATTLEFIELD, "alice")
+
+
+def _bob(scenario, name):
+    return scenario.find(name, Zone.BATTLEFIELD, "bob")
+
+
+def _combat_at_walker(attackers):
+    scenario = _board(["Zagras, Thief of Heartbeats", *attackers], ["Ajani Unrelenting"],
+                      step=Step.DECLARE_ATTACKERS)
+    return scenario
+
+
+def test_zagras_destroys_a_planeswalker_dealt_combat_damage_by_your_creature():
+    scenario = _combat_at_walker(["Elvish Berserker"])
+    ajani = _bob(scenario, "Ajani Unrelenting")
+    scenario.attack_with(_alice(scenario, "Elvish Berserker"), defending=ajani)
+    scenario.no_blocks()
+    scenario.combat_damage()
+    _settle(scenario)
+    assert ajani.zone is Zone.GRAVEYARD
+
+
+def test_zagras_ignores_combat_damage_dealt_to_a_player():
+    scenario = _combat_at_walker(["Elvish Berserker"])
+    scenario.attack_with(_alice(scenario, "Elvish Berserker"))
+    scenario.no_blocks()
+    scenario.combat_damage()
+    _settle(scenario)
+    assert _bob(scenario, "Ajani Unrelenting").zone is Zone.BATTLEFIELD
+
+
+def test_zagras_ignores_noncombat_damage_to_a_planeswalker():
+    scenario = _combat_at_walker([])
+    ajani = _bob(scenario, "Ajani Unrelenting")
+    scenario.game.deal_damage(ajani, 1, source=_alice(scenario, "Zagras, Thief of Heartbeats"))
+    _settle(scenario)
+    assert ajani.zone is Zone.BATTLEFIELD
+
+
+def test_zagras_ignores_a_planeswalker_hit_by_an_opponents_creature():
+    scenario = _board(["Ajani Unrelenting", "Zagras, Thief of Heartbeats"], ["Elvish Berserker"])
+    ajani = _alice(scenario, "Ajani Unrelenting")
+    scenario.game.deal_damage(ajani, 1, source=_bob(scenario, "Elvish Berserker"))
+    _settle(scenario)
+    assert ajani.zone is Zone.BATTLEFIELD
+
+
+def test_visions_of_brutality_costs_the_enchanted_creatures_controller_that_much_life():
+    scenario = _board(["Visions of Brutality"], ["Grizzly Bears"])
+    bears = _bob(scenario, "Grizzly Bears")
+    _alice(scenario, "Visions of Brutality").attach_to(bears)
+    scenario.game.deal_damage(scenario.player("alice"), 2, source=bears)
+    _settle(scenario)
+    assert scenario.player("alice").life == 18
+    assert scenario.player("bob").life == 18
+
+
+def test_visions_of_brutality_counts_damage_to_creatures_too():
+    scenario = _board(["Visions of Brutality", "Hill Giant"], ["Grizzly Bears"])
+    bears = _bob(scenario, "Grizzly Bears")
+    _alice(scenario, "Visions of Brutality").attach_to(bears)
+    scenario.game.deal_damage(_alice(scenario, "Hill Giant"), 2, source=bears)
+    _settle(scenario)
+    assert scenario.player("bob").life == 18
+
+
+def test_visions_of_brutality_ignores_other_creatures():
+    scenario = _board(["Visions of Brutality", "Hill Giant"], ["Grizzly Bears", "Elvish Berserker"])
+    _alice(scenario, "Visions of Brutality").attach_to(_bob(scenario, "Grizzly Bears"))
+    scenario.game.deal_damage(
+        scenario.player("alice"), 2, source=_bob(scenario, "Elvish Berserker")
+    )
+    _settle(scenario)
+    assert scenario.player("bob").life == 20
+
+
+def test_grievous_wound_enchanted_player_loses_half_their_remaining_life_rounded_up():
+    scenario = _board(["Grievous Wound", "Hill Giant"], [])
+    _alice(scenario, "Grievous Wound").attach_to(scenario.player("bob"))
+    scenario.game.deal_damage(scenario.player("bob"), 3, source=_alice(scenario, "Hill Giant"))
+    _settle(scenario)
+    assert scenario.player("bob").life == 8  # 17, then half of 17 rounded up (9) lost
+
+
+def test_grievous_wound_ignores_damage_to_other_players():
+    scenario = _board(["Grievous Wound", "Hill Giant"], [])
+    _alice(scenario, "Grievous Wound").attach_to(scenario.player("bob"))
+    scenario.game.deal_damage(scenario.player("alice"), 3, source=_alice(scenario, "Hill Giant"))
+    _settle(scenario)
+    assert scenario.player("alice").life == 17
+
+
+def test_grievous_wound_enchanted_player_cannot_gain_life():
+    scenario = _board(["Grievous Wound"], [])
+    wound = _alice(scenario, "Grievous Wound")
+    wound.attach_to(scenario.player("bob"))
+    scenario.game.gain_life(scenario.player("bob"), 5)
+    assert scenario.player("bob").life == 20
+    scenario.game.gain_life(scenario.player("alice"), 5)
+    assert scenario.player("alice").life == 25
+
+
+def test_lich_s_tomb_sacrifices_a_permanent_for_each_life_lost():
+    scenario = _board(["Lich's Tomb", "Forest", "Forest", "Grizzly Bears"], [])
+    forests = [c for c in scenario.game.permanents_controlled_by("alice") if c.name == "Forest"]
+    scenario.will_choose_cards(*forests, username="alice")
+    scenario.game.lose_life(scenario.player("alice"), 2)
+    _settle(scenario)
+    assert [c.name for c in scenario.game.permanents_controlled_by("alice")] == [
+        "Lich's Tomb",
+        "Grizzly Bears",
+    ]
+
+
+def test_lich_s_tomb_sacrifices_everything_when_the_loss_exceeds_the_board():
+    scenario = _board(["Lich's Tomb", "Forest"], [])
+    scenario.game.lose_life(scenario.player("alice"), 5)
+    _settle(scenario)
+    assert scenario.game.permanents_controlled_by("alice") == []
