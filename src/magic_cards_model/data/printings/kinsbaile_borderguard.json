@@ -33,7 +33,7 @@
   },
   "mana_cost": "{1}{W}{W}",
   "cmc": 3.0,
-  "type_line": "Creature — Kithkin Soldier",
+  "type_line": "Creature \u2014 Kithkin Soldier",
   "oracle_text": "This creature enters with a +1/+1 counter on it for each other Kithkin you control.\nWhen this creature dies, create a 1/1 white Kithkin Soldier creature token for each counter on it.",
   "power": "1",
   "toughness": "1",
@@ -50,16 +50,16 @@
       "id": "82a2e219-9e84-4f54-88e2-3925e48c4827",
       "component": "combo_piece",
       "name": "Kinsbaile Borderguard",
-      "type_line": "Creature — Kithkin Soldier",
+      "type_line": "Creature \u2014 Kithkin Soldier",
       "uri": "https://api.scryfall.com/cards/82a2e219-9e84-4f54-88e2-3925e48c4827"
     },
     {
       "object": "related_card",
-      "id": "ad29eb21-7ee3-4a67-9601-a62ea0cbe4c0",
+      "id": "064ce217-2a93-41ae-b26a-e80cbb2353e4",
       "component": "token",
       "name": "Kithkin Soldier",
-      "type_line": "Token Creature — Kithkin Soldier",
-      "uri": "https://api.scryfall.com/cards/ad29eb21-7ee3-4a67-9601-a62ea0cbe4c0"
+      "type_line": "Token Creature \u2014 Kithkin Soldier",
+      "uri": "https://api.scryfall.com/cards/064ce217-2a93-41ae-b26a-e80cbb2353e4"
     }
   ],
   "legalities": {
@@ -127,13 +127,13 @@
   "textless": false,
   "booster": true,
   "story_spotlight": false,
-  "edhrec_rank": 18434,
-  "penny_rank": 8136,
+  "edhrec_rank": 18487,
+  "penny_rank": 8207,
   "prices": {
-    "usd": "6.23",
+    "usd": "6.15",
     "usd_foil": "11.75",
     "usd_etched": null,
-    "eur": "1.22",
+    "eur": "1.70",
     "eur_foil": "3.51",
     "tix": "0.02"
   },

@@ -1624,6 +1624,10 @@ def _subject_has_required_counter(condition: str, game: "Game", subject_id: obje
 _ONE_OR_MORE_WORDS = re.compile(r"\bone or more\b")
 
 
+#: CR 509.3b: "blocks a creature" / "blocks target ..." - one trigger per attacker.
+_BLOCKS_A_CREATURE_RE = re.compile(r"\bblocks (?:a|an|another|target|that|each)\b")
+
+
 def condition_matches(
     game: "Game",
     ability: TriggeredAbility,
@@ -2221,6 +2225,13 @@ def _condition_matches(
             return _equipped_blocks_or_is_blocked_once(game, event, source.attached_to)
         if mine:
             blocks = "blocks" in lowered and event.subject_id == source.id
+            if blocks and not _BLOCKS_A_CREATURE_RE.search(lowered):
+                # CR 509.3a: a plain "Whenever [a creature] blocks" triggers
+                # once each combat for that creature however many attackers it
+                # blocks - only the pair of its first blocked attacker counts
+                # (CR 509.3b's "blocks a creature" form is once per attacker).
+                first = game.combat.attack_blocked_by(source.id)
+                blocks = first is None or first.attacker_id == event.related_id
             blocked = "becomes blocked" in lowered and (
                 event.related_id == source.id or equipped_blocked
             )

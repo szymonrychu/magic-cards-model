@@ -43,6 +43,7 @@ from ..cost import (
     removes_announced_number_of_counters,
 )
 from ..decisions import Decision, DecisionKind, source_id_of
+from ..ep01_r3_amounts import counters_on_it_total, creatures_blocked_by, creatures_blocking
 from ..layers import (
     BASIC_LAND_TYPES,
     Characteristics,
@@ -586,7 +587,7 @@ def _count_permanents_matching_any(
 _FILTERED_PERMANENT_COUNT_RE = re.compile(
     r"^(?:the )?(?P<measure>number of|total mana value of) (?P<other>other )?"
     r"(?:(?P<status>tapped|untapped) )?(?:(?P<quality>modified|equipped) )?"
-    r"(?P<qualifier>[a-z]+) you control"
+    r"(?P<qualifier>[a-z]+) you control(?: named (?P<named>[^.]+?))?"
     r"(?P<other_than> other than (?:this (?:creature|permanent|artifact|enchantment)|it))?"
     r"(?: with (?:(?P<stat>power|toughness|mana value) (?P<bound>\d+) or "
     r"(?P<direction>less|greater|more)|(?P<counter>[a-z+/-]+) counters? on (?:them|it)))?$",
@@ -600,6 +601,7 @@ _FILTERED_PERMANENT_COUNT_MARKERS = (
     " with ",
     "total mana value",
     "other ",
+    " named ",
 )
 #: "the greatest number of creatures you control that have a creature type in
 #: common" (Basalt Ravager, Skemfar Shadowsage, White Lotus Tile).
@@ -637,6 +639,10 @@ _COUNT_COLOR_PAIRS_RE = re.compile(
     r"that are exactly two colors$",
     re.IGNORECASE,
 )
+#: "creature it's blocking" / "creature blocking it" (see `_for_each_multiplier`).
+_CREATURES_BLOCKING_RE = re.compile(
+    r"^creatures? (?:it['’]s blocking|(?P<blocked_by_it>blocking it))$", re.IGNORECASE
+)
 #: "the number of times it was kicked" (Deathforge Shaman's "twice ..."): CR
 #: 702.33d's count, read off the cast record of the spell the permanent was.
 _TIMES_KICKED_RE = re.compile(
@@ -669,7 +675,8 @@ def _filtered_permanent_count(phrase: str) -> tuple[SourcedCount, bool] | None:
     other = match.group("other") is not None or match.group("other_than") is not None
     stat = (match.group("stat") or "").lower()
     counter_word = match.group("counter")
-    if not (total_mana_value or quality or other or stat or counter_word):
+    named = (match.group("named") or "").strip().lower()
+    if not (total_mana_value or quality or other or stat or counter_word or named):
         return None  # a plain "the number of <type> you control" is not this reader's
     qualifier = match.group("qualifier")
     counts_any_permanent = qualifier.lower() in ("permanent", "permanents")
@@ -695,6 +702,8 @@ def _filtered_permanent_count(phrase: str) -> tuple[SourcedCount, bool] | None:
                 continue
             if other and source is not None and permanent.id == source.id:
                 continue
+            if named and permanent.name.lower() != named:
+                continue  # "named Hare Apparent" (Hare Apparent): by printed name
             if card_type is not None and card_type not in chars.types:
                 continue
             if subtype is not None and not any(word.lower() == subtype for word in chars.subtypes):
@@ -2957,7 +2966,7 @@ _COLOR_AMONG_OTHER_QUALITY_RE = re.compile(
 #: `hangarback_dies` reads the identical ternary rather than `.counters`
 #: alone.
 _COUNTER_ON_IT_RE = re.compile(
-    r"^(?P<kind>\+1/\+1|-1/-1|[a-z]+) counters? on (?:it|this \w+)$", re.IGNORECASE
+    r"^(?:(?P<kind>\+1/\+1|-1/-1|[a-z]+) )?counters? on (?:it|this \w+)$", re.IGNORECASE
 )
 
 
@@ -3112,8 +3121,25 @@ def _for_each_multiplier(phrase: str) -> Callable[["Game", str, str | None], int
     if types_among is not None:
         # CR 608.2h: counted once, as the effect applies.
         return lambda game, controller, _source_id: len(types_among(game, controller))
+    if (blocking := _CREATURES_BLOCKING_RE.fullmatch(stripped)) is not None:
+        # "for each creature it's blocking" (Guardian of the Gateless) / "for
+        # each creature blocking it" (Elvish Berserker): the combat count at
+        # resolution (CR 608.2h), the ability's source being the creature.
+        count_blockers = blocking.group("blocked_by_it") is not None
+
+        def count_creatures_in_block(game: "Game", _controller: str, source_id: str | None) -> int:
+            source = None if source_id is None else game.find_by_id(UUID(source_id))
+            if source is None:
+                return 0
+            if count_blockers:
+                return creatures_blocking(game, source)
+            return creatures_blocked_by(game, source)
+
+        return count_creatures_in_block
     if match := _COUNTER_ON_IT_RE.fullmatch(stripped):
-        kind = _counter_kind(match.group("kind"))
+        # No kind word ("for each counter on it", Kinsbaile Borderguard) counts
+        # every counter on the object (CR 122.1).
+        kind = _counter_kind(match.group("kind")) if match.group("kind") else None
 
         def count_counters_on_it(game: "Game", _controller: str, source_id: str | None) -> int:
             if source_id is None:
@@ -3121,10 +3147,7 @@ def _for_each_multiplier(phrase: str) -> Callable[["Game", str, str | None], int
             source = game.find_by_id(UUID(source_id))
             if source is None:
                 return 0
-            counters = (
-                source.counters if source.zone is Zone.BATTLEFIELD else source.last_known_counters
-            )
-            return counters[kind]
+            return counters_on_it_total(source, kind)
 
         return count_counters_on_it
     if match := _COLOR_AMONG_OTHER_QUALITY_RE.fullmatch(stripped):

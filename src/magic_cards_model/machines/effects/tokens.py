@@ -4178,6 +4178,42 @@ def _parse_create_tokens_equal_to_event_subject_stat_clause(
     return effect
 
 
+#: "create a number of `<descriptor>` tokens equal to the number of `<count>`" -
+#: Hare Apparent's "... equal to the number of other creatures you control named
+#: Hare Apparent." The count is any `amount_expression` term, read once as the
+#: ability resolves (CR 608.2h); the "its power|toughness" form is
+#: `_TOKENS_EQUAL_TO_ITS_STAT_RE`'s.
+_TOKENS_EQUAL_TO_AMOUNT_RE = re.compile(
+    r"^create a number of (?P<desc>.+?) tokens equal to (?P<expr>the number of .+?)\.?$",
+    re.IGNORECASE,
+)
+
+
+@MIXED_CLAUSE.rung("s26", for_spell=FORWARD)
+def _parse_create_tokens_equal_to_amount_clause(
+    text: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`_TOKENS_EQUAL_TO_AMOUNT_RE`'s shape, or `None`. CR 107.1b: a zero count
+    creates nothing."""
+    if "tokens equal to the number of" not in text.lower():
+        return None
+    match = _TOKENS_EQUAL_TO_AMOUNT_RE.fullmatch(" ".join(text.strip().split()))
+    if match is None:
+        return None
+    reader = amount_expression(match.group("expr"))
+    template = _parse_token_clause(f"create a {match.group('desc')} token", for_spell=for_spell)
+    if reader is None or template is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        source = stack_object if isinstance(stack_object, CardState) else stack_object.source(game)
+        controller = game.controller_of(stack_object).username
+        for _ in range(reader(game, controller, source, getattr(stack_object, "x_value", 0))):
+            template(game, stack_object)
+
+    return effect
+
+
 def _token_creator_for_count(desc: str) -> Callable[["Game", "StackObject", int], None] | None:
     """The token half of "create a number of `<desc>` tokens equal to ...":
     the same one-token reader `_parse_token_clause` already gives "create a
