@@ -3315,6 +3315,11 @@ def _unread_condition_matches(
                 return True
         return False
 
+    if _A_CARD_INTO_GRAVEYARD_FROM_LIBRARY_CONDITION.match(condition):
+        if event.event is not ExtraTriggerEvent.PUT_INTO_GRAVEYARD:
+            return False
+        return bool(library_graveyard_arrivals(game, condition, controller))
+
     match = _SELF_PUT_INTO_GRAVEYARD_FROM_ANYWHERE_CONDITION.match(condition)
     if match is not None and mine:
         # CR 603.2/603.10: the source's own arrival at a graveyard, from any
@@ -5928,6 +5933,7 @@ def _state_condition_holds(game: "Game", ability: TriggeredAbility, source: Card
 
 
 from ._common import (  # noqa: E402
+    _A_CARD_INTO_GRAVEYARD_FROM_LIBRARY_CONDITION,
     _ABILITY_ACTIVATED_CONDITION,
     _CLASS_BECOMES_LEVEL_CONDITION,
     _COUNTERS_PUT_CONDITION,
@@ -5976,5 +5982,6 @@ from .collect import (  # noqa: E402
     batched_attackers,
     batched_combat_damage_sources,
     discard_occurrences,
+    library_graveyard_arrivals,
 )
 from .events import CastConditionNotice, InterveningIfNotice  # noqa: E402

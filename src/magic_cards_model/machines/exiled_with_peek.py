@@ -355,3 +355,49 @@ def parse_exile_discarded_card_with_counter(text: str):
             return
 
     return effect
+
+
+_EXILE_THAT_CARD_RE = re.compile(
+    r"^exile (?:it|that card)(?: with an? (?P<counter>[a-z]+) counter on it)?"
+    r"(?: and (?P<rest>.+?))?\.?$",
+    re.IGNORECASE,
+)
+
+
+def parse_exile_the_triggering_card(text: str):
+    """ "Exile it with a `<kind>` counter on it." (Grolnok) and "Exile that
+    card and `<more>`." (Undead Alchemist): the card a "whenever a card is put
+    into a graveyard from a library" trigger is about (`GameEvent.subject_id`,
+    stamped with its `zone_change_stamp`) is exiled from that graveyard and
+    linked to the ability's source (CR 607.2a). A card that has since left the
+    graveyard is a new object (CR 400.7) and is not found. `<more>` is an
+    ordinary effect run afterwards (the Zombie token)."""
+    match = _EXILE_THAT_CARD_RE.fullmatch(" ".join(text.split()))
+    if match is None:
+        return None
+    rest = None
+    if match.group("rest"):
+        from .effects.dispatch import _ability_effect_or_notice
+
+        rest = _ability_effect_or_notice(match.group("rest"))
+        if rest is None or getattr(rest, "__name__", "").endswith("notice_only"):
+            return None
+    counter = match.group("counter")
+    counter = counter.lower() if counter else None
+
+    def effect(game: Game, ability) -> None:
+        from .exile_top_marked import mark_exiled
+
+        event = getattr(ability, "event", None)
+        card = game.find_by_id(event.subject_id) if event and event.subject_id else None
+        if (
+            card is not None
+            and card.zone is Zone.GRAVEYARD
+            and card.zone_change_stamp == event.zone_change_stamp
+        ):
+            (moved,) = game.exile_cards([card])
+            mark_exiled(game, ability, moved, counter=counter)
+        if rest is not None:
+            rest(game, ability)
+
+    return effect

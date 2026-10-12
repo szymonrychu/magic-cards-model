@@ -26,6 +26,7 @@ from ..designations import designation_holds, split_as_long_as
 
 if TYPE_CHECKING:  # pragma: no cover - import cycle: Game builds on the machines
     from ...models.game import Game
+    from ...models.game.records import GraveyardArrival
 
     # `.cost` imports names from this module and `.keywords` imports
     # `AbilityOnStack` itself, so neither can be imported for real up here -
@@ -74,7 +75,9 @@ def _unread_trigger_events(condition: str) -> frozenset[TriggerEvent | ExtraTrig
         return frozenset({ExtraTriggerEvent.COUNTERS_PUT})
     if _ONE_OR_MORE_BECOME_TAPPED_CONDITION.match(lowered):
         return frozenset({ExtraTriggerEvent.PERMANENTS_TAPPED})
-    if _ONE_OR_MORE_CARDS_INTO_YOUR_GRAVEYARD_CONDITION.match(lowered):
+    if _ONE_OR_MORE_CARDS_INTO_YOUR_GRAVEYARD_CONDITION.match(
+        lowered
+    ) or _A_CARD_INTO_GRAVEYARD_FROM_LIBRARY_CONDITION.match(lowered):
         return frozenset({ExtraTriggerEvent.PUT_INTO_GRAVEYARD})
     if _LAND_ADDED_CHOSEN_MANA_CONDITION.match(lowered):
         return frozenset({ExtraTriggerEvent.MANA_ADDED})
@@ -1612,6 +1615,39 @@ def discard_occurrences(
     return len(ids)
 
 
+def library_graveyard_arrivals(
+    game: "Game", condition: str, controller: str
+) -> "list[tuple[GraveyardArrival, CardState]]":
+    """The cards of `game.graveyard_batch` a singular "a `<type>` card is put
+    into `<whose>` graveyard from `<their>` library" condition (Grolnok, Undead
+    Alchemist) is about, each with its arrival: milled or otherwise put from a
+    library (CR 400.6), a card and not a token (CR 108.2), of the named type
+    ("permanent" is CR 110.4a's permanent card), into the controller's own
+    graveyard ("your") or an opponent's. [] when `condition` is another shape."""
+    from .conditions import _types_match
+
+    match = _A_CARD_INTO_GRAVEYARD_FROM_LIBRARY_CONDITION.match(condition.lower().strip())
+    if match is None:
+        return []
+    types = match.group("types")
+    found: "list[tuple[GraveyardArrival, CardState]]" = []
+    for arrival in game.graveyard_batch:
+        if arrival.origin_zone is not Zone.LIBRARY or arrival.card_id is None:
+            continue
+        if (arrival.player == controller) != (match.group("whose") == "your"):
+            continue
+        card = game.find_by_id(arrival.card_id)
+        if card is None or card.token:
+            continue
+        if types == "permanent":
+            matches = arrival.is_permanent_card
+        else:
+            matches = _types_match(tuple(card.types), types)
+        if matches:
+            found.append((arrival, card))
+    return found
+
+
 def _event_for(
     game: "Game", ability: TriggeredAbility, controller: str, event: GameEvent, source: CardState
 ) -> GameEvent:
@@ -1691,6 +1727,23 @@ def triggers_for(game: "Game", event: GameEvent, sources: list[CardState]) -> li
             event=_event_for(game, ability, controller, event, source),
         )
         triggered.append(on_stack)
+        # CR 603.2c: a singular "a card is put into a graveyard from a library"
+        # is one occurrence per card, each about its own card ("it", "that card").
+        arrivals = library_graveyard_arrivals(game, ability.condition, controller)
+        for index, (arrival, card) in enumerate(arrivals):
+            about = event.model_copy(
+                update={
+                    "subject_id": card.id,
+                    "zone_change_stamp": card.zone_change_stamp,
+                    "player": arrival.player,
+                }
+            )
+            if index == 0:
+                on_stack.event = about
+            else:
+                triggered.append(
+                    on_stack.model_copy(update={"id": new_id(), "event": about}, deep=True)
+                )
         # CR 603.2c: one discard instruction of several cards is several
         # occurrences of a per-card "discard a card" condition.
         for _ in range(discard_occurrences(game, ability, source, event) - 1):
@@ -1975,6 +2028,7 @@ def apnap_order(triggered: list[AbilityOnStack], turn_order: list[str]) -> list[
 
 
 from ._common import (  # noqa: E402
+    _A_CARD_INTO_GRAVEYARD_FROM_LIBRARY_CONDITION,
     _ABILITY_ACTIVATED_CONDITION,
     _CLASS_BECOMES_LEVEL_CONDITION,
     _COUNTERS_PUT_CONDITION,

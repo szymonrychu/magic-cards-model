@@ -1085,3 +1085,102 @@ def test_tinybones_stashed_card_is_playable_on_its_controllers_turn_though_not_o
     _resolve_everything(scenario)
     land = scenario.play_land("Mountain", "alice", from_zone=Zone.EXILE)
     assert land.zone is Zone.BATTLEFIELD and land.controller == "alice"
+
+
+# -- a card put into a graveyard from a library: Grolnok, Undead Alchemist -----
+
+
+def _grolnok(library):
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Grolnok, the Omnivore"], library=list(library))
+        .player("bob", library=FILLER)
+        .build()
+    )
+    grolnok = scenario.creature("Grolnok, the Omnivore", "alice")
+    grolnok.summoning_sick = False
+    return scenario, grolnok
+
+
+def test_grolnok_exiles_each_permanent_card_milled_from_its_controllers_library_with_a_croak_counter():
+    scenario, grolnok = _grolnok(["Grizzly Bears", "Lightning Bolt", "Forest", "Island"])
+    _attack_and_resolve(scenario, grolnok)  # "Whenever a Frog you control attacks, mill three cards."
+    exiled = [c for c in scenario.game.exile if c.card.name in ("Grizzly Bears", "Forest")]
+    assert sorted(_names(exiled)) == ["Forest", "Grizzly Bears"]
+    for card in exiled:
+        assert card.counters["croak"] == 1
+    assert _graveyard_names(scenario, "alice") == ["Lightning Bolt"], "a nonpermanent card stays"
+
+
+def test_grolnok_ignores_cards_milled_from_an_opponents_library():
+    scenario, grolnok = _grolnok(["Forest"] * 4)
+    scenario.game.put_into_graveyard(scenario.player("bob").library[0])
+    _resolve_everything(scenario)
+    assert len(scenario.player("bob").graveyard) == 1
+    assert not scenario.game.exile
+
+
+def test_grolnok_ignores_a_permanent_card_that_reached_the_graveyard_from_elsewhere():
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=["Grolnok, the Omnivore"],
+            hand=["Grizzly Bears"],
+            library=FILLER,
+        )
+        .player("bob", library=FILLER)
+        .build()
+    )
+    (bears,) = scenario.player("alice").hand
+    scenario.game.discard_cards("alice", [bears])
+    _resolve_everything(scenario)
+    assert bears.zone is Zone.GRAVEYARD
+
+
+def test_grolnok_plays_its_croaked_cards():
+    scenario, grolnok = _grolnok(["Forest", "Forest", "Forest", "Island"])
+    _attack_and_resolve(scenario, grolnok)
+    scenario.start_at(Step.POSTCOMBAT_MAIN)
+    land = scenario.play_land("Forest", "alice", from_zone=Zone.EXILE)
+    assert land.zone is Zone.BATTLEFIELD
+
+
+def _alchemist(bob_library):
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Undead Alchemist"], library=FILLER)
+        .player("bob", library=list(bob_library))
+        .build()
+    )
+    alchemist = scenario.creature("Undead Alchemist", "alice")
+    alchemist.summoning_sick = False
+    return scenario, alchemist
+
+
+def test_undead_alchemist_exiles_each_creature_card_milled_from_an_opponent_and_makes_a_zombie():
+    scenario, alchemist = _alchemist(
+        ["Grizzly Bears", "Forest", "Hill Giant", "Lightning Bolt", "Island", "Island"]
+    )
+    _to_combat_damage(scenario, alchemist)  # the Zombie's combat damage mills bob instead
+    assert scenario.player("bob").life == 20
+    assert sorted(_graveyard_names(scenario, "bob")) == ["Forest", "Lightning Bolt"]
+    assert sorted(c.card.name for c in scenario.game.exile) == ["Grizzly Bears", "Hill Giant"]
+    zombies = [
+        c for c in scenario.game.battlefield if c.token and c.controller == "alice"
+    ]
+    assert len(zombies) == 2
+    assert all(z.token and (z.power, z.toughness) == (2, 2) for z in zombies)
+
+
+def test_undead_alchemist_ignores_creature_cards_milled_from_its_controllers_library():
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Undead Alchemist"], library=["Grizzly Bears", "Island"])
+        .player("bob", library=FILLER)
+        .build()
+    )
+    scenario.game.put_into_graveyard(scenario.player("alice").library[0])
+    _resolve_everything(scenario)
+    assert [c for c in scenario.game.battlefield if c.token] == []
+    assert _graveyard_names(scenario, "alice") == ["Grizzly Bears"]
