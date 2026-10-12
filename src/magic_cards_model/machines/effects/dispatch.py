@@ -787,7 +787,10 @@ def parse_clause_effect(clause: str) -> ClauseEffect | None:
 
         def draw_equal_to(game: "Game", player: Player, source: str, source_id: str | None) -> None:
             # CR 608.2h: counted once, as the effect applies.
-            total = reader(game, player.username, None, 0)
+            # "its toughness" (The Pride of Hull Clade's granted trigger) is the
+            # ability's own source, found by id.
+            origin = game.find_by_id(UUID(source_id)) if source_id is not None else None
+            total = reader(game, player.username, origin, 0)
             if total:
                 game.draw_cards(player.username, total)
 

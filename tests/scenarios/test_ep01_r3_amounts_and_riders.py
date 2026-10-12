@@ -659,3 +659,36 @@ def test_the_ancient_one_with_a_land_discard_mills_nothing():
     scenario.activate(one, auto=True)
     _settle(scenario)
     assert len(scenario.player("bob").library) == 10
+
+
+# -- "Until end of turn, target creature you control gets +1/+0, gains "...",
+# -- and can attack as though it didn't have defender" (The Pride of Hull Clade)
+
+
+def test_the_pride_of_hull_clade_attacks_despite_defender_and_draws_by_toughness():
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player(
+            "alice",
+            battlefield=["The Pride of Hull Clade", "Island", "Island", "Island", "Island"],
+            library=["Forest"] * 40,
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    hull = scenario.creature("The Pride of Hull Clade", "alice")
+    assert not scenario.can_attack(hull)
+    scenario.activate(hull, auto=True, targets=[hull])
+    _settle(scenario)
+    assert scenario.can_attack(hull)
+    power, toughness = scenario.game.power_of(hull), scenario.game.toughness_of(hull)
+    while scenario.step is not Step.DECLARE_ATTACKERS:
+        scenario.advance()
+    scenario.attack_with(hull)
+    scenario.no_blocks()
+    scenario.combat_damage()
+    _settle(scenario)
+    assert scenario.player("bob").life == 20 - power
+    assert len(scenario.player("alice").hand) == toughness
