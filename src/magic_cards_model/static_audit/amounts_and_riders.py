@@ -7,7 +7,7 @@ A line is credited only when the PRODUCTION reader performs it:
   that reader's own recogniser.
 """
 
-from magic_cards_model.models.game._damage_life import is_player_rules_static_line
+from magic_cards_model.models.game._continuous import is_player_rules_static_line
 
 
 def reads_amounts_and_riders_line(printing, text, *, card_name=None, legendary=False) -> bool:

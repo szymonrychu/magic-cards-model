@@ -224,6 +224,7 @@ def is_player_rules_static_line(text: str) -> bool:
     return bool(
         _LIFE_GAIN_PROHIBITION_RE.match(line)
         or _OPPONENTS_LIFE_GAIN_PROHIBITION_RE.match(line)
+        or _ENCHANTED_PLAYER_LIFE_GAIN_PROHIBITION_RE.match(line)
         or _DRAW_PROHIBITION_RE.match(line)
         or _DRAW_OR_LIFE_GAIN_PROHIBITION_RE.match(line)
         or _DAMAGE_CANT_BE_PREVENTED_RE.fullmatch(line)
@@ -2055,6 +2056,7 @@ from ._common import (  # noqa: E402
     _DRAW_PROHIBITION_RE,
     _LEGENDARY_TYPE_COUNT_POWER_RE,
     _LIFE_GAIN_PROHIBITION_RE,
+    _ENCHANTED_PLAYER_LIFE_GAIN_PROHIBITION_RE,
     _OPPONENTS_LIFE_GAIN_PROHIBITION_RE,
 )
 from ._conditions import _card_type_named, _permanent_quality  # noqa: E402

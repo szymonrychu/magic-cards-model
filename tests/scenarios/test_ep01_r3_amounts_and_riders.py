@@ -339,3 +339,41 @@ def test_lich_s_tomb_sacrifices_everything_when_the_loss_exceeds_the_board():
     scenario.game.lose_life(scenario.player("alice"), 5)
     _settle(scenario)
     assert scenario.game.permanents_controlled_by("alice") == []
+
+
+# -- group pumps over a state: "attacking creatures", "other modified creatures"
+
+
+def test_thunderstaff_pumps_every_attacking_creature_and_nothing_else():
+    scenario = _board(
+        ["Thunderstaff", "Elvish Berserker", "Hill Giant", "Forest", "Forest"],
+        ["Grizzly Bears"],
+        step=Step.DECLARE_ATTACKERS,
+    )
+    berserker = _alice(scenario, "Elvish Berserker")
+    giant = _alice(scenario, "Hill Giant")
+    scenario.attack_with(berserker)
+    forests = scenario.untapped_sources("Forest", "Forest")
+    scenario.activate(_alice(scenario, "Thunderstaff"), *forests)
+    scenario.pass_until_resolved()
+    assert berserker.power == int(berserker.card.power) + 1
+    assert giant.power == int(giant.card.power)
+    assert _bob(scenario, "Grizzly Bears").power == int(_bob(scenario, "Grizzly Bears").card.power)
+
+
+def test_thunderstaff_pumps_an_opponents_attackers_too():
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("bob", battlefield=["Elvish Berserker"], library=["Forest"] * 6)
+        .player("alice", battlefield=["Thunderstaff", "Forest", "Forest"], library=["Forest"] * 6)
+        .build()
+    )
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    berserker = _bob(scenario, "Elvish Berserker")
+    scenario.attack_with(berserker, defending="alice")
+    scenario.pass_priority("bob")
+    forests = scenario.untapped_sources("Forest", "Forest", username="alice")
+    scenario.activate(_alice(scenario, "Thunderstaff"), *forests, username="alice")
+    scenario.pass_until_resolved()
+    assert berserker.power == int(berserker.card.power) + 1
