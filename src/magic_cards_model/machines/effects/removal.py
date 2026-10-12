@@ -9962,6 +9962,51 @@ def _parse_multi_part_sacrifice_gain_draw_discard_damage_counters_clause(
     return effect
 
 
+#: "Destroy all other creatures that were dealt damage this turn." (Death-Rattle
+#: Oni) - CR 701.8a's destroy over the group fixed as the effect begins (CR
+#: 611.2c), narrowed by the damage history (`Game.damage_dealt_this_turn`, CR
+#: 120.1) read through the same `object_dealt_damage_clause_test` the damage
+#: families' "each creature dealt damage this turn" uses. "Other" leaves out
+#: the ability's own source.
+_DESTROY_ALL_DEALT_DAMAGE_RE = re.compile(
+    r"^destroy all (?P<other>other )?(?P<noun>creatures|permanents) that (?:were|was) "
+    r"dealt damage this turn\.?$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s9")
+def _parse_destroy_all_dealt_damage_this_turn_text(text: str) -> AbilityEffect | None:
+    """`_DESTROY_ALL_DEALT_DAMAGE_RE`'s shape."""
+    if "dealt damage this turn" not in text.lower():
+        return None
+    match = _DESTROY_ALL_DEALT_DAMAGE_RE.fullmatch(" ".join(text.strip().split()))
+    if match is None:
+        return None
+    from ..conditions.history import object_dealt_damage_clause_test
+
+    dealt = object_dealt_damage_clause_test("was dealt damage this turn")
+    if dealt is None:
+        return None
+    creatures_only = match.group("noun").lower() == "creatures"
+    other = match.group("other") is not None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        board = game.computed_board()
+        group = [
+            permanent
+            for permanent in game.battlefield
+            if not (other and permanent.id == ability.source_id)
+            and (not creatures_only or board.of(permanent).is_creature)
+            and dealt(game, permanent, None)
+        ]
+        for permanent in group:
+            if permanent.zone is Zone.BATTLEFIELD:
+                game.destroy(permanent)
+
+    return effect
+
+
 #: "Destroy that creature." / "destroy that planeswalker." as a whole trigger
 #: effect - CR 603.2: the object the triggering event concerns (the creature
 #: that blocked, the planeswalker that was dealt combat damage; see

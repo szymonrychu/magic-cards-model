@@ -79,3 +79,32 @@ def event_player_username(game, ability, who):
         referent = event_referent_permanent(game, ability)
         return None if referent is None else game.controller_of(referent).username
     return event.player
+
+
+def cast_spell_mana_value(game):
+    """The mana value of the spell a "whenever you cast ..." trigger names, or
+    `None` when the resolving ability's event is not a cast (CR 202.3e: the
+    event carries the value with X as announced)."""
+    from .abilities import TriggerEvent
+
+    event = resolving_event(game)
+    if event is None or event.event is not TriggerEvent.CAST_SPELL:
+        return None
+    if event.amount is not None:
+        return int(event.amount)
+    spell = None if event.subject_id is None else game.find_by_id(event.subject_id)
+    return None if spell is None else int(spell.mana_value)
+
+
+def event_subject_stat(game, *, wants_power):
+    """Power (or toughness) of the resolving trigger's event subject as it last
+    existed, never negative (CR 107.1b, CR 608.2h)."""
+    event = resolving_event(game)
+    if event is None or event.subject_id is None:
+        return 0
+    subject = game.find_by_id(event.subject_id)
+    if subject is None:
+        return 0
+    power, toughness = subject.last_known_power_toughness()
+    value = power if wants_power else toughness
+    return max(value or 0, 0)

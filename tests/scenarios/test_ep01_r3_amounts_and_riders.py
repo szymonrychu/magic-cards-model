@@ -377,3 +377,130 @@ def test_thunderstaff_pumps_an_opponents_attackers_too():
     scenario.activate(_alice(scenario, "Thunderstaff"), *forests, username="alice")
     scenario.pass_until_resolved()
     assert berserker.power == int(berserker.card.power) + 1
+
+
+# -- "destroy all other creatures that were dealt damage this turn"
+
+
+def test_death_rattle_oni_destroys_only_creatures_dealt_damage_this_turn():
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("alice", hand=["Death-Rattle Oni"], battlefield=["Hill Giant"], library=["Forest"])
+        .player("bob", battlefield=["Grizzly Bears", "Elvish Berserker"], library=["Forest"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    hurt_mine, hurt_theirs = _alice(scenario, "Hill Giant"), _bob(scenario, "Grizzly Bears")
+    unhurt = _bob(scenario, "Elvish Berserker")
+    scenario.game.deal_damage(hurt_mine, 1, source=unhurt)
+    scenario.game.deal_damage(hurt_theirs, 1, source=hurt_mine)
+    scenario.put_onto_battlefield("Death-Rattle Oni", "alice")
+    _settle(scenario)
+    assert hurt_mine.zone is Zone.GRAVEYARD  # "all other", whoever controls it
+    assert hurt_theirs.zone is Zone.GRAVEYARD
+    assert unhurt.zone is Zone.BATTLEFIELD
+    oni = _alice(scenario, "Death-Rattle Oni")
+    assert oni.zone is Zone.BATTLEFIELD  # "other"
+
+
+def test_golden_tail_trainer_pumps_other_modified_creatures_by_its_power():
+    scenario = _board(
+        ["Golden-Tail Trainer", "Hill Giant", "Grizzly Bears"], ["Elvish Berserker"],
+        step=Step.DECLARE_ATTACKERS,
+    )
+    trainer = _alice(scenario, "Golden-Tail Trainer")
+    modified = _alice(scenario, "Hill Giant")
+    modified.add_counters(Counter.PLUS_ONE, 1)
+    plain = _alice(scenario, "Grizzly Bears")
+    opposing = _bob(scenario, "Elvish Berserker")
+    opposing.add_counters(Counter.PLUS_ONE, 1)
+    before = (modified.power, plain.power, opposing.power, trainer.power)
+    scenario.attack_with(trainer)
+    _settle(scenario)
+    x = trainer.power
+    assert modified.power == before[0] + x
+    assert modified.toughness == int(modified.card.toughness) + 1 + x
+    assert plain.power == before[1]
+    assert opposing.power == before[2]
+    assert trainer.power == before[3]
+
+
+# -- amounts read off the trigger's event: "that creature's power", "its mana value"
+
+
+def test_terror_of_the_peaks_deals_damage_equal_to_the_entering_creatures_power():
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("alice", hand=["Hill Giant"], battlefield=["Terror of the Peaks"],
+                library=["Forest"] * 3)
+        .player("bob", library=["Forest"] * 3)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scenario.will_choose_targets(scenario.player("bob"), username="alice")
+    scenario.put_onto_battlefield("Hill Giant", "alice")
+    _settle(scenario)
+    assert scenario.player("bob").life == 20 - 3
+
+
+def test_terror_of_the_peaks_ignores_an_opponents_creature_entering():
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("alice", battlefield=["Terror of the Peaks"], library=["Forest"] * 3)
+        .player("bob", hand=["Hill Giant"], library=["Forest"] * 3)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scenario.put_onto_battlefield("Hill Giant", "bob")
+    _settle(scenario)
+    assert scenario.player("bob").life == 20
+
+
+def test_teval_cast_trigger_costs_life_equal_to_the_spells_mana_value():
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("alice", hand=["Serra Angel"], battlefield=["Teval, Arbiter of Virtue"] +
+                ["Plains"] * 5, library=["Forest"] * 3)
+        .player("bob", library=["Forest"] * 3)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    sources = scenario.untapped_sources(*(["Plains"] * 5))
+    scenario.cast_onto_stack("Serra Angel", *sources)
+    _settle(scenario)
+    assert scenario.player("alice").life == 20 - 5
+
+
+# -- Folio of Fancies: no maximum hand size for anyone; mill equal to a hand
+
+
+def test_folio_of_fancies_each_opponent_mills_cards_equal_to_their_hand():
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("alice", battlefield=["Folio of Fancies", "Island", "Island", "Island"],
+                library=["Forest"] * 3)
+        .player("bob", hand=["Forest"] * 4, library=["Mountain"] * 9)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    lands = scenario.untapped_sources("Island", "Island", "Island")
+    scenario.activate(_alice(scenario, "Folio of Fancies"), *lands, index=1)
+    scenario.pass_until_resolved()
+    assert len(scenario.game.player("bob").library) == 9 - 4
+    assert len(scenario.game.player("alice").library) == 3
+
+
+def test_folio_of_fancies_removes_every_players_maximum_hand_size():
+    scenario = _board(["Folio of Fancies"], [])
+    for name in ("alice", "bob"):
+        assert scenario.game.player(name).has_no_maximum_hand_size
+
+
+def test_without_folio_of_fancies_the_maximum_stays():
+    scenario = _board([], [])
+    assert not scenario.game.player("bob").has_no_maximum_hand_size

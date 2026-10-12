@@ -941,13 +941,20 @@ def parse_clause_effect(clause: str) -> ClauseEffect | None:
             return None
         mills_that_many = match.group("that_many") is not None
         equal = match.group("equal")
-        equal_reader = count_expression(equal) if equal is not None else None
-        if equal is not None and equal_reader is None:
+        # "cards equal to the number of cards in their hand" (Folio of Fancies):
+        # "their" is the player who mills, counted as the instruction is done.
+        equal_their_hand = equal is not None and equal.strip().lower() == (
+            "the number of cards in their hand"
+        )
+        equal_reader = count_expression(equal) if equal is not None and not equal_their_hand else None
+        if equal is not None and equal_reader is None and not equal_their_hand:
             return None
 
         def mill(game: "Game", player: Player, source: str, source_id: str | None) -> None:
             base = amount
-            if equal_reader is not None:
+            if equal_their_hand:
+                base = len(player.hand)
+            elif equal_reader is not None:
                 # CR 701.17a: "cards equal to the number of cards in your hand" -
                 # "your" is the ability's controller, not the player milled.
                 origin = game.find_by_id(UUID(source_id)) if source_id is not None else None
