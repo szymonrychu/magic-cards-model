@@ -311,17 +311,22 @@ def test_a_cloaked_sorcery_is_exiled_and_may_be_cast_free():
     scenario = _board(
         alice={
             "battlefield": ["Etrata, Deadly Fugitive", "Island", "Island", "Swamp", "Swamp"],
+            "library": ["Plains", "Plains", "Plains"],
         },
         bob={"library": ["Divination", "Forest", "Forest", "Forest"]},
         step=Step.DECLARE_ATTACKERS,
         manual=False,
     )
     cloaked = _cloaked_under_etrata(scenario)
+    hand_before = len(scenario.player("alice").hand)
     scenario.will_take_the_may()
     scenario.activate(cloaked, *scenario.untapped_sources("Island", "Island", "Swamp", "Swamp"))
     scenario.resolve_top()
     assert cloaked.zone is not Zone.BATTLEFIELD
-    assert "Divination" in scenario.stack_names() or scenario.player("bob").graveyard
+    assert scenario.stack_names() == ["Divination"], "cast without paying its mana cost"
+    scenario.resolve_top()
+    assert len(scenario.player("alice").hand) == hand_before + 2, "alice cast it and drew two"
+    assert [card.name for card in scenario.player("bob").graveyard] == ["Divination"]
 
 
 def test_the_grant_reaches_only_face_down_creatures():

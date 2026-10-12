@@ -24,6 +24,7 @@ from magic_cards_model.machines import Step
 from magic_cards_model.machines.abilities import self_normalized_effect_text
 from magic_cards_model.machines.effects.dispatch import _ability_effect_or_notice
 from magic_cards_model.models import Zone
+from magic_cards_model.models.card_state import Counter
 from tests.cards import card
 from tests.scenarios.harness import Scenario
 
@@ -229,3 +230,110 @@ def test_bonny_pall_puts_a_land_from_the_graveyard():
     scenario.game.put_triggers_on_stack()
     scenario.resolve_top()
     assert scenario.find("Forest", Zone.BATTLEFIELD, "alice") is not None
+
+
+# ---- remove counters from the source, then copy -------------------------------
+
+
+def _verazol_board(counters: int):
+    scenario = _board(
+        alice={
+            "battlefield": ["Verazol, the Split Current"] + ["Mountain"] * 5,
+            "hand": ["Burst Lightning"],
+        },
+    )
+    verazol = scenario.find("Verazol, the Split Current", Zone.BATTLEFIELD, "alice")
+    scenario.game.add_counters(verazol, Counter.PLUS_ONE, counters)
+    return scenario, verazol
+
+
+def _cast_burst_lightning(scenario, *, kicked: bool):
+    casting = scenario.cast("Burst Lightning", "alice")
+    if kicked:
+        casting.pay_kicker()
+    casting.choose_targets(["bob"])
+    needed = 5 if kicked else 1
+    scenario.pay_with(casting.begin_paying(), *scenario.untapped_sources(*["Mountain"] * needed))
+    scenario.put_on_stack(casting)
+
+
+def test_verazol_removes_two_counters_to_copy_a_kicked_spell():
+    scenario, verazol = _verazol_board(3)
+    scenario.will_take_the_may()
+    _cast_burst_lightning(scenario, kicked=True)
+    _resolve_all(scenario)
+
+    assert scenario.player("bob").life == 12, "the kicked spell and its copy each dealt 4"
+    assert verazol.counters[Counter.PLUS_ONE] == 1
+
+
+def test_verazol_with_one_counter_copies_nothing():
+    scenario, verazol = _verazol_board(1)
+    _cast_burst_lightning(scenario, kicked=True)
+    _resolve_all(scenario)
+
+    assert scenario.player("bob").life == 16
+    assert verazol.counters[Counter.PLUS_ONE] == 1
+
+
+def test_verazol_declined_keeps_its_counters():
+    scenario, verazol = _verazol_board(2)
+    scenario.will_take_the_may(False)
+    _cast_burst_lightning(scenario, kicked=True)
+    _resolve_all(scenario)
+
+    assert scenario.player("bob").life == 16
+    assert verazol.counters[Counter.PLUS_ONE] == 2
+
+
+def test_verazol_ignores_an_unkicked_spell():
+    scenario, verazol = _verazol_board(2)
+    _cast_burst_lightning(scenario, kicked=False)
+    _resolve_all(scenario)
+
+    assert scenario.player("bob").life == 18
+    assert verazol.counters[Counter.PLUS_ONE] == 2
+
+
+# ---- remove counters, then copy the next instant or sorcery --------------------
+
+
+def _spelldancer_connects(oil: int):
+    scenario = _board(
+        alice={
+            "battlefield": ["Mercurial Spelldancer"] + ["Mountain"] * 2,
+            "hand": ["Lightning Bolt"],
+        },
+        step=Step.DECLARE_ATTACKERS,
+    )
+    spelldancer = scenario.find("Mercurial Spelldancer", Zone.BATTLEFIELD, "alice")
+    scenario.game.add_counters(spelldancer, "oil", oil)
+    if oil >= 2:
+        scenario.will_take_the_may()
+    scenario.attack_with(spelldancer)
+    scenario.no_blocks()
+    scenario.combat_damage()
+    _resolve_all(scenario)
+    return scenario, spelldancer
+
+
+def test_mercurial_spelldancer_removes_two_oil_counters_and_copies_the_next_instant():
+    scenario, spelldancer = _spelldancer_connects(2)
+    assert spelldancer.counters["oil"] == 0
+    scenario.cast_onto_stack(
+        "Lightning Bolt", *scenario.untapped_sources("Mountain"), targets=["bob"]
+    )
+    _resolve_all(scenario)
+
+    assert scenario.player("bob").life == 20 - 2 - 3 - 3
+
+
+def test_mercurial_spelldancer_with_one_oil_counter_copies_nothing():
+    scenario, spelldancer = _spelldancer_connects(1)
+    assert spelldancer.counters["oil"] == 1
+    scenario.cast_onto_stack(
+        "Lightning Bolt", *scenario.untapped_sources("Mountain"), targets=["bob"]
+    )
+    _resolve_all(scenario)
+
+    assert scenario.player("bob").life == 20 - 2 - 3
