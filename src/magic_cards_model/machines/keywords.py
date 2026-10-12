@@ -318,6 +318,8 @@ def executes(keyword: str) -> bool:
         "bushido",
         "afterlife",
         "mentor",
+        "graft",
+        "backup",
         # CR 702.145b / CR 702.145e. Static abilities driven by the game's
         # day/night designation (CR 731): `apply_daybound_nightbound` below
         # transforms and sets the designation, `enters_transformed_at_night`

@@ -86,17 +86,20 @@ def test_bushido_does_nothing_when_unblocked():
     assert scenario.game.characteristics_of(samurai).power_toughness == (2, 2)
 
 
-def test_bushido_two_reads_the_number_takeno_gets_plus_two_plus_two():
-    """Second printing, a different N: Takeno, Samurai General (bushido 2)."""
-    scenario = _combat_board(["Takeno, Samurai General"], ["Grizzly Bears"])
-    takeno = scenario.creature("Takeno, Samurai General", "alice")
-    takeno.summoning_sick = False
-    bears = scenario.creature("Grizzly Bears", "bob")
-    scenario.attack_with(takeno)
+def test_bushido_on_a_second_printing_devoted_retainer():
+    """Second printing (a 1/1 for {W}): the same rule text, read off CR 702.45a."""
+    scenario = _combat_board(["Devoted Retainer"], ["Llanowar Elves"])
+    retainer = scenario.creature("Devoted Retainer", "alice")
+    retainer.summoning_sick = False
+    elves = scenario.creature("Llanowar Elves", "bob")
+    scenario.attack_with(retainer)
     scenario.advance()
-    scenario.block(takeno, bears)
+    scenario.block(retainer, elves)
     _resolve_everything(scenario)
-    assert scenario.game.characteristics_of(takeno).power_toughness == (5, 5)
+    assert scenario.game.characteristics_of(retainer).power_toughness == (2, 2)
+    scenario.combat_damage()
+    assert retainer.zone is Zone.BATTLEFIELD
+    assert elves.zone is Zone.GRAVEYARD
 
 
 def test_bushido_cards_read_handled():
@@ -158,18 +161,17 @@ def test_afterlife_tokens_belong_to_the_dead_creatures_controller():
 
 
 def test_mentor_puts_a_counter_on_an_attacker_with_lesser_power():
-    """CR 702.134a: Legion Warboss (2) mentors Grizzly Bears... power 2 is not
-    less, so a 1-power Elvish Mystic is the target."""
-    scenario = _combat_board(["Legion Warboss", "Llanowar Elves"], [])
-    warboss = scenario.creature("Legion Warboss", "alice")
+    """CR 702.134a: Barging Sergeant (power 4) mentors a 1-power attacker."""
+    scenario = _combat_board(["Barging Sergeant", "Llanowar Elves"], [])
+    sergeant = scenario.creature("Barging Sergeant", "alice")
     elves = scenario.creature("Llanowar Elves", "alice")
-    warboss.summoning_sick = elves.summoning_sick = False
-    scenario.attack_with(warboss, elves)
+    sergeant.summoning_sick = elves.summoning_sick = False
+    scenario.attack_with(sergeant, elves)
     scenario.game.put_triggers_on_stack()
-    scenario.choose_trigger_targets("Legion Warboss", [elves])
+    scenario.choose_trigger_targets("Barging Sergeant", [elves])
     _resolve_everything(scenario)
     assert elves.counter_count(Counter.PLUS_ONE) == 1
-    assert warboss.counter_count(Counter.PLUS_ONE) == 0
+    assert sergeant.counter_count(Counter.PLUS_ONE) == 0
 
 
 def test_mentor_cannot_target_an_attacker_with_equal_or_greater_power():
@@ -335,4 +337,219 @@ def test_exert_payoff_cards_read_handled():
         "Vizier of the True",
         "Tah-Crop Elite",
     ):
+        _support_is_handled(name)
+
+
+# -- graft (CR 702.58) -------------------------------------------------------
+
+
+def _main_board(alice, bob=(), *, hand=()):
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("alice", battlefield=list(alice), hand=list(hand), library=["Plains"] * 6)
+        .player("bob", battlefield=list(bob), library=["Plains"] * 6)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    return scenario
+
+
+def test_graft_enters_with_its_counters_vigean_hydropon_is_a_five_five():
+    """CR 702.58a, the static half: 'Graft 5' means enters with five +1/+1 counters."""
+    scenario = _main_board([], hand=["Vigean Hydropon"])
+    hydropon = scenario.put_onto_battlefield("Vigean Hydropon", "alice")
+    assert hydropon.counter_count(Counter.PLUS_ONE) == 5
+    assert scenario.game.characteristics_of(hydropon).power_toughness == (5, 5)
+
+
+def test_graft_second_printing_simic_initiate_enters_with_one():
+    scenario = _main_board([], hand=["Simic Initiate"])
+    initiate = scenario.put_onto_battlefield("Simic Initiate", "alice")
+    assert initiate.counter_count(Counter.PLUS_ONE) == 1
+
+
+def test_graft_moves_a_counter_onto_a_creature_that_enters():
+    """CR 702.58a, the triggered half."""
+    scenario = _main_board([], hand=["Vigean Hydropon", "Grizzly Bears"])
+    hydropon = scenario.put_onto_battlefield("Vigean Hydropon", "alice")
+    scenario.will_take_the_may(True, source="Vigean Hydropon")
+    bears = scenario.put_onto_battlefield("Grizzly Bears", "alice")
+    _resolve_everything(scenario)
+    assert bears.counter_count(Counter.PLUS_ONE) == 1
+    assert hydropon.counter_count(Counter.PLUS_ONE) == 4
+    assert scenario.game.characteristics_of(bears).power_toughness == (3, 3)
+
+
+def test_graft_may_be_declined():
+    scenario = _main_board([], hand=["Vigean Hydropon", "Grizzly Bears"])
+    hydropon = scenario.put_onto_battlefield("Vigean Hydropon", "alice")
+    scenario.will_take_the_may(False, source="Vigean Hydropon")
+    bears = scenario.put_onto_battlefield("Grizzly Bears", "alice")
+    _resolve_everything(scenario)
+    assert bears.counter_count(Counter.PLUS_ONE) == 0
+    assert hydropon.counter_count(Counter.PLUS_ONE) == 5
+
+
+def test_graft_does_not_trigger_for_the_grafter_itself_or_with_no_counters():
+    scenario = _main_board([], hand=["Simic Initiate", "Grizzly Bears"])
+    initiate = scenario.put_onto_battlefield("Simic Initiate", "alice")
+    scenario.game.put_triggers_on_stack()
+    assert scenario.stack_names() == []  # "another creature" - not itself
+    initiate.remove_counters(Counter.PLUS_ONE, 1)
+    bears = scenario.put_onto_battlefield("Grizzly Bears", "alice")
+    scenario.game.put_triggers_on_stack()
+    assert scenario.stack_names() == []  # intervening if: no +1/+1 counter left
+    assert bears.counter_count(Counter.PLUS_ONE) == 0
+
+
+def test_graft_works_on_an_opponents_creature_too():
+    """'another creature enters' - any controller's."""
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("alice", hand=["Vigean Hydropon"], library=["Plains"] * 6)
+        .player("bob", hand=["Grizzly Bears"], library=["Plains"] * 6)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    hydropon = scenario.put_onto_battlefield("Vigean Hydropon", "alice")
+    scenario.will_take_the_may(True, source="Vigean Hydropon")
+    bears = scenario.put_onto_battlefield("Grizzly Bears", "bob")
+    _resolve_everything(scenario)
+    assert bears.counter_count(Counter.PLUS_ONE) == 1
+    assert hydropon.counter_count(Counter.PLUS_ONE) == 4
+
+
+def test_vigean_hydropon_cannot_attack_or_block():
+    scenario = _combat_board(["Vigean Hydropon"], ["Grizzly Bears"])
+    hydropon = scenario.creature("Vigean Hydropon", "alice")
+    hydropon.summoning_sick = False
+    assert not scenario.can_attack(hydropon)
+
+
+def test_graft_cards_read_handled():
+    for name in ("Vigean Hydropon", "Simic Initiate"):
+        _support_is_handled(name)
+
+
+# -- backup (CR 702.165) and the toughness-assigns-damage static -------------
+
+
+def _cast_backup(scenario, name, target, *, lands):
+    scenario.cast_and_resolve(name, *scenario.untapped_sources(*lands))
+    scenario.game.put_triggers_on_stack()
+    scenario.choose_trigger_targets(name, [target])
+    _resolve_everything(scenario)
+
+
+def test_backup_puts_a_counter_on_another_creature_and_grants_the_abilities_below():
+    """CR 702.165a: Sigiled Sentinel's Vigilance goes to the target until end of turn."""
+    scenario = _main_board(
+        ["Forest", "Plains", "Plains", "Grizzly Bears"], hand=["Sigiled Sentinel"]
+    )
+    bears = scenario.creature("Grizzly Bears", "alice")
+    _cast_backup(scenario, "Sigiled Sentinel", bears, lands=["Plains", "Plains", "Forest"])
+    assert bears.counter_count(Counter.PLUS_ONE) == 1
+    assert has_keyword(bears, "vigilance", scenario.game)
+    sentinel = scenario.creature("Sigiled Sentinel", "alice")
+    assert sentinel.counter_count(Counter.PLUS_ONE) == 0
+
+
+def test_backup_targeting_itself_only_gets_the_counter():
+    scenario = _main_board(["Plains", "Plains", "Forest"], hand=["Sigiled Sentinel"])
+    scenario.cast_and_resolve(
+        "Sigiled Sentinel", *scenario.untapped_sources("Plains", "Plains", "Forest")
+    )
+    sentinel = scenario.creature("Sigiled Sentinel", "alice")
+    scenario.game.put_triggers_on_stack()
+    scenario.choose_trigger_targets("Sigiled Sentinel", [sentinel])
+    _resolve_everything(scenario)
+    assert sentinel.counter_count(Counter.PLUS_ONE) == 1
+    assert scenario.game.characteristics_of(sentinel).power_toughness == (3, 3)
+
+
+def test_backup_two_counters_on_a_second_printing_cragsmasher_yeti():
+    scenario = _main_board(["Mountain"] * 6 + ["Grizzly Bears"], hand=["Cragsmasher Yeti"])
+    bears = scenario.creature("Grizzly Bears", "alice")
+    _cast_backup(scenario, "Cragsmasher Yeti", bears, lands=["Mountain"] * 6)
+    assert bears.counter_count(Counter.PLUS_ONE) == 2
+    assert has_keyword(bears, "trample", scenario.game)
+
+
+def test_backup_grant_ends_with_the_turn():
+    scenario = _main_board(
+        ["Plains", "Plains", "Forest", "Grizzly Bears"], hand=["Sigiled Sentinel"]
+    )
+    bears = scenario.creature("Grizzly Bears", "alice")
+    _cast_backup(scenario, "Sigiled Sentinel", bears, lands=["Plains", "Plains", "Forest"])
+    assert has_keyword(bears, "vigilance", scenario.game)
+    scenario.game.cleanup_step()  # CR 514.2
+    assert not has_keyword(bears, "vigilance", scenario.game)
+    assert bears.counter_count(Counter.PLUS_ONE) == 1  # the counter stays
+
+
+def test_streetwise_negotiator_grants_toughness_damage_to_another_creature():
+    """Pillarfield Ox 2/4 + counter = 3/5 assigns 5, not 3, into a 0/4 wall."""
+    scenario = _main_board(
+        ["Forest", "Forest", "Pillarfield Ox"],
+        ["Wall of Omens"],
+        hand=["Streetwise Negotiator"],
+    )
+    ox = scenario.creature("Pillarfield Ox", "alice")
+    ox.summoning_sick = False
+    wall = scenario.creature("Wall of Omens", "bob")
+    _cast_backup(scenario, "Streetwise Negotiator", ox, lands=["Forest", "Forest"])
+    assert scenario.game.characteristics_of(ox).power_toughness == (3, 5)
+    scenario.advance()  # beginning of combat
+    while scenario.step is not Step.DECLARE_ATTACKERS:
+        scenario.advance()
+    scenario.attack_with(ox)
+    scenario.advance()
+    scenario.block(ox, wall)
+    scenario.combat_damage()
+    assert wall.zone is Zone.GRAVEYARD
+
+
+def test_assigns_toughness_damage_without_the_grant_is_just_power():
+    scenario = _combat_board(["Pillarfield Ox"], ["Wall of Omens"])
+    ox = scenario.creature("Pillarfield Ox", "alice")
+    ox.summoning_sick = False
+    wall = scenario.creature("Wall of Omens", "bob")
+    scenario.attack_with(ox)
+    scenario.advance()
+    scenario.block(ox, wall)
+    scenario.combat_damage()
+    assert wall.zone is Zone.BATTLEFIELD
+
+
+def test_streetwise_negotiator_assigns_its_own_toughness_as_a_blocker():
+    """The printed static: 1/3 (with a counter) blocks and deals 3 to a 3/3."""
+    scenario = _combat_board(["Hill Giant"], ["Streetwise Negotiator"])
+    giant = scenario.creature("Hill Giant", "alice")
+    giant.summoning_sick = False
+    negotiator = scenario.creature("Streetwise Negotiator", "bob")
+    scenario.game.add_counters(negotiator, Counter.PLUS_ONE, 1)
+    scenario.attack_with(giant)
+    scenario.advance()
+    scenario.block(giant, negotiator)
+    scenario.combat_damage()
+    assert giant.zone is Zone.GRAVEYARD
+
+
+def test_streetwise_negotiator_without_the_counter_assigns_toughness_two():
+    scenario = _combat_board(["Hill Giant"], ["Streetwise Negotiator"])
+    giant = scenario.creature("Hill Giant", "alice")
+    giant.summoning_sick = False
+    negotiator = scenario.creature("Streetwise Negotiator", "bob")
+    scenario.attack_with(giant)
+    scenario.advance()
+    scenario.block(giant, negotiator)
+    scenario.combat_damage()
+    assert giant.zone is Zone.BATTLEFIELD  # 2 damage on a 3/3
+    assert negotiator.zone is Zone.GRAVEYARD
+
+
+def test_backup_cards_read_handled():
+    for name in ("Streetwise Negotiator", "Sigiled Sentinel", "Cragsmasher Yeti"):
         _support_is_handled(name)

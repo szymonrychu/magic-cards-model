@@ -54,6 +54,7 @@ from ..layers import (
     only_this_incarnation,
     split_and_validate_keywords,
 )
+from ..legacy_keywords import BACKUP_GRANT_CLAUSE, backup_granted_lines
 from ..triggers import (
     AbilityOnStack,
     GameEvent,
@@ -375,6 +376,117 @@ def _parse_move_counter_clause(text: str) -> AbilityEffect | None:
             return
         source.remove_counters(kind, amount)
         game.add_counters(targets[0], kind, amount)
+
+    return effect
+
+
+#: Graft (CR 702.58a): "you may move a +1/+1 counter from this permanent onto
+#: that creature" - the destination is the creature whose entering triggered
+#: the ability (the event's subject), not a target (CR 115.10a: nothing here
+#: says "target").
+_MOVE_COUNTER_ONTO_EVENT_SUBJECT_RE = re.compile(
+    rf"^(?P<may>you may )?move (?P<n>{COUNT}) (?P<kind>\+1/\+1|-1/-1|[a-z]+) counters? "
+    r"from this \w+ onto that (?:creature|permanent)\.?$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s36")
+def _parse_move_counter_onto_event_subject_clause(text: str) -> AbilityEffect | None:
+    """CR 122.5 as `_parse_move_counter_clause` reads it, with the destination
+    being the triggering event's subject. Both halves are checked before
+    either happens: a source with too few counters, or a subject that has left
+    the battlefield, moves nothing."""
+    match = _MOVE_COUNTER_ONTO_EVENT_SUBJECT_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    raw_amount = match.group("n").lower()
+    amount = 1 if raw_amount in ("a", "an", "one") else parse_count(raw_amount)
+    if amount is None or amount < 1:
+        return None
+    kind = _counter_kind(match.group("kind"))
+    optional = match.group("may") is not None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        source = ability.source(game)
+        event = ability.event
+        if source is None or source.zone is not Zone.BATTLEFIELD or event is None:
+            return
+        destination = game.find_by_id(event.subject_id) if event.subject_id else None
+        if (
+            not isinstance(destination, CardState)
+            or destination.zone is not Zone.BATTLEFIELD
+            or not source.can_remove_counters(kind, amount)
+        ):
+            return
+        if optional and not game.ask(
+            Decision(
+                kind=DecisionKind.MAY,
+                player=ability.controller,
+                prompt=f"move a {kind} counter from {source.name} onto {destination.name}",
+                source=source.name,
+                source_id=source_id_of(ability),
+            )
+        ):
+            return
+        source.remove_counters(kind, amount)
+        game.add_counters(destination, kind, amount)
+
+    return effect
+
+
+#: Backup (CR 702.165a): "put N +1/+1 counters on target creature. If that's
+#: another creature, it also gains the non-backup abilities of this creature
+#: printed below this one until end of turn."
+_BACKUP_RE = re.compile(
+    rf"^put (?P<n>{COUNT}) (?P<kind>\+1/\+1) counters? on (?P<phrase>target creature)\. "
+    rf"{re.escape(BACKUP_GRANT_CLAUSE)}\.?$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s36")
+def _parse_backup_clause(text: str) -> AbilityEffect | None:
+    """`_BACKUP_RE`'s shape. The granted abilities are the lines printed below
+    the backup line on the source's printing, fixed as the ability resolves
+    (CR 702.165d); only the object's own printed abilities count (CR 702.165c)."""
+    match = _BACKUP_RE.fullmatch(" ".join(text.strip().split()))
+    if match is None:
+        return None
+    raw_amount = match.group("n").lower()
+    amount = 1 if raw_amount in ("a", "an", "one") else parse_count(raw_amount)
+    if amount is None:
+        return None
+    kind = _counter_kind(match.group("kind"))
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        source = ability.source(game)
+        targets = [
+            target
+            for target in game.resolve_targets(ability)
+            if isinstance(target, CardState) and target.zone is Zone.BATTLEFIELD
+        ]
+        if not targets:
+            return
+        target = targets[0]
+        game.add_counters(target, kind, amount)
+        if source is None or target.id == source.id:
+            return
+        store = continuous_effects(game)
+        timestamp = store.tick()
+        for line in backup_granted_lines(source.card.oracle_text or ""):
+            store.add(
+                ContinuousEffect(
+                    description=f"{source.name}: {target.name} gains {line}",
+                    layer=Layer.ABILITY,
+                    timestamp=timestamp,
+                    duration=Duration.UNTIL_END_OF_TURN,
+                    source_id=source.id,
+                    selector=only_this_incarnation(target, target.zone_change_stamp),
+                    modification=grant_ability(line),
+                ),
+                game,
+            )
 
     return effect
 

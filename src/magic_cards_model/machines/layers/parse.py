@@ -2143,6 +2143,17 @@ _EQUIPPED_ASSIGNS_DAMAGE_AS_TOUGHNESS_RE = re.compile(
     re.IGNORECASE,
 )
 
+#: "This creature assigns combat damage equal to its toughness rather than its
+#: power." (Streetwise Negotiator; also what its backup ability grants) - the
+#: singular twin of `_GROUP_ASSIGNS_DAMAGE_AS_TOUGHNESS_RE`, no condition
+#: (CR 510.1a: each creature assigns damage equal to its power; this static
+#: replaces the quantity for the one creature).
+_SELF_ASSIGNS_DAMAGE_AS_TOUGHNESS_RE = re.compile(
+    r"^this (?:creature|permanent) assigns combat damage equal to its toughness "
+    r"rather than its power\.?$",
+    re.IGNORECASE,
+)
+
 #: "Creatures you control with power or toughness 1 or less can't be
 #: blocked." (Tetsuko Umezawa, Fugitive) - a per-object threshold on either
 #: characteristic, granting `machines/combat.py`'s own self-referential
@@ -10800,6 +10811,32 @@ def _self_assigns_damage_as_though_positive_builder(*, line: str) -> EffectBuild
     return builder
 
 
+def _self_assigns_damage_as_toughness_builder(*, line: str) -> EffectBuilder:
+    """The source assigns combat damage equal to its toughness rather than its
+    power: the text `machines/combat._assignment_power_of` reads off the
+    computed board, granted to the source alone."""
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        return [
+            ContinuousEffect(
+                description=f"{source.name}: assigns combat damage equal to its toughness",
+                layer=Layer.ABILITY,
+                timestamp=timestamp,
+                source_id=source.id,
+                source_ability=_source_line_for(source, line),
+                selector=_only(source.id),
+                modification=grant_ability(ASSIGNS_DAMAGE_AS_TOUGHNESS_TEXT),
+            )
+        ]
+
+    return builder
+
+
 def _chosen_name_group_loses_builder(
     card_type: Type | None,
     scope: Literal["any", "you", "opponents"],
@@ -13129,6 +13166,8 @@ def _parse_narrow_static_layer_sentence(sentence: str) -> EffectBuilder | None:
             mine=match.group("mine") is not None,
             gated=match.group("gated") is not None,
         )
+    if _SELF_ASSIGNS_DAMAGE_AS_TOUGHNESS_RE.fullmatch(sentence):
+        return _self_assigns_damage_as_toughness_builder(line=sentence)
     if _EQUIPPED_ASSIGNS_DAMAGE_AS_TOUGHNESS_RE.fullmatch(sentence):
         return _equipped_assigns_damage_as_toughness_builder(line=sentence)
     if _SELF_ASSIGNS_DAMAGE_AS_THOUGH_POSITIVE_RE.fullmatch(sentence):
