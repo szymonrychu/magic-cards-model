@@ -26,6 +26,7 @@ file:
 import pytest
 
 from magic_cards_model.machines import Step
+from magic_cards_model.machines.casting import why_cannot_cast_from
 from magic_cards_model.models import Zone
 from tests.scenarios.harness import Scenario
 
@@ -827,3 +828,260 @@ def test_semblance_anvil_does_not_discount_a_spell_of_another_type():
     _enter_anvil(scenario, exile=bolt)
     casting = scenario.cast("Hill Giant", "alice")
     assert str(casting.total_cost.mana) == "{3}{R}"
+
+
+# -- graveyard exile family: Hedonist's Trove, Cemetery Illuminator, Azula, Tinybones
+
+
+def _cast_from_permission(scenario, card, username="alice", targets=None):
+    """Cast `card` from where a "you may cast ... from" permission found it."""
+    scenario.game.cast(
+        card,
+        username,
+        keyword="Cast permission",
+        targets=targets,
+        mana_sources=scenario.game.permanents_controlled_by(username),
+    )
+    _resolve_everything(scenario)
+
+
+def _cast_top_of_library(scenario):
+    top = scenario.player("alice").library[0]
+    casting = scenario.cast(top.name, username="alice", from_zone=Zone.LIBRARY)
+    casting.use_keyword("Cast permission")
+    scenario.auto_pay(casting.begin_paying(), username="alice")
+    scenario.put_on_stack(casting)
+    _resolve_everything(scenario)
+    return top
+
+
+def _graveyard_names(scenario, username):
+    return [card.name for card in scenario.player(username).graveyard]
+
+
+def _trove(bob_graveyard, alice_graveyard=()):
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Hedonist's Trove"],
+            battlefield=["Mountain", "Mountain", "Mountain"],
+            graveyard=list(alice_graveyard),
+            library=FILLER,
+        )
+        .player("bob", graveyard=list(bob_graveyard), library=FILLER)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    trove = scenario.put_onto_battlefield("Hedonist's Trove", "alice")
+    _resolve_everything(scenario)
+    return scenario, trove
+
+
+def test_hedonists_trove_exiles_the_opponents_whole_graveyard_linked_to_it():
+    scenario, trove = _trove(["Grizzly Bears", "Lightning Bolt", "Mountain"], ["Hill Giant"])
+    assert scenario.player("bob").graveyard == []
+    assert _graveyard_names(scenario, "alice") == ["Hill Giant"], "only the opponent's"
+    pile = _exiled_with(scenario, trove)
+    assert sorted(_names(pile)) == ["Grizzly Bears", "Lightning Bolt", "Mountain"]
+    assert all(card.face_up for card in pile)
+
+
+def test_hedonists_trove_with_an_empty_opponent_graveyard_exiles_nothing():
+    scenario, trove = _trove([])
+    assert _exiled_with(scenario, trove) == []
+
+
+def test_hedonists_trove_lets_its_controller_play_a_land_from_the_pile():
+    scenario, trove = _trove(["Mountain", "Grizzly Bears"])
+    land = scenario.play_land("Mountain", "alice", from_zone=Zone.EXILE)
+    assert land.zone is Zone.BATTLEFIELD and land.controller == "alice"
+
+
+def test_hedonists_trove_allows_only_one_spell_from_the_pile_each_turn():
+    scenario, trove = _trove(["Lightning Bolt", "Lightning Bolt"])
+    first, second = _exiled_with(scenario, trove)
+    _cast_from_permission(scenario, first, targets=["bob"])
+    assert first.zone is Zone.GRAVEYARD
+    with pytest.raises(ValueError):
+        _cast_from_permission(scenario, second, targets=["bob"])
+    assert second.zone is Zone.EXILE
+
+
+def _illuminator(alice_graveyard=(), bob_graveyard=(), library=("Grizzly Bears", "Forest")):
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Cemetery Illuminator"],
+            battlefield=["Island", "Island", "Island", "Island", "Forest", "Forest"],
+            graveyard=list(alice_graveyard),
+            library=list(library),
+        )
+        .player("bob", graveyard=list(bob_graveyard), library=FILLER)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    return scenario
+
+
+def test_cemetery_illuminator_exiles_a_card_of_the_controllers_choice_from_any_graveyard():
+    scenario = _illuminator(["Hill Giant"], ["Lightning Bolt", "Grizzly Bears"])
+    bolt = next(c for c in scenario.player("bob").graveyard if c.name == "Lightning Bolt")
+    scenario.will_choose_cards(bolt, username="alice")
+    illuminator = scenario.put_onto_battlefield("Cemetery Illuminator", "alice")
+    _resolve_everything(scenario)
+    assert _exiled_with(scenario, illuminator) == [bolt]
+    assert sorted(_graveyard_names(scenario, "bob")) == ["Grizzly Bears"]
+    assert _graveyard_names(scenario, "alice") == ["Hill Giant"]
+
+
+def test_cemetery_illuminator_with_every_graveyard_empty_exiles_nothing():
+    scenario = _illuminator()
+    illuminator = scenario.put_onto_battlefield("Cemetery Illuminator", "alice")
+    _resolve_everything(scenario)
+    assert _exiled_with(scenario, illuminator) == []
+
+
+def test_cemetery_illuminator_exiles_again_when_it_attacks():
+    scenario = _illuminator(bob_graveyard=["Lightning Bolt", "Grizzly Bears"])
+    illuminator = scenario.put_onto_battlefield("Cemetery Illuminator", "alice")
+    illuminator.summoning_sick = False
+    _resolve_everything(scenario)
+    assert len(_exiled_with(scenario, illuminator)) == 1
+    _attack_and_resolve(scenario, illuminator)
+    assert len(_exiled_with(scenario, illuminator)) == 2
+
+
+def test_cemetery_illuminator_casts_from_the_top_when_it_shares_a_type_with_its_pile():
+    scenario = _illuminator(bob_graveyard=["Hill Giant"], library=["Grizzly Bears", "Forest"])
+    scenario.put_onto_battlefield("Cemetery Illuminator", "alice")
+    _resolve_everything(scenario)
+    assert _cast_top_of_library(scenario).zone is Zone.BATTLEFIELD
+
+
+def test_cemetery_illuminator_allows_only_one_cast_from_the_top_each_turn():
+    scenario = _illuminator(bob_graveyard=["Hill Giant"], library=["Grizzly Bears", "Hill Giant"])
+    scenario.put_onto_battlefield("Cemetery Illuminator", "alice")
+    _resolve_everything(scenario)
+    _cast_top_of_library(scenario)
+    top = scenario.player("alice").library[0]
+    assert why_cannot_cast_from(top, "alice", Zone.LIBRARY, scenario.game) is not None
+
+
+def test_cemetery_illuminator_cannot_cast_from_the_top_without_a_shared_type():
+    scenario = _illuminator(bob_graveyard=["Lightning Bolt"], library=["Grizzly Bears", "Forest"])
+    scenario.put_onto_battlefield("Cemetery Illuminator", "alice")
+    _resolve_everything(scenario)
+    top = scenario.player("alice").library[0]
+    assert why_cannot_cast_from(top, "alice", Zone.LIBRARY, scenario.game) is not None
+
+
+def test_cemetery_illuminator_lets_its_controller_look_at_the_top_card():
+    scenario = _illuminator(library=["Grizzly Bears", "Forest"])
+    scenario.put_onto_battlefield("Cemetery Illuminator", "alice")
+    (top,) = scenario.top_of_library(1, username="alice")
+    assert top.id in _known(scenario, "alice")
+    assert top.id not in _known(scenario, "bob")
+
+
+def _azula(bob_battlefield, bob_graveyard):
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Azula, Cunning Usurper"],
+            battlefield=["Mountain"] * 4,
+            library=FILLER,
+        )
+        .player("bob", battlefield=list(bob_battlefield), graveyard=list(bob_graveyard), library=FILLER)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    return scenario
+
+
+def test_azula_makes_the_opponent_exile_a_nontoken_creature_then_a_nonland_card_linked_to_azula():
+    scenario = _azula(["Grizzly Bears", "Hill Giant"], ["Mountain", "Lightning Bolt", "Forest"])
+    hill_giant = scenario.creature("Hill Giant", "bob")
+    bolt = next(c for c in scenario.player("bob").graveyard if c.name == "Lightning Bolt")
+    scenario.will_choose_cards(hill_giant, username="bob")
+    scenario.will_choose_cards(bolt, username="bob")
+    azula = scenario.put_onto_battlefield("Azula, Cunning Usurper", "alice")
+    _resolve_everything(scenario)
+    assert sorted(_names(_exiled_with(scenario, azula))) == ["Hill Giant", "Lightning Bolt"]
+    assert [c.name for c in scenario.game.battlefield if c.controller == "bob"] == ["Grizzly Bears"]
+    assert sorted(_graveyard_names(scenario, "bob")) == ["Forest", "Mountain"]
+
+
+def test_azula_with_no_creature_and_no_nonland_card_exiles_nothing():
+    scenario = _azula([], ["Mountain"])
+    azula = scenario.put_onto_battlefield("Azula, Cunning Usurper", "alice")
+    _resolve_everything(scenario)
+    assert _exiled_with(scenario, azula) == []
+    assert _graveyard_names(scenario, "bob") == ["Mountain"]
+
+
+def test_azula_exiled_cards_can_be_cast_on_its_controllers_turn_with_any_mana():
+    scenario = _azula(["Grizzly Bears"], [])
+    scenario.put_onto_battlefield("Azula, Cunning Usurper", "alice")
+    _resolve_everything(scenario)
+    (bears,) = [c for c in scenario.game.exile if c.card.name == "Grizzly Bears"]
+    _cast_from_permission(scenario, bears)  # {1}{G} paid with Mountains
+    assert bears.zone is Zone.BATTLEFIELD and bears.controller == "alice"
+
+
+def test_azula_exiled_cards_may_be_cast_as_though_they_had_flash():
+    scenario = _azula(["Grizzly Bears"], [])
+    scenario.put_onto_battlefield("Azula, Cunning Usurper", "alice")
+    _resolve_everything(scenario)
+    (bears,) = [c for c in scenario.game.exile if c.card.name == "Grizzly Bears"]
+    scenario.start_at(Step.BEGINNING_OF_COMBAT)
+    _cast_from_permission(scenario, bears)
+    assert bears.zone is Zone.BATTLEFIELD
+
+
+def _tinybones(opponent_hand):
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Tinybones, Bauble Burglar", "Swamp"] * 1 + ["Swamp"] * 3, library=FILLER)
+        .player("bob", hand=list(opponent_hand), library=FILLER)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    return scenario, scenario.creature("Tinybones, Bauble Burglar", "alice")
+
+
+def test_tinybones_exiles_each_card_an_opponent_discards_with_a_stash_counter():
+    scenario, tinybones = _tinybones(["Grizzly Bears", "Hill Giant"])
+    bears, giant = scenario.player("bob").hand
+    scenario.game.discard_cards("bob", [bears, giant])
+    _resolve_everything(scenario)
+    assert scenario.player("bob").graveyard == []
+    assert sorted(c.name for c in scenario.game.exile) == ["Grizzly Bears", "Hill Giant"]
+    for card in (bears, giant):
+        assert card.zone is Zone.EXILE
+        assert card.counters["stash"] == 1
+
+
+def test_tinybones_does_not_trigger_on_its_controllers_own_discard():
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Tinybones, Bauble Burglar"], hand=["Grizzly Bears"], library=FILLER)
+        .player("bob", library=FILLER)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    (bears,) = scenario.player("alice").hand
+    scenario.game.discard_cards("alice", [bears])
+    _resolve_everything(scenario)
+    assert bears.zone is Zone.GRAVEYARD
+
+
+def test_tinybones_stashed_card_is_playable_on_its_controllers_turn_though_not_owned():
+    scenario, tinybones = _tinybones(["Mountain"])
+    (mountain,) = scenario.player("bob").hand
+    scenario.game.discard_cards("bob", [mountain])
+    _resolve_everything(scenario)
+    land = scenario.play_land("Mountain", "alice", from_zone=Zone.EXILE)
+    assert land.zone is Zone.BATTLEFIELD and land.controller == "alice"

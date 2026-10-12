@@ -2878,6 +2878,8 @@ def _condition_matches(
         # every other "you [verb]" condition does.
         if not _controller_clause_holds(condition, controller, event.player):
             return False
+        if "an opponent discards" in lowered and event.player in (None, controller):
+            return False  # Tinybones: "whenever an opponent discards a card"
         return discard_occurrences(game, ability, source, event) > 0
 
     if ability.event is TriggerEvent.LORE_COUNTERS_ADDED:

@@ -1116,7 +1116,7 @@ _BECOMES_PREPARED_TARGET_RE = re.compile(
 #: 107.1c's "any number" (zero included) is simply how many player targets
 #: the stack object carries.
 _EXILE_TARGET_PLAYERS_GRAVEYARD_RE = re.compile(
-    r"^exile (?P<phrase>.*target (?:player's graveyard|players' graveyards))\.?$",
+    r"^exile (?P<phrase>.*target (?:(?:player|opponent)'s graveyard|players' graveyards))\.?$",
     re.IGNORECASE,
 )
 #: "Exile all graveyards." (Rest in Peace) and "Exile all cards that are
@@ -4509,6 +4509,9 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
         exiled_with_peek.parse_exile_from_hand_face_down,
         exiled_with_peek.parse_return_exiled_with_to_hand,
         exiled_with_peek.parse_turn_exiled_with_face_up,
+        exiled_with_peek.parse_exile_a_card_from_a_graveyard,
+        exiled_with_peek.parse_opponent_exiles_permanent_then_graveyard_card,
+        exiled_with_peek.parse_exile_discarded_card_with_counter,
         impulse_choice.parse_exile_top_choose_one_play,
         impulse_choice.parse_reveal_top_take_one_rest_bottom,
         impulse_choice.parse_search_exile_then_cast_free,

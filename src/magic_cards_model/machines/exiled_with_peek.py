@@ -210,3 +210,148 @@ def parse_turn_exiled_with_face_up(text: str):
                 game.counter(spell)
 
     return effect
+
+
+# -- graveyard exile that is remembered (CR 607.2a) ---------------------------
+#
+# Cemetery Illuminator ("exile a card from a graveyard"), Azula ("target
+# opponent exiles a nontoken creature they control, then they exile a nonland
+# card from their graveyard"), Tinybones ("exile it from their graveyard with a
+# stash counter on it"). Hedonist's Trove ("exile target opponent's graveyard")
+# is the plain removal reader, linked to its source by `link_cards_exiled_during`.
+
+_EXILE_A_CARD_FROM_A_GRAVEYARD_RE = re.compile(r"^exile a card from a graveyard\.?$", re.IGNORECASE)
+_OPPONENT_EXILES_RE = re.compile(
+    r"^target opponent exiles an? (?P<permanent>(?:non\w+ )?\w+) they control, "
+    r"then they exile an? (?P<card>non\w+|\w+) card from their graveyard\.?$",
+    re.IGNORECASE,
+)
+_EXILE_IT_FROM_GRAVEYARD_WITH_COUNTER_RE = re.compile(
+    r"^exile it from their graveyard with an? (?P<counter>[a-z]+) counter on it\.?$",
+    re.IGNORECASE,
+)
+
+
+def _quality(phrase: str):
+    """A predicate for "`<type>`", "non`<type>`" or "nontoken `<type>`" (a
+    creature, a card), or None when the word is not a card type."""
+    from ..models.card import Type
+
+    lowered = phrase.lower().strip()
+    nontoken = lowered.startswith("nontoken ")
+    word = lowered.removeprefix("nontoken ")
+    negated = word.startswith("non")
+    try:
+        card_type = Type(word[3:] if negated else word)
+    except ValueError:
+        return None
+
+    def matches(card: CardState) -> bool:
+        if nontoken and card.token:
+            return False
+        return (card_type not in card.types) if negated else (card_type in card.types)
+
+    return matches
+
+
+def _choose_and_exile(game: Game, ability, chooser, candidates: list[CardState], prompt: str):
+    from .decisions import source_id_of
+    from .effects.modal import _choose_one_card
+
+    if not candidates:
+        return None
+    chosen = _choose_one_card(
+        game,
+        chooser,
+        candidates,
+        prompt=prompt,
+        source=ability.source_name,
+        source_id=source_id_of(ability),
+    )
+    (moved,) = game.exile_cards([chosen])
+    return moved
+
+
+def parse_exile_a_card_from_a_graveyard(text: str):
+    """ "Exile a card from a graveyard." - the controller picks one card out of
+    every graveyard (CR 608.2d; none when all are empty) and it is exiled with
+    the ability's source (CR 607.2a)."""
+    if _EXILE_A_CARD_FROM_A_GRAVEYARD_RE.fullmatch(" ".join(text.split())) is None:
+        return None
+
+    def effect(game: Game, ability) -> None:
+        from .exile_top_marked import mark_exiled
+
+        controller = game.controller_of(ability)
+        candidates = [card for player in game.players for card in player.graveyard]
+        moved = _choose_and_exile(
+            game, ability, controller, candidates, "choose a card from a graveyard to exile"
+        )
+        if moved is not None:
+            mark_exiled(game, ability, moved)
+
+    return effect
+
+
+def parse_opponent_exiles_permanent_then_graveyard_card(text: str):
+    """ "Target opponent exiles a `<permanent>` they control, then they exile a
+    `<card>` from their graveyard." - the targeted opponent chooses both
+    (CR 608.2d), each exile linked to the ability's source (CR 607.2a)."""
+    match = _OPPONENT_EXILES_RE.fullmatch(" ".join(text.split()))
+    if match is None:
+        return None
+    permanent_ok = _quality(match.group("permanent"))
+    card_ok = _quality(match.group("card"))
+    if permanent_ok is None or card_ok is None:
+        return None
+
+    def effect(game: Game, ability) -> None:
+        from .exile_top_marked import mark_exiled
+
+        from ..models.player import Player
+
+        for target in game.resolve_targets(ability):
+            if not isinstance(target, Player):
+                continue
+            battlefield = [
+                c for c in game.permanents_controlled_by(target.username) if permanent_ok(c)
+            ]
+            first = _choose_and_exile(
+                game, ability, target, battlefield, "choose a permanent you control to exile"
+            )
+            if first is not None:
+                mark_exiled(game, ability, first)
+            graveyard = [c for c in target.graveyard if card_ok(c)]
+            second = _choose_and_exile(
+                game, ability, target, graveyard, "choose a card from your graveyard to exile"
+            )
+            if second is not None:
+                mark_exiled(game, ability, second)
+
+    return effect
+
+
+def parse_exile_discarded_card_with_counter(text: str):
+    """ "Exile it from their graveyard with a `<kind>` counter on it." - the
+    card a "whenever an opponent discards a card" trigger is about: the first
+    card of the event's discard (`GameEvent.discarded_ids`; the trigger is put
+    on the stack once per discarded card, CR 603.2c) still in that graveyard
+    (CR 400.7: a card that moved is a new object, so one that left is skipped)."""
+    match = _EXILE_IT_FROM_GRAVEYARD_WITH_COUNTER_RE.fullmatch(" ".join(text.split()))
+    if match is None:
+        return None
+    counter = match.group("counter").lower()
+
+    def effect(game: Game, ability) -> None:
+        from .exile_top_marked import mark_exiled
+
+        event = getattr(ability, "event", None)
+        for card_id in getattr(event, "discarded_ids", ()):
+            card = game.find_by_id(card_id)
+            if card is None or card.zone is not Zone.GRAVEYARD:
+                continue
+            (moved,) = game.exile_cards([card])
+            mark_exiled(game, ability, moved, counter=counter)
+            return
+
+    return effect
