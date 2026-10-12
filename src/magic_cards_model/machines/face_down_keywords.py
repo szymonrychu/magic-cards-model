@@ -428,17 +428,38 @@ def library_top_plot_cost(game: Game | None, card: CardState, player: str) -> st
 
 
 def prints_cloak_clause(card: Card) -> bool:
-    """Whether some clause of `card`'s own text is a cloak instruction
-    `read_cloak_clause` reads - what credits the Cloak keyword (CR 701.58a)
-    as executed by `machines/effects/library._parse_cloak_clause`."""
+    """Whether some ability of `card`'s own text performs a cloak instruction
+    - its whole effect read by a production dispatcher, not a notice - which
+    is what credits the Cloak keyword (CR 701.58a) as executed by
+    `machines/effects/library._parse_cloak_clause`. A cloak clause inside an
+    effect nothing reads whole (Cryptic Coat's "cloak ..., then attach this
+    Equipment to it") credits nothing."""
     texts = [card.oracle_text or ""] + [face.oracle_text or "" for face in card.card_faces or []]
-    for text in texts:
-        if "cloak" not in text.lower():
-            continue
-        stripped = re.sub(r"\([^()]*\)", "", text)
-        for piece in re.split(r"[\n.]|, (?:then )?|•", stripped):
-            clause = re.sub(r"^.*?:\s*", "", piece.strip()) if ":" in piece else piece.strip()
-            clause = re.sub(r"^(?:then|and)\s+", "", clause, flags=re.IGNORECASE)
-            if read_cloak_clause(clause) is not None:
-                return True
-    return False
+    return any(
+        _cloak_line_is_performed(line)
+        for text in texts
+        for line in text.splitlines()
+        if "cloak" in line.lower()
+    )
+
+
+@cache
+def _cloak_line_is_performed(line: str) -> bool:
+    from .effects.dispatch import _ability_effect_or_notice
+    from .effects.tokens import _is_notice_only
+
+    # A mode line ("\u2022 Cloak a card from your hand.") is its own effect.
+    stripped = re.sub(r"\s*\([^()]*\)", "", line).strip().lstrip("\u2022").strip()
+    if ": " in stripped:
+        effect_text = stripped.split(": ", 1)[1]
+    elif re.match(r"^(?:when|whenever|at)\b", stripped, re.IGNORECASE):
+        effect_text = stripped.split(", ", 1)[1] if ", " in stripped else ""
+    else:
+        effect_text = stripped
+    if not any(
+        read_cloak_clause(re.sub(r"^(?:then|and)\s+", "", piece.strip(), flags=re.IGNORECASE))
+        for piece in re.split(r"[.]|, (?:then )?", effect_text)
+    ):
+        return False
+    effect = _ability_effect_or_notice(effect_text)
+    return effect is not None and not _is_notice_only(effect)
