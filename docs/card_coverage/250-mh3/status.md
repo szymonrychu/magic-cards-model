@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 92 | 35.1% |
-| Works (untested) | 93 | 35.5% |
+| Tested | 95 | 36.3% |
+| Works (untested) | 98 | 37.4% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 77 | 29.4% |
+| Not working | 69 | 26.3% |
 
 ## Cards needing work
 
@@ -32,11 +32,7 @@
 | Arna Kennerüd, Skycaptain | silent | Whenever a modified creature you control attacks, double the number of each kind of counter on it. Then for each nontoken permanent attached to it, create a tok | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Bloodsoaked Insight // Sanguine Morass | silent | This spell costs {1} less to cast for each 1 life your opponents have lost this turn. Target opponent exiles the top three cards of their library. Until the end | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Breathe Your Last | silent | Destroy target creature or planeswalker. You gain 1 life for each of its colors. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Colossal Dreadmask | silent | Living weapon | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Copycrook | silent | Connive | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Crabomination | silent | When this creature enters, target opponent exiles the top card of their library, a card at random from their graveyard, and a card at random from their hand. Yo | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Cranial Ram | silent | Living weapon | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Drossclaw | silent | Living weapon | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Eladamri, Korvecdal | silent | {G}, {T}, Tap two untapped creatures you control: Reveal a card from your hand or the top card of your library. If you reveal a creature card this way, put it o | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Electrozoa | silent | At the beginning of your first main phase, tap this creature unless you pay {E}. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Envoy of the Ancestors | silent | Modified creatures you control have lifelink. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -48,13 +44,10 @@
 | Flare of Fortitude | silent | You may sacrifice a nontoken white creature rather than pay this spell's mana cost. Until end of turn, your life total can't change, and permanents you control  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Fowl Strike | silent | Reinforce | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Frogmyr Enforcer | silent | Prototype | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Genku, Future Shaper | silent | Whenever another nontoken permanent you control leaves the battlefield, choose one that hasn't been chosen this turn. Create a creature token with those charact | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Glyph Elemental | silent | Enchanted creature gets +1/+1 for each +1/+1 counter on this Aura. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Golden-Tail Trainer | silent | Whenever this creature attacks, other modified creatures you control get +X/+X until end of turn, where X is this creature's power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Grim Servant | silent | When this creature enters, search your library for a card with mana value less than or equal to your devotion to black, reveal it, put it into your hand, then s | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Grist, Voracious Larva // Grist, the Plague Swarm | silent | Whenever Grist or another creature you control enters, if it entered from your graveyard or you cast it from your graveyard, you may pay {G}. If you do, exile G | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Grist, Voracious Larva // Grist, the Plague Swarm | silent | +1: Create a 1/1 black and green Insect creature token, then mill two cards. Put a deathtouch counter on the token if a black card was milled this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Horrid Shadowspinner | silent | Whenever this creature attacks, you may draw cards equal to its power. If you do, discard that many cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Indebted Spirit | silent | Enchanted creature gets +1/+1 and has afterlife 1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Infernal Captor | silent | When this creature exploits a creature, gain control of target artifact or creature until end of turn. Untap that permanent. It gains haste until end of turn. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Invert Polarity | silent | Choose target spell, then flip a coin. If you win the flip, gain control of that spell and you may choose new targets for it. If you lose the flip, counter that | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Jolted Awake | silent | Choose up to one target artifact or creature card in your graveyard. You get {E}{E} (two energy counters). Then you may pay an amount of {E} equal to that card' | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -64,7 +57,6 @@
 | Laelia, the Blade Reforged | silent | Whenever one or more cards are put into exile from your library and/or your graveyard, put a +1/+1 counter on Laelia. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Legion Leadership // Legion Stronghold | silent | Until end of turn, double target creature's power and it gains first strike. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Lethal Throwdown | silent | As an additional cost to cast this spell, sacrifice a creature or sacrifice a modified creature. (Equipment, Auras you control, and counters are modifications.) | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Mandibular Kite | silent | Living weapon | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Marionette Apprentice | silent | Fabricate | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Monstrous Vortex | silent | Whenever you cast a creature spell with power 5 or greater, discover X, where X is that spell's mana value. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Muster the Departed | silent | Morbid — At the beginning of your end step, if a creature died this turn, populate. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -114,13 +106,16 @@
 | Brainsurge | handled | Draw four cards, then put two cards from your hand on top of your library in any order. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Chthonian Nightmare | handled | When this enchantment enters, you get {E}{E}{E} . | the engine reads this text and performs it | Y/-/- | not_tested |
 | Collective Resistance | handled | Escalate {G} (Pay this cost for each mode chosen beyond the first.) Choose one or more — • Destroy target artifact. • Destroy target enchantment. • Target creat | the engine reads this text and performs it | Y/-/- | not_tested |
+| Colossal Dreadmask | handled | Equipped creature gets +6/+6 and has trample. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Consuming Corruption | handled | Consuming Corruption deals X damage to target creature or planeswalker and you gain X life, where X is the number of Swamps you control. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Contaminated Landscape | handled | {T}, Sacrifice this land: Search your library for a basic Plains, Island, or Swamp card, put it onto the battlefield tapped, then shuffle. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Copycrook | handled | You may have this creature enter as a copy of any creature on the battlefield, except it has "Whenever this creature attacks, it connives." | the engine reads this text and performs it | Y/-/- | not_tested |
 | Deceptive Landscape | handled | {T}, Sacrifice this land: Search your library for a basic Plains, Swamp, or Forest card, put it onto the battlefield tapped, then shuffle. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Depth Defiler | handled | When you cast this spell, choose one. If it was kicked, choose both instead. • Return target creature to its owner's hand. • Target player draws two cards, then | the engine reads this text and performs it | Y/-/- | not_tested |
 | Dreadmobile | handled | {1}, Sacrifice another artifact or creature: Put a +1/+1 counter on this Vehicle. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Dreamdrinker Vampire | handled | {1}{B}: Adapt 1. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Dreamtide Whale | handled | Whenever a player casts their second spell each turn, proliferate. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Drossclaw | handled | Equipped creature gets +1/+1. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Drownyard Lurker | handled | When you cast or cycle Drownyard Lurker, create a 0/1 colorless Eldrazi Spawn creature token with "Sacrifice this token: Add {C}." | the engine reads this text and performs it | Y/-/- | not_tested |
 | Eldrazi Linebreaker | handled | At the beginning of combat on your turn, target creature you control gains haste and gets +X/+0 until end of turn, where X is the number of Eldrazi you control. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Eldrazi Ravager | handled | Sacrifice two Eldrazi: Return this card from your graveyard to your hand. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -140,9 +135,11 @@
 | Gravedig | handled | Choose one — • Target player creates a 2/2 black Zombie creature token. • Return target creature card from your graveyard to your hand. Entwine {2} (Choose both | the engine reads this text and performs it | Y/-/- | not_tested |
 | Guardian of the Forgotten | handled | Whenever a modified creature you control dies, manifest the top card of your library. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Horrific Assault | handled | Target creature you control deals damage equal to its power to target creature or planeswalker you don't control. If you control an Eldrazi, you gain 3 life. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Indebted Spirit | handled | Enchanted creature gets +1/+1 and has afterlife 1. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Inspired Inventor | handled | When this creature enters, choose one — • You get {E}{E}{E} . • Put a +1/+1 counter on target creature. • Create a 1/1 colorless Servo artifact creature token. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Inventor's Axe | handled | When this Equipment enters, you get {E}{E} . | the engine reads this text and performs it | Y/-/- | not_tested |
 | Lion Umbra | handled | Enchanted creature gets +3/+3 and has reach and vigilance. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Mandibular Kite | handled | Equipped creature gets +1/+1 and has flying. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Metastatic Evangel | handled | Whenever another nontoken creature you control enters, proliferate. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Meteoric Mace | handled | Equipped creature gets +4/+0 and has trample. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Mindless Conscription | handled | When this enchantment enters and whenever you draw your third card each turn, amass Zombies 3. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -200,7 +197,7 @@
 ## Fully supported
 
 <details>
-<summary>92 cards</summary>
+<summary>95 cards</summary>
 
 - Aether Revolt
 - Ajani, Nacatl Pariah // Ajani, Nacatl Avenger
@@ -214,6 +211,7 @@
 - Conduit Goblin
 - Consign to Memory
 - Corrupted Shapeshifter
+- Cranial Ram
 - Cursed Wombat
 - Cyclops Superconductor
 - Deem Inferior
@@ -233,7 +231,9 @@
 - Flare of Denial
 - Flare of Malice
 - Galvanic Discharge
+- Genku, Future Shaper
 - Glaring Fleshraker
+- Golden-Tail Trainer
 - Guide of Souls
 - Harbinger of the Seas
 - Herigast, Erupting Nullkite
@@ -301,9 +301,9 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| living weapon | 4 | Colossal Dreadmask, Cranial Ram, Drossclaw, Mandibular Kite | mh3 |
 | Landfall | 3 | Reckless Pyrosurfer, Springheart Nantuko, Territory Culler | mh3 |
 | Morbid | 1 | Muster the Departed | mh3 |
+| +N: create a N/N black and green insect creature token, then mill two cards. put a deathtouch counter on the token if a black card was milled ~. | 1 | Grist, Voracious Larva // Grist, the Plague Swarm | mh3 |
 | as an additional cost to cast ~, sacrifice a creature or sacrifice a modified creature. (equipment, auras you control, and counters are modifications.) destroy  | 1 | Lethal Throwdown | mh3 |
 | as long as ~ is a creature, it has prowess. | 1 | Triton Wavebreaker | mh3 |
 | at the beginning of each of enchanted player's postcombat main phases, there is an additional beginning phase after ~. | 1 | Shadow of the Second Sun | mh3 |
@@ -312,7 +312,6 @@
 | choose target spell, then flip a coin. if you win the flip, gain control of that spell and you may choose new targets for it. if you lose the flip, counter that | 1 | Invert Polarity | mh3 |
 | choose target spell. you get {M}{M} (two energy counters), then you may pay any amount of {M}. counter that spell unless its controller pays {M} for each {M} pa | 1 | Aether Spike | mh3 |
 | choose up to one target artifact or creature card in your graveyard. you get {M}{M} (two energy counters). then you may pay an amount of {M} equal to that card' | 1 | Jolted Awake | mh3 |
-| connive | 1 | Copycrook | mh3 |
 | create a N/N white cat warrior creature token, then put a vigilance counter on a creature you control. | 1 | Ajani Fells the Godsire | mh3 |
 | create a spellgorger weird token. | 1 | Ral and the Implicit Maze | mh3 |
 | creature tokens you control have evolve. | 1 | Propagator Drone | mh3 |
@@ -321,7 +320,6 @@
 | devoid (~ has no color.) exile target nonland permanent. you may cast that card for as long as it remains exiled, and you may spend colorless mana as though it  | 1 | Abstruse Appropriation | mh3 |
 | devoid (~ has no color.) return target nonland permanent you don"..."s hand. whenever you cast a colorless spell with mana value N or greater, you may exile ~ f | 1 | Ugin's Binding | mh3 |
 | draw two cards. then discard a card at random unless you pay {M}{M} (two energy counters). | 1 | Rush of Inspiration // Crackling Falls | mh3 |
-| enchanted creature gets +N/+N and has afterlife N. | 1 | Indebted Spirit | mh3 |
 | enchanted creature gets +N/+N and has mentor. | 1 | Nyxborn Unicorn | mh3 |
 | enchanted creature gets +N/+N for each +N/+N counter on ~ and has reach and trample. | 1 | Nyxborn Hydra | mh3 |
 | enchanted creature gets +N/+N for each +N/+N counter on ~. | 1 | Glyph Elemental | mh3 |
@@ -351,12 +349,9 @@
 | whenever a modified creature you control attacks, double the number of each kind of counter on it. then for each nontoken permanent attached to it, create a tok | 1 | Arna Kennerüd, Skycaptain | mh3 |
 | whenever a player casts a noncreature spell, put a collection counter on ~. then if there are three or more collection counters on it, sacrifice it. if you do,  | 1 | Charitable Levy | mh3 |
 | whenever an opponent casts a spell, you may reveal the top card of your library. if you do, you may cast that card without paying its mana cost if the two spell | 1 | Powerbalance | mh3 |
-| whenever another nontoken permanent you control leaves the battlefield, choose one that hasn't been chosen ~. create a creature token with those characteristics | 1 | Genku, Future Shaper | mh3 |
-| whenever grist or another creature you control enters, if it entered from your graveyard or you cast it from your graveyard, you may pay {M}. if you do, exile g | 1 | Grist, Voracious Larva // Grist, the Plague Swarm | mh3 |
 | whenever one or more cards are put into exile from your library and/or your graveyard, put a +N/+N counter on laelia. | 1 | Laelia, the Blade Reforged | mh3 |
 | whenever you cast a creature spell with mana value N, N, or N, create two N/N colorless eldrazi spawn creature tokens with "..." | 1 | Kozilek's Unsealing | mh3 |
 | whenever you cast a creature spell with power N or greater, discover N, where N is that spell's mana value. | 1 | Monstrous Vortex | mh3 |
-| whenever ~ attacks, other modified creatures you control get +N/+N until end of turn, where N is ~ power. | 1 | Golden-Tail Trainer | mh3 |
 | whenever ~ attacks, put a +N/+N counter on target modified creature you control. | 1 | Expanding Ooze | mh3 |
 | whenever ~ attacks, you may draw cards equal to its power. if you do, discard that many cards. | 1 | Horrid Shadowspinner | mh3 |
 | whenever ~ deals combat damage to a player, put a +N/+N counter on it. when you do, you may remove a counter from another target permanent or opponent. | 1 | Etched Slith | mh3 |

@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 72 | 28.6% |
-| Works (untested) | 133 | 52.8% |
+| Tested | 76 | 30.2% |
+| Works (untested) | 134 | 53.2% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 47 | 18.7% |
+| Not working | 42 | 16.7% |
 
 ## Cards needing work
 
@@ -33,13 +33,12 @@
 | Bloomvine Regent // Claim Territory | silent | Search your library for up to two basic Forest cards, reveal them, put one onto the battlefield tapped and the other into your hand, then shuffle. (Also shuffle | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Call the Spirit Dragons | silent | At the beginning of your upkeep, for each color, put a +1/+1 counter on a Dragon you control of that color. If you put +1/+1 counters on five Dragons this way,  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Death Begets Life | silent | Destroy all creatures and enchantments. Draw a card for each permanent destroyed this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Descendant of Storms | silent | Whenever this creature attacks, you may pay {1}{W}. If you do, it endures 1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
+| Descendant of Storms | silent | Endure | no machine in the engine executes this keyword | Y/Y/Y | not_working |
 | Dragon's Prey | silent | This spell costs {2} more to cast if it targets a Dragon. Destroy target creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Dragonbroods' Relic | silent | {3}{W}{U}{B}{R}{G}, Sacrifice this artifact: Create a 4/4 Dragon creature token named Reliquary Dragon that's all colors. It has flying, lifelink, and "When thi | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Embermouth Sentinel | silent | When this creature enters, you may search your library for a basic land card, reveal it, then shuffle and put that card on top. If you control a Dragon, put tha | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Gurmag Rakshasa | silent | When this creature enters, target creature an opponent controls gets -2/-2 until end of turn and target creature you control gets +2/+2 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Herd Heirloom | silent | {T}: Until end of turn, target creature you control with power 4 or greater gains trample and "Whenever this creature deals combat damage to a player, draw a ca | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Hollowmurk Siege | silent | Whenever a counter is put on a creature you control, draw a card. This ability triggers only once each turn. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
 | Kheru Goldkeeper | silent | Whenever one or more cards leave your graveyard during your turn, create a Treasure token. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
 | Kishla Skimmer | silent | Whenever a card leaves your graveyard during your turn, draw a card. This ability triggers only once each turn. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
 | Kotis, the Fangkeeper | silent | Whenever Kotis deals combat damage to a player, exile the top X cards of their library, where X is the amount of damage dealt. You may cast any number of spells | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -58,14 +57,10 @@
 | Smile at Death | silent | At the beginning of your upkeep, return up to two target creature cards with power 2 or less from your graveyard to the battlefield. Put a +1/+1 counter on each | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Songcrafter Mage | silent | When this creature enters, target instant or sorcery card in your graveyard gains harmonize until end of turn. Its harmonize cost is equal to its mana cost. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Stillness in Motion | silent | At the beginning of your upkeep, mill three cards. Then if your library has no cards in it, exile this enchantment and put five cards from your graveyard on top | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Taigam, Master Opportunist | silent | Flurry — Whenever you cast your second spell each turn, copy it, then exile the spell you cast with four time counters on it. If it doesn't have suspend, it gai | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Teval, Arbiter of Virtue | silent | Whenever you cast a spell, you lose life equal to its mana value. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| The Sibsig Ceremony | silent | Whenever a creature you control enters, if you cast it, destroy that creature, then create a 2/2 black Zombie Druid creature token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Trade Route Envoy | silent | When this creature enters, draw a card if you control a creature with a counter on it. If you don't draw a card this way, put a +1/+1 counter on this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Traveling Botanist | silent | Whenever this creature becomes tapped, look at the top card of your library. If it's a land card, you may reveal it and put it into your hand. If you don't put  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Veteran Ice Climber | silent | Whenever this creature attacks, up to one target player mills cards equal to this creature's power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Warden of the Grove | silent | Whenever another nontoken creature you control enters, it endures X, where X is the number of counters on this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Wingspan Stride | silent | {2}{U}: Return this Aura to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Desperate Measures | notice | Target creature gets +1/-1 until end of turn. When it dies under your control this turn, draw two cards. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Kishla Trawlers | notice | When this creature enters, you may exile a creature card from your graveyard. When you do, return target instant or sorcery card from your graveyard to your han | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Lie in Wait | notice | Return target creature card from your graveyard to your hand. Lie in Wait deals damage equal to that card's power to target creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
@@ -190,6 +185,7 @@
 | Temur Devotee | handled | Defender | machines/combat.py | Y/Y/Y | not_tested |
 | Temur Monument | handled | When this artifact enters, search your library for a basic Forest, Island, or Mountain card, reveal it, put it into your hand, then shuffle. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Temur Tawnyback | handled | When this creature enters, draw a card, then discard a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| The Sibsig Ceremony | handled | Creature spells you cast cost {2} less to cast. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Thunder of Unity | handled | I — You draw two cards and you lose 2 life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Unburied Earthcarver | handled | {2}, Sacrifice another creature: Put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Underfoot Underdogs | handled | When this creature enters, create a 1/1 red Goblin creature token. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -210,7 +206,7 @@
 ## Fully supported
 
 <details>
-<summary>72 cards</summary>
+<summary>76 cards</summary>
 
 - Aegis Sculptor
 - Agent of Kotis
@@ -243,6 +239,7 @@
 - Glacierwood Siege
 - Hardened Tactician
 - Heritage Reclamation
+- Hollowmurk Siege
 - Hundred-Battle Veteran
 - Inevitable Defeat
 - Jeskai Revelation
@@ -270,8 +267,10 @@
 - Stormscale Scion
 - Strategic Betrayal
 - Surrak, Elusive Hunter
+- Taigam, Master Opportunist
 - Tempest Hawk
 - Tersa Lightshatter
+- Teval, Arbiter of Virtue
 - Twinmaw Stormbrood // Charring Bite
 - Ugin, Eye of the Storms
 - United Battlefront
@@ -280,6 +279,7 @@
 - Wail of War
 - Whirlwing Stormbrood // Dynamic Soar
 - Windcrag Siege
+- Wingspan Stride
 - Winternight Stories
 - Yathan Roadwatcher
 - Yathan Tombguard
@@ -291,7 +291,7 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| Flurry | 1 | Taigam, Master Opportunist | tdm |
+| endure | 2 | Anafenza, Unyielding Lineage, Descendant of Storms | tdm |
 | Renew | 1 | Naga Fleshcrafter | tdm |
 | at the beginning of your end step, if creatures you control have total toughness N or greater, draw a card. then if creatures you control have total toughness N | 1 | Betor, Kin to All | tdm |
 | at the beginning of your upkeep, for each color, put a +N/+N counter on a dragon you control of that color. if you put +N/+N counters on five dragons ~, you win | 1 | Call the Spirit Dragons | tdm |
@@ -302,7 +302,6 @@
 | double the power and toughness of each creature you control until end of turn. | 1 | Roar of Endless Song | tdm |
 | during your turn, spells you cast cost {M} less to cast for each creature you control with power N or greater. | 1 | Temur Battlecrier | tdm |
 | each non-dragon creature gets -N/-N until end of turn. (then shuffle ~ into its owner's library.) | 1 | Scavenger Regent // Exude Toxin | tdm |
-| endure | 1 | Anafenza, Unyielding Lineage | tdm |
 | return target creature card from your graveyard to your hand. ~ deals damage equal to that card's power to target creature. | 1 | Lie in Wait | tdm |
 | return target permanent card from your graveyard to the battlefield with a hexproof counter and an indestructible counter on it. | 1 | Perennation | tdm |
 | return up to two target permanent cards from your graveyard to your hand. target player shuffles up to four target cards from their graveyard into their library | 1 | Rite of Renewal | tdm |
@@ -319,21 +318,16 @@
 | when ~ enters, you may exile a creature card from your graveyard. when you do, return target instant or sorcery card from your graveyard to your hand. | 1 | Kishla Trawlers | tdm |
 | when ~ enters, you may search your library for a basic land card, reveal it, then shuffle and put that card on top. if you control a dragon, put that card onto  | 1 | Embermouth Sentinel | tdm |
 | whenever a card leaves your graveyard during your turn, draw a card. ~ triggers only once each turn. | 1 | Kishla Skimmer | tdm |
-| whenever a counter is put on a creature you control, draw a card. ~ triggers only once each turn. | 1 | Hollowmurk Siege | tdm |
-| whenever a creature you control enters, if you cast it, destroy that creature, then create a N/N black zombie druid creature token. | 1 | The Sibsig Ceremony | tdm |
 | whenever another nontoken creature you control enters, it endures N, where N is the number of counters on ~. | 1 | Warden of the Grove | tdm |
 | whenever kotis deals combat damage to a player, exile the top N cards of their library, where N is the amount of damage dealt. you may cast any number of spells | 1 | Kotis, the Fangkeeper | tdm |
 | whenever one or more cards leave your graveyard during your turn, create a treasure token. | 1 | Kheru Goldkeeper | tdm |
 | whenever one or more cards leave your graveyard during your turn, put a +N/+N counter on ~. | 1 | Attuned Hunter | tdm |
-| whenever you cast a spell, you lose life equal to its mana value. | 1 | Teval, Arbiter of Virtue | tdm |
 | whenever ~ attacks, for each opponent, create a tapped token that's a copy of the exiled card attacking that opponent. at the beginning of your next end step, s | 1 | Mardu Siegebreaker | tdm |
 | whenever ~ attacks, up to one target player mills cards equal to ~ power. | 1 | Veteran Ice Climber | tdm |
 | whenever ~ attacks, you lose N life and ~ endures N. | 1 | Sinkhole Surveyor | tdm |
-| whenever ~ attacks, you may pay {M}{M}. if you do, it endures N. | 1 | Descendant of Storms | tdm |
 | whenever ~ becomes tapped, look at the top card of your library. if it"..."t put the card into your hand, you may put it into your graveyard. | 1 | Traveling Botanist | tdm |
 | you may cast ~ as though it had flash if you behold a dragon as an additional cost to cast it. (to behold a dragon, choose a dragon you control or reveal a drag | 1 | Molten Exhale | tdm |
 | {M}: until end of turn, target creature you control with power N or greater gains trample and "..." | 1 | Herd Heirloom | tdm |
-| {M}{M}: return ~ to its owner's hand. | 1 | Wingspan Stride | tdm |
 | {M}{M}: ~ can attack ~ as though it didn't have defender. | 1 | Krotiq Nestguard | tdm |
 | {M}{M}{M}{M}{M}{M}, sacrifice ~: create a N/N dragon creature token named reliquary dragon that's all colors. it has flying, lifelink, and "..." activate only a | 1 | Dragonbroods' Relic | tdm |
 | ~ costs {M} more to cast if it targets a dragon. destroy target creature. | 1 | Dragon's Prey | tdm |

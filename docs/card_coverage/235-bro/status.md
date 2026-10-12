@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 45 | 17.6% |
-| Works (untested) | 141 | 55.1% |
+| Tested | 47 | 18.4% |
+| Works (untested) | 143 | 55.9% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 70 | 27.3% |
+| Not working | 66 | 25.8% |
 
 ## Cards needing work
 
@@ -31,11 +31,9 @@
 | Argivian Avenger | silent | {1}: Until end of turn, this creature gets -1/-1 and gains your choice of flying, vigilance, deathtouch, or haste. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Autonomous Assembler | silent | Prototype | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Battlefield Butcher | silent | {5}, {T}: Each opponent loses 2 life. This ability costs {1} less to activate for each creature card in your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Bladecoil Serpent | silent | When this creature enters, for each {U}{U} spent to cast it, draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Blitz Automaton | silent | Prototype | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Boulderbranch Golem | silent | When this creature enters, you gain life equal to its power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Calamity's Wake | silent | Exile all graveyards. Players can't cast noncreature spells this turn. Exile Calamity's Wake. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Clay Champion | silent | When this creature enters, choose up to two other target creatures you control. For each {W}{W} spent to cast this creature, put a +1/+1 counter on each of them | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Combat Thresher | silent | Prototype | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Cradle Clearcutter | silent | Prototype | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Depth Charge Colossus | silent | Prototype | no machine in the engine executes this keyword | Y/Y/- | not_working |
@@ -46,8 +44,6 @@
 | Fallaji Dragon Engine | silent | Prototype | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Fateful Handoff | silent | Draw cards equal to the mana value of target artifact or creature you control. An opponent gains control of that permanent. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Goring Warplow | silent | Prototype | no machine in the engine executes this keyword | Y/Y/- | not_working |
-| Great Desert Prospector | silent | When this creature enters, create a tapped Powerstone token for each other creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Gurgling Anointer | silent | When this creature dies, return another target creature card with mana value less than or equal to this creature's power from your graveyard to the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Heavyweight Demolisher | silent | At the beginning of your upkeep, tap this creature unless you pay {3}. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Hero of the Dunes | silent | Creatures you control with mana value 3 or less get +1/+0. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Hostile Negotiations | silent | Exile the top three cards of your library in a face-down pile, then exile the top three cards of your library in another face-down pile. Look at the cards in ea | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -142,7 +138,9 @@
 | Gnarlroot Pallbearer | handled | When this creature enters, target creature gets +X/+X until end of turn, where X is the number of creature cards in your graveyard. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Gnawing Vermin | handled | When this creature enters, target player mills two cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Goblin Firebomb | handled | {7}, {T}, Sacrifice this artifact: Destroy target permanent. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Great Desert Prospector | handled | When this creature enters, create a tapped Powerstone token for each other creature you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Gruesome Realization | handled | Choose one — • You draw two cards and you lose 2 life. • Creatures your opponents control get -1/-1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Gurgling Anointer | handled | Whenever you draw your second card each turn, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Gwenna, Eyes of Gaea | handled | Whenever you cast a creature spell with power 5 or greater, put a +1/+1 counter on Gwenna and untap it. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Hajar, Loyal Bodyguard | handled | Sacrifice Hajar: Legendary creatures you control get +1/+0 and gain indestructible until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Hall of Tagsin | handled | {4}, {T}: Create a tapped Powerstone token. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -241,16 +239,18 @@
 ## Fully supported
 
 <details>
-<summary>45 cards</summary>
+<summary>47 cards</summary>
 
 - Aeronaut Cavalry
 - Alloy Animist
 - Argoth, Sanctum of Nature
 - Awaken the Woods
 - Bitter Reunion
+- Bladecoil Serpent
 - Brotherhood's End
 - Bushwhack
 - Cityscape Leveler
+- Clay Champion
 - Demolition Field
 - Drafna, Founder of Lat-Nam
 - Fallaji Archaeologist
@@ -319,11 +319,7 @@
 | return target artifact or creature card with mana value N or less from your graveyard to the battlefield. if a creature enters ~, it enters with an additional + | 1 | Recommission | bro |
 | target opponent reveals their hand. you choose an artifact or creature card from it, then choose an artifact or creature card from their graveyard. exile the ch | 1 | Dreams of Steel and Oil | bro |
 | when ~ dies, add eight {M}. until end of turn, you don't lose ~ as steps and phases end. | 1 | Su-Chi Cave Guard | bro |
-| when ~ dies, return another target creature card with mana value less than or equal to ~ power from your graveyard to the battlefield. | 1 | Gurgling Anointer | bro |
 | when ~ dies, you may gain N life for each creature card in your graveyard. if you do, exile ~ from your graveyard. | 1 | Skyfisher Spider | bro |
-| when ~ enters, choose up to two other target creatures you control. for each {M}{M} spent to cast ~, put a +N/+N counter on each of them. | 1 | Clay Champion | bro |
-| when ~ enters, create a tapped powerstone token for each other creature you control. | 1 | Great Desert Prospector | bro |
-| when ~ enters, for each {M}{M} spent to cast it, draw a card. | 1 | Bladecoil Serpent | bro |
 | when ~ enters, if you cast it, exile target instant or sorcery card with mana value less than or equal to ~ power from your graveyard. copy that card. you may c | 1 | Arcane Proxy | bro |
 | when ~ enters, mill three cards. you may put a plains card or a creature card with mana value N or less from among the cards milled ~ into your hand. if you don | 1 | Airlift Chaplain | bro |
 | when ~ enters, scry N, where N is its power. | 1 | Spotter Thopter | bro |

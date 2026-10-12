@@ -18,20 +18,20 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 2 | 25.0% |
-| Works (untested) | 4 | 50.0% |
+| Works (untested) | 5 | 62.5% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 2 | 25.0% |
+| Not working | 1 | 12.5% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
 | Sengir Autocrat | silent | When this creature leaves the battlefield, exile all Serf tokens. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Torture | silent | {1}{B}: Put a -1/-1 counter on enchanted creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Anaba Bodyguard | handled | First strike | machines/combat.py | Y/-/- | not_tested |
 | Anaba Shaman | handled | {R}, {T}: This creature deals 1 damage to any target. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Eron the Relentless | handled | {R}{R}{R}: Regenerate Eron. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Merchant Scroll | handled | Search your library for a blue instant card, reveal that card, put it into your hand, then shuffle. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Torture | handled | {1}{B}: Put a -1/-1 counter on enchanted creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 
 ## Fully supported
 
@@ -48,7 +48,6 @@
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
 | when ~ leaves the battlefield, exile all serf tokens. | 1 | Sengir Autocrat | hml |
-| {M}{M}: put a -N/-N counter on enchanted creature. | 1 | Torture | hml |
 
 ## Notes
 

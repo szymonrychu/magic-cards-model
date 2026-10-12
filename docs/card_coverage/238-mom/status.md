@@ -17,52 +17,41 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 76 | 27.9% |
-| Works (untested) | 98 | 36.0% |
+| Tested | 79 | 29.0% |
+| Works (untested) | 113 | 41.5% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 98 | 36.0% |
+| Not working | 80 | 29.4% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
-| Archpriest of Shadows | silent | Backup | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Assimilate Essence | silent | Incubate | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Attentive Skywarden | silent | Whenever this creature deals combat damage to a player or battle, transform up to one target Incubator token you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Baral and Kari Zev | silent | Whenever you cast your first instant or sorcery spell each turn, you may cast a spell with lesser mana value that shares a card type with it from your hand with | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Blighted Burgeoning | silent | When this Aura enters, incubate 2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Bloated Processor | silent | When this creature dies, incubate X, where X is its power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Bola Slinger | silent | Backup | no machine in the engine executes this keyword | Y/Y/- | not_working |
-| Boon-Bringer Valkyrie | silent | Backup | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Breach the Multiverse | silent | Each player mills ten cards. For each player, choose a creature or planeswalker card in that player's graveyard. Put those cards onto the battlefield under your | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Chandra, Hope's Beacon | silent | +1: Exile the top five cards of your library. Until the end of your next turn, you may cast an instant or sorcery spell from among those exiled cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Chomping Kavu | silent | Backup | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Chrome Host Seedshark | silent | Whenever you cast a noncreature spell, incubate X, where X is that spell's mana value. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | City on Fire | silent | Triple | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Compleated Huntmaster | silent | {1}, {T}, Sacrifice another creature or artifact: Incubate 3. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Complete the Circuit | silent | Convoke (Your creatures can help cast this spell. Each creature you tap while casting this spell pays for {1} or one mana of that creature's color.) You may cas | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Consuming Aetherborn | silent | Backup | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Converter Beast | silent | When this creature enters, incubate 5. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Corruption of Towashi | silent | When this enchantment enters, incubate 4. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Cragsmasher Yeti | silent | Backup | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Djeru and Hazoret | silent | As long as you have one or fewer cards in hand, Djeru and Hazoret has vigilance and haste. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Doomskar Warrior | silent | Whenever this creature deals combat damage to a player or battle, look at that many cards from the top of your library. You may reveal a creature or land card f | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Elesh Norn // The Argent Etchings | silent | Whenever a source an opponent controls deals damage to you or a permanent you control, that source's controller loses 2 life unless they pay {1}. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Elvish Vatkeeper | silent | When this creature enters, incubate 2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Enduring Bondwarden | silent | Backup | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Essence of Orthodoxy | silent | Whenever this creature or another Phyrexian you control enters, incubate 2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Expedition Lookout | silent | As long as an opponent has eight or more cards in their graveyard, this creature can attack as though it didn't have defender and it can't be blocked. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Eyes of Gitaxias | silent | Incubate 3. (Create an Incubator token with three +1/+1 counters on it and "{2}: Transform this token." It transforms into a 0/0 Phyrexian artifact creature.) D | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Fearless Skald | silent | Backup | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Fertilid's Favor | silent | Target player searches their library for a basic land card, puts it onto the battlefield tapped, then shuffles. Put two +1/+1 counters on up to one target artif | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Furnace Gremlin | silent | When this creature dies, incubate X, where X is its power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Gift of Compleation | silent | When this enchantment enters, incubate 3. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Glissa, Herald of Predation | silent | Incubate | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Glistening Dawn | silent | Incubate X twice, where X is the number of lands you control. (To incubate X, create an Incubator token with X +1/+1 counters on it and "{2}: Transform this tok | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Gloomfang Mauler | silent | Backup | no machine in the engine executes this keyword | Y/Y/- | not_working |
-| Golden-Scale Aeronaut | silent | Backup | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Halo-Charged Skaab | silent | When this creature enters, each player mills two cards. Then you may put an instant, sorcery, or battle card from your graveyard on top of your library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Hangar Scrounger | silent | Backup | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Hidetsugu and Kairi | silent | When Hidetsugu and Kairi dies, exile the top card of your library. Target opponent loses life equal to its mana value. If it's an instant or sorcery card, you m | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ichor Drinker | silent | {B}, Exile this card from your graveyard: Incubate 2. Activate only as a sorcery. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Infected Defector | silent | When this creature dies, incubate 3. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -82,17 +71,11 @@
 | Progenitor Exarch | silent | When this creature enters, incubate 3 X times. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Quintorius, Loremaster | silent | {1}{R}{W}, {T}, Sacrifice a Spirit: Choose target card exiled with Quintorius. You may cast that card this turn without paying its mana cost. If that spell woul | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Realmbreaker, the Invasion Tree | silent | {2}, {T}: Target opponent mills three cards. Put a land card from their graveyard onto the battlefield tapped under your control. It gains "If this land would l | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Redcap Heelslasher | silent | Backup | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Rona, Herald of Invasion // Rona, Tolarian Obliterator | silent | Whenever a source deals damage to Rona, that source's controller exiles a card from their hand at random. If it's a land card, you may put it onto the battlefie | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Saiba Cryptomancer | silent | Backup | no machine in the engine executes this keyword | Y/Y/- | not_working |
-| Scorn-Blade Berserker | silent | Backup | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Sculpted Perfection | silent | When this enchantment enters, incubate 2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Searing Barb | silent | Incubate | no machine in the engine executes this keyword | Y/Y/- | not_working |
-| Serpent-Blade Assailant | silent | Backup | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Sheoldred // The True Scriptures | silent | III — Put all creature cards from all graveyards onto the battlefield under your control. Exile this Saga, then return it to the battlefield . | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Sigiled Sentinel | silent | Backup | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Stasis Field | silent | Enchanted creature has base power and toughness 0/2, has defender, and loses all other abilities. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Streetwise Negotiator | silent | Backup | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Sunder the Gateway | silent | Incubate | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Sunfall | silent | Exile all creatures. Incubate X, where X is the number of creatures exiled this way. (Create an Incubator token with X +1/+1 counters on it and "{2}: Transform  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sword of Once and Future | silent | Whenever equipped creature deals combat damage to a player, surveil 2. Then you may cast an instant or sorcery spell with mana value 2 or less from your graveya | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -101,7 +84,6 @@
 | Traumatic Revelation | silent | Target opponent reveals their hand. You may choose a creature or battle card from it. If you do, that player discards that card. If you don't, incubate 3. (Crea | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Unseal the Necropolis | silent | Each player mills three cards. Then you return up to two creature cards from your graveyard to your hand. (To mill three cards, a player puts the top three card | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Vengeant Earth | silent | Target creature or land you control becomes a 4/4 Elemental creature with haste in addition to its other types until end of turn. It must be blocked this turn i | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Voldaren Thrillseeker | silent | Backup | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | War-Trained Slasher | silent | Whenever this creature attacks a battle, double its power until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Wrenn and Realmbreaker | silent | +1: Up to one target land you control becomes a 3/3 Elemental creature with vigilance, hexproof, and haste until your next turn. It's still a land. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Zephyr Singer | silent | When this creature enters, put a flying counter on each creature that convoked it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -130,6 +112,7 @@
 | Alabaster Host Intercessor | handled | When this creature enters, exile target creature an opponent controls until this creature leaves the battlefield. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Alabaster Host Sanctifier | handled | Lifelink | machines/combat.py | Y/Y/- | not_tested |
 | Arachnoid Adaptation | handled | Target creature gets +2/+2 and gains reach until end of turn. Untap it. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Archpriest of Shadows | handled | Whenever this creature deals combat damage to a player or battle, return target creature card from your graveyard to the battlefield. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Artistic Refusal | handled | Convoke (Your creatures can help cast this spell. Each creature you tap while casting this spell pays for {1} or one mana of that creature's color.) Choose one  | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Astral Wingspan | handled | When this Aura enters, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Atraxa's Fall | handled | Destroy target artifact, battle, enchantment, or creature with flying. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -138,12 +121,16 @@
 | Bladed Battle-Fan | handled | When this Equipment enters, attach it to target creature you control. That creature gains indestructible until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Blightreaper Thallid // Blightsower Thallid | handled | {3}{G/P}: Transform this creature. Activate only as a sorcery. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Bloodfeather Phoenix | handled | This creature can't block. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Bola Slinger | handled | Whenever this creature attacks, tap target artifact or creature an opponent controls. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Bonded Herdbeast // Plated Kilnbeast | handled | {4}{R/P}: Transform this creature. Activate only as a sorcery. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Boon-Bringer Valkyrie | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
 | Burning Sun's Fury | handled | Convoke (Your creatures can help cast this spell. Each creature you tap while casting this spell pays for {1} or one mana of that creature's color.) Up to two t | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Captive Weird // Compleated Conjurer | handled | {3}{R/P}: Transform this creature. Activate only as a sorcery. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Change the Equation | handled | Choose one — • Counter target spell with mana value 2 or less. • Counter target red or green spell with mana value 6 or less. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Chomping Kavu | handled | This creature can't be blocked by creatures with power 2 or less. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Collective Nightmare | handled | Convoke (Your creatures can help cast this spell. Each creature you tap while casting this spell pays for {1} or one mana of that creature's color.) Target crea | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Coming In Hot | handled | Target creature gets +1/+0 and gains first strike until end of turn. Scry 1. (Look at the top card of your library. You may put that card on the bottom.) | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Consuming Aetherborn | handled | Lifelink | machines/combat.py | Y/Y/- | not_tested |
 | Copper Host Crusher | handled | Hexproof | machines/casting.py (target legality) | Y/Y/- | not_tested |
 | Corrupted Conviction | handled | As an additional cost to cast this spell, sacrifice a creature. Draw two cards. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Crystal Carapace | handled | Enchanted creature gets +3/+3 and has ward {2}. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -153,16 +140,21 @@
 | Dreg Recycler | handled | {T}, Sacrifice an artifact or creature: Each opponent loses 1 life and you gain 1 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Dusk Legion Duelist | handled | Whenever one or more +1/+1 counters are put on this creature, draw a card. This ability triggers only once each turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Elspeth's Smite | handled | Elspeth's Smite deals 3 damage to target attacking or blocking creature. If that creature would die this turn, exile it instead. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Enduring Bondwarden | handled | When this creature dies, put its counters on target creature you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ephara's Dispersal | handled | This spell costs {2} less to cast if it targets an attacking creature. Return target creature to its owner's hand. Surveil 2. (Look at the top two cards of your | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Etched Familiar | handled | When this creature dies, each opponent loses 2 life and you gain 2 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Failed Conversion | handled | Enchanted creature gets -4/-4. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Fearless Skald | handled | Backup | machines/keywords.py | Y/Y/- | not_tested |
 | Final Flourish | handled | Kicker—Sacrifice an artifact or creature. (You may sacrifice an artifact or creature in addition to any other costs as you cast this spell.) Target creature get | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Furnace Host Charger | handled | Mountaincycling | machines/keywords.py (off_zone_abilities: cycling) | Y/Y/- | not_tested |
 | Furtive Analyst | handled | {2}, {T}: Draw a card, then discard a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Gloomfang Mauler | handled | Backup | machines/keywords.py | Y/Y/- | not_tested |
 | Gnottvold Hermit // Chrome Host Hulk | handled | {5}{U/P}: Transform this creature. Activate only as a sorcery. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Golden-Scale Aeronaut | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
 | Grafted Butcher | handled | When this creature enters, Phyrexians you control gain menace until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Guardian of Ghirapur | handled | When this creature enters, exile up to one other target creature or artifact you control. Return it to the battlefield under its owner's control at the beginnin | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Halo Hopper | handled | Convoke | machines/keywords.py | Y/Y/- | not_tested |
+| Hangar Scrounger | handled | Whenever this creature becomes tapped, you may discard a card. If you do, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Harried Artisan // Phyrexian Skyflayer | handled | {3}{W/P}: Transform this creature. Activate only as a sorcery. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Herbology Instructor // Malady Invoker | handled | When this creature enters, you gain 3 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Interdisciplinary Mascot | handled | When this creature enters, look at the top four cards of your library. Put one of them into your hand and the rest on the bottom of your library in a random ord | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -192,14 +184,18 @@
 | Ral's Reinforcements | handled | Create two 1/1 blue and red Elemental creature tokens. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ramosian Greatsword | handled | Equipped creature gets +3/+1 and has trample. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ravenous Sailback | handled | When this creature enters, choose one — • This creature gains haste until end of turn. • Destroy target artifact or enchantment. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Redcap Heelslasher | handled | Backup | machines/keywords.py | Y/Y/- | not_tested |
 | Referee Squad | handled | When this creature enters, tap target creature an opponent controls and put a stun counter on it. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Render Inert | handled | Remove up to five counters from target permanent. Draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ruins Recluse | handled | {3}{G}: Put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Saiba Cryptomancer | handled | Backup | machines/keywords.py | Y/Y/- | not_tested |
+| Scorn-Blade Berserker | handled | {1}, Sacrifice this creature: Draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Scrappy Bruiser | handled | Whenever this creature attacks, up to one target attacking creature gets +2/+0 and gains trample until end of turn. Return that creature to its owner's hand at  | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Scrollshift | handled | Exile up to one target artifact, creature, or enchantment you control, then return it to the battlefield under its owner's control. Draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Seal from Existence | handled | When this enchantment enters, exile target nonland permanent an opponent controls until this enchantment leaves the battlefield. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Seer of Stolen Sight | handled | Whenever one or more artifacts and/or creatures you control are put into a graveyard from the battlefield, surveil 1. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Seraph of New Capenna // Seraph of New Phyrexia | handled | {4}{B/P}: Transform this creature. Activate only as a sorcery. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Serpent-Blade Assailant | handled | Backup | machines/keywords.py | Y/Y/- | not_tested |
 | Shatter the Source | handled | Convoke (Your creatures can help cast this spell. Each creature you tap while casting this spell pays for {1} or one mana of that creature's color.) Choose one  | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Shivan Branch-Burner | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
 | Skyclave Aerialist // Skyclave Invader | handled | {4}{G/P}: Transform this creature. Activate only as a sorcery. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -216,6 +212,7 @@
 | Transcendent Message | handled | Convoke (Your creatures can help cast this spell. Each creature you tap while casting this spell pays for {1} or one mana of that creature's color.) Draw X card | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Urn of Godfire | handled | {6}, {T}, Sacrifice this artifact: Destroy target creature or enchantment. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Volcanic Spite | handled | Volcanic Spite deals 3 damage to target creature, planeswalker, or battle. You may put a card from your hand on the bottom of your library. If you do, draw a ca | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Voldaren Thrillseeker | handled | {1}, Sacrifice this creature: It deals damage equal to its power to any target. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Wary Thespian | handled | When this creature enters or dies, surveil 1. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Wildwood Escort | handled | When this creature enters, return target creature or battle card from your graveyard to your hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Yargle and Multani | handled |  |  | Y/Y/- | not_tested |
@@ -226,7 +223,7 @@
 ## Fully supported
 
 <details>
-<summary>76 cards</summary>
+<summary>79 cards</summary>
 
 - Ancient Imperiosaur
 - Angelic Intervention
@@ -234,6 +231,7 @@
 - Borborygmos and Fblthp
 - Botanical Brawler
 - Cosmic Hunger
+- Cragsmasher Yeti
 - Disturbing Conversion
 - Drana and Linvala
 - Errant and Giada
@@ -295,6 +293,8 @@
 - Sandstalker Moloch
 - See Double
 - Seed of Hope
+- Sigiled Sentinel
+- Streetwise Negotiator
 - Surge of Salvation
 - Tandem Takedown
 - Temporal Cleansing
@@ -311,7 +311,6 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| backup | 18 | Archpriest of Shadows, Bola Slinger, Boon-Bringer Valkyrie, Chomping Kavu, Consuming Aetherborn | mom |
 | when ~ enters, incubate N. | 9 | Blighted Burgeoning, Converter Beast, Corruption of Towashi, Elvish Vatkeeper, Gift of Compleation | mom |
 | incubate | 4 | Assimilate Essence, Glissa, Herald of Predation, Searing Barb, Sunder the Gateway | mom |
 | when ~ dies, incubate N, where N is its power. | 2 | Bloated Processor, Furnace Gremlin | mom |

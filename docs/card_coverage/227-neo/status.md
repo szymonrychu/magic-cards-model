@@ -17,16 +17,15 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 54 | 20.2% |
-| Works (untested) | 137 | 51.3% |
+| Tested | 55 | 20.6% |
+| Works (untested) | 138 | 51.7% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 76 | 28.5% |
+| Not working | 74 | 27.7% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
-| Awakened Awareness | silent | When this Aura enters, put X +1/+1 counters on enchanted permanent. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Azusa's Many Journeys // Likeness of the Seeker | silent | Whenever this creature becomes blocked, untap up to three lands you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Banishing Slash | silent | Destroy up to one target artifact, enchantment, or tapped creature. Then if you control an artifact and an enchantment, create a 2/2 white Samurai creature toke | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Behold the Unspeakable // Vision of the Unspeakable | silent | I — Creatures you don't control get -2/-0 until your next turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -98,7 +97,6 @@
 | Regent's Authority | notice | Target creature gets +2/+2 until end of turn. If it's an enchantment creature or legendary creature, instead put a +1/+1 counter on it and it gets +1/+1 until e | unparsed remainder: If it's an enchantment creature or legendary creature, instead put a +1/+1 counter on it and it gets +1/+1 until end of turn. | Y/Y/- | not_working |
 | Runaway Trash-Bot | notice | This creature gets +1/+0 for each artifact and/or enchantment card in your graveyard. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Storyweave | notice | Choose one — • Put two +1/+1 counters on target creature you control. • Put two lore counters on target Saga you control. The next time one or more enchantment  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Tamiyo's Compleation | notice | When this Aura enters, tap enchanted permanent. If it's an Equipment, unattach it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Teachings of the Kirin // Kirin-Touched Orochi | notice | Whenever this creature attacks, choose one — • Exile target creature card from a graveyard. When you do, create a 1/1 colorless Spirit creature token. • Exile t | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | The Kami War // O-Kagachi Made Manifest | notice | Whenever this creature attacks, defending player chooses a nonland card in your graveyard. Return that card to your hand. This creature gets +X/+0 until end of  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Upriser Renegade | notice | This creature gets +2/+0 for each other modified creature you control. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -112,6 +110,7 @@
 | Assassin's Ink | handled | This spell costs {1} less to cast if you control an artifact and {1} less to cast if you control an enchantment. Destroy target creature or planeswalker. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Atsushi, the Blazing Sky | handled | When Atsushi dies, choose one — • Exile the top two cards of your library. Until the end of your next turn, you may play those cards. • Create three Treasure to | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Automated Artificer | handled |  |  | Y/Y/- | not_tested |
+| Awakened Awareness | handled | When this Aura enters, put X +1/+1 counters on enchanted permanent. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Bamboo Grove Archer | handled | Channel — {4}{G}, Discard this card: Destroy target creature with flying. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Bearer of Memory | handled | {5}{G}: Put a +1/+1 counter on target enchantment creature. It gains trample until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Befriending the Moths // Imperial Moth | handled | I, II — Target creature you control gets +1/+1 and gains flying until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -243,7 +242,7 @@
 ## Fully supported
 
 <details>
-<summary>54 cards</summary>
+<summary>55 cards</summary>
 
 - Boseiju, Who Endures
 - Brilliant Restoration
@@ -291,6 +290,7 @@
 - Spinning Wheel Kick
 - Takenuma, Abandoned Mire
 - Tameshi, Reality Architect
+- Tamiyo's Compleation
 - Tamiyo, Compleated Sage
 - Tezzeret, Betrayer of Flesh
 - The Reality Chip
@@ -349,8 +349,6 @@
 | when ~ enters, for each kind of counter on target permanent, put another counter of that kind on it or remove one from it. | 1 | Dramatist's Puppet | neo |
 | when ~ enters, gain control of all rat tokens. | 1 | Tribute to Horobi // Echo of Death's Wail | neo |
 | when ~ enters, look at the top five cards of your library. you may reveal a creature or enchantment card from among them and put it into your hand. put the rest | 1 | Blossom Prancer | neo |
-| when ~ enters, put N +N/+N counters on enchanted permanent. | 1 | Awakened Awareness | neo |
-| when ~ enters, tap enchanted permanent. if it's an equipment, unattach it. | 1 | Tamiyo's Compleation | neo |
 | when ~ enters, you may return an enchantment you control to its owner's hand. if you do, you gain N life. | 1 | Geothermal Kami | neo |
 | whenever a nontoken artifact you control enters, you may pay {M}{M}. if you do, create a token that's a copy of that artifact. | 1 | Replication Specialist | neo |
 | whenever a samurai or warrior you control attacks alone, the next spell you cast ~ costs {M} less to cast. | 1 | Peerless Samurai | neo |

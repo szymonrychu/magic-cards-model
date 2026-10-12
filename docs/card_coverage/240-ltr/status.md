@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 63 | 22.4% |
-| Works (untested) | 139 | 49.5% |
+| Tested | 64 | 22.8% |
+| Works (untested) | 141 | 50.2% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 79 | 28.1% |
+| Not working | 76 | 27.0% |
 
 ## Cards needing work
 
@@ -37,7 +37,6 @@
 | Dawn of a New Age | silent | At the beginning of your end step, remove a hope counter from this enchantment. If you do, draw a card. Then if this enchantment has no hope counters on it, sac | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Display of Power | silent | This spell can't be copied. Copy any number of target instant and/or sorcery spells. You may choose new targets for the copies. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Doors of Durin | silent | Whenever you attack, scry 2, then you may reveal the top card of your library. If a creature card is revealed this way, put it onto the battlefield tapped and a | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| East-Mark Cavalier | silent | Whenever this creature deals damage to a Goblin or Orc, destroy that creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Elven Farsight | silent | Scry 3, then you may reveal the top card of your library. If a creature card is revealed this way, draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Entish Restoration | silent | Sacrifice a land. Search your library for up to two basic land cards, put them onto the battlefield tapped, then shuffle. If you control a creature with power 4 | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Fall of Cair Andros | silent | Whenever a creature an opponent controls is dealt excess noncombat damage, amass Orcs X, where X is that excess damage. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
@@ -46,7 +45,6 @@
 | Faramir, Prince of Ithilien | silent | At the beginning of your end step, choose an opponent. At the beginning of that player's next end step, you draw a card if they didn't attack you that turn. Oth | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Fire of Orthanc | silent | Destroy target artifact or land. Creatures without flying can't block this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Foray of Orcs | silent | Amass Orcs 2. When you do, Foray of Orcs deals X damage to target creature an opponent controls, where X is the amassed Army's power. (To amass Orcs 2, put two  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Frodo, Determined Hero | silent | Whenever Frodo enters or attacks, you may attach target Equipment you control with mana value 2 or 3 to Frodo. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Frodo, Sauron's Bane | silent | {B}{B}{B}: If Frodo is a Scout, it becomes a Halfling Rogue with "Whenever this creature deals combat damage to a player, that player loses the game if the Ring | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Galadriel of Lothlórien | silent | Whenever you scry, you may reveal the top card of your library. If a land card is revealed this way, put it onto the battlefield tapped. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Glamdring | silent | Equipped creature has first strike and gets +1/+0 for each instant and sorcery card in your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -89,7 +87,6 @@
 | The One Ring | silent | When The One Ring enters, if you cast it, you gain protection from everything until your next turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | The Ring Goes South | silent | The Ring tempts you. Then reveal cards from the top of your library until you reveal X land cards, where X is the number of legendary creatures you control. Put | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | There and Back Again | silent | I — Up to one target creature can't block for as long as you control this Saga. The Ring tempts you. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Voracious Fell Beast | silent | When this creature enters, each opponent sacrifices a creature of their choice. Create a Food token for each creature sacrificed this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Witch-king of Angmar | silent | Whenever one or more creatures deal combat damage to you, each opponent sacrifices a creature of their choice that dealt combat damage to you this turn. The Rin | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Witch-king, Bringer of Ruin | silent | Whenever Witch-king attacks, defending player sacrifices a creature with the least power among creatures they control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Bill Ferny, Bree Swindler | notice | Whenever Bill Ferny becomes blocked, choose one — • Create a Treasure token. • Target opponent gains control of target Horse you control. If they do, remove Bil | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
@@ -130,6 +127,7 @@
 | Dúnedain Blade | handled | Equipped creature gets +2/+1. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Eagle of Deliverance | handled | When this creature enters, put an indestructible counter on another target creature you control. Draw a card if that creature's power is 2 or less. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Eagles of the North | handled | When this creature enters, creatures you control get +1/+0 and gain first strike until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
+| East-Mark Cavalier | handled | Whenever this creature deals damage to a Goblin or Orc, destroy that creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Easterling Vanguard | handled | When this creature dies, amass Orcs 1. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Elrond, Lord of Rivendell | handled | Whenever Elrond or another creature you control enters, scry 1. If this is the second time this ability has resolved this turn, the Ring tempts you. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Elrond, Master of Healing | handled | Whenever you scry, put a +1/+1 counter on each of up to X target creatures, where X is the number of cards looked at while scrying this way. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -236,6 +234,7 @@
 | Théoden, King of Rohan | handled | Whenever Théoden or another Human you control enters, target creature gains double strike until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Treason of Isengard | handled | Put up to one target instant or sorcery card from your graveyard on top of your library. Amass Orcs 2. (To amass Orcs 2, put two +1/+1 counters on an Army you c | the engine reads this text and performs it | Y/-/- | not_tested |
 | Uruk-hai Berserker | handled | When this creature enters, the Ring tempts you. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Voracious Fell Beast | handled | When this creature enters, each opponent sacrifices a creature of their choice. Create a Food token for each creature sacrificed this way. | the engine reads this text and performs it | Y/-/- | not_tested |
 | War of the Last Alliance | handled | I, II — Search your library for a legendary creature card, reveal it, put it into your hand, then shuffle. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Warbeast of Gorgoroth | handled | Whenever this creature or another creature you control with power 4 or greater dies, amass Orcs 2. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Westfold Rider | handled | Sacrifice this creature: Destroy target artifact or enchantment. Activate only as a sorcery. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -248,7 +247,7 @@
 ## Fully supported
 
 <details>
-<summary>63 cards</summary>
+<summary>64 cards</summary>
 
 - Arwen, Mortal Queen
 - Barad-dûr
@@ -270,6 +269,7 @@
 - Forge Anew
 - Friendly Rivalry
 - Frodo Baggins
+- Frodo, Determined Hero
 - Galadhrim Bow
 - Gandalf the White
 - Gandalf's Sanction
@@ -355,7 +355,6 @@
 | when lobelia enters, exile target creature card from an opponent"..."s power. | 1 | Lobelia Sackville-Baggins | ltr |
 | when samwise enters, choose up to one target permanent card in your graveyard that was put there from the battlefield ~. return it to your hand. then the ring t | 1 | Samwise the Stouthearted | ltr |
 | when ~ enters, create a food token. when you do, target creature you control gets +N/+N until end of turn for each food you control. | 1 | Eastfarthing Farmer | ltr |
-| when ~ enters, each opponent sacrifices a creature of their choice. create a food token for each creature sacrificed ~. | 1 | Voracious Fell Beast | ltr |
 | when ~ enters, if you cast it, you gain protection from everything until your next turn. | 1 | The One Ring | ltr |
 | when ~ enters, it deals N damage to target creature an opponent controls. destroy all equipment attached to that creature. | 1 | Fires of Mount Doom | ltr |
 | when ~ enters, target creature an opponent controls gets -N/-N until end of turn. if that creature is legendary, its controller loses N life. | 1 | Ringwraiths | ltr |
@@ -367,7 +366,6 @@
 | whenever another creature you control dies, put a +N/+N counter on uglúk. if that creature was a goblin or orc, put two +N/+N counters on uglúk instead. | 1 | Uglúk of the White Hand | ltr |
 | whenever bill ferny becomes blocked, choose one — • create a treasure token. • target opponent gains control of target horse you control. if they do, remove bil | 1 | Bill Ferny, Bree Swindler | ltr |
 | whenever equipped creature attacks, create two tapped N/N white spirit creature tokens with flying. if that creature is legendary, instead create two of those t | 1 | Andúril, Flame of the West | ltr |
-| whenever frodo enters or attacks, you may attach target equipment you control with mana value N or N to frodo. | 1 | Frodo, Determined Hero | ltr |
 | whenever gollum attacks, look at the top two cards of your library, put them back in any order, then choose land or nonland. an opponent guesses whether the top | 1 | Gollum, Scheming Guide | ltr |
 | whenever one or more creatures deal combat damage to you, each opponent sacrifices a creature of their choice that dealt combat damage to you ~. the ring tempts | 1 | Witch-king of Angmar | ltr |
 | whenever one or more treefolk you control attack, add twice that much {M}. | 1 | Fangorn, Tree Shepherd | ltr |
@@ -389,7 +387,6 @@
 | whenever ~ attacks, it gets +N/+N until end of turn, where N is the number of legendary creatures you control. | 1 | Bag End Porter | ltr |
 | whenever ~ attacks, you may sacrifice a food or pay {M}{M}. when you do, tap target creature an opponent controls. | 1 | Nimble Hobbit | ltr |
 | whenever ~ attacks, you may tap any number of untapped humans you control. draw a card for each human tapped ~. | 1 | Minas Tirith Garrison | ltr |
-| whenever ~ deals damage to a goblin or orc, destroy that creature. | 1 | East-Mark Cavalier | ltr |
 | whenever ~ or another spirit you control becomes the target of a spell, it phases out. | 1 | King of the Oathbreakers | ltr |
 | you and target opponent each create a food token. | 1 | Oath of the Grey Host | ltr |
 | you may cast spells ~ as though they had flash. draw a card. | 1 | Borne Upon a Wind | ltr |

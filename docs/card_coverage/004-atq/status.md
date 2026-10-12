@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 5 | 25.0% |
+| Tested | 6 | 30.0% |
 | Works (untested) | 10 | 50.0% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 5 | 25.0% |
+| Not working | 4 | 20.0% |
 
 ## Cards needing work
 
@@ -29,7 +29,6 @@
 | Circle of Protection: Artifacts | silent | {2}: The next time an artifact source of your choice would deal damage to you this turn, prevent that damage. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Hurkyl's Recall | silent | Return all artifacts target player owns to their hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Shatterstorm | silent | Destroy all artifacts. They can't be regenerated. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| The Rack | silent | At the beginning of the chosen player's upkeep, this artifact deals X damage to that player, where X is 3 minus the number of cards in their hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Detonate | notice | Destroy target artifact with mana value X. It can't be regenerated. Detonate deals X damage to that artifact's controller. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Atog | handled | Sacrifice an artifact: This creature gets +2/+2 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Colossus of Sardia | handled | This creature doesn't untap during your untap step. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -45,10 +44,11 @@
 ## Fully supported
 
 <details>
-<summary>5 cards</summary>
+<summary>6 cards</summary>
 
 - Mishra's Factory
 - Ornithopter
+- The Rack
 - Urza's Mine
 - Urza's Power Plant
 - Urza's Tower
@@ -59,7 +59,6 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| at the beginning of the chosen player's upkeep, ~ deals N damage to that player, where N is N minus the number of cards in their hand. | 1 | The Rack | atq |
 | destroy all artifacts. they can't be regenerated. | 1 | Shatterstorm | atq |
 | destroy target artifact with mana value N. it can"..."s controller. | 1 | Detonate | atq |
 | return all artifacts target player owns to their hand. | 1 | Hurkyl's Recall | atq |

@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 58 | 20.2% |
-| Works (untested) | 146 | 50.9% |
+| Tested | 59 | 20.6% |
+| Works (untested) | 151 | 52.6% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 83 | 28.9% |
+| Not working | 77 | 26.8% |
 
 ## Cards needing work
 
@@ -42,16 +42,12 @@
 | Cosima, God of the Voyage // The Omenkeel | silent | At the beginning of your upkeep, you may exile Cosima. If you do, it gains "Whenever a land you control enters, if Cosima is exiled, you may put a voyage counte | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Crippling Fear | silent | Choose a creature type. Creatures that aren't of the chosen type get -3/-3 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Cyclone Summoner | silent | When this creature enters, if you cast it from your hand, return all permanents to their owners' hands except for Giants, Wizards, and lands. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Draugr's Helm | silent | When this Equipment enters, you may pay {2}{B}. If you do, create a 2/2 black Zombie Berserker creature token, then attach this Equipment to it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Dwarven Hammer | silent | When this Equipment enters, you may pay {2}. If you do, create a 2/1 red Dwarf Berserker creature token, then attach this Equipment to it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Egon, God of Death // Throne of Death | silent | At the beginning of your upkeep, exile two cards from your graveyard. If you can't, sacrifice Egon and draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Elven Bow | silent | When this Equipment enters, you may pay {2}. If you do, create a 1/1 green Elf Warrior creature token, then attach this Equipment to it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Eradicator Valkyrie | silent | Boast — {1}{B}, Sacrifice a creature: Each opponent sacrifices a creature or planeswalker. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Fall of the Impostor | silent | III — Exile a creature with the greatest power among creatures target opponent controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Fire Giant's Fury | silent | Target Giant you control gets +2/+2 and gains trample until end of turn. Whenever it deals combat damage to a player this turn, exile that many cards from the t | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Frost Augur | silent | {S}, {T}: Look at the top card of your library. If it's a snow card, you may reveal it and put it into your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Frostpyre Arcanist | silent | When this creature enters, search your library for an instant or sorcery card with the same name as a card in your graveyard, reveal it, put it into your hand,  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Giant's Amulet | silent | When this Equipment enters, you may pay {3}{U}. If you do, create a 4/4 blue Giant Wizard creature token, then attach this Equipment to it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Glimpse the Cosmos | silent | Look at the top three cards of your library. Put one of them into your hand and the rest on the bottom of your library in any order. As long as you control a Gi | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Glorious Protector | silent | When this creature enters, you may exile any number of non-Angel creatures you control until this creature leaves the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Halvar, God of Battle // Sword of the Realms | silent | Creatures you control that are enchanted or equipped have double strike. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -92,8 +88,6 @@
 | Tibalt's Trickery | silent | Counter target spell. Choose 1, 2, or 3 at random. Its controller mills that many cards, then exiles cards from the top of their library until they exile a nonl | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Toralf, God of Fury // Toralf's Hammer | silent | Whenever a creature or planeswalker an opponent controls is dealt excess noncombat damage, Toralf deals damage equal to the excess to any target other than that | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Tundra Fumarole | silent | Tundra Fumarole deals 4 damage to target creature or planeswalker. Add {C} for each {S} spent to cast this spell. Until end of turn, you don't lose this mana as | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Valki, God of Lies // Tibalt, Cosmic Impostor | silent | When Valki enters, each opponent reveals their hand. For each opponent, exile a creature card they revealed this way until Valki leaves the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Valkyrie's Sword | silent | When this Equipment enters, you may pay {4}{W}. If you do, create a 4/4 white Angel Warrior creature token with flying and vigilance, then attach this Equipment | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Varragoth, Bloodsky Sire | silent | Boast — {1}{B}: Target player searches their library for a card, then shuffles and puts that card on top. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Waking the Trolls | silent | III — Choose target opponent. If they control fewer lands than you, create a number of 4/4 green Troll Warrior creature tokens with trample equal to the differe | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Absorb Identity | notice | Return target creature to its owner's hand. You may have Shapeshifters you control become copies of that creature until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -142,12 +136,15 @@
 | Doomskar Oracle | handled | Whenever you cast your second spell each turn, you gain 2 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Doomskar Titan | handled | When this creature enters, creatures you control get +1/+0 and gain haste until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Draugr Recruiter | handled | Boast — {3}{B}: Return target creature card from your graveyard to your hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Draugr's Helm | handled | When this Equipment enters, you may pay {2}{B}. If you do, create a 2/2 black Zombie Berserker creature token, then attach this Equipment to it. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Dread Rider | handled | {1}{B}, {T}, Exile a creature card from your graveyard: Target opponent loses 3 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Dwarven Hammer | handled | When this Equipment enters, you may pay {2}. If you do, create a 2/1 red Dwarf Berserker creature token, then attach this Equipment to it. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Dwarven Reinforcements | handled | Create two 2/1 red Dwarf Berserker creature tokens. Foretell {1}{R} (During your turn, you may pay {2} and exile this card from your hand face down. Cast it on  | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Elderfang Disciple | handled | When this creature enters, each opponent discards a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Elderfang Ritualist | handled | When this creature dies, return another target Elf card from your graveyard to your hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Elderleaf Mentor | handled | When this creature enters, create a 1/1 green Elf Warrior creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Elven Ambush | handled | Create a 1/1 green Elf Warrior creature token for each Elf you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Elven Bow | handled | When this Equipment enters, you may pay {2}. If you do, create a 1/1 green Elf Warrior creature token, then attach this Equipment to it. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Elvish Warmaster | handled | Whenever one or more other Elves you control enter, create a 1/1 green Elf Warrior creature token. This ability triggers only once each turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Fearless Liberator | handled | Boast — {2}{R}: Create a 2/1 red Dwarf Berserker creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Fearless Pup | handled | Boast — {2}{R}: This creature gets +2/+0 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -161,6 +158,7 @@
 | Funeral Longboat | handled | Vigilance | machines/combat.py | Y/Y/- | not_tested |
 | Fynn, the Fangbearer | handled | Whenever a creature you control with deathtouch deals combat damage to a player, that player gets two poison counters. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Gates of Istfell | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Giant's Amulet | handled | When this Equipment enters, you may pay {3}{U}. If you do, create a 4/4 blue Giant Wizard creature token, then attach this Equipment to it. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Giant's Grasp | handled | When this Aura enters, gain control of target nonland permanent for as long as this Aura remains on the battlefield. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Gilded Assault Cart | handled | Sacrifice two Treasures: Return this card from your graveyard to your hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Glacial Floodplain | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -246,6 +244,7 @@
 | Undersea Invader | handled | This creature enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Usher of the Fallen | handled | Boast — {1}{W}: Create a 1/1 white Human Warrior creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Valkyrie Harbinger | handled | At the beginning of each end step, if you gained 4 or more life this turn, create a 4/4 white Angel creature token with flying and vigilance. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Valkyrie's Sword | handled | When this Equipment enters, you may pay {4}{W}. If you do, create a 4/4 white Angel Warrior creature token with flying and vigilance, then attach this Equipment | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Valor of the Worthy | handled | Enchanted creature gets +1/+1. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Vault Robber | handled | {1}, {T}, Exile a creature card from your graveyard: Create a Treasure token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Vengeful Reaper | handled | Foretell | machines/casting.py | Y/Y/- | not_tested |
@@ -259,7 +258,7 @@
 ## Fully supported
 
 <details>
-<summary>58 cards</summary>
+<summary>59 cards</summary>
 
 - Armed and Armored
 - Axgard Braggart
@@ -314,6 +313,7 @@
 - The Trickster-God's Heist
 - The World Tree
 - Tyvar Kell
+- Valki, God of Lies // Tibalt, Cosmic Impostor
 - Vega, the Watcher
 - Vorinclex, Monstrous Raider
 - Warchanter Skald
@@ -370,7 +370,6 @@
 | the next giant spell you cast ~ costs {M} less to cast. | 1 | Invasion of the Giants | khm |
 | until end of turn, target creature gets +N/+N for each creature you control and gains trample. it must be blocked ~ if able. | 1 | King Harald's Revenge | khm |
 | when kardur enters, until your next turn, creatures your opponents control attack each combat if able and attack a player other than you if able. | 1 | Kardur, Doomscourge | khm |
-| when valki enters, each opponent reveals their hand. for each opponent, exile a creature card they revealed ~ until valki leaves the battlefield. | 1 | Valki, God of Lies // Tibalt, Cosmic Impostor | khm |
 | when ~ dies, if it was a creature, return it to the battlefield. it"..."{M}: add {M}{M}"..."{M}, {M}, sacrifice ~: create a tapped N/N green troll warrior creat | 1 | Old-Growth Troll | khm |
 | when ~ dies, it deals N damage to a creature an opponent controls chosen at random. | 1 | Cinderheart Giant | khm |
 | when ~ dies, search your library for a creature card with power or toughness N or greater, reveal it, put it into your hand, then shuffle. | 1 | Rootless Yew | khm |
@@ -380,11 +379,6 @@
 | when ~ enters, if you cast it from your hand, return all permanents to their owners' hands except for giants, wizards, and lands. | 1 | Cyclone Summoner | khm |
 | when ~ enters, search your library for an instant or sorcery card with the same name as a card in your graveyard, reveal it, put it into your hand, then shuffle | 1 | Frostpyre Arcanist | khm |
 | when ~ enters, you may exile any number of non-angel creatures you control until ~ leaves the battlefield. | 1 | Glorious Protector | khm |
-| when ~ enters, you may pay {M}. if you do, create a N/N green elf warrior creature token, then attach ~ to it. | 1 | Elven Bow | khm |
-| when ~ enters, you may pay {M}. if you do, create a N/N red dwarf berserker creature token, then attach ~ to it. | 1 | Dwarven Hammer | khm |
-| when ~ enters, you may pay {M}{M}. if you do, create a N/N black zombie berserker creature token, then attach ~ to it. | 1 | Draugr's Helm | khm |
-| when ~ enters, you may pay {M}{M}. if you do, create a N/N blue giant wizard creature token, then attach ~ to it. | 1 | Giant's Amulet | khm |
-| when ~ enters, you may pay {M}{M}. if you do, create a N/N white angel warrior creature token with flying and vigilance, then attach ~ to it. | 1 | Valkyrie's Sword | khm |
 | when ~ enters, you may search your library for exactly two cards not named ~ that have different names. if you do, reveal those cards. an opponent chooses one o | 1 | Burning-Rune Demon | khm |
 | when ~ enters, you may search your library, hand, and/or graveyard for a rune card and put it onto the battlefield attached to ~. if you search your library ~,  | 1 | Runed Crown | khm |
 | whenever a creature or planeswalker an opponent controls is dealt excess damage, if a giant, wizard, or spell you controlled dealt damage to it ~, draw a card. | 1 | Aegar, the Freezing Flame | khm |

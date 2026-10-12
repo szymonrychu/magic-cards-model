@@ -17,17 +17,16 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 16 | 14.2% |
+| Tested | 17 | 15.0% |
 | Works (untested) | 71 | 62.8% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 26 | 23.0% |
+| Not working | 25 | 22.1% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
 | Ajani's Chosen | silent | Whenever an enchantment you control enters, create a 2/2 white Cat creature token. If that enchantment is an Aura, you may attach it to the token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Artificer's Hex | silent | At the beginning of your upkeep, if enchanted Equipment is attached to a creature, destroy that creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Blightcaster | silent | Whenever you cast an enchantment spell, you may have target creature get -2/-2 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Bogbrew Witch | silent | {2}, {T}: Search your library for a card named Festering Newt or Bubbling Cauldron, put it onto the battlefield tapped, then shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Bubbling Cauldron | silent | {1}, {T}, Sacrifice a creature named Festering Newt: Each opponent loses 4 life. You gain life equal to the life lost this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -36,7 +35,7 @@
 | Dismiss into Dream | silent | Each creature your opponents control is an Illusion in addition to its other types and has "When this creature becomes the target of a spell or ability, sacrifi | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Elite Arcanist | silent | {X}, {T}: Copy the exiled card. You may cast the copy without paying its mana cost. X is the mana value of the exiled card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Goblin Diplomats | silent | {T}: Each creature attacks this turn if able. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Guardian of the Ages | silent | When a creature attacks you or a planeswalker you control, if this creature has defender, it loses defender and gains trample. | this trigger's condition can never be satisfied - it never triggers | Y/Y/- | not_working |
+| Guardian of the Ages | silent | When a creature attacks you or a planeswalker you control, if this creature has defender, it loses defender and gains trample. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Haunted Plate Mail | silent | {0}: Until end of turn, this permanent becomes a 4/4 Spirit artifact creature that's no longer an Equipment. Activate only if you control no creatures. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Molten Birth | silent | Create two 1/1 red Elemental creature tokens, then flip a coin. If you win the flip, return Molten Birth to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Rise of the Dark Realms | silent | Put all creature cards from all graveyards onto the battlefield under your control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -127,10 +126,11 @@
 ## Fully supported
 
 <details>
-<summary>16 cards</summary>
+<summary>17 cards</summary>
 
 - Advocate of the Beast
 - Angelic Accord
+- Artificer's Hex
 - Awaken the Ancient
 - Elvish Mystic
 - Fiendslayer Paladin
@@ -152,7 +152,6 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| at the beginning of your upkeep, if enchanted equipment is attached to a creature, destroy that creature. | 1 | Artificer's Hex | m14 |
 | create two N/N red elemental creature tokens, then flip a coin. if you win the flip, return ~ to its owner's hand. | 1 | Molten Birth | m14 |
 | creatures without flying can't block ~. | 1 | Seismic Stomp | m14 |
 | each creature your opponents control is an illusion in addition to its other types and has "..." | 1 | Dismiss into Dream | m14 |

@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 36 | 15.5% |
-| Works (untested) | 139 | 59.7% |
+| Tested | 37 | 15.9% |
+| Works (untested) | 140 | 60.1% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 58 | 24.9% |
+| Not working | 56 | 24.0% |
 
 ## Cards needing work
 
@@ -47,7 +47,6 @@
 | Gleam of Authority | silent | Enchanted creature gets +1/+1 for each +1/+1 counter on other creatures you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Gurmag Drowner | silent | When this creature exploits a creature, look at the top four cards of your library. Put one of them into your hand and the rest into your graveyard. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Hardened Berserker | silent | Whenever this creature attacks, the next spell you cast this turn costs {1} less to cast. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Hedonist's Trove | silent | When this enchantment enters, exile target opponent's graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Herdchaser Dragon | silent | When this creature is turned face up, put a +1/+1 counter on each other Dragon creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Illusory Gains | silent | Whenever a creature an opponent controls enters, attach this Aura to that creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Magmatic Chasm | silent | Creatures without flying can't block this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -71,7 +70,6 @@
 | Silumgar Sorcerer | silent | When this creature exploits a creature, counter target creature spell. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Stormwing Dragon | silent | When this creature is turned face up, put a +1/+1 counter on each other Dragon creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sunbringer's Touch | silent | Bolster | no machine in the engine executes this keyword | Y/Y/- | not_working |
-| Volcanic Rush | silent | Attacking creatures get +2/+0 and gain trample until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Vulturous Aven | silent | When this creature exploits a creature, you draw two cards and you lose 2 life. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Blessed Reincarnation | notice | Exile target creature an opponent controls. That player reveals cards from the top of their library until a creature card is revealed. The player puts that card | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Blood-Chin Fanatic | notice | {1}{B}, Sacrifice another Warrior creature: Target player loses X life and you gain X life, where X is the sacrificed creature's power. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -220,6 +218,7 @@
 | Vial of Dragonfire | handled | {2}, {T}, Sacrifice this artifact: It deals 2 damage to target creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Virulent Plague | handled | Creature tokens get -2/-2. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Void Squall | handled | Return target nonland permanent to its owner's hand. Rebound (If you cast this spell from your hand, exile it as it resolves. At the beginning of your next upke | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Volcanic Rush | handled | Attacking creatures get +2/+0 and gain trample until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Wandering Tombshell | handled |  |  | Y/Y/- | not_tested |
 | Youthful Scholar | handled | When this creature dies, draw two cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Zephyr Scribe | handled | {U}, {T}: Draw a card, then discard a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -227,7 +226,7 @@
 ## Fully supported
 
 <details>
-<summary>36 cards</summary>
+<summary>37 cards</summary>
 
 - Ambuscade Shaman
 - Anticipate
@@ -247,6 +246,7 @@
 - Epic Confrontation
 - Gate Smasher
 - Harbinger of the Hunt
+- Hedonist's Trove
 - Impact Tremors
 - Keeper of the Lens
 - Kolaghan Aspirant
@@ -279,7 +279,6 @@
 | +N: draw a card, then add one mana of any color. | 1 | Sarkhan Unbroken | dtk |
 | +N: look at the top card of your library. if it's a noncreature, nonland card, you may reveal it and put it into your hand. | 1 | Narset Transcendent | dtk |
 | as long as you control exactly one creature, that creature gets +N/+N and has deathtouch and lifelink. | 1 | Deadly Wanderings | dtk |
-| attacking creatures get +N/+N and gain trample until end of turn. | 1 | Volcanic Rush | dtk |
 | bolster | 1 | Sunbringer's Touch | dtk |
 | bolster N, then put a +N/+N counter on each creature you control with a +N/+N counter on it. (to bolster N, choose a creature with the least toughness among cre | 1 | Scale Blessing | dtk |
 | bolster N. (choose a creature with the least toughness among creatures you control and put four +N/+N counters on it.) | 1 | Dromoka's Gift | dtk |
@@ -298,7 +297,6 @@
 | until end of turn, target creature you control becomes a blue dragon illusion with base power and toughness N/N, loses all abilities, and gains flying. | 1 | Dance of the Skywise | dtk |
 | when sidisi exploits a creature, you may search your library for a card, put it into your hand, then shuffle. | 1 | Sidisi, Undead Vizier | dtk |
 | when ~ dies, you may put it on your choice of the top or bottom of its owner's library. | 1 | Arashin Sovereign | dtk |
-| when ~ enters, exile target opponent's graveyard. | 1 | Hedonist's Trove | dtk |
 | when ~ enters, you may put a creature card with mana value N or less from your hand or graveyard onto the battlefield. that creature gains haste. return it to y | 1 | Swift Warkite | dtk |
 | when ~ exploits a creature, counter target creature spell. | 1 | Silumgar Sorcerer | dtk |
 | when ~ exploits a creature, create two N/N black zombie creature tokens. | 1 | Rakshasa Gravecaller | dtk |

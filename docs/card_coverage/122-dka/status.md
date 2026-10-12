@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 35 | 22.7% |
+| Tested | 37 | 24.0% |
 | Works (untested) | 86 | 55.8% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 33 | 21.4% |
+| Not working | 31 | 20.1% |
 
 ## Cards needing work
 
@@ -32,10 +32,8 @@
 | Curse of Echoes | silent | Whenever enchanted player casts an instant or sorcery spell, each other player may copy that spell and may choose new targets for the copy they control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Curse of Misfortunes | silent | At the beginning of your upkeep, you may search your library for a Curse card that doesn't have the same name as a Curse attached to enchanted player, put it on | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Curse of Thirst | silent | At the beginning of enchanted player's upkeep, this Aura deals damage to that player equal to the number of Curses attached to them. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Elbrus, the Binding Blade // Withengar Unbound | silent | When equipped creature deals combat damage to a player, unattach Elbrus, then transform it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Fiend of the Shadows | silent | Whenever this creature deals combat damage to a player, that player exiles a card from their hand. You may play that card for as long as it remains exiled. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Gather the Townsfolk | silent | Create two 1/1 white Human creature tokens. Fateful hour — If you have 5 or less life, create five of those tokens instead. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Haunted Fengraf | silent | {3}, {T}, Sacrifice this land: Return a creature card at random from your graveyard to your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Havengul Lich | silent | {1}: You may cast target creature card in a graveyard this turn. When you cast it this turn, this creature gains all activated abilities of that card until end  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Havengul Runebinder | silent | {2}{U}, {T}, Exile a creature card from your graveyard: Create a 2/2 black Zombie creature token, then put a +1/+1 counter on each Zombie creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Helvault | silent | When Helvault is put into a graveyard from the battlefield, return all cards exiled with it to the battlefield under their owners' control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -43,7 +41,7 @@
 | Increasing Confusion | silent | Target player mills X cards. If this spell was cast from a graveyard, that player mills twice that many cards instead. Flashback {X}{U} (You may cast this card  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Increasing Devotion | silent | Create five 1/1 white Human creature tokens. If this spell was cast from a graveyard, create ten of those tokens instead. Flashback {7}{W}{W} (You may cast this | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Jar of Eyeballs | silent | {3}, {T}, Remove all eyeball counters from this artifact: Look at the top X cards of your library, where X is the number of eyeball counters removed this way. P | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Lost in the Woods | silent | Whenever a creature attacks you or a planeswalker you control, reveal the top card of your library. If it's a Forest card, remove that creature from combat. The | this trigger's condition can never be satisfied - it never triggers | Y/-/- | not_working |
+| Lost in the Woods | silent | Whenever a creature attacks you or a planeswalker you control, reveal the top card of your library. If it's a Forest card, remove that creature from combat. The | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Markov Warlord | silent | When this creature enters, up to two target creatures can't block this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Mikaeus, the Unhallowed | silent | Whenever a Human deals damage to you, destroy it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Scorch the Fields | silent | Destroy target land. Scorch the Fields deals 1 damage to each Human creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -149,7 +147,7 @@
 ## Fully supported
 
 <details>
-<summary>35 cards</summary>
+<summary>37 cards</summary>
 
 - Alpha Brawl
 - Avacyn's Collar
@@ -159,6 +157,7 @@
 - Curse of Bloodletting
 - Curse of Exhaustion
 - Dungeon Geists
+- Elbrus, the Binding Blade // Withengar Unbound
 - Faithless Looting
 - Flayer of the Hatebound
 - Forge Devil
@@ -166,6 +165,7 @@
 - Grafdigger's Cage
 - Gravecrawler
 - Gruesome Discovery
+- Haunted Fengraf
 - Heavy Mattock
 - Heckling Fiends
 - Hellrider
@@ -210,7 +210,6 @@
 | target creature gains deathtouch until end of turn and must be blocked ~ if able. flashback {M} (you may cast ~ from your graveyard for its flashback cost. then | 1 | Deadly Allure | dka |
 | target permanent you control gains protection from the color of your choice until end of turn. fateful hour — if you have N or less life, instead you and each p | 1 | Faith's Shield | dka |
 | target player mills N cards. if ~ was cast from a graveyard, that player mills twice that many cards instead. flashback {M}{M} (you may cast ~ from your graveya | 1 | Increasing Confusion | dka |
-| when equipped creature deals combat damage to a player, unattach elbrus, then transform it. | 1 | Elbrus, the Binding Blade // Withengar Unbound | dka |
 | when ~ dies, return it to the battlefield transformed under your control at the beginning of the next end step. | 1 | Loyal Cathar // Unhallowed Cathar | dka |
 | when ~ dies, target opponent discards a card at random. | 1 | Black Cat | dka |
 | when ~ enters, up to two target creatures can't block ~. | 1 | Markov Warlord | dka |
@@ -222,7 +221,6 @@
 | whenever ~ transforms into werewolf ransacker, you may destroy target artifact. if that artifact is put into a graveyard ~, ~ deals N damage to that artifact's  | 1 | Afflicted Deserter // Werewolf Ransacker | dka |
 | you gain N life for each card in your graveyard, then shuffle your graveyard into your library. | 1 | Archangel's Light | dka |
 | {M}, {M}, remove all eyeball counters from ~: look at the top N cards of your library, where N is the number of eyeball counters removed ~. put one of them into | 1 | Jar of Eyeballs | dka |
-| {M}, {M}, sacrifice ~: return a creature card at random from your graveyard to your hand. | 1 | Haunted Fengraf | dka |
 | {M}: you may cast target creature card in a graveyard ~. when you cast it ~, ~ gains all activated abilities of that card until end of turn. | 1 | Havengul Lich | dka |
 | {M}{M}, {M}, exile a creature card from your graveyard: create a N/N black zombie creature token, then put a +N/+N counter on each zombie creature you control. | 1 | Havengul Runebinder | dka |
 | −N: destroy up to three target creatures and/or other planeswalkers. return each card put into a graveyard ~ to the battlefield under your control. | 1 | Sorin, Lord of Innistrad | dka |

@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 32 | 22.4% |
-| Works (untested) | 66 | 46.2% |
+| Tested | 33 | 23.1% |
+| Works (untested) | 67 | 46.9% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 45 | 31.5% |
+| Not working | 43 | 30.1% |
 
 ## Cards needing work
 
@@ -43,7 +43,7 @@
 | Herald of Leshrac | silent | When this creature leaves the battlefield, each player gains control of each land they own that you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Hibernation's End | silent | Whenever you pay this enchantment's cumulative upkeep, you may search your library for a creature card with mana value equal to the number of age counters on th | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Icefall | silent | Recover | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Jester's Scepter | silent | When this artifact enters, exile the top five cards of target player's library face down. You may look at those cards for as long as they remain exiled. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Jester's Scepter | silent | {2}, {T}, Put a card exiled with this artifact into its owner's graveyard: Counter target spell if it has the same name as that card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Jokulmorder | silent | When this creature enters, sacrifice it unless you sacrifice five lands. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Karplusan Minotaur | silent | Whenever you win a coin flip, this creature deals 1 damage to any target. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Kjeldoran Gargoyle | silent | Whenever this creature deals damage, you gain that much life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -53,10 +53,9 @@
 | Resize | silent | Recover | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Rimehorn Aurochs | silent | {2}{S}: Target creature blocks target creature this turn if able. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Rite of Flame | silent | Add {R}{R}, then add {R} for each card named Rite of Flame in each graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Ronom Serpent | silent | When you control no snow lands, sacrifice this creature. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Rune Snag | silent | Counter target spell unless its controller pays {2} plus an additional {2} for each card named Rune Snag in each graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Scrying Sheets | silent | {1}{S}, {T}: Look at the top card of your library. If that card is snow, you may reveal it and put it into your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Shape of the Wiitigo | silent | When this Aura enters, put six +1/+1 counters on enchanted creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Shape of the Wiitigo | silent | At the beginning of your upkeep, put a +1/+1 counter on enchanted creature if it attacked or blocked since your last upkeep. Otherwise, remove a +1/+1 counter f | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sun's Bounty | silent | Recover | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Surging Aether | silent | Ripple | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Surging Dementia | silent | Ripple | no machine in the engine executes this keyword | Y/-/- | not_working |
@@ -67,7 +66,6 @@
 | Ursine Fylgja | silent | Remove a healing counter from this creature: Prevent the next 1 damage that would be dealt to this creature this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Woolly Razorback | silent | As long as this creature has an ice counter on it, prevent all combat damage it would deal and it has defender. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Blizzard Specter | notice | Whenever this creature deals combat damage to a player, choose one — • That player returns a permanent they control to its owner's hand. • That player discards  | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Frostweb Spider | notice | Whenever this creature blocks a creature with flying, put a +1/+1 counter on this creature at end of combat. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Ohran Viper | notice | Whenever this creature deals combat damage to a creature, destroy that creature at end of combat. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Thermal Flux | notice | Choose one — • Target nonsnow permanent becomes snow until end of turn. • Target snow permanent isn't snow until end of turn. Draw a card at the beginning of th | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Vanish into Memory | notice | Exile target creature. You draw cards equal to that creature's power. At the beginning of your next upkeep, return that card to the battlefield under its owner' | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
@@ -92,6 +90,7 @@
 | Flashfreeze | handled | Counter target red or green spell. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Frost Marsh | handled | This land enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Frost Raptor | handled | {S}{S}: This creature gains shroud until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Frostweb Spider | handled | Whenever this creature blocks a creature with flying, put a +1/+1 counter on this creature at end of combat. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Garza Zol, Plague Queen | handled | Whenever a creature dealt damage by Garza Zol this turn dies, put a +1/+1 counter on Garza Zol. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Gelid Shackles | handled | Enchanted creature can't block, and its activated abilities can't be activated. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Goblin Rimerunner | handled | {T}: Target creature can't block this turn. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -141,7 +140,7 @@
 ## Fully supported
 
 <details>
-<summary>32 cards</summary>
+<summary>33 cards</summary>
 
 - Adarkar Windform
 - Allosaurus Rider
@@ -166,6 +165,7 @@
 - Rimescale Dragon
 - Rimewind Cryomancer
 - Ronom Hulk
+- Ronom Serpent
 - Skred
 - Soul Spike
 - Stalking Yeti
@@ -189,13 +189,11 @@
 | as long as ~ has an ice counter on it, prevent all combat damage it would deal and it has defender. | 1 | Woolly Razorback | csp |
 | at the beginning of each end step, each player gains control of all nontoken permanents they own. | 1 | Brooding Saurian | csp |
 | at the beginning of your end step, ~ deals N damage divided as you choose among any number of target creatures, where N is the number of age counters on it. | 1 | Magmatic Core | csp |
+| at the beginning of your upkeep, put a +N/+N counter on enchanted creature if it attacked or blocked since your last upkeep. otherwise, remove a +N/+N counter f | 1 | Shape of the Wiitigo | csp |
 | counter target spell unless its controller pays {M} plus an additional {M} for each card named ~ in each graveyard. | 1 | Rune Snag | csp |
 | enchanted creature gets +N/+N for each age counter on ~. | 1 | Glacial Plating | csp |
 | exile target creature. you draw cards equal to that creature"..."s control. if you do, discard cards equal to that creature's toughness. | 1 | Vanish into Memory | csp |
 | remove a healing counter from ~: prevent the next N damage that would be dealt to ~ ~. | 1 | Ursine Fylgja | csp |
-| when you control no snow lands, sacrifice ~. | 1 | Ronom Serpent | csp |
-| when ~ enters, exile the top five cards of target player's library face down. you may look at those cards for as long as they remain exiled. | 1 | Jester's Scepter | csp |
-| when ~ enters, put six +N/+N counters on enchanted creature. | 1 | Shape of the Wiitigo | csp |
 | when ~ enters, sacrifice it unless you sacrifice five lands. | 1 | Jokulmorder | csp |
 | when ~ has no ice counters on it, sacrifice it. if you do, create marit lage, a legendary N/N black avatar creature token with flying and indestructible. | 1 | Dark Depths | csp |
 | when ~ leaves the battlefield, each player gains control of each land they own that you control. | 1 | Herald of Leshrac | csp |
@@ -204,13 +202,13 @@
 | whenever you pay ~ cumulative upkeep, you may search your library for a creature card with mana value equal to the number of age counters on ~, put it onto the  | 1 | Hibernation's End | csp |
 | whenever you win a coin flip, ~ deals N damage to any target. | 1 | Karplusan Minotaur | csp |
 | whenever you're dealt damage, you may create that many N/N white soldier creature tokens. | 1 | Darien, King of Kjeldor | csp |
-| whenever ~ blocks a creature with flying, put a +N/+N counter on ~ at end of combat. | 1 | Frostweb Spider | csp |
 | whenever ~ cumulative upkeep is paid, it gets +N/+N until end of turn for each {M} or {M} spent ~. | 1 | Balduvian Fallen | csp |
 | whenever ~ deals combat damage to a creature, destroy that creature at end of combat. | 1 | Ohran Viper | csp |
 | whenever ~ deals combat damage to a player, choose one — • that player returns a permanent they control to its owner's hand. • that player discards a card. | 1 | Blizzard Specter | csp |
 | whenever ~ deals damage, you gain that much life. | 1 | Kjeldoran Gargoyle | csp |
 | you may exile two blue cards from your hand rather than pay ~ mana cost. gain control of target noncreature spell. you may choose new targets for it. (if that s | 1 | Commandeer | csp |
 | you may exile two red cards from your hand rather than pay ~ mana cost. untap all creatures that attacked ~. after ~ phase, there is an additional combat phase  | 1 | Fury of the Horde | csp |
+| {M}, {M}, put a card exiled with ~ into its owner's graveyard: counter target spell if it has the same name as that card. | 1 | Jester's Scepter | csp |
 | {M}: target artifact creature's controller sacrifices it. that player may search their library for a noncreature artifact card, put it onto the battlefield, the | 1 | Arcum Dagsson | csp |
 | {M}: when target creature other than ~ dies ~, return that card to the battlefield under your control. | 1 | Adarkar Valkyrie | csp |
 | {M}{M}, {M}: look at the top card of your library. if that card is snow, you may reveal it and put it into your hand. | 1 | Scrying Sheets | csp |

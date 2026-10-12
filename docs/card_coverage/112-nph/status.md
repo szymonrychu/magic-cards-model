@@ -17,31 +17,26 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 38 | 23.5% |
-| Works (untested) | 82 | 50.6% |
+| Tested | 40 | 24.7% |
+| Works (untested) | 87 | 53.7% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 42 | 25.9% |
+| Not working | 35 | 21.6% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
-| Batterskull | silent | {3}: Return this Equipment to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Chancellor of the Annex | silent | Whenever an opponent casts a spell, counter it unless that player pays {1}. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Chancellor of the Spires | silent | When this creature enters, you may cast target instant or sorcery card from an opponent's graveyard without paying its mana cost. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Corrupted Resolve | silent | Counter target spell if its controller is poisoned. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Due Respect | silent | Permanents enter tapped this turn. Draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Forced Worship | silent | {2}{W}: Return this Aura to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Fresh Meat | silent | Create a 3/3 green Beast creature token for each creature put into your graveyard from the battlefield this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Glistening Oil | silent | At the beginning of your upkeep, put a -1/-1 counter on enchanted creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Gremlin Mine | silent | {1}, {T}, Sacrifice this artifact: Remove up to four charge counters from target noncreature artifact. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Hex Parasite | silent | {X}{B/P}: Remove up to X counters from target permanent. For each counter removed this way, this creature gets +1/+0 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Isolation Cell | silent | Whenever an opponent casts a creature spell, that player loses 2 life unless they pay {2}. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Karn Liberated | silent | +4: Target player exiles a card from their hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Lashwrithe | silent | Living weapon | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Life's Finale | silent | Destroy all creatures, then search target opponent's library for up to three creature cards and put them into their graveyard. Then that player shuffles. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Mortis Dogs | silent | When this creature dies, target player loses life equal to its power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Necropouncer | silent | Living weapon | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Omen Machine | silent | At the beginning of each player's draw step, that player exiles the top card of their library. If it's a land card, the player puts it onto the battlefield. Oth | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Parasitic Implant | silent | At the beginning of your upkeep, enchanted creature's controller sacrifices it and you create a 1/1 colorless Phyrexian Myr artifact creature token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Phyrexian Metamorph | silent | You may have this creature enter as a copy of any artifact or creature on the battlefield, except it's an artifact in addition to its other types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -51,8 +46,6 @@
 | Reaper of Sheoldred | silent | Whenever a source deals damage to this creature, that source's controller gets a poison counter. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Ruthless Invasion | silent | ({R/P} can be paid with either {R} or 2 life.) Nonartifact creatures can't block this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Shrine of Limitless Power | silent | {4}, {T}, Sacrifice this artifact: Target player discards a card for each charge counter on this artifact. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Shrine of Loyal Legions | silent | {3}, {T}, Sacrifice this artifact: Create a 1/1 colorless Phyrexian Myr artifact creature token for each charge counter on this artifact. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Sickleslicer | silent | Living weapon | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Soul Conduit | silent | {6}, {T}: Two target players exchange life totals. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Suture Priest | silent | Whenever a creature an opponent controls enters, you may have that player lose 1 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sword of War and Peace | silent | Whenever equipped creature deals combat damage to a player, this Equipment deals damage to that player equal to the number of cards in their hand and you gain 1 | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -92,6 +85,7 @@
 | Geosurge | handled | Add {R}{R}{R}{R}{R}{R}{R}. Spend this mana only to cast artifact or creature spells. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Geth's Verdict | handled | Target player sacrifices a creature of their choice and loses 1 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Glissa's Scorn | handled | Destroy target artifact. Its controller loses 1 life. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Glistening Oil | handled | Enchanted creature has infect. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Gut Shot | handled | ({R/P} can be paid with either {R} or 2 life.) Gut Shot deals 1 damage to any target. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Hovermyr | handled | Flying | machines/combat.py | Y/-/- | not_tested |
 | Immolating Souleater | handled | {R/P}: This creature gets +1/+0 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -101,6 +95,7 @@
 | Invader Parasite | handled | Imprint — When this creature enters, exile target land. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Jor Kadeen, the Prevailer | handled | Metalcraft — Creatures you control get +3/+0 as long as you control three or more artifacts. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Kiln Walker | handled | Whenever this creature attacks, it gets +3/+0 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Lashwrithe | handled | Equipped creature gets +1/+1 for each Swamp you control. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Leeching Bite | handled | Target creature gets +1/+1 until end of turn. Another target creature gets -1/-1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Lost Leonin | handled | Infect | machines/combat.py | Y/-/- | not_tested |
 | Loxodon Convert | handled |  |  | Y/-/- | not_tested |
@@ -110,6 +105,7 @@
 | Mindculling | handled | You draw two cards and target opponent discards two cards. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Moltensteel Dragon | handled | {R/P}: This creature gets +1/+0 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Mycosynth Wellspring | handled | When this artifact enters or is put into a graveyard from the battlefield, you may search your library for a basic land card, reveal it, put it into your hand,  | the engine reads this text and performs it | Y/-/- | not_tested |
+| Necropouncer | handled | Equipped creature gets +3/+1 and has haste. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Noxious Revival | handled | ({G/P} can be paid with either {G} or 2 life.) Put target card from a graveyard on top of its owner's library. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Numbing Dose | handled | Enchanted permanent doesn't untap during its controller's untap step. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ogre Menial | handled | {R}: This creature gets +1/+0 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -130,7 +126,9 @@
 | Shriek Raptor | handled | Flying | machines/combat.py | Y/-/- | not_tested |
 | Shrine of Boundless Growth | handled | At the beginning of your upkeep and whenever you cast a green spell, put a charge counter on this artifact. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Shrine of Burning Rage | handled | At the beginning of your upkeep and whenever you cast a red spell, put a charge counter on this artifact. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Shrine of Loyal Legions | handled | At the beginning of your upkeep and whenever you cast a white spell, put a charge counter on this artifact. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Shrine of Piercing Vision | handled | At the beginning of your upkeep and whenever you cast a blue spell, put a charge counter on this artifact. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Sickleslicer | handled | Equipped creature gets +2/+2. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Slag Fiend | handled | Slag Fiend's power and toughness are each equal to the number of artifact cards in all graveyards. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Slash Panther | handled | Haste | machines/combat.py | Y/-/- | not_tested |
 | Spined Thopter | handled | Flying | machines/combat.py | Y/-/- | not_tested |
@@ -154,10 +152,11 @@
 ## Fully supported
 
 <details>
-<summary>38 cards</summary>
+<summary>40 cards</summary>
 
 - Argent Mutation
 - Arm with Aether
+- Batterskull
 - Bludgeon Brawl
 - Caged Sun
 - Cathedral Membrane
@@ -167,6 +166,7 @@
 - Dismember
 - Elesh Norn, Grand Cenobite
 - Exclusion Ritual
+- Forced Worship
 - Furnace Scamp
 - Gitaxian Probe
 - Glistener Elf
@@ -201,14 +201,12 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| living weapon | 3 | Lashwrithe, Necropouncer, Sickleslicer | nph |
 | ({M} can be paid with either {M} or N life.) nonartifact creatures can't block ~. | 1 | Ruthless Invasion | nph |
 | ({M} can be paid with either {M} or N life.) target artifact or creature you control gains protection from artifacts or from the color of your choice until end  | 1 | Apostle's Blessing | nph |
 | +N: target player exiles a card from their hand. | 1 | Karn Liberated | nph |
 | as an additional cost to cast ~, sacrifice a creature. all creatures get -N/-N until end of turn, where N is the sacrificed creature's power. | 1 | Ichor Explosion | nph |
 | at the beginning of each player"..."s a land card, the player puts it onto the battlefield. otherwise, the player casts it without paying its mana cost if able. | 1 | Omen Machine | nph |
 | at the beginning of your upkeep, enchanted creature's controller sacrifices it and you create a N/N colorless phyrexian myr artifact creature token. | 1 | Parasitic Implant | nph |
-| at the beginning of your upkeep, put a -N/-N counter on enchanted creature. | 1 | Glistening Oil | nph |
 | counter target spell if its controller is poisoned. | 1 | Corrupted Resolve | nph |
 | create a N/N green beast creature token for each creature put into your graveyard from the battlefield ~. | 1 | Fresh Meat | nph |
 | destroy all creatures, then search target opponent's library for up to three creature cards and put them into their graveyard. then that player shuffles. | 1 | Life's Finale | nph |
@@ -232,13 +230,10 @@
 | you may have ~ enter as a copy of any artifact or creature on the battlefield, except it's an artifact in addition to its other types. | 1 | Phyrexian Metamorph | nph |
 | you may reveal ~ from your opening hand. if you do, at the beginning of the first upkeep, each opponent loses N life, then you gain life equal to the life lost  | 1 | Chancellor of the Dross | nph |
 | you may reveal ~ from your opening hand. if you do, at the beginning of your first main phase of the game, add {M}. | 1 | Chancellor of the Tangle | nph |
-| {M}, {M}, sacrifice ~: create a N/N colorless phyrexian myr artifact creature token for each charge counter on ~. | 1 | Shrine of Loyal Legions | nph |
 | {M}, {M}, sacrifice ~: remove up to four charge counters from target noncreature artifact. | 1 | Gremlin Mine | nph |
 | {M}, {M}, sacrifice ~: target player discards a card for each charge counter on ~. | 1 | Shrine of Limitless Power | nph |
 | {M}, {M}: two target players exchange life totals. | 1 | Soul Conduit | nph |
-| {M}: return ~ to its owner's hand. | 1 | Batterskull | nph |
 | {M}{M}: remove up to N counters from target permanent. for each counter removed ~, ~ gets +N/+N until end of turn. | 1 | Hex Parasite | nph |
-| {M}{M}: return ~ to its owner's hand. | 1 | Forced Worship | nph |
 | ~ gets +N/+y, where N is the exiled creature card's power and y is its toughness. | 1 | Phyrexian Ingester | nph |
 | ~ has infect as long as an opponent is poisoned. | 1 | Viridian Betrayers | nph |
 

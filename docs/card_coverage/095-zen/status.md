@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 39 | 17.7% |
-| Works (untested) | 126 | 57.3% |
+| Tested | 41 | 18.6% |
+| Works (untested) | 127 | 57.7% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 55 | 25.0% |
+| Not working | 52 | 23.6% |
 
 ## Cards needing work
 
@@ -44,11 +44,8 @@
 | Hagra Diabolist | silent | Whenever this creature or another Ally you control enters, you may have target player lose life equal to the number of Allies you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Highland Berserker | silent | Whenever this creature or another Ally you control enters, you may have Ally creatures you control gain first strike until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Joraga Bard | silent | Whenever this creature or another Ally you control enters, you may have Ally creatures you control gain vigilance until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Journey to Nowhere | silent | When this enchantment leaves the battlefield, return the exiled card to the battlefield under its owner's control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Kabira Evangel | silent | Whenever this creature or another Ally you control enters, you may choose a color. If you do, Allies you control gain protection from the chosen color until end | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Kazuul Warlord | silent | Whenever this creature or another Ally you control enters, you may put a +1/+1 counter on each Ally creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Kor Outfitter | silent | When this creature enters, you may attach target Equipment you control to target creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Lethargy Trap | silent | If three or more creatures are attacking, you may pay {U} rather than pay this spell's mana cost. Attacking creatures get -3/-0 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Living Tsunami | silent | At the beginning of your upkeep, sacrifice this creature unless you return a land you control to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Lorthos, the Tidemaker | silent | Whenever Lorthos attacks, you may pay {8}. If you do, tap up to eight target permanents. Those permanents don't untap during their controllers' next untap steps | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Lullmage Mentor | silent | Whenever a spell or ability you control counters a spell, you may create a 1/1 blue Merfolk creature token. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
@@ -121,6 +118,7 @@
 | Inferno Trap | handled | If you've been dealt damage by two or more creatures this turn, you may pay {R} rather than pay this spell's mana cost. Inferno Trap deals 4 damage to target cr | the engine reads this text and performs it | Y/-/- | not_tested |
 | Into the Roil | handled | Kicker {1}{U} (You may pay an additional {1}{U} as you cast this spell.) Return target nonland permanent to its owner's hand. If this spell was kicked, draw a c | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Ior Ruin Expedition | handled | Landfall — Whenever a land you control enters, you may put a quest counter on this enchantment. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Journey to Nowhere | handled | When this enchantment enters, exile target creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Jwar Isle Refuge | handled | This land enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Kabira Crossroads | handled | This land enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Kazandu Blademaster | handled | Whenever this creature or another Ally you control enters, you may put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -134,6 +132,7 @@
 | Kraken Hatchling | handled |  |  | Y/-/- | not_tested |
 | Landbind Ritual | handled | You gain 2 life for each Plains you control. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Lavaball Trap | handled | If an opponent had two or more lands enter the battlefield under their control this turn, you may pay {3}{R}{R} rather than pay this spell's mana cost. Destroy  | the engine reads this text and performs it | Y/-/- | not_tested |
+| Lethargy Trap | handled | If three or more creatures are attacking, you may pay {U} rather than pay this spell's mana cost. Attacking creatures get -3/-0 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Magma Rift | handled | As an additional cost to cast this spell, sacrifice a land. Magma Rift deals 5 damage to target creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Makindi Shieldmate | handled | Whenever this creature or another Ally you control enters, you may put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Mark of Mutiny | handled | Gain control of target creature until end of turn. Put a +1/+1 counter on it and untap it. That creature gains haste until end of turn. (It can attack and {T} t | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -150,7 +149,6 @@
 | Oran-Rief Recluse | handled | When this creature enters, if it was kicked, destroy target creature with flying. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Oran-Rief Survivalist | handled | Whenever this creature or another Ally you control enters, you may put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Paralyzing Grasp | handled | Enchanted creature doesn't untap during its controller's untap step. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Pillarfield Ox | handled |  |  | Y/Y/- | not_tested |
 | Piranha Marsh | handled | This land enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Pitfall Trap | handled | If exactly one creature is attacking, you may pay {W} rather than pay this spell's mana cost. Destroy target attacking creature without flying. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Plated Geopede | handled | Landfall — Whenever a land you control enters, this creature gets +2/+2 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -211,7 +209,7 @@
 ## Fully supported
 
 <details>
-<summary>39 cards</summary>
+<summary>41 cards</summary>
 
 - Aether Figment
 - Archive Trap
@@ -233,6 +231,7 @@
 - Hellkite Charger
 - Iona, Shield of Emeria
 - Khalni Gem
+- Kor Outfitter
 - Lotus Cobra
 - Luminarch Ascension
 - Marsh Flats
@@ -240,6 +239,7 @@
 - Misty Rainforest
 - Mold Shambler
 - Nissa's Chosen
+- Pillarfield Ox
 - Scalding Tarn
 - Sorin Markov
 - Spell Pierce
@@ -267,7 +267,6 @@
 | choose a color. white creatures you control gain protection from the chosen color until end of turn. | 1 | Brave the Elements | zen |
 | destroy target artifact or enchantment and up to one other target artifact or enchantment. | 1 | Relic Crush | zen |
 | destroy target land. its controller discards a card. | 1 | Desecrated Earth | zen |
-| if three or more creatures are attacking, you may pay {M} rather than pay ~ mana cost. attacking creatures get -N/-N until end of turn. | 1 | Lethargy Trap | zen |
 | kicker {M} (you may pay an additional {M} as you cast ~.) create a N/N red elemental creature token with trample and haste. exile it at the beginning of the nex | 1 | Elemental Appeal | zen |
 | kicker {M} (you may pay an additional {M} as you cast ~.) create a token that's a copy of target creature. if ~ was kicked, create five of those tokens instead. | 1 | Rite of Replication | zen |
 | kicker {M} (you may pay an additional {M} as you cast ~.) create six N/N white kor soldier creature tokens. if ~ was kicked, create twelve of those tokens inste | 1 | Conqueror's Pledge | zen |
@@ -283,8 +282,6 @@
 | when ~ enters, each opponent loses life equal to the number of vampires you control. you gain life equal to the life lost ~. | 1 | Malakir Bloodwitch | zen |
 | when ~ enters, if it was kicked, you may search your library for a card named ~, put it onto the battlefield, then shuffle. | 1 | Gigantiform | zen |
 | when ~ enters, sacrifice it unless you sacrifice a land. | 1 | Scythe Tiger | zen |
-| when ~ enters, you may attach target equipment you control to target creature you control. | 1 | Kor Outfitter | zen |
-| when ~ leaves the battlefield, return the exiled card to the battlefield under its owner's control. | 1 | Journey to Nowhere | zen |
 | whenever a card is put into an opponent's graveyard from anywhere, if ~ has three or more quest counters on it, you may have that player lose N life. if you do, | 1 | Bloodchief Ascension | zen |
 | whenever a card is put into your graveyard from anywhere, you may put a quest counter on ~. | 1 | Quest for Ancient Secrets | zen |
 | whenever a creature an opponent controls enters, you may have that player lose N life. | 1 | Blood Seeker | zen |

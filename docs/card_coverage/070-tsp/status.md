@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 60 | 22.4% |
+| Tested | 64 | 23.9% |
 | Works (untested) | 140 | 52.2% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 68 | 25.4% |
+| Not working | 64 | 23.9% |
 
 ## Cards needing work
 
@@ -39,8 +39,6 @@
 | Durkwood Tracker | silent | {1}{G}, {T}: If this creature is on the battlefield, it deals damage equal to its power to target attacking creature. That creature deals damage equal to its po | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Endrek Sahr, Master Breeder | silent | Whenever you cast a creature spell, create X 1/1 black Thrull creature tokens, where X is that spell's mana value. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Evangelize | silent | Buyback {2}{W}{W} (You may pay an additional {2}{W}{W} as you cast this spell. If you do, put this card into your hand as it resolves.) Gain control of target c | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Evil Eye of Urborg | silent | Whenever this creature becomes blocked by a creature, destroy that creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Faceless Devourer | silent | When this creature leaves the battlefield, return the exiled card to the battlefield under its owner's control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Foriysian Totem | silent | As long as this artifact is a creature, it can block an additional creature each combat. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Gauntlet of Power | silent | Creatures of the chosen color get +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Ghitu Firebreathing | silent | {R}: Enchanted creature gets +1/+0 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -66,9 +64,7 @@
 | Restore Balance | silent | Suspend 6—{W} Each player chooses a number of lands they control equal to the number of lands controlled by the player who controls the fewest, then sacrifices  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Saffi Eriksdotter | silent | Sacrifice Saffi Eriksdotter: When target creature is put into your graveyard this turn, return that card to the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sangrophage | silent | At the beginning of your upkeep, tap this creature unless you pay 2 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Sarpadian Empires, Vol. VII | silent | {3}, {T}: Create a 1/1 creature token of the chosen color and type. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Scion of the Ur-Dragon | silent | {2}: Search your library for a Dragon permanent card and put it into your graveyard. If you do, Scion of the Ur-Dragon becomes a copy of that card until end of  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Slipstream Serpent | silent | When you control no Islands, sacrifice this creature. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Smallpox | silent | Each player loses 1 life, discards a card, sacrifices a creature of their choice, then sacrifices a land of their choice. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Spectral Force | silent | Whenever this creature attacks, if defending player controls no black permanents, it doesn't untap during your next untap step. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Spell Burst | silent | Buyback | no machine in the engine executes this keyword | Y/-/- | not_working |
@@ -134,6 +130,7 @@
 | Errant Doomsayers | handled | {T}: Tap target creature with toughness 2 or less. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Errant Ephemeron | handled | Flying | machines/combat.py | Y/-/- | not_tested |
 | Eternity Snare | handled | When this Aura enters, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Faceless Devourer | handled | When this creature enters, exile another target creature with shadow. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Fallen Ideal | handled | Enchanted creature has flying and "Sacrifice a creature: This creature gets +2/+1 until end of turn." | the engine reads this text and performs it | Y/-/- | not_tested |
 | Fathom Seer | handled | When this creature is turned face up, draw two cards. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Feebleness | handled | Enchanted creature gets -2/-1. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -143,7 +140,6 @@
 | Flickering Spirit | handled | {3}{W}: Exile this creature, then return it to the battlefield under its owner's control. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Flowstone Channeler | handled | {1}{R}, {T}, Discard a card: Target creature gets +1/-1 and gains haste until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Fool's Demise | handled | When enchanted creature dies, return that card to the battlefield under your control. | the engine reads this text and performs it | Y/-/- | not_tested |
-| Fortify | handled | Choose one — • Creatures you control get +2/+0 until end of turn. • Creatures you control get +0/+2 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Fortune Thief | handled | Damage that would reduce your life total to less than 1 reduces it to 1 instead. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Fury Sliver | handled | All Sliver creatures have double strike. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Gaze of Justice | handled | As an additional cost to cast this spell, tap three untapped white creatures you control. Exile target creature. Flashback {5}{W} (You may cast this card from y | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -238,7 +234,7 @@
 ## Fully supported
 
 <details>
-<summary>60 cards</summary>
+<summary>64 cards</summary>
 
 - Amrou Seekers
 - Ancestral Vision
@@ -254,9 +250,11 @@
 - Dralnu, Lich Lord
 - Dreadship Reef
 - Empty the Warrens
+- Evil Eye of Urborg
 - Flagstones of Trokair
 - Flamecore Elemental
 - Foriysian Interceptor
+- Fortify
 - Fungal Reaches
 - Fungus Sliver
 - Gemstone Caverns
@@ -282,9 +280,11 @@
 - Pulmonic Sliver
 - Rift Bolt
 - Saltcrusted Steppe
+- Sarpadian Empires, Vol. VII
 - Sedge Sliver
 - Serra Avenger
 - Sidewinder Sliver
+- Slipstream Serpent
 - Snapback
 - Squall Line
 - Stormcloud Djinn
@@ -334,13 +334,11 @@
 | target player sacrifices half the permanents they control of their choice, rounded down. suspend N—{M}{M}{M} (rather than cast ~ from your hand, you may pay {M} | 1 | Curse of the Cabal | tsp |
 | target spell or permanent becomes colorless. | 1 | Moonlace | tsp |
 | when a player casts a spell or a creature attacks, exile norin. return it to the battlefield under its owner's control at the beginning of the next end step. | 1 | Norin the Wary | tsp |
-| when you control no islands, sacrifice ~. | 1 | Slipstream Serpent | tsp |
 | when ~ dies, target land becomes a swamp. exile ~. | 1 | Cyclopean Giant | tsp |
 | when ~ enters, switch target creature's power and toughness until end of turn. | 1 | Crookclaw Transmuter | tsp |
 | when ~ enters, you may reveal N black cards in your hand. if you do, target creature gets -N/-N until end of turn. | 1 | Nightshade Assassin | tsp |
 | when ~ enters, you may search your library for a forest card, put it onto the battlefield tapped under target player's control, then shuffle. | 1 | Yavimaya Dryad | tsp |
 | when ~ is put into a graveyard from the battlefield, if it was a creature, return ~ to its owner's hand. | 1 | Weatherseed Totem | tsp |
-| when ~ leaves the battlefield, return the exiled card to the battlefield under its owner's control. | 1 | Faceless Devourer | tsp |
 | whenever a creature an opponent controls dies, you may pay {M}{M}. if you do, return that card to the battlefield under your control. if it"..."s a zombie in ad | 1 | Lim-Dûl the Necromancer | tsp |
 | whenever an opponent casts a spell, if ~ is suspended, that player may put a time counter on ~. | 1 | Pardic Dragon | tsp |
 | whenever another goblin you control becomes blocked, sacrifice it. if you do, it deals N damage to each creature blocking it. | 1 | Ib Halfheart, Goblin Tactician | tsp |
@@ -349,7 +347,6 @@
 | whenever you cast an artifact spell, you may search your graveyard, hand, and/or library for a card with the same name as that spell and put it onto the battlef | 1 | Mishra, Artificer Prodigy | tsp |
 | whenever ~ attacks and isn't blocked, you may have it deal N damage to target creature. if you do, prevent all combat damage ~ would deal ~. | 1 | Zealot il-Vec | tsp |
 | whenever ~ attacks, if defending player controls no black permanents, it doesn't untap during your next untap step. | 1 | Spectral Force | tsp |
-| whenever ~ becomes blocked by a creature, destroy that creature. | 1 | Evil Eye of Urborg | tsp |
 | whenever ~ becomes blocked, you may untap ~ and remove it from combat. | 1 | Gustcloak Cavalier | tsp |
 | whenever ~ blocks or becomes blocked by a nonblack creature, destroy that creature at end of combat. | 1 | Gorgon Recluse | tsp |
 | whenever ~ deals combat damage to a player, that player loses N life at the beginning of their next draw step unless they pay {M} before that step. | 1 | Glass Asp | tsp |
@@ -357,7 +354,6 @@
 | whenever ~ is dealt damage, if it's a creature, sacrifice that many permanents. | 1 | Phyrexian Totem | tsp |
 | {M}, sacrifice ~: each player exiles all cards from their hand face down and draws seven cards. at the beginning of the next end step, each player discards thei | 1 | Magus of the Jar | tsp |
 | {M}, {M}: choose a card name, then reveal a card at random from your hand. if that card has the chosen name, ~ deals N damage to any target. | 1 | Magus of the Scroll | tsp |
-| {M}, {M}: create a N/N creature token of the chosen color and type. | 1 | Sarpadian Empires, Vol. VII | tsp |
 | {M}, {M}: reveal the top card of your library. if it has the same name as a card in your graveyard, put it into your graveyard. otherwise, draw a card. | 1 | Candles of Leng | tsp |
 | {M}: choose target permanent you control or suspended card you own. if that permanent or card has a time counter on it, you may remove a time counter from it or | 1 | Jhoira's Timebug | tsp |
 | {M}: each N/N creature you control gets +N/+N until end of turn. | 1 | Pendelhaven Elder | tsp |

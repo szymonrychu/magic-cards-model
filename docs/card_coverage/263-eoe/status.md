@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 62 | 24.6% |
-| Works (untested) | 138 | 54.8% |
+| Tested | 63 | 25.0% |
+| Works (untested) | 139 | 55.2% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 52 | 20.6% |
+| Not working | 50 | 19.8% |
 
 ## Cards needing work
 
@@ -38,9 +38,7 @@
 | Cryoshatter | silent | When enchanted creature becomes tapped or is dealt damage, destroy it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Dawnstrike Vanguard | silent | At the beginning of your end step, if you control two or more tapped creatures, put a +1/+1 counter on each creature you control other than this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Debris Field Crusher | silent | {1}{R}: This Spacecraft gets +2/+0 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Dyadrine, Synthesis Amalgam | silent | Whenever you attack, you may remove a +1/+1 counter from each of two creatures you control. If you do, draw a card and create a 2/2 colorless Robot artifact cre | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Hymn of the Faller | silent | Surveil 1, then you draw a card and lose 1 life. (To surveil 1, look at the top card of your library. You may put it into your graveyard.) Void — If a nonland p | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Infinite Guideline Station | silent | When Infinite Guideline Station enters, create a tapped 2/2 colorless Robot artifact creature token for each multicolored permanent you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Kav Landseeker | silent | When this creature enters, create a Lander token. At the beginning of the end step on your next turn, sacrifice that token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Kavaron, Memorial World | silent | {1}{R}, {T}, Sacrifice a land: Create a 2/2 colorless Robot artifact creature token, then creatures you control get +1/+0 and gain haste until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Lightstall Inquisitor | silent | When this creature enters, each opponent exiles a card from their hand and may play that card for as long as it remains exiled. Each spell cast this way costs { | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -134,6 +132,7 @@
 | Illvoi Infiltrator | handled | This creature can't be blocked if you've cast two or more spells this turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Illvoi Light Jammer | handled | When this Equipment enters, attach it to target creature you control. That creature gains hexproof until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Illvoi Operative | handled | Whenever you cast your second spell each turn, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Infinite Guideline Station | handled | When Infinite Guideline Station enters, create a tapped 2/2 colorless Robot artifact creature token for each multicolored permanent you control. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Intrepid Tenderfoot | handled | {3}: Put a +1/+1 counter on this creature. Activate only as a sorcery. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Invasive Maneuvers | handled | Invasive Maneuvers deals 3 damage to target creature. It deals 5 damage instead if you control a Spacecraft. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Kavaron Turbodrone | handled | {T}: Target creature you control gets +1/+1 and gains haste until end of turn. Activate only as a sorcery. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -220,7 +219,7 @@
 ## Fully supported
 
 <details>
-<summary>62 cards</summary>
+<summary>63 cards</summary>
 
 - Archenemy's Charm
 - Bioengineered Future
@@ -233,6 +232,7 @@
 - Cryogen Relic
 - Cut Propulsion
 - Dockworker Drone
+- Dyadrine, Synthesis Amalgam
 - Elegy Acolyte
 - Evendo, Waking Haven
 - Extinguisher Battleship
@@ -314,7 +314,6 @@
 | when ~ enters, choose one — • put two +N/+N counters on ~. • put target exiled card with warp on the bottom of its owner's library. | 1 | Blade of the Swarm | eoe |
 | when ~ enters, create a N/N colorless robot artifact creature token and attach ~ to it. | 1 | Auxiliary Boosters | eoe |
 | when ~ enters, create a lander token. at the beginning of the end step on your next turn, sacrifice that token. | 1 | Kav Landseeker | eoe |
-| when ~ enters, create a tapped N/N colorless robot artifact creature token for each multicolored permanent you control. | 1 | Infinite Guideline Station | eoe |
 | when ~ enters, creatures your opponents control get -N/-N until your next turn. | 1 | Mouth of the Storm | eoe |
 | when ~ enters, destroy up to one other target creature. if that creature wasn't dealt damage ~, its controller draws two cards. | 1 | Faller's Faithful | eoe |
 | when ~ enters, each opponent exiles a card from their hand and may play that card for as long as it remains exiled. each spell cast ~ costs {M} more to cast. ea | 1 | Lightstall Inquisitor | eoe |
@@ -327,7 +326,6 @@
 | whenever a creature you control dies, each opponent chooses a creature they control and exiles it. | 1 | Sothera, the Supervoid | eoe |
 | whenever enchanted creature attacks, put target creature card from defending player's graveyard onto the battlefield under your control tapped and attacking. | 1 | Chorale of the Void | eoe |
 | whenever equipped creature attacks, choose up to one target creature. that creature can't be blocked ~ and has base power and toughness N/N until end of turn. | 1 | Atomic Microsizer | eoe |
-| whenever you attack, you may remove a +N/+N counter from each of two creatures you control. if you do, draw a card and create a N/N colorless robot artifact cre | 1 | Dyadrine, Synthesis Amalgam | eoe |
 | whenever ~ attacks, defending player mills four cards. | 1 | Specimen Freighter | eoe |
 | whenever ~ or another kavu you control enters, exile the top card of your library. for as long as that card remains exiled, you may play it if you control a kav | 1 | Possibility Technician | eoe |
 | {M}, sacrifice another artifact: exile the top N cards of your library, where N is one plus the mana value of the sacrificed artifact. you may play those cards  | 1 | Memorial Vault | eoe |

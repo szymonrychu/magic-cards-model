@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 30 | 16.6% |
-| Works (untested) | 107 | 59.1% |
+| Tested | 31 | 17.1% |
+| Works (untested) | 108 | 59.7% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 44 | 24.3% |
+| Not working | 42 | 23.2% |
 
 ## Cards needing work
 
@@ -28,7 +28,6 @@
 |---|---|---|---|---|---|
 | Animist's Awakening | silent | Reveal the top X cards of your library. Put all land cards from among them onto the battlefield tapped and the rest on the bottom of your library in a random or | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Chandra, Fire of Kaladesh // Chandra, Roaring Flame | silent | −7: Chandra deals 6 damage to each opponent. Each player dealt damage this way gets an emblem with "At the beginning of your upkeep, this emblem deals 3 damage  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Consul's Lieutenant | silent | Whenever this creature attacks, if it's renowned, other attacking creatures you control get +1/+1 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Dark Dabbling | silent | Regenerate target creature. Draw a card. (The next time the creature would be destroyed this turn, instead tap it, remove it from combat, and heal all damage on | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Displacement Wave | silent | Return all nonland permanents with mana value X or less to their owners' hands. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Eyeblight Massacre | silent | Non-Elf creatures get -2/-2 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -38,7 +37,6 @@
 | Graveblade Marauder | silent | Whenever this creature deals combat damage to a player, that player loses life equal to the number of creature cards in your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Hixus, Prison Warden | silent | Whenever a creature deals combat damage to you, if Hixus entered this turn, exile that creature until Hixus leaves the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Honored Hierarch | silent | As long as this creature is renowned, it has vigilance and "{T}: Add one mana of any color." | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Hydrolash | silent | Attacking creatures get -2/-0 until end of turn. Draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Infectious Bloodlust | silent | Enchanted creature gets +2/+1, has haste, and attacks each combat if able. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Infinite Obliteration | silent | Choose a creature card name. Search target opponent's graveyard, hand, and library for any number of cards with that name and exile them. Then that player shuff | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Kytheon, Hero of Akros // Gideon, Battle-Forged | silent | +2: Up to one target creature an opponent controls attacks Gideon during its controller's next turn if able. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -119,6 +117,7 @@
 | Helm of the Gods | handled | Equipped creature gets +1/+1 for each enchantment you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Herald of the Pantheon | handled | Enchantment spells you cast cost {1} less to cast. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Hitchclaw Recluse | handled | Reach | machines/combat.py | Y/Y/- | not_tested |
+| Hydrolash | handled | Attacking creatures get -2/-0 until end of turn. Draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Infernal Scarring | handled | Enchanted creature gets +2/+0 and has "When this creature dies, draw a card." | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Iroas's Champion | handled | Double strike | machines/combat.py | Y/Y/- | not_tested |
 | Jace's Sanctum | handled | Instant and sorcery spells you cast cost {1} less to cast. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -181,7 +180,7 @@
 ## Fully supported
 
 <details>
-<summary>30 cards</summary>
+<summary>31 cards</summary>
 
 - Acolyte of the Inferno
 - Alhammarret's Archive
@@ -190,6 +189,7 @@
 - Boggart Brute
 - Bonded Construct
 - Chandra's Ignition
+- Consul's Lieutenant
 - Day's Undoing
 - Deep-Sea Terror
 - Embermaw Hellion
@@ -226,7 +226,6 @@
 | as long as ~ is renowned, it has menace. | 1 | Goblin Glory Chaser | ori |
 | as long as ~ is renowned, it has vigilance and "..." | 1 | Honored Hierarch | ori |
 | at the beginning of your upkeep, choose one that hasn't been chosen — • ~ deals N damage to any target and you gain N life. • target opponent discards two cards | 1 | Demonic Pact | ori |
-| attacking creatures get -N/-N until end of turn. draw a card. | 1 | Hydrolash | ori |
 | attacking creatures you control get +N/+N. | 1 | War Horn | ori |
 | choose a creature card name. search target opponent's graveyard, hand, and library for any number of cards with that name and exile them. then that player shuff | 1 | Infinite Obliteration | ori |
 | counter target instant or sorcery spell that targets you. spell mastery — if there are two or more instant and/or sorcery cards in your graveyard, you may copy  | 1 | Psychic Rebuttal | ori |
@@ -259,7 +258,6 @@
 | whenever another nontoken creature you control dies, exile ~, then return her to the battlefield transformed under her owner's control. if you do, create a N/N  | 1 | Liliana, Heretical Healer // Liliana, Defiant Necromancer | ori |
 | whenever you draw a card, target opponent mills two cards. if two nonland cards that share a color were milled ~, repeat ~. | 1 | Sphinx's Tutelage | ori |
 | whenever ~ attacks, each opponent who doesn't control an elf loses N life. | 1 | Thornbow Archer | ori |
-| whenever ~ attacks, if it's renowned, other attacking creatures you control get +N/+N until end of turn. | 1 | Consul's Lieutenant | ori |
 | whenever ~ deals combat damage to a player, that player loses life equal to the number of creature cards in your graveyard. | 1 | Graveblade Marauder | ori |
 | you may cast ~ as though it had flash if you pay {M} more to cast it. | 1 | Harbinger of the Tides | ori |
 | −N: chandra deals N damage to each opponent. each player dealt damage ~ gets an emblem with "..." | 1 | Chandra, Fire of Kaladesh // Chandra, Roaring Flame | ori |

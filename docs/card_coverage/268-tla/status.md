@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 80 | 28.9% |
-| Works (untested) | 131 | 47.3% |
+| Tested | 81 | 29.2% |
+| Works (untested) | 132 | 47.7% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 66 | 23.8% |
+| Not working | 64 | 23.1% |
 
 ## Cards needing work
 
@@ -30,7 +30,6 @@
 | Accumulate Wisdom | silent | Look at the top three cards of your library. Put one of those cards into your hand and the rest on the bottom of your library in any order. Put each of those ca | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Avatar Destiny | silent | Enchanted creature gets +1/+1 for each creature card in your graveyard and is an Avatar in addition to its other types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Avatar's Wrath | silent | Choose up to one target creature, then airbend all other creatures. (Exile them. While each one is exiled, its owner may cast it for {2} rather than its mana co | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Azula, Cunning Usurper | silent | When Azula enters, target opponent exiles a nontoken creature they control, then they exile a nonland card from their graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Beifong's Bounty Hunters | silent | Whenever a nonland creature you control dies, earthbend X, where X is that creature's power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Benevolent River Spirit | silent | Waterbend | no machine in the engine executes this keyword | Y/Y/Y | not_working |
 | Bumi, King of Three Trials | silent | When Bumi enters, choose up to X, where X is the number of Lesson cards in your graveyard — • Put three +1/+1 counters on Bumi. • Target player scries 3. • Eart | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -87,7 +86,6 @@
 | Jet's Brainwashing | notice | Kicker {3} (You may pay an additional {3} as you cast this spell.) Target creature can't block this turn. If this spell was kicked, gain control of that creatur | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Messenger Hawk | notice | This creature gets +2/+0 as long as you've drawn two or more cards this turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Planetarium of Wan Shi Tong | notice | Whenever you scry or surveil, look at the top card of your library. You may cast that card without paying its mana cost. Do this only once each turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Sandbender Scavengers | notice | When this creature dies, you may exile it. When you do, return target creature card with mana value less than or equal to this creature's power from your gravey | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Sold Out | notice | Exile target creature. If it was dealt damage this turn, create a Clue token. (It's an artifact with "{2}, Sacrifice this token: Draw a card.") | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Yip Yip! | notice | Target creature you control gets +2/+2 until end of turn. If that creature is an Ally, it also gains flying until end of turn. | unparsed remainder: If that creature is an Ally, it also gains flying until end of turn. | Y/Y/Y | not_working |
 | Zuko's Conviction | notice | Kicker {4} (You may pay an additional {4} as you cast this spell.) Return target creature card from your graveyard to your hand. If this spell was kicked, inste | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
@@ -182,6 +180,7 @@
 | Rowdy Snowballers | handled | When this creature enters, tap target creature an opponent controls and put a stun counter on it. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Rumble Arena | handled | When this land enters, scry 1. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Saber-Tooth Moose-Lion | handled | Reach | machines/combat.py | Y/Y/Y | not_tested |
+| Sandbender Scavengers | handled | Whenever you sacrifice another permanent, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Sandbenders' Storm | handled | Choose one — • Destroy target creature with power 4 or greater. • Earthbend 3. (Target land you control becomes a 0/0 creature with haste that's still a land. P | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Serpent's Pass | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Sokka's Haiku | handled | Counter target spell. Draw a card, then mill three cards. Untap target land. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -227,7 +226,7 @@
 ## Fully supported
 
 <details>
-<summary>80 cards</summary>
+<summary>81 cards</summary>
 
 - Aang's Iceberg
 - Aang, Swift Savior // Aang and La, Ocean's Fury
@@ -238,6 +237,7 @@
 - Allies at Last
 - Appa, Steadfast Guardian
 - Avatar Aang // Aang, Master of Elements
+- Azula, Cunning Usurper
 - Ba Sing Se
 - Badgermole
 - Badgermole Cub
@@ -350,10 +350,8 @@
 | waterbend {M}, {M}: you may cast a noncreature spell from your hand without paying its mana cost. | 1 | Yue, the Moon Spirit | tla |
 | waterbend {M}: enchanted creature's owner shuffles it into their library. | 1 | Watery Grasp | tla |
 | waterbend {M}: look at the top four cards of your library. you may reveal a creature card with power N or less from among them and put it into your hand. put th | 1 | Water Tribe Rallier | tla |
-| when azula enters, target opponent exiles a nontoken creature they control, then they exile a nonland card from their graveyard. | 1 | Azula, Cunning Usurper | tla |
 | when bumi enters, choose up to N, where N is the number of lesson cards in your graveyard — • put three +N/+N counters on bumi. • target player scries N. • eart | 1 | Bumi, King of Three Trials | tla |
 | when hama enters, target opponent mills three cards. exile up to one noncreature, nonland card from that player's graveyard. for as long as you control hama, yo | 1 | Hama, the Bloodbender | tla |
-| when ~ dies, you may exile it. when you do, return target creature card with mana value less than or equal to ~ power from your graveyard to the battlefield. | 1 | Sandbender Scavengers | tla |
 | when ~ enter, if you cast them and there are three or more dragon and/or lesson cards in your graveyard, create a token that"..."s not legendary. | 1 | Ran and Shaw | tla |
 | when ~ enters, for each shrine you control, create a N/N red monk creature token with prowess. | 1 | Crescent Island Temple | tla |
 | when ~ enters, put a +N/+N counter on each other ally creature you control. | 1 | Earth King's Lieutenant | tla |

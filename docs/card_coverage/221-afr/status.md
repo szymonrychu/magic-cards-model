@@ -17,16 +17,15 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 51 | 19.8% |
+| Tested | 60 | 23.3% |
 | Works (untested) | 135 | 52.5% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 71 | 27.6% |
+| Not working | 62 | 24.1% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
-| Aberrant Mind Sorcerer | silent | Psionic Spells — When this creature enters, choose target instant or sorcery card in your graveyard, then roll a d20. 1—9 \| You may put that card on top of you | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Acererak the Archlich | silent | Whenever Acererak attacks, for each opponent, you create a 2/2 black Zombie creature token unless that player sacrifices a creature of their choice. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Barrowin of Clan Undurr | silent | Whenever Barrowin attacks, return up to one creature card with mana value 3 or less from your graveyard to the battlefield if you've completed a dungeon. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Blink Dog | silent | Teleport — {3}{W}: This creature phases out. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -53,27 +52,19 @@
 | Icingdeath, Frost Tyrant | silent | When Icingdeath, Frost Tyrant dies, create Icingdeath, Frost Tongue, a legendary white Equipment artifact token with "Equipped creature gets +2/+0," "Whenever e | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Instrument of the Bards | silent | {3}{G}, {T}: Search your library for a creature card with mana value equal to the number of harmony counters on Instrument of the Bards, reveal it, and put it i | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Kick in the Door | silent | Put a +1/+1 counter on target creature. That creature gains haste until end of turn and can't be blocked by Walls this turn. Venture into the dungeon. (Enter th | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Loathsome Troll | silent | {3}{G}: Roll a d20. 1—9 \| Put this card on top of your library. 10—19 \| Return this card to your hand. 20 \| Return this card to the battlefield tapped. Activ | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Long Rest | silent | Return X target cards with different mana values from your graveyard to your hand. If eight or more cards were returned to your hand this way, your life total b | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Minion of the Mighty | silent | Pack tactics — Whenever this creature attacks, if you attacked with creatures with total power 6 or greater this combat, you may put a Dragon creature card from | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Monk Class | silent | At the beginning of your upkeep, exile the top card of your library. For as long as it remains exiled, it has "You may cast this card from exile as long as you' | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Mordenkainen | silent | −10: Exchange your hand and library, then shuffle. You get an emblem with "You have no maximum hand size." | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Power Word Kill | silent | Destroy target non-Angel, non-Demon, non-Devil, non-Dragon creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Power of Persuasion | silent | Choose target creature an opponent controls, then roll a d20. 1—9 \| Return it to its owner's hand. 10—19 \| Its owner puts it on their choice of the top or bot | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Reaper's Talisman | silent | Whenever equipped creature attacks alone, defending player loses 2 life and you gain 2 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Rogue Class | silent | Whenever a creature you control deals combat damage to a player, exile the top card of that player's library face down. You may look at it for as long as it rem | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Scion of Stygia | silent | Cone of Cold — When this creature enters, choose target creature an opponent controls, then roll a d20. 1—9 \| Tap that creature. 10—20 \| Tap that creature. It | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Skeletal Swarming | silent | Each Skeleton you control has trample, attacks each combat if able, and gets +X/+0, where X is the number of other Skeletons you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sphere of Annihilation | silent | At the beginning of your upkeep, exile this artifact, all creatures and planeswalkers with mana value less than or equal to the number of void counters on it, a | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Spiked Pit Trap | silent | {5}, {T}, Sacrifice this artifact: Choose target creature, then roll a d20. 1—9 \| This artifact deals 5 damage to that creature. 10—20 \| This artifact deals 5 | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Split the Party | silent | Choose target player. Return half the creatures they control to their owner's hand, rounded up. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sudden Insight | silent | Draw a card for each different mana value among nonland cards in your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Swarming Goblins | silent | When this creature enters, roll a d20. 1—9 \| Create a 1/1 red Goblin creature token. 10—19 \| Create two of those tokens. 20 \| Create three of those tokens. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Targ Nar, Demon-Fang Gnoll | silent | Pack tactics — Whenever Targ Nar attacks, if you attacked with creatures with total power 6 or greater this combat, attacking creatures get +1/+0 until end of t | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
+| Targ Nar, Demon-Fang Gnoll | silent | {2}{R}{G}: Double Targ Nar's power and toughness until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | The Book of Vile Darkness | silent | {T}, Exile The Book of Vile Darkness and artifacts you control named Eye of Vecna and Hand of Vecna: Create Vecna, a legendary 8/8 black Zombie God creature tok | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| The Deck of Many Things | silent | {2}, {T}: Roll a d20 and subtract the number of cards in your hand. If the result is 0 or less, discard your hand. 1—9 \| Return a card at random from your grav | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Tiamat | silent | When Tiamat enters, if you cast it, search your library for up to five Dragon cards not named Tiamat that each have different names, reveal them, put them into  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Treasure Chest | silent | {4}, Sacrifice this artifact: Roll a d20. 1 \| Trapped! — You lose 3 life. 2—9 \| Create five Treasure tokens. 10—19 \| You gain 3 life and draw three cards. 20 | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Varis, Silverymoon Ranger | silent | Whenever you complete a dungeon, create a 2/2 green Wolf creature token. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Vorpal Sword | silent | {5}{B}{B}{B}: Until end of turn, this Equipment gains "Whenever equipped creature deals combat damage to a player, that player loses the game." | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Warlock Class | silent | At the beginning of your end step, each opponent loses life equal to the life they lost this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -236,8 +227,9 @@
 ## Fully supported
 
 <details>
-<summary>51 cards</summary>
+<summary>60 cards</summary>
 
+- Aberrant Mind Sorcerer
 - Asmodeus the Archfiend
 - Bar the Gate
 - Barbarian Class
@@ -267,21 +259,29 @@
 - Kalain, Reclusive Painter
 - Keen-Eared Sentry
 - Leather Armor
+- Loathsome Troll
 - Minimus Containment
 - Minsc, Beloved Ranger
+- Monk Class
 - Mordenkainen's Polymorph
 - Ochre Jelly
 - Orb of Dragonkind
 - Pixie Guide
 - Price of Loyalty
 - Ray of Frost
+- Rogue Class
+- Scion of Stygia
 - Sorcerer Class
+- Spiked Pit Trap
 - Spoils of the Hunt
+- Swarming Goblins
 - Tasha's Hideous Laughter
 - Temple of the Dragon Queen
 - The Blackstaff of Waterdeep
+- The Deck of Many Things
 - Thieves' Tools
 - Tiger-Tribe Hunter
+- Treasure Chest
 - Veteran Dungeoneer
 - Wish
 - Wizard Class
@@ -297,15 +297,13 @@
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
 | Choose one | 3 | You Come to a River, You Come to the Gnoll Camp, You Find Some Prisoners | afr |
-| Pack tactics | 2 | Minion of the Mighty, Targ Nar, Demon-Fang Gnoll | afr |
-| Cone of Cold | 1 | Scion of Stygia | afr |
 | Dark One's Own Luck | 1 | Farideh, Devil's Chosen | afr |
 | Dissolve | 1 | Gelatinous Cube | afr |
 | Drag Below | 1 | Dragon Turtle | afr |
 | Life Drain | 1 | Wight | afr |
 | Lightning Breath | 1 | Blue Dragon | afr |
+| Pack tactics | 1 | Minion of the Mighty | afr |
 | Poison Breath | 1 | Green Dragon | afr |
-| Psionic Spells | 1 | Aberrant Mind Sorcerer | afr |
 | Rejuvenation | 1 | Flameskull | afr |
 | Teleport | 1 | Blink Dog | afr |
 | Tie Up | 1 | Fifty Feet of Rope | afr |
@@ -316,7 +314,6 @@
 | at the beginning of combat on your turn, equipped creature or a creature you control named vecna gets +N/+N until end of turn, where N is the number of cards in | 1 | Hand of Vecna | afr |
 | at the beginning of your end step, each opponent loses life equal to the life they lost ~. | 1 | Warlock Class | afr |
 | at the beginning of your upkeep, choose target opponent. until end of turn, that player can't cast spells, you may look at the top card of their library any tim | 1 | Xanathar, Guild Kingpin | afr |
-| at the beginning of your upkeep, exile the top card of your library. for as long as it remains exiled, it has "..." | 1 | Monk Class | afr |
 | at the beginning of your upkeep, exile ~, all creatures and planeswalkers with mana value less than or equal to the number of void counters on it, and all creat | 1 | Sphere of Annihilation | afr |
 | choose one. until end of turn, target creature you control has that base power and toughness, becomes that creature type, and gains that ability. • N/N turtle w | 1 | Wild Shape | afr |
 | choose target creature an opponent controls, then roll a dN. N—N \| return it to its owner's hand. N—N \| its owner puts it on their choice of the top or bottom | 1 | Power of Persuasion | afr |
@@ -341,9 +338,7 @@
 | when ~ dies, create icingdeath, frost tongue, a legendary white equipment artifact token with "..." "..." and equip {M}. | 1 | Icingdeath, Frost Tyrant | afr |
 | when ~ enters, any number of other target creatures you control phase out. | 1 | Guardian of Faith | afr |
 | when ~ enters, if you cast it, search your library for up to five dragon cards not named ~ that each have different names, reveal them, put them into your hand, | 1 | Tiamat | afr |
-| when ~ enters, roll a dN. N—N \| create a N/N red goblin creature token. N—N \| create two of those tokens. N \| create three of those tokens. | 1 | Swarming Goblins | afr |
 | whenever a creature you control becomes blocked, you may return it to its owner's hand. | 1 | Grazilaxx, Illithid Scholar | afr |
-| whenever a creature you control deals combat damage to a player, exile the top card of that player's library face down. you may look at it for as long as it rem | 1 | Rogue Class | afr |
 | whenever acererak attacks, for each opponent, you create a N/N black zombie creature token unless that player sacrifices a creature of their choice. | 1 | Acererak the Archlich | afr |
 | whenever barrowin attacks, return up to one creature card with mana value N or less from your graveyard to the battlefield if you've completed a dungeon. | 1 | Barrowin of Clan Undurr | afr |
 | whenever equipped creature attacks alone, defending player loses N life and you gain N life. | 1 | Reaper's Talisman | afr |
@@ -351,14 +346,11 @@
 | whenever you complete a dungeon, you may return ~ from your graveyard to your hand. | 1 | Dungeon Crawler | afr |
 | whenever ~ deals combat damage to a player, exile up to that many target cards from their graveyard. put a +N/+N counter on ~ for each creature card exiled ~. y | 1 | Froghemoth | afr |
 | {M}, exile ~ and artifacts you control named eye of vecna and hand of vecna: create vecna, a legendary N/N black zombie god creature token with indestructible a | 1 | The Book of Vile Darkness | afr |
-| {M}, sacrifice ~: roll a dN. N \| trapped! — you lose N life. N—N \| create five treasure tokens. N—N \| you gain N life and draw three cards. N \| search your  | 1 | Treasure Chest | afr |
-| {M}, {M}, sacrifice ~: choose target creature, then roll a dN. N—N \| ~ deals N damage to that creature. N—N \| ~ deals N damage to that creature. create a trea | 1 | Spiked Pit Trap | afr |
-| {M}, {M}: roll a dN and subtract the number of cards in your hand. if the result is N or less, discard your hand. N—N \| return a card at random from your grave | 1 | The Deck of Many Things | afr |
 | {M}, {M}: ~ deals damage equal to the number of goblins that entered the battlefield under your control ~ to any target. | 1 | Hobgoblin Bandit Lord | afr |
 | {M}{M}, {M}: search your library for a creature card with mana value equal to the number of harmony counters on ~, reveal it, and put it into your hand. if that | 1 | Instrument of the Bards | afr |
-| {M}{M}: roll a dN. N—N \| put ~ on top of your library. N—N \| return ~ to your hand. N \| return ~ to the battlefield tapped. activate only if ~ is in your gra | 1 | Loathsome Troll | afr |
 | {M}{M}: until end of turn, ~ has base power and toughness N/N, gains trample, and isn't a human. | 1 | Werewolf Pack Leader | afr |
 | {M}{M}{M}, {M}, exile ~: put an enlightened counter on target angel. it gains "..." activate only as a sorcery. | 1 | The Book of Exalted Deeds | afr |
+| {M}{M}{M}: double targ nar's power and toughness until end of turn. | 1 | Targ Nar, Demon-Fang Gnoll | afr |
 | {M}{M}{M}{M}: until end of turn, ~ gains "..." | 1 | Vorpal Sword | afr |
 | ~ deals N damage to target creature or planeswalker. roll a dN. N—N \| ~ deals N damage to each player. N—N \| ~ deals N damage to each opponent. | 1 | Farideh's Fireball | afr |
 | ~ has haste and ward {M} as long as it was cast. | 1 | The Tarrasque | afr |

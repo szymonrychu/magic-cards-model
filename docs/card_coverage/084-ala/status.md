@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 31 | 13.9% |
-| Works (untested) | 142 | 63.7% |
+| Tested | 32 | 14.3% |
+| Works (untested) | 143 | 64.1% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 50 | 22.4% |
+| Not working | 48 | 21.5% |
 
 ## Cards needing work
 
@@ -48,14 +48,12 @@
 | Godsire | silent | {T}: Create an 8/8 Beast creature token that's red, green, and white. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Guardians of Akrasa | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Hindering Light | silent | Counter target spell that targets you or a permanent you control. Draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Immortal Coil | silent | When there are no cards in your graveyard, you lose the game. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Kederekt Leviathan | silent | When this creature enters, return all other nonland permanents to their owners' hands. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Keeper of Progenitus | silent | Whenever a player taps a Mountain, Forest, or Plains for mana, that player adds one mana of any type that land produced. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Lush Growth | silent | Enchanted land is a Mountain, Forest, and Plains. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Manaplasm | silent | Whenever you cast a spell, this creature gets +X/+X until end of turn, where X is that spell's mana value. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Mayael the Anima | silent | {3}{R}{G}{W}, {T}: Look at the top five cards of your library. You may put a creature card with power 5 or greater from among them onto the battlefield. Put the | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Minion Reflector | silent | Whenever a nontoken creature you control enters, you may pay {2}. If you do, create a token that's a copy of that creature, except it has haste and "At the begi | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Mycoloth | silent | At the beginning of your upkeep, create a 1/1 green Saproling creature token for each +1/+1 counter on this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Outrider of Jhess | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Prince of Thralls | silent | Whenever a permanent an opponent controls is put into a graveyard, put that card onto the battlefield under your control unless that opponent pays 3 life. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Rafiq of the Many | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
@@ -153,6 +151,7 @@
 | Metallurgeon | handled | {W}, {T}: Regenerate target artifact. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Mighty Emergence | handled | Whenever a creature you control with power 5 or greater enters, you may put two +1/+1 counters on it. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Mosstodon | handled | {1}: Target creature with power 5 or greater gains trample until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Mycoloth | handled | At the beginning of your upkeep, create a 1/1 green Saproling creature token for each +1/+1 counter on this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Naya Battlemage | handled | {R}, {T}: Target creature gets +2/+0 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Naya Charm | handled | Choose one — • Naya Charm deals 3 damage to target creature. • Return target card from a graveyard to its owner's hand. • Tap all creatures target player contro | the engine reads this text and performs it | Y/-/- | not_tested |
 | Naya Panorama | handled | {1}, {T}, Sacrifice this land: Search your library for a basic Mountain, Forest, or Plains card, put it onto the battlefield tapped, then shuffle. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -222,7 +221,7 @@
 ## Fully supported
 
 <details>
-<summary>31 cards</summary>
+<summary>32 cards</summary>
 
 - Angelsong
 - Blightning
@@ -236,6 +235,7 @@
 - Goblin Assault
 - Godtoucher
 - Gustrider Exuberant
+- Immortal Coil
 - Invincible Hymn
 - Lich's Mirror
 - Mindlock Orb
@@ -265,7 +265,6 @@
 | exalted | 12 | Akrasan Squire, Angelic Benediction, Battlegrace Angel, Court Archers, Dawnray Archer | ala |
 | Choose one | 1 | Bant Charm | ala |
 | +N: target permanent doesn"..."s next untap step. | 1 | Ajani Vengeant | ala |
-| at the beginning of your upkeep, create a N/N green saproling creature token for each +N/+N counter on ~. | 1 | Mycoloth | ala |
 | choose five permanents you control. for each of those permanents, you may search your library for a card with the same name as that permanent. put those cards o | 1 | Clarion Ultimatum | ala |
 | counter target spell that targets you or a permanent you control. draw a card. | 1 | Hindering Light | ala |
 | enchanted land is a mountain, forest, and plains. | 1 | Lush Growth | ala |
@@ -280,7 +279,6 @@
 | target player discards a card at random. cycling {M}{M}{M}{M} ({M}{M}{M}{M}, discard ~: draw a card.) when you cycle ~, target player discards two cards at rand | 1 | Resounding Scream | ala |
 | until end of turn, target creature you control gets +N/+N and other creatures you control get +N/+N. | 1 | Sigil Blessing | ala |
 | when enchanted creature dies, that creature's controller loses life equal to its toughness. | 1 | Banewasp Affliction | ala |
-| when there are no cards in your graveyard, you lose the game. | 1 | Immortal Coil | ala |
 | when ~ enters, return all other nonland permanents to their owners' hands. | 1 | Kederekt Leviathan | ala |
 | when ~ enters, target player discards a card for each creature it devoured. | 1 | Tar Fiend | ala |
 | when ~ leaves the battlefield, return the exiled cards to the battlefield tapped under their owners' control. | 1 | Realm Razer | ala |

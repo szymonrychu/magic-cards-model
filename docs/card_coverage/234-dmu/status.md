@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 50 | 20.5% |
-| Works (untested) | 122 | 50.0% |
+| Tested | 52 | 21.3% |
+| Works (untested) | 124 | 50.8% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 72 | 29.5% |
+| Not working | 68 | 27.9% |
 
 ## Cards needing work
 
@@ -47,11 +47,9 @@
 | Love Song of Night and Day | silent | Read Ahead | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Micromancer | silent | When this creature enters, you may search your library for an instant or sorcery card with mana value 1, reveal it, put it into your hand, then shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Nael, Avizoa Aeronaut | silent | Domain — Whenever Nael deals combat damage to a player, look at the top X cards of your library, where X is the number of basic land types among lands you contr | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Najal, the Storm Runner | silent | Whenever Najal attacks, you may pay {2}. If you do, when you next cast an instant or sorcery spell this turn, copy it. You may choose new targets for the copy. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Phoenix Chick | silent | Whenever you attack with three or more creatures, you may pay {R}{R}. If you do, return this card from your graveyard to the battlefield tapped and attacking wi | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Protect the Negotiators | silent | Kicker {W} (You may pay an additional {W} as you cast this spell.) If this spell was kicked, create a 1/1 white Soldier creature token. Counter target spell unl | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Quirion Beastcaller | silent | When this creature dies, distribute X +1/+1 counters among any number of target creatures you control, where X is the number of +1/+1 counters on this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Radha's Firebrand | silent | Whenever this creature attacks, target creature defending player controls with power less than this creature's power can't block this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ratadrabik of Urborg | silent | Whenever another legendary creature you control dies, create a token that's a copy of that creature, except it's not legendary and it's a 2/2 black Zombie in ad | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Rulik Mons, Warren Chief | silent | Whenever Rulik Mons attacks, look at the top card of your library. If it's a land card, you may put it onto the battlefield tapped. If you didn't put a card ont | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Rundvelt Hordemaster | silent | Whenever this creature or another Goblin you control dies, exile the top card of your library. If it's a Goblin creature card, you may cast that card until the  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -76,9 +74,7 @@
 | Urza Assembles the Titans | silent | I — Scry 4, then you may reveal the top card of your library. If a planeswalker card is revealed this way, put it into your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Vesuvan Duplimancy | silent | Whenever you cast a spell that targets only a single artifact or creature you control, create a token that's a copy of that artifact or creature, except it's no | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Voda Sea Scavenger | silent | Domain — When this creature enters, look at the top X cards of your library, where X is the number of basic land types among lands you control. You may put one  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Vodalian Mindsinger | silent | When this creature enters, gain control of target creature with power less than this creature's power for as long as you control this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Walking Bulwark | silent | {2}: Until end of turn, target creature with defender gains haste, can attack as though it didn't have defender, and assigns combat damage equal to its toughnes | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Wingmantle Chaplain | silent | When this creature enters, create a 1/1 white Bird creature token with flying for each creature with defender you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Yotia Declares War | silent | III — Up to one target artifact you control becomes an artifact creature with base power and toughness 4/4 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Zar Ojanen, Scion of Efrava | silent | Domain — Whenever Zar Ojanen becomes tapped, put a +1/+1 counter on each creature you control with toughness less than the number of basic land types among land | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Zur, Eternal Schemer | silent | {1}{W}: Target non-Aura enchantment you control becomes a creature in addition to its other types and has base power and base toughness each equal to its mana v | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -175,6 +171,7 @@
 | Pilfer | handled | Target opponent reveals their hand. You choose a nonland card from it. That player discards that card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Plaza of Heroes | handled | {3}, {T}, Exile this land: Target legendary creature gains hexproof and indestructible until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Queen Allenal of Ruadach | handled | Queen Allenal of Ruadach's power and toughness are each equal to the number of creatures you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Radha's Firebrand | handled | Whenever this creature attacks, target creature defending player controls with power less than this creature's power can't block this turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Radha, Coalition Warlord | handled | Domain — Whenever Radha becomes tapped, another target creature you control gets +X/+X until end of turn, where X is the number of basic land types among lands  | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Radiant Grove | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ragefire Hellkite | handled | Whenever this creature attacks, you may sacrifice another creature. If you do, this creature gains double strike until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -215,6 +212,7 @@
 | Vineshaper Prodigy | handled | When this creature enters, if it was kicked, look at the top three cards of your library. Put one of them into your hand and the rest on the bottom of your libr | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Vodalian Hexcatcher | handled | Other Merfolk you control get +1/+1. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Volshe Tideturner | handled |  |  | Y/Y/- | not_tested |
+| Wingmantle Chaplain | handled | When this creature enters, create a 1/1 white Bird creature token with flying for each creature with defender you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Wooded Ridgeline | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Writhing Necromass | handled | This spell costs {1} less to cast for each creature card in your graveyard. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Yavimaya Iconoclast | handled | When this creature enters, if it was kicked, it gets +1/+1 and gains haste until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -224,7 +222,7 @@
 ## Fully supported
 
 <details>
-<summary>50 cards</summary>
+<summary>52 cards</summary>
 
 - Aggressive Sabotage
 - Ajani, Sleeper Agent
@@ -252,6 +250,7 @@
 - Leyline Binding
 - Meria's Outrider
 - Monstrous War-Leech
+- Najal, the Storm Runner
 - Nemata, Primeval Warden
 - Nishoba Brawler
 - Pixie Illusionist
@@ -274,6 +273,7 @@
 - Urborg Lhurgoyf
 - Uurg, Spawn of Turg
 - Viashino Branchrider
+- Vodalian Mindsinger
 - Vohar, Vodalian Desecrator
 - Warhost's Frenzy
 
@@ -312,14 +312,11 @@
 | when danitha enters, you may put an aura or equipment card from your hand or graveyard onto the battlefield attached to danitha. | 1 | Danitha, Benalia's Hope | dmu |
 | when ~ dies, distribute N +N/+N counters among any number of target creatures you control, where N is the number of +N/+N counters on ~. | 1 | Quirion Beastcaller | dmu |
 | when ~ enters, choose up to one — • counter target spell, activated ability, or triggered ability. its controller draws a card. • destroy another target creatur | 1 | Ertai Resurrected | dmu |
-| when ~ enters, create a N/N white bird creature token with flying for each creature with defender you control. | 1 | Wingmantle Chaplain | dmu |
 | when ~ enters, exile each nonland permanent with mana value N or less until ~ leaves the battlefield. | 1 | Temporary Lockdown | dmu |
-| when ~ enters, gain control of target creature with power less than ~ power for as long as you control ~. | 1 | Vodalian Mindsinger | dmu |
 | when ~ enters, you gain N life for each time it was kicked. | 1 | Stronghold Arena | dmu |
 | when ~ enters, you may search your library for an instant or sorcery card with mana value N, reveal it, put it into your hand, then shuffle. | 1 | Micromancer | dmu |
 | whenever a creature you control dies, put a phyresis counter on ~. then draw a card if it has seven or more phyresis counters on it. if it doesn't, scry N. | 1 | Weatherlight Compleated | dmu |
 | whenever another legendary creature you control dies, create a token that"..."s not legendary and it's a N/N black zombie in addition to its other colors and ty | 1 | Ratadrabik of Urborg | dmu |
-| whenever najal attacks, you may pay {M}. if you do, when you next cast an instant or sorcery spell ~, copy it. you may choose new targets for the copy. | 1 | Najal, the Storm Runner | dmu |
 | whenever rulik mons attacks, look at the top card of your library. if it"..."t put a card onto the battlefield ~, create a N/N red goblin creature token. | 1 | Rulik Mons, Warren Chief | dmu |
 | whenever tori d'avenant attacks, all other attacking creatures you control get +N/+N until end of turn. other red attacking creatures you control gain trample u | 1 | Tori D'Avenant, Fury Rider | dmu |
 | whenever you attack with three or more creatures, you may pay {M}{M}. if you do, return ~ from your graveyard to the battlefield tapped and attacking with a +N/ | 1 | Phoenix Chick | dmu |
@@ -327,7 +324,6 @@
 | whenever you cast an instant or sorcery spell, choose one — • ~ gets +N/+N until end of turn. • exile ~. return it to the battlefield under its owner's control  | 1 | Djinn of the Fountain | dmu |
 | whenever ~ attacks, exile each creature that crewed it ~. return them to the battlefield tapped under their owner's control at the beginning of the next end ste | 1 | Golden Argosy | dmu |
 | whenever ~ attacks, look at the top N cards of your library, where N is ~ power. you may exile an instant or sorcery card with mana value N or less from among t | 1 | Keldon Flamesage | dmu |
-| whenever ~ attacks, target creature defending player controls with power less than ~ power can't block ~. | 1 | Radha's Firebrand | dmu |
 | whenever ~ enters or attacks, you may put a land card from a graveyard onto the battlefield tapped under your control. | 1 | Soul of Windgrace | dmu |
 | whenever ~ or another goblin you control dies, exile the top card of your library. if it's a goblin creature card, you may cast that card until the end of your  | 1 | Rundvelt Hordemaster | dmu |
 | you may cast an instant or sorcery spell with mana value N or N from your hand without paying its mana cost. | 1 | Founding the Third Path | dmu |

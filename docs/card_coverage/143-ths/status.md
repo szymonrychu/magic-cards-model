@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 36 | 17.1% |
-| Works (untested) | 137 | 64.9% |
+| Works (untested) | 138 | 65.4% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 38 | 18.0% |
+| Not working | 37 | 17.5% |
 
 ## Cards needing work
 
@@ -52,7 +52,6 @@
 | Returned Phalanx | silent | {1}{U}: This creature can attack this turn as though it didn't have defender. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Satyr Piper | silent | {3}{G}: Target creature must be blocked this turn if able. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Scholar of Athreos | silent | {2}{B}: Each opponent loses 1 life. You gain life equal to the life lost this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Shipwreck Singer | silent | {1}{B}, {T}: Attacking creatures get -1/-1 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Steam Augury | silent | Reveal the top five cards of your library and separate them into two piles. An opponent chooses one of those piles. Put that pile into your hand and the other i | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Stoneshock Giant | silent | When this creature becomes monstrous, creatures without flying your opponents control can't block this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Tormented Hero | silent | Heroic — Whenever you cast a spell that targets this creature, each opponent loses 1 life. You gain life equal to the life lost this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -165,6 +164,7 @@
 | Setessan Battle Priest | handled | Heroic — Whenever you cast a spell that targets this creature, you gain 2 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Setessan Griffin | handled | {2}{G}{G}: This creature gets +2/+2 until end of turn. Activate only once each turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Shipbreaker Kraken | handled | {6}{U}{U}: Monstrosity 4. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Shipwreck Singer | handled | {1}{U}: Target creature an opponent controls attacks this turn if able. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Shredding Winds | handled | Shredding Winds deals 7 damage to target creature with flying. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Silent Artisan | handled |  |  | Y/Y/- | not_tested |
 | Sip of Hemlock | handled | Destroy target creature. Its controller loses 2 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -274,7 +274,6 @@
 | whenever another creature dies, tap ~. | 1 | Fleshmad Steed | ths |
 | whenever daxos deals combat damage to a player, exile the top card of that player"..."s mana value. until end of turn, you may cast that card and you may spend  | 1 | Daxos of Meletis | ths |
 | {M}{M}, {M}, sacrifice a land: create a N/N colorless golem enchantment artifact creature token. | 1 | Hammer of Purphoros | ths |
-| {M}{M}, {M}: attacking creatures get -N/-N until end of turn. | 1 | Shipwreck Singer | ths |
 | {M}{M}, {M}: creatures your opponents control attack ~ if able. | 1 | Bident of Thassa | ths |
 | {M}{M}, {M}: the controller of target instant or sorcery spell copies it. that player may choose new targets for the copy. | 1 | Meletis Charlatan | ths |
 | {M}{M}: each opponent loses N life. you gain life equal to the life lost ~. | 1 | Scholar of Athreos | ths |

@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 26 | 16.0% |
-| Works (untested) | 102 | 63.0% |
+| Tested | 27 | 16.7% |
+| Works (untested) | 104 | 64.2% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 34 | 21.0% |
+| Not working | 31 | 19.1% |
 
 ## Cards needing work
 
@@ -34,7 +34,6 @@
 | Cosmic Larva | silent | At the beginning of your upkeep, sacrifice this creature unless you sacrifice two lands. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Door to Nothingness | silent | {W}{W}{U}{U}{B}{B}{R}{R}{G}{G}, {T}, Sacrifice this artifact: Target player loses the game. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Doubling Cube | silent | {3}, {T}: Double the amount of each type of unspent mana you have. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Fangren Pathcutter | silent | Whenever this creature attacks, attacking creatures gain trample until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Ferropede | silent | Whenever this creature deals combat damage to a player, you may remove a counter from target permanent. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Fold into Aether | silent | Counter target spell. If that spell is countered this way, its controller may put a creature card from their hand onto the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Grafted Wargear | silent | Whenever this Equipment becomes unattached from a permanent, sacrifice that permanent. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
@@ -51,11 +50,9 @@
 | Skullcage | silent | At the beginning of each opponent's upkeep, this artifact deals 2 damage to that player unless they have exactly three or exactly four cards in hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Spinal Parasite | silent | Remove two +1/+1 counters from this creature: Remove a counter from target permanent. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Summoner's Egg | silent | Imprint — When this creature enters, you may exile a card from your hand face down. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Synod Centurion | silent | When you control no other artifacts, sacrifice this creature. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Bringer of the Red Dawn | notice | At the beginning of your upkeep, you may untap target creature and gain control of it until end of turn. That creature gains haste until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Chimeric Coils | notice | {X}{1}: This artifact becomes an X/X Construct artifact creature. Sacrifice it at the beginning of the next end step. | unparsed remainder: Sacrifice it at the beginning of the next end step. | Y/-/- | not_working |
 | Devour in Shadow | notice | Destroy target creature. It can't be regenerated. You lose life equal to that creature's toughness. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Ouphe Vandals | notice | {G}, Sacrifice this creature: Counter target activated ability from an artifact source and destroy that artifact if it's on the battlefield. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Plunge into Darkness | notice | Choose one — • Sacrifice any number of creatures. You gain 3 life for each creature sacrificed this way. • Pay any amount of life, then look at that many cards  | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Rude Awakening | notice | Choose one — • Untap all lands you control. • Until end of turn, lands you control become 2/2 creatures that are still lands. Entwine {2}{G} (Choose both if you | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Spectral Shift | notice | Choose one — • Change the text of target spell or permanent by replacing all instances of one basic land type with another. (This effect lasts indefinitely.) •  | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
@@ -99,6 +96,7 @@
 | Ensouled Scimitar | handled | {3}: This artifact becomes a 1/5 Spirit artifact creature with flying until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Etched Oracle | handled | {1}, Remove four +1/+1 counters from this creature: Target player draws three cards. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Eyes of the Watcher | handled | Whenever you cast an instant or sorcery spell, you may pay {1}. If you do, scry 2. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Fangren Pathcutter | handled | Whenever this creature attacks, attacking creatures gain trample until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Feedback Bolt | handled | Feedback Bolt deals damage to target player or planeswalker equal to the number of artifacts you control. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ferocious Charge | handled | Target creature gets +4/+4 until end of turn. Scry 2. (Look at the top two cards of your library, then put any number of them on the bottom and the rest on top  | the engine reads this text and performs it | Y/-/- | not_tested |
 | Fill with Fright | handled | Target player discards two cards. Scry 2. (Look at the top two cards of your library, then put any number of them on the bottom and the rest on top in any order | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -128,6 +126,7 @@
 | Moriok Rigger | handled | Whenever an artifact is put into a graveyard from the battlefield, you may put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Neurok Stealthsuit | handled | Equipped creature has shroud. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Nim Grotesque | handled | This creature gets +1/+0 for each artifact you control. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Ouphe Vandals | handled | {G}, Sacrifice this creature: Counter target activated ability from an artifact source and destroy that artifact if it's on the battlefield. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Pentad Prism | handled | Sunburst | machines/replacement.py (_sunburst_modifier, CR 702.44a) | Y/-/- | not_tested |
 | Plasma Elemental | handled | This creature can't be blocked. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Qumulox | handled | Flying | machines/combat.py | Y/-/- | not_tested |
@@ -166,7 +165,7 @@
 ## Fully supported
 
 <details>
-<summary>26 cards</summary>
+<summary>27 cards</summary>
 
 - Beacon of Unrest
 - Cranial Plating
@@ -189,6 +188,7 @@
 - Silent Arbiter
 - Solarion
 - Stasis Cocoon
+- Synod Centurion
 - Tornado Elemental
 - Trinket Mage
 - Vedalken Shackles
@@ -221,12 +221,9 @@
 | search target opponent's library for an artifact card and put that card onto the battlefield under your control. then that player shuffles. | 1 | Acquire | 5dn |
 | target opponent reveals their hand. you may copy an instant or sorcery card in it. if you do, you may cast the copy without paying its mana cost. | 1 | Reversal of Fortune | 5dn |
 | target player takes an extra turn after ~. shuffle ~ into its owner's library. | 1 | Beacon of Tomorrows | 5dn |
-| when you control no other artifacts, sacrifice ~. | 1 | Synod Centurion | 5dn |
-| whenever ~ attacks, attacking creatures gain trample until end of turn. | 1 | Fangren Pathcutter | 5dn |
 | whenever ~ becomes unattached from a permanent, sacrifice that permanent. | 1 | Grafted Wargear | 5dn |
 | whenever ~ blocks or becomes blocked by a creature, destroy that creature at end of combat. | 1 | Tangle Asp | 5dn |
 | whenever ~ deals combat damage to a player, you may remove a counter from target permanent. | 1 | Ferropede | 5dn |
-| {M}, sacrifice ~: counter target activated ability from an artifact source and destroy that artifact if it's on the battlefield. | 1 | Ouphe Vandals | 5dn |
 | {M}, {M}: double the amount of each type of unspent mana you have. | 1 | Doubling Cube | 5dn |
 | {M}: exchange control of ~ and target nonland permanent. | 1 | Avarice Totem | 5dn |
 | {M}: if you control equipment named ~, sword of kaldra, and shield of kaldra, create kaldra, a legendary N/N colorless avatar creature token. attach those equip | 1 | Helm of Kaldra | 5dn |

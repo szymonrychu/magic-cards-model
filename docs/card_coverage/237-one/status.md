@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 58 | 23.0% |
-| Works (untested) | 118 | 46.8% |
+| Tested | 61 | 24.2% |
+| Works (untested) | 124 | 49.2% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 76 | 30.2% |
+| Not working | 67 | 26.6% |
 
 ## Cards needing work
 
@@ -30,16 +30,13 @@
 | Apostle of Invasion | silent | Corrupted — As long as an opponent has three or more poison counters, this creature has double strike. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Archfiend of the Dross | silent | Whenever a creature an opponent controls dies, its controller loses 2 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Argentum Masticore | silent | At the beginning of your upkeep, sacrifice this creature unless you discard a card. When you discard a card this way, destroy target nonland permanent an oppone | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Barbed Batterfist | silent | For Mirrodin! | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Blade of Shared Souls | silent | Whenever this Equipment becomes attached to a creature, for as long as this Equipment remains attached to it, you may have that creature become a copy of anothe | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
-| Bladehold War-Whip | silent | For Mirrodin! | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Blue Sun's Twilight | silent | Gain control of target creature with mana value X or less. If X is 5 or more, create a token that's a copy of that creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Bonepicker Skirge | silent | Corrupted — As long as an opponent has three or more poison counters, this creature has deathtouch and lifelink. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Bring the Ending | silent | Counter target spell unless its controller pays {2}. Corrupted — Counter that spell instead if its controller has three or more poison counters. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Capricious Hellraiser | silent | When this creature enters, exile three cards at random from your graveyard. Choose a noncreature, nonland card from among them and copy it. You may cast the cop | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Conduit of Worlds | silent | {T}: Choose target nonland permanent card in your graveyard. If you haven't cast a spell this turn, you may cast that card. If you do, you can't cast additional | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Contagious Vorrac | silent | When this creature enters, look at the top four cards of your library. You may reveal a land card from among them and put it into your hand. Put the rest on the | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Dragonwing Glider | silent | For Mirrodin! | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Expand the Sphere | silent | Look at the top six cards of your library. Put up to two land cards from among them onto the battlefield tapped and the rest on the bottom of your library in a  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Eye of Malcator | silent | Whenever another artifact you control enters, this artifact becomes a 4/4 Phyrexian Eye artifact creature until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ezuri, Stalker of Spheres | silent | When Ezuri enters, you may pay {3}. If you do, proliferate twice. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -47,10 +44,8 @@
 | Font of Progress | silent | {3}, {T}: Target player mills X cards, where X is the number of oil counters on this artifact. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Furnace Punisher | silent | At the beginning of each player's upkeep, this creature deals 2 damage to that player unless they control two or more basic lands. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Gitaxian Anatomist | silent | When this creature enters, you may tap it. If you do, proliferate. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Goldwarden's Helm | silent | For Mirrodin! | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Goliath Hatchery | silent | Corrupted — At the beginning of your upkeep, if an opponent has three or more poison counters, choose a creature you control, then draw cards equal to its total | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Green Sun's Twilight | silent | Reveal the top X plus one cards of your library. Choose a creature card and/or a land card from among them. Put those cards into your hand and the rest on the b | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Hexgold Halberd | silent | For Mirrodin! | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Hexgold Hoverwings | silent | Creatures you control that are equipped get +1/+0. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ichor Synthesizer | silent | As long as this creature has four or more oil counters on it, it gets +2/+0 and can't be blocked. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ichormoon Gauntlet | silent | Whenever you cast a noncreature spell, choose a counter on target permanent. Put an additional counter of that kind on that permanent. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -63,8 +58,6 @@
 | Lattice-Blade Mantis | silent | Whenever this creature attacks, you may remove an oil counter from it. If you do, untap it and it gets +1/+1 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Lukka, Bound to Ruin | silent | −4: Lukka deals X damage divided as you choose among any number of target creatures and/or planeswalkers, where X is the greatest power among creatures you cont | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Magmatic Sprinter | silent | At the beginning of your end step, return this creature to its owner's hand unless you remove two oil counters from it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Mercurial Spelldancer | silent | Whenever this creature deals combat damage to a player, you may remove two oil counters from it. If you do, when you next cast an instant or sorcery spell this  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Mirran Bardiche | silent | For Mirrodin! | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Monument to Perfection | silent | {3}: This artifact becomes a 9/9 Phyrexian Construct artifact creature, loses all abilities, and gains indestructible and toxic 9. Activate only if there are ni | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Myr Custodian | silent | When this creature enters, scry 2. Then each opponent may scry 1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Necrogen Rotpriest | silent | Whenever a creature you control with toxic deals combat damage to a player, that player gets an additional poison counter. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -76,7 +69,6 @@
 | Scheming Aspirant | silent | Whenever you proliferate, each opponent loses 2 life and you gain 2 life. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Skrelv's Hive | silent | At the beginning of your upkeep, you lose 1 life and create a 1/1 colorless Phyrexian Mite artifact creature token with toxic 1 and "This token can't block." | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Skrelv, Defector Mite | silent | {W/P}, {T}: Choose a color. Another target creature you control gains toxic 1 and hexproof from that color until end of turn. It can't be blocked by creatures o | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Sylvok Battle-Chair | silent | For Mirrodin! | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | The Seedcore | silent | Corrupted — {T}: Target 1/1 creature gets +2/+1 until end of turn. Activate only if an opponent has three or more poison counters. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Unctus's Retrofitter | silent | When this creature enters, up to one target artifact you control becomes an artifact creature with base power and toughness 4/4 for as long as this creature rem | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Vanish into Eternity | silent | This spell costs {3} more to cast if it targets a creature. Exile target nonland permanent. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -84,7 +76,6 @@
 | Viral Spawning | silent | Create a 3/3 green Phyrexian Beast creature token with toxic 1. (Players dealt combat damage by it also get a poison counter.) Corrupted — As long as an opponen | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Voidwing Hybrid | silent | When you proliferate, return this card from your graveyard to your hand. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Vraska, Betrayal's Sting | silent | −2: Target creature becomes a Treasure artifact with "{T}, Sacrifice this artifact: Add one mana of any color" and loses all other card types and abilities. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Vulshok Splitter | silent | For Mirrodin! | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Zealot's Conviction | silent | Corrupted — As long as an opponent has three or more poison counters, enchanted creature gets an additional +1/+0 and has first strike. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Zenith Chronicler | silent | Whenever a player casts their first multicolored spell each turn, each other player draws a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Zopandrel, Hunger Dominus | silent | At the beginning of each combat, double the power and toughness of each creature you control until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -124,6 +115,7 @@
 | Crawling Chorus | handled | When this creature dies, create a 1/1 colorless Phyrexian Mite artifact creature token with toxic 1 and "This token can't block." | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Cutthroat Centurion | handled | Sacrifice another artifact or creature: This creature gets +2/+2 until end of turn. Activate only once each turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Distorted Curiosity | handled | Corrupted — This spell costs {2} less to cast if an opponent has three or more poison counters. Draw two cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Dragonwing Glider | handled | Equipped creature gets +2/+2 and has flying and haste. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Dross Skullbomb | handled | {1}, Sacrifice this artifact: Draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Drown in Ichor | handled | Target creature gets -4/-4 until end of turn. Proliferate. (Choose any number of permanents and/or players, then give each another counter of each kind already  | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Duelist of Deep Faith | handled | During your turn, this creature has first strike. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -139,7 +131,9 @@
 | Gitaxian Raptor | handled | This creature enters with three oil counters on it. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Glissa Sunslayer | handled | Whenever Glissa Sunslayer deals combat damage to a player, choose one — • You draw a card and lose 1 life. • Destroy target enchantment. • Remove up to three co | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Glistener Seer | handled | This creature enters with three oil counters on it. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Goldwarden's Helm | handled | Equipped creature gets +0/+1. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Gulping Scraptrap | handled | When this creature enters or dies, proliferate. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Hexgold Halberd | handled | During your turn, equipped creature has first strike and trample. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ichorplate Golem | handled | Whenever a creature you control enters, if it has one or more oil counters on it, put an oil counter on it. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ichorspit Basilisk | handled | Toxic | machines/combat.py | Y/Y/- | not_tested |
 | Incisor Glider | handled | Corrupted — Whenever this creature attacks, if an opponent has three or more poison counters, creatures you control get +1/+1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -157,6 +151,7 @@
 | Mesmerizing Dose | handled | When this Aura enters, tap enchanted creature, then proliferate. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Migloz, Maze Crusher | handled | Migloz enters with five oil counters on it. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Minor Misstep | handled | Counter target spell with mana value 1 or less. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Mirran Bardiche | handled | Equipped creature gets +2/+1 and has vigilance. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Mirran Safehouse | handled | As long as this artifact is on the battlefield, it has all activated abilities of all land cards in all graveyards. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Mirrex | handled | {3}, {T}: Create a 1/1 colorless Phyrexian Mite artifact creature token with toxic 1 and "This token can't block." | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Mite Overseer | handled | During your turn, creature tokens you control get +1/+0 and have first strike. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -193,6 +188,7 @@
 | Staff of Compleation | handled | {T}, Pay 1 life: Destroy target permanent you own. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Surgical Skullbomb | handled | {1}, Sacrifice this artifact: Draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Sword of Forge and Frontier | handled | Equipped creature gets +2/+2 and has protection from red and from green. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Sylvok Battle-Chair | handled | Equipped creature gets +4/+4 and has trample. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Tainted Observer | handled | Whenever another creature you control enters, you may pay {2}. If you do, proliferate. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Tamiyo's Immobilizer | handled | This artifact enters with four oil counters on it. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Tamiyo's Logbook | handled | {5}{U}, {T}: Draw a card. This ability costs {1} less to activate for each other artifact you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -217,6 +213,7 @@
 | Vivisurgeon's Insight | handled | Draw three cards. Proliferate. (Choose any number of permanents and/or players, then give each another counter of each kind already there.) | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Vraan, Executioner Thane | handled | Whenever one or more other creatures you control die, each opponent loses 2 life and you gain 2 life. This ability triggers only once each turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Vraska's Fall | handled | Each opponent sacrifices a creature or planeswalker of their choice and gets a poison counter. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Vulshok Splitter | handled | Equipped creature gets +2/+0. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Watchful Blisterzoa | handled | This creature enters with an oil counter on it. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Whisper of the Dross | handled | Target creature gets -1/-1 until end of turn. Proliferate. (Choose any number of permanents and/or players, then give each another counter of each kind already  | the engine reads this text and performs it | Y/Y/- | not_tested |
 | White Sun's Twilight | handled | You gain X life. Create X 1/1 colorless Phyrexian Mite artifact creature tokens with toxic 1 and "This token can't block." If X is 5 or more, destroy all other  | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -224,15 +221,17 @@
 ## Fully supported
 
 <details>
-<summary>58 cards</summary>
+<summary>61 cards</summary>
 
 - Ambulatory Edifice
 - Annihilating Glare
 - Aspirant's Ascent
 - Atraxa, Grand Unifier
+- Barbed Batterfist
 - Basilica Shepherd
 - Bilious Skulldweller
 - Bladegraft Aspirant
+- Bladehold War-Whip
 - Blazing Crescendo
 - Charforger
 - Charge of the Mites
@@ -254,6 +253,7 @@
 - Kuldotha Cackler
 - Malcator, Purity Overseer
 - Melira, the Living Cure
+- Mercurial Spelldancer
 - Mindsplice Apparatus
 - Myr Convert
 - Nahiri, the Unforgiving
@@ -291,7 +291,6 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| for mirrodin! | 8 | Barbed Batterfist, Bladehold War-Whip, Dragonwing Glider, Goldwarden's Helm, Hexgold Halberd | one |
 | Corrupted | 6 | Apostle of Invasion, Bonepicker Skirge, Goliath Hatchery, Phyrexian Atlas, The Seedcore | one |
 | +N: until your next turn, up to one target creature gets -N/-N. | 1 | Jace, the Perfected Mind | one |
 | N: you draw two cards. then each opponent may scry N. | 1 | Kaya, Intangible Slayer | one |
@@ -345,7 +344,6 @@
 | whenever ~ attacks, you may remove an oil counter from it. if you do, untap it and it gets +N/+N until end of turn. | 1 | Lattice-Blade Mantis | one |
 | whenever ~ attacks, you may remove two oil counters from it. when you do, target creature can't block ~. | 1 | Forgehammer Centurion | one |
 | whenever ~ becomes attached to a creature, for as long as ~ remains attached to it, you may have that creature become a copy of another target creature you cont | 1 | Blade of Shared Souls | one |
-| whenever ~ deals combat damage to a player, you may remove two oil counters from it. if you do, when you next cast an instant or sorcery spell ~, copy that spel | 1 | Mercurial Spelldancer | one |
 | you draw three cards and you lose N life. corrupted — each opponent who has three or more poison counters loses N life. | 1 | Feed the Infection | one |
 | {M}, {M}: choose a color. another target creature you control gains toxic N and hexproof from that color until end of turn. it can't be blocked by creatures of  | 1 | Skrelv, Defector Mite | one |
 | {M}, {M}: target player mills N cards, where N is the number of oil counters on ~. | 1 | Font of Progress | one |

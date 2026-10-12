@@ -17,16 +17,15 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 12 | 38.7% |
+| Tested | 13 | 41.9% |
 | Works (untested) | 11 | 35.5% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 8 | 25.8% |
+| Not working | 7 | 22.6% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
-| Conviction | silent | {W}: Return this Aura to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Duct Crawler | silent | {1}{R}: Target creature can't block this creature this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Grave Pact | silent | Whenever a creature you control dies, each other player sacrifices a creature of their choice. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Rolling Stones | silent | Wall creatures can attack as though they didn't have defender. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -49,9 +48,10 @@
 ## Fully supported
 
 <details>
-<summary>12 cards</summary>
+<summary>13 cards</summary>
 
 - Bandage
+- Conviction
 - Dream Prowler
 - Ensnaring Bridge
 - Flame Wave
@@ -76,7 +76,6 @@
 | whenever a sliver becomes blocked, that sliver gets +N/+N until end of turn for each creature blocking it. | 1 | Spined Sliver | sth |
 | whenever a spell or ability an opponent controls causes a land to be put into your graveyard from the battlefield, return that card to the battlefield. | 1 | Sacred Ground | sth |
 | whenever ~ is dealt combat damage, you gain that much life. | 1 | Wall of Essence | sth |
-| {M}: return ~ to its owner's hand. | 1 | Conviction | sth |
 | {M}{M}: target creature can't block ~ ~. | 1 | Duct Crawler | sth |
 
 ## Notes

@@ -17,25 +17,22 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 25 | 13.7% |
-| Works (untested) | 97 | 53.0% |
+| Tested | 27 | 14.8% |
+| Works (untested) | 102 | 55.7% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 61 | 33.3% |
+| Not working | 54 | 29.5% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
 | Act of Heroism | silent | Untap target creature. It gets +2/+2 until end of turn and can block an additional creature this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Adorned Pouncer | silent | Eternalize | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Ammit Eternal | silent | Whenever this creature deals combat damage to a player, remove all -1/-1 counters from it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Apocalypse Demon | silent | At the beginning of your upkeep, tap this creature unless you sacrifice another creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Champion of Wits | silent | Eternalize | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Countervailing Winds | silent | Counter target spell unless its controller pays {1} for each card in your graveyard. Cycling {2} ({2}, Discard this card: Draw a card.) | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Cunning Survivor | silent | Whenever you cycle or discard a card, this creature gets +1/+0 until end of turn and can't be blocked this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Dagger of the Worthy | silent | Equipped creature gets +2/+0 and has afflict 1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Dreamstealer | silent | Whenever this creature deals combat damage to a player, that player discards that many cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Earthshaker Khenra | silent | When this creature enters, target creature with power less than or equal to this creature's power can't block this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Eternal of Harsh Truths | silent | Afflict | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Fraying Sanity | silent | At the beginning of each end step, enchanted player mills X cards, where X is the number of cards put into their graveyard from anywhere this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Frontline Devastator | silent | Afflict | no machine in the engine executes this keyword | Y/Y/- | not_working |
@@ -55,16 +52,13 @@
 | Nimble Obstructionist | silent | When you cycle this card, counter target activated or triggered ability you don't control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Nissa's Encouragement | silent | Search your library and graveyard for a card named Forest, a card named Brambleweft Behemoth, and a card named Nissa, Genesis Mage. Reveal those cards, put them | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Nissa, Genesis Mage | silent | +2: Untap up to two target creatures and up to two target lands. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Proven Combatant | silent | Eternalize | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Reason // Believe | silent | Aftermath (Cast this spell only from your graveyard. Then exile it.) Look at the top card of your library. You may put it onto the battlefield if it's a creatur | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Resilient Khenra | silent | When this creature enters, you may have target creature get +X/+X until end of turn, where X is this creature's power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Resolute Survivors | silent | Whenever you exert a creature, this creature deals 1 damage to each opponent and you gain 1 life. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Rhonas's Stalwart | silent | You may exert this creature as it attacks. When you do, it gets +1/+1 until end of turn and can't be blocked by creatures with power 2 or less this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Riddleform | silent | Whenever you cast a noncreature spell, you may have this enchantment become a 3/3 Sphinx creature with flying in addition to its other types until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sidewinder Naga | silent | As long as you control a Desert or there is a Desert card in your graveyard, this creature gets +1/+0 and has trample. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sifter Wurm | silent | When this creature enters, scry 3, then reveal the top card of your library. You gain life equal to that card's mana value. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Spellweaver Eternal | silent | Afflict | no machine in the engine executes this keyword | Y/Y/- | not_working |
-| Steadfast Sentinel | silent | Eternalize | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Sunscourge Champion | silent | When this creature enters, you gain life equal to its power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Tenacious Hunter | silent | As long as a creature has a -1/-1 counter on it, this creature has vigilance and deathtouch. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Torment of Hailfire | silent | Repeat the following process X times. Each opponent loses 3 life unless that player sacrifices a nonland permanent of their choice or discards a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -75,7 +69,6 @@
 | Unesh, Criosphinx Sovereign | silent | Whenever Unesh or another Sphinx you control enters, reveal the top four cards of your library. An opponent separates those cards into two piles. Put one pile i | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Visage of Bolas | silent | When this artifact enters, you may search your library and/or graveyard for a card named Nicol Bolas, the Deceiver, reveal it, and put it into your hand. If you | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Vizier of the Anointed | silent | Whenever you activate an eternalize or embalm ability, draw a card. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
-| Vizier of the True | silent | Whenever you exert a creature, tap target creature an opponent controls. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Wildfire Eternal | silent | Whenever this creature attacks and isn't blocked, you may cast an instant or sorcery spell from your hand without paying its mana cost. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Doomfall | notice | Choose one — • Target opponent exiles a creature they control. • Target opponent reveals their hand. You choose a nonland card from it. Exile that card. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Gideon's Defeat | notice | Exile target white creature that's attacking or blocking. If it was a Gideon planeswalker, you gain 5 life. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -88,6 +81,7 @@
 | Thorned Moloch | notice | This creature has first strike as long as it's attacking. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Vile Manifestation | notice | This creature gets +1/+0 for each card with cycling in your graveyard. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Accursed Horde | handled | {1}{B}: Target attacking Zombie gains indestructible until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Adorned Pouncer | handled | Double strike | machines/combat.py | Y/Y/- | not_tested |
 | Aerial Guide | handled | Whenever this creature attacks, another target attacking creature gains flying until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ambuscade | handled | Target creature you control gets +1/+0 until end of turn. It deals damage equal to its power to target creature an opponent controls. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Angel of Condemnation | handled | {2}{W}, {T}: Exile another target creature. Return that card to the battlefield under its owner's control at the beginning of the next end step. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -104,6 +98,7 @@
 | Brambleweft Behemoth | handled | Trample | machines/combat.py | Y/Y/- | not_tested |
 | Burning-Fist Minotaur | handled | {1}{R}, Discard a card: This creature gets +2/+0 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Carrion Screecher | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
+| Champion of Wits | handled | When this creature enters, you may draw cards equal to its power. If you do, discard two cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Consign // Oblivion | handled | Return target nonland permanent to its owner's hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Crash Through | handled | Creatures you control gain trample until end of turn. (Each of those creatures can deal excess combat damage to the player or planeswalker it's attacking.) Draw | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Crested Sunmare | handled | Other Horses you control have indestructible. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -121,6 +116,7 @@
 | Dune Diviner | handled | {1}, Tap an untapped Desert you control: You gain 1 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Dunes of the Dead | handled | When this land is put into a graveyard from the battlefield, create a 2/2 black Zombie creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Dutiful Servants | handled |  |  | Y/Y/- | not_tested |
+| Earthshaker Khenra | handled | When this creature enters, target creature with power less than or equal to this creature's power can't block this turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Farm // Market | handled | Destroy target attacking or blocking creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Feral Prowler | handled | When this creature dies, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Fervent Paincaster | handled | {T}: This creature deals 1 damage to target player or planeswalker. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -156,6 +152,7 @@
 | Ominous Sphinx | handled | Whenever you cycle or discard a card, target creature an opponent controls gets -2/-0 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Open Fire | handled | Open Fire deals 3 damage to any target. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Overcome | handled | Creatures you control get +2/+2 and gain trample until end of turn. (Each of those creatures can deal excess combat damage to the player or planeswalker it's at | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Proven Combatant | handled | Eternalize | machines/keywords.py (off_zone_abilities: token_copy) | Y/Y/- | not_tested |
 | Puncturing Blow | handled | Puncturing Blow deals 5 damage to target creature. If that creature would die this turn, exile it instead. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Quarry Beetle | handled | When this creature enters, you may return target land card from your graveyard to the battlefield. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Rampaging Hippo | handled | Trample | machines/combat.py | Y/Y/- | not_tested |
@@ -171,6 +168,7 @@
 | Seer of the Last Tomorrow | handled | {U}, {T}, Discard a card: Target player mills three cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Shefet Dunes | handled | {2}{W}{W}, {T}, Sacrifice a Desert: Creatures you control get +1/+1 until end of turn. Activate only as a sorcery. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Sinuous Striker | handled | {U}: This creature gets +1/-1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Steadfast Sentinel | handled | Vigilance | machines/combat.py | Y/Y/- | not_tested |
 | Steward of Solidarity | handled | {T}, Exert this creature: Create a 1/1 white Warrior creature token with vigilance. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Struggle // Survive | handled | Struggle deals damage to target creature equal to the number of lands you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Sunset Pyramid | handled | This artifact enters with three brick counters on it. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -188,7 +186,7 @@
 ## Fully supported
 
 <details>
-<summary>25 cards</summary>
+<summary>27 cards</summary>
 
 - Abandoned Sarcophagus
 - Abrade
@@ -210,10 +208,12 @@
 - Overwhelming Splendor
 - Pride Sovereign
 - Refuse // Cooperate
+- Resolute Survivors
 - Sand Strangler
 - Saving Grace
 - Solemnity
 - Striped Riverwinder
+- Vizier of the True
 - Wall of Forgotten Pharaohs
 
 </details>
@@ -223,7 +223,6 @@
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
 | afflict | 6 | Eternal of Harsh Truths, Frontline Devastator, Khenra Eternal, Manticore Eternal, Merciless Eternal | hou |
-| eternalize | 4 | Adorned Pouncer, Champion of Wits, Proven Combatant, Steadfast Sentinel | hou |
 | Choose one | 1 | Doomfall | hou |
 | +N: each opponent exiles two cards from their hand. | 1 | Nicol Bolas, God-Pharaoh | hou |
 | +N: untap up to two target creatures and up to two target lands. | 1 | Nissa, Genesis Mage | hou |
@@ -252,7 +251,6 @@
 | untap target creature. it gets +N/+N until end of turn and can block an additional creature ~. | 1 | Act of Heroism | hou |
 | when you cycle ~, counter target activated or triggered ability you don't control. | 1 | Nimble Obstructionist | hou |
 | when ~ enters, scry N, then reveal the top card of your library. you gain life equal to that card's mana value. | 1 | Sifter Wurm | hou |
-| when ~ enters, target creature with power less than or equal to ~ power can't block ~. | 1 | Earthshaker Khenra | hou |
 | when ~ enters, you gain life equal to its power. | 1 | Sunscourge Champion | hou |
 | when ~ enters, you may have target creature get +N/+N until end of turn, where N is ~ power. | 1 | Resilient Khenra | hou |
 | when ~ enters, you may search your library and/or graveyard for a card named nicol bolas, the deceiver, reveal it, and put it into your hand. if you search your | 1 | Visage of Bolas | hou |
@@ -261,8 +259,6 @@
 | whenever you cast a noncreature spell, you may have ~ become a N/N sphinx creature with flying in addition to its other types until end of turn. | 1 | Riddleform | hou |
 | whenever you cast a spell with mana value equal to the number of doom counters on ~, ~ deals that much damage to any target. then put a doom counter on ~. | 1 | Imminent Doom | hou |
 | whenever you cycle or discard a card, ~ gets +N/+N until end of turn and can't be blocked ~. | 1 | Cunning Survivor | hou |
-| whenever you exert a creature, tap target creature an opponent controls. | 1 | Vizier of the True | hou |
-| whenever you exert a creature, ~ deals N damage to each opponent and you gain N life. | 1 | Resolute Survivors | hou |
 | whenever ~ attacks and isn't blocked, you may cast an instant or sorcery spell from your hand without paying its mana cost. | 1 | Wildfire Eternal | hou |
 | whenever ~ attacks, exile target card from defending player's graveyard. | 1 | Graven Abomination | hou |
 | whenever ~ deals combat damage to a player, remove all -N/-N counters from it. | 1 | Ammit Eternal | hou |

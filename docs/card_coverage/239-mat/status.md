@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 14 | 28.6% |
+| Tested | 15 | 30.6% |
 | Works (untested) | 13 | 26.5% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 22 | 44.9% |
+| Not working | 21 | 42.9% |
 
 ## Cards needing work
 
@@ -29,7 +29,6 @@
 | Arni Metalbrow | silent | Whenever a creature you control attacks or enters attacking, you may pay {1}{R}. If you do, you may put a creature card with mana value less than that creature' | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Calix, Guided by Fate | silent | Whenever Calix or an enchanted creature you control deals combat damage to a player, you may create a token that's a copy of a nonlegendary enchantment you cont | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Cosmic Rebirth | silent | Choose target permanent card in your graveyard. If it has mana value 3 or less, you may put it onto the battlefield. If you don't put it onto the battlefield, p | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Death-Rattle Oni | silent | When this creature enters, destroy all other creatures that were dealt damage this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Feast of the Victorious Dead | silent | At the beginning of your end step, if one or more creatures died this turn, you gain that much life and distribute that many +1/+1 counters among any number of  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Filter Out | silent | Return all noncreature, nonland permanents to their owners' hands. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Karn, Legacy Reforged | silent | At the beginning of your upkeep, add {C} for each artifact you control. This mana can't be spent to cast nonartifact spells. Until end of turn, you don't lose t | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -65,10 +64,11 @@
 ## Fully supported
 
 <details>
-<summary>14 cards</summary>
+<summary>15 cards</summary>
 
 - Ayara's Oathsworn
 - Blot Out
+- Death-Rattle Oni
 - Deification
 - Gold-Forged Thopteryx
 - Jolrael, Voice of Zhalfir
@@ -97,7 +97,6 @@
 | choose target permanent card in your graveyard. if it has mana value N or less, you may put it onto the battlefield. if you don't put it onto the battlefield, p | 1 | Cosmic Rebirth | mat |
 | each planeswalker with one or more loyalty counters on it loses all abilities and is a creature with power and toughness each equal to the number of loyalty cou | 1 | Spark Rupture | mat |
 | return all noncreature, nonland permanents to their owners' hands. | 1 | Filter Out | mat |
-| when ~ enters, destroy all other creatures that were dealt damage ~. | 1 | Death-Rattle Oni | mat |
 | when ~ enters, exile up to two target legendary creature cards from your graveyard. you draw N cards and you lose N life, where N is the greatest mana value amo | 1 | The Kenriths' Royal Funeral | mat |
 | when ~ enters, you may pay {M} up to three times. when you pay ~ one or more times, choose up to that many — • destroy target artifact or enchantment. • exile t | 1 | Tranquil Frillback | mat |
 | whenever a creature you control attacks or enters attacking, you may pay {M}{M}. if you do, you may put a creature card with mana value less than that creature' | 1 | Arni Metalbrow | mat |

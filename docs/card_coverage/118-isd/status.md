@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 46 | 19.2% |
-| Works (untested) | 151 | 63.2% |
+| Tested | 47 | 19.7% |
+| Works (untested) | 155 | 64.9% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 42 | 17.6% |
+| Not working | 37 | 15.5% |
 
 ## Cards needing work
 
@@ -30,7 +30,6 @@
 | Bonds of Faith | silent | Enchanted creature gets +2/+2 as long as it's a Human. Otherwise, it can't attack or block. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Caravan Vigil | silent | Search your library for a basic land card, reveal it, put it into your hand, then shuffle. Morbid — You may put that card onto the battlefield instead of puttin | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Cellar Door | silent | {3}, {T}: Target player puts the bottom card of their library into their graveyard. If it's a creature card, you create a 2/2 black Zombie creature token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Charmbreaker Devils | silent | At the beginning of your upkeep, return an instant or sorcery card at random from your graveyard to your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Civilized Scholar // Homicidal Brute | silent | At the beginning of your end step, if this creature didn't attack this turn, tap this creature, then transform it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Corpse Lunge | silent | As an additional cost to cast this spell, exile a creature card from your graveyard. Corpse Lunge deals damage equal to the exiled card's power to target creatu | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Creeping Renaissance | silent | Choose a permanent type. Return all cards of the chosen type from your graveyard to your hand. Flashback {5}{G}{G} (You may cast this card from your graveyard f | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -39,11 +38,9 @@
 | Desperate Ravings | silent | Draw two cards, then discard a card at random. Flashback {2}{U} (You may cast this card from your graveyard for its flashback cost. Then exile it.) | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Divine Reckoning | silent | Each player chooses a creature they control. Destroy the rest. Flashback {5}{W}{W} (You may cast this card from your graveyard for its flashback cost. Then exil | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Elite Inquisitor | silent | First strike, vigilance Protection from Vampires, from Werewolves, and from Zombies | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Fiend Hunter | silent | When this creature leaves the battlefield, return the exiled card to the battlefield under its owner's control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Frightful Delusion | silent | Counter target spell unless its controller pays {1}. That player discards a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Full Moon's Rise | silent | Sacrifice this enchantment: Regenerate all Werewolf creatures you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Garruk Relentless // Garruk, the Veil-Cursed | silent | When Garruk has two or fewer loyalty counters on him, transform him. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
-| Ghoulraiser | silent | When this creature enters, return a Zombie card at random from your graveyard to your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Grimoire of the Dead | silent | {T}, Remove three study counters from Grimoire of the Dead and sacrifice it: Put all creature cards from all graveyards onto the battlefield under your control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Hamlet Captain | silent | Whenever this creature attacks or blocks, other Humans you control get +1/+1 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Heretic's Punishment | silent | {3}{R}: Choose any target, then mill three cards. This enchantment deals damage to that permanent or player equal to the greatest mana value among the milled ca | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -60,11 +57,9 @@
 | Runic Repetition | silent | Return target exiled card with flashback you own to your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Tree of Redemption | silent | {T}: Exchange your life total with this creature's toughness. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Trepanation Blade | silent | Whenever equipped creature attacks, defending player reveals cards from the top of their library until they reveal a land card. The creature gets +1/+0 until en | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Undead Alchemist | silent | Whenever a creature card is put into an opponent's graveyard from their library, exile that card and create a 2/2 black Zombie creature token. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Victim of Night | silent | Destroy target non-Vampire, non-Werewolf, non-Zombie creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Witchbane Orb | silent | When this artifact enters, destroy all Curses attached to you. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Wooden Stake | silent | Whenever equipped creature blocks or becomes blocked by a Vampire, destroy that creature. It can't be regenerated. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Woodland Sleuth | silent | Morbid — When this creature enters, if a creature died this turn, return a creature card at random from your graveyard to your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Mirror-Mad Phantasm | notice | {1}{U}: This creature's owner shuffles it into their library. If that player does, they reveal cards from the top of that library until a card named Mirror-Mad  | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Sever the Bloodline | notice | Exile target creature and all other creatures with the same name as that creature. Flashback {5}{B}{B} (You may cast this card from your graveyard for its flash | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Tribute to Hunger | notice | Target opponent sacrifices a creature of their choice. You gain life equal to that creature's toughness. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
@@ -88,6 +83,7 @@
 | Butcher's Cleaver | handled | Equipped creature gets +3/+0. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Champion of the Parish | handled | Whenever another Human you control enters, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Chapel Geist | handled | Flying | machines/combat.py | Y/-/- | not_tested |
+| Charmbreaker Devils | handled | At the beginning of your upkeep, return an instant or sorcery card at random from your graveyard to your hand. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Clifftop Retreat | handled | This land enters tapped unless you control a Mountain or a Plains. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Cobbled Wings | handled | Equipped creature has flying. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Crossway Vampire | handled | When this creature enters, target creature can't block this turn. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -110,6 +106,7 @@
 | Falkenrath Noble | handled | Whenever this creature or another creature dies, target player loses 1 life and you gain 1 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Feeling of Dread | handled | Tap up to two target creatures. Flashback {1}{U} (You may cast this card from your graveyard for its flashback cost. Then exile it.) | the engine reads this text and performs it | Y/-/- | not_tested |
 | Feral Ridgewolf | handled | {1}{R}: This creature gets +2/+0 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Fiend Hunter | handled | When this creature enters, you may exile another target creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Fortress Crab | handled |  |  | Y/Y/- | not_tested |
 | Furor of the Bitten | handled | Enchanted creature gets +2/+2 and attacks each combat if able. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Gallows Warden | handled | Other Spirit creatures you control get +0/+1. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -122,6 +119,7 @@
 | Geistflame | handled | Geistflame deals 1 damage to any target. Flashback {3}{R} (You may cast this card from your graveyard for its flashback cost. Then exile it.) | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ghoulcaller's Bell | handled | {T}: Each player mills a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ghoulcaller's Chant | handled | Choose one — • Return target creature card from your graveyard to your hand. • Return two target Zombie cards from your graveyard to your hand. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Ghoulraiser | handled | When this creature enters, return a Zombie card at random from your graveyard to your hand. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Gnaw to the Bone | handled | You gain 2 life for each creature card in your graveyard. Flashback {2}{G} (You may cast this card from your graveyard for its flashback cost. Then exile it.) | the engine reads this text and performs it | Y/-/- | not_tested |
 | Grasp of Phantoms | handled | Put target creature on top of its owner's library. Flashback {7}{U} (You may cast this card from your graveyard for its flashback cost. Then exile it.) | the engine reads this text and performs it | Y/-/- | not_tested |
 | Graveyard Shovel | handled | {2}, {T}: Target player exiles a card from their graveyard. If it's a creature card, you gain 2 life. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -219,11 +217,12 @@
 | Village Ironsmith // Ironfang | handled | At the beginning of each upkeep, if no spells were cast last turn, transform this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Voiceless Spirit | handled | Flying | machines/combat.py | Y/-/- | not_tested |
 | Woodland Cemetery | handled | This land enters tapped unless you control a Swamp or a Forest. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Woodland Sleuth | handled | Morbid — When this creature enters, if a creature died this turn, return a creature card at random from your graveyard to your hand. | the engine reads this text and performs it | Y/-/- | not_tested |
 
 ## Fully supported
 
 <details>
-<summary>46 cards</summary>
+<summary>47 cards</summary>
 
 - Ambush Viper
 - Army of the Damned
@@ -267,6 +266,7 @@
 - Stony Silence
 - Typhoid Rats
 - Unbreathing Horde
+- Undead Alchemist
 - Vampiric Fury
 - Villagers of Estwald // Howlpack of Estwald
 - Walking Corpse
@@ -278,11 +278,9 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| Morbid | 1 | Woodland Sleuth | isd |
 | as an additional cost to cast ~, exile a creature card from your graveyard. ~ deals damage equal to the exiled card's power to target creature. | 1 | Corpse Lunge | isd |
 | at the beginning of enchanted player's upkeep, ~ deals N damage to that player or a planeswalker that player controls. | 1 | Curse of the Pierced Heart | isd |
 | at the beginning of your end step, if ~ didn't attack ~, tap ~, then transform it. | 1 | Civilized Scholar // Homicidal Brute | isd |
-| at the beginning of your upkeep, return an instant or sorcery card at random from your graveyard to your hand. | 1 | Charmbreaker Devils | isd |
 | attacking creatures you control get +N/+N. | 1 | Instigator Gang // Wildblood Pack | isd |
 | choose a permanent type. return all cards of the chosen type from your graveyard to your hand. flashback {M}{M}{M} (you may cast ~ from your graveyard for its f | 1 | Creeping Renaissance | isd |
 | counter target spell unless its controller pays {M}. that player discards a card. | 1 | Frightful Delusion | isd |
@@ -305,9 +303,6 @@
 | when ~ dies, exile it, then return two creature cards at random from your graveyard to the battlefield. | 1 | Moldgraf Monstrosity | isd |
 | when ~ dies, you may search your library for a curse card, put it onto the battlefield attached to target player, then shuffle. | 1 | Bitterheart Witch | isd |
 | when ~ enters, destroy all curses attached to you. | 1 | Witchbane Orb | isd |
-| when ~ enters, return a zombie card at random from your graveyard to your hand. | 1 | Ghoulraiser | isd |
-| when ~ leaves the battlefield, return the exiled card to the battlefield under its owner's control. | 1 | Fiend Hunter | isd |
-| whenever a creature card is put into an opponent's graveyard from their library, exile that card and create a N/N black zombie creature token. | 1 | Undead Alchemist | isd |
 | whenever equipped creature attacks, defending player reveals cards from the top of their library until they reveal a land card. the creature gets +N/+N until en | 1 | Trepanation Blade | isd |
 | whenever equipped creature blocks or becomes blocked by a vampire, destroy that creature. it can't be regenerated. | 1 | Wooden Stake | isd |
 | whenever ~ attacks or blocks, other humans you control get +N/+N until end of turn. | 1 | Hamlet Captain | isd |

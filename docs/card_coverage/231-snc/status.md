@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 50 | 19.8% |
-| Works (untested) | 141 | 55.7% |
+| Tested | 53 | 20.9% |
+| Works (untested) | 140 | 55.3% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 62 | 24.5% |
+| Not working | 60 | 23.7% |
 
 ## Cards needing work
 
@@ -43,7 +43,6 @@
 | Devilish Valet | silent | Alliance — Whenever another creature you control enters, double this creature's power until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Elspeth Resplendent | silent | +1: Choose up to one target creature. Put a +1/+1 counter and a counter from among flying, first strike, lifelink, or vigilance on it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Errant, Street Artist | silent | {1}{U}, {T}: Copy target spell you control that wasn't cast. You may choose new targets for the copy. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Evelyn, the Covetous | silent | Whenever Evelyn or another Vampire you control enters, exile the top card of each player's library with a collection counter on it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Exotic Pets | silent | Create two 1/1 blue Fish creature tokens with "This token can't be blocked." Then for each kind of counter among creatures you control, put a counter of that ki | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Fatal Grudge | silent | As an additional cost to cast this spell, sacrifice a nonland permanent. Each opponent chooses a permanent they control that shares a card type with the sacrifi | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Freelance Muscle | silent | Whenever this creature attacks or blocks, it gets +X/+X until end of turn, where X is the greatest power and/or toughness among other creatures you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -66,7 +65,6 @@
 | Reservoir Kraken | silent | At the beginning of each combat, if this creature is untapped, any opponent may tap an untapped creature they control. If they do, tap this creature and create  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Rogues' Gallery | silent | For each color, return up to one target creature card of that color from your graveyard to your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Rumor Gatherer | silent | Alliance — Whenever another creature you control enters, scry 1. If this is the second time this ability has resolved this turn, draw a card instead. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Security Bypass | silent | Connive | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Shakedown Heavy | silent | Whenever this creature attacks, defending player may have you draw a card. If they do, untap this creature and remove it from combat. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Snooping Newsie | silent | As long as there are five or more mana values among cards in your graveyard, this creature gets +1/+1 and has lifelink. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Soul of Emancipation | silent | When this creature enters, destroy up to three other target nonland permanents. For each of those permanents, its controller creates a 3/3 white Angel creature  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -182,7 +180,6 @@
 | Pyre-Sledge Arsonist | handled | {1}, {T}: This creature deals X damage to any target, where X is the number of permanents you've sacrificed this turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Queza, Augur of Agonies | handled | Whenever you draw a card, target opponent loses 1 life and you gain 1 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Racers' Ring | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Raffine's Informant | handled | When this creature enters, it connives. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Raffine's Silencer | handled | When this creature enters, it connives. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Raffine's Tower | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Rakish Revelers | handled | When this creature enters, create a 1/1 green and white Citizen creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -233,7 +230,7 @@
 ## Fully supported
 
 <details>
-<summary>50 cards</summary>
+<summary>53 cards</summary>
 
 - An Offer You Can't Refuse
 - Angel of Suffering
@@ -242,6 +239,7 @@
 - Brass Knuckles
 - Caldaia Strongarm
 - Dusk Mangler
+- Evelyn, the Covetous
 - Evolving Door
 - Expendable Lackey
 - Falco Spara, Pactweaver
@@ -271,11 +269,13 @@
 - Pugnacious Pugilist
 - Quick-Draw Dagger
 - Raffine's Guidance
+- Raffine's Informant
 - Riveteers Charm
 - Sanctuary Warden
 - Sanguine Spy
 - Scheming Fence
 - Scuttling Butler
+- Security Bypass
 - Security Rhox
 - Shadow of Mortality
 - Spara's Headquarters
@@ -309,7 +309,6 @@
 | casualty N (as you cast ~, you may sacrifice a creature with power N or greater. when you do, copy ~ and you may choose a new target for the copy.) choose targe | 1 | Grisly Sigil | snc |
 | casualty N (as you cast ~, you may sacrifice a creature with power N or greater. when you do, copy ~ and you may choose a new target for the copy.) ~ deals N da | 1 | Light 'Em Up | snc |
 | choose two target creatures controlled by the same player. that player sacrifices one of them of their choice. | 1 | Incriminate | snc |
-| connive | 1 | Security Bypass | snc |
 | create two N/N blue fish creature tokens with "..." then for each kind of counter among creatures you control, put a counter of that kind on either of those tok | 1 | Exotic Pets | snc |
 | creatures you control also get +N/+N and have trample as long as you control six or more creatures. | 1 | Jetmir, Nexus of Revels | snc |
 | draw two cards, then look at the top card of each player's library. | 1 | Case the Joint | snc |
@@ -328,7 +327,6 @@
 | when ~ enters, it connives. when it connives ~, return up to one target spell to its owner's hand. | 1 | Obscura Interceptor | snc |
 | when ~ enters, return target creature card with mana value N or less from your graveyard to the battlefield. that creature can't attack or block for as long as  | 1 | Extraction Specialist | snc |
 | when ~ enters, you may search your library for any number of cards named ~, reveal them, put them into your hand, then shuffle. | 1 | Gathering Throng | snc |
-| whenever evelyn or another vampire you control enters, exile the top card of each player's library with a collection counter on it. | 1 | Evelyn, the Covetous | snc |
 | whenever you attack with one or more creatures, create that many N/N green and white citizen creature tokens. then if you control ten or more creatures, you may | 1 | Rabble Rousing | snc |
 | whenever you attack, double target creature's power until end of turn. | 1 | Mr. Orfeo, the Boulder | snc |
 | whenever you attack, target attacking creature connives N, where N is the number of attacking creatures. | 1 | Raffine, Scheming Seer | snc |

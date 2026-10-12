@@ -17,16 +17,16 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 14 | 13.1% |
+| Tested | 15 | 14.0% |
 | Works (untested) | 67 | 62.6% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 26 | 24.3% |
+| Not working | 25 | 23.4% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
-| Blood Reckoning | silent | Whenever a creature attacks you or a planeswalker you control, that creature's controller loses 1 life. | this trigger's condition can never be satisfied - it never triggers | Y/-/- | not_working |
+| Blood Reckoning | silent | Whenever a creature attacks you or a planeswalker you control, that creature's controller loses 1 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Cathedral of War | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Disciple of Bolas | silent | When this creature enters, sacrifice another creature. You gain X life and draw X cards, where X is that creature's power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Duskmantle Prowler | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
@@ -46,7 +46,6 @@
 | Ring of Valkas | silent | At the beginning of your upkeep, put a +1/+1 counter on equipped creature if it's red. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Ring of Xathrid | silent | {2}: Regenerate equipped creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Servant of Nefarox | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Slumbering Dragon | silent | Whenever a creature attacks you or a planeswalker you control, put a +1/+1 counter on this creature. | this trigger's condition can never be satisfied - it never triggers | Y/-/- | not_working |
 | Spelltwine | silent | Exile target instant or sorcery card from your graveyard and target instant or sorcery card from an opponent's graveyard. Copy those cards. Cast the copies if a | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sublime Archangel | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Void Stalker | silent | {2}{U}, {T}: Put this creature and target creature on top of their owners' libraries, then those players shuffle their libraries. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -123,7 +122,7 @@
 ## Fully supported
 
 <details>
-<summary>14 cards</summary>
+<summary>15 cards</summary>
 
 - Augur of Bolas
 - Chandra's Fury
@@ -134,6 +133,7 @@
 - Mind Sculpt
 - Omniscience
 - Predatory Rampage
+- Slumbering Dragon
 - Switcheroo
 - Thundermaw Hellkite
 - Touch of the Eternal
@@ -156,7 +156,6 @@
 | when ~ enters, sacrifice another creature. you gain N life and draw N cards, where N is that creature's power. | 1 | Disciple of Bolas | m13 |
 | when ~ enters, search your library for a creature card with deathtouch, hexproof, reach, or trample and reveal it. shuffle and put that card on top. | 1 | Mwonvuli Beast Tracker | m13 |
 | when ~ enters, target opponent reveals their hand. you may cast an instant or sorcery spell from among those cards without paying its mana cost. | 1 | Mindclaw Shaman | m13 |
-| whenever a creature attacks you or a planeswalker you control, put a +N/+N counter on ~. | 1 | Slumbering Dragon | m13 |
 | whenever a creature attacks you or a planeswalker you control, that creature's controller loses N life. | 1 | Blood Reckoning | m13 |
 | whenever nefarox attacks alone, defending player sacrifices a creature of their choice. | 1 | Nefarox, Overlord of Grixis | m13 |
 | whenever odric and at least three other creatures attack, you choose which creatures block ~ and how those creatures block. | 1 | Odric, Master Tactician | m13 |

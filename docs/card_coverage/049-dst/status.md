@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 23 | 14.2% |
-| Works (untested) | 95 | 58.6% |
+| Tested | 26 | 16.0% |
+| Works (untested) | 96 | 59.3% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 44 | 27.2% |
+| Not working | 40 | 24.7% |
 
 ## Cards needing work
 
@@ -30,18 +30,15 @@
 | Arcbound Fiend | silent | At the beginning of your upkeep, you may move a +1/+1 counter from target creature onto this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Arcbound Overseer | silent | At the beginning of your upkeep, put a +1/+1 counter on each creature you control with modular. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Auriok Siege Sled | silent | {1}: Target artifact creature can't block this creature this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Carry Away | silent | When this Aura enters, unattach enchanted Equipment. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Chittering Rats | silent | When this creature enters, target opponent puts a card from their hand on top of their library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Darksteel Reactor | silent | When this artifact has twenty or more charge counters on it, you win the game. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Death Cloud | silent | Each player loses X life, discards X cards, sacrifices X creatures of their choice, then sacrifices X lands of their choice. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Death-Mask Duplicant | silent | As long as a card exiled with this creature has flying, this creature has flying. The same is true for fear, first strike, double strike, haste, landwalk, prote | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Drooling Ogre | silent | Whenever a player casts an artifact spell, that player gains control of this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Eater of Days | silent | When this creature enters, you skip your next two turns. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Emissary of Hope | silent | Whenever this creature deals combat damage to a player, you gain 1 life for each artifact that player controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Fangren Firstborn | silent | Whenever this creature attacks, put a +1/+1 counter on each attacking creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Genesis Chamber | silent | Whenever a nontoken creature enters, if this artifact is untapped, that creature's controller creates a 1/1 colorless Myr artifact creature token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Goblin Archaeologist | silent | {R}, {T}: Flip a coin. If you win the flip, destroy target artifact and untap this creature. If you lose the flip, sacrifice this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Lich's Tomb | silent | Whenever you lose life, sacrifice a permanent for each 1 life you lost. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Mephitic Ooze | silent | Whenever this creature deals combat damage to a creature, destroy that creature. The creature can't be regenerated. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Neurok Transmuter | silent | {U}: Until end of turn, target artifact creature becomes blue and isn't an artifact. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Panoptic Mirror | silent | Imprint — {X}, {T}: You may exile an instant or sorcery card with mana value X from your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -55,7 +52,6 @@
 | Stand Together | silent | Put two +1/+1 counters on target creature and two +1/+1 counters on another target creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sundering Titan | silent | When this creature enters or leaves the battlefield, choose a land of each basic land type, then destroy those lands. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Thought Dissector | silent | {X}, {T}: Target opponent reveals cards from the top of their library until an artifact card or X cards are revealed, whichever comes first. If an artifact card | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Thunderstaff | silent | {2}, {T}: Attacking creatures get +1/+0 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Vex | silent | Counter target spell. That spell's controller may draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Vulshok War Boar | silent | When this creature enters, sacrifice it unless you sacrifice an artifact. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Well of Lost Dreams | silent | Whenever you gain life, you may pay {X}, where X is less than or equal to the amount of life you gained. If you do, draw X cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -96,6 +92,7 @@
 | Demon's Horn | handled | Whenever a player casts a black spell, you may gain 1 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Dragon's Claw | handled | Whenever a player casts a red spell, you may gain 1 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Drill-Skimmer | handled | This creature has shroud as long as you control another artifact creature. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Drooling Ogre | handled | Whenever a player casts an artifact spell, that player gains control of this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Dross Golem | handled | Affinity | models/game.py (Game.cost_reduction_for, CR 702.41a) | Y/-/- | not_tested |
 | Echoing Decay | handled | Target creature and all other creatures with the same name as that creature get -2/-2 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Emissary of Despair | handled | Whenever this creature deals combat damage to a player, that player loses 1 life for each artifact they control. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -169,11 +166,12 @@
 ## Fully supported
 
 <details>
-<summary>23 cards</summary>
+<summary>26 cards</summary>
 
 - Aether Snap
 - Arcbound Ravager
 - Arcbound Worker
+- Carry Away
 - Darksteel Forge
 - Darksteel Gargoyle
 - Echoing Courage
@@ -183,6 +181,7 @@
 - Hallow
 - Hoverguard Observer
 - Leonin Shikari
+- Lich's Tomb
 - Mycosynth Lattice
 - Nemesis Mask
 - Pristine Angel
@@ -191,6 +190,7 @@
 - Sword of Fire and Ice
 - Tanglewalker
 - Test of Faith
+- Thunderstaff
 - Trinisphere
 - Turn the Tables
 - Whispersilk Cloak
@@ -224,19 +224,15 @@
 | when ~ enters or leaves the battlefield, choose a land of each basic land type, then destroy those lands. | 1 | Sundering Titan | dst |
 | when ~ enters, sacrifice it unless you sacrifice an artifact. | 1 | Vulshok War Boar | dst |
 | when ~ enters, target opponent puts a card from their hand on top of their library. | 1 | Chittering Rats | dst |
-| when ~ enters, unattach enchanted equipment. | 1 | Carry Away | dst |
 | when ~ enters, you skip your next two turns. | 1 | Eater of Days | dst |
 | when ~ has twenty or more charge counters on it, you win the game. | 1 | Darksteel Reactor | dst |
 | whenever a nontoken creature enters, if ~ is untapped, that creature's controller creates a N/N colorless myr artifact creature token. | 1 | Genesis Chamber | dst |
-| whenever a player casts an artifact spell, that player gains control of ~. | 1 | Drooling Ogre | dst |
 | whenever you gain life, you may pay {M}, where N is less than or equal to the amount of life you gained. if you do, draw N cards. | 1 | Well of Lost Dreams | dst |
-| whenever you lose life, sacrifice a permanent for each N life you lost. | 1 | Lich's Tomb | dst |
 | whenever ~ attacks, create a colorless construct artifact creature token named twin that's attacking. its power is equal to ~ power and its toughness is equal t | 1 | Gemini Engine | dst |
 | whenever ~ attacks, put a +N/+N counter on each attacking creature. | 1 | Fangren Firstborn | dst |
 | whenever ~ deals combat damage to a creature, destroy that creature. the creature can't be regenerated. | 1 | Mephitic Ooze | dst |
 | whenever ~ deals combat damage to a player, you gain N life for each artifact that player controls. | 1 | Emissary of Hope | dst |
 | you gain N life. then if an opponent has more life than you, return ~ to its owner's hand. | 1 | Pulse of the Fields | dst |
-| {M}, {M}: attacking creatures get +N/+N until end of turn. | 1 | Thunderstaff | dst |
 | {M}, {M}: flip a coin. if you win the flip, create a N/N colorless insect artifact creature token with flying named wirefly. if you lose the flip, destroy all p | 1 | Wirefly Hive | dst |
 | {M}, {M}: flip a coin. if you win the flip, destroy target artifact and untap ~. if you lose the flip, sacrifice ~. | 1 | Goblin Archaeologist | dst |
 | {M}, {M}: target opponent reveals cards from the top of their library until an artifact card or N cards are revealed, whichever comes first. if an artifact card | 1 | Thought Dissector | dst |

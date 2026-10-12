@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 47 | 22.4% |
-| Works (untested) | 113 | 53.8% |
+| Tested | 48 | 22.9% |
+| Works (untested) | 112 | 53.3% |
 | Partial (unaudited) | 0 | 0.0% |
 | Not working | 50 | 23.8% |
 
@@ -86,7 +86,6 @@
 | Birthing Boughs | handled | {4}, {T}: Create a 2/2 colorless Shapeshifter creature token with changeling. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Bladeback Sliver | handled | Hellbent — As long as you have no cards in hand, Sliver creatures you control have "{T}: This creature deals 1 damage to target player or planeswalker." | the engine reads this text and performs it | Y/-/- | not_tested |
 | Blizzard Strix | handled | When this creature enters, if you control another snow permanent, exile target permanent other than this creature. Return that card to the battlefield under its | the engine reads this text and performs it | Y/-/- | not_tested |
-| Bogardan Dragonheart | handled | Sacrifice another creature: Until end of turn, this creature becomes a Dragon with base power and toughness 4/4, flying, and haste. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Cave of Temptation | handled | {4}, {T}, Sacrifice this land: Put two +1/+1 counters on target creature. Activate only as a sorcery. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Chillerpillar | handled | {4}{S}{S}: Monstrosity 2. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Cleaving Sliver | handled | Sliver creatures you control get +2/+0. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -193,8 +192,9 @@
 ## Fully supported
 
 <details>
-<summary>47 cards</summary>
+<summary>48 cards</summary>
 
+- Bogardan Dragonheart
 - Changeling Outcast
 - Collector Ouphe
 - Conifer Wurm

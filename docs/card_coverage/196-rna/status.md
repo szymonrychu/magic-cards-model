@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 46 | 19.2% |
-| Works (untested) | 148 | 61.9% |
+| Tested | 48 | 20.1% |
+| Works (untested) | 155 | 64.9% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 45 | 18.8% |
+| Not working | 36 | 15.1% |
 
 ## Cards needing work
 
@@ -32,7 +32,6 @@
 | Cavalcade of Calamity | silent | Whenever a creature you control with power 1 or less attacks, this enchantment deals 1 damage to the player or planeswalker that creature is attacking. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Combine Guildmage | silent | {1}{G}, {T}: This turn, each creature you control enters with an additional +1/+1 counter on it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Consecrate // Consume | silent | Target player sacrifices a creature with the greatest power among creatures they control. You gain life equal to its power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Debtors' Transport | silent | Afterlife | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Domri's Nodorog | silent | When this creature enters, you may search your library and/or graveyard for a card named Domri, City Smasher, reveal it, and put it into your hand. If you searc | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Dovin's Dismissal | silent | Put up to one target tapped creature on top of its owner's library. You may search your library and/or graveyard for a card named Dovin, Architect of Law, revea | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Dovin, Architect of Law | silent | −9: Tap all permanents target opponent controls. That player skips their next untap step. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -42,15 +41,9 @@
 | Forbidding Spirit | silent | When this creature enters, until your next turn, creatures can't attack you or planeswalkers you control unless their controller pays {2} for each of those crea | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Galloping Lizrog | silent | When this creature enters, you may remove any number of +1/+1 counters from among creatures you control. If you do, put twice that many +1/+1 counters on this c | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Glass of the Guildpact | silent | Multicolored creatures you control get +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Imperious Oligarch | silent | Afterlife | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Kaya's Wrath | silent | Destroy all creatures. You gain life equal to the number of creatures you controlled that were destroyed this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Knight of Sorrows | silent | Afterlife | no machine in the engine executes this keyword | Y/Y/- | not_working |
-| Knight of the Last Breath | silent | Afterlife | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Lumbering Battlement | silent | When this creature enters, exile any number of other nontoken creatures you control until it leaves the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Mass Manipulation | silent | Gain control of X target creatures and/or planeswalkers. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Ministrant of Obligation | silent | Afterlife | no machine in the engine executes this keyword | Y/Y/- | not_working |
-| Orzhov Enforcer | silent | Afterlife | no machine in the engine executes this keyword | Y/Y/- | not_working |
-| Orzhov Racketeers | silent | Afterlife | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Pestilent Spirit | silent | Instant and sorcery spells you control have deathtouch. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Plague Wight | silent | Whenever this creature becomes blocked, each creature blocking it gets -1/-1 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Plaza of Harmony | silent | {T}: Add one mana of any type that a Gate you control could produce. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -59,18 +52,16 @@
 | Rakdos, the Showstopper | silent | When Rakdos enters, flip a coin for each creature that isn't a Demon, Devil, or Imp. Destroy each creature whose coin comes up tails. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Rampage of the Clans | silent | Destroy all artifacts and enchantments. For each permanent destroyed this way, its controller creates a 3/3 green Centaur creature token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Rumbling Ruin | silent | When this creature enters, count the number of +1/+1 counters on creatures you control. Creatures your opponents control with power less than or equal to that n | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Seraph of the Scales | silent | Afterlife | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Silhana Wayfinder | silent | When this creature enters, look at the top four cards of your library. You may reveal a creature or land card from among them and put it on top of your library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Smothering Tithe | silent | Whenever an opponent draws a card, that player may pay {2}. If the player doesn't, you create a Treasure token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Syndicate Messenger | silent | Afterlife | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Thought Collapse | silent | Counter target spell. Its controller mills three cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Tin Street Dodger | silent | {R}: This creature can't be blocked this turn except by creatures with defender. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Tithe Taker | silent | Afterlife | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Code of Constraint | notice | Target creature gets -4/-0 until end of turn. Draw a card. Addendum — If you cast this spell during your main phase, tap that creature and it doesn't untap duri | unparsed remainder: Draw a card. Addendum — If you cast this spell during your main phase, tap that creature and it doesn't untap during its controller's next untap step. | Y/Y/- | not_working |
 | Deputy of Detention | notice | When this creature enters, exile target nonland permanent an opponent controls and all other nonland permanents that player controls with the same name as that  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Mirror March | notice | Whenever a nontoken creature you control enters, flip a coin until you lose a flip. For each flip you won, create a token that's a copy of that creature. Those  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Open the Gates | notice | Search your library for a basic land card or Gate card, reveal it, put it into your hand, then shuffle. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Sphinx of Foresight | notice | You may reveal this card from your opening hand. If you do, scry 3 at the beginning of your first upkeep. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
+| Tithe Taker | notice | During your turn, spells your opponents cast cost {1} more to cast and abilities your opponents activate cost {1} more to activate unless they're mana abilities | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Aeromunculus | handled | {2}{G}{U}: Adapt 1. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Angelic Exaltation | handled | Whenever a creature you control attacks alone, it gets +X/+X until end of turn, where X is the number of creatures you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Applied Biomancy | handled | Choose one or both — • Target creature gets +1/+1 until end of turn. • Return target creature to its owner's hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -107,6 +98,7 @@
 | Coral Commando | handled |  |  | Y/Y/- | not_tested |
 | Cult Guildmage | handled | {3}{B}, {T}: Target player discards a card. Activate only as a sorcery. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Dead Revels | handled | Spectacle {1}{B} (You may cast this spell for its spectacle cost rather than its mana cost if an opponent lost life this turn.) Return up to two target creature | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Debtors' Transport | handled | Afterlife | machines/keywords.py | Y/Y/- | not_tested |
 | Deface | handled | Choose one — • Destroy target artifact. • Destroy target creature with defender. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Depose // Deploy | handled | Tap target creature. Draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Domri, City Smasher | handled | +2: Creatures you control get +1/+1 and gain haste until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -145,13 +137,17 @@
 | Humongulus | handled | Hexproof | machines/casting.py (target legality) | Y/Y/- | not_tested |
 | Ill-Gotten Inheritance | handled | At the beginning of your upkeep, this enchantment deals 1 damage to each opponent and you gain 1 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Impassioned Orator | handled | Whenever another creature you control enters, you gain 1 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Imperious Oligarch | handled | Afterlife | machines/keywords.py | Y/Y/- | not_tested |
 | Incubation Druid | handled | {3}{G}{G}: Adapt 3. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Judith, the Scourge Diva | handled | Other creatures you control get +1/+0. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Justiciar's Portal | handled | Exile target creature you control, then return that card to the battlefield under its owner's control. It gains first strike until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Knight of the Last Breath | handled | {3}, Sacrifice another nontoken creature: Create a 1/1 white and black Spirit creature token with flying. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Macabre Mockery | handled | Put target creature card from an opponent's graveyard onto the battlefield under your control. It gets +2/+0 and gains haste until end of turn. Sacrifice it at  | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Mesmerizing Benthid | handled | When this creature enters, create two 0/2 blue Illusion creature tokens with "Whenever this token blocks a creature, that creature doesn't untap during its cont | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Noxious Groodion | handled | Deathtouch | machines/combat.py | Y/Y/- | not_tested |
+| Orzhov Enforcer | handled | Afterlife | machines/keywords.py | Y/Y/- | not_tested |
 | Orzhov Locket | handled | {W/B}{W/B}{W/B}{W/B}, {T}, Sacrifice this artifact: Draw two cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Orzhov Racketeers | handled | Whenever this creature deals combat damage to a player, that player discards a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Pitiless Pontiff | handled | {1}, Sacrifice another creature: This creature gains deathtouch and indestructible until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Precognitive Perception | handled | Draw three cards. Addendum — If you cast this spell during your main phase, instead scry 3, then draw three cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Prowling Caracal | handled |  |  | Y/Y/- | not_tested |
@@ -179,6 +175,7 @@
 | Senate Courier | handled | {1}{W}: This creature gains vigilance until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Senate Griffin | handled | When this creature enters, scry 1. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Senate Guildmage | handled | {W}, {T}: You gain 2 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Seraph of the Scales | handled | {W}: This creature gains vigilance until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Sharktocrab | handled | {2}{G}{U}: Adapt 1. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Simic Ascendancy | handled | {1}{G}{U}: Put a +1/+1 counter on target creature you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Simic Locket | handled | {G/U}{G/U}{G/U}{G/U}, {T}, Sacrifice this artifact: Draw two cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -201,6 +198,7 @@
 | Swirling Torrent | handled | Choose one or both — • Put target creature on top of its owner's library. • Return target creature to its owner's hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Sylvan Brushstrider | handled | When this creature enters, you gain 2 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Syndicate Guildmage | handled | {1}{W}, {T}: Tap target creature with power 4 or greater. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Syndicate Messenger | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
 | Tenth District Veteran | handled | Whenever this creature attacks, untap another target creature you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Territorial Boar | handled | Whenever a creature you control with power 4 or greater enters, this creature gets +1/+1 and gains vigilance until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Thirsting Shade | handled | {2}{B}: This creature gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -223,7 +221,7 @@
 ## Fully supported
 
 <details>
-<summary>46 cards</summary>
+<summary>48 cards</summary>
 
 - Angel of Grace
 - Awaken the Erstwhile
@@ -245,9 +243,11 @@
 - Hydroid Krasis
 - Immolation Shaman
 - Incubation // Incongruity
+- Knight of Sorrows
 - Lavinia, Azorius Renegade
 - Lawmage's Binding
 - Light Up the Stage
+- Ministrant of Obligation
 - Nikya of the Old Ways
 - Persistent Petitioners
 - Prime Speaker Vannifar
@@ -278,12 +278,12 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| afterlife | 10 | Debtors' Transport, Imperious Oligarch, Knight of Sorrows, Knight of the Last Breath, Ministrant of Obligation | rna |
 | at the beginning of your upkeep, reveal cards from the top of your library until you reveal a creature card. until your next turn, ~ base power becomes twice th | 1 | Amplifire | rna |
 | counter target spell. its controller mills three cards. | 1 | Thought Collapse | rna |
 | destroy all artifacts and enchantments. for each permanent destroyed ~, its controller creates a N/N green centaur creature token. | 1 | Rampage of the Clans | rna |
 | destroy all creatures. you gain life equal to the number of creatures you controlled that were destroyed ~. | 1 | Kaya's Wrath | rna |
 | distribute three +N/+N counters among one, two, or three target creatures, then double the number of +N/+N counters on each of those creatures. | 1 | Biogenic Upgrade | rna |
+| during your turn, spells your opponents cast cost {M} more to cast and abilities your opponents activate cost {M} more to activate unless they're mana abilities | 1 | Tithe Taker | rna |
 | each player shuffles their hand and graveyard into their library, then draws seven cards. exile ~. addendum — if you cast ~ during your main phase, you may put  | 1 | Emergency Powers | rna |
 | gain control of N target creatures and/or planeswalkers. | 1 | Mass Manipulation | rna |
 | instant and sorcery spells you control have deathtouch. | 1 | Pestilent Spirit | rna |

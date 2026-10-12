@@ -17,16 +17,15 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 33 | 20.4% |
+| Tested | 34 | 21.0% |
 | Works (untested) | 87 | 53.7% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 42 | 25.9% |
+| Not working | 41 | 25.3% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
-| Bog Serpent | silent | When you control no Swamps, sacrifice this creature. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Braids, Conjurer Adept | silent | At the beginning of each player's upkeep, that player may put an artifact, creature, or land card from their hand onto the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Dichotomancy | silent | For each tapped nonland permanent target opponent controls, search that player's library for a card with the same name as that permanent. Put those cards onto t | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Dismal Failure | silent | Counter target spell. Its controller discards a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -159,7 +158,7 @@
 ## Fully supported
 
 <details>
-<summary>33 cards</summary>
+<summary>34 cards</summary>
 
 - Aeon Chronicler
 - Aether Membrane
@@ -167,6 +166,7 @@
 - Aquamorph Entity
 - Aven Riftwatcher
 - Benalish Commander
+- Bog Serpent
 - Brain Gorgers
 - Cautery Sliver
 - Cradle to Grave
@@ -225,7 +225,6 @@
 | until end of turn, target creature you control gains trample and gets +N/+N, where N is its power. sacrifice it at the beginning of the next end step. | 1 | Fatal Frenzy | plc |
 | when the last time counter is removed from ~ while it"..."t be blocked ~. | 1 | Veiling Oddity | plc |
 | when the last time counter is removed from ~ while it's exiled, create a N/N black knight creature token with flanking, protection from white, and haste. | 1 | Riftmarked Knight | plc |
-| when you control no swamps, sacrifice ~. | 1 | Bog Serpent | plc |
 | when ~ dies, return it to the battlefield under its owner's control at the beginning of the next end step and you skip your next draw step. | 1 | Molten Firebird | plc |
 | when ~ enters, any player may sacrifice a land of their choice. if a player does, put ~ on top of its owner's library. | 1 | Shivan Wumpus | plc |
 | when ~ enters, tap all other creatures. | 1 | Timbermare | plc |

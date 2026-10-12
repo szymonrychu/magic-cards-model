@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 52 | 20.3% |
-| Works (untested) | 143 | 55.9% |
+| Tested | 54 | 21.1% |
+| Works (untested) | 144 | 56.2% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 61 | 23.8% |
+| Not working | 58 | 22.7% |
 
 ## Cards needing work
 
@@ -36,7 +36,6 @@
 | Cloudspire Coordinator | silent | {T}: Create X 1/1 colorless Pilot creature tokens, where X is the number of Mounts and/or Vehicles that entered the battlefield under your control this turn. Th | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Coalstoke Gearhulk | silent | When this creature enters, put target creature card with mana value 4 or less from a graveyard onto the battlefield under your control with a finality counter o | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Cursecloth Wrappings | silent | {T}: Target creature card in your graveyard gains embalm until end of turn. The embalm cost is equal to its mana cost. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Daretti, Rocketeer Engineer | silent | Whenever Daretti enters or attacks, choose target artifact card in your graveyard. You may sacrifice an artifact. If you do, return the chosen card to the battl | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Detention Chariot | silent | When this Vehicle enters, exile target artifact or creature an opponent controls until this Vehicle leaves the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Dredger's Insight | silent | Whenever one or more artifact and/or creature cards leave your graveyard, you gain 1 life. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
 | Full Throttle | silent | After this main phase, there are two additional combat phases. At the beginning of each combat this turn, untap all creatures that attacked this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -48,7 +47,6 @@
 | Kolodin, Triumph Caster | silent | Mounts and Vehicles you control have haste. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Lifecraft Engine | silent | Vehicle creatures you control are the chosen creature type in addition to their other types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Lotusguard Disciple | silent | When this creature enters, target creature or Vehicle gains lifelink and indestructible until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Mendicant Core, Guidelight | silent | Max speed — Whenever you cast an artifact spell, you may pay {1}. If you do, copy it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Midnight Mangler | silent | During turns other than yours, this Vehicle is an artifact creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Mindspring Merfolk | silent | Exhaust — {X}{U}{U}, {T}: Draw X cards. Put a +1/+1 counter on each Merfolk creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Momentum Breaker | silent | When this enchantment enters, each opponent sacrifices a creature or Vehicle of their choice. Each opponent who can't discards a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -83,7 +81,6 @@
 | Push the Limit | notice | Return all Mount and Vehicle cards from your graveyard to the battlefield. Sacrifice them at the beginning of the next end step. Vehicles you control become art | unparsed remainder: Return all Mount and Vehicle cards from your graveyard to the battlefield. Sacrifice them at the beginning of the next end step. Vehicles you control become artifact creatures until end of turn. | Y/Y/Y | not_working |
 | Racers' Scoreboard | notice | Max speed — Spells you cast cost {1} less to cast. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Riptide Gearhulk | notice | When this creature enters, for each opponent, put up to one target nonland permanent that player controls into its owner's library third from the top. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Sab-Sunen, Luxa Embodied | notice | At the beginning of your first main phase, put a +1/+1 counter on Sab-Sunen. Then if it has an odd number of counters on it, draw two cards. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Spire Mechcycle | notice | Exhaust — Tap another untapped Mount or Vehicle you control: This Vehicle becomes an artifact creature. Put a +1/+1 counter on it for each Mount and/or Vehicle  | unparsed remainder: Put a +1/+1 counter on it for each Mount and/or Vehicle you control other than this Vehicle. | Y/Y/Y | not_working |
 | The Last Ride | notice | The Last Ride gets -X/-X, where X is your life total. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Tune Up | notice | Return target artifact card from your graveyard to the battlefield. If it's a Vehicle, it becomes an artifact creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
@@ -166,6 +163,7 @@
 | Marshals' Pathcruiser | handled | When this Vehicle enters, search your library for a basic land card, reveal it, put it into your hand, then shuffle. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Maximum Overdrive | handled | Put a +1/+1 counter on target creature. It gains deathtouch and indestructible until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Memory Guardian | handled | Flying | machines/combat.py | Y/Y/Y | not_tested |
+| Mendicant Core, Guidelight | handled | Mendicant Core's power is equal to the number of artifacts you control. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Migrating Ketradon | handled | When this creature enters, you gain 4 life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Molt Tender | handled | {T}: Mill a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Muraganda Raceway | handled | Max speed | models/game.py (why_cannot_activate, CR 702.178a) | Y/Y/Y | not_tested |
@@ -234,7 +232,7 @@
 ## Fully supported
 
 <details>
-<summary>52 cards</summary>
+<summary>54 cards</summary>
 
 - Bleachbone Verge
 - Boom Scholar
@@ -246,6 +244,7 @@
 - Cloudspire Captain
 - Collision Course
 - Country Roads
+- Daretti, Rocketeer Engineer
 - Deathless Pilot
 - Dynamite Diver
 - Elvish Refueler
@@ -274,6 +273,7 @@
 - Riverpyre Verge
 - Road Rage
 - Rocky Roads
+- Sab-Sunen, Luxa Embodied
 - Samut, the Driving Force
 - Shefet Archfiend
 - Skyseer's Chariot
@@ -296,8 +296,8 @@
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
 | Exhaust | 4 | Mindspring Merfolk, Sita Varma, Masked Racer, Spire Mechcycle, Winter, Cursed Rider | dft |
-| Max speed | 2 | Mendicant Core, Guidelight, Racers' Scoreboard | dft |
 | Choose one | 1 | Crash and Burn | dft |
+| Max speed | 1 | Racers' Scoreboard | dft |
 | after ~ phase, there are two additional combat phases. at the beginning of each combat ~, untap all creatures that attacked ~. | 1 | Full Throttle | dft |
 | all creatures and vehicles lose indestructible until end of turn, then destroy all creatures and vehicles. cycling {M} ({M}, discard ~: draw a card.) | 1 | Spectacular Pileup | dft |
 | at the beginning of combat on your turn, choose up to one target mount or vehicle you control. until end of turn, that permanent becomes saddled if it"..."s a v | 1 | Alacrian Armory | dft |
@@ -305,7 +305,6 @@
 | at the beginning of combat on your turn, create a N/N red goblin creature token. that token attacks ~ if able. | 1 | Howlsquad Heavy | dft |
 | at the beginning of your end step, untap each creature you control. | 1 | Veteran Beastrider | dft |
 | at the beginning of your end step, you draw N cards and lose N life, where N is your speed. | 1 | The Speed Demon | dft |
-| at the beginning of your first main phase, put a +N/+N counter on sab-sunen. then if it has an odd number of counters on it, draw two cards. | 1 | Sab-Sunen, Luxa Embodied | dft |
 | choose a card name. search target opponent's graveyard, hand, and library for up to four cards with that name and exile them. then that player shuffles. | 1 | Ancient Vendetta | dft |
 | choose target creature, planeswalker, or vehicle. mill two cards, then destroy the chosen permanent if its mana value is less than or equal to the number of car | 1 | Quag Feast | dft |
 | choose target opponent. create two N/N colorless thopter artifact creature tokens with flying. then the chosen player loses N life and you gain N life, where N  | 1 | Haunt the Network | dft |
@@ -337,7 +336,6 @@
 | when ~ enters, you may search your library for an artifact card with mana value N or N, reveal it, put it into your hand, then shuffle. | 1 | Transit Mage | dft |
 | when ~ enters, you may search your library for up to two artifact, creature, and/or enchantment cards with mana value N or less, reveal them, put them into your | 1 | Brightglass Gearhulk | dft |
 | whenever a creature deals combat damage to one of your opponents, its controller looks at the top card of that opponent's library and exiles it face down. they  | 1 | Gonti, Night Minister | dft |
-| whenever daretti enters or attacks, choose target artifact card in your graveyard. you may sacrifice an artifact. if you do, return the chosen card to the battl | 1 | Daretti, Rocketeer Engineer | dft |
 | whenever one or more artifact and/or creature cards leave your graveyard, you gain N life. | 1 | Dredger's Insight | dft |
 | whenever you attack, target attacking creature gets +N/+N until end of turn. when that creature dies ~, surveil N. | 1 | Grim Javelineer | dft |
 | whenever ~ attacks while saddled, untap it and put a +N/+N counter on it. | 1 | Brightfield Mustang | dft |

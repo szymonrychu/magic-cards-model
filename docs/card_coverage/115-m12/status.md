@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 18 | 18.4% |
+| Tested | 19 | 19.4% |
 | Works (untested) | 61 | 62.2% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 19 | 19.4% |
+| Not working | 18 | 18.4% |
 
 ## Cards needing work
 
@@ -38,7 +38,6 @@
 | Jace, Memory Adept | silent | −7: Any number of target players each draw twenty cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Monomania | silent | Target player chooses a card in their hand and discards the rest. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Scrambleverse | silent | For each nonland permanent, choose a player at random. Then each player gains control of each permanent for which they were chosen. Untap those permanents. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Skinshifter | silent | {G}: Choose one. Activate only once each turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sphinx of Uthuun | silent | When this creature enters, reveal the top five cards of your library. An opponent separates those cards into two piles. Put one pile into your hand and the othe | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Stonehorn Dignitary | silent | When this creature enters, target opponent skips their next combat phase. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Tectonic Rift | silent | Destroy target land. Creatures without flying can't block this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -110,7 +109,7 @@
 ## Fully supported
 
 <details>
-<summary>18 cards</summary>
+<summary>19 cards</summary>
 
 - Adaptive Automaton
 - Aegis Angel
@@ -125,6 +124,7 @@
 - Personal Sanctuary
 - Phantasmal Image
 - Scepter of Empires
+- Skinshifter
 - Skywinder Drake
 - Sundial of the Infinite
 - Throne of Empires
@@ -152,7 +152,6 @@
 | whenever you cast a vampire creature spell, it gains bloodthirst N. | 1 | Bloodlord of Vaasgoth | m12 |
 | {M}, {M}: each player discards their hand, then draws cards equal to the greatest number of cards a player discarded ~. | 1 | Jace's Archivist | m12 |
 | {M}, {M}: reveal the top card of your library. if it"..."s a land card, put that card onto the battlefield under your control. if it's a noncreature, nonland ca | 1 | Druidic Satchel | m12 |
-| {M}: choose one. activate only once each turn. | 1 | Skinshifter | m12 |
 | {M}: flip a coin. if you win the flip, ~ deals N damage to any target. if you lose the flip, ~ deals N damage to itself. | 1 | Goblin Bangchuckers | m12 |
 | {M}{M}, {M}: ~ deals N damage to target attacking or blocking creature. ~ doesn't untap during your next untap step. | 1 | Arbalest Elite | m12 |
 | −N: any number of target players each draw twenty cards. | 1 | Jace, Memory Adept | m12 |

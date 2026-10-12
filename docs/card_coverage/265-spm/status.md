@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 48 | 25.7% |
-| Works (untested) | 101 | 54.0% |
+| Works (untested) | 102 | 54.5% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 38 | 20.3% |
+| Not working | 37 | 19.8% |
 
 ## Cards needing work
 
@@ -45,7 +45,6 @@
 | Selfless Police Captain | silent | When this creature leaves the battlefield, put its +1/+1 counters on target creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Spider-Ham, Peter Porker | silent | Animal May-Ham — Other Spiders, Boars, Bats, Bears, Birds, Cats, Dogs, Frogs, Jackals, Lizards, Mice, Otters, Rabbits, Raccoons, Rats, Squirrels, Turtles, and W | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Spider-Man India | silent | Pavitr's Sevā — Whenever you cast a creature spell, put a +1/+1 counter on target creature you control. It gains flying until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Spider-Slayer, Hatred Honed | silent | Whenever Spider-Slayer deals damage to a Spider, destroy that creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Spinneret and Spiderling | silent | Whenever Spinneret and Spiderling deals 4 or more damage, exile the top card of your library. Until the end of your next turn, you may play that card. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
 | Stegron the Dinosaur Man | silent | Dinosaur Formula — {1}{R}, Discard this card: Until end of turn, target creature you control gets +3/+1 and becomes a Dinosaur in addition to its other types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Superior Foes of Spider-Man | silent | Whenever you cast a spell with mana value 4 or greater, you may exile the top card of your library. If you do, you may play that card until you exile another ca | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -140,6 +139,7 @@
 | Spider-Mobile | handled | Whenever this Vehicle attacks or blocks, it gets +1/+1 until end of turn for each Spider you control. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Spider-Rex, Daring Dino | handled | Reach | machines/combat.py | Y/Y/Y | not_tested |
 | Spider-Sense | handled | Web-slinging {U} (You may cast this spell for {U} if you also return a tapped creature you control to its owner's hand.) Counter target instant spell, sorcery s | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Spider-Slayer, Hatred Honed | handled | Whenever Spider-Slayer deals damage to a Spider, destroy that creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Spider-Suit | handled | Equipped creature gets +2/+2 and is a Spider Hero in addition to its other types. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Spider-Woman, Stunning Savior | handled | Venom Blast — Artifacts and creatures your opponents control enter tapped. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Starling, Aerial Ally | handled | When Starling enters, another target creature you control gains flying until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -251,7 +251,6 @@
 | when ~ enters, exile the top card of your library. you may play that card for as long as you control ~. | 1 | Gwen Stacy // Ghost-Spider | spm |
 | when ~ leaves the battlefield, put its +N/+N counters on target creature you control. | 1 | Selfless Police Captain | spm |
 | whenever gwenom attacks, until end of turn, you may look at the top card of your library any time and you may play cards from the top of your library. if you ca | 1 | Gwenom, Remorseless | spm |
-| whenever spider-slayer deals damage to a spider, destroy that creature. | 1 | Spider-Slayer, Hatred Honed | spm |
 | whenever venom attacks, you may sacrifice another creature. if you do, draw N cards, then you may put a permanent card with mana value N or less from your hand  | 1 | Eddie Brock // Venom, Lethal Protector | spm |
 | whenever vulture attacks, other villains you control gain flying until end of turn. | 1 | Vulture, Scheming Scavenger | spm |
 | whenever you attack, double the number of each kind of counter on each spider and legendary creature you control. | 1 | Miles Morales // Ultimate Spider-Man | spm |

@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 67 | 25.0% |
+| Tested | 72 | 26.9% |
 | Works (untested) | 113 | 42.2% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 88 | 32.8% |
+| Not working | 83 | 31.0% |
 
 ## Cards needing work
 
@@ -40,12 +40,10 @@
 | Case of the Trampled Garden | silent | Solved — Whenever you attack, put a +1/+1 counter on target attacking creature. It gains trample until end of turn. | this trigger's condition can never be satisfied - it never triggers | Y/Y/Y | not_working |
 | Chalk Outline | silent | Whenever one or more creature cards leave your graveyard, create a 2/2 white and blue Detective creature token, then investigate. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
 | Coerced to Kill | silent | Enchanted creature has base power and toughness 1/1, has deathtouch, and is an Assassin in addition to its other types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Connecting the Dots | silent | Whenever a creature you control attacks, exile the top card of your library face down. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Coveted Falcon | silent | When this creature is turned face up, target opponent gains control of any number of target permanents you control. Draw a card for each one they gained control | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Cryptic Coat | silent | When this Equipment enters, cloak the top card of your library, then attach this Equipment to it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Doppelgang | silent | For each of X target permanents, create X tokens that are copies of that permanent. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Dramatic Accusation | silent | {U}{U}: Shuffle enchanted creature into its owner's library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Etrata, Deadly Fugitive | silent | Whenever an Assassin you control deals combat damage to an opponent, cloak the top card of that player's library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Evidence Examiner | silent | At the beginning of combat on your turn, you may collect evidence 4. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Expedited Inheritance | silent | Whenever a creature is dealt damage, its controller may exile that many cards from the top of their library. They may play those cards until the end of their ne | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Expose the Culprit | silent | Cloak | no machine in the engine executes this keyword | Y/Y/Y | not_working |
@@ -53,7 +51,6 @@
 | Flotsam // Jetsam | silent | Each opponent mills three cards, then you may cast a spell from each opponent's graveyard without paying its mana cost. If a spell cast this way would be put in | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Flourishing Bloom-Kin | silent | When this creature is turned face up, search your library for up to two Forest cards and reveal them. Put one of them onto the battlefield tapped and the other  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Frantic Scapegoat | silent | Whenever one or more other creatures you control enter, if this creature is suspected, you may suspect one of the other creatures. If you do, this creature is n | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Fugitive Codebreaker | silent | Disguise | no machine in the engine executes this keyword | Y/Y/Y | not_working |
 | Fuss // Bother | silent | Put a +1/+1 counter on each attacking creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Goblin Maskmaker | silent | Whenever this creature attacks, face-down spells you cast this turn cost {1} less to cast. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Harried Dronesmith | silent | At the beginning of combat on your turn, create a 1/1 colorless Thopter artifact creature token with flying. It gains haste until end of turn. Sacrifice it at t | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -86,11 +83,9 @@
 | Steamcore Scholar | silent | When this creature enters, draw two cards. Then discard two cards unless you discard an instant or sorcery card or a creature card with flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Surveillance Monitor | silent | When this creature enters, you may collect evidence 4. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Tenth District Hero | silent | {2}{W}, Collect evidence 4: If this creature is a Detective, it becomes a legendary creature named Mileva, the Stalwart, it has base power and toughness 5/5, an | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| The Pride of Hull Clade | silent | {2}{U}{U}: Until end of turn, target creature you control gets +1/+0, gains "Whenever this creature deals combat damage to a player, draw cards equal to its tou | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Tolsimir, Midnight's Light | silent | Whenever a Wolf you control attacks, if Tolsimir attacked this combat, target creature an opponent controls blocks that Wolf this combat if able. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Tomik, Wielder of Law | silent | Whenever an opponent attacks with creatures, if two or more of those creatures are attacking you and/or planeswalkers you control, that opponent loses 3 life an | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Urgent Necropsy | silent | As an additional cost to cast this spell, collect evidence X, where X is the total mana value of the permanents this spell targets. Destroy up to one target art | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Vannifar, Evolved Enigma | silent | Cloak | no machine in the engine executes this keyword | Y/Y/Y | not_working |
 | Wojek Investigator | silent | At the beginning of your upkeep, investigate once for each opponent who has more cards in hand than you. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Worldsoul's Rage | silent | Worldsoul's Rage deals X damage to any target. Put up to X land cards from your hand and/or graveyard onto the battlefield tapped. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Yarus, Roar of the Old Gods | silent | Whenever a face-down creature you control dies, return it to the battlefield face down under its owner's control if it's a permanent card, then turn it face up. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -231,7 +226,7 @@
 ## Fully supported
 
 <details>
-<summary>67 cards</summary>
+<summary>72 cards</summary>
 
 - Absolving Lammasu
 - Aftermath Analyst
@@ -251,6 +246,7 @@
 - Case of the Uneaten Feast
 - Clandestine Meddler
 - Commercial District
+- Connecting the Dots
 - Conspiracy Unraveler
 - Convenient Target
 - Crimestopper Sprite
@@ -261,8 +257,10 @@
 - Elegant Parlor
 - Escape Tunnel
 - Essence of Antiquity
+- Etrata, Deadly Fugitive
 - Forensic Gadgeteer
 - Forensic Researcher
+- Fugitive Codebreaker
 - Get a Leg Up
 - Hedge Maze
 - Hedge Whisperer
@@ -293,10 +291,12 @@
 - Slimy Dualleech
 - Sudden Setback
 - Teysa, Opulent Oligarch
+- The Pride of Hull Clade
 - Thundering Falls
 - Tunnel Tipster
 - Undercity Sewers
 - Underground Mortuary
+- Vannifar, Evolved Enigma
 - Vein Ripper
 - Vitu-Ghazi Inspector
 - Warleader's Call
@@ -308,7 +308,6 @@
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
 | Solved | 3 | Case of the Burning Masks, Case of the Gorgon's Kiss, Case of the Trampled Garden | mkm |
-| cloak | 2 | Expose the Culprit, Vannifar, Evolved Enigma | mkm |
 | Choose one | 1 | Archdruid's Charm | mkm |
 | Choose one or both | 1 | Deadly Complication | mkm |
 | as an additional cost to cast ~, collect evidence N, where N is the total mana value of the permanents ~ targets. destroy up to one target artifact, up to one t | 1 | Urgent Necropsy | mkm |
@@ -318,11 +317,11 @@
 | at the beginning of combat on your turn, you may collect evidence N. | 1 | Evidence Examiner | mkm |
 | at the beginning of your end step, target opponent may sacrifice two nonland, nontoken permanents of their choice. if they don't, you draw two cards. | 1 | Rakdos, Patron of Chaos | mkm |
 | at the beginning of your upkeep, investigate once for each opponent who has more cards in hand than you. | 1 | Wojek Investigator | mkm |
+| cloak | 1 | Expose the Culprit | mkm |
 | create a N/N green ooze creature token with trample. put N +N/+N counters on it, where N is two plus the total number of cards you own in exile and in your grav | 1 | Slime Against Humanity | mkm |
 | create a N/N green plant creature token, then draw cards equal to the number of differently named creature tokens you control. | 1 | Audience with Trostani | mkm |
 | creatures you control get +N/+N and gain trample until end of turn. you may turn a creature you control face up. | 1 | Hustle // Bustle | mkm |
 | destroy all artifacts you don't control, then exile the top N cards of your library, where N is the number of artifacts that were put into graveyards from the b | 1 | Anzrag's Rampage | mkm |
-| disguise | 1 | Fugitive Codebreaker | mkm |
 | each opponent mills three cards, then you may cast a spell from each opponent's graveyard without paying its mana cost. if a spell cast ~ would be put into a gr | 1 | Flotsam // Jetsam | mkm |
 | each player who controls the most creatures investigates. then destroy all creatures. (to investigate, create a clue token. it's an artifact with "...") | 1 | No Witnesses | mkm |
 | enchanted creature gets +N/+N and can't become suspected. | 1 | Airtight Alibi | mkm |
@@ -358,11 +357,9 @@
 | when ~ is turned face up, target opponent gains control of any number of target permanents you control. draw a card for each one they gained control of ~. | 1 | Coveted Falcon | mkm |
 | when ~ leaves the battlefield, return the exiled cards to their owners' hands. | 1 | Aurelia's Vindicator | mkm |
 | whenever a creature is dealt damage, its controller may exile that many cards from the top of their library. they may play those cards until the end of their ne | 1 | Expedited Inheritance | mkm |
-| whenever a creature you control attacks, exile the top card of your library face down. | 1 | Connecting the Dots | mkm |
 | whenever a face-down creature you control dies, return it to the battlefield face down under its owner"..."s a permanent card, then turn it face up. | 1 | Yarus, Roar of the Old Gods | mkm |
 | whenever a wolf you control attacks, if tolsimir attacked ~, target creature an opponent controls blocks that wolf ~ if able. | 1 | Tolsimir, Midnight's Light | mkm |
 | whenever agrus kos enters or attacks, choose up to one target creature. if it's suspected, exile it. otherwise, suspect it. | 1 | Agrus Kos, Spirit of Justice | mkm |
-| whenever an assassin you control deals combat damage to an opponent, cloak the top card of that player's library. | 1 | Etrata, Deadly Fugitive | mkm |
 | whenever an opponent attacks with creatures, if two or more of those creatures are attacking you and/or planeswalkers you control, that opponent loses N life an | 1 | Tomik, Wielder of Law | mkm |
 | whenever anzrag becomes blocked, untap each creature you control. after ~, there is an additional combat phase. | 1 | Anzrag, the Quake-Mole | mkm |
 | whenever izoni enters or attacks, you may collect evidence N. if you do, create two N/N black and green spider creature tokens with reach and menace. | 1 | Izoni, Center of the Web | mkm |
@@ -387,7 +384,6 @@
 | {M}{M}, collect evidence N: if ~ is a detective, it becomes a legendary creature named mileva, the stalwart, it has base power and toughness N/N, and it gains " | 1 | Tenth District Hero | mkm |
 | {M}{M}, {M}: tap target creature. you may put a stun counter on it. if you do, put a stun counter on ~. | 1 | Sanctuary Wall | mkm |
 | {M}{M}: shuffle enchanted creature into its owner's library. | 1 | Dramatic Accusation | mkm |
-| {M}{M}{M}: until end of turn, target creature you control gets +N/+N, gains "..." and can attack as though it didn't have defender. | 1 | The Pride of Hull Clade | mkm |
 | ~ can"..."t block.) | 1 | Caught Red-Handed | mkm |
 | ~ costs {M}{M} more to cast for each target beyond the first. choose any number of target players. investigate N times, where N is the total number of creatures | 1 | Officious Interrogation | mkm |
 | ~ deals N damage to any target. put up to N land cards from your hand and/or graveyard onto the battlefield tapped. | 1 | Worldsoul's Rage | mkm |

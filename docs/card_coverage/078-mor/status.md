@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 22 | 14.9% |
-| Works (untested) | 64 | 43.2% |
+| Tested | 25 | 16.9% |
+| Works (untested) | 67 | 45.3% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 62 | 41.9% |
+| Not working | 56 | 37.8% |
 
 ## Cards needing work
 
@@ -33,21 +33,16 @@
 | Coordinated Barrage | silent | Choose a creature type. Coordinated Barrage deals damage to target attacking or blocking creature equal to the number of permanents you control of the chosen ty | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Countryside Crusher | silent | At the beginning of your upkeep, reveal the top card of your library. If it's a land card, put it into your graveyard and repeat this process. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Cream of the Crop | silent | Whenever a creature you control enters, you may look at the top X cards of your library, where X is that creature's power. If you do, put one of those cards on  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Daily Regimen | silent | {1}{W}: Put a +1/+1 counter on enchanted creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Earthbrawn | silent | Reinforce | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Earwig Squad | silent | When this creature enters, if its prowl cost was paid, search target opponent's library for three cards and exile them. Then that player shuffles. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Fendeep Summoner | silent | {T}: Up to two target Swamps each become 3/5 Treefolk Warrior creatures in addition to their other types until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Fertilid | silent | {1}{G}, Remove a +1/+1 counter from this creature: Target player searches their library for a basic land card, puts it onto the battlefield tapped, then shuffle | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Fire Juggler | silent | Whenever this creature becomes blocked, clash with an opponent. If you win, this creature deals 4 damage to each creature blocking it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Graceful Reprieve | silent | When target creature dies this turn, return that card to the battlefield under its owner's control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Grimoire Thief | silent | Whenever this creature becomes tapped, exile the top three cards of target opponent's library face down. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Hunting Triad | silent | Reinforce | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Ink Dissolver | silent | Kinship — At the beginning of your upkeep, you may look at the top card of your library. If it shares a creature type with this creature, you may reveal it. If  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Kinsbaile Borderguard | silent | When this creature dies, create a 1/1 white Kithkin Soldier creature token for each counter on it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Kithkin Zephyrnaut | silent | Kinship — At the beginning of your upkeep, you may look at the top card of your library. If it shares a creature type with this creature, you may reveal it. If  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Knowledge Exploitation | silent | Prowl {3}{U} (You may cast this for its prowl cost if you dealt combat damage to a player this turn with a Rogue.) Search target opponent's library for an insta | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Leaf-Crowned Elder | silent | Kinship — At the beginning of your upkeep, you may look at the top card of your library. If it shares a creature type with this creature, you may reveal it. If  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Lightning Crafter | silent | Champion | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Luminescent Rain | silent | Choose a creature type. You gain 2 life for each permanent you control of that type. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Mind Shatter | silent | Target player discards X cards at random. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Mosquito Guard | silent | Reinforce | no machine in the engine executes this keyword | Y/-/- | not_working |
@@ -61,7 +56,6 @@
 | Pyroclast Consul | silent | Kinship — At the beginning of your upkeep, you may look at the top card of your library. If it shares a creature type with this creature, you may reveal it. If  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Rage Forger | silent | When this creature enters, put a +1/+1 counter on each other Shaman creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Recross the Paths | silent | Reveal cards from the top of your library until you reveal a land card. Put that card onto the battlefield and the rest on the bottom of your library in any ord | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Redeem the Lost | silent | Clash | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Reins of the Vinesteed | silent | When enchanted creature dies, you may return this card from your graveyard to the battlefield attached to a creature that shares a creature type with that creat | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Release the Ants | silent | Release the Ants deals 1 damage to any target. Clash with an opponent. If you win, return Release the Ants to its owner's hand. (Each clashing player reveals th | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Research the Deep | silent | Draw a card. Clash with an opponent. If you win, return Research the Deep to its owner's hand. (Each clashing player reveals the top card of their library, then | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -76,7 +70,6 @@
 | Stomping Slabs | silent | Reveal the top seven cards of your library, then put those cards on the bottom of your library in any order. If a card named Stomping Slabs was revealed this wa | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Stonehewer Giant | silent | {1}{W}, {T}: Search your library for an Equipment card, put it onto the battlefield, attach it to a creature you control, then shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sunflare Shaman | silent | {1}{R}, {T}: This creature deals X damage to any target and X damage to itself, where X is the number of Elemental cards in your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Supreme Exemplar | silent | Champion | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Swell of Courage | silent | Reinforce | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Titan's Revenge | silent | Titan's Revenge deals X damage to any target. Clash with an opponent. If you win, return Titan's Revenge to its owner's hand. (Each clashing player reveals the  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Unstoppable Ash | silent | Whenever a creature you control becomes blocked, it gets +0/+5 until end of turn. | this trigger's condition can never be satisfied - it never triggers | Y/-/- | not_working |
@@ -86,6 +79,7 @@
 | Winnower Patrol | silent | Kinship — At the beginning of your upkeep, you may look at the top card of your library. If it shares a creature type with this creature, you may reveal it. If  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Wolf-Skull Shaman | silent | Kinship — At the beginning of your upkeep, you may look at the top card of your library. If it shares a creature type with this creature, you may reveal it. If  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Pack's Disdain | notice | Choose a creature type. Target creature gets -1/-1 until end of turn for each permanent of the chosen type you control. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
+| Redeem the Lost | notice | Target creature you control gains protection from the color of your choice until end of turn. Clash with an opponent. If you win, return Redeem the Lost to its  | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Vendilion Clique | notice | When Vendilion Clique enters, look at target player's hand. You may choose a nonland card from it. If you do, that player reveals the chosen card, puts it on th | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Vengeful Firebrand | notice | This creature has haste as long as a Warrior card is in your graveyard. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Ambassador Oak | handled | When this creature enters, create a 1/1 green Elf Warrior creature token. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -98,6 +92,7 @@
 | Chameleon Colossus | handled | {2}{G}{G}: This creature gets +X/+X until end of turn, where X is its power. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Changeling Sentinel | handled | Vigilance | machines/combat.py | Y/-/- | not_tested |
 | Cloak and Dagger | handled | Equipped creature gets +2/+0 and has shroud. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Daily Regimen | handled | {1}{W}: Put a +1/+1 counter on enchanted creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Declaration of Naught | handled | As this enchantment enters, choose a card name. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Dewdrop Spy | handled | When this creature enters, look at the top card of target player's library. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Disperse | handled | Return target nonland permanent to its owner's hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -108,6 +103,7 @@
 | Festercreep | handled | This creature enters with a +1/+1 counter on it. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Feudkiller's Verdict | handled | You gain 10 life. Then if you have more life than an opponent, create a 5/5 white Giant Warrior creature token. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Final-Sting Faerie | handled | When this creature enters, destroy target creature that was dealt damage this turn. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Fire Juggler | handled | Whenever this creature becomes blocked, clash with an opponent. If you win, this creature deals 4 damage to each creature blocking it. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Frogtosser Banneret | handled | Goblin spells and Rogue spells you cast cost {1} less to cast. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Game-Trail Changeling | handled | Trample | machines/combat.py | Y/-/- | not_tested |
 | Gilt-Leaf Archdruid | handled | Whenever you cast a Druid spell, you may draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -144,6 +140,7 @@
 | Stonybrook Banneret | handled | Merfolk spells and Wizard spells you cast cost {1} less to cast. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Stonybrook Schoolmaster | handled | Whenever this creature becomes tapped, you may create a 1/1 blue Merfolk Wizard creature token. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Stream of Unconsciousness | handled | Target creature gets -4/-0 until end of turn. If you control a Wizard, draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Supreme Exemplar | handled | Flying | machines/combat.py | Y/-/- | not_tested |
 | Taurean Mauler | handled | Whenever an opponent casts a spell, you may put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Thornbite Staff | handled | Equipped creature has "{2}, {T}: This creature deals 1 damage to any target" and "Whenever a creature dies, untap this creature." | the engine reads this text and performs it | Y/-/- | not_tested |
 | Veteran's Armaments | handled | Equipped creature has "Whenever this creature attacks or blocks, it gets +1/+1 until end of turn for each attacking creature." | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -156,7 +153,7 @@
 ## Fully supported
 
 <details>
-<summary>22 cards</summary>
+<summary>25 cards</summary>
 
 - Battletide Alchemist
 - Bramblewood Paragon
@@ -166,8 +163,11 @@
 - Floodchaser
 - Forfend
 - Greatbow Doyen
+- Grimoire Thief
 - Indomitable Ancients
+- Kinsbaile Borderguard
 - Latchkey Faerie
+- Lightning Crafter
 - Maralen of the Mornsong
 - Meadowboon
 - Morsel Theft
@@ -189,7 +189,6 @@
 |---|---|---|---|
 | Kinship | 12 | Ink Dissolver, Kithkin Zephyrnaut, Leaf-Crowned Elder, Mudbutton Clanger, Nightshade Schemers | mor |
 | reinforce | 7 | Brighthearth Banneret, Burrenton Bombardier, Earthbrawn, Hunting Triad, Mosquito Guard | mor |
-| champion | 2 | Lightning Crafter, Supreme Exemplar | mor |
 | ~ deals N damage to any target. clash with an opponent. if you win, return ~ to its owner's hand. (each clashing player reveals the top card of their library, t | 2 | Release the Ants, Titan's Revenge | mor |
 | at the beginning of your upkeep, reveal the top card of your library. if it's a land card, put it into your graveyard and repeat ~. | 1 | Countryside Crusher | mor |
 | choose a creature type. target creature gets -N/-N until end of turn for each permanent of the chosen type you control. | 1 | Pack's Disdain | mor |
@@ -197,7 +196,6 @@
 | choose a creature type. ~ deals damage to any target equal to the number of permanents you control of the chosen type. | 1 | Roar of the Crowd | mor |
 | choose a creature type. ~ deals damage to target attacking or blocking creature equal to the number of permanents you control of the chosen type. | 1 | Coordinated Barrage | mor |
 | choose two target creatures that share no creature types. those creatures fight each other. (each deals damage equal to its power to the other.) | 1 | Rivals' Duel | mor |
-| clash | 1 | Redeem the Lost | mor |
 | clash with an opponent. if you win, target player discards two cards. otherwise, that player discards a card. (each clashing player reveals the top card of thei | 1 | Pulling Teeth | mor |
 | draw a card. clash with an opponent. if you win, return ~ to its owner's hand. (each clashing player reveals the top card of their library, then puts that card  | 1 | Research the Deep | mor |
 | prowl {M}{M} (you may cast ~ its prowl cost if you dealt combat damage to a player ~ with a rogue.) create N N/N black faerie rogue creature tokens with flying, | 1 | Notorious Throng | mor |
@@ -206,11 +204,11 @@
 | return target creature card from a graveyard to its owner"..."s hand. (each clashing player reveals the top card of their library, then puts that card on their  | 1 | Revive the Fallen | mor |
 | reveal cards from the top of your library until you reveal a land card. put that card onto the battlefield and the rest on the bottom of your library in any ord | 1 | Recross the Paths | mor |
 | reveal the top seven cards of your library, then put those cards on the bottom of your library in any order. if a card named ~ was revealed ~, ~ deals N damage  | 1 | Stomping Slabs | mor |
+| target creature you control gains protection from the color of your choice until end of turn. clash with an opponent. if you win, return ~ to its owner's hand.  | 1 | Redeem the Lost | mor |
 | target player discards N cards at random. | 1 | Mind Shatter | mor |
 | target player sacrifices a creature of their choice. if a goblin is sacrificed ~, that player creates two N/N black goblin rogue creature tokens, and those toke | 1 | Warren Weirding | mor |
 | when enchanted creature dies, you may return ~ from your graveyard to the battlefield attached to a creature that shares a creature type with that creature. | 1 | Reins of the Vinesteed | mor |
 | when target creature dies ~, return that card to the battlefield under its owner's control. | 1 | Graceful Reprieve | mor |
-| when ~ dies, create a N/N white kithkin soldier creature token for each counter on it. | 1 | Kinsbaile Borderguard | mor |
 | when ~ enters, each opponent may search their library for a creature card and put it onto the battlefield. then each player who searched their library ~ shuffle | 1 | Boldwyr Heavyweights | mor |
 | when ~ enters, if its prowl cost was paid, search target opponent's library for three cards and exile them. then that player shuffles. | 1 | Earwig Squad | mor |
 | when ~ enters, look at target player's hand. you may choose a nonland card from it. if you do, that player reveals the chosen card, puts it on the bottom of the | 1 | Vendilion Clique | mor |
@@ -222,13 +220,10 @@
 | whenever a goblin or rogue you control deals combat damage to a player, if ~ is in your graveyard, you may return ~ to your hand. | 1 | Auntie's Snitch | mor |
 | whenever another treefolk creature you control enters, you may gain life equal to that creature's toughness. | 1 | Orchard Warden | mor |
 | whenever ~ attacks, you may put a soldier creature card from your hand onto the battlefield tapped and attacking. | 1 | Preeminent Captain | mor |
-| whenever ~ becomes blocked, clash with an opponent. if you win, ~ deals N damage to each creature blocking it. | 1 | Fire Juggler | mor |
-| whenever ~ becomes tapped, exile the top three cards of target opponent's library face down. | 1 | Grimoire Thief | mor |
 | {M}: up to two target swamps each become N/N treefolk warrior creatures in addition to their other types until end of turn. | 1 | Fendeep Summoner | mor |
 | {M}{M}, remove a +N/+N counter from ~: target player searches their library for a basic land card, puts it onto the battlefield tapped, then shuffles. | 1 | Fertilid | mor |
 | {M}{M}, {M}: search your library for an equipment card, put it onto the battlefield, attach it to a creature you control, then shuffle. | 1 | Stonehewer Giant | mor |
 | {M}{M}, {M}: ~ deals N damage to any target and N damage to itself, where N is the number of elemental cards in your graveyard. | 1 | Sunflare Shaman | mor |
-| {M}{M}: put a +N/+N counter on enchanted creature. | 1 | Daily Regimen | mor |
 | ~ has haste as long as a warrior card is in your graveyard. | 1 | Vengeful Firebrand | mor |
 
 ## Notes

@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 28 | 12.1% |
-| Works (untested) | 126 | 54.3% |
+| Tested | 31 | 13.4% |
+| Works (untested) | 128 | 55.2% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 78 | 33.6% |
+| Not working | 73 | 31.5% |
 
 ## Cards needing work
 
@@ -28,12 +28,9 @@
 |---|---|---|---|---|---|
 | Adaptive Snapjaw | silent | Evolve | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Aetherize | silent | Return all attacking creatures to their owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Agoraphobia | silent | {2}{U}: Return this Aura to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Alms Beast | silent | Creatures blocking or blocked by this creature have lifelink. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Angelic Skirmisher | silent | At the beginning of each combat, choose first strike, vigilance, or lifelink. Creatures you control gain that ability until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Assemble the Legion | silent | At the beginning of your upkeep, put a muster counter on this enchantment. Then create a 1/1 red and white Soldier creature token with haste for each muster cou | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Balustrade Spy | silent | When this creature enters, target player reveals cards from the top of their library until they reveal a land card, then puts those cards into their graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Bane Alley Broker | silent | {T}: Draw a card, then exile a card from your hand face down. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Bioshift | silent | Move any number of +1/+1 counters from target creature onto another target creature with the same controller. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Call of the Nightwing | silent | Cipher | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Cartel Aristocrat | silent | Sacrifice another creature: This creature gains protection from the color of your choice until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -50,18 +47,16 @@
 | Elusive Krasis | silent | Evolve | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Enter the Infinite | silent | Draw cards equal to the number of cards in your library, then put a card from your hand on top of your library. You have no maximum hand size until your next tu | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Experiment One | silent | Remove two +1/+1 counters from this creature: Regenerate it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Fathom Mage | silent | Whenever a +1/+1 counter is put on this creature, you may draw a card. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
-| Forced Adaptation | silent | At the beginning of your upkeep, put a +1/+1 counter on enchanted creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
+| Fathom Mage | silent | Evolve | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Frontline Medic | silent | Sacrifice this creature: Counter target spell with {X} in its mana cost unless its controller pays {3}. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Gideon, Champion of Justice | silent | +1: Put a loyalty counter on Gideon for each creature target opponent controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Guardian of the Gateless | silent | Whenever this creature blocks, it gets +1/+1 until end of turn for each creature it's blocking. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Gyre Sage | silent | Evolve | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Hands of Binding | silent | Cipher | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Hellkite Tyrant | silent | Whenever this creature deals combat damage to a player, gain control of all artifacts that player controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Illusionist's Bracers | silent | Whenever an ability of equipped creature is activated, if it isn't a mana ability, copy that ability. You may choose new targets for the copy. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Incursion Specialist | silent | Whenever you cast your second spell each turn, this creature gets +2/+0 until end of turn and can't be blocked this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Last Thoughts | silent | Cipher | no machine in the engine executes this keyword | Y/Y/- | not_working |
-| Lazav, Dimir Mastermind | silent | Whenever a creature card is put into an opponent's graveyard from anywhere, you may have Lazav become a copy of that card, except its name is Lazav, Dimir Maste | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
+| Lazav, Dimir Mastermind | silent | Whenever a creature card is put into an opponent's graveyard from anywhere, you may have Lazav become a copy of that card, except its name is Lazav, Dimir Maste | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Lord of the Void | silent | Whenever this creature deals combat damage to a player, exile the top seven cards of that player's library, then put a creature card from among them onto the ba | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Master Biomancer | silent | Each other creature you control enters with a number of additional +1/+1 counters on it equal to this creature's power and as a Mutant in addition to its other  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Mental Vapors | silent | Cipher | no machine in the engine executes this keyword | Y/Y/- | not_working |
@@ -107,6 +102,7 @@
 | Alpha Authority | handled | Enchanted creature has hexproof and can't be blocked by more than one creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Angelic Edict | handled | Exile target creature or enchantment. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Arrows of Justice | handled | Arrows of Justice deals 4 damage to target attacking or blocking creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Assemble the Legion | handled | At the beginning of your upkeep, put a muster counter on this enchantment. Then create a 1/1 red and white Soldier creature token with haste for each muster cou | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Aurelia, the Warleader | handled | Whenever Aurelia attacks for the first time each turn, untap all creatures you control. After this phase, there is an additional combat phase. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Basilica Guards | handled | Extort | machines/keywords.py | Y/Y/- | not_tested |
 | Basilica Screecher | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
@@ -136,6 +132,7 @@
 | Firefist Striker | handled | Battalion — Whenever this creature and at least two other creatures attack, target creature can't block this turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Firemane Avenger | handled | Battalion — Whenever this creature and at least two other creatures attack, this creature deals 3 damage to any target and you gain 3 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Five-Alarm Fire | handled | Whenever a creature you control deals combat damage, put a blaze counter on this enchantment. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Forced Adaptation | handled | At the beginning of your upkeep, put a +1/+1 counter on enchanted creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Fortress Cyclops | handled | Whenever this creature attacks, it gets +3/+0 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Foundry Champion | handled | When this creature enters, it deals damage to any target equal to the number of creatures you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Foundry Street Denizen | handled | Whenever another red creature you control enters, this creature gets +1/+0 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -234,11 +231,13 @@
 ## Fully supported
 
 <details>
-<summary>28 cards</summary>
+<summary>31 cards</summary>
 
 - Aerial Maneuver
+- Agoraphobia
 - Armored Transport
 - Aurelia's Fury
+- Bane Alley Broker
 - Biovisionary
 - Boros Guildgate
 - Boros Reckoner
@@ -248,6 +247,7 @@
 - Executioner's Swing
 - Glaring Spotlight
 - Gruul Guildgate
+- Guardian of the Gateless
 - Hindervines
 - Hold the Gates
 - Homing Lightning
@@ -272,15 +272,13 @@
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
 | cipher | 9 | Call of the Nightwing, Hands of Binding, Last Thoughts, Mental Vapors, Midnight Recovery | gtc |
-| evolve | 8 | Adaptive Snapjaw, Clinging Anemones, Cloudfin Raptor, Crocanura, Elusive Krasis | gtc |
+| evolve | 9 | Adaptive Snapjaw, Clinging Anemones, Cloudfin Raptor, Crocanura, Elusive Krasis | gtc |
 | Choose one | 3 | Dimir Charm, Gruul Charm, Orzhov Charm | gtc |
 | +N: look at the top card of your library. if it's a creature card, you may reveal it and put it into your hand. | 1 | Domri Rade | gtc |
 | +N: put a loyalty counter on gideon for each creature target opponent controls. | 1 | Gideon, Champion of Justice | gtc |
 | at the beginning of each combat, choose first strike, vigilance, or lifelink. creatures you control gain that ability until end of turn. | 1 | Angelic Skirmisher | gtc |
 | at the beginning of your end step, you may exile obzedat. if you do, return it to the battlefield under its owner's control at the beginning of your next upkeep | 1 | Obzedat, Ghost Council | gtc |
 | at the beginning of your upkeep, each player reveals the top card of their library, loses life equal to that card's mana value, then puts it into their hand. | 1 | Duskmantle Seer | gtc |
-| at the beginning of your upkeep, put a +N/+N counter on enchanted creature. | 1 | Forced Adaptation | gtc |
-| at the beginning of your upkeep, put a muster counter on ~. then create a N/N red and white soldier creature token with haste for each muster counter on ~. | 1 | Assemble the Legion | gtc |
 | choose target creature you control. you gain life equal to that creature's power plus its toughness. | 1 | Predator's Rapport | gtc |
 | counter target spell unless its controller pays {M}, where N is the greatest power among creatures you control. | 1 | Spell Rupture | gtc |
 | counter target spell. create an N/N green ooze creature token, where N is that spell's mana value. | 1 | Mystic Genesis | gtc |
@@ -311,22 +309,18 @@
 | when ~ enters, for each opponent, you may put up to one target creature card from that player's graveyard onto the battlefield under your control. | 1 | Sepulchral Primordial | gtc |
 | when ~ enters, pay any amount of life. target opponent reveals that many cards from their hand. you choose one of them and exile it. | 1 | Vizkopa Confessor | gtc |
 | when ~ enters, target player reveals cards from the top of their library until they reveal a land card, then puts those cards into their graveyard. | 1 | Balustrade Spy | gtc |
-| whenever a +N/+N counter is put on ~, you may draw a card. | 1 | Fathom Mage | gtc |
 | whenever a creature card is put into an opponent"..."s legendary in addition to its other types, and it has hexproof and ~. | 1 | Lazav, Dimir Mastermind | gtc |
 | whenever an ability of equipped creature is activated, if it isn't a mana ability, copy that ability. you may choose new targets for the copy. | 1 | Illusionist's Bracers | gtc |
 | whenever you cast a spell, each opponent reveals cards from the top of their library until they reveal a land card, then puts those cards into their graveyard. | 1 | Consuming Aberration | gtc |
 | whenever you cast your second spell each turn, ~ gets +N/+N until end of turn and can't be blocked ~. | 1 | Incursion Specialist | gtc |
 | whenever ~ attacks, put a +N/+N counter on it for each attacking creature you control. | 1 | Rubblebelt Raiders | gtc |
 | whenever ~ becomes blocked, defending player discards a card. | 1 | Slate Street Ruffian | gtc |
-| whenever ~ blocks, it gets +N/+N until end of turn for each creature it's blocking. | 1 | Guardian of the Gateless | gtc |
 | whenever ~ deals combat damage to a player, exile the top seven cards of that player's library, then put a creature card from among them onto the battlefield un | 1 | Lord of the Void | gtc |
 | whenever ~ deals combat damage to a player, gain control of all artifacts that player controls. | 1 | Hellkite Tyrant | gtc |
 | {M}, pay N life: remove a counter from target nonland permanent. | 1 | Thrull Parasite | gtc |
 | {M}, remove one or more +N/+N counters from ~: gain control of target creature with power less than or equal to the number of +N/+N counters removed ~. | 1 | Simic Manipulator | gtc |
 | {M}, sacrifice a creature: target player reveals cards from the top of their library until they reveal a land card, then puts those cards into their graveyard. | 1 | Undercity Informer | gtc |
-| {M}: draw a card, then exile a card from your hand face down. | 1 | Bane Alley Broker | gtc |
 | {M}{M}, remove one or more +N/+N counters from among creatures you control: create an N/N green ooze creature token, where N is the number of +N/+N counters rem | 1 | Ooze Flux | gtc |
-| {M}{M}: return ~ to its owner's hand. | 1 | Agoraphobia | gtc |
 | {M}{M}: ~ becomes a N/N blue and black horror artifact creature until end of turn and can't be blocked ~. | 1 | Dimir Keyrune | gtc |
 | {M}{M}: ~, each creature you control enters with an additional +N/+N counter on it. | 1 | Zameck Guildmage | gtc |
 | {M}{M}{M}: whenever a card is put into an opponent's graveyard from anywhere ~, that player loses N life. | 1 | Duskmantle Guildmage | gtc |

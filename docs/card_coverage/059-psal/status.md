@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 6 | 7.6% |
+| Tested | 7 | 8.9% |
 | Works (untested) | 59 | 74.7% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 14 | 17.7% |
+| Not working | 13 | 16.5% |
 
 ## Cards needing work
 
@@ -38,7 +38,6 @@
 | Sanguine Praetor | silent | {B}, Sacrifice a creature: Destroy each creature with the same mana value as the sacrificed creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Seht's Tiger | silent | When this creature enters, you gain protection from the color of your choice until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Wojek Apothecary | silent | Radiance — {T}: Prevent the next 1 damage that would be dealt to target creature and each other creature that shares a color with it this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Nacatl War-Pride | notice | Whenever this creature attacks, create X tokens that are copies of it and that are tapped and attacking, where X is the number of creatures defending player con | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Skyrider Trainee | notice | This creature has flying as long as it's enchanted. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Balduvian Rage | handled | Target attacking creature gets +X/+0 until end of turn. Draw a card at the beginning of the next turn's upkeep. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Carrion Howler | handled | Pay 1 life: This creature gets +2/-1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -103,12 +102,13 @@
 ## Fully supported
 
 <details>
-<summary>6 cards</summary>
+<summary>7 cards</summary>
 
 - Arctic Nishoba
 - Detainment Spell
 - Frenzied Goblin
 - Grifter's Blade
+- Nacatl War-Pride
 - Selesnya Sanctuary
 - Stalking Vengeance
 
@@ -128,7 +128,6 @@
 | whenever a source deals damage to ~, that source's controller mills that many cards. | 1 | Belltower Sphinx | psal |
 | whenever an aura becomes attached to ~, create two N/N green saproling creature tokens. | 1 | Bramble Elemental | psal |
 | whenever jedit ojanen attacks or blocks, create a N/N green cat warrior creature token with forestwalk. | 1 | Jedit Ojanen of Efrava | psal |
-| whenever ~ attacks, create N tokens that are copies of it and that are tapped and attacking, where N is the number of creatures defending player controls. exile | 1 | Nacatl War-Pride | psal |
 | {M}, sacrifice a creature: destroy each creature with the same mana value as the sacrificed creature. | 1 | Sanguine Praetor | psal |
 | {M}{M}: target creature can't block ~ ~. | 1 | Burning-Tree Bloodscale | psal |
 | ~ has flying as long as it's enchanted. | 1 | Skyrider Trainee | psal |

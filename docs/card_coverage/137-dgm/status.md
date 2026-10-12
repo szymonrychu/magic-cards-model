@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 24 | 16.8% |
-| Works (untested) | 76 | 53.1% |
+| Tested | 25 | 17.5% |
+| Works (untested) | 78 | 54.5% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 43 | 30.1% |
+| Not working | 40 | 28.0% |
 
 ## Cards needing work
 
@@ -41,8 +41,6 @@
 | Gruul War Chant | silent | Attacking creatures you control get +1/+0 and have menace. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Hidden Strings | silent | Cipher | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Hired Torturer | silent | {3}{B}, {T}: Target opponent loses 2 life, then reveals a card at random from their hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Jelenn Sphinx | silent | Whenever this creature attacks, other attacking creatures get +1/+1 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Krasis Incubation | silent | {1}{G}{U}, Return this Aura to its owner's hand: Put two +1/+1 counters on enchanted creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Lavinia of the Tenth | silent | When Lavinia enters, detain each nonland permanent your opponents control with mana value 4 or less. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Legion's Initiative | silent | {R}{W}, Exile this enchantment: Exile all creatures you control. At the beginning of the next combat, return those cards to the battlefield under their owner's  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Lyev Decree | silent | Detain up to two target creatures your opponents control. (Until your next turn, those creatures can't attack or block and their activated abilities can't be ac | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -63,7 +61,6 @@
 | Restore the Peace | silent | Return each creature that dealt damage this turn to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Scion of Vitu-Ghazi | silent | When this creature enters, if you cast it from your hand, create a 1/1 white Bird creature token with flying, then populate. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sinister Possession | silent | Whenever enchanted creature attacks or blocks, its controller loses 2 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Teysa, Envoy of Ghosts | silent | Whenever a creature deals combat damage to you, destroy that creature. Create a 1/1 white and black Spirit creature token with flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Trait Doctoring | silent | Change the text of target permanent by replacing all instances of one color word with another or one basic land type with another until end of turn. Cipher (The | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Vorel of the Hull Clade | silent | {G}{U}, {T}: Double the number of each kind of counter on target artifact, creature, or land. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Wake the Reflections | silent | Populate. (Create a token that's a copy of a creature token you control.) | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -97,6 +94,7 @@
 | Haazda Snare Squad | handled | Whenever this creature attacks, you may pay {W}. If you do, tap target creature an opponent controls. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Haunter of Nightveil | handled | Creatures your opponents control get -1/-0. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Izzet Cluestone | handled | {U}{R}, {T}, Sacrifice this artifact: Draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Jelenn Sphinx | handled | Whenever this creature attacks, other attacking creatures get +1/+1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Kraul Warrior | handled | {5}{G}: This creature gets +3/+3 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Maw of the Obzedat | handled | Sacrifice a creature: Creatures you control get +1/+1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Mending Touch | handled | Regenerate target creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -132,6 +130,7 @@
 | Steeple Roc | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
 | Sunspire Gatekeepers | handled | When this creature enters, if you control two or more Gates, create a 2/2 white Knight creature token with vigilance. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Tajic, Blade of the Legion | handled | Battalion — Whenever Tajic and at least two other creatures attack, Tajic gets +5/+5 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Teysa, Envoy of Ghosts | handled | Whenever a creature deals combat damage to you, destroy that creature. Create a 1/1 white and black Spirit creature token with flying. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Thrashing Mossdog | handled | Scavenge | machines/keywords.py (off_zone_abilities: scavenge) | Y/Y/- | not_tested |
 | Tithe Drinker | handled | Lifelink | machines/combat.py | Y/Y/- | not_tested |
 | Toil // Trouble | handled | Target player draws two cards and loses 2 life. Fuse (You may cast one or both halves of this card from your hand.) | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -149,7 +148,7 @@
 ## Fully supported
 
 <details>
-<summary>24 cards</summary>
+<summary>25 cards</summary>
 
 - Aetherling
 - Beck // Call
@@ -161,6 +160,7 @@
 - Emmara Tandris
 - Gleam of Battle
 - Korozda Gorgon
+- Krasis Incubation
 - Master of Cruelties
 - Maze's End
 - Melek, Izzet Paragon
@@ -211,18 +211,15 @@
 | when lavinia enters, detain each nonland permanent your opponents control with mana value N or less. | 1 | Lavinia of the Tenth | dgm |
 | when ~ enters, if you cast it from your hand, create a N/N white bird creature token with flying, then populate. | 1 | Scion of Vitu-Ghazi | dgm |
 | whenever a creature blocks, that creature's controller loses N life. | 1 | Carnage Gladiator | dgm |
-| whenever a creature deals combat damage to you, destroy that creature. create a N/N white and black spirit creature token with flying. | 1 | Teysa, Envoy of Ghosts | dgm |
 | whenever enchanted creature attacks or blocks, its controller loses N life. | 1 | Sinister Possession | dgm |
 | whenever mirko vosk deals combat damage to a player, that player reveals cards from the top of their library until they reveal four land cards, then puts those  | 1 | Mirko Vosk, Mind Drinker | dgm |
 | whenever one or more creatures you control deal combat damage to a player, if ~ is in your graveyard, you may pay {M}. if you do, return ~ to your hand. | 1 | Pyrewild Shaman | dgm |
 | whenever you cast an instant or sorcery spell, you may switch ~ power and toughness until end of turn. | 1 | Fluxcharger | dgm |
 | whenever you cast an instant or sorcery spell, ~ gets +N/+N until end of turn and can attack ~ as though it didn't have defender. | 1 | Nivix Cyclops | dgm |
-| whenever ~ attacks, other attacking creatures get +N/+N until end of turn. | 1 | Jelenn Sphinx | dgm |
 | whenever ~ evolves, put a +N/+N counter on each other creature you control with a +N/+N counter on it. | 1 | Renegade Krasis | dgm |
 | {M}{M}, exile ~: exile all creatures you control. at the beginning of the next combat, return those cards to the battlefield under their owner's control and tho | 1 | Legion's Initiative | dgm |
 | {M}{M}, {M}: double the number of each kind of counter on target artifact, creature, or land. | 1 | Vorel of the Hull Clade | dgm |
 | {M}{M}, {M}: target opponent loses N life, then reveals a card at random from their hand. | 1 | Hired Torturer | dgm |
-| {M}{M}{M}, return ~ to its owner's hand: put two +N/+N counters on enchanted creature. | 1 | Krasis Incubation | dgm |
 | −N: flip five coins. take an extra turn after ~ for each coin that comes up heads. | 1 | Ral Zarek | dgm |
 
 ## Notes

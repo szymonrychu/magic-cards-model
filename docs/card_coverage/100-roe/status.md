@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 46 | 20.9% |
-| Works (untested) | 130 | 59.1% |
+| Works (untested) | 131 | 59.5% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 44 | 20.0% |
+| Not working | 43 | 19.5% |
 
 ## Cards needing work
 
@@ -56,7 +56,6 @@
 | Spawnsire of Ulamog | silent | {20}: Cast any number of Eldrazi spells from among cards you own outside the game without paying their mana costs. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Suffer the Past | silent | Exile X target cards from target player's graveyard. For each card exiled this way, that player loses 1 life and you gain 1 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Surrakar Spellblade | silent | Whenever this creature deals combat damage to a player, you may draw X cards, where X is the number of charge counters on it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Surreal Memoir | silent | Return an instant card at random from your graveyard to your hand. Rebound (If you cast this spell from your hand, exile it as it resolves. At the beginning of  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Thought Gorger | silent | When this creature enters, put a +1/+1 counter on it for each card in your hand. If you do, discard your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Unified Will | silent | Counter target spell if you control more creatures than that spell's controller. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Valakut Fireboar | silent | Whenever this creature attacks, switch its power and toughness until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -189,6 +188,7 @@
 | Staggershock | handled | Staggershock deals 2 damage to any target. Rebound (If you cast this spell from your hand, exile it as it resolves. At the beginning of your next upkeep, you ma | the engine reads this text and performs it | Y/-/- | not_tested |
 | Stalwart Shield-Bearers | handled | Other creatures you control with defender get +0/+2. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Stomper Cub | handled | Trample | machines/combat.py | Y/-/- | not_tested |
+| Surreal Memoir | handled | Return an instant card at random from your graveyard to your hand. Rebound (If you cast this spell from your hand, exile it as it resolves. At the beginning of  | the engine reads this text and performs it | Y/-/- | not_tested |
 | Survival Cache | handled | You gain 2 life. Then if you have more life than an opponent, draw a card. Rebound (If you cast this spell from your hand, exile it as it resolves. At the begin | the engine reads this text and performs it | Y/-/- | not_tested |
 | Time of Heroes | handled | Each creature you control with a level counter on it gets +2/+2. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Totem-Guide Hartebeest | handled | When this creature enters, you may search your library for an Aura card, reveal it, put it into your hand, then shuffle. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -276,7 +276,6 @@
 | exile N target cards from target player's graveyard. for each card exiled ~, that player loses N life and you gain N life. | 1 | Suffer the Past | roe |
 | if you control an eldrazi spawn, create three N/N colorless eldrazi spawn creature tokens. they have "..." otherwise, create one of those tokens. | 1 | Brood Birthing | roe |
 | put target creature into its owner's library second from the top. its controller gains N life. | 1 | Oust | roe |
-| return an instant card at random from your graveyard to your hand. rebound (if you cast ~ from your hand, exile it as it resolves. at the beginning of your next | 1 | Surreal Memoir | roe |
 | sacrifice all creatures you control, then create that many N/N red hellion creature tokens. | 1 | Hellion Eruption | roe |
 | search your library for up to four land cards with different names and reveal them. an opponent chooses two of those cards. put the chosen cards into your grave | 1 | Realms Uncharted | roe |
 | target creature gets +N/+N until end of turn and can't be blocked ~. rebound (if you cast ~ from your hand, exile it as it resolves. at the beginning of your ne | 1 | Distortion Strike | roe |

@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 36 | 20.5% |
-| Works (untested) | 98 | 55.7% |
+| Tested | 37 | 21.0% |
+| Works (untested) | 97 | 55.1% |
 | Partial (unaudited) | 0 | 0.0% |
 | Not working | 42 | 23.9% |
 
@@ -158,7 +158,6 @@
 | Unholy Indenture | handled | When enchanted creature dies, return that card to the battlefield under your control with a +1/+1 counter on it. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Vampire of the Dire Moon | handled | Lifelink | machines/combat.py | Y/Y/- | not_tested |
 | Vengeful Warchief | handled | Whenever you lose life for the first time each turn, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Vilis, Broker of Blood | handled | {B}, Pay 2 life: Target creature gets -1/-1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Vivien's Crocodile | handled | This creature gets +1/+1 as long as you control a Vivien planeswalker. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Vivien, Nature's Avenger | handled | +1: Put three +1/+1 counters on up to one target creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Waterkin Shaman | handled | Whenever a creature you control with flying enters, this creature gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -170,7 +169,7 @@
 ## Fully supported
 
 <details>
-<summary>36 cards</summary>
+<summary>37 cards</summary>
 
 - Aether Gust
 - Agent of Treachery
@@ -204,6 +203,7 @@
 - Squad Captain
 - Tomebound Lich
 - Veil of Summer
+- Vilis, Broker of Blood
 - Vivien, Arkbow Ranger
 - Wakeroot Elemental
 - Wildfire Elemental

@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 30 | 18.8% |
+| Tested | 31 | 19.4% |
 | Works (untested) | 91 | 56.9% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 39 | 24.4% |
+| Not working | 38 | 23.8% |
 
 ## Cards needing work
 
@@ -34,7 +34,6 @@
 | Archetype of Imagination | silent | Creatures your opponents control lose flying and can't have or gain flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Brimaz, King of Oreskos | silent | Whenever Brimaz attacks, create a 1/1 white Cat Soldier creature token with vigilance that's attacking. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Eidolon of Countless Battles | silent | This creature and enchanted creature each get +1/+1 for each creature you control and +1/+1 for each Aura you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Ephara's Enlightenment | silent | When this Aura enters, put a +1/+1 counter on enchanted creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Fated Intervention | silent | Create two 3/3 green Centaur enchantment creature tokens. If it's your turn, scry 2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Fated Retribution | silent | Destroy all creatures and planeswalkers. If it's your turn, scry 2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Flame-Wreathed Phoenix | silent | When this creature enters, if tribute wasn't paid, it gains haste and "When this creature dies, return it to its owner's hand." | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -160,12 +159,13 @@
 ## Fully supported
 
 <details>
-<summary>30 cards</summary>
+<summary>31 cards</summary>
 
 - Acolyte's Reward
 - Archetype of Endurance
 - Courser of Kruphix
 - Deepwater Hypnotist
+- Ephara's Enlightenment
 - Ephara, God of the Polis
 - Fall of the Hammer
 - Fate Unraveler
@@ -223,7 +223,6 @@
 | until end of turn, target creature gains "..." | 1 | Retraction Helix | bng |
 | when ~ enters, if tribute wasn"..."s hand." | 1 | Flame-Wreathed Phoenix | bng |
 | when ~ enters, if tribute wasn't paid, you may cast an instant or sorcery spell from your hand without paying its mana cost. | 1 | Oracle of Bones | bng |
-| when ~ enters, put a +N/+N counter on enchanted creature. | 1 | Ephara's Enlightenment | bng |
 | whenever an opponent casts a spell, you may exchange control of ~ and that spell. if you do, you may choose new targets for the spell. | 1 | Perplexing Chimera | bng |
 | whenever brimaz attacks, create a N/N white cat soldier creature token with vigilance that's attacking. | 1 | Brimaz, King of Oreskos | bng |
 | whenever enchanted creature attacks, it gets +N/+N until end of turn, where N is your devotion to red. | 1 | Thunderous Might | bng |

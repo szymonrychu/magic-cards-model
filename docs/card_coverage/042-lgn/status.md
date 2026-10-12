@@ -18,20 +18,20 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 4 | 23.5% |
-| Works (untested) | 9 | 52.9% |
+| Works (untested) | 10 | 58.8% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 4 | 23.5% |
+| Not working | 3 | 17.6% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
 | Dreamborn Muse | silent | At the beginning of each player's upkeep, that player mills X cards, where X is the number of cards in their hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Essence Sliver | silent | Whenever a Sliver deals damage, its controller gains that much life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Graveborn Muse | silent | At the beginning of your upkeep, you draw X cards and lose X life, where X is the number of Zombies you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Phage the Untouchable | silent | Whenever Phage deals combat damage to a creature, destroy that creature. It can't be regenerated. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Akroma, Angel of Wrath | handled | Flying | machines/combat.py | Y/-/- | not_tested |
 | Enormous Baloth | handled |  |  | Y/-/- | not_tested |
+| Essence Sliver | handled | Whenever a Sliver deals damage, its controller gains that much life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Flamewave Invoker | handled | {7}{R}: This creature deals 5 damage to target player or planeswalker. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Krosan Cloudscraper | handled | At the beginning of your upkeep, sacrifice this creature unless you pay {G}{G}. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Merchant of Secrets | handled | When this creature enters, draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -58,7 +58,6 @@
 |---|---|---|---|
 | at the beginning of each player's upkeep, that player mills N cards, where N is the number of cards in their hand. | 1 | Dreamborn Muse | lgn |
 | at the beginning of your upkeep, you draw N cards and lose N life, where N is the number of zombies you control. | 1 | Graveborn Muse | lgn |
-| whenever a sliver deals damage, its controller gains that much life. | 1 | Essence Sliver | lgn |
 | whenever phage deals combat damage to a creature, destroy that creature. it can't be regenerated. | 1 | Phage the Untouchable | lgn |
 
 ## Notes

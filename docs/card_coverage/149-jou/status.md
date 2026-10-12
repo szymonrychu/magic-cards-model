@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 20 | 12.4% |
+| Tested | 21 | 13.0% |
 | Works (untested) | 103 | 64.0% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 38 | 23.6% |
+| Not working | 37 | 23.0% |
 
 ## Cards needing work
 
@@ -29,7 +29,6 @@
 | Armament of Nyx | silent | Enchanted creature has double strike as long as it's an enchantment. Otherwise, prevent all damage that would be dealt by enchanted creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Athreos, God of Passage | silent | Whenever another creature you own dies, return it to your hand unless target opponent pays 3 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Blinding Flare | silent | Strive — This spell costs {R} more to cast for each target beyond the first. Any number of target creatures can't block this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Bloodcrazed Hoplite | silent | Whenever a +1/+1 counter is put on this creature, remove a +1/+1 counter from target creature an opponent controls. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Brain Maggot | silent | When this creature enters, target opponent reveals their hand and you choose a nonland card from it. Exile that card until this creature leaves the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Countermand | silent | Counter target spell. Its controller mills four cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Dakra Mystic | silent | {U}, {T}: Each player reveals the top card of their library. You may put the revealed cards into their owners' graveyards. If you don't, each player draws a car | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -171,11 +170,12 @@
 ## Fully supported
 
 <details>
-<summary>20 cards</summary>
+<summary>21 cards</summary>
 
 - Aegis of the Gods
 - Aerial Formation
 - Battlefield Thaumaturge
+- Bloodcrazed Hoplite
 - Deserter's Quarters
 - Godhunter Octopus
 - Godsend
@@ -222,7 +222,6 @@
 | when ~ enters, put target creature into its owner's library just beneath the top N cards of that library, where N is the number of plains you control. | 1 | Quarry Colossus | jou |
 | when ~ enters, return each creature your opponents control with toughness N or less to its owner's hand, where N is the number of islands you control. | 1 | Scourge of Fleets | jou |
 | when ~ enters, target opponent reveals their hand and you choose a nonland card from it. exile that card until ~ leaves the battlefield. | 1 | Brain Maggot | jou |
-| whenever a +N/+N counter is put on ~, remove a +N/+N counter from target creature an opponent controls. | 1 | Bloodcrazed Hoplite | jou |
 | whenever another creature you own dies, return it to your hand unless target opponent pays N life. | 1 | Athreos, God of Passage | jou |
 | {M}, {M}: each player reveals the top card of their library. you may put the revealed cards into their owners"..."t, each player draws a card. | 1 | Dakra Mystic | jou |
 | {M}{M}, sacrifice ~: create a N/N green spider enchantment creature token with reach. | 1 | Renowned Weaver | jou |

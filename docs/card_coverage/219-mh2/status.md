@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 63 | 24.4% |
-| Works (untested) | 138 | 53.5% |
+| Tested | 65 | 25.2% |
+| Works (untested) | 143 | 55.4% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 57 | 22.1% |
+| Not working | 50 | 19.4% |
 
 ## Cards needing work
 
@@ -30,7 +30,6 @@
 | Altar of the Goyf | silent | Whenever a creature you control attacks alone, it gets +X/+X until end of turn, where X is the number of card types among cards in all graveyards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Arcbound Shikari | silent | When this creature enters, put a +1/+1 counter on each other artifact creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Bannerhide Krushok | silent | Reinforce | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Batterbone | silent | Living weapon | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Bottle Golems | silent | When this creature dies, you gain life equal to its power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Break Ties | silent | Reinforce | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Break the Ice | silent | Overload | no machine in the engine executes this keyword | Y/-/- | not_working |
@@ -39,7 +38,6 @@
 | Chef's Kiss | silent | Gain control of target spell that targets only a single permanent or player. Copy it, then reselect the targets at random for the spell and the copy. The new ta | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Chitterspitter | silent | Squirrels you control get +1/+1 for each acorn counter on this artifact. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Chrome Courier | silent | When this creature enters, reveal the top two cards of your library. Put one of them into your hand and the other into your graveyard. If you put an artifact ca | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Dakkon, Shadow Slayer | silent | −6: You may put an artifact card from your hand or graveyard onto the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Damn | silent | Destroy target creature. A creature destroyed this way can't be regenerated. Overload {2}{W}{W} (You may cast this spell for its overload cost. If you do, chang | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Dihada's Ploy | silent | Jump | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Discerning Taste | silent | Look at the top four cards of your library. Put one of them into your hand and the rest into your graveyard. You gain life equal to the greatest power among cre | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -52,8 +50,6 @@
 | Goblin Traprunner | silent | Whenever this creature attacks, flip three coins. For each flip you win, create a 1/1 red Goblin creature token that's tapped and attacking. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Ignoble Hierarch | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Inevitable Betrayal | silent | Suspend 3—{1}{U}{U} (Rather than cast this card from your hand, pay {1}{U}{U} and exile it with three time counters on it. At the beginning of your upkeep, remo | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Jade Avenger | silent | Bushido | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Kaldra Compleat | silent | Living weapon | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Landscaper Colos | silent | When this creature enters, put target card from an opponent's graveyard on the bottom of their library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Loathsome Curator | silent | When this creature exploits a creature, destroy target creature you don't control with mana value 3 or less. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Lonis, Cryptozoologist | silent | {T}, Sacrifice X Clues: Target opponent reveals the top X cards of their library. You may put a nonland permanent card with mana value X or less from among them | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -65,14 +61,11 @@
 | Rise and Shine | silent | Overload | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Scour the Desert | silent | Exile target creature card from your graveyard. Create X 1/1 white Bird creature tokens with flying, where X is the exiled card's toughness. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Scurry Oak | silent | Evolve | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Search the Premises | silent | Whenever a creature attacks you or a planeswalker you control, investigate. | this trigger's condition can never be satisfied - it never triggers | Y/-/- | not_working |
 | Shattered Ego | silent | {3}{U}{U}: Put enchanted creature into its owner's library third from the top. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sojourner's Companion | silent | Affinity for artifacts Artifact landcycling {2} ({2}, Discard this card: Search your library for an artifact land card, reveal it, put it into your hand, then s | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sword of Hearth and Home | silent | Whenever equipped creature deals combat damage to a player, exile up to one target creature you own, then search your library for a basic land card. Put both ca | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Tavern Scoundrel | silent | Whenever you win a coin flip, create two Treasure tokens. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Tide Shaper | silent | When this creature enters, if it was kicked, target land becomes an Island for as long as this creature remains on the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Timeless Dragon | silent | Eternalize | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Timeless Witness | silent | Eternalize | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Tourach's Canticle | silent | Target opponent reveals their hand. You choose a card from it. That player discards that card, then discards a card at random. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Tourach, Dread Cantor | silent | When Tourach enters, if it was kicked, target opponent discards two cards at random. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Underworld Hermit | silent | When this creature enters, create a number of 1/1 green Squirrel creature tokens equal to your devotion to black. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -91,6 +84,7 @@
 | Arcbound Whelp | handled | {R}: This creature gets +1/+0 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Archfiend of Sorrows | handled | When this creature enters, creatures your opponents control get -2/-2 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Barbed Spike | handled | When this Equipment enters, create a 1/1 colorless Thopter artifact creature token with flying, then attach this Equipment to it. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Batterbone | handled | Equipped creature gets +1/+1 and has vigilance and lifelink. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Battle Plan | handled | At the beginning of combat on your turn, target creature you control gets +2/+0 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Bone Shards | handled | As an additional cost to cast this spell, sacrifice a creature or discard a card. Destroy target creature or planeswalker. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Brainstone | handled | {2}, {T}, Sacrifice this artifact: Draw three cards, then put two cards from your hand on top of your library in any order. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -140,8 +134,10 @@
 | Healer's Flock | handled | Flying | machines/combat.py | Y/-/- | not_tested |
 | Hell Mongrel | handled | Discard a card: This creature gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Herd Baloth | handled | Whenever one or more +1/+1 counters are put on this creature, you may create a 4/4 green Beast creature token. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Jade Avenger | handled | Bushido | machines/keywords.py | Y/-/- | not_tested |
 | Jewel-Eyed Cobra | handled | When this creature dies, create a Treasure token. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Junk Winder | handled | Whenever a token you control enters, tap target nonland permanent an opponent controls. It doesn't untap during its controller's next untap step. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Kaldra Compleat | handled | Equipped creature gets +5/+5 and has first strike, trample, indestructible, haste, and "Whenever this creature deals combat damage to a creature, exile that cre | the engine reads this text and performs it | Y/-/- | not_tested |
 | Kitchen Imp | handled | Flying | machines/combat.py | Y/-/- | not_tested |
 | Knighted Myr | handled | {2}{W}: Adapt 1. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Late to Dinner | handled | Return target creature card from your graveyard to the battlefield. Create a Food token. (It's an artifact with "{2}, {T}, Sacrifice this token: You gain 3 life | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -209,6 +205,8 @@
 | Thornglint Bridge | handled | This land enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Thought Monitor | handled | When this creature enters, draw two cards. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Thraben Watcher | handled | Other nontoken creatures you control get +1/+1 and have vigilance. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Timeless Dragon | handled | Flying | machines/combat.py | Y/-/- | not_tested |
+| Timeless Witness | handled | When this creature enters, return target card from your graveyard to your hand. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Titania, Protector of Argoth | handled | When Titania enters, return target land card from your graveyard to the battlefield. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Tormod's Cryptkeeper | handled | {T}, Sacrifice this creature: Exile target player's graveyard. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Tragic Fall | handled | Target creature gets -3/-3 until end of turn. Hellbent — That creature gets -13/-13 until end of turn instead if you have no cards in hand. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -225,7 +223,7 @@
 ## Fully supported
 
 <details>
-<summary>63 cards</summary>
+<summary>65 cards</summary>
 
 - Abiding Grace
 - Academy Manufactor
@@ -240,6 +238,7 @@
 - Breathless Knight
 - Carth the Lion
 - Chatterfang, Squirrel General
+- Dakkon, Shadow Slayer
 - Dauthi Voidwalker
 - Dermotaxi
 - Dragon's Rage Channeler
@@ -270,6 +269,7 @@
 - Rustvale Bridge
 - Sanctifier en-Vec
 - Scion of Draco
+- Search the Premises
 - Serra's Emissary
 - Skyblade's Boon
 - Solitude
@@ -298,12 +298,9 @@
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
 | reinforce | 3 | Bannerhide Krushok, Break Ties, Wren's Run Hydra | mh2 |
-| eternalize | 2 | Timeless Dragon, Timeless Witness | mh2 |
-| living weapon | 2 | Batterbone, Kaldra Compleat | mh2 |
 | overload | 2 | Break the Ice, Rise and Shine | mh2 |
 | affinity for artifacts artifact landcycling {M} ({M}, discard ~: search your library for an artifact land card, reveal it, put it into your hand, then shuffle.) | 1 | Sojourner's Companion | mh2 |
 | at the beginning of combat on your turn, you may discard a card. when you do, ~ deals N damage to any target, where N is the number of card types the discarded  | 1 | Mount Velus Manticore | mh2 |
-| bushido | 1 | Jade Avenger | mh2 |
 | destroy target creature. a creature destroyed ~ can't be regenerated. overload {M}{M}{M} (you may cast ~ for its overload cost. if you do, change "..." in its t | 1 | Damn | mh2 |
 | discard a card: switch ~ power and toughness until end of turn. | 1 | Aeromoeba | mh2 |
 | discard a card: you may cast a creature spell from your graveyard ~. activate only once each turn. | 1 | Chainer, Nightmare Adept | mh2 |
@@ -336,7 +333,6 @@
 | when ~ enters, untap all creatures, then those creatures phase out until ~ leaves the battlefield. put a time counter on ~ for each creature that phased out ~. | 1 | Out of Time | mh2 |
 | when ~ enters, you may exile two cards from your graveyard. when you do, return target creature card from your graveyard to the battlefield. | 1 | Young Necromancer | mh2 |
 | when ~ exploits a creature, destroy target creature you don't control with mana value N or less. | 1 | Loathsome Curator | mh2 |
-| whenever a creature attacks you or a planeswalker you control, investigate. | 1 | Search the Premises | mh2 |
 | whenever a creature you control attacks alone, it gets +N/+N until end of turn, where N is the number of card types among cards in all graveyards. | 1 | Altar of the Goyf | mh2 |
 | whenever an opponent casts their first noncreature spell each turn, draw a card unless that player pays {M}, where N is ~ power. | 1 | Esper Sentinel | mh2 |
 | whenever equipped creature deals combat damage to a player, exile up to one target creature you own, then search your library for a basic land card. put both ca | 1 | Sword of Hearth and Home | mh2 |
@@ -348,7 +344,6 @@
 | {M}: choose a card name that hasn't been chosen from among disenchant, braingeyser, terror, shivan dragon, regrowth, and black lotus. create a copy of the card  | 1 | Garth One-Eye | mh2 |
 | {M}{M}{M}: put enchanted creature into its owner's library third from the top. | 1 | Shattered Ego | mh2 |
 | −N: gain control of each permanent with a corruption counter on it. | 1 | Geyadrone Dihada | mh2 |
-| −N: you may put an artifact card from your hand or graveyard onto the battlefield. | 1 | Dakkon, Shadow Slayer | mh2 |
 
 ## Notes
 

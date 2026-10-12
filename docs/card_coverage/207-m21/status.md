@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 32 | 17.6% |
-| Works (untested) | 109 | 59.9% |
+| Tested | 35 | 19.2% |
+| Works (untested) | 110 | 60.4% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 41 | 22.5% |
+| Not working | 37 | 20.3% |
 
 ## Cards needing work
 
@@ -30,8 +30,6 @@
 | Basri Ket | silent | −2: Whenever one or more nontoken creatures attack this turn, create that many 1/1 white Soldier creature tokens that are tapped and attacking. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Canopy Stalker | silent | When this creature dies, you gain 1 life for each creature that died this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Chandra's Firemaw | silent | When this creature enters, you may search your library and/or graveyard for a card named Chandra, Flame's Catalyst, reveal it, and put it into your hand. If you | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Chandra's Incinerator | silent | Whenever a source you control deals noncombat damage to an opponent, this creature deals that much damage to target creature or planeswalker that player control | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
-| Chandra's Pyreling | silent | Whenever a source you control deals noncombat damage to an opponent, this creature gets +1/+0 and gains double strike until end of turn. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Chandra, Flame's Catalyst | silent | −8: Discard your hand, then draw seven cards. Until end of turn, you may cast spells from your hand without paying their mana costs. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Chandra, Heart of Fire | silent | +1: Discard your hand, then exile the top three cards of your library. Until end of turn, you may play cards exiled this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Conclave Mentor | silent | When this creature dies, you gain life equal to its power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -45,7 +43,6 @@
 | Gloom Sower | silent | Whenever this creature becomes blocked by a creature, that creature's controller loses 2 life and you gain 2 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Gnarled Sage | silent | As long as you've drawn two or more cards this turn, this creature gets +0/+2 and has vigilance. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Goremand | silent | When this creature enters, each opponent sacrifices a creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Hooded Blightfang | silent | Whenever a creature you control with deathtouch deals damage to a planeswalker, destroy that planeswalker. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Idol of Endurance | silent | When this artifact enters, exile all creature cards with mana value 3 or less from your graveyard until this artifact leaves the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Liliana's Scrounger | silent | At the beginning of each end step, if a creature died this turn, you may put a loyalty counter on a Liliana planeswalker you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Liliana, Death Mage | silent | −7: Target opponent loses 2 life for each creature card in their graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -56,7 +53,6 @@
 | Siege Striker | silent | Whenever this creature attacks, you may tap any number of untapped creatures you control. This creature gets +1/+1 until end of turn for each creature tapped th | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Teferi's Wavecaster | silent | When this creature enters, you may search your library and/or graveyard for a card named Teferi, Timeless Voyager, reveal it, and put it into your hand. If you  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Teferi, Timeless Voyager | silent | −8: Each creature target opponent controls phases out. Until the end of your next turn, they can't phase in. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Terror of the Peaks | silent | Whenever another creature you control enters, this creature deals damage equal to that creature's power to any target. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Unleash Fury | silent | Double the power of target creature until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Warded Battlements | silent | Attacking creatures you control get +1/+0. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Alchemist's Gift | notice | Target creature gets +1/+1 and gains your choice of deathtouch or lifelink until end of turn. (Any amount of damage a creature with deathtouch deals to a creatu | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -84,6 +80,7 @@
 | Burlfist Oak | handled | Whenever you draw a card, this creature gets +2/+2 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Caged Zombie | handled | {1}{B}, {T}: Each opponent loses 2 life. Activate only if a creature died this turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Chandra's Magmutt | handled | {T}: This creature deals 1 damage to target player or planeswalker. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Chandra's Pyreling | handled | Whenever a source you control deals noncombat damage to an opponent, this creature gets +1/+0 and gains double strike until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Daybreak Charger | handled | When this creature enters, target creature gets +2/+0 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Dire Fleet Warmonger | handled | At the beginning of combat on your turn, you may sacrifice another creature. If you do, this creature gets +2/+2 and gains trample until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Double Vision | handled | Whenever you cast your first instant or sorcery spell each turn, copy that spell. You may choose new targets for the copy. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -180,13 +177,14 @@
 ## Fully supported
 
 <details>
-<summary>32 cards</summary>
+<summary>35 cards</summary>
 
 - Archfiend's Vessel
 - Barrin, Tolarian Archmage
 - Basri's Lieutenant
 - Basri's Solidarity
 - Celestial Enforcer
+- Chandra's Incinerator
 - Chromatic Orrery
 - Chrome Replicator
 - Conspicuous Snoop
@@ -194,6 +192,7 @@
 - Elder Gargaroth
 - Enthralling Hold
 - Griffin Aerie
+- Hooded Blightfang
 - Kinetic Augur
 - Leafkin Avenger
 - Liliana's Standard Bearer
@@ -211,6 +210,7 @@
 - Soul Sear
 - Speaker of the Heavens
 - Teferi, Master of Time
+- Terror of the Peaks
 - Track Down
 - Vito, Thorn of the Dusk Rose
 - Waker of Waves
@@ -250,10 +250,6 @@
 | when ~ enters, you may search your library and/or graveyard for a card named garruk, savage herald, reveal it, and put it into your hand. if you search your lib | 1 | Garruk's Warsteed | m21 |
 | when ~ enters, you may search your library and/or graveyard for a card named teferi, timeless voyager, reveal it, and put it into your hand. if you search your  | 1 | Teferi's Wavecaster | m21 |
 | when ~ enters, you may search your library for a card named alpine watchdog and/or a card named igneous cur, reveal them, put them into your hand, then shuffle. | 1 | Alpine Houndmaster | m21 |
-| whenever a creature you control with deathtouch deals damage to a planeswalker, destroy that planeswalker. | 1 | Hooded Blightfang | m21 |
-| whenever a source you control deals noncombat damage to an opponent, ~ deals that much damage to target creature or planeswalker that player controls. | 1 | Chandra's Incinerator | m21 |
-| whenever a source you control deals noncombat damage to an opponent, ~ gets +N/+N and gains double strike until end of turn. | 1 | Chandra's Pyreling | m21 |
-| whenever another creature you control enters, ~ deals damage equal to that creature's power to any target. | 1 | Terror of the Peaks | m21 |
 | whenever ~ attacks, you may tap any number of untapped creatures you control. ~ gets +N/+N until end of turn for each creature tapped ~. | 1 | Siege Striker | m21 |
 | whenever ~ becomes blocked by a creature, that creature's controller loses N life and you gain N life. | 1 | Gloom Sower | m21 |
 | whenever ~ deals combat damage to a player or planeswalker, look at that many cards from the top of your library. you may reveal a creature card or garruk plane | 1 | Garruk's Harbinger | m21 |

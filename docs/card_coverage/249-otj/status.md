@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 42 | 16.2% |
-| Works (untested) | 135 | 52.1% |
+| Tested | 45 | 17.4% |
+| Works (untested) | 136 | 52.5% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 82 | 31.7% |
+| Not working | 78 | 30.1% |
 
 ## Cards needing work
 
@@ -34,7 +34,6 @@
 | At Knifepoint | silent | During your turn, outlaws you control have first strike. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Binding Negotiation | silent | Target opponent reveals their hand. You may choose a nonland card from it. If you do, they discard it. Otherwise, you may put a face-up exiled card they own int | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Boneyard Desecrator | silent | {1}{B}, Sacrifice another creature: Put a +1/+1 counter on this creature. If an outlaw was sacrificed this way, create a Treasure token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Bonny Pall, Clearcutter | silent | Whenever you attack, draw a card, then you may put a land card from your hand or graveyard onto the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Boom Box | silent | {6}, {T}, Sacrifice this artifact: Destroy up to one target artifact, up to one target creature, and up to one target land. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Bounding Felidar | silent | Whenever this creature attacks while saddled, put a +1/+1 counter on each other creature you control. You gain 1 life for each of those creatures. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Bristlepack Sentry | silent | As long as you control a creature with power 4 or greater, this creature can attack as though it didn't have defender. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -44,7 +43,6 @@
 | Claim Jumper | silent | When this creature enters, if an opponent controls more lands than you, you may search your library for a Plains card and put it onto the battlefield tapped. Th | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Eriette, the Beguiler | silent | Whenever an Aura you control becomes attached to a nonland permanent an opponent controls with mana value less than or equal to that Aura's mana value, gain con | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
 | Ertha Jo, Frontier Mentor | silent | Whenever you activate an ability that targets a creature or player, copy that ability. You may choose new targets for the copy. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
-| Fblthp, Lost on the Range | silent | Plot | no machine in the engine executes this keyword | Y/Y/Y | not_working |
 | Geralf, the Fleshwright | silent | Whenever a Zombie you control enters, put a +1/+1 counter on it for each other Zombie that entered the battlefield under your control this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Hellspur Posse Boss | silent | Other outlaws you control have haste. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Hollow Marauder | silent | When this creature enters, any number of target opponents each discard a card. For each of those opponents who didn't discard a card with mana value 4 or greate | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -52,7 +50,6 @@
 | Laughing Jasper Flint | silent | Creatures you control but don't own are Mercenaries in addition to their other types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Lazav, Familiar Stranger | silent | Whenever you commit a crime, put a +1/+1 counter on Lazav. Then you may exile a card from a graveyard. If a creature card was exiled this way, you may have Laza | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Longhorn Sharpshooter | silent | When this card becomes plotted, it deals 2 damage to any target. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
-| Luxurious Locomotive | silent | Whenever this Vehicle attacks, create a Treasure token for each creature that crewed it this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Magebane Lizard | silent | Whenever a player casts a noncreature spell, this creature deals damage to that player equal to the number of noncreature spells they've cast this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Make Your Own Luck | silent | Look at the top three cards of your library. You may exile a nonland card from among them. If you do, it becomes plotted. Put the rest into your hand. (You may  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Nurturing Pixie | silent | When this creature enters, return up to one target non-Faerie, nonland permanent you control to its owner's hand. If a permanent was returned this way, put a +1 | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -72,7 +69,6 @@
 | Resilient Roadrunner | silent | {3}: This creature can't be blocked this turn except by creatures with haste. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Shackle Slinger | silent | Whenever you cast your second spell each turn, choose target creature an opponent controls. If it's tapped, put a stun counter on it. Otherwise, tap it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Stubborn Burrowfiend | silent | Whenever this creature becomes saddled for the first time each turn, mill two cards, then this creature gets +X/+X until end of turn, where X is the number of c | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
-| Taii Wakeen, Perfect Shot | silent | Whenever a source you control deals noncombat damage to a creature equal to that creature's toughness, draw a card. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
 | The Key to the Vault | silent | Whenever equipped creature deals combat damage to a player, look at that many cards from the top of your library. You may exile a nonland card from among them.  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Tinybones Joins Up | silent | Whenever a legendary creature you control enters, any number of target players each mill a card and lose 1 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Tinybones, the Pickpocket | silent | Whenever Tinybones deals combat damage to a player, you may cast target nonland permanent card from that player's graveyard, and mana of any type can be spent t | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -224,6 +220,7 @@
 | Sterling Keykeeper | handled | {2}, {T}: Tap target non-Mount creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Sterling Supplier | handled | When this creature enters, put a +1/+1 counter on another target creature you control. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Stop Cold | handled | When this Aura enters, tap enchanted permanent. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Taii Wakeen, Perfect Shot | handled | Whenever a source you control deals noncombat damage to a creature equal to that creature's toughness, draw a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | This Town Ain't Big Enough | handled | This spell costs {3} less to cast if it targets a permanent you control. Return up to two target nonland permanents to their owners' hands. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Thunder Lasso | handled | When this Equipment enters, attach it to target creature you control. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Tomb Trawler | handled | {2}: Put target card from your graveyard on the bottom of your library. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -247,14 +244,16 @@
 ## Fully supported
 
 <details>
-<summary>42 cards</summary>
+<summary>45 cards</summary>
 
 - Armored Armadillo
 - Betrayal at the Vault
+- Bonny Pall, Clearcutter
 - Doc Aurlock, Grizzled Genius
 - Drover Grizzly
 - Duelist of the Mind
 - Dust Animus
+- Fblthp, Lost on the Range
 - Final Showdown
 - Forsaken Miner
 - Freestrider Commando
@@ -271,6 +270,7 @@
 - Lilah, Undefeated Slickshot
 - Lively Dirge
 - Loan Shark
+- Luxurious Locomotive
 - Magda, the Hoardmaster
 - Metamorphic Blast
 - Mine Raider
@@ -308,7 +308,6 @@
 | look at the top three cards of your library. you may exile a nonland card from among them. if you do, it becomes plotted. put the rest into your hand. (you may  | 1 | Make Your Own Luck | otj |
 | nontoken creatures you control have "..." | 1 | Ghired, Mirror of the Wilds | otj |
 | other outlaws you control have haste. | 1 | Hellspur Posse Boss | otj |
-| plot | 1 | Fblthp, Lost on the Range | otj |
 | sacrifice any number of permanents you control, then draw that many cards. plot {M}{M}{M} (you may pay {M}{M}{M} and exile ~ from your hand. cast it as a sorcer | 1 | Pitiless Carnage | otj |
 | search your library for up to two basic land cards and/or desert cards, put them onto the battlefield tapped, then shuffle. | 1 | Map the Frontier | otj |
 | spree (choose one or more additional costs.) + {M} — copy target instant spell, sorcery spell, activated ability, or triggered ability. you may choose new targe | 1 | Return the Favor | otj |
@@ -340,7 +339,6 @@
 | whenever a legendary creature you control enters, any number of target players each mill a card and lose N life. | 1 | Tinybones Joins Up | otj |
 | whenever a nontoken creature an opponent controls dies, you may pay {M}. if you do, return that card to the battlefield tapped under your control. it's a treasu | 1 | Vraska, the Silencer | otj |
 | whenever a player casts a noncreature spell, ~ deals damage to that player equal to the number of noncreature spells they've cast ~. | 1 | Magebane Lizard | otj |
-| whenever a source you control deals noncombat damage to a creature equal to that creature's toughness, draw a card. | 1 | Taii Wakeen, Perfect Shot | otj |
 | whenever a zombie you control enters, put a +N/+N counter on it for each other zombie that entered the battlefield under your control ~. | 1 | Geralf, the Fleshwright | otj |
 | whenever an aura you control becomes attached to a nonland permanent an opponent controls with mana value less than or equal to that aura's mana value, gain con | 1 | Eriette, the Beguiler | otj |
 | whenever another creature you control enters, put N +N/+N counters on it, where N is its power. | 1 | Railway Brawler | otj |
@@ -352,7 +350,6 @@
 | whenever the gitrog deals combat damage to a player, you may sacrifice a creature that saddled it ~. if you do, draw N cards, then put up to N land cards from y | 1 | The Gitrog, Ravenous Ride | otj |
 | whenever tinybones deals combat damage to a player, you may cast target nonland permanent card from that player's graveyard, and mana of any type can be spent t | 1 | Tinybones, the Pickpocket | otj |
 | whenever you activate an ability that targets a creature or player, copy that ability. you may choose new targets for the copy. | 1 | Ertha Jo, Frontier Mentor | otj |
-| whenever you attack, draw a card, then you may put a land card from your hand or graveyard onto the battlefield. | 1 | Bonny Pall, Clearcutter | otj |
 | whenever you cast a modal spell, choose up to N, where N is the number of times you chose a mode for that spell — • exile the top card of your library. until th | 1 | Riku of Many Paths | otj |
 | whenever you cast a spell from anywhere other than your hand, you may cast a permanent spell with equal or lesser mana value from your hand without paying its m | 1 | Kellan, the Kid | otj |
 | whenever you cast your second spell each turn, choose target creature an opponent controls. if it's tapped, put a stun counter on it. otherwise, tap it. | 1 | Shackle Slinger | otj |
@@ -365,7 +362,6 @@
 | whenever ~ attacks while saddled, double the number of +N/+N counters on target creature. | 1 | Ornery Tumblewagg | otj |
 | whenever ~ attacks while saddled, it gets +N/+N until end of turn. then you may return any number of creatures that saddled it ~ to their owner's hand. | 1 | Rambling Possum | otj |
 | whenever ~ attacks while saddled, put a +N/+N counter on each other creature you control. you gain N life for each of those creatures. | 1 | Bounding Felidar | otj |
-| whenever ~ attacks, create a treasure token for each creature that crewed it ~. | 1 | Luxurious Locomotive | otj |
 | whenever ~ attacks, reveal the top card of your library and put it into your hand. you lose life equal to that card"..."t saddled. otherwise, each opponent lose | 1 | Caustic Bronco | otj |
 | whenever ~ becomes saddled for the first time each turn, mill two cards, then ~ gets +N/+N until end of turn, where N is the number of creature cards in your gr | 1 | Stubborn Burrowfiend | otj |
 | whenever ~ deals combat damage to a player, target instant or sorcery card in your graveyard gains flashback until end of turn. the flashback cost is equal to i | 1 | Archmage's Newt | otj |

@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 67 | 26.9% |
-| Works (untested) | 128 | 51.4% |
+| Tested | 69 | 27.7% |
+| Works (untested) | 130 | 52.2% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 54 | 21.7% |
+| Not working | 50 | 20.1% |
 
 ## Cards needing work
 
@@ -32,7 +32,6 @@
 | Baneblade Scoundrel // Baneclaw Marauder | silent | Whenever this creature becomes blocked, each creature blocking it gets -1/-1 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Bereaved Survivor // Dauntless Avenger | silent | Whenever this creature attacks, return target creature card with mana value 2 or less from your graveyard to the battlefield tapped and attacking. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Blessed Defiance | silent | Target creature you control gets +2/+0 and gains lifelink until end of turn. When that creature dies this turn, create a 1/1 white Spirit creature token with fl | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Celestus Sanctifier | silent | Whenever day becomes night or night becomes day, look at the top two cards of your library. Put one of them into your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Curse of Surveillance | silent | At the beginning of enchanted player's upkeep, any number of target players other than that player each draw cards equal to the number of Curses attached to tha | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Deathbonnet Sprout // Deathbonnet Hulk | silent | At the beginning of your upkeep, you may exile a card from a graveyard. If a creature card was exiled this way, put a +1/+1 counter on this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Fading Hope | silent | Return target creature to its owner's hand. If its mana value was 3 or less, scry 1. (Look at the top card of your library. You may put that card on the bottom. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -50,9 +49,7 @@
 | Moonveil Regent | silent | Whenever you cast a spell, you may discard your hand. If you do, draw a card for each of that spell's colors. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Path to the Festival | silent | Search your library for a basic land card, put that card onto the battlefield tapped, then shuffle. Then if there are three or more basic land types among lands | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Primal Adversary | silent | When this creature enters, you may pay {1}{G} any number of times. When you pay this cost one or more times, put that many +1/+1 counters on this creature, then | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Sigarda's Splendor | silent | At the beginning of your upkeep, draw a card if your life total is greater than or equal to the last noted life total for this enchantment. Then note your life  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Siphon Insight | silent | Look at the top two cards of target opponent's library. Exile one of them face down and put the other on the bottom of that library. You may play the exiled car | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Slogurk, the Overslime | silent | Whenever a land card is put into your graveyard from anywhere, put a +1/+1 counter on Slogurk. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Spectral Adversary | silent | When this creature enters, you may pay {1}{U} any number of times. When you pay this cost one or more times, put that many +1/+1 counters on this creature, then | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sungold Sentinel | silent | Coven — {1}{W}: Choose a color. This creature gains hexproof from that color until end of turn and can't be blocked by creatures of that color this turn. Activa | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Tainted Adversary | silent | When this creature enters, you may pay {2}{B} any number of times. When you pay this cost one or more times, put that many +1/+1 counters on this creature, then | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -63,7 +60,6 @@
 | Tovolar, Dire Overlord // Tovolar, the Midnight Scourge | silent | At the beginning of your upkeep, if you control three or more Wolves and/or Werewolves, it becomes night. Then transform any number of Human Werewolves you cont | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Turn the Earth | silent | Choose up to three target cards in graveyards. The owners of those cards shuffle them into their libraries. You gain 2 life. Flashback {1}{G} (You may cast this | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Unnatural Growth | silent | At the beginning of each combat, double the power and toughness of each creature you control until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Vengeful Strangler // Strangling Grasp | silent | When this creature dies, return it to the battlefield transformed under your control attached to target creature or planeswalker an opponent controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Village Watch // Village Reavers | silent | Wolves and Werewolves you control have haste. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Willow Geist | silent | When this creature dies, you gain life equal to its power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Bloodline Culling | notice | Choose one — • Target creature gets -5/-5 until end of turn. • Creature tokens get -2/-2 until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -100,6 +96,7 @@
 | Cathar Commando | handled | {1}, Sacrifice this creature: Destroy target artifact or enchantment. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Cathar's Call | handled | Enchanted creature has vigilance and "At the beginning of your end step, create a 1/1 white Human creature token." | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Cathartic Pyre | handled | Choose one — • Cathartic Pyre deals 3 damage to target creature or planeswalker. • Discard up to two cards, then draw that many cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Celestus Sanctifier | handled | If it's neither day nor night, it becomes day as this creature enters. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Champion of the Perished | handled | Whenever another Zombie you control enters, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Clarion Cathars | handled | When this creature enters, create a 1/1 white Human creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Component Collector | handled | If it's neither day nor night, it becomes day as this creature enters. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -187,6 +184,7 @@
 | Sigardian Savior | handled | When this creature enters, if you cast it, return up to two target creature cards with mana value 2 or less from your graveyard to the battlefield. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Skaab Wrangler | handled | Tap three untapped creatures you control: Tap target creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Slaughter Specialist | handled | When this creature enters, each opponent creates a 1/1 white Human creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Slogurk, the Overslime | handled | Whenever a land card is put into your graveyard from anywhere, put a +1/+1 counter on Slogurk. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Smoldering Egg // Ashmouth Dragon | handled | Whenever you cast an instant or sorcery spell, put a number of ember counters on this creature equal to the amount of mana spent to cast that spell. Then if thi | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Snarling Wolf | handled | {1}{G}: This creature gets +2/+2 until end of turn. Activate only once each turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Soul-Guide Gryff | handled | When this creature enters, exile up to one target card from a graveyard. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -212,7 +210,7 @@
 ## Fully supported
 
 <details>
-<summary>67 cards</summary>
+<summary>69 cards</summary>
 
 - Augur of Autumn
 - Baithook Angler // Hook-Haunt Drifter
@@ -275,11 +273,13 @@
 - Search Party Captain
 - Secrets of the Key
 - Shipwreck Marsh
+- Sigarda's Splendor
 - Silver Bolt
 - Sludge Monster
 - Sunset Revelry
 - Tavern Ruffian // Tavern Smasher
 - Vampire Socialite
+- Vengeful Strangler // Strangling Grasp
 - Wrenn and Seven
 
 </details>
@@ -296,7 +296,6 @@
 | at the beginning of each combat, double the power and toughness of each creature you control until end of turn. | 1 | Unnatural Growth | mid |
 | at the beginning of each of your postcombat main phases, look at the top N cards of your library, where N is the total amount of life your opponents lost ~. exi | 1 | Florian, Voldaren Scion | mid |
 | at the beginning of enchanted player's upkeep, any number of target players other than that player each draw cards equal to the number of curses attached to tha | 1 | Curse of Surveillance | mid |
-| at the beginning of your upkeep, draw a card if your life total is greater than or equal to the last noted life total for ~. then note your life total. | 1 | Sigarda's Splendor | mid |
 | at the beginning of your upkeep, if you control three or more wolves and/or werewolves, it becomes night. then transform any number of human werewolves you cont | 1 | Tovolar, Dire Overlord // Tovolar, the Midnight Scourge | mid |
 | at the beginning of your upkeep, put all creature cards exiled with gisa onto the battlefield under your control. they gain decayed. | 1 | Gisa, Glorious Resurrector | mid |
 | at the beginning of your upkeep, you may exile a card from a graveyard. if a creature card was exiled ~, put a +N/+N counter on ~. | 1 | Deathbonnet Sprout // Deathbonnet Hulk | mid |
@@ -316,7 +315,6 @@
 | target creature gets +N/+N until end of turn. if it's a human, instead it gets +N/+N and gains indestructible until end of turn. | 1 | Flare of Faith | mid |
 | target creature you control gets +N/+N and gains lifelink until end of turn. when that creature dies ~, create a N/N white spirit creature token with flying. | 1 | Blessed Defiance | mid |
 | up to two target creatures can't block ~. flashback {M}{M} (you may cast ~ from your graveyard for its flashback cost. then exile it.) | 1 | Abandon the Post | mid |
-| when ~ dies, return it to the battlefield transformed under your control attached to target creature or planeswalker an opponent controls. | 1 | Vengeful Strangler // Strangling Grasp | mid |
 | when ~ dies, you gain life equal to its power. | 1 | Willow Geist | mid |
 | when ~ enters, create two N/N black zombie creature tokens with decayed. when you do, exile up to two target cards from graveyards. | 1 | Diregraf Horde | mid |
 | when ~ enters, each creature gets -N/-N until end of turn. | 1 | The Meathook Massacre | mid |
@@ -327,8 +325,6 @@
 | when ~ enters, you may pay {M}{M} any number of times. when you pay ~ one or more times, put that many +N/+N counters on ~, then up to that many target lands yo | 1 | Primal Adversary | mid |
 | when ~ enters, you may pay {M}{M} any number of times. when you pay ~ one or more times, put that many valor counters on ~. | 1 | Intrepid Adversary | mid |
 | when ~ enters, you may return another creature you control to its owner's hand. | 1 | Loyal Gryff | mid |
-| whenever a land card is put into your graveyard from anywhere, put a +N/+N counter on slogurk. | 1 | Slogurk, the Overslime | mid |
-| whenever day becomes night or night becomes day, look at the top two cards of your library. put one of them into your graveyard. | 1 | Celestus Sanctifier | mid |
 | whenever equipped creature dies, you may pay N life, where N is its power. if you do, draw N cards. | 1 | Mask of Griselbrand | mid |
 | whenever you attack, for each opponent, create a N/N white human creature token that's tapped and attacking that player or a planeswalker they control. | 1 | Adeline, Resplendent Cathar | mid |
 | whenever you cast a spell, you may discard your hand. if you do, draw a card for each of that spell's colors. | 1 | Moonveil Regent | mid |

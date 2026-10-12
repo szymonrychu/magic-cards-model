@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 50 | 18.2% |
-| Works (untested) | 147 | 53.6% |
+| Tested | 52 | 19.0% |
+| Works (untested) | 149 | 54.4% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 77 | 28.1% |
+| Not working | 73 | 26.6% |
 
 ## Cards needing work
 
@@ -29,7 +29,6 @@
 | Advice from the Fae | silent | ({2/U} can be paid with any two mana or with {U}. This card's mana value is 6.) Look at the top five cards of your library. If you control more creatures than e | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Aphotic Wisps | silent | Target creature becomes black and gains fear until end of turn. (It can't be blocked except by artifact creatures and/or black creatures.) Draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Augury Adept | silent | Whenever this creature deals combat damage to a player, reveal the top card of your library and put that card into your hand. You gain life equal to its mana va | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Biting Tether | silent | At the beginning of your upkeep, put a -1/-1 counter on enchanted creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Cauldron of Souls | silent | {T}: Choose any number of target creatures. Each of those creatures gains persist until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Cemetery Puca | silent | Whenever a creature dies, you may pay {1}. If you do, this creature becomes a copy of that creature, except it has this ability. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Counterbore | silent | Counter target spell. Search its controller's graveyard, hand, and library for all cards with the same name as that spell and exile them. Then that player shuff | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -44,7 +43,6 @@
 | Elsewhere Flask | silent | Sacrifice this artifact: Choose a basic land type. Each land you control becomes that type until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Faerie Swarm | silent | Faerie Swarm's power and toughness are each equal to the number of blue permanents you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Fate Transfer | silent | Move all counters from target creature onto another target creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Flourishing Defenses | silent | Whenever a -1/-1 counter is put on a creature, you may create a 1/1 green Elf Warrior creature token. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Fossil Find | silent | Return a card at random from your graveyard to your hand, then reorder your graveyard as you choose. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Fracturing Gust | silent | Destroy all artifacts and enchantments. You gain 2 life for each permanent destroyed this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Ghastlord of Fugue | silent | Whenever this creature deals combat damage to a player, that player reveals their hand. You choose a card from it. That player exiles that card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -72,10 +70,9 @@
 | Pale Wayfarer | silent | {2}{W}{W}, {Q}: Target creature gains protection from the color of its controller's choice until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Plague of Vermin | silent | Starting with you, each player may pay any amount of life. Repeat this process until no one pays life. Each player creates a 1/1 black Rat creature token for ea | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Prismwake Merrow | silent | When this creature enters, target permanent becomes the color or colors of your choice until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Prison Term | silent | Whenever a creature an opponent controls enters, you may attach this Aura to that creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Puca's Mischief | silent | At the beginning of your upkeep, you may exchange control of target nonland permanent you control and target nonland permanent an opponent controls with equal o | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Puresight Merrow | silent | {W/U}, {Q}: Look at the top card of your library. You may exile that card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Raking Canopy | silent | Whenever a creature with flying attacks you, this enchantment deals 4 damage to it. | this trigger's condition can never be satisfied - it never triggers | Y/-/- | not_working |
+| Raking Canopy | silent | Whenever a creature with flying attacks you, this enchantment deals 4 damage to it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Repel Intruders | silent | Create two 1/1 white Kithkin Soldier creature tokens if {W} was spent to cast this spell. Counter up to one target creature spell if {U} was spent to cast this  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Rhys the Redeemed | silent | {4}{G/W}{G/W}, {T}: For each creature token you control, create a token that's a copy of that creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Scuttlemutt | silent | {T}: Target creature becomes the color or colors of your choice until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -102,7 +99,6 @@
 | Isleback Spawn | notice | This creature gets +4/+8 as long as a library has twenty or fewer cards in it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Puppeteer Clique | notice | When this creature enters, put target creature card from an opponent's graveyard onto the battlefield under your control. It gains haste. At the beginning of yo | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | River's Grasp | notice | If {U} was spent to cast this spell, return up to one target creature to its owner's hand. If {B} was spent to cast this spell, target player reveals their hand | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Wicker Warcrawler | notice | Whenever this creature attacks or blocks, put a -1/-1 counter on it at end of combat. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Aethertow | handled | Put target attacking or blocking creature on top of its owner's library. Conspire (As you cast this spell, you may tap two untapped creatures you control that s | the engine reads this text and performs it | Y/-/- | not_tested |
 | Apothecary Initiate | handled | Whenever a player casts a white spell, you may pay {1}. If you do, you gain 1 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Armored Ascension | handled | Enchanted creature gets +1/+1 for each Plains you control and has flying. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -113,6 +109,7 @@
 | Barkshell Blessing | handled | Target creature gets +2/+2 until end of turn. Conspire (As you cast this spell, you may tap two untapped creatures you control that share a color with it. When  | the engine reads this text and performs it | Y/-/- | not_tested |
 | Barrenton Cragtreads | handled | This creature can't be blocked by red creatures. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Barrenton Medic | handled | {T}: Prevent the next 1 damage that would be dealt to any target this turn. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Biting Tether | handled | You control enchanted creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Blazethorn Scarecrow | handled | This creature has haste as long as you control a red creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Blight Sickle | handled | Equipped creature gets +1/+0 and has wither. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Blistering Dieflyn | handled | {B/R}: This creature gets +1/+0 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -244,6 +241,7 @@
 | Wanderbrine Rootcutters | handled | This creature can't be blocked by green creatures. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Wasp Lancer | handled | Flying | machines/combat.py | Y/-/- | not_tested |
 | Watchwing Scarecrow | handled | This creature has vigilance as long as you control a white creature. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Wicker Warcrawler | handled | Whenever this creature attacks or blocks, put a -1/-1 counter on it at end of combat. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Wildslayer Elves | handled | Wither | machines/combat.py | Y/-/- | not_tested |
 | Wilt-Leaf Cavaliers | handled | Vigilance | machines/combat.py | Y/-/- | not_tested |
 | Windbrisk Raptor | handled | Attacking creatures you control have lifelink. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -254,7 +252,7 @@
 ## Fully supported
 
 <details>
-<summary>50 cards</summary>
+<summary>52 cards</summary>
 
 - Beseech the Queen
 - Bloodshed Fever
@@ -272,6 +270,7 @@
 - Everlasting Torment
 - Faerie Macabre
 - Firespout
+- Flourishing Defenses
 - Gloomwidow
 - Godhead of Awe
 - Greater Auramancy
@@ -285,6 +284,7 @@
 - Mistveil Plains
 - Mossbridge Troll
 - Mystic Gate
+- Prison Term
 - Resplendent Mentor
 - Rite of Consumption
 - Rosheen Meanderer
@@ -318,7 +318,6 @@
 | as long as enchanted creature is blue, it gets +N/+N and can't be blocked. | 1 | Steel of the Godhead | shm |
 | at the beginning of each end step, each opponent loses life equal to the life they lost ~. | 1 | Wound Reflection | shm |
 | at the beginning of your upkeep, put a -N/-N counter on each nonblack creature. | 1 | Midnight Banshee | shm |
-| at the beginning of your upkeep, put a -N/-N counter on enchanted creature. | 1 | Biting Tether | shm |
 | at the beginning of your upkeep, remove a -N/-N counter from each creature you control. | 1 | Heartmender | shm |
 | at the beginning of your upkeep, you may exchange control of target nonland permanent you control and target nonland permanent an opponent controls with equal o | 1 | Puca's Mischief | shm |
 | choose three target nonenchantment permanents. destroy one of them at random. | 1 | Wild Swing | shm |
@@ -357,12 +356,9 @@
 | when ~ enters, target permanent becomes the color or colors of your choice until end of turn. | 1 | Prismwake Merrow | shm |
 | when ~ enters, you may discard your hand and draw cards equal to the damage dealt to target opponent ~. | 1 | Knollspine Dragon | shm |
 | when ~ enters, you may remove a counter from target permanent. | 1 | Medicine Runner | shm |
-| whenever a -N/-N counter is put on a creature, you may create a N/N green elf warrior creature token. | 1 | Flourishing Defenses | shm |
 | whenever a blue creature you control enters, you may have target player draw a card. | 1 | Dire Undercurrents | shm |
-| whenever a creature an opponent controls enters, you may attach ~ to that creature. | 1 | Prison Term | shm |
 | whenever a creature dies, you may pay {M}. if you do, ~ becomes a copy of that creature, except it has ~. | 1 | Cemetery Puca | shm |
 | whenever a creature with flying attacks you, ~ deals N damage to it. | 1 | Raking Canopy | shm |
-| whenever ~ attacks or blocks, put a -N/-N counter on it at end of combat. | 1 | Wicker Warcrawler | shm |
 | whenever ~ attacks, you may have target creature lose flying until end of turn. | 1 | Kinscaer Harpoonist | shm |
 | whenever ~ becomes untapped, you may have target player discard a card. | 1 | Hollowsage | shm |
 | whenever ~ deals N or more damage to an opponent, destroy target land that player controls. | 1 | Deus of Calamity | shm |

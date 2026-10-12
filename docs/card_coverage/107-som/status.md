@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 38 | 17.7% |
+| Tested | 39 | 18.1% |
 | Works (untested) | 136 | 63.3% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 41 | 19.1% |
+| Not working | 40 | 18.6% |
 
 ## Cards needing work
 
@@ -65,7 +65,6 @@
 | Viridian Revel | silent | Whenever an artifact is put into an opponent's graveyard from the battlefield, you may draw a card. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Flesh Allergy | notice | As an additional cost to cast this spell, sacrifice a creature. Destroy target creature. Its controller loses life equal to the number of creatures that died th | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Quicksilver Gargantuan | notice | You may have this creature enter as a copy of any creature on the battlefield, except it's 7/7. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Semblance Anvil | notice | Imprint — When this artifact enters, you may exile a nonland card from your hand. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Turn to Slag | notice | Turn to Slag deals 5 damage to target creature. Destroy all Equipment attached to that creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Abuna Acolyte | handled | {T}: Prevent the next 1 damage that would be dealt to any target this turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Accorder's Shield | handled | Equipped creature gets +0/+3 and has vigilance. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -207,7 +206,7 @@
 ## Fully supported
 
 <details>
-<summary>38 cards</summary>
+<summary>39 cards</summary>
 
 - Arc Trail
 - Argent Sphinx
@@ -236,6 +235,7 @@
 - Riddlesmith
 - Rust Tick
 - Rusted Relic
+- Semblance Anvil
 - Soul Parry
 - Spikeshot Elder
 - Steel Hellkite
@@ -254,7 +254,7 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| Imprint | 2 | Clone Shell, Semblance Anvil | som |
+| Imprint | 1 | Clone Shell | som |
 | as an additional cost to cast ~, sacrifice a creature. destroy target creature. its controller loses life equal to the number of creatures that died ~. | 1 | Flesh Allergy | som |
 | at the beginning of your upkeep, create a N/N white cat creature token for each equipment attached to kemba. | 1 | Kemba, Kha Regent | som |
 | at the beginning of your upkeep, you gain N life for each card in your hand. | 1 | Venser's Journal | som |

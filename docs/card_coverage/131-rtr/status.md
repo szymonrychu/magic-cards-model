@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 36 | 16.1% |
+| Tested | 37 | 16.5% |
 | Works (untested) | 110 | 49.1% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 78 | 34.8% |
+| Not working | 77 | 34.4% |
 
 ## Cards needing work
 
@@ -64,7 +64,6 @@
 | Horncaller's Chant | silent | Create a 4/4 green Rhino creature token with trample, then populate. (Create a token that's a copy of a creature token you control.) | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Inaction Injunction | silent | Detain target creature an opponent controls. (Until your next turn, that creature can't attack or block and its activated abilities can't be activated.) Draw a  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Isperia's Skywatch | silent | When this creature enters, detain target creature an opponent controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Isperia, Supreme Judge | silent | Whenever a creature attacks you or a planeswalker you control, you may draw a card. | this trigger's condition can never be satisfied - it never triggers | Y/Y/- | not_working |
 | Jace, Architect of Thought | silent | +1: Until your next turn, whenever a creature an opponent controls attacks, it gets -1/-0 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Jarad's Orders | silent | Search your library for up to two creature cards and reveal them. Put one into your hand and the other into your graveyard. Then shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Lyev Skyknight | silent | When this creature enters, detain target nonland permanent an opponent controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -218,7 +217,7 @@
 ## Fully supported
 
 <details>
-<summary>36 cards</summary>
+<summary>37 cards</summary>
 
 - Abrupt Decay
 - Ash Zealot
@@ -238,6 +237,7 @@
 - Grisly Salvage
 - Guttersnipe
 - Hypersonic Dragon
+- Isperia, Supreme Judge
 - Izzet Guildgate
 - Izzet Staticaster
 - Loxodon Smiter
@@ -300,7 +300,6 @@
 | when ~ enters, sacrifice it unless you return another creature you control to its owner's hand. | 1 | Faerie Impostor | rtr |
 | when ~ leaves the battlefield, return the exiled cards to the battlefield under their owner's control. | 1 | Detention Sphere | rtr |
 | when ~ leaves the battlefield, return the exiled cards to their owners' hands. | 1 | Angel of Serenity | rtr |
-| whenever a creature attacks you or a planeswalker you control, you may draw a card. | 1 | Isperia, Supreme Judge | rtr |
 | whenever a creature you control dies, put N +N/+N counters on target creature you control, where N is the power of the creature that died. | 1 | Death's Presence | rtr |
 | whenever a creature you don't control dies, return it to the battlefield under your control with an additional +N/+N counter on it at the beginning of the next  | 1 | Grave Betrayal | rtr |
 | whenever enchanted land becomes tapped, its controller mills three cards. | 1 | Chronic Flooding | rtr |

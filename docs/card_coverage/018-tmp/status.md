@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 14 | 24.6% |
-| Works (untested) | 32 | 56.1% |
+| Works (untested) | 33 | 57.9% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 11 | 19.3% |
+| Not working | 10 | 17.5% |
 
 ## Cards needing work
 
@@ -32,7 +32,6 @@
 | Jinxed Idol | silent | Sacrifice a creature: Target opponent gains control of this artifact. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Rathi Dragon | silent | When this creature enters, sacrifice it unless you sacrifice two Mountains. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Rootwater Matriarch | silent | {T}: Gain control of target creature for as long as that creature is enchanted. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Shimmering Wings | silent | {U}: Return this Aura to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Time Warp | silent | Target player takes an extra turn after this one. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Vhati il-Dal | silent | {T}: Until end of turn, target creature has base power 1 or base toughness 1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Whispers of the Muse | silent | Buyback | no machine in the engine executes this keyword | Y/-/- | not_working |
@@ -62,6 +61,7 @@
 | Sapphire Medallion | handled | Blue spells you cast cost {1} less to cast. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Scragnoth | handled | This spell can't be countered. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Sea Monster | handled | This creature can't attack unless defending player controls an Island. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Shimmering Wings | handled | Enchanted creature has flying. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Skyshroud Ranger | handled | {T}: You may put a land card from your hand onto the battlefield. Activate only as a sorcery. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Soltari Priest | handled | Shadow | machines/combat.py | Y/-/- | not_tested |
 | Staunch Defenders | handled | When this creature enters, you gain 4 life. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -104,7 +104,6 @@
 | when ~ enters, sacrifice it unless you sacrifice two mountains. | 1 | Rathi Dragon | tmp |
 | whenever a creature is dealt damage, destroy it. it can't be regenerated. | 1 | Death Pits of Rath | tmp |
 | {M}: gain control of target creature for as long as that creature is enchanted. | 1 | Rootwater Matriarch | tmp |
-| {M}: return ~ to its owner's hand. | 1 | Shimmering Wings | tmp |
 | {M}: until end of turn, target creature has base power N or base toughness N. | 1 | Vhati il-Dal | tmp |
 
 ## Notes

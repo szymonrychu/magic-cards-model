@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 24 | 22.9% |
-| Works (untested) | 64 | 61.0% |
+| Tested | 25 | 23.8% |
+| Works (untested) | 65 | 61.9% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 17 | 16.2% |
+| Not working | 15 | 14.3% |
 
 ## Cards needing work
 
@@ -37,8 +37,6 @@
 | Mass Polymorph | silent | Exile all creatures you control, then reveal cards from the top of your library until you reveal that many creature cards. Put all creature cards revealed this  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Merfolk Spy | silent | Whenever this creature deals combat damage to a player, that player reveals a card at random from their hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Necrotic Plague | silent | When enchanted creature dies, its controller chooses target creature one of their opponents controls. Return this card from its owner's graveyard to the battlef | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Phylactery Lich | silent | When you control no permanents with phylactery counters on them, sacrifice this creature. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
-| Primal Cocoon | silent | At the beginning of your upkeep, put a +1/+1 counter on enchanted creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Redirect | silent | You may choose new targets for target spell. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Squadron Hawk | silent | When this creature enters, you may search your library for up to three cards named Squadron Hawk, reveal them, put them into your hand, then shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Steel Overseer | silent | {T}: Put a +1/+1 counter on each artifact creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -87,6 +85,7 @@
 | Nightwing Shade | handled | {1}{B}: This creature gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Overwhelming Stampede | handled | Until end of turn, creatures you control gain trample and get +X/+X, where X is the greatest power among creatures you control. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Phantom Beast | handled | When this creature becomes the target of a spell or ability, sacrifice it. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Primal Cocoon | handled | At the beginning of your upkeep, put a +1/+1 counter on enchanted creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Quag Sickness | handled | Enchanted creature gets -1/-1 for each Swamp you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Roc Egg | handled | When this creature dies, create a 3/3 white Bird creature token with flying. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Rotting Legion | handled | This creature enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -111,7 +110,7 @@
 ## Fully supported
 
 <details>
-<summary>24 cards</summary>
+<summary>25 cards</summary>
 
 - Aether Adept
 - Ajani's Mantra
@@ -130,6 +129,7 @@
 - Leyline of Punishment
 - Leyline of Sanctity
 - Obstinate Baloth
+- Phylactery Lich
 - Preordain
 - Primeval Titan
 - Pyretic Ritual
@@ -146,13 +146,11 @@
 |---|---|---|---|
 | any number of target players each gain N life. | 1 | Hunters' Feast | m11 |
 | at the beginning of each player"..."s a land card, the player puts it onto the battlefield. otherwise, the player casts it without paying its mana cost if able. | 1 | Wild Evocation | m11 |
-| at the beginning of your upkeep, put a +N/+N counter on enchanted creature. | 1 | Primal Cocoon | m11 |
 | each opponent loses N life. you gain life equal to the life lost ~. | 1 | Blood Tithe | m11 |
 | exile all creatures you control, then reveal cards from the top of your library until you reveal that many creature cards. put all creature cards revealed ~ ont | 1 | Mass Polymorph | m11 |
 | spells you control can"..."t be the targets of blue or black spells ~. | 1 | Autumn's Veil | m11 |
 | target creature becomes red until end of turn and attacks ~ if able. | 1 | Incite | m11 |
 | when enchanted creature dies, its controller chooses target creature one of their opponents controls. return ~ from its owner's graveyard to the battlefield att | 1 | Necrotic Plague | m11 |
-| when you control no permanents with phylactery counters on them, sacrifice ~. | 1 | Phylactery Lich | m11 |
 | when ~ enters, you may search your library for up to three cards named ~, reveal them, put them into your hand, then shuffle. | 1 | Squadron Hawk | m11 |
 | whenever you draw a card, you may have target player mill a card. | 1 | Jace's Erasure | m11 |
 | whenever ~ attacks, you may have it deal damage equal to its power to target creature defending player controls. if you do, that creature deals damage equal to  | 1 | Cyclops Gladiator | m11 |

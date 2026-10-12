@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 59 | 22.3% |
-| Works (untested) | 116 | 43.8% |
+| Tested | 62 | 23.4% |
+| Works (untested) | 117 | 44.2% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 90 | 34.0% |
+| Not working | 86 | 32.5% |
 
 ## Cards needing work
 
@@ -42,7 +42,6 @@
 | Erratic Apparition | silent | Eerie — Whenever an enchantment you control enters and whenever you fully unlock a Room, this creature gets +1/+1 until end of turn. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
 | Fanatic of the Harrowing | silent | When this creature enters, each player discards a card. If you discarded a card this way, draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Fear of Abduction | silent | When this creature leaves the battlefield, put each card exiled with it into its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Fear of Burning Alive | silent | Delirium — Whenever a source you control deals noncombat damage to an opponent, if there are four or more card types among cards in your graveyard, this creatur | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
 | Fear of Falling | silent | Whenever this creature attacks, target creature defending player controls gets -2/-0 and loses flying until your next turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Fear of Infinity | silent | Eerie — Whenever an enchantment you control enters and whenever you fully unlock a Room, you may return this card from your graveyard to your hand. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
 | Ghost Vacuum | silent | {6}, {T}, Sacrifice this artifact: Put each creature card exiled with this artifact onto the battlefield under your control with a flying counter on it. Each of | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -53,7 +52,6 @@
 | Glimmerlight | silent | When this Equipment enters, create a 1/1 white Glimmer enchantment creature token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Grand Entryway // Elegant Rotunda | silent | When you unlock this door, create a 1/1 white Glimmer enchantment creature token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Gremlin Tamer | silent | Eerie — Whenever an enchantment you control enters and whenever you fully unlock a Room, create a 1/1 red Gremlin creature token. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
-| Grievous Wound | silent | Whenever enchanted player is dealt damage, they lose half their life, rounded up. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Growing Dread | silent | Whenever you turn a permanent face up, put a +1/+1 counter on it. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
 | Hauntwoods Shrieker | silent | {1}{G}: Reveal target face-down permanent. If it's a creature card, you may turn it face up. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Hedge Shredder | silent | Whenever one or more land cards are put into your graveyard from your library, put them onto the battlefield tapped. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -72,7 +70,6 @@
 | Optimistic Scavenger | silent | Eerie — Whenever an enchantment you control enters and whenever you fully unlock a Room, put a +1/+1 counter on target creature. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
 | Orphans of the Wheat | silent | Whenever this creature attacks, tap any number of untapped creatures you control. This creature gets +1/+1 until end of turn for each creature tapped this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Osseous Sticktwister | silent | Delirium — At the beginning of your end step, if there are four or more card types among cards in your graveyard, each opponent may sacrifice a nonland permanen | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Painter's Studio // Defaced Gallery | silent | Whenever you attack, attacking creatures you control get +1/+0 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Paranormal Analyst | silent | Whenever you manifest dread, put a card you put into your graveyard this way into your hand. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
 | Peer Past the Veil | silent | Discard your hand. Then draw X cards, where X is the number of card types among cards in your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Reluctant Role Model | silent | Survival — At the beginning of your second main phase, if this creature is tapped, put a flying, lifelink, or +1/+1 counter on it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -87,9 +84,7 @@
 | The Tale of Tamiyo | silent | I, II, III — Mill two cards. If two cards that share a card type were milled this way, draw a card and repeat this process. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Trial of Agony | silent | Choose two target creatures controlled by the same opponent. That player chooses one of those creatures. Trial of Agony deals 5 damage to that creature, and the | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Tunnel Surveyor | silent | When this creature enters, create a 1/1 white Glimmer enchantment creature token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Twitching Doll | silent | {T}, Sacrifice this creature: Create a 2/2 green Spider creature token with reach for each counter on this creature. Activate only as a sorcery. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Under the Skin | silent | Manifest dread. (Look at the top two cards of your library. Put one onto the battlefield face down as a 2/2 creature and the other into your graveyard. Turn it  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Unstoppable Slasher | silent | Whenever this creature deals combat damage to a player, they lose half their life, rounded up. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Unwilling Vessel | silent | Eerie — Whenever an enchantment you control enters and whenever you fully unlock a Room, put a possession counter on this creature. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
 | Valgavoth's Onslaught | silent | Manifest dread X times, then put X +1/+1 counters on each of those creatures. (To manifest dread, look at the top two cards of your library, then put one onto t | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Veteran Survivor | silent | As long as there are three or more cards exiled with this creature, it gets +3/+3 and has hexproof. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -102,6 +97,7 @@
 | Come Back Wrong | notice | Destroy target creature. If a creature card is put into a graveyard this way, return it to the battlefield under your control. Sacrifice it at the beginning of  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Dollmaker's Shop // Porcelain Gallery | notice | Creatures you control have base power and toughness each equal to the number of creatures you control. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Don't Make a Sound | notice | Counter target spell unless its controller pays {2}. If they do, surveil 2. (Look at the top two cards of your library, then put any number of them into your gr | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
+| Fear of Burning Alive | notice | Delirium — Whenever a source you control deals noncombat damage to an opponent, if there are four or more card types among cards in your graveyard, this creatur | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Fear of Immobility | notice | When this creature enters, tap up to one target creature. If an opponent controls that creature, put a stun counter on it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Jump Scare | notice | Until end of turn, target creature gets +2/+2, gains flying, and becomes a Horror enchantment creature in addition to its other types. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Marvin, Murderous Mimic | notice | Marvin has all activated abilities of creatures you control that don't have the same name as this creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
@@ -187,6 +183,7 @@
 | Overlord of the Boilerbilges | handled | Whenever this permanent enters or attacks, it deals 4 damage to any target. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Overlord of the Floodpits | handled | Whenever this permanent enters or attacks, draw two cards, then discard a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Overlord of the Hauntwoods | handled | Whenever this permanent enters or attacks, create a tapped colorless land token named Everywhere that is every basic land type. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Painter's Studio // Defaced Gallery | handled | When you unlock this door, exile the top two cards of your library. You may play them until the end of your next turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Peculiar Lighthouse | handled | This land enters tapped unless a player has 13 or less life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Piggy Bank | handled | When this creature dies, create a Treasure token. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Piranha Fly | handled | This creature enters tapped. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -236,7 +233,7 @@
 ## Fully supported
 
 <details>
-<summary>59 cards</summary>
+<summary>62 cards</summary>
 
 - Abhorrent Oculus
 - Arabella, Abandoned Doll
@@ -267,6 +264,7 @@
 - Glassworks // Shattered Yard
 - Gloomlake Verge
 - Grab the Prize
+- Grievous Wound
 - Inquisitive Glimmer
 - Kaito, Bane of Nightmares
 - Kona, Rescue Beastie
@@ -287,11 +285,13 @@
 - The Mindskinner
 - The Rollercrusher Ride
 - Thornspire Verge
+- Twitching Doll
 - Tyvar, the Pummeler
 - Unable to Scream
 - Undead Sprinter
 - Unholy Annex // Ritual Chamber
 - Unidentified Hovership
+- Unstoppable Slasher
 - Unwanted Remake
 - Valgavoth, Terror Eater
 - Violent Urge
@@ -346,21 +346,17 @@
 | when ~ leaves the battlefield, put each card exiled with it into its owner's hand. | 1 | Fear of Abduction | dsk |
 | whenever a creature you control becomes blocked, you may exile it. you may play that card from exile ~. | 1 | Norin, Swift Survivalist | dsk |
 | whenever a creature you control dies, you may pay N life. if you do, return that card under your control with a finality counter on it. | 1 | Meathook Massacre II | dsk |
-| whenever enchanted player is dealt damage, they lose half their life, rounded up. | 1 | Grievous Wound | dsk |
 | whenever equipped creature attacks, you may sacrifice a permanent other than that creature or ~. if you do, draw a card. | 1 | Saw | dsk |
 | whenever one or more cards leave your graveyard, create a N/N black horror enchantment creature token. ~ triggers only once each turn. | 1 | Defiled Crypt // Cadaver Lab | dsk |
 | whenever one or more land cards are put into your graveyard from your library, put them onto the battlefield tapped. | 1 | Hedge Shredder | dsk |
-| whenever you attack, attacking creatures you control get +N/+N until end of turn. | 1 | Painter's Studio // Defaced Gallery | dsk |
 | whenever you manifest dread, put a card you put into your graveyard ~ into your hand. | 1 | Paranormal Analyst | dsk |
 | whenever you turn a permanent face up, put a +N/+N counter on it. | 1 | Growing Dread | dsk |
 | whenever ~ attacks, tap any number of untapped creatures you control. ~ gets +N/+N until end of turn for each creature tapped ~. | 1 | Orphans of the Wheat | dsk |
 | whenever ~ attacks, target creature defending player controls gets -N/-N and loses flying until your next turn. | 1 | Fear of Falling | dsk |
 | whenever ~ attacks, you may have it get +N/+N until end of turn. if you do, sacrifice it at the beginning of the next end step. | 1 | Attack-in-the-Box | dsk |
 | whenever ~ deals combat damage to a player, choose one that hasn't been chosen — • put two +N/+N counters on ~. • draw a card. • ~ becomes a copy of another tar | 1 | Silent Hallcreeper | dsk |
-| whenever ~ deals combat damage to a player, they lose half their life, rounded up. | 1 | Unstoppable Slasher | dsk |
 | whenever ~ deals combat damage to a player, unlock a locked door of up to one target room you control. | 1 | Ghostly Keybearer | dsk |
 | {M}, discard a card: put three +N/+N counters on ~ and it becomes a black demon in addition to its other colors and types. activate only once. | 1 | Possessed Goat | dsk |
-| {M}, sacrifice ~: create a N/N green spider creature token with reach for each counter on ~. activate only as a sorcery. | 1 | Twitching Doll | dsk |
 | {M}, {M}, sacrifice ~: lock or unlock a door of target room you control. activate only as a sorcery. | 1 | Keys to the House | dsk |
 | {M}, {M}, sacrifice ~: put each creature card exiled with ~ onto the battlefield under your control with a flying counter on it. each of them is a N/N spirit in | 1 | Ghost Vacuum | dsk |
 | {M}, {M}: create a token that"..."s a N/N red balloon creature in addition to its other colors and types and it has flying and haste. sacrifice it at the beginn | 1 | The Jolly Balloon Man | dsk |

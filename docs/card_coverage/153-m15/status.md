@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 17 | 11.9% |
-| Works (untested) | 88 | 61.5% |
+| Works (untested) | 90 | 62.9% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 38 | 26.6% |
+| Not working | 36 | 25.2% |
 
 ## Cards needing work
 
@@ -42,7 +42,6 @@
 | In Garruk's Wake | silent | Destroy all creatures you don't control and all planeswalkers you don't control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Indulgent Tormentor | silent | At the beginning of your upkeep, draw a card unless target opponent sacrifices a creature of their choice or pays 3 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Invasive Species | silent | When this creature enters, return another permanent you control to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Jace, the Living Guildpact | silent | +1: Look at the top two cards of your library. Put one of them into your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Jalira, Master Polymorphist | silent | {2}{U}, {T}, Sacrifice another creature: Reveal cards from the top of your library until you reveal a nonlegendary creature card. Put that card onto the battlef | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Kurkesh, Onakke Ancient | silent | Whenever you activate an ability of an artifact, if it isn't a mana ability, you may pay {R}. If you do, copy that ability. You may choose new targets for the c | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Leeching Sliver | silent | Whenever a Sliver you control attacks, defending player loses 1 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -51,7 +50,6 @@
 | Nissa, Worldwaker | silent | −7: Search your library for any number of basic land cards, put them onto the battlefield, then shuffle. Those lands become 4/4 Elemental creatures with trample | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Phytotitan | silent | When this creature dies, return it to the battlefield tapped under its owner's control at the beginning of their next upkeep. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Polymorphist's Jest | silent | Until end of turn, each creature target player controls loses all abilities and becomes a blue Frog with base power and toughness 1/1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Profane Memento | silent | Whenever a creature card is put into an opponent's graveyard from anywhere, you gain 1 life. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Quickling | silent | When this creature enters, sacrifice it unless you return another creature you control to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Siege Dragon | silent | When this creature enters, destroy all Walls your opponents control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Spectra Ward | silent | Enchanted creature gets +2/+2 and has protection from each color. This effect doesn't remove Auras. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -95,6 +93,7 @@
 | Hornet Nest | handled | Whenever this creature is dealt damage, create that many 1/1 green Insect creature tokens with flying and deathtouch. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Hornet Queen | handled | When this creature enters, create four 1/1 green Insect creature tokens with flying and deathtouch. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Inferno Fist | handled | Enchanted creature gets +2/+0. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Jace, the Living Guildpact | handled | +1: Look at the top two cards of your library. Put one of them into your graveyard. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Jorubai Murk Lurker | handled | This creature gets +1/+1 as long as you control a Swamp. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Kalonian Twingrove | handled | Kalonian Twingrove's power and toughness are each equal to the number of Forests you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Kapsho Kitefins | handled | Whenever this creature or another creature you control enters, tap target creature an opponent controls. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -120,6 +119,7 @@
 | Paragon of Open Graves | handled | Other black creatures you control get +1/+1. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Perilous Vault | handled | {5}, {T}, Exile this artifact: Exile all nonland permanents. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Pillar of Light | handled | Exile target creature with toughness 4 or greater. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Profane Memento | handled | Whenever a creature card is put into an opponent's graveyard from anywhere, you gain 1 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Radiant Fountain | handled | When this land enters, you gain 2 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Reclamation Sage | handled | When this creature enters, you may destroy target artifact or enchantment. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Research Assistant | handled | {3}{U}, {T}: Draw a card, then discard a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -182,7 +182,6 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| +N: look at the top two cards of your library. put one of them into your graveyard. | 1 | Jace, the Living Guildpact | m15 |
 | as an additional cost to cast ~, sacrifice a creature. draw cards equal to the sacrificed creature's power. | 1 | Life's Legacy | m15 |
 | at the beginning of your upkeep, draw a card unless target opponent sacrifices a creature of their choice or pays N life. | 1 | Indulgent Tormentor | m15 |
 | convoke (your creatures can help cast ~. each creature you tap while casting ~ pays for {M} or one mana of that creature"..."s graveyard, hand, and library for  | 1 | Stain the Mind | m15 |
@@ -200,7 +199,6 @@
 | when ~ enters, return another permanent you control to its owner's hand. | 1 | Invasive Species | m15 |
 | when ~ enters, sacrifice it unless you return another creature you control to its owner's hand. | 1 | Quickling | m15 |
 | when ~ enters, you may search your graveyard, hand, and/or library for an aura card and put it onto the battlefield attached to ~. if you search your library ~, | 1 | Boonweaver Giant | m15 |
-| whenever a creature card is put into an opponent's graveyard from anywhere, you gain N life. | 1 | Profane Memento | m15 |
 | whenever a sliver you control attacks, defending player loses N life. | 1 | Leeching Sliver | m15 |
 | whenever an aura becomes attached to ~, create a N/N red dragon creature token with flying. it has "..." | 1 | Brood Keeper | m15 |
 | whenever an opponent discards a noncreature, nonland card, draw a card. | 1 | Waste Not | m15 |

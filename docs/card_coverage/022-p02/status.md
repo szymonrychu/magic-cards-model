@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 3 | 11.5% |
-| Works (untested) | 19 | 73.1% |
+| Works (untested) | 20 | 76.9% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 4 | 15.4% |
+| Not working | 3 | 11.5% |
 
 ## Cards needing work
 
@@ -29,7 +29,6 @@
 | Denizen of the Deep | silent | When this creature enters, return each other creature you control to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Goblin Lore | silent | Draw four cards, then discard three cards at random. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sea Drake | silent | When this creature enters, return two target lands you control to their owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Sylvan Basilisk | silent | Whenever this creature becomes blocked by a creature, destroy that creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Angel of Mercy | handled | When this creature enters, you gain 3 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Angelic Wall | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
 | Bear Cub | handled |  |  | Y/Y/Y | not_tested |
@@ -45,6 +44,7 @@
 | Righteous Charge | handled | Creatures you control get +2/+2 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | River Bear | handled | Landwalk | no code needed | Y/-/- | not_tested |
 | Swarm of Rats | handled | Swarm of Rats's power is equal to the number of Rats you control. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Sylvan Basilisk | handled | Whenever this creature becomes blocked by a creature, destroy that creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Tree Monkey | handled | Reach | machines/combat.py | Y/-/- | not_tested |
 | Vampiric Spirit | handled | When this creature enters, you lose 4 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Wild Griffin | handled | Flying | machines/combat.py | Y/-/- | not_tested |
@@ -68,7 +68,6 @@
 | draw four cards, then discard three cards at random. | 1 | Goblin Lore | p02 |
 | when ~ enters, return each other creature you control to its owner's hand. | 1 | Denizen of the Deep | p02 |
 | when ~ enters, return two target lands you control to their owner's hand. | 1 | Sea Drake | p02 |
-| whenever ~ becomes blocked by a creature, destroy that creature. | 1 | Sylvan Basilisk | p02 |
 
 ## Notes
 

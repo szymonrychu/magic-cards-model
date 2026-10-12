@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 22 | 12.3% |
-| Works (untested) | 116 | 64.8% |
+| Works (untested) | 117 | 65.4% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 41 | 22.9% |
+| Not working | 40 | 22.3% |
 
 ## Cards needing work
 
@@ -33,7 +33,6 @@
 | Desecrator Hag | silent | When this creature enters, return to your hand the creature card in your graveyard with the greatest power. If two or more cards are tied for greatest power, yo | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Dominus of Fealty | silent | At the beginning of your upkeep, you may gain control of target permanent until end of turn. If you do, untap it and it gains haste until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Doomgape | silent | At the beginning of your upkeep, sacrifice a creature. You gain life equal to that creature's toughness. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Duergar Mine-Captain | silent | {1}{R/W}, {Q}: Attacking creatures get +1/+0 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Endless Horizons | silent | When this enchantment enters, search your library for any number of Plains cards, exile them, then shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Fiery Bombardment | silent | Chroma — {2}, Sacrifice a creature: This enchantment deals damage to any target equal to the number of red mana symbols in the sacrificed creature's mana cost. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Gift of the Deity | silent | As long as enchanted creature is green, it gets +1/+1 and all creatures able to block it do so. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -94,6 +93,7 @@
 | Dream Thief | handled | When this creature enters, draw a card if you've cast another blue spell this turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Duergar Assailant | handled | Sacrifice this creature: It deals 1 damage to target attacking or blocking creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Duergar Cave-Guard | handled | {R/W}: This creature gets +1/+0 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Duergar Mine-Captain | handled | {1}{R/W}, {Q}: Attacking creatures get +1/+0 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Duskdale Wurm | handled | Trample | machines/combat.py | Y/-/- | not_tested |
 | Edge of the Divinity | handled | As long as enchanted creature is white, it gets +1/+2. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Fable of Wolf and Owl | handled | Whenever you cast a green spell, you may create a 2/2 green Wolf creature token. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -248,7 +248,6 @@
 | whenever ~ deals damage to a player, that player can't gain life for the rest of the game. | 1 | Stigma Lasher | eve |
 | {M}: switch ~ power and toughness until end of turn. | 1 | Crag Puca | eve |
 | {M}: target creature can't block ~ ~. | 1 | Shrewd Hatchling | eve |
-| {M}{M}, {M}: attacking creatures get +N/+N until end of turn. | 1 | Duergar Mine-Captain | eve |
 | {M}{M}, {M}: double the number of each kind of counter on target permanent. | 1 | Gilder Bairn | eve |
 | {M}{M}: target creature you control becomes the color or colors of your choice until end of turn. | 1 | Swirling Spriggan | eve |
 | {M}{M}{M}: copy target instant or sorcery spell that targets you. you may choose new targets for the copy. | 1 | Mirror Sheen | eve |

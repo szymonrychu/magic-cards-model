@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 37 | 15.0% |
-| Works (untested) | 154 | 62.6% |
+| Tested | 39 | 15.9% |
+| Works (untested) | 155 | 63.0% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 55 | 22.4% |
+| Not working | 52 | 21.1% |
 
 ## Cards needing work
 
@@ -34,7 +34,6 @@
 | Angel of Invention | silent | Fabricate | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Animation Module | silent | {3}, {T}: Choose a counter on target permanent or player. Give that permanent or player another counter of that kind. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Aviary Mechanic | silent | When this creature enters, you may return another permanent you control to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Bomat Courier | silent | Whenever this creature attacks, exile the top card of your library face down. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Cataclysmic Gearhulk | silent | When this creature enters, each player chooses an artifact, a creature, an enchantment, and a planeswalker from among the nonland permanents they control, then  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Combustible Gearhulk | silent | When this creature enters, target opponent may have you draw three cards. If the player doesn't, you mill three cards, then this creature deals damage to that p | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Confiscation Coup | silent | Choose target artifact or creature. You get {E}{E}{E}{E} (four energy counters), then you may pay an amount of {E} equal to that permanent's mana value. If you  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -52,7 +51,6 @@
 | Gearshift Ace | silent | Whenever this creature crews a Vehicle, that Vehicle gains first strike until end of turn. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Ghirapur Guide | silent | {2}{G}: Target creature you control can't be blocked by creatures with power 2 or less this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Glint-Sleeve Artisan | silent | Fabricate | no machine in the engine executes this keyword | Y/Y/- | not_working |
-| Gonti, Lord of Luxury | silent | When Gonti enters, look at the top four cards of target opponent's library, exile one of them face down, then put the rest on the bottom of that library in a ra | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Hazardous Conditions | silent | Creatures with no counters on them get -2/-2 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Highspire Artisan | silent | Fabricate | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Hightide Hermit | silent | Pay {E}{E}: This creature can attack this turn as though it didn't have defender. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -80,7 +78,6 @@
 | Built to Last | notice | Target creature gets +2/+2 until end of turn. If it's an artifact creature, it gains indestructible until end of turn. (Damage and effects that say "destroy" do | unparsed remainder: If it's an artifact creature, it gains indestructible until end of turn. | Y/Y/- | not_working |
 | Built to Smash | notice | Target attacking creature gets +3/+3 until end of turn. If it's an artifact creature, it gains trample until end of turn. | unparsed remainder: If it's an artifact creature, it gains trample until end of turn. | Y/Y/- | not_working |
 | Insidious Will | notice | Choose one — • Counter target spell. • You may choose new targets for target spell. • Copy target instant or sorcery spell. You may choose new targets for the c | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Nissa, Vital Force | notice | +1: Untap target land you control. Until your next turn, it becomes a 5/5 Elemental creature with haste. It's still a land. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Acrobatic Maneuver | handled | Exile target creature you control, then return that card to the battlefield under its owner's control. Draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Aerial Responder | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
 | Aether Hub | handled | When this land enters, you get {E} . | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -169,6 +166,7 @@
 | Night Market Lookout | handled | Whenever this creature becomes tapped, each opponent loses 1 life and you gain 1 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Nimble Innovator | handled | When this creature enters, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ninth Bridge Patrol | handled | Whenever another creature you control leaves the battlefield, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Nissa, Vital Force | handled | +1: Untap target land you control. Until your next turn, it becomes a 5/5 Elemental creature with haste. It's still a land. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ornamental Courage | handled | Untap target creature. It gets +1/+3 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ovalchase Daredevil | handled | Whenever an artifact you control enters, you may return this card from your graveyard to your hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ovalchase Dragster | handled | Haste | machines/combat.py | Y/Y/- | not_tested |
@@ -239,12 +237,13 @@
 ## Fully supported
 
 <details>
-<summary>37 cards</summary>
+<summary>39 cards</summary>
 
 - Aetherstorm Roc
 - Armorcraft Judge
 - Blooming Marsh
 - Blossoming Defense
+- Bomat Courier
 - Captured by the Consulate
 - Cathartic Reunion
 - Chandra, Torch of Defiance
@@ -259,6 +258,7 @@
 - Fairgrounds Trumpeter
 - Fateful Showdown
 - Ghirapur Orrery
+- Gonti, Lord of Luxury
 - Harnessed Lightning
 - Hijack
 - Inspiring Vantage
@@ -287,7 +287,6 @@
 |---|---|---|---|
 | fabricate | 13 | Accomplished Automaton, Ambitious Aetherborn, Angel of Invention, Elegant Edgecrafters, Glint-Sleeve Artisan | kld |
 | Choose one | 1 | Insidious Will | kld |
-| +N: untap target land you control. until your next turn, it becomes a N/N elemental creature with haste. it's still a land. | 1 | Nissa, Vital Force | kld |
 | +N: until your next turn, up to one target creature gets -N/-N and its activated abilities can't be activated. | 1 | Dovin Baan | kld |
 | as an additional cost to cast ~, sacrifice an artifact or creature. draw cards equal to the mana value of the sacrificed permanent. | 1 | Morbid Curiosity | kld |
 | choose a nonartifact, nonland card name. search target player's graveyard, hand, and library for any number of cards with that name and exile them. that player  | 1 | Lost Legacy | kld |
@@ -308,7 +307,6 @@
 | search your library for a basic land card and put it onto the battlefield tapped. search your library and graveyard for a card named nissa, nature's artisan, re | 1 | Verdant Crescendo | kld |
 | target attacking creature gets +N/+N until end of turn. if it's an artifact creature, it gains trample until end of turn. | 1 | Built to Smash | kld |
 | target creature gets +N/+N until end of turn. if it"..."t destroy it.) | 1 | Built to Last | kld |
-| when gonti enters, look at the top four cards of target opponent's library, exile one of them face down, then put the rest on the bottom of that library in a ra | 1 | Gonti, Lord of Luxury | kld |
 | when ~ enters, each player chooses an artifact, a creature, an enchantment, and a planeswalker from among the nonland permanents they control, then sacrifices t | 1 | Cataclysmic Gearhulk | kld |
 | when ~ enters, each player may scry N. | 1 | Eager Construct | kld |
 | when ~ enters, move any number of +N/+N counters from other permanents you control onto ~. | 1 | Aetherborn Marauder | kld |
@@ -318,7 +316,6 @@
 | whenever a permanent you control is put into a graveyard, you get {M} . | 1 | Aetherworks Marvel | kld |
 | whenever you cast an instant or sorcery spell, create an N/N colorless construct artifact creature token, where N is that spell's mana value. | 1 | Metallurgic Summonings | kld |
 | whenever you cast your first spell each turn, reveal the top card of your library. you may cast it without paying its mana cost if it"..."t cast it, put it into | 1 | Rashmi, Eternities Crafter | kld |
-| whenever ~ attacks, exile the top card of your library face down. | 1 | Bomat Courier | kld |
 | whenever ~ attacks, you may have other attacking creatures get +N/+N until end of turn, where N is ~ power. | 1 | Cultivator of Blades | kld |
 | whenever ~ crews a vehicle, that vehicle gains first strike until end of turn. | 1 | Gearshift Ace | kld |
 | whenever ~ crews a vehicle, that vehicle gains haste until end of turn. | 1 | Speedway Fanatic | kld |

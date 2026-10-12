@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 41 | 23.0% |
-| Works (untested) | 97 | 54.5% |
+| Tested | 42 | 23.6% |
+| Works (untested) | 98 | 55.1% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 40 | 22.5% |
+| Not working | 38 | 21.3% |
 
 ## Cards needing work
 
@@ -39,7 +39,6 @@
 | Cherished Hatchling | silent | When this creature dies, you may cast Dinosaur spells this turn as though they had flash, and whenever you cast a Dinosaur spell this turn, it gains "When this  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Crashing Tide | silent | This spell has flash as long as you control a Merfolk. Return target creature to its owner's hand. Draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Dead Man's Chest | silent | When enchanted creature dies, exile cards equal to its power from the top of its owner's library. You may cast spells from among those cards for as long as they | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Dinosaur Hunter | silent | Whenever this creature deals damage to a Dinosaur, destroy that creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Dire Fleet Neckbreaker | silent | Attacking Pirates you control get +2/+0. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Etali, Primal Storm | silent | Whenever Etali attacks, exile the top card of each player's library, then you may cast any number of spells from among those cards without paying their mana cos | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Fathom Fleet Boarder | silent | When this creature enters, you lose 2 life unless you control another Pirate. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -47,7 +46,6 @@
 | Gruesome Fate | silent | Each opponent loses 1 life for each creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Huatli, Radiant Champion | silent | +1: Put a loyalty counter on Huatli for each creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Induced Amnesia | silent | When this enchantment enters, target player exiles all cards from their hand face down, then draws that many cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Journey to Eternity // Atzal, Cave of Eternity | silent | When enchanted creature dies, return it to the battlefield under your control, then return this card to the battlefield transformed under your control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Kumena's Awakening | silent | At the beginning of your upkeep, each player draws a card. If you have the city's blessing, instead only you draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sea Legs | silent | Enchanted creature gets +0/+2 as long as it's a Pirate. Otherwise, it gets -2/-0. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Slaughter the Strong | silent | Each player chooses any number of creatures they control with total power 4 or less, then sacrifices all other creatures they control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -85,6 +83,7 @@
 | Deadeye Brawler | handled | Whenever this creature deals combat damage to a player, if you have the city's blessing, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Deadeye Rig-Hauler | handled | Raid — When this creature enters, if you attacked this turn, you may return target creature to its owner's hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Deeproot Elite | handled | Whenever another Merfolk you control enters, put a +1/+1 counter on target Merfolk you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Dinosaur Hunter | handled | Whenever this creature deals damage to a Dinosaur, destroy that creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Dire Fleet Poisoner | handled | When this creature enters, target attacking Pirate you control gets +1/+1 and gains deathtouch until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Dusk Legion Zealot | handled | When this creature enters, you draw a card and you lose 1 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Elenda, the Dusk Rose | handled | Whenever another creature dies, put a +1/+1 counter on Elenda. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -167,7 +166,7 @@
 ## Fully supported
 
 <details>
-<summary>41 cards</summary>
+<summary>42 cards</summary>
 
 - Arch of Orazca
 - Blood Sun
@@ -181,6 +180,7 @@
 - Ghalta, Primal Hunger
 - Golden Demise
 - Jadelight Ranger
+- Journey to Eternity // Atzal, Cave of Eternity
 - Mastermind's Acquisition
 - Mausoleum Harpy
 - Mutiny
@@ -236,7 +236,6 @@
 | saprolings you control get +N/+N as long as you have the city's blessing. | 1 | Tendershoot Dryad | rix |
 | when azor enters, each opponent can"..."s next turn. | 1 | Azor, the Lawbringer | rix |
 | when enchanted creature dies, exile cards equal to its power from the top of its owner's library. you may cast spells from among those cards for as long as they | 1 | Dead Man's Chest | rix |
-| when enchanted creature dies, return it to the battlefield under your control, then return ~ to the battlefield transformed under your control. | 1 | Journey to Eternity // Atzal, Cave of Eternity | rix |
 | when tetzimoc enters, destroy each creature your opponents control with a prey counter on it. | 1 | Tetzimoc, Primal Death | rix |
 | when ~ dies, you may cast dinosaur spells ~ as though they had flash, and whenever you cast a dinosaur spell ~, it gains "..." | 1 | Cherished Hatchling | rix |
 | when ~ enters, target player exiles all cards from their hand face down, then draws that many cards. | 1 | Induced Amnesia | rix |
@@ -245,7 +244,6 @@
 | whenever ~ attacks, target creature defending player controls loses all abilities and has base power and toughness N/N until end of turn. | 1 | Warkite Marauder | rix |
 | whenever ~ attacks, target vampire gets +N/+N until end of turn, where N is the power of the exiled card. | 1 | Bishop of Binding | rix |
 | whenever ~ attacks, you may pay {M}{M}. if you do, create N N/N red elemental creature tokens that are tapped and attacking. at the beginning of the next end st | 1 | Tilonalli's Summoner | rix |
-| whenever ~ deals damage to a dinosaur, destroy that creature. | 1 | Dinosaur Hunter | rix |
 | {M}, {M}: draw a card, then exile a card from your hand. if cards with five or more different mana values are exiled with ~, you gain N life, untap ~, and trans | 1 | Azor's Gateway // Sanctum of the Sun | rix |
 | {M}: ~ fights another target creature you control. when ~ dies ~, return it to the battlefield transformed under your control. | 1 | Golden Guardian // Gold-Forge Garrison | rix |
 | {M}{M}{M}: exile target creature. then if there are three or more cards exiled with ~, transform it. | 1 | Profane Procession // Tomb of the Dusk Rose | rix |

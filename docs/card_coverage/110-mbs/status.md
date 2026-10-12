@@ -17,37 +17,29 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 22 | 15.5% |
-| Works (untested) | 95 | 66.9% |
+| Tested | 24 | 16.9% |
+| Works (untested) | 101 | 71.1% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 25 | 17.6% |
+| Not working | 17 | 12.0% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
-| Bonehoard | silent | Living weapon | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Choking Fumes | silent | Put a -1/-1 counter on each attacking creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Contested War Zone | silent | Whenever a creature deals combat damage to you, that creature's controller gains control of this land. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Cryptoplasm | silent | At the beginning of your upkeep, you may have this creature become a copy of another target creature, except it has this ability. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Decimator Web | silent | {4}, {T}: Target opponent loses 2 life, gets a poison counter, then mills six cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Distant Memories | silent | Search your library for a card, exile it, then shuffle. Any opponent may have you put that card into your hand. If no player does, you draw three cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Flayer Husk | silent | Living weapon | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Galvanoth | silent | At the beginning of your upkeep, you may look at the top card of your library. You may cast it without paying its mana cost if it's an instant or sorcery spell. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Hero of Oxid Ridge | silent | Whenever this creature attacks, creatures with power 1 or less can't block this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Leonin Relic-Warder | silent | When this creature leaves the battlefield, return the exiled card to the battlefield under its owner's control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Magnetic Mine | silent | Whenever another artifact is put into a graveyard from the battlefield, this artifact deals 2 damage to that artifact's controller. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Mirrorworks | silent | Whenever another nontoken artifact you control enters, you may pay {2}. If you do, create a token that's a copy of that artifact. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Mitotic Manipulation | silent | Look at the top seven cards of your library. You may put one of those cards onto the battlefield if it has the same name as a permanent. Put the rest on the bot | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Mortarpod | silent | Living weapon | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Phyrexian Rebirth | silent | Destroy all creatures, then create an X/X colorless Phyrexian Horror artifact creature token, where X is the number of creatures destroyed this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Praetor's Counsel | silent | Return all cards from your graveyard to your hand. Exile Praetor's Counsel. You have no maximum hand size for the rest of the game. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Rally the Forces | silent | Attacking creatures get +1/+0 and gain first strike until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Skinwing | silent | Living weapon | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Spin Engine | silent | {R}: Target creature can't block this creature this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Spire Serpent | silent | Metalcraft — As long as you control three or more artifacts, this creature gets +2/+2 and can attack as though it didn't have defender. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Strandwalker | silent | Living weapon | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Victory's Herald | silent | Whenever this creature attacks, attacking creatures gain flying and lifelink until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Gore Vassal | notice | Sacrifice this creature: Put a -1/-1 counter on target creature. Then if that creature's toughness is 1 or greater, regenerate it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Pistus Strike | notice | Destroy target creature with flying. Its controller gets a poison counter. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Vedalken Anatomist | notice | {2}{U}, {T}: Put a -1/-1 counter on target creature. You may tap or untap that creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
@@ -68,6 +60,7 @@
 | Darksteel Plate | handled | Equipped creature has indestructible. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Dross Ripper | handled | {2}{B}: This creature gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Fangren Marauder | handled | Whenever an artifact is put into a graveyard from the battlefield, you may gain 5 life. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Flayer Husk | handled | Equipped creature gets +1/+1. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Flensermite | handled | Lifelink | machines/combat.py | Y/-/- | not_tested |
 | Flesh-Eater Imp | handled | Sacrifice a creature: This creature gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Frantic Salvage | handled | Put any number of target artifact cards from your graveyard on top of your library. Draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -86,6 +79,7 @@
 | Koth's Courier | handled | Landwalk | no code needed | Y/-/- | not_tested |
 | Kuldotha Flamefiend | handled | When this creature enters, you may sacrifice an artifact. If you do, this creature deals 4 damage divided as you choose among any number of targets. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Kuldotha Ringleader | handled | This creature attacks each combat if able. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Leonin Relic-Warder | handled | When this creature enters, you may exile target artifact or enchantment. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Loxodon Partisan | handled | Battle Cry | machines/keywords.py | Y/-/- | not_tested |
 | Lumengrid Gargoyle | handled | Flying | machines/combat.py | Y/-/- | not_tested |
 | Massacre Wurm | handled | When this creature enters, creatures your opponents control get -2/-2 until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -95,6 +89,7 @@
 | Mirran Mettle | handled | Target creature gets +2/+2 until end of turn. Metalcraft — That creature gets +4/+4 until end of turn instead if you control three or more artifacts. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Mirran Spy | handled | Whenever you cast an artifact spell, you may untap target creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Morbid Plunder | handled | Return up to two target creature cards from your graveyard to your hand. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Mortarpod | handled | Equipped creature gets +0/+1 and has "Sacrifice this creature: This creature deals 1 damage to any target." | the engine reads this text and performs it | Y/-/- | not_tested |
 | Myr Sire | handled | When this creature dies, create a 1/1 colorless Phyrexian Myr artifact creature token. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Myr Turbine | handled | {T}: Create a 1/1 colorless Myr artifact creature token. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Myr Welder | handled | Imprint — {T}: Exile target artifact card from a graveyard. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -125,11 +120,13 @@
 | Serum Raker | handled | When this creature dies, each player discards a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Shriekhorn | handled | This artifact enters with three charge counters on it. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Silverskin Armor | handled | Equipped creature gets +1/+1 and is an artifact in addition to its other types. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Skinwing | handled | Equipped creature gets +2/+2 and has flying. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Slagstorm | handled | Choose one — • Slagstorm deals 3 damage to each creature. • Slagstorm deals 3 damage to each player. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Spine of Ish Sah | handled | When this artifact enters, destroy target permanent. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Spiraling Duelist | handled | Metalcraft — This creature has double strike as long as you control three or more artifacts. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Spread the Sickness | handled | Destroy target creature, then proliferate. (Choose any number of permanents and/or players, then give each another counter of each kind already there.) | the engine reads this text and performs it | Y/-/- | not_tested |
 | Steel Sabotage | handled | Choose one — • Counter target artifact spell. • Return target artifact to its owner's hand. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Strandwalker | handled | Equipped creature gets +2/+4 and has reach. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Tangle Hulk | handled | {2}{G}: Regenerate this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Tangle Mantis | handled | Trample | machines/combat.py | Y/-/- | not_tested |
 | Tezzeret, Agent of Bolas | handled | +1: Look at the top five cards of your library. You may reveal an artifact card from among them and put it into your hand. Put the rest on the bottom of your li | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -140,6 +137,7 @@
 | Turn the Tide | handled | Creatures your opponents control get -2/-0 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Unnatural Predation | handled | Target creature gets +1/+1 and gains trample until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Vedalken Infuser | handled | At the beginning of your upkeep, you may put a charge counter on target artifact. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Victory's Herald | handled | Whenever this creature attacks, attacking creatures gain flying and lifelink until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Viridian Claw | handled | Equipped creature gets +1/+0 and has first strike. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Viridian Corrupter | handled | When this creature enters, destroy target artifact. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Viridian Emissary | handled | When this creature dies, you may search your library for a basic land card, put it onto the battlefield tapped, then shuffle. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -150,11 +148,12 @@
 ## Fully supported
 
 <details>
-<summary>22 cards</summary>
+<summary>24 cards</summary>
 
 - Accorder Paladin
 - Ardent Recruit
 - Blightsteel Colossus
+- Bonehoard
 - Burn the Impure
 - Concussive Bolt
 - Fuel for the Cause
@@ -167,6 +166,7 @@
 - Melira's Keepers
 - Phyrexian Hydra
 - Phyrexian Revoker
+- Rally the Forces
 - Septic Rats
 - Shimmer Myr
 - Signal Pest
@@ -181,11 +181,9 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| living weapon | 5 | Bonehoard, Flayer Husk, Mortarpod, Skinwing, Strandwalker | mbs |
 | Metalcraft | 1 | Spire Serpent | mbs |
 | at the beginning of your upkeep, you may have ~ become a copy of another target creature, except it has ~. | 1 | Cryptoplasm | mbs |
 | at the beginning of your upkeep, you may look at the top card of your library. you may cast it without paying its mana cost if it's an instant or sorcery spell. | 1 | Galvanoth | mbs |
-| attacking creatures get +N/+N and gain first strike until end of turn. | 1 | Rally the Forces | mbs |
 | destroy all creatures, then create an N/N colorless phyrexian horror artifact creature token, where N is the number of creatures destroyed ~. | 1 | Phyrexian Rebirth | mbs |
 | destroy target creature with flying. its controller gets a poison counter. | 1 | Pistus Strike | mbs |
 | look at the top seven cards of your library. you may put one of those cards onto the battlefield if it has the same name as a permanent. put the rest on the bot | 1 | Mitotic Manipulation | mbs |
@@ -193,11 +191,9 @@
 | return all cards from your graveyard to your hand. exile ~. you have no maximum hand size for the rest of the game. | 1 | Praetor's Counsel | mbs |
 | sacrifice ~: put a -N/-N counter on target creature. then if that creature's toughness is N or greater, regenerate it. | 1 | Gore Vassal | mbs |
 | search your library for a card, exile it, then shuffle. any opponent may have you put that card into your hand. if no player does, you draw three cards. | 1 | Distant Memories | mbs |
-| when ~ leaves the battlefield, return the exiled card to the battlefield under its owner's control. | 1 | Leonin Relic-Warder | mbs |
 | whenever a creature deals combat damage to you, that creature's controller gains control of ~. | 1 | Contested War Zone | mbs |
 | whenever another artifact is put into a graveyard from the battlefield, ~ deals N damage to that artifact's controller. | 1 | Magnetic Mine | mbs |
 | whenever another nontoken artifact you control enters, you may pay {M}. if you do, create a token that's a copy of that artifact. | 1 | Mirrorworks | mbs |
-| whenever ~ attacks, attacking creatures gain flying and lifelink until end of turn. | 1 | Victory's Herald | mbs |
 | whenever ~ attacks, creatures with power N or less can't block ~. | 1 | Hero of Oxid Ridge | mbs |
 | {M}, {M}: target opponent loses N life, gets a poison counter, then mills six cards. | 1 | Decimator Web | mbs |
 | {M}: target creature can't block ~ ~. | 1 | Spin Engine | mbs |

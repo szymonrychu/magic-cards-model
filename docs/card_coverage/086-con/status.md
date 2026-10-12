@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 22 | 15.6% |
+| Tested | 23 | 16.3% |
 | Works (untested) | 86 | 61.0% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 33 | 23.4% |
+| Not working | 32 | 22.7% |
 
 ## Cards needing work
 
@@ -36,7 +36,6 @@
 | Extractor Demon | silent | Whenever another creature leaves the battlefield, you may have target player mill two cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Frontline Sage | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Giltspire Avenger | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Gwafa Hazid, Profiteer | silent | {W}{U}, {T}: Put a bribery counter on target creature you don't control. Its controller draws a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Maelstrom Archangel | silent | Whenever this creature deals combat damage to a player, you may cast a spell from your hand without paying its mana cost. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Malfegor | silent | When Malfegor enters, discard your hand. Each opponent sacrifices a creature of their choice for each card discarded this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Manaforce Mace | silent | Domain — Equipped creature gets +1/+1 for each basic land type among lands you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -149,7 +148,7 @@
 ## Fully supported
 
 <details>
-<summary>22 cards</summary>
+<summary>23 cards</summary>
 
 - Aerie Mystics
 - Ancient Ziggurat
@@ -160,6 +159,7 @@
 - Celestial Purge
 - Exotic Orchard
 - Gleam of Resistance
+- Gwafa Hazid, Profiteer
 - Ignite Disorder
 - Magister Sphinx
 - Mark of Asylum
@@ -199,7 +199,6 @@
 | whenever another creature leaves the battlefield, you may have target player mill two cards. | 1 | Extractor Demon | con |
 | whenever enchanted land becomes tapped, its controller loses N life. | 1 | Corrupted Roots | con |
 | whenever ~ deals combat damage to a player, you may cast a spell from your hand without paying its mana cost. | 1 | Maelstrom Archangel | con |
-| {M}{M}, {M}: put a bribery counter on target creature you don't control. its controller draws a card. | 1 | Gwafa Hazid, Profiteer | con |
 | {M}{M}: ~ gets -N/-N until end of turn and can't be blocked ~. | 1 | Vectis Agents | con |
 | {M}{M}{M}: ~ and each other creature with the same name as it get +N/+N until end of turn. | 1 | Cylian Sunsinger | con |
 | {M}{M}{M}{M}{M}: until end of turn, ~ becomes a dragon, gets +N/+N, and gains flying and trample. | 1 | Dragonsoul Knight | con |

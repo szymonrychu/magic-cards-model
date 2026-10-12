@@ -17,22 +17,20 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 33 | 12.6% |
-| Works (untested) | 187 | 71.6% |
+| Tested | 35 | 13.4% |
+| Works (untested) | 188 | 72.0% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 41 | 15.7% |
+| Not working | 38 | 14.6% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
-| Accursed Witch // Infectious Curse | silent | When this creature dies, return it to the battlefield transformed under your control attached to target opponent. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Brain in a Jar | silent | {1}, {T}: Put a charge counter on this artifact, then you may cast an instant or sorcery spell with mana value equal to the number of charge counters on this ar | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Breakneck Rider // Neck Breaker | silent | Attacking creatures you control get +1/+0 and have trample. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Corrupted Grafstone | silent | {T}: Choose a color of a card in your graveyard. Add one mana of that color. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Creeping Dread | silent | At the beginning of your upkeep, each player discards a card. Each opponent who discarded a card that shares a card type with the card you discarded loses 3 lif | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Cult of the Waxing Moon | silent | Whenever a permanent you control transforms into a non-Human creature, create a 2/2 green Wolf creature token. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
-| Elusive Tormentor // Insidious Mist | silent | Whenever this creature attacks and isn't blocked, you may pay {2}{B}. If you do, transform it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Engulf the Shore | silent | Return to their owners' hands all creatures with toughness less than or equal to the number of Islands you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Epiphany at the Drownyard | silent | Reveal the top X plus one cards of your library and separate them into two piles. An opponent chooses one of those piles. Put that pile into your hand and the o | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Erdwal Illuminator | silent | Whenever you investigate for the first time each turn, investigate an additional time. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
@@ -53,7 +51,6 @@
 | Seasons Past | silent | Return any number of cards with different mana values from your graveyard to your hand. Put Seasons Past on the bottom of its owner's library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Second Harvest | silent | For each token you control, create a token that's a copy of that permanent. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sin Prodder | silent | At the beginning of your upkeep, reveal the top card of your library. Any opponent may have you put that card into your graveyard. If a player does, this creatu | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Skin Invasion // Skin Shedder | silent | When enchanted creature dies, return this card to the battlefield transformed under your control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sorin, Grim Nemesis | silent | +1: Reveal the top card of your library and put that card into your hand. Each opponent loses life equal to its mana value. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Startled Awake // Persistent Nightmare | silent | {3}{U}{U}: Put this card from your graveyard onto the battlefield transformed. Activate only as a sorcery. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | The Gitrog Monster | silent | At the beginning of your upkeep, sacrifice The Gitrog Monster unless you sacrifice a land. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -105,6 +102,7 @@
 | Drownyard Explorers | handled | When this creature enters, investigate. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Drownyard Temple | handled | {3}: Return this card from your graveyard to the battlefield tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Drunau Corpse Trawler | handled | When this creature enters, create a 2/2 black Zombie creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Elusive Tormentor // Insidious Mist | handled | {1}, Discard a card: Transform this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ember-Eye Wolf | handled | {1}{R}: This creature gets +2/+0 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Emissary of the Sleepless | handled | When this creature enters, if a creature died this turn, create a 1/1 white Spirit creature token with flying. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Epitaph Golem | handled | {2}: Put target card from your graveyard on the bottom of your library. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -258,8 +256,9 @@
 ## Fully supported
 
 <details>
-<summary>33 cards</summary>
+<summary>35 cards</summary>
 
+- Accursed Witch // Infectious Curse
 - Always Watching
 - Archangel Avacyn // Avacyn, the Purifier
 - Avacynian Missionaries // Lunarch Inquisitors
@@ -286,6 +285,7 @@
 - Rattlechains
 - Sigarda, Heron's Grace
 - Silburlind Snapper
+- Skin Invasion // Skin Shedder
 - Slayer's Plate
 - Tenacity
 - Thing in the Ice // Awoken Horror
@@ -324,16 +324,13 @@
 | search your library for up to two basic land cards and reveal them. put one into your hand and the other into your graveyard. then shuffle. | 1 | Fork in the Road | soi |
 | target opponent reveals their hand. you choose a nonland card from it and exile that card. delirium — if there are four or more card types among cards in your g | 1 | Pick the Brain | soi |
 | werewolf of ancient hunger"..." hands. | 1 | Sage of Ancient Lore // Werewolf of Ancient Hunger | soi |
-| when enchanted creature dies, return ~ to the battlefield transformed under your control. | 1 | Skin Invasion // Skin Shedder | soi |
 | when equipped creature transforms, transform ~. | 1 | Neglected Heirloom // Ashmouth Blade | soi |
-| when ~ dies, return it to the battlefield transformed under your control attached to target opponent. | 1 | Accursed Witch // Infectious Curse | soi |
 | whenever a permanent you control transforms into a non-human creature, create a N/N green wolf creature token. | 1 | Cult of the Waxing Moon | soi |
 | whenever a source an opponent controls deals damage to you or a permanent you control, you may have ~ deal N damage to that source's controller. | 1 | Flameblade Angel | soi |
 | whenever a werewolf you control enters, you may transform it. | 1 | Geier Reach Bandit // Vildin-Pack Alpha | soi |
 | whenever another creature you control enters, you may discard a card. if you do, put a +N/+N counter on that creature, it gains haste until end of turn, and it  | 1 | Olivia, Mobilized for War | soi |
 | whenever you cast an instant or sorcery spell from your hand, you may cast target card with the same name as that spell from your graveyard. | 1 | Harness the Storm | soi |
 | whenever you investigate for the first time each turn, investigate an additional time. | 1 | Erdwal Illuminator | soi |
-| whenever ~ attacks and isn't blocked, you may pay {M}{M}. if you do, transform it. | 1 | Elusive Tormentor // Insidious Mist | soi |
 | whenever ~ attacks, you may pay {M}{M} and discard a card. if you do, ~ deals damage to target creature or planeswalker equal to the discarded card's mana value | 1 | Wolf of Devil's Breach | soi |
 | you may have ~ enter as a copy of any creature on the battlefield, except it enters with N additional +N/+N counters on it. | 1 | Altered Ego | soi |
 | {M}, {M}: put a charge counter on ~, then you may cast an instant or sorcery spell with mana value equal to the number of charge counters on ~ from your hand wi | 1 | Brain in a Jar | soi |

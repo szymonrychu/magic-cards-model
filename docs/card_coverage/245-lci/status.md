@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 80 | 29.1% |
-| Works (untested) | 139 | 50.5% |
+| Tested | 82 | 29.8% |
+| Works (untested) | 140 | 50.9% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 56 | 20.4% |
+| Not working | 53 | 19.3% |
 
 ## Cards needing work
 
@@ -62,14 +62,11 @@
 | Subterranean Schooner | silent | Whenever this Vehicle attacks, target creature that crewed it this turn explores. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Sunbird Standard // Sunbird Effigy | silent | Sunbird Effigy's power and toughness are each equal to the number of colors among the exiled cards used to craft it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Tarrian's Journal // The Tomb of Aclazotz | silent | {T}: You may cast a creature spell from your graveyard this turn. If you do, it enters with a finality counter on it and is a Vampire in addition to its other t | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Tarrian's Soulcleaver | silent | Whenever another artifact or creature is put into a graveyard from the battlefield, put a +1/+1 counter on equipped creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Terror Tide | silent | Fathomless descent — All creatures get -X/-X until end of turn, where X is the number of permanent cards in your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| The Ancient One | silent | {2}{U}{B}: Draw a card, then discard a card. When you discard a card this way, target player mills cards equal to its mana value. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | The Belligerent | silent | Whenever The Belligerent attacks, create a Treasure token. Until end of turn, you may look at the top card of your library any time, and you may play lands and  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | The Everflowing Well // The Myriad Pools | silent | Whenever you cast a permanent spell using mana produced by The Myriad Pools, up to one other target permanent you control becomes a copy of that spell until end | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | The Skullspore Nexus | silent | Whenever one or more nontoken creatures you control die, create a green Fungus Dinosaur creature token with base power and toughness each equal to the total pow | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Throne of the Grim Captain // The Grim Captain | silent | Whenever The Grim Captain attacks, each opponent sacrifices a nonland permanent of their choice. Then you may put an exiled creature card used to craft The Grim | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Unstable Glyphbridge // Sandswirl Wanderglyph | silent | When this artifact enters, if you cast it, for each player, choose a creature with power 2 or less that player controls. Then destroy all creatures except creat | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Wail of the Forgotten | silent | Descend 8 — Choose one. If there are eight or more permanent cards in your graveyard as you cast this spell, choose one or more instead. • Return target nonland | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Warden of the Inner Sky | silent | As long as this creature has three or more counters on it, it has flying and vigilance. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Zoyowa Lava-Tongue | silent | At the beginning of your end step, if you descended this turn, each opponent may discard a card or sacrifice a permanent of their choice. Zoyowa deals 3 damage  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -209,6 +206,7 @@
 | Sunshot Militia | handled | Tap two untapped artifacts and/or creatures you control: This creature deals 1 damage to each opponent. Activate only as a sorcery. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Swashbuckler's Whip | handled | Equipped creature has reach, "{2}, {T}: Tap target artifact or creature," and "{8}, {T}: Discover 10." | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Synapse Necromage | handled | When this creature dies, create two 1/1 black Fungus creature tokens with "This token can't block." | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Tarrian's Soulcleaver | handled | Equipped creature has vigilance. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Tectonic Hazard | handled | Tectonic Hazard deals 1 damage to each opponent and each creature they control. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Thousand Moons Crackshot | handled | Whenever this creature attacks, you may pay {2}{W}. When you do, tap target creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Thousand Moons Smithy // Barracks of the Thousand | handled | When Thousand Moons Smithy enters, create a white Gnome Soldier artifact creature token with "This token's power and toughness are each equal to the number of a | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -225,7 +223,7 @@
 ## Fully supported
 
 <details>
-<summary>80 cards</summary>
+<summary>82 cards</summary>
 
 - Abuelo's Awakening
 - Akawalli, the Seething Tower
@@ -293,6 +291,7 @@
 - Starving Revenant
 - Sunken Citadel
 - Tendril of the Mycotyrant
+- The Ancient One
 - The Millennium Calendar
 - The Mycotyrant
 - Thousand Moons Infantry
@@ -302,6 +301,7 @@
 - Triumphant Chomp
 - Trumpeting Carnosaur
 - Twists and Turns // Mycoid Maze
+- Unstable Glyphbridge // Sandswirl Wanderglyph
 - Vanguard of the Rose
 - Visage of Dread // Dread Osseosaur
 - Vito, Fanatic of Aclazotz
@@ -335,7 +335,6 @@
 | when ~ enters, choose one — • put a +N/+N counter on ~ for each creature that left the battlefield under your control ~. • you gain N life and scry N. • exile t | 1 | Kutzil's Flanker | lci |
 | when ~ enters, create a N/N black bat creature token with flying for each mana from a cave spent to cast it. | 1 | Bat Colony | lci |
 | when ~ enters, for each player, choose up to one other target artifact or creature that player controls. for as long as ~ remains on the battlefield, the chosen | 1 | Kitesail Larcenist | lci |
-| when ~ enters, if you cast it, for each player, choose a creature with power N or less that player controls. then destroy all creatures except creatures chosen  | 1 | Unstable Glyphbridge // Sandswirl Wanderglyph | lci |
 | when ~ enters, it explores N times. | 1 | Jadelight Spelunker | lci |
 | when ~ enters, look at the top six cards of your library. you may put a land card from among them onto the battlefield tapped. put the rest on the bottom in a r | 1 | Kaslem's Stonetree // Kaslem's Strider | lci |
 | when ~ enters, search your library for a basic land card or cave card, put it onto the battlefield tapped, then shuffle. | 1 | Scampering Surveyor | lci |
@@ -345,7 +344,6 @@
 | whenever a creature you control attacks alone, it gains deathtouch and lifelink until end of turn. put a dread counter on ~. then if there are three or more dre | 1 | Grasping Shadows // Shadows' Lair | lci |
 | whenever a creature you control explores a land card, you may put a land card from your hand onto the battlefield tapped. | 1 | Nicanzil, Current Conductor | lci |
 | whenever a creature you control explores, ~ gets +N/+N until end of turn and can't be blocked ~. | 1 | Merfolk Cave-Diver | lci |
-| whenever another artifact or creature is put into a graveyard from the battlefield, put a +N/+N counter on equipped creature. | 1 | Tarrian's Soulcleaver | lci |
 | whenever another dinosaur you control enters, you may have ~ base power become equal to that creature's power until end of turn. | 1 | Belligerent Yearling | lci |
 | whenever malcolm deals combat damage to a player, put a chorus counter on it. draw a card, then discard a card. if there are four or more chorus counters on mal | 1 | Malcolm, Alluring Scoundrel | lci |
 | whenever ojer kaslem deals combat damage to a player, reveal that many cards from the top of your library. you may put a creature card and/or a land card from a | 1 | Ojer Kaslem, Deepest Growth // Temple of Cultivation | lci |
@@ -364,7 +362,6 @@
 | {M}: add one mana of any of the exiled cards' colors. | 1 | Pit of Offerings | lci |
 | {M}: you may cast a creature spell from your graveyard ~. if you do, it enters with a finality counter on it and is a vampire in addition to its other types. | 1 | Tarrian's Journal // The Tomb of Aclazotz | lci |
 | {M}{M}: ~ can't be blocked by creatures with power N or less ~. | 1 | Cavern Stomper | lci |
-| {M}{M}{M}: draw a card, then discard a card. when you discard a card ~, target player mills cards equal to its mana value. | 1 | The Ancient One | lci |
 | −N: exile any number of target cards from your graveyard. add {M} for each card exiled ~. you may play those cards ~. | 1 | Quintorius Kand | lci |
 
 ## Notes

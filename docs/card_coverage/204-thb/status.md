@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 49 | 19.9% |
-| Works (untested) | 142 | 57.7% |
+| Tested | 51 | 20.7% |
+| Works (untested) | 143 | 58.1% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 55 | 22.4% |
+| Not working | 52 | 21.1% |
 
 ## Cards needing work
 
@@ -40,19 +40,17 @@
 | Dreamshaper Shaman | silent | At the beginning of your end step, you may pay {2}{R} and sacrifice a nonland permanent. If you do, reveal cards from the top of your library until you reveal a | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Elspeth Conquers Death | silent | II — Noncreature spells your opponents cast cost {2} more to cast until your next turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Elspeth's Devotee | silent | When this creature enters, you may search your library and/or graveyard for a card named Elspeth, Undaunted Hero, reveal it, and put it into your hand. If you s | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Elspeth's Nightmare | silent | III — Exile target opponent's graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Elspeth, Undaunted Hero | silent | −2: Search your library and/or graveyard for a card named Sunlit Hoplite and put it onto the battlefield. If you search your library this way, shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Furious Rise | silent | At the beginning of your end step, if you control a creature with power 4 or greater, exile the top card of your library. You may play that card until you exile | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Gallia of the Endless Dance | silent | Whenever you attack with three or more creatures, you may discard a card at random. If you do, draw two cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Grasping Giant | silent | Whenever this creature becomes blocked by a creature, exile that creature until this creature leaves the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Hateful Eidolon | silent | Whenever an enchanted creature dies, draw a card for each Aura you controlled that was attached to it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Hydra's Growth | silent | When this Aura enters, put a +1/+1 counter on enchanted creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
+| Hydra's Growth | silent | At the beginning of your upkeep, double the number of +1/+1 counters on enchanted creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Inspire Awe | silent | Prevent all combat damage that would be dealt this turn except combat damage that would be dealt by enchanted creatures and enchantment creatures. Scry 2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Kiora Bests the Sea God | silent | III — Gain control of target permanent an opponent controls. Untap it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Lagonna-Band Storyteller | silent | When this creature enters, you may put target enchantment card from your graveyard on top of your library. If you do, you gain life equal to its mana value. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Medomai's Prophecy | silent | III — When you cast a spell with the chosen name for the first time this turn, draw two cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Mystic Repeal | silent | Put target enchantment on the bottom of its owner's library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Nessian Boar | silent | Whenever this creature becomes blocked by a creature, that creature's controller draws a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Nightmare Shepherd | silent | Whenever another nontoken creature you control dies, you may exile it. If you do, create a token that's a copy of that creature, except it's 1/1 and it's a Nigh | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Nylea's Huntmaster | silent | When this creature enters, target creature you control gets +X/+0 until end of turn, where X is your devotion to green. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | One with the Stars | silent | Enchanted permanent is an enchantment and loses all other card types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -60,7 +58,6 @@
 | Reverent Hoplite | silent | When this creature enters, create a number of 1/1 white Human Soldier creature tokens equal to your devotion to white. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Shatter the Sky | silent | Each player who controls a creature with power 4 or greater draws a card. Then destroy all creatures. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Siona, Captain of the Pyleas | silent | Whenever an Aura you control becomes attached to a creature you control, create a 1/1 white Human Soldier creature token. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
-| Skola Grovedancer | silent | Whenever a land card is put into your graveyard from anywhere, you gain 1 life. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Skophos Maze-Warden | silent | Whenever another creature becomes the target of an ability of a land you control named Labyrinth of Skophos, you may have this creature fight that creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Storm Herald | silent | When this creature enters, return any number of Aura cards from your graveyard to the battlefield attached to creatures you control. Exile those Auras at the be | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Thassa's Oracle | silent | When this creature enters, look at the top X cards of your library, where X is your devotion to blue. Put up to one of them on top of your library and the rest  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -191,6 +188,7 @@
 | Setessan Training | handled | When this Aura enters, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Shimmerwing Chimera | handled | At the beginning of your upkeep, return up to one other target enchantment you control to its owner's hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Shoal Kraken | handled | Constellation — Whenever an enchantment you control enters, you may draw a card. If you do, discard a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Skola Grovedancer | handled | Whenever a land card is put into your graveyard from anywhere, you gain 1 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Skophos Warleader | handled | {R}, Sacrifice another creature or an enchantment: This creature gets +1/+0 and gains menace until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Slaughter-Priest of Mogis | handled | Whenever you sacrifice a permanent, this creature gets +2/+0 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Sleep of the Dead | handled | Tap target creature. It doesn't untap during its controller's next untap step. Escape—{2}{U}, Exile three other cards from your graveyard. (You may cast this ca | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -227,7 +225,7 @@
 ## Fully supported
 
 <details>
-<summary>49 cards</summary>
+<summary>51 cards</summary>
 
 - Alirios, Enraptured
 - Altar of the Pantheon
@@ -240,6 +238,7 @@
 - Daxos, Blessed by the Sun
 - Dryad of the Ilysian Grove
 - Eidolon of Obstruction
+- Elspeth's Nightmare
 - Enigmatic Incarnation
 - Entrancing Lyre
 - Flicker of Fate
@@ -251,6 +250,7 @@
 - Kunoros, Hound of Athreos
 - Labyrinth of Skophos
 - Loathsome Chimera
+- Nessian Boar
 - Nessian Hornbeetle
 - Nylea, Keen-Eyed
 - Nyxbloom Ancient
@@ -289,12 +289,12 @@
 | Constellation | 1 | Protean Thaumaturge | thb |
 | at the beginning of your end step, if you control a creature with power N or greater, exile the top card of your library. you may play that card until you exile | 1 | Furious Rise | thb |
 | at the beginning of your end step, you may pay {M}{M} and sacrifice a nonland permanent. if you do, reveal cards from the top of your library until you reveal a | 1 | Dreamshaper Shaman | thb |
+| at the beginning of your upkeep, double the number of +N/+N counters on enchanted creature. | 1 | Hydra's Growth | thb |
 | creatures you control get +N/+N until end of turn, where N is your devotion to green. (each {M} in the mana costs of permanents you control counts toward your d | 1 | Klothys's Design | thb |
 | during turns other than yours, spells you cast cost {M} less to cast. | 1 | Naiad of Hidden Coves | thb |
 | each player who controls a creature with power N or greater draws a card. then destroy all creatures. | 1 | Shatter the Sky | thb |
 | enchanted permanent is an enchantment and loses all other card types. | 1 | One with the Stars | thb |
 | equipped creatures you control have flying and haste. | 1 | Dalakos, Crafter of Wonders | thb |
-| exile target opponent's graveyard. | 1 | Elspeth's Nightmare | thb |
 | for each spell and ability your opponents control, counter it unless its controller pays {M}. | 1 | Whirlwind Denial | thb |
 | gain control of target permanent an opponent controls. untap it. | 1 | Kiora Bests the Sea God | thb |
 | mill three cards. then you may exile a creature or enchantment card from your graveyard. if you do, create a N/N black zombie creature token. | 1 | Tymaret Calls the Dead | thb |
@@ -313,7 +313,6 @@
 | when ~ dies, return it to the battlefield. it's an aura enchantment with enchant creature you control and "..." and it loses all other abilities. | 1 | Bronzehide Lion | thb |
 | when ~ enters, create a number of N/N white human soldier creature tokens equal to your devotion to white. | 1 | Reverent Hoplite | thb |
 | when ~ enters, look at the top N cards of your library, where N is your devotion to blue. put up to one of them on top of your library and the rest on the botto | 1 | Thassa's Oracle | thb |
-| when ~ enters, put a +N/+N counter on enchanted creature. | 1 | Hydra's Growth | thb |
 | when ~ enters, return any number of aura cards from your graveyard to the battlefield attached to creatures you control. exile those auras at the beginning of y | 1 | Storm Herald | thb |
 | when ~ enters, target creature an opponent controls gets -N/-N until end of turn, where N is your devotion to black. | 1 | Blight-Breath Catoblepas | thb |
 | when ~ enters, target creature an opponent controls gets -N/-N until end of turn, where N is your devotion to blue. | 1 | Threnody Singer | thb |
@@ -321,7 +320,6 @@
 | when ~ enters, you may put target enchantment card from your graveyard on top of your library. if you do, you gain life equal to its mana value. | 1 | Lagonna-Band Storyteller | thb |
 | when ~ enters, you may search your library and/or graveyard for a card named ashiok, sculptor of fears, reveal it, and put it into your hand. if you search your | 1 | Ashiok's Forerunner | thb |
 | when ~ enters, you may search your library and/or graveyard for a card named elspeth, undaunted hero, reveal it, and put it into your hand. if you search your l | 1 | Elspeth's Devotee | thb |
-| whenever a land card is put into your graveyard from anywhere, you gain N life. | 1 | Skola Grovedancer | thb |
 | whenever an aura you control becomes attached to a creature you control, create a N/N white human soldier creature token. | 1 | Siona, Captain of the Pyleas | thb |
 | whenever an enchanted creature dies, draw a card for each aura you controlled that was attached to it. | 1 | Hateful Eidolon | thb |
 | whenever another creature becomes the target of an ability of a land you control named labyrinth of skophos, you may have ~ fight that creature. | 1 | Skophos Maze-Warden | thb |
@@ -331,7 +329,6 @@
 | whenever you attack with three or more creatures, you may discard a card at random. if you do, draw two cards. | 1 | Gallia of the Endless Dance | thb |
 | whenever ~ attacks or becomes the target of a spell an opponent controls, choose one — • ~ deals N damage to each opponent. • exile the top two cards of your li | 1 | Tectonic Giant | thb |
 | whenever ~ becomes blocked by a creature, exile that creature until ~ leaves the battlefield. | 1 | Grasping Giant | thb |
-| whenever ~ becomes blocked by a creature, that creature's controller draws a card. | 1 | Nessian Boar | thb |
 | {M}{M}: you may put a red creature card or an artifact creature card from your hand onto the battlefield. sacrifice it at the beginning of the next end step. | 1 | Purphoros, Bronze-Blooded | thb |
 | ~ gets +N/+N as long as there are ten or more cards in a single graveyard. | 1 | Swimmer in Nightmares | thb |
 | ~ gets -N/-N for each card in your opponents' hands. | 1 | Enemy of Enlightenment | thb |

@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 64 | 21.1% |
-| Works (untested) | 134 | 44.1% |
+| Tested | 69 | 22.7% |
+| Works (untested) | 142 | 46.7% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 106 | 34.9% |
+| Not working | 93 | 30.6% |
 
 ## Cards needing work
 
@@ -28,9 +28,6 @@
 |---|---|---|---|---|---|
 | Aerith Gainsborough | silent | When Aerith Gainsborough dies, put X +1/+1 counters on each legendary creature you control, where X is the number of +1/+1 counters on Aerith Gainsborough. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Ambrosia Whiteheart | silent | When Ambrosia Whiteheart enters, you may return another permanent you control to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Astrologian's Planisphere | silent | Job select | no machine in the engine executes this keyword | Y/Y/Y | not_working |
-| Auron's Inspiration | silent | Attacking creatures get +2/+0 until end of turn. Flashback {2}{W}{W} (You may cast this card from your graveyard for its flashback cost. Then exile it.) | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Bard's Bow | silent | Job select | no machine in the engine executes this keyword | Y/Y/Y | not_working |
 | Beatrix, Loyal General | silent | At the beginning of combat on your turn, you may attach any number of Equipment you control to target creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Black Mage's Rod | silent | Equipped creature gets +1/+0, has "Whenever you cast a noncreature spell, this creature deals 1 damage to each opponent," and is a Wizard in addition to its oth | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Buster Sword | silent | Whenever equipped creature deals combat damage to a player, draw a card, then you may cast a spell from your hand with mana value less than or equal to that dam | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -38,10 +35,8 @@
 | Chocobo Kick | silent | Kicker—Return a land you control to its owner's hand. (You may return a land you control to its owner's hand in addition to any other costs as you cast this spe | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Clive's Hideaway | silent | {2}, {T}: You may play the exiled card without paying its mana cost if you control four or more legendary creatures. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Cloud of Darkness | silent | Particle Beam — When Cloud of Darkness enters, target creature an opponent controls gets -X/-X until end of turn, where X is the number of permanent cards in yo | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Dark Knight's Greatsword | silent | Job select | no machine in the engine executes this keyword | Y/Y/Y | not_working |
 | Deadly Embrace | silent | Destroy target creature an opponent controls. Then draw a card for each creature that died this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Demon Wall | silent | As long as this creature has a counter on it, it can attack as though it didn't have defender. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Dragoon's Lance | silent | Job select | no machine in the engine executes this keyword | Y/Y/Y | not_working |
 | Elixir | silent | {5}, {T}, Exile this artifact: Shuffle all nonland cards from your graveyard into your library. You gain life equal to the number of cards shuffled into your li | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Evil Reawakened | silent | Return target creature card from your graveyard to the battlefield with two additional +1/+1 counters on it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Excalibur II | silent | Equipped creature gets +1/+1 for each charge counter on Excalibur II. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -62,26 +57,21 @@
 | Lightning, Army of One | silent | Stagger — Whenever Lightning deals combat damage to a player, until your next turn, if a source would deal damage to that player or a permanent that player cont | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Lightning, Security Sergeant | silent | Whenever Lightning deals combat damage to a player, exile the top card of your library. You may play that card for as long as you control Lightning. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Louisoix's Sacrifice | silent | As an additional cost to cast this spell, sacrifice a legendary creature or pay {2}. Counter target activated ability, triggered ability, or noncreature spell. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Machinist's Arsenal | silent | Job select | no machine in the engine executes this keyword | Y/Y/Y | not_working |
 | Magitek Infantry | silent | {2}{W}: Search your library for a card named Magitek Infantry, put it onto the battlefield tapped, then shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Magitek Scythe | silent | A Test of Your Reflexes! — When this Equipment enters, you may attach it to target creature you control. If you do, that creature gains first strike until end o | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Malboro | silent | Bad Breath — When this creature enters, each opponent discards a card, loses 2 life, and exiles the top three cards of their library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Memories Returning | silent | Reveal the top five cards of your library. Put one of them into your hand. Then choose an opponent. They put one on the bottom of your library. Then you put one | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Monk's Fist | silent | Job select | no machine in the engine executes this keyword | Y/Y/Y | not_working |
 | Nibelheim Aflame | silent | Choose target creature you control. It deals damage equal to its power to each other creature. If this spell was cast from a graveyard, discard your hand and dr | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Ninja's Blades | silent | Equipped creature gets +1/+1, is a Ninja in addition to its other types, and has "Whenever this creature deals combat damage to a player, draw a card, then disc | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Omega, Heartless Evolution | silent | Wave Cannon — When Omega enters, for each opponent, tap up to one target nonland permanent that opponent controls. Put X stun counters on each of those permanen | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Paladin's Arms | silent | Job select | no machine in the engine executes this keyword | Y/Y/Y | not_working |
 | Phantom Train | silent | Sacrifice another artifact or creature: Put a +1/+1 counter on this Vehicle. It becomes a Spirit artifact creature in addition to its other types until end of t | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | PuPu UFO | silent | {3}: Until end of turn, this creature's base power becomes equal to the number of Towns you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Quistis Trepe | silent | Blue Magic — When Quistis Trepe enters, you may cast target instant or sorcery card from a graveyard, and mana of any type can be spent to cast that spell. If t | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Reach the Horizon | silent | Search your library for up to two basic land cards and/or Town cards with different names, put them onto the battlefield tapped, then shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Red Mage's Rapier | silent | Job select | no machine in the engine executes this keyword | Y/Y/Y | not_working |
 | Reno and Rude | silent | Whenever Reno and Rude deals combat damage to a player, exile the top card of that player's library. Then you may sacrifice another creature or artifact. If you | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Ride the Shoopuf | silent | {5}{G}{G}: This enchantment becomes a 7/7 Beast creature in addition to its other types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Rinoa Heartilly | silent | Angelo Cannon — Whenever Rinoa Heartilly attacks, another target creature you control gets +1/+1 until end of turn for each creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Sage's Nouliths | silent | Equipped creature gets +1/+0, has "Whenever this creature attacks, untap target attacking creature," and is a Cleric in addition to its other types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Samurai's Katana | silent | Job select | no machine in the engine executes this keyword | Y/Y/Y | not_working |
 | Seifer Almasy | silent | Fire Cross — Whenever Seifer Almasy deals combat damage to a player, you may cast target instant or sorcery card with mana value 3 or less from your graveyard w | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Sidequest: Catch a Fish // Cooking Campsite | silent | At the beginning of your upkeep, look at the top card of your library. If it's an artifact or creature card, you may reveal it and put it into your hand. If you | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Sin, Spira's Punishment | silent | Whenever Sin enters or attacks, exile a permanent card from your graveyard at random, then create a tapped token that's a copy of that card. If the exiled card  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -90,7 +80,6 @@
 | Summon: Brynhildr | silent | I — Chain — Exile the top card of your library. During any turn you put a lore counter on this Saga, you may play that card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Summon: G.F. Cerberus | silent | III — Triple — When you next cast an instant or sorcery spell this turn, copy it twice. You may choose new targets for the copies. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Summon: Leviathan | silent | I — Return each creature that isn't a Kraken, Leviathan, Merfolk, Octopus, or Serpent to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Summoner's Grimoire | silent | Job select | no machine in the engine executes this keyword | Y/Y/Y | not_working |
 | Swallowed by Leviathan | silent | Choose target spell. Surveil 2, then counter the chosen spell unless its controller pays {1} for each card in your graveyard. (To surveil 2, look at the top two | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Terra, Magical Adept // Esper Terra | silent | IV — Add {W}{W}, {U}{U}, {B}{B}, {R}{R}, and {G}{G}. Exile Esper Terra, then return it to the battlefield . | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | The Final Days | silent | Create two tapped 2/2 black Horror creature tokens. If this spell was cast from a graveyard, instead create X of those tokens, where X is the number of creature | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -110,10 +99,8 @@
 | Vanille, Cheerful l'Cie | silent | At the beginning of your first main phase, if you both own and control Vanille and a creature named Fang, Fearless l'Cie, you may pay {3}{B}{G}. If you do, exil | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Vincent Valentine // Galian Beast | silent | Whenever Vincent Valentine attacks, you may transform it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Vincent's Limit Break | silent | Tiered (Choose one additional cost.) Until end of turn, target creature you control gains "When this creature dies, return it to the battlefield tapped under it | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Warrior's Sword | silent | Job select | no machine in the engine executes this keyword | Y/Y/Y | not_working |
 | White Mage's Staff | silent | Equipped creature gets +1/+1, has "Whenever this creature attacks, you gain 1 life," and is a Cleric in addition to its other types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Yuna, Hope of Spira | silent | During your turn, Yuna and enchantment creatures you control have trample, lifelink, and ward {2}. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Zenos yae Galvus // Shinryu, Transcendent Rival | silent | My First Friend — When Zenos yae Galvus enters, choose a creature an opponent controls. Until end of turn, creatures other than Zenos yae Galvus and the chosen  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Zidane, Tantalus Thief | silent | Whenever an opponent gains control of a permanent from you, you create a Treasure token. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
 | Zodiark, Umbral God | silent | When Zodiark enters, each player sacrifices half the non-God creatures they control of their choice, rounded down. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Aerith Rescue Mission | notice | Choose one — • Take the Elevator — Create three 1/1 colorless Hero creature tokens. • Take 59 Flights of Stairs — Tap up to three target creatures. Put a stun c | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
@@ -139,9 +126,12 @@
 | Airship Crash | handled | Destroy target artifact, enchantment, or creature with flying. Cycling {2} ({2}, Discard this card: Draw a card.) | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Al Bhed Salvagers | handled | Whenever this creature or another creature or artifact you control dies, target opponent loses 1 life and you gain 1 life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Ashe, Princess of Dalmasca | handled | Whenever Ashe attacks, look at the top five cards of your library. You may reveal an artifact card from among them and put it into your hand. Put the rest on th | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Astrologian's Planisphere | handled | Equipped creature is a Wizard in addition to its other types and has "Whenever you cast a noncreature spell and whenever you draw your third card each turn, put | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Auron's Inspiration | handled | Attacking creatures get +2/+0 until end of turn. Flashback {2}{W}{W} (You may cast this card from your graveyard for its flashback cost. Then exile it.) | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Balamb Garden, SeeD Academy // Balamb Garden, Airborne | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Balamb T-Rexaur | handled | When this creature enters, you gain 3 life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Balthier and Fran | handled | Vehicles you control get +1/+1 and have reach and vigilance. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Bard's Bow | handled | Equipped creature gets +2/+2, has reach, and is a Bard in addition to its other types. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Baron, Airship Kingdom | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Battle Menu | handled | Choose one — • Attack — Create a 2/2 white Knight creature token. • Ability — Target creature gets +0/+4 until end of turn. • Magic — Destroy target creature wi | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Black Waltz No. 3 | handled | Whenever you cast a noncreature spell, Black Waltz No. 3 deals 2 damage to each opponent. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -162,6 +152,7 @@
 | Delivery Moogle | handled | When this creature enters, search your library and/or graveyard for an artifact card with mana value 2 or less, reveal it, and put it into your hand. If you sea | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Diamond Weapon | handled | This spell costs {1} less to cast for each permanent card in your graveyard. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Dion, Bahamut's Dominant // Bahamut, Warden of Light | handled | Dragonfire Dive — During your turn, Dion and other Knights you control have flying. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Dragoon's Lance | handled | Equipped creature gets +1/+0 and is a Knight in addition to its other types. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Dragoon's Wyvern | handled | When this creature enters, create a 1/1 colorless Hero creature token. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Dreams of Laguna | handled | Surveil 1, then draw a card. (To surveil 1, look at the top card of your library. You may put it into your graveyard.) Flashback {3}{U} (You may cast this card  | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Dwarven Castle Guard | handled | When this creature dies, create a 1/1 colorless Hero creature token. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -209,12 +200,14 @@
 | Namazu Trader | handled | When this creature enters, you lose 1 life and create a Treasure token. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Opera Love Song | handled | Choose one — • Exile the top two cards of your library. You may play those cards until your next end step. • One or two target creatures each get +2/+0 until en | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Overkill | handled | Target creature gets -0/-9999 until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Paladin's Arms | handled | Equipped creature gets +2/+1, has ward {1}, and is a Knight in addition to its other types. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Phoenix Down | handled | {1}{W}, {T}, Exile this artifact: Choose one — • Return target creature card with mana value 4 or less from your graveyard to the battlefield tapped. • Exile ta | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Poison the Waters | handled | Choose one — • All creatures get -1/-1 until end of turn. • Target player reveals their hand. You choose an artifact or creature card from it. That player disca | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Queen Brahne | handled | Whenever Queen Brahne attacks, create a 0/1 black Wizard creature token with "Whenever you cast a noncreature spell, this token deals 1 damage to each opponent. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Qutrub Forayer | handled | When this creature enters, choose one — • Destroy target creature that was dealt damage this turn. • Exile up to two target cards from a single graveyard. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Rabanastre, Royal City | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Ragnarok, Divine Deliverance | handled | When Ragnarok dies, destroy target permanent and return target nonlegendary permanent card from your graveyard to the battlefield. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Red Mage's Rapier | handled | Equipped creature has "Whenever you cast a noncreature spell, this creature gets +2/+0 until end of turn" and is a Wizard in addition to its other types. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Relm's Sketching | handled | Create a token that's a copy of target artifact, creature, or land. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Resentful Revelation | handled | Look at the top three cards of your library. Put one of them into your hand and the rest into your graveyard. Flashback {6}{B} (You may cast this card from your | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Restoration Magic | handled | Tiered (Choose one additional cost.) • Cure — {0} — Target permanent gains hexproof and indestructible until end of turn. • Cura — {1} — Target permanent gains  | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -225,6 +218,7 @@
 | Rydia, Summoner of Mist | handled | Landfall — Whenever a land you control enters, you may discard a card. If you do, draw a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Sabotender | handled | Landfall — Whenever a land you control enters, this creature deals 1 damage to each opponent. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Sahagin | handled | Whenever you cast a noncreature spell, if at least four mana was spent to cast it, put a +1/+1 counter on this creature and it can't be blocked this turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Samurai's Katana | handled | Equipped creature gets +2/+2, has trample and haste, and is a Samurai in addition to its other types. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Sandworm | handled | When this creature enters, destroy target land. Its controller may search their library for a basic land card, put it onto the battlefield tapped, then shuffle. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Scorpion Sentinel | handled | As long as you control seven or more lands, this creature gets +3/+0. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Sephiroth's Intervention | handled | Destroy target creature. You gain 2 life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -236,7 +230,6 @@
 | Sidequest: Card Collection // Magicked Card | handled | When this enchantment enters, draw three cards, then discard two cards. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Sidequest: Raise a Chocobo // Black Chocobo | handled | When this enchantment enters, create a 2/2 green Bird creature token with "Whenever a land you control enters, this token gets +1/+0 until end of turn." | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Slash of Light | handled | Slash of Light deals damage equal to the number of creatures you control plus the number of Equipment you control to target creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Sleep Magic | handled | When this Aura enters, tap enchanted creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Squall, SeeD Mercenary | handled | Rough Divide — Whenever a creature you control attacks alone, it gains double strike until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Summon: Anima | handled | I, II, III — Pain — You draw a card and you lose 1 life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Summon: Choco/Mog | handled | I, II, III, IV — Stampede! — Other creatures you control get +1/+0 until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -245,6 +238,7 @@
 | Summon: Primal Odin | handled | I — Gungnir — Destroy target creature an opponent controls. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Summon: Shiva | handled | I, II — Heavenly Strike — Tap target creature an opponent controls. Put a stun counter on it. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Summon: Titan | handled | I — Mill five cards. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Summoner's Grimoire | handled | Equipped creature is a Shaman in addition to its other types and has "Whenever this creature attacks, you may put a creature card from your hand onto the battle | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Suplex | handled | Choose one — • Suplex deals 3 damage to target creature. If that creature would die this turn, exile it instead. • Exile target artifact. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | The Crystal's Chosen | handled | Create four 1/1 colorless Hero creature tokens. Then put a +1/+1 counter on each creature you control. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | The Earth Crystal | handled | Green spells you cast cost {1} less to cast. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -261,6 +255,7 @@
 | Valkyrie Aerial Unit | handled | When this creature enters, surveil 2. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Vayne's Treachery | handled | Kicker—Sacrifice an artifact or creature. (You may sacrifice an artifact or creature in addition to any other costs as you cast this spell.) Target creature get | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Vector, Imperial Capital | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Warrior's Sword | handled | Equipped creature gets +3/+2 and is a Warrior in addition to its other types. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | White Auracite | handled | When this artifact enters, exile target nonland permanent an opponent controls until this artifact leaves the battlefield. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Windurst, Federation Center | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | World Map | handled | {1}, {T}, Sacrifice this artifact: Search your library for a basic land card, reveal it, put it into your hand, then shuffle. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -270,7 +265,7 @@
 ## Fully supported
 
 <details>
-<summary>64 cards</summary>
+<summary>69 cards</summary>
 
 - A Realm Reborn
 - Absolute Virtue
@@ -289,6 +284,7 @@
 - Cloud, Midgar Mercenary
 - Cloud, Planet's Champion
 - Coliseum Behemoth
+- Dark Knight's Greatsword
 - Edgar, King of Figaro
 - Emet-Selch, Unsundered // Hades, Sorcerer of Eld
 - Esper Origins // Summon: Esper Maduin
@@ -300,7 +296,9 @@
 - Joshua, Phoenix's Dominant // Phoenix, Warden of Fire
 - Judgment Bolt
 - Kuja, Genome Sorcerer // Trance Kuja, Fate Defied
+- Machinist's Arsenal
 - Matoya, Archon Elder
+- Monk's Fist
 - Noctis, Prince of Lucis
 - Prompto Argentum
 - Qiqirn Merchant
@@ -316,6 +314,7 @@
 - Shantotto, Tactician Magician
 - Sidequest: Hunt the Mark // Yiazmat, Ultimate Mark
 - Sidequest: Play Blitzball // World Champion, Celestial Weapon
+- Sleep Magic
 - Snow Villiers
 - Sorceress's Schemes
 - Starting Town
@@ -336,6 +335,7 @@
 - Traveling Chocobo
 - Vivi Ornitier
 - You're Not Alone
+- Zenos yae Galvus // Shinryu, Transcendent Rival
 
 </details>
 
@@ -343,7 +343,6 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| job select | 11 | Astrologian's Planisphere, Bard's Bow, Dark Knight's Greatsword, Dragoon's Lance, Machinist's Arsenal | fin |
 | equipped creature gets +N/+N, has "..." and is a cleric in addition to its other types. | 2 | Sage's Nouliths, White Mage's Staff | fin |
 | Angelo Cannon | 1 | Rinoa Heartilly | fin |
 | Bad Breath | 1 | Malboro | fin |
@@ -352,7 +351,6 @@
 | Choose one | 1 | Aerith Rescue Mission | fin |
 | Fire Cross | 1 | Seifer Almasy | fin |
 | Landfall | 1 | Tifa Lockhart | fin |
-| My First Friend | 1 | Zenos yae Galvus // Shinryu, Transcendent Rival | fin |
 | Particle Beam | 1 | Cloud of Darkness | fin |
 | Stagger | 1 | Lightning, Army of One | fin |
 | Starscourge | 1 | Ardyn, the Usurper | fin |
@@ -374,7 +372,6 @@
 | at the beginning of your first main phase, if you both own and control vanille and a creature named fang, fearless l'cie, you may pay {M}{M}{M}. if you do, exil | 1 | Vanille, Cheerful l'Cie | fin |
 | at the beginning of your upkeep, each player exiles the top card of their library. until end of turn, you may play the card you own exiled ~ and each other card | 1 | Triple Triad | fin |
 | at the beginning of your upkeep, look at the top card of your library. if it's an artifact or creature card, you may reveal it and put it into your hand. if you | 1 | Sidequest: Catch a Fish // Cooking Campsite | fin |
-| attacking creatures get +N/+N until end of turn. flashback {M}{M}{M} (you may cast ~ from your graveyard for its flashback cost. then exile it.) | 1 | Auron's Inspiration | fin |
 | chain — exile the top card of your library. during any turn you put a lore counter on ~, you may play that card. | 1 | Summon: Brynhildr | fin |
 | choose target creature you control and target equipment. gain control of that equipment until end of turn. attach it to the chosen creature. when you lose contr | 1 | Stolen Uniform | fin |
 | choose target creature you control. it deals damage equal to its power to each other creature. if ~ was cast from a graveyard, discard your hand and draw four c | 1 | Nibelheim Aflame | fin |

@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 22 | 15.4% |
-| Works (untested) | 79 | 55.2% |
+| Works (untested) | 81 | 56.6% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 42 | 29.4% |
+| Not working | 40 | 28.0% |
 
 ## Cards needing work
 
@@ -48,7 +48,6 @@
 | Mind Funeral | silent | Target opponent reveals cards from the top of their library until four land cards are revealed. That player puts all cards revealed this way into their graveyar | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Morbid Bloom | silent | Exile target creature card from a graveyard, then create X 1/1 green Saproling creature tokens, where X is the exiled card's toughness. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Naya Hushblade | silent | As long as you control another multicolored permanent, this creature gets +1/+1 and has shroud. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Necromancer's Covenant | silent | When this enchantment enters, exile all creature cards from target player's graveyard, then create a 2/2 black Zombie creature token for each card exiled this w | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Nemesis of Reason | silent | Whenever this creature attacks, defending player mills ten cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Nulltread Gargantuan | silent | When this creature enters, put a creature you control on top of its owner's library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Qasali Pridemage | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
@@ -62,7 +61,6 @@
 | Tainted Sigil | silent | {T}, Sacrifice this artifact: You gain life equal to the total life lost by all players this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Thought Hemorrhage | silent | Choose a nonland card name. Target player reveals their hand. Thought Hemorrhage deals 3 damage to that player for each card with the chosen name revealed this  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Thraximundar | silent | Whenever Thraximundar attacks, defending player sacrifices a creature of their choice. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Unscythe, Killer of Kings | silent | Whenever a creature dealt damage by equipped creature this turn dies, you may exile that card. If you do, create a 2/2 black Zombie creature token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Vedalken Ghoul | silent | Whenever this creature becomes blocked, defending player loses 4 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Aven Mimeomancer | notice | At the beginning of your upkeep, you may put a feather counter on target creature. If you do, that creature has base power and toughness 3/1 and has flying for  | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Slave of Bolas | notice | Gain control of target creature. Untap that creature. It gains haste until end of turn. Sacrifice it at the beginning of the next end step. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
@@ -119,6 +117,7 @@
 | Monstrous Carabid | handled | This creature attacks each combat if able. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Mycoid Shepherd | handled | Whenever this creature or another creature you control with power 5 or greater dies, you may gain 5 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Naya Sojourners | handled | When you cycle this card and when this creature dies, you may put a +1/+1 counter on target creature. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Necromancer's Covenant | handled | When this enchantment enters, exile all creature cards from target player's graveyard, then create a 2/2 black Zombie creature token for each card exiled this w | the engine reads this text and performs it | Y/-/- | not_tested |
 | Offering to Asha | handled | Counter target spell unless its controller pays {4}. You gain 4 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Pale Recluse | handled | Reach | machines/combat.py | Y/-/- | not_tested |
 | Reborn Hope | handled | Return target multicolored card from your graveyard to your hand. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -137,6 +136,7 @@
 | Thopter Foundry | handled | {1}, Sacrifice a nontoken artifact: Create a 1/1 blue Thopter artifact creature token with flying. You gain 1 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Time Sieve | handled | {T}, Sacrifice five artifacts: Take an extra turn after this one. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Unbender Tine | handled | {T}: Untap another target permanent. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Unscythe, Killer of Kings | handled | Equipped creature gets +3/+3 and has first strike. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Uril, the Miststalker | handled | Uril gets +2/+2 for each Aura attached to it. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Valley Rannet | handled | Mountaincycling | machines/keywords.py (off_zone_abilities: cycling) | Y/-/- | not_tested |
 | Vectis Dominator | handled | {T}: Tap target creature unless its controller pays 2 life. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -205,12 +205,10 @@
 | until end of turn, creatures you control get +N/+N and creatures your opponents control get -N/-N. | 1 | Zealous Persecution | arb |
 | when enchanted creature becomes the target of a spell or ability, exile that creature. | 1 | Crystallization | arb |
 | when karrthus enters, gain control of all dragons, then untap all dragons. | 1 | Karrthus, Tyrant of Jund | arb |
-| when ~ enters, exile all creature cards from target player's graveyard, then create a N/N black zombie creature token for each card exiled ~. | 1 | Necromancer's Covenant | arb |
 | when ~ enters, put a creature you control on top of its owner's library. | 1 | Nulltread Gargantuan | arb |
 | when ~ enters, target player discards a card at random. | 1 | Sanity Gnawers | arb |
 | when ~ enters, target player reveals a card at random from their hand, then loses life equal to that card's mana value. | 1 | Singe-Mind Ogre | arb |
 | when ~ enters, you may have target creature block it ~ if able. | 1 | Giant Ambush Beetle | arb |
-| whenever a creature dealt damage by equipped creature ~ dies, you may exile that card. if you do, create a N/N black zombie creature token. | 1 | Unscythe, Killer of Kings | arb |
 | whenever a creature you control attacks alone, if it's the first combat phase of the turn, untap that creature. after ~, there is an additional combat phase. | 1 | Finest Hour | arb |
 | whenever a creature you control attacks alone, you may search your library for an aura card that could enchant that creature, put it onto the battlefield attach | 1 | Sovereigns of Lost Alara | arb |
 | whenever another artifact you control enters, ~ gets +N/+N until end of turn and can't be blocked ~. | 1 | Glassdust Hulk | arb |

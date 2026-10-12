@@ -17,24 +17,22 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 20 | 18.9% |
-| Works (untested) | 45 | 42.5% |
+| Tested | 21 | 19.8% |
+| Works (untested) | 47 | 44.3% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 41 | 38.7% |
+| Not working | 38 | 35.8% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
 | Adéwalé, Breaker of Chains | silent | When Adéwalé enters, reveal the top six cards of your library. Put an Assassin, Pirate, or Vehicle card from among them into your hand and the rest on the botto | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Alexios, Deimos of Kosmos | silent | At the beginning of each player's upkeep, that player gains control of Alexios, untaps it, and puts a +1/+1 counter on it. It gains haste until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Aveline de Grandpré | silent | Whenever a creature you control with deathtouch deals combat damage to a player, put that many +1/+1 counters on that creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Bayek of Siwa | silent | During your turn, other historic creatures you control have double strike. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Become Anonymous | silent | Exile target nontoken creature you own and the top two cards of your library in a face-down pile, shuffle that pile, then cloak those cards. They enter tapped.  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Brotherhood Regalia | silent | Equipped creature has ward {2}, is an Assassin in addition to its other types, and can't be blocked. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Brotherhood Spy | silent | At the beginning of combat on your turn, if you control a legendary Assassin, this creature gets +1/+0 until end of turn and can't be blocked this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Chain Assassination | silent | Freerunning {1}{B} (You may cast this spell for its freerunning cost if you dealt combat damage to a player this turn with an Assassin or commander.) Destroy ta | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Cleopatra, Exiled Pharaoh | silent | Betrayal — Whenever a legendary creature with counters on it dies, draw a card for each counter on it. You lose 2 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Desmond Miles | silent | Whenever Desmond Miles deals combat damage to a player, surveil X, where X is the amount of damage it dealt to that player. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Desynchronization | silent | Return each nonland permanent that's not historic to its owner's hand. (Artifacts, legendaries, and Sagas are historic.) | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Edward Kenway | silent | At the beginning of your end step, create a Treasure token for each tapped Assassin, Pirate, and/or Vehicle you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -48,7 +46,6 @@
 | Mary Read and Anne Bonny | silent | Whenever you discard an Island, Pirate, or Vehicle card, create a tapped Treasure token. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Monastery Raid | silent | Freerunning {X}{R} (You may cast this spell for its freerunning cost if you dealt combat damage to a player this turn with an Assassin or commander.) Exile the  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Overpowering Attack | silent | Freerunning {2}{R} (You may cast this spell for its freerunning cost if you dealt combat damage to a player this turn with an Assassin or commander.) Untap all  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Palazzo Archers | silent | Whenever a creature with flying attacks you or a planeswalker you control, this creature deals damage equal to its power to that creature. | this trigger's condition can never be satisfied - it never triggers | Y/-/- | not_working |
 | Petty Larceny | silent | Freerunning {1}{B} (You may cast this spell for its freerunning cost if you dealt combat damage to a player this turn with an Assassin or commander.) Look at th | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Phantom Blade | silent | When this Equipment enters, attach it to up to one target creature you control. Destroy up to one other target creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Raven Clan War-Axe | silent | When this Equipment enters, you may search your library and/or graveyard for a card named Eivor, Battle-Ready, reveal it, and put it into your hand. If you sear | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -80,6 +77,7 @@
 | Brotherhood Headquarters | handled |  |  | Y/-/- | not_tested |
 | Brotherhood Patriarch | handled | When this creature dies, each opponent loses 2 life and you gain 2 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Caduceus, Staff of Hermes | handled | Equipped creature has lifelink. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Cleopatra, Exiled Pharaoh | handled | Allies — At the beginning of your end step, put a +1/+1 counter on each of up to two other target legendary creatures. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Detained by Legionnaires | handled | Enchanted creature can't attack or block. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Distract the Guards | handled | Freerunning {1}{W} (You may cast this spell for its freerunning cost if you dealt combat damage to a player this turn with an Assassin or commander.) Create thr | the engine reads this text and performs it | Y/-/- | not_tested |
 | Eagle Vision | handled | Freerunning {1}{U} (You may cast this spell for its freerunning cost if you dealt combat damage to a player this turn with an Assassin or commander.) Draw three | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -96,6 +94,7 @@
 | Lydia Frye | handled | Lydia Frye can't be blocked by creatures with power 3 or greater. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Merciless Harlequin | handled | When this creature enters, you draw a card and you lose 1 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Origin of the Hidden Ones | handled | I — This Saga deals 4 damage to any target. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Palazzo Archers | handled | Whenever a creature with flying attacks you or a planeswalker you control, this creature deals damage equal to its power to that creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Poison-Blade Mentor | handled | Whenever this creature attacks, another target Assassin you control gains deathtouch until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Restart Sequence | handled | Freerunning {1}{B} (You may cast this spell for its freerunning cost if you dealt combat damage to a player this turn with an Assassin or commander.) Return tar | the engine reads this text and performs it | Y/-/- | not_tested |
 | Rooftop Bypass | handled | Whenever one or more nontoken creatures you control deal combat damage to a player, create a 1/1 black Assassin creature token with menace. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -116,10 +115,11 @@
 ## Fully supported
 
 <details>
-<summary>20 cards</summary>
+<summary>21 cards</summary>
 
 - Abstergo Entertainment
 - Adrestia
+- Alexios, Deimos of Kosmos
 - Ballad of the Black Flag
 - Bleeding Effect
 - Bureau Headmaster
@@ -145,12 +145,10 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| Betrayal | 1 | Cleopatra, Exiled Pharaoh | acr |
 | Choose one | 1 | What Must Be Done | acr |
 | Choose one or both | 1 | Auditore Ambush | acr |
 | as long as ezio has two or more counters on it, it has first strike and is an assassin in addition to its other types. | 1 | Ezio, Brash Novice | acr |
 | at the beginning of combat on your turn, if you control a legendary assassin, ~ gets +N/+N until end of turn and can't be blocked ~. | 1 | Brotherhood Spy | acr |
-| at the beginning of each player's upkeep, that player gains control of alexios, untaps it, and puts a +N/+N counter on it. it gains haste until end of turn. | 1 | Alexios, Deimos of Kosmos | acr |
 | at the beginning of your end step, create a treasure token for each tapped assassin, pirate, and/or vehicle you control. | 1 | Edward Kenway | acr |
 | detain | 1 | Tax Collector | acr |
 | during your turn, other historic creatures you control have double strike. | 1 | Bayek of Siwa | acr |
@@ -177,7 +175,6 @@
 | when ~ enters, for each opponent, exile up to one target creature that player controls until ~ leaves the battlefield. | 1 | Haytham Kenway | acr |
 | when ~ enters, you may search your library and/or graveyard for a card named eivor, battle-ready, reveal it, and put it into your hand. if you search your libra | 1 | Raven Clan War-Axe | acr |
 | when ~ enters, you may search your library for an artifact card, reveal it, then shuffle. put that card into your hand if you control an assassin. otherwise, pu | 1 | Loyal Inventor | acr |
-| whenever a creature with flying attacks you or a planeswalker you control, ~ deals damage equal to its power to that creature. | 1 | Palazzo Archers | acr |
 | whenever a creature you control with deathtouch deals combat damage to a player, put that many +N/+N counters on that creature. | 1 | Aveline de Grandpré | acr |
 | whenever altaïr attacks, exile up to one target assassin creature card from your graveyard with a memory counter on it. then for each creature card you own in e | 1 | Altaïr Ibn-La'Ahad | acr |
 | whenever eivor deals combat damage to a player, you mill that many cards. you may put a saga card and/or a land card from among them onto the battlefield. | 1 | Eivor, Wolf-Kissed | acr |

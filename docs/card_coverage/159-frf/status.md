@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 32 | 19.9% |
-| Works (untested) | 81 | 50.3% |
+| Works (untested) | 82 | 50.9% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 48 | 29.8% |
+| Not working | 47 | 29.2% |
 
 ## Cards needing work
 
@@ -67,7 +67,6 @@
 | Whisperwood Elemental | silent | Sacrifice this creature: Until end of turn, face-up nontoken creatures you control gain "When this creature dies, manifest the top card of your library." | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Wildcall | silent | Manifest the top card of your library, then put X +1/+1 counters on it. (To manifest a card, put it onto the battlefield face down as a 2/2 creature. Turn it fa | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Write into Being | silent | Look at the top two cards of your library. Manifest one of those cards, then put the other on the top or bottom of your library. (To manifest a card, put it ont | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Yasova Dragonclaw | silent | At the beginning of combat on your turn, you may pay {1}{U/R}{U/R}. If you do, gain control of target creature an opponent controls with power less than Yasova  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Bloodfire Enforcers | notice | This creature has first strike and trample as long as an instant card and a sorcery card are in your graveyard. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Crux of Fate | notice | Choose one — • Destroy all Dragon creatures. • Destroy all non-Dragon creatures. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Fearsome Awakening | notice | Return target creature card from your graveyard to the battlefield. If it's a Dragon, put two +1/+1 counters on it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -155,6 +154,7 @@
 | Whisperer of the Wilds | handled | Ferocious | no code needed | Y/Y/- | not_tested |
 | Wild Slash | handled | Ferocious — If you control a creature with power 4 or greater, damage can't be prevented this turn. Wild Slash deals 2 damage to any target. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Will of the Naga | handled | Delve (Each card you exile from your graveyard while casting this spell pays for {1}.) Tap up to two target creatures. Those creatures don't untap during their  | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Yasova Dragonclaw | handled | At the beginning of combat on your turn, you may pay {1}{U/R}{U/R}. If you do, gain control of target creature an opponent controls with power less than Yasova  | the engine reads this text and performs it | Y/Y/- | not_tested |
 
 ## Fully supported
 
@@ -204,7 +204,6 @@
 | when ~ enters, bolster N. | 2 | Elite Scaleguard, Sandsteppe Mastodon | frf |
 | Choose one | 1 | Crux of Fate | frf |
 | add {M} for each attacking creature you control. until end of turn, attacking creatures you control gain "..." | 1 | Dragonrage | frf |
-| at the beginning of combat on your turn, you may pay {M}{M}{M}. if you do, gain control of target creature an opponent controls with power less than ~'s power u | 1 | Yasova Dragonclaw | frf |
 | at the beginning of each opponent's end step, that player chooses up to two creatures they control, then sacrifices the rest. | 1 | Archfiend of Depravity | frf |
 | at the beginning of your end step, bolster N, where N is the number of tapped creatures you control. | 1 | Dragonscale General | frf |
 | bolster N. (choose a creature with the least toughness among creatures you control and put three +N/+N counters on it.) | 1 | Cached Defenses | frf |

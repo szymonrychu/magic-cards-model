@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 29 | 16.5% |
+| Tested | 30 | 17.0% |
 | Works (untested) | 118 | 67.0% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 29 | 16.5% |
+| Not working | 28 | 15.9% |
 
 ## Cards needing work
 
@@ -47,7 +47,6 @@
 | Stoneforge Masterwork | silent | Equipped creature gets +1/+1 for each other creature you control that shares a creature type with it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sylvan Advocate | silent | As long as you control six or more lands, this creature and land creatures you control get +2/+2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Unity of Purpose | silent | Support 2. (Put a +1/+1 counter on each of up to two target creatures.) Untap each creature you control with a +1/+1 counter on it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Visions of Brutality | silent | Whenever enchanted creature deals damage, its controller loses that much life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Eldrazi Aggressor | notice | This creature has haste as long as you control another colorless creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Elemental Uprising | notice | Target land you control becomes a 4/4 Elemental creature with haste until end of turn. It's still a land. It must be blocked this turn if able. | unparsed remainder: It must be blocked this turn if able. | Y/Y/- | not_working |
 | Kor Scythemaster | notice | This creature has first strike as long as it's attacking. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -177,7 +176,7 @@
 ## Fully supported
 
 <details>
-<summary>29 cards</summary>
+<summary>30 cards</summary>
 
 - Ayli, Eternal Pilgrim
 - Crumbling Vestige
@@ -203,6 +202,7 @@
 - Thought-Knot Seer
 - Tyrant of Valakut
 - Vile Redeemer
+- Visions of Brutality
 - Wall of Resurgence
 - Warping Wail
 - Wastes
@@ -233,7 +233,6 @@
 | when ~ enters, exile all cards from your library face down, then shuffle all cards from your graveyard into your library. | 1 | Inverter of Truth | ogw |
 | when ~ enters, return target creature an opponent controls to its owner"..."s owner can't cast spells with the same name as that creature until your next turn. | 1 | Reflector Mage | ogw |
 | when ~ enters, you may cast target instant or sorcery card with mana value N or less from your graveyard without paying its mana cost. if that spell would be pu | 1 | Goblin Dark-Dwellers | ogw |
-| whenever enchanted creature deals damage, its controller loses that much life. | 1 | Visions of Brutality | ogw |
 | {M}: target creature can't block ~ ~. | 1 | Kozilek's Pathfinder | ogw |
 | {M}{M}, exile a creature card from your graveyard: target opponent loses life equal to the exiled card's power. | 1 | Dread Defiler | ogw |
 | {M}{M}: each creature with toughness greater than its power can't block ~. | 1 | Immobilizer Eldrazi | ogw |

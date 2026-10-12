@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 41 | 16.8% |
-| Works (untested) | 149 | 61.1% |
+| Tested | 43 | 17.6% |
+| Works (untested) | 150 | 61.5% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 54 | 22.1% |
+| Not working | 51 | 20.9% |
 
 ## Cards needing work
 
@@ -28,7 +28,6 @@
 |---|---|---|---|---|---|
 | Ajani, the Greathearted | silent | −2: Put a +1/+1 counter on each creature you control and a loyalty counter on each other planeswalker you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Bond of Insight | silent | Each player mills four cards. Return up to two instant and/or sorcery cards from your graveyard to your hand. Exile Bond of Insight. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Chandra, Fire Artisan | silent | Whenever one or more loyalty counters are removed from Chandra, she deals that much damage to target opponent or planeswalker. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Deliver Unto Evil | silent | Choose up to four target cards in your graveyard. If you control a Bolas planeswalker, return those cards to your hand. Otherwise, an opponent chooses two of th | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Domri, Anarch of Bolas | silent | +1: Add {R} or {G}. Creature spells you cast this turn can't be countered. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Dovin, Hand of Control | silent | −1: Until your next turn, prevent all damage that would be dealt to and dealt by target permanent an opponent controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -64,16 +63,14 @@
 | Ravnica at War | silent | Exile all multicolored permanents. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Roalesk, Apex Hybrid | silent | When Roalesk dies, proliferate, then proliferate again. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Saheeli's Silverwing | silent | When this creature enters, look at the top card of target opponent's library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Sarkhan the Masterless | silent | Whenever a creature attacks you or a planeswalker you control, each Dragon you control deals 1 damage to that creature. | this trigger's condition can never be satisfied - it never triggers | Y/Y/- | not_working |
+| Sarkhan the Masterless | silent | Whenever a creature attacks you or a planeswalker you control, each Dragon you control deals 1 damage to that creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Single Combat | silent | Each player chooses a creature or planeswalker they control, then sacrifices the rest. Players can't cast creature or planeswalker spells until the end of your  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Storrev, Devkarin Lich | silent | Whenever Storrev deals combat damage to a player or planeswalker, return to your hand target creature or planeswalker card in your graveyard that wasn't put the | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Tamiyo, Collector of Tales | silent | +1: Choose a nonland card name, then reveal the top four cards of your library. Put all cards with the chosen name from among them into your hand and the rest i | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | The Elderspell | silent | Destroy any number of target planeswalkers. Choose a planeswalker you control. Put two loyalty counters on it for each planeswalker destroyed this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Time Wipe | silent | Return a creature you control to its owner's hand, then destroy all creatures. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Tolsimir, Friend to Wolves | silent | When Tolsimir enters, create Voja, Friend to Elves, a legendary 3/3 green and white Wolf creature token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ugin, the Ineffable | silent | +1: Exile the top card of your library face down and look at it. Create a 2/2 colorless Spirit creature token. When that token leaves the battlefield, put the e | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Vivien's Grizzly | silent | {3}{G}: Look at the top card of your library. If it's a creature or planeswalker card, you may reveal it and put it into your hand. If you don't put the card in | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Vivien, Champion of the Wilds | silent | +1: Until your next turn, up to one target creature gains reach and vigilance. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Widespread Brutality | silent | Amass Zombies 2, then the Army you amassed deals damage equal to its power to each non-Army creature. (To amass Zombies 2, put two +1/+1 counters on an Army you | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Awakening of Vitu-Ghazi | notice | Put nine +1/+1 counters on target land you control. It becomes a legendary 0/0 Elemental creature with haste named Vitu-Ghazi. It's still a land. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Planewide Celebration | notice | Choose four. You may choose the same mode more than once. • Create a 2/2 Citizen creature token that's all colors. • Return target permanent card from your grav | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -105,6 +102,7 @@
 | Chainwhip Cyclops | handled | {3}{R}: Target creature can't block this turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Challenger Troll | handled | Each creature you control with power 4 or greater can't be blocked by more than one creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Chandra's Triumph | handled | Chandra's Triumph deals 3 damage to target creature or planeswalker an opponent controls. Chandra's Triumph deals 5 damage instead if you control a Chandra plan | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Chandra, Fire Artisan | handled | Whenever one or more loyalty counters are removed from Chandra, she deals that much damage to target opponent or planeswalker. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Charity Extractor | handled | Lifelink | machines/combat.py | Y/Y/- | not_tested |
 | Charmed Stray | handled | When this creature enters, put a +1/+1 counter on each other creature you control named Charmed Stray. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Contentious Plan | handled | Proliferate. (Choose any number of permanents and/or players, then give each another counter of each kind already there.) Draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -233,7 +231,7 @@
 ## Fully supported
 
 <details>
-<summary>41 cards</summary>
+<summary>43 cards</summary>
 
 - Arboreal Grazer
 - Arlinn, Voice of the Pack
@@ -272,10 +270,12 @@
 - Solar Blaze
 - Sorin, Vengeful Bloodlord
 - Storm the Citadel
+- Tamiyo, Collector of Tales
 - Teferi, Time Raveler
 - Tomik, Distinguished Advokist
 - Turret Ogre
 - Ugin's Conjurant
+- Vivien, Champion of the Wilds
 
 </details>
 
@@ -284,9 +284,7 @@
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
 | +N: add {M} or {M}. creature spells you cast ~ can't be countered. | 1 | Domri, Anarch of Bolas | war |
-| +N: choose a nonland card name, then reveal the top four cards of your library. put all cards with the chosen name from among them into your hand and the rest i | 1 | Tamiyo, Collector of Tales | war |
 | +N: exile the top card of your library face down and look at it. create a N/N colorless spirit creature token. when that token leaves the battlefield, put the e | 1 | Ugin, the Ineffable | war |
-| +N: until your next turn, up to one target creature gains reach and vigilance. | 1 | Vivien, Champion of the Wilds | war |
 | amass zombies N, then the army you amassed deals damage equal to its power to each non-army creature. (to amass zombies N, put two +N/+N counters on an army you | 1 | Widespread Brutality | war |
 | choose a creature or planeswalker you control. all damage that would be dealt ~ to you and permanents you control is dealt to the chosen permanent instead (if i | 1 | Gideon's Sacrifice | war |
 | choose four. you may choose the same mode more than once. • create a N/N citizen creature token that's all colors. • return target permanent card from your grav | 1 | Planewide Celebration | war |
@@ -320,7 +318,6 @@
 | whenever a creature attacks you or a planeswalker you control, each dragon you control deals N damage to that creature. | 1 | Sarkhan the Masterless | war |
 | whenever krenko attacks, put a +N/+N counter on it, then create a number of N/N red goblin creature tokens equal to krenko's power. | 1 | Krenko, Tin Street Kingpin | war |
 | whenever neheb deals combat damage to a player or planeswalker, you may discard any number of cards. if you do, draw that many cards and add that much {M}. unti | 1 | Neheb, Dreadhorde Champion | war |
-| whenever one or more loyalty counters are removed from chandra, she deals that much damage to target opponent or planeswalker. | 1 | Chandra, Fire Artisan | war |
 | whenever storrev deals combat damage to a player or planeswalker, return to your hand target creature or planeswalker card in your graveyard that wasn't put the | 1 | Storrev, Devkarin Lich | war |
 | whenever you attack with two or more non-gideon creatures, put a +N/+N counter on each of those creatures. | 1 | Gideon, the Oathsworn | war |
 | whenever you cast a noncreature spell, ~ becomes an artifact creature and gets +N/+N until end of turn. | 1 | Mizzium Tank | war |

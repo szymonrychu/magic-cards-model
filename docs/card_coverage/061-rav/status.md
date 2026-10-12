@@ -18,15 +18,14 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 56 | 22.7% |
-| Works (untested) | 128 | 51.8% |
+| Works (untested) | 130 | 52.6% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 63 | 25.5% |
+| Not working | 61 | 24.7% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
-| Agrus Kos, Wojek Veteran | silent | Whenever Agrus Kos attacks, attacking red creatures get +2/+0 and attacking white creatures get +0/+2 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Bathe in Light | silent | Radiance — Choose a color. Target creature and each other creature that shares a color with it gain protection from the chosen color until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Blood Funnel | silent | Whenever you cast a noncreature spell, counter that spell unless you sacrifice a creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Bloodbond March | silent | Whenever a player casts a creature spell, each player returns all cards with the same name as that spell from their graveyard to the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -64,7 +63,6 @@
 | Sins of the Past | silent | Until end of turn, you may cast target instant or sorcery card from your graveyard without paying its mana cost. If that spell would be put into your graveyard, | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Spawnbroker | silent | When this creature enters, you may exchange control of target creature you control and target creature with power less than or equal to that creature's power an | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Spectral Searchlight | silent | {T}: Choose a player. That player adds one mana of any color they choose. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Stinkweed Imp | silent | Whenever this creature deals combat damage to a creature, destroy that creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Strands of Undeath | silent | {B}: Regenerate enchanted creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sunforger | silent | {R}{W}, Unattach this Equipment: Search your library for a red or white instant card with mana value 4 or less and cast that card without paying its mana cost.  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sunhome Enforcer | silent | Whenever this creature deals combat damage, you gain that much life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -89,6 +87,7 @@
 | Twisted Justice | notice | Target player sacrifices a creature of their choice. You draw cards equal to that creature's power. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Vigor Mortis | notice | Return target creature card from your graveyard to the battlefield. If {G} was spent to cast this spell, that creature enters with an additional +1/+1 counter o | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Voyager Staff | notice | {2}, Sacrifice this artifact: Exile target creature. Return the exiled card to the battlefield under its owner's control at the beginning of the next end step. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
+| Agrus Kos, Wojek Veteran | handled | Whenever Agrus Kos attacks, attacking red creatures get +2/+0 and attacking white creatures get +0/+2 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Autochthon Wurm | handled | Trample | machines/combat.py | Y/-/- | not_tested |
 | Barbarian Riftcutter | handled | {R}, Sacrifice this creature: Destroy target land. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Benevolent Ancestor | handled | {T}: Prevent the next 1 damage that would be dealt to any target this turn. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -195,6 +194,7 @@
 | Skyknight Legionnaire | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
 | Sparkmage Apprentice | handled | When this creature enters, it deals 1 damage to any target. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Stasis Cell | handled | Enchanted creature doesn't untap during its controller's untap step. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Stinkweed Imp | handled | Whenever this creature deals combat damage to a creature, destroy that creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Stone-Seeder Hierophant | handled | Landfall — Whenever a land you control enters, untap this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Stoneshaker Shaman | handled | At the beginning of each player's end step, that player sacrifices an untapped land of their choice. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Sundering Vitae | handled | Convoke (Your creatures can help cast this spell. Each creature you tap while casting this spell pays for {1} or one mana of that creature's color.) Destroy tar | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -322,11 +322,9 @@
 | whenever a nonartifact permanent you control enters, you may return another permanent you control that shares a permanent type with it to its owner's hand. | 1 | Cloudstone Curio | rav |
 | whenever a player casts a creature spell, each player returns all cards with the same name as that spell from their graveyard to the battlefield. | 1 | Bloodbond March | rav |
 | whenever a player casts an instant or sorcery card, exile it. then that player copies each instant or sorcery card exiled with ~. for each copy, the player may  | 1 | Eye of the Storm | rav |
-| whenever agrus kos attacks, attacking red creatures get +N/+N and attacking white creatures get +N/+N until end of turn. | 1 | Agrus Kos, Wojek Veteran | rav |
 | whenever you cast a noncreature spell, counter that spell unless you sacrifice a creature. | 1 | Blood Funnel | rav |
 | whenever you cast a spell, put the cards in your hand on the bottom of your library in any order, then draw that many cards. | 1 | Mindmoil | rav |
 | whenever you sacrifice a black creature, you may pay N life. if you do, each other player sacrifices a creature of their choice. | 1 | Savra, Queen of the Golgari | rav |
-| whenever ~ deals combat damage to a creature, destroy that creature. | 1 | Stinkweed Imp | rav |
 | whenever ~ deals combat damage to a player, you may look at that player's hand. if you do, you may cast a spell from among those cards without paying its mana c | 1 | Mindleech Mass | rav |
 | whenever ~ deals combat damage, you gain that much life. | 1 | Sunhome Enforcer | rav |
 | {M}, sacrifice a creature: look at the top two cards of target opponent's library, then exile one of them. | 1 | Thoughtpicker Witch | rav |

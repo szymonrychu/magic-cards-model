@@ -17,16 +17,15 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 52 | 22.6% |
+| Tested | 53 | 23.0% |
 | Works (untested) | 132 | 57.4% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 46 | 20.0% |
+| Not working | 45 | 19.6% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
-| Dauntless Bodyguard | silent | Sacrifice this creature: The chosen creature gains indestructible until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Deep Freeze | silent | Enchanted creature has base power and toughness 0/4, has defender, loses all other abilities, and is a blue Wall in addition to its other colors and types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Demonlord Belzenlok | silent | When Demonlord Belzenlok enters, exile cards from the top of your library until you exile a nonland card, then put that card into your hand. If the card's mana  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Drudge Sentinel | silent | {3}: Tap this creature. It gains indestructible until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -208,7 +207,7 @@
 ## Fully supported
 
 <details>
-<summary>52 cards</summary>
+<summary>53 cards</summary>
 
 - Academy Drake
 - Adamant Will
@@ -223,6 +222,7 @@
 - Curator's Ward
 - Damping Sphere
 - Darigaaz Reincarnated
+- Dauntless Bodyguard
 - Gaea's Protector
 - Grand Warlord Radha
 - Grunn, the Lonely King
@@ -288,7 +288,6 @@
 | kicker {M} (you may pay an additional {M} as you cast ~.) create two N/N green saproling creature tokens. if ~ was kicked, create four of those tokens instead. | 1 | Saproling Migration | dom |
 | kicker {M} (you may pay an additional {M} as you cast ~.) untap target creature. it gets +N/+N until end of turn. if ~ was kicked, that creature gets +N/+N unti | 1 | Gift of Growth | dom |
 | return all tapped creatures to their owners' hands. | 1 | Time of Ice | dom |
-| sacrifice ~: the chosen creature gains indestructible until end of turn. | 1 | Dauntless Bodyguard | dom |
 | search your library for two cards. put one into your hand and the other into your graveyard. then shuffle. | 1 | Final Parting | dom |
 | target creature you control with the greatest power gains flying, first strike, and lifelink until end of turn. | 1 | Triumph of Gerrard | dom |
 | until your next turn, all lands you control become N/N elemental creatures with reach, indestructible, and haste. they're still lands. | 1 | Sylvan Awakening | dom |

@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 63 | 24.7% |
-| Works (untested) | 133 | 52.2% |
+| Tested | 67 | 26.3% |
+| Works (untested) | 135 | 52.9% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 59 | 23.1% |
+| Not working | 53 | 20.8% |
 
 ## Cards needing work
 
@@ -70,12 +70,7 @@
 | Skyclave Squid | silent | Landfall — Whenever a land you control enters, this creature can attack this turn as though it didn't have defender. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Squad Commander | silent | When this creature enters, create a 1/1 white Kor Warrior creature token for each creature in your party. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Strength of Solidarity | silent | Choose target creature you control. Put a +1/+1 counter on it for each creature in your party. (Your party consists of up to one each of Cleric, Rogue, Warrior, | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Tazeem Raptor | silent | When this creature enters, you may return a land you control to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Thieving Skydiver | silent | When this creature enters, if it was kicked, gain control of target artifact with mana value X or less. If that artifact is an Equipment, attach it to this crea | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Thwart the Grave | silent | This spell costs {1} less to cast for each creature in your party. (Your party consists of up to one each of Cleric, Rogue, Warrior, and Wizard.) Return target  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Verazol, the Split Current | silent | Whenever you cast a kicked spell, you may remove two +1/+1 counters from Verazol. If you do, copy that spell. You may choose new targets for the copy. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Yasharn, Implacable Earth | silent | When Yasharn enters, search your library for a basic Forest card and a basic Plains card, reveal those cards, put them into your hand, then shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Zagras, Thief of Heartbeats | silent | Whenever a creature you control deals combat damage to a planeswalker, destroy that planeswalker. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Zareth San, the Trickster | silent | {2}{U}{B}, Return an unblocked attacking Rogue you control to its owner's hand: Put this card from your hand onto the battlefield tapped and attacking. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Charix, the Raging Isle | notice | Spells your opponents cast that target Charix cost {2} more to cast. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Crawling Barrens | notice | {4}: Put two +1/+1 counters on this land. Then you may have it become a 0/0 Elemental creature until end of turn. It's still a land. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
@@ -83,7 +78,6 @@
 | Inscription of Insight | notice | Kicker {2}{U}{U} Choose one. If this spell was kicked, choose any number instead. • Return up to two target creatures to their owners' hands. • Scry 2, then dra | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Leyline Tyrant | notice | When this creature dies, you may pay any amount of {R}. When you do, it deals that much damage to any target. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Oblivion's Hunger | notice | Target creature you control gains indestructible until end of turn. Draw a card if that creature has a +1/+1 counter on it. (Damage and effects that say "destro | unparsed remainder: Draw a card if that creature has a +1/+1 counter on it. | Y/Y/- | not_working |
-| Pyroclastic Hellion | notice | When this creature enters, you may return a land you control to its owner's hand. When you do, this creature deals 2 damage to each opponent. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Zulaport Duelist | notice | When this creature enters, up to one target creature gets -2/-0 until end of turn. Its controller mills two cards. | unparsed remainder: Its controller mills two cards. | Y/Y/- | not_working |
 | Acquisitions Expert | handled | When this creature enters, target opponent reveals a number of cards from their hand equal to the number of creatures in your party. You choose one of those car | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Akoum Warrior // Akoum Teeth | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -165,6 +159,7 @@
 | Paired Tactician | handled | Whenever this creature and at least one other Warrior attack, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Phylath, World Sculptor | handled | When Phylath enters, create a 0/1 green Plant creature token for each basic land you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Prowling Felidar | handled | Landfall — Whenever a land you control enters, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Pyroclastic Hellion | handled | When this creature enters, you may return a land you control to its owner's hand. When you do, this creature deals 2 damage to each opponent. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Relic Amulet | handled | Whenever you cast an instant, sorcery, or Wizard spell, put a charge counter on this artifact. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Relic Axe | handled | When this Equipment enters, attach it to target creature you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Risen Riptide | handled | Whenever you cast a kicked spell, this creature has base power and toughness 5/5 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -201,6 +196,7 @@
 | Tajuru Snarecaster | handled | Reach | machines/combat.py | Y/Y/- | not_tested |
 | Tangled Florahedron // Tangled Vale | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Taunting Arbormage | handled | When this creature enters, if it was kicked, all creatures able to block target creature this turn do so. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Tazeem Raptor | handled | When this creature enters, you may return a land you control to its owner's hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Tazeem Roilmage | handled | When this creature enters, if it was kicked, return target instant or sorcery card from your graveyard to your hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Teeterpeak Ambusher | handled | {2}{R}: This creature gets +2/+0 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Territorial Scythecat | handled | Landfall — Whenever a land you control enters, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -222,7 +218,7 @@
 ## Fully supported
 
 <details>
-<summary>63 cards</summary>
+<summary>67 cards</summary>
 
 - Agadeem's Awakening // Agadeem, the Undercrypt
 - Akoum Hellhound
@@ -283,10 +279,14 @@
 - Synchronized Spellcraft
 - Tajuru Paragon
 - Tazri, Beacon of Unity
+- Thieving Skydiver
 - Turntimber Symbiosis // Turntimber, Serpentine Wood
 - Valakut Awakening // Valakut Stoneforge
 - Valakut Exploration
+- Verazol, the Split Current
 - Veteran Adventurer
+- Yasharn, Implacable Earth
+- Zagras, Thief of Heartbeats
 
 </details>
 
@@ -317,24 +317,18 @@
 | target creature you control gains indestructible until end of turn. draw a card if that creature has a +N/+N counter on it. (damage and effects that say "..." d | 1 | Oblivion's Hunger | znr |
 | target opponent reveals their hand. you choose a card from it with mana value N or greater. that player discards that card. | 1 | Pelakka Predation // Pelakka Caverns | znr |
 | when jace enters, if jace was kicked, create a token that"..."s not legendary and its starting loyalty is N. | 1 | Jace, Mirror Mage | znr |
-| when yasharn enters, search your library for a basic forest card and a basic plains card, reveal those cards, put them into your hand, then shuffle. | 1 | Yasharn, Implacable Earth | znr |
 | when ~ dies, you may pay any amount of {M}. when you do, it deals that much damage to any target. | 1 | Leyline Tyrant | znr |
 | when ~ enters, add {M} for each creature in your party. | 1 | Ardent Electromancer | znr |
 | when ~ enters, copy the next instant or sorcery spell with mana value N or less you cast ~ when you cast it. if ~ was kicked, copy that spell twice instead. you | 1 | Sea Gate Stormcaller | znr |
 | when ~ enters, create a N/N white kor warrior creature token for each creature in your party. | 1 | Squad Commander | znr |
 | when ~ enters, if it was kicked, create two tapped tokens that are copies of ~. | 1 | Skyclave Relic | znr |
-| when ~ enters, if it was kicked, gain control of target artifact with mana value N or less. if that artifact is an equipment, attach it to ~. | 1 | Thieving Skydiver | znr |
 | when ~ enters, look at the top five cards of your library. you may reveal a card with a kicker ability from among them and put it into your hand. put the rest o | 1 | Coralhelm Chronicler | znr |
 | when ~ enters, put a +N/+N counter on it for each creature in your party. | 1 | Emeria Captain | znr |
 | when ~ enters, target creature gets +N/+N until end of turn for each creature in your party. | 1 | Kabira Outrider | znr |
 | when ~ enters, up to one target creature gets -N/-N until end of turn. its controller mills two cards. | 1 | Zulaport Duelist | znr |
 | when ~ enters, you gain N life for each creature in your party. | 1 | Shepherd of Heroes | znr |
-| when ~ enters, you may return a land you control to its owner's hand. | 1 | Tazeem Raptor | znr |
-| when ~ enters, you may return a land you control to its owner's hand. when you do, ~ deals N damage to each opponent. | 1 | Pyroclastic Hellion | znr |
-| whenever a creature you control deals combat damage to a planeswalker, destroy that planeswalker. | 1 | Zagras, Thief of Heartbeats | znr |
 | whenever a land an opponent controls enters, if that player had another land enter the battlefield under their control ~, they return a land they control to its | 1 | Confounding Conundrum | znr |
 | whenever drana attacks, defending player chooses a nonlegendary creature card in your graveyard. you return that card to the battlefield with an additional +N/+ | 1 | Drana, the Last Bloodchief | znr |
-| whenever you cast a kicked spell, you may remove two +N/+N counters from verazol. if you do, copy that spell. you may choose new targets for the copy. | 1 | Verazol, the Split Current | znr |
 | whenever you cast an instant, sorcery, or wizard spell, you may have ~ base power and toughness become N/N or N/N until end of turn. | 1 | Master of Winds | znr |
 | whenever you tap a permanent for {M}, add an additional {M}. | 1 | Forsaken Monument | znr |
 | whenever ~ attacks, it gets +N/+N until end of turn for each creature in your party. | 1 | Grotag Bug-Catcher | znr |

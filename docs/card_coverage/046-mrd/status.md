@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 40 | 14.9% |
-| Works (untested) | 164 | 61.0% |
+| Tested | 41 | 15.2% |
+| Works (untested) | 166 | 61.7% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 65 | 24.2% |
+| Not working | 62 | 23.0% |
 
 ## Cards needing work
 
@@ -41,20 +41,17 @@
 | Empyrial Plate | silent | Equipped creature gets +1/+1 for each card in your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Fatespinner | silent | At the beginning of each opponent's upkeep, that player chooses draw step, main phase, or combat phase. The player skips each instance of the chosen step or pha | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Fiery Gambit | silent | Flip a coin until you lose a flip or choose to stop flipping. If you lose a flip, Fiery Gambit has no effect. If you win one or more flips, Fiery Gambit deals 3 | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Flayed Nim | silent | Whenever this creature deals combat damage to a creature, that creature's controller loses that much life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Fractured Loyalty | silent | Whenever enchanted creature becomes the target of a spell or ability, that spell or ability's controller gains control of that creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Gate to the Aether | silent | At the beginning of each player's upkeep, that player reveals the top card of their library. If it's an artifact, creature, enchantment, or land card, the playe | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Glissa Sunseeker | silent | {T}: Destroy target artifact if its mana value is equal to the amount of unspent mana you have. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Grim Reminder | silent | Search your library for a nonland card and reveal it. Each opponent who cast a spell this turn with the same name as that card loses 6 life. Then shuffle. {B}{B | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Jinxed Choker | silent | At the beginning of your end step, target opponent gains control of this artifact and puts a charge counter on it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Liar's Pendulum | silent | {2}, {T}: Choose a card name. Target opponent guesses whether a card with that name is in your hand. You may reveal your hand. If you do and your opponent guess | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Loxodon Peacekeeper | silent | At the beginning of your upkeep, the player with the lowest life total gains control of this creature. If two or more players are tied for lowest life total, yo | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Lumengrid Augur | silent | {1}, {T}: Target player draws a card, then discards a card. If that player discards an artifact card this way, untap this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | March of the Machines | silent | Each noncreature artifact is an artifact creature with power and toughness each equal to its mana value. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Mesmeric Orb | silent | Whenever a permanent becomes untapped, that permanent's controller mills a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Mourner's Shield | silent | {2}, {T}: Prevent all damage that would be dealt this turn by a source of your choice that shares a color with the exiled card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Myr Incubator | silent | {6}, {T}, Sacrifice this artifact: Search your library for any number of artifact cards, exile them, then create that many 1/1 colorless Myr artifact creature t | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Ogre Leadfoot | silent | Whenever this creature becomes blocked by an artifact creature, destroy that creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Override | silent | Counter target spell unless its controller pays {1} for each artifact you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Proteus Staff | silent | {2}{U}, {T}: Put target creature on the bottom of its owner's library. That creature's controller reveals cards from the top of their library until they reveal  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Psychogenic Probe | silent | Whenever a spell or ability causes a player to shuffle their library, this artifact deals 2 damage to that player. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
@@ -121,6 +118,7 @@
 | Farsight Mask | handled | Whenever a source an opponent controls deals damage to you, if this artifact is untapped, you may draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Fireshrieker | handled | Equipped creature has double strike. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Fists of the Anvil | handled | Target creature gets +4/+0 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Flayed Nim | handled | Whenever this creature deals combat damage to a creature, that creature's controller loses that much life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Galvanic Key | handled | {3}, {T}: Untap target artifact. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Gilded Lotus | handled |  |  | Y/Y/Y | not_tested |
 | Goblin Dirigible | handled | This creature doesn't untap during your untap step. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -178,6 +176,7 @@
 | Nim Shambler | handled | This creature gets +1/+0 for each artifact you control. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Nim Shrieker | handled | This creature gets +1/+0 for each artifact you control. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Nuisance Engine | handled | {2}, {T}: Create a 0/1 colorless Pest artifact creature token. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Ogre Leadfoot | handled | Whenever this creature becomes blocked by an artifact creature, destroy that creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Omega Myr | handled |  |  | Y/-/- | not_tested |
 | One Dozen Eyes | handled | Choose one — • Create a 5/5 green Beast creature token. • Create five 1/1 green Insect creature tokens. Entwine {G}{G}{G} (Choose both if you pay the entwine co | the engine reads this text and performs it | Y/-/- | not_tested |
 | Pearl Shard | handled | {3}, {T} or {W}, {T}: Prevent the next 2 damage that would be dealt to any target this turn. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -259,7 +258,7 @@
 ## Fully supported
 
 <details>
-<summary>40 cards</summary>
+<summary>41 cards</summary>
 
 - Aether Spellbomb
 - Auriok Steelshaper
@@ -282,6 +281,7 @@
 - Leveler
 - Lightning Coils
 - Lightning Greaves
+- Loxodon Peacekeeper
 - Loxodon Punisher
 - Mindslaver
 - Mindstorm Crown
@@ -319,7 +319,6 @@
 | at the beginning of each player's upkeep, that player puts a flood counter on target non-island land they control of their choice. that land is an island for as | 1 | Quicksilver Fountain | mrd |
 | at the beginning of each upkeep, each player exiles the top card of their library. the player who exiled the card with the greatest mana value takes an extra tu | 1 | Timesifter | mrd |
 | at the beginning of your end step, target opponent gains control of ~ and puts a charge counter on it. | 1 | Jinxed Choker | mrd |
-| at the beginning of your upkeep, the player with the lowest life total gains control of ~. if two or more players are tied for lowest life total, you choose one | 1 | Loxodon Peacekeeper | mrd |
 | choose a card name. reveal cards from the top of your library until you reveal a card with that name, then put that card into your hand. exile all other cards r | 1 | Spoils of the Vault | mrd |
 | counter target spell unless its controller pays {M} for each artifact you control. | 1 | Override | mrd |
 | destroy target land. if that land was nonbasic, ~ deals N damage to the land's controller. | 1 | Molten Rain | mrd |
@@ -351,9 +350,7 @@
 | whenever equipped creature deals combat damage to a player, destroy all permanents other than ~. | 1 | Worldslayer | mrd |
 | whenever equipped creature deals damage to a creature, exile that creature. | 1 | Sword of Kaldra | mrd |
 | whenever you're dealt damage, put that many charge counters on ~. | 1 | Sun Droplet | mrd |
-| whenever ~ becomes blocked by an artifact creature, destroy that creature. | 1 | Ogre Leadfoot | mrd |
 | whenever ~ becomes blocked, regenerate it. | 1 | Duskworker | mrd |
-| whenever ~ deals combat damage to a creature, that creature's controller loses that much life. | 1 | Flayed Nim | mrd |
 | {M}, sacrifice ~: return all cards exiled with ~ to the battlefield under your control. | 1 | Synod Sanctum | mrd |
 | {M}, {M} or {M}, {M}: return target creature to its owner's hand unless its controller pays {M}. | 1 | Crystal Shard | mrd |
 | {M}, {M}, sacrifice ~: search your library for any number of artifact cards, exile them, then create that many N/N colorless myr artifact creature tokens. then  | 1 | Myr Incubator | mrd |

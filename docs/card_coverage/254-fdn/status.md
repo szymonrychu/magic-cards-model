@@ -17,16 +17,15 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 22 | 15.3% |
-| Works (untested) | 90 | 62.5% |
+| Tested | 25 | 17.4% |
+| Works (untested) | 93 | 64.6% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 32 | 22.2% |
+| Not working | 26 | 18.1% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
-| Alesha, Who Laughs at Fate | silent | Raid — At the beginning of your end step, if you attacked this turn, return target creature card with mana value less than or equal to Alesha's power from your  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Blasphemous Edict | silent | You may pay {B} rather than pay this spell's mana cost if there are thirteen or more creatures on the battlefield. Each player sacrifices thirteen creatures of  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Bloodthirsty Conqueror | silent | Whenever an opponent loses life, you gain that much life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Bulk Up | silent | Double target creature's power until end of turn. Flashback {4}{R}{R} (You may cast this card from your graveyard for its flashback cost. Then exile it.) | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -34,30 +33,26 @@
 | Dropkick Bomber | silent | {R}: Until end of turn, another target Goblin you control gains flying and "When this creature deals combat damage, sacrifice it." | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Exemplar of Light | silent | Whenever you put one or more +1/+1 counters on this creature, draw a card. This ability triggers only once each turn. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
 | Faebloom Trick | silent | Create two 1/1 blue Faerie creature tokens with flying. When you do, tap target creature an opponent controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Fiendish Panda | silent | When this creature dies, return another target non-Bear creature card with mana value less than or equal to this creature's power from your graveyard to the bat | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Fishing Pole | silent | Whenever equipped creature becomes untapped, remove a bait counter from this Equipment. If you do, create a 1/1 blue Fish creature token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Hare Apparent | silent | When this creature enters, create a number of 1/1 white Rabbit creature tokens equal to the number of other creatures you control named Hare Apparent. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Infernal Vessel | silent | When this creature dies, if it wasn't a Demon, return it to the battlefield under its owner's control with two +1/+1 counters on it. It's a Demon in addition to | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Kellan, Planar Trailblazer | silent | {1}{R}: If Kellan is a Scout, it becomes a Human Faerie Detective and gains "Whenever Kellan deals combat damage to a player, exile the top card of your library | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Loot, Exuberant Explorer | silent | {4}{G}{G}, {T}: Look at the top six cards of your library. You may reveal a creature card with mana value less than or equal to the number of lands you control  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Lunar Insight | silent | Draw a card for each different mana value among nonland permanents you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Midnight Snack | silent | {2}{B}, Sacrifice this enchantment: Target opponent loses X life, where X is the amount of life you gained this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Niv-Mizzet, Visionary | silent | Whenever a source you control deals noncombat damage to an opponent, you draw that many cards. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
 | Ravenous Amulet | silent | {4}, {T}, Sacrifice this artifact: Each opponent loses life equal to the number of soul counters on this artifact. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Skyknight Squire | silent | As long as this creature has three or more +1/+1 counters on it, it has flying and is a Knight in addition to its other types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Sphinx of Forgotten Lore | silent | Whenever this creature attacks, target instant or sorcery card in your graveyard gains flashback until end of turn. The flashback cost is equal to that card's m | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Spinner of Souls | silent | Whenever another nontoken creature you control dies, you may reveal cards from the top of your library until you reveal a creature card. Put that card into your | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Squad Rallier | silent | {2}{W}: Look at the top four cards of your library. You may reveal a creature card with power 2 or less from among them and put it into your hand. Put the rest  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Tinybones, Bauble Burglar | silent | Whenever an opponent discards a card, exile it from their graveyard with a stash counter on it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Valkyrie's Call | silent | Whenever a nontoken, non-Angel creature you control dies, return that card to the battlefield under its owner's control with a +1/+1 counter on it. It has flyin | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
 | Zimone, Paradox Sculptor | silent | {G}{U}, {T}: Double the number of each kind of counter on up to two target creatures and/or artifacts you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Abyssal Harvester | notice | {T}: Exile target creature card from a graveyard that was put there this turn. Create a token that's a copy of it, except it's a Nightmare in addition to its ot | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Chandra, Flameshaper | notice | +2: Add {R}{R}{R}. Exile the top three cards of your library. Choose one. You may play that card this turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Divine Resilience | notice | Kicker {2}{W} (You may pay an additional {2}{W} as you cast this spell.) Target creature you control gains indestructible until end of turn. If this spell was k | unparsed remainder: If this spell was kicked, instead any number of target creatures you control gain indestructible until end of turn. | Y/Y/Y | not_working |
-| Nine-Lives Familiar | notice | When this creature dies, if it had a revival counter on it, return it to the battlefield with one fewer revival counter on it at the beginning of the next end s | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Strongbox Raider | notice | Raid — When this creature enters, if you attacked this turn, exile the top two cards of your library. Choose one of them. Until the end of your next turn, you m | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Tragic Banshee | notice | Morbid — When this creature enters, target creature an opponent controls gets -1/-1 until end of turn. If a creature died this turn, that creature gets -13/-13  | unparsed remainder: If a creature died this turn, that creature gets -13/-13 until end of turn instead. | Y/Y/Y | not_working |
 | Vampire Gourmand | notice | Whenever this creature attacks, you may sacrifice another creature. If you do, draw a card and this creature can't be blocked this turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
+| Alesha, Who Laughs at Fate | handled | Whenever Alesha attacks, put a +1/+1 counter on it. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Ambush Wolf | handled | When this creature enters, exile up to one target card from a graveyard. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Anthem of Champions | handled | Creatures you control get +1/+1. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Apothecary Stomper | handled | When this creature enters, choose one — • Put two +1/+1 counters on target creature you control. • You gain 4 life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -96,6 +91,7 @@
 | Extravagant Replication | handled | At the beginning of your upkeep, create a token that's a copy of another target nonland permanent you control. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Felidar Savior | handled | When this creature enters, put a +1/+1 counter on each of up to two other target creatures you control. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Felling Blow | handled | Put a +1/+1 counter on target creature you control. Then that creature deals damage equal to its power to target creature an opponent controls. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Fiendish Panda | handled | Whenever you gain life, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Fiery Annihilation | handled | Fiery Annihilation deals 5 damage to target creature. Exile up to one target Equipment attached to that creature. If that creature would die this turn, exile it | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Firespitter Whelp | handled | Whenever you cast a noncreature or Dragon spell, this creature deals 1 damage to each opponent. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Goblin Surprise | handled | Choose one — • Creatures you control get +2/+0 until end of turn. • Create two 1/1 red Goblin creature tokens. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -120,6 +116,7 @@
 | Luminous Rebuke | handled | This spell costs {3} less to cast if it targets a tapped creature. Destroy target creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Mischievous Mystic | handled | Whenever you draw your second card each turn, create a 1/1 blue Faerie creature token with flying. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Needletooth Pack | handled | Morbid — At the beginning of your end step, if a creature died this turn, put two +1/+1 counters on target creature you control. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Niv-Mizzet, Visionary | handled | You have no maximum hand size. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Preposterous Proportions | handled | Creatures you control get +10/+10 and gain vigilance until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Prideful Parent | handled | When this creature enters, create a 1/1 white Cat creature token. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Quakestrider Ceratops | handled |  |  | Y/Y/Y | not_tested |
@@ -152,7 +149,7 @@
 ## Fully supported
 
 <details>
-<summary>22 cards</summary>
+<summary>25 cards</summary>
 
 - Arbiter of Woe
 - Banner of Kinship
@@ -163,18 +160,21 @@
 - Fleeting Flight
 - Goblin Boarders
 - Goblin Negotiation
+- Hare Apparent
 - Herald of Eternal Dawn
 - High Fae Trickster
 - Hinterland Sanctifier
 - Inspiration from Beyond
 - Leyline Axe
 - Mossborn Hydra
+- Nine-Lives Familiar
 - Perforating Artist
 - Quilled Greatwurm
 - Raise the Past
 - Sire of Seven Deaths
 - Soul-Shackled Zombie
 - Soulstone Sanctuary
+- Tinybones, Bauble Burglar
 - Twinflame Tyrant
 
 </details>
@@ -183,8 +183,8 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| Raid | 2 | Alesha, Who Laughs at Fate, Strongbox Raider | fdn |
 | Morbid | 1 | Tragic Banshee | fdn |
+| Raid | 1 | Strongbox Raider | fdn |
 | +N: add {M}{M}{M}. exile the top three cards of your library. choose one. you may play that card ~. | 1 | Chandra, Flameshaper | fdn |
 | as long as ~ has three or more +N/+N counters on it, it has flying and is a knight in addition to its other types. | 1 | Skyknight Squire | fdn |
 | create two N/N blue faerie creature tokens with flying. when you do, tap target creature an opponent controls. | 1 | Faebloom Trick | fdn |
@@ -192,13 +192,8 @@
 | draw a card for each different mana value among nonland permanents you control. | 1 | Lunar Insight | fdn |
 | each player mills N cards. for each creature card put into a graveyard ~, you create a tapped N/N black zombie creature token. (to mill a card, a player puts th | 1 | Dread Summons | fdn |
 | kicker {M}{M} (you may pay an additional {M}{M} as you cast ~.) target creature you control gains indestructible until end of turn. if ~ was kicked, instead any | 1 | Divine Resilience | fdn |
-| when ~ dies, if it had a revival counter on it, return it to the battlefield with one fewer revival counter on it at the beginning of the next end step. | 1 | Nine-Lives Familiar | fdn |
 | when ~ dies, if it wasn"..."s control with two +N/+N counters on it. it's a demon in addition to its other types. | 1 | Infernal Vessel | fdn |
-| when ~ dies, return another target non-bear creature card with mana value less than or equal to ~ power from your graveyard to the battlefield. | 1 | Fiendish Panda | fdn |
-| when ~ enters, create a number of N/N white rabbit creature tokens equal to the number of other creatures you control named ~. | 1 | Hare Apparent | fdn |
 | whenever a nontoken, non-angel creature you control dies, return that card to the battlefield under its owner's control with a +N/+N counter on it. it has flyin | 1 | Valkyrie's Call | fdn |
-| whenever a source you control deals noncombat damage to an opponent, you draw that many cards. | 1 | Niv-Mizzet, Visionary | fdn |
-| whenever an opponent discards a card, exile it from their graveyard with a stash counter on it. | 1 | Tinybones, Bauble Burglar | fdn |
 | whenever an opponent loses life, you gain that much life. | 1 | Bloodthirsty Conqueror | fdn |
 | whenever another nontoken creature you control dies, you may reveal cards from the top of your library until you reveal a creature card. put that card into your | 1 | Spinner of Souls | fdn |
 | whenever equipped creature becomes untapped, remove a bait counter from ~. if you do, create a N/N blue fish creature token. | 1 | Fishing Pole | fdn |

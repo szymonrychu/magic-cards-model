@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 43 | 17.6% |
+| Tested | 44 | 18.0% |
 | Works (untested) | 162 | 66.1% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 40 | 16.3% |
+| Not working | 39 | 15.9% |
 
 ## Cards needing work
 
@@ -32,7 +32,6 @@
 | Boneyard Parley | silent | Exile up to five target creature cards from graveyards. An opponent separates those cards into two piles. Put all cards from the pile of your choice onto the ba | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Deadeye Tracker | silent | Explore | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Deathgorge Scavenger | silent | Whenever this creature enters or attacks, you may exile target card from a graveyard. If a creature card is exiled this way, you gain 2 life. If a noncreature c | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Dinosaur Stampede | silent | Attacking creatures get +2/+0 until end of turn. Dinosaurs you control gain trample until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Dire Fleet Ravager | silent | When this creature enters, each player loses a third of their life, rounded up. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Dowsing Dagger // Lost Vale | silent | Whenever equipped creature deals combat damage to a player, you may transform this Equipment. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Entrancing Melody | silent | Gain control of target creature with mana value X. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -232,7 +231,7 @@
 ## Fully supported
 
 <details>
-<summary>43 cards</summary>
+<summary>44 cards</summary>
 
 - Admiral Beckett Brass
 - Arcane Adaptation
@@ -247,6 +246,7 @@
 - Captivating Crew
 - Carnage Tyrant
 - Colossal Dreadmaw
+- Dinosaur Stampede
 - Dreamcaller Siren
 - Field of Ruin
 - Fiery Cannonade
@@ -292,7 +292,6 @@
 | at the beginning of your upkeep, exile the top card of your library. if it's a nonland card, you may cast that card ~. | 1 | Vance's Blasting Cannons // Spitfire Bastion | xln |
 | at the beginning of your upkeep, you may have two target players exchange life totals. | 1 | Axis of Mortality | xln |
 | at the beginning of your upkeep, you may reveal a dinosaur card from your hand. if you do, you gain N life. | 1 | Priest of the Wakening Sun | xln |
-| attacking creatures get +N/+N until end of turn. dinosaurs you control gain trample until end of turn. | 1 | Dinosaur Stampede | xln |
 | counter target spell. create N treasure tokens, where N is that spell"..."re artifacts with "...") | 1 | Spell Swindle | xln |
 | exile target creature you control, then return that card to the battlefield under its owner's control. if a pirate was exiled ~, draw a card. | 1 | Siren's Ruse | xln |
 | exile up to five target creature cards from graveyards. an opponent separates those cards into two piles. put all cards from the pile of your choice onto the ba | 1 | Boneyard Parley | xln |

@@ -17,16 +17,15 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 2 | 15.4% |
+| Tested | 3 | 23.1% |
 | Works (untested) | 8 | 61.5% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 3 | 23.1% |
+| Not working | 2 | 15.4% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
-| Dandân | silent | When you control no Islands, sacrifice this creature. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Sindbad | silent | {T}: Draw a card and reveal it. If it isn't a land card, discard it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Rukh Egg | notice | When this creature dies, create a 4/4 red Bird creature token with flying at the beginning of the next end step. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Aladdin's Ring | handled | {8}, {T}: This artifact deals 4 damage to any target. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -41,8 +40,9 @@
 ## Fully supported
 
 <details>
-<summary>2 cards</summary>
+<summary>3 cards</summary>
 
+- Dandân
 - Desert
 - Kird Ape
 
@@ -52,7 +52,6 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| when you control no islands, sacrifice ~. | 1 | Dandân | arn |
 | when ~ dies, create a N/N red bird creature token with flying at the beginning of the next end step. | 1 | Rukh Egg | arn |
 | {M}: draw a card and reveal it. if it isn't a land card, discard it. | 1 | Sindbad | arn |
 

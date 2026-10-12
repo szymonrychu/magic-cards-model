@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 22 | 14.8% |
-| Works (untested) | 84 | 56.4% |
+| Works (untested) | 85 | 57.0% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 43 | 28.9% |
+| Not working | 42 | 28.2% |
 
 ## Cards needing work
 
@@ -41,8 +41,7 @@
 | Exhumer Thrull | silent | Haunt | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Fencer's Magemark | silent | Creatures you control that are enchanted get +1/+1 and have first strike. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Graven Dominator | silent | When this creature enters or the creature it haunts dies, each other creature has base power and toughness 1/1 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Hissing Miasma | silent | Whenever a creature attacks you, its controller loses 1 life. | this trigger's condition can never be satisfied - it never triggers | Y/-/- | not_working |
-| Hypervolt Grasp | silent | {1}{U}: Return this Aura to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Hissing Miasma | silent | Whenever a creature attacks you, its controller loses 1 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Ink-Treader Nephilim | silent | Whenever a player casts an instant or sorcery spell, if that spell targets only this creature, copy the spell for each other creature that spell could target. E | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Izzet Guildmage | silent | {2}{U}: Copy target instant spell you control with mana value 2 or less. You may choose new targets for the copy. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Living Inferno | silent | {T}: This creature deals damage equal to its power divided as you choose among any number of target creatures. Each of those creatures deals damage equal to its | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -99,6 +98,7 @@
 | Gruul War Plow | handled | Creatures you control have trample. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Harrier Griffin | handled | At the beginning of your upkeep, tap target creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Hatching Plans | handled | When this enchantment is put into a graveyard from the battlefield, draw three cards. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Hypervolt Grasp | handled | Enchanted creature has "{T}: This creature deals 1 damage to any target." | the engine reads this text and performs it | Y/-/- | not_tested |
 | Invoke the Firemind | handled | Choose one — • Draw X cards. • Invoke the Firemind deals X damage to any target. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Izzet Boilerworks | handled | This land enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Izzet Chronarch | handled | When this creature enters, return target instant or sorcery card from your graveyard to your hand. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -223,7 +223,6 @@
 | {M}: ~ deals damage equal to its power divided as you choose among any number of target creatures. each of those creatures deals damage equal to its power to ~. | 1 | Living Inferno | gpt |
 | {M}{M}: copy target instant spell you control with mana value N or less. you may choose new targets for the copy. | 1 | Izzet Guildmage | gpt |
 | {M}{M}: enchanted creature gets +N/+N until end of turn. | 1 | Shadow Lance | gpt |
-| {M}{M}: return ~ to its owner's hand. | 1 | Hypervolt Grasp | gpt |
 | {M}{M}{M}, {M}, sacrifice ~: exile target nonland card from a graveyard, all other cards from graveyards with the same name as that card, and all permanents wit | 1 | Moratorium Stone | gpt |
 | {M}{M}{M}, {M}: exile the top card of your library. until your next turn, you may cast it if it's an instant or sorcery spell. | 1 | Nivix, Aerie of the Firemind | gpt |
 
