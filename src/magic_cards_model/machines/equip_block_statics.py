@@ -33,6 +33,9 @@ _ATTACH_ONLY_RE = re.compile(
 )
 _CANT_BE_EQUIPPED_RE = re.compile(r"^(?:this [a-z]+|~) can't be equipped\.?$", re.IGNORECASE)
 _EQUIP_ONCE_RE = re.compile(r"^equip\b.*\bactivate only once each turn\.?$", re.IGNORECASE)
+_CREW_ONCE_RE = re.compile(
+    r"^crew \d+\. activate only once each turn\.?(?: \(.*\))?$", re.IGNORECASE
+)
 _UNTAPPED_BLOCK_RE = re.compile(
     r"^tapped creatures you control can block as though they were untapped\.?$", re.IGNORECASE
 )
@@ -54,6 +57,7 @@ _PATTERNS = (
     _ATTACH_ONLY_RE,
     _CANT_BE_EQUIPPED_RE,
     _EQUIP_ONCE_RE,
+    _CREW_ONCE_RE,
     _UNTAPPED_BLOCK_RE,
     _REACH_RE,
     _LOYALTY_LIMIT_RE,
@@ -115,6 +119,19 @@ def equip_once_each_turn(equipment: CardState) -> bool:
 
 def equip_activation_key(equipment: CardState) -> str:
     return f"{equipment.id}:equip"
+
+
+def crew_once_each_turn(vehicle: CardState) -> bool:
+    """Whether the Vehicle prints "Crew N. Activate only once each turn."
+    (CR 602.5b)."""
+    return any(
+        _CREW_ONCE_RE.match(" ".join(line.split()))
+        for line in (vehicle.card.oracle_text or "").splitlines()
+    )
+
+
+def crew_activation_key(vehicle: CardState) -> str:
+    return f"{vehicle.id}:crew"
 
 
 def blocks_as_though_untapped(game: "Game", blocker: CardState) -> bool:

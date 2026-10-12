@@ -35,6 +35,16 @@ def creatures_blocking(game, attacker) -> int:
     return 0 if attack is None else len(attack.blockers)
 
 
+def creatures_that_crewed(game, vehicle) -> int:
+    """How many creatures crewed `vehicle` this turn (CR 702.122b - each
+    creature tapped to pay a crew cost crews the Vehicle it was bound to)."""
+    return sum(
+        1
+        for entry in game.turn_history
+        if entry.kind == "crewed" and entry.related_id == vehicle.id
+    )
+
+
 # --------------------------------------------------------------------------
 # The trigger's own event as the referent of "that creature", "its controller",
 # "that much", "they" (CR 603.2 - the event that triggered the ability; CR 608.2h

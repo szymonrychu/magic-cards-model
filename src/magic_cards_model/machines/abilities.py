@@ -3617,6 +3617,25 @@ def _parse_equip_with_quality(
     )
 
 
+#: "Crew 1. Activate only once each turn." (Luxurious Locomotive) - the plain
+#: Crew N keyword (CR 702.122a) with the activation limit CR 602.5b allows an
+#: activated ability to print, the way `_EQUIP_WITH_QUALITY` reads Equip's.
+_CREW_ONCE_EACH_TURN = re.compile(r"^Crew (?P<n>\d+)\. Activate only once each turn\.?$")
+
+
+def _parse_crew_once_each_turn(text: str, common: dict) -> KeywordAbility | None:
+    match = _CREW_ONCE_EACH_TURN.match(text.strip())
+    if match is None:
+        return None
+    return KeywordAbility(
+        **common,
+        keyword="Crew",
+        canonical="Crew",
+        cost=match.group("n"),
+        count=int(match.group("n")),
+    )
+
+
 def _parse_keywords(text: str, keywords: list[str], common: dict) -> list[Ability]:
     """Read a line that is nothing but keywords (CR 702).
 
@@ -3632,6 +3651,9 @@ def _parse_keywords(text: str, keywords: list[str], common: dict) -> list[Abilit
     equip_quality = _parse_equip_with_quality(text, keywords, common)
     if equip_quality is not None:
         return [equip_quality]
+    crew_once = _parse_crew_once_each_turn(text, common)
+    if crew_once is not None:
+        return [crew_once]
 
     # Longest first, so `First strike` wins over any shorter prefix.
     known = sorted(keywords, key=len, reverse=True)

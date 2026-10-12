@@ -2275,7 +2275,7 @@ def _condition_matches(
         return power_or_toughness is None or power_or_toughness
 
     if ability.event is TriggerEvent.BEGINNING_OF_STEP:
-        return _step_matches(condition, controller, event)
+        return _step_matches(condition, controller, event, source)
 
     if ability.event is TriggerEvent.LOYALTY_ABILITY_ACTIVATED:
         # CR 606.3. "you activate ..." (Ajani Unrelenting) - the ability's
@@ -3823,7 +3823,9 @@ def _acting_player_matches(who: str, controller: str, actor: str | None) -> bool
     return True
 
 
-def _step_matches(condition: str, controller: str, event: GameEvent) -> bool:
+def _step_matches(
+    condition: str, controller: str, event: GameEvent, source: CardState | None = None
+) -> bool:
     """ "At the beginning of [whose] [step]" against the step that just began."""
     lowered = condition.lower()
     if "main phases" in lowered:
@@ -3836,6 +3838,14 @@ def _step_matches(condition: str, controller: str, event: GameEvent) -> bool:
         step = next((step for phrase, step in _STEP_PHRASES if phrase in lowered), None)
         if step is None or step is not event.step:
             return False
+    if "the chosen player" in lowered:
+        # The Rack's "At the beginning of the chosen player's upkeep": the
+        # player its as-enters choice named (`CardState.chosen_player`).
+        return (
+            source is not None
+            and event.player is not None
+            and event.player == source.chosen_player
+        )
     if "your" in lowered:
         return event.player == controller
     if "opponent" in lowered:

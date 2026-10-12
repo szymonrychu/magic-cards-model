@@ -871,6 +871,22 @@ _X_OVER_X_RE = re.compile(r"\bx/x\b", re.IGNORECASE)
 _TOKEN_FOR_EACH_TAIL_RE = re.compile(r"\s+for each (?P<each>[^.\"“”]+?)\.?$", re.IGNORECASE)
 
 
+def _token_clause_for_each_of_source(
+    template: TargetedClause, multiplier: Callable[["Game", str, str | None], int]
+) -> TargetedClause:
+    """`_token_clause_for_each` for a count that reads the resolving object
+    (`amounts._for_each_multiplier`'s `(game, controller, source_id)` form)."""
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        times = multiplier(
+            game, game.controller_of(stack_object).username, source_id_of(stack_object)
+        )
+        for _ in range(max(times, 0)):
+            template(game, stack_object)
+
+    return effect
+
+
 def _token_clause_for_each(
     template: TargetedClause, multiplier: Callable[["Game", str], int]
 ) -> TargetedClause:
@@ -1046,6 +1062,11 @@ def _parse_token_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
             return token_riders.token_clause_for_each_event_subject_counter(
                 template, event_subject_multiplier
             )
+        # "create a Treasure token for each creature that crewed it this turn"
+        # (Luxurious Locomotive): a count read off the ability's own source.
+        source_multiplier = _for_each_multiplier(each_phrase)
+        if source_multiplier is not None:
+            return _token_clause_for_each_of_source(template, source_multiplier)
         return None
 
     match = _TOKEN_CLAUSE_RE.fullmatch(clause)

@@ -91,6 +91,8 @@ from .delayed import anaphoric_delayed_trigger
 from .designations import designation_holds, split_as_long_as
 from .equip_block_statics import (
     attach_refusal,
+    crew_activation_key,
+    crew_once_each_turn,
     equip_activation_key,
     equip_once_each_turn,
 )
@@ -2365,6 +2367,16 @@ class KeywordActivation(EngineModel):
                 f"({self.rule}, CR 602.5b)"
             )
         if (
+            self.keyword == "Crew"
+            and self.game is not None
+            and crew_once_each_turn(self.card)
+            and self.game.activations.get(crew_activation_key(self.card), 0) > 0
+        ):
+            return (
+                f"{self.card.name}'s crew ability can be activated only once each turn "
+                f"({self.rule}, CR 602.5b)"
+            )
+        if (
             self.sorcery_only
             and self.game is not None
             and not self.game.can_cast_sorcery(self.player)
@@ -2490,6 +2502,9 @@ class KeywordActivation(EngineModel):
             if equip_once_each_turn(self.card):
                 key = equip_activation_key(self.card)
                 self.game.activations[key] = self.game.activations.get(key, 0) + 1
+        if self.keyword == "Crew" and crew_once_each_turn(self.card):
+            key = crew_activation_key(self.card)
+            self.game.activations[key] = self.game.activations.get(key, 0) + 1
         if self.forecast:
             # CR 702.57b's own once-each-turn restriction, checked back in
             # `why_not` against this same key - the card is still in `zone`

@@ -5,6 +5,8 @@ One section per template; each listed card plus a second printing of a
 different wording, so the reader is proven and not the one sentence.
 """
 
+import pytest
+
 from magic_cards_model.machines import Step
 from magic_cards_model.models import Zone
 from magic_cards_model.models.card_state import Counter
@@ -692,3 +694,90 @@ def test_the_pride_of_hull_clade_attacks_despite_defender_and_draws_by_toughness
     _settle(scenario)
     assert scenario.player("bob").life == 20 - power
     assert len(scenario.player("alice").hand) == toughness
+
+
+# -- "At the beginning of the chosen player's upkeep, this artifact deals X
+# -- damage to that player, where X is 3 minus the number of cards in their hand"
+
+
+def _rack_at_bobs_upkeep(bob_hand):
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("alice", hand=["The Rack"])
+        .player("bob", hand=bob_hand, library=["Forest"] * 5)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scenario.will_choose("bob", username="alice", source="The Rack")
+    scenario.put_onto_battlefield("The Rack")
+    while not (scenario.step is Step.UPKEEP and scenario.game.active_player.username == "bob"):
+        scenario.advance()
+    return scenario
+
+
+def test_the_rack_deals_three_minus_hand_size_at_the_chosen_players_upkeep():
+    scenario = _rack_at_bobs_upkeep(["Forest", "Forest"])
+    _settle(scenario)
+    assert scenario.player("bob").life == 20 - 1
+
+
+def test_the_rack_deals_nothing_to_a_full_hand_and_not_at_its_controllers_upkeep():
+    scenario = _rack_at_bobs_upkeep(["Forest"] * 3)
+    _settle(scenario)
+    assert scenario.player("bob").life == 20
+    assert scenario.player("alice").life == 20
+
+
+# -- "Crew 1. Activate only once each turn." and "create a Treasure token for
+# -- each creature that crewed it this turn" (Luxurious Locomotive)
+
+
+def _crew(scenario, vehicle, *creatures):
+    from magic_cards_model.machines.keywords import crew_activation
+
+    activation = crew_activation(scenario.game, vehicle, list(creatures), "alice")
+    refusal = activation.why_not()
+    if refusal is not None:
+        raise ValueError(refusal)
+    activation.begin_paying()
+    activation.payment.pay()
+    activation.activate()
+    activation.resolve()
+
+
+def _locomotive_board():
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player(
+            "alice",
+            battlefield=["Luxurious Locomotive", "Grizzly Bears", "Grizzly Bears", "Grizzly Bears"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    return scenario
+
+
+def test_luxurious_locomotive_makes_a_treasure_per_creature_that_crewed_it():
+    scenario = _locomotive_board()
+    train = scenario.find("Luxurious Locomotive", Zone.BATTLEFIELD)
+    bears = scenario.creatures("Grizzly Bears", "Grizzly Bears", username="alice")
+    _crew(scenario, train, *bears)
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    scenario.attack_with(train)
+    _settle(scenario)
+    assert _count(scenario, "Treasure Token") == 2
+
+
+def test_luxurious_locomotive_crews_only_once_each_turn():
+    scenario = _locomotive_board()
+    train = scenario.find("Luxurious Locomotive", Zone.BATTLEFIELD)
+    first, second, _third = scenario.creatures(
+        "Grizzly Bears", "Grizzly Bears", "Grizzly Bears", username="alice"
+    )
+    _crew(scenario, train, first)
+    with pytest.raises(ValueError, match="only once each turn"):
+        _crew(scenario, train, second)

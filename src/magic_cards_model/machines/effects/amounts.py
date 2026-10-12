@@ -48,6 +48,7 @@ from ..ep01_r3_amounts import (
     counters_on_it_total,
     creatures_blocked_by,
     creatures_blocking,
+    creatures_that_crewed,
     event_subject_stat,
     event_terms_enabled,
 )
@@ -3183,6 +3184,15 @@ def _for_each_multiplier(phrase: str) -> Callable[["Game", str, str | None], int
             return creatures_blocked_by(game, source)
 
         return count_creatures_in_block
+    if stripped.lower() == "creature that crewed it this turn":
+        # Luxurious Locomotive: this turn's crew history for the source Vehicle.
+        def count_creatures_that_crewed(
+            game: "Game", _controller: str, source_id: str | None
+        ) -> int:
+            source = None if source_id is None else game.find_by_id(UUID(source_id))
+            return 0 if source is None else creatures_that_crewed(game, source)
+
+        return count_creatures_that_crewed
     if match := _COUNTER_ON_IT_RE.fullmatch(stripped):
         # No kind word ("for each counter on it", Kinsbaile Borderguard) counts
         # every counter on the object (CR 122.1).
