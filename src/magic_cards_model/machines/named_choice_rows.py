@@ -26,6 +26,10 @@ another creature you control" answer recorded on the source
 left the battlefield since - Dauntless Bodyguard's "Sacrifice this creature:
 The chosen creature gains indestructible until end of turn." is activated by
 sacrificing the source (CR 602.2: the cost is paid before it resolves).
+The same record is written by a resolving "choose a creature an opponent
+controls" (Zenos yae Galvus's enters trigger, `choose_and_record_object`), so
+the source's later "When the chosen creature leaves the battlefield" trigger
+(`chosen_object_id`) watches the one object chosen.
 """
 
 from __future__ import annotations
@@ -33,7 +37,7 @@ from __future__ import annotations
 import re
 from typing import TYPE_CHECKING, Any
 
-from ..models.card_state import CardState, ChoiceKind
+from ..models.card_state import CardState, Choice, ChoiceKind
 from ..phrases import with_indefinite_article
 
 if TYPE_CHECKING:
@@ -153,3 +157,50 @@ def chosen_object(game: Game, stack_object: Any) -> CardState | None:
         if str(permanent.id) == choice.value:
             return permanent
     return None
+
+
+def chosen_object_id(source: CardState | None) -> str | None:
+    """The id (as recorded) of the object `source`'s `ChoiceKind.OBJECT`
+    answer named, or None when it has none."""
+    choice = None if source is None else source.choice
+    if choice is None or choice.kind is not ChoiceKind.OBJECT:
+        return None
+    return choice.value
+
+
+def choose_and_record_object(
+    game: Game,
+    stack_object: Any,
+    candidates: list[CardState],
+    *,
+    prompt: str,
+) -> CardState | None:
+    """A resolution-time "choose a creature ..." (CR 608.2d: the controller
+    chooses as the ability resolves; no target, CR 115.1) among `candidates`,
+    recorded on the ability's source as its `ChoiceKind.OBJECT` answer for a
+    later "the chosen creature". None when there is nothing to choose."""
+    from ..models.card_state import CardState as _CardState
+    from .decisions import Decision, DecisionKind, source_id_of
+
+    if not candidates:
+        return None
+    controller = game.controller_of(stack_object).username
+    answer = game.ask(
+        Decision(
+            kind=DecisionKind.CHOOSE_CARDS,
+            player=controller,
+            prompt=prompt,
+            source=getattr(stack_object, "source_name", ""),
+            amount=1,
+            cards=tuple(state.id for state in candidates),
+            card_labels=tuple(state.name for state in candidates),
+            source_id=source_id_of(stack_object),
+        )
+    )
+    picked = next((state for state in candidates if answer and state.id == answer[0]), None)
+    if picked is None:
+        return None
+    source = stack_object.source(game) if hasattr(stack_object, "source") else None
+    if isinstance(source, _CardState):
+        source.choice = Choice(kind=ChoiceKind.OBJECT, value=str(picked.id))
+    return picked

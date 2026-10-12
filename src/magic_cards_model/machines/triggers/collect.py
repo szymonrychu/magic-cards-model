@@ -120,6 +120,8 @@ def _unread_trigger_events(condition: str) -> frozenset[TriggerEvent | ExtraTrig
         return frozenset({ExtraTriggerEvent.DOOR_UNLOCKED})
     if _SOLVE_A_CASE_CONDITION.match(lowered):
         return frozenset({ExtraTriggerEvent.CASE_SOLVED})
+    if _PLAYER_LOSES_THE_GAME_CONDITION.match(lowered):
+        return frozenset({ExtraTriggerEvent.PLAYER_LOSES_THE_GAME})
     if _FINAL_CHAPTER_RESOLVES_CONDITION.match(lowered):
         return frozenset({ExtraTriggerEvent.FINAL_CHAPTER_RESOLVED})
     if _SELF_PUT_INTO_GRAVEYARD_FROM_ANYWHERE_CONDITION.match(lowered):
@@ -2003,6 +2005,7 @@ from ._common import (  # noqa: E402
     _PLAY_A_CARD_EXILED_WITH_CONDITION,
     _PLAY_A_LAND_OR_CAST_CONDITION,
     _PLAYER_COUNTERS_PUT_CONDITION,
+    _PLAYER_LOSES_THE_GAME_CONDITION,
     _PUT_INTO_LIBRARY_CONDITION,
     _REVEALED_FIRST_DRAW_CONDITION,
     _REVEALED_THIS_WAY_CONDITION,

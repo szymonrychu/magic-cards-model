@@ -2089,6 +2089,14 @@ def _condition_matches(
         # at the object as it last existed, which the event carries).
         if event.subject_id == source.id:
             return mine
+        if lowered.startswith("the chosen "):
+            # Zenos yae Galvus's "When the chosen creature leaves the
+            # battlefield": only the object the source's choice recorded
+            # (CR 614.12a / CR 608.2d), never any other creature.
+            from ..named_choice_rows import chosen_object_id
+
+            chosen = chosen_object_id(source)
+            return chosen is not None and chosen == str(event.subject_id)
         if mine and "another" not in lowered and "other" not in lowered:
             return False
         counter_qualifier = _leaves_battlefield_counter_qualifier_holds(
@@ -2475,8 +2483,11 @@ def _condition_matches(
             # "your turn" points at, read off the live `TurnMachine` rather
             # than any snapshot, since the trigger is checked as the cast
             # event fires, before anything else has moved the turn along.
+            # "an opponent casts a spell during their turn" (Sandswirl
+            # Wanderglyph): "their" is the caster's own turn.
             turn = getattr(game, "turn", None)
-            if turn is None or turn.active_player != controller:
+            whose = event.player if "during their turn" in lowered else controller
+            if turn is None or turn.active_player != whose:
                 return False
         ordinal_match = _ordinal_spell_this_turn_matches(game, condition, controller, event)
         if ordinal_match is not None:
@@ -3796,6 +3807,17 @@ def _unread_condition_matches(
             and event.subject_id == source.id
             and event.subject_name == ability.face
         )
+
+    loses = _PLAYER_LOSES_THE_GAME_CONDITION.match(condition)
+    if loses is not None:
+        # CR 104.3: the event's player is the one who lost. "The chosen
+        # player" is the one the source's choice named (`chosen_player`).
+        if event.event is not ExtraTriggerEvent.PLAYER_LOSES_THE_GAME or event.player is None:
+            return False
+        who = loses.group("who").lower()
+        if who == "the chosen player":
+            return event.player == source.chosen_player
+        return who == "a player" or event.player != controller
 
     if _SOLVE_A_CASE_CONDITION.match(condition):
         # CR 719.3a-b: you solve a Case when a Case you control becomes
@@ -6006,6 +6028,7 @@ from ._common import (  # noqa: E402
     _PLAY_A_CARD_EXILED_WITH_CONDITION,
     _PLAY_A_LAND_OR_CAST_CONDITION,
     _PLAYER_COUNTERS_PUT_CONDITION,
+    _PLAYER_LOSES_THE_GAME_CONDITION,
     _PUT_INTO_LIBRARY_CONDITION,
     _REVEALED_FIRST_DRAW_CONDITION,
     _REVEALED_THIS_WAY_CONDITION,

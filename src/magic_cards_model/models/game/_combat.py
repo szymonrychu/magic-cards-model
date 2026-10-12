@@ -422,6 +422,9 @@ class CombatMixin:
                 # re-derived later: `defending_player` needs `attack.defender`
                 # still resolvable, and a battle's protector (CR 310.9d) can
                 # change once combat is over.
+                # "Each opponent who attacked you or a planeswalker you
+                # control this turn" (Sandswirl Wanderglyph).
+                note_attacked(self, self.active_player.username, attack.defender)
                 defender_username = combat_rules.defending_player(self, attack.defender)
                 if defender_username is not None:
                     self.attacked_players_this_turn.setdefault(creature.id, set()).add(
@@ -671,3 +674,6 @@ class CombatMixin:
         if creature.zone is not Zone.BATTLEFIELD or goader in creature.goaded_by:
             return
         creature.goaded_by.append(goader)
+
+
+from ...machines.opponent_attack_restrictions import note_attacked  # noqa: E402

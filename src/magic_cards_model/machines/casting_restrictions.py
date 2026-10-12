@@ -620,6 +620,16 @@ def _live_blanket_cant_cast(
     rulings - that share the cap's quality, and applies only to a spell that
     has that quality itself.
     """
+    from .opponent_attack_restrictions import attacked_cant_cast_source
+
+    attacked_ban = attacked_cant_cast_source(game, caster)
+    if attacked_ban is not None:
+        return CastingRuleEffect(
+            kind=CastingRuleKind.TURN_WINDOW_CANT_CAST,
+            controller=attacked_ban[1],
+            source_name=attacked_ban[0],
+            restricted_player=caster,
+        )
     turn = getattr(game, "turn", None)
     active_player = getattr(turn, "active_player", None)
     for source in list(getattr(game, "battlefield", [])):

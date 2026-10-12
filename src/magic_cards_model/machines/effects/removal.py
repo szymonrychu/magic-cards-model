@@ -4502,6 +4502,77 @@ def _parse_roll_table_text(text: str) -> AbilityEffect | None:
     return roll_table_effect(text)
 
 
+#: Unstable Glyphbridge: "for each player, choose a creature with power 2 or
+#: less that player controls. Then destroy all creatures except creatures
+#: chosen this way." - CR 608.2d's resolution-time choices (no targets, CR
+#: 115.1), made by the controller in APNAP order (CR 101.4), then one CR
+#: 701.8a destroy of every other creature at once.
+_FOR_EACH_PLAYER_CHOOSE_THEN_DESTROY_REST_RE = re.compile(
+    r"^for each player, (?:you )?choose a creature"
+    r"(?: with (?P<stat>power|toughness|mana value) (?P<n>\d+) or (?P<dir>less|greater))? "
+    r"that player controls\. then destroy all (?:other )?creatures"
+    r"(?: except (?:creatures|those) chosen this way)?\.?$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s1")
+def _parse_destroy_all_but_chosen_per_player_text(text: str) -> AbilityEffect | None:
+    """`_FOR_EACH_PLAYER_CHOOSE_THEN_DESTROY_REST_RE`'s shape. A player with
+    no creature meeting the quality is skipped as a chooser (CR 608.2d)."""
+    if not text.lower().startswith("for each player, ") or "destroy all" not in text.lower():
+        return None
+    match = _FOR_EACH_PLAYER_CHOOSE_THEN_DESTROY_REST_RE.fullmatch(" ".join(text.strip().split()))
+    if match is None:
+        return None
+    stat = (match.group("stat") or "").lower()
+    bound = int(match.group("n")) if match.group("n") else 0
+    at_most = (match.group("dir") or "less").lower() == "less"
+
+    def qualifies(game: "Game", creature: CardState) -> bool:
+        if not stat:
+            return True
+        if stat == "mana value":
+            value: float | None = creature.mana_value
+        elif stat == "power":
+            value = game.power_of(creature)
+        else:
+            value = game.toughness_of(creature)
+        if value is None:
+            return False
+        return value <= bound if at_most else value >= bound
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        from ..named_choice_rows import choose_and_record_object
+
+        board = game.computed_board()
+        kept: set[UUID] = set()
+        for player in _players_in_apnap_order(game):
+            candidates = [
+                state
+                for state in game.permanents_controlled_by(player.username)
+                if board.of(state).is_creature and qualifies(game, state)
+            ]
+            picked = choose_and_record_object(
+                game,
+                ability,
+                candidates,
+                prompt=f"choose a creature {player.username} controls",
+            )
+            if picked is not None:
+                kept.add(picked.id)
+        doomed = [
+            state
+            for state in game.battlefield
+            if board.of(state).is_creature and state.id not in kept
+        ]
+        for creature in doomed:
+            if creature.zone is Zone.BATTLEFIELD:
+                game.destroy(creature)
+
+    return effect
+
+
 #: "Destroy this enchantment." (Experimental Frenzy's `{3}{R}` ability) - CR 701.8a's
 #: destroy on the ability's own source, a self-reference (CR 201.5, CR 115.1a) rather
 #: than a target. Ability-only: a spell is never a permanent on the battlefield.

@@ -4896,6 +4896,50 @@ _AS_TRANSFORMS_INTO_RE = re.compile(
 )
 
 
+#: "choose an opponent." / "choose a player." after "As this creature
+#: transforms into <face>, " (Shinryu, Transcendent Rival) - CR 712.20 applies
+#: it while the permanent turns over, recorded on `CardState.chosen_player`
+#: for the face's "the chosen player".
+_AS_TRANSFORMS_CHOOSE_PLAYER_RE = re.compile(
+    r"^choose (?P<who>an opponent|a player)\.?$", re.IGNORECASE
+)
+
+
+def _choose_player_as_it_transforms(game: "Game", permanent: CardState, instruction: str) -> None:
+    """The controller chooses an opponent (or any player) for the permanent's
+    `chosen_player`; asked only when there is more than one to pick between."""
+    match = _AS_TRANSFORMS_CHOOSE_PLAYER_RE.fullmatch(instruction.strip())
+    if match is None:
+        return
+    controller = game.controller_of(permanent).username
+    any_player = match.group("who").lower() == "a player"
+    candidates = tuple(
+        player.username
+        for player in game.players_in_game
+        if any_player or player.username != controller
+    )
+    if not candidates:
+        return
+    chosen = candidates[0]
+    if len(candidates) > 1:
+        quality = "player" if any_player else "opponent"
+        answer = game.ask(
+            Decision(
+                kind=DecisionKind.CHOOSE_A_QUALITY,
+                player=controller,
+                prompt=f"choose {with_indefinite_article(quality)} as {permanent.name} transforms",
+                source=permanent.name,
+                source_id=source_id_of(permanent),
+                options=candidates,
+                quality=quality,
+            )
+        )
+        if answer not in candidates:
+            raise ValueError(f"{permanent.name}: {answer!r} is not one of {', '.join(candidates)}")
+        chosen = str(answer)
+    permanent.chosen_player = chosen
+
+
 def transform_permanent(game: "Game", permanent: CardState, *, day_night: bool = False) -> None:
     """CR 701.27a's transform, then the new face's own "As this ...
     transforms into `<face>`, `<effect>`" (CR 712.20) for the permanent's
@@ -4916,10 +4960,24 @@ def transform_permanent(game: "Game", permanent: CardState, *, day_night: bool =
         match = _AS_TRANSFORMS_INTO_RE.fullmatch((ability.text or "").strip())
         # The face's own name may hold a comma ("Sephiroth, One-Winged
         # Angel"), so it is matched as the name, not up to the first comma.
-        lead = f"{after}, ".lower()
-        if match is None or not match.group("rest").lower().startswith(lead):
+        # Shinryu, Transcendent Rival's own "As this creature transforms into
+        # Shinryu, ..." names the face by its short name (CR 201.4b).
+        rest = match.group("rest") if match is not None else ""
+        lead = next(
+            (
+                f"{name}, "
+                for name in (after, after.split(",")[0])
+                if rest.lower().startswith(f"{name}, ".lower())
+            ),
+            None,
+        )
+        if lead is None:
             continue
-        run = _player_instruction(match.group("rest")[len(lead) :])
+        instruction = rest[len(lead) :]
+        if _AS_TRANSFORMS_CHOOSE_PLAYER_RE.fullmatch(instruction.strip()):
+            _choose_player_as_it_transforms(game, permanent, instruction)
+            continue
+        run = _player_instruction(instruction)
         if run is None:
             game.unmodeled_trigger_effect_notices.append(
                 UnmodeledTriggerEffectNotice(
@@ -5266,7 +5324,8 @@ def reads_as_transforms_line(text: str) -> bool:
         return False
     rest = match.group("rest")
     return any(
-        _player_instruction(rest[index + 2 :]) is not None
+        _AS_TRANSFORMS_CHOOSE_PLAYER_RE.fullmatch(rest[index + 2 :].strip()) is not None
+        or _player_instruction(rest[index + 2 :]) is not None
         for index in range(len(rest))
         if rest.startswith(", ", index)
     )
@@ -12820,5 +12879,138 @@ def _parse_tap_all_that_player_controls_clause(
             }[what]
             if kind:
                 game.tap_permanent(permanent)
+
+    return effect
+
+
+#: Zenos yae Galvus: "choose a creature an opponent controls. Until end of
+#: turn, creatures other than Zenos yae Galvus and the chosen creature get
+#: -2/-2." - CR 608.2d's resolution-time choice (recorded on the source for its
+#: later "the chosen creature", `named_choice_rows.choose_and_record_object`),
+#: then a P/T change whose affected set is fixed as it begins (CR 611.2c).
+_CHOOSE_THEN_OTHERS_GET_RE = re.compile(
+    r"^choose a creature(?: (?P<whose>an opponent|you) controls?)?\.\s*"
+    r"(?:until end of turn, )?creatures other than (?:this creature|[^,.]+?) and the chosen "
+    r"creature get (?P<power>[+-]\d+)/(?P<toughness>[+-]\d+)(?: until end of turn)?\.?$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s22")
+def _parse_choose_creature_then_others_get_text(text: str) -> AbilityEffect | None:
+    """`_CHOOSE_THEN_OTHERS_GET_RE`'s shape; "until end of turn" is required
+    in one of its two printed positions."""
+    lowered = text.lower()
+    if "and the chosen creature get" not in lowered or "until end of turn" not in lowered:
+        return None
+    match = _CHOOSE_THEN_OTHERS_GET_RE.fullmatch(" ".join(text.strip().split()))
+    if match is None:
+        return None
+    power = int(match.group("power"))
+    toughness = int(match.group("toughness"))
+    whose = (match.group("whose") or "").lower()
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        from ..named_choice_rows import choose_and_record_object
+
+        controller = game.controller_of(ability).username
+        board = game.computed_board()
+        creatures = [state for state in game.battlefield if board.of(state).is_creature]
+        candidates = [
+            state
+            for state in creatures
+            if not whose or (whose == "you") == (game.controller_of(state).username == controller)
+        ]
+        chosen = choose_and_record_object(
+            game, ability, candidates, prompt=f"choose a creature {whose} controls".strip()
+        )
+        source = ability.source(game)
+        excluded = {state.id for state in (source, chosen) if state is not None}
+        store = game.continuous_effects
+        timestamp = store.tick()
+        name = ability.source_name
+        for creature in creatures:
+            if creature.id in excluded or creature.zone is not Zone.BATTLEFIELD:
+                continue
+            store.add(
+                ContinuousEffect(
+                    description=f"{name}: {creature.name} gets {power:+}/{toughness:+}",
+                    layer=Layer.POWER_TOUGHNESS,
+                    sublayer=Sublayer.MODIFY,
+                    timestamp=timestamp,
+                    duration=Duration.UNTIL_END_OF_TURN,
+                    selector=_only(creature.id),
+                    modification=modify_power_toughness(power, toughness),
+                )
+            )
+
+    return effect
+
+
+#: Sandswirl Wanderglyph: "they can't attack you or planeswalkers you control
+#: this turn." - the triggering event's player (CR 603.2: the opponent who cast
+#: the spell) is barred for the rest of the turn (CR 508.1c), a rules change
+#: kept by `opponent_attack_restrictions.record_cant_attack`.
+_THEY_CANT_ATTACK_YOU_THIS_TURN_RE = re.compile(
+    r"^(?:they|that player) can'?t attack you(?: or planeswalkers you control)? this turn\.?$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s22")
+def _parse_they_cant_attack_you_this_turn_text(text: str) -> AbilityEffect | None:
+    """`_THEY_CANT_ATTACK_YOU_THIS_TURN_RE`'s shape."""
+    if "attack you" not in text.lower():
+        return None
+    if _THEY_CANT_ATTACK_YOU_THIS_TURN_RE.fullmatch(" ".join(text.strip().split())) is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        from ..opponent_attack_restrictions import record_cant_attack
+
+        event = ability.event
+        restricted = None if event is None else event.player
+        if restricted is None or restricted == ability.controller:
+            return
+        record_cant_attack(game, restricted, ability.controller, ability.source_name)
+
+    return effect
+
+
+#: Elbrus, the Binding Blade: "unattach Elbrus, then transform it." - CR
+#: 701.3d's unattach of the source itself (named by its own name or "this
+#: Equipment"/"this Aura"), then, in order (CR 608.2c), the source's own
+#: transform (CR 701.27a).
+_UNATTACH_SELF_RE = re.compile(
+    r"^unattach (?P<self>(?i:this (?:equipment|aura|fortification))|"
+    r"(?!All |Each |Target |Any )[A-Z][^,.]*?)"
+    r"(?P<transform>, then transform (?i:it|this (?:equipment|aura|permanent)))?\.?$"
+)
+
+
+@ABILITY_TEXT.rung("s28")
+def _parse_unattach_self_then_transform_text(text: str) -> AbilityEffect | None:
+    """`_UNATTACH_SELF_RE`'s shape; a source that is gone does nothing (CR
+    608.2b), and the transform obeys CR 701.27f through the shared
+    self-transform reader."""
+    stripped = " ".join(text.strip().split())
+    if not stripped.lower().startswith("unattach "):
+        return None
+    match = _UNATTACH_SELF_RE.fullmatch(stripped[0].lower() + stripped[1:])
+    if match is None:
+        return None
+    transform_self = (
+        parse_mixed_effect("Transform this permanent.") if match.group("transform") else None
+    )
+    if match.group("transform") and transform_self is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        source = ability.source(game)
+        if source is None or source.zone is not Zone.BATTLEFIELD:
+            return
+        source.unattach()
+        if transform_self is not None:
+            transform_self(game, ability)
 
     return effect

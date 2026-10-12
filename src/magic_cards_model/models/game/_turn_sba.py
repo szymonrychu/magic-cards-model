@@ -2077,6 +2077,10 @@ class TurnSbaMixin:
         """This player loses, and so leaves the game (CR 104.5)."""
         if username not in self.losers:
             self.losers.append(username)
+            # "When the chosen player loses the game" (CR 104.3) - raised
+            # before the player's objects leave (CR 800.4a), so a trigger of
+            # an object they control is not lost with them by mistake.
+            self.emit(GameEvent(event=ExtraTriggerEvent.PLAYER_LOSES_THE_GAME, player=username))
         self._player_left(username)
 
     def _player_left(self: "Game", username: str) -> None:

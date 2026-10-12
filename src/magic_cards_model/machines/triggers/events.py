@@ -325,6 +325,10 @@ class ExtraTriggerEvent(StrEnum):
     #: number. **Emitted by:** `Game._resolve_ability`, after the effect of a
     #: chapter ability whose chapter is the Saga's final chapter number.
     FINAL_CHAPTER_RESOLVED = "final_chapter_resolved"
+    #: "When the chosen player loses the game" (Shinryu, Transcendent Rival;
+    #: CR 104.3). `GameEvent.player` is the player who lost. **Emitted by:**
+    #: `Game._lose_the_game`, before the player leaves (CR 800.4a).
+    PLAYER_LOSES_THE_GAME = "player_loses_the_game"
 
 
 class GameEvent(EngineModel):

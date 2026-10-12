@@ -14,10 +14,14 @@ that wrote this file:
 
 from random import Random
 
+import pytest
+
 from magic_cards_model.machines import Step
 from magic_cards_model.machines.combat import has_keyword
+from magic_cards_model.machines.effects.continuous import transform_permanent
 from magic_cards_model.models import Zone
 from magic_cards_model.models.card import Color
+from magic_cards_model.models.card_state import Counter
 from tests.scenarios.harness import Scenario
 
 
@@ -358,10 +362,7 @@ def test_deck_of_many_things_twenty_reanimates_and_dooms_its_owner():
 
 def test_deck_of_many_things_twenty_with_no_creature_card_anywhere_does_nothing():
     scenario = _deck(20, [], ["Lightning Bolt"])
-    assert names(scenario.player("alice").graveyard) == [
-        "Lightning Bolt",
-        "The Deck of Many Things",
-    ][:1] or "Lightning Bolt" in names(scenario.player("alice").graveyard)
+    assert names(scenario.player("alice").graveyard) == ["Lightning Bolt"]
     assert not scenario.game.is_over
 
 
@@ -872,3 +873,262 @@ def test_wars_toll_ignores_its_controllers_own_mana():
     scenario.game.put_triggers_on_stack()
     assert scenario.game.stack == []
     assert len([c for c in scenario.game.battlefield if c.name == "Island" and not c.tapped]) == 1
+
+
+def test_wars_toll_makes_every_creature_of_an_attacking_opponent_attack():
+    scenario = (
+        Scenario()
+        .player("bob", battlefield=["Grizzly Bears", "Hill Giant"], library=["Wastes"] * 3)
+        .player("alice", battlefield=["War's Toll"], library=["Wastes"] * 3)
+        .build()
+    )
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    bears = scenario.creature("Grizzly Bears", "bob")
+    giant = scenario.creature("Hill Giant", "bob")
+    # CR 508.1d: one attacker turns the conditional requirement on for both.
+    with pytest.raises(ValueError, match="War's Toll"):
+        scenario.attack_with(bears)
+    scenario.attack_with(bears, giant)
+    assert {c.name for c in scenario.attackers()} == {"Grizzly Bears", "Hill Giant"}
+
+
+def test_wars_toll_lets_an_opponent_attack_with_nothing():
+    scenario = (
+        Scenario()
+        .player("bob", battlefield=["Grizzly Bears", "Hill Giant"], library=["Wastes"] * 3)
+        .player("alice", battlefield=["War's Toll"], library=["Wastes"] * 3)
+        .build()
+    )
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    scenario.game.declare_attackers([])
+    assert scenario.attackers() == []
+
+
+def test_wars_toll_does_not_bind_its_controllers_attack():
+    scenario = board(["War's Toll", "Grizzly Bears", "Hill Giant"], step=Step.DECLARE_ATTACKERS)
+    scenario.attack_with(scenario.creature("Grizzly Bears", "alice"))
+    assert [c.name for c in scenario.attackers()] == ["Grizzly Bears"]
+
+
+# --------------------------------------------------------------------------
+# Zenos yae Galvus // Shinryu: the chosen creature and the chosen player
+# --------------------------------------------------------------------------
+
+
+def _zenos(extra_bob: list[str] | None = None, *, carol: bool = False):
+    builder = (
+        Scenario()
+        .player("alice", battlefield=["Savannah Lions"], hand=["Zenos yae Galvus"])
+        .player("bob", battlefield=["Hill Giant", "Grizzly Bears", *(extra_bob or [])])
+    )
+    if carol:
+        builder = builder.player("carol", battlefield=["Memnite"])
+    scenario = builder.build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    giant = scenario.creature("Hill Giant", "bob")
+    scenario.will_choose_cards(giant, source="Zenos yae Galvus")
+    zenos = scenario.put_onto_battlefield("Zenos yae Galvus", "alice")
+    scenario.game.put_triggers_on_stack()
+    scenario.pass_until_resolved()
+    return scenario, zenos, giant
+
+
+def test_zenos_shrinks_every_other_creature_but_the_chosen_one():
+    scenario, zenos, giant = _zenos()
+    assert zenos.choice is not None and zenos.choice.value == str(giant.id)
+    stats = scenario.game.characteristics_of(giant)
+    assert (stats.power, stats.toughness) == (3, 3)
+    assert (scenario.game.power_of(zenos), scenario.game.toughness_of(zenos)) == (4, 4)
+    # Grizzly Bears and Savannah Lions get -2/-2 and die (CR 704.5f).
+    graveyards = names(scenario.player("bob").graveyard) + names(scenario.player("alice").graveyard)
+    assert sorted(graveyards) == ["Grizzly Bears", "Savannah Lions"]
+
+
+def test_zenos_shrink_ends_with_the_turn():
+    scenario, _zenos_state, _giant = _zenos(["Craw Wurm"])
+    wurm = scenario.creature("Craw Wurm", "bob")
+    assert scenario.game.power_of(wurm) == 4
+    scenario.game.cleanup_step()
+    assert scenario.game.power_of(wurm) == 6
+
+
+def test_zenos_transforms_when_the_chosen_creature_leaves_and_chooses_an_opponent():
+    scenario, zenos, giant = _zenos(carol=True)
+    scenario.will_choose("carol", source="Shinryu, Transcendent Rival")
+    scenario.game.destroy(giant)
+    scenario.game.put_triggers_on_stack()
+    scenario.pass_until_resolved()
+    assert zenos.up_face_name == "Shinryu, Transcendent Rival"
+    assert zenos.chosen_player == "carol"
+
+
+def test_zenos_ignores_another_creature_leaving():
+    scenario, zenos, _giant = _zenos(["Craw Wurm"])
+    scenario.game.destroy(scenario.creature("Craw Wurm", "bob"))
+    scenario.game.put_triggers_on_stack()
+    scenario.pass_until_resolved()
+    assert zenos.up_face_name == "Zenos yae Galvus"
+
+
+def test_shinryu_wins_the_game_when_the_chosen_player_loses():
+    scenario, zenos, giant = _zenos(carol=True)
+    scenario.will_choose("bob", source="Shinryu, Transcendent Rival")
+    scenario.game.destroy(giant)
+    scenario.game.put_triggers_on_stack()
+    scenario.pass_until_resolved()
+    assert zenos.chosen_player == "bob"
+    scenario.game.player_loses_the_game("bob")
+    assert not scenario.game.is_over  # carol is still in (CR 104.2a)
+    scenario.game.put_triggers_on_stack()
+    scenario.pass_until_resolved()
+    assert scenario.game.winner == "alice"  # CR 104.2b
+
+
+def test_shinryu_ignores_another_player_losing():
+    scenario, zenos, giant = _zenos(carol=True)
+    scenario.will_choose("bob", source="Shinryu, Transcendent Rival")
+    scenario.game.destroy(giant)
+    scenario.game.put_triggers_on_stack()
+    scenario.pass_until_resolved()
+    scenario.game.player_loses_the_game("carol")
+    scenario.game.put_triggers_on_stack()
+    assert scenario.game.stack == []
+    assert scenario.game.winner is None
+
+
+# --------------------------------------------------------------------------
+# Unstable Glyphbridge // Sandswirl Wanderglyph
+# --------------------------------------------------------------------------
+
+
+def _glyphbridge_cast():
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=["Savannah Lions", "Hill Giant", *(["Plains"] * 5)],
+            hand=["Unstable Glyphbridge"],
+        )
+        .player("bob", battlefield=["Grizzly Bears", "Memnite", "Craw Wurm"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    return scenario
+
+
+def test_unstable_glyphbridge_keeps_one_small_creature_per_player():
+    scenario = _glyphbridge_cast()
+    lions = scenario.creature("Savannah Lions", "alice")
+    bears = scenario.creature("Grizzly Bears", "bob")
+    scenario.will_choose_cards(lions, source="Unstable Glyphbridge")
+    scenario.will_choose_cards(bears, source="Unstable Glyphbridge")
+    scenario.cast_and_resolve("Unstable Glyphbridge", *scenario.untapped_sources(*["Plains"] * 5))
+    scenario.game.put_triggers_on_stack()
+    scenario.pass_until_resolved()
+    survivors = {c.name for c in scenario.game.battlefield if c.card.is_creature}
+    assert survivors == {"Savannah Lions", "Grizzly Bears"}
+
+
+def test_unstable_glyphbridge_put_onto_the_battlefield_does_nothing():
+    # CR 603.4: "if you cast it" - not cast, no trigger.
+    scenario = _glyphbridge_cast()
+    scenario.put_onto_battlefield("Unstable Glyphbridge", "alice")
+    scenario.game.put_triggers_on_stack()
+    assert scenario.game.stack == []
+    assert len([c for c in scenario.game.battlefield if c.card.is_creature]) == 5
+
+
+def _wanderglyph(bob_hand: list[str] | None = None):
+    scenario = (
+        Scenario()
+        .player(
+            "bob",
+            battlefield=["Grizzly Bears", "Island"],
+            hand=bob_hand or [],
+            library=["Wastes"] * 3,
+        )
+        .player("alice", hand=["Unstable Glyphbridge"], library=["Wastes"] * 3)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    glyph = scenario.put_onto_battlefield("Unstable Glyphbridge", "alice")
+    transform_permanent(scenario.game, glyph)
+    assert glyph.up_face_name == "Sandswirl Wanderglyph"
+    return scenario
+
+
+def test_sandswirl_wanderglyph_stops_an_opponent_who_cast_on_their_turn_from_attacking():
+    scenario = _wanderglyph(["Opt"])
+    scenario.cast_and_resolve(
+        "Opt", *scenario.untapped_sources("Island", username="bob"), username="bob"
+    )
+    scenario.pass_until_resolved()  # the cast trigger resolved first, then Opt
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    with pytest.raises(ValueError, match="Sandswirl Wanderglyph"):
+        scenario.attack_with(scenario.creature("Grizzly Bears", "bob"))
+
+
+def test_sandswirl_wanderglyph_lets_a_quiet_opponent_attack():
+    scenario = _wanderglyph()
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    scenario.attack_with(scenario.creature("Grizzly Bears", "bob"))
+    assert [c.name for c in scenario.attackers()] == ["Grizzly Bears"]
+
+
+def test_sandswirl_wanderglyph_bars_an_opponent_who_attacked_from_casting():
+    scenario = _wanderglyph(["Opt"])
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    scenario.attack_with(scenario.creature("Grizzly Bears", "bob"))
+    scenario.start_at(Step.POSTCOMBAT_MAIN)
+    with pytest.raises(ValueError, match="Sandswirl Wanderglyph"):
+        scenario.cast("Opt", username="bob")
+
+
+def test_sandswirl_wanderglyph_lets_an_opponent_who_did_not_attack_cast():
+    scenario = _wanderglyph(["Opt"])
+    scenario.cast_and_resolve(
+        "Opt", *scenario.untapped_sources("Island", username="bob"), username="bob"
+    )
+    scenario.pass_until_resolved()  # the cast trigger resolved first, then Opt
+    assert "Opt" in names(scenario.player("bob").graveyard)
+
+
+# Second printing for the "a player loses the game" event (CR 104.3):
+# Withengar Unbound counts any player's loss, not only a chosen one.
+
+
+def _elbrus_equipped():
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Elbrus, the Binding Blade", "Grizzly Bears"])
+        .player("bob", life=2)
+        .player("carol", battlefield=["Memnite"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    elbrus = scenario.creature("Elbrus, the Binding Blade", "alice")
+    bears = scenario.creature("Grizzly Bears", "alice")
+    elbrus.attach_to(bears)
+    return scenario, elbrus, bears
+
+
+def test_elbrus_unattaches_and_transforms_after_combat_damage():
+    scenario, elbrus, bears = _elbrus_equipped()
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    scenario.attack_with(bears, defending="carol")
+    scenario.no_blocks()
+    scenario.combat_damage()
+    scenario.game.put_triggers_on_stack()
+    scenario.pass_until_resolved()
+    assert elbrus.up_face_name == "Withengar Unbound"
+    assert elbrus.attached_to is None  # CR 701.3d
+
+
+def test_withengar_unbound_grows_when_any_player_loses():
+    scenario, elbrus, _bears = _elbrus_equipped()
+    elbrus.unattach()
+    transform_permanent(scenario.game, elbrus)
+    scenario.game.player_loses_the_game("bob")
+    scenario.game.put_triggers_on_stack()
+    scenario.pass_until_resolved()
+    assert elbrus.counter_count(Counter.PLUS_ONE) == 13
