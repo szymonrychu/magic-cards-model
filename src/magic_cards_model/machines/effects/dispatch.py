@@ -4505,6 +4505,7 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
     # sentence's target, with a CR 611.2b duration tied to the source.
     for whole_text_reader in (
         exile_top_marked.parse_exile_top_marked,
+        exile_top_marked.parse_look_top_exile_one_face_down,
         exiled_with_peek.parse_exile_from_hand_face_down,
         exiled_with_peek.parse_return_exiled_with_to_hand,
         exiled_with_peek.parse_turn_exiled_with_face_up,

@@ -135,3 +135,111 @@ def parse_exile_top_marked(text: str) -> Any:
             )
 
     return effect
+
+
+# --------------------------------------------------------------------------
+# "Look at the top `<n>` cards of `<whose>` library, exile one face down, put
+# the rest `<on the bottom | into the graveyard>`. You may cast that card for
+# as long as it remains exiled." (Vivien, Champion of the Wilds; Gonti, Lord of
+# Luxury; Thief of Sanity)
+# --------------------------------------------------------------------------
+
+_LOOK_EXILE_ONE_RE = re.compile(
+    rf"^look at the top {count_pattern('n')} cards of "
+    r"(?P<whose>your|target opponent'?s|target player'?s|that player'?s) library(?:\.\s*|,\s*)"
+    r"(?:then )?exile (?:one|one of them|one of those cards) face down"
+    r"(?:\.\s*|,\s*then\s+|\s+and\s+)put the rest "
+    r"(?P<dest>on the bottom of (?:your|that) library(?: in (?P<order>any|a random) order)?"
+    r"|into (?:their|your) graveyard)\.\s*"
+    r"(?:for as long as it remains exiled, you may cast it"
+    r"(?: if it'?s an? (?P<quality>[a-z]+) spell)?"
+    r"|you may cast that card for as long as it remains exiled"
+    r"(?P<any>, and (?:you may spend mana as though it were mana of any type|mana of any type can be spent)"
+    r" to cast that spell)?)"
+    r"\.?$",
+    re.IGNORECASE,
+)
+
+
+def parse_look_top_exile_one_face_down(text: str) -> Any:
+    """The whole-text effect for the shape above, or None.
+
+    CR 701.20e: the controller looks at the cards (`Game.look_at_top_and_split`
+    records the look and asks the one-card choice, CR 608.2d); the chosen card
+    is exiled face down (CR 406.3) with a link to the ability's source (CR
+    607.2a); the rest go to the bottom (CR 401.4's free order, or random) or
+    to the graveyard. The cast permission (CR 601.3) has no end but the card
+    leaving exile; "if it's a `<quality>` spell" is a property of the card
+    itself, so a card that cannot ever qualify is simply never castable and is
+    granted nothing."""
+    if "face down" not in text.lower() or not text.lower().startswith("look at the top"):
+        return None
+    match = _LOOK_EXILE_ONE_RE.fullmatch(" ".join(text.split()))
+    if match is None:
+        return None
+    count = parse_count(match.group("n"))
+    if count is None:
+        return None
+    whose = match.group("whose").lower()
+    dest = match.group("dest").lower()
+    to_graveyard = dest.startswith("into")
+    randomised = match.group("order") is not None and match.group("order").lower() == "a random"
+    quality = match.group("quality")
+    any_type = match.group("any") is not None
+    matcher = None
+    if quality is not None:
+        from .effects import _quality_matcher
+
+        matcher = _quality_matcher(quality.lower())
+
+    def effect(game: Game, ability: Any) -> None:
+        from .casting import PlayAction
+        from .decisions import source_id_of
+        from .effects.library import _put_rest_on_bottom
+
+        controller = game.controller_of(ability)
+        owners = _owners(game, ability, whose)
+        if not owners:
+            return
+        owner = owners[0]
+        moved, rest = game.look_at_top_and_split(
+            owner,
+            count,
+            source=ability.source_name,
+            source_id=source_id_of(ability),
+            prompt=f"look at the top {count} cards; exile one face down",
+            moved_label="exiled face down",
+            kept_label="graveyard" if to_graveyard else "bottom of the library",
+            moved_amount=1,
+            moved_exact=True,
+            rest_in_random_order=randomised,
+            asked_of=controller,
+        )
+        castable = [card for card in moved if matcher is None or matcher(card)]
+        for card in game.exile_cards(moved):
+            mark_exiled(game, ability, card, face_down=True, looker=controller.username)
+            if card in castable and card.zone is Zone.EXILE:
+                game.grant_play_permission(
+                    card,
+                    controller.username,
+                    action=PlayAction.CAST,
+                    source_name=ability.source_name,
+                    rule="CR 601.3",
+                    zone=Zone.EXILE,
+                    until_end_of_turn=False,
+                    any_type_mana=any_type,
+                )
+        if to_graveyard:
+            for card in rest:
+                game.put_into_graveyard(card)
+        else:
+            _put_rest_on_bottom(
+                game,
+                owner,
+                rest,
+                randomised=randomised,
+                source=ability.source_name,
+                source_id=source_id_of(ability),
+            )
+
+    return effect
