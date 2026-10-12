@@ -12737,3 +12737,44 @@ from .tokens import (  # noqa: E402
     create_continuous_effect,
     create_continuous_effect_of_ability,
 )
+
+#: "The chosen creature gains indestructible until end of turn." (Dauntless
+#: Bodyguard) - CR 613.1f's grant to the object the source's as-enters choice
+#: recorded (CR 614.12a, `named_choice_rows.chosen_object`), not a target.
+_CHOSEN_OBJECT_GAINS_RE = re.compile(
+    r"^the chosen (?:creature|permanent) gains (?P<keywords>[a-z][a-z, ]*?)"
+    r"(?P<duration> until end of turn)?\.?$",
+    re.IGNORECASE,
+)
+
+
+@MIXED_CLAUSE.rung("s26", for_spell=FORWARD)
+def _parse_chosen_object_gains_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
+    """`_CHOSEN_OBJECT_GAINS_RE`'s shape; a chosen creature that is gone gains
+    nothing (CR 608.2b)."""
+    if for_spell or "the chosen" not in clause.lower():
+        return None
+    match = _CHOSEN_OBJECT_GAINS_RE.fullmatch(clause.strip())
+    if match is None:
+        return None
+    keywords = _split_and_validate_keywords(match.group("keywords").strip())
+    if keywords is None:
+        return None
+    duration = "until end of turn" if match.group("duration") else None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        from ..named_choice_rows import chosen_object
+
+        chosen = chosen_object(game, stack_object)
+        if chosen is None:
+            return
+        _grant_keywords_to(
+            game,
+            chosen,
+            keywords,
+            duration,
+            controller=game.controller_of(stack_object).username,
+            source_name=getattr(stack_object, "source_name", ""),
+        )
+
+    return effect

@@ -1624,6 +1624,48 @@ def _subject_has_required_counter(condition: str, game: "Game", subject_id: obje
 _ONE_OR_MORE_WORDS = re.compile(r"\bone or more\b")
 
 
+#: Talion, the Kindly Lord's "an opponent casts a spell with mana value,
+#: power, or toughness equal to the chosen number" - the source's as-enters
+#: number (CR 614.12a, `ChoiceKind.NUMBER`) against any of the listed values
+#: of the spell as cast (CR 202.3e: an {X} spell's mana value counts X).
+_STAT_EQUALS_CHOSEN_NUMBER_RE = re.compile(
+    r"^(?P<who>an opponent|you|a player) casts? an? spell with (?P<stats>(?:mana value|power|"
+    r"toughness)(?:(?:,? or |, )(?:mana value|power|toughness))*) equal to the chosen number$",
+    re.IGNORECASE,
+)
+
+
+def reads_stat_equals_chosen_number_condition(condition: str) -> bool:
+    """Whether `_cast_stat_equals_chosen_number` reads `condition`."""
+    return _STAT_EQUALS_CHOSEN_NUMBER_RE.fullmatch(" ".join(condition.split())) is not None
+
+
+def _cast_stat_equals_chosen_number(
+    game: "Game", source: CardState, controller: str, event: GameEvent, condition: str
+) -> bool:
+    match = _STAT_EQUALS_CHOSEN_NUMBER_RE.fullmatch(" ".join(condition.split()))
+    choice = source.choice
+    if match is None or choice is None or not choice.value.lstrip("-").isdigit():
+        return False
+    who = match.group("who").lower()
+    if who == "an opponent" and (event.player is None or event.player == controller):
+        return False
+    if who == "you" and event.player != controller:
+        return False
+    card = event.subject_card
+    if card is None:
+        return False
+    chosen = int(choice.value)
+    values: list[int | None] = []
+    for stat in re.split(r",? or |, ", match.group("stats").lower()):
+        if stat == "mana value":
+            values.append(event.amount if event.amount is not None else int(card.cmc))
+        else:
+            printed = card.power if stat == "power" else card.toughness
+            values.append(int(printed) if printed is not None and printed.isdigit() else None)
+    return chosen in values
+
+
 def condition_matches(
     game: "Game",
     ability: TriggeredAbility,
@@ -1780,6 +1822,9 @@ def _condition_matches(
     if ability_word == "to solve" and getattr(source, "solved", False):
         return False  # CR 719.3a: "... and this Case is not solved"
     condition = ability.condition
+
+    if ability.event is TriggerEvent.CAST_SPELL and "the chosen number" in condition.lower():
+        return _cast_stat_equals_chosen_number(game, source, controller, event, condition)
 
     if ability.event is TriggerEvent.CAST_SPELL:
         # Danitha, Sword of Hope's own "you cast an Equipment spell or a

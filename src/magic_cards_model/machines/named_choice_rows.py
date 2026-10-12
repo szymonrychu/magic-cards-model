@@ -19,13 +19,25 @@ Choose one. Activate only once each turn. - Until end of turn, this creature
 becomes a Rhino ..." (Skinshifter). The instruction is not a mode; it is moved
 after the bullets, where `abilities._INSTRUCTIONS` reads activation
 instructions, and the header becomes the ordinary "Choose one -".
+
+**"The chosen creature"** (CR 614.12a): the object an "As this enters, choose
+another creature you control" answer recorded on the source
+(`ChoiceKind.OBJECT`), read back by `chosen_object` even when the source has
+left the battlefield since - Dauntless Bodyguard's "Sacrifice this creature:
+The chosen creature gains indestructible until end of turn." is activated by
+sacrificing the source (CR 602.2: the cost is paid before it resolves).
 """
 
 from __future__ import annotations
 
 import re
+from typing import TYPE_CHECKING, Any
 
+from ..models.card_state import CardState, ChoiceKind
 from ..phrases import with_indefinite_article
+
+if TYPE_CHECKING:
+    from ..models.game import Game
 
 _BULLET = "•"
 
@@ -124,3 +136,20 @@ def fold_choice_rows(lines: list[str]) -> list[str]:
         folded.append("\n".join(block))
         index += 1 + len(bullets)
     return folded
+
+
+def chosen_object(game: Game, stack_object: Any) -> CardState | None:
+    """The permanent the resolving ability's source chose as it entered
+    (`ChoiceKind.OBJECT`), if it is still on the battlefield (CR 400.7: a
+    chosen creature that left is a new object, CR 608.2b)."""
+    source = stack_object.source(game) if hasattr(stack_object, "source") else None
+    if source is None and getattr(stack_object, "source_id", None) is not None:
+        found = game.find_by_id(stack_object.source_id)
+        source = found if isinstance(found, CardState) else None
+    choice = None if source is None else source.choice
+    if choice is None or choice.kind is not ChoiceKind.OBJECT:
+        return None
+    for permanent in game.battlefield:
+        if str(permanent.id) == choice.value:
+            return permanent
+    return None

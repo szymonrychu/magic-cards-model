@@ -689,3 +689,117 @@ def test_tajuru_preserver_still_stops_only_the_sacrifice():
     # permanents" alone does not stop a discard.
     scenario = _mind_rot(["Tajuru Preserver"])
     assert scenario.player("bob").hand == []
+
+
+# --------------------------------------------------------------------------
+# "The chosen <thing>" (CR 614.12a): the as-enters answer read back later
+# --------------------------------------------------------------------------
+
+
+def test_dauntless_bodyguard_saves_the_chosen_creature():
+    scenario = board(["Grizzly Bears"], alice_zones={"hand": ["Dauntless Bodyguard"]})
+    bears = scenario.creature("Grizzly Bears", "alice")
+    bodyguard = scenario.put_onto_battlefield("Dauntless Bodyguard", "alice")
+    assert bodyguard.choice is not None and bodyguard.choice.value == str(bears.id)
+    scenario.activate(bodyguard, sacrificing=[bodyguard])
+    scenario.pass_until_resolved()
+    scenario.game.destroy(bears)
+    assert bears.zone is Zone.BATTLEFIELD  # indestructible (CR 702.12b)
+
+
+def test_dauntless_bodyguard_grant_ends_with_the_turn():
+    scenario = board(["Grizzly Bears"], alice_zones={"hand": ["Dauntless Bodyguard"]})
+    bears = scenario.creature("Grizzly Bears", "alice")
+    bodyguard = scenario.put_onto_battlefield("Dauntless Bodyguard", "alice")
+    scenario.activate(bodyguard, sacrificing=[bodyguard])
+    scenario.pass_until_resolved()
+    scenario.game.cleanup_step()  # "until end of turn" ends (CR 514.2)
+    scenario.game.destroy(bears)
+    assert bears.zone is Zone.GRAVEYARD
+
+
+def test_dauntless_bodyguard_with_no_creature_chosen_grants_nothing():
+    scenario = board(["Wastes"], alice_zones={"hand": ["Dauntless Bodyguard"]})
+    bodyguard = scenario.put_onto_battlefield("Dauntless Bodyguard", "alice")
+    scenario.activate(bodyguard, sacrificing=[bodyguard])
+    scenario.pass_until_resolved()
+    assert bodyguard.zone is Zone.GRAVEYARD
+
+
+def _talion(number: str, spell: str, mana: list[str]):
+    scenario = (
+        Scenario()
+        .player("bob", battlefield=mana, hand=[spell], library=["Wastes"] * 3)
+        .player("alice", hand=["Talion, the Kindly Lord"], library=["Island", "Forest"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scenario.will_choose(number, source="Talion, the Kindly Lord")
+    scenario.put_onto_battlefield("Talion, the Kindly Lord", "alice")
+    casting = scenario.cast(spell, username="bob")
+    if spell == "Lightning Bolt":
+        casting.choose_targets(["alice"])
+    scenario.pay_with(casting.begin_paying(), *scenario.untapped_sources(*mana, username="bob"))
+    scenario.put_on_stack(casting)
+    scenario.game.put_triggers_on_stack()
+    scenario.pass_until_resolved()
+    return scenario
+
+
+def test_talion_punishes_a_spell_with_the_chosen_mana_value():
+    scenario = _talion("1", "Lightning Bolt", ["Mountain"])
+    assert scenario.player("bob").life == 18
+    assert len(scenario.player("alice").hand) == 1
+
+
+def test_talion_ignores_a_spell_with_another_mana_value():
+    scenario = _talion("3", "Lightning Bolt", ["Mountain"])
+    assert scenario.player("bob").life == 20
+    assert scenario.player("alice").hand == []
+
+
+def test_talion_reads_the_spells_toughness():
+    # Ornithopter: mana value 0, power 0, toughness 2.
+    scenario = _talion("2", "Ornithopter", [])
+    assert scenario.player("bob").life == 18
+
+
+def test_talion_ignores_its_controllers_own_spell():
+    scenario = board(
+        ["Mountain"],
+        alice_zones={"hand": ["Talion, the Kindly Lord", "Lightning Bolt"], "library": ["Island"]},
+    )
+    scenario.will_choose("1", source="Talion, the Kindly Lord")
+    scenario.put_onto_battlefield("Talion, the Kindly Lord", "alice")
+    scenario.cast_and_resolve(
+        "Lightning Bolt", *scenario.untapped_sources("Mountain"), targets=["bob"]
+    )
+    assert scenario.player("alice").life == 20
+    assert scenario.player("alice").hand == []
+
+
+def test_sarpadian_empires_makes_a_token_of_the_chosen_color_and_type():
+    scenario = board(
+        ["Wastes", "Wastes", "Wastes"], alice_zones={"hand": ["Sarpadian Empires, Vol. VII"]}
+    )
+    scenario.will_choose("white Citizen", source="Sarpadian Empires, Vol. VII")
+    empires = scenario.put_onto_battlefield("Sarpadian Empires, Vol. VII", "alice")
+    scenario.activate(empires, *scenario.untapped_sources("Wastes", "Wastes", "Wastes"))
+    scenario.pass_until_resolved()
+    (citizen,) = on_battlefield(scenario, "Citizen", "alice")
+    stats = scenario.game.characteristics_of(citizen)
+    assert (stats.power, stats.toughness) == (1, 1)
+    assert {color.value for color in stats.colors} == {"W"}
+    assert "Citizen" in stats.subtypes
+
+
+def test_sarpadian_empires_another_answer_another_token():
+    scenario = board(
+        ["Wastes", "Wastes", "Wastes"], alice_zones={"hand": ["Sarpadian Empires, Vol. VII"]}
+    )
+    scenario.will_choose("green Saproling", source="Sarpadian Empires, Vol. VII")
+    empires = scenario.put_onto_battlefield("Sarpadian Empires, Vol. VII", "alice")
+    scenario.activate(empires, *scenario.untapped_sources("Wastes", "Wastes", "Wastes"))
+    scenario.pass_until_resolved()
+    (saproling,) = on_battlefield(scenario, "Saproling", "alice")
+    assert {c.value for c in scenario.game.characteristics_of(saproling).colors} == {"G"}
