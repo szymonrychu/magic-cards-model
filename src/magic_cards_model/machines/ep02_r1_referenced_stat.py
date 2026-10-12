@@ -350,7 +350,9 @@ def _parse_effect_sentence(sentence: str) -> tuple[Action, StatRef, bool] | None
         return discard, ref, False
     if (match := _DAMAGE_RE.fullmatch(sentence)) is not None:
         ref = parse_stat_phrase(match.group("amount"))
-        if ref is None:
+        if ref is None or ref.anchor is not Anchor.SACRIFICED:
+            # Damage equal to the source's own, a target's or a bitten
+            # creature's characteristic is the established damage rungs'.
             return None
         from .effects._common import _targets_understood
 
