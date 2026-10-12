@@ -12,6 +12,7 @@ from ...machines.abilities import (
     parse_abilities,
     resolve_mana_count_expression,
     self_normalized_effect_text,
+    self_reference_names,
 )
 from ...machines.casting import (
     split_second_restriction_source,
@@ -56,6 +57,7 @@ from ...machines.effects import (
     devotion_to,
     modal_trigger_profile,
 )
+from ...machines.ep02_r1_counter_amounts import counters_self_reference_normalised
 from ...machines.equip_block_statics import additional_loyalty_cost, loyalty_activation_limit
 from ...machines.keywords import (
     ACTIVATED_EXHAUST_FACT,
@@ -1624,10 +1626,16 @@ class ActivationMixin:
         # the parsed ability joins every option with "or", so the two spellings
         # of the same list are compared with the separators made alike.
         text = _mana_list_spelling(ability.text)
-        return any(
-            text in _mana_list_spelling(line) or _mana_list_spelling(line) in text
-            for line in computed.abilities
+        # `parse_abilities` reads CR 201.5's "counters on <its own name>" as
+        # "counters on this permanent"; the computed lines still print the name.
+        names = self_reference_names(
+            permanent.card.name, legendary=Supertype.LEGENDARY in permanent.supertypes
         )
+        lines = [
+            _mana_list_spelling(counters_self_reference_normalised(line, names))
+            for line in computed.abilities
+        ]
+        return any(text in line or line in text for line in lines)
 
     def _activation_key(self: "Game", permanent: CardState, index: int) -> str:
         """The key `activations`/`exhausted` key an ability's bookkeeping by.

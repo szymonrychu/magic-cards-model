@@ -25,7 +25,7 @@ def _settle(scenario, limit=12):
     raise AssertionError(f"stack never emptied: {scenario.stack_names()}")
 
 
-def _board(alice, bob=None, *, alice_hand=(), bob_hand=(), library=12):
+def _board(alice, bob=None, *, alice_hand=(), bob_hand=(), library=12, alice_library=None):
     scenario = (
         Scenario()
         .manual_turn_based_actions()
@@ -33,7 +33,7 @@ def _board(alice, bob=None, *, alice_hand=(), bob_hand=(), library=12):
             "alice",
             battlefield=list(alice),
             hand=list(alice_hand),
-            library=["Forest"] * library,
+            library=list(alice_library) if alice_library is not None else ["Forest"] * library,
         )
         .player(
             "bob",
@@ -406,3 +406,138 @@ def test_the_eternity_elevator_adds_nothing_without_charge_counters_past_its_thr
     elevator.add_counters("charge", 5)
     # CR 721.2: the 20+ ability is not there yet; only the colorless one is.
     assert scenario.why_cannot_activate(elevator, index=1) is not None
+
+
+# -- a counter-count that names a card by mana value (CR 202.3), not a size
+
+_LIBRARY = ["Llanowar Elves", "Grizzly Bears", "Hill Giant", "Craw Wurm", "Forest"]
+
+
+def _hand_names(scenario, username="alice"):
+    return sorted(c.name for c in scenario.player(username).hand)
+
+
+def test_aether_vial_puts_the_creature_whose_mana_value_equals_its_charge_counters():
+    scenario = _board(["Aether Vial"], alice_hand=["Grizzly Bears", "Hill Giant"])
+    vial = scenario.find("Aether Vial", Zone.BATTLEFIELD, "alice")
+    vial.add_counters("charge", 4)
+    scenario.will_take_the_may(True)
+    scenario.activate(vial)
+    _settle(scenario)
+    assert _count(scenario, "Hill Giant") == 1
+    assert _hand_names(scenario) == ["Grizzly Bears"]
+
+
+def test_aether_vial_does_not_offer_a_creature_of_a_different_mana_value():
+    scenario = _board(["Aether Vial"], alice_hand=["Grizzly Bears", "Craw Wurm"])
+    vial = scenario.find("Aether Vial", Zone.BATTLEFIELD, "alice")
+    vial.add_counters("charge", 3)
+    scenario.will_take_the_may(True)
+    scenario.activate(vial)
+    _settle(scenario)
+    assert _count(scenario, "Grizzly Bears") == 0
+    assert _count(scenario, "Craw Wurm") == 0
+    assert _hand_names(scenario) == ["Craw Wurm", "Grizzly Bears"]
+
+
+def test_aether_vial_at_zero_counters_puts_nothing_not_even_a_land_or_free_spell():
+    scenario = _board(["Aether Vial"], alice_hand=["Grizzly Bears"])
+    vial = scenario.find("Aether Vial", Zone.BATTLEFIELD, "alice")
+    scenario.will_take_the_may(True)
+    scenario.activate(vial)
+    _settle(scenario)
+    assert _count(scenario, "Grizzly Bears") == 0
+
+
+def test_instrument_of_the_bards_fetches_the_creature_matching_its_harmony_counters():
+    scenario = _board(
+        ["Instrument of the Bards", "Forest", "Forest", "Forest", "Forest"],
+        alice_library=_LIBRARY,
+    )
+    instrument = scenario.find("Instrument of the Bards", Zone.BATTLEFIELD, "alice")
+    instrument.add_counters("harmony", 2)
+    scenario.activate(instrument, auto=True)
+    _settle(scenario)
+    assert _hand_names(scenario) == ["Grizzly Bears"]
+    assert not [
+        c for c in scenario.game.permanents_controlled_by("alice") if c.card.name == "Treasure"
+    ]
+
+
+def test_instrument_of_the_bards_makes_a_treasure_only_for_a_legendary_find():
+    scenario = _board(
+        ["Instrument of the Bards", "Forest", "Forest", "Forest", "Forest"],
+        alice_library=["Yisan, the Wanderer Bard", "Forest"],
+    )
+    instrument = scenario.find("Instrument of the Bards", Zone.BATTLEFIELD, "alice")
+    instrument.add_counters("harmony", 3)
+    scenario.activate(instrument, auto=True)
+    _settle(scenario)
+    assert _hand_names(scenario) == ["Yisan, the Wanderer Bard"]
+    assert _count(scenario, "Treasure Token") == 1
+
+
+def test_instrument_of_the_bards_finds_nothing_when_no_creature_matches():
+    scenario = _board(
+        ["Instrument of the Bards", "Forest", "Forest", "Forest", "Forest"],
+        alice_library=_LIBRARY,
+    )
+    instrument = scenario.find("Instrument of the Bards", Zone.BATTLEFIELD, "alice")
+    instrument.add_counters("harmony", 9)
+    scenario.activate(instrument, auto=True)
+    _settle(scenario)
+    assert _hand_names(scenario) == []
+
+
+def test_yisan_puts_a_verse_counter_as_a_cost_then_fetches_that_mana_value():
+    scenario = _board(
+        ["Yisan, the Wanderer Bard", "Forest", "Forest", "Forest"], alice_library=_LIBRARY
+    )
+    yisan = scenario.find("Yisan, the Wanderer Bard", Zone.BATTLEFIELD, "alice")
+    yisan.summoning_sick = False
+    yisan.add_counters("verse", 3)
+    scenario.activate(yisan, auto=True)
+    assert yisan.counter_count("verse") == 4
+    _settle(scenario)
+    assert _count(scenario, "Hill Giant") == 1
+
+
+def test_yisan_with_no_counters_has_to_count_the_one_it_just_added():
+    scenario = _board(
+        ["Yisan, the Wanderer Bard", "Forest", "Forest", "Forest"], alice_library=_LIBRARY
+    )
+    yisan = scenario.find("Yisan, the Wanderer Bard", Zone.BATTLEFIELD, "alice")
+    yisan.summoning_sick = False
+    scenario.activate(yisan, auto=True)
+    _settle(scenario)
+    assert _count(scenario, "Llanowar Elves") == 1
+
+
+def test_brain_in_a_jar_casts_a_free_spell_whose_mana_value_equals_its_counters():
+    scenario = _board(
+        ["Brain in a Jar", "Forest"],
+        ["Hill Giant"],
+        alice_hand=["Lightning Bolt", "Divination"],
+    )
+    jar = scenario.find("Brain in a Jar", Zone.BATTLEFIELD, "alice")
+    jar.add_counters("charge", 2)
+    giant = scenario.creature("Hill Giant", "bob")
+    scenario.will_take_the_may(True)
+    scenario.activate(jar, auto=True, targets=[])
+    scenario.will_choose_targets(giant)
+    _settle(scenario)
+    assert jar.counter_count("charge") == 3
+    # Divination (mana value 3) was cast for free and resolved: two cards drawn.
+    assert "Divination" not in _hand_names(scenario)
+    assert "Lightning Bolt" in _hand_names(scenario)
+
+
+def test_brain_in_a_jar_casts_nothing_when_no_spell_has_the_mana_value():
+    scenario = _board(["Brain in a Jar", "Forest"], alice_hand=["Divination"])
+    jar = scenario.find("Brain in a Jar", Zone.BATTLEFIELD, "alice")
+    jar.add_counters("charge", 5)
+    scenario.will_take_the_may(True)
+    scenario.activate(jar, auto=True)
+    _settle(scenario)
+    assert jar.counter_count("charge") == 6
+    assert _hand_names(scenario) == ["Divination"]

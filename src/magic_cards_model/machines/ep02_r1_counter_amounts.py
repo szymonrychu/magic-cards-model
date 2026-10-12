@@ -144,6 +144,22 @@ def _for_each_target(names: tuple[str, ...]) -> re.Pattern[str]:
     )
 
 
+def _placed_first(text: str, names: tuple[str, ...]) -> tuple[str, int] | None:
+    """The kind and number of counters a leading "Put <n> <kind> counter(s) on
+    <itself>, then ..." instruction adds before the rest of the text is read."""
+    match = re.match(
+        rf"\s*put (?P<n>an?|one|two|three|\d+) (?P<kind>\+1/\+1|-1/-1|[a-z]+) counters? "
+        rf"on {_self(names)}, then ",
+        text,
+        re.IGNORECASE,
+    )
+    if match is None:
+        return None
+    word = match.group("n").lower()
+    number = {"a": 1, "an": 1, "one": 1, "two": 2, "three": 3}.get(word)
+    return match.group("kind").lower(), number if number is not None else int(word)
+
+
 def counters_counted_text(text: str, names: tuple[str, ...] = ()) -> str:
     """`text` with each "number of <kind> counters on <the source>" phrase read
     as the number it is now (CR 122.1, CR 608.2h); unchanged when it has none.
@@ -153,8 +169,15 @@ def counters_counted_text(text: str, names: tuple[str, ...] = ()) -> str:
     if "counter" not in lowered or " on " not in lowered:
         return text
 
+    placed = _placed_first(text, names)
+
     def n_of(match: re.Match[str]) -> int:
-        return _counted(_kind(match.group("kind")))
+        kind = _kind(match.group("kind"))
+        # CR 608.2c: the instructions run in order, so a count read after "Put a
+        # charge counter on this artifact, then ..." includes that counter, which
+        # the live board does not hold until the first instruction has run.
+        extra = placed[1] if placed is not None and kind in (None, placed[0]) else 0
+        return _counted(kind) + extra
 
     where = _where_x(names).search(text)
     if where is not None:

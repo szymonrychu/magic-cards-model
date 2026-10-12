@@ -6555,6 +6555,71 @@ def _parse_look_top_cast_le_greatest_attacking_power_whole_text(
     return effect
 
 
+#: "You may cast an `<quality>` spell with mana value equal to `<n>` from your
+#: hand without paying its mana cost." - Brain in a Jar's second sentence, the
+#: number already read in from the counters by `ep02_r1_counter_amounts` (CR
+#: 202.3 gives the mana value compared). CR 118.9 and CR 608.2g: cast during
+#: resolution, no mana paid; CR 608.2d: only a spell that can really be cast
+#: is offered, so a hand with none asks nothing.
+_MAY_CAST_FROM_HAND_FREE_RE = re.compile(
+    r"^you may cast an? (?P<quality>[^.]+?) spell"
+    r"(?: with mana value equal to (?P<n>\d+))?"
+    r" from your hand without paying its mana cost\.?$",
+    re.IGNORECASE,
+)
+
+
+@MIXED_CLAUSE.rung("s30", for_spell=FORWARD)
+def _parse_may_cast_from_hand_free_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
+    """`_MAY_CAST_FROM_HAND_FREE_RE`'s shape, or `None`."""
+    match = _MAY_CAST_FROM_HAND_FREE_RE.fullmatch(" ".join(clause.strip().split()))
+    if match is None or not _card_description_is_readable(match.group("quality")):
+        return None
+    quality = _quality_matcher(match.group("quality"))
+    value = int(match.group("n")) if match.group("n") else None
+    phrase = f"{match.group('quality')} spell" + (
+        f" with mana value equal to {value}" if value is not None else ""
+    )
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        player = game.controller_of(stack_object)
+        source = stack_object.name if for_spell else stack_object.source_name  # type: ignore[union-attr]
+        source_id = source_id_of(stack_object)
+        legal = [
+            card
+            for card in player.hand
+            if not card.card.is_land
+            and quality(card)
+            and (value is None or card.mana_value == value)
+            and game.can_cast_during_resolution(card, player.username)
+        ]
+        if not legal or not game.may(
+            player,
+            f"cast {with_indefinite_article(phrase)} from your hand without paying its mana cost",
+            source=source,
+            source_id=source_id,
+            cards=tuple(legal),
+        ):
+            return
+        chosen_ids = game.ask(
+            Decision(
+                kind=DecisionKind.CHOOSE_CARDS,
+                player=player.username,
+                prompt="choose a spell to cast without paying its mana cost",
+                source=source,
+                source_id=source_id,
+                amount=1,
+                cards=tuple(card.id for card in legal),
+                default_cards=(legal[0].id,),
+            )
+        )
+        assert isinstance(chosen_ids, tuple)
+        chosen = next(card for card in legal if card.id == chosen_ids[0])
+        game.cast_during_resolution(chosen, player.username, source_name=source, rule="CR 608.2g")
+
+    return effect
+
+
 _LOOK_TOP_LANDS_TAKE_TO_HAND_RE = re.compile(
     r"^look at the top x cards of your library, where x is the number of lands you control\.\s*"
     rf"put (?P<n>{COUNT}) of those cards into your hand\.\s*"
@@ -6909,6 +6974,7 @@ from ._common import (  # noqa: E402
     _SELECT_FROM_TOP_KINDS,
     ConditionalClauseNotice,
     LayerRemainderNotice,
+    _card_description_is_readable,
     _effect_condition_is_readable,
     _opponents,
     _parse_card_group_qualifier,
