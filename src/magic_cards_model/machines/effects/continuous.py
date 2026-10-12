@@ -947,6 +947,57 @@ _MASS_WORD_FILTER_SUBJECT_RE = re.compile(
     r"^(?P<word>[A-Za-z][a-z-]*) creatures (?P<whose>you control|your opponents control)\b"
 )
 _MASS_FILTER_COLORS = ("white", "blue", "black", "red", "green")
+#: "Attacking creatures get +1/+0 until end of turn." (Thunderstaff), "Other
+#: modified creatures you control get +X/+X until end of turn, where X is this
+#: creature's power." (Golden-Tail Trainer) - a combat-state or modified
+#: adjective in front of "creatures", optionally narrowed by controller (no
+#: controller phrase means every player's). Fixed once as the effect begins
+#: (CR 611.2c); "attacking" is CR 508.1k's, "modified" CR 700.9's.
+_MASS_STATE_SUBJECT_RE = re.compile(
+    r"^(?P<other>other )?(?P<state>attacking|blocking|modified|tapped|untapped) creatures"
+    r"(?: (?P<whose>you control|your opponents control))?(?= (?:get|gain)\b)",
+    re.IGNORECASE,
+)
+
+
+def _is_mass_state_subject(text: str) -> bool:
+    """Cheap literal gate before `_MASS_STATE_SUBJECT_RE` (hot on the pool)."""
+    head = text[:30].lower()
+    return " creatures" in head and head.startswith(
+        ("attacking", "blocking", "modified", "tapped", "untapped", "other ")
+    )
+
+
+def _mass_state_group(game: "Game", controller: str, source_id: UUID, match) -> list[CardState]:
+    """The creatures `_MASS_STATE_SUBJECT_RE` names, on the board right now."""
+    from ..conditions.board import permanent_is_modified
+
+    state = match.group("state").lower()
+    whose = (match.group("whose") or "").lower()
+    board = game.computed_board()
+    group = []
+    for permanent in game.battlefield:
+        chars = board.of(permanent)
+        if not chars.is_creature:
+            continue
+        if whose == "you control" and chars.controller != controller:
+            continue
+        if whose == "your opponents control" and chars.controller in (None, controller):
+            continue
+        if match.group("other") and permanent.id == source_id:
+            continue
+        if state == "attacking" and not game.is_attacking(permanent):
+            continue
+        if state == "blocking" and not game.is_blocking(permanent):
+            continue
+        if state == "modified" and not permanent_is_modified(game, permanent, chars):
+            continue
+        if state == "tapped" and not permanent.tapped:
+            continue
+        if state == "untapped" and permanent.tapped:
+            continue
+        group.append(permanent)
+    return group
 
 
 def _mass_word_filter(
@@ -1039,6 +1090,11 @@ def _mass_creature_group_targets(
     here. `None` if `text`'s subject is none of the three - the caller's
     ordinary target resolution stays in charge for everything else.
     """
+    state_match = (
+        _MASS_STATE_SUBJECT_RE.match(text.strip()) if _is_mass_state_subject(text) else None
+    )
+    if state_match is not None:
+        return _mass_state_group(game, controller, source_id, state_match)
     each_match = _MASS_EACH_SUBJECT_RE.match(text.strip())
     if each_match is not None:
         noun = each_match.group("noun")
@@ -1326,6 +1382,7 @@ def _parse_mass_pump_clause(
         and _MASS_TYPE_FILTER_RE.match(text) is None
         and _mass_word_filter(text) is None
         and _mass_group_filter(text) is None
+        and not _is_mass_state_subject(text)
     ):
         return None
     if Duration.UNTIL_END_OF_TURN not in text.lower():
@@ -1388,7 +1445,13 @@ def _mass_pump_parseable(literal: str) -> str:
     type_filter_match = _MASS_TYPE_FILTER_RE.match(literal.strip())
     each_match = _MASS_EACH_SUBJECT_RE.match(literal.strip())
     other_match = _MASS_OTHER_CREATURES_RE.match(literal.strip())
-    if other_match is not None:
+    state_match = (
+        _MASS_STATE_SUBJECT_RE.match(literal.strip()) if _is_mass_state_subject(literal) else None
+    )
+    if state_match is not None:
+        # The group (state, "other", controller) is already `targets`.
+        parseable = "all creatures" + literal.strip()[state_match.end() :]
+    elif other_match is not None:
         # "(All) other creatures get ..." - `targets` already excludes the
         # source, so the layer parser only needs the whole-board shape.
         parseable = "all creatures " + literal.strip()[other_match.end() :]

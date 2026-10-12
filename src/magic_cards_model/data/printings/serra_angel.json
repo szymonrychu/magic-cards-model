@@ -3,6 +3,7 @@
   "id": "b8c5e74c-96e7-4a1f-93b7-14d776fe4b2d",
   "oracle_id": "4b7ac066-e5c7-43e6-9e7e-2739b24a905d",
   "multiverse_ids": [],
+  "resource_id": "D17BBB15FD2EA68132397D2FA0CD1DC67FE6010700317D240F763F21D4A87945",
   "tcgplayer_id": 695524,
   "cardmarket_id": 904192,
   "name": "Serra Angel",
@@ -130,13 +131,13 @@
   "promo_types": [
     "setextension"
   ],
-  "edhrec_rank": 9438,
-  "penny_rank": 12454,
+  "edhrec_rank": 9449,
+  "penny_rank": 12473,
   "prices": {
     "usd": "0.24",
     "usd_foil": null,
     "usd_etched": null,
-    "eur": "0.20",
+    "eur": "0.59",
     "eur_foil": null,
     "tix": null
   },

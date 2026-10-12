@@ -1673,6 +1673,10 @@ def _cast_stat_equals_chosen_number(
     return chosen in values
 
 
+#: CR 509.3b: "blocks a creature" / "blocks target ..." - one trigger per attacker.
+_BLOCKS_A_CREATURE_RE = re.compile(r"\bblocks (?:a|an|another|target|that|each)\b")
+
+
 def condition_matches(
     game: "Game",
     ability: TriggeredAbility,
@@ -2288,6 +2292,13 @@ def _condition_matches(
             return _equipped_blocks_or_is_blocked_once(game, event, source.attached_to)
         if mine:
             blocks = "blocks" in lowered and event.subject_id == source.id
+            if blocks and not _BLOCKS_A_CREATURE_RE.search(lowered):
+                # CR 509.3a: a plain "Whenever [a creature] blocks" triggers
+                # once each combat for that creature however many attackers it
+                # blocks - only the pair of its first blocked attacker counts
+                # (CR 509.3b's "blocks a creature" form is once per attacker).
+                first = game.combat.attack_blocked_by(source.id)
+                blocks = first is None or first.attacker_id == event.related_id
             blocked = "becomes blocked" in lowered and (
                 event.related_id == source.id or equipped_blocked
             )
@@ -2331,7 +2342,7 @@ def _condition_matches(
         return power_or_toughness is None or power_or_toughness
 
     if ability.event is TriggerEvent.BEGINNING_OF_STEP:
-        return _step_matches(condition, controller, event)
+        return _step_matches(condition, controller, event, source)
 
     if ability.event is TriggerEvent.LOYALTY_ABILITY_ACTIVATED:
         # CR 606.3. "you activate ..." (Ajani Unrelenting) - the ability's
@@ -2736,6 +2747,13 @@ def _condition_matches(
             if mine:
                 if event.target_id != source.id:
                     return False
+            elif "enchanted player is dealt" in lowered:
+                # CR 303.4m: Grievous Wound's "Whenever enchanted player is
+                # dealt damage" - the player the Aura is attached to.
+                from ..group_attack_statics import _enchanted_player
+
+                if event.player is None or event.player != _enchanted_player(source):
+                    return False
             elif _HOST_IS_DEALT_DAMAGE_RE.match(lowered.strip()):
                 # CR 303.4b: Pain for All's and Spiteful Shadows' "Whenever
                 # enchanted creature is dealt damage" - the permanent the
@@ -2781,6 +2799,11 @@ def _condition_matches(
         if mine:
             if event.subject_id != source.id:
                 return False
+        elif "enchanted creature deals" in lowered:
+            # CR 303.4b: Visions of Brutality's "Whenever enchanted creature
+            # deals damage" - the permanent the Aura is attached to.
+            if source.attached_to is None or event.subject_id != source.attached_to:
+                return False
         elif not (
             _controller_clause_holds(condition, controller, event.subject_controller)
             and _types_match(event.subject_types, condition)
@@ -2789,7 +2812,13 @@ def _condition_matches(
             return False
         if not _subject_has_required_counter(condition, game, event.subject_id):
             return False
-        if "combat damage" in lowered and not event.combat:
+        if "noncombat damage" in lowered:
+            # CR 120.2b: damage dealt as an effect of a spell or ability, not combat.
+            if event.combat:
+                return False
+        elif "combat damage" in lowered and not event.combat:
+            return False
+        if "to a planeswalker" in lowered and Type.PLANESWALKER not in (event.target_types or ()):
             return False
         if _DEALS_DAMAGE_TO_A_CREATURE.search(lowered) and (
             event.target_id is None or Type.CREATURE not in (event.target_types or ())
@@ -3906,7 +3935,9 @@ def _acting_player_matches(who: str, controller: str, actor: str | None) -> bool
     return True
 
 
-def _step_matches(condition: str, controller: str, event: GameEvent) -> bool:
+def _step_matches(
+    condition: str, controller: str, event: GameEvent, source: CardState | None = None
+) -> bool:
     """ "At the beginning of [whose] [step]" against the step that just began."""
     lowered = condition.lower()
     if "main phases" in lowered:
@@ -3919,6 +3950,12 @@ def _step_matches(condition: str, controller: str, event: GameEvent) -> bool:
         step = next((step for phrase, step in _STEP_PHRASES if phrase in lowered), None)
         if step is None or step is not event.step:
             return False
+    if "the chosen player" in lowered:
+        # The Rack's "At the beginning of the chosen player's upkeep": the
+        # player its as-enters choice named (`CardState.chosen_player`).
+        return (
+            source is not None and event.player is not None and event.player == source.chosen_player
+        )
     if "your" in lowered:
         return event.player == controller
     if "opponent" in lowered:

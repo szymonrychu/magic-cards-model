@@ -89,6 +89,12 @@ _TARGETING_THIS_COST_INCREASE = re.compile(
     r"[Ss]pells your opponents cast that target this \w+ cost "
     r"\{(?P<amount>\d+)\} more to cast\."
 )
+#: Terror of the Peaks' tax in life, not mana (CR 118.8: an additional cost):
+#: `_TARGETING_THIS_COST_INCREASE`'s sentence with "an additional N life".
+_TARGETING_THIS_LIFE_COST = re.compile(
+    r"^[Ss]pells your opponents cast that target this \w+ cost an additional "
+    r"(?P<amount>\d+) life to cast\.?$"
+)
 #: Monastery Siege's Dragons tax: spells an opponent casts that target the
 #: permanent's controller or a permanent that controller controls.
 _TARGETING_CONTROLLER_COST_INCREASE = re.compile(
@@ -285,6 +291,16 @@ def cost_modifier_effect(text: str) -> CostModifierEffect | None:
     if base is None:
         return None
     return base.model_copy(update={"condition": tail.group("condition").strip()})
+
+
+def targeting_this_life_cost(text: str) -> int | None:
+    """The life a "Spells your opponents cast that target this `<noun>` cost an
+    additional N life to cast." line charges, or `None` for any other line
+    (CR 118.8, CR 601.2f - `Game.static_life_costs_for` applies it)."""
+    if " life to cast" not in text:
+        return None
+    match = _TARGETING_THIS_LIFE_COST.match(" ".join(text.split()))
+    return None if match is None else int(match.group("amount"))
 
 
 def _unconditional_cost_modifier_effect(text: str) -> CostModifierEffect | None:

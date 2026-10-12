@@ -44,6 +44,7 @@ from ..delayed import (
     ReflexiveWhenYouDoConsequence,
     put_counters_and_grant_keywords_to_event_subject,
 )
+from ..keyword_counters import symbol_groups_spent
 from ..layers import (
     ContinuousEffect,
     Duration,
@@ -3079,6 +3080,119 @@ def _parse_counter_then_referent_pair(
     return effect
 
 
+def _parse_counter_on_target_then_controller_pair(
+    first: str, second: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """ "Put a `<kind>` counter on target `<permanent>`. Its controller
+    `<referent clause>`." - Gwafa Hazid's "Put a bribery counter on target
+    creature you don't control. Its controller draws a card." as one CR 608.2c
+    instruction pair.
+
+    "Its controller" is CR 400.7's anaphora back to the permanent the first
+    sentence targeted (the same one `_parse_anaphoric_clause_pair` reads after a
+    destroy), read once the counter is on it, so a target that stopped being
+    legal (CR 608.2b) leaves both sentences undone.
+    """
+    if " controller " not in second or " counter" not in first:
+        return None
+    put = _COUNTER_TARGET_RE.fullmatch(first.strip())
+    subject = _ANAPHORIC_SUBJECT_RE.fullmatch(second.strip())
+    if put is None or subject is None or put.group("each") is not None:
+        return None
+    if not second.strip().lower().startswith(("its controller", "that creature's controller")):
+        return None
+    amount = parse_count(put.group("n"))
+    second_clause = _parse_referent_clause(subject.group("rest"))
+    if amount is None or second_clause is None:
+        return None
+    if not _targets_understood(put.group("phrase"), count_agnostic=True):
+        return None
+    put_counters = put_counters_on_ability_targets(_counter_kind(put.group("kind")), amount)
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        name = stack_object.name if for_spell else stack_object.source_name  # type: ignore[union-attr]
+        targets = [
+            target
+            for target in game.resolve_targets(stack_object)
+            if isinstance(target, CardState) and target.zone is Zone.BATTLEFIELD
+        ]
+        if not targets:
+            return
+        put_counters(game, stack_object)
+        second_clause(game, game.controller_of(targets[0]), None, name, source_id_of(stack_object))
+
+    return effect
+
+
+#: "For each {W}{W} spent to cast this creature, `<instruction>`." (Bladecoil
+#: Serpent) - the instruction runs once for each whole group of that many mana
+#: of that colour in the payment of the spell this permanent was (CR 601.2h,
+#: CR 400.7d; `keyword_counters.symbol_groups_spent`).
+_FOR_EACH_SYMBOLS_SPENT_RE = re.compile(
+    r"^for each (?P<symbols>(?:\{[wubrg]\})+) spent to cast (?:it|this creature|this spell),\s*"
+    r"(?P<inner>.+?)\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
+#: Clay Champion's "choose up to two other target creatures you control. For
+#: each {W}{W} spent to cast this creature, put a +1/+1 counter on each of them."
+_CHOOSE_THEN_COUNTERS_PER_SYMBOLS_SPENT_RE = re.compile(
+    r"^choose (?P<phrase>up to [a-z]+ other target creatures you control)\.\s*"
+    r"for each (?P<symbols>(?:\{[wubrg]\})+) spent to cast (?:it|this creature|this spell),\s*"
+    rf"put (?P<n>{COUNT}) (?P<kind>\+1/\+1) counters? on each of them\.?$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s28")
+def _parse_for_each_symbols_spent_clause(text: str) -> AbilityEffect | None:
+    """`_FOR_EACH_SYMBOLS_SPENT_RE`'s shape: the instruction is read as it would
+    be on its own and run once per group spent."""
+    if " spent to cast " not in text:
+        return None
+    match = _FOR_EACH_SYMBOLS_SPENT_RE.fullmatch(" ".join(text.split()))
+    if match is None:
+        return None
+    from .dispatch import _ability_effect_or_notice
+
+    inner = _ability_effect_or_notice(match.group("inner") + ".")
+    if inner is None:
+        return None
+    groups = symbol_groups_spent(match.group("symbols").lower())
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        source = ability.source_or_last_known(game)
+        if source is None:
+            return
+        for _ in range(groups(game, ability.controller, source, 0)):
+            inner(game, ability)
+
+    return effect
+
+
+@ABILITY_TEXT.rung("s28")
+def _parse_choose_then_counters_per_symbols_spent_clause(text: str) -> AbilityEffect | None:
+    """`_CHOOSE_THEN_COUNTERS_PER_SYMBOLS_SPENT_RE`'s shape."""
+    if " spent to cast " not in text or not text.lower().startswith("choose "):
+        return None
+    match = _CHOOSE_THEN_COUNTERS_PER_SYMBOLS_SPENT_RE.fullmatch(" ".join(text.split()))
+    each = parse_count(match.group("n")) if match else None
+    if match is None or each is None:
+        return None
+    groups = symbol_groups_spent(match.group("symbols").lower())
+    kind = _counter_kind(match.group("kind"))
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        source = ability.source_or_last_known(game)
+        total = each * (0 if source is None else groups(game, ability.controller, source, 0))
+        if total <= 0:
+            return
+        for target in game.resolve_targets(ability):
+            if isinstance(target, CardState) and target.zone is Zone.BATTLEFIELD:
+                game.add_counters(target, kind, total)
+
+    return effect
+
+
 #: "Create X 1/1 colorless Thopter artifact creature tokens with flying, where
 #: X is that spell's mana value." (Access Denied) - CR 107.3's X, set by the
 #: very spell the paired first clause just countered, not chosen by the
@@ -4572,6 +4686,7 @@ from ._common import (  # noqa: E402
     _ANAPHORIC_SUBJECT_RE,
     _COLOR_COUNT_WORDS,
     _COLOR_LETTERS,
+    _COUNTER_TARGET_RE,
     _COUNTER_TARGET_SPELL_RE,
     _COUNTER_UNLESS_PAYS_RE,
     _HAND_EXILE_COLOR_WORDS,

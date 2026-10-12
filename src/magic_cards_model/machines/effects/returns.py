@@ -472,10 +472,23 @@ def return_ability_targets_to_battlefield(game: "Game", stack_object: "StackObje
 #: (`_parse_mass_type_qualifier`): Trusted Advisor's upkeep "return a blue
 #: creature you control to its owner's hand".
 _RETURN_A_LAND_YOU_CONTROL_RE = re.compile(
-    rf"^return {quantity_pattern('n')} (?P<quality>[a-z ,-]+?) you control to (?:its|their) "
-    r"owner'?s hand\.?$",
+    rf"^(?P<may>you may )?return {quantity_pattern('n')} (?P<quality>[a-z ,-]+?) you control to "
+    r"(?:its|their) owner'?s hand\.?$",
     re.IGNORECASE,
 )
+
+
+@MIXED_CLAUSE.rung("s34", for_spell=FORWARD)
+def _parse_optional_return_a_land_you_control_clause(
+    text: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """The "you may return a land you control to its owner's hand" clause that
+    follows another instruction (Kefnet the Mindful's "Draw a card, then you
+    may return a land ..."): `_parse_return_a_land_you_control_clause`'s shape
+    with the printed "you may"."""
+    if for_spell or not text.lstrip().lower().startswith("you may return "):
+        return None
+    return _parse_return_a_land_you_control_clause(text)
 
 
 @ABILITY_TEXT.rung("s28")
@@ -506,6 +519,10 @@ def _parse_return_a_land_you_control_clause(text: str) -> AbilityEffect | None:
     type_matches = _parse_mass_type_qualifier(quality)
     if quantity is None or type_matches is None:
         return None
+    # "you may return a land you control" (Kefnet the Mindful): the controller
+    # may choose none (CR 608.2d), so the choice is "up to" the printed count.
+    optional = match.group("may") is not None
+    exact = quantity.exact and not optional
 
     def effect(game: "Game", ability: AbilityOnStack) -> None:
         controller = ability.controller
@@ -529,8 +546,8 @@ def _parse_return_a_land_you_control_clause(text: str) -> AbilityEffect | None:
                 source=source_name,
                 amount=limit,
                 cards=tuple(state.id for state in candidates),
-                exact=quantity.exact,
-                default_cards=tuple(state.id for state in candidates[:limit]),
+                exact=exact,
+                default_cards=() if optional else tuple(state.id for state in candidates[:limit]),
                 source_id=source_id_of(ability),
             )
         )

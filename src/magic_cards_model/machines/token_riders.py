@@ -35,6 +35,7 @@ from ..models.card_state import CardState
 from ..models.zone import Zone
 from . import triggers as _triggers
 from .decisions import source_id_of
+from .ep01_r3_amounts import counters_on_it_total
 
 if TYPE_CHECKING:  # pragma: no cover - import cycle: Game builds on the machines
     from ..models.game import Game, StackObject
@@ -50,7 +51,7 @@ if TYPE_CHECKING:  # pragma: no cover - import cycle: Game builds on the machine
 #: multiplier phrase (the tail of `_TOKEN_FOR_EACH_TAIL_RE`'s own "each"
 #: group, with any trailing period already stripped by that reader).
 _EVENT_SUBJECT_COUNTER_RE = re.compile(
-    r"^(?P<kind>\+1/\+1|-1/-1|[a-z]+) counters? on it$", re.IGNORECASE
+    r"^(?:(?P<kind>\+1/\+1|-1/-1|[a-z]+) )?counters? on (?P<who>it|this \w+)$", re.IGNORECASE
 )
 
 
@@ -71,20 +72,25 @@ def event_subject_counter_multiplier(phrase: str):  # noqa: ANN201 - Callable[[G
     match = _EVENT_SUBJECT_COUNTER_RE.fullmatch(phrase.strip().rstrip("."))
     if match is None:
         return None
-    kind = _triggers._counter_kind_word(match.group("kind"))  # noqa: SLF001
+    kind = (
+        _triggers._counter_kind_word(match.group("kind"))  # noqa: SLF001
+        if match.group("kind")
+        else None
+    )
 
     def count(game: "Game", stack_object: "StackObject") -> int:
         event = getattr(stack_object, "event", None)
         subject_id = getattr(event, "subject_id", None) if event is not None else None
+        if subject_id is None or match.group("who").lower() != "it":
+            # "on this creature" (Twitching Doll) and an "it" with no event
+            # subject both name the ability's own source.
+            subject_id = getattr(stack_object, "source_id", None)
         if subject_id is None:
             return 0
         subject = game.find_by_id(subject_id)
         if subject is None:
             return 0
-        counters = (
-            subject.counters if subject.zone is Zone.BATTLEFIELD else subject.last_known_counters
-        )
-        return counters[kind]
+        return counters_on_it_total(subject, kind)
 
     return count
 

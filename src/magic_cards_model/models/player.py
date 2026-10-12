@@ -116,6 +116,13 @@ def _is_no_maximum_hand_size_line(line: str) -> bool:
     return line.strip().rstrip(".").lower() == _NO_MAXIMUM_HAND_SIZE_EMBLEM_TEXT
 
 
+def _is_players_no_maximum_hand_size_line(line: str) -> bool:
+    """Folio of Fancies' "Players have no maximum hand size." - CR 402.2's
+    maximum, removed for every player while the source is on the battlefield
+    (CR 613.11)."""
+    return line.strip().rstrip(".").lower() == "players have no maximum hand size"
+
+
 #: "Your maximum hand size is ten." (The Ten Rings; Doctor Octopus, Master
 #: Planner's "eight") - CR 402.2's maximum set to a number, CR 613.11's
 #: rule-modifying effect.
@@ -187,6 +194,7 @@ def reads_maximum_hand_size_line(line: str) -> bool:
     `Player.cards_over_maximum_hand_size` performs - `support.py`'s credit."""
     return (
         _is_no_maximum_hand_size_line(line)
+        or _is_players_no_maximum_hand_size_line(line)
         or maximum_hand_size_of_line(line) is not None
         or _hand_size_shape(line) is not None
     )
@@ -826,7 +834,9 @@ class Player(EngineModel):
             controller = game.controller_of(permanent).username
             mine = controller == self.username
             for line in lines_of[permanent.id]:
-                if mine and _is_no_maximum_hand_size_line(line):
+                if (mine and _is_no_maximum_hand_size_line(line)) or (
+                    _is_players_no_maximum_hand_size_line(line)
+                ):
                     found.append(("set", None))
                     continue
                 if mine and (size := maximum_hand_size_of_line(line)) is not None:

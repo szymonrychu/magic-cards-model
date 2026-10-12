@@ -16,6 +16,7 @@ from ...numbers import (
     parse_count,
 )
 from ..decisions import Decision, DecisionKind, source_id_of
+from ..ep01_r3_amounts import event_player_username, event_terms
 from ..targeting import (
     permanent_description,
 )
@@ -873,6 +874,67 @@ def _parse_they_gain_or_lose_life_clause(clause: str, *, for_spell: bool) -> Tar
     return effect
 
 
+#: "Its controller loses that much life." (Visions of Brutality), "they lose
+#: half their life, rounded up." (Grievous Wound), "that player loses ..." - a
+#: life change aimed at the player the trigger's event concerns (CR 603.2):
+#: "they" / "that player" is `GameEvent.player`, "its controller" the
+#: controller of the event's subject (the damage source). The amount is the
+#: event's own (`GameEvent.amount`, "that much", CR 603.2c) or half the
+#: player's current life total (CR 107.1a - the card prints the rounding).
+_EVENT_PLAYER_LIFE_RE = re.compile(
+    r"^(?P<who>they|that player|its controller|that (?:creature|permanent)'?s controller) "
+    r"(?P<verb>gains?|loses?) (?:(?P<much>that much life)|half their life,\s*rounded "
+    r"(?P<direction>up|down))\.?$",
+    re.IGNORECASE,
+)
+
+
+@MIXED_CLAUSE.rung("s26", for_spell=FORWARD)
+def _parse_event_player_life_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
+    """`_EVENT_PLAYER_LIFE_RE`'s shape. Ability-only: a spell has no event."""
+    if for_spell or not clause.startswith(
+        (
+            "they ",
+            "They ",
+            "that player",
+            "That player",
+            "its controller",
+            "Its controller",
+            "that creature",
+            "That creature",
+            "that permanent",
+            "That permanent",
+        )
+    ):
+        return None
+    match = _EVENT_PLAYER_LIFE_RE.fullmatch(clause.strip())
+    if match is None:
+        return None
+    who = match.group("who").lower()
+    gains = match.group("verb").lower().startswith("gain")
+    half_rounds_up = (match.group("direction") or "").lower() == "up"
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        assert isinstance(stack_object, AbilityOnStack)
+        username = event_player_username(game, stack_object, who)
+        if username is None:
+            return
+        player = game.player(username)
+        if match.group("much"):
+            amount = stack_object.event.amount if stack_object.event is not None else None
+        else:
+            life = max(player.life, 0)
+            amount = (life + 1) // 2 if half_rounds_up else life // 2
+        if not amount or amount <= 0:
+            return
+        if gains:
+            game.gain_life(player, amount)
+        else:
+            game.lose_life(player, amount)
+
+    return effect
+
+
 #: "[Then] if `<condition>`, target player/opponent loses the game." - Mirrodin
 #: Besieged's Phyrexian half ("... Then if there are fifteen or more artifact
 #: cards in your graveyard, target opponent loses the game."). CR 104.3e's
@@ -1320,3 +1382,24 @@ from .removal import (  # noqa: E402
 from .search import _search_library  # noqa: E402
 from .text import _strip_non_effect_preamble  # noqa: E402
 from .tokens import _is_notice_only  # noqa: E402
+
+#: "You lose life equal to its mana value." off a "whenever you cast a spell"
+#: trigger (Teval, Arbiter of Virtue) - "its" is the spell the cast event names
+#: (CR 603.2, CR 202.3e).
+_LOSE_LIFE_EQUAL_TO_CAST_SPELL_MV_RE = re.compile(
+    r"^you lose life equal to (?:its|that spell'?s) mana value\.?$", re.IGNORECASE
+)
+
+
+@ABILITY_TEXT.rung("s40", before=["dispatch.parse_mixed_effect"])
+def _parse_lose_life_equal_to_cast_spell_mana_value_text(text: str) -> AbilityEffect | None:
+    """`_LOSE_LIFE_EQUAL_TO_CAST_SPELL_MV_RE`'s shape."""
+    if "mana value" not in text:
+        return None
+    stripped = " ".join(text.strip().split())
+    if _LOSE_LIFE_EQUAL_TO_CAST_SPELL_MV_RE.fullmatch(stripped) is None:
+        return None
+    from . import parse_mixed_effect
+
+    with event_terms():
+        return parse_mixed_effect(stripped)

@@ -43,6 +43,15 @@ from ..cost import (
     removes_announced_number_of_counters,
 )
 from ..decisions import Decision, DecisionKind, source_id_of
+from ..ep01_r3_amounts import (
+    cast_spell_mana_value,
+    counters_on_it_total,
+    creatures_blocked_by,
+    creatures_blocking,
+    creatures_that_crewed,
+    event_subject_stat,
+    event_terms_enabled,
+)
 from ..layers import (
     BASIC_LAND_TYPES,
     Characteristics,
@@ -586,7 +595,7 @@ def _count_permanents_matching_any(
 _FILTERED_PERMANENT_COUNT_RE = re.compile(
     r"^(?:the )?(?P<measure>number of|total mana value of) (?P<other>other )?"
     r"(?:(?P<status>tapped|untapped) )?(?:(?P<quality>modified|equipped) )?"
-    r"(?P<qualifier>[a-z]+) you control"
+    r"(?P<qualifier>[a-z]+) you control(?: named (?P<named>[^.]+?))?"
     r"(?P<other_than> other than (?:this (?:creature|permanent|artifact|enchantment)|it))?"
     r"(?: with (?:(?P<stat>power|toughness|mana value) (?P<bound>\d+) or "
     r"(?P<direction>less|greater|more)|(?P<counter>[a-z+/-]+) counters? on (?:them|it)))?$",
@@ -600,6 +609,7 @@ _FILTERED_PERMANENT_COUNT_MARKERS = (
     " with ",
     "total mana value",
     "other ",
+    " named ",
 )
 #: "the greatest number of creatures you control that have a creature type in
 #: common" (Basalt Ravager, Skemfar Shadowsage, White Lotus Tile).
@@ -637,6 +647,14 @@ _COUNT_COLOR_PAIRS_RE = re.compile(
     r"that are exactly two colors$",
     re.IGNORECASE,
 )
+#: "that creature's power|toughness" read off the resolving trigger's event.
+_EVENT_SUBJECT_STAT_RE = re.compile(
+    r"^that (?:creature|permanent)['’]s (?P<stat>power|toughness)$", re.IGNORECASE
+)
+#: "creature it's blocking" / "creature blocking it" (see `_for_each_multiplier`).
+_CREATURES_BLOCKING_RE = re.compile(
+    r"^creatures? (?:it['’]s blocking|(?P<blocked_by_it>blocking it))$", re.IGNORECASE
+)
 #: "the number of times it was kicked" (Deathforge Shaman's "twice ..."): CR
 #: 702.33d's count, read off the cast record of the spell the permanent was.
 _TIMES_KICKED_RE = re.compile(
@@ -669,7 +687,8 @@ def _filtered_permanent_count(phrase: str) -> tuple[SourcedCount, bool] | None:
     other = match.group("other") is not None or match.group("other_than") is not None
     stat = (match.group("stat") or "").lower()
     counter_word = match.group("counter")
-    if not (total_mana_value or quality or other or stat or counter_word):
+    named = (match.group("named") or "").strip().lower()
+    if not (total_mana_value or quality or other or stat or counter_word or named):
         return None  # a plain "the number of <type> you control" is not this reader's
     qualifier = match.group("qualifier")
     counts_any_permanent = qualifier.lower() in ("permanent", "permanents")
@@ -695,6 +714,8 @@ def _filtered_permanent_count(phrase: str) -> tuple[SourcedCount, bool] | None:
                 continue
             if other and source is not None and permanent.id == source.id:
                 continue
+            if named and permanent.name.lower() != named:
+                continue  # "named Hare Apparent" (Hare Apparent): by printed name
             if card_type is not None and card_type not in chars.types:
                 continue
             if subtype is not None and not any(word.lower() == subtype for word in chars.subtypes):
@@ -1669,7 +1690,8 @@ def _damage_those_creatures_dealt(game: "Game", controller: str) -> int:
 #: "its mana value" / "this permanent's mana value" - the object the
 #: expression is evaluated for (Terminal Velocity's granted leaves trigger).
 _ITS_MANA_VALUE_RE = re.compile(
-    r"^(?:its|this (?:creature|permanent|artifact|token)(?:'|\u2019)s) mana value$", re.IGNORECASE
+    r"^(?:its|this (?:creature|permanent|artifact|token)(?:'|\u2019)s) mana value$",
+    re.IGNORECASE,
 )
 
 
@@ -1763,10 +1785,39 @@ def _amount_term(term: str) -> AmountReader | None:
     ):
         sourced = filtered[0]
         return lambda game, controller, obj, _x: sourced(game, controller, obj)
+    if (
+        "mana value" in lowered
+        and event_terms_enabled()
+        and _CAST_SPELL_MANA_VALUE_RE.fullmatch(text)
+    ):
+        # Off a "whenever you cast a spell" trigger "its" / "that spell's" is the
+        # spell the cast event names (Teval, Arbiter of Virtue): the event's own
+        # mana value (CR 202.3e - X counted as announced).
+        def read_cast_mana_value(
+            game: "Game", _controller: str, obj: CardState | None, _x: int
+        ) -> int:
+            cast_value = cast_spell_mana_value(game)
+            if cast_value is not None:
+                return cast_value
+            return 0 if obj is None else int(obj.mana_value)
+
+        return read_cast_mana_value
     if "mana value" in lowered and _ITS_MANA_VALUE_RE.fullmatch(text):
         # CR 202.3: the object's mana value, as it last existed if it has left
         # the battlefield (CR 603.10a looks back in time for a leaves trigger).
         return lambda _game, _controller, obj, _x: 0 if obj is None else int(obj.mana_value)
+    if event_terms_enabled() and (event_stat := _EVENT_SUBJECT_STAT_RE.fullmatch(text)) is not None:
+        # "that creature's power" off a trigger whose event names a creature
+        # (Terror of the Peaks' "another creature you control enters"): the
+        # subject as it last existed (CR 608.2h).
+        wants_power = event_stat.group("stat").lower() == "power"
+
+        def read_event_subject_stat(
+            game: "Game", _controller: str, _obj: CardState | None, _x: int
+        ) -> int:
+            return event_subject_stat(game, wants_power=wants_power)
+
+        return read_event_subject_stat
     if lowered == "the difference between its power and toughness":
         # Doran, Besieged by Time's own X: "it gets +X/+X until end of turn,
         # where X is the difference between its power and toughness." Every
@@ -2713,6 +2764,10 @@ _COUNTED_LIFE_CHANGE_RE = re.compile(
 _ANAPHORIC_OBJECT_TERM_RE = re.compile(r"\b(?:its|that \w+'s|the \w+ \w+'s)\b", re.IGNORECASE)
 
 
+#: "its mana value" / "that spell's mana value" - the spell a cast trigger names.
+_CAST_SPELL_MANA_VALUE_RE = re.compile(r"^(?:its|that spell['’]s) mana value$", re.IGNORECASE)
+
+
 def _parse_counted_life_change_clause(clause: str) -> ClauseEffect | None:
     """`_COUNTED_LIFE_CHANGE_RE`'s shape, or `None`.
 
@@ -2735,7 +2790,9 @@ def _parse_counted_life_change_clause(clause: str) -> ClauseEffect | None:
     if third_person == bool(match.group("you")):
         return None
     expression = (match.group("where") or match.group("equal")).strip()
-    if _ANAPHORIC_OBJECT_TERM_RE.search(expression):
+    if _ANAPHORIC_OBJECT_TERM_RE.search(expression) and not (
+        event_terms_enabled() and _CAST_SPELL_MANA_VALUE_RE.fullmatch(expression)
+    ):
         # "you gain life equal to its toughness" (Momentous Fall) names an
         # object an earlier clause chose - an anaphora (CR 608.2c) this
         # single-clause reader has no referent for, never this effect's own
@@ -2957,7 +3014,7 @@ _COLOR_AMONG_OTHER_QUALITY_RE = re.compile(
 #: `hangarback_dies` reads the identical ternary rather than `.counters`
 #: alone.
 _COUNTER_ON_IT_RE = re.compile(
-    r"^(?P<kind>\+1/\+1|-1/-1|[a-z]+) counters? on (?:it|this \w+)$", re.IGNORECASE
+    r"^(?:(?P<kind>\+1/\+1|-1/-1|[a-z]+) )?counters? on (?:it|this \w+)$", re.IGNORECASE
 )
 
 
@@ -3112,8 +3169,34 @@ def _for_each_multiplier(phrase: str) -> Callable[["Game", str, str | None], int
     if types_among is not None:
         # CR 608.2h: counted once, as the effect applies.
         return lambda game, controller, _source_id: len(types_among(game, controller))
+    if "blocking" in stripped and (blocking := _CREATURES_BLOCKING_RE.fullmatch(stripped)):
+        # "for each creature it's blocking" (Guardian of the Gateless) / "for
+        # each creature blocking it" (Elvish Berserker): the combat count at
+        # resolution (CR 608.2h), the ability's source being the creature.
+        count_blockers = blocking.group("blocked_by_it") is not None
+
+        def count_creatures_in_block(game: "Game", _controller: str, source_id: str | None) -> int:
+            source = None if source_id is None else game.find_by_id(UUID(source_id))
+            if source is None:
+                return 0
+            if count_blockers:
+                return creatures_blocking(game, source)
+            return creatures_blocked_by(game, source)
+
+        return count_creatures_in_block
+    if stripped.lower() == "creature that crewed it this turn":
+        # Luxurious Locomotive: this turn's crew history for the source Vehicle.
+        def count_creatures_that_crewed(
+            game: "Game", _controller: str, source_id: str | None
+        ) -> int:
+            source = None if source_id is None else game.find_by_id(UUID(source_id))
+            return 0 if source is None else creatures_that_crewed(game, source)
+
+        return count_creatures_that_crewed
     if match := _COUNTER_ON_IT_RE.fullmatch(stripped):
-        kind = _counter_kind(match.group("kind"))
+        # No kind word ("for each counter on it", Kinsbaile Borderguard) counts
+        # every counter on the object (CR 122.1).
+        kind = _counter_kind(match.group("kind")) if match.group("kind") else None
 
         def count_counters_on_it(game: "Game", _controller: str, source_id: str | None) -> int:
             if source_id is None:
@@ -3121,10 +3204,7 @@ def _for_each_multiplier(phrase: str) -> Callable[["Game", str, str | None], int
             source = game.find_by_id(UUID(source_id))
             if source is None:
                 return 0
-            counters = (
-                source.counters if source.zone is Zone.BATTLEFIELD else source.last_known_counters
-            )
-            return counters[kind]
+            return counters_on_it_total(source, kind)
 
         return count_counters_on_it
     if match := _COLOR_AMONG_OTHER_QUALITY_RE.fullmatch(stripped):

@@ -184,6 +184,7 @@ from magic_cards_model.machines.modes import (
 )
 from magic_cards_model.machines.objects_as_costs import (
     granted_convoke_line_is_readable,
+    granted_delve_line_is_readable,
     has_improvise,
     reads_crew_loyalty_alternative_line,
 )
@@ -2332,6 +2333,11 @@ def _static_ability_category(
         # excludes convoke (it is a cost-payment method, not a triggered-
         # ability expansion), so `objects_as_costs.has_convoke_now` reads the
         # identical grant itself, live, at a real cast.
+        return HANDLED
+    if granted_delve_line_is_readable(text):
+        # CR 604.2 / CR 702.66a: "<quality> spells you cast have delve" (Teval,
+        # Arbiter of Virtue) - `objects_as_costs.has_delve_now` reads the grant
+        # live at a real cast, the same way it does convoke's.
         return HANDLED
     if reads_extra_mana_counters_line(text):
         # CR 118.8 / CR 614.1c: "As an additional cost to cast creature

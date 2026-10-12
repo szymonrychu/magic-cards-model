@@ -1978,7 +1978,7 @@ class Game(
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 153
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 157
     #: 67: `machines/cost.CostComponent` gained `link_to_permanent_id` (CR
     #: 607.2q), reachable from `Game` through a pending `AbilityOnStack.
     #: keyword_activation`/`.unless_payment`'s own `CostPayment.components`.
@@ -2326,6 +2326,13 @@ class Game(
     #: `merged_order`, and `Game` gained `merged_components`
     #: (mutate, CR 702.140, 730.2); an older dump would decode a mutated
     #: permanent as its bottom card alone, with its other components lost.
+    #: 157 (EP01-R3-T8, reserved: 149 + task 8): behavioural changes to
+    #: name-keyed dispatch a decoded game could already be pointing at - a
+    #: trigger's "that much" / "its mana value" / "that creature's power" now
+    #: read the resolving event, a damage-event trigger names the planeswalker
+    #: it hit, "Enchanted player can't gain life." and "Players have no maximum
+    #: hand size." are read off the battlefield, and a Crew N ability is
+    #: once-per-turn; an older dump would resolve each of these as a no-op.
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a

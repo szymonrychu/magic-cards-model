@@ -9987,6 +9987,110 @@ def _parse_multi_part_sacrifice_gain_draw_discard_damage_counters_clause(
     return effect
 
 
+#: "Destroy all other creatures that were dealt damage this turn." (Death-Rattle
+#: Oni) - CR 701.8a's destroy over the group fixed as the effect begins (CR
+#: 611.2c), narrowed by the damage history (`Game.damage_dealt_this_turn`, CR
+#: 120.1) read through the same `object_dealt_damage_clause_test` the damage
+#: families' "each creature dealt damage this turn" uses. "Other" leaves out
+#: the ability's own source.
+_DESTROY_ALL_DEALT_DAMAGE_RE = re.compile(
+    r"^destroy all (?P<other>other )?(?P<noun>creatures|permanents) that (?:were|was) "
+    r"dealt damage this turn\.?$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s9")
+def _parse_destroy_all_dealt_damage_this_turn_text(text: str) -> AbilityEffect | None:
+    """`_DESTROY_ALL_DEALT_DAMAGE_RE`'s shape."""
+    if "dealt damage this turn" not in text:
+        return None
+    match = _DESTROY_ALL_DEALT_DAMAGE_RE.fullmatch(" ".join(text.strip().split()))
+    if match is None:
+        return None
+    from ..conditions.history import object_dealt_damage_clause_test
+
+    dealt = object_dealt_damage_clause_test("was dealt damage this turn")
+    if dealt is None:
+        return None
+    creatures_only = match.group("noun").lower() == "creatures"
+    other = match.group("other") is not None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        board = game.computed_board()
+        group = [
+            permanent
+            for permanent in game.battlefield
+            if not (other and permanent.id == ability.source_id)
+            and (not creatures_only or board.of(permanent).is_creature)
+            and dealt(game, permanent, None)
+        ]
+        for permanent in group:
+            if permanent.zone is Zone.BATTLEFIELD:
+                game.destroy(permanent)
+
+    return effect
+
+
+#: "Destroy that creature." / "destroy that planeswalker." as a whole trigger
+#: effect - CR 603.2: the object the triggering event concerns (the creature
+#: that blocked, the planeswalker that was dealt combat damage; see
+#: `ep01_r3_amounts.event_referent_permanent`). Nothing to destroy once it has
+#: left the battlefield (CR 608.2b).
+_DESTROY_EVENT_REFERENT_RE = re.compile(
+    r"^destroy that (?P<noun>creature|planeswalker|permanent|artifact|enchantment|land)\.?$",
+    re.IGNORECASE,
+)
+
+
+@MIXED_CLAUSE.rung("s26", for_spell=FORWARD)
+def _parse_destroy_event_referent_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
+    """`_DESTROY_EVENT_REFERENT_RE`'s shape. Ability-only: a spell has no event."""
+    if for_spell or not clause.startswith(("destroy that ", "Destroy that ")):
+        return None
+    if _DESTROY_EVENT_REFERENT_RE.fullmatch(clause.strip()) is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        assert isinstance(stack_object, AbilityOnStack)
+        referent = event_referent_permanent(game, stack_object)
+        if isinstance(referent, CardState) and referent.zone is Zone.BATTLEFIELD:
+            game.destroy(referent)
+
+    return effect
+
+
+#: "Sacrifice a permanent for each 1 life you lost." (Lich's Tomb) - the
+#: trigger's own life-loss amount (CR 119.3, `GameEvent.amount`), one permanent
+#: of the controller's choice per point (CR 701.21a).
+_SACRIFICE_PER_LIFE_LOST_RE = re.compile(
+    r"^sacrifice an? (?P<what>[a-z ]+?) for each 1 life you lost\.?$", re.IGNORECASE
+)
+
+
+@MIXED_CLAUSE.rung("s26", for_spell=FORWARD)
+def _parse_sacrifice_per_life_lost_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
+    """`_SACRIFICE_PER_LIFE_LOST_RE`'s shape (ability-only: it reads the event)."""
+    if for_spell or "for each 1 life you lost" not in clause:
+        return None
+    match = _SACRIFICE_PER_LIFE_LOST_RE.fullmatch(clause.strip())
+    if match is None or permanent_description(match.group("what")) is None:
+        return None
+    what = match.group("what")
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        assert isinstance(stack_object, AbilityOnStack)
+        lost = stack_object.event.amount if stack_object.event is not None else None
+        if not lost or lost <= 0:
+            return
+        player = game.player(game.controller_of(stack_object).username)
+        _sacrifice_of_choice_clause_effect(what, lost, f"{lost} {what}s")(
+            game, player, stack_object.source_name, str(stack_object.source_id)
+        )
+
+    return effect
+
+
 #: "Choose a creature at random that attacked this turn. Destroy that
 #: creature." (Metzali, Tower of Triumph): one creature, picked uniformly at
 #: random among the creatures declared as attackers this turn (CR 508.1a)
@@ -10026,6 +10130,7 @@ def _parse_destroy_random_attacked_creature_text(text: str) -> TargetedClause | 
 
 
 from ..d20_tables import roll_table_effect  # noqa: E402
+from ..ep01_r3_amounts import event_referent_permanent  # noqa: E402
 from ..free_cast_price import with_board_priced_cost  # noqa: E402
 from ._common import (  # noqa: E402
     _ANAPHORIC_SUBJECT_RE,

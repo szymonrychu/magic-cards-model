@@ -430,9 +430,10 @@ _SUBTYPE_TARGET_PUMP_RE = re.compile(
 #: resolved target gets the same pump and the same quoted ability.
 _PUMP_AND_QUOTED_GRANT_RE = re.compile(
     rf"^(?:{_SUBJECT} gets|{_PLURAL_PUMP_SUBJECT} get) "
-    r"(?P<power>[+-]\d+)/(?P<toughness>[+-]\d+) and gains? "
+    r"(?P<power>[+-]\d+)/(?P<toughness>[+-]\d+)(?:,)? (?:and )?gains? "
     r"(?:(?P<keywords>[a-z][a-z ,]*?),? and )?"
-    r'"(?P<granted>[^"]+)" until end of turn\.?$',
+    r'"(?P<granted>[^"]+)"(?P<no_defender>,? and can attack as though (?:it|they) didn\'?t have '
+    r"defender)? until end of turn\.?$",
     re.IGNORECASE,
 )
 
@@ -11609,10 +11610,21 @@ def _parse_layer_sentence_ungated(sentence: str) -> EffectBuilder | None:
             if validated is None:
                 return None
             granted_keywords = validated
+        # The Pride of Hull Clade: the quoted ability and "can attack as though
+        # it didn't have defender" are separate layer 6 grants (CR 613.1f); the
+        # comma that closes the quote in "... equal to its toughness,\" and ..."
+        # is list punctuation, not part of the granted ability.
+        granted_line = match.group("granted").strip()
+        if match.group("no_defender") is not None:
+            return _pump_and_keyword_builder(
+                int(match.group("power")),
+                int(match.group("toughness")),
+                [*granted_keywords, granted_line.rstrip(",.") + ".", ATTACK_WITHOUT_DEFENDER_TEXT],
+            )
         return _pump_and_keyword_builder(
             int(match.group("power")),
             int(match.group("toughness")),
-            [*granted_keywords, match.group("granted").strip()],
+            [*granted_keywords, granted_line],
         )
     if match := _KEYWORDS_AND_QUOTED_GRANT_RE.fullmatch(sentence):
         quoted_keywords = _split_and_validate_keywords(match.group("keywords"))

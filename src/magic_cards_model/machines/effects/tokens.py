@@ -871,6 +871,22 @@ _X_OVER_X_RE = re.compile(r"\bx/x\b", re.IGNORECASE)
 _TOKEN_FOR_EACH_TAIL_RE = re.compile(r"\s+for each (?P<each>[^.\"“”]+?)\.?$", re.IGNORECASE)
 
 
+def _token_clause_for_each_of_source(
+    template: TargetedClause, multiplier: Callable[["Game", str, str | None], int]
+) -> TargetedClause:
+    """`_token_clause_for_each` for a count that reads the resolving object
+    (`amounts._for_each_multiplier`'s `(game, controller, source_id)` form)."""
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        times = multiplier(
+            game, game.controller_of(stack_object).username, source_id_of(stack_object)
+        )
+        for _ in range(max(times, 0)):
+            template(game, stack_object)
+
+    return effect
+
+
 def _token_clause_for_each(
     template: TargetedClause, multiplier: Callable[["Game", str], int]
 ) -> TargetedClause:
@@ -1046,6 +1062,11 @@ def _parse_token_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
             return token_riders.token_clause_for_each_event_subject_counter(
                 template, event_subject_multiplier
             )
+        # "create a Treasure token for each creature that crewed it this turn"
+        # (Luxurious Locomotive): a count read off the ability's own source.
+        source_multiplier = _for_each_multiplier(each_phrase)
+        if source_multiplier is not None:
+            return _token_clause_for_each_of_source(template, source_multiplier)
         return None
 
     match = _TOKEN_CLAUSE_RE.fullmatch(clause)
@@ -4248,6 +4269,42 @@ def _parse_create_tokens_equal_to_event_subject_stat_clause(
         assert isinstance(stack_object, AbilityOnStack)
         amount = read_stat(game, stack_object.event)
         for _ in range(max(amount or 0, 0)):
+            template(game, stack_object)
+
+    return effect
+
+
+#: "create a number of `<descriptor>` tokens equal to the number of `<count>`" -
+#: Hare Apparent's "... equal to the number of other creatures you control named
+#: Hare Apparent." The count is any `amount_expression` term, read once as the
+#: ability resolves (CR 608.2h); the "its power|toughness" form is
+#: `_TOKENS_EQUAL_TO_ITS_STAT_RE`'s.
+_TOKENS_EQUAL_TO_AMOUNT_RE = re.compile(
+    r"^create a number of (?P<desc>.+?) tokens equal to (?P<expr>the number of .+?)\.?$",
+    re.IGNORECASE,
+)
+
+
+@MIXED_CLAUSE.rung("s26", for_spell=FORWARD)
+def _parse_create_tokens_equal_to_amount_clause(
+    text: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`_TOKENS_EQUAL_TO_AMOUNT_RE`'s shape, or `None`. CR 107.1b: a zero count
+    creates nothing."""
+    if "tokens equal to the number of" not in text:
+        return None
+    match = _TOKENS_EQUAL_TO_AMOUNT_RE.fullmatch(" ".join(text.strip().split()))
+    if match is None:
+        return None
+    reader = amount_expression(match.group("expr"))
+    template = _parse_token_clause(f"create a {match.group('desc')} token", for_spell=for_spell)
+    if reader is None or template is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        source = stack_object if isinstance(stack_object, CardState) else stack_object.source(game)
+        controller = game.controller_of(stack_object).username
+        for _ in range(reader(game, controller, source, getattr(stack_object, "x_value", 0))):
             template(game, stack_object)
 
     return effect
