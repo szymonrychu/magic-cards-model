@@ -37,6 +37,10 @@ PLACEHOLDER = 2
 _COUNTS: contextvars.ContextVar[Callable[[str | None], int] | None] = contextvars.ContextVar(
     "ep02_r1_counters_counted", default=None
 )
+#: How many counters the resolving ability's own cost removed.
+_REMOVED: contextvars.ContextVar[int | None] = contextvars.ContextVar(
+    "ep02_r1_counters_removed", default=None
+)
 #: The number the triggering event carried - how many cards a scry looked at.
 _EVENT_AMOUNT: contextvars.ContextVar[int | None] = contextvars.ContextVar(
     "ep02_r1_event_amount", default=None
@@ -44,21 +48,26 @@ _EVENT_AMOUNT: contextvars.ContextVar[int | None] = contextvars.ContextVar(
 
 
 @contextlib.contextmanager
-def counters_read_from(source, event_amount: int | None = None) -> Iterator[None]:
+def counters_read_from(
+    source, event_amount: int | None = None, *, removed: int | None = None
+) -> Iterator[None]:
     """Resolve "the number of <kind> counters on it" against `source` (last
     known information when it has left the battlefield, CR 603.10a); a `None`
     source - gone with no record - counts nothing. `event_amount` is the number
     the triggering event carried, for "for each card looked at while scrying
-    this way"."""
+    this way". `removed` is the number of counters the ability's cost removed
+    (CR 107.3a's announced number), for "counters removed this way"."""
 
     def count(kind: str | None) -> int:
         return 0 if source is None else counters_on_it_total(source, kind)
 
     token = _COUNTS.set(count)
     amount_token = _EVENT_AMOUNT.set(event_amount)
+    removed_token = _REMOVED.set(removed)
     try:
         yield
     finally:
+        _REMOVED.reset(removed_token)
         _EVENT_AMOUNT.reset(amount_token)
         _COUNTS.reset(token)
 
@@ -167,9 +176,42 @@ def _for_each_scried(text: str) -> str:
     n = PLACEHOLDER if looked is None else looked
 
     def pump(m: re.Match[str]) -> str:
-        return f"{m.group('verb')} {int(m.group('p')) * n:+d}/{int(m.group('t')) * n:+d}{m.group('mid')}"
+        power, toughness = int(m.group("p")) * n, int(m.group("t")) * n
+        return f"{m.group('verb')} {power:+d}/{toughness:+d}{m.group('mid')}"
 
     return _FOR_EACH_SCRIED.sub(pump, text)
+
+
+_REMOVED_WHERE_X = re.compile(
+    r",? where X is the number of (?:(?:\+1/\+1|-1/-1|[a-z]+) )?counters? removed this way"
+    r"(?=[.,]|$)",
+    re.IGNORECASE,
+)
+_FOR_EACH_REMOVED = re.compile(
+    r"\bfor each counter removed(?: this way)?, (?P<who>[^.]*?) (?P<verb>gets?) "
+    r"(?P<p>[+-]\d+)/(?P<t>[+-]\d+)(?P<mid>(?: until end of turn)?)",
+    re.IGNORECASE,
+)
+
+
+def _counters_removed_text(text: str) -> str:
+    """The number of counters the ability's cost removed (Blademane Baku's
+    "Remove X ki counters: For each counter removed, this creature gets +2/+0",
+    Ooze Flux's "an X/X Ooze, where X is the number of +1/+1 counters removed
+    this way") read as the number announced with the cost (CR 107.3a, CR 118.3);
+    `PLACEHOLDER` when classifying."""
+    removed = _REMOVED.get()
+    n = PLACEHOLDER if removed is None else removed
+    where = _REMOVED_WHERE_X.search(text)
+    if where is not None:
+        rest = text[: where.start()] + text[where.end() :]
+        text = re.sub(r"\bX\b", str(n), rest)
+
+    def pump(m: re.Match[str]) -> str:
+        p, t = int(m.group("p")) * n, int(m.group("t")) * n
+        return f"{m.group('who')} {m.group('verb')} {p:+d}/{t:+d}{m.group('mid')}"
+
+    return _FOR_EACH_REMOVED.sub(pump, text)
 
 
 def _placed_first(text: str, names: tuple[str, ...]) -> tuple[str, int] | None:
@@ -205,6 +247,10 @@ def counters_counted_text(text: str, names: tuple[str, ...] = ()) -> str:
     lowered = text.lower()
     if "scrying this way" in lowered:
         text = _for_each_scried(text)
+    if "removed" in lowered and not re.search(r"\bremove\b", lowered):
+        # Removed by the ability's cost, not by an instruction of its own text
+        # (which counts what it removed itself).
+        text = _counters_removed_text(text)
     if "counter" not in lowered or " on " not in lowered:
         return text
 

@@ -34,6 +34,7 @@ from ...machines.combat import (
 from ...machines.cost import (
     additional_cost_phrases,
     cost_announces_x,
+    removes_announced_number_of_counters,
     total_cost_for_phrase,
 )
 from ...machines.decisions import (
@@ -1941,7 +1942,12 @@ class StackPriorityMixin:
                 legendary = activated_source_card is not None and (
                     Supertype.LEGENDARY in activated_source_card.supertypes
                 )
-                with counters_read_from(ability.source_or_last_known(self)):
+                removed = (
+                    ability.x_value
+                    if removes_announced_number_of_counters(ability.ability.cost)
+                    else None
+                )
+                with counters_read_from(ability.source_or_last_known(self), removed=removed):
                     return activated_effect_for(
                         ability.source_name,
                         index,
@@ -2314,10 +2320,12 @@ class StackPriorityMixin:
         )
         for ability in printed:
             counted = counters_counted_for(ability.text, source, names)
-            if counted != ability.text and source.zone is not Zone.BATTLEFIELD:
+            if counted != ability.text and source.zone not in (Zone.BATTLEFIELD, Zone.GRAVEYARD):
                 # The number of targets is a count of counters the card does not
                 # have yet (CR 601.2c reads it as the trigger goes on the stack),
-                # so a scripted-ahead choice cannot be judged here.
+                # so a choice scripted ahead of the cast cannot be judged here. A
+                # card in the graveyard is a permanent that died: its last known
+                # counters (CR 603.10a) are what the count reads.
                 continue
             profile = profile_for_text(counted)
             if profile.understood and profile.requirements:

@@ -8,6 +8,8 @@ trigger looks back in time) with CR 122.2 (counters cease to exist as the
 object moves). Every number below is the live count when the ability resolves.
 """
 
+import pytest
+
 from magic_cards_model.machines import Step
 from magic_cards_model.models import Zone
 from magic_cards_model.models.card import Color
@@ -726,3 +728,169 @@ def test_celeborn_pump_ends_at_end_of_turn():
     scenario.advance()  # cleanup
     scenario.turn_based_actions()  # CR 514.2 ends "until end of turn"
     assert _stats(scenario, celeborn) == base
+
+
+# -- counters removed as a cost (CR 118.3, CR 107.3a), and "for each counter removed"
+
+
+def _baku(ki, x):
+    scenario = _board(["Blademane Baku", "Mountain"])
+    baku = scenario.creature("Blademane Baku", "alice")
+    baku.add_counters("ki", ki)
+    scenario.activate(baku, auto=True, x_value=x)
+    _settle(scenario)
+    return scenario, baku
+
+
+def test_blademane_baku_gets_plus_two_power_for_each_ki_counter_removed():
+    scenario, baku = _baku(3, 2)
+    assert baku.counter_count("ki") == 1
+    assert _stats(scenario, baku) == (1 + 4, 1)
+
+
+def test_blademane_baku_removing_none_pumps_nothing():
+    scenario, baku = _baku(3, 0)
+    assert baku.counter_count("ki") == 3
+    assert _stats(scenario, baku) == (1, 1)
+
+
+def test_blademane_baku_cannot_remove_more_ki_counters_than_it_has():
+    scenario = _board(["Blademane Baku", "Mountain"])
+    baku = scenario.creature("Blademane Baku", "alice")
+    baku.add_counters("ki", 1)
+    with pytest.raises(ValueError):
+        scenario.activate(baku, auto=True, x_value=2)
+
+
+def _parasite(counters, x, *, kind=Counter.PLUS_ONE):
+    scenario = _board(["Hex Parasite", "Swamp", "Swamp", "Swamp", "Grizzly Bears"])
+    parasite = scenario.creature("Hex Parasite", "alice")
+    target = scenario.creature("Grizzly Bears", "alice")
+    target.add_counters(kind, counters)
+    scenario.activate(parasite, auto=True, x_value=x, targets=[target])
+    _settle(scenario)
+    return scenario, parasite, target
+
+
+def test_hex_parasite_removes_up_to_x_counters_and_pumps_per_counter_removed():
+    scenario, parasite, target = _parasite(3, 2)
+    assert target.counter_count(Counter.PLUS_ONE) == 1
+    assert _stats(scenario, parasite) == (1 + 2, 1)
+
+
+def test_hex_parasite_pumps_only_by_the_counters_that_were_really_there():
+    scenario, parasite, target = _parasite(1, 3)
+    assert target.counter_count(Counter.PLUS_ONE) == 0
+    assert _stats(scenario, parasite) == (1 + 1, 1)
+
+
+def test_hex_parasite_with_x_of_zero_removes_nothing_and_pumps_nothing():
+    scenario, parasite, target = _parasite(2, 0)
+    assert target.counter_count(Counter.PLUS_ONE) == 2
+    assert _stats(scenario, parasite) == (1, 1)
+
+
+def test_hex_parasite_takes_counters_of_any_kind():
+    scenario, parasite, target = _parasite(2, 1, kind="oil")
+    assert target.counter_count("oil") == 1
+    assert _stats(scenario, parasite) == (2, 1)
+
+
+def test_hex_parasite_aimed_at_a_permanent_with_no_counters_pumps_nothing():
+    scenario, parasite, target = _parasite(0, 2)
+    assert _stats(scenario, parasite) == (1, 1)
+
+
+def _garnet_attacks(sagas, *, take=True):
+    scenario = _board(["Garnet, Princess of Alexandria", *sagas], ["Craw Wurm"])
+    garnet = scenario.creature("Garnet, Princess of Alexandria", "alice")
+    garnet.summoning_sick = False
+    saga_cards = [
+        c
+        for c in scenario.game.permanents_controlled_by("alice")
+        if c.card.name == "The Triumph of Anax"
+    ]
+    # A Saga enters with a lore counter (CR 714.3a); these two hold three and two.
+    for saga, extra in zip(saga_cards, (2, 1), strict=False):
+        saga.add_counters("lore", extra)
+    before = [saga.counter_count("lore") for saga in saga_cards]
+    scenario.will_take_the_may(take)
+    scenario.will_choose_cards(*saga_cards, times=None)
+    while scenario.step is not Step.DECLARE_ATTACKERS:
+        scenario.advance()
+    scenario.attack_with(garnet)
+    _settle(scenario)
+    return garnet, saga_cards, before
+
+
+def test_garnet_removes_a_lore_counter_from_each_chosen_saga_and_grows_per_counter():
+    garnet, sagas, before = _garnet_attacks(["The Triumph of Anax", "The Triumph of Anax"])
+    assert [s.counter_count("lore") for s in sagas] == [n - 1 for n in before]
+    assert garnet.counter_count(Counter.PLUS_ONE) == 2
+
+
+def test_garnet_only_removes_from_the_sagas_chosen():
+    scenario = _board(
+        ["Garnet, Princess of Alexandria", "The Triumph of Anax", "The Triumph of Anax"],
+        ["Craw Wurm"],
+    )
+    garnet = scenario.creature("Garnet, Princess of Alexandria", "alice")
+    garnet.summoning_sick = False
+    first, second = [
+        c
+        for c in scenario.game.permanents_controlled_by("alice")
+        if c.card.name == "The Triumph of Anax"
+    ]
+    scenario.will_take_the_may(True)
+    scenario.will_choose_cards(first)
+    while scenario.step is not Step.DECLARE_ATTACKERS:
+        scenario.advance()
+    scenario.attack_with(garnet)
+    _settle(scenario)
+    assert (first.counter_count("lore"), second.counter_count("lore")) == (0, 1)
+    assert garnet.counter_count(Counter.PLUS_ONE) == 1
+
+
+def test_garnet_declined_removes_nothing():
+    garnet, sagas, before = _garnet_attacks(["The Triumph of Anax"], take=False)
+    assert [s.counter_count("lore") for s in sagas] == before
+    assert garnet.counter_count(Counter.PLUS_ONE) == 0
+
+
+def test_garnet_with_no_sagas_gets_nothing():
+    garnet, _sagas, _before = _garnet_attacks([])
+    assert garnet.counter_count(Counter.PLUS_ONE) == 0
+
+
+def _ooze_flux(first, second, x):
+    scenario = _board(["Ooze Flux", "Forest", "Forest", "Grizzly Bears", "Hill Giant"])
+    bears, giant = scenario.creature("Grizzly Bears", "alice"), scenario.creature("Hill Giant", "alice")
+    bears.add_counters(Counter.PLUS_ONE, first)
+    giant.add_counters(Counter.PLUS_ONE, second)
+    flux = scenario.find("Ooze Flux", Zone.BATTLEFIELD, "alice")
+    scenario.activate(flux, auto=True, x_value=x)
+    _settle(scenario)
+    return scenario, bears, giant
+
+
+def test_ooze_flux_makes_an_ooze_as_large_as_the_counters_it_removed():
+    scenario, bears, giant = _ooze_flux(2, 1, 3)
+    ooze = scenario.creature("Ooze Token", "alice")
+    assert _stats(scenario, ooze) == (3, 3)
+    assert bears.counter_count(Counter.PLUS_ONE) + giant.counter_count(Counter.PLUS_ONE) == 0
+
+
+def test_ooze_flux_may_remove_fewer_counters_than_the_creatures_hold():
+    scenario, bears, giant = _ooze_flux(2, 1, 1)
+    assert _stats(scenario, scenario.creature("Ooze Token", "alice")) == (1, 1)
+    assert bears.counter_count(Counter.PLUS_ONE) + giant.counter_count(Counter.PLUS_ONE) == 2
+
+
+def test_ooze_flux_cannot_remove_more_counters_than_the_creatures_hold():
+    with pytest.raises(ValueError):
+        _ooze_flux(1, 1, 3)
+
+
+def test_ooze_flux_has_to_remove_at_least_one_counter():
+    with pytest.raises(ValueError):
+        _ooze_flux(1, 1, 0)

@@ -851,6 +851,12 @@ class CostComponent(EngineModel):
         checked before anything is spent.
         """
         if self.from_among:
+            if (
+                self.variable_count
+                and self.amount < 1
+                and "one or more" in self.description.lower()
+            ):
+                return "the cost removes one or more counters, and none were announced (CR 118.3)"
             total = 0
             for card in self.cards:
                 if card.zone is not Zone.BATTLEFIELD:
@@ -1734,9 +1740,12 @@ def cost_announces_x(cost_text: str) -> bool:
     )
 
 
-#: "Remove any number of `<kind>` counters" inside a printed cost.
+#: "Remove any number of `<kind>` counters" inside a printed cost, and Ooze
+#: Flux's "Remove one or more `<kind>` counters from among creatures you control"
+#: - both announce how many.
 _REMOVE_ANY_NUMBER_OF_COUNTERS = re.compile(
-    r"\bremove any number of [\w+/−-]+ counters\b", re.IGNORECASE
+    r"\bremove (?:any number of [\w+/−-]+ counters\b|one or more [\w+/−-]+ counters from among\b)",
+    re.IGNORECASE,
 )
 
 
