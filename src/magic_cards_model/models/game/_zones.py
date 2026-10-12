@@ -60,6 +60,7 @@ from ...machines.layers import (
     plays_lands_from_graveyard_line,
 )
 from ...machines.player_action_prohibitions import (
+    discard_caused_by_opponent,
     library_search_blocked,
     sacrifice_caused_by_opponent,
 )
@@ -2924,6 +2925,10 @@ class ZonesMixin:
         with self._id_allocator_scope():
             from ...machines.keywords import discard as discard_one  # avoids an import cycle
 
+            if discard_caused_by_opponent(self, username):
+                # CR 101.2: Tamiyo, Collector of Tales' "can't cause you to
+                # discard cards" beats the opponent's instruction.
+                return []
             discarded: list[CardState] = []
             for card in cards:
                 discarded.append(discard_one(self, card, username))

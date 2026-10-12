@@ -1,6 +1,7 @@
 import re
 from collections.abc import Callable, Iterable, Iterator, Sequence
 from contextlib import contextmanager
+from random import Random
 from typing import TYPE_CHECKING, Any
 from uuid import UUID
 
@@ -1466,6 +1467,7 @@ class CastingMixin:
         instruction_lower = modal.instruction.lower()
         exclusive_this_turn = "hasn't been chosen this turn" in instruction_lower
         exclusive = exclusive_this_turn or "hasn't been chosen" in instruction_lower
+        at_random = "at random" in instruction_lower
         source_state = ability.source(self) if exclusive else None
         if exclusive and source_state is not None:
             already = (
@@ -1502,6 +1504,14 @@ class CastingMixin:
                 # first mode - but once a mode is chosen the rest must follow
                 # (`len(chosen) < minimum`), so it is offered only here.
                 options = (*options, NO_FURTHER_MODES)
+            if at_random:
+                # Outlaws' Merriment's "choose one at random": the mode is
+                # picked at random as the ability goes on the stack (CR
+                # 700.2b's moment), seeded like `Game.roll_dice`.
+                rng = Random(f"{self.shuffle_seed}:{self.coin_flips_performed}:mode")  # noqa: S311
+                self.coin_flips_performed += 1
+                chosen.append(rng.choice(remaining))
+                continue
             answer = self.ask(
                 Decision(
                     kind=DecisionKind.CHOOSE_A_MODE,

@@ -762,9 +762,12 @@ def _parse_return_cards_from_your_graveyard_clause(
 #: not only "Zombie creature" - so a card printing "Return a Spirit creature
 #: card at random from your graveyard to the battlefield" reads for free.
 #: CR 609.3: a graveyard with no matching card returns nothing.
+#: The destination is the battlefield or the hand (Haunted Fengraf's "Return a
+#: creature card at random from your graveyard to your hand."), and the quality
+#: may be absent (The Deck of Many Things' "Return a card at random ...").
 _RETURN_A_CARD_AT_RANDOM_FROM_GRAVEYARD_RE = re.compile(
-    r"^return an? (?P<quality>[a-z ,]+?) cards? at random from your graveyard to "
-    r"the battlefield\.?$",
+    r"^return an? (?:(?P<quality>[a-z ,]+?) )?cards? at random from your graveyard to "
+    r"(?P<destination>the battlefield|your hand)\.?$",
     re.IGNORECASE,
 )
 
@@ -778,7 +781,9 @@ def _parse_return_a_card_at_random_from_graveyard_clause(
     match = _RETURN_A_CARD_AT_RANDOM_FROM_GRAVEYARD_RE.fullmatch(clause.strip())
     if match is None:
         return None
-    matches = _quality_matcher(match.group("quality"))
+    quality = match.group("quality")
+    matches = _quality_matcher(quality) if quality else (lambda _state: True)
+    to_hand = match.group("destination").lower() == "your hand"
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
         player = game.controller_of(stack_object)
@@ -790,7 +795,10 @@ def _parse_return_a_card_at_random_from_graveyard_clause(
         )
         chosen = rng.choice(candidates)
         game.shuffles_performed += 1
-        game.put_onto_battlefield(chosen, player.username)
+        if to_hand:
+            player.move(chosen, Zone.HAND)
+        else:
+            game.put_onto_battlefield(chosen, player.username)
 
     return effect
 

@@ -288,6 +288,11 @@ _SELF_PUT_INTO_GRAVEYARD_FROM_ANYWHERE_CONDITION = re.compile(
 #: permanent's other door.
 _DOOR_UNLOCKED_CONDITION = re.compile(r"^you unlock this door$", re.IGNORECASE)
 _SOLVE_A_CASE_CONDITION = re.compile(r"^you solve a case$", re.IGNORECASE)
+#: CR 104.3: a player loses the game - Shinryu, Transcendent Rival's "When the
+#: chosen player loses the game" (the player `CardState.chosen_player` names).
+_PLAYER_LOSES_THE_GAME_CONDITION = re.compile(
+    r"^(?P<who>the chosen player|an opponent|a player) loses the game$", re.IGNORECASE
+)
 #: CR 714.2e: "the final chapter ability of a Saga you control resolves"
 #: (Tom Bombadil).
 _FINAL_CHAPTER_RESOLVES_CONDITION = re.compile(

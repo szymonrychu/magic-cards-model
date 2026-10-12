@@ -5113,6 +5113,16 @@ SWEEP_DRIVER_GAPS: tuple[DriverGap, ...] = (
         event="an opponent attacking a planeswalker the source's controller controls",
         precondition=r"an opponent attacks a planeswalker you control",
     ),
+    # EP-01-R3 T1: covered by tests/scenarios/test_ep01_r3_d20_choice_rows.py.
+    DriverGap(
+        kind="player_loses_the_game",
+        event="a player losing the game while two others play on (CR 104.2a)",
+    ),
+    DriverGap(
+        kind="leaves_the_battlefield",
+        event="the creature the source's own choice recorded leaving the battlefield",
+        precondition=r"^when the chosen creature leaves",
+    ),
 )
 
 

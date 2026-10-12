@@ -1624,6 +1624,48 @@ def _subject_has_required_counter(condition: str, game: "Game", subject_id: obje
 _ONE_OR_MORE_WORDS = re.compile(r"\bone or more\b")
 
 
+#: Talion, the Kindly Lord's "an opponent casts a spell with mana value,
+#: power, or toughness equal to the chosen number" - the source's as-enters
+#: number (CR 614.12a, `ChoiceKind.NUMBER`) against any of the listed values
+#: of the spell as cast (CR 202.3e: an {X} spell's mana value counts X).
+_STAT_EQUALS_CHOSEN_NUMBER_RE = re.compile(
+    r"^(?P<who>an opponent|you|a player) casts? an? spell with (?P<stats>(?:mana value|power|"
+    r"toughness)(?:(?:,? or |, )(?:mana value|power|toughness))*) equal to the chosen number$",
+    re.IGNORECASE,
+)
+
+
+def reads_stat_equals_chosen_number_condition(condition: str) -> bool:
+    """Whether `_cast_stat_equals_chosen_number` reads `condition`."""
+    return _STAT_EQUALS_CHOSEN_NUMBER_RE.fullmatch(" ".join(condition.split())) is not None
+
+
+def _cast_stat_equals_chosen_number(
+    game: "Game", source: CardState, controller: str, event: GameEvent, condition: str
+) -> bool:
+    match = _STAT_EQUALS_CHOSEN_NUMBER_RE.fullmatch(" ".join(condition.split()))
+    choice = source.choice
+    if match is None or choice is None or not choice.value.lstrip("-").isdigit():
+        return False
+    who = match.group("who").lower()
+    if who == "an opponent" and (event.player is None or event.player == controller):
+        return False
+    if who == "you" and event.player != controller:
+        return False
+    card = event.subject_card
+    if card is None:
+        return False
+    chosen = int(choice.value)
+    values: list[int | None] = []
+    for stat in re.split(r",? or |, ", match.group("stats").lower()):
+        if stat == "mana value":
+            values.append(event.amount if event.amount is not None else int(card.cmc))
+        else:
+            printed = card.power if stat == "power" else card.toughness
+            values.append(int(printed) if printed is not None and printed.isdigit() else None)
+    return chosen in values
+
+
 def condition_matches(
     game: "Game",
     ability: TriggeredAbility,
@@ -1780,6 +1822,9 @@ def _condition_matches(
     if ability_word == "to solve" and getattr(source, "solved", False):
         return False  # CR 719.3a: "... and this Case is not solved"
     condition = ability.condition
+
+    if ability.event is TriggerEvent.CAST_SPELL and "the chosen number" in condition.lower():
+        return _cast_stat_equals_chosen_number(game, source, controller, event, condition)
 
     if ability.event is TriggerEvent.CAST_SPELL:
         # Danitha, Sword of Hope's own "you cast an Equipment spell or a
@@ -2044,6 +2089,14 @@ def _condition_matches(
         # at the object as it last existed, which the event carries).
         if event.subject_id == source.id:
             return mine
+        if lowered.startswith("the chosen "):
+            # Zenos yae Galvus's "When the chosen creature leaves the
+            # battlefield": only the object the source's choice recorded
+            # (CR 614.12a / CR 608.2d), never any other creature.
+            from ..named_choice_rows import chosen_object_id
+
+            chosen = chosen_object_id(source)
+            return chosen is not None and chosen == str(event.subject_id)
         if mine and "another" not in lowered and "other" not in lowered:
             return False
         counter_qualifier = _leaves_battlefield_counter_qualifier_holds(
@@ -2051,6 +2104,13 @@ def _condition_matches(
         )
         if counter_qualifier is False:
             return False
+        if _NONTOKEN_WORD.search(lowered):
+            # Genku, Future Shaper's "another nontoken permanent you control
+            # leaves the battlefield" - CR 111.1's token is excluded, read
+            # off the event's own subject as the DIES branch reads it.
+            subject = game.find_by_id(event.subject_id) if event.subject_id else None
+            if subject is None or getattr(subject, "token", False):
+                return False
         return (
             _controller_clause_holds(condition, controller, event.subject_controller)
             and _types_match(event.subject_types, condition)
@@ -2423,8 +2483,11 @@ def _condition_matches(
             # "your turn" points at, read off the live `TurnMachine` rather
             # than any snapshot, since the trigger is checked as the cast
             # event fires, before anything else has moved the turn along.
+            # "an opponent casts a spell during their turn" (Sandswirl
+            # Wanderglyph): "their" is the caster's own turn.
             turn = getattr(game, "turn", None)
-            if turn is None or turn.active_player != controller:
+            whose = event.player if "during their turn" in lowered else controller
+            if turn is None or turn.active_player != whose:
                 return False
         ordinal_match = _ordinal_spell_this_turn_matches(game, condition, controller, event)
         if ordinal_match is not None:
@@ -3744,6 +3807,17 @@ def _unread_condition_matches(
             and event.subject_id == source.id
             and event.subject_name == ability.face
         )
+
+    loses = _PLAYER_LOSES_THE_GAME_CONDITION.match(condition)
+    if loses is not None:
+        # CR 104.3: the event's player is the one who lost. "The chosen
+        # player" is the one the source's choice named (`chosen_player`).
+        if event.event is not ExtraTriggerEvent.PLAYER_LOSES_THE_GAME or event.player is None:
+            return False
+        who = loses.group("who").lower()
+        if who == "the chosen player":
+            return event.player == source.chosen_player
+        return who == "a player" or event.player != controller
 
     if _SOLVE_A_CASE_CONDITION.match(condition):
         # CR 719.3a-b: you solve a Case when a Case you control becomes
@@ -5954,6 +6028,7 @@ from ._common import (  # noqa: E402
     _PLAY_A_CARD_EXILED_WITH_CONDITION,
     _PLAY_A_LAND_OR_CAST_CONDITION,
     _PLAYER_COUNTERS_PUT_CONDITION,
+    _PLAYER_LOSES_THE_GAME_CONDITION,
     _PUT_INTO_LIBRARY_CONDITION,
     _REVEALED_FIRST_DRAW_CONDITION,
     _REVEALED_THIS_WAY_CONDITION,

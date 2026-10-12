@@ -3793,6 +3793,11 @@ def unobeyed_attack_requirement(
     collective = collective_requirement_violation(game, declared)
     if collective is not None:
         return UnobeyedAttackRequirement(None, collective)
+    from .opponent_attack_restrictions import all_attack_requirement_violation
+
+    all_attack = all_attack_requirement_violation(game, declared)
+    if all_attack is not None:
+        return UnobeyedAttackRequirement(None, all_attack)
     return None
 
 

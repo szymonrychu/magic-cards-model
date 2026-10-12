@@ -2412,7 +2412,9 @@ def parse_abilities(card: Card) -> list[Ability]:
     abilities: list[Ability] = []
     for face_name, text in _faces(card):
         face_abilities: list[Ability] = []
-        merged = _merge_roll_table_lines(_merge_modal_bullet_lines(text.split("\n")))
+        merged = _merge_roll_table_lines(
+            _merge_modal_bullet_lines(fold_choice_rows(text.split("\n")))
+        )
         if is_leveler_text(text):
             # CR 711.2: a level symbol and its power/toughness box are not
             # abilities; each ability in a striation is tagged with its band,
@@ -3898,6 +3900,16 @@ _KEYWORD_LIST_CONDITION_BOUNDARY = re.compile(
     re.IGNORECASE,
 )
 
+#: Talion, the Kindly Lord's "an opponent casts a spell with mana value,
+#: power, or toughness equal to the chosen number, ..." - a list of a spell's
+#: values inside the condition, whose commas are not the condition/effect one.
+_STAT = r"(?:mana value|power|toughness)"
+_STAT_LIST_CONDITION_BOUNDARY = re.compile(
+    rf"^(?P<condition>[^,]*?\bwith {_STAT}(?:,\s*{_STAT})+,?\s+(?:and/or|or|and)\s+{_STAT}"
+    r"[^,]*?)\s*,\s*",
+    re.IGNORECASE,
+)
+
 _BENDING_LIST_CONDITION_BOUNDARY = re.compile(
     r"^(?P<condition>you (?:waterbend|earthbend|firebend|airbend)"
     r"(?:,\s*(?:waterbend|earthbend|firebend|airbend))*(?:,)?"
@@ -4210,6 +4222,11 @@ def _parse_triggered(text: str, common: dict) -> list[TriggeredAbility] | None:
     elif type_list_boundary is not None:
         condition = type_list_boundary.group("condition")
         rest = body[type_list_boundary.end() :].strip()
+        if not rest:
+            return None
+    elif (stat_list_boundary := _STAT_LIST_CONDITION_BOUNDARY.match(body)) is not None:
+        condition = stat_list_boundary.group("condition")
+        rest = body[stat_list_boundary.end() :].strip()
         if not rest:
             return None
     elif (keyword_list_boundary := _KEYWORD_LIST_CONDITION_BOUNDARY.match(body)) is not None:
@@ -4636,6 +4653,11 @@ _ACTIVATE_ONLY_IF_SUSPENDED = re.compile(
 )
 
 
+_ACTIVATE_ONLY_IF_IN_GRAVEYARD = re.compile(
+    r"\bactivate only (?:if|while) this card is in your graveyard\b", re.IGNORECASE
+)
+
+
 def _activated_ability_zone(
     costs: list[Cost], effect: str, instructions: str | None = None
 ) -> tuple[Zone | None, str | None]:
@@ -4668,6 +4690,10 @@ def _activated_ability_zone(
         return Zone.GRAVEYARD, "CR 113.6m"
     if instructions and _ACTIVATE_ONLY_IF_SUSPENDED.search(instructions):
         return Zone.EXILE, "CR 702.62b"
+    if instructions and _ACTIVATE_ONLY_IF_IN_GRAVEYARD.search(instructions):
+        # Loathsome Troll: "Activate only if this card is in your graveyard."
+        # - an ability that states the zone it functions in (CR 113.6b).
+        return Zone.GRAVEYARD, "CR 113.6b"
     return None, None
 
 
@@ -5252,3 +5278,6 @@ def _is_triggered_mana_ability(ability: TriggeredAbility) -> bool:
         and not _TARGET_WORD_RE.search(ability.effect)
         and parse_triggered_mana(ability.effect) is not None
     )
+
+
+from .named_choice_rows import fold_choice_rows  # noqa: E402

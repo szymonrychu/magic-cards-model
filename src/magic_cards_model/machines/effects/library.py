@@ -4671,6 +4671,65 @@ def _ask_name_reveal_top_and_branch(
         on_miss(top)
 
 
+#: Tamiyo, Collector of Tales' +1: "Choose a nonland card name, then reveal
+#: the top four cards of your library. Put all cards with the chosen name
+#: from among them into your hand and the rest into your graveyard." - a
+#: resolution-time name (CR 201.4; "nonland" narrows it), CR 701.20a's
+#: reveal, then every revealed card goes to one of two zones by its name.
+_NAME_REVEAL_TOP_N_SPLIT_RE = re.compile(
+    r"^choose a (?P<nonland>nonland )?card name, then reveal the top (?P<n>\w+) cards of "
+    r"your library\.\s*put all cards with the chosen name from among them into your hand "
+    r"and the rest into your graveyard\.?$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s34")
+def _parse_name_reveal_top_n_split_text(text: str) -> AbilityEffect | None:
+    """`_NAME_REVEAL_TOP_N_SPLIT_RE`'s shape. A land's name is refused when
+    the instruction says "nonland" (CR 201.4's named card must fit it)."""
+    if "card name, then reveal the top" not in text:
+        return None
+    match = _NAME_REVEAL_TOP_N_SPLIT_RE.fullmatch(
+        " ".join(_strip_non_effect_preamble(text).split())
+    )
+    if match is None:
+        return None
+    count = parse_count(match.group("n"))
+    if count is None:
+        return None
+    nonland = match.group("nonland") is not None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        from ...data.printing_pool import resolve_printing
+
+        controller = game.controller_of(ability)
+        name = game.ask(
+            Decision(
+                kind=DecisionKind.CHOOSE_A_QUALITY,
+                player=controller.username,
+                prompt="choose a nonland card name" if nonland else "choose a card name",
+                source=ability.source_name,
+                source_id=source_id_of(ability),
+                quality=ChoiceKind.CARD_NAME.value,
+            )
+        )
+        assert isinstance(name, str)
+        printing = resolve_printing(name)
+        if nonland and printing is not None and Type.LAND in printing.types:
+            raise ValueError(f"choose a nonland card name: {name!r} is a land (CR 201.4)")
+        revealed = list(controller.library[:count])
+        for card in revealed:
+            game.reveal(card, source=ability.source_name)
+        for card in revealed:
+            if card.name == name:
+                controller.move(card, Zone.HAND)
+            else:
+                game.put_into_graveyard(card)
+
+    return effect
+
+
 #: "Target player chooses a card name, then reveals the top card of their
 #: library. If that card has the chosen name, that player puts it into
 #: their hand. Otherwise, they put it into their graveyard and this artifact

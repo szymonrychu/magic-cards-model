@@ -4759,3 +4759,42 @@ from .text import (  # noqa: E402
     _split_created_trigger_paragraph,
     _strip_non_effect_preamble,
 )
+
+#: "Create a 1/1 creature token of the chosen color and type." (Sarpadian
+#: Empires, Vol. VII) - the token is described by the source's as-enters
+#: answer (CR 614.12a), "white Citizen" for "choose white Citizen, blue
+#: Camarid, ...", so the sentence is read with that answer written in.
+_CHOSEN_COLOR_AND_TYPE_TOKEN_RE = re.compile(
+    r"^create (?P<count>an?|one|two|three|four|five) (?P<pt>\d+/\d+) creature tokens? "
+    r"of the chosen color and type\.?$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s26")
+def _parse_chosen_color_and_type_token_text(text: str) -> AbilityEffect | None:
+    """`_CHOSEN_COLOR_AND_TYPE_TOKEN_RE`'s shape, read whole (the clause
+    splitter would cut "color and type" at its "and"). The answer is read at
+    resolution; a source with no "<color> <type>" answer creates nothing."""
+    if "the chosen color and type" not in text.lower():
+        return None
+    match = _CHOSEN_COLOR_AND_TYPE_TOKEN_RE.fullmatch(_strip_non_effect_preamble(text).strip())
+    if match is None:
+        return None
+    count = match.group("count").lower()
+    plural = count not in ("a", "an", "one")
+    pt = match.group("pt")
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        source = stack_object.source(game)  # type: ignore[union-attr]
+        choice = None if source is None else source.choice
+        if choice is None or len(choice.value.split()) < 2:
+            return
+        noun = "creature tokens" if plural else "creature token"
+        lead = count if plural else "a"
+        text = f"Create {lead} {pt} {choice.value} {noun}."
+        inner = _ability_effect_or_notice(text)
+        if inner is not None and not _is_notice_only(inner):
+            inner(game, stack_object)  # type: ignore[arg-type]
+
+    return effect

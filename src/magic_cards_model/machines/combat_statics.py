@@ -875,6 +875,7 @@ def extra_attack_refusal(game: "Game", creature: CardState, defender) -> str | N
         attack_block_costs,
         attacking_statics,
         group_attack_statics,
+        opponent_attack_restrictions,
         static_cast_bans,
     )
 
@@ -884,6 +885,7 @@ def extra_attack_refusal(game: "Game", creature: CardState, defender) -> str | N
         or attack_block_costs.return_cost_refusal(game, creature)
         or attacking_statics.self_attack_condition_refusal(game, creature, defender)
         or group_attack_statics.group_attack_refusal(game, creature, defender)
+        or opponent_attack_restrictions.cant_attack_refusal(game, creature, defender)
     )
 
 
