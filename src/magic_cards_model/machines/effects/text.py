@@ -3424,6 +3424,16 @@ _TRAILING_IF_OTHERWISE_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s8")
+def _parse_attached_controller_clause(text: str) -> "AbilityEffect | None":
+    """ "enchanted permanent's controller <instruction>[, then that player
+    <instruction>]." - Strangling Grasp. Read by `machines/return_
+    transformed_attached.parse_attached_controller_clause`."""
+    from ..return_transformed_attached import parse_attached_controller_clause
+
+    return parse_attached_controller_clause(text)
+
+
 @ABILITY_TEXT.rung("s2", for_spell=False)
 def _parse_leading_then_if_otherwise_clause(text: str, *, for_spell: bool) -> AbilityEffect | None:
     """`_LEADING_THEN_IF_OTHERWISE_RE`'s shape - see its own docstring.

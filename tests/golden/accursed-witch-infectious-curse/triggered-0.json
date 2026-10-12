@@ -1,11 +1,11 @@
 {
-  "ability": "At the beginning of enchanted player's upkeep, that player loses 1 life and you gain 1 life.",
+  "ability": "When this creature dies, return it to the battlefield transformed under your control attached to target opponent.",
   "action": {
     "controller": "alice",
     "modes": [],
     "on_stack": true,
-    "source": "Infectious Curse@alice#1",
-    "targets": [],
+    "source": "Accursed Witch@alice#1",
+    "targets": ["player:bob"],
     "x": 0
   },
   "board": {
@@ -26,7 +26,7 @@
         "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
       }
     },
-    "step": null,
+    "step": "precombat_main",
     "tapped": [],
     "tokens": [],
     "variant": "quiet",
@@ -36,20 +36,26 @@
   "delta": {
     "created": {},
     "decisions": [],
-    "fields_changed": ["life_gained_amount_this_turn", "life_gained_this_turn"],
+    "fields_changed": ["turn_counts", "turn_facts", "turn_history"],
     "notices": {},
-    "objects": {},
+    "objects": {
+      "Accursed Witch@alice#1": {
+        "zone": ["graveyard", "battlefield"]
+      }
+    },
     "players": {},
     "stack": []
   },
   "family": "triggered",
   "format": 1,
-  "kind": "beginning_of_step",
+  "kind": "dies",
   "number": 0,
   "recipe": {
-    "attempt": "staged",
+    "attempt": "itself",
     "index": 0,
-    "params": {},
+    "params": {
+      "removal": "destroy"
+    },
     "variant": "quiet"
   }
 }

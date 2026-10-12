@@ -36,9 +36,13 @@
   "delta": {
     "created": {},
     "decisions": [],
-    "fields_changed": [],
+    "fields_changed": ["became_tapped_count_this_turn"],
     "notices": {},
-    "objects": {},
+    "objects": {
+      "Fleecemane Lion@bob#1": {
+        "tapped": [false, true]
+      }
+    },
     "players": {},
     "stack": []
   },

@@ -2177,6 +2177,30 @@ def _parse_return_self_as_type_clause(text: str) -> AbilityEffect | None:
     return effect
 
 
+@ABILITY_TEXT.rung("s24")
+def _parse_return_self_transformed_attached_clause(text: str) -> AbilityEffect | None:
+    """ "return <it|this card> to the battlefield transformed under your
+    control[ attached to <target>]." - Accursed Witch, Radiant Grace, Skin
+    Invasion, Vengeful Strangler. Read by `machines/return_transformed_
+    attached.parse_return_self_transformed_clause`."""
+    from ..return_transformed_attached import parse_return_self_transformed_clause
+
+    return parse_return_self_transformed_clause(text)
+
+
+@ABILITY_TEXT.rung("s24")
+def _parse_return_subject_then_self_transformed_clause(text: str) -> AbilityEffect | None:
+    """ "return it to the battlefield under your control, then return this
+    card to the battlefield transformed under your control." - Journey to
+    Eternity. Read by `machines/return_transformed_attached.
+    parse_return_subject_then_self_transformed_clause`."""
+    from ..return_transformed_attached import (
+        parse_return_subject_then_self_transformed_clause,
+    )
+
+    return parse_return_subject_then_self_transformed_clause(text)
+
+
 @ABILITY_TEXT.rung("s24", for_spell=False)
 @MIXED_CLAUSE.rung("s31", for_spell=FORWARD)
 def _parse_return_self_to_battlefield_transformed_clause(

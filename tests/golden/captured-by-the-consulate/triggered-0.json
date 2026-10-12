@@ -36,7 +36,7 @@
   "delta": {
     "created": {},
     "decisions": [],
-    "fields_changed": [],
+    "fields_changed": ["spells_cast_this_turn"],
     "notices": {},
     "objects": {},
     "players": {},

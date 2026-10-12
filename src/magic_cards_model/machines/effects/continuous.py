@@ -5060,6 +5060,25 @@ _ATTACH_SELF_TO_TARGET_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s8")
+def _parse_unattach_attached_clause(text: str) -> AbilityEffect | None:
+    """ "Unattach enchanted Equipment." - Carry Away. Read by
+    `machines/unattach.parse_unattach_attached_clause`."""
+    from ..unattach import parse_unattach_attached_clause
+
+    return parse_unattach_attached_clause(text)
+
+
+@ABILITY_TEXT.rung("s8")
+def _parse_then_if_subtype_unattach_clause(text: str) -> AbilityEffect | None:
+    """ "Tap enchanted permanent. If it's an Equipment, unattach it." -
+    Tamiyo's Compleation. Read by
+    `machines/unattach.parse_then_if_subtype_unattach_clause`."""
+    from ..unattach import parse_then_if_subtype_unattach_clause
+
+    return parse_then_if_subtype_unattach_clause(text)
+
+
 def attach_permanent(game: "Game", attached: CardState, host: CardState) -> bool:
     """CR 701.3a's attach, with CR 701.3b's refusals: an object that is not
     an Aura, Equipment or Fortification is not moved, nor is one onto a host

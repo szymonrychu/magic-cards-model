@@ -913,6 +913,10 @@ def _cast(
                     casting.pay_kicker(1, which=cost)
             else:
                 casting.pay_kicker(1)
+            if x_value is None and any("{X}" in cost for cost in costs):
+                # CR 107.3a: a kicker cost with {X} announces X - the least
+                # one "X can't be 0" (Thieving Skydiver) allows.
+                x_value = 1
         if x_value is not None:
             # CR 107.3a: the X announced for an {X} spell.
             casting.determine_cost(x_value=x_value)
@@ -1589,11 +1593,15 @@ def _attach(scenario: PlayedScenario, source: CardState) -> None:
     restriction = _enchant_restriction(source.card)
     if restriction is None:
         return
-    if "player" in restriction or "opponent" in restriction:
+    # "Enchant creature or planeswalker an opponent controls" (Strangling
+    # Grasp) and "creature you don't control" name a permanent on the other
+    # side (CR 303.4a); a bare "Enchant opponent" / "player" names a player.
+    theirs = re.search(r"\ban opponent controls\b|\byou don't control\b", restriction)
+    if theirs is None and ("player" in restriction or "opponent" in restriction):
         source.attachment = TargetRef.to_player(scenario.game.player(BOB))
         return
     wanted = next((word for word in _BASICS if word.lower() in restriction), None)
-    for permanent in scenario.game.permanents_controlled_by(ALICE):
+    for permanent in scenario.game.permanents_controlled_by(BOB if theirs else ALICE):
         if permanent is source:
             continue
         if wanted is not None and permanent.name != wanted:
@@ -1715,6 +1723,7 @@ def _prime(scenario: PlayedScenario, source: CardState, ability: Any) -> CardSta
         increase_speed(player, by=4 - effective_speed(player))
     _counter_threshold(scenario, source, getattr(ability, "intervening_if", None))
     _counter_to_remove(scenario, source, getattr(ability, "text", None))
+    _above_board_power(scenario, source, getattr(ability, "text", None))
     _history_threshold(scenario, source, getattr(ability, "intervening_if", None))
     _target_damage_history(scenario, source, getattr(ability, "text", None))
     _board_threshold(scenario, source, getattr(ability, "intervening_if", None) or "")
@@ -1769,6 +1778,40 @@ def _counter_to_remove(scenario: PlayedScenario, source: CardState, text: str | 
     kind = found.group("kind")
     if source.counters[kind] == 0:
         scenario.game.add_counters(source, kind, 1)
+
+
+_BELOW_SOURCE_POWER = re.compile(
+    r"\btarget creature with power less than (?:this creature|~)'s power\b", re.IGNORECASE
+)
+
+
+def _above_board_power(scenario: PlayedScenario, source: CardState, text: str | None) -> None:
+    """ "target creature with power less than this creature's power" (Unliving
+    Psychopath, a 0/4) has no legal target while the source's power is no
+    more than every other creature's (CR 115.1, CR 601.2c): the source is
+    staged carrying the +1/+1 counters (CR 122.1a) that lift it one above the
+    weakest other creature on the board, as its own pump ability would."""
+    if source.zone is not Zone.BATTLEFIELD or not _BELOW_SOURCE_POWER.search(
+        (text or "").replace(source.name, "~")
+    ):
+        return
+    game = scenario.game
+
+    def power(permanent: CardState) -> int | None:
+        value = game.characteristics_of(permanent).power
+        return int(value) if isinstance(value, int) or str(value).lstrip("-").isdigit() else None
+
+    others = [
+        value
+        for permanent in game.battlefield
+        if permanent is not source
+        and Type.CREATURE in permanent.types
+        and (value := power(permanent)) is not None
+    ]
+    own = power(source)
+    if not others or own is None or own > min(others):
+        return
+    game.add_counters(source, "+1/+1", min(others) + 1 - own)
 
 
 def _target_damage_history(scenario: PlayedScenario, source: CardState, text: str | None) -> None:

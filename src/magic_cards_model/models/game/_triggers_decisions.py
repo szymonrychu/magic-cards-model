@@ -1004,6 +1004,10 @@ class TriggersDecisionsMixin:
         # (via CR 603.3d) fixes the number as it goes on the stack, and "that
         # many" is what the triggering event carried.
         text = event_count_target_text(text, ability.event)
+        # CR 107.3m: an ETB trigger's X is the X its spell was cast with -
+        # read into the targets too ("target artifact with mana value X or
+        # less", Thieving Skydiver), not only into the effect.
+        text = self.etb_x_substituted(ability, text) or text
         profile = (
             profile_for_text(text)
             .for_event_player(_that_player_of(ability))

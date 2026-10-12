@@ -4081,7 +4081,9 @@ class Casting(EngineModel):
         ]
         increases = [
             *self.cost_increases,
-            *(extra.mana for extra in extras),
+            # CR 107.3a: an {X} in an additional cost (Thieving Skydiver's
+            # "Kicker {X}") is the X announced for the spell.
+            *(extra.mana.with_x(self.x_value) for extra in extras),
             self._own_cost_increase_for_targets(),
             *(
                 [self.permission_used.cost_increase]
@@ -4415,6 +4417,21 @@ class Casting(EngineModel):
         """
         return self._refusing(lambda: self._determine_cost(x_value, additional, choices))
 
+    def _x_restriction_text(self) -> str:
+        """The text whose "X can't be 0" binds this cast's X (CR 107.3a).
+
+        A keyword cost line's own restriction - Thieving Skydiver's "Kicker
+        {X}. X can't be 0." - bounds the X of that cost only, so it binds
+        only when the kicker is paid (CR 702.33a, CR 702.33d): an unkicked
+        Skydiver has no X to announce and is cast with X 0."""
+        text = self.spell.oracle_text or ""
+        if self.kicked:
+            return text
+        ability = _keyword(self.spell.card, "kicker")
+        if ability is None or ability.count_minimum is None:
+            return text
+        return "\n".join(line for line in text.split("\n") if line.strip() != ability.raw)
+
     def _determine_cost(
         self,
         x_value: int | None,
@@ -4425,7 +4442,7 @@ class Casting(EngineModel):
         self._advance_to(CastingStep.COST_DETERMINED)
         if x_value is not None:
             self.x_value = x_value
-        x_refusal = x_restriction_refusal(self.spell.oracle_text or "", self.x_value)
+        x_refusal = x_restriction_refusal(self._x_restriction_text(), self.x_value)
         if x_refusal is not None:
             raise ValueError(f"{self.spell.name}: {x_refusal}")
         if additional is not None:

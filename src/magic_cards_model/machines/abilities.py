@@ -3685,6 +3685,14 @@ def _parse_keywords(text: str, keywords: list[str], common: dict) -> list[Abilit
     if em_dash is not None:
         return [em_dash]
 
+    x_minimum = _parse_keyword_mana_x_minimum(text, known, common)
+    if x_minimum is not None:
+        return [x_minimum]
+
+    enchant_list = _parse_enchant_list(text, known, common)
+    if enchant_list is not None:
+        return [enchant_list]
+
     parameterised = _parse_keyword_parameter(text, known, common)
     if parameterised is not None:
         return [parameterised]
@@ -3837,6 +3845,64 @@ def _parse_keyword_cost(text: str, known: list[str], common: dict) -> KeywordAbi
         count_minimum=1 if match.group("minimum") else None,
         cost_is_mana=bool(_ONLY_SYMBOLS.match(cost)),
         em_dash=True,
+    )
+
+
+#: `Keyword {cost with X}. X can't be 0.` - Thieving Skydiver's "Kicker {X}.
+#: X can't be 0.": a keyword whose space-form mana cost carries an X (CR
+#: 107.3a: X in an additional cost is announced as the spell is cast) and a
+#: restriction on that announcement. The full stop is what otherwise keeps the
+#: line from reading as a keyword line at all.
+_KEYWORD_MANA_X_MINIMUM = re.compile(
+    r"^(?P<keyword>[A-Z][A-Za-z'’-]*(?: [A-Za-z'’-]+)*?) "
+    r"(?P<cost>(?:\{[^}]+\})*\{X\}(?:\{[^}]+\})*)\. X can't be 0\.?$"
+)
+
+
+def _parse_keyword_mana_x_minimum(
+    text: str, known: list[str], common: dict
+) -> KeywordAbility | None:
+    """`_KEYWORD_MANA_X_MINIMUM`'s line: the mana goes on `cost`, and the "X
+    can't be 0" sentence on `count_minimum` - the same field the em-dash
+    `Suspend X—{X}{3}{U}. X can't be 0.` line already sets. The keyword still
+    has to be on the printing's own Scryfall `keywords` list."""
+    match = _KEYWORD_MANA_X_MINIMUM.match(text.strip())
+    if match is None:
+        return None
+    printed = match.group("keyword")
+    canonical = next((k for k in known if k.lower() == printed.lower()), None)
+    if canonical is None:
+        return None
+    return KeywordAbility(
+        **common,
+        keyword=printed,
+        canonical=canonical,
+        cost=match.group("cost"),
+        count_minimum=1,
+        cost_is_mana=True,
+    )
+
+
+#: "Enchant artifact, creature, or planeswalker" (Tamiyo's Compleation) - CR
+#: 702.5a's "Enchant [object or player]" whose quality is a comma list of
+#: alternatives. The commas belong to the one keyword's parameter, never
+#: separate keywords, so the line is read before the comma split.
+_ENCHANT_LIST = re.compile(
+    r"^(?P<keyword>Enchant) (?P<parameter>[a-z][\w' -]*(?:, [a-z][\w' -]*)+,? or [a-z][\w' -]*)$"
+)
+
+
+def _parse_enchant_list(text: str, known: list[str], common: dict) -> KeywordAbility | None:
+    """`_ENCHANT_LIST`'s line, or `None` - only on a printing whose Scryfall
+    `keywords` list names Enchant."""
+    match = _ENCHANT_LIST.match(text.strip())
+    if match is None:
+        return None
+    canonical = next((k for k in known if k.lower() == "enchant"), None)
+    if canonical is None:
+        return None
+    return KeywordAbility(
+        **common, keyword="Enchant", canonical=canonical, parameter=match.group("parameter")
     )
 
 
