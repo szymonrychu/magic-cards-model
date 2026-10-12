@@ -744,3 +744,68 @@ def test_jacobs_back_face_exiles_the_top_card_each_upkeep_and_may_play_one_free_
         _resolve_everything(scenario)
     land = scenario.play_land("Island", "alice", from_zone=Zone.EXILE)
     assert land.zone is Zone.BATTLEFIELD
+
+
+# -- Semblance Anvil: imprint a nonland card, share a card type, cost {2} less --
+
+
+def _anvil(hand):
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Semblance Anvil", *hand], battlefield=["Mountain", "Mountain"], library=FILLER)
+        .player("bob", library=FILLER)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    return scenario
+
+
+def _enter_anvil(scenario, *, exile=None):
+    if exile is None:
+        scenario.will_take_the_may(False, username="alice")
+    else:
+        scenario.will_take_the_may(True, username="alice")
+        scenario.will_choose_cards(exile, username="alice")
+    anvil = scenario.put_onto_battlefield("Semblance Anvil", "alice")
+    _resolve_everything(scenario)
+    return anvil
+
+
+def test_semblance_anvil_exiles_the_chosen_nonland_card_from_hand():
+    scenario = _anvil(["Grizzly Bears", "Mountain"])
+    (bears,) = [c for c in scenario.player("alice").hand if c.name == "Grizzly Bears"]
+    anvil = _enter_anvil(scenario, exile=bears)
+    assert bears.zone is Zone.EXILE and bears.face_up
+    assert _exiled_with(scenario, anvil) == [bears]
+
+
+def test_semblance_anvil_cannot_exile_a_land():
+    scenario = _anvil(["Mountain"])
+    scenario.will_take_the_may(True, username="alice")
+    scenario.put_onto_battlefield("Semblance Anvil", "alice")
+    with pytest.raises(ValueError, match="CR 608.2d"):
+        _resolve_everything(scenario)
+    assert [c.name for c in scenario.player("alice").hand] == ["Mountain"]
+
+
+def test_semblance_anvil_may_be_declined():
+    scenario = _anvil(["Grizzly Bears"])
+    anvil = _enter_anvil(scenario)
+    assert _exiled_with(scenario, anvil) == []
+    assert [c.name for c in scenario.player("alice").hand] == ["Grizzly Bears"]
+
+
+def test_semblance_anvil_discounts_spells_sharing_a_type_with_the_exiled_card():
+    scenario = _anvil(["Grizzly Bears", "Hill Giant"])
+    (bears,) = [c for c in scenario.player("alice").hand if c.name == "Grizzly Bears"]
+    _enter_anvil(scenario, exile=bears)
+    casting = scenario.cast("Hill Giant", "alice")
+    assert str(casting.total_cost.mana) == "{1}{R}"
+
+
+def test_semblance_anvil_does_not_discount_a_spell_of_another_type():
+    scenario = _anvil(["Lightning Bolt", "Hill Giant"])
+    (bolt,) = [c for c in scenario.player("alice").hand if c.name == "Lightning Bolt"]
+    _enter_anvil(scenario, exile=bolt)
+    casting = scenario.cast("Hill Giant", "alice")
+    assert str(casting.total_cost.mana) == "{3}{R}"
