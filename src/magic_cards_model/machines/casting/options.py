@@ -1976,9 +1976,9 @@ from ._common import (  # noqa: E402
 )
 from .casting import _why_not_in_own_declare_blockers_step, why_cannot_cast_now  # noqa: E402
 from .permissions import (  # noqa: E402
-    granted_self_zone_cast_options,
     _printed_self_zone_cast_with_additional_cost,
     _printed_self_zone_cast_with_counters,
     _printed_zone_permissions,
     adventure_face,
+    granted_self_zone_cast_options,
 )

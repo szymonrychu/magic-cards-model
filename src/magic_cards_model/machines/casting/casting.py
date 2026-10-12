@@ -5858,6 +5858,7 @@ def exile_adventured(game: Any, spell: CardState, owner: str | None = None) -> C
 
 
 from ..aftermath import aftermath_face_only_refusal, aftermath_face_refusal  # noqa: E402
+from ..face_down_keywords import library_top_plot_cost  # noqa: E402
 from ._common import (  # noqa: E402
     _BLIGHT_PHRASE,
     _OPTIONAL_BEHOLD,
@@ -5909,6 +5910,3 @@ from .permissions import (  # noqa: E402
     split_second_restriction_source,
     usable_play_permission,
 )
-
-
-from ..face_down_keywords import library_top_plot_cost  # noqa: E402
