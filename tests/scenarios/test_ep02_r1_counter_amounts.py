@@ -228,7 +228,7 @@ def test_call_for_unity_ignores_other_counter_kinds_and_moves_with_the_count():
 def test_chitterspitter_pumps_only_squirrels_you_control():
     scenario = _board(["Chitterspitter", "Forest", "Grizzly Bears"])
     spitter = scenario.find("Chitterspitter", Zone.BATTLEFIELD, "alice")
-    scenario.activate(spitter, auto=True, index=1)
+    scenario.activate(spitter, auto=True)
     _settle(scenario)
     squirrel = scenario.creature("Squirrel Token", "alice")
     assert _stats(scenario, squirrel) == (1, 1)
