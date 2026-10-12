@@ -15,8 +15,10 @@ graveyard" reads through the same grammar:
   card is never counted twice - CR 205.2a), "permanent", a negated type
   ("nonland"), a subtype ("Lesson", "Elemental"), a colour.
 - `<where>` is "your graveyard" (CR 404.1: every player has their own), "all
-  graveyards" / "each graveyard" (every player's), or "exile and in your
-  graveyard" with "you own" (CR 108.3: cards by owner, whichever zone).
+  graveyards" / "each graveyard" (every player's), "that player's graveyard" /
+  "their graveyard" (the player the resolving ability targets or concerns), or
+  "exile and in your graveyard" with "you own" (CR 108.3: cards by owner,
+  whichever zone).
 - "card types among cards in <where>" counts distinct CR 205.2a card types.
 - "different mana value(s) among <description> cards in <where>" counts
   distinct mana values (CR 202.3), a card with no mana cost being 0.
@@ -25,6 +27,12 @@ The returned reader is `(game, controller) -> int`, the shape
 `amounts.count_expression` returns; the caller counts once, as the effect
 applies (CR 608.2h). A token is never counted: it is not a card, and ceases to
 exist in a graveyard anyway.
+
+Below the reader are the instruction shapes that use it and had no parser of
+their own (life change, mill, counters, mana, tapped-and-attacking tokens, a
+search limit, a damage pair sharing one X, a counted pump rider); each is gated
+on the word "graveyard" and joins its ladder through the rungs at the end of
+`machines/effects/amounts.py`.
 """
 
 import re
@@ -652,9 +660,11 @@ def _pump_then_additional_per_count(text: str, *, for_spell: bool):
     +2/+2 until end of turn for each card named Growth Cycle in your
     graveyard." (Growth Cycle): both sentences modify the same creature in
     sublayer 7c (CR 613.4c) for the same duration, so the count (taken once, as
-    the spell resolves - CR 608.2h) is folded into one pump and read as the
-    ordinary sentence it adds up to."""
-    from .effects.dispatch import parse_mixed_effect, parse_mixed_effect_for_spell
+    the spell resolves - CR 608.2h) is folded into one pump, built by the same
+    layer parser every "until end of turn" pump uses and put on the chosen
+    target (CR 611.2c fixes who it affects)."""
+    from .effects.continuous import continuous_effects, layer_context_for
+    from .layers import parsed_layer_effects
 
     if "it gets an additional" not in text.lower():
         return None
@@ -664,21 +674,32 @@ def _pump_then_additional_per_count(text: str, *, for_spell: bool):
     reader = _for_each_reader(match.group("each"))
     if reader is None:
         return None
-    parse = parse_mixed_effect_for_spell if for_spell else parse_mixed_effect
 
     def written_with(count: int) -> str:
         power = int(match.group("power")) + int(match.group("extra_power")) * count
         toughness = int(match.group("toughness")) + int(match.group("extra_toughness")) * count
         return f"Target creature gets {power:+d}/{toughness:+d} until end of turn."
 
-    if parse(written_with(1)) is None:
+    if parsed_layer_effects(written_with(1)) is None:
         return None
 
     def effect(game: "Game", stack_object) -> None:
-        count = reader(game, game.controller_of(stack_object).username, source_id_of(stack_object))
-        resolved = parse(written_with(max(count, 0)))
-        if resolved is not None:
-            resolved(game, stack_object)
+        controller = game.controller_of(stack_object)
+        count = max(reader(game, controller.username, source_id_of(stack_object)), 0)
+        builder = parsed_layer_effects(written_with(count))
+        targets = game.resolve_card_targets(stack_object)
+        source = (
+            stack_object
+            if hasattr(stack_object, "oracle_text")
+            else stack_object.source_or_last_known(game)
+        )
+        if builder is None or source is None or not targets:
+            return
+        store = continuous_effects(game)
+        context = layer_context_for(game, controller)
+        for built in builder(source, store.tick(), targets, context):
+            if built.holds(game):
+                store.add(built)
 
     return effect
 

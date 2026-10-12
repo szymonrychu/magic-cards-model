@@ -1249,3 +1249,168 @@ def test_vraska_puts_one_counter_per_creature_card_on_each_creature_I_control():
 def test_vraska_does_nothing_with_no_creature_cards():
     scenario = _vraska_ultimate(graveyard=[BOLT, SOL_RING])
     assert scenario.creature(BEARS, "alice").counter_count("+1/+1") == 0
+
+
+# ==========================================================================
+# Second printings: the same reader on cards that are not the reported ones
+# ==========================================================================
+
+
+def test_izoni_makes_an_insect_per_creature_card_in_my_graveyard():
+    scenario = _board(
+        hand=["Izoni, Thousand-Eyed"],
+        graveyard=[BEARS, BEARS, SOL_RING, BOLT],
+        bob_graveyard=[BEARS] * 3,
+    )
+    _enter(scenario, "Izoni, Thousand-Eyed")
+    assert len(_tokens(scenario, "Insect")) == 2
+
+
+def test_kraul_foragers_gains_one_life_per_creature_card():
+    scenario = _board(hand=["Kraul Foragers"], graveyard=[BEARS, BEARS, BEARS, MOUNTAIN])
+    _enter(scenario, "Kraul Foragers")
+    assert _life(scenario) == 23
+
+
+def test_revenge_of_the_rats_makes_tapped_rats_per_creature_card():
+    scenario = _board(
+        hand=["Revenge of the Rats"], battlefield=["Swamp"] * 4, graveyard=[BEARS, BEARS, BOLT]
+    )
+    scenario.cast_and_resolve("Revenge of the Rats", auto=True)
+    rats = _tokens(scenario, "Rat")
+    assert len(rats) == 2
+    assert all(rat.tapped for rat in rats)
+
+
+def test_grim_flowering_draws_a_card_per_creature_card():
+    scenario = _board(
+        hand=["Grim Flowering"], battlefield=["Forest"] * 6, graveyard=[BEARS, BEARS, BEARS, BOLT]
+    )
+    scenario.cast_and_resolve("Grim Flowering", auto=True)
+    assert len(scenario.player("alice").hand) == 3
+
+
+# -- cards named like the spell, in your graveyard ---------------------------
+
+
+def _growth_cycle(copies, bob_copies=0):
+    scenario = _board(
+        hand=["Growth Cycle"],
+        battlefield=["Forest", "Forest", BEARS],
+        graveyard=["Growth Cycle"] * copies + [BOLT],
+        bob_graveyard=["Growth Cycle"] * bob_copies,
+    )
+    bears = scenario.creature(BEARS, "alice")
+    scenario.cast_and_resolve("Growth Cycle", auto=True, targets=[bears])
+    return _stats(scenario, bears)
+
+
+def test_growth_cycle_alone_is_a_plain_plus_three():
+    assert _growth_cycle(0) == (5, 5)
+
+
+def test_growth_cycle_gets_two_more_per_copy_already_in_the_graveyard():
+    assert _growth_cycle(2) == (9, 9)
+
+
+def test_growth_cycle_does_not_count_the_opponents_copies_or_itself():
+    assert _growth_cycle(1, bob_copies=4) == (7, 7)
+
+
+# -- cards counted by owner across two zones ---------------------------------
+
+
+def test_huskburster_swarm_counts_creature_cards_I_own_in_exile_and_the_graveyard():
+    scenario = _board(
+        hand=["Huskburster Swarm"],
+        battlefield=["Swamp"] * 3,
+        graveyard=[BEARS, BEARS, BEARS, BOLT],
+        exile=[BEARS, BEARS],
+        bob_graveyard=[BEARS] * 5,
+    )
+    # {7}{B} less five creature cards = {2}{B}
+    scenario.cast_and_resolve("Huskburster Swarm", auto=True)
+    assert scenario.find("Huskburster Swarm", Zone.BATTLEFIELD, "alice") is not None
+
+
+def test_huskburster_swarm_is_not_cheaper_for_cards_in_exile_I_do_not_own():
+    scenario = _board(
+        hand=["Huskburster Swarm"],
+        battlefield=["Swamp"] * 3,
+        graveyard=[BEARS, BEARS],
+    )
+    with pytest.raises(ValueError):
+        scenario.cast_and_resolve("Huskburster Swarm", auto=True)
+
+
+# -- the same cost reduction on an activated ability -------------------------
+
+
+def test_nemesis_of_mortals_monstrosity_is_cheaper_per_creature_card():
+    scenario = _board(
+        battlefield=["Nemesis of Mortals", "Forest", "Forest", "Forest"],
+        graveyard=[BEARS] * 6 + [BOLT],
+    )
+    snake = scenario.creature("Nemesis of Mortals", "alice")
+    scenario.activate(snake, *scenario.untapped_sources("Forest", "Forest", "Forest"))
+    scenario.resolve_top()
+    assert snake.counter_count("+1/+1") == 5
+
+
+def test_nemesis_of_mortals_monstrosity_still_costs_full_with_no_creature_cards():
+    scenario = _board(battlefield=["Nemesis of Mortals", "Forest", "Forest", "Forest"])
+    snake = scenario.creature("Nemesis of Mortals", "alice")
+    with pytest.raises(ValueError):
+        scenario.activate(snake, *scenario.untapped_sources("Forest", "Forest", "Forest"))
+
+
+# -- "that player's graveyard" -----------------------------------------------
+
+
+def test_the_mouth_of_sauron_counts_the_milled_players_graveyard_after_the_mill():
+    scenario = _board(
+        hand=["The Mouth of Sauron"],
+        graveyard=[BOLT] * 5,  # mine, which are not counted
+        bob_graveyard=["Divination"],
+        bob_library=[BOLT, "Island", "Opt"],
+    )
+    _enter(scenario, "The Mouth of Sauron", targets=[scenario.player("bob")])
+    (army,) = _tokens(scenario, "Orc Army")
+    # Divination was there; the mill added Lightning Bolt and Opt; Island is a land.
+    assert army.counter_count("+1/+1") == 3
+
+
+def test_the_mouth_of_sauron_amasses_nothing_when_the_graveyard_has_none():
+    scenario = _board(hand=["The Mouth of Sauron"], bob_library=["Island"] * 4)
+    _enter(scenario, "The Mouth of Sauron", targets=[scenario.player("bob")])
+    assert all(p.counter_count("+1/+1") == 0 for p in scenario.game.battlefield if "Army" in p.name)
+
+
+# -- characteristic-defining counts ------------------------------------------
+
+
+def test_consuming_blob_is_as_big_as_the_card_types_in_my_graveyard():
+    scenario = _board(
+        battlefield=["Consuming Blob"], graveyard=[BEARS, BEARS, BOLT, SOL_RING, MOUNTAIN]
+    )
+    assert _stats(scenario, scenario.creature("Consuming Blob", "alice")) == (4, 5)
+
+
+def test_consuming_blob_ignores_the_opponents_graveyard():
+    scenario = _board(battlefield=["Consuming Blob"], bob_graveyard=[BEARS, BOLT, SOL_RING])
+    assert _stats(scenario, scenario.creature("Consuming Blob", "alice")) == (0, 1)
+
+
+def test_souls_of_the_lost_counts_permanent_cards_only():
+    scenario = _board(battlefield=["Souls of the Lost"], graveyard=PERMANENT_YARD)
+    assert _stats(scenario, scenario.creature("Souls of the Lost", "alice")) == (3, 4)
+
+
+def test_crackling_drake_counts_instants_and_sorceries_across_exile_and_graveyard():
+    scenario = _board(
+        battlefield=["Crackling Drake"],
+        graveyard=[BOLT, "Divination", BEARS],
+        exile=[BOLT],
+        bob_graveyard=[BOLT] * 4,
+    )
+    assert _stats(scenario, scenario.creature("Crackling Drake", "alice")) == (3, 4)
