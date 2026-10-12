@@ -10,6 +10,7 @@ object moves). Every number below is the live count when the ability resolves.
 
 from magic_cards_model.machines import Step
 from magic_cards_model.models import Zone
+from magic_cards_model.models.card_state import Counter
 from tests.scenarios.harness import Scenario
 
 
@@ -191,3 +192,69 @@ def test_surrakar_spellblade_draws_per_charge_counter_on_combat_damage():
     _settle(scenario)
     assert len(scenario.player("alice").hand) == 2
     assert len(scenario.player("alice").library) == 10
+
+
+# -- statics: "get +1/+1 for each <kind> counter on this <permanent>"
+
+
+def _stats(scenario, card):
+    chars = scenario.game.characteristics_of(card)
+    return chars.power, chars.toughness
+
+
+def test_call_for_unity_pumps_every_creature_you_control_per_unity_counter():
+    scenario = _board(["Call for Unity", "Grizzly Bears", "Hill Giant"], ["Grizzly Bears"])
+    call = scenario.find("Call for Unity", Zone.BATTLEFIELD, "alice")
+    mine = scenario.creature("Grizzly Bears", "alice")
+    assert _stats(scenario, mine) == (2, 2)
+    call.add_counters("unity", 2)
+    assert _stats(scenario, mine) == (4, 4)
+    assert _stats(scenario, scenario.creature("Hill Giant", "alice")) == (5, 5)
+    assert _stats(scenario, scenario.creature("Grizzly Bears", "bob")) == (2, 2)
+
+
+def test_call_for_unity_ignores_other_counter_kinds_and_moves_with_the_count():
+    scenario = _board(["Call for Unity", "Grizzly Bears"])
+    call = scenario.find("Call for Unity", Zone.BATTLEFIELD, "alice")
+    mine = scenario.creature("Grizzly Bears", "alice")
+    call.add_counters("charge", 4)
+    assert _stats(scenario, mine) == (2, 2)
+    call.add_counters("unity", 1)
+    assert _stats(scenario, mine) == (3, 3)
+    call.add_counters("unity", 2)
+    assert _stats(scenario, mine) == (5, 5)
+
+
+def test_chitterspitter_pumps_only_squirrels_you_control():
+    scenario = _board(["Chitterspitter", "Forest", "Grizzly Bears"])
+    spitter = scenario.find("Chitterspitter", Zone.BATTLEFIELD, "alice")
+    scenario.activate(spitter, auto=True, index=1)
+    _settle(scenario)
+    squirrel = scenario.creature("Squirrel Token", "alice")
+    assert _stats(scenario, squirrel) == (1, 1)
+    spitter.add_counters("acorn", 3)
+    assert _stats(scenario, squirrel) == (4, 4)
+    assert _stats(scenario, scenario.creature("Grizzly Bears", "alice")) == (2, 2)
+    spitter.add_counters("charge", 5)
+    assert _stats(scenario, squirrel) == (4, 4)
+
+
+def test_high_sentinels_counts_other_creatures_with_a_plus_one_counter():
+    scenario = _board(["High Sentinels of Arashin", "Grizzly Bears", "Hill Giant"])
+    sentinels = scenario.creature("High Sentinels of Arashin", "alice")
+    base = _stats(scenario, sentinels)
+    scenario.creature("Grizzly Bears", "alice").add_counters(Counter.PLUS_ONE, 3)
+    assert _stats(scenario, sentinels) == (base[0] + 1, base[1] + 1)
+    scenario.creature("Hill Giant", "alice").add_counters(Counter.PLUS_ONE, 1)
+    assert _stats(scenario, sentinels) == (base[0] + 2, base[1] + 2)
+
+
+def test_high_sentinels_does_not_count_itself_or_other_counter_kinds_or_opponents():
+    scenario = _board(["High Sentinels of Arashin", "Grizzly Bears"], ["Hill Giant"])
+    sentinels = scenario.creature("High Sentinels of Arashin", "alice")
+    base = _stats(scenario, sentinels)
+    sentinels.add_counters(Counter.PLUS_ONE, 2)
+    scenario.creature("Grizzly Bears", "alice").add_counters("charge", 2)
+    scenario.creature("Hill Giant", "bob").add_counters(Counter.PLUS_ONE, 2)
+    # Its own two counters pump it directly (+2/+2); none of the rest counts.
+    assert _stats(scenario, sentinels) == (base[0] + 2, base[1] + 2)

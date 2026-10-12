@@ -3767,6 +3767,14 @@ _PUMP_SUBJECT_CHOSEN_TYPE_RE = re.compile(
 _PUMP_SUBJECT_OTHER_SUBTYPE_RE = re.compile(
     r"^other (?P<subtype>[a-z]+) creatures you control$", re.IGNORECASE
 )
+_PUMP_SUBJECT_ALL_CREATURES_RE = re.compile(r"^creatures you control$", re.IGNORECASE)
+_PUMP_SUBJECT_SUBTYPE_RE = re.compile(r"^(?P<subtype>[a-z]+) you control$", re.IGNORECASE)
+#: "other creature you control with a +1/+1 counter on it" (High Sentinels of Arashin).
+_PUMP_PER_OTHER_WITH_COUNTER_RE = re.compile(
+    r"^other (?P<card_type>[a-z]+) you control with an? (?P<counter>[+\-0-9/]+|[a-z]+) "
+    r"counter on (?:it|them)$",
+    re.IGNORECASE,
+)
 _PUMP_SUBJECT_TYPE_AND_SUBTYPE_RE = re.compile(
     r"^(?P<card_type>[a-z]+) creatures and (?P<subtype>[a-z]+) you control$", re.IGNORECASE
 )
@@ -3806,6 +3814,21 @@ def _pump_per_count_builder(sentence: str) -> EffectBuilder | None:
                 source.controller, [other_subtype], other_than=source.id
             )
 
+    elif _PUMP_SUBJECT_ALL_CREATURES_RE.fullmatch(subject):
+        # "Creatures you control get +1/+1 for each unity counter on this
+        # enchantment" (Call for Unity): every creature its controller has.
+        def selector_for(source: CardState) -> Selector | None:
+            return creatures_controlled_by(source.controller)
+
+    elif (plural := _PUMP_SUBJECT_SUBTYPE_RE.fullmatch(subject)) and (
+        plural_subtype := _singular_subtype_word(plural.group("subtype"))
+    ):
+        # "Squirrels you control get +1/+1 for each acorn counter on this
+        # artifact" (Chitterspitter): every creature of that type, the source
+        # included when it is one.
+        def selector_for(source: CardState) -> Selector | None:
+            return creatures_controlled_by_with_subtype(source.controller, [plural_subtype])
+
     elif combined := _PUMP_SUBJECT_TYPE_AND_SUBTYPE_RE.fullmatch(subject):
         combined_type = _card_type_word(combined.group("card_type"))
         combined_subtype = _singular_subtype_word(combined.group("subtype"))
@@ -3829,6 +3852,14 @@ def _pump_per_count_builder(sentence: str) -> EffectBuilder | None:
         kind = counter_match.group("counter").lower()
         count_factory = lambda source, context: CountCountersOnObject(  # noqa: E731
             object_id=source.id, counter=kind
+        )
+    elif other_with := _PUMP_PER_OTHER_WITH_COUNTER_RE.fullmatch(each):
+        other_type = _card_type_word(other_with.group("card_type"))
+        if other_type is None:
+            return None
+        other_kind = other_with.group("counter").lower()
+        count_factory = lambda source, context: CountOtherPermanentsWithCounter(  # noqa: E731
+            source_id=source.id, card_type=other_type, counter=other_kind
         )
     elif double is not None:
         qualifier = double.group("qualifier")
@@ -13814,6 +13845,7 @@ from .model import (  # noqa: E402
     CountCreaturesWithSubtypesControlledBy,
     CountDevotion,
     CountOtherCreaturesLikeThatOne,
+    CountOtherPermanentsWithCounter,
     CountParty,
     CountPermanentsControlledBy,
     CountPermanentsControlledByItsController,
