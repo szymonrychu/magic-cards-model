@@ -401,3 +401,121 @@ def parse_exile_the_triggering_card(text: str):
             rest(game, ability)
 
     return effect
+
+
+# -- Valki, God of Lies (CR 607.2a, CR 610.3, CR 707.2) ------------------------
+
+_REVEAL_HANDS_EXILE_CREATURE_UNTIL_LEAVES_RE = re.compile(
+    r"^each opponent reveals their hand\.\s*for each opponent, exile an? (?P<quality>\w+) card "
+    r"they revealed this way until (?:valki|this \w+) leaves the battlefield\.?$",
+    re.IGNORECASE,
+)
+_COPY_AN_EXILED_CARD_RE = re.compile(
+    r"^choose an? (?P<quality>\w+) card exiled with (?:valki|this \w+) with mana value x\.\s*"
+    r"(?:valki|this \w+) becomes a copy of that card\.?$",
+    re.IGNORECASE,
+)
+
+
+def parse_reveal_hands_exile_creature_until_leaves(text: str):
+    """ "Each opponent reveals their hand. For each opponent, exile a creature
+    card they revealed this way until `<this>` leaves the battlefield." - every
+    opponent's hand is shown to all (CR 701.20a), the controller picks a card of
+    the quality from each (CR 608.2d), and it is exiled linked to the source
+    (CR 607.2a) and returned to its owner's hand when the source leaves (CR
+    610.3). A source that already left exiles nothing (CR 610.3b)."""
+    match = _REVEAL_HANDS_EXILE_CREATURE_UNTIL_LEAVES_RE.fullmatch(" ".join(text.split()))
+    if match is None:
+        return None
+    permits = _quality(match.group("quality"))
+    if permits is None:
+        return None
+
+    def effect(game: Game, ability) -> None:
+        from .effects._common import _players_in_apnap_order
+        from .effects.returns import _watch_for_departure_and_return_exiled_card
+        from .exile_top_marked import mark_exiled
+
+        controller = game.controller_of(ability)
+        source = ability.source(game)
+        for opponent in _players_in_apnap_order(game):
+            if opponent.username == controller.username:
+                continue
+            for card in list(opponent.hand):
+                game.reveal(card, source=ability.source_name)
+            if source is None or source.zone is not Zone.BATTLEFIELD:
+                continue
+            moved = _choose_and_exile(
+                game,
+                ability,
+                controller,
+                [card for card in opponent.hand if permits(card)],
+                f"choose a card revealed from {opponent.username}'s hand to exile",
+            )
+            if moved is None:
+                continue
+            mark_exiled(game, ability, moved)
+            _watch_for_departure_and_return_exiled_card(
+                game, source, moved, controller.username, return_zone=Zone.HAND
+            )
+
+    return effect
+
+
+def parse_become_a_copy_of_an_exiled_card(text: str):
+    """ "Choose a creature card exiled with `<this>` with mana value X. `<This>`
+    becomes a copy of that card." - the controller chooses among the pile's
+    cards of that quality and mana value X (CR 608.2d; the announced X, CR
+    107.3k), and the source becomes a copy of the card's copiable values (CR
+    707.2: a card in exile has its printed ones) with no end (CR 707.4)."""
+    match = _COPY_AN_EXILED_CARD_RE.fullmatch(" ".join(text.split()))
+    if match is None:
+        return None
+    permits = _quality(match.group("quality"))
+    if permits is None:
+        return None
+
+    def effect(game: Game, ability) -> None:
+        from .copy_effects import _become_a_copy, _copiable_values_of
+        from .layers import Duration
+
+        subject = ability.source(game)
+        if subject is None or subject.zone is not Zone.BATTLEFIELD:
+            return
+        candidates = [
+            card
+            for card in _pile(game, ability)
+            if permits(card) and card.mana_value == ability.x_value
+        ]
+        chosen = _choose_one_of(game, ability, candidates, "choose a card exiled with this")
+        if chosen is None:
+            return
+        _become_a_copy(
+            game,
+            subject=subject,
+            copied=_copiable_values_of(game, chosen),
+            exceptions=None,
+            source_name=ability.source_name,
+            own_name=subject.name,
+            this_ability=None,
+            duration=Duration.INDEFINITE,
+        )
+
+    return effect
+
+
+def _choose_one_of(game: Game, ability, candidates: list[CardState], prompt: str):
+    """The controller's pick among `candidates` (CR 608.2d); None when empty."""
+    from .decisions import source_id_of
+    from .effects.modal import _choose_one_card
+
+    if not candidates:
+        return None
+    return _choose_one_card(
+        game,
+        game.controller_of(ability),
+        candidates,
+        prompt=prompt,
+        source=ability.source_name,
+        source_id=source_id_of(ability),
+    )

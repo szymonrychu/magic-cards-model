@@ -1184,3 +1184,116 @@ def test_undead_alchemist_ignores_creature_cards_milled_from_its_controllers_lib
     _resolve_everything(scenario)
     assert [c for c in scenario.game.battlefield if c.token] == []
     assert _graveyard_names(scenario, "alice") == ["Grizzly Bears"]
+
+
+# -- Valki, God of Lies // Tibalt, Cosmic Impostor ----------------------------
+
+VALKI = "Valki, God of Lies // Tibalt, Cosmic Impostor"
+
+
+def _valki(bob_hand, *, lands=("Swamp",) * 6):
+    scenario = (
+        Scenario()
+        .player("alice", hand=[VALKI], battlefield=list(lands), library=FILLER)
+        .player("bob", hand=list(bob_hand), library=FILLER)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    return scenario
+
+
+def _enter_valki(scenario, *, exile=None):
+    if exile is not None:
+        scenario.will_choose_cards(exile, username="alice")
+    valki = scenario.put_onto_battlefield(VALKI, "alice")
+    _resolve_everything(scenario)
+    return valki
+
+
+def test_valki_reveals_the_opponents_hand_and_exiles_a_chosen_creature_card_from_it():
+    scenario = _valki(["Grizzly Bears", "Lightning Bolt", "Hill Giant"])
+    bears = next(c for c in scenario.player("bob").hand if c.name == "Grizzly Bears")
+    hand_ids = {c.id for c in scenario.player("bob").hand}
+    valki = _enter_valki(scenario, exile=bears)
+    assert _exiled_with(scenario, valki) == [bears]
+    assert bears.face_up
+    assert sorted(c.name for c in scenario.player("bob").hand) == ["Hill Giant", "Lightning Bolt"]
+    assert hand_ids - {bears.id} <= _known(scenario, "alice"), "the hand was revealed"
+
+
+def test_valki_exiles_nothing_when_the_hand_has_no_creature_card():
+    scenario = _valki(["Lightning Bolt", "Mountain"])
+    valki = _enter_valki(scenario)
+    assert _exiled_with(scenario, valki) == []
+    assert len(scenario.player("bob").hand) == 2
+
+
+def test_the_exiled_card_returns_to_its_owners_hand_when_valki_leaves():
+    scenario = _valki(["Grizzly Bears", "Hill Giant"])
+    bears = next(c for c in scenario.player("bob").hand if c.name == "Grizzly Bears")
+    valki = _enter_valki(scenario, exile=bears)
+    scenario.game.destroy(valki)
+    _resolve_everything(scenario)
+    assert bears.zone is Zone.HAND and bears.owner == "bob"
+
+
+def _activate_valki(scenario, valki, x, *, choose):
+    scenario.will_choose_cards(choose, username="alice")
+    scenario.activate(valki, index=0, x_value=x, auto=True)
+    scenario.pass_until_resolved()
+
+
+def test_valki_becomes_a_copy_of_a_chosen_exiled_creature_card_with_mana_value_x():
+    scenario = _valki(["Grizzly Bears", "Hill Giant"])
+    bears = next(c for c in scenario.player("bob").hand if c.name == "Grizzly Bears")
+    valki = _enter_valki(scenario, exile=bears)
+    _activate_valki(scenario, valki, 2, choose=bears)
+    board = scenario.game.computed_board().of(valki)
+    assert (board.name, board.power, board.toughness) == ("Grizzly Bears", 2, 2)
+
+
+def test_valki_cannot_copy_a_card_whose_mana_value_is_not_x():
+    scenario = _valki(["Grizzly Bears"])
+    bears = scenario.player("bob").hand[0]
+    valki = _enter_valki(scenario, exile=bears)
+    scenario.activate(valki, index=0, x_value=3, auto=True)
+    scenario.pass_until_resolved()
+    assert scenario.game.computed_board().of(valki).name.startswith("Valki")
+
+
+def test_valki_copy_ability_with_no_matching_card_does_nothing():
+    scenario = _valki([])
+    valki = _enter_valki(scenario)
+    scenario.activate(valki, index=0, x_value=2, auto=True)
+    scenario.pass_until_resolved()
+    assert scenario.game.computed_board().of(valki).name.startswith("Valki")
+
+
+def test_tibalts_emblem_lets_its_controller_play_and_cast_what_plus_two_exiled_after_it_left():
+    scenario = (
+        Scenario()
+        .player("alice", hand=[VALKI], battlefield=["Swamp"] * 3, library=["Forest"] * 4)
+        .player("bob", library=["Grizzly Bears", "Forest"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    card = scenario.find(VALKI, Zone.HAND, "alice")
+    tibalt = scenario.game.put_onto_battlefield(card, "alice", transformed=True)
+    scenario.activate(tibalt, index=0)  # +2: exile the top card of each player's library
+    scenario.pass_until_resolved()
+    forest = next(c for c in _exiled_with(scenario, tibalt) if c.owner == "alice")
+    bears = next(c for c in _exiled_with(scenario, tibalt) if c.owner == "bob")
+    scenario.game.destroy(tibalt)
+    _resolve_everything(scenario)
+    assert scenario.game.play_land(forest, "alice").zone is Zone.BATTLEFIELD
+    _cast_from_permission(scenario, bears)  # {1}{G} paid with Swamps: any color
+    assert bears.zone is Zone.BATTLEFIELD and bears.controller == "alice"
+
+
+def test_tibalts_emblem_does_not_open_cards_exiled_with_something_else():
+    scenario = _valki([])
+    card = scenario.find(VALKI, Zone.HAND, "alice")
+    scenario.game.put_onto_battlefield(card, "alice", transformed=True)
+    (stray,) = scenario.game.exile_cards([scenario.player("bob").library[0]])
+    with pytest.raises(ValueError):
+        scenario.game.play_land(stray, "alice")

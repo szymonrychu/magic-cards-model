@@ -4513,6 +4513,8 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
         exiled_with_peek.parse_opponent_exiles_permanent_then_graveyard_card,
         exiled_with_peek.parse_exile_discarded_card_with_counter,
         exiled_with_peek.parse_exile_the_triggering_card,
+        exiled_with_peek.parse_reveal_hands_exile_creature_until_leaves,
+        exiled_with_peek.parse_become_a_copy_of_an_exiled_card,
         impulse_choice.parse_exile_top_choose_one_play,
         impulse_choice.parse_reveal_top_take_one_rest_bottom,
         impulse_choice.parse_search_exile_then_cast_free,
