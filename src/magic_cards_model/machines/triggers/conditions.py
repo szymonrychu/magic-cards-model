@@ -3842,9 +3842,7 @@ def _step_matches(
         # The Rack's "At the beginning of the chosen player's upkeep": the
         # player its as-enters choice named (`CardState.chosen_player`).
         return (
-            source is not None
-            and event.player is not None
-            and event.player == source.chosen_player
+            source is not None and event.player is not None and event.player == source.chosen_player
         )
     if "your" in lowered:
         return event.player == controller

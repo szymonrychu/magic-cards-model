@@ -480,7 +480,9 @@ def has_delve_now(spell: CardState) -> bool:
     return has_delve(spell.card) or _has_granted_cost_keyword_now(spell, "delve")
 
 
-def _has_granted_cost_keyword_now(spell: CardState, keyword: str, *, anywhere: bool = False) -> bool:
+def _has_granted_cost_keyword_now(
+    spell: CardState, keyword: str, *, anywhere: bool = False
+) -> bool:
     """Whether a static \"`<quality>` spells you cast have `<keyword>`\" line of a
     permanent `spell`'s controller controls applies to `spell` right now."""
     if spell.zone is not Zone.STACK and not anywhere:

@@ -963,7 +963,9 @@ def _terror_board(alice_life=20):
             hand=["Lightning Bolt"],
             battlefield=["Mountain", "Grizzly Bears"],
         )
-        .player("bob", battlefield=["Terror of the Peaks", "Grizzly Bears"], hand=["Lightning Bolt"])
+        .player(
+            "bob", battlefield=["Terror of the Peaks", "Grizzly Bears"], hand=["Lightning Bolt"]
+        )
         .build()
     )
     scenario.start_at(Step.PRECOMBAT_MAIN)
@@ -1004,7 +1006,9 @@ def test_terror_of_the_peaks_does_not_tax_its_own_controllers_spells():
     taxed = scenario.find("Lightning Bolt", Zone.HAND, "alice")
     aimed = [TargetRef.coerce(terror)]
     assert scenario.game.static_life_costs_for(bolt, "bob", aimed) == []
-    assert [life for life, _source in scenario.game.static_life_costs_for(taxed, "alice", aimed)] == [3]
+    assert [
+        life for life, _source in scenario.game.static_life_costs_for(taxed, "alice", aimed)
+    ] == [3]
 
 
 # -- "As this enchantment enters, note your life total. At the beginning of your
