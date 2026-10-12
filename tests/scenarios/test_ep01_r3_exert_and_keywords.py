@@ -648,3 +648,294 @@ def test_connive_counter_for_a_nonland_discard_via_the_granted_trigger():
 def test_connive_keyword_on_security_bypass_and_raffines_informant_reads_handled():
     for name in ("Security Bypass", "Raffine's Informant"):
         _support_is_handled(name)
+
+
+# -- champion (CR 702.72) ----------------------------------------------------
+
+
+def _champion_board(on_battlefield, hand):
+    return _main_board(on_battlefield, hand=hand)
+
+
+def _cast_champion(scenario, name, lands):
+    scenario.cast_and_resolve(name, *scenario.untapped_sources(*lands))
+    _resolve_everything(scenario)
+
+
+def test_champion_exiles_another_matching_creature_instead_of_being_sacrificed():
+    """CR 702.72a: Changeling Hero is every creature type, so it is a Kithkin."""
+    scenario = _champion_board(
+        ["Plains", "Plains", "Plains", "Plains", "Changeling Hero"], ["Thoughtweft Trio"]
+    )
+    hero = scenario.creature("Changeling Hero", "alice")
+    scenario.will_choose_cards(hero, source="Thoughtweft Trio")
+    _cast_champion(scenario, "Thoughtweft Trio", ["Plains"] * 4)
+    trio = scenario.creature("Thoughtweft Trio", "alice")
+    assert trio.zone is Zone.BATTLEFIELD
+    assert hero.zone is Zone.EXILE
+
+
+def test_champion_sacrifices_itself_with_nothing_to_exile():
+    scenario = _champion_board(["Plains"] * 4 + ["Grizzly Bears"], ["Thoughtweft Trio"])
+    _cast_champion(scenario, "Thoughtweft Trio", ["Plains"] * 4)
+    assert scenario.find("Thoughtweft Trio", Zone.GRAVEYARD, "alice")
+    assert scenario.creature("Grizzly Bears", "alice").zone is Zone.BATTLEFIELD
+
+
+def test_champion_may_decline_the_exile_and_sacrifice_instead():
+    scenario = _champion_board(["Plains"] * 4 + ["Changeling Hero"], ["Thoughtweft Trio"])
+    hero = scenario.creature("Changeling Hero", "alice")
+    scenario.will_choose_cards(source="Thoughtweft Trio")
+    _cast_champion(scenario, "Thoughtweft Trio", ["Plains"] * 4)
+    assert scenario.find("Thoughtweft Trio", Zone.GRAVEYARD, "alice")
+    assert hero.zone is Zone.BATTLEFIELD
+
+
+def test_champion_returns_the_exiled_card_when_it_leaves_the_battlefield():
+    """CR 702.72a's second ability, linked to the first by CR 702.72b."""
+    scenario = _champion_board(["Mountain"] * 4 + ["Swab Goblin"], ["Lightning Crafter"])
+    goblin = scenario.creature("Swab Goblin", "alice")
+    scenario.will_choose_cards(goblin, source="Lightning Crafter")
+    _cast_champion(scenario, "Lightning Crafter", ["Mountain"] * 4)
+    crafter = scenario.creature("Lightning Crafter", "alice")
+    assert goblin.zone is Zone.EXILE
+    scenario.game.destroy(crafter)
+    _resolve_everything(scenario)
+    assert goblin.zone is Zone.BATTLEFIELD
+    assert crafter.zone is Zone.GRAVEYARD
+
+
+def test_a_returned_champion_target_is_a_new_object_that_can_champion_again():
+    """Changeling Hero returns and, entering, must champion a creature itself (CR 702.72a)."""
+    scenario = _champion_board(["Plains"] * 4 + ["Changeling Hero"], ["Thoughtweft Trio"])
+    hero = scenario.creature("Changeling Hero", "alice")
+    scenario.will_choose_cards(hero, source="Thoughtweft Trio")
+    _cast_champion(scenario, "Thoughtweft Trio", ["Plains"] * 4)
+    trio = scenario.creature("Thoughtweft Trio", "alice")
+    scenario.game.destroy(trio)
+    _resolve_everything(scenario)
+    # Hero came back, had nothing to exile for its own champion, and was sacrificed.
+    assert hero.zone is Zone.GRAVEYARD
+
+
+def test_champion_sacrificed_with_nothing_exiled_returns_nothing():
+    scenario = _champion_board(["Plains"] * 4 + ["Grizzly Bears"], ["Thoughtweft Trio"])
+    _cast_champion(scenario, "Thoughtweft Trio", ["Plains"] * 4)
+    assert scenario.creature("Grizzly Bears", "alice").zone is Zone.BATTLEFIELD
+    assert scenario.game.exile == []
+
+
+def test_champion_cannot_exile_itself_for_its_own_cost():
+    scenario = _champion_board(["Plains"] * 4, ["Thoughtweft Trio"])
+    _cast_champion(scenario, "Thoughtweft Trio", ["Plains"] * 4)
+    assert scenario.find("Thoughtweft Trio", Zone.GRAVEYARD, "alice")
+
+
+def test_champion_two_subtype_alternatives_goblin_or_shaman():
+    """Lightning Crafter 'Champion a Goblin or Shaman': a Goblin qualifies."""
+    scenario = _champion_board(["Mountain"] * 4 + ["Swab Goblin"], ["Lightning Crafter"])
+    goblin = scenario.creature("Swab Goblin", "alice")
+    scenario.will_choose_cards(goblin, source="Lightning Crafter")
+    _cast_champion(scenario, "Lightning Crafter", ["Mountain"] * 4)
+    assert scenario.creature("Lightning Crafter", "alice").zone is Zone.BATTLEFIELD
+    assert goblin.zone is Zone.EXILE
+
+
+def test_champion_alternatives_reject_a_creature_of_neither_type():
+    scenario = _champion_board(["Mountain"] * 4 + ["Grizzly Bears"], ["Lightning Crafter"])
+    _cast_champion(scenario, "Lightning Crafter", ["Mountain"] * 4)
+    assert scenario.find("Lightning Crafter", Zone.GRAVEYARD, "alice")
+
+
+def test_champion_creature_object_takes_any_creature_changeling_hero():
+    scenario = _champion_board(["Plains"] * 5 + ["Grizzly Bears"], ["Changeling Hero"])
+    bears = scenario.creature("Grizzly Bears", "alice")
+    scenario.will_choose_cards(bears, source="Changeling Hero")
+    _cast_champion(scenario, "Changeling Hero", ["Plains"] * 5)
+    assert scenario.creature("Changeling Hero", "alice").zone is Zone.BATTLEFIELD
+    assert bears.zone is Zone.EXILE
+
+
+def test_champion_elemental_nova_chaser_with_a_changeling():
+    scenario = _champion_board(["Mountain"] * 4 + ["Changeling Hero"], ["Nova Chaser"])
+    hero = scenario.creature("Changeling Hero", "alice")
+    scenario.will_choose_cards(hero, source="Nova Chaser")
+    _cast_champion(scenario, "Nova Chaser", ["Mountain"] * 4)
+    assert hero.zone is Zone.EXILE
+
+
+def test_champion_cards_read_handled():
+    for name in ("Thoughtweft Trio", "Nova Chaser", "Changeling Hero", "Lightning Crafter"):
+        _support_is_handled(name)
+
+
+# -- fateseal (CR 701.29) ----------------------------------------------------
+
+
+def _sliver_board(hand_alice, hand_bob=()):
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("alice", hand=list(hand_alice), library=["Plains", "Island", "Swamp", "Forest"])
+        .player("bob", hand=list(hand_bob), library=["Mountain", "Forest", "Swamp", "Island"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    return scenario
+
+
+def test_fateseal_puts_the_top_card_of_an_opponents_library_on_the_bottom():
+    scenario = _sliver_board(["Mesmeric Sliver"])
+    top = scenario.top_of_library(1, "bob")[0]
+    scenario.will_take_the_may(True, source="Mesmeric Sliver")
+    scenario.scry_bottoming(top, username="alice")
+    scenario.put_onto_battlefield("Mesmeric Sliver", "alice")
+    _resolve_everything(scenario)
+    assert scenario.player("bob").library[-1] is top
+    assert scenario.player("bob").library[0] is not top
+
+
+def test_fateseal_may_keep_the_card_on_top():
+    scenario = _sliver_board(["Mesmeric Sliver"])
+    top = scenario.top_of_library(1, "bob")[0]
+    scenario.will_take_the_may(True, source="Mesmeric Sliver")
+    scenario.scry_keeping_everything_on_top(username="alice")
+    scenario.put_onto_battlefield("Mesmeric Sliver", "alice")
+    _resolve_everything(scenario)
+    assert scenario.player("bob").library[0] is top
+
+
+def test_fateseal_does_not_touch_the_controllers_own_library():
+    scenario = _sliver_board(["Mesmeric Sliver"])
+    mine = scenario.top_of_library(1, "alice")[0]
+    scenario.will_take_the_may(True, source="Mesmeric Sliver")
+    scenario.scry_bottoming(scenario.top_of_library(1, "bob")[0], username="alice")
+    scenario.put_onto_battlefield("Mesmeric Sliver", "alice")
+    _resolve_everything(scenario)
+    assert scenario.player("alice").library[0] is mine
+
+
+def test_fateseal_is_optional():
+    scenario = _sliver_board(["Mesmeric Sliver"])
+    top = scenario.top_of_library(1, "bob")[0]
+    scenario.will_take_the_may(False, source="Mesmeric Sliver")
+    scenario.put_onto_battlefield("Mesmeric Sliver", "alice")
+    _resolve_everything(scenario)
+    assert scenario.player("bob").library[0] is top
+    assert all(question.kind.value != "scry" for question in scenario.questions_asked())
+
+
+def test_all_slivers_have_the_fateseal_trigger_including_an_opponents():
+    """'All Slivers' - bob's Sliver Construct fateseals alice's library."""
+    scenario = _sliver_board(["Mesmeric Sliver"], ["Sliver Construct"])
+    scenario.put_onto_battlefield("Mesmeric Sliver", "alice")
+    scenario.will_take_the_may(False, source="Mesmeric Sliver")
+    _resolve_everything(scenario)
+    top = scenario.top_of_library(1, "alice")[0]
+    scenario.will_take_the_may(True, source="Sliver Construct")
+    scenario.scry_bottoming(top, username="bob")
+    scenario.put_onto_battlefield("Sliver Construct", "bob")
+    _resolve_everything(scenario)
+    assert scenario.player("alice").library[-1] is top
+
+
+def test_fateseal_two_on_a_second_printing_spin_into_myth():
+    """Spin into Myth: 'then fateseal 2' - order two cards: one bottom, one top."""
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player(
+            "alice",
+            battlefield=["Island"] * 5,
+            hand=["Spin into Myth"],
+            library=["Plains"] * 4,
+        )
+        .player(
+            "bob", battlefield=["Grizzly Bears"], library=["Mountain", "Forest", "Swamp", "Island"]
+        )
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.creature("Grizzly Bears", "bob")
+    first, second = scenario.top_of_library(2, "bob")
+    scenario.scry_bottoming(first, username="alice")
+    scenario.cast_and_resolve(
+        "Spin into Myth", *scenario.untapped_sources(*["Island"] * 5), targets=[bears]
+    )
+    library = scenario.player("bob").library
+    assert library[-1] is first
+    assert library[1] is second  # bears on top, the unbottomed card beneath it
+    assert library[0].name == "Grizzly Bears"
+
+
+def test_fateseal_cards_read_handled():
+    for name in ("Mesmeric Sliver", "Spin into Myth", "Sliver Construct"):
+        _support_is_handled(name)
+
+
+# -- clash (CR 701.30) -------------------------------------------------------
+
+
+def _clash_board(alice_library, bob_library, hand):
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("alice", hand=list(hand), library=list(alice_library))
+        .player("bob", library=list(bob_library))
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    return scenario
+
+
+def test_winning_a_clash_puts_a_counter_on_nath_s_elite():
+    """CR 701.30d: a greater mana value wins - Elite (alice) reveals Craw Wurm (6)."""
+    scenario = _clash_board(["Craw Wurm"], ["Island"], ["Nath's Elite"])
+    elite = scenario.put_onto_battlefield("Nath's Elite", "alice")
+    _resolve_everything(scenario)
+    assert elite.counter_count(Counter.PLUS_ONE) == 1
+
+
+def test_losing_a_clash_does_nothing():
+    scenario = _clash_board(["Island"], ["Craw Wurm"], ["Nath's Elite"])
+    elite = scenario.put_onto_battlefield("Nath's Elite", "alice")
+    _resolve_everything(scenario)
+    assert elite.counter_count(Counter.PLUS_ONE) == 0
+
+
+def test_a_tied_clash_is_not_a_win():
+    """CR 701.30d: 'higher mana value than all other cards revealed'."""
+    scenario = _clash_board(["Grizzly Bears"], ["Grizzly Bears"], ["Nath's Elite"])
+    elite = scenario.put_onto_battlefield("Nath's Elite", "alice")
+    _resolve_everything(scenario)
+    assert elite.counter_count(Counter.PLUS_ONE) == 0
+
+
+def test_a_clash_reveals_both_top_cards_and_each_may_bottom_theirs():
+    scenario = _clash_board(["Craw Wurm", "Island"], ["Island", "Plains"], ["Nath's Elite"])
+    wurm = scenario.top_of_library(1, "alice")[0]
+    scenario.will_take_the_may(True, source="Nath's Elite", username="alice")
+    scenario.will_take_the_may(False, source="Nath's Elite", username="bob")
+    scenario.put_onto_battlefield("Nath's Elite", "alice")
+    _resolve_everything(scenario)
+    assert scenario.player("alice").library[-1] is wurm
+    assert scenario.player("bob").library[0].name == "Island"
+
+
+def test_an_opponent_with_an_empty_library_reveals_nothing_and_loses_the_clash():
+    scenario = _clash_board(["Grizzly Bears"], [], ["Nath's Elite"])
+    elite = scenario.put_onto_battlefield("Nath's Elite", "alice")
+    _resolve_everything(scenario)
+    assert elite.counter_count(Counter.PLUS_ONE) == 1
+
+
+def test_oaken_brawler_second_printing_of_the_clash_template():
+    scenario = _clash_board(["Craw Wurm"], ["Island"], ["Oaken Brawler"])
+    brawler = scenario.put_onto_battlefield("Oaken Brawler", "alice")
+    _resolve_everything(scenario)
+    assert brawler.counter_count(Counter.PLUS_ONE) == 1
+
+
+def test_clash_cards_read_handled():
+    for name in ("Nath's Elite", "Oaken Brawler"):
+        _support_is_handled(name)

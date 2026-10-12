@@ -58,6 +58,7 @@ from ..layers import (
     only_this_incarnation,
     split_and_validate_keywords,
 )
+from ..legacy_keywords import fateseal
 from ..targeting import (
     permanent_description,
 )
@@ -426,6 +427,7 @@ _BECOME_THE_MONARCH_RE = re.compile(r"^you become the monarch$", re.IGNORECASE)
 #: The explicit-subject spelling "you scry N" (Torch the Tower's bargained
 #: "... and you scry 1") reads as the bare one.
 _SCRY_RE = re.compile(rf"(?:you )?scr(?:y|ies) (?P<n>{AMOUNT}){where_x_pattern()}", re.IGNORECASE)
+_FATESEAL_RE = re.compile(rf"(?:you )?fateseals? (?P<n>{AMOUNT}){where_x_pattern()}", re.IGNORECASE)
 
 
 #: "you may pay any amount of life" (Necrodominance) - CR 119.4's variable
@@ -978,6 +980,14 @@ def parse_clause_effect(clause: str) -> ClauseEffect | None:
             return None
         return lambda game, player, source, source_id: game.scry(
             player, reader(game, player.username), source=source, source_id=source_id
+        )
+
+    if match := _FATESEAL_RE.fullmatch(clause):
+        reader = _amount_reader(match.group("n"), match.group("where_x"))
+        if reader is None:
+            return None
+        return lambda game, player, source, source_id: fateseal(
+            game, player, reader(game, player.username), source=source, source_id=source_id
         )
 
     if _SHUFFLE_RE.fullmatch(clause):

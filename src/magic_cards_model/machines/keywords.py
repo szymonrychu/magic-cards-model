@@ -320,6 +320,12 @@ def executes(keyword: str) -> bool:
         "mentor",
         "graft",
         "backup",
+        "champion",
+        # CR 701.29a / CR 701.30b: the keyword actions `legacy_keywords.fateseal`
+        # and `legacy_keywords.clash`, read by the clause rungs in
+        # `machines/effects` (`_SCRY_RE`'s fateseal twin, `_parse_clash_clause`).
+        "fateseal",
+        "clash",
         # CR 702.145b / CR 702.145e. Static abilities driven by the game's
         # day/night designation (CR 731): `apply_daybound_nightbound` below
         # transforms and sets the designation, `enters_transformed_at_night`

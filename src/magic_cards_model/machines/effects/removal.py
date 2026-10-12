@@ -60,6 +60,7 @@ from ..delayed import (
 from ..layers import (
     Characteristics,
 )
+from ..legacy_keywords import parse_champion_clause, parse_clash_clause
 from ..linked_exile import (
     parse_return_all_linked_to_hand_lose_life_clause,
     parse_return_linked_creature_clause,
@@ -8332,6 +8333,20 @@ def _parse_linked_exile_return_pair_clause(text: str) -> AbilityEffect | None:
         second(game, ability)
 
     return effect
+
+
+@ABILITY_TEXT.rung("s38")
+def _parse_champion_clause(text: str) -> AbilityEffect | None:
+    """Champion's two linked triggers (CR 702.72a) - see
+    `legacy_keywords.parse_champion_clause`."""
+    return parse_champion_clause(text)
+
+
+@ABILITY_TEXT.rung("s38")
+def _parse_clash_clause(text: str) -> AbilityEffect | None:
+    """Clash with an opponent (CR 701.30b) and its win/otherwise branches - see
+    `legacy_keywords.parse_clash_clause`."""
+    return parse_clash_clause(text)
 
 
 @ABILITY_TEXT.rung("s38")
