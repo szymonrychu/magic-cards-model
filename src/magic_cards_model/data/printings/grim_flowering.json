@@ -1,0 +1,127 @@
+{
+  "object": "card",
+  "id": "65222b42-8375-4c7a-b0fc-d6fb81876202",
+  "oracle_id": "65428247-b386-410c-91b7-81dd278c0927",
+  "multiverse_ids": [
+    430333
+  ],
+  "tcgplayer_id": 132056,
+  "cardmarket_id": 298063,
+  "name": "Grim Flowering",
+  "lang": "en",
+  "released_at": "2017-06-09",
+  "uri": "https://api.scryfall.com/cards/65222b42-8375-4c7a-b0fc-d6fb81876202",
+  "scryfall_uri": "https://scryfall.com/card/cma/114/grim-flowering?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T09:51:00Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/6/5/65222b42-8375-4c7a-b0fc-d6fb81876202.jpg?1783936260",
+    "normal": "https://cards.scryfall.io/normal/front/6/5/65222b42-8375-4c7a-b0fc-d6fb81876202.jpg?1783936260",
+    "large": "https://cards.scryfall.io/large/front/6/5/65222b42-8375-4c7a-b0fc-d6fb81876202.jpg?1783936260",
+    "png": "https://cards.scryfall.io/png/front/6/5/65222b42-8375-4c7a-b0fc-d6fb81876202.png?1783936260",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/6/5/65222b42-8375-4c7a-b0fc-d6fb81876202.jpg?1783936260",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/6/5/65222b42-8375-4c7a-b0fc-d6fb81876202.jpg?1783936260",
+    "thumb": "https://cards.scryfall.io/thumb/front/6/5/65222b42-8375-4c7a-b0fc-d6fb81876202.webp?1783936260",
+    "grid": "https://cards.scryfall.io/grid/front/6/5/65222b42-8375-4c7a-b0fc-d6fb81876202.webp?1783936260",
+    "display": "https://cards.scryfall.io/display/front/6/5/65222b42-8375-4c7a-b0fc-d6fb81876202.webp?1783936260",
+    "art": "https://cards.scryfall.io/art/front/6/5/65222b42-8375-4c7a-b0fc-d6fb81876202.webp?1783936260",
+    "crop": "https://cards.scryfall.io/crop/front/6/5/65222b42-8375-4c7a-b0fc-d6fb81876202.webp?1783936260"
+  },
+  "mana_cost": "{5}{G}",
+  "cmc": 6.0,
+  "type_line": "Sorcery",
+  "oracle_text": "Draw a card for each creature card in your graveyard.",
+  "colors": [
+    "G"
+  ],
+  "color_identity": [
+    "G"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": false,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "fd4d8463-0156-4c60-a40e-778762bb90e4",
+  "set": "cma",
+  "set_name": "Commander Anthology",
+  "set_type": "commander",
+  "set_uri": "https://api.scryfall.com/sets/fd4d8463-0156-4c60-a40e-778762bb90e4",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Acma&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/cma?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/65222b42-8375-4c7a-b0fc-d6fb81876202/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A65428247-b386-410c-91b7-81dd278c0927&unique=prints",
+  "collector_number": "114",
+  "digital": false,
+  "rarity": "uncommon",
+  "flavor_text": "\"Nothing in nature goes to waste, not even the rotting corpse of a good-for-nothing, blood-sucking vampire.\"\n\u2014Halana of Ulvenwald",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Adam Paquette",
+  "artist_ids": [
+    "89023dad-e6c0-41e0-83fb-eb2bfbbdc3f2"
+  ],
+  "illustration_id": "0699ac0a-171f-4e1a-ab49-0a0583c24820",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "edhrec_rank": 20646,
+  "prices": {
+    "usd": "0.33",
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": "0.26",
+    "eur_foil": null,
+    "tix": null
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=430333&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DGrim%2BFlowering",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DGrim%2BFlowering",
+    "edhrec": "https://edhrec.com/route/?cc=Grim+Flowering"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F132056%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=298063&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards?affiliate_id=scryfall&data%5Bsearch%5D=Grim+Flowering&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

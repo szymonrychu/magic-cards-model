@@ -52,6 +52,17 @@ from ..ep01_r3_amounts import (
     event_subject_stat,
     event_terms_enabled,
 )
+from ..ep02_r1_graveyard_counts import (
+    graveyard_count_expression,
+    parse_damage_pair_where_x_ability,
+    parse_damage_pair_where_x_spell,
+    parse_graveyard_count_clause,
+    parse_pump_then_additional_per_count_ability,
+    parse_pump_then_additional_per_count_spell,
+    parse_search_value_at_most_count_ability,
+    parse_search_value_at_most_count_spell,
+    parse_tapped_attacking_tokens_for_each_ability,
+)
 from ..layers import (
     BASIC_LAND_TYPES,
     Characteristics,
@@ -208,15 +219,6 @@ _COUNT_AND_OR_YOU_CONTROL_RE = re.compile(
     r"(?P<whose>you control|your opponents control)$"
     rf"|^(?:the )?number of permanents (?P<whose2>you control|your opponents control) "
     rf"that are (?P<list2>{_COUNT_TYPE_LIST})$",
-    re.IGNORECASE,
-)
-#: "the number of cards named `<Name>` in your graveyard / in all graveyards"
-#: (Galvanic Bombardment, Feast of Flesh, Kjeldoran War Cry, Take Inventory).
-#: CR 201.2: objects have the same name when they share a name; the name is
-#: read straight off the phrase, so it is whatever the printing names (usually
-#: itself), never a literal fitted to one card.
-_COUNT_CARDS_NAMED_IN_GRAVEYARDS_RE = re.compile(
-    r"^(?:the )?number of cards named (?P<name>.+?) in (?P<whose>your graveyard|all graveyards)$",
     re.IGNORECASE,
 )
 #: "the number of cards with a cycling ability in your graveyard" (Zenith
@@ -913,6 +915,15 @@ def count_expression(phrase: str) -> Callable[["Game", str], int] | None:
         if fixed is None or counted_rest is None:
             return None
         return lambda game, controller: fixed + counted_rest(game, controller)
+    if (half := parse_half(stripped)) is not None:
+        # "half the number of creature cards in your graveyard, rounded up"
+        # (Ghoulcaller's Harvest): CR 107.1a - the card prints which way the
+        # fraction rounds - over any count this function reads.
+        counted_whole = count_expression(half.of)
+        if counted_whole is None:
+            return None
+        round_up = half.round_up
+        return lambda game, controller: halve(counted_whole(game, controller), round_up=round_up)
     from ..counter_effects import counter_history_count
 
     if (history_count := counter_history_count(stripped)) is not None:
@@ -1106,21 +1117,10 @@ def count_expression(phrase: str) -> Callable[["Game", str], int] | None:
 
         return count_on_board
 
-    if "cards named " in stripped and (
-        named := _COUNT_CARDS_NAMED_IN_GRAVEYARDS_RE.fullmatch(stripped)
-    ):
-        wanted_name = named.group("name").strip()
-        in_all_graveyards = named.group("whose").lower() == "all graveyards"
-
-        def count_named_in_graveyards(game: "Game", controller: str) -> int:
-            # The resolving spell is on the stack, not in a graveyard, so it
-            # never counts itself while its own instructions run (CR 608.2n).
-            owners = game.players if in_all_graveyards else [game.player(controller)]
-            return sum(
-                1 for owner in owners for state in owner.graveyard if state.name == wanted_name
-            )
-
-        return count_named_in_graveyards
+    if "graveyard" in stripped.lower() and (in_graveyard := graveyard_count_expression(stripped)):
+        # EP-02 R1 T5: "[the number of] <description> cards [named N] in your
+        # graveyard / all graveyards", card types among, different mana values.
+        return in_graveyard
 
     if " ability in your graveyard" in stripped.lower() and (
         with_ability := _COUNT_CARDS_WITH_KEYWORD_ABILITY_IN_YOUR_GRAVEYARD_RE.fullmatch(stripped)
@@ -5727,3 +5727,40 @@ from .tokens import (  # noqa: E402
     _parse_generic_token_descriptor,
     _parse_token_clause,
 )
+
+# --------------------------------------------------------------------------
+# EP-02 R1 T5: instructions whose amount is a count of cards in a graveyard.
+# The parsers live in `machines/ep02_r1_graveyard_counts.py` beside the
+# reader; each ladder gets one rung here, gated on the word "graveyard".
+# --------------------------------------------------------------------------
+
+
+@MIXED_CLAUSE.rung("s37", for_spell=FORWARD)
+def _parse_graveyard_count_instruction_clause(
+    clause: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """Life change, mill, counters or mana scaled by a graveyard count."""
+    return parse_graveyard_count_clause(clause, for_spell=for_spell)
+
+
+@SPELL_TEXT.rung("s23", before=("parse_mixed_effect_for_spell",))
+def _parse_graveyard_count_spell_text(effect_text: str) -> Effect | None:
+    """Spell sentences the clause splitter would cut across (an "and" pair
+    sharing one X, a search limited by a count, a pump plus a counted extra)."""
+    return (
+        parse_search_value_at_most_count_spell(effect_text)
+        or parse_damage_pair_where_x_spell(effect_text)
+        or parse_pump_then_additional_per_count_spell(effect_text)
+    )
+
+
+@ABILITY_TEXT.rung("s23")
+def _parse_graveyard_count_ability_text(effect_text: str) -> AbilityEffect | None:
+    """The ability side of `_parse_graveyard_count_spell_text`, and tokens that
+    enter tapped and attacking per counted card."""
+    return (
+        parse_search_value_at_most_count_ability(effect_text)
+        or parse_damage_pair_where_x_ability(effect_text)
+        or parse_pump_then_additional_per_count_ability(effect_text)
+        or parse_tapped_attacking_tokens_for_each_ability(effect_text)
+    )

@@ -1224,6 +1224,17 @@ _DAMAGE_THAT_PERMANENTS_CONTROLLER_RE = re.compile(
     re.IGNORECASE,
 )
 
+#: The same follow-up with an amount that is a count of cards in a graveyard:
+#: "`<this>` deals damage to that land's controller equal to the number of land
+#: cards in that player's graveyard." (Roiling Terrain). The count is taken
+#: after the destroy (CR 608.2c - the land just destroyed is in it) and in the
+#: graveyard of the controller the target had before it (CR 608.2h).
+_DAMAGE_THAT_PERMANENTS_CONTROLLER_EQUAL_RE = re.compile(
+    r"^(?P<subject>[^,]+?) deals damage to that (?P<noun>[a-z ]+?)'s controller equal to "
+    r"(?P<expr>[^,]*graveyard[^,]*?)\.?$",
+    re.IGNORECASE,
+)
+
 
 def _merge_destroy_then_damage_controller_clauses(
     clauses: list[str], index: int, *, for_spell: bool
@@ -1235,14 +1246,25 @@ def _merge_destroy_then_damage_controller_clauses(
         return None
     if _DESTROY_TARGET_CLAUSE_RE.match(clauses[index].strip()) is None:
         return None
-    match = _DAMAGE_THAT_PERMANENTS_CONTROLLER_RE.fullmatch(clauses[index + 1].strip())
-    if match is None or re.search(r"\btarget\b", match.group("subject"), re.IGNORECASE):
+    follow = clauses[index + 1].strip()
+    match = _DAMAGE_THAT_PERMANENTS_CONTROLLER_RE.fullmatch(follow)
+    equal = _DAMAGE_THAT_PERMANENTS_CONTROLLER_EQUAL_RE.fullmatch(follow)
+    if (match or equal) is None or re.search(
+        r"\btarget\b", (match or equal).group("subject"), re.IGNORECASE
+    ):
         return None
-    condition = match.group("condition")
+    condition = match.group("condition") if match is not None else None
     if condition is not None and not _effect_condition_is_readable(condition):
         return None
-    amount = parse_count(match.group("n"))
-    if amount is None:
+    amount = parse_count(match.group("n")) if match is not None else None
+    count_reader = None
+    counts_for_controller = False
+    if equal is not None:
+        from ..ep02_r1_graveyard_counts import recipient_view
+
+        phrase, counts_for_controller = recipient_view(equal.group("expr"))
+        count_reader = amount_expression(phrase)
+    if amount is None and count_reader is None:
         return None
     destroy = _parse_targeted_clause(clauses[index], for_spell=for_spell)
     if destroy is None:
@@ -1265,7 +1287,20 @@ def _merge_destroy_then_damage_controller_clauses(
             if game.condition_holds(controller, condition, source) is not True:
                 return
         for username in controllers:
-            game.deal_damage(game.player(username), amount, source=source)
+            dealt = (
+                amount
+                if count_reader is None
+                else count_reader(
+                    game,
+                    username
+                    if counts_for_controller
+                    else game.controller_of(stack_object).username,
+                    source,
+                    0,
+                )
+            )
+            if dealt:
+                game.deal_damage(game.player(username), dealt, source=source)
 
     return 2, effect
 
@@ -6227,6 +6262,7 @@ from .amounts import (  # noqa: E402
     _fixed_or_where_x_amount,
     _for_each_multiplier,
     _that_many_or_notice,
+    amount_expression,
     count_expression,
 )
 from .continuous import (  # noqa: E402

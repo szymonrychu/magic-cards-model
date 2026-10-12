@@ -1,0 +1,161 @@
+{
+  "object": "card",
+  "id": "6a507ea6-d818-4443-b468-cf65c3e7031c",
+  "oracle_id": "bbef4d8e-5861-4d50-9589-14b46c71e9af",
+  "multiverse_ids": [
+    535019
+  ],
+  "resource_id": "FE9D627BFEE2F0CC85B5FD01A3053EAC73A3C9BC1AC68E81F4951231AF62918C",
+  "mtgo_id": 93452,
+  "arena_id": 78590,
+  "tcgplayer_id": 247980,
+  "cardmarket_id": 574800,
+  "name": "Ghoulcaller's Harvest",
+  "lang": "en",
+  "released_at": "2021-09-24",
+  "uri": "https://api.scryfall.com/cards/6a507ea6-d818-4443-b468-cf65c3e7031c",
+  "scryfall_uri": "https://scryfall.com/card/mid/225/ghoulcallers-harvest?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T06:52:40Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/6/a/6a507ea6-d818-4443-b468-cf65c3e7031c.jpg?1783925560",
+    "normal": "https://cards.scryfall.io/normal/front/6/a/6a507ea6-d818-4443-b468-cf65c3e7031c.jpg?1783925560",
+    "large": "https://cards.scryfall.io/large/front/6/a/6a507ea6-d818-4443-b468-cf65c3e7031c.jpg?1783925560",
+    "png": "https://cards.scryfall.io/png/front/6/a/6a507ea6-d818-4443-b468-cf65c3e7031c.png?1783925560",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/6/a/6a507ea6-d818-4443-b468-cf65c3e7031c.jpg?1783925560",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/6/a/6a507ea6-d818-4443-b468-cf65c3e7031c.jpg?1783925560",
+    "thumb": "https://cards.scryfall.io/thumb/front/6/a/6a507ea6-d818-4443-b468-cf65c3e7031c.webp?1783925560",
+    "grid": "https://cards.scryfall.io/grid/front/6/a/6a507ea6-d818-4443-b468-cf65c3e7031c.webp?1783925560",
+    "display": "https://cards.scryfall.io/display/front/6/a/6a507ea6-d818-4443-b468-cf65c3e7031c.webp?1783925560",
+    "art": "https://cards.scryfall.io/art/front/6/a/6a507ea6-d818-4443-b468-cf65c3e7031c.webp?1783925560",
+    "crop": "https://cards.scryfall.io/crop/front/6/a/6a507ea6-d818-4443-b468-cf65c3e7031c.webp?1783925560"
+  },
+  "mana_cost": "{B}{G}",
+  "cmc": 2.0,
+  "type_line": "Sorcery",
+  "oracle_text": "Create X 2/2 black Zombie creature tokens with decayed, where X is half the number of creature cards in your graveyard, rounded up. (A creature with decayed can't block. When it attacks, sacrifice it at end of combat.)\nFlashback {3}{B}{G} (You may cast this card from your graveyard for its flashback cost. Then exile it.)",
+  "colors": [
+    "B",
+    "G"
+  ],
+  "color_identity": [
+    "B",
+    "G"
+  ],
+  "keywords": [
+    "Flashback"
+  ],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "6adb8607-1066-451d-a719-74ad32358278",
+      "component": "token",
+      "name": "Zombie",
+      "type_line": "Token Creature \u2014 Zombie",
+      "uri": "https://api.scryfall.com/cards/6adb8607-1066-451d-a719-74ad32358278"
+    },
+    {
+      "object": "related_card",
+      "id": "bdb2dc53-57aa-4327-8700-6396fd86e3d1",
+      "component": "combo_piece",
+      "name": "Ghoulcaller's Harvest",
+      "type_line": "Sorcery",
+      "uri": "https://api.scryfall.com/cards/bdb2dc53-57aa-4327-8700-6396fd86e3d1"
+    }
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "arena",
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "44b8eb8f-fa23-401a-98b5-1fbb9871128e",
+  "set": "mid",
+  "set_name": "Innistrad: Midnight Hunt",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/44b8eb8f-fa23-401a-98b5-1fbb9871128e",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Amid&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/mid?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/6a507ea6-d818-4443-b468-cf65c3e7031c/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Abbef4d8e-5861-4d50-9589-14b46c71e9af&unique=prints",
+  "collector_number": "225",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Anna Steinbauer",
+  "artist_ids": [
+    "3516496c-c279-4b56-8239-720683d03ae0"
+  ],
+  "illustration_id": "049265cf-28c8-47ee-a4ea-c616016dac94",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 19615,
+  "penny_rank": 11692,
+  "preview": {
+    "source": "Clintus",
+    "source_uri": "https://twitter.com/clintus/status/1434552311871799301",
+    "previewed_at": "2021-09-05"
+  },
+  "prices": {
+    "usd": "0.23",
+    "usd_foil": "0.21",
+    "usd_etched": null,
+    "eur": "0.12",
+    "eur_foil": "0.27",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=535019&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DGhoulcaller%2527s%2BHarvest",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DGhoulcaller%2527s%2BHarvest",
+    "edhrec": "https://edhrec.com/route/?cc=Ghoulcaller%27s+Harvest"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F247980%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=574800&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/93452?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

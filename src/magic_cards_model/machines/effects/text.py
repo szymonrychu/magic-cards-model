@@ -847,6 +847,12 @@ _ZONE_PAIR_AND_RE = re.compile(
     r"\b(?:hands?|graveyards?|librar(?:y|ies)) and (?:hands?|graveyards?|librar(?:y|ies))\b",
     re.IGNORECASE,
 )
+#: "the total number of instant and sorcery cards you own in exile and in your
+#: graveyard" (Ral, Izzet Viceroy) - one count over two zones (CR 400.1), not
+#: two instructions.
+_IN_EXILE_AND_IN_GRAVEYARD_RE = re.compile(
+    r"\bin exile and in (?:your|their|its owner's) graveyard\b", re.IGNORECASE
+)
 
 #: A "then" standing at the **head** of its own sentence - "Look at the top
 #: five cards ... Then put the rest on the bottom of your library." (Ancient
@@ -1004,6 +1010,9 @@ def _split_effect_clauses(text: str) -> list[str]:
         lambda m: m.group(0).replace(" and ", _AND_SENTINEL), masked
     )
     masked = _ZONE_PAIR_AND_RE.sub(lambda m: m.group(0).replace(" and ", _AND_SENTINEL), masked)
+    masked = _IN_EXILE_AND_IN_GRAVEYARD_RE.sub(
+        lambda m: m.group(0).replace(" and ", _AND_SENTINEL), masked
+    )
     # "Exile this artifact and all cards from all graveyards." (Silent
     # Gravestone) - one instruction naming two objects, read whole by
     # `removal._parse_exile_self_and_all_graveyards_clause`.

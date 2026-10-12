@@ -2296,6 +2296,13 @@ class ActivationMixin:
             amount = reduction.amount * permanent.counter_count(reduction.self_counter_kind)
             return ManaCost.parse(f"{{{amount}}}") if amount else ManaCost()
 
+        if reduction.graveyard_quality is not None:
+            counted = graveyard_count_expression(
+                f"{reduction.graveyard_quality} cards in your graveyard"
+            )
+            amount = 0 if counted is None else reduction.amount * counted(self, controller)
+            return ManaCost.parse(f"{{{amount}}}") if amount else ManaCost()
+
         if reduction.quality is None:
             return ManaCost()
 
@@ -3371,6 +3378,7 @@ class ActivationMixin:
 
 
 from ...machines import game_rule_statics  # noqa: E402
+from ...machines.ep02_r1_graveyard_counts import graveyard_count_expression  # noqa: E402
 from ._common import _SPEND_AS_ANY_COLOR_STATIC_RE, _SPEND_AS_ANY_COLOR_TO_ACTIVATE_RE  # noqa: E402
 from ._conditions import (  # noqa: E402
     _card_type_named,

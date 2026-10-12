@@ -1879,6 +1879,14 @@ class ActivationCostReduction(EngineModel):
     #: per-object count: the whole `amount` comes off once when the activator
     #: controls at least one such permanent.
     if_you_control: bool = False
+    #: Battlefield Butcher's "This ability costs {1} less to activate for each
+    #: creature card in your graveyard." and Pteramander's "... for each
+    #: instant and sorcery card in your graveyard." - the cards counted in the
+    #: activator's graveyard (CR 404.1), kept as the printed description
+    #: ("creature", "instant and sorcery") and read by the shared graveyard
+    #: counter (`machines/ep02_r1_graveyard_counts.py`). Exactly one of
+    #: `quality`, `target_quality`, `self_counter_kind` and this is ever set.
+    graveyard_quality: str | None = None
 
 
 #: "This ability costs {N} less to activate for each <quality> you control."
@@ -1887,6 +1895,15 @@ class ActivationCostReduction(EngineModel):
 _TRAILING_ACTIVATION_COST_REDUCTION_RE = re.compile(
     r"^this ability costs \{(?P<amount>\d+)\} less to activate for each "
     r"(?P<quality>.+?) you control\.?$",
+    re.IGNORECASE,
+)
+
+#: The graveyard sibling: "This ability costs {1} less to activate for each
+#: creature card in your graveyard." (Battlefield Butcher) - what is counted is
+#: cards in the activator's graveyard, not permanents they control.
+_TRAILING_GRAVEYARD_COST_REDUCTION_RE = re.compile(
+    r"^this ability costs \{(?P<amount>\d+)\} less to activate for each "
+    r"(?P<quality>.+?) cards? in your graveyard\.?$",
     re.IGNORECASE,
 )
 
@@ -1989,6 +2006,13 @@ def _split_off_trailing_cost_reduction(effect: str) -> tuple[str, ActivationCost
         reduction = ActivationCostReduction(
             amount=int(target_match.group("amount")),
             target_quality=target_match.group("what").strip(),
+        )
+        return " ".join(sentences[:-1]).strip(), reduction
+    graveyard_match = _TRAILING_GRAVEYARD_COST_REDUCTION_RE.match(last)
+    if graveyard_match is not None:
+        reduction = ActivationCostReduction(
+            amount=int(graveyard_match.group("amount")),
+            graveyard_quality=graveyard_match.group("quality").strip(),
         )
         return " ".join(sentences[:-1]).strip(), reduction
     self_counter_match = _TRAILING_SELF_COUNTER_COST_REDUCTION_RE.match(last)
