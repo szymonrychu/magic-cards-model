@@ -10,6 +10,7 @@ object moves). Every number below is the live count when the ability resolves.
 
 from magic_cards_model.machines import Step
 from magic_cards_model.models import Zone
+from magic_cards_model.models.card import Color
 from magic_cards_model.models.card_state import Counter
 from tests.scenarios.harness import Scenario
 
@@ -322,3 +323,86 @@ def test_soulstinger_declined_puts_nothing():
     scenario.choose_trigger_targets("Soulstinger", [wurm])
     _settle(scenario)
     assert wurm.counter_count(Counter.MINUS_ONE) == 0
+
+
+# -- pumps and life totals read off the source's counters
+
+
+def test_scroll_of_the_masters_pumps_by_its_lore_counters():
+    scenario = _board(["Scroll of the Masters", "Island", "Island", "Island", "Grizzly Bears"])
+    scroll = scenario.find("Scroll of the Masters", Zone.BATTLEFIELD, "alice")
+    scroll.add_counters("lore", 3)
+    bears = scenario.creature("Grizzly Bears", "alice")
+    scenario.activate(scroll, auto=True, targets=[bears])
+    _settle(scenario)
+    assert _stats(scenario, bears) == (5, 5)
+
+
+def test_scroll_of_the_masters_with_no_lore_counters_pumps_nothing():
+    scenario = _board(["Scroll of the Masters", "Island", "Island", "Island", "Grizzly Bears"])
+    scroll = scenario.find("Scroll of the Masters", Zone.BATTLEFIELD, "alice")
+    scroll.add_counters("charge", 4)
+    bears = scenario.creature("Grizzly Bears", "alice")
+    scenario.activate(scroll, auto=True, targets=[bears])
+    _settle(scenario)
+    assert _stats(scenario, bears) == (2, 2)
+
+
+def test_the_triumph_of_anax_chapter_pumps_by_the_lore_counters_it_has_then():
+    scenario = _board(["Grizzly Bears"], alice_hand=["The Triumph of Anax"])
+    bears = scenario.creature("Grizzly Bears", "alice")
+    scenario.put_onto_battlefield("The Triumph of Anax", "alice")
+    scenario.choose_trigger_targets("The Triumph of Anax", [bears])
+    _settle(scenario)
+    assert _stats(scenario, bears) == (3, 2)
+    assert scenario.game.computed_board().of(bears).has_ability("Trample")
+
+
+def test_eternity_vessel_sets_life_to_its_charge_counters_on_landfall():
+    scenario = _board(["Eternity Vessel"], alice_hand=["Forest"])
+    vessel = scenario.find("Eternity Vessel", Zone.BATTLEFIELD, "alice")
+    vessel.add_counters("charge", 7)
+    scenario.will_take_the_may(True)
+    scenario.play_land("Forest")
+    _settle(scenario)
+    assert scenario.player("alice").life == 7
+
+
+def test_eternity_vessel_may_decline_to_change_its_life_total():
+    scenario = _board(["Eternity Vessel"], alice_hand=["Forest"])
+    vessel = scenario.find("Eternity Vessel", Zone.BATTLEFIELD, "alice")
+    vessel.add_counters("charge", 7)
+    scenario.will_take_the_may(False)
+    scenario.play_land("Forest")
+    _settle(scenario)
+    assert scenario.player("alice").life == 20
+
+
+def test_eternity_vessel_can_raise_life_as_well_as_lower_it():
+    scenario = _board(["Eternity Vessel"], alice_hand=["Forest"])
+    scenario.player("alice").life = 4
+    scenario.find("Eternity Vessel", Zone.BATTLEFIELD, "alice").add_counters("charge", 30)
+    scenario.will_take_the_may(True)
+    scenario.play_land("Forest")
+    _settle(scenario)
+    assert scenario.player("alice").life == 30
+
+
+# -- Add X mana of any one color, where X is the number of charge counters (a mana ability)
+
+
+def test_the_eternity_elevator_taps_for_its_charge_counters_in_one_color():
+    scenario = _board(["The Eternity Elevator"])
+    elevator = scenario.find("The Eternity Elevator", Zone.BATTLEFIELD, "alice")
+    elevator.add_counters("charge", 21)
+    ability = scenario.activate(elevator, index=1, color=Color.GREEN)
+    assert ability is None, ability.ability.text  # a mana ability: no stack
+    assert scenario.player("alice").mana_pool.floating == {Color.GREEN: 21}
+
+
+def test_the_eternity_elevator_adds_nothing_without_charge_counters_past_its_threshold():
+    scenario = _board(["The Eternity Elevator"])
+    elevator = scenario.find("The Eternity Elevator", Zone.BATTLEFIELD, "alice")
+    elevator.add_counters("charge", 5)
+    # CR 721.2: the 20+ ability is not there yet; only the colorless one is.
+    assert scenario.why_cannot_activate(elevator, index=1) is not None

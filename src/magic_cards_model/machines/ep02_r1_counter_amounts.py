@@ -199,3 +199,14 @@ def counters_counted_text(text: str, names: tuple[str, ...] = ()) -> str:
         return f"{m.group('verb')} up to {wording}{m.group('tail')}"
 
     return _for_each_target(names).sub(targets, text)
+
+
+def counters_self_reference_normalised(text: str, names: tuple[str, ...]) -> str:
+    """`text` with a card's own name after "counters on" read as CR 700.7's
+    "this permanent" ("the number of charge counters on The Eternity Elevator",
+    "a verse counter on Yisan"), so the mana-ability reader and every counter
+    reader see the one self-reference they already know (CR 201.5)."""
+    if "counter" not in text.lower() or not names:
+        return text
+    named = "|".join(re.escape(name) for name in names)
+    return re.sub(rf"(\bcounters? on )(?:{named})\b", r"\1this permanent", text)
