@@ -35,9 +35,7 @@ from ..numbers import count_pattern, parse_count
 if TYPE_CHECKING:
     from ..models.game import Game
 
-_WHOSE = (
-    r"your|each player'?s|each opponent'?s|target opponent'?s|target player'?s|that player'?s"
-)
+_WHOSE = r"your|each player'?s|each opponent'?s|target opponent'?s|target player'?s|that player'?s"
 
 _EXILE_TOP_RE = re.compile(
     rf"^exile the top (?:card|{count_pattern('n')} cards) of (?P<whose>{_WHOSE}) library"
@@ -154,8 +152,8 @@ _LOOK_EXILE_ONE_RE = re.compile(
     r"(?:for as long as it remains exiled, you may cast it"
     r"(?: if it'?s an? (?P<quality>[a-z]+) spell)?"
     r"|you may cast that card for as long as it remains exiled"
-    r"(?P<any>, and (?:you may spend mana as though it were mana of any type|mana of any type can be spent)"
-    r" to cast that spell)?)"
+    r"(?P<any>, and (?:you may spend mana as though it were mana of any type"
+    r"|mana of any type can be spent) to cast that spell)?)"
     r"\.?$",
     re.IGNORECASE,
 )

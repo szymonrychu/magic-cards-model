@@ -4495,7 +4495,9 @@ def _self_has_counted_trigger_keyword_builder(
     return builder
 
 
-def _keyword_grant_builder(keywords: Sequence[str], *, until_next_turn: bool = False) -> EffectBuilder:
+def _keyword_grant_builder(
+    keywords: Sequence[str], *, until_next_turn: bool = False
+) -> EffectBuilder:
     """ "[Subject] gains <keyword>[, <keyword>, and <keyword>] until end of
     turn[/until your next turn]." (CR 613.1f, CR 113.10) - one or more
     keywords, each its own layer 6 grant. `until_next_turn` is CR 611.2a's

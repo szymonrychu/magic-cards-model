@@ -37,7 +37,9 @@ def reads_look_at_exiled_with_line(card_name: str, text: str, legendary: bool) -
         return False
     from .abilities import self_normalized_effect_text
 
-    line = " ".join(self_normalized_effect_text(card_name, text.strip(), legendary=legendary).split())
+    line = " ".join(
+        self_normalized_effect_text(card_name, text.strip(), legendary=legendary).split()
+    )
     return _LOOK_AT_EXILED_WITH_RE.fullmatch(line) is not None
 
 
@@ -97,7 +99,7 @@ def _pile(game: Game, ability) -> list[CardState]:
 
 
 def parse_exile_from_hand_face_down(text: str):
-    """"[Draw a card, then ]exile a card from your hand face down.[ You may
+    """ "[Draw a card, then ]exile a card from your hand face down.[ You may
     look at that card for as long as it remains exiled.][ `<more>`]": the
     controller chooses a card from their hand (CR 608.2d), it is exiled face
     down (CR 406.3) and linked to the ability's source (CR 607.2a). `<more>` is
@@ -150,7 +152,7 @@ def parse_exile_from_hand_face_down(text: str):
 
 
 def parse_return_exiled_with_to_hand(text: str):
-    """"Return a card exiled with `<this>` to its owner's hand." (one of the
+    """ "Return a card exiled with `<this>` to its owner's hand." (one of the
     pile, chosen on resolution, CR 608.2d) and "Put all cards exiled with
     `<this>` into their owners' hands." (the whole pile, one event, CR 603.2c)."""
     if "exiled with" not in text.lower():
@@ -185,7 +187,7 @@ def parse_return_exiled_with_to_hand(text: str):
 
 
 def parse_turn_exiled_with_face_up(text: str):
-    """"Turn all cards exiled with `<this>` face up.[ Counter all spells with
+    """ "Turn all cards exiled with `<this>` face up.[ Counter all spells with
     those names.]": every card of the pile is turned face up (CR 406.3a lifts
     its blank), then each spell on the stack whose name is one of theirs is
     countered (CR 701.6a)."""

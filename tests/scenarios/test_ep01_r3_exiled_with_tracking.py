@@ -521,7 +521,11 @@ def _cast_from_exile(scenario, name, *lands, username="alice"):
 def _vivien(library):
     scenario = (
         Scenario()
-        .player("alice", battlefield=["Vivien, Champion of the Wilds", "Forest", "Forest"], library=library)
+        .player(
+            "alice",
+            battlefield=["Vivien, Champion of the Wilds", "Forest", "Forest"],
+            library=library,
+        )
         .player("bob", library=FILLER)
         .build()
     )
@@ -564,7 +568,9 @@ def test_vivien_does_not_let_its_controller_cast_an_exiled_noncreature_card():
     assert bolt.zone is Zone.EXILE
     casting = scenario.cast("Lightning Bolt", "alice", from_zone=Zone.EXILE)
     with pytest.raises(ValueError):
-        scenario.pay_with(casting.begin_paying(), *scenario.untapped_sources("Forest", username="alice"))
+        scenario.pay_with(
+            casting.begin_paying(), *scenario.untapped_sources("Forest", username="alice")
+        )
         scenario.put_on_stack(casting)
 
 
@@ -579,7 +585,9 @@ def test_vivien_minus_two_with_a_short_library_looks_at_what_is_there():
 def _gonti(bob_library):
     scenario = (
         Scenario()
-        .player("alice", hand=["Gonti, Lord of Luxury"], battlefield=["Swamp", "Swamp"], library=FILLER)
+        .player(
+            "alice", hand=["Gonti, Lord of Luxury"], battlefield=["Swamp", "Swamp"], library=FILLER
+        )
         .player("bob", library=bob_library)
         .build()
     )
@@ -627,7 +635,10 @@ def test_thief_of_sanity_puts_the_rest_into_the_damaged_players_graveyard():
     scenario.scry_bottoming(bolt, username="alice")
     _to_combat_damage(scenario, thief)
     assert _names(_exiled_with(scenario, thief)) == ["Lightning Bolt"]
-    assert sorted(c.name for c in scenario.player("bob").graveyard) == ["Grizzly Bears", "Hill Giant"]
+    assert sorted(c.name for c in scenario.player("bob").graveyard) == [
+        "Grizzly Bears",
+        "Hill Giant",
+    ]
     assert [c.name for c in scenario.player("bob").library] == ["Island"]
 
 
@@ -638,7 +649,9 @@ def _keywords(scenario, permanent):
 def _vivien_plus_one(*, target):
     scenario = (
         Scenario()
-        .player("alice", battlefield=["Vivien, Champion of the Wilds", "Grizzly Bears"], library=FILLER)
+        .player(
+            "alice", battlefield=["Vivien, Champion of the Wilds", "Grizzly Bears"], library=FILLER
+        )
         .player("bob", battlefield=["Hill Giant"], library=FILLER)
         .build()
     )
@@ -752,7 +765,12 @@ def test_jacobs_back_face_exiles_the_top_card_each_upkeep_and_may_play_one_free_
 def _anvil(hand):
     scenario = (
         Scenario()
-        .player("alice", hand=["Semblance Anvil", *hand], battlefield=["Mountain", "Mountain"], library=FILLER)
+        .player(
+            "alice",
+            hand=["Semblance Anvil", *hand],
+            battlefield=["Mountain", "Mountain"],
+            library=FILLER,
+        )
         .player("bob", library=FILLER)
         .build()
     )
