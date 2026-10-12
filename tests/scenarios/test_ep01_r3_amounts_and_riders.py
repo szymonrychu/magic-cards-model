@@ -781,3 +781,87 @@ def test_luxurious_locomotive_crews_only_once_each_turn():
     _crew(scenario, train, first)
     with pytest.raises(ValueError, match="only once each turn"):
         _crew(scenario, train, second)
+
+
+# -- "For each {W}{W} spent to cast this creature, put a +1/+1 counter on each
+# -- of them" (Clay Champion) and "for each {U}{U} spent to cast it, ..."
+# -- (Bladecoil Serpent)
+
+
+def _cast_with_x(scenario, name, x_value, lands):
+    casting = scenario.cast(name, "alice")
+    casting.x_value = x_value
+    payment = casting.begin_paying()
+    scenario.pay_with(payment, *lands)
+    scenario.put_on_stack(casting)
+
+
+def test_clay_champion_counts_each_ww_and_gg_spent_to_cast_it():
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player(
+            "alice",
+            hand=["Clay Champion"],
+            battlefield=["Plains"] * 4 + ["Forest"] * 2 + ["Grizzly Bears", "Grizzly Bears"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    lands = scenario.untapped_sources("Plains", "Plains", "Plains", "Plains", "Forest", "Forest")
+    bears = scenario.creatures("Grizzly Bears", "Grizzly Bears", username="alice")
+    scenario.will_choose_targets(*bears, source="Clay Champion")
+    _cast_with_x(scenario, "Clay Champion", 2, lands)
+    scenario.resolve_top()
+    _settle(scenario)
+    champion = scenario.creature("Clay Champion", "alice")
+    assert champion.counter_count(Counter.PLUS_ONE) == 3  # one {G}{G}, three each
+    assert [bear.counter_count(Counter.PLUS_ONE) for bear in bears] == [2, 2]  # two {W}{W}
+
+
+def test_clay_champion_with_no_ww_spent_adds_no_counters_to_the_targets():
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player(
+            "alice",
+            hand=["Clay Champion"],
+            battlefield=["Forest"] * 6 + ["Grizzly Bears"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    lands = scenario.untapped_sources(*["Forest"] * 6)
+    (bear,) = scenario.creatures("Grizzly Bears", username="alice")
+    scenario.will_choose_targets(bear, source="Clay Champion")
+    _cast_with_x(scenario, "Clay Champion", 2, lands)
+    scenario.resolve_top()
+    _settle(scenario)
+    assert bear.counter_count(Counter.PLUS_ONE) == 0
+    assert scenario.creature("Clay Champion", "alice").counter_count(Counter.PLUS_ONE) == 9
+
+
+def test_bladecoil_serpent_draws_discards_and_pumps_per_mana_pair():
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player(
+            "alice",
+            hand=["Bladecoil Serpent"],
+            battlefield=["Island"] * 2 + ["Swamp"] * 2 + ["Mountain"] * 2,
+            library=["Forest", "Forest"],
+        )
+        .player("bob", hand=["Forest", "Forest"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    lands = scenario.untapped_sources("Island", "Island", "Swamp", "Swamp", "Mountain", "Mountain")
+    _cast_with_x(scenario, "Bladecoil Serpent", 0, lands)
+    scenario.resolve_top()
+    _settle(scenario)
+    serpent = scenario.creature("Bladecoil Serpent", "alice")
+    assert len(scenario.player("alice").hand) == 1
+    assert len(scenario.player("bob").hand) == 1
+    assert scenario.game.power_of(serpent) == 6

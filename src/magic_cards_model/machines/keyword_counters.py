@@ -513,7 +513,7 @@ def _one_term(description: str):
         return _kicked_times
     symbols = _SYMBOLS_SPENT_RE.match(lowered)
     if symbols is not None:
-        return _symbol_groups_spent(symbols.group("symbols"))
+        return symbol_groups_spent(symbols.group("symbols"))
     term = _board_count_term(text, lowered) or _graveyard_count_term(lowered)
     if term is not None:
         return term
@@ -528,7 +528,9 @@ def _one_term(description: str):
 
 
 _N_TIMES_RE = re.compile(rf"^(?P<n>{COUNT}) (?P<op>times|plus) (?P<rest>.+)$", re.IGNORECASE)
-_SYMBOLS_SPENT_RE = re.compile(r"^(?P<symbols>(?:\{[wubrg]\})+) spent to cast it$")
+_SYMBOLS_SPENT_RE = re.compile(
+    r"^(?P<symbols>(?:\{[wubrg]\})+) spent to cast (?:it|this creature|this spell)$"
+)
 
 
 def _kicked_times(game, controller, entering, _x) -> int:
@@ -536,7 +538,7 @@ def _kicked_times(game, controller, entering, _x) -> int:
     return record.kicked if record is not None else 0
 
 
-def _symbol_groups_spent(symbols: str):
+def symbol_groups_spent(symbols: str):
     """ "for each {G}{G} spent to cast it" (Clay Champion): how many whole
     groups of that many mana of that colour the spell's payment holds."""
     from ..models.card import Color
