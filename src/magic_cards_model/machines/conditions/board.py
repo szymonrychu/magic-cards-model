@@ -50,7 +50,7 @@ from collections import Counter
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from functools import cache
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from ...models.card import Type
 from ...numbers import COUNT, parse_count
@@ -109,13 +109,16 @@ def _attached(context: "ConditionContext", state: "CardState", subtype: str) -> 
     ]
 
 
-def permanent_is_modified(game: "Game", state: "CardState", chars: "Characteristics") -> bool:
+def permanent_is_modified(
+    game: "Game", state: "CardState", chars: "Characteristics", board: Any = None
+) -> bool:
     """CR 700.9's three ways - a counter, an Equipment attached, or an Aura
     attached that the permanent's own controller controls - read off the
-    computed board (CR 613.5)."""
+    computed board (CR 613.5); `board` when the caller already holds it."""
     if any(amount > 0 for amount in chars.counters.values()):
         return True
-    board = game.computed_board()
+    if board is None:
+        board = game.computed_board()
 
     def attached(subtype: str) -> list["CardState"]:
         return [
@@ -137,7 +140,7 @@ def controls_modified_creature(game: "Game", username: str) -> bool:
     board = game.computed_board()
     for state in game.permanents_controlled_by(username):
         chars = board.of(state)
-        if Type.CREATURE in chars.types and permanent_is_modified(game, state, chars):
+        if Type.CREATURE in chars.types and permanent_is_modified(game, state, chars, board):
             return True
     return False
 

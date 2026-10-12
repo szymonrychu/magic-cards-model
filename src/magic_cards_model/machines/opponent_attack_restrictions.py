@@ -58,11 +58,16 @@ def reads_opponent_attack_restriction_line(text: str) -> bool:
 
 
 def _static_lines(game: Game, pattern: re.Pattern[str]) -> list[tuple[CardState, re.Match[str]]]:
-    from .triggers.collect import _computed_ability_lines
-
+    """Every battlefield static line matching `pattern`, read off one computed
+    board for the whole scan (CR 613.5), not one per permanent."""
+    board = game.computed_board()
     found = []
     for permanent in game.battlefield:
-        for line in _computed_ability_lines(game, permanent):
+        try:
+            lines = board.of(permanent).abilities
+        except KeyError:
+            lines = [line for line in (permanent.oracle_text or "").splitlines() if line.strip()]
+        for line in lines:
             match = pattern.fullmatch(_norm(line))
             if match is not None:
                 found.append((permanent, match))

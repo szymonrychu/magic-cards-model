@@ -126,6 +126,23 @@ def test_a_command_computes_the_board_a_constant_number_of_times():
     assert all(small_count == large_count for small_count, large_count in counts.values()), counts
 
 
+def _boards_to_cast_bears(alice: list[str], bob: list[str]) -> int:
+    scenario = _scenario(alice, bob)
+    forests = scenario.untapped_sources("Forest", "Forest", username="alice")
+    before = board_computations()
+    scenario.cast_onto_stack("Grizzly Bears", *forests, username="alice")
+    return board_computations() - before
+
+
+def test_casting_a_spell_computes_the_board_a_constant_number_of_times():
+    """The cast-legality checks (CR 601.2, CR 601.3's "can't cast" statics)
+    each read one board, never one per permanent: casting the same spell costs
+    the same on a 4-permanent board as on a 20+ permanent one."""
+    small = _boards_to_cast_bears(SMALL_ALICE, SMALL_BOB)
+    large = _boards_to_cast_bears(ALICE_PERMANENTS, BOB_PERMANENTS)
+    assert small == large, (small, large)
+
+
 def test_a_command_leaves_the_same_game_as_with_every_board_computed_afresh():
     for alice, bob in ((SMALL_ALICE, SMALL_BOB), (ALICE_PERMANENTS, BOB_PERMANENTS)):
         for name, raw in _starting_points(alice, bob).items():
