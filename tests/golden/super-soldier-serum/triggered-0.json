@@ -39,11 +39,11 @@
     "fields_changed": [],
     "notices": {},
     "objects": {
-      "Bonesplitter@alice#1": {
-        "attached_to": [null, "Memnite@alice#1"]
+      "A.I.M. Scientists@alice#1": {
+        "power": [5, 7]
       },
-      "Memnite@alice#1": {
-        "power": [3, 5]
+      "Bonesplitter@alice#1": {
+        "attached_to": [null, "A.I.M. Scientists@alice#1"]
       }
     },
     "players": {},

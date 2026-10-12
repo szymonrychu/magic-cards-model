@@ -5,7 +5,7 @@
     "modes": [],
     "on_stack": true,
     "source": "Tyvar Kell@alice#1",
-    "targets": ["Advocate of the Beast@bob#1"],
+    "targets": ["Aberrant Mind Sorcerer@bob#1"],
     "x": 0
   },
   "board": {
@@ -20,7 +20,7 @@
         "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
       },
       "bob": {
-        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Kaito, Bane of Nightmares", "Fleecemane Lion", "Icehide Golem", "Shadowspear", "Dragonfire Blade", "Advocate of the Beast"],
+        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Kaito, Bane of Nightmares", "Fleecemane Lion", "Icehide Golem", "Shadowspear", "Dragonfire Blade", "Aberrant Mind Sorcerer"],
         "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel"],
         "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt"],
         "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
@@ -39,7 +39,7 @@
     "fields_changed": ["continuous_effects", "counters_put_this_turn"],
     "notices": {},
     "objects": {
-      "Advocate of the Beast@bob#1": {
+      "Aberrant Mind Sorcerer@bob#1": {
         "counters": [
           {},
           {
@@ -50,8 +50,8 @@
           [],
           ["Deathtouch"]
         ],
-        "power": [2, 3],
-        "toughness": [3, 4]
+        "power": [3, 4],
+        "toughness": [4, 5]
       }
     },
     "players": {},

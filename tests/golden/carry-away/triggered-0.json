@@ -38,7 +38,14 @@
     "decisions": [],
     "fields_changed": [],
     "notices": {},
-    "objects": {},
+    "objects": {
+      "Bonesplitter@alice#1": {
+        "attached_to": ["Memnite@alice#1", null]
+      },
+      "Memnite@alice#1": {
+        "power": [3, 1]
+      }
+    },
     "players": {},
     "stack": []
   },

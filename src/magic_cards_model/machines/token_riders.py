@@ -96,7 +96,7 @@ def event_subject_counter_multiplier(phrase: str):  # noqa: ANN201 - Callable[[G
 
 
 def token_clause_for_each_event_subject_counter(
-    template: "TargetedClause", multiplier
+    template: "TargetedClause", multiplier, counted=None
 ) -> "TargetedClause":
     """Run `template` (already built by `effects._token_creation_clause`)
     once per unit `event_subject_counter_multiplier` counts off the trigger's
@@ -107,9 +107,9 @@ def token_clause_for_each_event_subject_counter(
     """
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
-        times = multiplier(game, stack_object)
-        for _ in range(max(times, 0)):
-            template(game, stack_object)
+        from .effects.tokens import create_for_each
+
+        create_for_each(game, stack_object, template, counted, multiplier(game, stack_object))
 
     return effect
 

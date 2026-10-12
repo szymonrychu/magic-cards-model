@@ -871,8 +871,58 @@ _X_OVER_X_RE = re.compile(r"\bx/x\b", re.IGNORECASE)
 _TOKEN_FOR_EACH_TAIL_RE = re.compile(r"\s+for each (?P<each>[^.\"“”]+?)\.?$", re.IGNORECASE)
 
 
+#: "create a `<desc>` token[ with ...]" - the one-token clause a "for each"
+#: tail multiplies, re-read with the count spelled out by `_counted_token_clause`.
+_ONE_TOKEN_CLAUSE_RE = re.compile(
+    r"^(?P<lead>(?:you )?create) an? (?P<desc>.+?) token(?P<tail>(?:\s.*)?)$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _counted_token_clause(
+    clause: str, *, for_spell: bool
+) -> Callable[[int], TargetedClause | None]:
+    """`clause` (one token) read again as "create `<n>` ... tokens": CR 701.7a
+    creates the whole count in one event, so a CR 701.7b replacement that
+    watches the event (Stridehangar Automaton's "those tokens plus an
+    additional Thopter") applies once, not once per token. `None` for a count
+    no token reader takes, so the caller falls back to one event per token."""
+    match = _ONE_TOKEN_CLAUSE_RE.match(clause.strip())
+
+    def counted(count: int) -> TargetedClause | None:
+        if match is None:
+            return None
+        return _parse_token_clause(
+            f"{match['lead']} {count} {match['desc']} tokens{match['tail']}", for_spell=for_spell
+        )
+
+    return counted
+
+
+def create_for_each(
+    game: "Game",
+    stack_object: "StackObject",
+    template: TargetedClause,
+    counted: Callable[[int], TargetedClause | None] | None,
+    times: int,
+) -> None:
+    """`times` of `template`'s token (CR 107.1b: none for zero or less), the
+    count taken once before any is created (CR 608.2h) and, when `counted`
+    reads it, created in one event (CR 701.7a)."""
+    if times <= 0:
+        return
+    whole = counted(times) if counted is not None and times > 1 else None
+    if whole is not None:
+        whole(game, stack_object)
+        return
+    for _ in range(times):
+        template(game, stack_object)
+
+
 def _token_clause_for_each_of_source(
-    template: TargetedClause, multiplier: Callable[["Game", str, str | None], int]
+    template: TargetedClause,
+    multiplier: Callable[["Game", str, str | None], int],
+    counted: Callable[[int], TargetedClause | None] | None = None,
 ) -> TargetedClause:
     """`_token_clause_for_each` for a count that reads the resolving object
     (`amounts._for_each_multiplier`'s `(game, controller, source_id)` form)."""
@@ -881,22 +931,23 @@ def _token_clause_for_each_of_source(
         times = multiplier(
             game, game.controller_of(stack_object).username, source_id_of(stack_object)
         )
-        for _ in range(max(times, 0)):
-            template(game, stack_object)
+        create_for_each(game, stack_object, template, counted, times)
 
     return effect
 
 
 def _token_clause_for_each(
-    template: TargetedClause, multiplier: Callable[["Game", str], int]
+    template: TargetedClause,
+    multiplier: Callable[["Game", str], int],
+    counted: Callable[[int], TargetedClause | None] | None = None,
 ) -> TargetedClause:
     """Run `template` once per unit `multiplier` counts, the count taken once
-    before any token is created (CR 608.2h)."""
+    before any token is created (CR 608.2h) - as one event when `counted`
+    reads the count (`create_for_each`)."""
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
         times = multiplier(game, game.controller_of(stack_object).username)
-        for _ in range(max(times, 0)):
-            template(game, stack_object)
+        create_for_each(game, stack_object, template, counted, times)
 
     return effect
 
@@ -1049,9 +1100,10 @@ def _parse_token_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
         template = _parse_token_clause(clause[: for_each.start()], for_spell=for_spell)
         if template is None:
             return None
+        counted = _counted_token_clause(clause[: for_each.start()], for_spell=for_spell)
         multiplier = count_expression(each_phrase)
         if multiplier is not None:
-            return _token_clause_for_each(template, multiplier)
+            return _token_clause_for_each(template, multiplier, counted)
         # "create a Mutagen token for each +1/+1 counter on it" (The Ooze) -
         # not a board-wide `count_expression` at all: "it" is the *other*
         # object this trigger's own condition named (CR 603.10a's look-back),
@@ -1060,13 +1112,13 @@ def _parse_token_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
         event_subject_multiplier = token_riders.event_subject_counter_multiplier(each_phrase)
         if event_subject_multiplier is not None:
             return token_riders.token_clause_for_each_event_subject_counter(
-                template, event_subject_multiplier
+                template, event_subject_multiplier, counted
             )
         # "create a Treasure token for each creature that crewed it this turn"
         # (Luxurious Locomotive): a count read off the ability's own source.
         source_multiplier = _for_each_multiplier(each_phrase)
         if source_multiplier is not None:
-            return _token_clause_for_each_of_source(template, source_multiplier)
+            return _token_clause_for_each_of_source(template, source_multiplier, counted)
         return None
 
     match = _TOKEN_CLAUSE_RE.fullmatch(clause)
@@ -4318,13 +4370,14 @@ def _token_creator_for_count(desc: str) -> Callable[["Game", "StackObject", int]
     count being whatever the caller read off the rest of the sentence.
     CR 107.1b: a zero or negative count creates nothing.
     """
-    template = _parse_token_clause(f"create a {desc.strip()} token", for_spell=True)
+    text = f"create a {desc.strip()} token"
+    template = _parse_token_clause(text, for_spell=True)
     if template is None:
         return None
+    counted = _counted_token_clause(text, for_spell=True)
 
     def create(game: "Game", stack_object: "StackObject", count: int) -> None:
-        for _ in range(max(count, 0)):
-            template(game, stack_object)
+        create_for_each(game, stack_object, template, counted, count)
 
     return create
 

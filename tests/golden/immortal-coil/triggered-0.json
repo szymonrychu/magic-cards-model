@@ -36,7 +36,7 @@
   "delta": {
     "created": {},
     "decisions": [],
-    "fields_changed": ["losers", "turn", "winner"],
+    "fields_changed": ["losers", "state_trigger_latches", "turn", "winner"],
     "notices": {},
     "objects": {
       "Bonesplitter@alice#1": {

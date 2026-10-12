@@ -1389,3 +1389,16 @@ def test_cemetery_protector_makes_a_token_for_a_land_when_a_land_was_exiled():
     _resolve_everything(scenario)
     tokens = [c for c in scenario.game.battlefield if c.token and c.controller == "alice"]
     assert [(t.power, t.toughness) for t in tokens] == [(1, 1)]
+
+
+def test_a_bare_exile_it_still_exiles_the_source_not_a_graveyard_arrival():
+    """Nine Lives: "When there are nine or more incarnation counters on this
+    enchantment, exile it." - "it" is the source (CR 603.10a's own object), not
+    a card a graveyard trigger is about, so the Grolnok reader leaves it alone."""
+    scenario = Scenario().player("alice", battlefield=["Nine Lives"]).player("bob").build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    lives = scenario.find("Nine Lives", Zone.BATTLEFIELD)
+    scenario.game.add_counters(lives, "incarnation", 9, putter="alice")
+    scenario.game.put_triggers_on_stack()
+    scenario.resolve_top()
+    assert lives.zone is Zone.EXILE

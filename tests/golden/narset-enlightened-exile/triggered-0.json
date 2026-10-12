@@ -5,7 +5,7 @@
     "modes": [],
     "on_stack": true,
     "source": "Narset, Enlightened Exile@alice#1",
-    "targets": [],
+    "targets": ["Lightning Bolt@alice#2"],
     "x": 0
   },
   "board": {
@@ -34,13 +34,50 @@
   },
   "card": "Narset, Enlightened Exile",
   "delta": {
-    "created": {},
-    "decisions": [],
-    "fields_changed": [],
+    "created": {
+      "Lightning Bolt@alice+1": {
+        "counters": {},
+        "zone": "stack"
+      }
+    },
+    "decisions": [
+      {
+        "amount": 0,
+        "cards": ["Lightning Bolt@alice+1"],
+        "kind": "may",
+        "player": "alice",
+        "players": [],
+        "prompt": "cast the copy of Lightning Bolt without paying its mana cost",
+        "source": "Narset, Enlightened Exile"
+      },
+      {
+        "amount": 0,
+        "cards": [],
+        "kind": "choose_targets",
+        "player": "alice",
+        "players": [],
+        "prompt": "choose targets for Lightning Bolt",
+        "source": "Lightning Bolt"
+      },
+      {
+        "amount": 0,
+        "cards": ["?", "?", "?"],
+        "kind": "order_triggers",
+        "player": "alice",
+        "players": [],
+        "prompt": "order your triggered abilities on the stack, bottom of the stack first: 1. Memnite, 2. Icehide Golem, 3. Narset, Enlightened Exile",
+        "source": null
+      }
+    ],
+    "fields_changed": ["cast_records", "exile_residents_seen", "spells_cast_this_turn", "turn_counts", "turn_facts"],
     "notices": {},
-    "objects": {},
+    "objects": {
+      "Lightning Bolt@alice#2": {
+        "zone": ["graveyard", "exile"]
+      }
+    },
     "players": {},
-    "stack": []
+    "stack": ["Lightning Bolt@alice+1", "ability of Memnite@alice#1: Whenever you cast a noncreature spell, this creature gets +1/+1 until end of turn", "ability of Icehide Golem@alice#1: Whenever you cast a noncreature spell, this creature gets +1/+1 until end of turn", "ability of Narset, Enlightened Exile@alice#1: Whenever you cast a noncreature spell, this creature gets +1/+1 until end of turn"]
   },
   "family": "triggered",
   "format": 1,

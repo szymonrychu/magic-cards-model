@@ -356,8 +356,12 @@ def parse_exile_discarded_card_with_counter(text: str):
     return effect
 
 
+#: A bare "exile it[ and ...]" is not this shape: there "it" is the ability's
+#: own source (Nine Lives' state trigger, Ancient Adamantoise's dies trigger),
+#: read by `removal._parse_exile_dead_self_clause` and its siblings. "It" names
+#: the arriving card only with Grolnok's counter rider.
 _EXILE_THAT_CARD_RE = re.compile(
-    r"^exile (?:it|that card)(?: with an? (?P<counter>[a-z]+) counter on it)?"
+    r"^exile (?:it(?= with )|that card)(?: with an? (?P<counter>[a-z]+) counter on it)?"
     r"(?: and (?P<rest>.+?))?\.?$",
     re.IGNORECASE,
 )
