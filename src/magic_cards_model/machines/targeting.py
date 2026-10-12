@@ -110,7 +110,7 @@ from ..models.zone import Zone
 from ..numbers import parse_count
 from ..serialization import SortedFrozenSet
 from ..snapshot import EngineModel
-from .abilities import AbilityKind, TriggeredAbility, keyword_abilities, parse_abilities
+from .abilities import AbilityKind, TriggeredAbility, parse_abilities
 from .combat import has_keyword
 from .converge import colors_of_mana_spent
 from .keywords import keyword_triggered_abilities
@@ -283,6 +283,18 @@ class ComparisonCount(StrEnum):
     spent`) - the identical "read off the source, not the target" shape
     `SOURCE_LOYALTY` just above already uses for Nahiri's own activated
     ability."""
+
+    SOURCE_POWER = "source_power"
+    """"with power less than this creature's power" - Vodalian Mindsinger's
+    ETB steal, Unliving Psychopath's and Radha's Firebrand's own targets: the
+    bound is the *source's* power, read off `source_id` like `SOURCE_LOYALTY`
+    and counted fresh at every `rejects` call. CR 613.5's layers give the
+    current value while the source is on the battlefield (a counter or a pump
+    in response moves it); once it has left, CR 608.2h's last known
+    information (`CardState.last_known_power`) is what the effect uses."""
+
+    SOURCE_TOUGHNESS = "source_toughness"
+    """`SOURCE_POWER`'s twin for "... less than this creature's toughness"."""
 
 
 class CombatState(StrEnum):
@@ -1884,7 +1896,31 @@ class TargetRequirement(EngineModel):
                 return None
             source = find_by_id(source_id)
             return None if source is None else colors_of_mana_spent(game, source)
+        if self.comparison_count in (
+            ComparisonCount.SOURCE_POWER,
+            ComparisonCount.SOURCE_TOUGHNESS,
+        ):
+            return self._source_stat(game, source_id)
         return None
+
+    def _source_stat(self, game: Any, source_id: UUID | None) -> int | None:
+        """The ability source's current power or toughness (CR 613.5), or its
+        last known one once it has left the battlefield (CR 608.2h) - see
+        `ComparisonCount.SOURCE_POWER`."""
+        find_by_id = getattr(game, "find_by_id", None)
+        if source_id is None or find_by_id is None:
+            return None
+        source = find_by_id(source_id)
+        if not isinstance(source, CardState):
+            return None
+        power = self.comparison_count is ComparisonCount.SOURCE_POWER
+        if source.zone is Zone.BATTLEFIELD:
+            characteristics_of = getattr(game, "characteristics_of", None)
+            if characteristics_of is None:
+                return None
+            chars = characteristics_of(source)
+            return _numeric(chars.power if power else chars.toughness)
+        return source.last_known_power if power else source.last_known_toughness
 
     def _defined_x(self, game: Any, caster: str | None) -> int | None:
         """`comparison_x_definition` counted for `caster` right now (CR 107.3c),
@@ -3939,11 +3975,11 @@ def _with_aura_target(card: Card, profile: TargetingProfile) -> TargetingProfile
     """
     if "Aura" not in card.subtypes:
         return profile
-    restrictions = [
-        (ability.parameter or "").strip()
-        for ability in keyword_abilities(card)
-        if ability.canonical.lower() == "enchant" and (ability.parameter or "").strip()
-    ]
+    from .keywords import enchant_restrictions
+
+    # CR 712.8d: an Aura spell cast from its front face is that face only -
+    # a back face's own enchant line (Radiant Restraints') is not in force.
+    restrictions = enchant_restrictions(card)
     added: list[TargetRequirement] = []
     only_tapped = untapped_target_forbidden(card.oracle_text)
     for restriction in restrictions:
@@ -6522,6 +6558,13 @@ _COMPARISON_COUNTS = {
     "colors_spent_source": ComparisonCount.SOURCE_COLORS_SPENT,
 }
 
+#: "less/greater than this creature's power|toughness" - which source stat the
+#: `stat_dir` branch of `_COMPARISON_CLAUSE` names.
+_SOURCE_STAT_COUNTS = {
+    "power": ComparisonCount.SOURCE_POWER,
+    "toughness": ComparisonCount.SOURCE_TOUGHNESS,
+}
+
 #: The comparison itself, once `_COMPARISON_ATTEMPT` says one is being made.
 #: Order inside the alternation matters: "N or less/greater" and the spelled-
 #: out "less/greater than or equal to N" are tried before the bare "N" so a
@@ -6547,6 +6590,10 @@ _COMPARISON_CLAUSE = re.compile(
     r"|(?P<expr_dir>less|greater) than or equal to (?P<expr>the number of [^,.]+? you control)"
     r"|less than or equal to\s+(?P<le_num>x|\d+)\b"
     r"|greater than or equal to\s+(?P<ge_num>x|\d+)\b"
+    # Vodalian Mindsinger, Unliving Psychopath: "power less than this
+    # creature's power" - the source's own current stat (`SOURCE_POWER`).
+    r"|(?P<stat_dir>less|greater) than (?:this (?:creature|permanent)|[A-Z][^.,']*?)'s "
+    r"(?P<source_stat>power|toughness)\b"
     r"|(?P<strict_dir>less|greater) than (?P<source_loyalty>.+?)'s loyalty\b"
     r"|equal to\s+(?P<eq_num>x|\d+)\b"
     r"|(?P<bare_num>x|\d+)\b"
@@ -6630,6 +6677,16 @@ def _extract_comparison(
         )
         remaining = rest[: match.start()] + rest[match.end() :]
         return attribute, operator, None, None, f"{remaining}, where X is {match.group('expr')}"
+    if match.group("stat_dir") is not None:
+        # "less/greater than this creature's power" - a strict inequality
+        # against the source's own current stat (`ComparisonCount.SOURCE_POWER`).
+        operator = (
+            ComparisonOperator.LESS_THAN
+            if match.group("stat_dir").lower() == "less"
+            else ComparisonOperator.GREATER_THAN
+        )
+        count = _SOURCE_STAT_COUNTS[match.group("source_stat").lower()]
+        return attribute, operator, None, count, rest[: match.start()] + rest[match.end() :]
     if match.group("strict_dir") is not None:
         # "less/greater than `<Name>`'s loyalty" (Nahiri, the Unforgiving) -
         # a strict inequality (CR 107.1a's plain English "less than", not "or

@@ -912,6 +912,10 @@ def _cast(
                     casting.pay_kicker(1, which=cost)
             else:
                 casting.pay_kicker(1)
+            if x_value is None and any("{X}" in cost for cost in costs):
+                # CR 107.3a: a kicker cost with {X} announces X - the least
+                # one "X can't be 0" (Thieving Skydiver) allows.
+                x_value = 1
         if x_value is not None:
             # CR 107.3a: the X announced for an {X} spell.
             casting.determine_cost(x_value=x_value)

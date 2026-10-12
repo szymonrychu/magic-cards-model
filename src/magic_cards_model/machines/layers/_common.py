@@ -24,10 +24,13 @@ BASIC_LAND_TYPES: dict[str, str] = {
 #: face) - an Aura's own static control change (CR 613.1b: "Layer 2:
 #: Control-changing effects are applied"), for as long as the Aura is on the
 #: battlefield attached to it (CR 611.3a). The subject is whatever the Aura
-#: or Equipment is attached to, never a target.
+#: or Equipment is attached to, never a target - a card type, or an artifact
+#: subtype an enchant ability can name (Carry Away's "Enchant Equipment / You
+#: control enchanted Equipment.").
 _YOU_CONTROL_ATTACHED_RE = re.compile(
     r"^[Yy]ou control (?P<attachment>enchanted|equipped) "
-    r"(?P<subject>artifact creature|creature|permanent|artifact|enchantment|land|planeswalker)\.?$"
+    r"(?P<subject>artifact creature|creature|permanent|artifact|enchantment|land|planeswalker"
+    r"|Equipment|Vehicle)\.?$"
 )
 
 

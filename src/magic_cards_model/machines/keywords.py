@@ -6435,7 +6435,7 @@ def madness_annotation(card: CardState, turn: int | None = None) -> ExileAnnotat
 # --------------------------------------------------------------------------
 
 
-def enchant_restrictions(card: Card) -> list[str]:
+def enchant_restrictions(card: Card, face_name: str | None = None) -> list[str]:
     """What every `Enchant [object or player]` line on this card demands.
 
     CR 702.5a: "Enchant is a static ability, written 'Enchant [object or
@@ -6445,11 +6445,21 @@ def enchant_restrictions(card: Card) -> list[str]:
     CR 702.5c is why this is a list and not one string: "If an Aura has multiple
     instances of enchant, **all of them apply**. The Aura's target must follow
     the restrictions from all the instances of enchant."
+
+    Only the face that is up counts (CR 712.8d/712.8e): Radiant Grace's front
+    "Enchant creature" and its back face Radiant Restraints' "Enchant player"
+    are never in force together. `face_name` is the up face (`CardState.
+    up_face_name`); `None` reads the front face, the face a card has in every
+    zone but the battlefield.
     """
+    faces = getattr(card, "card_faces", None) or []
+    wanted = face_name or (faces[0].name if faces else None)
     return [
         (ability.parameter or "").strip()
         for ability in keyword_abilities(card)
-        if ability.canonical.lower() == "enchant" and (ability.parameter or "").strip()
+        if ability.canonical.lower() == "enchant"
+        and (ability.parameter or "").strip()
+        and (wanted is None or not ability.face or ability.face == wanted)
     ]
 
 
@@ -6471,7 +6481,7 @@ def why_cannot_enchant(aura: CardState, target: Any, caster: str, game: Any = No
     """
     from .targeting import profile_for_text
 
-    restrictions = enchant_restrictions(aura.card)
+    restrictions = enchant_restrictions(aura.card, aura.up_face_name)
     if not restrictions and aura.bestowed:
         # CR 702.103b: "As a spell cast bestowed is put onto the stack, it
         # becomes an Aura enchantment and gains enchant creature." That grant

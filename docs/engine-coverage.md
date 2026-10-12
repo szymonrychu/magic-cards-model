@@ -8115,3 +8115,19 @@ Audit credit lives in `static_audit/other_statics.py`: a line reads handled only
 | "As this permanent transforms into <face>, attach it to a player": the Aura's controller picks the player | 712.20, 303.4d, 303.4m | `effects/continuous._attach_permanent_to_a_player` | same file (Curse of Leeches // Leeching Lurker) |
 
 Notes: CR 702.122 and 702.171 contain no "as though" text, so the crew/saddle statics are contribution and restriction statics only. A Jailer-style removal is applied over a granted unearth without comparing timestamps. Schema bumped 141 -> 149 (new `Modification` members `RemoveSupertype`, `LoseAllAbilitiesExceptManaAbilities`; the integrator renumbers).
+
+## EP01-R3-T5: control-change triggers, control of an attached Equipment, return transformed attached (CR 613.1b, 611.2a, 611.2b, 107.3a, 107.3m, 701.3a, 701.3d, 712.14a, 303.4f, 303.4i)
+
+| Shape | Reader | Cards (proof) | Status |
+|---|---|---|---|
+| "`that player`/`the player with the lowest life total` gains control of `<this>`[, untaps it][, and puts N `<kind>` counters on it]. [It gains haste until end of turn.]" (+ printed tie clause) | `machines/recurring_control.parse_gains_control_of_self_clause` | Alexios, Deimos of Kosmos (Loxodon Peacekeeper) | handled - layer 2, no duration (CR 611.2a); tie is the controller's CHOOSE_PLAYERS |
+| "gain control of `<target>`. If that `<noun>` is an `<subtype>`, attach it to this creature." | `machines/recurring_control.parse_gain_control_then_attach_clause` | Thieving Skydiver | handled |
+| "Kicker {X}. X can't be 0." keyword line; kicker {X} folded into the total cost; X restriction binds only when kicked; ETB X read from the cast (CR 107.3m) at announcement and recheck | `abilities._parse_keyword_mana_x_minimum`, `Casting._x_restriction_text`, `Game.etb_x_substituted` | Thieving Skydiver | handled |
+| "target ... with power less than this creature's power" (source's current power, LKI once gone) | `targeting.ComparisonCount.SOURCE_POWER` | Vodalian Mindsinger (Unliving Psychopath) | handled |
+| "You control enchanted Equipment." | `layers/_common._YOU_CONTROL_ATTACHED_RE` widened | Carry Away (Steal Artifact) | handled |
+| "unattach enchanted Equipment." / "`<instruction>`. If it's an `<subtype>`, unattach it." | `machines/unattach.py` | Carry Away (Tamiyo's Compleation) | handled |
+| "Enchant A, B, or C" comma-list enchant line | `abilities._parse_enchant_list` | Tamiyo's Compleation | handled |
+| Enchant restrictions read off the face that is up (CR 712.8a/d/e) | `keywords.enchant_restrictions(card, face_name)` | Radiant Grace // Radiant Restraints | handled |
+| "return `<it|this card>` to the battlefield transformed under your control[ attached to `<target>`]." (CR 303.4i: an illegal host leaves it in the graveyard) | `machines/return_transformed_attached.parse_return_self_transformed_clause` | Accursed Witch, Radiant Grace, Skin Invasion (Vengeful Strangler) | handled |
+| "return it to the battlefield under your control, then return this card to the battlefield transformed under your control." ("it" = the event's creature) | `parse_return_subject_then_self_transformed_clause` | (Journey to Eternity) | handled |
+| "enchanted permanent's controller `<instruction>`[, then that player ...]" | `parse_attached_controller_clause` (binds the "that player" readers to the host's controller) | (Strangling Grasp) | handled |

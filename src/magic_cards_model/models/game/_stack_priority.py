@@ -223,6 +223,16 @@ _THAT_PLAYER_BINDING_RE = re.compile(
 )
 
 
+def _costs_carry_x(source: CardState) -> bool:
+    """Whether a cost of the spell `source` was printed with an {X} - its mana
+    cost, or a kicker cost (CR 107.3a: X in an additional cost)."""
+    if "{X}" in (source.mana_cost or ""):
+        return True
+    from ...machines.casting import kicker_costs
+
+    return any("{X}" in cost for cost in kicker_costs(source.card))
+
+
 def _that_player_of(ability: "AbilityOnStack") -> str | None:
     """Who a triggered ability's "... that player controls"/"... that
     player's `<zone>`" names: the player its trigger event names
@@ -2079,19 +2089,33 @@ class StackPriorityMixin:
         effect_text = effect_text_with_named_token_reminder(
             ability.ability.effect, ability.ability.reminder
         )
-        if (
-            ability.ability.event is TriggerEvent.ENTERS_THE_BATTLEFIELD
-            and effect_text
-            and re.search(r"\bX\b", effect_text)
+        return self.etb_x_substituted(ability, effect_text, uncast_x=uncast_x)
+
+    def etb_x_substituted(
+        self: "Game", ability: AbilityOnStack, text: str | None, *, uncast_x: int | None = None
+    ) -> str | None:
+        """`text` (an ETB trigger's effect, or the part its targets are read
+        from) with CR 107.3m's X written in - see `_etb_x_effect_text`.
+
+        "Had a value of X chosen for any of its costs" covers an X in an
+        additional cost as much as one in the mana cost: Thieving Skydiver's
+        "Kicker {X}" (CR 107.3a) is the X its "mana value X or less" reads."""
+        if not (
+            isinstance(ability.ability, TriggeredAbility)
+            and ability.ability.event is TriggerEvent.ENTERS_THE_BATTLEFIELD
+            and text
+            and re.search(r"\bX\b", text)
         ):
-            source = ability.source(self)
-            if source is not None and "{X}" in (source.mana_cost or ""):
-                record = self.cast_record_of(source)
-                if record is not None:
-                    effect_text = substitute_x(effect_text, record.x_value)
-                elif uncast_x is not None:
-                    effect_text = substitute_x(effect_text, uncast_x)
-        return effect_text
+            return text
+        source = ability.source(self)
+        if source is None or not _costs_carry_x(source):
+            return text
+        record = self.cast_record_of(source)
+        if record is not None:
+            return substitute_x(text, record.x_value)
+        if uncast_x is not None:
+            return substitute_x(text, uncast_x)
+        return text
 
     def _targets_for_trigger(self: "Game", ability: AbilityOnStack) -> list[TargetRef] | None:
         """What this triggered ability targets, as it goes on the stack (CR 603.3d).
@@ -2527,6 +2551,9 @@ class StackPriorityMixin:
                 and cost_announces_x(spell.ability.cost)
                 else spell.ability.text
             )
+            # CR 107.3m: an ETB trigger's X is its spell's X, at the recheck
+            # as at announcement (`_trigger_target_profile`).
+            ability_text = self.etb_x_substituted(spell, ability_text) or ability_text
             # CR 201.5's self-reference, normalized to "this permanent" the
             # same way `_activation_target_text` already normalizes it for
             # the initial announcement (Hope of Ghirapur's own "by Hope of

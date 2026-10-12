@@ -97,6 +97,26 @@ _COPY_CAST_SPELL_RE = re.compile(
 )
 
 
+@ABILITY_TEXT.rung("s8")
+def _parse_gains_control_of_self_clause(text: str) -> AbilityEffect | None:
+    """ "`<player>` gains control of `<this>`[, untaps it][, and puts ...]" -
+    Alexios, Deimos of Kosmos; Loxodon Peacekeeper. Read by
+    `machines/recurring_control.parse_gains_control_of_self_clause`."""
+    from ..recurring_control import parse_gains_control_of_self_clause
+
+    return parse_gains_control_of_self_clause(text)
+
+
+@ABILITY_TEXT.rung("s8")
+def _parse_gain_control_then_attach_clause(text: str) -> AbilityEffect | None:
+    """ "Gain control of `<target>`. If that `<noun>` is an? `<subtype>`,
+    attach it to this creature." - Thieving Skydiver. Read by
+    `machines/recurring_control.parse_gain_control_then_attach_clause`."""
+    from ..recurring_control import parse_gain_control_then_attach_clause
+
+    return parse_gain_control_then_attach_clause(text)
+
+
 @ABILITY_TEXT.rung("s36")
 def _parse_copy_cast_spell_clause(text: str) -> AbilityEffect | None:
     """`_COPY_CAST_SPELL_RE`'s shape - see its own docstring."""
