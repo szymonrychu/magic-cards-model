@@ -1081,15 +1081,9 @@ def _granted_cost_keyword(line: str, keyword: str) -> KeywordAbility | None:
 
 
 def marker_cast_options(spell: CardState) -> list[KeywordCastOption]:
-    """The cast options a card has for reasons not printed on it: a
-    self-zone cast permission it was granted (`granted_self_zone_cast_options`)
-    and the exile pile it is in (`_exile_marker_cast_options`)."""
-    return granted_self_zone_cast_options(spell) + _exile_marker_cast_options(spell)
-
-
-def _exile_marker_cast_options(spell: CardState) -> list[KeywordCastOption]:
-    """The cast options a card has because of the *pile of exile it is in*
-    (CR 406.4), rather than because of anything printed on it.
+    """The cast options a card has for reasons not printed on it: a self-zone
+    cast permission it was granted (`granted_self_zone_cast_options`), and
+    those it has because of the *pile of exile it is in* (CR 406.4).
 
     Every option in `keyword_cast_options` is read off a printed CR 702 keyword
     line, so a permission handed out by a CR 701 keyword *action* - which
@@ -1119,6 +1113,7 @@ def _exile_marker_cast_options(spell: CardState) -> list[KeywordCastOption]:
     airbent this way gets nothing: it is not a card, and CR 111.7/CR 704.5d
     have it cease to exist before anybody could ask.
     """
+    self_zone = granted_self_zone_cast_options(spell)
     annotation = spell.exile_annotation
     if (
         annotation is not None
@@ -1127,7 +1122,7 @@ def _exile_marker_cast_options(spell: CardState) -> list[KeywordCastOption]:
     ):
         # CR 702.170c/d: a card that *became* plotted (Jace Reawakened, Lilah)
         # is cast the same way a plot card is, though it prints no plot line.
-        return [
+        return self_zone + [
             KeywordCastOption(
                 keyword="Plot",
                 rule="CR 702.170d",
@@ -1144,15 +1139,15 @@ def _exile_marker_cast_options(spell: CardState) -> list[KeywordCastOption]:
         # (Falkenrath Gorger, Dream Devourer) rides on the exiled card; its
         # printed one is `keyword_cast_options`'s.
         keyword = _GRANTED_KEYWORD_MARKERS[annotation.marker]
-        return [
+        return self_zone + [
             option
             for line in spell.granted_ability_texts
             if (granted := _granted_cost_keyword(line, keyword)) is not None
             and (option := _option_from_keyword(granted)) is not None
         ]
     if annotation is None or annotation.marker is not ExileMarker.AIRBENT:
-        return []
-    return [
+        return self_zone
+    return self_zone + [
         KeywordCastOption(
             keyword="Airbend",
             rule="CR 701.65a",
