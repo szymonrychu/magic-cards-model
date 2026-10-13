@@ -1002,6 +1002,19 @@ class AbilityOnStack(EngineModel):
     cost_sacrificed_toughnesses: tuple[int | None, ...] = ()
     """`cost_sacrificed_powers`' toughness twin."""
 
+    cost_discarded_card_ids: tuple[UUID, ...] = ()
+    """The ids of the cards discarded to pay this ability's own cost, when the
+    ability's *effect* refers back to one - Mercurial Chemister's "deals damage
+    to target creature equal to the discarded card's mana value". Read off the
+    settled payment by `Game.activate_ability` (CR 602.2b), the discard twin of
+    `cost_sacrificed_card_ids`."""
+
+    cost_discarded_mana_values: tuple[float, ...] = ()
+    """`cost_discarded_card_ids`' mana values, aligned by position and taken as
+    the ability is created (CR 608.2h) - a discarded token-less card keeps its
+    mana value in the graveyard, but the value is fixed here so a later
+    zone change cannot move it (CR 202.3)."""
+
     mana_spent: dict[Color, int] = Field(default_factory=dict)
     """How much mana of each colour paid this ability's own activation cost
     (CR 601.2h, imported for activation by CR 602.2b), taken from `machines/

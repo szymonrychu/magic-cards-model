@@ -1493,6 +1493,13 @@ def parse_mode_effect(mode: Mode, x_value: int) -> Effect | None:
     c02_t6 = _c02_t6_spell_effect(text)
     if c02_t6 is not None:
         return c02_t6
+    # Grab the Reins's second mode: "Sacrifice a creature. ~ deals damage equal
+    # to that creature's power to any target." - an amount that spends a
+    # characteristic of the object an earlier sentence of the mode moved, which
+    # a mode never reaches the spell-text ladder to have read.
+    referenced_stat = referenced_permanent_stat_effect(text, for_spell=True)
+    if referenced_stat is not None:
+        return referenced_stat
     # Witherbloom Charm's own first mode: "You may sacrifice a permanent. If
     # you do, draw two cards." (CR 118.12) is read whole by `_spell_effect_
     # or_notice` for a non-modal card, but a mode's own text never reaches
@@ -6830,6 +6837,9 @@ from .dispatch import (  # noqa: E402
     parse_clause_effect,
     parse_mixed_effect,
     parse_mixed_effect_for_spell,
+)
+from ..ep02_r2_referenced_permanent_stat import (  # noqa: E402
+    referenced_permanent_stat_effect,
 )
 from .draw_discard import _discard_cards, _land_cards_in_hand  # noqa: E402
 from .library import (  # noqa: E402

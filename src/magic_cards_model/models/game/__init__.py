@@ -1972,7 +1972,7 @@ class Game(
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 163
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 164
     #: 67: `machines/cost.CostComponent` gained `link_to_permanent_id` (CR
     #: 607.2q), reachable from `Game` through a pending `AbilityOnStack.
     #: keyword_activation`/`.unless_payment`'s own `CostPayment.components`.
@@ -2327,6 +2327,16 @@ class Game(
     #: it hit, "Enchanted player can't gain life." and "Players have no maximum
     #: hand size." are read off the battlefield, and a Crew N ability is
     #: once-per-turn; an older dump would resolve each of these as a no-op.
+    #: 164 (EP02-R2-T4): `AbilityOnStack` gained `cost_discarded_card_ids` and
+    #: `cost_discarded_mana_values` (the card an activation's "Discard a card"
+    #: cost moved, for "damage equal to the discarded card's mana value" and
+    #: "X/X, where X is the discarded card's mana value"); a decoded older
+    #: ability would resolve those texts with no discarded card to read, and
+    #: referenced-permanent amounts ("its controller gains life equal to its
+    #: toughness", "scry X, where X is its power", "look at the top X cards ...
+    #: where X is that creature's power", the sacrificed permanent's mana value
+    #: as X damage and life) now resolve where an older dump would have done
+    #: nothing.
     #: 163 (EP02-R1-T6, reserved: 157 + task 6): a `DelayedEffectSpec` variant
     #: `return_subject_then_discard_its_stat` (Vanish into Memory's return with
     #: its "if you do, discard cards equal to that creature's toughness"), and

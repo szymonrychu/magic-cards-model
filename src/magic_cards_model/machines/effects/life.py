@@ -22,6 +22,7 @@ from ..ep02_r1_life_amounts import parse_life_loss_text
 from ..ep02_r1_moved_card_stat import moved_card_stat_effect
 from ..ep02_r1_referenced_stat import referenced_stat_effect
 from ..ep02_r2_card_mana_value import card_mana_value_effect
+from ..ep02_r2_referenced_permanent_stat import referenced_permanent_stat_effect
 from ..targeting import (
     permanent_description,
 )
@@ -1479,3 +1480,16 @@ def _parse_card_mana_value_text(text: str, *, for_spell: bool) -> Effect | Abili
     the spell a cast trigger names, or of a card the text reveals, mills,
     discards or exiles (`ep02_r2_card_mana_value`)."""
     return card_mana_value_effect(text, for_spell=for_spell)
+
+
+@ABILITY_TEXT.rung("s39", for_spell=False, after=[_parse_card_mana_value_text])
+@SPELL_TEXT.rung("s22", for_spell=True, after=[_parse_card_mana_value_text])
+def _parse_referenced_permanent_stat_text(
+    text: str, *, for_spell: bool
+) -> Effect | AbilityEffect | None:
+    """ "Its controller gains life equal to its toughness", "scry X, where X
+    is its power", "each opponent loses life equal to the sacrificed creature's
+    power": an amount that is a characteristic of a permanent or card the text,
+    its cost or its trigger named, with the openers and sentences the earlier
+    readers do not read (`ep02_r2_referenced_permanent_stat`)."""
+    return referenced_permanent_stat_effect(text, for_spell=for_spell)
