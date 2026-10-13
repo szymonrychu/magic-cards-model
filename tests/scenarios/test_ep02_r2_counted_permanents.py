@@ -501,3 +501,141 @@ def test_bloodtithe_harvester_kills_a_creature_when_twice_the_blood_tokens_cover
     scenario.activate(harvester, targets=[bears])
     scenario.pass_until_resolved()
     assert bears.zone is Zone.GRAVEYARD
+
+
+
+# --------------------------------------------------------------------------
+# Counted legendary creatures / Allies as the count of a larger instruction
+# (The Ring Goes South, Bala Ged Thief, Vastwood Animist)
+# --------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize("legends", [0, 1, 2])
+def test_ring_goes_south_puts_one_land_per_legendary_creature_onto_the_battlefield_tapped(legends):
+    """CR 701.54a: the Ring tempts you; then lands are revealed until X are found, X
+    being the legendary creatures you control (the opponent's are not counted); the
+    lands enter tapped (CR 701.20) and the rest go to the bottom of the library."""
+    scenario = _main(
+        _build(
+            ["Forest"] * 4 + ["Isamaru, Hound of Konda", "Kaza, Roil Chaser"][:legends],
+            ["Isamaru, Hound of Konda", "Kaza, Roil Chaser"],
+            hand=["The Ring Goes South"],
+            alice_library=["Grizzly Bears", "Island", "Grizzly Bears", "Plains", "Swamp", "Mountain"],
+        )
+    )
+    lands_before = len(_lands(scenario))
+    _cast(scenario, "The Ring Goes South")
+    assert scenario.player("alice").ring_tempted_count == 1
+    entered = _lands(scenario)[lands_before:]
+    assert len(entered) == legends
+    assert all(land.tapped for land in entered)
+    library = [card.name for card in scenario.player("alice").library]
+    assert len(library) == 6 - legends
+    if legends == 2:  # revealed down to the second land; the two Bears went to the bottom
+        assert library == ["Swamp", "Mountain", "Grizzly Bears", "Grizzly Bears"]
+
+
+def _bala_ged_scenario(hand_names, allies):
+    return _main(
+        _build(
+            ["Swamp"] * 4 + ["Tajuru Archer"] * allies,
+            [],
+            hand=["Bala Ged Thief"],
+            bob_hand=hand_names,
+        )
+    )
+
+
+@pytest.mark.parametrize("allies", [0, 1])
+def test_bala_ged_thief_makes_the_player_discard_a_card_the_controller_picks(allies):
+    """Allies counted include Bala Ged Thief itself; with a hand no bigger than the
+    count, every card is revealed and the controller chooses which is discarded."""
+    scenario = _bala_ged_scenario(["Forest", "Island"], allies)
+    scenario.choose_trigger_targets("Bala Ged Thief", ["bob"])
+    island = scenario.find("Island", Zone.HAND, "bob")
+    scenario.will_choose_cards(island, source="Bala Ged Thief")
+    scenario.cast_onto_stack("Bala Ged Thief", auto=True, username="alice")
+    while scenario.game.stack:
+        scenario.pass_until_resolved()
+    assert island.zone is Zone.GRAVEYARD
+    assert len(scenario.player("bob").hand) == 1
+
+
+def test_bala_ged_thief_with_more_cards_than_allies_reveals_only_the_ally_count():
+    """One Ally (Bala Ged itself): the opponent reveals exactly one of three cards,
+    and that is the card that is discarded."""
+    scenario = _bala_ged_scenario(["Forest", "Island", "Mountain"], 0)
+    scenario.choose_trigger_targets("Bala Ged Thief", ["bob"])
+    mountain = scenario.find("Mountain", Zone.HAND, "bob")
+    scenario.will_choose_cards(mountain, username="bob", times=None)
+    scenario.will_choose_cards(mountain, username="alice", times=None)
+    scenario.cast_onto_stack("Bala Ged Thief", auto=True, username="alice")
+    while scenario.game.stack:
+        scenario.pass_until_resolved()
+    assert mountain.zone is Zone.GRAVEYARD
+    assert len(scenario.player("bob").hand) == 2
+
+
+@pytest.mark.parametrize("allies", [0, 1, 3])
+def test_vastwood_animist_makes_a_land_an_x_x_elemental_for_the_ally_count(allies):
+    """X is the Allies you control (the Animist included), fixed as the ability
+    resolves (CR 608.2h); it is still a land (CR 205.1b)."""
+    scenario = _main(
+        _build(
+            ["Vastwood Animist", "Forest"] + ["Tajuru Archer"] * allies + ["Grizzly Bears"],
+            ["Tajuru Archer", "Tajuru Archer"],
+        )
+    )
+    animist = scenario.find("Vastwood Animist", Zone.BATTLEFIELD, "alice")
+    animist.summoning_sick = False
+    forest = scenario.find("Forest", Zone.BATTLEFIELD, "alice")
+    scenario.activate(animist, targets=[forest])
+    scenario.pass_until_resolved()
+    chars = scenario.game.characteristics_of(forest)
+    assert chars.is_land and chars.is_creature
+    assert (chars.power, chars.toughness) == (allies + 1, allies + 1)
+    assert "Elemental" in chars.subtypes
+
+
+# --------------------------------------------------------------------------
+# "reveals a number of cards from their hand equal to the number of Swamps you
+# control. You choose one of them. That player discards that card." (Mire's Toll)
+# CR 701.20 (reveal), CR 701.9b (the discard is chosen by someone else).
+# --------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize("swamps", [1, 2])
+def test_mire_s_toll_reveals_as_many_cards_as_swamps_and_discards_the_one_chosen(swamps):
+    """Swamps counted include the one that pays; the opponent's are not counted. With
+    a hand of three and fewer Swamps than that, the revealing player picks which cards
+    to show, and the caster picks the one that goes."""
+    scenario = _main(
+        _build(
+            ["Swamp"] * swamps + ["Island"] * 2,
+            ["Swamp"] * 4,
+            hand=["Mire's Toll"],
+            bob_hand=["Forest", "Island", "Mountain"],
+        )
+    )
+    forest = scenario.find("Forest", Zone.HAND, "bob")
+    island = scenario.find("Island", Zone.HAND, "bob")
+    mountain = scenario.find("Mountain", Zone.HAND, "bob")
+    shown = (forest, island)[:swamps]
+    scenario.will_choose_cards(*shown, username="bob", times=None)
+    scenario.will_choose_cards(shown[-1], username="alice", times=None)
+    _cast(scenario, "Mire's Toll", targets=["bob"])
+    assert shown[-1].zone is Zone.GRAVEYARD
+    assert len(scenario.player("bob").hand) == 2
+    assert mountain.zone is Zone.HAND
+    assert len(scenario.player("alice").hand) == 0
+
+
+def test_mire_s_toll_with_a_hand_no_bigger_than_the_swamps_reveals_it_all():
+    scenario = _main(
+        _build(["Swamp"] * 3, [], hand=["Mire's Toll"], bob_hand=["Forest", "Island"])
+    )
+    island = scenario.find("Island", Zone.HAND, "bob")
+    scenario.will_choose_cards(island, username="alice", times=None)
+    _cast(scenario, "Mire's Toll", targets=["bob"])
+    assert island.zone is Zone.GRAVEYARD
+    assert len(scenario.player("bob").hand) == 1
