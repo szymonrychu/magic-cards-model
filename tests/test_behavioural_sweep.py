@@ -1520,6 +1520,18 @@ def _board_candidates(*, legendary: bool = False) -> tuple[str, ...]:
         and set(card.types) & _PERMANENT_TYPES
         and ("Legendary" in (card.type_line or "")) is legendary
         and not card.is_land
+        and not _fires_at_a_step(card)
+    )
+
+
+def _fires_at_a_step(card: Card) -> bool:
+    """Whether the printing has a trigger of its own at the beginning of a
+    step or phase (CR 603.2) - staged as filler it would fire in the very
+    step a probe runs through (Abhorrent Overlord's upkeep sacrifice) and
+    change the board the probe's condition is read on."""
+    return any(
+        ability.event is not None and ability.event.value == "beginning_of_step"
+        for ability in triggered_abilities_of(card)
     )
 
 
@@ -6846,3 +6858,22 @@ def replay(case: Case, recipe: dict[str, Any]) -> dict[str, Any]:
     if outcome.record is None:
         raise AssertionError(f"{case.id}: the recorded recipe no longer executes: {outcome.detail}")
     return json.loads(golden.dumps(outcome.record))
+
+
+@pytest.mark.parametrize("card", ["Liliana's Contract", "Happily Ever After"])
+def test_board_material_does_not_fire_in_the_probed_step(card: str) -> None:
+    """Filler staged to meet a board condition must not carry a trigger of
+    its own on the step being probed (Abhorrent Overlord's upkeep sacrifice
+    would break the very condition the probe tests, CR 603.2)."""
+    ability = next(
+        a for a in triggered_abilities_of(pool()[card]) if a.event is not None and a.intervening_if
+    )
+    material = _board_material(card, ability.intervening_if)
+    assert material
+    for item in material:
+        fires = [
+            a
+            for a in triggered_abilities_of(pool()[item.name])
+            if a.event is not None and a.event.value == "beginning_of_step"
+        ]
+        assert not fires, f"{item.name} triggers at the beginning of a step: {fires[0].text}"
