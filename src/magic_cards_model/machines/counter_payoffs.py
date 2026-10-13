@@ -64,6 +64,9 @@ from typing import TYPE_CHECKING
 from ..models.card_state import CardState
 from ..models.zone import Zone
 from ..numbers import parse_count
+from . import effects
+from .modes import substitute_x
+from .targeting import permanent_description
 from .triggers import AbilityOnStack
 
 if TYPE_CHECKING:
@@ -106,8 +109,6 @@ _PUT_THAT_MANY_COUNTERS_ON_IT_RE = re.compile(
 def _put_that_many_counters_on_it(text: str, *, for_spell: bool):  # noqa: ANN202
     if for_spell:
         return None
-
-    from . import effects
 
     match = _PUT_THAT_MANY_COUNTERS_ON_IT_RE.fullmatch(text.strip())
     if match is None:
@@ -238,9 +239,6 @@ def _put_counter_then_x_clause_where_x_is_counters_on_self(text: str, *, for_spe
     if for_spell:
         return None
 
-    from . import effects
-    from .modes import substitute_x
-
     match = _PUT_COUNTER_THEN_X_CLAUSE_WHERE_X_IS_COUNTERS_ON_SELF_RE.fullmatch(
         " ".join(text.split())
     )
@@ -342,8 +340,6 @@ def _remove_a_counter_from_it_when_you_do(text: str, *, for_spell: bool):  # noq
     if for_spell:
         return None
 
-    from . import effects
-
     match = _REMOVE_A_COUNTER_FROM_IT_WHEN_YOU_DO_RE.fullmatch(" ".join(text.split()))
     if match is None:
         return None
@@ -432,9 +428,6 @@ def _crewed_this_turn_target_then_maybe_double(text: str, *, for_spell: bool):  
     if for_spell:
         return None
 
-    from . import effects
-    from .targeting import permanent_description
-
     match = _CREWED_THIS_TURN_TARGET_THEN_MAYBE_DOUBLE_RE.fullmatch(" ".join(text.split()))
     if match is None:
         return None
@@ -486,8 +479,6 @@ _MAY_PAY_LIFE_EQUAL_TO_ITS_POWER_THEN_COUNTERS_RE = re.compile(
 def _may_pay_life_equal_to_its_power_then_counters(text: str, *, for_spell: bool):  # noqa: ANN202
     if for_spell:
         return None
-
-    from . import effects
 
     match = _MAY_PAY_LIFE_EQUAL_TO_ITS_POWER_THEN_COUNTERS_RE.fullmatch(" ".join(text.split()))
     if match is None:

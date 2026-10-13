@@ -25,6 +25,8 @@ if TYPE_CHECKING:
     from ...models.game import Game
     from ...models.player import Player
 from .enters import (
+    ESCAPED_CONDITION,
+    NOT_ESCAPED_CONDITION,
     _compile_enters_uncast_exile,
     _compile_lands_you_control_enter_untapped,
     _compile_opponents_permanents_enter_tapped,
@@ -534,7 +536,6 @@ def _gate_replaced_enters_with(
     +1/+1 counters on it instead." (Polukranos, Unchained): the instead-sentence
     replaces the plain one for a permanent that escaped (CR 702.138c), so the
     plain sentence's `ENTERS_WITH` applies only to one that did not."""
-    from .enters import ESCAPED_CONDITION, NOT_ESCAPED_CONDITION
 
     if not re.search(r"\binstead\.?$", paragraph.strip(), re.IGNORECASE):
         return effects

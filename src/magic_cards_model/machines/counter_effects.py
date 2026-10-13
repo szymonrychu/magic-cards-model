@@ -27,6 +27,14 @@ from typing import TYPE_CHECKING
 
 from ..data.subtypes import subtype_vocabulary
 from ..models.card import Type
+from ..models.card_state import CardState
+from ..models.mana import ManaCost
+from ..models.token import is_token
+from ..models.zone import Zone
+from ..numbers import parse_count
+from . import counter_payoffs, effects, layers, minus_counters
+from .decisions import Decision, DecisionKind, source_id_of
+from .delayed import ReflexiveConsequence
 from .triggers import ExtraTriggerEvent, GameEvent, TriggerEvent
 
 if TYPE_CHECKING:
@@ -396,8 +404,6 @@ def _counter_threshold_anthem_builder(
 def parse_static_layer_sentence(sentence: str):  # noqa: ANN201 - EffectBuilder
     """A static counter sentence as a `machines/layers` `EffectBuilder`, or
     `None`. Asked first by `machines/layers._parse_static_layer_sentence`."""
-    from ..numbers import parse_count
-    from . import layers
 
     text = " ".join(sentence.split())
     match = _COUNTER_THRESHOLD_ANTHEM_RE.fullmatch(text)
@@ -1128,7 +1134,6 @@ _CHOOSE_TARGETS_PUT_COUNTER_ON_EACH_RE = re.compile(
 
 
 def _choose_targets_put_counter_on_each(text: str, *, for_spell: bool):  # noqa: ANN202
-    from ..numbers import parse_count
 
     match = _CHOOSE_TARGETS_PUT_COUNTER_ON_EACH_RE.fullmatch(text)
     if match is None:
@@ -1160,12 +1165,6 @@ _CREATE_THEN_COUNTERS_PER_SOURCE_COUNTER_RE = re.compile(
 def _create_then_counters_per_source_counter(text: str, *, for_spell: bool):  # noqa: ANN202
     if for_spell:
         return None
-
-    from ..models.token import is_token
-    from ..models.zone import Zone
-    from ..numbers import parse_count
-    from . import effects
-    from .decisions import source_id_of
 
     match = _CREATE_THEN_COUNTERS_PER_SOURCE_COUNTER_RE.fullmatch(text)
     if match is None:
@@ -1221,10 +1220,6 @@ def _create_token_then_put_this_creatures_counters_on_it(text: str, *, for_spell
     if for_spell:
         return None
 
-    from ..models.token import is_token
-    from ..models.zone import Zone
-    from . import effects
-
     match = _CREATE_TOKEN_THEN_PUT_THIS_CREATURES_COUNTERS_ON_IT_RE.fullmatch(text.strip())
     if match is None:
         return None
@@ -1279,11 +1274,6 @@ def _reflexive_may_pay_x_move_counters(text: str, *, for_spell: bool):  # noqa: 
     if for_spell:
         return None
 
-    from ..models.mana import ManaCost
-    from . import effects
-    from .decisions import source_id_of
-    from .delayed import ReflexiveConsequence
-
     match = _REFLEXIVE_MAY_PAY_X_MOVE_COUNTERS_RE.fullmatch(text.strip())
     if match is None:
         return None
@@ -1337,11 +1327,6 @@ _MAY_MOVE_ANY_NUMBER_COUNTERS_RE = re.compile(
 def _may_move_any_number_counters(text: str, *, for_spell: bool):  # noqa: ANN202
     if for_spell:
         return None
-
-    from ..models.card_state import CardState
-    from ..models.zone import Zone
-    from . import effects
-    from .decisions import Decision, DecisionKind, source_id_of
 
     match = _MAY_MOVE_ANY_NUMBER_COUNTERS_RE.fullmatch(text.strip())
     if match is None:
@@ -1502,11 +1487,6 @@ def _deals_damage_then_may_exile_graveyard_extra_damage(text: str, *, for_spell:
     if not for_spell:
         return None
 
-    from ..models.card_state import CardState
-    from ..models.zone import Zone
-    from . import effects
-    from .decisions import source_id_of
-
     match = _DEALS_DAMAGE_THEN_MAY_EXILE_GRAVEYARD_EXTRA_DAMAGE_RE.fullmatch(text.strip())
     if match is None:
         return None
@@ -1553,7 +1533,6 @@ def _counter_payoffs_resolution_text(text: str, *, for_spell: bool):  # noqa: AN
     to add a card-name row for. Deferred to a function (rather than a bare
     tuple entry naming the imported callable) only so this module's own
     import list stays untouched by a sibling task's additions to that one."""
-    from . import counter_payoffs
 
     return counter_payoffs.parse_resolution_text(text, for_spell=for_spell)
 
@@ -1569,7 +1548,6 @@ def _minus_counters_resolution_text(text: str, *, for_spell: bool):  # noqa: ANN
     entry naming the imported callable) for the identical reason `_counter_
     payoffs_resolution_text` is: this module's own import list stays
     untouched by a sibling task's additions to that one."""
-    from . import minus_counters
 
     return minus_counters.parse_resolution_text(text, for_spell=for_spell)
 

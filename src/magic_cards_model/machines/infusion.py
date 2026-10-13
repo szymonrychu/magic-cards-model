@@ -33,6 +33,7 @@ from ..models.player import Player
 from ..models.zone import Zone
 from ..numbers import count_pattern, parse_count, quantity_pattern
 from .decisions import Decision, DecisionKind, source_id_of
+from .triggers import AbilityOnStack as StackAbility
 
 if TYPE_CHECKING:
     from ..models.game import Game, StackObject
@@ -427,7 +428,6 @@ def _parse_conditional_anaphoric_clause_pair(
         _parse_referent_clause,
         _targets_understood,
     )
-    from .triggers import AbilityOnStack as StackAbility
 
     first = first.strip()
     verb_match = _DESTROY_TARGET_RE.fullmatch(first) or _EXILE_TARGET_RE.fullmatch(first)

@@ -41,6 +41,7 @@ from functools import cache
 from typing import TYPE_CHECKING
 
 from ..models.player import Player
+from ..models.token import create_tokens
 from ..numbers import COUNT, parse_count
 from .decisions import source_id_of
 
@@ -460,7 +461,6 @@ def parse_tapped_attacking_tokens_for_each_ability(text: str):
     each creature card in your graveyard." (Kessig Cagebreakers): CR 508.4's
     tokens that enter tapped and attacking (never declared, so nothing
     "attacks"), `n` times the count taken once as it resolves (CR 608.2h)."""
-    from ..models.token import create_tokens
     from .effects._common import _strip_non_effect_preamble
     from .effects.continuous import _defender_of_controllers_attack
     from .effects.tokens import _parse_generic_token_descriptor

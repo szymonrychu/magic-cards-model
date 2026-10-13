@@ -47,8 +47,10 @@ the function that needs it.
 import re
 from typing import TYPE_CHECKING
 
-from ..models.card_state import Counter
+from ..models.card_state import CardState, Counter
+from ..models.zone import Zone
 from ..numbers import COUNT, parse_count
+from . import effects  # noqa: PLC0415 - see module docstring: one-way import rule
 
 if TYPE_CHECKING:  # pragma: no cover - import cycle: Game builds on the machines
     from ..models.game import Game, Player
@@ -140,7 +142,6 @@ def parse_search_put_battlefield_tapped_then_count_lands_untap_clause(
       (CR 608.2h): the just-fetched land counts toward its own threshold,
       the same way a real game reads it.
     """
-    from . import effects  # noqa: PLC0415 - see module docstring: one-way import rule
 
     stripped = effects._strip_non_effect_preamble(text).strip()  # noqa: SLF001
     match = _SEARCH_PUT_BATTLEFIELD_TAPPED_THEN_COUNT_LANDS_UNTAP_RE.fullmatch(stripped)
@@ -287,9 +288,6 @@ def parse_destroy_then_referent_mandatory_search_tapped_clause(
       (an indestructible nonbasic land) - the printed Beast Within ruling
       that pair reader's own docstring quotes.
     """
-    from ..models.card_state import CardState
-    from ..models.zone import Zone
-    from . import effects  # noqa: PLC0415 - see module docstring: one-way import rule
 
     whole = effects._strip_non_effect_preamble(text).strip()  # noqa: SLF001
     match = _DESTROY_THEN_REFERENT_MANDATORY_SEARCH_TAPPED_RE.fullmatch(whole)

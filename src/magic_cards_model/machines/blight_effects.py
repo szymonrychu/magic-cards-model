@@ -63,6 +63,7 @@ from .decisions import Decision, DecisionKind, source_id_of
 from .delayed import ReflexiveConsequence
 from .layers import ContinuousEffect, Duration, Layer, grant_ability, only_this_incarnation
 from .triggers import AbilityOnStack
+from .turn import MAIN_PHASES
 
 if TYPE_CHECKING:
     from ..models.game import Game, StackObject
@@ -688,7 +689,6 @@ def parse_then_if_not_main_phase_clause(text: str, *, for_spell: bool) -> object
         parse_mixed_effect,
         parse_mixed_effect_for_spell,
     )
-    from .turn import MAIN_PHASES
 
     match = _HEAD_THEN_IF_NOT_MAIN_PHASE_RE.fullmatch(_strip_non_effect_preamble(text).strip())
     if match is None:

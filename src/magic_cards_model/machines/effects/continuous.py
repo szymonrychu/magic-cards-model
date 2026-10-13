@@ -139,6 +139,10 @@ from ..turn_scoped_riders import (
 if TYPE_CHECKING:
     from ...models.game import CastRecord, Game, StackObject
     from ..layers import Characteristics
+from ..layers.group_grants import parse_group
+from ..layers.model import GroupMatch
+from ..next_spell import NEXT_SPELL_KEYWORDS, NextSpellKeywordGrant, spell_quality_is_readable
+from ..spell_grants import _keyword_line
 from ._chains import ABILITY_TEXT, FORWARD, MIXED_CLAUSE, MIXED_CLAUSES, SPELL_TEXT
 from ._common import (
     _ANAPHOR_NOUN,
@@ -900,8 +904,6 @@ def _mass_group_filter(
     """`_MASS_GROUP_SUBJECT_RE`'s subject and the `GroupMatch` it names, when
     that subject names a card type other than the bare "creatures" (which the
     ordinary mass subjects above already read)."""
-    from ..layers.group_grants import parse_group
-    from ..layers.model import GroupMatch
 
     match = _MASS_GROUP_SUBJECT_RE.match(text.strip())
     if match is None:
@@ -9530,8 +9532,6 @@ def _parse_next_spell_has_keyword(text: str) -> TargetedClause | None:
     """`_NEXT_SPELL_HAS_KEYWORD_RE`, for the resolving object's controller,
     this turn - or None when the quality or the keyword is not one this
     reads (`next_spell.NEXT_SPELL_KEYWORDS`)."""
-    from ..next_spell import NEXT_SPELL_KEYWORDS, NextSpellKeywordGrant, spell_quality_is_readable
-    from ..spell_grants import _keyword_line
 
     stripped = re.sub(r"\s*\([^()]*\)\s*$", "", text).strip()
     match = _NEXT_SPELL_HAS_KEYWORD_RE.fullmatch(stripped)

@@ -73,6 +73,7 @@ from ._common import (
     ReferentReader,
     TargetedClause,
 )
+from .dispatch import _ability_effect_or_notice, _spell_effect_or_notice
 
 
 def _as_sentence(text: str) -> str:
@@ -3895,8 +3896,6 @@ def _per_target_sentence_steps(
     own, with the requirement slots (CR 601.2c, `TargetRef.slot`) its own
     "target" phrases filled - or `None` when any group does not read cleanly
     or its targets cannot be told apart."""
-    from .dispatch import _ability_effect_or_notice, _spell_effect_or_notice
-    from .tokens import _is_notice_only
 
     groups = _target_sentence_groups(whole)
     if groups is None:
@@ -4340,7 +4339,6 @@ from .damage import _parse_damage_each_other_type_and_each_opponent_clause  # no
 from .dispatch import (  # noqa: E402
     _parse_mixed_clause,
     _parse_mixed_clauses,
-    _spell_effect_or_notice,
     parse_clause_effect,
     parse_mixed_effect,
     parse_mixed_effect_for_spell,

@@ -10,6 +10,7 @@ from ...models.card_state import (
     Counter,
 )
 from ...models.zone import Zone
+from ..abilities import self_reference_names, station_creature_threshold, station_striations
 from .apply import EffectBuilder
 
 
@@ -796,7 +797,6 @@ def _station_symbol_effects(source: CardState, timestamp: int) -> list[Continuou
     own timestamp (CR 613.7a). Read off the printing (the up face), like
     `_impending_not_a_creature`.
     """
-    from ..abilities import self_reference_names, station_creature_threshold, station_striations
     from ..ep02_r1_counter_amounts import counters_self_reference_normalised
 
     if source.zone is not Zone.BATTLEFIELD:

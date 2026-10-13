@@ -17,6 +17,7 @@ from ..models.card import Card, Color
 from ..models.card_state import CardState, FaceDownCharacteristics
 from ..models.mana import ManaCost
 from ..models.zone import Zone
+from .abilities import keyword_abilities
 
 if TYPE_CHECKING:
     from ..models.game import Game
@@ -38,7 +39,6 @@ TOKEN_COPY_KEYWORDS: dict[str, tuple[str, Color, tuple[int, int] | None]] = {
 
 def token_copy_keyword_abilities(card: Card) -> list[KeywordAbility]:
     """Every embalm or eternalize ability printed on `card`, in printed order."""
-    from .abilities import keyword_abilities
 
     return [
         ability

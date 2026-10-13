@@ -22,6 +22,8 @@ import re
 from typing import TYPE_CHECKING
 
 from ..models.zone import Zone
+from .effects import _counter_kind, parse_mixed_effect_for_spell
+from .replacement import strip_reminder_text
 
 if TYPE_CHECKING:
     from ..models.card_state import CardState
@@ -39,8 +41,6 @@ _CAST_FROM_GRAVEYARD_TRANSFORM_RE = re.compile(
 def parse_cast_from_graveyard_transform_clause(text: str) -> Effect | None:
     """`_CAST_FROM_GRAVEYARD_TRANSFORM_RE`'s spell effect, or `None` when the
     text is another shape or its leading instructions are unreadable."""
-    from .effects import _counter_kind, parse_mixed_effect_for_spell
-    from .replacement import strip_reminder_text
 
     rules_text, _ = strip_reminder_text(text)
     match = _CAST_FROM_GRAVEYARD_TRANSFORM_RE.fullmatch(" ".join(rules_text.split()))

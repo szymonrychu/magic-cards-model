@@ -47,6 +47,7 @@ from ..triggers import (
 
 if TYPE_CHECKING:
     from ...models.game import Game, StackObject
+from ..control import exchange_control
 from ._chains import ABILITY_TEXT, FORWARD, MIXED_CLAUSE, SPELL_TEXT
 from ._common import _SPELL_QUALIFIER, AbilityEffect, Effect, TargetedClause, _CopyExceptionList
 
@@ -239,7 +240,6 @@ _EXCHANGE_CONTROL_RE = re.compile(
 @SPELL_TEXT.rung("s8")
 def _parse_exchange_control_clause(text: str) -> TargetedClause | None:
     """`_EXCHANGE_CONTROL_RE`'s shape, on a spell or an ability."""
-    from ..control import exchange_control
 
     match = _EXCHANGE_CONTROL_RE.fullmatch(" ".join(text.strip().split()))
     if match is None:

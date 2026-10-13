@@ -43,8 +43,14 @@ from ..ep02_r2_cards_in_zone_counts import attached_pump_per_zone_count, static_
 
 if TYPE_CHECKING:
     from ...models.game import Game
+from ..attached_restrictions import parse_attached_compound_grant
+from ..conditions.cast_record import reads_cast_record
+from ..game_rule_statics import parse_opponents_lose_keyword
 from ._common import BASIC_LAND_TYPES
+from .attached_grants import attached_quoted_texts, parse_attached_sentence
+from .group_grants import equipment_by_mana_value_group
 from .model import DOESNT_UNTAP_TEXT
+from .quoted_grants import group_quoted_grant_of, parse_group_quoted_sentence
 
 
 #: What the effect does to one object it applies to. Pure: returns a new
@@ -9190,9 +9196,6 @@ def quoted_ability_grants(
     grants nothing and must still be able to take its own line back off the
     creature it used to be on.
     """
-    from .attached_grants import attached_quoted_texts
-    from .group_grants import equipment_by_mana_value_group
-    from .quoted_grants import group_quoted_grant_of
 
     grantable: set[str] = set()
     wanted: dict[UUID, set[str]] = {}
@@ -11498,7 +11501,6 @@ def _parse_if_gated_layer_sentence(sentence: str) -> EffectBuilder | None:
     locked as it was cast, never the board as it resolves. An unreadable
     condition parses to `None` here, so the sentence fails closed as before.
     """
-    from ..conditions.cast_record import reads_cast_record
 
     text = sentence.strip().rstrip(".")
     for found in re.finditer(r" if ", text):
@@ -11533,7 +11535,6 @@ def _parse_layer_sentence(sentence: str) -> EffectBuilder | None:
     their "as long as" conditions too), `conditional_statics`' "as long as" /
     "during your turn" template, the attached compound grant, and the gated
     self static."""
-    from ..attached_restrictions import parse_attached_compound_grant
     from ..attacking_statics import parse_gated_self_static
     from .conditional_statics import parse_conditional_static
 
@@ -11592,7 +11593,6 @@ def _parse_layer_sentence_ungated(sentence: str) -> EffectBuilder | None:
     # imports `AttackingGroupControlledBy`/`grant_ability`/etc. *from* this
     # one; importing it back at this module's own top level would be a cycle.
     from ..attacking_statics import parse_attacking_group_keyword_grant
-    from ..game_rule_statics import parse_opponents_lose_keyword
 
     if (opponents_lose := parse_opponents_lose_keyword(sentence)) is not None:
         return opponents_lose
@@ -12224,8 +12224,6 @@ def _parse_layer_sentence_ungated(sentence: str) -> EffectBuilder | None:
         return animation
     if (builder := _parse_static_layer_sentence(sentence)) is not None:
         return builder
-    from .attached_grants import parse_attached_sentence
-    from .quoted_grants import parse_group_quoted_sentence
 
     return parse_attached_sentence(sentence) or parse_group_quoted_sentence(sentence)
 

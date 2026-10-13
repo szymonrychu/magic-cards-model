@@ -35,6 +35,7 @@ from typing import TYPE_CHECKING, Any
 from ..models.card_state import CardState
 from ..models.player import Player
 from .decisions import source_id_of
+from .effects import _INLINE_REMINDER_RE, _strip_keyword_ability_lines
 
 if TYPE_CHECKING:
     from ..models.game import Game
@@ -69,7 +70,6 @@ _BOUND_BY_EXPRESSION_RE = re.compile(
 def _sentences(text: str) -> list[str]:
     """The instruction sentences, keyword-ability lines (Solstice
     Revelations' own "Flashback {6}{R} (...)") and reminder text dropped."""
-    from .effects import _INLINE_REMINDER_RE, _strip_keyword_ability_lines
 
     text = _strip_keyword_ability_lines(_INLINE_REMINDER_RE.sub("", text))
     return [s.strip() for s in re.split(r"(?<=\.)\s+", " ".join(text.split())) if s.strip()]

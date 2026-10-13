@@ -33,6 +33,7 @@ from typing import TYPE_CHECKING
 
 from ..models.card_state import CardState
 from ..models.zone import Zone
+from . import effects  # noqa: PLC0415 - see module docstring: one-way import rule
 from . import triggers as _triggers
 from .decisions import source_id_of
 from .ep01_r3_amounts import counters_on_it_total
@@ -156,7 +157,6 @@ def parse_destroy_if_mv_then_consequence_clause_pair(first: str, second: str, *,
     unreliable the instant it leaves, and a Python local outlives that move
     exactly the way `last_known_counters` outlives a counter wipe.
     """
-    from . import effects  # noqa: PLC0415 - see module docstring: one-way import rule
 
     verb_match = effects._DESTROY_TARGET_RE.fullmatch(first.strip())  # noqa: SLF001
     if verb_match is None:
