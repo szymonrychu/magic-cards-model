@@ -1,0 +1,144 @@
+{
+  "object": "card",
+  "id": "b07114d8-40b3-4102-8d70-e3ed94a7f515",
+  "oracle_id": "667ece0e-a474-4e11-8ac4-6c8fc354457c",
+  "multiverse_ids": [
+    622759
+  ],
+  "mtgo_id": 115401,
+  "tcgplayer_id": 504183,
+  "cardmarket_id": 722476,
+  "name": "Demonlord Belzenlok",
+  "lang": "en",
+  "released_at": "2023-08-04",
+  "uri": "https://api.scryfall.com/cards/b07114d8-40b3-4102-8d70-e3ed94a7f515",
+  "scryfall_uri": "https://scryfall.com/card/cmm/151/demonlord-belzenlok?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T04:08:00Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/b/0/b07114d8-40b3-4102-8d70-e3ed94a7f515.jpg?1783915680",
+    "normal": "https://cards.scryfall.io/normal/front/b/0/b07114d8-40b3-4102-8d70-e3ed94a7f515.jpg?1783915680",
+    "large": "https://cards.scryfall.io/large/front/b/0/b07114d8-40b3-4102-8d70-e3ed94a7f515.jpg?1783915680",
+    "png": "https://cards.scryfall.io/png/front/b/0/b07114d8-40b3-4102-8d70-e3ed94a7f515.png?1783915680",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/b/0/b07114d8-40b3-4102-8d70-e3ed94a7f515.jpg?1783915680",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/b/0/b07114d8-40b3-4102-8d70-e3ed94a7f515.jpg?1783915680",
+    "thumb": "https://cards.scryfall.io/thumb/front/b/0/b07114d8-40b3-4102-8d70-e3ed94a7f515.webp?1783915680",
+    "grid": "https://cards.scryfall.io/grid/front/b/0/b07114d8-40b3-4102-8d70-e3ed94a7f515.webp?1783915680",
+    "display": "https://cards.scryfall.io/display/front/b/0/b07114d8-40b3-4102-8d70-e3ed94a7f515.webp?1783915680",
+    "art": "https://cards.scryfall.io/art/front/b/0/b07114d8-40b3-4102-8d70-e3ed94a7f515.webp?1783915680",
+    "crop": "https://cards.scryfall.io/crop/front/b/0/b07114d8-40b3-4102-8d70-e3ed94a7f515.webp?1783915680"
+  },
+  "mana_cost": "{4}{B}{B}",
+  "cmc": 6.0,
+  "type_line": "Legendary Creature \u2014 Elder Demon",
+  "oracle_text": "Flying, trample\nWhen Demonlord Belzenlok enters, exile cards from the top of your library until you exile a nonland card, then put that card into your hand. If the card's mana value is 4 or greater, repeat this process. Demonlord Belzenlok deals 1 damage to you for each card put into your hand this way.",
+  "power": "6",
+  "toughness": "6",
+  "colors": [
+    "B"
+  ],
+  "color_identity": [
+    "B"
+  ],
+  "keywords": [
+    "Flying",
+    "Trample"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "cd05036f-2698-43e6-a48e-5c8d82f0a551",
+  "set": "cmm",
+  "set_name": "Commander Masters",
+  "set_type": "masters",
+  "set_uri": "https://api.scryfall.com/sets/cd05036f-2698-43e6-a48e-5c8d82f0a551",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Acmm&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/cmm?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/b07114d8-40b3-4102-8d70-e3ed94a7f515/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A667ece0e-a474-4e11-8ac4-6c8fc354457c&unique=prints",
+  "collector_number": "151",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Tyler Jacobson",
+  "artist_ids": [
+    "522af130-8db4-4b4b-950c-6e2b246339cf"
+  ],
+  "illustration_id": "9058a3c5-1064-4333-afac-722f4373a93c",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 7321,
+  "penny_rank": 11658,
+  "preview": {
+    "source": "Star City Games",
+    "source_uri": "https://articles.starcitygames.com/magic-the-gathering/demonic-tutor-demonlord-belzenlok-return-in-commander-masters/",
+    "previewed_at": "2023-07-14"
+  },
+  "prices": {
+    "usd": "0.42",
+    "usd_foil": "0.58",
+    "usd_etched": null,
+    "eur": "0.56",
+    "eur_foil": "0.67",
+    "tix": "0.03"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=622759&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DDemonlord%2BBelzenlok",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DDemonlord%2BBelzenlok",
+    "edhrec": "https://edhrec.com/route/?cc=Demonlord+Belzenlok"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F504183%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=722476&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/115401?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

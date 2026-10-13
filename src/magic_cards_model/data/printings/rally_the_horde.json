@@ -1,0 +1,149 @@
+{
+  "object": "card",
+  "id": "b292a8d2-44b1-4c20-8035-0f5912cc09a4",
+  "oracle_id": "fd9aeda1-9e44-4bc6-aa0d-19d58918d1f4",
+  "multiverse_ids": [
+    74411
+  ],
+  "mtgo_id": 22082,
+  "mtgo_foil_id": 22083,
+  "tcgplayer_id": 12515,
+  "cardmarket_id": 12743,
+  "name": "Rally the Horde",
+  "lang": "en",
+  "released_at": "2005-06-03",
+  "uri": "https://api.scryfall.com/cards/b292a8d2-44b1-4c20-8035-0f5912cc09a4",
+  "scryfall_uri": "https://scryfall.com/card/sok/110/rally-the-horde?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T12:02:25Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/b/2/b292a8d2-44b1-4c20-8035-0f5912cc09a4.jpg?1783944145",
+    "normal": "https://cards.scryfall.io/normal/front/b/2/b292a8d2-44b1-4c20-8035-0f5912cc09a4.jpg?1783944145",
+    "large": "https://cards.scryfall.io/large/front/b/2/b292a8d2-44b1-4c20-8035-0f5912cc09a4.jpg?1783944145",
+    "png": "https://cards.scryfall.io/png/front/b/2/b292a8d2-44b1-4c20-8035-0f5912cc09a4.png?1783944145",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/b/2/b292a8d2-44b1-4c20-8035-0f5912cc09a4.jpg?1783944145",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/b/2/b292a8d2-44b1-4c20-8035-0f5912cc09a4.jpg?1783944145",
+    "thumb": "https://cards.scryfall.io/thumb/front/b/2/b292a8d2-44b1-4c20-8035-0f5912cc09a4.webp?1783944145",
+    "grid": "https://cards.scryfall.io/grid/front/b/2/b292a8d2-44b1-4c20-8035-0f5912cc09a4.webp?1783944145",
+    "display": "https://cards.scryfall.io/display/front/b/2/b292a8d2-44b1-4c20-8035-0f5912cc09a4.webp?1783944145",
+    "art": "https://cards.scryfall.io/art/front/b/2/b292a8d2-44b1-4c20-8035-0f5912cc09a4.webp?1783944145",
+    "crop": "https://cards.scryfall.io/crop/front/b/2/b292a8d2-44b1-4c20-8035-0f5912cc09a4.webp?1783944145"
+  },
+  "mana_cost": "{5}{R}",
+  "cmc": 6.0,
+  "type_line": "Sorcery",
+  "oracle_text": "Exile the top card of your library. Exile the top card of your library. Exile the top card of your library. If the last card exiled isn't a land card, repeat this process. Create a 1/1 red Warrior creature token for each nonland card exiled this way.",
+  "colors": [
+    "R"
+  ],
+  "color_identity": [
+    "R"
+  ],
+  "keywords": [],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "7edc0515-a130-45a7-aa09-0e23bba41587",
+      "component": "token",
+      "name": "Warrior",
+      "type_line": "Token Creature \u2014 Warrior",
+      "uri": "https://api.scryfall.com/cards/7edc0515-a130-45a7-aa09-0e23bba41587"
+    },
+    {
+      "object": "related_card",
+      "id": "b292a8d2-44b1-4c20-8035-0f5912cc09a4",
+      "component": "combo_piece",
+      "name": "Rally the Horde",
+      "type_line": "Sorcery",
+      "uri": "https://api.scryfall.com/cards/b292a8d2-44b1-4c20-8035-0f5912cc09a4"
+    }
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "4db16ad3-2b95-442f-bb6b-e9aa7fe7f769",
+  "set": "sok",
+  "set_name": "Saviors of Kamigawa",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/4db16ad3-2b95-442f-bb6b-e9aa7fe7f769",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Asok&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/sok?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/b292a8d2-44b1-4c20-8035-0f5912cc09a4/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Afd9aeda1-9e44-4bc6-aa0d-19d58918d1f4&unique=prints",
+  "collector_number": "110",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Paolo Parente",
+  "artist_ids": [
+    "d48dd097-720d-476a-8722-6a02854ae28b"
+  ],
+  "illustration_id": "7c6f9576-ba7c-452c-b556-51f04a6c5dba",
+  "border_color": "black",
+  "frame": "2003",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 26860,
+  "penny_rank": 16068,
+  "prices": {
+    "usd": "0.28",
+    "usd_foil": "3.35",
+    "usd_etched": null,
+    "eur": "0.31",
+    "eur_foil": "2.94",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=74411&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DRally%2Bthe%2BHorde",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DRally%2Bthe%2BHorde",
+    "edhrec": "https://edhrec.com/route/?cc=Rally+the+Horde"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F12515%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=12743&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/22082?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

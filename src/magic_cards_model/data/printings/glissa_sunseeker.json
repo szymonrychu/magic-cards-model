@@ -1,0 +1,136 @@
+{
+  "object": "card",
+  "id": "670c3106-71fc-464e-8c94-81bf7fafc3e6",
+  "oracle_id": "bf4b9330-72df-426f-820c-77e37f7e9130",
+  "multiverse_ids": [
+    48386
+  ],
+  "mtgo_id": 19667,
+  "mtgo_foil_id": 19668,
+  "tcgplayer_id": 11316,
+  "cardmarket_id": 120,
+  "name": "Glissa Sunseeker",
+  "lang": "en",
+  "released_at": "2003-10-02",
+  "uri": "https://api.scryfall.com/cards/670c3106-71fc-464e-8c94-81bf7fafc3e6",
+  "scryfall_uri": "https://scryfall.com/card/mrd/120/glissa-sunseeker?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T12:08:53Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/6/7/670c3106-71fc-464e-8c94-81bf7fafc3e6.jpg?1783944533",
+    "normal": "https://cards.scryfall.io/normal/front/6/7/670c3106-71fc-464e-8c94-81bf7fafc3e6.jpg?1783944533",
+    "large": "https://cards.scryfall.io/large/front/6/7/670c3106-71fc-464e-8c94-81bf7fafc3e6.jpg?1783944533",
+    "png": "https://cards.scryfall.io/png/front/6/7/670c3106-71fc-464e-8c94-81bf7fafc3e6.png?1783944533",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/6/7/670c3106-71fc-464e-8c94-81bf7fafc3e6.jpg?1783944533",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/6/7/670c3106-71fc-464e-8c94-81bf7fafc3e6.jpg?1783944533",
+    "thumb": "https://cards.scryfall.io/thumb/front/6/7/670c3106-71fc-464e-8c94-81bf7fafc3e6.webp?1783944533",
+    "grid": "https://cards.scryfall.io/grid/front/6/7/670c3106-71fc-464e-8c94-81bf7fafc3e6.webp?1783944533",
+    "display": "https://cards.scryfall.io/display/front/6/7/670c3106-71fc-464e-8c94-81bf7fafc3e6.webp?1783944533",
+    "art": "https://cards.scryfall.io/art/front/6/7/670c3106-71fc-464e-8c94-81bf7fafc3e6.webp?1783944533",
+    "crop": "https://cards.scryfall.io/crop/front/6/7/670c3106-71fc-464e-8c94-81bf7fafc3e6.webp?1783944533"
+  },
+  "mana_cost": "{2}{G}{G}",
+  "cmc": 4.0,
+  "type_line": "Legendary Creature \u2014 Elf Warrior",
+  "oracle_text": "First strike\n{T}: Destroy target artifact if its mana value is equal to the amount of unspent mana you have.",
+  "power": "3",
+  "toughness": "2",
+  "colors": [
+    "G"
+  ],
+  "color_identity": [
+    "G"
+  ],
+  "keywords": [
+    "First strike"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "1d4f90ba-8d4a-4ee5-bc2f-e2d6bffe4955",
+  "set": "mrd",
+  "set_name": "Mirrodin",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/1d4f90ba-8d4a-4ee5-bc2f-e2d6bffe4955",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Amrd&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/mrd?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/670c3106-71fc-464e-8c94-81bf7fafc3e6/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Abf4b9330-72df-426f-820c-77e37f7e9130&unique=prints",
+  "collector_number": "120",
+  "digital": false,
+  "rarity": "rare",
+  "flavor_text": "\"There's a secret at the heart of this world, and I will unlock it.\"",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Brom",
+  "artist_ids": [
+    "bd79c951-2552-45dd-aae7-a333c2b7c1ef"
+  ],
+  "illustration_id": "65ec761f-0383-4212-b480-724464a10797",
+  "border_color": "black",
+  "frame": "2003",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 16151,
+  "penny_rank": 8270,
+  "prices": {
+    "usd": "0.90",
+    "usd_foil": "6.29",
+    "usd_etched": null,
+    "eur": "0.56",
+    "eur_foil": "5.57",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=48386&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DGlissa%2BSunseeker",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DGlissa%2BSunseeker",
+    "edhrec": "https://edhrec.com/route/?cc=Glissa+Sunseeker"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F11316%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=120&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/19667?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

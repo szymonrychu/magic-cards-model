@@ -1,0 +1,136 @@
+{
+  "object": "card",
+  "id": "79e5c1ab-eebd-41ca-a1ca-29b00370f6e8",
+  "oracle_id": "ab4e9284-7904-413e-97b0-69793be79cc5",
+  "multiverse_ids": [
+    430724
+  ],
+  "mtgo_id": 64554,
+  "mtgo_foil_id": 64555,
+  "tcgplayer_id": 135012,
+  "cardmarket_id": 298660,
+  "name": "Fraying Sanity",
+  "lang": "en",
+  "released_at": "2017-07-14",
+  "uri": "https://api.scryfall.com/cards/79e5c1ab-eebd-41ca-a1ca-29b00370f6e8",
+  "scryfall_uri": "https://scryfall.com/card/hou/35/fraying-sanity?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T09:47:33Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/7/9/79e5c1ab-eebd-41ca-a1ca-29b00370f6e8.jpg?1783936053",
+    "normal": "https://cards.scryfall.io/normal/front/7/9/79e5c1ab-eebd-41ca-a1ca-29b00370f6e8.jpg?1783936053",
+    "large": "https://cards.scryfall.io/large/front/7/9/79e5c1ab-eebd-41ca-a1ca-29b00370f6e8.jpg?1783936053",
+    "png": "https://cards.scryfall.io/png/front/7/9/79e5c1ab-eebd-41ca-a1ca-29b00370f6e8.png?1783936053",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/7/9/79e5c1ab-eebd-41ca-a1ca-29b00370f6e8.jpg?1783936053",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/7/9/79e5c1ab-eebd-41ca-a1ca-29b00370f6e8.jpg?1783936053",
+    "thumb": "https://cards.scryfall.io/thumb/front/7/9/79e5c1ab-eebd-41ca-a1ca-29b00370f6e8.webp?1783936053",
+    "grid": "https://cards.scryfall.io/grid/front/7/9/79e5c1ab-eebd-41ca-a1ca-29b00370f6e8.webp?1783936053",
+    "display": "https://cards.scryfall.io/display/front/7/9/79e5c1ab-eebd-41ca-a1ca-29b00370f6e8.webp?1783936053",
+    "art": "https://cards.scryfall.io/art/front/7/9/79e5c1ab-eebd-41ca-a1ca-29b00370f6e8.webp?1783936053",
+    "crop": "https://cards.scryfall.io/crop/front/7/9/79e5c1ab-eebd-41ca-a1ca-29b00370f6e8.webp?1783936053"
+  },
+  "mana_cost": "{2}{U}",
+  "cmc": 3.0,
+  "type_line": "Enchantment \u2014 Aura Curse",
+  "oracle_text": "Enchant player\nAt the beginning of each end step, enchanted player mills X cards, where X is the number of cards put into their graveyard from anywhere this turn.",
+  "colors": [
+    "U"
+  ],
+  "color_identity": [
+    "U"
+  ],
+  "keywords": [
+    "Enchant",
+    "Mill"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "65ff168b-bb94-47a5-a8f9-4ec6c213e768",
+  "set": "hou",
+  "set_name": "Hour of Devastation",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/65ff168b-bb94-47a5-a8f9-4ec6c213e768",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Ahou&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/hou?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/79e5c1ab-eebd-41ca-a1ca-29b00370f6e8/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Aab4e9284-7904-413e-97b0-69793be79cc5&unique=prints",
+  "collector_number": "35",
+  "digital": false,
+  "rarity": "rare",
+  "flavor_text": "Those wound tightest are first to unravel.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Ryan Alexander Lee",
+  "artist_ids": [
+    "f4d194b4-958a-4830-8d87-1a84e0b9ffbc"
+  ],
+  "illustration_id": "15d5bc82-aff0-4549-83b9-9837f448d8ff",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 2924,
+  "penny_rank": 3508,
+  "prices": {
+    "usd": "0.75",
+    "usd_foil": "1.34",
+    "usd_etched": null,
+    "eur": "0.61",
+    "eur_foil": "1.91",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=430724&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DFraying%2BSanity",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DFraying%2BSanity",
+    "edhrec": "https://edhrec.com/route/?cc=Fraying+Sanity"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F135012%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=298660&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/64554?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}
