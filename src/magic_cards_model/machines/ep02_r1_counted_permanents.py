@@ -88,6 +88,9 @@ def counting_controller(game: "Game", acting: str, source_id: "str | None", each
 def counted_group_reader(phrase: str) -> CountedGroupReader | None:
     """`phrase` ("creatures with defender you control") as a reader, or `None`
     when any word of it is left unread - never a partial count."""
+    from .ep02_r2_counted_permanents import split_group_extras
+
+    phrase, extras = split_group_extras(phrase)
     match = _GROUP_RE.fullmatch(phrase.strip().rstrip("."))
     if match is None:
         return None
@@ -134,6 +137,8 @@ def counted_group_reader(phrase: str) -> CountedGroupReader | None:
             if status and permanent.tapped != (status == "tapped"):
                 continue
             if snow and (Supertype.SNOW in computed.supertypes) != (snow == "snow"):
+                continue
+            if extras is not None and not extras.matches(computed):
                 continue
             if not (
                 any_permanent
