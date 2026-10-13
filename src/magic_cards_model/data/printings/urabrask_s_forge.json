@@ -1,0 +1,147 @@
+{
+  "object": "card",
+  "id": "2a9f089b-ee4a-4765-a384-4490962df403",
+  "oracle_id": "7c4b2203-a937-4d91-8e39-2283fe686b45",
+  "multiverse_ids": [],
+  "tcgplayer_id": 481563,
+  "cardmarket_id": 695420,
+  "name": "Urabrask's Forge",
+  "lang": "en",
+  "released_at": "2023-02-10",
+  "uri": "https://api.scryfall.com/cards/2a9f089b-ee4a-4765-a384-4490962df403",
+  "scryfall_uri": "https://scryfall.com/card/pone/153s/urabrasks-forge?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T04:43:48Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/2/a/2a9f089b-ee4a-4765-a384-4490962df403.jpg?1783917828",
+    "normal": "https://cards.scryfall.io/normal/front/2/a/2a9f089b-ee4a-4765-a384-4490962df403.jpg?1783917828",
+    "large": "https://cards.scryfall.io/large/front/2/a/2a9f089b-ee4a-4765-a384-4490962df403.jpg?1783917828",
+    "png": "https://cards.scryfall.io/png/front/2/a/2a9f089b-ee4a-4765-a384-4490962df403.png?1783917828",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/2/a/2a9f089b-ee4a-4765-a384-4490962df403.jpg?1783917828",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/2/a/2a9f089b-ee4a-4765-a384-4490962df403.jpg?1783917828",
+    "thumb": "https://cards.scryfall.io/thumb/front/2/a/2a9f089b-ee4a-4765-a384-4490962df403.webp?1783917828",
+    "grid": "https://cards.scryfall.io/grid/front/2/a/2a9f089b-ee4a-4765-a384-4490962df403.webp?1783917828",
+    "display": "https://cards.scryfall.io/display/front/2/a/2a9f089b-ee4a-4765-a384-4490962df403.webp?1783917828",
+    "art": "https://cards.scryfall.io/art/front/2/a/2a9f089b-ee4a-4765-a384-4490962df403.webp?1783917828",
+    "crop": "https://cards.scryfall.io/crop/front/2/a/2a9f089b-ee4a-4765-a384-4490962df403.webp?1783917828"
+  },
+  "mana_cost": "{2}{R}",
+  "cmc": 3.0,
+  "type_line": "Artifact",
+  "oracle_text": "At the beginning of combat on your turn, put an oil counter on this artifact, then create an X/1 red Phyrexian Horror creature token with trample and haste, where X is the number of oil counters on this artifact. Sacrifice that token at the beginning of the next end step.",
+  "colors": [
+    "R"
+  ],
+  "color_identity": [
+    "R"
+  ],
+  "keywords": [],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "da13c90f-9ed2-4262-88e2-17daa294537b",
+      "component": "token",
+      "name": "Phyrexian Horror",
+      "type_line": "Token Creature \u2014 Phyrexian Horror",
+      "uri": "https://api.scryfall.com/cards/da13c90f-9ed2-4262-88e2-17daa294537b"
+    },
+    {
+      "object": "related_card",
+      "id": "2a9f089b-ee4a-4765-a384-4490962df403",
+      "component": "combo_piece",
+      "name": "Urabrask's Forge",
+      "type_line": "Artifact",
+      "uri": "https://api.scryfall.com/cards/2a9f089b-ee4a-4765-a384-4490962df403"
+    }
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": false,
+  "finishes": [
+    "foil"
+  ],
+  "oversized": false,
+  "promo": true,
+  "reprint": false,
+  "variation": false,
+  "set_id": "a43681f0-e7f5-415b-bf1f-f9e52ad8213c",
+  "set": "pone",
+  "set_name": "Phyrexia: All Will Be One Promos",
+  "set_type": "promo",
+  "set_uri": "https://api.scryfall.com/sets/a43681f0-e7f5-415b-bf1f-f9e52ad8213c",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Apone&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/pone?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/2a9f089b-ee4a-4765-a384-4490962df403/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A7c4b2203-a937-4d91-8e39-2283fe686b45&unique=prints",
+  "collector_number": "153s",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Lie Setiawan",
+  "artist_ids": [
+    "6f771d3f-310e-4aa4-841f-5ba4ba9f025a"
+  ],
+  "illustration_id": "81c052ab-7572-4b7f-87fd-6e52de4b0956",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "promo_types": [
+    "prerelease",
+    "datestamped"
+  ],
+  "edhrec_rank": 2571,
+  "penny_rank": 3190,
+  "prices": {
+    "usd": null,
+    "usd_foil": "6.30",
+    "usd_etched": null,
+    "eur": null,
+    "eur_foil": "1.60",
+    "tix": null
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DUrabrask%2527s%2BForge",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DUrabrask%2527s%2BForge",
+    "edhrec": "https://edhrec.com/route/?cc=Urabrask%27s+Forge"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F481563%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=695420&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards?affiliate_id=scryfall&data%5Bsearch%5D=Urabrask%27s+Forge&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

@@ -1,0 +1,89 @@
+{
+  "ability": "At the beginning of your upkeep, put a despair counter on this enchantment, then each player exiles X permanents they control and/or cards from their hand, where X is the number of despair counters on this enchantment.",
+  "action": {
+    "controller": "alice",
+    "modes": [],
+    "on_stack": true,
+    "source": "Descent into Madness@alice#1",
+    "targets": [],
+    "x": 0
+  },
+  "board": {
+    "busy_turn": false,
+    "entering": [],
+    "order": ["alice", "bob"],
+    "players": {
+      "alice": {
+        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Wastes", "Memnite", "Icehide Golem", "Bonesplitter", "Icy Manipulator", "Descent into Madness"],
+        "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel"],
+        "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt"],
+        "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
+      },
+      "bob": {
+        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Kaito, Bane of Nightmares", "Fleecemane Lion", "Icehide Golem", "Shadowspear", "Dragonfire Blade"],
+        "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel"],
+        "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt"],
+        "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
+      }
+    },
+    "step": null,
+    "tapped": [],
+    "tokens": [],
+    "variant": "quiet",
+    "war_turn": false
+  },
+  "card": "Descent into Madness",
+  "delta": {
+    "created": {},
+    "decisions": [
+      {
+        "amount": 1,
+        "cards": ["Plains@alice#1", "Island@alice#1", "Swamp@alice#1", "Mountain@alice#1", "Forest@alice#1", "Plains@alice#2", "Island@alice#2", "Swamp@alice#2", "Mountain@alice#2", "Forest@alice#2", "Plains@alice#3", "Island@alice#3", "Swamp@alice#3", "Mountain@alice#3", "Forest@alice#3", "Wastes@alice#1", "Wastes@alice#2", "Memnite@alice#1", "Icehide Golem@alice#1", "Bonesplitter@alice#1", "Icy Manipulator@alice#1", "Descent into Madness@alice#1", "Forest@alice#4", "Grizzly Bears@alice#1", "Lightning Bolt@alice#1", "Opt@alice#1"],
+        "kind": "choose_cards",
+        "player": "alice",
+        "players": [],
+        "prompt": "exile 1 permanents you control and/or cards from your hand",
+        "source": "Descent into Madness"
+      },
+      {
+        "amount": 1,
+        "cards": ["Plains@bob#1", "Island@bob#1", "Swamp@bob#1", "Mountain@bob#1", "Forest@bob#1", "Wastes@bob#1", "Kaito, Bane of Nightmares@bob#1", "Fleecemane Lion@bob#1", "Icehide Golem@bob#1", "Shadowspear@bob#1", "Dragonfire Blade@bob#1", "Forest@bob#2", "Grizzly Bears@bob#1", "Lightning Bolt@bob#1", "Opt@bob#1"],
+        "kind": "choose_cards",
+        "player": "bob",
+        "players": [],
+        "prompt": "exile 1 permanents you control and/or cards from your hand",
+        "source": "Descent into Madness"
+      }
+    ],
+    "fields_changed": ["counters_put_this_turn", "exile_residents_seen", "permanents_left_battlefield_this_turn", "turn_counts", "turn_history"],
+    "notices": {},
+    "objects": {
+      "Descent into Madness@alice#1": {
+        "counters": [
+          {},
+          {
+            "despair": 1
+          }
+        ]
+      },
+      "Plains@alice#1": {
+        "zone": ["battlefield", "exile"]
+      },
+      "Plains@bob#1": {
+        "zone": ["battlefield", "exile"]
+      }
+    },
+    "players": {},
+    "stack": []
+  },
+  "family": "triggered",
+  "format": 1,
+  "kind": "beginning_of_step",
+  "number": 0,
+  "recipe": {
+    "attempt": "staged",
+    "index": 0,
+    "params": {},
+    "variant": "quiet"
+  }
+}

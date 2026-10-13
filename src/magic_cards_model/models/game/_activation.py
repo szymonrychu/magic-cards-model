@@ -250,6 +250,19 @@ def read_activation_instructions(instructions: str | None) -> ActivationInstruct
     )
 
 
+def _activation_home_zone(card: CardState) -> Zone:
+    """The zone an activated ability with no zone of its own functions in (CR
+    113.6): "Abilities of an instant or sorcery spell usually function only while
+    that object is on the stack. Abilities of all other objects usually function
+    only while that object is on the battlefield." (Lightning Storm's discard
+    ability.)"""
+    if card.zone is not Zone.BATTLEFIELD and {Type.INSTANT, Type.SORCERY} & set(card.card.types):
+        # Off the battlefield only: a modal double-faced card's land face is a permanent
+        # whose printed front face is a sorcery (Shatterskull Smashings).
+        return Zone.STACK
+    return Zone.BATTLEFIELD
+
+
 #: "You may activate loyalty abilities of `<subject>` on any player's turn
 #: any time you could cast an instant." printed as a permanent's own static
 #: ability (CR 604.2) - Teferi, Master of Time's own self-reference. The
@@ -982,8 +995,9 @@ class ActivationMixin:
                     f"{permanent.name}'s ability functions in the {ability.zone.value}, "
                     f"but it is in the {permanent.zone.value} ({ability.zone_rule})"
                 )
-        elif permanent.zone is not Zone.BATTLEFIELD:
-            return f"{permanent.name} is in {permanent.zone.value}, not on the battlefield"
+        elif permanent.zone is not _activation_home_zone(permanent):
+            home = _activation_home_zone(permanent)
+            return f"{permanent.name} is in {permanent.zone.value}, not on the {home.value}"
         refused_activator = self._activator_refusal(permanent, ability, controller)
         if refused_activator is not None:
             return refused_activator

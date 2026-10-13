@@ -1207,6 +1207,29 @@ class CreaturesControlledByOpponentsOf(SelectorBase):
         )
 
 
+class CreaturesControlledByOpponentsOfWithPowerAtMost(SelectorBase):
+    """ "Creatures your opponents control with power N or less" (Rumbling Ruin's
+    "can't block this turn"): a restriction changes no characteristic, so CR
+    611.2c leaves the set live - a creature that grows past N stops being
+    caught, and one that shrinks to N is. N is fixed when the effect begins
+    (CR 608.2h: the count was taken once as the ability resolved)."""
+
+    kind: Literal["creatures_controlled_by_opponents_of_with_power_at_most"] = (
+        "creatures_controlled_by_opponents_of_with_power_at_most"
+    )
+    username: str | None = None
+    threshold: int = 0
+
+    def __call__(self, chars: Characteristics, board: Board) -> bool:
+        return (
+            chars.is_creature
+            and chars.controller is not None
+            and chars.controller != self.username
+            and chars.power is not None
+            and chars.power <= self.threshold
+        )
+
+
 class LandsControlledBy(SelectorBase):
     kind: Literal["lands_controlled_by"] = "lands_controlled_by"
     username: str | None = None
@@ -2003,6 +2026,21 @@ class PermanentsOfTypesControlledBy(SelectorBase):
         )
 
 
+class PermanentsOfTypesWithCounter(SelectorBase):
+    """Every permanent of any of `card_types` with at least one `counter` counter on
+    it, whoever controls it (CR 122.1) - Spark Rupture's "each planeswalker with one
+    or more loyalty counters on it"."""
+
+    kind: Literal["permanents_of_types_with_counter"] = "permanents_of_types_with_counter"
+    card_types: tuple[Type, ...] = ()
+    counter: str
+
+    def __call__(self, chars: Characteristics, board: Board) -> bool:
+        return chars.counters.get(self.counter, 0) > 0 and any(
+            card_type in chars.types for card_type in self.card_types
+        )
+
+
 class PermanentsOfTypes(SelectorBase):
     """Every permanent of any of `card_types`, whoever controls it -
     Solemnity's "Counters can't be put on artifacts, creatures, enchantments,
@@ -2595,6 +2633,7 @@ Selector = Annotated[
     | OtherCreaturesControlledBy
     | OtherCreatures
     | CreaturesControlledByOpponentsOf
+    | CreaturesControlledByOpponentsOfWithPowerAtMost
     | LandsControlledBy
     | NonbasicLands
     | CreaturesOfManaValueParity
@@ -2616,6 +2655,7 @@ Selector = Annotated[
     | PermanentsControlledBy
     | PermanentsOfTypesControlledBy
     | PermanentsOfTypes
+    | PermanentsOfTypesWithCounter
     | CreaturesControlledByWithSubtype
     | CreaturesWithSubtype
     | PermanentsControlledByWithSubtype
@@ -3038,6 +3078,20 @@ class SetPowerToughnessToManaValue(ModificationBase):
         return chars.with_(power=value, toughness=value)
 
 
+class SetPowerToughnessToCounters(ModificationBase):
+    """Sublayer 7b, where the value is the object's own counters of one kind (CR
+    613.4b, CR 122.1) - Spark Rupture's "power and toughness each equal to the
+    number of loyalty counters on it". Read off the object as the layer applies, so
+    a counter added or removed moves it at once."""
+
+    kind: Literal["set_power_toughness_to_counters"] = "set_power_toughness_to_counters"
+    counter: str
+
+    def __call__(self, chars: Characteristics, board: Board) -> Characteristics:
+        value = chars.counters.get(self.counter, 0)
+        return chars.with_(power=value, toughness=value)
+
+
 class SetPower(ModificationBase):
     """Sublayer 7b (CR 613.4b), power only - "has base power 0" (Withercrown)
     sets the base power and leaves the toughness as it is."""
@@ -3400,6 +3454,7 @@ Modification = Annotated[
     | ReplaceText
     | SetPowerToughness
     | SetPowerToughnessToManaValue
+    | SetPowerToughnessToCounters
     | SetPower
     | DefinePowerToughness
     | DefinePower
@@ -3901,6 +3956,13 @@ def creatures_controlled_by_opponents_of(username: str | None) -> Selector:
     A permanent with no controller at all is nobody's, so it is not caught.
     """
     return CreaturesControlledByOpponentsOf(username=username)
+
+
+def creatures_controlled_by_opponents_of_with_power_at_most(
+    username: str | None, threshold: int
+) -> Selector:
+    """ "Creatures your opponents control with power `threshold` or less"."""
+    return CreaturesControlledByOpponentsOfWithPowerAtMost(username=username, threshold=threshold)
 
 
 def lands_controlled_by(username: str | None) -> Selector:

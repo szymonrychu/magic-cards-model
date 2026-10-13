@@ -947,7 +947,8 @@ _PHRASE_EXILE = re.compile(
     rf"^exile (?:this (?P<self_noun>card|artifact|creature|enchantment|land|planeswalker|permanent)"
     rf"|(?:(?P<another>another)|{_COST_COUNT}) (?P<quality>[\w /]*?)cards?)"
     + _MANA_VALUE_TAIL
-    + r"(?: from (?:your|their) (?P<zone>hand|graveyard|library|battlefield))?$",
+    + r"(?: from (?:(?:your|their) (?P<zone>hand|graveyard|library|battlefield)"
+    r"|a (?P<any_graveyard>graveyard)))?$",
     re.IGNORECASE,
 )
 #: "Exile a creature you control" (The Soul Stone): CR 406.2's exile from the
@@ -1558,7 +1559,10 @@ def cost_component_for_phrase(phrase: str, payer: str | None = None) -> CostComp
     if exile is not None:
         self_noun = (exile.group("self_noun") or "card").lower()
         default_zone = "hand" if self_noun == "card" else "battlefield"
-        zone = _ZONE_WORDS.get((exile.group("zone") or default_zone).lower(), Zone.HAND)
+        # "from a graveyard" (Thelon of Havenwood) is any player's graveyard: the zone
+        # is what the component checks, the owner is not part of it.
+        zone_word = exile.group("zone") or exile.group("any_graveyard") or default_zone
+        zone = _ZONE_WORDS.get(zone_word.lower(), Zone.HAND)
         if exile.group("count") is None and exile.group("another") is None:
             # "Exile this card [from your graveyard]": CR 700.7's self-
             # reference, so there is nothing to choose - only the caller

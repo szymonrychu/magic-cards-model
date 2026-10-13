@@ -1,0 +1,208 @@
+{
+  "object": "card",
+  "id": "6897514f-e396-46d6-91e3-158366c741bb",
+  "oracle_id": "7cec9021-6f25-4fd8-b40e-adf4ffd3a7b8",
+  "multiverse_ids": [
+    686039
+  ],
+  "mtgo_id": 135808,
+  "tcgplayer_id": 609909,
+  "cardmarket_id": 805824,
+  "name": "Garruk Relentless // Garruk, the Veil-Cursed",
+  "lang": "en",
+  "released_at": "2025-01-24",
+  "uri": "https://api.scryfall.com/cards/6897514f-e396-46d6-91e3-158366c741bb",
+  "scryfall_uri": "https://scryfall.com/card/inr/197/garruk-relentless-garruk-the-veil-cursed?utm_source=api",
+  "layout": "transform",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T02:01:44Z",
+  "cmc": 4.0,
+  "type_line": "Legendary Planeswalker \u2014 Garruk // Legendary Planeswalker \u2014 Garruk",
+  "color_identity": [
+    "B",
+    "G"
+  ],
+  "keywords": [
+    "Transform"
+  ],
+  "card_faces": [
+    {
+      "object": "card_face",
+      "name": "Garruk Relentless",
+      "mana_cost": "{3}{G}",
+      "type_line": "Legendary Planeswalker \u2014 Garruk",
+      "oracle_text": "When Garruk has two or fewer loyalty counters on him, transform him.\n0: Garruk deals 3 damage to target creature. That creature deals damage equal to its power to him.\n0: Create a 2/2 green Wolf creature token.",
+      "colors": [
+        "G"
+      ],
+      "loyalty": "3",
+      "artist": "Eric Deschamps",
+      "artist_id": "37970e22-9cee-44c1-af44-5ee27cf26b76",
+      "illustration_id": "2379c842-37c9-4a10-baaf-a14940bae97d",
+      "image_uris": {
+        "small": "https://cards.scryfall.io/small/front/6/8/6897514f-e396-46d6-91e3-158366c741bb.jpg?1783908104",
+        "normal": "https://cards.scryfall.io/normal/front/6/8/6897514f-e396-46d6-91e3-158366c741bb.jpg?1783908104",
+        "large": "https://cards.scryfall.io/large/front/6/8/6897514f-e396-46d6-91e3-158366c741bb.jpg?1783908104",
+        "png": "https://cards.scryfall.io/png/front/6/8/6897514f-e396-46d6-91e3-158366c741bb.png?1783908104",
+        "art_crop": "https://cards.scryfall.io/art_crop/front/6/8/6897514f-e396-46d6-91e3-158366c741bb.jpg?1783908104",
+        "border_crop": "https://cards.scryfall.io/border_crop/front/6/8/6897514f-e396-46d6-91e3-158366c741bb.jpg?1783908104",
+        "thumb": "https://cards.scryfall.io/thumb/front/6/8/6897514f-e396-46d6-91e3-158366c741bb.webp?1783908104",
+        "grid": "https://cards.scryfall.io/grid/front/6/8/6897514f-e396-46d6-91e3-158366c741bb.webp?1783908104",
+        "display": "https://cards.scryfall.io/display/front/6/8/6897514f-e396-46d6-91e3-158366c741bb.webp?1783908104",
+        "art": "https://cards.scryfall.io/art/front/6/8/6897514f-e396-46d6-91e3-158366c741bb.webp?1783908104",
+        "crop": "https://cards.scryfall.io/crop/front/6/8/6897514f-e396-46d6-91e3-158366c741bb.webp?1783908104"
+      }
+    },
+    {
+      "object": "card_face",
+      "name": "Garruk, the Veil-Cursed",
+      "mana_cost": "",
+      "type_line": "Legendary Planeswalker \u2014 Garruk",
+      "oracle_text": "+1: Create a 1/1 black Wolf creature token with deathtouch.\n\u22121: Sacrifice a creature. If you do, search your library for a creature card, reveal it, put it into your hand, then shuffle.\n\u22123: Creatures you control gain trample and get +X/+X until end of turn, where X is the number of creature cards in your graveyard.",
+      "colors": [
+        "B",
+        "G"
+      ],
+      "color_indicator": [
+        "B",
+        "G"
+      ],
+      "artist": "Eric Deschamps",
+      "artist_id": "37970e22-9cee-44c1-af44-5ee27cf26b76",
+      "illustration_id": "06ec1f49-d380-4298-a67f-988cd3262007",
+      "image_uris": {
+        "small": "https://cards.scryfall.io/small/back/6/8/6897514f-e396-46d6-91e3-158366c741bb.jpg?1783908104",
+        "normal": "https://cards.scryfall.io/normal/back/6/8/6897514f-e396-46d6-91e3-158366c741bb.jpg?1783908104",
+        "large": "https://cards.scryfall.io/large/back/6/8/6897514f-e396-46d6-91e3-158366c741bb.jpg?1783908104",
+        "png": "https://cards.scryfall.io/png/back/6/8/6897514f-e396-46d6-91e3-158366c741bb.png?1783908104",
+        "art_crop": "https://cards.scryfall.io/art_crop/back/6/8/6897514f-e396-46d6-91e3-158366c741bb.jpg?1783908104",
+        "border_crop": "https://cards.scryfall.io/border_crop/back/6/8/6897514f-e396-46d6-91e3-158366c741bb.jpg?1783908104",
+        "thumb": "https://cards.scryfall.io/thumb/back/6/8/6897514f-e396-46d6-91e3-158366c741bb.webp?1783908104",
+        "grid": "https://cards.scryfall.io/grid/back/6/8/6897514f-e396-46d6-91e3-158366c741bb.webp?1783908104",
+        "display": "https://cards.scryfall.io/display/back/6/8/6897514f-e396-46d6-91e3-158366c741bb.webp?1783908104",
+        "art": "https://cards.scryfall.io/art/back/6/8/6897514f-e396-46d6-91e3-158366c741bb.webp?1783908104",
+        "crop": "https://cards.scryfall.io/crop/back/6/8/6897514f-e396-46d6-91e3-158366c741bb.webp?1783908104"
+      }
+    }
+  ],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "f5561f57-34e2-4c01-8094-0ecb101c7fa1",
+      "component": "token",
+      "name": "Wolf",
+      "type_line": "Token Creature \u2014 Wolf",
+      "uri": "https://api.scryfall.com/cards/f5561f57-34e2-4c01-8094-0ecb101c7fa1"
+    },
+    {
+      "object": "related_card",
+      "id": "6897514f-e396-46d6-91e3-158366c741bb",
+      "component": "combo_piece",
+      "name": "Garruk Relentless // Garruk, the Veil-Cursed",
+      "type_line": "Legendary Planeswalker \u2014 Garruk // Legendary Planeswalker \u2014 Garruk",
+      "uri": "https://api.scryfall.com/cards/6897514f-e396-46d6-91e3-158366c741bb"
+    },
+    {
+      "object": "related_card",
+      "id": "99ce1bee-8f95-4284-8e06-9de9bfcb53b5",
+      "component": "combo_piece",
+      "name": "Innistrad Checklist",
+      "type_line": "Card",
+      "uri": "https://api.scryfall.com/cards/99ce1bee-8f95-4284-8e06-9de9bfcb53b5"
+    },
+    {
+      "object": "related_card",
+      "id": "89b89a55-3ea2-4186-b946-06831bc16169",
+      "component": "token",
+      "name": "Wolf",
+      "type_line": "Token Creature \u2014 Wolf",
+      "uri": "https://api.scryfall.com/cards/89b89a55-3ea2-4186-b946-06831bc16169"
+    }
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "b9618c8c-9f31-4b42-9798-2991893c27bf",
+  "set": "inr",
+  "set_name": "Innistrad Remastered",
+  "set_type": "masters",
+  "set_uri": "https://api.scryfall.com/sets/b9618c8c-9f31-4b42-9798-2991893c27bf",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Ainr&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/inr?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/6897514f-e396-46d6-91e3-158366c741bb/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A7cec9021-6f25-4fd8-b40e-adf4ffd3a7b8&unique=prints",
+  "collector_number": "197",
+  "digital": false,
+  "rarity": "mythic",
+  "artist": "Eric Deschamps",
+  "artist_ids": [
+    "37970e22-9cee-44c1-af44-5ee27cf26b76"
+  ],
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 13357,
+  "penny_rank": 975,
+  "prices": {
+    "usd": "1.93",
+    "usd_foil": "2.85",
+    "usd_etched": null,
+    "eur": "0.88",
+    "eur_foil": "0.99",
+    "tix": "0.03"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=686039&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DGarruk%2BRelentless%2B%252F%252F%2BGarruk%252C%2Bthe%2BVeil-Cursed",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DGarruk%2BRelentless%2B%252F%252F%2BGarruk%252C%2Bthe%2BVeil-Cursed",
+    "edhrec": "https://edhrec.com/route/?cc=Garruk+Relentless"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F609909%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=805824&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/135808?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

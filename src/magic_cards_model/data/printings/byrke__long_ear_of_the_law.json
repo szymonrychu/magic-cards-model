@@ -1,0 +1,144 @@
+{
+  "object": "card",
+  "id": "6441abd3-320b-424a-9753-61e3581fe1a9",
+  "oracle_id": "e9c6e4e6-0c3f-4048-93e6-161a1221ea36",
+  "multiverse_ids": [
+    670751
+  ],
+  "mtgo_id": 129001,
+  "arena_id": 91799,
+  "tcgplayer_id": 541388,
+  "cardmarket_id": 776473,
+  "name": "Byrke, Long Ear of the Law",
+  "lang": "en",
+  "released_at": "2024-08-02",
+  "uri": "https://api.scryfall.com/cards/6441abd3-320b-424a-9753-61e3581fe1a9",
+  "scryfall_uri": "https://scryfall.com/card/blb/380/byrke-long-ear-of-the-law?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T02:45:44Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/6/4/6441abd3-320b-424a-9753-61e3581fe1a9.jpg?1783910744",
+    "normal": "https://cards.scryfall.io/normal/front/6/4/6441abd3-320b-424a-9753-61e3581fe1a9.jpg?1783910744",
+    "large": "https://cards.scryfall.io/large/front/6/4/6441abd3-320b-424a-9753-61e3581fe1a9.jpg?1783910744",
+    "png": "https://cards.scryfall.io/png/front/6/4/6441abd3-320b-424a-9753-61e3581fe1a9.png?1783910744",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/6/4/6441abd3-320b-424a-9753-61e3581fe1a9.jpg?1783910744",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/6/4/6441abd3-320b-424a-9753-61e3581fe1a9.jpg?1783910744",
+    "thumb": "https://cards.scryfall.io/thumb/front/6/4/6441abd3-320b-424a-9753-61e3581fe1a9.webp?1783910744",
+    "grid": "https://cards.scryfall.io/grid/front/6/4/6441abd3-320b-424a-9753-61e3581fe1a9.webp?1783910744",
+    "display": "https://cards.scryfall.io/display/front/6/4/6441abd3-320b-424a-9753-61e3581fe1a9.webp?1783910744",
+    "art": "https://cards.scryfall.io/art/front/6/4/6441abd3-320b-424a-9753-61e3581fe1a9.webp?1783910744",
+    "crop": "https://cards.scryfall.io/crop/front/6/4/6441abd3-320b-424a-9753-61e3581fe1a9.webp?1783910744"
+  },
+  "mana_cost": "{4}{G}{W}",
+  "cmc": 6.0,
+  "type_line": "Legendary Creature \u2014 Rabbit Soldier",
+  "oracle_text": "Vigilance\nWhen Byrke enters, put a +1/+1 counter on each of up to two target creatures.\nWhenever a creature you control with a +1/+1 counter on it attacks, double the number of +1/+1 counters on it.",
+  "power": "4",
+  "toughness": "4",
+  "colors": [
+    "G",
+    "W"
+  ],
+  "color_identity": [
+    "G",
+    "W"
+  ],
+  "keywords": [
+    "Vigilance",
+    "Double"
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": false,
+  "finishes": [
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "a2f58272-bba6-439d-871e-7a46686ac018",
+  "set": "blb",
+  "set_name": "Bloomburrow",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/a2f58272-bba6-439d-871e-7a46686ac018",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Ablb&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/blb?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/6441abd3-320b-424a-9753-61e3581fe1a9/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Ae9c6e4e6-0c3f-4048-93e6-161a1221ea36&unique=prints",
+  "collector_number": "380",
+  "digital": false,
+  "rarity": "mythic",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Manuel Casta\u00f1\u00f3n",
+  "artist_ids": [
+    "35f11eeb-36ff-4059-bb70-d1274f5bd858"
+  ],
+  "illustration_id": "3c00f5ae-b4d6-40f1-922d-f908ad340492",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "promo_types": [
+    "starterdeck"
+  ],
+  "edhrec_rank": 6006,
+  "prices": {
+    "usd": null,
+    "usd_foil": "7.49",
+    "usd_etched": null,
+    "eur": null,
+    "eur_foil": "3.01",
+    "tix": "0.55"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=670751&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DByrke%252C%2BLong%2BEar%2Bof%2Bthe%2BLaw",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DByrke%252C%2BLong%2BEar%2Bof%2Bthe%2BLaw",
+    "edhrec": "https://edhrec.com/route/?cc=Byrke%2C+Long+Ear+of+the+Law"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F541388%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=776473&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/129001?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

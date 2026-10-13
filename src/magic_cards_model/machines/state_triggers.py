@@ -43,13 +43,23 @@ STATE_CONDITION_START = re.compile(
 )
 
 
+#: "When Garruk has two or fewer loyalty counters on him": a permanent's own counter
+#: count falling to a bound is a state (CR 603.8), where "has N or more counters" is
+#: also printed as an event-shaped condition elsewhere, so only the "or fewer" bound
+#: opens a state trigger here.
+STATE_COUNTER_AT_MOST = re.compile(
+    r"^.+? has [a-z0-9]+ or fewer [^.]+? counters on (?:him|her|it|them)$", re.IGNORECASE
+)
+
+
 @cache
 def reads_state_condition(condition: str) -> bool:
     """Whether `condition` is a CR 603.8 state the condition reader evaluates."""
     from .conditions import claims
 
     text = condition.strip().rstrip(".")
-    return STATE_CONDITION_START.match(text) is not None and claims(text)
+    opens = STATE_CONDITION_START.match(text) or STATE_COUNTER_AT_MOST.match(text)
+    return opens is not None and claims(text)
 
 
 def state_condition_holds(game: Game, source: CardState, controller: str, condition: str) -> bool:

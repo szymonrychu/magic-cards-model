@@ -4486,7 +4486,7 @@ def _parse_shared_subject_clauses(text: str, *, for_spell: bool) -> list[Targete
 #: group each. Applied once, ahead of every clause parser below, the same way
 #: `_fold_following_token_grant` folds its own token-only rewrite in first.
 _TOKEN_WITH_TAIL_THEN_NAMED_RE = re.compile(
-    r"\btoken with (?P<tail>.+?) named (?P<name>[A-Z][\w' -]*?)(?=[.,]|$)", re.IGNORECASE
+    r"\btoken with (?P<tail>[^.]+?) named (?P<name>[A-Z][\w' -]*?)(?=[.,]|$)", re.IGNORECASE
 )
 
 

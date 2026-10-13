@@ -2492,3 +2492,28 @@ def test_a_snapshot_written_before_epic_is_refused() -> None:
         match=f"schema_version={_SCHEMA_VERSION_BEFORE_EP02_R2_T2_EPIC}",
     ):
         Game.model_validate(dumped)
+
+
+#: The version stamped before EP-02 round 2's counter work (version 164): the layer
+#: engine gained two persisted selector variants and one persisted modification
+#: variant (`CreaturesControlledByOpponentsOfWithPowerAtMost`,
+#: `PermanentsOfTypesWithCounter`, `SetPowerToughnessToCounters`), and counter-amount
+#: dispatch a decoded game could already point at changed.
+_SCHEMA_VERSION_BEFORE_COUNTER_LAYERS = 163
+
+
+def test_the_counter_layers_bump_moved_the_version_past_163() -> None:
+    assert Game.CURRENT_SCHEMA_VERSION > _SCHEMA_VERSION_BEFORE_COUNTER_LAYERS
+
+
+def test_a_snapshot_written_before_the_counter_layer_variants_is_refused() -> None:
+    """A version-163 dump predates three layer variants, and a game decoded from it
+    would run "for each kind of counter" / loyalty-sized creatures as no-ops."""
+    dumped = _a_played_game().model_dump(mode="json")
+    dumped["schema_version"] = _SCHEMA_VERSION_BEFORE_COUNTER_LAYERS
+
+    with pytest.raises(
+        SchemaVersionMismatch,
+        match=f"schema_version={_SCHEMA_VERSION_BEFORE_COUNTER_LAYERS}",
+    ):
+        Game.model_validate(dumped)

@@ -2368,6 +2368,15 @@ class Game(
     #: counts ("for each <type> card in your graveyard", "card types among
     #: cards in your graveyard", "that player's graveyard") now resolve where
     #: an older dump would have resolved the same text as a no-op.
+    #: 164 (EP-02-R2-T5): `machines/layers` gained the persisted selector variants
+    #: `CreaturesControlledByOpponentsOfWithPowerAtMost` and
+    #: `PermanentsOfTypesWithCounter` and the modification variant
+    #: `SetPowerToughnessToCounters`, all reachable from `Game.continuous_effects`;
+    #: and dispatch a decoded game could already point at now reads "for each kind of
+    #: counter", "double the number of ... counters", "remove ... counters. ... removed
+    #: this way", a loyalty-counter-sized creature, a base power and toughness set on a
+    #: group, and a CR 603.8 "has N or fewer counters" state; an older dump would
+    #: resolve each of these as a no-op.
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
