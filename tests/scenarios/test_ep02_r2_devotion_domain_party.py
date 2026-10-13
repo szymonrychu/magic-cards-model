@@ -15,6 +15,7 @@ import pytest
 from magic_cards_model.machines import Step
 from magic_cards_model.machines.combat import Keyword, has_keyword
 from magic_cards_model.models import Zone
+from magic_cards_model.models.card import Color
 from magic_cards_model.models.card_state import Counter
 from tests.scenarios.harness import Scenario
 
@@ -606,3 +607,110 @@ def test_bortuk_does_nothing_when_it_was_not_cast():
     scenario.game.put_triggers_on_stack()
     assert scenario.game.stack == []
     assert bears.zone is Zone.GRAVEYARD
+
+
+# --------------------------------------------------------------------------
+# Colors of an object / among permanents (CR 105.1)
+# --------------------------------------------------------------------------
+
+
+def test_breathe_your_last_gains_one_life_per_color_of_the_destroyed_creature():
+    scenario = _main(
+        _build(["Swamp"] * 3, bob=["Kitchen Finks", "Grizzly Bears"], hand=["Breathe Your Last"])
+    )
+    finks = scenario.creature("Kitchen Finks", "bob")
+    scenario.cast_and_resolve("Breathe Your Last", auto=True, username="alice", targets=[finks])
+    assert finks.zone is Zone.GRAVEYARD
+    assert scenario.player("alice").life == 22  # green and white: two colors
+
+
+def test_breathe_your_last_gains_nothing_for_a_colorless_permanent():
+    """CR 105.2c: a colorless object has no colors; a planeswalker is a legal target too."""
+    scenario = _main(_build(["Swamp"] * 3, bob=["Karn, Scion of Urza"], hand=["Breathe Your Last"]))
+    karn = scenario.find("Karn, Scion of Urza", Zone.BATTLEFIELD, "bob")
+    scenario.cast_and_resolve("Breathe Your Last", auto=True, username="alice", targets=[karn])
+    assert karn.zone is Zone.GRAVEYARD
+    assert scenario.player("alice").life == 20
+
+
+def test_ancient_cornucopia_gains_once_per_turn_for_each_color_of_the_spell():
+    scenario = _main(
+        _build(["Ancient Cornucopia", "Forest", "Forest", "Swamp", "Plains"], hand=["Kitchen Finks", "Grizzly Bears"])
+    )
+    scenario.cast_onto_stack("Kitchen Finks", auto=True, username="alice")
+    scenario.game.put_triggers_on_stack()
+    while scenario.game.stack:
+        scenario.resolve_top()
+        scenario.game.put_triggers_on_stack()
+    assert scenario.player("alice").life == 22 + 2  # Finks: two colors; Finks' own ETB gains 2
+    life = scenario.player("alice").life
+    scenario.cast_onto_stack("Grizzly Bears", auto=True, username="alice")
+    scenario.game.put_triggers_on_stack()
+    while scenario.game.stack:
+        scenario.resolve_top()
+        scenario.game.put_triggers_on_stack()
+    assert scenario.player("alice").life == life  # "Do this only once each turn"
+
+
+def test_general_tazri_pumps_allies_by_the_colors_among_them():
+    scenario = _main(
+        _build(
+            ["Plains", "Island", "Swamp", "Mountain", "Forest", "General Tazri", "Grizzly Bears"],
+        )
+    )
+    tazri = scenario.creature("General Tazri", "alice")
+    scenario.activate(tazri, auto=True, index=0)
+    scenario.pass_until_resolved()
+    # Tazri is the only (white) Ally: +1/+1; the Bears are not Allies
+    assert _pt(scenario, tazri)[0] == 4
+    assert _pt(scenario, scenario.creature("Grizzly Bears", "alice")) == (2, 2)
+
+
+# --------------------------------------------------------------------------
+# One mana of each color among permanents (Bloom Tender, Faeburrow Elder, Tarnation Vista)
+# --------------------------------------------------------------------------
+
+
+def _mana_pool(scenario):
+    """The floating mana as {"W": n, ...}, readable as attributes."""
+
+    class Pool:
+        def __init__(self, floating):
+            self.white, self.blue, self.black, self.red, self.green = (
+                floating.get(Color(letter), 0) for letter in "WUBRG"
+            )
+
+    return Pool(scenario.player("alice").mana_pool.floating)
+
+
+def test_bloom_tender_adds_one_mana_of_each_color_among_your_permanents():
+    scenario = _main(_build(["Bloom Tender", "Savannah Lions", "Hill Giant", "Llanowar Elves"]))
+    tender = scenario.creature("Bloom Tender", "alice")
+    scenario.activate(tender)
+    pool = _mana_pool(scenario)
+    assert (pool.green, pool.white) == (1, 1)  # Tender and Elves green, Lions white, Giant red
+    assert pool.red == 1
+
+
+def test_bloom_tender_ignores_the_opponents_permanents_and_colorless_ones():
+    scenario = _main(_build(["Bloom Tender", "Sol Ring"], bob=["Savannah Lions"]))
+    scenario.activate(scenario.creature("Bloom Tender", "alice"))
+    pool = _mana_pool(scenario)
+    assert (pool.green, pool.white, pool.red, pool.blue, pool.black) == (1, 0, 0, 0, 0)
+
+
+def test_faeburrow_elder_taps_for_each_of_its_colors_and_gets_the_same_bonus():
+    scenario = _main(_build(["Faeburrow Elder", "Hill Giant"]))
+    elder = scenario.creature("Faeburrow Elder", "alice")
+    scenario.activate(elder, index=0)
+    pool = _mana_pool(scenario)
+    assert (pool.green, pool.white, pool.red) == (1, 1, 1)
+
+
+def test_tarnation_vista_counts_only_monocolored_permanents():
+    scenario = _main(_build(["Tarnation Vista", "Kitchen Finks", "Hill Giant", "Mountain", "Forest"]))
+    vista = scenario.find("Tarnation Vista", Zone.BATTLEFIELD, "alice")
+    scenario.activate(vista, auto=True, index=1)
+    pool = _mana_pool(scenario)
+    assert pool.red == 1  # Hill Giant; Kitchen Finks is multicolored and adds nothing
+    assert pool.green == 0 and pool.white == 0

@@ -749,6 +749,12 @@ class ManaAbility(EngineModel):
     #: resolves (CR 605.3b), through `resolve_mana_count_expression` exactly as
     #: `any_color_count_expression` is, and passed to `resolve` as `count`.
     for_each_expression: str | None = None
+    #: "For each color among permanents you control, add one mana of that color."
+    #: (Bloom Tender, Faeburrow Elder; "monocolored permanents": Tarnation Vista) - one mana of
+    #: each color the qualifier phrase names, none of it a choice. The set is only knowable
+    #: from the board when the ability resolves (CR 605.3b), so `Game.activate_ability` and
+    #: `cost.counted_mana_options` read it (`vivid.colors_among`) and pass it to `resolve`.
+    each_color_among: str | None = None
     #: The raw trailing sentence, when the ability's text has one beyond
     #: "Add ..." and its own recognised conditional/spend-restriction
     #: clauses, but this parser could not classify it as a known rider shape.
@@ -935,6 +941,7 @@ class ManaAbility(EngineModel):
         *,
         could_produce_colors: frozenset[Color] | None = None,
         chosen_color: Color | None = None,
+        colors_among: "Sequence[Color] | None" = None,
     ) -> list[Color]:
         """What this ability adds right now (CR 605.1a, CR 605.3b resolves it
         immediately, so "right now" is the only time that matters).
@@ -956,6 +963,9 @@ class ManaAbility(EngineModel):
         adding mana of a colour nothing licensed. `cost.py`'s auto-tap asks
         `effective` first and drops such a source before it ever gets here.
         """
+        if self.each_color_among is not None:
+            # One mana of each color found, in WUBRG order; no color found adds nothing (CR 605.2).
+            return [color for color in _COLORS if color in (colors_among or ())]
         options, any_color = self.effective(
             controlled_land_types,
             own_counters,
@@ -1130,7 +1140,21 @@ def granted_mana_abilities(texts: Sequence[str]) -> list[ManaAbility]:
     return _mana_abilities_from(parse_granted_ability_lines(texts), face=None)
 
 
+_EACH_COLOR_AMONG_RE = re.compile(
+    r"^for each colou?r among (?P<qualifier>.+?), add one mana of that colou?r$", re.IGNORECASE
+)
+
+
 def _parse_effect(effect: str, *, cost_announces_x: bool = False) -> ManaAbility | None:
+    each_color = _EACH_COLOR_AMONG_RE.fullmatch(effect.strip().rstrip("."))
+    if each_color is not None:
+        from .vivid import parse_colors_among_qualifier
+
+        qualifier = each_color.group("qualifier").strip()
+        stripped = qualifier.removesuffix(" you control")
+        if qualifier.endswith(" you control") and parse_colors_among_qualifier(stripped):
+            return ManaAbility(options=[[Color.WHITE]], each_color_among=stripped)
+        return None
     if _DEVOTION_AMOUNT.fullmatch(effect.strip().rstrip(".")):
         return ManaAbility(
             options=[[color] for color in _COLORS],
@@ -3408,6 +3432,11 @@ _MANA_SHAPED = re.compile(r"^(?:\{[^{}]+\}\s*)+$|^\d+$|^X$")
 #: mana ability, and CR 605.1a's "could add mana" criterion failed, sending it
 #: to the stack instead of resolving immediately (CR 605.3b).
 _ADD = re.compile(r"^Add\s+(?P<effect>[^.]+)\.?\s*(?P<rest>.*)$", re.DOTALL)
+#: "For each color among permanents you control, add one mana of that color." opens with the
+#: count rather than "Add" (`ManaAbility.each_color_among`).
+_EACH_COLOR_ADD = re.compile(
+    r"^(?P<effect>For each colou?r among [^.]+)\.?\s*(?P<rest>.*)$", re.DOTALL | re.IGNORECASE
+)
 _ONLY_SYMBOLS = re.compile(r"^(?:\{[^{}]+\}|\s)+$")
 _PAY_LIFE = re.compile(r"^Pay\s+\S+\s+life$", re.IGNORECASE)
 
@@ -4954,7 +4983,9 @@ def _parse_activated(text: str, common: dict) -> ActivatedAbility | None:
     # paragraph - `_ADD` anchors at the start of the text and would otherwise
     # never see the "Add" at all. `effect` on the returned ability keeps the
     # full printed text, unchanged.
-    add = _ADD.match(_CHOOSE_A_COLOR_PREAMBLE.sub("", effect_text))
+    add = _ADD.match(_CHOOSE_A_COLOR_PREAMBLE.sub("", effect_text)) or _EACH_COLOR_ADD.match(
+        effect_text
+    )
     cost_parts = _merge_disjunctive_sacrifice_cost(_split_top_level(cost))
     costs = [_classify_cost(part) for part in cost_parts]
     # CR 606.2 makes an ability a loyalty ability when a loyalty symbol is in

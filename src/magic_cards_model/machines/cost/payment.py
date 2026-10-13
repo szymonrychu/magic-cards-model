@@ -1195,6 +1195,17 @@ def mana_ability_most(
     return max(known) if known else None
 
 
+def colors_among_now(game: Any, controller: str, ability: ManaAbility) -> "list[Color] | None":
+    """The colors a "For each color among <qualifier>, add one mana of that color" ability
+    adds if it resolved now (CR 605.3b), or `None` for any other ability."""
+    if ability.each_color_among is None or game is None:
+        return None
+    from ..vivid import colors_among, parse_colors_among_qualifier
+
+    qualifier = parse_colors_among_qualifier(ability.each_color_among)
+    return [] if qualifier is None else sorted(colors_among(game, controller, qualifier))
+
+
 def counted_mana_options(
     game: Any,
     payer: str | None,
@@ -1216,6 +1227,10 @@ def counted_mana_options(
     a plan counts on is what the tap adds. A count of zero leaves no option at
     all: CR 605.2 keeps it a mana ability, but it is no mana source now.
     """
+    if ability.each_color_among is not None:
+        found = colors_among_now(game, source.controller or payer or "", ability)
+        counted = [color for color in _FIVE_COLORS if color in (found or ())]
+        return ([counted] if counted else []), len(counted)
     expression = ability.for_each_expression or ability.any_color_count_expression
     if game is None or (expression is None and not ability.amount_from_devotion):
         return options, None

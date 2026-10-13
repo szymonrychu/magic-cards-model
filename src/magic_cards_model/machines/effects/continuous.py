@@ -1146,7 +1146,7 @@ def _mass_creature_group_targets(
         # it is actually stored, singular - `board.of(...).subtypes` holds
         # "Knight", never "Knights".
         subtypes = {
-            part.strip().lower().removesuffix("s")
+            (_singular_subtype_for_count_expression(part.strip()) or part.strip().lower().removesuffix("s"))
             for part in re.split(r",\s*(?:and\s+)?|\s+and\s+", subtype_match.group("subtypes"))
             if part.strip()
         }
@@ -13294,3 +13294,5 @@ def _parse_unattach_self_then_transform_text(text: str) -> AbilityEffect | None:
             transform_self(game, ability)
 
     return effect
+
+from .text import _singular_subtype_for_count_expression  # noqa: E402
