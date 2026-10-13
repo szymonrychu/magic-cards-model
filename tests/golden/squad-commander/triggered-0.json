@@ -1,5 +1,5 @@
 {
-  "ability": "At the beginning of combat on your turn, if you have a full party, creatures you control get +1/+0 and gain indestructible until end of turn.",
+  "ability": "When this creature enters, create a 1/1 white Kor Warrior creature token for each creature in your party.",
   "action": {
     "controller": "alice",
     "modes": [],
@@ -14,9 +14,9 @@
     "order": ["alice", "bob"],
     "players": {
       "alice": {
-        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Wastes", "Memnite", "Icehide Golem", "Bonesplitter", "Icy Manipulator", "Squad Commander"],
+        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Wastes", "Memnite", "Icehide Golem", "Bonesplitter", "Icy Manipulator"],
         "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel"],
-        "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt"],
+        "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt", "Squad Commander"],
         "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
       },
       "bob": {
@@ -26,7 +26,7 @@
         "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
       }
     },
-    "step": null,
+    "step": "precombat_main",
     "tapped": [],
     "tokens": [],
     "variant": "quiet",
@@ -34,44 +34,40 @@
   },
   "card": "Squad Commander",
   "delta": {
-    "created": {},
-    "decisions": [],
-    "fields_changed": ["continuous_effects"],
-    "notices": {},
-    "objects": {
-      "Blackbloom Rogue@alice#1": {
-        "power": [6, 7]
-      },
-      "Eccentric Apprentice@alice#1": {
-        "power": [3, 4]
-      },
-      "Icehide Golem@alice#1": {
-        "power": [3, 4]
-      },
-      "Infernal Vessel@alice#1": {
-        "power": [3, 4]
-      },
-      "Memnite@alice#1": {
-        "power": [2, 3]
-      },
-      "Squad Commander@alice#1": {
-        "power": [4, 5]
-      },
-      "Squad Commander@alice#2": {
-        "power": [4, 5]
+    "created": {
+      "Kor Warrior Token@alice+1": {
+        "attached_to": null,
+        "class_level": 1,
+        "controller": "alice",
+        "counters": {},
+        "damage": 0,
+        "face_up": true,
+        "granted": [],
+        "monstrous": false,
+        "power": 1,
+        "tapped": false,
+        "toughness": 1,
+        "transformed": false,
+        "zone": "battlefield"
       }
     },
+    "decisions": [],
+    "fields_changed": ["continuous_effects", "turn_counts", "turn_history"],
+    "notices": {},
+    "objects": {},
     "players": {},
     "stack": []
   },
   "family": "triggered",
   "format": 1,
-  "kind": "beginning_of_step",
+  "kind": "enters_the_battlefield",
   "number": 0,
   "recipe": {
-    "attempt": "staged",
+    "attempt": "put",
     "index": 0,
-    "params": {},
+    "params": {
+      "tapped": false
+    },
     "variant": "quiet"
   }
 }

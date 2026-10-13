@@ -51,6 +51,7 @@ from ..delayed import (
     DelayedTrigger,
     NextSpellCannotBeCountered,
 )
+from ..ep02_r1_counted_permanents import counting_controller
 from ..layers import (
     ContinuousEffect,
     Duration,
@@ -574,7 +575,14 @@ def parse_clause_effect(clause: str) -> ClauseEffect | None:
         def gain_life(game: "Game", player: Player, source: str, source_id: str | None) -> None:
             # CR 608.2h: a "for each" count is taken once, when the effect
             # applies.
-            total = amount * multiplier(game, player.username, source_id) if multiplier else amount
+            total = (
+                amount
+                * multiplier(
+                    game, counting_controller(game, player.username, source_id, each), source_id
+                )
+                if multiplier
+                else amount
+            )
             game.gain_life(player, total)
 
         return gain_life
@@ -708,7 +716,14 @@ def parse_clause_effect(clause: str) -> ClauseEffect | None:
             return None
 
         def lose_life(game: "Game", player: Player, source: str, source_id: str | None) -> None:
-            total = amount * multiplier(game, player.username, source_id) if multiplier else amount
+            total = (
+                amount
+                * multiplier(
+                    game, counting_controller(game, player.username, source_id, each), source_id
+                )
+                if multiplier
+                else amount
+            )
             game.lose_life(player, total)
 
         return lose_life
@@ -866,7 +881,14 @@ def parse_clause_effect(clause: str) -> ClauseEffect | None:
                 if counted is None:
                     return
                 base = max(counted + adjust, 0)  # CR 107.1b
-            total = base * multiplier(game, player.username, source_id) if multiplier else base
+            total = (
+                base
+                * multiplier(
+                    game, counting_controller(game, player.username, source_id, each), source_id
+                )
+                if multiplier
+                else base
+            )
             if total:
                 game.draw_cards(player.username, total)
 
@@ -987,7 +1009,14 @@ def parse_clause_effect(clause: str) -> ClauseEffect | None:
                 if counted is None:
                     return
                 base = counted
-            total = base * multiplier(game, player.username, source_id) if multiplier else base
+            total = (
+                base
+                * multiplier(
+                    game, counting_controller(game, player.username, source_id, each), source_id
+                )
+                if multiplier
+                else base
+            )
             _mill(game, player, total)
 
         return mill
