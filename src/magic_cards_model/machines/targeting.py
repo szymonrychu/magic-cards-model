@@ -4202,7 +4202,7 @@ _REFLEXIVE_CLAUSE_CONSEQUENCE_RE = re.compile(
 #: not the sentence's own count words, is what says how many targets this
 #: asks for.
 _FOR_EACH_OPPONENT_TARGET_RE = re.compile(
-    r"for each opponent,[^.]*?\b(?P<up_to>up to one )?target (?P<desc>[^.]+?) "
+    r"for each (?P<who>opponent|player),[^.]*?\b(?P<up_to>up to one )?target (?P<desc>[^.]+?) "
     r"that (?:player|opponent) controls\b",
     re.IGNORECASE | re.DOTALL,
 )
@@ -4263,15 +4263,19 @@ def _for_each_opponent_profile(text: str) -> TargetingProfile | None:
     if base is None:
         return None
     mandatory = match.group("up_to") is None
+    opponents_only = match.group("who").lower() == "opponent"
     requirement = base.model_copy(
         update={
-            "phrase": f"target {description} an opponent controls",
+            "phrase": f"target {description} "
+            + ("an opponent controls" if opponents_only else "that player controls"),
             "count": 0,
             "minimum": 1 if mandatory else 0,
             "unbounded": True,
             "distinct_controllers": True,
             "one_per_opponent": mandatory,
-            "controller": ControllerRestriction.OPPONENT,
+            "controller": (
+                ControllerRestriction.OPPONENT if opponents_only else ControllerRestriction.ANY
+            ),
         }
     )
     return TargetingProfile(requirements=(requirement,))

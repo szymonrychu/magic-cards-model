@@ -1181,3 +1181,174 @@ def test_kaya_minus_five_with_nothing_in_exile_deals_and_gains_nothing():
     scenario.pass_until_resolved()
     assert scenario.player("bob").life == 20
     assert scenario.player("alice").life == 20
+
+
+# -- The Elderspell: counters on a chosen planeswalker for each one destroyed ------
+
+
+def _loyalty(state):
+    return state.counter_count("loyalty")
+
+
+def test_the_elderspell_puts_two_loyalty_counters_per_planeswalker_destroyed():
+    scenario = _board(
+        alice_hand=["The Elderspell"],
+        alice_battlefield=["Kaya, Orzhov Usurper"],
+        bob_battlefield=["Liliana, Death Mage", "Tezzeret, Master of Metal"],
+    )
+    kaya = scenario.find("Kaya, Orzhov Usurper", Zone.BATTLEFIELD, "alice")
+    liliana = scenario.find("Liliana, Death Mage", Zone.BATTLEFIELD, "bob")
+    tezzeret = scenario.find("Tezzeret, Master of Metal", Zone.BATTLEFIELD, "bob")
+    before = _loyalty(kaya)
+    scenario.will_choose_cards(kaya, username="alice")
+    _cast(scenario, "The Elderspell", targets=[liliana, tezzeret])
+    assert liliana.zone is Zone.GRAVEYARD and tezzeret.zone is Zone.GRAVEYARD
+    assert _loyalty(kaya) == before + 4
+
+
+def test_the_elderspell_counts_only_the_planeswalkers_really_destroyed():
+    scenario = _board(
+        alice_hand=["The Elderspell"],
+        alice_battlefield=["Kaya, Orzhov Usurper"],
+        bob_battlefield=["Liliana, Death Mage"],
+    )
+    kaya = scenario.find("Kaya, Orzhov Usurper", Zone.BATTLEFIELD, "alice")
+    liliana = scenario.find("Liliana, Death Mage", Zone.BATTLEFIELD, "bob")
+    before = _loyalty(kaya)
+    scenario.will_choose_cards(kaya, username="alice")
+    _cast(scenario, "The Elderspell", targets=[liliana])
+    assert _loyalty(kaya) == before + 2
+
+
+def test_the_elderspell_with_no_target_adds_nothing():
+    scenario = _board(alice_hand=["The Elderspell"], alice_battlefield=["Kaya, Orzhov Usurper"])
+    kaya = scenario.find("Kaya, Orzhov Usurper", Zone.BATTLEFIELD, "alice")
+    before = _loyalty(kaya)
+    scenario.will_choose_cards(kaya, username="alice")
+    _cast(scenario, "The Elderspell", targets=[])
+    assert _loyalty(kaya) == before
+
+
+def test_the_elderspell_lets_the_caster_pick_which_planeswalker_gets_the_counters():
+    scenario = _board(
+        alice_hand=["The Elderspell"],
+        alice_battlefield=["Kaya, Orzhov Usurper", "Tezzeret, Master of Metal"],
+        bob_battlefield=["Liliana, Death Mage"],
+    )
+    kaya = scenario.find("Kaya, Orzhov Usurper", Zone.BATTLEFIELD, "alice")
+    tezzeret = scenario.find("Tezzeret, Master of Metal", Zone.BATTLEFIELD, "alice")
+    liliana = scenario.find("Liliana, Death Mage", Zone.BATTLEFIELD, "bob")
+    before = (_loyalty(kaya), _loyalty(tezzeret))
+    scenario.will_choose_cards(tezzeret, username="alice")
+    _cast(scenario, "The Elderspell", targets=[liliana])
+    assert (_loyalty(kaya), _loyalty(tezzeret)) == (before[0], before[1] + 2)
+
+
+# -- Demonic Junker: two counters when a creature you controlled was destroyed -----
+
+
+def _junker(alice_battlefield=(), bob_battlefield=(), targets=()):
+    scenario = _board(
+        alice_hand=["Demonic Junker"],
+        alice_battlefield=alice_battlefield,
+        alice_lands=("Swamp",) * 8,
+        bob_battlefield=bob_battlefield,
+    )
+    chosen = [scenario.creature(name, owner) for name, owner in targets]
+    if chosen:
+        scenario.choose_trigger_targets("Demonic Junker", chosen)
+    _cast(scenario, "Demonic Junker")
+    _settle(scenario)
+    return scenario, scenario.find("Demonic Junker", Zone.BATTLEFIELD, "alice")
+
+
+def test_demonic_junker_destroys_one_creature_of_each_player_and_grows_for_its_own_loss():
+    scenario, junker = _junker(
+        alice_battlefield=["Grizzly Bears"],
+        bob_battlefield=["Hill Giant"],
+        targets=[("Grizzly Bears", "alice"), ("Hill Giant", "bob")],
+    )
+    assert _battlefield_of(scenario, "alice") == ["Demonic Junker"]
+    assert _battlefield_of(scenario, "bob") == []
+    assert junker.counter_count("+1/+1") == 2
+
+
+def test_demonic_junker_does_not_grow_when_only_an_opponents_creature_died():
+    scenario, junker = _junker(
+        alice_battlefield=["Grizzly Bears"],
+        bob_battlefield=["Hill Giant"],
+        targets=[("Hill Giant", "bob")],
+    )
+    assert _battlefield_of(scenario, "alice") == ["Demonic Junker", "Grizzly Bears"]
+    assert junker.counter_count("+1/+1") == 0
+
+
+def test_demonic_junker_grows_once_even_if_it_destroys_only_its_own_creature():
+    scenario, junker = _junker(
+        alice_battlefield=["Grizzly Bears"], targets=[("Grizzly Bears", "alice")]
+    )
+    assert junker.counter_count("+1/+1") == 2
+
+
+def test_demonic_junker_with_an_indestructible_own_creature_gets_nothing():
+    scenario, junker = _junker(
+        alice_battlefield=["Darksteel Colossus"], targets=[("Darksteel Colossus", "alice")]
+    )
+    assert "Darksteel Colossus" in _battlefield_of(scenario, "alice")
+    assert junker.counter_count("+1/+1") == 0
+
+
+# -- Tuktuk Scrapper: damage to the destroyed artifact's controller ----------------
+
+
+def _tuktuk(bob_battlefield=("Sol Ring",), alice_battlefield=(), take=True, target="Sol Ring"):
+    scenario = _board(
+        alice_hand=["Tuktuk Scrapper"],
+        alice_battlefield=alice_battlefield,
+        bob_battlefield=bob_battlefield,
+    )
+    aimed = scenario.find(target, Zone.BATTLEFIELD, "bob")
+    scenario.choose_trigger_targets("Tuktuk Scrapper", [aimed])
+    scenario.will_take_the_may(take, source="Tuktuk Scrapper")
+    _cast(scenario, "Tuktuk Scrapper")
+    _settle(scenario)
+    return scenario, aimed
+
+
+def test_tuktuk_scrapper_burns_the_artifacts_controller_for_each_ally_you_control():
+    scenario, ring = _tuktuk()
+    assert ring.zone is Zone.GRAVEYARD
+    assert scenario.player("bob").life == 19  # Tuktuk Scrapper is the one Ally
+
+
+def test_tuktuk_scrapper_counts_every_ally_at_resolution():
+    scenario, ring = _tuktuk(alice_battlefield=["Ondu Cleric"])
+    assert ring.zone is Zone.GRAVEYARD
+    assert scenario.player("bob").life == 18
+
+
+def test_tuktuk_scrapper_does_nothing_when_the_player_declines():
+    scenario, ring = _tuktuk(take=False)
+    assert ring.zone is Zone.BATTLEFIELD
+    assert scenario.player("bob").life == 20
+
+
+def test_tuktuk_scrapper_deals_no_damage_if_the_artifact_was_not_destroyed():
+    scenario, colossus = _tuktuk(bob_battlefield=("Darksteel Colossus",), target="Darksteel Colossus")
+    assert colossus.zone is Zone.BATTLEFIELD
+    assert scenario.player("bob").life == 20
+
+
+def test_tuktuk_scrapper_triggers_for_another_ally_entering():
+    scenario = _board(
+        alice_hand=["Ondu Cleric"],
+        alice_battlefield=["Tuktuk Scrapper"],
+        bob_battlefield=["Sol Ring"],
+    )
+    ring = scenario.find("Sol Ring", Zone.BATTLEFIELD, "bob")
+    scenario.choose_trigger_targets("Tuktuk Scrapper", [ring])
+    scenario.will_take_the_may(True, source="Tuktuk Scrapper")
+    _cast(scenario, "Ondu Cleric")
+    _settle(scenario)
+    assert ring.zone is Zone.GRAVEYARD
+    assert scenario.player("bob").life == 18

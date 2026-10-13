@@ -33,6 +33,7 @@ Registered as one SPELL_TEXT and one ABILITY_TEXT rung behind a cheap
 lowercase gate, with memoised parsers, to stay inside the classify budget.
 """
 
+import dataclasses
 import functools
 import re
 from collections.abc import Callable
@@ -49,6 +50,7 @@ from ..models.zone import Zone
 from ..numbers import parse_count
 from .casting import PlayAction
 from .conditions.history import excess_damage
+from .amount_sentences import recipient_amount
 from .decisions import Decision, DecisionKind, source_id_of
 from .delayed import ReflexiveDamageEqualToSubjectManaValueConsequence
 from .effects._chains import ABILITY_TEXT, SPELL_TEXT
@@ -99,6 +101,9 @@ class _Ctx:
     referent: CardState | None = None
     referent_chars: Any = None  # the referent as it last existed (CR 608.2h)
     excess: int = 0
+    chosen: CardState | None = None  # the permanent a "choose a ..." sentence picked
+    referent_controller: str | None = None
+    x: int = 0  # the value of ", where X is ..."
     last_amount: int = 0  # the number the latest damage or life instruction used
 
     def subject_card(self) -> CardState | None:
@@ -1211,6 +1216,108 @@ def _that_much_life(match: re.Match[str]) -> Step:
     return step
 
 
+_CHOOSE_PERMANENT_RE = re.compile(
+    r"^choose an? (?P<q>[a-z' -]+?) you control$", re.IGNORECASE
+)
+
+
+def _choose_permanent(match: re.Match[str]) -> Step | None:
+    """ "Choose a planeswalker you control." - the controller picks one (CR 608.2d)."""
+    quality = match.group("q").strip().lower()
+    if not _card_description_is_readable(quality):
+        return None
+    matcher = _quality_matcher(quality)
+
+    def step(game: "Game", obj: Any, ctx: _Ctx) -> None:
+        candidates = [p for p in game.permanents_controlled_by(ctx.controller.username) if matcher(p)]
+        ctx.chosen = None
+        if not candidates:
+            return
+        chosen = game.ask(
+            Decision(
+                kind=DecisionKind.CHOOSE_CARDS,
+                player=ctx.controller.username,
+                prompt=f"choose a {quality} you control",
+                source=_source_name(obj),
+                source_id=source_id_of(obj),
+                amount=1,
+                exact=True,
+                cards=tuple(c.id for c in candidates),
+                card_labels=tuple(c.name for c in candidates),
+                default_cards=(candidates[0].id,),
+            )
+        )
+        assert isinstance(chosen, tuple)
+        ctx.chosen = next((c for c in candidates if c.id in chosen), None)
+
+    return step
+
+
+_PUT_COUNTERS_ON_IT_RE = re.compile(
+    r"^put (?P<n>a|one|two|three|four|\d+) (?P<kind>[a-z+/0-9-]+) counters? on it$", re.IGNORECASE
+)
+
+
+def _put_counters_on_chosen(match: re.Match[str]) -> Step | None:
+    count = 1 if match.group("n").lower() in ("a", "one") else parse_count(match.group("n"))
+    if count is None:
+        return None
+    kind = match.group("kind").lower()
+
+    def step(game: "Game", obj: Any, ctx: _Ctx) -> None:
+        if ctx.chosen is not None and ctx.chosen.zone is Zone.BATTLEFIELD:
+            game.add_counters(ctx.chosen, kind, count)
+
+    return step
+
+
+_X_CLAUSE_RE = re.compile(
+    r"^(?:you )?(?P<verb>draw|gain|lose)s? x (?P<what>cards?|life)$", re.IGNORECASE
+)
+
+
+def _x_clause(match: re.Match[str]) -> Step | None:
+    verb, what = match.group("verb").lower(), match.group("what").lower()
+    if (verb == "draw") != what.startswith("card"):
+        return None
+
+    def step(game: "Game", obj: Any, ctx: _Ctx) -> None:
+        if ctx.x <= 0:
+            return
+        if verb == "draw":
+            game.draw_cards(ctx.controller.username, ctx.x)
+        elif verb == "gain":
+            game.gain_life(ctx.controller, ctx.x)
+        else:
+            game.lose_life(ctx.controller, ctx.x)
+
+    return step
+
+
+_DAMAGE_ITS_CONTROLLER_RE = re.compile(
+    r"^(?P<src>(?!if )[^,]+?) deals damage to that (?P<noun>[a-z ]+?)'s controller equal to "
+    r"(?P<expr>.+)$",
+    re.IGNORECASE,
+)
+
+
+def _damage_its_controller(match: re.Match[str]) -> Step | None:
+    reader = recipient_amount(match.group("expr"))
+    if reader is None:
+        return None
+
+    def step(game: "Game", obj: Any, ctx: _Ctx) -> None:
+        if ctx.referent_controller is None:
+            return
+        player = game.player(ctx.referent_controller)
+        amount = reader(game, obj, ctx.controller)
+        if amount > 0:
+            source = _source_of(obj) or (obj.source(game) if hasattr(obj, "source") else None)
+            game.deal_damage(player, amount, source=source)
+
+    return step
+
+
 # Readers, tried in order; each is (pattern, builder).
 _READERS: tuple[tuple[re.Pattern[str], Callable[[re.Match[str]], Step | None]], ...] = (
     (_CHOOSE_NAME_RE, _choose_name),
@@ -1248,6 +1355,10 @@ _READERS: tuple[tuple[re.Pattern[str], Callable[[re.Match[str]], Step | None]], 
     (_DISCARD_RANDOM_RE, _discard_random),
     (_IF_DISCARDED_DAMAGE_RE, _if_discarded_damage),
     (_GAIN_THAT_MUCH_RE, _that_much_life),
+    (_CHOOSE_PERMANENT_RE, _choose_permanent),
+    (_PUT_COUNTERS_ON_IT_RE, _put_counters_on_chosen),
+    (_X_CLAUSE_RE, _x_clause),
+    (_DAMAGE_ITS_CONTROLLER_RE, _damage_its_controller),
 )
 
 # --------------------------------------------------------------------------
@@ -1352,7 +1463,8 @@ def _plain_step(effect: Any) -> Step:
 
 _FOR_EACH_RE = re.compile(r"^for each (?P<each>.+? this way), (?P<rest>.+)$", re.IGNORECASE)
 _MULTI_TARGET_FIRST_RE = re.compile(
-    r"^(?P<verb>exile|destroy) (?P<phrase>(?:up to |any number of |x )?[a-z ]*?target .+)$",
+    r"^(?P<lead>for each player, )?(?P<verb>exile|destroy) "
+    r"(?P<phrase>(?:up to |any number of |x )?[a-z ]*?target .+)$",
     re.IGNORECASE,
 )
 
@@ -1365,9 +1477,11 @@ def _multi_target_first(text: str) -> Callable[["Game", Any], None] | None:
     match = _MULTI_TARGET_FIRST_RE.fullmatch(text.strip().rstrip("."))
     if match is None:
         return None
-    profile = profile_for_text(match.group("phrase"))
-    if not profile.understood or len(profile.requirements) < 2:
+    profile = profile_for_text(match.group(0))
+    if not profile.understood or not profile.requirements:
         return None
+    if len(profile.requirements) < 2 and not match.group("lead"):
+        return None  # one ordinary target is the clause parsers' own
     if any(r.allows_players or r.zones != frozenset({Zone.BATTLEFIELD}) for r in profile.requirements):
         return None
     destroy = match.group("verb").lower() == "destroy"
@@ -1479,38 +1593,63 @@ _IF_ANY_RE = re.compile(
     r"^(?P<rest>.+?) if at least one (?P<each>[a-z' ,-]+? (?:was|were) [a-z ]+? this way)$",
     re.IGNORECASE,
 )
+_IF_LEADING_RE = re.compile(
+    r"^if (?:an?|that|at least one) (?P<each>[a-z' ,-]+? (?:was|were|is|are) [a-z ]+? this way), "
+    r"(?P<rest>.+)$",
+    re.IGNORECASE,
+)
+_WHERE_X_RE = re.compile(r"^(?P<rest>.+?),? where x is (?P<expr>.+ this way)$", re.IGNORECASE)
+_WHERE_X_OBJECTS_RE = re.compile(
+    r"\b(?P<noun>(?:(?!among\b)[a-z-]+ )?(?:cards?|permanents?|creatures?)) "
+    r"(?P<verb>exiled|destroyed|sacrificed|milled|discarded) this way$",
+    re.IGNORECASE,
+)
 _TOKEN_PREFIX_RE = re.compile(r"^(?P<tok>nontoken|token) (?P<rest>.+)$", re.IGNORECASE)
 
 
 @dataclass(frozen=True)
 class _EachPlan:
     first: Callable[["Game", Any], None]
+    pre: tuple[Step, ...]  # sentences between the first instruction and the payoff
     objects: Any  # ep02_r1_this_way_counts._Objects
     token_wanted: bool | None
-    once: bool  # "if at least one ... this way": the steps run once, not per object
+    mode: str  # "each" per object, "any" once if some moved, "always" once
+    x_amount: Amount | None  # ", where X is ..." read once before the steps
     inner: tuple[Step, ...]
     post: tuple[Step, ...]
 
 
+def _ledger_sentence(sentences: list[str]) -> tuple[int, str, str, str, Amount | None] | None:
+    """`(index, mode, object phrase, payoff clauses text, X amount)` of the first
+    sentence that counts what an earlier instruction really did."""
+    for index, sentence in enumerate(sentences):
+        if index == 0 or " this way" not in sentence.lower():
+            continue
+        if (m := _FOR_EACH_RE.fullmatch(sentence)) is not None:
+            return index, "each", m.group("each"), m.group("rest"), None
+        if (m := _IF_LEADING_RE.fullmatch(sentence)) is not None:
+            return index, "any", m.group("each"), m.group("rest"), None
+        if (m := _IF_ANY_RE.fullmatch(sentence)) is not None:
+            return index, "any", m.group("each"), m.group("rest"), None
+        if (m := _WHERE_X_RE.fullmatch(sentence)) is not None:
+            amount = _amount(m.group("expr"))
+            objects = _WHERE_X_OBJECTS_RE.search(m.group("expr"))
+            if amount is None or objects is None:
+                continue
+            each = f"{objects.group('noun')} {objects.group('verb')} this way"
+            return index, "always", each, m.group("rest"), amount
+        if (m := _TRAILING_EACH_RE.fullmatch(sentence)) is not None:
+            return index, "each", m.group("each"), m.group("rest"), None
+    return None
+
+
 def _each_plan_uncached(text: str, for_spell: bool) -> _EachPlan | None:
     sentences = _r1_sentences(text)
-    found = None
-    for i, sentence in enumerate(sentences):
-        if " this way" not in sentence.lower():
-            continue
-        match = (
-            _FOR_EACH_RE.fullmatch(sentence)
-            or _IF_ANY_RE.fullmatch(sentence)
-            or _TRAILING_EACH_RE.fullmatch(sentence)
-        )
-        if match is not None:
-            found = (i, match)
-            break
-    if found is None or found[0] == 0:
+    ledger = _ledger_sentence(sentences)
+    if ledger is None:
         return None
-    index, match = found
-    once = _IF_ANY_RE.fullmatch(sentences[index]) is not None
-    each = re.sub(r" (?:was|were) ", " ", match.group("each"))
+    index, mode, each, rest, x_amount = ledger
+    each = re.sub(r" (?:was|were|is|are) ", " ", each)
     token_match = _TOKEN_PREFIX_RE.fullmatch(each)
     token_wanted = None
     if token_match is not None:
@@ -1519,16 +1658,31 @@ def _each_plan_uncached(text: str, for_spell: bool) -> _EachPlan | None:
     objects = _r1_objects(each)
     if objects is None:
         return None
-    instruction = ". ".join(sentences[:index]) + "."
-    first = _first_instruction_of(instruction, for_spell)
+    first = None
+    pre: tuple[Step, ...] = ()
+    for cut in range(index, 0, -1):
+        first = _first_instruction_of(". ".join(sentences[:cut]) + ".", for_spell)
+        if first is None:
+            continue
+        between = _steps_of(
+            [c for sentence in sentences[cut:index] for c in _clauses(sentence)], for_spell
+        )
+        if between is not None:
+            pre = tuple(between[0])
+            break
+        first = None
     if first is None:
         return None
-    inner = _steps_of(_clauses(match.group("rest")), for_spell)
+    inner = _steps_of(_clauses(rest), for_spell)
     post_clauses = [c for sentence in sentences[index + 1 :] for c in _clauses(sentence)]
     post = _steps_of(post_clauses, for_spell)
-    if inner is None or post is None or (inner[1] + post[1] == 0 and not once):
+    if inner is None or post is None:
         return None
-    return _EachPlan(first, objects, token_wanted, once, tuple(inner[0]), tuple(post[0]))
+    if mode == "each" and inner[1] + post[1] == 0:
+        return None
+    return _EachPlan(
+        first, pre, objects, token_wanted, mode, x_amount, tuple(inner[0]), tuple(post[0])
+    )
 
 
 @functools.lru_cache(maxsize=1024)
@@ -1540,6 +1694,14 @@ def _each_plan(text: str, for_spell: bool) -> _EachPlan | None:
         _READING.pop()
 
 
+def _derived(base: _Ctx, player: Player) -> _Ctx:
+    """A fresh context for `player`'s own share of a payoff, keeping what the
+    earlier sentences chose (a name, a type, a permanent)."""
+    return dataclasses.replace(
+        base, actor=player, revealed=[], stoppers=[], disposed=set(), moved={}
+    )
+
+
 def _for_each_effect(text: str, for_spell: bool) -> Any:
     if _r1_plan(text, for_spell) is not None:
         return None  # the R1 payoffs read this text; one reader per text
@@ -1547,6 +1709,7 @@ def _for_each_effect(text: str, for_spell: bool) -> Any:
     if plan is None:
         return None
     verb = _r1_verbs[plan.objects.verb]
+    moved_key = "exile" if verb.destination is Zone.EXILE else "graveyard"
 
     def effect(game: "Game", obj: Any) -> None:
         marks = _r1_snapshot(game, verb.sources)
@@ -1557,20 +1720,30 @@ def _for_each_effect(text: str, for_spell: bool) -> Any:
             for entry in plan.objects.matching(_r1_affected(game, marks, verb), controller.username)
             if plan.token_wanted is None or is_token(entry.card) is plan.token_wanted
         ]
-        if plan.once:
+        base = _Ctx(actor=controller, controller=controller)
+        for step in plan.pre:
+            step(game, obj, base)
+        if plan.mode != "each":
+            if plan.mode == "any" and not moved:
+                return
+            ctx = _derived(base, controller)
+            ctx.moved[moved_key] = [entry.card for entry in moved]
             if moved:
-                ctx = _Ctx(actor=controller, controller=controller)
-                ctx.moved["exile"] = [entry.card for entry in moved]
-                for step in plan.inner:
-                    step(game, obj, ctx)
+                ctx.referent, ctx.referent_chars = moved[0].card, moved[0].characteristics
+                ctx.referent_controller = moved[0].controller
+            if plan.x_amount is not None:
+                ctx.x = plan.x_amount(game, obj, ctx)
+            for step in plan.inner:
+                step(game, obj, ctx)
             return
         contexts: dict[str, _Ctx] = {}
         order = _players_in_apnap_order(game)
         for player in order:
-            ctx = _Ctx(actor=player, controller=controller)
+            ctx = _derived(base, player)
             for entry in (e for e in moved if e.controller == player.username):
                 contexts[player.username] = ctx
                 ctx.referent, ctx.referent_chars = entry.card, entry.characteristics
+                ctx.referent_controller = entry.controller
                 for step in plan.inner:
                     step(game, obj, ctx)
         for player in order:
