@@ -103,6 +103,11 @@ def _life(scenario, name="alice"):
 
 
 def test_aatchik_makes_no_insect_for_an_empty_graveyard():
+    # The same trigger with one creature card in the graveyard makes one, so
+    # the zero below is a count and not an unread trigger.
+    loaded = _board(hand=["Aatchik, Emerald Radian"], graveyard=[BEARS])
+    _enter(loaded, "Aatchik, Emerald Radian")
+    assert len(_tokens(loaded, "Insect")) == 1
     scenario = _board(hand=["Aatchik, Emerald Radian"])
     _enter(scenario, "Aatchik, Emerald Radian")
     assert _tokens(scenario, "Insect") == []
@@ -134,6 +139,9 @@ def test_aatchik_counts_a_card_once_even_when_it_is_both_types():
 
 
 def test_ancestors_chosen_gains_nothing_with_an_empty_graveyard():
+    loaded = _board(hand=["Ancestor's Chosen"], graveyard=[BOLT])
+    _enter(loaded, "Ancestor's Chosen")
+    assert _life(loaded) == 21
     scenario = _board(hand=["Ancestor's Chosen"])
     _enter(scenario, "Ancestor's Chosen")
     assert _life(scenario) == 20
@@ -174,6 +182,9 @@ def test_archangels_light_gains_two_per_card_then_empties_the_graveyard():
 
 
 def test_archangels_light_with_an_empty_graveyard_gains_nothing():
+    loaded = _board(hand=["Archangel's Light"], battlefield=EIGHT_PLAINS, graveyard=[BOLT])
+    loaded.cast_and_resolve("Archangel's Light", auto=True)
+    assert _life(loaded) == 22
     scenario = _board(hand=["Archangel's Light"], battlefield=EIGHT_PLAINS)
     scenario.cast_and_resolve("Archangel's Light", auto=True)
     assert _life(scenario) == 20
@@ -207,6 +218,10 @@ def _butcher(*, lands, graveyard=(), bob_graveyard=()):
 
 
 def test_battlefield_butcher_costs_the_full_five_with_no_creature_cards():
+    cheaper, cheaper_butcher = _butcher(lands=4, graveyard=[BEARS])
+    cheaper.activate(cheaper_butcher, *cheaper.untapped_sources(*["Swamp"] * 4))
+    cheaper.resolve_top()
+    assert _life(cheaper, "bob") == 18
     scenario, butcher = _butcher(lands=4)
     with pytest.raises(ValueError):
         scenario.activate(butcher, *scenario.untapped_sources(*["Swamp"] * 4))
@@ -227,12 +242,22 @@ def test_battlefield_butcher_is_one_cheaper_per_creature_card():
 
 
 def test_battlefield_butcher_does_not_count_noncreature_cards():
+    cheaper, cheaper_butcher = _butcher(lands=2, graveyard=[BEARS] * 3)
+    cheaper.activate(cheaper_butcher, *cheaper.untapped_sources("Swamp", "Swamp"))
+    cheaper.resolve_top()
+    assert _life(cheaper, "bob") == 18
     scenario, butcher = _butcher(lands=2, graveyard=[BEARS, BEARS, BOLT, SOL_RING, MOUNTAIN])
     with pytest.raises(ValueError):
         scenario.activate(butcher, *scenario.untapped_sources("Swamp", "Swamp"))
 
 
 def test_battlefield_butcher_ignores_the_opponents_graveyard():
+    cheaper, cheaper_butcher = _butcher(
+        lands=3, graveyard=[BEARS, BEARS], bob_graveyard=[BEARS] * 4
+    )
+    cheaper.activate(cheaper_butcher, *cheaper.untapped_sources("Swamp", "Swamp", "Swamp"))
+    cheaper.resolve_top()
+    assert _life(cheaper, "bob") == 18
     scenario, butcher = _butcher(lands=3, graveyard=[BEARS], bob_graveyard=[BEARS] * 4)
     with pytest.raises(ValueError):
         scenario.activate(butcher, *scenario.untapped_sources("Swamp", "Swamp", "Swamp"))
@@ -316,6 +341,10 @@ def test_permanent_cards_shrink_the_target_by_their_count(name):
 
 @pytest.mark.parametrize("name", ["Chupacabra Echo", "Cloud of Darkness"])
 def test_an_empty_graveyard_shrinks_the_target_by_nothing(name):
+    loaded = _board(hand=[name], graveyard=[BEARS], bob_battlefield=[DREADMAW])
+    loaded_target = loaded.creature(DREADMAW, "bob")
+    _enter(loaded, name, targets=[loaded_target])
+    assert _stats(loaded, loaded_target) == (5, 5)
     scenario = _board(hand=[name], bob_battlefield=[DREADMAW])
     target = scenario.creature(DREADMAW, "bob")
     _enter(scenario, name, targets=[target])
@@ -347,6 +376,14 @@ def test_terror_tide_shrinks_every_creature_on_both_sides():
 
 
 def test_terror_tide_with_an_empty_graveyard_changes_nothing():
+    loaded = _board(
+        hand=["Terror Tide"],
+        battlefield=["Swamp"] * 4 + [BEARS],
+        graveyard=[SOL_RING],
+        bob_battlefield=[DREADMAW],
+    )
+    loaded.cast_and_resolve("Terror Tide", auto=True)
+    assert _stats(loaded, loaded.creature(DREADMAW, "bob")) == (5, 5)
     scenario = _board(
         hand=["Terror Tide"], battlefield=["Swamp"] * 4 + [BEARS], bob_battlefield=[DREADMAW]
     )
@@ -358,6 +395,14 @@ def test_terror_tide_with_an_empty_graveyard_changes_nothing():
 
 def test_terror_tide_does_not_count_itself_while_it_resolves():
     """The sorcery is on the stack, not in the graveyard, until it finishes."""
+    loaded = _board(
+        hand=["Terror Tide"],
+        battlefield=["Swamp"] * 4,
+        graveyard=[SOL_RING, MOUNTAIN],
+        bob_battlefield=[DREADMAW],
+    )
+    loaded.cast_and_resolve("Terror Tide", auto=True)
+    assert _stats(loaded, loaded.creature(DREADMAW, "bob")) == (4, 4)
     scenario = _board(hand=["Terror Tide"], battlefield=["Swamp"] * 4, bob_battlefield=[DREADMAW])
     scenario.cast_and_resolve("Terror Tide", auto=True)
     assert _stats(scenario, scenario.creature(DREADMAW, "bob")) == (6, 6)
@@ -394,12 +439,20 @@ def test_fresh_meat_makes_a_beast_per_creature_that_died_this_turn():
 
 
 def test_fresh_meat_makes_none_when_nothing_died():
+    died = _fresh_meat_board(mine=[BEARS])
+    _kill(died, BEARS, "alice")
+    died.cast_and_resolve("Fresh Meat", auto=True)
+    assert len(_tokens(died, "Beast")) == 1
     scenario = _fresh_meat_board(mine=[BEARS])
     scenario.cast_and_resolve("Fresh Meat", auto=True)
     assert _tokens(scenario, "Beast") == []
 
 
 def test_fresh_meat_ignores_creature_cards_that_never_were_on_the_battlefield():
+    died = _fresh_meat_board(mine=[BEARS], graveyard=[BEARS, BEARS])
+    _kill(died, BEARS, "alice")
+    died.cast_and_resolve("Fresh Meat", auto=True)
+    assert len(_tokens(died, "Beast")) == 1  # the one that died, not the two milled
     scenario = _fresh_meat_board(graveyard=[BEARS, BEARS])
     scenario.cast_and_resolve("Fresh Meat", auto=True)
     assert _tokens(scenario, "Beast") == []
@@ -410,8 +463,9 @@ def test_fresh_meat_ignores_noncreature_permanents_and_opponents_creatures():
     _kill(scenario, SOL_RING, "alice")
     _kill(scenario, DREADMAW, "bob")
     _kill(scenario, BEARS, "bob")
+    _kill(scenario, BEARS, "alice")
     scenario.cast_and_resolve("Fresh Meat", auto=True)
-    assert _tokens(scenario, "Beast") == []
+    assert len(_tokens(scenario, "Beast")) == 1  # only my own creature counts
 
 
 def test_fresh_meat_counts_a_creature_of_mine_that_an_opponent_destroyed():
@@ -428,10 +482,24 @@ def test_fresh_meat_counts_a_creature_of_mine_that_an_opponent_destroyed():
 # --------------------------------------------------------------------------
 
 
+def _harvest_resolved(creature_cards):
+    scenario = _board(
+        hand=["Ghoulcaller's Harvest"],
+        battlefield=["Swamp", "Forest"],
+        graveyard=[BEARS] * creature_cards + [BOLT, SOL_RING],
+    )
+    scenario.cast_and_resolve("Ghoulcaller's Harvest", auto=True)
+    return scenario
+
+
 @pytest.mark.parametrize(
     ("creature_cards", "zombies"), [(0, 0), (1, 1), (2, 1), (3, 2), (4, 2), (5, 3)]
 )
 def test_ghoulcallers_harvest_rounds_half_up(creature_cards, zombies):
+    if creature_cards == 0:
+        creature_cards, zombies = 1, 1  # a lone creature card still rounds up to one
+        assert len(_tokens(_harvest_resolved(creature_cards), "Zombie")) == zombies
+        creature_cards, zombies = 0, 0
     scenario = _board(
         hand=["Ghoulcaller's Harvest"],
         battlefield=["Swamp", "Forest"],
@@ -486,6 +554,8 @@ def test_gran_pulse_ochu_grows_by_each_permanent_card():
 
 
 def test_gran_pulse_ochu_stays_a_one_one_with_an_empty_graveyard():
+    grown, grown_ochu = _ochu(graveyard=[BEARS])
+    assert _stats(grown, grown_ochu) == (2, 2)
     scenario, ochu = _ochu()
     assert _stats(scenario, ochu) == (1, 1)
 
@@ -509,6 +579,7 @@ def test_gran_pulse_ochu_ignores_the_opponents_graveyard():
 
 def test_gran_pulse_ochu_bonus_ends_with_the_turn():
     scenario, ochu = _ochu(graveyard=PERMANENT_YARD)
+    assert _stats(scenario, ochu) == (4, 4)
     scenario.game.continuous_effects.end_the_turn()
     assert _stats(scenario, ochu) == (1, 1)
 
@@ -541,6 +612,7 @@ def test_graveblade_marauder_drains_per_creature_card_beyond_its_combat_damage()
 
 
 def test_graveblade_marauder_drains_nothing_extra_with_an_empty_graveyard():
+    assert _life(_marauder_hit(graveyard=[BEARS]), "bob") == 18
     scenario = _marauder_hit()
     assert _life(scenario, "bob") == 19
 
@@ -581,6 +653,7 @@ def test_cagebreakers_wolves_enter_tapped_and_attacking_one_per_creature_card():
 
 
 def test_cagebreakers_makes_no_wolf_for_an_empty_graveyard():
+    assert len(_tokens(_cagebreakers_attack(graveyard=[BEARS]), "Wolf")) == 1
     scenario = _cagebreakers_attack()
     assert _tokens(scenario, "Wolf") == []
 
@@ -627,6 +700,11 @@ def test_keening_stone_can_target_its_own_controller():
 
 
 def test_keening_stone_with_an_empty_graveyard_mills_nothing():
+    loaded = _board(battlefield=["Keening Stone", *["Mountain"] * 5], bob_graveyard=[BEARS])
+    loaded_stone = loaded.find("Keening Stone", Zone.BATTLEFIELD)
+    loaded.activate(loaded_stone, targets=[loaded.player("bob")], auto=True)
+    loaded.resolve_top()
+    assert len(loaded.player("bob").library) == 11
     scenario = _board(battlefield=["Keening Stone", *["Mountain"] * 5])
     stone = scenario.find("Keening Stone", Zone.BATTLEFIELD)
     scenario.activate(stone, targets=[scenario.player("bob")], auto=True)
@@ -675,6 +753,7 @@ def test_liliana_counts_their_graveyard_not_mine():
 
 
 def test_liliana_drains_nothing_when_their_graveyard_has_no_creature_cards():
+    assert _life(_lili_ultimate(bob_graveyard=[BEARS, BOLT]), "bob") == 18
     scenario = _lili_ultimate(graveyard=[BEARS] * 3, bob_graveyard=[BOLT])
     assert _life(scenario, "bob") == 20
 
@@ -705,6 +784,9 @@ def test_lucid_dreams_counts_each_type_of_a_multi_typed_card():
 
 
 def test_lucid_dreams_draws_nothing_with_an_empty_graveyard():
+    loaded = _board(hand=["Lucid Dreams"], battlefield=["Island"] * 5, graveyard=[BEARS])
+    loaded.cast_and_resolve("Lucid Dreams", auto=True)
+    assert len(loaded.player("alice").hand) == 1
     scenario = _board(hand=["Lucid Dreams"], battlefield=["Island"] * 5)
     scenario.cast_and_resolve("Lucid Dreams", auto=True)
     assert scenario.player("alice").hand == []
@@ -725,12 +807,13 @@ def test_peer_past_the_veil_discards_the_hand_first_and_counts_the_discards():
     scenario = _board(
         hand=["Peer Past the Veil", BEARS, MOUNTAIN, BOLT],
         battlefield=["Mountain", "Mountain", "Forest", "Forest"],
+        graveyard=[SOL_RING],
     )
     scenario.cast_and_resolve("Peer Past the Veil", auto=True)
     # creature, land and instant were discarded into the graveyard before the
-    # draw (CR 608.2c), so three card types are counted; the spell itself is
-    # still on the stack and is not one of them.
-    assert len(scenario.player("alice").hand) == 3
+    # draw (CR 608.2c) next to the artifact already there, so four card types
+    # are counted; the spell itself is still on the stack and is not one.
+    assert len(scenario.player("alice").hand) == 4
 
 
 def test_peer_past_the_veil_with_a_stocked_graveyard_draws_per_type():
@@ -773,6 +856,7 @@ def test_master_pakku_mills_by_the_lesson_cards_in_its_controllers_graveyard():
 
 
 def test_master_pakku_mills_nothing_without_lesson_cards():
+    assert len(_pakku_taps(graveyard=[LESSON, BEARS]).player("bob").library) == 11
     scenario = _pakku_taps(graveyard=[BEARS, BOLT, SOL_RING])
     assert len(scenario.player("bob").library) == 12
 
@@ -814,14 +898,17 @@ def test_mausoleum_secrets_finds_a_black_card_at_exactly_the_limit():
 
 
 def test_mausoleum_secrets_cannot_find_a_card_above_the_limit():
+    assert _mausoleum([GRAY_MERCHANT, ELVES], graveyard=[BEARS] * 5) == [GRAY_MERCHANT]
     assert _mausoleum([GRAY_MERCHANT, ELVES], graveyard=[BEARS] * 4) == []
 
 
 def test_mausoleum_secrets_with_no_creature_cards_has_a_limit_of_zero():
+    assert _mausoleum([NIGHTHAWK, GRAY_MERCHANT], graveyard=[BEARS] * 3) == [NIGHTHAWK]
     assert _mausoleum([NIGHTHAWK, GRAY_MERCHANT], graveyard=[BOLT, SOL_RING]) == []
 
 
 def test_mausoleum_secrets_never_finds_a_card_that_is_not_black():
+    assert _mausoleum([GRAY_MERCHANT, ELVES], graveyard=[BEARS] * 6) == [GRAY_MERCHANT]
     assert _mausoleum([ELVES], graveyard=[BEARS] * 6) == []
 
 
@@ -846,6 +933,10 @@ def _pteramander(*, lands, graveyard=(), bob_graveyard=()):
 
 
 def test_pteramander_costs_eight_with_no_instants_or_sorceries():
+    cheaper, cheaper_drake = _pteramander(lands=7, graveyard=[BOLT])
+    cheaper.activate(cheaper_drake, *cheaper.untapped_sources(*["Island"] * 7))
+    cheaper.resolve_top()
+    assert cheaper_drake.counter_count("+1/+1") == 4
     scenario, drake = _pteramander(lands=7, graveyard=[BEARS, SOL_RING])
     with pytest.raises(ValueError):
         scenario.activate(drake, *scenario.untapped_sources(*["Island"] * 7))
@@ -859,6 +950,10 @@ def test_pteramander_is_one_cheaper_per_instant_and_sorcery_card():
 
 
 def test_pteramander_ignores_the_opponents_instants():
+    cheaper, cheaper_drake = _pteramander(lands=6, graveyard=[BOLT, BOLT], bob_graveyard=[BOLT] * 4)
+    cheaper.activate(cheaper_drake, *cheaper.untapped_sources(*["Island"] * 6))
+    cheaper.resolve_top()
+    assert cheaper_drake.counter_count("+1/+1") == 4
     scenario, drake = _pteramander(lands=7, graveyard=[BOLT], bob_graveyard=[BOLT] * 4)
     with pytest.raises(ValueError):
         scenario.activate(drake, *scenario.untapped_sources(*["Island"] * 6))
@@ -872,6 +967,10 @@ def test_pteramander_costs_one_blue_at_seven_instants_and_sorceries():
 
 
 def test_pteramander_reduction_never_removes_the_blue():
+    paid, paid_drake = _pteramander(lands=1, graveyard=[BOLT] * 9)
+    paid.activate(paid_drake, *paid.untapped_sources("Island"))
+    paid.resolve_top()
+    assert paid_drake.counter_count("+1/+1") == 4
     scenario, drake = _pteramander(lands=0, graveyard=[BOLT] * 9)
     with pytest.raises(ValueError):
         scenario.activate(drake)
@@ -910,6 +1009,7 @@ def test_ral_ignores_creatures_artifacts_and_lands_in_either_zone():
 
 
 def test_ral_deals_no_damage_with_nothing_to_count():
+    assert _ral_minus_three(graveyard=[BOLT]).damage == 1
     target = _ral_minus_three()
     assert target.damage == 0
 
@@ -1027,6 +1127,7 @@ def test_sudden_insight_ignores_lands_even_though_their_value_is_zero():
 
 
 def test_sudden_insight_draws_nothing_with_only_lands_or_nothing():
+    assert _insight([MOUNTAIN, BEARS]) == 1
     assert _insight([MOUNTAIN]) == 0
     assert _insight() == 0
 
@@ -1081,6 +1182,14 @@ def test_sunflare_shaman_hits_a_player_for_the_elemental_count():
 def test_sunflare_shaman_counts_the_cards_not_the_shaman_itself():
     """The Shaman is an Elemental but on the battlefield, not a card in the
     graveyard (CR 404.1), so an empty graveyard is X = 0."""
+    counted, counted_shaman = _shaman(graveyard=[ELEMENTAL])
+    counted.activate(
+        counted_shaman,
+        *counted.untapped_sources("Mountain", "Mountain"),
+        targets=[counted.player("bob")],
+    )
+    counted.resolve_top()
+    assert _life(counted, "bob") == 19
     scenario, shaman = _shaman()
     scenario.activate(
         shaman, *scenario.untapped_sources("Mountain", "Mountain"), targets=[scenario.player("bob")]
@@ -1115,12 +1224,20 @@ def test_undead_servant_counts_cards_with_its_own_name():
 
 
 def test_undead_servant_makes_none_when_none_are_in_the_graveyard():
+    named = _board(hand=["Undead Servant"], graveyard=["Undead Servant", BEARS])
+    _enter(named, "Undead Servant")
+    assert len(_tokens(named, "Zombie")) == 1
     scenario = _board(hand=["Undead Servant"], graveyard=[BEARS, "Walking Ballista"])
     _enter(scenario, "Undead Servant")
     assert _tokens(scenario, "Zombie") == []
 
 
 def test_undead_servant_ignores_the_opponents_graveyard():
+    own = _board(
+        hand=["Undead Servant"], graveyard=["Undead Servant"], bob_graveyard=["Undead Servant"] * 3
+    )
+    _enter(own, "Undead Servant")
+    assert len(_tokens(own, "Zombie")) == 1
     scenario = _board(hand=["Undead Servant"], bob_graveyard=["Undead Servant"] * 3)
     _enter(scenario, "Undead Servant")
     assert _tokens(scenario, "Zombie") == []
@@ -1147,6 +1264,8 @@ def test_moldgraf_millipede_adds_creature_cards_already_in_the_graveyard():
 
 
 def test_moldgraf_millipede_gets_no_counter_without_creature_cards():
+    counted = _board(hand=["Moldgraf Millipede"], graveyard=[BEARS], library=["Forest"] * 6)
+    assert _enter(counted, "Moldgraf Millipede").counter_count("+1/+1") == 1
     scenario = _board(
         hand=["Moldgraf Millipede"], graveyard=[BOLT, SOL_RING], library=["Forest"] * 6
     )
@@ -1162,6 +1281,13 @@ def test_moldgraf_millipede_mills_only_what_the_library_holds():
 
 
 def test_moldgraf_millipede_ignores_the_opponents_graveyard():
+    own = _board(
+        hand=["Moldgraf Millipede"],
+        graveyard=[BEARS],
+        bob_graveyard=[BEARS] * 4,
+        library=["Forest"] * 6,
+    )
+    assert _enter(own, "Moldgraf Millipede").counter_count("+1/+1") == 1
     scenario = _board(
         hand=["Moldgraf Millipede"], bob_graveyard=[BEARS] * 4, library=["Forest"] * 6
     )
@@ -1181,6 +1307,10 @@ def test_ooze_patrol_counts_artifact_and_creature_cards_after_milling_two():
 
 
 def test_ooze_patrol_gets_none_when_only_lands_and_instants_are_there():
+    counted = _board(
+        hand=["Ooze Patrol"], graveyard=[BOLT, MOUNTAIN, SOL_RING], library=["Forest"] * 6
+    )
+    assert _enter(counted, "Ooze Patrol").counter_count("+1/+1") == 1
     scenario = _board(hand=["Ooze Patrol"], graveyard=[BOLT, MOUNTAIN], library=["Forest"] * 6)
     patrol = _enter(scenario, "Ooze Patrol")
     assert patrol.counter_count("+1/+1") == 0
@@ -1206,6 +1336,8 @@ def _curve(*, graveyard=(), exile=(), bob_graveyard=()):
 
 
 def test_serpentine_curve_is_a_one_one_with_an_empty_graveyard_and_exile():
+    loaded, loaded_fractal = _curve(exile=[BOLT])
+    assert _stats(loaded, loaded_fractal) == (2, 2)
     scenario, fractal = _curve()
     assert _stats(scenario, fractal) == (1, 1)
 
@@ -1216,6 +1348,8 @@ def test_serpentine_curve_adds_instants_and_sorceries_from_both_zones():
 
 
 def test_serpentine_curve_ignores_other_card_types_and_the_opponents_graveyard():
+    loaded, loaded_fractal = _curve(graveyard=[BEARS, BOLT], bob_graveyard=[BOLT] * 3)
+    assert _stats(loaded, loaded_fractal) == (2, 2)
     scenario, fractal = _curve(graveyard=[BEARS, SOL_RING, MOUNTAIN], bob_graveyard=[BOLT] * 3)
     assert _stats(scenario, fractal) == (1, 1)
 
@@ -1247,6 +1381,8 @@ def test_vraska_puts_one_counter_per_creature_card_on_each_creature_I_control():
 
 
 def test_vraska_does_nothing_with_no_creature_cards():
+    counted = _vraska_ultimate(graveyard=[BEARS, BOLT])
+    assert counted.creature(BEARS, "alice").counter_count("+1/+1") == 1
     scenario = _vraska_ultimate(graveyard=[BOLT, SOL_RING])
     assert scenario.creature(BEARS, "alice").counter_count("+1/+1") == 0
 
@@ -1254,6 +1390,35 @@ def test_vraska_does_nothing_with_no_creature_cards():
 # ==========================================================================
 # Second printings: the same reader on cards that are not the reported ones
 # ==========================================================================
+
+
+def _altar_attack(*, graveyard=(), bob_graveyard=()):
+    scenario = _board(
+        battlefield=["Altar of the Goyf", BEARS],
+        graveyard=graveyard,
+        bob_graveyard=bob_graveyard,
+        step=Step.DECLARE_ATTACKERS,
+    )
+    bears = scenario.creature(BEARS, "alice")
+    scenario.attack_with(bears)
+    scenario.pass_until_resolved()
+    return scenario, bears
+
+
+def test_altar_of_the_goyf_counts_card_types_among_cards_in_all_graveyards():
+    """The only second printing of the "all graveyards" form: a creature card of
+    mine, an instant of mine and an artifact of the opponent's are three types."""
+    scenario, bears = _altar_attack(graveyard=[BEARS, BOLT], bob_graveyard=[SOL_RING])
+    assert _stats(scenario, bears) == (5, 5)
+
+
+def test_altar_of_the_goyf_counts_a_type_once_across_both_graveyards():
+    scenario, bears = _altar_attack(graveyard=[BOLT, BOLT], bob_graveyard=[BOLT, BEARS])
+    assert _stats(scenario, bears) == (4, 4)
+
+
+# -- the templates below were already read before this task; they stay as
+# -- regression guards for the new reader, not as red-first proofs.
 
 
 def test_izoni_makes_an_insect_per_creature_card_in_my_graveyard():
@@ -1306,6 +1471,7 @@ def _growth_cycle(copies, bob_copies=0):
 
 
 def test_growth_cycle_alone_is_a_plain_plus_three():
+    assert _growth_cycle(1) == (7, 7)
     assert _growth_cycle(0) == (5, 5)
 
 
@@ -1334,6 +1500,14 @@ def test_huskburster_swarm_counts_creature_cards_I_own_in_exile_and_the_graveyar
 
 
 def test_huskburster_swarm_is_not_cheaper_for_cards_in_exile_I_do_not_own():
+    owned = _board(
+        hand=["Huskburster Swarm"],
+        battlefield=["Swamp"] * 3,
+        graveyard=[BEARS, BEARS],
+        exile=[BEARS] * 3,
+    )
+    owned.cast_and_resolve("Huskburster Swarm", auto=True)
+    assert owned.find("Huskburster Swarm", Zone.BATTLEFIELD, "alice") is not None
     scenario = _board(
         hand=["Huskburster Swarm"],
         battlefield=["Swamp"] * 3,
@@ -1358,6 +1532,13 @@ def test_nemesis_of_mortals_monstrosity_is_cheaper_per_creature_card():
 
 
 def test_nemesis_of_mortals_monstrosity_still_costs_full_with_no_creature_cards():
+    cheaper = _board(
+        battlefield=["Nemesis of Mortals", "Forest", "Forest", "Forest"], graveyard=[BEARS] * 6
+    )
+    cheaper_snake = cheaper.creature("Nemesis of Mortals", "alice")
+    cheaper.activate(cheaper_snake, *cheaper.untapped_sources("Forest", "Forest", "Forest"))
+    cheaper.resolve_top()
+    assert cheaper_snake.counter_count("+1/+1") == 5
     scenario = _board(battlefield=["Nemesis of Mortals", "Forest", "Forest", "Forest"])
     snake = scenario.creature("Nemesis of Mortals", "alice")
     with pytest.raises(ValueError):
@@ -1381,6 +1562,10 @@ def test_the_mouth_of_sauron_counts_the_milled_players_graveyard_after_the_mill(
 
 
 def test_the_mouth_of_sauron_amasses_nothing_when_the_graveyard_has_none():
+    counted = _board(hand=["The Mouth of Sauron"], bob_library=[BOLT, "Island", "Island"])
+    _enter(counted, "The Mouth of Sauron", targets=[counted.player("bob")])
+    (army,) = _tokens(counted, "Orc Army")
+    assert army.counter_count("+1/+1") == 1
     scenario = _board(hand=["The Mouth of Sauron"], bob_library=["Island"] * 4)
     _enter(scenario, "The Mouth of Sauron", targets=[scenario.player("bob")])
     assert all(p.counter_count("+1/+1") == 0 for p in scenario.game.battlefield if "Army" in p.name)
