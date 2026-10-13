@@ -1055,7 +1055,7 @@ def _ordinal_spell_this_turn_matches(
     """
     lowered = condition.lower()
     match = _ORDINAL_SPELL_EACH_TURN.search(lowered)
-    not_first = _OTHER_THAN_FIRST_SPELL.search(lowered)
+    not_first = _OTHER_THAN_FIRST_SPELL.search(lowered) if "other than" in lowered else None
     if match is None and not_first is None:
         return None
     if match is not None and not_first is None:

@@ -1460,7 +1460,8 @@ def _parse_mass_pump_clause(
     # "you may have other attacking creatures get +X/+X ..." (Cultivator of
     # Blades) reaches this reader as "have ...": the optional wrapper strips
     # only "you may".
-    text = _HAVE_PREFIX_RE.sub("", text)
+    if text[:5].lower() == "have ":
+        text = _HAVE_PREFIX_RE.sub("", text)
     if duration_first := _MASS_PUMP_DURATION_FIRST_RE.fullmatch(text):
         text = f"{duration_first.group('rest')} until end of turn."
     if trailing := _MASS_PUMP_TRAILING_FOR_EACH_RE.search(text):

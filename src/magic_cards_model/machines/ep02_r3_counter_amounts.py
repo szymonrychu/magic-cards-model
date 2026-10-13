@@ -69,6 +69,8 @@ def _parse_remove_extremum_creature_of_target_player(
     nothing. The extremum is taken as the effect resolves (CR 608.2h); a tie
     for it is the ability controller's choice, since "a creature" is theirs to
     pick (CR 608.2d)."""
+    if " among creatures " not in clause:
+        return None
     match = _GROUP_EXTREMUM_REMOVAL_RE.fullmatch(clause.strip())
     if match is None or not _targets_understood(f"{match.group('who')}", allow_player_targets=True):
         return None

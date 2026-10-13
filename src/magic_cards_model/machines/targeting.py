@@ -6790,7 +6790,7 @@ def _extract_comparison(
     rather than read past the clause: a restriction the parser cannot evaluate
     must never be dropped silently.
     """
-    extremum = _EXTREMUM_CLAUSE.search(rest)
+    extremum = _EXTREMUM_CLAUSE.search(rest) if " with the " in f" {rest.lower()}" else None
     if extremum is not None:
         # "with the greatest power" / "with the lowest mana value": compared
         # against the phrase's own group (`ComparisonCount.GROUP_EXTREMUM`).
