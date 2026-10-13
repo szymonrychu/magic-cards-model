@@ -5520,6 +5520,14 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
             parsed.append(effect)
             index += consumed
             continue
+        merged = _merge_tap_target_recipient_then_no_untap_clauses(
+            clauses, index, for_spell=for_spell
+        )
+        if merged is not None:
+            consumed, effect = merged
+            parsed.append(effect)
+            index += consumed
+            continue
         merged = _merge_tap_target_then_no_untap_clauses(clauses, index, for_spell=for_spell)
         if merged is not None:
             consumed, effect = merged
@@ -6621,6 +6629,7 @@ from .merges import (  # noqa: E402
     _merge_split_damage_clauses,
     _merge_surveil_then_for_each_on_top_draw_and_lose_life_clauses,
     _merge_surveil_then_if_quality_to_hand_clauses,
+    _merge_tap_target_recipient_then_no_untap_clauses,
     _merge_tap_target_then_no_untap_clauses,
     _merge_target_player_draws_and_loses_life_clauses,
     _merge_target_then_life_equal_to_its_mana_value_clauses,

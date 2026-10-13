@@ -11031,6 +11031,42 @@ def _parse_target_attacks_if_able_clause(text: str) -> TargetedClause | None:
     return effect
 
 
+#: "{1}{R}: Enchanted creature attacks this turn if able." - Nettling Curse:
+#: `_TARGET_ATTACKS_IF_ABLE_RE`'s requirement on the permanent this Aura or
+#: Equipment is attached to (CR 303.4b, CR 301.5a) instead of on a target.
+_ATTACHED_ATTACKS_THIS_TURN_IF_ABLE_RE = re.compile(
+    r"^(?:enchanted|equipped) creature attacks this turn if able\.?$", re.IGNORECASE
+)
+
+
+@ABILITY_TEXT.rung("s11")
+def _parse_attached_attacks_this_turn_if_able_clause(text: str) -> AbilityEffect | None:
+    """`_ATTACHED_ATTACKS_THIS_TURN_IF_ABLE_RE`'s shape: CR 508.1d's
+    requirement granted until end of turn (CR 611.2a) as the same ability
+    line `_parse_target_attacks_if_able_clause` grants. A source with nothing
+    attached grants nothing (CR 303.4b names no creature)."""
+    if _ATTACHED_ATTACKS_THIS_TURN_IF_ABLE_RE.fullmatch(" ".join(text.split())) is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        source = ability.source(game)
+        if source is None or source.attached_to is None:
+            return
+        attached = game.find_by_id(source.attached_to)
+        if not isinstance(attached, CardState) or attached.zone is not Zone.BATTLEFIELD:
+            return
+        _grant_keywords_to(
+            game,
+            attached,
+            ["This creature attacks each combat if able."],
+            "until end of turn",
+            controller=game.controller_of(ability).username,
+            source_name=ability.source_name,
+        )
+
+    return effect
+
+
 #: "All creatures able to block target creature this turn do so." - Shinen of
 #: Life's Roar's channel ability: a CR 509.1c lure put on the target for the
 #: turn (CR 611.2a), granted as the printed static's own line so

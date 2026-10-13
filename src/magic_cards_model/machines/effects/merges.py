@@ -796,6 +796,61 @@ def _merge_tap_target_then_no_untap_clauses(
     return 2, effect
 
 
+def _merge_tap_target_recipient_then_no_untap_clauses(
+    clauses: list[str], index: int, *, for_spell: bool
+) -> tuple[int, TargetedClause] | None:
+    """Glacial Grasp: "Tap target creature. Its controller mills two cards.
+    That creature doesn't untap during its controller's next untap step." -
+    `_merge_tap_target_then_no_untap_clauses`' pair with a sentence between
+    its halves whose recipient is the target's controller (CR 109.5, a mill or
+    life change read by `ep02_r1_controller_recipients`). Run in the printed
+    order (CR 608.2c): tap, the recipient's instruction, the withheld untap."""
+    if index + 2 >= len(clauses):
+        return None
+    from ..decisions import source_id_of
+    from ..ep02_r1_controller_recipients import (
+        CONTROLLER_ANAPHOR,
+        controller_username,
+        parse_predicate,
+    )
+    from ..ep02_r1_referenced_stat import snapshot_of
+
+    recipient = re.fullmatch(
+        rf"{CONTROLLER_ANAPHOR} (?P<predicate>.+?)\.?",
+        clauses[index + 1].strip(),
+        re.IGNORECASE,
+    )
+    if recipient is None:
+        return None
+    predicate = parse_predicate(recipient.group("predicate"))
+    if predicate is None:
+        return None
+    pair = f"{clauses[index].strip()}. {clauses[index + 2].strip()}."
+    tap_and_hold = _parse_tap_target_then_no_untap_clause(pair)
+    if tap_and_hold is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        target = next(
+            (t for t in game.resolve_targets(stack_object) if isinstance(t, CardState)), None
+        )
+        if target is None:
+            return  # CR 608.2b: nothing legal left to tap or refer to
+        username = controller_username(game, target)
+        referent = snapshot_of(game, target) if predicate.stat is not None else None
+        tap_and_hold(game, stack_object)
+        if username is not None:
+            predicate.run(
+                game,
+                game.player(username),
+                referent,
+                getattr(stack_object, "source_name", None) or getattr(stack_object, "name", ""),
+                source_id_of(stack_object),
+            )
+
+    return 3, effect
+
+
 #: "Reveal cards from the top of your library until you reveal a `<kind>`[ or
 #: `<kind2>`] card. Put that card `<dest>` and the rest on the bottom of your
 #: library in a random order." - CR 701.20a's open-ended reveal, the same

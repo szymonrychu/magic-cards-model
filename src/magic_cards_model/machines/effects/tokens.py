@@ -2716,6 +2716,94 @@ def _parse_created_trigger_ability_text(text: str) -> AbilityEffect | None:
     return effect
 
 
+def _split_instruction_then_created_trigger(
+    text: str,
+) -> tuple[str, str, TriggeredAbility, str] | None:
+    """(the paragraphs before, printed line, its parse, the paragraphs after)
+    when a created "this turn" trigger is not the first paragraph: Mage
+    Hunters' Onslaught's "Destroy target creature or planeswalker." and then,
+    as its own paragraph, "Whenever a creature blocks this turn, its
+    controller loses 1 life." CR 608.2c: the instructions run in the order
+    written, the trigger being created when its paragraph is reached."""
+    paragraphs = [part for part in text.strip().split("\n") if part.strip()]
+    for position in range(1, len(paragraphs)):
+        split = _split_created_trigger_paragraph("\n".join(paragraphs[position:]))
+        if split is not None and split[1].event is not None:
+            line, ability, rest = split
+            return "\n".join(paragraphs[:position]).strip(), line, ability, rest
+    return None
+
+
+@SPELL_TEXT.rung("s10")
+def _parse_instruction_then_created_trigger_spell_text(text: str) -> Effect | None:
+    """The spell side of `_split_instruction_then_created_trigger`."""
+    split = _split_instruction_then_created_trigger(text)
+    if split is None:
+        return None
+    head_text, line, ability, rest_text = split
+    event = ability.event
+    assert event is not None
+    head = _spell_effect_or_notice(head_text)
+    if head is None or _is_notice_only(head):
+        return None
+    rest: Effect | None = None
+    if rest_text:
+        rest = _spell_effect_or_notice(rest_text)
+        if rest is None or _is_notice_only(rest):
+            return None
+
+    def effect(game: "Game", spell: CardState) -> None:
+        head(game, spell)
+        _create_turn_scoped_trigger(
+            game,
+            line,
+            event,
+            controller=game.controller_of(spell).username,
+            source=spell,
+            source_id=spell.id,
+            source_name=spell.name,
+        )
+        if rest is not None:
+            rest(game, spell)
+
+    return effect
+
+
+@ABILITY_TEXT.rung("s20")
+def _parse_instruction_then_created_trigger_ability_text(text: str) -> AbilityEffect | None:
+    """The ability side of `_split_instruction_then_created_trigger`."""
+    split = _split_instruction_then_created_trigger(_strip_non_effect_preamble(text))
+    if split is None:
+        return None
+    head_text, line, ability, rest_text = split
+    event = ability.event
+    assert event is not None
+    head = _ability_effect_or_notice(head_text)
+    if head is None or _is_notice_only(head):
+        return None
+    rest: AbilityEffect | None = None
+    if rest_text:
+        rest = _ability_effect_or_notice(rest_text)
+        if rest is None or _is_notice_only(rest):
+            return None
+
+    def effect(game: "Game", stack_object: AbilityOnStack) -> None:
+        head(game, stack_object)
+        _create_turn_scoped_trigger(
+            game,
+            line,
+            event,
+            controller=stack_object.controller,
+            source=stack_object.source(game),
+            source_id=stack_object.source_id,
+            source_name=stack_object.source_name,
+        )
+        if rest is not None:
+            rest(game, stack_object)
+
+    return effect
+
+
 # --------------------------------------------------------------------------
 # Replacement effects a resolving spell or ability creates for the turn
 # --------------------------------------------------------------------------

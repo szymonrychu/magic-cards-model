@@ -10068,6 +10068,28 @@ def _parse_destroy_it_event_text(text: str) -> AbilityEffect | None:
     return destroy_event_subject_effect(text)
 
 
+_DESTROY_IT_NO_REGENERATION_RE = re.compile(
+    r"^destroy it\.\s*it can'?t be regenerated\.?$", re.IGNORECASE
+)
+
+
+@ABILITY_TEXT.rung("s25")
+def _parse_destroy_it_cant_regenerate_event_text(text: str) -> AbilityEffect | None:
+    """ "Destroy it. It can't be regenerated." (Death Pits of Rath): the
+    object the trigger's event names, destroyed with CR 701.19c's prohibition
+    on regeneration, only while it is still on the battlefield (CR 608.2b)."""
+    if _DESTROY_IT_NO_REGENERATION_RE.fullmatch(" ".join(text.split())) is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        assert isinstance(stack_object, AbilityOnStack)
+        referent = event_referent_permanent(game, stack_object)
+        if isinstance(referent, CardState) and referent.zone is Zone.BATTLEFIELD:
+            game.destroy(referent, regeneration_allowed=False)
+
+    return effect
+
+
 #: "Sacrifice a permanent for each 1 life you lost." (Lich's Tomb) - the
 #: trigger's own life-loss amount (CR 119.3, `GameEvent.amount`), one permanent
 #: of the controller's choice per point (CR 701.21a).
