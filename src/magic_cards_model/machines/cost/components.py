@@ -217,6 +217,10 @@ class CardRequirement(EngineModel):
     non-creature" would exclude both."""
     subtypes: list[str] = Field(default_factory=list)
     """The card must have at least one of these subtypes, as printed."""
+    excluded_subtypes: list[str] = Field(default_factory=list)
+    """The card must have **none** of these subtypes, as printed - Ooze
+    Garden's "Sacrifice a non-Ooze creature" (the subtype twin of
+    `excluded_types`: every one of them excluded at once)."""
     supertypes: list[Supertype] = Field(default_factory=list)
     """The card must have **all** of these supertypes (CR 205.4a: "The
     supertypes are basic, legendary, ongoing, snow, and world"). Unlike the
@@ -276,6 +280,7 @@ class CardRequirement(EngineModel):
             or self.types
             or self.excluded_types
             or self.subtypes
+            or self.excluded_subtypes
             or self.supertypes
             or self.same_name_as
             or self.mana_value is not None
@@ -353,8 +358,10 @@ class CardRequirement(EngineModel):
         if self.excluded_types and types & set(self.excluded_types):
             unwanted = "/".join(type_.value for type_ in self.excluded_types)
             return f"{card.name} is {with_indefinite_article(unwanted)}"
-        if self.subtypes and not subtypes & self._wanted_subtypes():
+        if self.subtypes and not subtypes & self._subtype_forms(self.subtypes):
             return f"{card.name} is not {with_indefinite_article('/'.join(self.subtypes))}"
+        if self.excluded_subtypes and subtypes & self._subtype_forms(self.excluded_subtypes):
+            return f"{card.name} is {with_indefinite_article('/'.join(self.excluded_subtypes))}"
         if self.named is not None and card.name != self.named:
             return f"{card.name} is not named {self.named}"
         if (
@@ -393,8 +400,9 @@ class CardRequirement(EngineModel):
                 )
         return None
 
-    def _wanted_subtypes(self) -> set[str]:
-        """The subtypes this accepts, lowercased, plural forms included.
+    @staticmethod
+    def _subtype_forms(names: list[str]) -> set[str]:
+        """The subtypes `names` accepts, lowercased, plural forms included.
 
         A cost phrase names its subtype the way the sentence needs it, and
         Fireblast's "Sacrifice two Mountains" is plural while CR 205.3 prints
@@ -404,7 +412,7 @@ class CardRequirement(EngineModel):
         end in *s*, and blind singularising would break them.
         """
         wanted = set()
-        for subtype in self.subtypes:
+        for subtype in names:
             lowered = subtype.lower()
             wanted.add(lowered)
             if lowered.endswith("s"):

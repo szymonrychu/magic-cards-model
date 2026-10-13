@@ -1,0 +1,162 @@
+{
+  "object": "card",
+  "id": "69890076-9cc4-434f-8618-63b00fdf4515",
+  "oracle_id": "0a0743b0-07c2-4e11-8b30-6b1b8156bdd0",
+  "multiverse_ids": [
+    540899
+  ],
+  "mtgo_id": 94426,
+  "arena_id": 78847,
+  "tcgplayer_id": 253026,
+  "cardmarket_id": 581671,
+  "name": "Geralf, Visionary Stitcher",
+  "lang": "en",
+  "released_at": "2021-11-19",
+  "uri": "https://api.scryfall.com/cards/69890076-9cc4-434f-8618-63b00fdf4515",
+  "scryfall_uri": "https://scryfall.com/card/vow/61/geralf-visionary-stitcher?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T06:41:32Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/6/9/69890076-9cc4-434f-8618-63b00fdf4515.jpg?1783924892",
+    "normal": "https://cards.scryfall.io/normal/front/6/9/69890076-9cc4-434f-8618-63b00fdf4515.jpg?1783924892",
+    "large": "https://cards.scryfall.io/large/front/6/9/69890076-9cc4-434f-8618-63b00fdf4515.jpg?1783924892",
+    "png": "https://cards.scryfall.io/png/front/6/9/69890076-9cc4-434f-8618-63b00fdf4515.png?1783924892",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/6/9/69890076-9cc4-434f-8618-63b00fdf4515.jpg?1783924892",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/6/9/69890076-9cc4-434f-8618-63b00fdf4515.jpg?1783924892",
+    "thumb": "https://cards.scryfall.io/thumb/front/6/9/69890076-9cc4-434f-8618-63b00fdf4515.webp?1783924892",
+    "grid": "https://cards.scryfall.io/grid/front/6/9/69890076-9cc4-434f-8618-63b00fdf4515.webp?1783924892",
+    "display": "https://cards.scryfall.io/display/front/6/9/69890076-9cc4-434f-8618-63b00fdf4515.webp?1783924892",
+    "art": "https://cards.scryfall.io/art/front/6/9/69890076-9cc4-434f-8618-63b00fdf4515.webp?1783924892",
+    "crop": "https://cards.scryfall.io/crop/front/6/9/69890076-9cc4-434f-8618-63b00fdf4515.webp?1783924892"
+  },
+  "mana_cost": "{2}{U}",
+  "cmc": 3.0,
+  "type_line": "Legendary Creature \u2014 Human Wizard",
+  "oracle_text": "Zombies you control have flying.\n{U}, {T}, Sacrifice another nontoken creature: Create an X/X blue Zombie creature token, where X is the sacrificed creature's toughness.",
+  "power": "1",
+  "toughness": "4",
+  "colors": [
+    "U"
+  ],
+  "color_identity": [
+    "U"
+  ],
+  "keywords": [],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "53c5d474-5620-4c5f-95a4-8a128825df83",
+      "component": "combo_piece",
+      "name": "Geralf, Visionary Stitcher",
+      "type_line": "Legendary Creature \u2014 Human Wizard",
+      "uri": "https://api.scryfall.com/cards/53c5d474-5620-4c5f-95a4-8a128825df83"
+    },
+    {
+      "object": "related_card",
+      "id": "539f4b60-667b-469d-9191-eacaad5c0db1",
+      "component": "token",
+      "name": "Zombie",
+      "type_line": "Token Creature \u2014 Zombie",
+      "uri": "https://api.scryfall.com/cards/539f4b60-667b-469d-9191-eacaad5c0db1"
+    }
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "arena",
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "8144b676-569f-4716-8005-bc8f0778f3fa",
+  "set": "vow",
+  "set_name": "Innistrad: Crimson Vow",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/8144b676-569f-4716-8005-bc8f0778f3fa",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Avow&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/vow?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/69890076-9cc4-434f-8618-63b00fdf4515/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A0a0743b0-07c2-4e11-8b30-6b1b8156bdd0&unique=prints",
+  "collector_number": "61",
+  "digital": false,
+  "rarity": "rare",
+  "flavor_text": "\"Do you like it, Sister? Its dreadful visage was inspired by your own.\"",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Bryan Sola",
+  "artist_ids": [
+    "e6879299-a28b-48bc-8db1-9cafcf36de09"
+  ],
+  "illustration_id": "54ebe638-475c-4cf4-848f-59d12c8a7e49",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 5430,
+  "penny_rank": 11992,
+  "preview": {
+    "source": "Marshall Sutcliffe",
+    "source_uri": "https://twitter.com/Marshall_LR/status/1454341469527965696",
+    "previewed_at": "2021-10-30"
+  },
+  "prices": {
+    "usd": "1.09",
+    "usd_foil": "1.11",
+    "usd_etched": null,
+    "eur": "0.70",
+    "eur_foil": "1.16",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=540899&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DGeralf%252C%2BVisionary%2BStitcher",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DGeralf%252C%2BVisionary%2BStitcher",
+    "edhrec": "https://edhrec.com/route/?cc=Geralf%2C+Visionary+Stitcher"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F253026%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=581671&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/94426?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

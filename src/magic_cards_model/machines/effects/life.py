@@ -19,6 +19,7 @@ from ..decisions import Decision, DecisionKind, source_id_of
 from ..ep01_r3_amounts import event_player_username, event_terms
 from ..ep02_r1_controller_recipients import event_controller_clause, target_controller_effect
 from ..ep02_r1_life_amounts import parse_life_loss_text
+from ..ep02_r1_moved_card_stat import moved_card_stat_effect
 from ..ep02_r1_referenced_stat import referenced_stat_effect
 from ..targeting import (
     permanent_description,
@@ -1455,3 +1456,14 @@ def _parse_event_controller_clause(clause: str, *, for_spell: bool) -> TargetedC
     if for_spell or " controller " not in clause.lower():
         return None
     return event_controller_clause(clause)
+
+
+@ABILITY_TEXT.rung("s39", for_spell=False)
+@SPELL_TEXT.rung("s22", for_spell=True)
+def _parse_moved_card_stat_text(text: str, *, for_spell: bool) -> Effect | AbilityEffect | None:
+    """ "Create X tokens, where X is the sacrificed creature's toughness",
+    "deals damage equal to that card's power" (the card it just returned),
+    "draw cards equal to that spell's mana value" (the spell it countered): an
+    amount that is a characteristic of something the text or its cost moved
+    (`ep02_r1_moved_card_stat`)."""
+    return moved_card_stat_effect(text, for_spell=for_spell)

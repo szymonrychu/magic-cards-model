@@ -1,0 +1,152 @@
+{
+  "object": "card",
+  "id": "56b93af3-f7b9-4b66-8a66-366134ebb896",
+  "oracle_id": "58940a7e-3827-43fa-8bf5-cc88dc295df0",
+  "multiverse_ids": [
+    425999
+  ],
+  "mtgo_id": 63423,
+  "mtgo_foil_id": 63424,
+  "tcgplayer_id": 128905,
+  "cardmarket_id": 296021,
+  "name": "Mystic Genesis",
+  "lang": "en",
+  "released_at": "2017-03-17",
+  "uri": "https://api.scryfall.com/cards/56b93af3-f7b9-4b66-8a66-366134ebb896",
+  "scryfall_uri": "https://scryfall.com/card/mm3/174/mystic-genesis?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T09:56:54Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/5/6/56b93af3-f7b9-4b66-8a66-366134ebb896.jpg?1783936614",
+    "normal": "https://cards.scryfall.io/normal/front/5/6/56b93af3-f7b9-4b66-8a66-366134ebb896.jpg?1783936614",
+    "large": "https://cards.scryfall.io/large/front/5/6/56b93af3-f7b9-4b66-8a66-366134ebb896.jpg?1783936614",
+    "png": "https://cards.scryfall.io/png/front/5/6/56b93af3-f7b9-4b66-8a66-366134ebb896.png?1783936614",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/5/6/56b93af3-f7b9-4b66-8a66-366134ebb896.jpg?1783936614",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/5/6/56b93af3-f7b9-4b66-8a66-366134ebb896.jpg?1783936614",
+    "thumb": "https://cards.scryfall.io/thumb/front/5/6/56b93af3-f7b9-4b66-8a66-366134ebb896.webp?1783936614",
+    "grid": "https://cards.scryfall.io/grid/front/5/6/56b93af3-f7b9-4b66-8a66-366134ebb896.webp?1783936614",
+    "display": "https://cards.scryfall.io/display/front/5/6/56b93af3-f7b9-4b66-8a66-366134ebb896.webp?1783936614",
+    "art": "https://cards.scryfall.io/art/front/5/6/56b93af3-f7b9-4b66-8a66-366134ebb896.webp?1783936614",
+    "crop": "https://cards.scryfall.io/crop/front/5/6/56b93af3-f7b9-4b66-8a66-366134ebb896.webp?1783936614"
+  },
+  "mana_cost": "{2}{G}{U}{U}",
+  "cmc": 5.0,
+  "type_line": "Instant",
+  "oracle_text": "Counter target spell. Create an X/X green Ooze creature token, where X is that spell's mana value.",
+  "colors": [
+    "G",
+    "U"
+  ],
+  "color_identity": [
+    "G",
+    "U"
+  ],
+  "keywords": [],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "56b93af3-f7b9-4b66-8a66-366134ebb896",
+      "component": "combo_piece",
+      "name": "Mystic Genesis",
+      "type_line": "Instant",
+      "uri": "https://api.scryfall.com/cards/56b93af3-f7b9-4b66-8a66-366134ebb896"
+    },
+    {
+      "object": "related_card",
+      "id": "2a9cea73-9421-4f91-b8f9-1a8081b3811a",
+      "component": "token",
+      "name": "Ooze",
+      "type_line": "Token Creature \u2014 Ooze",
+      "uri": "https://api.scryfall.com/cards/2a9cea73-9421-4f91-b8f9-1a8081b3811a"
+    }
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "02624962-f727-4c31-bbf2-a94fa6c5b653",
+  "set": "mm3",
+  "set_name": "Modern Masters 2017",
+  "set_type": "masters",
+  "set_uri": "https://api.scryfall.com/sets/02624962-f727-4c31-bbf2-a94fa6c5b653",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Amm3&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/mm3?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/56b93af3-f7b9-4b66-8a66-366134ebb896/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A58940a7e-3827-43fa-8bf5-cc88dc295df0&unique=prints",
+  "collector_number": "174",
+  "digital": false,
+  "rarity": "uncommon",
+  "flavor_text": "\"The Simic can grow anything out of a puddle of sludge. I just hope they never join forces with the Golgari.\"\n\u2014Teysa Karlov, Grand Envoy of Orzhov",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Mike Bierek",
+  "artist_ids": [
+    "e5f52ef5-1a2e-4128-90b0-ccc71cd47ea7"
+  ],
+  "illustration_id": "668f8ba0-222b-49fa-9fed-2e7c4b9b549d",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 18691,
+  "penny_rank": 12077,
+  "prices": {
+    "usd": "0.18",
+    "usd_foil": "0.33",
+    "usd_etched": null,
+    "eur": "0.14",
+    "eur_foil": "0.36",
+    "tix": "0.03"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=425999&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DMystic%2BGenesis",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DMystic%2BGenesis",
+    "edhrec": "https://edhrec.com/route/?cc=Mystic+Genesis"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F128905%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=296021&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/63423?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}
