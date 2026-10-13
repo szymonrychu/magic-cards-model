@@ -2040,12 +2040,7 @@ class ActivationMixin:
                         }
                     )
                     del exiles[: component.required]
-                elif (
-                    not component.cards
-                    # "... named Templar Knight" names a quality the chosen
-                    # permanents share (CR 201.2), not this permanent.
-                    and (component.requirement is None or component.requirement.named is None)
-                ) and (
+                elif not component.cards and (
                     _cost_refers_to_self(piece.text, permanent)
                     or _exiles_itself_by_name(piece.text, permanent)
                 ):

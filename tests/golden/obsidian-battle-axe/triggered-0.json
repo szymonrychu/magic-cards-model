@@ -16,7 +16,7 @@
       "alice": {
         "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Wastes", "Memnite", "Icehide Golem", "Bonesplitter", "Icy Manipulator", "Obsidian Battle-Axe"],
         "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel"],
-        "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt", "A.I.M. Scientists"],
+        "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt", "Absolute Virtue"],
         "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
       },
       "bob": {
@@ -42,19 +42,19 @@
         "kind": "may",
         "player": "alice",
         "players": [],
-        "prompt": "attach Obsidian Battle-Axe to A.I.M. Scientists",
+        "prompt": "attach Obsidian Battle-Axe to Absolute Virtue",
         "source": "Obsidian Battle-Axe"
       }
     ],
     "fields_changed": [],
     "notices": {},
     "objects": {
-      "A.I.M. Scientists@alice#1": {
-        "power": [3, 5],
-        "toughness": [3, 4]
+      "Absolute Virtue@alice#1": {
+        "power": [8, 10],
+        "toughness": [8, 9]
       },
       "Obsidian Battle-Axe@alice#1": {
-        "attached_to": [null, "A.I.M. Scientists@alice#1"]
+        "attached_to": [null, "Absolute Virtue@alice#1"]
       }
     },
     "players": {},
@@ -69,7 +69,7 @@
     "index": 3,
     "params": {
       "owner": "alice",
-      "probe": "A.I.M. Scientists",
+      "probe": "Absolute Virtue",
       "tapped": false
     },
     "variant": "quiet"

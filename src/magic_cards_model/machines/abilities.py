@@ -109,7 +109,7 @@ Deliberate limits, all of them visible as tests:
 
 import functools
 import re
-from collections.abc import Sequence
+from collections.abc import Iterator, Sequence
 from enum import StrEnum
 from typing import TYPE_CHECKING, Annotated, Any, Literal, NamedTuple
 from uuid import UUID
@@ -2831,11 +2831,53 @@ def self_reference_pattern(name: str) -> str:
     )
 
 
-@functools.lru_cache(maxsize=4096)
-def self_reference_re(name: str) -> re.Pattern[str]:
-    """`self_reference_pattern(name)`, compiled once per name (case-sensitive,
-    so a caller may skip it outright when `name` is not a substring)."""
-    return re.compile(self_reference_pattern(name))
+#: `self_reference_pattern`'s guards around the name, compiled once for every
+#: name: matched at the candidate's own position, the lookbehinds still see the
+#: text before it.
+_SELF_REFERENCE_BEFORE = re.compile(
+    rf"{_EMPOWER_KEYWORD_LOOKBEHIND}{_TYPE_NOUN_LOOKBEHIND}{_NAMED_LOOKBEHIND}(?<!\w)"
+)
+_SELF_REFERENCE_AFTER = re.compile(rf"(?!\w){_LONGER_NAME_CONTINUATION_LOOKAHEAD}")
+
+
+class SelfReference:
+    """`self_reference_pattern(name)`'s matches, found with `str.find` and the
+    two shared guards rather than a regex compiled per card name (a cold
+    classification of the pool compiled one per card). Case-sensitive, like
+    the pattern; `search` and `sub` behave as the compiled pattern's would."""
+
+    __slots__ = ("name",)
+
+    def __init__(self, name: str) -> None:
+        self.name = name
+
+    def _spans(self, text: str) -> Iterator[tuple[int, int]]:
+        name, size, start = self.name, len(self.name), 0
+        while (at := text.find(name, start)) != -1:
+            if (
+                _SELF_REFERENCE_BEFORE.match(text, at) is not None
+                and _SELF_REFERENCE_AFTER.match(text, at + size) is not None
+            ):
+                yield at, at + size
+                start = at + size
+            else:
+                start = at + 1
+
+    def search(self, text: str) -> tuple[int, int] | None:
+        return next(self._spans(text), None)
+
+    def sub(self, replacement: str, text: str) -> str:
+        pieces, last = [], 0
+        for begin, end in self._spans(text):
+            pieces += (text[last:begin], replacement)
+            last = end
+        return "".join(pieces) + text[last:] if pieces else text
+
+
+def self_reference_re(name: str) -> SelfReference:
+    """`self_reference_pattern(name)`'s matcher (case-sensitive, so a caller
+    may skip it outright when `name` is not a substring)."""
+    return SelfReference(name)
 
 
 #: Epithet-boundary words CR 201.5c's shortened names split on: "`<Name>` the

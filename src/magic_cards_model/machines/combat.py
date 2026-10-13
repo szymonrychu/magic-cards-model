@@ -2290,11 +2290,20 @@ def _reads_evasion_sentence(sentence: str) -> bool:
     )
 
 
-@functools.lru_cache(maxsize=4096)
-def _own_combat_restriction_re(name: str) -> re.Pattern[str]:
-    """`name`'s own "<self> can't (be blocked|block)" subject regex, compiled once."""
-    subjects = "|".join(re.escape(subject) for subject in _self_reference_names(name))
-    return re.compile(rf"^(?:{subjects}) can't (?:be blocked|block)\b", re.IGNORECASE)
+#: What follows the subject of `_opens_with_own_combat_restriction`.
+_OWN_COMBAT_RESTRICTION_TAIL_RE = re.compile(r" can't (?:be blocked|block)\b")
+
+
+def _opens_with_own_combat_restriction(sentence: str, name: str) -> bool:
+    """Whether `sentence` opens "<self> can't (be blocked|block)", the subject
+    one of `name`'s own self-reference names (CR 201.5) - one shared regex for
+    the tail, not one compiled per card name."""
+    lowered = sentence.lower()
+    return any(
+        lowered.startswith(subject)
+        and _OWN_COMBAT_RESTRICTION_TAIL_RE.match(lowered, len(subject)) is not None
+        for subject in (s.lower() for s in _self_reference_names(name))
+    )
 
 
 def reads_self_combat_restriction_line(line: str, name: str) -> bool:
@@ -2311,12 +2320,11 @@ def reads_self_combat_restriction_line(line: str, name: str) -> bool:
     """
     if "can't" not in line.lower():
         return False
-    own = _own_combat_restriction_re(name)
     sentences = [strip_ability_word(sentence) for sentence in layer_readable_sentences(line)]
     if not sentences:
         return False
     for sentence in sentences:
-        if own.search(sentence) is None:
+        if not _opens_with_own_combat_restriction(sentence, name):
             return False
         evasion = re.search(r"can't be blocked\b|can't block or be blocked by\b", sentence)
         if evasion is not None and not _reads_evasion_sentence(sentence):

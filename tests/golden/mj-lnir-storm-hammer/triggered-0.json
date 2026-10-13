@@ -5,7 +5,7 @@
     "modes": [],
     "on_stack": true,
     "source": "Mjölnir, Storm Hammer@alice#1",
-    "targets": ["Abigale, Eloquent First-Year@alice#1"],
+    "targets": ["Aatchik, Emerald Radian@alice#1"],
     "x": 0
   },
   "board": {
@@ -14,7 +14,7 @@
     "order": ["alice", "bob"],
     "players": {
       "alice": {
-        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Wastes", "Memnite", "Icehide Golem", "Bonesplitter", "Icy Manipulator", "Abigale, Eloquent First-Year"],
+        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Wastes", "Memnite", "Icehide Golem", "Bonesplitter", "Icy Manipulator", "Aatchik, Emerald Radian"],
         "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel"],
         "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt", "Mjölnir, Storm Hammer"],
         "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
@@ -40,7 +40,7 @@
     "notices": {},
     "objects": {
       "Mj\u00f6lnir, Storm Hammer@alice#1": {
-        "attached_to": [null, "Abigale, Eloquent First-Year@alice#1"]
+        "attached_to": [null, "Aatchik, Emerald Radian@alice#1"]
       }
     },
     "players": {},

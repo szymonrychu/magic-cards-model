@@ -86,6 +86,9 @@ if TYPE_CHECKING:
 #: only the caller building the cost knows which it is.
 _SELF_REFERENCE = re.compile(r"\bthis\b", re.IGNORECASE)
 _OTHER_THAN_THIS = re.compile(r"\bother than this \w+", re.IGNORECASE)
+#: "... named Shadowborn Apostle" / "... named Templar Knight": a name the chosen
+#: objects share (CR 201.2), never this object's own self-reference (CR 201.5).
+_NAMED_QUALITY = re.compile(r"\bnamed .+$", re.IGNORECASE)
 
 
 def _cost_refers_to_self(text: str, permanent: CardState) -> bool:
@@ -110,7 +113,7 @@ def _cost_refers_to_self(text: str, permanent: CardState) -> bool:
     """
     # "other than this creature" (Mossbridge Troll) names the source only to
     # leave it out of the choice, so it is not the cost's own self-reference.
-    text = _OTHER_THAN_THIS.sub("", text)
+    text = _NAMED_QUALITY.sub("", _OTHER_THAN_THIS.sub("", text))
     if _SELF_REFERENCE.search(text):
         return True
     front = permanent.card.name.split("//")[0].strip()

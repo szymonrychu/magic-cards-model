@@ -56,7 +56,7 @@
     "notices": {},
     "objects": {},
     "players": {},
-    "stack": ["ability of Wingmantle Chaplain@alice#1: Whenever another creature you control with defender enters, create a 1/1 white Bird creature token with flying."]
+    "stack": []
   },
   "family": "triggered",
   "format": 1,

@@ -14,7 +14,7 @@
     "order": ["alice", "bob"],
     "players": {
       "alice": {
-        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Wastes", "Memnite", "Icehide Golem", "Bonesplitter", "Icy Manipulator"],
+        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Wastes", "Memnite", "Icehide Golem", "Bonesplitter", "Icy Manipulator", "Wingmantle Chaplain"],
         "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel"],
         "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt", "Wingmantle Chaplain"],
         "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
@@ -35,7 +35,7 @@
   "card": "Wingmantle Chaplain",
   "delta": {
     "created": {
-      "Bird Token@alice+1": {
+      "Bird Token@alice+3": {
         "attached_to": null,
         "class_level": 1,
         "controller": "alice",
@@ -56,7 +56,7 @@
     "notices": {},
     "objects": {},
     "players": {},
-    "stack": ["ability of Wingmantle Chaplain@alice#1: Whenever another creature you control with defender enters, create a 1/1 white Bird creature token with flying."]
+    "stack": []
   },
   "family": "triggered",
   "format": 1,
@@ -64,8 +64,10 @@
   "number": 1,
   "recipe": {
     "attempt": "put",
-    "index": 0,
+    "index": 2,
     "params": {
+      "owner": "alice",
+      "probe": "Wingmantle Chaplain",
       "tapped": false
     },
     "variant": "quiet"

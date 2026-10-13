@@ -16,7 +16,7 @@
       "alice": {
         "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Wastes", "Memnite", "Icehide Golem", "Bonesplitter", "Icy Manipulator", "Frontier Siege"],
         "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel"],
-        "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt", "A.I.M. Scientists"],
+        "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt", "Aang, at the Crossroads // Aang, Destined Savior"],
         "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
       },
       "bob": {
@@ -42,14 +42,14 @@
         "kind": "may",
         "player": "alice",
         "players": [],
-        "prompt": "have A.I.M. Scientists fight Fleecemane Lion?",
+        "prompt": "have Aang, at the Crossroads fight Fleecemane Lion?",
         "source": "Frontier Siege"
       }
     ],
     "fields_changed": ["creatures_died_this_turn", "damage_dealt_this_turn", "graveyard_arrivals_announced", "graveyard_arrivals_this_turn", "nontoken_creatures_died_under_control_this_turn", "permanents_left_battlefield_this_turn", "turn_history"],
     "notices": {},
     "objects": {
-      "A.I.M. Scientists@alice#1": {
+      "Aang, at the Crossroads@alice#1": {
         "zone": ["battlefield", "graveyard"]
       },
       "Fleecemane Lion@bob#1": {
@@ -65,10 +65,10 @@
   "number": 1,
   "recipe": {
     "attempt": "put",
-    "index": 3,
+    "index": 4,
     "params": {
       "owner": "alice",
-      "probe": "A.I.M. Scientists",
+      "probe": "Aang, at the Crossroads // Aang, Destined Savior",
       "tapped": false
     },
     "variant": "quiet"

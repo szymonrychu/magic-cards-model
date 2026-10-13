@@ -2902,6 +2902,19 @@ _probe_permanent = _ProbePermanentMemo()
 
 
 def _condition_can_fire(printing: Card, ability: TriggeredAbility) -> bool | None:
+    """`_probe_condition`, with the memoised probe permanents unbound from its
+    throwaway game afterwards, so the memo does not keep every game alive."""
+    held: list[CardState] = []
+    try:
+        return _probe_condition(printing, ability, held)
+    finally:
+        for state in held:
+            state.bind_to_game(None)
+
+
+def _probe_condition(
+    printing: Card, ability: TriggeredAbility, held: list[CardState]
+) -> bool | None:
     """Whether some real, reachable permanent could satisfy `ability`'s own
     parsed condition through the production `condition_matches` (CR 603.2) -
     or `None` when this closure has no synthetic occurrence to try, in which
@@ -2992,13 +3005,18 @@ def _condition_can_fire(printing: Card, ability: TriggeredAbility) -> bool | Non
         for controller_name in ("sweep_you", "sweep_opp"):
             for token in token_choices:
                 for tapped in tapped_choices:
-                    state = _probe_permanent(
+                    # The printing's own twin recurs for no other card, so only
+                    # the pool probes go through the memo.
+                    build = _synthetic_permanent if probe is printing else _probe_permanent
+                    state = build(
                         probe,
                         controller=controller_name,
                         token=token,
                         tapped=tapped,
                         counter_kind=counter_kind,
                     )
+                    if probe is not printing:
+                        held.append(state)
                     state.bind_to_game(game)
                     game.battlefield.append(state)
                     states.append(state)

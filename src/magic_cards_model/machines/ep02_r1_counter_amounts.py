@@ -108,6 +108,8 @@ def _self(names: tuple[str, ...] = ()) -> str:
 def _tokenised(text: str, names: tuple[str, ...]) -> str:
     """`text` with the card's own name after "on " as a name-independent token."""
     for index, name in enumerate(names):
+        if f"on {name}" not in text:
+            continue  # nothing to swap: no pattern compiled for this name
         token = f"\x00{index}x"
         text = re.sub(rf"(\bon ){re.escape(name)}\b", lambda m, t=token: m.group(1) + t, text)
     return text

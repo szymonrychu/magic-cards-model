@@ -5,7 +5,7 @@
     "modes": [],
     "on_stack": true,
     "source": "Havi, the All-Father@alice#1",
-    "targets": ["Abigale, Eloquent First-Year@alice#1"],
+    "targets": ["Asmoranomardicadaistinaculdacar@alice#1"],
     "x": 0
   },
   "board": {
@@ -15,7 +15,7 @@
     "players": {
       "alice": {
         "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Wastes", "Memnite", "Icehide Golem", "Bonesplitter", "Icy Manipulator", "Havi, the All-Father"],
-        "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel", "Abigale, Eloquent First-Year"],
+        "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel", "Asmoranomardicadaistinaculdacar"],
         "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt"],
         "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
       },
@@ -35,26 +35,16 @@
   "card": "Havi, the All-Father",
   "delta": {
     "created": {},
-    "decisions": [
-      {
-        "amount": 0,
-        "cards": [],
-        "kind": "choose_targets",
-        "player": "alice",
-        "players": [],
-        "prompt": "choose targets for Abigale, Eloquent First-Year",
-        "source": "Abigale, Eloquent First-Year"
-      }
-    ],
+    "decisions": [],
     "fields_changed": ["continuous_effects", "turn_counts", "turn_facts", "turn_history"],
     "notices": {},
     "objects": {
-      "Abigale, Eloquent First-Year@alice#1": {
+      "Asmoranomardicadaistinaculdacar@alice#1": {
         "zone": ["graveyard", "battlefield"]
       }
     },
     "players": {},
-    "stack": ["ability of Abigale, Eloquent First-Year@alice#1: When Abigale enters, up to one other target creature loses all abilities. Put a flying counter, a first strike counter, and a lifelink counter on that creature."]
+    "stack": ["ability of Asmoranomardicadaistinaculdacar@alice#1: When Asmoranomardicadaistinaculdacar enters, you may search your library for a card named The Underworld Cookbook, reveal it, put it into your hand, then shuffle."]
   },
   "family": "triggered",
   "format": 1,

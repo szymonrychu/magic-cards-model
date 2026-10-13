@@ -69,6 +69,7 @@ from __future__ import annotations
 import contextlib
 import itertools
 import json
+import math
 import os
 import re
 from collections import Counter
@@ -135,6 +136,8 @@ from magic_cards_model.machines.state_triggers import reads_state_condition, sta
 from magic_cards_model.machines.targeting import (
     _KEYWORD_FAMILIES,
     CombatState,
+    ComparisonAttribute,
+    ComparisonOperator,
     ControllerRestriction,
     TargetRequirement,
     profile_for_text,
@@ -169,7 +172,7 @@ from magic_cards_model.models.game import (
 )
 from magic_cards_model.models.token import PREDEFINED, create_predefined_tokens, token_copy_of
 from magic_cards_model.numbers import parse_count, parse_ordinal
-from magic_cards_model.support import _probe_cards, card_support, in_target_formats
+from magic_cards_model.support import _numeric_stat, _probe_cards, card_support, in_target_formats
 from tests import golden
 from tests.cards import card_state, pool
 from tests.scenarios.harness import PlayedScenario, ResolutionEffect, Scenario, mana_from
@@ -609,11 +612,13 @@ def _war_turn(scenario: PlayedScenario) -> None:
     attackers = [
         p
         for p in game.permanents_controlled_by(ALICE)
-        if Type.CREATURE in p.types and not _named(p, own) and scenario.can_attack(p)
+        # Bob is named outright: a three-seat board (the lose-the-game
+        # driver's, CR 800.4) has no one default defender (CR 508.1b).
+        if Type.CREATURE in p.types and not _named(p, own) and scenario.can_attack(p, BOB)
     ]
     try:
         if attackers:
-            scenario.attack_with(*attackers)
+            scenario.attack_with(*attackers, defending=BOB)
             _settle(scenario)
             while game.stack:
                 game.resolve_top()
@@ -1275,6 +1280,34 @@ def _card_types_material(count: str, with_permanents: bool) -> tuple[Material, .
     return tuple(material)
 
 
+def _event_comparison_order(requirement: TargetRequirement) -> tuple[Card, ...]:
+    """The pool in the order `_find_material` tries it: by name, except that a
+    bound on the trigger event's own object ("target legendary creature card
+    with lesser mana value", Havi, the All-Father) tries the lowest values
+    first (the highest for "greater") - the bound is only known once the
+    event happens, and the smallest card satisfies the most of them."""
+    attribute = requirement.event_comparison_attribute
+    operator = requirement.event_comparison_operator
+    if attribute is None or operator is None:
+        return _format_pool()
+    printed = {
+        ComparisonAttribute.MANA_VALUE: lambda card: card.cmc,
+        ComparisonAttribute.POWER: lambda card: _numeric_stat(card.power),
+        ComparisonAttribute.TOUGHNESS: lambda card: _numeric_stat(card.toughness),
+    }.get(attribute)
+    if printed is None:
+        return _format_pool()
+    lesser = operator in (ComparisonOperator.LESS_THAN, ComparisonOperator.LESS_OR_EQUAL)
+
+    def key(card: Card) -> float:
+        value = printed(card)
+        if value is None:
+            return math.inf
+        return value if lesser else -value
+
+    return tuple(sorted(_format_pool(), key=key))
+
+
 def _find_material(requirement: TargetRequirement) -> Material | None:
     owners = {
         ControllerRestriction.YOU: [ALICE],
@@ -1304,7 +1337,7 @@ def _find_material(requirement: TargetRequirement) -> Material | None:
                 if requirement.rejects(staged, ALICE, scenario.game, None) is None:
                     return candidate
     tried = 0
-    for card in _format_pool():
+    for card in _event_comparison_order(requirement):
         if not _quick_fit(card, requirement):
             continue
         name = card.name
@@ -4309,6 +4342,14 @@ def _losing_the_game(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]
 
         def lose(loser: str = loser) -> tuple[PlayedScenario, Any]:
             scenario, source_id = _home(case, ability, third=True)
+            if lowered.startswith("the chosen player") and loser != ALICE:
+                # Shinryu's "As this creature transforms into Shinryu, choose
+                # an opponent" (CR 712.20): the source was staged already
+                # transformed, so the opponent it would have chosen is
+                # recorded here - the one about to lose.
+                source = scenario.game.find_by_id(source_id) if source_id else None
+                if isinstance(source, CardState) and source.chosen_player is None:
+                    source.chosen_player = loser
             scenario.game.player_loses_the_game(loser)
             _drive(scenario, case, source_id)
             return scenario, source_id
