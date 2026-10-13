@@ -263,11 +263,12 @@ def count_for(
         return counted
     if (zoned := _zone_count(text, source, context)) is not None:
         return zoned
+    if (board := _board_count(text, source)) is not None:
+        return board
     from .layers.parse import _cda_base_count
 
-    if (base := _cda_base_count(f"the number of {text}")) is not None:
-        return base(source, context)
-    return _board_count(text, source)
+    base = _cda_base_count(f"the number of {text}")
+    return None if base is None else base(source, context)
 
 
 # -- subjects -----------------------------------------------------------------

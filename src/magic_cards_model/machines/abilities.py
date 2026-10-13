@@ -3046,8 +3046,26 @@ def self_normalized_effect_text(card_name: str, effect_text: str, *, legendary: 
     normalized = effect_text
     for name in self_reference_names(card_name, legendary=legendary):
         if name in normalized:
+            if name != card_name and _short_name_is_a_type_word(name, normalized):
+                continue
             normalized = self_reference_re(name).sub("this permanent", normalized)
     return normalized
+
+
+_TYPE_WORD_USE_RE = re.compile(r"\b(?P<word>[A-Z][a-z]+)s?(?: creatures?\b| on the battlefield\b)")
+
+
+def _short_name_is_a_type_word(name: str, text: str) -> bool:
+    """Whether the bare short form of a legendary name ("Sliver" for Sliver
+    Legion) is, in `text`, a creature type naming a group ("All Sliver
+    creatures", "each other Sliver on the battlefield", CR 205.3m) rather than
+    the card using its own name (CR 201.5): a short name that is also a
+    creature type must not turn the group word into "this permanent"."""
+    from ..data.subtypes import subtype_vocabulary
+
+    if " " in name or name.lower() not in subtype_vocabulary():
+        return False
+    return any(match["word"] == name for match in _TYPE_WORD_USE_RE.finditer(text))
 
 
 #: A legendary card's own gendered subject pronoun opening an effect
