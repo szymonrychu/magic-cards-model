@@ -1146,7 +1146,10 @@ def _mass_creature_group_targets(
         # it is actually stored, singular - `board.of(...).subtypes` holds
         # "Knight", never "Knights".
         subtypes = {
-            part.strip().lower().removesuffix("s")
+            (
+                _singular_subtype_for_count_expression(part.strip())
+                or part.strip().lower().removesuffix("s")
+            )
             for part in re.split(r",\s*(?:and\s+)?|\s+and\s+", subtype_match.group("subtypes"))
             if part.strip()
         }
@@ -1393,6 +1396,9 @@ def _parse_mass_pump_clause(
     `_compose_layer_effect_with_remainder` composes any other layer
     sentence's own sibling.
     """
+    from ..ep02_r2_devotion_domain_party import where_x_pump_text_normalised
+
+    effect_text = where_x_pump_text_normalised(effect_text)
     sentences = _plain_resolution_sentences(effect_text)
     text = sentences[0].strip() if sentences else effect_text.strip()
     remainder = " ".join(sentences[1:]) if len(sentences) > 1 else ""
@@ -13291,3 +13297,6 @@ def _parse_unattach_self_then_transform_text(text: str) -> AbilityEffect | None:
             transform_self(game, ability)
 
     return effect
+
+
+from .text import _singular_subtype_for_count_expression  # noqa: E402

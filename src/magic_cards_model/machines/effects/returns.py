@@ -33,6 +33,7 @@ from ..delayed import (
     parse_anaphoric_delayed_clause,
     return_subject_to_hand,
 )
+from ..ep02_r2_devotion_domain_party import return_if_mana_value_effect
 from ..layers import (
     CLOSED_SUBTYPE_LISTS,
     ContinuousEffect,
@@ -3066,3 +3067,14 @@ def _parse_return_put_from_hand_or_graveyard_clause(
     from ..if_you_do_chains import parse_put_from_hand_or_graveyard
 
     return parse_put_from_hand_or_graveyard(clause)
+
+
+@ABILITY_TEXT.rung("s1", for_spell=False)
+@SPELL_TEXT.rung("s1", for_spell=True)
+def _parse_return_if_mana_value_text(
+    text: str, *, for_spell: bool
+) -> Effect | AbilityEffect | None:
+    """ "Choose target creature card in your graveyard. Return that card to the battlefield if
+    its mana value is less than or equal to <amount>. Otherwise, put it into your hand."
+    (`ep02_r2_devotion_domain_party`)."""
+    return return_if_mana_value_effect(text)

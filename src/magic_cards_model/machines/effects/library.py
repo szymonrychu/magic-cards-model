@@ -43,6 +43,7 @@ from ..delayed import (
     ReflexiveWhenYouDoConsequence,
 )
 from ..ep02_r1_life_amounts import parse_mill_x
+from ..ep02_r2_devotion_domain_party import look_top_effect
 from ..replacement import EventKind, ReplaceableEvent, apply_replacements
 from ..triggers import (
     AbilityOnStack,
@@ -7019,3 +7020,13 @@ from .removal import _parse_mass_destroy_predicate  # noqa: E402
 from .returns import _reposition_in_owners_library  # noqa: E402
 from .search import _outside_the_game_card_phrase, _search_quality_is_readable  # noqa: E402
 from .text import _singular_card_type, _strip_non_effect_preamble  # noqa: E402
+
+
+@ABILITY_TEXT.rung("s1", for_spell=False)
+@SPELL_TEXT.rung("s1", for_spell=True)
+def _parse_look_top_amount_text(text: str, *, for_spell: bool) -> Effect | AbilityEffect | None:
+    """ "Look at the top X cards of your library, where X is your devotion to blue.
+    Put up to one of them on top ...", "Reveal the top X cards ... An opponent
+    separates those cards into two piles ...": a look or reveal sized by an
+    amount, then the kept cards and the rest (`ep02_r2_devotion_domain_party`)."""
+    return look_top_effect(text, for_spell=for_spell)

@@ -38,6 +38,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from ..models.card import Color
     from ..models.card_state import CardState
     from ..models.game import Game
 
@@ -54,6 +55,8 @@ class ColorsAmongQualifier:
     subtype: str | None = None
     legendary: bool = False
     excludes_self: bool = False
+    #: "monocolored permanents" (Tarnation Vista): only objects of exactly one color count.
+    monocolored: bool = False
 
 
 def parse_colors_among_qualifier(phrase: str) -> ColorsAmongQualifier | None:
@@ -76,14 +79,20 @@ def parse_colors_among_qualifier(phrase: str) -> ColorsAmongQualifier | None:
     if excludes_self:
         words = words[1:]
     legendary = False
+    monocolored = False
     if len(words) == 2 and words[0] == "legendary":
         legendary = True
+        words = words[1:]
+    elif len(words) == 2 and words[0] == "monocolored":
+        monocolored = True
         words = words[1:]
     if len(words) != 1:
         return None
     noun = words[0]
     if noun == "permanents":
-        return ColorsAmongQualifier(legendary=legendary, excludes_self=excludes_self)
+        return ColorsAmongQualifier(
+            legendary=legendary, excludes_self=excludes_self, monocolored=monocolored
+        )
     card_type = _singular_card_type(noun)
     if card_type is not None:
         return ColorsAmongQualifier(
@@ -95,13 +104,13 @@ def parse_colors_among_qualifier(phrase: str) -> ColorsAmongQualifier | None:
     return ColorsAmongQualifier(subtype=subtype, legendary=legendary, excludes_self=excludes_self)
 
 
-def count_colors_among(
+def colors_among(
     game: Game,
     controller: str,
     qualifier: ColorsAmongQualifier,
     *,
     source: CardState | None = None,
-) -> int:
+) -> frozenset[Color]:
     """CR 105.1's colors among the permanents `controller` controls that
     match `qualifier`, read off the computed board (CR 613.5) - a creature
     that only became one through a continuous effect still counts, and a
@@ -127,8 +136,22 @@ def count_colors_among(
             continue
         if qualifier.legendary and Supertype.LEGENDARY not in chars.supertypes:
             continue
-        colors.update(color for color in chars.colors if color is not Color.COLORLESS)
-    return len(colors)
+        own = {color for color in chars.colors if color is not Color.COLORLESS}
+        if qualifier.monocolored and len(own) != 1:
+            continue
+        colors.update(own)
+    return frozenset(colors)
+
+
+def count_colors_among(
+    game: Game,
+    controller: str,
+    qualifier: ColorsAmongQualifier,
+    *,
+    source: CardState | None = None,
+) -> int:
+    """How many colors `colors_among` finds."""
+    return len(colors_among(game, controller, qualifier, source=source))
 
 
 #: "the number of colors among `<qualifier>` you control" - every Vivid

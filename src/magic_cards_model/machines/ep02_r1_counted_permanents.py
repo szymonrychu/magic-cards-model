@@ -199,6 +199,10 @@ def _resolving_context(game: "Game", obj: object) -> "tuple[str, object, str | N
 
 def _each_reader(each: str) -> _ObjectCount | None:
     from .effects.amounts import _for_each_multiplier
+    from .ep02_r2_devotion_domain_party import colors_of_reference
+
+    if (colors := colors_of_reference(each)) is not None:
+        return colors  # "each of its colors" / "each of that spell's colors"
 
     multiplier = _for_each_multiplier(each)
     if multiplier is None:

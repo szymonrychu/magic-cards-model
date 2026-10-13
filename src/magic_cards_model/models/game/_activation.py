@@ -3171,6 +3171,7 @@ class ActivationMixin:
                         count=devotion if devotion is not None else expression_count,
                         could_produce_colors=could_produce_colors,
                         chosen_color=chosen_color,
+                        colors_among=colors_among_now(self, controller, ability.mana),
                     )
                     # CR 106.5, for the third narrowing: "of any color among legendary
                     # creatures and planeswalkers you control" (Mox Amber). The colour
@@ -3388,6 +3389,7 @@ class ActivationMixin:
 
 
 from ...machines import game_rule_statics  # noqa: E402
+from ...machines.cost.payment import colors_among_now  # noqa: E402
 from ...machines.ep02_r1_graveyard_counts import graveyard_count_expression  # noqa: E402
 from ._common import _SPEND_AS_ANY_COLOR_STATIC_RE, _SPEND_AS_ANY_COLOR_TO_ACTIVATE_RE  # noqa: E402
 from ._conditions import (  # noqa: E402

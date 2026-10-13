@@ -1,0 +1,141 @@
+{
+  "object": "card",
+  "id": "9d243099-94b1-4571-96af-4c5a34241911",
+  "oracle_id": "c4d7a200-7401-4c9a-a7cf-6c98fa8eb61a",
+  "multiverse_ids": [
+    574571
+  ],
+  "mtgo_id": 102658,
+  "arena_id": 82143,
+  "tcgplayer_id": 283409,
+  "cardmarket_id": 672316,
+  "name": "Drag to the Bottom",
+  "lang": "en",
+  "released_at": "2022-09-09",
+  "uri": "https://api.scryfall.com/cards/9d243099-94b1-4571-96af-4c5a34241911",
+  "scryfall_uri": "https://scryfall.com/card/dmu/91/drag-to-the-bottom?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T05:42:13Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/9/d/9d243099-94b1-4571-96af-4c5a34241911.jpg?1783921333",
+    "normal": "https://cards.scryfall.io/normal/front/9/d/9d243099-94b1-4571-96af-4c5a34241911.jpg?1783921333",
+    "large": "https://cards.scryfall.io/large/front/9/d/9d243099-94b1-4571-96af-4c5a34241911.jpg?1783921333",
+    "png": "https://cards.scryfall.io/png/front/9/d/9d243099-94b1-4571-96af-4c5a34241911.png?1783921333",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/9/d/9d243099-94b1-4571-96af-4c5a34241911.jpg?1783921333",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/9/d/9d243099-94b1-4571-96af-4c5a34241911.jpg?1783921333",
+    "thumb": "https://cards.scryfall.io/thumb/front/9/d/9d243099-94b1-4571-96af-4c5a34241911.webp?1783921333",
+    "grid": "https://cards.scryfall.io/grid/front/9/d/9d243099-94b1-4571-96af-4c5a34241911.webp?1783921333",
+    "display": "https://cards.scryfall.io/display/front/9/d/9d243099-94b1-4571-96af-4c5a34241911.webp?1783921333",
+    "art": "https://cards.scryfall.io/art/front/9/d/9d243099-94b1-4571-96af-4c5a34241911.webp?1783921333",
+    "crop": "https://cards.scryfall.io/crop/front/9/d/9d243099-94b1-4571-96af-4c5a34241911.webp?1783921333"
+  },
+  "mana_cost": "{2}{B}{B}",
+  "cmc": 4.0,
+  "type_line": "Sorcery",
+  "oracle_text": "Domain \u2014 Each creature gets -X/-X until end of turn, where X is 1 plus the number of basic land types among lands you control.",
+  "colors": [
+    "B"
+  ],
+  "color_identity": [
+    "B"
+  ],
+  "keywords": [
+    "Domain"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "arena",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "4e47a6cd-cdeb-4b0f-8f24-cfe1a0127cb3",
+  "set": "dmu",
+  "set_name": "Dominaria United",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/4e47a6cd-cdeb-4b0f-8f24-cfe1a0127cb3",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Admu&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/dmu?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/9d243099-94b1-4571-96af-4c5a34241911/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Ac4d7a200-7401-4c9a-a7cf-6c98fa8eb61a&unique=prints",
+  "collector_number": "91",
+  "digital": false,
+  "rarity": "rare",
+  "flavor_text": "Windgrace's gladehunters hibernate in the quagmires of Urborg until the scent of Phyrexian technology awakens their hunger.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Nino Is",
+  "artist_ids": [
+    "ae717001-28ec-46e3-a07e-f16b6deaf9e2"
+  ],
+  "illustration_id": "8ed5f2f6-8c91-4132-96e9-d6860d2fe8e7",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 21600,
+  "penny_rank": 11386,
+  "preview": {
+    "source": "Thierry Ramboa",
+    "source_uri": "https://twitter.com/El_Gran_Boa/status/1562093877439373315",
+    "previewed_at": "2022-08-23"
+  },
+  "prices": {
+    "usd": "0.19",
+    "usd_foil": "0.23",
+    "usd_etched": null,
+    "eur": "0.13",
+    "eur_foil": "0.14",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=574571&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DDrag%2Bto%2Bthe%2BBottom",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DDrag%2Bto%2Bthe%2BBottom",
+    "edhrec": "https://edhrec.com/route/?cc=Drag+to+the+Bottom"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F283409%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=672316&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/102658?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

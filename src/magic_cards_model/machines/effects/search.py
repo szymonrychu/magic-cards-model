@@ -573,13 +573,20 @@ def _parse_search_hand_or_graveyard_clause(
     return effect
 
 
+#: The plural wording of a card with a basic land type (Slimefoot's Survey): "land cards
+#: that each have a basic land type" is "land cards with a basic land type" (CR 305.6).
+_EACH_HAVE_BASIC_TYPE_RE = re.compile(r"(cards) that each have a basic land type", re.IGNORECASE)
+
+
 @MIXED_CLAUSE.rung("s26", for_spell=FORWARD)
 def _parse_search_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
     """One clause of a search, fed either the whole ability text (a fetchland
     with nothing else on it) or one clause a multi-clause dispatcher split out
     and rejoined - see `_rejoin_search_clauses`.
     """
-    match = _SEARCH_AND_PUT_RE.fullmatch(clause.strip())
+    match = _SEARCH_AND_PUT_RE.fullmatch(
+        _EACH_HAVE_BASIC_TYPE_RE.sub(r"\1 with a basic land type", clause.strip())
+    )
     if match is None:
         return None
     return _build_search_clause(match, for_spell=for_spell)

@@ -1,0 +1,156 @@
+{
+  "object": "card",
+  "id": "c4f1a23a-084a-429b-823a-a8e7e5f26e0d",
+  "oracle_id": "f7f4ddc9-cea0-42f9-bbca-2ad87a24bfc8",
+  "multiverse_ids": [
+    522181
+  ],
+  "mtgo_id": 90583,
+  "tcgplayer_id": 239754,
+  "cardmarket_id": 566172,
+  "name": "Underworld Hermit",
+  "lang": "en",
+  "released_at": "2021-06-18",
+  "uri": "https://api.scryfall.com/cards/c4f1a23a-084a-429b-823a-a8e7e5f26e0d",
+  "scryfall_uri": "https://scryfall.com/card/mh2/105/underworld-hermit?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T07:14:13Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/c/4/c4f1a23a-084a-429b-823a-a8e7e5f26e0d.jpg?1783926853",
+    "normal": "https://cards.scryfall.io/normal/front/c/4/c4f1a23a-084a-429b-823a-a8e7e5f26e0d.jpg?1783926853",
+    "large": "https://cards.scryfall.io/large/front/c/4/c4f1a23a-084a-429b-823a-a8e7e5f26e0d.jpg?1783926853",
+    "png": "https://cards.scryfall.io/png/front/c/4/c4f1a23a-084a-429b-823a-a8e7e5f26e0d.png?1783926853",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/c/4/c4f1a23a-084a-429b-823a-a8e7e5f26e0d.jpg?1783926853",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/c/4/c4f1a23a-084a-429b-823a-a8e7e5f26e0d.jpg?1783926853",
+    "thumb": "https://cards.scryfall.io/thumb/front/c/4/c4f1a23a-084a-429b-823a-a8e7e5f26e0d.webp?1783926853",
+    "grid": "https://cards.scryfall.io/grid/front/c/4/c4f1a23a-084a-429b-823a-a8e7e5f26e0d.webp?1783926853",
+    "display": "https://cards.scryfall.io/display/front/c/4/c4f1a23a-084a-429b-823a-a8e7e5f26e0d.webp?1783926853",
+    "art": "https://cards.scryfall.io/art/front/c/4/c4f1a23a-084a-429b-823a-a8e7e5f26e0d.webp?1783926853",
+    "crop": "https://cards.scryfall.io/crop/front/c/4/c4f1a23a-084a-429b-823a-a8e7e5f26e0d.webp?1783926853"
+  },
+  "mana_cost": "{4}{B}{B}",
+  "cmc": 6.0,
+  "type_line": "Creature \u2014 Human Peasant",
+  "oracle_text": "When this creature enters, create a number of 1/1 green Squirrel creature tokens equal to your devotion to black. (Each {B} in the mana costs of permanents you control counts toward your devotion to black.)",
+  "power": "3",
+  "toughness": "3",
+  "colors": [
+    "B"
+  ],
+  "color_identity": [
+    "B"
+  ],
+  "keywords": [],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "977ddd05-1aae-46fc-95ce-866710d1c5c6",
+      "component": "token",
+      "name": "Squirrel",
+      "type_line": "Token Creature \u2014 Squirrel",
+      "uri": "https://api.scryfall.com/cards/977ddd05-1aae-46fc-95ce-866710d1c5c6"
+    },
+    {
+      "object": "related_card",
+      "id": "735a5082-72f4-4812-adcc-d8095d8eee51",
+      "component": "combo_piece",
+      "name": "Underworld Hermit",
+      "type_line": "Creature \u2014 Human Peasant",
+      "uri": "https://api.scryfall.com/cards/735a5082-72f4-4812-adcc-d8095d8eee51"
+    }
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "c1c7eb8c-f205-40ab-a609-767cb296544e",
+  "set": "mh2",
+  "set_name": "Modern Horizons 2",
+  "set_type": "draft_innovation",
+  "set_uri": "https://api.scryfall.com/sets/c1c7eb8c-f205-40ab-a609-767cb296544e",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Amh2&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/mh2?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/c4f1a23a-084a-429b-823a-a8e7e5f26e0d/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Af7f4ddc9-cea0-42f9-bbca-2ad87a24bfc8&unique=prints",
+  "collector_number": "105",
+  "digital": false,
+  "rarity": "uncommon",
+  "flavor_text": "Some souls yearn to escape death. Others are content to feed the wildlife.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Jason A. Engle",
+  "artist_ids": [
+    "02e2b5de-4341-464c-8fdb-a1adbf873bc0"
+  ],
+  "illustration_id": "23e72acf-e087-42bc-adf0-847aac6145ac",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 13149,
+  "penny_rank": 13315,
+  "preview": {
+    "source": "Wizards of the Coast",
+    "source_uri": "https://twitter.com/mtgaaron/status/1397364755887624193",
+    "previewed_at": "2021-05-26"
+  },
+  "prices": {
+    "usd": "0.28",
+    "usd_foil": "0.33",
+    "usd_etched": null,
+    "eur": "0.13",
+    "eur_foil": "0.19",
+    "tix": "0.03"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=522181&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DUnderworld%2BHermit",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DUnderworld%2BHermit",
+    "edhrec": "https://edhrec.com/route/?cc=Underworld+Hermit"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F239754%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=566172&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/90583?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

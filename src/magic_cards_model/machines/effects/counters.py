@@ -44,6 +44,7 @@ from ..delayed import (
     ReflexiveWhenYouDoConsequence,
     put_counters_and_grant_keywords_to_event_subject,
 )
+from ..ep02_r2_devotion_domain_party import counters_amount_effect
 from ..keyword_counters import symbol_groups_spent
 from ..layers import (
     ContinuousEffect,
@@ -4883,3 +4884,12 @@ def _parse_may_remove_from_each_then_put_per_removed(text: str) -> AbilityEffect
             game.add_counters(source, put_kind, removed)
 
     return effect
+
+
+@ABILITY_TEXT.rung("s1", for_spell=False)
+@SPELL_TEXT.rung("s1", for_spell=True)
+def _parse_counters_amount_text(text: str, *, for_spell: bool) -> Effect | AbilityEffect | None:
+    """ "Put a +1/+1 counter on it for each creature in your party", "Choose target creature
+    you control. Put ... on it for each ...", "Put a +1/+1 counter on each creature you control
+    with toughness less than <amount>" (`ep02_r2_devotion_domain_party`)."""
+    return counters_amount_effect(text)

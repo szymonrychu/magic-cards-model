@@ -1,0 +1,138 @@
+{
+  "object": "card",
+  "id": "974c9e0c-07b2-4535-a3d0-bb827b651075",
+  "oracle_id": "7ee394a2-84de-42e8-834e-6c1030be0aef",
+  "multiverse_ids": [
+    574547
+  ],
+  "mtgo_id": 102610,
+  "arena_id": 82119,
+  "tcgplayer_id": 283090,
+  "cardmarket_id": 671608,
+  "name": "Sphinx of Clear Skies",
+  "lang": "en",
+  "released_at": "2022-09-09",
+  "uri": "https://api.scryfall.com/cards/974c9e0c-07b2-4535-a3d0-bb827b651075",
+  "scryfall_uri": "https://scryfall.com/card/dmu/67/sphinx-of-clear-skies?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T05:42:22Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/9/7/974c9e0c-07b2-4535-a3d0-bb827b651075.jpg?1783921342",
+    "normal": "https://cards.scryfall.io/normal/front/9/7/974c9e0c-07b2-4535-a3d0-bb827b651075.jpg?1783921342",
+    "large": "https://cards.scryfall.io/large/front/9/7/974c9e0c-07b2-4535-a3d0-bb827b651075.jpg?1783921342",
+    "png": "https://cards.scryfall.io/png/front/9/7/974c9e0c-07b2-4535-a3d0-bb827b651075.png?1783921342",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/9/7/974c9e0c-07b2-4535-a3d0-bb827b651075.jpg?1783921342",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/9/7/974c9e0c-07b2-4535-a3d0-bb827b651075.jpg?1783921342",
+    "thumb": "https://cards.scryfall.io/thumb/front/9/7/974c9e0c-07b2-4535-a3d0-bb827b651075.webp?1783921342",
+    "grid": "https://cards.scryfall.io/grid/front/9/7/974c9e0c-07b2-4535-a3d0-bb827b651075.webp?1783921342",
+    "display": "https://cards.scryfall.io/display/front/9/7/974c9e0c-07b2-4535-a3d0-bb827b651075.webp?1783921342",
+    "art": "https://cards.scryfall.io/art/front/9/7/974c9e0c-07b2-4535-a3d0-bb827b651075.webp?1783921342",
+    "crop": "https://cards.scryfall.io/crop/front/9/7/974c9e0c-07b2-4535-a3d0-bb827b651075.webp?1783921342"
+  },
+  "mana_cost": "{3}{U}{U}",
+  "cmc": 5.0,
+  "type_line": "Creature \u2014 Sphinx",
+  "oracle_text": "Flying, ward {2}\nDomain \u2014 Whenever this creature deals combat damage to a player, reveal the top X cards of your library, where X is the number of basic land types among lands you control. An opponent separates those cards into two piles. Put one pile into your hand and the other into your graveyard. (Piles can be empty.)",
+  "power": "5",
+  "toughness": "5",
+  "colors": [
+    "U"
+  ],
+  "color_identity": [
+    "U"
+  ],
+  "keywords": [
+    "Flying",
+    "Ward",
+    "Domain"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "arena",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "4e47a6cd-cdeb-4b0f-8f24-cfe1a0127cb3",
+  "set": "dmu",
+  "set_name": "Dominaria United",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/4e47a6cd-cdeb-4b0f-8f24-cfe1a0127cb3",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Admu&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/dmu?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/974c9e0c-07b2-4535-a3d0-bb827b651075/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A7ee394a2-84de-42e8-834e-6c1030be0aef&unique=prints",
+  "collector_number": "67",
+  "digital": false,
+  "rarity": "mythic",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Valera Lutfullina",
+  "artist_ids": [
+    "76bc57c7-47c6-40c5-8797-8ffcce430ac7"
+  ],
+  "illustration_id": "5eaa6651-8ecd-43b8-8aea-2d7b308f13f9",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 14400,
+  "prices": {
+    "usd": "0.46",
+    "usd_foil": "0.44",
+    "usd_etched": null,
+    "eur": "0.41",
+    "eur_foil": "0.56",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=574547&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DSphinx%2Bof%2BClear%2BSkies",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DSphinx%2Bof%2BClear%2BSkies",
+    "edhrec": "https://edhrec.com/route/?cc=Sphinx+of+Clear+Skies"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F283090%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=671608&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/102610?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}
