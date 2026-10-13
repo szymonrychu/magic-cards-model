@@ -29,6 +29,7 @@ import pytest
 from magic_cards_model.machines import Step
 from magic_cards_model.machines.casting.permissions import play_permissions_on
 from magic_cards_model.models import Zone
+from magic_cards_model.models.card_state import Counter
 from magic_cards_model.support import card_support
 from tests.cards import card
 
@@ -349,7 +350,7 @@ def test_wheel_of_potential_seven_energy_lets_you_play_what_you_exiled_next_turn
         alice_lands=("Mountain",) * 3,
         alice_library=["Island"] * 10,
     )
-    scenario.player("alice").energy = 4
+    scenario.player("alice").add_counters(Counter.ENERGY, 4)
     scenario.will_pay_energy_amount(7, source="Wheel of Potential")
     scenario.will_take_the_may(True, username="alice", source="Wheel of Potential")
     scenario.will_take_the_may(True, username="bob", source="Wheel of Potential")
@@ -364,7 +365,7 @@ def test_wheel_of_potential_six_energy_gives_no_permission_to_play():
         alice_lands=("Mountain",) * 3,
         alice_library=["Island"] * 10,
     )
-    scenario.player("alice").energy = 3
+    scenario.player("alice").add_counters(Counter.ENERGY, 3)
     scenario.will_pay_energy_amount(6, source="Wheel of Potential")
     scenario.will_take_the_may(True, username="alice", source="Wheel of Potential")
     scenario.will_take_the_may(True, username="bob", source="Wheel of Potential")

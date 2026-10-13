@@ -1546,3 +1546,97 @@ def _parse_counter_unless_pays_per_energy_clause(clause: str, *, for_spell: bool
                 game.counter(target)
 
     return effect
+
+
+# --------------------------------------------------------------------------
+# "Each player may exile their hand and draw a number of cards equal to the
+# amount of {E} paid this way." (Wheel of Potential)
+# --------------------------------------------------------------------------
+
+_EXILE_HAND_AND_DRAW_PAID_RE = re.compile(
+    r"^(?P<lead>.+?)\s+each player may exile their hand and draw a number of cards equal to "
+    r"the amount of \{e\} paid this way\.(?:\s+if (?P<k>\S+) or more \{e\} was paid this way, "
+    r"you may play cards you own exiled this way until the end of your next turn\.)?$",
+    re.IGNORECASE,
+)
+
+
+@functools.cache
+def _exile_hand_plan(text: str) -> tuple[Any, int | None] | None:
+    from ..numbers import parse_count
+    from .effects.dispatch import _spell_effect_or_notice
+    from .effects.text import _strip_non_effect_preamble
+    from .effects.tokens import _is_notice_only
+
+    whole = " ".join(_strip_non_effect_preamble(text).strip().split())
+    match = _EXILE_HAND_AND_DRAW_PAID_RE.fullmatch(whole)
+    if match is None:
+        return None
+    lead = _spell_effect_or_notice(match.group("lead"))
+    if lead is None or _is_notice_only(lead):
+        return None
+    threshold = None
+    if match.group("k") is not None:
+        threshold = parse_count(match.group("k"))
+        if threshold is None:
+            return None
+    return lead, threshold
+
+
+def exile_hand_and_draw_paid_effect(text: str) -> Any:
+    """ "<pay any amount of {E}>. Each player may exile their hand and draw a
+    number of cards equal to the amount of {E} paid this way. If N or more {E}
+    was paid this way, you may play cards you own exiled this way until the
+    end of your next turn." (Wheel of Potential): starting with the
+    controller, each player in turn order chooses (CR 608.2d) whether to
+    exile their hand and, if so, draws the energy paid (CR 608.2c, CR 121.2);
+    at the threshold, the controller may play the cards they own that were
+    exiled this way (CR 601.3, CR 305.2)."""
+    if "each player may exile their hand" not in text.lower():
+        return None
+    plan = _exile_hand_plan(text)
+    if plan is None:
+        return None
+    lead, threshold = plan
+
+    def effect(game: "Game", stack_object: Any) -> None:
+        from .casting.permissions import PlayAction
+
+        lead(game, stack_object)
+        paid = game.recorded_count() or 0
+        controller = _controller(game, stack_object)
+        name, source_id = _source_name(stack_object), source_id_of(stack_object)
+        mine: list[CardState] = []
+        for player in _starting_with(game, controller.username):
+            if not game.may(
+                player,
+                f"exile your hand and draw {paid} cards",
+                source=name,
+                source_id=source_id,
+                cards=tuple(player.hand),
+            ):
+                continue
+            exiled = [game.exile_permanent(state) for state in list(player.hand)]
+            if player.username == controller.username:
+                mine = [state for state in exiled if state.owner == controller.username]
+            game.draw_cards(player, paid)
+        if threshold is not None and paid >= threshold:
+            for state in mine:
+                game.grant_play_permission(
+                    state,
+                    controller.username,
+                    action=PlayAction.PLAY,
+                    source_name=name,
+                    zone=Zone.EXILE,
+                    rule="CR 601.3",
+                    until_end_of_turn=False,
+                    expires_end_of_next_turn=True,
+                )
+
+    return effect
+
+
+@SPELL_TEXT.rung("s23")
+def _parse_exile_hand_and_draw_paid_spell(text: str) -> Any:
+    """`exile_hand_and_draw_paid_effect` as a spell's whole text."""
+    return exile_hand_and_draw_paid_effect(text)
