@@ -23,6 +23,7 @@ from collections.abc import Callable
 from typing import TYPE_CHECKING
 from uuid import UUID
 
+from ..models.zone import Zone
 from .amount_sentences import apply_life, life_clause_amount, parse_life_clause
 from .effects._chains import FORWARD, MIXED_CLAUSE
 
@@ -260,9 +261,89 @@ def _parse_reveal_hand_clause(clause: str, *, for_spell: bool) -> "Callable[...,
         from .amount_sentences import controller_of, resolve_recipients, source_card
 
         source = source_card(game, stack_object)
-        for player in resolve_recipients(game, stack_object, who, controller_of(game, stack_object)):
+        for player in resolve_recipients(
+            game, stack_object, who, controller_of(game, stack_object)
+        ):
             for card in list(player.hand):
                 game.reveal(card, source=None if source is None else source.name)
+
+    return effect
+
+
+# --------------------------------------------------------------------------
+# Exchanging a life total with a creature's power or toughness (CR 701.12g)
+# --------------------------------------------------------------------------
+
+_EXCHANGE_LIFE_RE = re.compile(
+    r"^exchange (?P<who>your|target opponent's|target player's) life total with "
+    r"(?P<owner>this creature|this permanent|[A-Za-z][\w ,'-]*?)'s (?P<stat>power|toughness)$",
+    re.IGNORECASE,
+)
+
+
+@MIXED_CLAUSE.rung("s26", for_spell=FORWARD)
+def _parse_exchange_life_total_clause(
+    clause: str, *, for_spell: bool
+) -> "Callable[..., None] | None":
+    """ "Exchange your | target opponent's life total with <this creature>'s power |
+    toughness" (Evra, Tree of Redemption, Tree of Perdition). CR 701.12g: each value becomes
+    the other's previous value - the player gains or loses the necessary life, and a
+    continuous effect sets the power or toughness (CR 613.4b). If the whole exchange can't
+    be completed - the creature has left, or the player can't gain (CR 119.7) or can't lose
+    (CR 119.8) the life the exchange needs - no part of it occurs (CR 701.12a)."""
+    if "exchange" not in clause.lower():
+        return None
+    match = _EXCHANGE_LIFE_RE.fullmatch(clause.strip().rstrip("."))
+    if match is None:
+        return None
+    who = "you" if match.group("who").lower() == "your" else match.group("who").lower()[:-2]
+    if who.startswith("target"):
+        from .effects import _targets_understood
+
+        if not _targets_understood(who, allow_player_targets=True):
+            return None
+    wants_power = match.group("stat").lower() == "power"
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        from .amount_sentences import controller_of, resolve_recipients, source_card
+        from .layers.model import (
+            ContinuousEffect,
+            Layer,
+            SetPower,
+            SetToughness,
+            Sublayer,
+            only_this_incarnation,
+        )
+
+        creature = source_card(game, stack_object)
+        if creature is None or creature.zone is not Zone.BATTLEFIELD:
+            return
+        players = resolve_recipients(game, stack_object, who, controller_of(game, stack_object))
+        if not players:
+            return
+        player = players[0]
+        stat = game.power_of(creature) if wants_power else game.toughness_of(creature)
+        if stat is None:
+            return
+        life = player.life
+        if (stat > life and player.cannot_gain_life) or (stat < life and player.cannot_lose_life):
+            return
+        game.set_life_total(player, stat)
+        store = game.continuous_effects
+        store.add(
+            ContinuousEffect(
+                description=(
+                    f"{creature.name}: its {'power' if wants_power else 'toughness'} "
+                    f"becomes {life} (exchanged with {player.username}'s life total)"
+                ),
+                layer=Layer.POWER_TOUGHNESS,
+                sublayer=Sublayer.SET,
+                timestamp=store.tick(),
+                selector=only_this_incarnation(creature, creature.zone_change_stamp),
+                modification=SetPower(power=life) if wants_power else SetToughness(toughness=life),
+            ),
+            game,
+        )
 
     return effect
 

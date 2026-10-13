@@ -3176,6 +3176,17 @@ class SetPower(ModificationBase):
         return chars.with_(power=self.power)
 
 
+class SetToughness(ModificationBase):
+    """Sublayer 7b (CR 613.4b), toughness only - the toughness half of an exchanged numerical
+    value (CR 701.12g), which sets the toughness and leaves the power as it is."""
+
+    kind: Literal["set_toughness"] = "set_toughness"
+    toughness: int
+
+    def __call__(self, chars: Characteristics, board: Board) -> Characteristics:
+        return chars.with_(toughness=self.toughness)
+
+
 class DefinePowerToughness(ModificationBase):
     """Sublayer 7a: a characteristic-defining ability that defines P/T."""
 
@@ -3529,6 +3540,7 @@ Modification = Annotated[
     | SetPowerToughnessToManaValue
     | SetPowerToughnessToCounters
     | SetPower
+    | SetToughness
     | DefinePowerToughness
     | DefinePower
     | DefineToughness

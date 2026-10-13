@@ -74,7 +74,7 @@ def _advance_to(scenario, step):
 def _cast_kicked(scenario, name, *, times=1, which=None):
     """Cast `name`, paying its kicker `times` (or the named kicker costs)."""
     casting = scenario.cast(name)
-    for cost in (which if which is not None else [None] * times):
+    for cost in which if which is not None else [None] * times:
         casting.pay_kicker(which=cost)
     scenario.auto_pay(casting.begin_paying())
     scenario.put_on_stack(casting)
@@ -123,9 +123,7 @@ def test_benediction_of_moons_gains_one_life_per_player():
 
 
 def test_emissary_of_hope_gains_one_life_per_artifact_the_damaged_player_controls():
-    scenario = _build(
-        ["Emissary of Hope"], ["Sol Ring", "Sol Ring", "Mountain", "Grizzly Bears"]
-    )
+    scenario = _build(["Emissary of Hope"], ["Sol Ring", "Sol Ring", "Mountain", "Grizzly Bears"])
     scenario.start_at(Step.DECLARE_ATTACKERS)
     scenario.attack_with(scenario.creature("Emissary of Hope", "alice"))
     scenario.no_blocks()
@@ -268,3 +266,95 @@ def test_momentum_breaker_sacrifice_gains_life_equal_to_speed():
     scenario.pass_until_resolved()
     assert _life(scenario) == 23
     assert breaker.zone is Zone.GRAVEYARD
+
+
+# --------------------------------------------------------------------------
+# "Exchange your life total with this creature's toughness|power" (Tree of Redemption,
+# Tree of Perdition, Evra, Halcyon Witness) - CR 701.12g
+# --------------------------------------------------------------------------
+
+
+def _toughness(scenario, card):
+    return scenario.game.toughness_of(card)
+
+
+@pytest.mark.parametrize("life", [1, 20, 35])
+def test_tree_of_redemption_swaps_your_life_with_its_toughness(life):
+    scenario = _main(_build(["Tree of Redemption"], life=life))
+    tree = scenario.creature("Tree of Redemption", "alice")
+    toughness = _toughness(scenario, tree)
+    scenario.activate(tree, index=0)
+    scenario.pass_until_resolved()
+    assert _life(scenario) == toughness
+    assert _toughness(scenario, tree) == life
+
+
+def test_tree_of_perdition_swaps_the_targeted_opponents_life():
+    scenario = _main(_build(["Tree of Perdition"], life=20))
+    scenario.player("bob").life = 3
+    tree = scenario.creature("Tree of Perdition", "alice")
+    toughness = _toughness(scenario, tree)
+    scenario.activate(tree, index=0, targets=["bob"])
+    scenario.pass_until_resolved()
+    assert _life(scenario, "bob") == toughness
+    assert _life(scenario) == 20
+    assert _toughness(scenario, tree) == 3
+
+
+def test_a_player_who_cannot_gain_life_cannot_make_an_exchange_that_raises_the_total():
+    """CR 119.7 with CR 701.12a: no part of the exchange occurs."""
+    scenario = _main(_build(["Tree of Redemption"], life=2))
+    scenario.player("alice").cannot_gain_life = True
+    tree = scenario.creature("Tree of Redemption", "alice")
+    toughness = _toughness(scenario, tree)
+    scenario.activate(tree, index=0)
+    scenario.pass_until_resolved()
+    assert _life(scenario) == 2
+    assert _toughness(scenario, tree) == toughness
+
+
+@pytest.mark.parametrize("life", [3, 12])
+def test_evra_swaps_your_life_total_with_its_power(life):
+    scenario = _main(_build(["Evra, Halcyon Witness"] + ["Plains"] * 4, life=life))
+    evra = scenario.creature("Evra, Halcyon Witness", "alice")
+    power = scenario.game.power_of(evra)
+    scenario.activate(evra, *scenario.untapped_sources(*["Plains"] * 4), index=0)
+    scenario.pass_until_resolved()
+    assert _life(scenario) == power
+    assert scenario.game.power_of(evra) == life
+
+
+# --------------------------------------------------------------------------
+# "sacrifice half the non-Demon permanents you control, rounded up" (Rakdos the Defiler)
+# and "you may have your life total become the total toughness of creatures you control"
+# (Loxodon Lifechanter)
+# --------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    ("others", "kept_others"),
+    [(0, 0), (1, 0), (4, 2), (5, 2)],
+)
+def test_rakdos_attack_sacrifices_half_the_non_demons_rounded_up(others, kept_others):
+    """Rakdos is a Demon, so it is never counted and never sacrificed (CR 701.21a)."""
+    scenario = _build(["Rakdos the Defiler"] + ["Grizzly Bears"] * others, ["Hill Giant"])
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    rakdos = scenario.creature("Rakdos the Defiler", "alice")
+    scenario.attack_with(rakdos)
+    scenario.game.put_triggers_on_stack()
+    if others > kept_others:
+        bears = scenario.creatures(*["Grizzly Bears"] * others, username="alice")
+        scenario.will_choose_cards(*bears[: others - kept_others])
+    scenario.pass_until_resolved()
+    assert rakdos.zone is Zone.BATTLEFIELD
+    assert len([s for s in scenario.game.battlefield if s.name == "Grizzly Bears"]) == kept_others
+
+
+@pytest.mark.parametrize("take", [True, False])
+def test_loxodon_lifechanter_may_set_life_to_total_toughness(take):
+    scenario = _main(
+        _build(["Plains"] * 6 + ["Grizzly Bears", "Serra Angel"], hand=["Loxodon Lifechanter"])
+    )
+    scenario.will_take_the_may(take)
+    _creature_etb(scenario, "Loxodon Lifechanter")
+    assert _life(scenario) == (6 + 2 + 4 if take else 20)

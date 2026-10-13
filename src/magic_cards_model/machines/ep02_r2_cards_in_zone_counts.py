@@ -262,7 +262,7 @@ _HALF_DISCARD_RE = re.compile(
     re.IGNORECASE,
 )
 _HALF_SACRIFICE_RE = re.compile(
-    r"^sacrifices? half the (?P<description>.+?) (?:they|you) control of (?:their|your) choice, "
+    r"^sacrifices? half the (?P<description>.+?) (?:they|you) control(?: of (?:their|your) choice)?, "
     r"rounded (?P<direction>up|down)$",
     re.IGNORECASE,
 )
