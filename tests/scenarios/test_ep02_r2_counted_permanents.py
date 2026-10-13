@@ -825,3 +825,35 @@ def test_pupu_ufo_base_power_sits_under_a_counter_and_ends_with_the_turn():
     _advance_to(scenario, Step.END_STEP)
     scenario.advance()  # cleanup: "until end of turn" effects end
     assert scenario.game.characteristics_of(ufo).power == 0 + 1
+
+
+# --------------------------------------------------------------------------
+# "{T}: The next instant or sorcery spell you cast this turn costs {X} less to
+# cast, where X is the number of Wizards you control as this ability resolves."
+# (Kaza, Roil Chaser). CR 601.2f (the reduction), CR 118.7a (generic mana only),
+# CR 608.2h (X is fixed as the ability resolves), CR 611.2a (this turn).
+# --------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize("wizards", [1, 3])
+def test_kaza_makes_only_the_next_instant_or_sorcery_cheaper_by_the_wizard_count(wizards):
+    """Divination is {2}{U}: one Wizard (Kaza) takes {1} off, three take the whole
+    generic {2} off but never the {U} (CR 118.7a). The second sorcery this turn is
+    full price: the reduction was used up by the first."""
+    paid = 3 - min(wizards, 2)
+    scenario = _main(
+        _build(
+            ["Kaza, Roil Chaser"] + ["Aether Adept"] * (wizards - 1) + ["Island"] * (paid + 3),
+            ["Aether Adept"] * 2,
+            hand=["Divination", "Divination"],
+        )
+    )
+    kaza = scenario.find("Kaza, Roil Chaser", Zone.BATTLEFIELD, "alice")
+    kaza.summoning_sick = False
+    scenario.activate(kaza, index=0)
+    scenario.pass_until_resolved()
+    _cast(scenario, "Divination")
+    islands = [p for p in _lands(scenario) if p.name == "Island"]
+    assert sum(1 for island in islands if island.tapped) == paid  # opponent's Wizards: not counted
+    _cast(scenario, "Divination")
+    assert all(island.tapped for island in islands)  # the second one cost the full {2}{U}

@@ -12,7 +12,9 @@ resolving spell or ability"):
 - "`<Quality>` spells you cast this turn cost {N} less to cast." (Armor Wars'
   chapter II, Ballad of the Black Flag's chapter IV) - CR 601.2f's cost
   reduction for every such spell its controller casts this turn
-  (`SpellCostReductionGrant`).
+  (`SpellCostReductionGrant`); "The next `<quality>` spell you cast this turn
+  costs {N} less to cast." (Kaza, Roil Chaser) is the same grant used up by the
+  first such spell (`SpellCostReductionGrant.once`).
 - "The next `<quality>` spell you cast this turn has `<keyword>`." (Don &
   Raph, Hard Science's affinity for artifacts, Archway of Innovation's
   improvise) - a cost keyword the next such spell has while its total cost is
@@ -107,6 +109,10 @@ class SpellCostReductionGrant(EngineModel):
     amount: int
     turn: int
     """`TurnMachine.turns_taken` when it was created - "this turn"."""
+    once: bool = False
+    """"The next `<quality>` spell you cast this turn costs {N} less" (Kaza, Roil
+    Chaser): used up by the first such spell cast (CR 601.2i) instead of applying to
+    every one."""
 
 
 #: The keywords "the next `<quality>` spell you cast this turn has `<keyword>`"
@@ -157,4 +163,20 @@ def next_spell_keyword_grants_for(
         if grant.controller == caster
         and grant.turn == turn.turns_taken
         and (not grant.quality or spell_has_quality(spell, grant.quality))
+    ]
+
+
+def used_up_cost_reductions_for(game: object, spell: "CardState", caster: str) -> "list[SpellCostReductionGrant]":
+    """The one-shot ("the next `<quality>` spell") cost reductions `spell`, which
+    `caster` is casting, answers for - used up by it as it becomes cast (CR 601.2i)."""
+    turn = getattr(game, "turn", None)
+    if turn is None:
+        return []
+    return [
+        grant
+        for grant in getattr(game, "spell_cost_reduction_grants", [])
+        if grant.once
+        and grant.controller == caster
+        and grant.turn == turn.turns_taken
+        and spell_has_quality(spell, grant.quality)
     ]

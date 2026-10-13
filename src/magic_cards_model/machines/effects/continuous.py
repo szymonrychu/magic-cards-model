@@ -9442,6 +9442,14 @@ _SPELLS_COST_LESS_THIS_TURN_RE = re.compile(
     r"^(?P<quality>[^.]+?) spells you cast this turn cost \{(?P<n>\d+)\} less to cast\.?$",
     re.IGNORECASE,
 )
+#: "The next instant or sorcery spell you cast this turn costs {N} less to cast."
+#: (Kaza, Roil Chaser, its X already read into `<n>`): the same reduction, used up
+#: by the first such spell (`SpellCostReductionGrant.once`).
+_NEXT_SPELL_COSTS_LESS_RE = re.compile(
+    r"^the next (?:(?P<quality>[^.]+?) )?spell you cast this turn costs \{(?P<n>\d+)\} "
+    r"less to cast\.?$",
+    re.IGNORECASE,
+)
 #: "The next noncreature spell you cast this turn has affinity for
 #: artifacts." (Don & Raph, Hard Science, CR 702.41a) and "The next spell you
 #: cast this turn has improvise." (Archway of Innovation, CR 702.126a) - a
@@ -9510,8 +9518,9 @@ def _parse_this_turn_spell_grant_clause(clause: str, *, for_spell: bool) -> Targ
         return keyword_grant
     free = _NEXT_SPELL_FREE_CAST_RE.fullmatch(text)
     cheaper = _SPELLS_COST_LESS_THIS_TURN_RE.fullmatch(text)
-    matched = free or cheaper
-    if matched is None or not spell_quality_is_readable(matched.group("quality")):
+    next_cheaper = _NEXT_SPELL_COSTS_LESS_RE.fullmatch(text)
+    matched = free or cheaper or next_cheaper
+    if matched is None or not spell_quality_is_readable(matched.group("quality") or ""):
         return None
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
@@ -9532,15 +9541,17 @@ def _parse_this_turn_spell_grant_clause(clause: str, *, for_spell: bool) -> Targ
                     turn=turn,
                 ),
             ]
-        elif cheaper is not None:
+        elif cheaper is not None or next_cheaper is not None:
+            reduction = cheaper or next_cheaper
             game.spell_cost_reduction_grants = [
                 *game.spell_cost_reduction_grants,
                 SpellCostReductionGrant(
                     controller=controller,
                     source_name=source_name,
-                    quality=cheaper.group("quality").strip(),
-                    amount=int(cheaper.group("n")),
+                    quality=(reduction.group("quality") or "").strip(),
+                    amount=int(reduction.group("n")),
                     turn=turn,
+                    once=next_cheaper is not None,
                 ),
             ]
 

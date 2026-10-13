@@ -77,6 +77,7 @@ from ...machines.modes import (
 from ...machines.monarch import monarch_effect_for
 from ...machines.next_spell import (
     next_spell_keyword_grants_for,
+    used_up_cost_reductions_for,
     spell_has_quality,
 )
 from ...machines.priority import PriorityOutcome
@@ -435,6 +436,11 @@ class StackPriorityMixin:
         # CR 601.2i again: "the next `<quality>` spell you cast this turn has
         # `<keyword>`" - every such grant this spell answers for is used up
         # by it (two Don & Raph triggers both applied to this one spell).
+        used_reductions = used_up_cost_reductions_for(self, card_state, controller)
+        if used_reductions:
+            self.spell_cost_reduction_grants = [
+                grant for grant in self.spell_cost_reduction_grants if grant not in used_reductions
+            ]
         used = next_spell_keyword_grants_for(self, card_state, controller)
         if used:
             self.next_spell_keyword_grants = [
