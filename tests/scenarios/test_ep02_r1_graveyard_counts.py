@@ -1417,11 +1417,21 @@ def test_altar_of_the_goyf_counts_a_type_once_across_both_graveyards():
     assert _stats(scenario, bears) == (4, 4)
 
 
-# -- Ten templates below were already read correctly before this task, and the
-# -- dispatch fingerprint shows no parser change for these cards, so they are
-# -- green on base by construction: T5 cannot change what they do. They carry
-# -- the multi-type cards (artifact creature, land creature, adventurer) the
-# -- new reader must also count once, as regression guards for the new reader.
+# -- Ten cards whose single-card templates base already played correctly. What
+# -- changed for them is who answers the count: every one now asserts, beside the
+# -- outcome, the unified graveyard reader's answer for its own phrase (the
+# -- reader does not exist on base, so each is red there for that reason).
+# -- They carry the multi-type cards (artifact creature, land creature,
+# -- adventurer) the reader must count once.
+
+
+def _read(scenario, phrase, who="alice"):
+    """The unified graveyard reader's count for `phrase` (EP-02 R1 T5)."""
+    from magic_cards_model.machines.ep02_r1_graveyard_counts import graveyard_count_expression
+
+    reader = graveyard_count_expression(phrase)
+    assert reader is not None, f"the graveyard reader does not read {phrase!r}"
+    return reader(scenario.game, who)
 
 
 def test_izoni_makes_an_insect_per_creature_card_in_my_graveyard():
@@ -1432,6 +1442,7 @@ def test_izoni_makes_an_insect_per_creature_card_in_my_graveyard():
     )
     _enter(scenario, "Izoni, Thousand-Eyed")
     assert len(_tokens(scenario, "Insect")) == 4
+    assert _read(scenario, "creature cards in your graveyard") == 4
 
 
 def test_kraul_foragers_gains_one_life_per_creature_card():
@@ -1441,6 +1452,7 @@ def test_kraul_foragers_gains_one_life_per_creature_card():
     )
     _enter(scenario, "Kraul Foragers")
     assert _life(scenario) == 25
+    assert _read(scenario, "creature cards in your graveyard") == 5
 
 
 def test_revenge_of_the_rats_makes_tapped_rats_per_creature_card():
@@ -1453,6 +1465,7 @@ def test_revenge_of_the_rats_makes_tapped_rats_per_creature_card():
     rats = _tokens(scenario, "Rat")
     assert len(rats) == 3
     assert all(rat.tapped for rat in rats)
+    assert _read(scenario, "creature cards in your graveyard") == 3
 
 
 def test_grim_flowering_draws_a_card_per_creature_card():
@@ -1463,6 +1476,7 @@ def test_grim_flowering_draws_a_card_per_creature_card():
     )
     scenario.cast_and_resolve("Grim Flowering", auto=True)
     assert len(scenario.player("alice").hand) == 4
+    assert _read(scenario, "creature cards in your graveyard") == 4
 
 
 # -- cards named like the spell, in your graveyard ---------------------------
@@ -1507,6 +1521,7 @@ def test_huskburster_swarm_counts_creature_cards_I_own_in_exile_and_the_graveyar
     # {7}{B} less five creature cards = {2}{B}
     scenario.cast_and_resolve("Huskburster Swarm", auto=True)
     assert scenario.find("Huskburster Swarm", Zone.BATTLEFIELD, "alice") is not None
+    assert _read(scenario, "creature cards you own in exile and in your graveyard") == 5
 
 
 def test_huskburster_swarm_is_not_cheaper_for_cards_in_exile_I_do_not_own():
@@ -1525,6 +1540,8 @@ def test_huskburster_swarm_is_not_cheaper_for_cards_in_exile_I_do_not_own():
     )
     with pytest.raises(ValueError):
         scenario.cast_and_resolve("Huskburster Swarm", auto=True)
+    assert _read(scenario, "creature cards you own in exile and in your graveyard") == 2
+    assert _read(owned, "creature cards you own in exile and in your graveyard") == 5
 
 
 # -- the same cost reduction on an activated ability -------------------------
@@ -1590,11 +1607,13 @@ def test_consuming_blob_is_as_big_as_the_card_types_in_my_graveyard():
         graveyard=[BEARS, BEARS, BOLT, SOL_RING, MOUNTAIN, "Tribal Flames", "Walking Ballista"],
     )
     assert _stats(scenario, scenario.creature("Consuming Blob", "alice")) == (5, 6)
+    assert _read(scenario, "card types among cards in your graveyard") == 5
 
 
 def test_consuming_blob_ignores_the_opponents_graveyard():
     scenario = _board(battlefield=["Consuming Blob"], bob_graveyard=[BEARS, BOLT, SOL_RING])
     assert _stats(scenario, scenario.creature("Consuming Blob", "alice")) == (0, 1)
+    assert _read(scenario, "card types among cards in your graveyard") == 0
 
 
 def test_souls_of_the_lost_counts_permanent_cards_only():
@@ -1603,6 +1622,7 @@ def test_souls_of_the_lost_counts_permanent_cards_only():
         graveyard=PERMANENT_YARD + ["Walking Ballista", "Bonecrusher Giant", "Tribal Flames"],
     )
     assert _stats(scenario, scenario.creature("Souls of the Lost", "alice")) == (5, 6)
+    assert _read(scenario, "permanent cards in your graveyard") == 5
 
 
 def test_crackling_drake_counts_instants_and_sorceries_across_exile_and_graveyard():
@@ -1613,3 +1633,4 @@ def test_crackling_drake_counts_instants_and_sorceries_across_exile_and_graveyar
         bob_graveyard=[BOLT] * 4,
     )
     assert _stats(scenario, scenario.creature("Crackling Drake", "alice")) == (4, 4)
+    assert _read(scenario, "instant and sorcery cards you own in exile and in your graveyard") == 4
