@@ -40,6 +40,7 @@ from magic_cards_model import __version__, static_audit
 from magic_cards_model.data.creature_types import creature_types
 from magic_cards_model.ids import install_id_allocator, reset_id_allocator
 from magic_cards_model.machines import keywords as keyword_machine
+from magic_cards_model.machines.cleave import cleaved_text, has_cleave, uncleaved_text
 from magic_cards_model.machines.abilities import (
     AbilityKind,
     ActivatedAbility,
@@ -3777,6 +3778,26 @@ class SpellFace(NamedTuple):
 
 
 def _spell_faces(printing: Card) -> list[SpellFace]:
+    """`_printed_spell_faces`, with a cleave spell (CR 702.148a) offered as the
+    two spells a cast can make: the text with the bracketed words in it (cast
+    for its mana cost) and the text with them removed (cast for its cleave
+    cost, whose own `{X}` is the one announced)."""
+    faces: list[SpellFace] = []
+    for face in _printed_spell_faces(printing):
+        if "[" not in face.text or not has_cleave(printing):
+            faces.append(face)
+            continue
+        cleave_cost = next(
+            ability.cost
+            for ability in keyword_abilities(printing)
+            if ability.canonical.lower() == "cleave"
+        )
+        faces.append(face._replace(text=uncleaved_text(face.text)))
+        faces.append(face._replace(text=cleaved_text(face.text), mana_cost=cleave_cost))
+    return faces
+
+
+def _printed_spell_faces(printing: Card) -> list[SpellFace]:
     """The faces `classify_card` should feed to `effect_for`, one per face a
     real cast could put on the stack with only that face's own characteristics
     (CR 712.8a/712.8d/712.8f).

@@ -60,6 +60,7 @@ from ...machines.effects import (
     trigger_effect_for,
 )
 from ...machines.ep02_r1_counter_amounts import counters_counted_for, counters_read_from
+from ...machines.cleave import cleave_cost_announces_x, spell_text_as_cast, was_cleaved
 from ...machines.keywords import (
     ascend_as_a_spell_resolves,
     awaken_as_the_spell_resolves,
@@ -581,6 +582,10 @@ class StackPriorityMixin:
         cost_has_x = "{X}" in (spell.mana_cost or "") or any(
             cost_announces_x(phrase) for phrase in additional_cost_phrases(spell.card)
         )
+        # CR 702.148a: a cleaved spell's X is announced in its cleave cost.
+        cost_has_x = cost_has_x or (
+            was_cleaved(self, spell) and cleave_cost_announces_x(spell.card)
+        )
         x_value = self.cast_record(spell).x_value if cost_has_x else None
         # CR 702.102d: a fused split spell resolves the left half's
         # instructions and then the right half's - two independent texts,
@@ -593,7 +598,7 @@ class StackPriorityMixin:
                 (face.name, face.oracle_text or "") for face in spell.card.card_faces
             ]
         else:
-            faces_to_resolve = [(spell.name, spell.oracle_text)]
+            faces_to_resolve = [(spell.name, spell_text_as_cast(self, spell, spell.oracle_text))]
         # CR 702.174j: an instant or sorcery's gift effect happens before any
         # of the spell's other abilities - ahead of `effect_for`'s own
         # dispatch, not folded into it, because gift is never a clause of

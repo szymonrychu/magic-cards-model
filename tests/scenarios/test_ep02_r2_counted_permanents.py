@@ -1115,3 +1115,71 @@ def test_the_mana_spent_total_resets_each_turn():
     scenario.advance()
     scenario.advance()
     assert scenario.game.mana_spent_on_spells_this_turn == {}
+
+
+# --------------------------------------------------------------------------
+# Lantern Flare: "Cleave {X}{R}{W}. Lantern Flare deals X damage to target creature or
+# planeswalker and you gain X life. [X is the number of creatures you control.]"
+# CR 702.148a: cleave is an alternative cost, and a spell cast for it has the words
+# inside square brackets removed from its text; cast normally the bracketed words are
+# simply part of the text. CR 107.3a: the X of the cleave cost is announced as it is
+# cast; CR 107.3f: otherwise X is whatever the spell's own text says it is.
+# --------------------------------------------------------------------------
+
+
+def _flare_board(creatures=3):
+    scenario = _main(
+        _build(
+            ["Plains"] * 3 + ["Mountain"] + ["Grizzly Bears"] * creatures,
+            ["Craw Wurm"],
+            hand=["Lantern Flare"],
+        )
+    )
+    return scenario
+
+
+def _cast_flare(scenario, *, cleave, x=0):
+    wurm = scenario.find("Craw Wurm", Zone.BATTLEFIELD, "bob")
+    casting = scenario.cast("Lantern Flare", username="alice")
+    if cleave:
+        casting.use_keyword("Cleave")
+        casting.x_value = x
+    casting.choose_targets([wurm])
+    payment = casting.begin_paying()
+    scenario.auto_pay(payment)
+    scenario.put_on_stack(casting)
+    while scenario.game.stack:
+        scenario.pass_until_resolved()
+    return wurm, payment
+
+
+def test_lantern_flare_cast_normally_counts_your_creatures():
+    scenario = _flare_board(creatures=3)
+    wurm, _ = _cast_flare(scenario, cleave=False)
+    assert wurm.damage == 3
+    assert scenario.player("alice").life == 23
+
+
+def test_lantern_flare_normal_cast_with_no_creatures_deals_and_gains_nothing():
+    scenario = _flare_board(creatures=0)
+    wurm, _ = _cast_flare(scenario, cleave=False)
+    assert wurm.damage == 0
+    assert scenario.player("alice").life == 20
+
+
+@pytest.mark.parametrize("x", [1, 2])
+def test_lantern_flare_cleaved_uses_the_announced_x_not_the_creature_count(x):
+    scenario = _flare_board(creatures=3)
+    wurm, _ = _cast_flare(scenario, cleave=True, x=x)
+    assert wurm.damage == x  # three creatures, but the bracketed words are gone
+    assert scenario.player("alice").life == 20 + x
+    tapped = sum(1 for land in _lands(scenario) if land.tapped)
+    assert tapped == x + 2  # {X}{R}{W}, not {1}{W}
+
+
+def test_lantern_flare_cleave_is_an_alternative_cost_offered_beside_the_mana_cost():
+    scenario = _flare_board()
+    casting = scenario.cast("Lantern Flare", username="alice")
+    (option,) = [option for option in casting.cast_options if option.keyword == "Cleave"]
+    assert str(option.cost) == "{X}{R}{W}"
+    assert not option.pays_mana_cost
