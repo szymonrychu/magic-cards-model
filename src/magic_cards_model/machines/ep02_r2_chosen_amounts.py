@@ -634,9 +634,6 @@ _AT_MOST_COUNT_RE = re.compile(
     re.IGNORECASE,
 )
 
-#: ", where X is <expr>" ending its sentence, its X used anywhere in the text.
-_WHERE_X_SENTENCE_RE = re.compile(r",\s*where x is (?P<expr>[^.]+)(?=\.|$)", re.IGNORECASE)
-
 Measure = Callable[["Game", Any], int]
 
 
@@ -673,18 +670,19 @@ def _written_template(
     amount written as a number, or `None` when it names none of these.
     `after_prefix`: earlier instructions run first, so even a one-sentence
     "..., where X is ..." is read here, once they have."""
-    from .amount_sentences import write_x
+    from .amount_sentences import find_where_x, write_x
 
-    where = _WHERE_X_SENTENCE_RE.search(text)
+    where = find_where_x(text)
     if where is not None:
-        # Otherwise only an X that reaches past its own sentence: a
-        # one-sentence "..., where X is ..." is the ordinary readers' own.
-        later = text[where.end() :]
-        measure = amount_measure(where.group("expr"))
+        measure = amount_measure(where.expr)
         if measure is None:
             return None
-        body = text[: where.start()] + later
-        return measure, lambda n: write_x(body, n)
+        body, factor = where.rest, where.multiplier
+
+        def scaled(game: "Game", stack_object: Any) -> int:
+            return measure(game, stack_object) * factor
+
+        return scaled, lambda n: write_x(body, n)
     if after_prefix and (bound := _AT_MOST_COUNT_RE.search(text)) is not None:
         # "with mana value less than or equal to the number of creatures
         # sacrificed this way" (The Hunger Tide Rises), read once the
@@ -732,6 +730,7 @@ def amount_written_effect(text: str, for_spell: bool) -> Any:
     number, and that text is read by the ordinary readers (CR 608.2c). The
     text is probed with sample numbers when read, so a shape no reader takes
     refuses here instead of failing on resolution."""
+    from .amount_sentences import find_where_x
     from .effects.text import _strip_non_effect_preamble
 
     lowered = text.lower()
@@ -747,7 +746,7 @@ def amount_written_effect(text: str, for_spell: bool) -> Any:
         (
             i
             for i, sentence in enumerate(sentences)
-            if _WHERE_X_SENTENCE_RE.search(sentence) or _AT_MOST_COUNT_RE.search(sentence)
+            if find_where_x(sentence) or _AT_MOST_COUNT_RE.search(sentence)
         ),
         0,
     )

@@ -156,13 +156,7 @@ def layer_group_count_factory(group: str):
 # ", where X is <counted group>" over a whole multi-sentence text.
 # --------------------------------------------------------------------------
 
-_WHERE_X_TAIL_RE = re.compile(
-    r",\s*where X is (?P<mult>twice |three times )?(?P<expr>[^.]+?)"
-    r"(?: as (?:this (?:ability|spell) resolves|it resolves))?(?=\.(?:\s|$)|$)",
-    re.IGNORECASE,
-)
 _CONTINUATION_RE = re.compile(r",\s+(?:and|then)\s", re.IGNORECASE)
-_MULTIPLIERS = {"twice ": 2, "three times ": 3}
 #: "Search ... for up to X basic land cards. Put those cards onto the battlefield
 #: tapped, then shuffle." (Kyoshi Island Plaza) is the older "..., put them onto
 #: the battlefield tapped, then shuffle" with the sentence break moved.
@@ -188,6 +182,7 @@ def parse_where_x_whole_text(text: str, *, for_spell: bool):
     the text unreadable: there is no half-run instruction (CR 608.2c)."""
     if "where x is" not in text.lower():
         return None
+    from .amount_sentences import find_where_x, write_x
     from .effects.dispatch import _ability_effect_or_notice, _spell_effect_or_notice
     from .effects.text import _strip_non_effect_preamble
     from .effects.tokens import _is_notice_only
@@ -196,10 +191,10 @@ def parse_where_x_whole_text(text: str, *, for_spell: bool):
     body = _strip_non_effect_preamble(text).strip()
     if _WHOLE_TEXT_CONDITIONAL_RE.match(body) or (for_spell and _ABILITY_LINE_RE.match(body)):
         return None
-    match = _WHERE_X_TAIL_RE.search(body)
-    if match is None:
+    where = find_where_x(body)
+    if where is None:
         return None
-    expr = match.group("expr").strip()
+    expr, before, after = where.expr, where.before, where.after
     reader = _expression_reader(expr)
     spill = ""
     if reader is None and (cut := _CONTINUATION_RE.search(expr)) is not None:
@@ -209,10 +204,10 @@ def parse_where_x_whole_text(text: str, *, for_spell: bool):
         reader = _expression_reader(expr)
     if reader is None:
         return None
-    rest = body[: match.start()] + spill + body[match.end() :]
-    if re.search(r"\bX\b", rest, re.IGNORECASE) is None:
+    rest = before + spill + after
+    if not where.uses_x(rest):
         return None
-    multiplier = _MULTIPLIERS.get((match.group("mult") or "").lower(), 1)
+    multiplier = where.multiplier
     parse = _spell_effect_or_notice if for_spell else _ability_effect_or_notice
 
     @functools.cache
@@ -224,8 +219,6 @@ def parse_where_x_whole_text(text: str, *, for_spell: bool):
             and getattr(effect, "unparsed_remainder", None) is None
         )
         return effect if readable else None
-
-    from .amount_sentences import write_x
 
     if parsed(write_x(rest, 2)) is None:
         return None

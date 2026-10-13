@@ -72,6 +72,50 @@ def split_where_x(sentence: str) -> tuple[str, str] | None:
     return body, tail
 
 
+#: ", where X is <expr>" closing its sentence anywhere in a multi-sentence text:
+#: an optional "twice " / "three times " in front of the expression and an
+#: optional "as this ability/spell resolves" after it are not part of it.
+_WHERE_X_SENTENCE_RE = re.compile(
+    r",\s*where X is (?P<mult>twice |three times )?(?P<expr>[^.]+?)"
+    r"(?: as (?:this (?:ability|spell) resolves|it resolves))?(?=\.(?:\s|$)|$)",
+    re.IGNORECASE,
+)
+_MULTIPLIER_WORDS = {"twice ": 2, "three times ": 3}
+
+
+@dataclass(frozen=True)
+class WhereXDefinition:
+    """A ", where X is <expr>" found inside a multi-sentence text: the
+    definition's expression and multiplier, and the text on either side of it."""
+
+    expr: str
+    multiplier: int
+    before: str
+    after: str
+
+    @property
+    def rest(self) -> str:
+        """The text without the definition - the part that uses X."""
+        return self.before + self.after
+
+    def uses_x(self, rest: str | None = None) -> bool:
+        return re.search(r"\bX\b", self.rest if rest is None else rest, re.IGNORECASE) is not None
+
+
+def find_where_x(text: str) -> WhereXDefinition | None:
+    """The ", where X is <expr>" closing a sentence of `text`, or `None`. X is
+    measured once as the object resolves and written into the rest of the text
+    as a number (CR 608.2h, CR 107.3a); this is the one place that finds the
+    definition, for every module that measures it differently."""
+    match = _WHERE_X_SENTENCE_RE.search(text)
+    if match is None:
+        return None
+    multiplier = _MULTIPLIER_WORDS.get((match.group("mult") or "").lower(), 1)
+    return WhereXDefinition(
+        match.group("expr").strip(), multiplier, text[: match.start()], text[match.end() :]
+    )
+
+
 def write_x(body: str, n: int) -> str:
     """`body` with every X written as `n`."""
     return re.sub(r"\bX\b", str(n), body, flags=re.IGNORECASE)

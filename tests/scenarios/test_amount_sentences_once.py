@@ -129,3 +129,39 @@ def test_a_stat_sized_gain_and_draw_pair_happens_once():
     assert _life(scenario, "alice") == 20 + 2
     assert len(scenario.player("alice").hand) == hand_before + 2
     assert _life(scenario, "bob") == 20
+
+
+def test_a_where_x_measured_once_is_written_in_and_applied_once():
+    """Kyoshi Island Plaza ("Search your library for up to X basic land cards,
+    where X is the number of Shrines you control") and Kotis, the Fangkeeper
+    ("exile the top X cards of that player's library, where X is the damage
+    dealt") - both read by `amount_sentences.find_where_x`. X is measured as the
+    object resolves (CR 608.2h) and written in as a number (CR 107.3a): with three
+    Shrines exactly three lands are fetched, and with the damage dealt exactly that
+    many cards are exiled - neither is doubled."""
+    scenario = _board(
+        alice=["Forest"] * 4 + ["Honden of Life's Web", "Honden of Night's Reach"],
+        hand=["Kyoshi Island Plaza"],
+    )
+    library_before = len(scenario.player("alice").library)
+    scenario.cast_onto_stack("Kyoshi Island Plaza", auto=True, username="alice")
+    _settle(scenario)
+    lands_after = [
+        p
+        for p in scenario.game.permanents_controlled_by("alice")
+        if scenario.game.characteristics_of(p).is_land
+    ]
+    assert len(lands_after) == 4 + 3  # X = 3 Shrines (the plaza is one): three fetched
+    assert len(scenario.player("alice").library) == library_before - 3
+
+    scenario = _board(alice=["Kotis, the Fangkeeper"], step=Step.DECLARE_ATTACKERS)
+    kotis = scenario.creature("Kotis, the Fangkeeper", "alice")
+    kotis.summoning_sick = False
+    scenario.attack_with(kotis)
+    _settle(scenario)
+    scenario.no_blocks()
+    scenario.combat_damage()
+    _settle(scenario)
+    damage = 20 - scenario.player("bob").life
+    assert damage == 2
+    assert len(scenario.player("bob").library) == 12 - damage
