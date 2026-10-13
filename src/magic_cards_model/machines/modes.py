@@ -43,11 +43,14 @@ The sub-rules this module implements, all looked up rather than remembered:
   that same whitespace, which a loyalty symbol's immediate digit never has.
   Proved against Smuggler's Surprise, a real printing in this pool.
 
+CR 700.2i pawprint modes (`{P}{P} — effect` lines under "Choose up to five {P}
+worth of modes") are read too: each `Mode.pawprints` is its symbol count, the
+profile's `pawprint_budget` is the "up to N {P}" total, and `resolve` checks the
+chosen modes' pawprints sum to at most the budget, not a mode count.
+
 Deliberately not handled, each of them leaving `understood=False` rather than a
 confident wrong answer:
 
-- **CR 700.2i** - pawprint modes, chosen by paying `{P}` worth of modes rather
-  than by counting bullets.
 - **CR 700.2e / CR 601.7** - a mode chosen by a player other than the
   controller.
 
@@ -122,6 +125,10 @@ _MODE_WITH_COST = re.compile(
 _MODE_LABEL = re.compile(r"^[A-Z][^{}.:;\u2014\n]{0,39}?\s+\u2014\s+")
 #: CR 700.2i: pawprint modes are not counted in bullets at all.
 _PAWPRINT = re.compile(r"\{P\}")
+#: A pawprint mode line: "{P}{P} — Draw a card for each creature ...".
+_PAWPRINT_MODE = re.compile(r"^(?P<marks>(?:\{P\})+)\s*[-\u2014]\s*(?P<effect>.+)$")
+#: "Choose up to five {P} worth of modes."
+_PAWPRINT_BUDGET = re.compile(r"\bup to (?P<count>\w+) \{P\} worth of modes", re.IGNORECASE)
 #: CR 700.2h keywords (Spree, Tiered) print their modal instruction inside a
 #: reminder-text parenthetical after the keyword name, not as a bare "Choose
 #: ..." line: `Tiered (Choose one additional cost.)`. This reads the shape
@@ -149,6 +156,9 @@ class Mode(EngineModel):
     #: (Spree, Tiered), or None for an ordinary mode. Mandatory once the mode
     #: is chosen (CR 700.2h, CR 601.2f-h) - not an optional cost like kicker.
     cost: str | None = None
+    #: CR 700.2i: the number of pawprint symbols ({P}) printed in front of this
+    #: mode; 0 for a bulleted mode.
+    pawprints: int = 0
 
     def __str__(self) -> str:
         return f"{self.number}. {self.text}"
@@ -174,6 +184,9 @@ class ModalProfile(EngineModel):
     #: "Each mode must target a different player": no two chosen modes may
     #: aim at the same player.
     distinct_targets: bool = False
+    #: CR 700.2i: "Choose up to five {P} worth of modes" - the most pawprint
+    #: symbols the chosen modes may add up to; None for a bulleted card.
+    pawprint_budget: int | None = None
     #: CR 702.42a: the entwine cost, if the card has entwine.
     entwine_cost: str | None = None
     #: CR 702.120a: the escalate cost, if the card has escalate.
@@ -250,6 +263,16 @@ class ModalProfile(EngineModel):
         """
         modes = tuple(self.mode(spec) for spec in chosen)
 
+        if self.pawprint_budget is not None:
+            # CR 700.2i: any number of modes whose pawprints total at most the
+            # budget; the same mode again is CR 700.2d's repeat, which the
+            # instruction allows or not like any other modal card.
+            total = sum(mode.pawprints for mode in modes)
+            if total > self.pawprint_budget:
+                raise ValueError(
+                    f"{total} pawprint symbols chosen where the spell allows at most "
+                    f"{self.pawprint_budget} {{P}} worth of modes (CR 700.2i)"
+                )
         if not self.repeatable:
             seen: set[int] = set()
             for mode in modes:
@@ -261,6 +284,8 @@ class ModalProfile(EngineModel):
                 seen.add(mode.number)
 
         minimum, maximum = self.allowed_range(entwined=entwined, alternative=alternative)
+        if self.pawprint_budget is not None:
+            minimum, maximum = 0, len(modes)
         if len(modes) < minimum:
             raise ValueError(
                 f"too few modes: {len(modes)} chosen where the spell requires {minimum}"
@@ -468,7 +493,11 @@ def mode_effect_text(mode: Mode) -> str:
 
 def _parse(oracle_text: str, keywords: Iterable[str]) -> ModalProfile | None:
     lines = [line.strip() for line in oracle_text.splitlines()]
-    bullets = [index for index, line in enumerate(lines) if _BULLET_RE.match(line)]
+    bullets = [
+        index
+        for index, line in enumerate(lines)
+        if _BULLET_RE.match(line) or _PAWPRINT_MODE.match(line)
+    ]
     if not bullets:
         return None
 
@@ -499,6 +528,11 @@ def _parse(oracle_text: str, keywords: Iterable[str]) -> ModalProfile | None:
             understood=False,
         )
 
+    pawprint_lines = [_PAWPRINT_MODE.match(lines[index]) for index in bullets]
+    if any(pawprint_lines):
+        return _parse_pawprint(
+            lines, bullets, pawprint_lines, instruction_line, raw_instruction_line
+        )
     mode_texts = [_BULLET_RE.sub("", lines[index], count=1).strip() for index in bullets]
     mode_costs: list[str | None] = []
     for text in mode_texts:
@@ -529,6 +563,41 @@ def _parse(oracle_text: str, keywords: Iterable[str]) -> ModalProfile | None:
 
     minimum, maximum = counted
     return ModalProfile(**profile_kwargs, minimum=minimum, maximum=maximum)
+
+
+def _parse_pawprint(
+    lines: Sequence[str],
+    bullets: Sequence[int],
+    pawprint_lines: Sequence["re.Match[str] | None"],
+    instruction_line: str,
+    raw_instruction_line: str | None,
+) -> ModalProfile:
+    """CR 700.2i's profile: every mode line is `{P}...` and the instruction
+    names the {P} total. Anything else leaves `understood=False`."""
+    budget = _PAWPRINT_BUDGET.search(instruction_line)
+    count = parse_count(budget.group("count"), article=False) if budget is not None else None
+    if count is None or not all(pawprint_lines):
+        return ModalProfile(
+            instruction=raw_instruction_line or "", modes=(), minimum=0, maximum=0, understood=False
+        )
+    modes = tuple(
+        Mode(
+            number=number,
+            text=found.group("effect").strip(),
+            pawprints=found.group("marks").count("{P}"),
+        )
+        for number, found in enumerate(pawprint_lines, start=1)
+        if found is not None
+    )
+    return ModalProfile(
+        instruction=raw_instruction_line or "",
+        modes=modes,
+        minimum=0,
+        maximum=count,
+        repeatable=bool(_REPEATABLE.search(instruction_line)),
+        optional=True,
+        pawprint_budget=count,
+    )
 
 
 def _read_counts(instruction: str, mode_count: int) -> tuple[int, int] | None:

@@ -819,6 +819,7 @@ class StackPriorityMixin:
             self.put_into_graveyard(spell, resolving=True)
             self._create_rebound_delayed_trigger(spell, cast_from_hand)
             self._create_paradigm_delayed_trigger(spell)
+            self._resolve_epic(spell)
             self.forget_cast_record(spell)
 
         self._before_priority()
@@ -1071,6 +1072,9 @@ class StackPriorityMixin:
                 controller=controller,
                 owner=controller,
                 is_copy=True,
+                # CR 707.2: a copy of a copy made "except for its epic ability"
+                # still lacks it.
+                epic_suppressed=spell.epic_suppressed,
                 token=False,
                 targets=targets,
                 face_played=spell.face_played,

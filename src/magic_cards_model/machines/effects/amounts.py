@@ -65,6 +65,17 @@ from ..ep02_r1_graveyard_counts import (
 )
 from ..ep02_r1_life_amounts import life_this_turn_count
 from ..ep02_r2_devotion_domain_party import up_to_x_targets, where_x_pump_text_normalised
+from ..ep02_r2_cards_in_zone_counts import (
+    hand_count_expression,
+    parse_attached_pump_until_end_of_turn_clause,
+    parse_cast_any_number_from_hand_free_clause,
+    parse_defending_player_clause,
+    parse_hand_difference_spell,
+    parse_mill_by_stat_then_return_self_and_milled,
+    parse_no_maximum_hand_size_while_controlling_clause,
+    parse_return_half_permanents_spell,
+    parse_search_target_library_and_exile,
+)
 from ..layers import (
     BASIC_LAND_TYPES,
     Characteristics,
@@ -1125,6 +1136,11 @@ def count_expression(phrase: str) -> Callable[["Game", str], int] | None:
         # EP-02 R1 T5: "[the number of] <description> cards [named N] in your
         # graveyard / all graveyards", card types among, different mana values.
         return in_graveyard
+
+    if " in " in stripped and (in_zone := hand_count_expression(stripped)) is not None:
+        # EP-02 R2 T2: "[the number of] cards in your hand / their hand / your
+        # opponents' hands", cards with a keyword in a graveyard.
+        return in_zone
 
     if " ability in your graveyard" in stripped.lower() and (
         with_ability := _COUNT_CARDS_WITH_KEYWORD_ABILITY_IN_YOUR_GRAVEYARD_RE.fullmatch(stripped)
@@ -5807,6 +5823,9 @@ def _parse_graveyard_count_spell_text(effect_text: str) -> Effect | None:
         parse_search_value_at_most_count_spell(effect_text)
         or parse_damage_pair_where_x_spell(effect_text)
         or parse_pump_then_additional_per_count_spell(effect_text)
+        or parse_hand_difference_spell(effect_text)
+        or parse_search_target_library_and_exile(effect_text)
+        or parse_return_half_permanents_spell(effect_text)
     )
 
 
@@ -5819,4 +5838,36 @@ def _parse_graveyard_count_ability_text(effect_text: str) -> AbilityEffect | Non
         or parse_damage_pair_where_x_ability(effect_text)
         or parse_pump_then_additional_per_count_ability(effect_text)
         or parse_tapped_attacking_tokens_for_each_ability(effect_text)
+        or parse_mill_by_stat_then_return_self_and_milled(effect_text)
     )
+
+
+# --------------------------------------------------------------------------
+# EP-02 R2 T2: "defending player <verb> ..." - any per-player clause run
+# against the attacker's defending player.
+# --------------------------------------------------------------------------
+
+
+@MIXED_CLAUSE.rung("s37", for_spell=FORWARD)
+def _parse_defending_player_instruction_clause(
+    clause: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`parse_defending_player_clause`'s shape, gated on the literal subject."""
+    return parse_defending_player_clause(clause, for_spell=for_spell)
+
+
+@MIXED_CLAUSE.rung("s37", for_spell=FORWARD)
+def _parse_attached_pump_until_end_of_turn_instruction_clause(
+    clause: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`parse_attached_pump_until_end_of_turn_clause`'s shape, on an ability."""
+    return parse_attached_pump_until_end_of_turn_clause(clause, for_spell=for_spell)
+
+
+@MIXED_CLAUSE.rung("s37", for_spell=FORWARD)
+def _parse_hand_rule_instruction_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
+    """A hand-size rider or a free cast of any number of spells from the hand
+    (Jin-Gitaxias // The Great Synthesis' chapters I and III)."""
+    return parse_no_maximum_hand_size_while_controlling_clause(
+        clause, for_spell=for_spell
+    ) or parse_cast_any_number_from_hand_free_clause(clause, for_spell=for_spell)

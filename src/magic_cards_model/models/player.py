@@ -347,6 +347,13 @@ class Player(EngineModel):
     it and every permanent, so it is recorded here rather than read off any
     object; `has_no_maximum_hand_size` reads it."""
 
+    cannot_cast_spells_for_rest_of_game: bool = False
+    """Whether a spell with epic this player controlled has resolved: "For the
+    rest of the game, you can't cast spells." (CR 702.50a, CR 702.50b). Like
+    `no_maximum_hand_size_for_rest_of_game` it outlives the spell and is
+    recorded on the player; `machines/casting.why_cannot_cast_restriction`
+    reads it. Copies of spells are not cast, so they still go on the stack."""
+
     mulligans_taken: int = 0
     hand_kept: bool = False
     first_mulligan_free: bool = False

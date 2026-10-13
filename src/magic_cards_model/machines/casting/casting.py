@@ -588,6 +588,11 @@ def why_cannot_cast_restriction(
     """
     if game is None:
         return None
+    if game.player(caster).cannot_cast_spells_for_rest_of_game:
+        return (
+            f"{caster} can't cast spells for the rest of the game because a spell with epic "
+            f"they controlled resolved (CR 702.50a, CR 702.50b)"
+        )
     # CR 702.61a: checked before `spell` has moved to the stack (CR 601.2a
     # runs after every refusal in this chain), so a split-second spell
     # already on the stack always counts as an "other" spell here - even one

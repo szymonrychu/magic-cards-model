@@ -290,6 +290,7 @@
     "_resolution_profile",
     "_resolve_ability",
     "_resolve_declaration",
+    "_resolve_epic",
     "_resolve_mulligan_round_if_ready",
     "_resolve_top",
     "_resolve_triggered_mana_abilities",

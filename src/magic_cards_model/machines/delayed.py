@@ -503,6 +503,60 @@ class ParadigmCopyAndCast(DelayedEffectSpecBase):
             game.exile.remove(copy)
 
 
+class CopyEpicSpell(DelayedEffectSpecBase):
+    """CR 702.50a's second spell ability: "At the beginning of each of your
+    upkeeps for the rest of the game, copy this spell except for its epic
+    ability. If the spell has any targets, you may choose new targets for the
+    copy."
+
+    The spell is the card the delayed trigger names (`subject_id`), copied as
+    it last existed on the stack (CR 608.2h, `Game.copy_spell_as_last_known`):
+    its targets, X, modes and the rest of how it was cast. The copy is marked
+    `epic_suppressed`, so resolving it makes no further delayed trigger and no
+    further restriction (CR 702.50a's "except for its epic ability"). A copy
+    is never cast (CR 707.10), so CR 702.50b's ban does not stop it.
+    """
+
+    kind: Literal["epic_copy_spell"] = "epic_copy_spell"
+
+    copy_of: CardState | None = None
+    """Set only when the epic spell was itself a copy (Reverberate on it): a
+    copy ceases to exist as it leaves the stack (CR 707.10a), so nothing could
+    be looked up by id at the upkeep. This is the copy as it last existed on
+    the stack, with its targets and `cast_record` (its modes and X, dumped as
+    JSON), and the upkeep copies it from there (CR 608.2h)."""
+
+    cast_record: dict | None = None
+
+    def __call__(self, game: "Game", ability: AbilityOnStack, trigger: "DelayedTrigger") -> None:
+        if trigger.subject_id is None or not game.is_in_game(trigger.controller):
+            return
+        if self.copy_of is not None:
+            from ..models.game.records import CastRecord
+
+            copy = game._put_spell_copy(
+                self.copy_of,
+                trigger.controller,
+                original_record=CastRecord.model_validate(self.cast_record or {}),
+                targets=list(self.copy_of.targets),
+                division=self.copy_of.division,
+            )
+        else:
+            spell = game.find_by_id(trigger.subject_id)
+            if not isinstance(spell, CardState):
+                return
+            copy = game.copy_spell_as_last_known(spell, controller=trigger.controller)
+        if copy is None:
+            return
+        copy.epic_suppressed = True
+        game.offer_new_targets_for_copy(
+            copy,
+            trigger.controller,
+            source_name=trigger.source_name,
+            source_id=source_id_of(ability),
+        )
+
+
 class DiscardCardsAtRandomForController(DelayedEffectSpecBase):
     """ "At the beginning of your next upkeep, discard `<n>` cards at
     random." - Casey Jones, Vigilante's own delayed half (TMT). Like
@@ -2527,6 +2581,7 @@ DelayedEffectSpec = Annotated[
     | ReturnSubjectToHand
     | ReboundRecast
     | ParadigmCopyAndCast
+    | CopyEpicSpell
     | DrawACardForController
     | AddManaAmountForController
     | AddManaInAnyCombinationForController
@@ -2598,6 +2653,7 @@ return_subject_to_battlefield_under_owner = ReturnSubjectToBattlefieldUnderOwner
 return_subject_to_hand = ReturnSubjectToHand()
 rebound_recast = ReboundRecast()
 paradigm_copy_and_cast = ParadigmCopyAndCast()
+copy_epic_spell = CopyEpicSpell()
 draw_a_card_for_controller = DrawACardForController()
 destroy_subject = DestroySubject()
 tap_subject = TapSubject()

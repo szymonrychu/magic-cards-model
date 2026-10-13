@@ -1,0 +1,168 @@
+{
+  "object": "card",
+  "id": "86881c5f-df5e-4f50-b554-e4c49d5316f9",
+  "oracle_id": "aeeba0a5-46c0-4637-8761-45be738a18a3",
+  "multiverse_ids": [],
+  "tcgplayer_id": 244128,
+  "name": "Vecna",
+  "lang": "en",
+  "released_at": "2021-07-23",
+  "uri": "https://api.scryfall.com/cards/86881c5f-df5e-4f50-b554-e4c49d5316f9",
+  "scryfall_uri": "https://scryfall.com/card/tafr/8/vecna?utm_source=api",
+  "layout": "token",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T07:05:47Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/8/6/86881c5f-df5e-4f50-b554-e4c49d5316f9.jpg?1783926347",
+    "normal": "https://cards.scryfall.io/normal/front/8/6/86881c5f-df5e-4f50-b554-e4c49d5316f9.jpg?1783926347",
+    "large": "https://cards.scryfall.io/large/front/8/6/86881c5f-df5e-4f50-b554-e4c49d5316f9.jpg?1783926347",
+    "png": "https://cards.scryfall.io/png/front/8/6/86881c5f-df5e-4f50-b554-e4c49d5316f9.png?1783926347",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/8/6/86881c5f-df5e-4f50-b554-e4c49d5316f9.jpg?1783926347",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/8/6/86881c5f-df5e-4f50-b554-e4c49d5316f9.jpg?1783926347",
+    "thumb": "https://cards.scryfall.io/thumb/front/8/6/86881c5f-df5e-4f50-b554-e4c49d5316f9.webp?1783926347",
+    "grid": "https://cards.scryfall.io/grid/front/8/6/86881c5f-df5e-4f50-b554-e4c49d5316f9.webp?1783926347",
+    "display": "https://cards.scryfall.io/display/front/8/6/86881c5f-df5e-4f50-b554-e4c49d5316f9.webp?1783926347",
+    "art": "https://cards.scryfall.io/art/front/8/6/86881c5f-df5e-4f50-b554-e4c49d5316f9.webp?1783926347",
+    "crop": "https://cards.scryfall.io/crop/front/8/6/86881c5f-df5e-4f50-b554-e4c49d5316f9.webp?1783926347"
+  },
+  "mana_cost": "",
+  "cmc": 0.0,
+  "type_line": "Token Legendary Creature \u2014 Zombie God",
+  "oracle_text": "Indestructible",
+  "power": "8",
+  "toughness": "8",
+  "colors": [
+    "B"
+  ],
+  "color_identity": [
+    "B"
+  ],
+  "keywords": [
+    "Indestructible"
+  ],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "5ff69e99-61ff-4dd3-abf7-9c35407b75d3",
+      "component": "combo_piece",
+      "name": "Eye of Vecna",
+      "type_line": "Legendary Artifact",
+      "uri": "https://api.scryfall.com/cards/5ff69e99-61ff-4dd3-abf7-9c35407b75d3"
+    },
+    {
+      "object": "related_card",
+      "id": "48b4a449-08b3-4dd9-ba14-3e6853b15eb0",
+      "component": "combo_piece",
+      "name": "Hand of Vecna",
+      "type_line": "Legendary Artifact \u2014 Equipment",
+      "uri": "https://api.scryfall.com/cards/48b4a449-08b3-4dd9-ba14-3e6853b15eb0"
+    },
+    {
+      "object": "related_card",
+      "id": "86881c5f-df5e-4f50-b554-e4c49d5316f9",
+      "component": "token",
+      "name": "Vecna",
+      "type_line": "Token Legendary Creature \u2014 Zombie God",
+      "uri": "https://api.scryfall.com/cards/86881c5f-df5e-4f50-b554-e4c49d5316f9"
+    },
+    {
+      "object": "related_card",
+      "id": "c2711992-84e8-409a-ad4a-25f69d0c4e06",
+      "component": "combo_piece",
+      "name": "The Book of Vile Darkness",
+      "type_line": "Legendary Artifact \u2014 Book",
+      "uri": "https://api.scryfall.com/cards/c2711992-84e8-409a-ad4a-25f69d0c4e06"
+    }
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "not_legal",
+    "legacy": "not_legal",
+    "pauper": "not_legal",
+    "vintage": "not_legal",
+    "penny": "not_legal",
+    "commander": "not_legal",
+    "oathbreaker": "not_legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "not_legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "68e8eca4-2c75-4f44-8519-59489e76b719",
+  "set": "tafr",
+  "set_name": "Adventures in the Forgotten Realms Tokens",
+  "set_type": "token",
+  "set_uri": "https://api.scryfall.com/sets/68e8eca4-2c75-4f44-8519-59489e76b719",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Atafr&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/tafr?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/86881c5f-df5e-4f50-b554-e4c49d5316f9/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Aaeeba0a5-46c0-4637-8761-45be738a18a3&unique=prints",
+  "collector_number": "8",
+  "digital": false,
+  "rarity": "common",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Irina Nordsol",
+  "artist_ids": [
+    "1e4cb52d-476e-4c68-ac87-2e620aede6d4"
+  ],
+  "illustration_id": "505c5a5a-5fe6-4b39-ba3b-73e405a8c803",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "preview": {
+    "source": "Wizards of the Coast",
+    "source_uri": "https://www.youtube.com/watch?v=WRLSIMz2Rb4",
+    "previewed_at": "2021-07-07"
+  },
+  "prices": {
+    "usd": "5.20",
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": null,
+    "eur_foil": null,
+    "tix": null
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DVecna",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DVecna",
+    "edhrec": "https://edhrec.com/route/?cc=Vecna"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F244128%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products/Search?referrer=scryfall&searchString=Vecna&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards?affiliate_id=scryfall&data%5Bsearch%5D=Vecna&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

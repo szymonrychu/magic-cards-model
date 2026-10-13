@@ -4963,8 +4963,8 @@ def _merge_look_top_may_reveal_group_to_hand_clauses(
 #: cut already split this away from "put them back in any order" below, so
 #: this clause is read on its own.
 _LOOK_AT_TOP_N_LIBRARY_RE = re.compile(
-    rf"^look at the top (?P<count>{COUNT}) cards? of "
-    r"(?P<subject>your|target player'?s) library$",
+    rf"^look at the top (?P<count>{COUNT}|x) cards? of "
+    r"(?P<subject>your|target player'?s) library(?:, where x is (?P<where_x>.+))?$",
     re.IGNORECASE,
 )
 #: "put them back in any order" - Ponder's own second half of the same
@@ -5004,8 +5004,12 @@ def _merge_look_top_put_back_any_order_clauses(
     look_match = _LOOK_AT_TOP_N_LIBRARY_RE.fullmatch(clauses[index].strip())
     if look_match is None:
         return None
-    count = parse_count(look_match.group("count"))
-    if count is None:
+    # "the top X cards of your library, where X is the number of cards in your
+    # hand" (Descendant of Soramaro): X is read as the effect applies (CR 608.2h).
+    where_x = look_match.group("where_x")
+    counted = count_expression(where_x.strip()) if where_x else None
+    count = parse_count(look_match.group("count")) if where_x is None else 0
+    if count is None or (where_x is not None and counted is None):
         return None
     if _PUT_THEM_BACK_IN_ANY_ORDER_RE.fullmatch(clauses[index + 1].strip()) is None:
         return None
@@ -5029,11 +5033,12 @@ def _merge_look_top_put_back_any_order_clauses(
         else:
             subject = controller
 
+        looked = count if counted is None else counted(game, controller.username)
         moved, rest = game.look_at_top_and_split(
             subject,
-            count,
+            looked,
             source=source,
-            prompt=f"look at the top {count} card(s), then put them back in any order",
+            prompt=f"look at the top {looked} card(s), then put them back in any order",
             moved_label="not moved",
             kept_label="top of the library, in any order",
             moved_amount=0,
@@ -6337,8 +6342,8 @@ from .counters import _counter_kind, put_counters_on_ability_targets  # noqa: E4
 #: life gain. The gain does not depend on the damage being dealt: a
 #: prevented damage event still leaves "you gain N life" to happen.
 _DAMAGE_THAT_PLAYER_AND_YOU_GAIN_RE = re.compile(
-    rf"^(?P<damage>[^.]*\bdeals? {COUNT} damage to (?:that player|them|that creature'?s "
-    rf"controller)) and you gain (?P<n>{COUNT}) life\.?$",
+    rf"^(?P<damage>[^.]*\bdeals? (?:{COUNT} damage|damage) to (?:that player|them|that creature'?s "
+    rf"controller)(?: equal to [^.]*?)?) and you gain (?P<gain>[^.]+?)\.?$",
     re.IGNORECASE,
 )
 
@@ -6348,20 +6353,24 @@ def _merge_damage_that_player_and_gain_life_text(
     text: str, *, for_spell: bool
 ) -> AbilityEffect | None:
     """`_DAMAGE_THAT_PLAYER_AND_YOU_GAIN_RE`'s pair. Ability-only: "that
-    player" is the triggering event's (CR 603.2)."""
+    player" is the triggering event's (CR 603.2). Either half may be scaled:
+    Sword of War and Peace's "deals damage to that player equal to the number
+    of cards in their hand and you gain 1 life for each card in your hand" is
+    two instructions with different zone owners (CR 402.1), each counted as it
+    is followed (CR 608.2h)."""
     if for_spell or "and you gain" not in text.lower():
         return None
     match = _DAMAGE_THAT_PLAYER_AND_YOU_GAIN_RE.fullmatch(text.strip())
     if match is None:
         return None
     damage = _parse_damage_that_player_clause(match.group("damage"), for_spell=False)
-    gained = parse_count(match.group("n"))
+    gained = _parse_mixed_clause(f"you gain {match.group('gain')}", for_spell=False)
     if damage is None or gained is None:
         return None
 
     def effect(game: "Game", ability: AbilityOnStack) -> None:
         damage(game, ability)
-        game.gain_life(game.controller_of(ability), gained)
+        gained(game, ability)
 
     return effect
 
