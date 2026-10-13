@@ -1,0 +1,129 @@
+{
+  "object": "card",
+  "id": "98b84356-fa97-4f61-bd84-e8efd7f46e38",
+  "oracle_id": "530f088d-bfa1-4410-b1aa-ade8abdb2b7a",
+  "multiverse_ids": [
+    532492
+  ],
+  "tcgplayer_id": 243898,
+  "cardmarket_id": 572278,
+  "name": "Phthisis",
+  "lang": "en",
+  "released_at": "2021-07-23",
+  "uri": "https://api.scryfall.com/cards/98b84356-fa97-4f61-bd84-e8efd7f46e38",
+  "scryfall_uri": "https://scryfall.com/card/afc/105/phthisis?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T07:03:36Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/9/8/98b84356-fa97-4f61-bd84-e8efd7f46e38.jpg?1783926216",
+    "normal": "https://cards.scryfall.io/normal/front/9/8/98b84356-fa97-4f61-bd84-e8efd7f46e38.jpg?1783926216",
+    "large": "https://cards.scryfall.io/large/front/9/8/98b84356-fa97-4f61-bd84-e8efd7f46e38.jpg?1783926216",
+    "png": "https://cards.scryfall.io/png/front/9/8/98b84356-fa97-4f61-bd84-e8efd7f46e38.png?1783926216",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/9/8/98b84356-fa97-4f61-bd84-e8efd7f46e38.jpg?1783926216",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/9/8/98b84356-fa97-4f61-bd84-e8efd7f46e38.jpg?1783926216",
+    "thumb": "https://cards.scryfall.io/thumb/front/9/8/98b84356-fa97-4f61-bd84-e8efd7f46e38.webp?1783926216",
+    "grid": "https://cards.scryfall.io/grid/front/9/8/98b84356-fa97-4f61-bd84-e8efd7f46e38.webp?1783926216",
+    "display": "https://cards.scryfall.io/display/front/9/8/98b84356-fa97-4f61-bd84-e8efd7f46e38.webp?1783926216",
+    "art": "https://cards.scryfall.io/art/front/9/8/98b84356-fa97-4f61-bd84-e8efd7f46e38.webp?1783926216",
+    "crop": "https://cards.scryfall.io/crop/front/9/8/98b84356-fa97-4f61-bd84-e8efd7f46e38.webp?1783926216"
+  },
+  "mana_cost": "{3}{B}{B}{B}{B}",
+  "cmc": 7.0,
+  "type_line": "Sorcery",
+  "oracle_text": "Destroy target creature. Its controller loses life equal to its power plus its toughness.\nSuspend 5\u2014{1}{B} (Rather than cast this card from your hand, you may pay {1}{B} and exile it with five time counters on it. At the beginning of your upkeep, remove a time counter. When the last is removed, you may cast it without paying its mana cost.)",
+  "colors": [
+    "B"
+  ],
+  "color_identity": [
+    "B"
+  ],
+  "keywords": [
+    "Suspend"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": false,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "db1b46f9-893c-4623-9465-985ff6e4472c",
+  "set": "afc",
+  "set_name": "Forgotten Realms Commander",
+  "set_type": "commander",
+  "set_uri": "https://api.scryfall.com/sets/db1b46f9-893c-4623-9465-985ff6e4472c",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Aafc&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/afc?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/98b84356-fa97-4f61-bd84-e8efd7f46e38/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A530f088d-bfa1-4410-b1aa-ade8abdb2b7a&unique=prints",
+  "collector_number": "105",
+  "digital": false,
+  "rarity": "uncommon",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Carl Critchlow",
+  "artist_ids": [
+    "17948f16-611a-44b8-8d10-9895a0bdfff1"
+  ],
+  "illustration_id": "fe3cb8de-b7c2-4766-8e99-5a27c8d14de1",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "edhrec_rank": 14607,
+  "penny_rank": 16013,
+  "prices": {
+    "usd": "0.32",
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": "0.08",
+    "eur_foil": null,
+    "tix": null
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=532492&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DPhthisis",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DPhthisis",
+    "edhrec": "https://edhrec.com/route/?cc=Phthisis"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F243898%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=572278&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards?affiliate_id=scryfall&data%5Bsearch%5D=Phthisis&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

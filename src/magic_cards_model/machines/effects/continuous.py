@@ -68,6 +68,7 @@ from ..delayed import (
     RevokeGrantedAbility,
     parse_anaphoric_delayed_clause,
 )
+from ..ep02_r1_controller_recipients import attach_may_then_rider_effect
 from ..land_animation import (
     retained_animation_effect,
     retained_animation_sentence,
@@ -5193,6 +5194,16 @@ def _attach_self_to_announced_target(game: "Game", ability: AbilityOnStack) -> C
 
 
 @ABILITY_TEXT.rung("s20")
+def _parse_attach_may_then_rider_clause(text: str) -> AbilityEffect | None:
+    """ "You may attach it to target creature you control. If you do, that
+    creature gains first strike until end of turn and must be blocked this turn
+    if able." (`ep02_r1_controller_recipients.attach_may_then_rider_effect`)."""
+    if "if you do" not in text.lower() or "attach" not in text.lower():
+        return None
+    return attach_may_then_rider_effect(text)
+
+
+@ABILITY_TEXT.rung("s20")
 def _attach_self_to_target_effect(text: str) -> AbilityEffect | None:
     """`_ATTACH_SELF_TO_TARGET_RE`: the source attached to the target the
     ability announced (CR 603.3d), rechecked by `Game.resolve_targets` (CR
@@ -8194,7 +8205,7 @@ def _parse_goad_for_each_opponent_then_counters_clause(
 #: the ordinary `ENTERS_THE_BATTLEFIELD` machinery, and is no part of this
 #: effect body at all.
 _MAY_ATTACH_TO_ENTERING_CREATURE_RE = re.compile(
-    r"^you may attach (?P<what>it|this (?:equipment|aura|fortification|permanent)"
+    r"^(?P<may>you may )?attach (?P<what>it|this (?:equipment|aura|fortification|permanent)"
     r"|target (?P<kind>equipment|aura|fortification) you control"
     r"(?: with mana value (?P<mv>\d+)(?: or (?P<mv2>\d+))?)?) "
     r"to (?P<where>it|that (?:creature|permanent)|this (?:creature|permanent)"
@@ -8221,6 +8232,10 @@ def _parse_may_attach_to_entering_creature_clause(text: str) -> AbilityEffect | 
         return None
     what = match.group("what").lower()
     where = match.group("where").lower()
+    if match.group("may") is None and not (
+        what.startswith("this ") and where in ("that creature", "that permanent")
+    ):
+        return None  # a bare "attach it to target creature you control" is the plain attach
     values = {int(value) for value in (match.group("mv"), match.group("mv2")) if value is not None}
     wanted = (match.group("kind") or "").capitalize()
 
@@ -8256,7 +8271,10 @@ def _parse_may_attach_to_entering_creature_clause(text: str) -> AbilityEffect | 
         if source is None or source.zone is not Zone.BATTLEFIELD:
             return
         controller = game.controller_of(ability)
-        decision = game.ask(
+        # Illusory Gains' "Whenever a creature an opponent controls enters,
+        # attach this Aura to that creature." prints no "you may": the same
+        # attach, not offered.
+        decision = match.group("may") is None or game.ask(
             Decision(
                 kind=DecisionKind.MAY,
                 player=controller.username,

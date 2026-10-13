@@ -2234,11 +2234,12 @@ def _condition_matches(
         # "a creature you control attacks alone").
         if "a player alone" not in lowered and "alone" in lowered and not event.attacking_alone:
             return False
-        if "equipped" in lowered and not _AN_EQUIPPED_CREATURE_RE.search(lowered):
+        if _ATTACHED_SUBJECT_RE.search(lowered) and not _AN_EQUIPPED_CREATURE_RE.search(lowered):
             # S.H.I.E.L.D. Spy Kit's own "Whenever equipped creature attacks
             # alone, ..." - the attacker has to be the one this Equipment is
             # attached to (CR 301.5a), not merely any lone attacker the
-            # controller happens to have.
+            # controller happens to have. An Aura's "enchanted creature
+            # attacks" (Sinister Possession) is the same look-up (CR 303.4).
             return event.subject_id is not None and event.subject_id == source.attached_to
         defended = _ATTACKS_YOU_RE.search(lowered)
         if defended is not None:
@@ -2309,6 +2310,22 @@ def _condition_matches(
             and "equipped creature blocks or becomes blocked by one or more creatures" in lowered
         ):
             return _equipped_blocks_or_is_blocked_once(game, event, source.attached_to)
+        if (
+            _ATTACHED_SUBJECT_RE.search(lowered)
+            and not _AN_EQUIPPED_CREATURE_RE.search(lowered)
+            and re.search(r"\bblocks\b", lowered)
+            and "becomes blocked" not in lowered
+        ):
+            # "Whenever enchanted creature blocks" (Sinister Possession): the
+            # blocker has to be the creature this Aura is attached to
+            # (CR 303.4), and CR 509.3a's once-per-combat reading applies
+            # unless the text names a creature it blocks (CR 509.3b).
+            if source.attached_to is None or event.subject_id != source.attached_to:
+                return False
+            if _BLOCKS_A_CREATURE_RE.search(lowered):
+                return True
+            first = game.combat.attack_blocked_by(event.subject_id)
+            return first is None or first.attacker_id == event.related_id
         if mine:
             blocks = "blocks" in lowered and event.subject_id == source.id
             if blocks and not _BLOCKS_A_CREATURE_RE.search(lowered):

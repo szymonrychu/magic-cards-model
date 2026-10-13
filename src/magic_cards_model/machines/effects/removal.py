@@ -3478,7 +3478,8 @@ def _parse_sacrifice_all_you_control_clause(sentence: str) -> TargetedClause | N
 #: own sacrifice ability and is read the same way, though none of the pool's
 #: printings need it yet.
 _DESTROY_OR_EXILE_ATTACHED_RE = re.compile(
-    r"^(?P<verb>destroy|exile) (?:enchanted|equipped) (?:creature|permanent)\.?$",
+    r"^(?P<verb>destroy|exile) (?:enchanted|equipped|fortified) "
+    r"(?:creature|permanent|land|artifact)\.?$",
     re.IGNORECASE,
 )
 
@@ -10060,6 +10061,13 @@ def _parse_destroy_event_referent_clause(clause: str, *, for_spell: bool) -> Tar
     return effect
 
 
+@ABILITY_TEXT.rung("s25")
+def _parse_destroy_it_event_text(text: str) -> AbilityEffect | None:
+    """ "destroy it": the object the trigger's event names
+    (`ep02_r1_controller_recipients.destroy_event_subject_effect`)."""
+    return destroy_event_subject_effect(text)
+
+
 #: "Sacrifice a permanent for each 1 life you lost." (Lich's Tomb) - the
 #: trigger's own life-loss amount (CR 119.3, `GameEvent.amount`), one permanent
 #: of the controller's choice per point (CR 701.21a).
@@ -10131,6 +10139,7 @@ def _parse_destroy_random_attacked_creature_text(text: str) -> TargetedClause | 
 
 from ..d20_tables import roll_table_effect  # noqa: E402
 from ..ep01_r3_amounts import event_referent_permanent  # noqa: E402
+from ..ep02_r1_controller_recipients import destroy_event_subject_effect  # noqa: E402
 from ..free_cast_price import with_board_priced_cost  # noqa: E402
 from ._common import (  # noqa: E402
     _ANAPHORIC_SUBJECT_RE,

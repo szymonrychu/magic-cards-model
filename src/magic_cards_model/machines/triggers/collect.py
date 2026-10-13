@@ -507,6 +507,14 @@ _ATTACKS_OR_BLOCKS_RE = re.compile(r"^this (?P<kind>[a-z]+) attacks or blocks$",
 #: path by mistake.
 _SELF_ATTACKS_OR_BLOCKS_RE = re.compile(r"^attack(?:s)? or block(?:s)?$", re.IGNORECASE)
 
+#: "Whenever enchanted creature attacks or blocks, ..." (Sinister Possession,
+#: Contaminated Bond): `_ATTACKS_OR_BLOCKS_RE`'s compound on the object an Aura,
+#: Equipment or Fortification is attached to (CR 303.4, CR 301.5a), expanded
+#: into its attack half and its block half with the attached subject kept.
+_ATTACHED_ATTACKS_OR_BLOCKS_RE = re.compile(
+    r"^(?P<subject>(?:enchanted|equipped|fortified) [a-z]+) attacks or blocks$", re.IGNORECASE
+)
+
 #: Doran, Besieged by Time: "Whenever a creature you control attacks or
 #: blocks, ..." - `_ATTACKS_OR_BLOCKS_RE`'s identical compound-event gap
 #: (`_trigger_event` stops at the first event word it recognises), but on
@@ -536,6 +544,17 @@ def _expand_attacks_or_blocks(
     Every other printed ability passes through unchanged, singleton-wrapped.
     """
     condition = ability.condition.strip()
+    attached = _ATTACHED_ATTACKS_OR_BLOCKS_RE.match(condition)
+    if attached is not None:
+        subject = attached.group("subject")
+        return [
+            ability.model_copy(
+                update={"condition": f"{subject} attacks", "event": TriggerEvent.ATTACKS}
+            ),
+            ability.model_copy(
+                update={"condition": f"{subject} blocks", "event": TriggerEvent.BLOCKS}
+            ),
+        ]
     match = _ATTACKS_OR_BLOCKS_RE.match(condition)
     kind = match.group("kind").lower() if match is not None else "creature"
     if match is None and card_name is not None:

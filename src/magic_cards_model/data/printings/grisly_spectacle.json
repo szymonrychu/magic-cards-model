@@ -1,0 +1,134 @@
+{
+  "object": "card",
+  "id": "3ce3816e-0f81-40b6-a592-ba2c65243c6d",
+  "oracle_id": "8c83d21a-6138-409f-8e00-75dcd14388e2",
+  "multiverse_ids": [
+    438658
+  ],
+  "mtgo_id": 66063,
+  "mtgo_foil_id": 66064,
+  "tcgplayer_id": 145441,
+  "cardmarket_id": 301460,
+  "name": "Grisly Spectacle",
+  "lang": "en",
+  "released_at": "2017-11-17",
+  "uri": "https://api.scryfall.com/cards/3ce3816e-0f81-40b6-a592-ba2c65243c6d",
+  "scryfall_uri": "https://scryfall.com/card/ima/92/grisly-spectacle?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T09:38:58Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/3/c/3ce3816e-0f81-40b6-a592-ba2c65243c6d.jpg?1783935538",
+    "normal": "https://cards.scryfall.io/normal/front/3/c/3ce3816e-0f81-40b6-a592-ba2c65243c6d.jpg?1783935538",
+    "large": "https://cards.scryfall.io/large/front/3/c/3ce3816e-0f81-40b6-a592-ba2c65243c6d.jpg?1783935538",
+    "png": "https://cards.scryfall.io/png/front/3/c/3ce3816e-0f81-40b6-a592-ba2c65243c6d.png?1783935538",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/3/c/3ce3816e-0f81-40b6-a592-ba2c65243c6d.jpg?1783935538",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/3/c/3ce3816e-0f81-40b6-a592-ba2c65243c6d.jpg?1783935538",
+    "thumb": "https://cards.scryfall.io/thumb/front/3/c/3ce3816e-0f81-40b6-a592-ba2c65243c6d.webp?1783935538",
+    "grid": "https://cards.scryfall.io/grid/front/3/c/3ce3816e-0f81-40b6-a592-ba2c65243c6d.webp?1783935538",
+    "display": "https://cards.scryfall.io/display/front/3/c/3ce3816e-0f81-40b6-a592-ba2c65243c6d.webp?1783935538",
+    "art": "https://cards.scryfall.io/art/front/3/c/3ce3816e-0f81-40b6-a592-ba2c65243c6d.webp?1783935538",
+    "crop": "https://cards.scryfall.io/crop/front/3/c/3ce3816e-0f81-40b6-a592-ba2c65243c6d.webp?1783935538"
+  },
+  "mana_cost": "{2}{B}{B}",
+  "cmc": 4.0,
+  "type_line": "Instant",
+  "oracle_text": "Destroy target nonartifact creature. Its controller mills cards equal to that creature's power.",
+  "colors": [
+    "B"
+  ],
+  "color_identity": [
+    "B"
+  ],
+  "keywords": [
+    "Mill"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "741bcd30-7709-4133-8919-f4b46483bed7",
+  "set": "ima",
+  "set_name": "Iconic Masters",
+  "set_type": "masters",
+  "set_uri": "https://api.scryfall.com/sets/741bcd30-7709-4133-8919-f4b46483bed7",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Aima&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/ima?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/3ce3816e-0f81-40b6-a592-ba2c65243c6d/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A8c83d21a-6138-409f-8e00-75dcd14388e2&unique=prints",
+  "collector_number": "92",
+  "digital": false,
+  "rarity": "common",
+  "flavor_text": "\"Watch people flock to a murder scene. Then tell me we're not all a little sick in the head.\"\n\u2014Juri, proprietor of the Juri Revue",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Zoltan Boros",
+  "artist_ids": [
+    "1885e6cb-c827-4896-994e-3d0a027d602f"
+  ],
+  "illustration_id": "2c59b24d-75a3-453f-ae5b-05af8e2ab234",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 11933,
+  "penny_rank": 13543,
+  "prices": {
+    "usd": "0.13",
+    "usd_foil": "0.39",
+    "usd_etched": null,
+    "eur": "0.05",
+    "eur_foil": "0.18",
+    "tix": "0.04"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=438658&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DGrisly%2BSpectacle",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DGrisly%2BSpectacle",
+    "edhrec": "https://edhrec.com/route/?cc=Grisly+Spectacle"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F145441%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=301460&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/66063?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}
