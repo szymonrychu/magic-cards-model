@@ -179,8 +179,8 @@ def test_bontu_declining_leaves_it_in_the_graveyard():
 
 def _witch_board(**extra):
     return _board(
-        alice_lands=("Swamp",),
-        alice_battlefield=["Sol Ring", "Pacifism", "Grizzly Bears", "Glorious Anthem"],
+        alice_lands=("Plains",),
+        alice_battlefield=["Sol Ring", "Ghostly Prison", "Grizzly Bears", "Glorious Anthem"],
         **extra,
     )
 
@@ -192,7 +192,22 @@ def test_witchkite_offers_artifacts_enchantments_and_tokens_only():
     _resolve_all(scenario)
     (question,) = _question(scenario, "Malevolent Witchkite")
     names = sorted(scenario.game.find_by_id(cid).name for cid in question.cards)
-    assert names == ["Glorious Anthem", "Pacifism", "Sol Ring"]
+    assert names == ["Ghostly Prison", "Glorious Anthem", "Sol Ring"]
+
+
+def test_witchkite_offers_tokens_too_even_when_they_are_creatures():
+    scenario = _witch_board(alice_hand=["Malevolent Witchkite", "Raise the Alarm"])
+    _cast(scenario, "Raise the Alarm")
+    soldiers = [s for s in scenario.game.battlefield if s.token and s.controller == "alice"]
+    assert len(soldiers) == 2
+    scenario.will_choose_cards(*soldiers, source="Malevolent Witchkite")
+    scenario.put_onto_battlefield("Malevolent Witchkite")
+    _resolve_all(scenario)
+    (question,) = _question(scenario, "Malevolent Witchkite")
+    assert {s.id for s in soldiers} <= set(question.cards)
+    bear = scenario.creature("Grizzly Bears", "alice")
+    assert bear.id not in question.cards
+    assert all(s.zone is not Zone.BATTLEFIELD for s in soldiers)
 
 
 def test_witchkite_draws_one_per_permanent_sacrificed():
@@ -211,15 +226,15 @@ def test_lich_knights_conquest_returns_that_many_creatures_from_the_graveyard(sa
     scenario = _board(
         alice_hand=["Lich-Knights' Conquest"],
         alice_lands=("Swamp",) * 5,
-        alice_battlefield=["Sol Ring", "Pacifism", "Glorious Anthem"],
+        alice_battlefield=["Sol Ring", "Ghostly Prison", "Glorious Anthem"],
         alice_graveyard=["Grizzly Bears", "Serra Angel", "Elvish Mystic"],
     )
     ring = scenario.find("Sol Ring", Zone.BATTLEFIELD, "alice")
-    pacifism = scenario.find("Pacifism", Zone.BATTLEFIELD, "alice")
+    prison = scenario.find("Ghostly Prison", Zone.BATTLEFIELD, "alice")
     back = [
         s for s in scenario.player("alice").graveyard if s.name in ("Serra Angel", "Elvish Mystic")
     ]
-    scenario.will_choose_cards(*[ring, pacifism][:sacrificed], source="Lich-Knights' Conquest")
+    scenario.will_choose_cards(*[ring, prison][:sacrificed], source="Lich-Knights' Conquest")
     scenario.will_choose_cards(*back[:sacrificed], source="Lich-Knights' Conquest")
     _cast(scenario, "Lich-Knights' Conquest")
     returned = [s for s in back if s.zone is Zone.BATTLEFIELD]
@@ -230,13 +245,13 @@ def test_lich_knights_conquest_returns_as_many_as_it_can_when_the_graveyard_is_s
     scenario = _board(
         alice_hand=["Lich-Knights' Conquest"],
         alice_lands=("Swamp",) * 5,
-        alice_battlefield=["Sol Ring", "Pacifism"],
+        alice_battlefield=["Sol Ring", "Ghostly Prison"],
         alice_graveyard=["Grizzly Bears"],
     )
     ring = scenario.find("Sol Ring", Zone.BATTLEFIELD, "alice")
-    pacifism = scenario.find("Pacifism", Zone.BATTLEFIELD, "alice")
+    prison = scenario.find("Ghostly Prison", Zone.BATTLEFIELD, "alice")
     bears = scenario.find("Grizzly Bears", Zone.GRAVEYARD, "alice")
-    scenario.will_choose_cards(ring, pacifism, source="Lich-Knights' Conquest")
+    scenario.will_choose_cards(ring, prison, source="Lich-Knights' Conquest")
     scenario.will_choose_cards(bears, source="Lich-Knights' Conquest")
     _cast(scenario, "Lich-Knights' Conquest")
     assert bears.zone is Zone.BATTLEFIELD
@@ -377,6 +392,7 @@ def _opt_into_spike(scenario):
     scenario.pass_priority("alice")
     bob_islands = scenario.untapped_sources("Island", "Island", username="bob")
     scenario.cast_and_resolve("Aether Spike", *bob_islands, username="bob", targets=[opt])
+    _resolve_all(scenario)
     return opt
 
 
@@ -385,7 +401,7 @@ def test_aether_spike_counters_unless_its_controller_pays_one_per_energy_paid():
     scenario.will_pay_energy_amount(2, username="bob", source="Aether Spike")
     scenario.will_pay_the_mana_cost(False, username="alice", source="Aether Spike")
     opt = _opt_into_spike(scenario)
-    assert opt.zone is Zone.GRAVEYARD
+    assert len(scenario.player("alice").hand) == 0, "Opt was countered before it drew"
     assert scenario.player("bob").energy == 0
 
 
@@ -394,7 +410,7 @@ def test_aether_spike_does_nothing_when_the_controller_pays():
     scenario.will_pay_energy_amount(2, username="bob", source="Aether Spike")
     scenario.will_pay_the_mana_cost(True, username="alice", source="Aether Spike")
     opt = _opt_into_spike(scenario)
-    assert opt.zone is not Zone.GRAVEYARD or opt.name == "Opt"
+    assert len(scenario.player("alice").hand) == 1, "Opt resolved and drew"
     assert scenario.player("bob").energy == 0
     assert all(s.tapped for s in scenario.game.battlefield if s.controller == "alice")
 
@@ -404,7 +420,7 @@ def test_aether_spike_paying_no_energy_counters_nothing_to_pay():
     scenario.will_pay_energy_amount(0, username="bob", source="Aether Spike")
     opt = _opt_into_spike(scenario)
     assert scenario.player("bob").energy == 2
-    assert opt.zone is not Zone.GRAVEYARD or opt.name == "Opt"
+    assert len(scenario.player("alice").hand) == 1, "paying {0} owes nothing, so Opt resolved"
 
 
 def test_aether_spike_refuses_more_energy_than_held():

@@ -139,26 +139,37 @@ def _hand_card_matcher(description: str) -> Callable[["Game", str, CardState], b
     return matches
 
 
-def _permanent_matcher(description: str) -> tuple[bool, Callable[..., bool]] | None:
-    """`(untapped_only, predicate)` for "untapped creatures", "Mountains"."""
+_LIST_SPLIT_RE = re.compile(r"\s*,\s*(?:and/or\s+|or\s+|and\s+)?|\s+and/or\s+|\s+or\s+")
+
+
+def _permanent_matcher(description: str) -> tuple[bool, bool, Callable[..., bool]] | None:
+    """`(untapped_only, other, predicate)` for "untapped creatures", "Mountains",
+    "other permanents", "artifacts, enchantments, and/or tokens" - a list of
+    descriptions names a permanent that fits any one of them."""
     from .targeting import permanent_description
 
     text = description.strip()
     untapped = text.lower().startswith("untapped ")
     if untapped:
         text = text[len("untapped ") :]
-    requirement = permanent_description(_singular(text))
-    if requirement is None:
-        return None
+    other = text.lower().startswith("other ")
+    if other:
+        text = text[len("other ") :]
+    requirements = []
+    for part in _LIST_SPLIT_RE.split(text):
+        requirement = permanent_description(_singular(part))
+        if requirement is None:
+            return None
+        requirements.append(requirement)
 
     def matches(game: "Game", controller: str, state: CardState) -> bool:
-        return requirement.rejects(state, controller, game) is None
+        return any(r.rejects(state, controller, game) is None for r in requirements)
 
-    return untapped, matches
+    return untapped, other, matches
 
 
 @functools.cache
-def _any_number_plan(clause: str) -> tuple[str, Callable[..., bool], bool] | None:
+def _any_number_plan(clause: str) -> tuple[str, Callable[..., bool], bool, bool] | None:
     match = _ANY_NUMBER_RE.fullmatch(clause.strip().rstrip("."))
     if match is None:
         return None
@@ -174,14 +185,14 @@ def _any_number_plan(clause: str) -> tuple[str, Callable[..., bool], bool] | Non
         if where not in ("", "you control") or _SACRIFICE_N_GROUP_RE.fullmatch(clause.strip()):
             return None
         permanent = _permanent_matcher(description)
-        return None if permanent is None else ("sacrifice", permanent[1], False)
+        return None if permanent is None else ("sacrifice", permanent[2], False, permanent[1])
     if not where:
         return None
     if verb == "reveal":
         if where == "you control":
             return None
         hand = _hand_card_matcher(description)
-        return None if hand is None else ("reveal", hand, False)
+        return None if hand is None else ("reveal", hand, False, False)
     if not where.startswith("you control"):
         return None
     to_hand = " to " in where
@@ -190,10 +201,10 @@ def _any_number_plan(clause: str) -> tuple[str, Callable[..., bool], bool] | Non
     permanent = _permanent_matcher(description)
     if permanent is None:
         return None
-    untapped, predicate = permanent
+    untapped, other, predicate = permanent
     if verb == "tap" and not untapped:
         return None
-    return verb, predicate, untapped
+    return verb, predicate, untapped, other
 
 
 def choose_any_number(
@@ -229,15 +240,18 @@ def any_number_chosen(game: "Game", stack_object: Any, clause: str) -> list[Card
     plan = _any_number_plan(clause)
     if plan is None:
         return None
-    verb, predicate, untapped = plan
+    verb, predicate, untapped, other = plan
     player = _controller(game, stack_object)
+    source_id = source_id_of(stack_object)
     if verb == "reveal":
         candidates = [s for s in player.hand if predicate(game, player.username, s)]
     else:
         candidates = [
             s
             for s in game.permanents_controlled_by(player.username)
-            if predicate(game, player.username, s) and not (untapped and s.tapped)
+            if predicate(game, player.username, s)
+            and not (untapped and s.tapped)
+            and not (other and str(s.id) == str(source_id))
         ]
     chosen = choose_any_number(game, stack_object, player, candidates, clause.strip().rstrip("."))
     done: list[CardState] = []
@@ -1396,3 +1410,139 @@ def _parse_play_exiled_this_turn_ability(text: str) -> Any:
 def _parse_play_exiled_this_turn_spell(text: str) -> Any:
     """`play_exiled_this_turn_effect` as a spell's whole text."""
     return play_exiled_this_turn_effect(text, True)
+
+
+# --------------------------------------------------------------------------
+# "Target opponent reveals N cards from their hand. You choose one of them
+# and exile it." (the payoff after "pay any amount of life")
+# --------------------------------------------------------------------------
+
+_REVEAL_N_CHOOSE_EXILE_RE = re.compile(
+    r"^target (?:opponent|player) reveals (?P<n>\d+) cards? from their hand\.\s*"
+    r"you choose (?:one|a card) of them and exile it\.?$",
+    re.IGNORECASE,
+)
+
+
+def reveal_n_choose_exile_effect(text: str, for_spell: bool) -> Any:
+    """ "Target opponent reveals N cards from their hand. You choose one of
+    them and exile it." (Vizkopa Confessor, N written in from "that many"):
+    the revealing player picks which N cards - every card when the hand is
+    shorter (CR 609.3) - and reveals them (CR 701.20a); the effect's
+    controller then chooses one of those cards and it is exiled (CR 701.13a),
+    the choice made as the effect resolves (CR 608.2d)."""
+    if " reveals " not in text.lower() or "of them and exile it" not in text.lower():
+        return None
+    match = _REVEAL_N_CHOOSE_EXILE_RE.fullmatch(" ".join(text.strip().split()))
+    if match is None:
+        return None
+    wanted = int(match.group("n"))
+
+    def effect(game: "Game", stack_object: Any) -> None:
+        controller = _controller(game, stack_object)
+        revealer = next(
+            (t for t in game.resolve_targets(stack_object) if isinstance(t, Player)), None
+        )
+        if revealer is None or wanted <= 0:
+            return
+        hand = list(revealer.hand)
+        revealed = hand
+        if len(hand) > wanted:
+            picked = game.ask(
+                Decision(
+                    kind=DecisionKind.CHOOSE_CARDS,
+                    player=revealer.username,
+                    prompt=f"reveal {wanted} cards from your hand",
+                    source=_source_name(stack_object),
+                    source_id=source_id_of(stack_object),
+                    amount=wanted,
+                    exact=True,
+                    cards=tuple(state.id for state in hand),
+                )
+            )
+            by_id = {state.id: state for state in hand}
+            revealed = [by_id[card_id] for card_id in picked]
+        for state in revealed:
+            game.reveal(state, source=_source_name(stack_object))
+        if not revealed:
+            return
+        chosen = game.ask(
+            Decision(
+                kind=DecisionKind.CHOOSE_CARDS,
+                player=controller.username,
+                prompt=f"choose one of the cards {revealer.username} revealed to exile",
+                source=_source_name(stack_object),
+                source_id=source_id_of(stack_object),
+                amount=1,
+                exact=True,
+                cards=tuple(state.id for state in revealed),
+            )
+        )
+        by_id = {state.id: state for state in revealed}
+        for card_id in chosen:
+            game.exile_permanent(by_id[card_id])
+
+    return effect
+
+
+@ABILITY_TEXT.rung("s40", before=("parse_mixed_effect",))
+def _parse_reveal_n_choose_exile_ability(text: str) -> Any:
+    """`reveal_n_choose_exile_effect` as an ability's whole text."""
+    return reveal_n_choose_exile_effect(text, False)
+
+
+@SPELL_TEXT.rung("s23")
+def _parse_reveal_n_choose_exile_spell(text: str) -> Any:
+    """`reveal_n_choose_exile_effect` as a spell's whole text."""
+    return reveal_n_choose_exile_effect(text, True)
+
+
+# --------------------------------------------------------------------------
+# "Counter target spell unless its controller pays {1} for each {E} paid
+# this way." (Aether Spike)
+# --------------------------------------------------------------------------
+
+_COUNTER_UNLESS_PAYS_PER_RE = re.compile(
+    r"^counter (?P<phrase>target [^.]*?spell) unless its controller pays "
+    r"\{(?P<n>\d+)\} for each \{e\} paid this way\.?$",
+    re.IGNORECASE,
+)
+
+
+@MIXED_CLAUSE.rung("s32", for_spell=FORWARD)
+def _parse_counter_unless_pays_per_energy_clause(clause: str, *, for_spell: bool) -> Any:
+    """ "Counter target spell unless its controller pays {N} for each {E} paid
+    this way." (CR 118.12a, CR 608.2c): the spell's controller is offered
+    {N} times the energy the preceding "pay any amount of {E}" really took
+    (the recorded count); nothing owed means nothing to decline, so the spell
+    is not countered."""
+    if "for each {e} paid this way" not in clause.lower():
+        return None
+    match = _COUNTER_UNLESS_PAYS_PER_RE.fullmatch(clause.strip())
+    if match is None:
+        return None
+    from .effects._common import _targets_understood
+
+    if not _targets_understood(match.group("phrase"), battlefield_only=False):
+        return None
+    unit = int(match.group("n"))
+
+    def effect(game: "Game", stack_object: Any) -> None:
+        owed = unit * (game.recorded_count() or 0)
+        for reference in stack_object.targets:
+            if not reference.is_card:
+                continue
+            target = next((item for item in game.stack if item.id == reference.card_id), None)
+            if target is None:
+                continue
+            if owed > 0 and game.may_pay_mana(
+                target.controller,
+                owed,
+                source=_source_name(stack_object),
+                source_id=source_id_of(stack_object),
+            ):
+                continue
+            if owed > 0:
+                game.counter(target)
+
+    return effect

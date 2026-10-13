@@ -4585,14 +4585,14 @@ def _dead_self_found(game: "Game", ability: "AbilityOnStack") -> CardState | Non
 _DEAD_OBJECT_TO_LIBRARY_RE = re.compile(
     r"^(?:you may )?"
     r"(?:"
-    r"put (?:it|this (?:permanent|creature|card|artifact))(?: from your graveyard)? "
-    r"on (?:the )?(?P<side>top|bottom) of (?:its owner'?s|your) library"
+    r"put (?:it|her|him|this (?:permanent|creature|card|artifact))(?: from your graveyard)? "
+    r"on (?:the )?(?P<side>top|bottom) of (?:its owner'?s|her owner'?s|his owner'?s|your) library"
     r"|"
-    rf"put (?:it|this (?:permanent|creature|card|artifact))(?: from your graveyard)? "
-    rf"into (?:its owner'?s|your) library (?P<ordinal>{ORDINAL}) from the top"
+    rf"put (?:it|her|him|this (?:permanent|creature|card|artifact))(?: from your graveyard)? "
+    rf"into (?:its owner'?s|her owner'?s|his owner'?s|your) library (?P<ordinal>{ORDINAL}) from the top"
     r"|"
-    r"shuffle (?:it|this (?:permanent|creature|card|artifact))(?: from your graveyard)? "
-    r"into (?:its owner'?s|your) library"
+    r"shuffle (?:it|her|him|this (?:permanent|creature|card|artifact))(?: from your graveyard)? "
+    r"into (?:its owner'?s|her owner'?s|his owner'?s|your) library"
     r")\.?$",
     re.IGNORECASE,
 )
