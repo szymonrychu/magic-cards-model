@@ -1083,6 +1083,7 @@ class ContinuousMixin:
             # CR 110.5: "Other tapped creatures you control have
             # indestructible." (Adept Watershaper) reads tapped status,
             # which is a permanent's physical state, not a characteristic.
+            attack_count_by_id=dict(self.attack_count_this_turn),
             tapped_ids=frozenset(
                 permanent.id for permanent in self.battlefield if permanent.tapped
             ),

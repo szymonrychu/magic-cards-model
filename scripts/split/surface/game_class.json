@@ -792,6 +792,7 @@
     "life_gained_this_turn",
     "life_gained_amount_this_turn",
     "became_tapped_count_this_turn",
+    "attack_count_this_turn",
     "attacked_this_turn",
     "exerted_this_turn",
     "attacked_players_this_turn",

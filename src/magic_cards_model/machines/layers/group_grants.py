@@ -91,7 +91,7 @@ _SUFFIX_ATTACHED_RE = re.compile(
     r"(?P<who>you control|your opponents control)$"
 )
 _SUFFIX_ENCHANTED_PLAYER_RE = re.compile(r" enchanted player controls$")
-_SUFFIX_CONTROL_RE = re.compile(r" (?P<who>you control|your opponents control)$")
+_SUFFIX_CONTROL_RE = re.compile(r" (?P<who>you control|you don't control|your opponents control)$")
 _SUFFIX_CHOSEN_RE = re.compile(r" of the chosen type$")
 _SUFFIX_COUNTER_RE = re.compile(
     r" with (?:an? |one or more )?(?P<kind>[a-z+/\-0-9]+) counters? on (?:them|it)$"
@@ -190,6 +190,8 @@ def parse_group(subject: str) -> dict[str, Any] | None:
             any_colors.append(_GROUP_COLORS[word])
         elif word == "colorless":
             fields["colorless"] = True
+        elif word == "multicolored":
+            fields["multicolored"] = True
         elif word in ("legendary", "nonlegendary"):
             fields["legendary"] = word == "legendary"
         elif word == "nontoken":

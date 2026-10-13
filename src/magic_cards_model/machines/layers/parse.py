@@ -132,6 +132,8 @@ def printed_characteristics(
             attached_to=state.attached_to,
             paired_with=state.paired_with,
             transformed=state.transformed,
+            owner=state.owner,
+            tapped=state.tapped,
         )
     # CR 712.8d/712.8e/712.8f: a double-faced permanent has only the
     # characteristics of the face that is up - the front face by default
@@ -188,6 +190,8 @@ def printed_characteristics(
         attached_to=state.attached_to,
         paired_with=state.paired_with,
         transformed=state.transformed,
+        owner=state.owner,
+        tapped=state.tapped,
     )
 
 
@@ -11536,6 +11540,7 @@ def _parse_layer_sentence(sentence: str) -> EffectBuilder | None:
     "during your turn" template, the attached compound grant, and the gated
     self static."""
     from ..attacking_statics import parse_gated_self_static
+    from ..ep02_r3_static_pumps import parse_static_pump
     from .conditional_statics import parse_conditional_static
 
     return (
@@ -11545,6 +11550,7 @@ def _parse_layer_sentence(sentence: str) -> EffectBuilder | None:
         or parse_conditional_static(sentence)
         or parse_attached_compound_grant(sentence)
         or parse_gated_self_static(sentence)
+        or parse_static_pump(sentence)
     )
 
 

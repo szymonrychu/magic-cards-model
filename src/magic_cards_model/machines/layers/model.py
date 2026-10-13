@@ -260,6 +260,13 @@ class Characteristics(EngineModel):
     #: Gargantuan Slabhorn's "Other transformed permanents you control have
     #: trample and ward {2}.").
     transformed: bool = False
+    #: `CardState.owner` (CR 108.3) - carried like `transformed`, so a `Count`
+    #: can say "a land you control but don't own" (Herald of Leshrac).
+    owner: str | None = None
+    #: `CardState.tapped` (CR 110.5) as of this computation - a physical status
+    #: carried like `transformed`, so a `Count` can say "for each untapped
+    #: permanent your opponents control" (Copperhoof Vorrac).
+    tapped: bool = False
 
     @property
     def is_creature(self) -> bool:
@@ -741,12 +748,15 @@ class CountControlledAndGraveyardCards(CountBase):
     card_type: Type | None = None
     subtype: str | None = None
     graveyard_count: int = 0
+    #: "other": the asking object is not counted on the board.
+    exclude_asking: bool = False
 
     def __call__(self, chars: Characteristics, board: Board) -> int:
         board_count = sum(
             1
             for other in board.values()
             if other.controller == self.username
+            and not (self.exclude_asking and other.card_id == chars.card_id)
             and (self.card_type is None or self.card_type in other.types)
             and (
                 self.subtype is None or any(word.lower() == self.subtype for word in other.subtypes)
@@ -874,12 +884,56 @@ class CountBoardWhere(CountBase):
     #: A further narrowing word that is a supertype ("snow permanents",
     #: Rimefeather Owl; CR 205.4).
     supertype: Supertype | None = None
+    #: Whose permanents "you" are, when that is not the asking object's own
+    #: controller: Eidolon of Countless Battles' enchanted creature counts the
+    #: *Eidolon's* controller's creatures.
+    username: str | None = None
+    #: Statuses (CR 110.5 tapped, CR 701.27 transformed) the match requires or
+    #: forbids; `None` leaves the status out of the question.
+    tapped: bool | None = None
+    transformed: bool | None = None
+    #: "other": the asking object is not counted.
+    exclude_asking: bool = False
+    #: "you control but don't own": its owner (CR 108.3) is another player.
+    not_owned_by_controller: bool = False
+    #: "attached to a creature" (CR 301.5, CR 303.4): the permanent is attached
+    #: to a creature on the board.
+    attached_to_creature: bool = False
+    #: CR 700.9: a permanent is modified if it has a counter, an Equipment its
+    #: controller controls attached, or an Aura its controller controls attached.
+    modified: bool = False
+    #: "that shares at least one creature type with it" (CR 205.3m): the match
+    #: has a creature type in common with the asking object.
+    shares_creature_type: bool = False
+
+    def _is_modified(self, other: Characteristics, board: Board) -> bool:
+        if any(count > 0 for count in other.counters.values()):
+            return True
+        return any(
+            attached.attached_to == other.card_id
+            and attached.controller == other.controller
+            and any(word.lower() in ("equipment", "aura") for word in attached.subtypes)
+            for attached in board.values()
+        )
 
     def _matches(self, chars: Characteristics, other: Characteristics) -> bool:
-        if self.scope == "you" and other.controller != chars.controller:
+        you = self.username if self.username is not None else chars.controller
+        if self.scope == "you" and other.controller != you:
             return False
-        if self.scope == "opponents" and (
-            other.controller is None or other.controller == chars.controller
+        if self.scope == "opponents" and (other.controller is None or other.controller == you):
+            return False
+        if self.exclude_asking and other.card_id == chars.card_id:
+            return False
+        if self.tapped is not None and other.tapped != self.tapped:
+            return False
+        if self.transformed is not None and other.transformed != self.transformed:
+            return False
+        if self.shares_creature_type and not (
+            {word.lower() for word in other.subtypes} & {word.lower() for word in chars.subtypes}
+        ):
+            return False
+        if self.not_owned_by_controller and (
+            other.owner is None or other.owner == other.controller
         ):
             return False
         if self.types_any or self.subtypes_any:
@@ -897,6 +951,16 @@ class CountBoardWhere(CountBase):
 
     def __call__(self, chars: Characteristics, board: Board) -> int:
         matched = [other for other in board.values() if self._matches(chars, other)]
+        if self.attached_to_creature:
+            matched = [
+                other
+                for other in matched
+                if other.attached_to is not None
+                and (host := board.get(other.attached_to)) is not None
+                and host.is_creature
+            ]
+        if self.modified:
+            matched = [other for other in matched if self._is_modified(other, board)]
         if self.measure == "count":
             return len(matched)
         if self.measure == "counters":
@@ -1018,14 +1082,78 @@ class CountAttachedWithAnySubtype(CountBase):
 
     kind: Literal["attached_with_any_subtype"] = "attached_with_any_subtype"
     subtypes: tuple[str, ...]
+    #: The permanent they are attached to, when it is not the asking object
+    #: itself ("for each Equipment attached to this creature", Armament Master).
+    host: UUID | None = None
 
     def __call__(self, chars: Characteristics, board: Board) -> int:
+        host = self.host if self.host is not None else chars.card_id
         return sum(
             1
             for other in board.values()
-            if other.attached_to == chars.card_id
+            if other.attached_to == host
             and any(word.lower() in self.subtypes for word in other.subtypes)
         )
+
+
+class CountOwnCharacteristic(CountBase):
+    """A number read off the asking object itself, as the layers left it (CR
+    613.5): "for each of its colors" (Knight of New Alara, CR 105.1), "for each
+    of its creature types" (Diligent Zookeeper, CR 205.3m), "for each point of
+    bushido it has" (Takeno, CR 702.45a - each instance of bushido is its own
+    number). `cap` is "to a maximum of N"."""
+
+    kind: Literal["own_characteristic"] = "own_characteristic"
+    measure: Literal["colors", "creature_types", "bushido"]
+    cap: int | None = None
+
+    def __call__(self, chars: Characteristics, board: Board) -> int:
+        if self.measure == "colors":
+            amount = len(set(chars.colors))
+        elif self.measure == "creature_types":
+            amount = len({word.lower() for word in chars.subtypes})
+        else:
+            amount = sum(
+                int(match.group(1))
+                for line in chars.abilities
+                if (match := re.fullmatch(r"\s*bushido (\d+)(?:\s*\(.*\))?\.?\s*", line, re.I))
+            )
+        return amount if self.cap is None else min(amount, self.cap)
+
+
+class CountOwnManaSymbols(CountBase):
+    """How many mana symbols of the given colors the asking object's own mana
+    cost has - "for each white mana symbol in its mana cost" (Light from Within,
+    CR 207.2c chroma; a hybrid or Phyrexian symbol of that color counts once,
+    CR 700.5). `costs` is the board's printed mana costs, read once when the
+    effect is built like `CountDevotion`'s."""
+
+    kind: Literal["own_mana_symbols"] = "own_mana_symbols"
+    colors: tuple[Color, ...]
+    costs: tuple[tuple[UUID, str], ...] = ()
+
+    def __call__(self, chars: Characteristics, board: Board) -> int:
+        from ...models.mana import ManaCost
+
+        cost = dict(self.costs).get(chars.card_id)
+        printed = ManaCost.try_parse(cost) if cost else None
+        if printed is None:
+            return 0
+        wanted = set(self.colors)
+        return sum(1 for symbol in printed.symbols if wanted & set(symbol.colors))
+
+
+class CountByObjectId(CountBase):
+    """A per-object number worked out once when the effect is built, picked by
+    the asking object's id - "for each time it has attacked this turn" (Moraug,
+    Fury of Akoum): a per-turn fact the layer engine never sees. An object
+    with no entry counts 0."""
+
+    kind: Literal["by_object_id"] = "by_object_id"
+    counts: tuple[tuple[UUID, int], ...] = ()
+
+    def __call__(self, chars: Characteristics, board: Board) -> int:
+        return dict(self.counts).get(chars.card_id, 0)
 
 
 #: How many of something an effect counts, judged against one object and the
@@ -1053,7 +1181,10 @@ Count = Annotated[
     | CountGroup
     | CountByControllerOfObject
     | CountObjectManaValue
-    | CountAttachedWithAnySubtype,
+    | CountAttachedWithAnySubtype
+    | CountOwnCharacteristic
+    | CountOwnManaSymbols
+    | CountByObjectId,
     Field(discriminator="kind"),
 ]
 
@@ -1386,6 +1517,21 @@ class EveryLand(SelectorBase):
 
     def __call__(self, chars: Characteristics, board: Board) -> bool:
         return chars.is_land
+
+
+class PermanentIds(SelectorBase):
+    """A group fixed by id when the effect was built, for a later layer of an
+    effect whose earlier layer changes what the group's own description says:
+    March of the Machines' "Each noncreature artifact is an artifact creature
+    with power and toughness each equal to its mana value" adds the creature
+    type in layer 4, so by layer 7b these are no longer "noncreature" -
+    CR 613.6 keeps one effect on the objects it began with."""
+
+    kind: Literal["permanent_ids"] = "permanent_ids"
+    ids: tuple[UUID, ...] = ()
+
+    def __call__(self, chars: Characteristics, board: Board) -> bool:
+        return chars.card_id in self.ids
 
 
 class OtherNonAuraEnchantments(SelectorBase):
@@ -2006,6 +2152,8 @@ class GroupMatch(SelectorBase):
     Kaldra, and Helm of Kaldra" (CR 201.2)."""
     empty_if_unset: bool = False
     """A "of the chosen type" group whose source recorded no choice is empty."""
+    multicolored: bool = False
+    """CR 105.2b: "multicolored" is more than one color."""
 
     def __call__(self, chars: Characteristics, board: Board) -> bool:
         if self.empty_if_unset:
@@ -2056,6 +2204,8 @@ class GroupMatch(SelectorBase):
         if any(color in chars.colors for color in self.not_colors):
             return False
         if self.colorless and chars.colors:
+            return False
+        if self.multicolored and len(chars.colors) < 2:
             return False
         if self.legendary is not None and self.legendary != (
             Supertype.LEGENDARY in chars.supertypes
@@ -2714,6 +2864,7 @@ Selector = Annotated[
     | SelfIfDevotionBelow
     | PermanentsWithName
     | OtherNonAuraEnchantments
+    | PermanentIds
     | QualifiedCreatures
     | SelfIfControls
     | SelfIfControlsAnyOf

@@ -1429,6 +1429,14 @@ class Game(
     when a new turn begins, the same reset `attacked_this_turn` already
     gets."""
 
+    attack_count_this_turn: dict[UUID, int] = Field(default_factory=dict)
+    """How many times each creature (by id) has been declared as an attacker this
+    turn (CR 508.1) - a creature can attack once per combat phase, and an
+    additional combat phase (CR 500.8) gives it another, so this is a count where
+    `attacked_this_turn` is a set. Moraug, Fury of Akoum's "+1/+0 for each time it
+    has attacked this turn" reads it. Written where `attacked_this_turn` is,
+    cleared with it when a new turn begins."""
+
     attacked_this_turn: SortedSet[UUID] = Field(default_factory=set)
     """Which creatures (by id) have attacked this turn (CR 508.1), for
     Hexhaven Dueling Arena's own "target creature that attacked this turn" -
@@ -1979,7 +1987,7 @@ class Game(
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 169
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 170
     #: 67: `machines/cost.CostComponent` gained `link_to_permanent_id` (CR
     #: 607.2q), reachable from `Game` through a pending `AbilityOnStack.
     #: keyword_activation`/`.unless_payment`'s own `CostPayment.components`.

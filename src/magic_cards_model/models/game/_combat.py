@@ -415,6 +415,9 @@ class CombatMixin:
                 # over. Cleared at the same new-turn reset as the rest of
                 # `Game`'s "this turn" fields.
                 self.attacked_this_turn.add(creature.id)
+                self.attack_count_this_turn[creature.id] = (
+                    self.attack_count_this_turn.get(creature.id, 0) + 1
+                )
                 # The same per-object historical fact as `attacked_this_turn`
                 # above, but naming *whom* - Angel of Destiny's own "each
                 # player this creature attacked this turn loses the game."
