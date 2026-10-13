@@ -1043,9 +1043,13 @@ _MASS_COLOR_FILTER_RE = re.compile(
 )
 #: "All nonsnow creatures get -X/-X until end of turn" (Dead of Winter), "All
 #: snow creatures ..." - the whole board narrowed by CR 205.4g's snow supertype,
-#: read once against the computed board as the effect begins (CR 611.2c).
+#: read once against the computed board as the effect begins (CR 611.2c). A
+#: controller qualifier narrows it further: "Snow creatures you control get
+#: +1/+1 until end of turn" (Diamond Faerie).
 _MASS_SUPERTYPE_SUBJECT_RE = re.compile(
-    r"^(?:all )?(?P<negated>non)?snow creatures\b(?= (?:get|gain)\b)", re.IGNORECASE
+    r"^(?:all )?(?P<negated>non)?snow creatures"
+    r"(?P<whose> you control| your opponents control)?\b(?= (?:get|gain)\b)",
+    re.IGNORECASE,
 )
 #: The trailing computed-magnitude clause - "..., where X is <expr>." - split
 #: off so the rest of the sentence can be handed to `machines/layers.py`'s
@@ -1166,11 +1170,16 @@ def _mass_creature_group_targets(
     if supertype_match is not None:
         board = game.computed_board()
         wants_snow = supertype_match.group("negated") is None
+        whose = (supertype_match.group("whose") or "").strip()
         return [
             permanent
             for permanent in game.battlefield
             if board.of(permanent).is_creature
             and (Supertype.SNOW in board.of(permanent).supertypes) == wants_snow
+            and (
+                not whose
+                or (board.of(permanent).controller == controller) == (whose == "you control")
+            )
         ]
     color_filter_match = _MASS_COLOR_FILTER_RE.match(text.strip())
     if color_filter_match is not None:

@@ -710,6 +710,32 @@ def test_dead_of_winter_counts_snow_permanents_and_spares_snow_creatures(snow_la
 
 
 # --------------------------------------------------------------------------
+# Snow creatures you control get +1/+1 until end of turn (Diamond Faerie): the
+# second printing of the snow-supertype mass subject, CR 205.4
+# --------------------------------------------------------------------------
+
+
+def test_diamond_faerie_pumps_only_snow_creatures_you_control():
+    scenario = _main(
+        _build(
+            ["Snow-Covered Forest", "Snow-Covered Island", "Diamond Faerie"]
+            + ["Priest of the Haunted Edge", "Grizzly Bears"],
+            ["Priest of the Haunted Edge"],
+        )
+    )
+    faerie = scenario.find("Diamond Faerie", Zone.BATTLEFIELD, "alice")
+    scenario.activate(faerie, auto=True)
+    scenario.resolve_top()
+    # Priest of the Haunted Edge is a snow creature: pumped. Bears and the
+    # opponent's snow creature are not.
+    assert _chars(scenario, "Priest of the Haunted Edge", "alice").toughness == 5
+    assert _chars(scenario, "Grizzly Bears", "alice").toughness == 2
+    assert _chars(scenario, "Priest of the Haunted Edge", "bob").toughness == 4
+    # Diamond Faerie is itself a Snow Creature, so it is pumped too (3/3 -> 4/4).
+    assert _chars(scenario, "Diamond Faerie", "alice").toughness == 4
+
+
+# --------------------------------------------------------------------------
 # Domain - this creature gets +1/+0 until end of turn for each basic land type
 # among lands you control (Wandering Goblins); +1/+1 for each enchantment you
 # control (Slumbering Keepguard)
