@@ -1500,7 +1500,12 @@ def count_expression(phrase: str) -> Callable[["Game", str], int] | None:
 
     from ..ep02_r1_counted_permanents import counted_group_reader
 
-    if (counted := counted_group_reader(stripped)) is not None:
+    # A source-free count cannot leave "this permanent" out of an "other ..." group
+    # (CR 201.5); the sourced readers below do.
+    if (
+        re.search(r"\bother\b", stripped, re.IGNORECASE) is None
+        and (counted := counted_group_reader(stripped)) is not None
+    ):
         return lambda game, controller: counted(game, controller, None)
 
     return None

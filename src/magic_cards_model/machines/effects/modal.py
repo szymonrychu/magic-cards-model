@@ -1506,14 +1506,6 @@ def parse_mode_effect(mode: Mode, x_value: int) -> Effect | None:
     referenced_stat = referenced_permanent_stat_effect(text, for_spell=True)
     if referenced_stat is not None:
         return referenced_stat
-    # Plunge into Darkness's second mode: a chosen amount, then a payoff that
-    # reads it - the whole-text readers a non-modal spell reaches through
-    # `SPELL_TEXT`, which a mode's own text never does.
-    from ..ep02_r2_chosen_amounts import chosen_amount_spell_effect
-
-    chosen_amount = chosen_amount_spell_effect(text)
-    if chosen_amount is not None:
-        return chosen_amount
     # Witherbloom Charm's own first mode: "You may sacrifice a permanent. If
     # you do, draw two cards." (CR 118.12) is read whole by `_spell_effect_
     # or_notice` for a non-modal card, but a mode's own text never reaches
@@ -1567,6 +1559,15 @@ def parse_mode_effect(mode: Mode, x_value: int) -> Effect | None:
     where_x_targeted = _parse_where_x_is_continuous_effect_for_spell(text)
     if where_x_targeted is not None:
         return where_x_targeted
+    # Plunge into Darkness's second mode: a chosen amount, then a payoff that
+    # reads it - the whole-text readers a non-modal spell reaches through
+    # `SPELL_TEXT`, which a mode's own text never does. After the mode-scoped
+    # "where X is" readers above, which know a mode's own targets.
+    from ..ep02_r2_chosen_amounts import chosen_amount_spell_effect
+
+    chosen_amount = chosen_amount_spell_effect(text)
+    if chosen_amount is not None:
+        return chosen_amount
     # Shriveling Rot's modes: "Until end of turn, whenever a creature is dealt
     # damage, destroy it." - a chosen mode that creates a CR 603.7 delayed
     # trigger, read the way the same sentence on a non-modal spell is.

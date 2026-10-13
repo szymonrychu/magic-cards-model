@@ -547,6 +547,9 @@ KNOWN_UNREAD_RESTRICTIONS = {
     # published as `False` rather than filtered away, so making the grammar
     # read it means finding that test another card, not deleting the row.
     "Rosheen Meanderer": "Spend this mana only on costs that contain {X}.",
+    # The same CR 106.6 sentence on a later printing: one grammar shape, so the
+    # same deliberate fail-closed reason.
+    "Rosheen, Roaring Prophet": "Spend this mana only on costs that contain {X}.",
 }
 
 
