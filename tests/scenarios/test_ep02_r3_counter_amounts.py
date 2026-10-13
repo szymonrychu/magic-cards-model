@@ -182,7 +182,12 @@ def test_cultivator_does_not_pump_creatures_that_are_not_attacking():
 def _blocker_scenario(counter_choice):
     scenario = (
         Scenario()
-        .player("alice", battlefield=["Grizzly Bears"], hand=["Hellhole Flailer"], library=["Forest"] * 8)
+        .player(
+            "alice",
+            battlefield=["Grizzly Bears"],
+            hand=["Hellhole Flailer"],
+            library=["Forest"] * 8,
+        )
         .player("bob", battlefield=["Grizzly Bears"], hand=["Rakdos Drake"], library=["Forest"] * 8)
         .build()
     )
@@ -239,3 +244,172 @@ def test_unleashed_creature_blocks_again_once_the_counter_is_gone():
     scenario.attack_with(bears)
     attack = scenario.game.combat.attack_by(bears.id)
     assert block_refusal(scenario.game, drake, attack) is None
+
+
+# -- "target creature you control with the greatest power" (Triumph of Gerrard)
+# and its mana-value twin (Culling Scales): a target restriction that compares
+# the target to the rest of its group, ties all legal.
+
+
+def _requirement(text):
+    from magic_cards_model.machines.targeting import profile_for_text
+
+    profile = profile_for_text(text)
+    assert profile.understood
+    return profile.requirements[0]
+
+
+def _ruling_board():
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Grizzly Bears", "Hill Giant", "Serra Angel"])
+        .player("bob", battlefield=["Hill Giant", "Culling Scales"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    return scenario
+
+
+def test_only_a_creature_with_the_greatest_power_among_yours_is_a_legal_target():
+    scenario = _ruling_board()
+    requirement = _requirement(
+        "Put a +1/+1 counter on target creature you control with the greatest power."
+    )
+    angel = scenario.creature("Serra Angel", "alice")
+    giant = scenario.creature("Hill Giant", "alice")
+    bears = scenario.creature("Grizzly Bears", "alice")
+    assert requirement.rejects(angel, "alice", scenario.game) is None
+    assert requirement.rejects(giant, "alice", scenario.game) is not None
+    assert requirement.rejects(bears, "alice", scenario.game) is not None
+
+
+def test_greatest_power_ignores_the_opponents_bigger_creature():
+    scenario = _ruling_board()
+    scenario.creature("Hill Giant", "bob").add_counters(Counter.PLUS_ONE, 5)
+    requirement = _requirement(
+        "Put a +1/+1 counter on target creature you control with the greatest power."
+    )
+    assert (
+        requirement.rejects(scenario.creature("Serra Angel", "alice"), "alice", scenario.game)
+        is None
+    )
+
+
+def test_ties_for_greatest_power_are_all_legal():
+    scenario = _ruling_board()
+    scenario.creature("Hill Giant", "alice").add_counters(Counter.PLUS_ONE, 1)
+    requirement = _requirement(
+        "Put a +1/+1 counter on target creature you control with the greatest power."
+    )
+    assert (
+        requirement.rejects(scenario.creature("Hill Giant", "alice"), "alice", scenario.game)
+        is None
+    )
+    assert (
+        requirement.rejects(scenario.creature("Serra Angel", "alice"), "alice", scenario.game)
+        is None
+    )
+    assert (
+        requirement.rejects(scenario.creature("Grizzly Bears", "alice"), "alice", scenario.game)
+        is not None
+    )
+
+
+def test_greatest_power_follows_a_pump_in_response():
+    scenario = _ruling_board()
+    requirement = _requirement(
+        "Put a +1/+1 counter on target creature you control with the greatest power."
+    )
+    bears = scenario.creature("Grizzly Bears", "alice")
+    bears.add_counters(Counter.PLUS_ONE, 3)
+    assert requirement.rejects(bears, "alice", scenario.game) is None
+
+
+def test_lowest_mana_value_target_restriction():
+    scenario = _ruling_board()
+    requirement = _requirement("Destroy target nonland permanent with the lowest mana value.")
+    scales = scenario.find("Culling Scales", Zone.BATTLEFIELD, "bob")
+    bears = scenario.creature("Grizzly Bears", "alice")
+    # Grizzly Bears (2) is the cheapest nonland permanent; Culling Scales (3) is not.
+    assert requirement.rejects(bears, "alice", scenario.game) is None
+    assert requirement.rejects(scales, "alice", scenario.game) is not None
+
+
+def _advance_saga(scenario, saga):
+    scenario.game.add_counters(saga, Counter.LORE, 1)
+    _settle(scenario)
+
+
+def test_triumph_of_gerrard_chapters_go_to_the_greatest_power_creature():
+    from magic_cards_model.machines.combat import Keyword, has_keyword
+
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Triumph of Gerrard", "Grizzly Bears", "Hill Giant"])
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    saga = scenario.find("Triumph of Gerrard", Zone.BATTLEFIELD, "alice")
+    giant = scenario.creature("Hill Giant", "alice")
+    bears = scenario.creature("Grizzly Bears", "alice")
+    # The scenario builds the Saga with its first lore counter already on it
+    # (chapter I not run), so the next two counters are chapters II and III.
+    _advance_saga(scenario, saga)
+    assert giant.counter_count(Counter.PLUS_ONE) == 1
+    assert bears.counter_count(Counter.PLUS_ONE) == 0
+    _advance_saga(scenario, saga)
+    for keyword in (Keyword.FLYING, Keyword.FIRST_STRIKE, Keyword.LIFELINK):
+        assert has_keyword(giant, keyword, scenario.game)
+        assert not has_keyword(bears, keyword, scenario.game)
+
+
+# -- Fall of the Impostor III: "Exile a creature with the greatest power among
+# creatures target opponent controls." (not targeted at the creature)
+
+
+def _fall_board(bob=("Hill Giant", "Grizzly Bears")):
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Fall of the Impostor", "Serra Angel"])
+        .player("bob", battlefield=list(bob))
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    saga = scenario.find("Fall of the Impostor", Zone.BATTLEFIELD, "alice")
+    # The scenario builds the Saga with its first lore counter on it, so the
+    # next two counters are chapters II and III.
+    return scenario, saga
+
+
+def test_fall_of_the_impostor_exiles_the_opponents_greatest_power_creature():
+    scenario, saga = _fall_board()
+    scenario.game.add_counters(saga, Counter.LORE, 1)
+    _settle(scenario)
+    scenario.game.add_counters(saga, Counter.LORE, 1)
+    _settle(scenario)
+    assert [c.name for c in scenario.game.permanents_controlled_by("bob")] == ["Grizzly Bears"]
+    assert any(c.name == "Hill Giant" for c in scenario.game.exile)
+    # My own bigger creature is not in the opponent's group.
+    assert scenario.creature("Serra Angel", "alice").zone is Zone.BATTLEFIELD
+
+
+def test_fall_of_the_impostor_tie_is_the_controllers_choice():
+    scenario, saga = _fall_board(("Hill Giant", "Hill Giant"))
+    giants = [c for c in scenario.game.permanents_controlled_by("bob")]
+    scenario.game.add_counters(saga, Counter.LORE, 1)
+    _settle(scenario)
+    scenario.will_choose_cards(giants[1], username="alice")
+    scenario.game.add_counters(saga, Counter.LORE, 1)
+    _settle(scenario)
+    assert giants[1].zone is Zone.EXILE
+    assert giants[0].zone is Zone.BATTLEFIELD
+
+
+def test_fall_of_the_impostor_does_nothing_against_an_empty_board():
+    scenario, saga = _fall_board(())
+    scenario.game.add_counters(saga, Counter.LORE, 1)
+    _settle(scenario)
+    scenario.game.add_counters(saga, Counter.LORE, 1)
+    _settle(scenario)
+    assert saga.zone is Zone.GRAVEYARD

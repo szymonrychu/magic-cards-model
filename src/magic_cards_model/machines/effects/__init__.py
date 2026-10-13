@@ -2806,6 +2806,7 @@ from .. import ep02_r1_this_way_counts as ep02_r1_this_way_counts  # noqa: E402
 from .. import ep02_r2_chosen_amounts as ep02_r2_chosen_amounts  # noqa: E402
 from .. import ep02_r2_counter_amounts as ep02_r2_counter_amounts  # noqa: E402
 from .. import ep02_r2_revealed_this_way as ep02_r2_revealed_this_way  # noqa: E402
+from .. import ep02_r3_counter_amounts as ep02_r3_counter_amounts  # noqa: E402
 
 __all__ = [
     "ACTIVATED_EFFECTS",

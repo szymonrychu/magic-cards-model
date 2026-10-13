@@ -298,6 +298,16 @@ class ComparisonCount(StrEnum):
     SOURCE_TOUGHNESS = "source_toughness"
     """`SOURCE_POWER`'s twin for "... less than this creature's toughness"."""
 
+    GROUP_EXTREMUM = "group_extremum"
+    """"target creature you control **with the greatest power**" (Triumph of
+    Gerrard), "target nonland permanent **with the lowest mana value**"
+    (Culling Scales): the bound is the greatest (or least) value of the
+    compared characteristic among the battlefield objects the same phrase
+    could name - same card types, same controller restriction (relative to the
+    caster) - read fresh at every `rejects` call, so a counter or pump in
+    response moves it (CR 613.5). Ties are all legal: the operator is
+    `GREATER_OR_EQUAL` / `LESS_OR_EQUAL` against that bound."""
+
 
 class CombatState(StrEnum):
     """Being in combat, which is a game state rather than a characteristic.
@@ -1818,7 +1828,9 @@ class TargetRequirement(EngineModel):
             return None
         label = self.comparison_attribute.value.replace("_", " ")
         comparison_value = self.comparison_value
-        if comparison_value is None and self.comparison_count is not None:
+        if comparison_value is None and self.comparison_count is ComparisonCount.GROUP_EXTREMUM:
+            comparison_value = self._group_extremum(game, caster)
+        elif comparison_value is None and self.comparison_count is not None:
             comparison_value = self._counted_bound(target, game, source_id)
         if comparison_value is None and self.comparison_x_definition is not None:
             comparison_value = self._defined_x(game, caster)
@@ -1860,6 +1872,39 @@ class TargetRequirement(EngineModel):
         return (
             f"{self.phrase} needs {label} {self._comparison_words(comparison_value)}, "
             f"and {target.name} does not have it"
+        )
+
+    def _group_extremum(self, game: Any, caster: str | None) -> float | None:
+        """`ComparisonCount.GROUP_EXTREMUM`'s bound: the greatest (operator
+        `GREATER_OR_EQUAL`) or least value of the compared characteristic among
+        the battlefield objects this phrase's type and controller words name,
+        or None when it cannot be counted (no game, no caster)."""
+        battlefield = getattr(game, "battlefield", None)
+        characteristics_of = getattr(game, "characteristics_of", None)
+        if battlefield is None or characteristics_of is None or caster is None:
+            return None
+        values: list[float] = []
+        for candidate in battlefield:
+            if self._rejects_controller(candidate, caster) is not None:
+                continue
+            chars = characteristics_of(candidate)
+            if self.card_types and not set(self.card_types) & set(chars.types):
+                continue
+            if set(self.excluded_card_types) & set(chars.types):
+                continue
+            if self.comparison_attribute is ComparisonAttribute.MANA_VALUE:
+                values.append(chars.mana_value)
+            elif self.comparison_attribute is ComparisonAttribute.POWER:
+                if chars.power is not None:
+                    values.append(chars.power)
+            elif chars.toughness is not None:
+                values.append(chars.toughness)
+        if not values:
+            return None
+        return (
+            max(values)
+            if self.comparison_operator is ComparisonOperator.GREATER_OR_EQUAL
+            else min(values)
         )
 
     def _counted_bound(
@@ -6650,6 +6695,15 @@ _SOURCE_STAT_COUNTS = {
     "toughness": ComparisonCount.SOURCE_TOUGHNESS,
 }
 
+#: "with the greatest power" / "with the lowest mana value", optionally "among
+#: creatures you control" naming the group (`ComparisonCount.GROUP_EXTREMUM`).
+_EXTREMUM_CLAUSE = re.compile(
+    r"\bwith the (?P<dir>greatest|highest|least|lowest) "
+    r"(?P<attr>mana value|power|toughness)\b"
+    r"(?P<scope> among creatures you control)?",
+    re.IGNORECASE,
+)
+
 #: The comparison itself, once `_COMPARISON_ATTEMPT` says one is being made.
 #: Order inside the alternation matters: "N or less/greater" and the spelled-
 #: out "less/greater than or equal to N" are tried before the bare "N" so a
@@ -6736,6 +6790,25 @@ def _extract_comparison(
     rather than read past the clause: a restriction the parser cannot evaluate
     must never be dropped silently.
     """
+    extremum = _EXTREMUM_CLAUSE.search(rest)
+    if extremum is not None:
+        # "with the greatest power" / "with the lowest mana value": compared
+        # against the phrase's own group (`ComparisonCount.GROUP_EXTREMUM`).
+        operator = (
+            ComparisonOperator.GREATER_OR_EQUAL
+            if extremum.group("dir").lower() in ("greatest", "highest")
+            else ComparisonOperator.LESS_OR_EQUAL
+        )
+        remaining = (rest[: extremum.start()] + rest[extremum.end() :]).strip()
+        if extremum.group("scope") is not None and "control" not in remaining:
+            remaining = f"{remaining} you control".strip()
+        return (
+            _COMPARISON_ATTR[extremum.group("attr").lower()],
+            operator,
+            None,
+            ComparisonCount.GROUP_EXTREMUM,
+            remaining,
+        )
     if not _COMPARISON_ATTEMPT.search(rest):
         return None, None, None, None, rest
     match = _COMPARISON_CLAUSE.search(rest)
