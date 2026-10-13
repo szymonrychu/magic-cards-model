@@ -30,6 +30,8 @@ file:
 - **CR 705.1** - flipping a coin.
 """
 
+from pathlib import Path
+
 import pytest
 
 from magic_cards_model.machines import Step
@@ -1029,3 +1031,36 @@ def test_endrek_sahr_survives_with_six_thrulls() -> None:
     _cast_all(scenario, "Shivan Dragon")
     assert len(_named(scenario, "Thrull")) == 6
     assert scenario.creature("Endrek Sahr, Master Breeder", "alice").zone is Zone.BATTLEFIELD
+
+
+# --- one reader per shape: the card mana value reader defers to existing owners ---
+
+_DARK_CONFIDANT = (
+    "Reveal the top card of your library and put that card into your hand. "
+    "You lose life equal to its mana value."
+)
+_COSMIC_CUBE = (
+    "Look at the top five cards of your library. You may cast a spell from among them "
+    "with mana value less than or equal to the greatest power among attacking creatures "
+    "you control without paying its mana cost. Put the rest on the bottom of your "
+    "library in a random order."
+)
+
+
+def test_card_mana_value_reader_declines_the_reveal_hand_lose_life_shape() -> None:
+    from magic_cards_model.machines.ep02_r2_card_mana_value import card_mana_value_effect
+
+    assert card_mana_value_effect(_DARK_CONFIDANT, for_spell=False) is None
+
+
+def test_card_mana_value_reader_declines_the_cosmic_cube_shape() -> None:
+    from magic_cards_model.machines.ep02_r2_card_mana_value import card_mana_value_effect
+
+    assert card_mana_value_effect(_COSMIC_CUBE, for_spell=False) is None
+
+
+def test_look_top_cast_free_has_a_single_resolution_body() -> None:
+    from magic_cards_model.machines import ep02_r2_card_mana_value as mod
+
+    source = open(mod.__file__).read()
+    assert "game.cast_during_resolution(" not in source

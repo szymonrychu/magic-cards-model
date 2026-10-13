@@ -495,55 +495,24 @@ def _step_look_top_x_cast_free(verb: str, *, strictly_less: bool) -> ResolutionS
     spell's mana value. You may cast a spell with mana value less than X /
     X or less from among them without paying its mana cost. Put the rest on the
     bottom of your library in a random order." (CR 608.2g, CR 118.9)."""
-    from .decisions import Decision, DecisionKind
-    from .effects.library import _bottom_in_random_order
+    from .effects.library import _look_at_top_cast_free_bottom_rest
 
     def step(game: "Game", stack_object: Any, state: State) -> bool:
         assert isinstance(state, RunState)
-        controller = game.controller_of(stack_object)
         name, source_id = _name_and_id(stack_object)
         x = max(state.referent.mana_value, 0) if state.referent is not None else 0
-        looked_at = list(controller.library[:x])
-        for card in looked_at:
-            if verb == "reveal":
-                game.reveal(card, source=name)
-            else:
-                game.look(card, controller.username, source=name)
-        ceiling = x if strictly_less else x + 1
-        legal = [
-            card
-            for card in looked_at
-            if not card.card.is_land
-            and game.can_cast_during_resolution(card, controller.username, mana_value_below=ceiling)
-        ]
-        chosen: CardState | None = None
-        if legal and game.may(
-            controller,
-            f"cast a spell with mana value {'less than' if strictly_less else 'at most'} {x} "
-            "from among them without paying its mana cost",
-            source=name,
+        _look_at_top_cast_free_bottom_rest(
+            game,
+            game.controller_of(stack_object),
+            x,
+            ceiling=x if strictly_less else x + 1,
+            prompt=(
+                f"cast a spell with mana value {'less than' if strictly_less else 'at most'} "
+                f"{x} from among them without paying its mana cost"
+            ),
+            source_name=name,
             source_id=source_id,
-            cards=tuple(legal),
-        ):
-            picked = game.ask(
-                Decision(
-                    kind=DecisionKind.CHOOSE_CARDS,
-                    player=controller.username,
-                    prompt="choose a spell to cast without paying its mana cost",
-                    source=name,
-                    source_id=source_id,
-                    amount=1,
-                    cards=tuple(card.id for card in legal),
-                )
-            )
-            assert isinstance(picked, tuple)
-            chosen = next(card for card in legal if card.id == picked[0])
-        if chosen is not None:
-            game.cast_during_resolution(
-                chosen, controller.username, source_name=name or "", rule="CR 608.2g"
-            )
-        _bottom_in_random_order(
-            game, controller, [card for card in looked_at if chosen is None or card is not chosen]
+            reveal=verb == "reveal",
         )
         return True
 
@@ -860,6 +829,30 @@ def _step_event_spell(game: "Game", stack_object: Any, state: State) -> bool:
     return True
 
 
+def _owned_by_the_reveal_hand_lose_life_merge(sentences: list[str]) -> bool:
+    """Exactly "reveal the top card ... put that card into your hand. You lose
+    life equal to its mana value" is `effects.merges`'s own three-clause
+    reader (Dark Confidant); only a repeat or other rider is read here."""
+    from .effects.merges import (
+        _PUT_THAT_CARD_INTO_YOUR_HAND_BARE_RE,
+        _REVEAL_TOP_CARD_OF_LIBRARY_BARE_RE,
+        _YOU_LOSE_LIFE_EQUAL_TO_THAT_CARDS_MANA_VALUE_RE,
+    )
+
+    # The merge sees "reveal ... and put" cut at the "and" into two clauses.
+    parts = [
+        piece.strip(" .")
+        for sentence in sentences
+        for piece in sentence.replace(" and put ", "\0put ").split("\0")
+    ]
+    return (
+        len(parts) == 3
+        and bool(_REVEAL_TOP_CARD_OF_LIBRARY_BARE_RE.fullmatch(parts[0]))
+        and bool(_PUT_THAT_CARD_INTO_YOUR_HAND_BARE_RE.fullmatch(parts[1]))
+        and bool(_YOU_LOSE_LIFE_EQUAL_TO_THAT_CARDS_MANA_VALUE_RE.fullmatch(parts[2]))
+    )
+
+
 @functools.cache
 def card_mana_value_effect(text: str, *, for_spell: bool) -> Callable[["Game", Any], None] | None:
     """The effect of `text` when it spends the mana value of the spell a cast
@@ -877,7 +870,7 @@ def card_mana_value_effect(text: str, *, for_spell: bool) -> Callable[["Game", A
         )
     ]
     sentences = [s for s in sentences if s and s.lower() not in _KEYWORD_ONLY]
-    if not sentences:
+    if not sentences or _owned_by_the_reveal_hand_lose_life_merge(sentences):
         return None
     steps = _compile(sentences, for_spell=for_spell)
     if steps is None:
