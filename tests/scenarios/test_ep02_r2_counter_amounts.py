@@ -500,5 +500,160 @@ def test_sita_varma_puts_x_counters_then_sets_the_others_to_her_power():
     scenario.activate(sita, *lands, x_value=2)
     scenario.pass_until_resolved()
     assert sita.counter_count(Counter.PLUS_ONE) == 2
-    assert _stats(scenario, sita) == (4, 4)  # base 2/2
+    assert _stats(scenario, sita) == (4, 5)  # base 2/3
     assert _stats(scenario, bears) == (4, 4)
+
+
+# -- Sarulf: remove all +1/+1 counters, then exile each other nonland permanent
+#    with mana value at most the number removed
+
+
+def test_sarulf_exiles_other_nonland_permanents_up_to_the_removed_counter_count():
+    scenario = _board(
+        ["Sarulf, Realm Eater", "Grizzly Bears", "Forest"],
+        bob=["Savannah Lions", "Serra Angel", "Island"],
+        step=Step.UNTAP,
+    )
+    sarulf = scenario.creature("Sarulf, Realm Eater", "alice")
+    sarulf.add_counters(Counter.PLUS_ONE, 3)
+    scenario.will_take_the_may(True)
+    _to_step(scenario, Step.UPKEEP)
+    _settle(scenario)
+    assert sarulf.counter_count(Counter.PLUS_ONE) == 0
+    assert sarulf.zone is Zone.BATTLEFIELD  # "each other"
+    assert not _named(scenario, "Grizzly Bears")
+    assert not _named(scenario, "Savannah Lions", "bob")
+    assert _named(scenario, "Serra Angel", "bob")
+    assert _named(scenario, "Forest") and _named(scenario, "Island", "bob")  # lands stay
+
+
+def test_sarulf_declined_keeps_the_counters_and_the_board():
+    scenario = _board(["Sarulf, Realm Eater", "Grizzly Bears"], step=Step.UNTAP)
+    sarulf = scenario.creature("Sarulf, Realm Eater", "alice")
+    sarulf.add_counters(Counter.PLUS_ONE, 3)
+    scenario.will_take_the_may(False)
+    _to_step(scenario, Step.UPKEEP)
+    _settle(scenario)
+    assert sarulf.counter_count(Counter.PLUS_ONE) == 3
+    assert _named(scenario, "Grizzly Bears")
+
+
+# -- Galloping Lizrog: remove any number of +1/+1 counters from among your creatures,
+#    put twice that many on it
+
+
+def _lizrog_board():
+    scenario = _board(["Grizzly Bears", "Savannah Lions"], alice_hand=["Galloping Lizrog"])
+    bears = scenario.creature("Grizzly Bears", "alice")
+    lions = scenario.creature("Savannah Lions", "alice")
+    bears.add_counters(Counter.PLUS_ONE, 3)
+    lions.add_counters(Counter.PLUS_ONE, 1)
+    return scenario, bears, lions
+
+
+def test_galloping_lizrog_trades_counters_for_twice_as_many():
+    scenario, bears, lions = _lizrog_board()
+    scenario.will_choose_an_amount(3)
+    lizrog = scenario.put_onto_battlefield("Galloping Lizrog", "alice")
+    _settle(scenario)
+    assert bears.counter_count(Counter.PLUS_ONE) + lions.counter_count(Counter.PLUS_ONE) == 1
+    assert lizrog.counter_count(Counter.PLUS_ONE) == 6
+
+
+def test_galloping_lizrog_choosing_zero_removes_nothing_and_adds_nothing():
+    scenario, bears, lions = _lizrog_board()
+    scenario.will_choose_an_amount(0)
+    lizrog = scenario.put_onto_battlefield("Galloping Lizrog", "alice")
+    _settle(scenario)
+    assert bears.counter_count(Counter.PLUS_ONE) == 3
+    assert lions.counter_count(Counter.PLUS_ONE) == 1
+    assert lizrog.counter_count(Counter.PLUS_ONE) == 0
+
+
+def test_galloping_lizrog_removes_from_the_creatures_the_player_picks():
+    scenario, bears, lions = _lizrog_board()
+    scenario.will_choose_an_amount(2)
+    scenario.will_choose_cards(lions, username="alice")
+    scenario.will_choose_cards(bears, username="alice")
+    lizrog = scenario.put_onto_battlefield("Galloping Lizrog", "alice")
+    _settle(scenario)
+    assert lions.counter_count(Counter.PLUS_ONE) == 0
+    assert bears.counter_count(Counter.PLUS_ONE) == 2
+    assert lizrog.counter_count(Counter.PLUS_ONE) == 4
+
+
+# -- Thornmantle Striker: X is the number of Elves you control
+
+
+def _striker_board():
+    return _board(
+        ["Llanowar Elves", "Elvish Mystic"],
+        bob=["Grizzly Bears"],
+        alice_hand=["Thornmantle Striker"],
+    )
+
+
+def test_thornmantle_striker_removes_x_counters_from_the_target_permanent():
+    scenario = _striker_board()
+    bears = scenario.creature("Grizzly Bears", "bob")
+    bears.add_counters("charge", 5)
+    scenario.will_choose_mode(
+        "Remove X counters from target permanent, where X is the number of Elves you control.",
+        source="Thornmantle Striker",
+    )
+    scenario.will_choose_targets(bears, source="Thornmantle Striker")
+    scenario.put_onto_battlefield("Thornmantle Striker", "alice")
+    _settle(scenario)
+    assert bears.counter_count("charge") == 2  # Llanowar, Mystic and the Striker (an Elf)
+
+
+def test_thornmantle_striker_gives_minus_x_minus_x():
+    scenario = _striker_board()
+    bears = scenario.creature("Grizzly Bears", "bob")
+    scenario.will_choose_mode(
+        "Target creature an opponent controls gets -X/-X until end of turn, where X is the "
+        "number of Elves you control.",
+        source="Thornmantle Striker",
+    )
+    scenario.will_choose_targets(bears, source="Thornmantle Striker")
+    scenario.put_onto_battlefield("Thornmantle Striker", "alice")
+    _settle(scenario)
+    scenario.state_based_actions()
+    assert bears.zone is Zone.GRAVEYARD  # -3/-3 on a 2/2
+
+
+# -- Confront the Past: X is the cast X, twice X loyalty counters off a planeswalker
+
+
+def _confront(scenario, mode, x_value, targets):
+    lands = [p for p in scenario.game.permanents_controlled_by("alice") if p.name == "Swamp"]
+    scenario.game.cast(
+        scenario.find("Confront the Past", Zone.HAND, "alice"),
+        "alice",
+        modes=[mode],
+        x_value=x_value,
+        targets=targets,
+        mana_sources=lands,
+    )
+    scenario.resolve_top()
+
+
+def test_confront_the_past_removes_twice_x_loyalty_counters():
+    scenario = _board(
+        ["Swamp"] * 4, bob=["Jace, the Mind Sculptor"], alice_hand=["Confront the Past"]
+    )
+    jace = scenario.find("Jace, the Mind Sculptor", Zone.BATTLEFIELD, "bob")
+    before = jace.counter_count("loyalty")
+    _confront(scenario, 2, 1, [jace])
+    assert jace.counter_count("loyalty") == before - 2
+
+
+def test_confront_the_past_returns_a_planeswalker_card_with_mana_value_x_or_less():
+    scenario = _board(
+        ["Swamp"] * 5,
+        alice_hand=["Confront the Past"],
+        alice_graveyard=["Jace, the Mind Sculptor"],
+    )
+    jace = scenario.find("Jace, the Mind Sculptor", Zone.GRAVEYARD, "alice")
+    _confront(scenario, 1, 4, [jace])
+    assert _named(scenario, "Jace, the Mind Sculptor")

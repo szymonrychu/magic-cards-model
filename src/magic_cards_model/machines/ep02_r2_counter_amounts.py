@@ -110,6 +110,11 @@ _FOR_EACH_REMOVED_RE = re.compile(
     rf"\s+for each (?:{_KIND} )?counter removed this way(?=[.,]|$)", re.IGNORECASE
 )
 _TWICE_THAT_MANY_RE = re.compile(r"\btwice that many\b", re.IGNORECASE)
+#: "mana value less than or equal to 3" is read as the "mana value 3 or less" the
+#: comparison readers already know.
+_LESS_THAN_OR_EQUAL_RE = re.compile(
+    r"\b(mana value|power|toughness) less than or equal to (\d+)\b", re.IGNORECASE
+)
 _THAT_MANY_RE = re.compile(r"\bthat many\b", re.IGNORECASE)
 
 
@@ -191,7 +196,7 @@ def perform_removal(game: "Game", ability, spec: RemoveCounters, x: int | None =
     which kind, from which permanent), and return how many came off. Zero when
     a "you may" is declined or nothing was there to take (CR 122.1)."""
     controller = game.controller_of(ability).username
-    if spec.may and not game.ask(
+    if spec.may and spec.amount != "any" and not game.ask(
         Decision(
             kind=DecisionKind.MAY,
             player=controller,
@@ -296,6 +301,7 @@ def removed_text(text: str, n: int) -> tuple[str, bool]:
     text = _TWICE_THAT_MANY_RE.sub(str(2 * n), text)
     text = _THAT_MANY_RE.sub(str(n), text)
     text = _REMOVED_THIS_WAY_RE.sub(str(n), text)
+    text = _LESS_THAN_OR_EQUAL_RE.sub(r"\1 \2 or less", text)
     where = split_where_x(text)
     if where is not None and _REMOVED_THIS_WAY_RE.sub("", where[1]).strip() == "":
         text = write_x(where[0], n)
@@ -331,6 +337,31 @@ _IF_YOU_DO_RE = re.compile(r"^(?P<first>[^.]+)\.\s*(?:if you do,\s*)?(?P<rest>.+
 _MENTIONS_REMOVED_RE = re.compile(r"removed this way|that many", re.IGNORECASE)
 
 
+def _removal_head(first: str):
+    """`(spec, x_reader)` for a removal instruction with an optional ", where X is
+    <amount>" tail, or `None` when either half is unreadable."""
+    x_reader = None
+    if ", where x is" in first.lower():
+        split = split_where_x(first)
+        if split is None:
+            return None
+        first, expr = split
+        x_reader = amount_expression(expr)
+        if x_reader is None:
+            return None
+    spec = parse_remove_counters(first)
+    return None if spec is None else (spec, x_reader)
+
+
+def _removed_amount(game: "Game", ability, spec: RemoveCounters, x_reader) -> int:
+    x = None
+    if x_reader is not None:
+        x = x_reader(
+            game, game.controller_of(ability).username, ability.source_or_last_known(game), 0
+        )
+    return perform_removal(game, ability, spec, x)
+
+
 def removal_then_rest_effect(text: str):
     """ "Remove ... counters. <Instruction that reads the number removed>" as one
     effect (CR 608.2c), or `None`."""
@@ -338,29 +369,18 @@ def removal_then_rest_effect(text: str):
     if "remove" not in lowered or _MENTIONS_REMOVED_RE.search(text) is None:
         return None
     text = " ".join(text.strip().split())
-    where_x = split_where_x(text)
     first_end = text.find(". ")
     if first_end < 0:
         return None
     first, rest = text[:first_end], text[first_end + 2 :]
     rest = re.sub(r"^if you do,\s*", "", rest, flags=re.IGNORECASE)
-    x_reader = None
-    if where_x is not None and ", where x is" in first.lower():
-        first, expr = split_where_x(first) or (first, "")
-        x_reader = amount_expression(expr)
-        if x_reader is None:
-            return None
-    spec = parse_remove_counters(first)
-    if spec is None or _rest_effect(rest, PLACEHOLDER) is None:
+    head = _removal_head(first)
+    if head is None or _rest_effect(rest, PLACEHOLDER) is None:
         return None
+    spec, x_reader = head
 
     def effect(game: "Game", ability) -> None:
-        x = None
-        if x_reader is not None:
-            x = x_reader(
-                game, game.controller_of(ability).username, ability.source_or_last_known(game), 0
-            )
-        removed = perform_removal(game, ability, spec, x)
+        removed = _removed_amount(game, ability, spec, x_reader)
         if removed <= 0:
             return
         follow = _rest_effect(rest, removed)
@@ -978,5 +998,23 @@ def _parse_effect_then_group_base_pt(text: str):
     def effect(game: "Game", ability) -> None:
         first(game, ability)
         second(game, ability)
+
+    return effect
+
+
+@ABILITY_TEXT.rung("s40", before=("parse_mixed_effect",))
+def _parse_remove_x_counters_where_x(text: str):
+    """ "Remove X counters from target permanent, where X is <amount>." - a removal
+    whose count is a computed amount (CR 107.3), with no instruction after it."""
+    flat = " ".join(text.split())
+    if not flat.lower().startswith("remove ") or ", where x is" not in flat.lower():
+        return None
+    head = _removal_head(flat.rstrip("."))
+    if head is None:
+        return None
+    spec, x_reader = head
+
+    def effect(game: "Game", ability) -> None:
+        _removed_amount(game, ability, spec, x_reader)
 
     return effect

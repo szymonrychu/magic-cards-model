@@ -351,6 +351,9 @@ def modal_profile_from_text(oracle_text: str | None) -> ModalProfile | None:
     return _parse(oracle_text or "", ())
 
 
+_TWICE_X = re.compile(r"(?<![\w])twice X(?![\w])", re.IGNORECASE)
+
+
 def substitute_x(text: str, x_value: int | None) -> str:
     """CR 107.3a/CR 107.3c: X has no value until the caster announces one for
     this spell or ability; given one, it applies "while that spell or ability
@@ -362,7 +365,10 @@ def substitute_x(text: str, x_value: int | None) -> str:
     """
     if x_value is None:
         return text
-    return _X.sub(str(x_value), strip_x_restrictions(text))
+    # "twice X" is the product, so an amount reader sees one number (Confront the
+    # Past's "Remove twice X loyalty counters"): 2 * X, never "twice 3".
+    text = _TWICE_X.sub(str(2 * x_value), strip_x_restrictions(text))
+    return _X.sub(str(x_value), text)
 
 
 #: "X can't be 0." - a restriction on the value announced for X (CR 107.3a),
