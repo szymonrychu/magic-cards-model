@@ -714,6 +714,17 @@ def test_glamdring_does_not_offer_a_spell_costing_more_than_the_damage():
     assert [card.name for card in scenario.player("alice").hand] == ["Divination"]
 
 
+def test_glamdring_casts_exactly_one_spell_once_with_two_eligible():
+    """Integration once-only check: T2's bound-after-the-zone reading and T8's
+    "N or less" reading were merged into one `_parse_may_cast_from_hand_free_clause`;
+    one hit casts one spell (CR 608.2g), never one per reader."""
+    scenario = _glamdring_hit("Craw Wurm", ["Divination", "Opt"])
+    graveyard = [c.name for c in scenario.player("alice").graveyard]
+    assert len(graveyard) == 1 and graveyard[0] in {"Divination", "Opt"}
+    left = [c for c in scenario.player("alice").hand if c.name in {"Divination", "Opt"}]
+    assert len(left) == 1
+
+
 # -- an animated land whose stats are a quoted count ---------------------------------
 
 
