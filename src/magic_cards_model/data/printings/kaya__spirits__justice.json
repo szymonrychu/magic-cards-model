@@ -1,0 +1,156 @@
+{
+  "object": "card",
+  "id": "a2827593-4951-4ba7-b73e-c27de56f2606",
+  "oracle_id": "0a094c5f-cefb-4ba1-90c8-dd78ae8efe95",
+  "multiverse_ids": [
+    646767
+  ],
+  "mtgo_id": 121896,
+  "arena_id": 89124,
+  "tcgplayer_id": 532892,
+  "cardmarket_id": 750902,
+  "name": "Kaya, Spirits' Justice",
+  "lang": "en",
+  "released_at": "2024-02-09",
+  "uri": "https://api.scryfall.com/cards/a2827593-4951-4ba7-b73e-c27de56f2606",
+  "scryfall_uri": "https://scryfall.com/card/mkm/211/kaya-spirits-justice?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T03:20:48Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/a/2/a2827593-4951-4ba7-b73e-c27de56f2606.jpg?1783912848",
+    "normal": "https://cards.scryfall.io/normal/front/a/2/a2827593-4951-4ba7-b73e-c27de56f2606.jpg?1783912848",
+    "large": "https://cards.scryfall.io/large/front/a/2/a2827593-4951-4ba7-b73e-c27de56f2606.jpg?1783912848",
+    "png": "https://cards.scryfall.io/png/front/a/2/a2827593-4951-4ba7-b73e-c27de56f2606.png?1783912848",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/a/2/a2827593-4951-4ba7-b73e-c27de56f2606.jpg?1783912848",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/a/2/a2827593-4951-4ba7-b73e-c27de56f2606.jpg?1783912848",
+    "thumb": "https://cards.scryfall.io/thumb/front/a/2/a2827593-4951-4ba7-b73e-c27de56f2606.webp?1783912848",
+    "grid": "https://cards.scryfall.io/grid/front/a/2/a2827593-4951-4ba7-b73e-c27de56f2606.webp?1783912848",
+    "display": "https://cards.scryfall.io/display/front/a/2/a2827593-4951-4ba7-b73e-c27de56f2606.webp?1783912848",
+    "art": "https://cards.scryfall.io/art/front/a/2/a2827593-4951-4ba7-b73e-c27de56f2606.webp?1783912848",
+    "crop": "https://cards.scryfall.io/crop/front/a/2/a2827593-4951-4ba7-b73e-c27de56f2606.webp?1783912848"
+  },
+  "mana_cost": "{2}{W}{B}",
+  "cmc": 4.0,
+  "type_line": "Legendary Planeswalker \u2014 Kaya",
+  "oracle_text": "Whenever one or more creatures you control and/or creature cards in your graveyard are put into exile, you may choose a creature card from among them. Until end of turn, target token you control becomes a copy of it, except it has flying.\n+2: Surveil 2, then exile a card from a graveyard.\n+1: Create a 1/1 white and black Spirit creature token with flying.\n\u22122: Exile target creature you control. For each other player, exile up to one target creature that player controls.",
+  "loyalty": "3",
+  "colors": [
+    "B",
+    "W"
+  ],
+  "color_identity": [
+    "B",
+    "W"
+  ],
+  "keywords": [
+    "Surveil"
+  ],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "7c9acee3-12b7-41c6-8a5c-7985d052bc7a",
+      "component": "combo_piece",
+      "name": "Kaya, Spirits' Justice",
+      "type_line": "Legendary Planeswalker \u2014 Kaya",
+      "uri": "https://api.scryfall.com/cards/7c9acee3-12b7-41c6-8a5c-7985d052bc7a"
+    },
+    {
+      "object": "related_card",
+      "id": "f4588570-bde4-4c2f-8469-81a3e15fb57b",
+      "component": "token",
+      "name": "Spirit",
+      "type_line": "Token Creature \u2014 Spirit",
+      "uri": "https://api.scryfall.com/cards/f4588570-bde4-4c2f-8469-81a3e15fb57b"
+    }
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "arena",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "2b17794b-15c3-4796-ad6f-0887a0eceeca",
+  "set": "mkm",
+  "set_name": "Murders at Karlov Manor",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/2b17794b-15c3-4796-ad6f-0887a0eceeca",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Amkm&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/mkm?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/a2827593-4951-4ba7-b73e-c27de56f2606/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A0a094c5f-cefb-4ba1-90c8-dd78ae8efe95&unique=prints",
+  "collector_number": "211",
+  "digital": false,
+  "rarity": "mythic",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Magali Villeneuve",
+  "artist_ids": [
+    "9e6a55ae-be4d-4c23-a2a5-135737ffd879"
+  ],
+  "illustration_id": "18c8d8ed-4e6a-4278-b5a9-0f7d2d4e9472",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 14372,
+  "penny_rank": 9343,
+  "prices": {
+    "usd": "0.42",
+    "usd_foil": "0.54",
+    "usd_etched": null,
+    "eur": "0.47",
+    "eur_foil": "0.66",
+    "tix": "0.33"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=646767&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DKaya%252C%2BSpirits%2527%2BJustice",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DKaya%252C%2BSpirits%2527%2BJustice",
+    "edhrec": "https://edhrec.com/route/?cc=Kaya%2C+Spirits%27+Justice"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F532892%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=750902&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/121896?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

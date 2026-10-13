@@ -1,0 +1,139 @@
+{
+  "object": "card",
+  "id": "09980ce6-425b-4e03-94d0-0f02043cb361",
+  "oracle_id": "f6476884-f73f-465f-8e7f-ea312a5b306d",
+  "multiverse_ids": [
+    679183
+  ],
+  "resource_id": "8E095FC241FAFF029F1AB807345667C348904666F7D328FF94951EC04B28FAB5",
+  "mtgo_id": 133780,
+  "arena_id": 93819,
+  "tcgplayer_id": 591833,
+  "cardmarket_id": 797333,
+  "name": "Loot, Exuberant Explorer",
+  "lang": "en",
+  "released_at": "2024-11-15",
+  "uri": "https://api.scryfall.com/cards/09980ce6-425b-4e03-94d0-0f02043cb361",
+  "scryfall_uri": "https://scryfall.com/card/fdn/106/loot-exuberant-explorer?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T02:18:17Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/0/9/09980ce6-425b-4e03-94d0-0f02043cb361.jpg?1783909097",
+    "normal": "https://cards.scryfall.io/normal/front/0/9/09980ce6-425b-4e03-94d0-0f02043cb361.jpg?1783909097",
+    "large": "https://cards.scryfall.io/large/front/0/9/09980ce6-425b-4e03-94d0-0f02043cb361.jpg?1783909097",
+    "png": "https://cards.scryfall.io/png/front/0/9/09980ce6-425b-4e03-94d0-0f02043cb361.png?1783909097",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/0/9/09980ce6-425b-4e03-94d0-0f02043cb361.jpg?1783909097",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/0/9/09980ce6-425b-4e03-94d0-0f02043cb361.jpg?1783909097",
+    "thumb": "https://cards.scryfall.io/thumb/front/0/9/09980ce6-425b-4e03-94d0-0f02043cb361.webp?1783909097",
+    "grid": "https://cards.scryfall.io/grid/front/0/9/09980ce6-425b-4e03-94d0-0f02043cb361.webp?1783909097",
+    "display": "https://cards.scryfall.io/display/front/0/9/09980ce6-425b-4e03-94d0-0f02043cb361.webp?1783909097",
+    "art": "https://cards.scryfall.io/art/front/0/9/09980ce6-425b-4e03-94d0-0f02043cb361.webp?1783909097",
+    "crop": "https://cards.scryfall.io/crop/front/0/9/09980ce6-425b-4e03-94d0-0f02043cb361.webp?1783909097"
+  },
+  "mana_cost": "{2}{G}",
+  "cmc": 3.0,
+  "type_line": "Legendary Creature \u2014 Beast Noble",
+  "oracle_text": "You may play an additional land on each of your turns.\n{4}{G}{G}, {T}: Look at the top six cards of your library. You may reveal a creature card with mana value less than or equal to the number of lands you control from among them and put it onto the battlefield. Put the rest on the bottom in a random order.",
+  "power": "1",
+  "toughness": "4",
+  "colors": [
+    "G"
+  ],
+  "color_identity": [
+    "G"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "arena",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "a7ecb771-d1b6-4dec-8cf5-8d45179f21e0",
+  "set": "fdn",
+  "set_name": "Foundations",
+  "set_type": "core",
+  "set_uri": "https://api.scryfall.com/sets/a7ecb771-d1b6-4dec-8cf5-8d45179f21e0",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Afdn&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/fdn?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/09980ce6-425b-4e03-94d0-0f02043cb361/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Af6476884-f73f-465f-8e7f-ea312a5b306d&unique=prints",
+  "collector_number": "106",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Arif Wijaya",
+  "artist_ids": [
+    "a1d47f27-cbf6-4a7b-bbbb-8f051c9069d6"
+  ],
+  "illustration_id": "69315613-7ca5-440e-8faf-8a7294959c56",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 872,
+  "penny_rank": 4476,
+  "prices": {
+    "usd": "2.90",
+    "usd_foil": "3.62",
+    "usd_etched": null,
+    "eur": "2.62",
+    "eur_foil": "3.72",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=679183&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DLoot%252C%2BExuberant%2BExplorer",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DLoot%252C%2BExuberant%2BExplorer",
+    "edhrec": "https://edhrec.com/route/?cc=Loot%2C+Exuberant+Explorer"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F591833%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=797333&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/133780?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

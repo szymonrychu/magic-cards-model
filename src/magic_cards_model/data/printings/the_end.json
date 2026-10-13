@@ -1,0 +1,133 @@
+{
+  "object": "card",
+  "id": "b18402dc-c4ab-417c-92d1-5e4d9cfb840d",
+  "oracle_id": "835c195a-8c35-4076-896d-8d2972cac270",
+  "multiverse_ids": [
+    629588
+  ],
+  "mtgo_id": 116486,
+  "arena_id": 86781,
+  "tcgplayer_id": 512423,
+  "cardmarket_id": 728041,
+  "name": "The End",
+  "lang": "en",
+  "released_at": "2023-09-08",
+  "uri": "https://api.scryfall.com/cards/b18402dc-c4ab-417c-92d1-5e4d9cfb840d",
+  "scryfall_uri": "https://scryfall.com/card/woe/87/the-end?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T03:58:29Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/b/1/b18402dc-c4ab-417c-92d1-5e4d9cfb840d.jpg?1783915109",
+    "normal": "https://cards.scryfall.io/normal/front/b/1/b18402dc-c4ab-417c-92d1-5e4d9cfb840d.jpg?1783915109",
+    "large": "https://cards.scryfall.io/large/front/b/1/b18402dc-c4ab-417c-92d1-5e4d9cfb840d.jpg?1783915109",
+    "png": "https://cards.scryfall.io/png/front/b/1/b18402dc-c4ab-417c-92d1-5e4d9cfb840d.png?1783915109",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/b/1/b18402dc-c4ab-417c-92d1-5e4d9cfb840d.jpg?1783915109",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/b/1/b18402dc-c4ab-417c-92d1-5e4d9cfb840d.jpg?1783915109",
+    "thumb": "https://cards.scryfall.io/thumb/front/b/1/b18402dc-c4ab-417c-92d1-5e4d9cfb840d.webp?1783915109",
+    "grid": "https://cards.scryfall.io/grid/front/b/1/b18402dc-c4ab-417c-92d1-5e4d9cfb840d.webp?1783915109",
+    "display": "https://cards.scryfall.io/display/front/b/1/b18402dc-c4ab-417c-92d1-5e4d9cfb840d.webp?1783915109",
+    "art": "https://cards.scryfall.io/art/front/b/1/b18402dc-c4ab-417c-92d1-5e4d9cfb840d.webp?1783915109",
+    "crop": "https://cards.scryfall.io/crop/front/b/1/b18402dc-c4ab-417c-92d1-5e4d9cfb840d.webp?1783915109"
+  },
+  "mana_cost": "{2}{B}{B}",
+  "cmc": 4.0,
+  "type_line": "Instant",
+  "oracle_text": "This spell costs {2} less to cast if your life total is 5 or less.\nExile target creature or planeswalker. Search its controller's graveyard, hand, and library for any number of cards with the same name as that permanent and exile them. That player shuffles, then draws a card for each card exiled from their hand this way.",
+  "colors": [
+    "B"
+  ],
+  "color_identity": [
+    "B"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "arena",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "79139661-13ee-43c4-8bad-a8c069f1a1df",
+  "set": "woe",
+  "set_name": "Wilds of Eldraine",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/79139661-13ee-43c4-8bad-a8c069f1a1df",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Awoe&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/woe?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/b18402dc-c4ab-417c-92d1-5e4d9cfb840d/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A835c195a-8c35-4076-896d-8d2972cac270&unique=prints",
+  "collector_number": "87",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Donato Giancola",
+  "artist_ids": [
+    "90332db2-aecb-4d79-917b-95cbeb8d0cb6"
+  ],
+  "illustration_id": "b93b6c48-7937-4ea5-bb55-443a8d68b9d9",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 23812,
+  "penny_rank": 2739,
+  "prices": {
+    "usd": "0.37",
+    "usd_foil": "0.44",
+    "usd_etched": null,
+    "eur": "0.34",
+    "eur_foil": "0.72",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=629588&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DThe%2BEnd",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DThe%2BEnd",
+    "edhrec": "https://edhrec.com/route/?cc=The+End"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F512423%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=728041&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/116486?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}
