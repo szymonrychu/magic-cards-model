@@ -66,6 +66,7 @@ PROOFS = (
     "Silent-Chant Zubera",
     "Floating-Dream Zubera",
     "Deadly Embrace",
+    "Harried Dronesmith",
     "Stronghold Arena",
 )
 
@@ -226,3 +227,79 @@ def test_gadrak_makes_a_treasure_per_nontoken_creature_that_died_this_turn():
     scenario.resolve_top()
 
     assert len(tokens(scenario, "Treasure Token")) == 3
+
+
+# -- "Exile it at the beginning of your next end step" ------------------------------
+
+
+def test_stone_idol_trap_costs_one_less_per_attacker_and_makes_a_6_12_that_leaves_at_end_step():
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Stone Idol Trap"],
+            battlefield=["Mountain"] * 3 + ["Grizzly Bears"] * 3,
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    scenario.attack_with(*scenario.creatures("Grizzly Bears", "Grizzly Bears", "Grizzly Bears"))
+    # {5}{R} less {1} for each of the three attacking creatures is {2}{R}.
+    scenario.cast_and_resolve("Stone Idol Trap", *scenario.untapped_sources("Mountain", "Mountain", "Mountain"))
+
+    (construct,) = tokens(scenario, "Construct Token")
+    assert (scenario.game.power_of(construct), scenario.game.toughness_of(construct)) == (6, 12)
+    trigger = scenario.game.delayed_triggers.triggers[0]
+    assert trigger.only_when_active == "alice"  # "your" next end step, not any end step
+
+    reach(scenario, Step.END_STEP)
+    scenario.resolve_top()
+    assert construct.zone is Zone.EXILE
+
+
+def test_a_construct_made_on_the_opponents_turn_waits_for_the_controllers_own_end_step():
+    scenario = (
+        Scenario()
+        .player("bob", battlefield=["Grizzly Bears"], library=["Plains"] * 5)
+        .player(
+            "alice", hand=["Stone Idol Trap"], battlefield=["Mountain"] * 6, library=["Plains"] * 5
+        )
+        .build()
+    )
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    scenario.attack_with(scenario.creature("Grizzly Bears", "bob"), defending="alice")
+    scenario.pass_priority("bob")
+    scenario.cast_and_resolve(
+        "Stone Idol Trap",
+        *scenario.untapped_sources(*(["Mountain"] * 5), username="alice"),
+        username="alice",
+    )
+    (construct,) = tokens(scenario, "Construct Token")
+
+    reach(scenario, Step.END_STEP)  # bob's end step
+    assert scenario.game.active_player.username == "bob"
+    assert scenario.stack_names() == []
+    assert construct.zone is Zone.BATTLEFIELD
+
+    scenario.advance()
+    while scenario.step is not Step.END_STEP:
+        scenario.advance()
+    assert scenario.game.active_player.username == "alice"
+    scenario.resolve_top()
+    assert construct.zone is Zone.EXILE
+
+
+def test_harried_dronesmith_sacrifices_its_thopter_at_its_controllers_next_end_step():
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Harried Dronesmith"])
+        .player("bob")
+        .build()
+    )
+    reach(scenario, Step.BEGINNING_OF_COMBAT)
+    scenario.resolve_top()
+    (thopter,) = tokens(scenario, "Thopter Token")
+    reach(scenario, Step.END_STEP)
+    scenario.resolve_top()
+    assert thopter.zone is not Zone.BATTLEFIELD
