@@ -1,0 +1,135 @@
+{
+  "object": "card",
+  "id": "3ac93762-9377-49c3-9593-6d02bfb66903",
+  "oracle_id": "26e01261-2cf1-4746-b066-c2e65e7882d7",
+  "multiverse_ids": [
+    509432
+  ],
+  "mtgo_id": 86497,
+  "tcgplayer_id": 233774,
+  "cardmarket_id": 543056,
+  "name": "Erratic Mutation",
+  "lang": "en",
+  "released_at": "2021-03-19",
+  "uri": "https://api.scryfall.com/cards/3ac93762-9377-49c3-9593-6d02bfb66903",
+  "scryfall_uri": "https://scryfall.com/card/tsr/67/erratic-mutation?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T07:30:52Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/3/a/3ac93762-9377-49c3-9593-6d02bfb66903.jpg?1783927852",
+    "normal": "https://cards.scryfall.io/normal/front/3/a/3ac93762-9377-49c3-9593-6d02bfb66903.jpg?1783927852",
+    "large": "https://cards.scryfall.io/large/front/3/a/3ac93762-9377-49c3-9593-6d02bfb66903.jpg?1783927852",
+    "png": "https://cards.scryfall.io/png/front/3/a/3ac93762-9377-49c3-9593-6d02bfb66903.png?1783927852",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/3/a/3ac93762-9377-49c3-9593-6d02bfb66903.jpg?1783927852",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/3/a/3ac93762-9377-49c3-9593-6d02bfb66903.jpg?1783927852",
+    "thumb": "https://cards.scryfall.io/thumb/front/3/a/3ac93762-9377-49c3-9593-6d02bfb66903.webp?1783927852",
+    "grid": "https://cards.scryfall.io/grid/front/3/a/3ac93762-9377-49c3-9593-6d02bfb66903.webp?1783927852",
+    "display": "https://cards.scryfall.io/display/front/3/a/3ac93762-9377-49c3-9593-6d02bfb66903.webp?1783927852",
+    "art": "https://cards.scryfall.io/art/front/3/a/3ac93762-9377-49c3-9593-6d02bfb66903.webp?1783927852",
+    "crop": "https://cards.scryfall.io/crop/front/3/a/3ac93762-9377-49c3-9593-6d02bfb66903.webp?1783927852"
+  },
+  "mana_cost": "{2}{U}",
+  "cmc": 3.0,
+  "type_line": "Instant",
+  "oracle_text": "Choose target creature. Reveal cards from the top of your library until you reveal a nonland card. That creature gets +X/-X until end of turn, where X is that card's mana value. Put all cards revealed this way on the bottom of your library in any order.",
+  "colors": [
+    "U"
+  ],
+  "color_identity": [
+    "U"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "11e90d1b-0502-43e6-b056-e24836523c13",
+  "set": "tsr",
+  "set_name": "Time Spiral Remastered",
+  "set_type": "masters",
+  "set_uri": "https://api.scryfall.com/sets/11e90d1b-0502-43e6-b056-e24836523c13",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Atsr&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/tsr?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/3ac93762-9377-49c3-9593-6d02bfb66903/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A26e01261-2cf1-4746-b066-c2e65e7882d7&unique=prints",
+  "collector_number": "67",
+  "digital": false,
+  "rarity": "common",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Zoltan Boros & Gabor Szikszai",
+  "artist_ids": [
+    "1885e6cb-c827-4896-994e-3d0a027d602f",
+    "44c3877f-8771-43dc-9e40-f4c765f59d2e"
+  ],
+  "illustration_id": "21498706-9891-4123-a735-a15c6199940c",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 29804,
+  "preview": {
+    "source": "MTGNerdGirl",
+    "source_uri": "https://twitter.com/MTGNerdGirl/status/1365375385903357954",
+    "previewed_at": "2021-02-26"
+  },
+  "prices": {
+    "usd": "0.10",
+    "usd_foil": "0.37",
+    "usd_etched": null,
+    "eur": "0.03",
+    "eur_foil": "0.08",
+    "tix": "0.04"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=509432&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DErratic%2BMutation",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DErratic%2BMutation",
+    "edhrec": "https://edhrec.com/route/?cc=Erratic+Mutation"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F233774%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=543056&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/86497?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

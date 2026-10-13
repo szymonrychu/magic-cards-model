@@ -1443,6 +1443,7 @@ class PlayedScenario:
         *mana_sources: CardState,
         username: str | None = None,
         index: int = 0,
+        x_value: int = 0,
     ) -> object:
         """Cycle a card out of its owner's hand (CR 702.29a).
 
@@ -1471,7 +1472,7 @@ class PlayedScenario:
             for mana_source in mana_sources:
                 payment.tap_for_mana(mana_source, mana_from(mana_source))
 
-        return keywords.cycle(self.game, card_state, player, pay, index)
+        return keywords.cycle(self.game, card_state, player, pay, index, x_value)
 
     def bring_companion_to_hand(
         self, *mana_sources: CardState, username: str | None = None

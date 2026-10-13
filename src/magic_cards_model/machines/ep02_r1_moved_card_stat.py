@@ -40,10 +40,12 @@ from ..models.zone import Zone
 from .amount_sentences import (
     TokenMaker,
     apply_life,
+    apply_mill,
     parse_cards_clause,
     parse_create,
     parse_damage_clause,
     parse_life_clause,
+    parse_mill_clause,
     parse_put_counters,
     split_where_x,
     token_maker,
@@ -136,6 +138,7 @@ _MOVED_SUBJECT = (
     r"(?: (?:creature|artifact|permanent|nonland|instant|sorcery))*"
     r" (?:card|creature|permanent|artifact|spell)"
     r"|the spell|that spell"
+    r"|the (?:milled |revealed |discarded )?card"
 )
 _MOVED_POSSESSIVE_RE = re.compile(
     rf"^(?P<subject>{_MOVED_SUBJECT})'s (?P<stat>{_STATS})$|^its (?P<its_stat>{_STATS})$"
@@ -246,11 +249,19 @@ class State:
     legal: list[Any] | None = None
     cursor: int = 0
     token_controller: str | None = None
+    player: str | None = None
+    """"that player": whose card the text just revealed or discarded."""
 
     def targets(self, game: "Game", stack_object: Any) -> list[Any]:
         if self.legal is None:
             self.legal = [game.legal_target(stack_object, ref) for ref in stack_object.targets]
         return self.legal
+
+    def first_target(self, game: "Game", stack_object: Any) -> Any:
+        """The first target, for "that permanent or player" / "that creature"
+        looking back at what the text chose, without consuming it."""
+        legal = self.targets(game, stack_object)
+        return legal[0] if legal else None
 
     def next_target(self, game: "Game", stack_object: Any) -> Any:
         """The next target in printed order, `None` if it is illegal now or
@@ -472,7 +483,7 @@ _TOKEN_SIZE_RE = re.compile(
     re.IGNORECASE,
 )
 _PUMP_RE = re.compile(
-    r"^(?P<subject>target creature|this creature|this permanent|"
+    r"^(?P<subject>target creature|that creature|this creature|this permanent|"
     r"(?-i:[A-Z][^ ]*(?: [A-Z][^ ]*)*)) gets (?P<power>[+-](?:x|\d+))/"
     r"(?P<toughness>[+-](?:x|y|\d+)) until end of turn$",
     re.IGNORECASE,
@@ -506,6 +517,11 @@ def _step_x_pair(parts: tuple[tuple[str, str, bool], ...], phrase: Phrase) -> Re
     return step
 
 
+#: The players a life clause may name; "that player" is the one the text just
+#: revealed a card of.
+_LIFE_WHO = ("you", "target player", "target opponent", "each opponent", "each player", "that player")
+
+
 def _x_pair(body: str) -> tuple[tuple[str, str, bool], ...] | None:
     """The two parts of an "X life and X life/cards" body, the second
     inheriting the first's subject when it prints none."""
@@ -515,7 +531,7 @@ def _x_pair(body: str) -> tuple[tuple[str, str, bool], ...] | None:
         life = parse_life_clause(part)
         if life is not None and life.kind == "x" and life.expr is None and life.n == 1:
             subject = life.who or subject
-            if subject not in ("you", "target player", "target opponent"):
+            if subject not in _LIFE_WHO:
                 return None
             parts.append(("life", subject, life.gains))
             continue
@@ -532,8 +548,36 @@ def _x_pair(body: str) -> tuple[tuple[str, str, bool], ...] | None:
 def _step_life_equal(who: str, gains: bool, phrase: Phrase) -> ResolutionStep:
     def step(game: "Game", stack_object: Any, state: State) -> bool:
         amount = _amount(game, stack_object, state, phrase)
-        targets = None if who == "you" else [state.next_target(game, stack_object)]
-        apply_life(game, stack_object, who, gains, lambda *_: amount, targets=targets)
+        targets = [state.next_target(game, stack_object)] if who.startswith("target") else None
+        fallback = () if state.player is None else (state.player,)
+        apply_life(
+            game, stack_object, who, gains, lambda *_: amount, targets=targets, fallback=fallback
+        )
+        return True
+
+    return step
+
+
+_MILL_WHO = ("", "you", "target player", "target opponent", "each opponent", "that player")
+
+
+def _step_mill(who: str, phrase: Phrase) -> ResolutionStep:
+    """ "<Player> mills X cards, where X is the stat": a player the text names,
+    or the controller of the object the amount names."""
+
+    def step(game: "Game", stack_object: Any, state: State) -> bool:
+        amount = _amount(game, stack_object, state, phrase)
+        if _ITS_CONTROLLER_RE.fullmatch(who):
+            referent = _referent_for(game, stack_object, state, phrase.anchor)
+            owner = getattr(referent, "controller", None)
+            if owner is not None:
+                apply_mill(game, stack_object, "that player", lambda *_: amount, fallback=(owner,))
+            return True
+        targets = [state.next_target(game, stack_object)] if who.startswith("target") else None
+        fallback = () if state.player is None else (state.player,)
+        apply_mill(
+            game, stack_object, who or "you", lambda *_: amount, targets=targets, fallback=fallback
+        )
         return True
 
     return step
@@ -558,6 +602,9 @@ _ITS_CONTROLLER_RE = re.compile(
     r"^(?:its|that (?:spell|creature|permanent)'s) controller$", re.IGNORECASE
 )
 _TARGET_RE = re.compile(r"^(?:up to one )?(?:another )?target .+$|^any target$", re.IGNORECASE)
+_THAT_RE = re.compile(
+    r"^that (?P<what>permanent or player|player|creature|permanent|planeswalker)$", re.IGNORECASE
+)
 
 
 @dataclass
@@ -597,6 +644,13 @@ class _Damage:
             owner = None if referent is None else getattr(referent, "controller", None)
             if owner is not None:
                 game.deal_damage(game.player(owner), amount, source=source)
+        elif (that := _THAT_RE.fullmatch(recipient)) is not None:
+            if that["what"].lower() == "player" and state.player is not None:
+                target = game.player(state.player)
+            else:
+                target = state.first_target(game, stack_object)
+            if target is not None:
+                game.deal_damage(target, amount, source=source)
         else:
             target = state.next_target(game, stack_object)
             if target is not None:
@@ -604,11 +658,16 @@ class _Damage:
         return True
 
 
-def _step_made_tokens(make: TokenMaker, phrase: Phrase) -> ResolutionStep:
-    """X tokens, or one X/X, where X is the stat (`amount_sentences.token_maker`)."""
+def _step_made_tokens(make: TokenMaker, phrase: Phrase, *, who: str = "") -> ResolutionStep:
+    """X tokens, or one X/X, where X is the stat (`amount_sentences.token_maker`).
+    "That player creates" is the controller of the object the amount names
+    (CR 111.2: the creator owns the token)."""
 
     def step(game: "Game", stack_object: Any, state: State) -> bool:
         controller = state.token_controller or game.controller_of(stack_object).username
+        if who == "that player":
+            referent = _referent_for(game, stack_object, state, phrase.anchor)
+            controller = getattr(referent, "controller", None) or state.player or controller
         make(game, controller, _amount(game, stack_object, state, phrase))
         return True
 
@@ -652,6 +711,7 @@ def _step_pump(
     from .effects.continuous import continuous_effects, layer_context_for
 
     on_target = subject.lower() == "target creature"
+    on_that = subject.lower() == "that creature"
 
     def literal(x: int, y: int) -> str:
         def number(spec: str) -> str:
@@ -659,14 +719,17 @@ def _step_pump(
             value = x if word == "x" else y if word == "y" else int(word)
             return f"{spec[0]}{value}"
 
-        who = "Target creature" if on_target else "This creature"
+        who = "Target creature" if on_target or on_that else "This creature"
         return f"{who} gets {number(power)}/{number(toughness)} until end of turn."
 
     def step(game: "Game", stack_object: Any, state: State) -> bool:
         x = _amount(game, stack_object, state, x_phrase)
         y = 0 if y_phrase is None else _amount(game, stack_object, state, y_phrase)
         source = _source_card(game, stack_object)
-        recipient = state.next_target(game, stack_object) if on_target else source
+        if on_that:
+            recipient = state.first_target(game, stack_object)
+        else:
+            recipient = state.next_target(game, stack_object) if on_target else source
         if (
             source is None
             or not isinstance(recipient, CardState)
@@ -741,7 +804,7 @@ def _amount_step(sentence: str, *, for_spell: bool, opener: bool) -> ResolutionS
     if (
         life is not None
         and life.kind == "equal"
-        and life.who in ("you", "target player", "target opponent")
+        and life.who in _LIFE_WHO
         and (p := _phrase(life.expr or ""))
     ):
         return None if barred(p, allowed=False) else _step_life_equal(life.who, life.gains, p)
@@ -761,20 +824,29 @@ def _amount_step(sentence: str, *, for_spell: bool, opener: bool) -> ResolutionS
             _EACH_RE.fullmatch(recipient)
             or _ITS_CONTROLLER_RE.fullmatch(recipient)
             or _TARGET_RE.fullmatch(recipient)
+            or _THAT_RE.fullmatch(recipient)
         ):
             return None
         return _Damage(p, recipient)
+    mill = parse_mill_clause(sentence)
+    if (
+        mill is not None
+        and mill.kind in ("x", "equal")
+        and (p := _phrase(mill.expr or ""))
+        and (mill.who in _MILL_WHO or _ITS_CONTROLLER_RE.fullmatch(mill.who))
+    ):
+        return None if barred(p, allowed=False) else _step_mill(mill.who, p)
     created = parse_create(body) if where is not None else None
     if (
         created is not None
-        and created[0] in ("", "you")
+        and created[0] in ("", "you", "that player")
         and re.match(r"^(?:x\s|an? x/x\s)", created[1], re.IGNORECASE)
         and (p := _phrase(tail))
     ):
         if barred(p, allowed=False):
             return None
         make = token_maker(created[1])
-        return None if make is None else _step_made_tokens(make, p)
+        return None if make is None else _step_made_tokens(make, p, who=created[0])
     if (
         where is not None
         and (m := _PUMP_RE.fullmatch(body))

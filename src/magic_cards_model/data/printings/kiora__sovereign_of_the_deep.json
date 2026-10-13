@@ -1,0 +1,143 @@
+{
+  "object": "card",
+  "id": "7b599f53-614c-4b1f-9899-15d5d1e35879",
+  "oracle_id": "95df54e2-0196-4e54-8144-de5982ce07f5",
+  "multiverse_ids": [
+    615428
+  ],
+  "mtgo_id": 109192,
+  "arena_id": 85091,
+  "tcgplayer_id": 495599,
+  "cardmarket_id": 710187,
+  "name": "Kiora, Sovereign of the Deep",
+  "lang": "en",
+  "released_at": "2023-05-12",
+  "uri": "https://api.scryfall.com/cards/7b599f53-614c-4b1f-9899-15d5d1e35879",
+  "scryfall_uri": "https://scryfall.com/card/mat/35/kiora-sovereign-of-the-deep?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T04:21:53Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/7/b/7b599f53-614c-4b1f-9899-15d5d1e35879.jpg?1783916513",
+    "normal": "https://cards.scryfall.io/normal/front/7/b/7b599f53-614c-4b1f-9899-15d5d1e35879.jpg?1783916513",
+    "large": "https://cards.scryfall.io/large/front/7/b/7b599f53-614c-4b1f-9899-15d5d1e35879.jpg?1783916513",
+    "png": "https://cards.scryfall.io/png/front/7/b/7b599f53-614c-4b1f-9899-15d5d1e35879.png?1783916513",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/7/b/7b599f53-614c-4b1f-9899-15d5d1e35879.jpg?1783916513",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/7/b/7b599f53-614c-4b1f-9899-15d5d1e35879.jpg?1783916513",
+    "thumb": "https://cards.scryfall.io/thumb/front/7/b/7b599f53-614c-4b1f-9899-15d5d1e35879.webp?1783916513",
+    "grid": "https://cards.scryfall.io/grid/front/7/b/7b599f53-614c-4b1f-9899-15d5d1e35879.webp?1783916513",
+    "display": "https://cards.scryfall.io/display/front/7/b/7b599f53-614c-4b1f-9899-15d5d1e35879.webp?1783916513",
+    "art": "https://cards.scryfall.io/art/front/7/b/7b599f53-614c-4b1f-9899-15d5d1e35879.webp?1783916513",
+    "crop": "https://cards.scryfall.io/crop/front/7/b/7b599f53-614c-4b1f-9899-15d5d1e35879.webp?1783916513"
+  },
+  "mana_cost": "{3}{G}{U}",
+  "cmc": 5.0,
+  "type_line": "Legendary Creature \u2014 Merfolk Noble",
+  "oracle_text": "Vigilance, ward {3}\nWhenever you cast a Kraken, Leviathan, Octopus, or Serpent spell from your hand, look at the top X cards of your library, where X is that spell's mana value. You may cast a spell with mana value less than X from among them without paying its mana cost. Put the rest on the bottom of your library in a random order.",
+  "power": "4",
+  "toughness": "5",
+  "colors": [
+    "G",
+    "U"
+  ],
+  "color_identity": [
+    "G",
+    "U"
+  ],
+  "keywords": [
+    "Vigilance",
+    "Ward"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "arena",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "6727e43d-31b6-45b0-ae05-7a811ba72f70",
+  "set": "mat",
+  "set_name": "March of the Machine: The Aftermath",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/6727e43d-31b6-45b0-ae05-7a811ba72f70",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Amat&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/mat?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/7b599f53-614c-4b1f-9899-15d5d1e35879/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A95df54e2-0196-4e54-8144-de5982ce07f5&unique=prints",
+  "collector_number": "35",
+  "digital": false,
+  "rarity": "mythic",
+  "watermark": "desparked",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Chris Rallis",
+  "artist_ids": [
+    "a8e7b854-b15a-421a-b66d-6e68187ae285"
+  ],
+  "illustration_id": "b06d1dc6-ca75-4e7c-a9b0-2c6c886c6b47",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 8821,
+  "prices": {
+    "usd": "2.70",
+    "usd_foil": "3.89",
+    "usd_etched": null,
+    "eur": "1.31",
+    "eur_foil": "2.02",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=615428&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DKiora%252C%2BSovereign%2Bof%2Bthe%2BDeep",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DKiora%252C%2BSovereign%2Bof%2Bthe%2BDeep",
+    "edhrec": "https://edhrec.com/route/?cc=Kiora%2C+Sovereign+of+the+Deep"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F495599%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=710187&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/109192?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

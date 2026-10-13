@@ -34,8 +34,13 @@ if TYPE_CHECKING:  # pragma: no cover
 #: The openings a printed state trigger uses for "nothing of this kind is
 #: there": "When you control no Swamps", "When there are no cards in your
 #: graveyard", "When there are no creatures on the battlefield", "When you have
-#: no cards in hand".
-STATE_CONDITION_START = re.compile(r"^(?:you control no|there are no|you have no) ", re.IGNORECASE)
+#: no cards in hand"; and the counted form, "When you control seven or more
+#: Thrulls".
+STATE_CONDITION_START = re.compile(
+    r"^(?:you control no|there are no|you have no"
+    r"|you control (?:\d+|[a-z]+) or more) ",
+    re.IGNORECASE,
+)
 
 
 @cache

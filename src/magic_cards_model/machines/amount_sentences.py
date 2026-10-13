@@ -321,10 +321,13 @@ def apply_mill(
     amount: Amount,
     *,
     targets: list[Any] | None = None,
+    fallback: tuple[str, ...] = (),
 ) -> None:
     """`who` mills `amount` each, every amount read before any card moves."""
     controller = controller_of(game, stack_object)
-    players = resolve_recipients(game, stack_object, who, controller, targets=targets)
+    players = resolve_recipients(
+        game, stack_object, who, controller, targets=targets, fallback=fallback
+    )
     mill_players(game, players, [amount(game, stack_object, player) for player in players])
 
 
