@@ -1,0 +1,132 @@
+{
+  "object": "card",
+  "id": "544b2931-0af1-4743-b7c1-91e1dc9294d5",
+  "oracle_id": "48ddba1e-2ad7-463f-9307-d2379a800e51",
+  "multiverse_ids": [
+    567620
+  ],
+  "mtgo_id": 101152,
+  "tcgplayer_id": 273799,
+  "cardmarket_id": 661944,
+  "name": "Mizzium Mortars",
+  "lang": "en",
+  "released_at": "2022-06-10",
+  "uri": "https://api.scryfall.com/cards/544b2931-0af1-4743-b7c1-91e1dc9294d5",
+  "scryfall_uri": "https://scryfall.com/card/clb/803/mizzium-mortars?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T06:00:18Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/5/4/544b2931-0af1-4743-b7c1-91e1dc9294d5.jpg?1783922418",
+    "normal": "https://cards.scryfall.io/normal/front/5/4/544b2931-0af1-4743-b7c1-91e1dc9294d5.jpg?1783922418",
+    "large": "https://cards.scryfall.io/large/front/5/4/544b2931-0af1-4743-b7c1-91e1dc9294d5.jpg?1783922418",
+    "png": "https://cards.scryfall.io/png/front/5/4/544b2931-0af1-4743-b7c1-91e1dc9294d5.png?1783922418",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/5/4/544b2931-0af1-4743-b7c1-91e1dc9294d5.jpg?1783922418",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/5/4/544b2931-0af1-4743-b7c1-91e1dc9294d5.jpg?1783922418",
+    "thumb": "https://cards.scryfall.io/thumb/front/5/4/544b2931-0af1-4743-b7c1-91e1dc9294d5.webp?1783922418",
+    "grid": "https://cards.scryfall.io/grid/front/5/4/544b2931-0af1-4743-b7c1-91e1dc9294d5.webp?1783922418",
+    "display": "https://cards.scryfall.io/display/front/5/4/544b2931-0af1-4743-b7c1-91e1dc9294d5.webp?1783922418",
+    "art": "https://cards.scryfall.io/art/front/5/4/544b2931-0af1-4743-b7c1-91e1dc9294d5.webp?1783922418",
+    "crop": "https://cards.scryfall.io/crop/front/5/4/544b2931-0af1-4743-b7c1-91e1dc9294d5.webp?1783922418"
+  },
+  "mana_cost": "{1}{R}",
+  "cmc": 2.0,
+  "type_line": "Sorcery",
+  "oracle_text": "Mizzium Mortars deals 4 damage to target creature you don't control.\nOverload {3}{R}{R}{R} (You may cast this spell for its overload cost. If you do, change \"target\" in its text to \"each.\")",
+  "colors": [
+    "R"
+  ],
+  "color_identity": [
+    "R"
+  ],
+  "keywords": [
+    "Overload"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": false,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "5e4c3fe8-fd57-4b20-ad56-c03790a16cea",
+  "set": "clb",
+  "set_name": "Commander Legends: Battle for Baldur's Gate",
+  "set_type": "draft_innovation",
+  "set_uri": "https://api.scryfall.com/sets/5e4c3fe8-fd57-4b20-ad56-c03790a16cea",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Aclb&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/clb?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/544b2931-0af1-4743-b7c1-91e1dc9294d5/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A48ddba1e-2ad7-463f-9307-d2379a800e51&unique=prints",
+  "collector_number": "803",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Christina Davis",
+  "artist_ids": [
+    "01352a25-8032-471e-a6b1-c9642b1ee825"
+  ],
+  "illustration_id": "b9adb8a2-7ae1-4bcf-8566-6e5314fe49bc",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "edhrec_rank": 3062,
+  "penny_rank": 1347,
+  "prices": {
+    "usd": "0.54",
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": "0.26",
+    "eur_foil": null,
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=567620&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DMizzium%2BMortars",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DMizzium%2BMortars",
+    "edhrec": "https://edhrec.com/route/?cc=Mizzium+Mortars"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F273799%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=661944&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/101152?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

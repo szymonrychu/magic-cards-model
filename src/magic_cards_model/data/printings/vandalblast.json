@@ -1,0 +1,135 @@
+{
+  "object": "card",
+  "id": "71067239-d46f-4201-a91c-6aa4c41fa8b1",
+  "oracle_id": "3567c3c8-b3c7-45b7-935b-b1fdbc973720",
+  "multiverse_ids": [],
+  "resource_id": "A12F35B18D99852CA55811F6B563F4F43D1F39DF6AF3938A2111C2CCA6209838",
+  "mtgo_id": 150805,
+  "tcgplayer_id": 698091,
+  "cardmarket_id": 892423,
+  "name": "Vandalblast",
+  "lang": "en",
+  "released_at": "2026-06-26",
+  "uri": "https://api.scryfall.com/cards/71067239-d46f-4201-a91c-6aa4c41fa8b1",
+  "scryfall_uri": "https://scryfall.com/card/msc/168/vandalblast?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T00:40:32Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/7/1/71067239-d46f-4201-a91c-6aa4c41fa8b1.jpg?1783903232",
+    "normal": "https://cards.scryfall.io/normal/front/7/1/71067239-d46f-4201-a91c-6aa4c41fa8b1.jpg?1783903232",
+    "large": "https://cards.scryfall.io/large/front/7/1/71067239-d46f-4201-a91c-6aa4c41fa8b1.jpg?1783903232",
+    "png": "https://cards.scryfall.io/png/front/7/1/71067239-d46f-4201-a91c-6aa4c41fa8b1.png?1783903232",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/7/1/71067239-d46f-4201-a91c-6aa4c41fa8b1.jpg?1783903232",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/7/1/71067239-d46f-4201-a91c-6aa4c41fa8b1.jpg?1783903232",
+    "thumb": "https://cards.scryfall.io/thumb/front/7/1/71067239-d46f-4201-a91c-6aa4c41fa8b1.webp?1783903232",
+    "grid": "https://cards.scryfall.io/grid/front/7/1/71067239-d46f-4201-a91c-6aa4c41fa8b1.webp?1783903232",
+    "display": "https://cards.scryfall.io/display/front/7/1/71067239-d46f-4201-a91c-6aa4c41fa8b1.webp?1783903232",
+    "art": "https://cards.scryfall.io/art/front/7/1/71067239-d46f-4201-a91c-6aa4c41fa8b1.webp?1783903232",
+    "crop": "https://cards.scryfall.io/crop/front/7/1/71067239-d46f-4201-a91c-6aa4c41fa8b1.webp?1783903232"
+  },
+  "mana_cost": "{R}",
+  "cmc": 1.0,
+  "type_line": "Sorcery",
+  "oracle_text": "Destroy target artifact you don't control.\nOverload {4}{R} (You may cast this spell for its overload cost. If you do, change \"target\" in its text to \"each.\")",
+  "colors": [
+    "R"
+  ],
+  "color_identity": [
+    "R"
+  ],
+  "keywords": [
+    "Overload"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "9d739461-c5ac-43a1-af41-3d5a585b5c8d",
+  "set": "msc",
+  "set_name": "Marvel Super Heroes Commander",
+  "set_type": "commander",
+  "set_uri": "https://api.scryfall.com/sets/9d739461-c5ac-43a1-af41-3d5a585b5c8d",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Amsc&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/msc?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/71067239-d46f-4201-a91c-6aa4c41fa8b1/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A3567c3c8-b3c7-45b7-935b-b1fdbc973720&unique=prints",
+  "collector_number": "168",
+  "digital": false,
+  "rarity": "uncommon",
+  "flavor_text": "\"C'mon in. Make yourself at home. Here, let me take your things.\"\n\u2014Molecule Man, Owen Reece",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Javier Charro",
+  "artist_ids": [
+    "8fd2d5fa-3b94-4e48-9cec-9d148acc8180"
+  ],
+  "illustration_id": "5571dfbd-d49e-4ced-b50f-5c60232b2d8f",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "promo_types": [
+    "surgefoil",
+    "universesbeyond"
+  ],
+  "edhrec_rank": 100,
+  "penny_rank": 2345,
+  "prices": {
+    "usd": "1.76",
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": "2.72",
+    "eur_foil": null,
+    "tix": "0.43"
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DVandalblast",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DVandalblast",
+    "edhrec": "https://edhrec.com/route/?cc=Vandalblast"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F698091%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=892423&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/150805?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

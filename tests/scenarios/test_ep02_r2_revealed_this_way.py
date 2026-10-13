@@ -1663,3 +1663,179 @@ def test_alrund_does_not_count_an_unforetold_exiled_card_or_the_opponents_foreto
     )
     alrund = scenario.find("Alrund, God of the Cosmos", Zone.BATTLEFIELD, "alice")
     assert scenario.game.power_of(alrund) == 1
+
+
+# ==========================================================================
+# Second printings: the readers above proven on cards that were not the target
+# ==========================================================================
+
+# -- Overload (CR 702.96a-b): Vandalblast and Mizzium Mortars ----------------------
+
+
+def test_vandalblast_destroys_the_one_target_when_cast_normally():
+    scenario = _board(
+        alice_hand=["Vandalblast"],
+        alice_battlefield=["Sol Ring"],
+        bob_battlefield=["Sol Ring", "Mind Stone"],
+    )
+    ring = scenario.find("Sol Ring", Zone.BATTLEFIELD, "bob")
+    _cast(scenario, "Vandalblast", targets=[ring])
+    assert ring.zone is Zone.GRAVEYARD
+    assert "Mind Stone" in _battlefield_of(scenario, "bob")
+
+
+def test_vandalblast_overloaded_destroys_each_artifact_you_dont_control():
+    scenario = _board(
+        alice_hand=["Vandalblast"],
+        alice_battlefield=["Sol Ring"],
+        alice_lands=("Mountain",) * 3,
+        bob_battlefield=["Sol Ring", "Mind Stone"],
+    )
+    _cast_with(scenario, "Vandalblast", "Overload")
+    assert _battlefield_of(scenario, "bob") == []
+    assert _battlefield_of(scenario, "alice") == ["Sol Ring"]
+
+
+def test_an_overloaded_spell_takes_no_target_and_a_normal_one_does():
+    scenario = _board(
+        alice_hand=["Vandalblast"], alice_lands=("Mountain",) * 3, bob_battlefield=["Sol Ring"]
+    )
+    ring = scenario.find("Sol Ring", Zone.BATTLEFIELD, "bob")
+    overloaded = scenario.cast("Vandalblast", username="alice")
+    overloaded.use_keyword("Overload")
+    with pytest.raises(ValueError):
+        overloaded.choose_targets([ring])  # CR 702.96b: it won't require (or take) a target
+
+
+def test_mizzium_mortars_overloaded_hits_every_creature_you_dont_control_but_not_yours():
+    scenario = _board(
+        alice_hand=["Mizzium Mortars"],
+        alice_battlefield=["Grizzly Bears"],
+        alice_lands=("Mountain",) * 6,
+        bob_battlefield=["Hill Giant", "Serra Angel"],
+    )
+    _cast_with(scenario, "Mizzium Mortars", "Overload")
+    assert _battlefield_of(scenario, "bob") == ["Serra Angel"] or _battlefield_of(
+        scenario, "bob"
+    ) == []
+    assert "Hill Giant" not in _battlefield_of(scenario, "bob")
+    assert _battlefield_of(scenario, "alice") == ["Grizzly Bears"]
+
+
+def test_mizzium_mortars_normal_cast_burns_one_creature():
+    scenario = _board(
+        alice_hand=["Mizzium Mortars"],
+        alice_lands=("Mountain",) * 2,
+        bob_battlefield=["Hill Giant", "Serra Angel"],
+    )
+    giant = scenario.creature("Hill Giant", "bob")
+    _cast(scenario, "Mizzium Mortars", targets=[giant])
+    assert giant.zone is Zone.GRAVEYARD
+    assert "Serra Angel" in _battlefield_of(scenario, "bob")
+
+
+# -- Choose a name, search all three zones and exile (CR 701.23a): four spells -----
+
+
+def _name_search_board(card_in_hand):
+    return _board(
+        alice_hand=[card_in_hand],
+        alice_lands=("Island", "Swamp", "Island", "Swamp", "Island", "Swamp"),
+        bob_hand=["Grizzly Bears", "Forest"],
+        bob_graveyard=["Grizzly Bears"],
+        bob_library=["Grizzly Bears", "Island"],
+    )
+
+
+def test_ancient_vendetta_exiles_the_named_cards_and_draws_nothing():
+    scenario = _name_search_board("Ancient Vendetta")
+    scenario.will_choose("Grizzly Bears", username="alice")
+    _cast(scenario, "Ancient Vendetta", targets=["bob"])
+    assert _exiled_names(scenario) == ["Grizzly Bears"] * 3
+    assert _names(scenario, "bob", Zone.HAND) == ["Forest"]  # "Then that player shuffles", no draw
+
+
+def test_lost_legacy_takes_every_copy_and_draws_for_the_ones_from_hand():
+    scenario = _name_search_board("Lost Legacy")
+    scenario.will_choose("Grizzly Bears", username="alice")
+    _cast(scenario, "Lost Legacy", targets=["bob"])
+    assert _exiled_names(scenario) == ["Grizzly Bears"] * 3
+    assert len(scenario.player("bob").hand) == 2  # Forest and the card drawn for the Bears
+
+
+def test_lost_legacy_refuses_a_land_name():
+    scenario = _name_search_board("Lost Legacy")
+    scenario.will_choose("Forest", username="alice")
+    with pytest.raises(ValueError):
+        _cast(scenario, "Lost Legacy", targets=["bob"])
+
+
+def test_cranial_extraction_exiles_all_cards_with_a_nonland_name():
+    scenario = _name_search_board("Cranial Extraction")
+    scenario.will_choose("Grizzly Bears", username="alice")
+    _cast(scenario, "Cranial Extraction", targets=["bob"])
+    assert _exiled_names(scenario) == ["Grizzly Bears"] * 3
+
+
+def test_infinite_obliteration_names_a_creature_card():
+    scenario = _name_search_board("Infinite Obliteration")
+    scenario.will_choose("Grizzly Bears", username="alice")
+    _cast(scenario, "Infinite Obliteration", targets=["bob"])
+    assert _exiled_names(scenario) == ["Grizzly Bears"] * 3
+
+
+def test_the_stone_brain_is_unchanged_by_reading_spells_too():
+    scenario = _board(
+        alice_battlefield=["The Stone Brain"],
+        bob_hand=["Grizzly Bears"],
+        bob_graveyard=["Grizzly Bears"],
+        bob_library=["Island"],
+    )
+    brain = scenario.find("The Stone Brain", Zone.BATTLEFIELD, "alice")
+    scenario.will_choose("Grizzly Bears", username="alice")
+    scenario.activate(brain, auto=True, targets=["bob"])
+    scenario.pass_until_resolved()
+    assert _exiled_names(scenario) == ["Grizzly Bears"] * 2 + ["The Stone Brain"]
+    assert _names(scenario, "bob", Zone.HAND) == ["Island"]
+
+
+# -- "If <a thing> was <verb> this way" after one ordinary instruction -------------
+
+
+def test_smashing_success_makes_a_treasure_only_when_an_artifact_was_destroyed():
+    scenario = _board(
+        alice_hand=["Smashing Success"],
+        alice_lands=("Mountain", "Mountain", "Mountain"),
+        bob_battlefield=["Sol Ring"],
+    )
+    _cast(scenario, "Smashing Success", targets=[scenario.find("Sol Ring", Zone.BATTLEFIELD, "bob")])
+    assert any(s.name == "Treasure Token" and s.controller == "alice" for s in scenario.game.battlefield)
+
+
+def test_smashing_success_destroying_a_land_makes_no_treasure():
+    scenario = _board(alice_hand=["Smashing Success"], alice_lands=("Mountain", "Mountain", "Mountain"))
+    land = scenario.find("Swamp", Zone.BATTLEFIELD, "bob")
+    _cast(scenario, "Smashing Success", targets=[land])
+    assert land.zone is Zone.GRAVEYARD
+    assert not any(s.name == "Treasure Token" for s in scenario.game.battlefield)
+
+
+def _ignis(graveyard_card):
+    scenario = _board(alice_battlefield=["Ignis Scientia"], bob_graveyard=[graveyard_card])
+    ignis = scenario.find("Ignis Scientia", Zone.BATTLEFIELD, "alice")
+    card = scenario.find(graveyard_card, Zone.GRAVEYARD, "bob")
+    scenario.activate(ignis, auto=True, targets=[card])
+    scenario.pass_until_resolved()
+    return scenario, card
+
+
+def test_ignis_scientia_makes_a_food_when_a_creature_card_was_exiled():
+    scenario, card = _ignis("Grizzly Bears")
+    assert card.zone is Zone.EXILE
+    assert any(s.name == "Food Token" and s.controller == "alice" for s in scenario.game.battlefield)
+
+
+def test_ignis_scientia_exiling_a_noncreature_card_makes_no_food():
+    scenario, card = _ignis("Lightning Bolt")
+    assert card.zone is Zone.EXILE
+    assert not any(s.name == "Food Token" for s in scenario.game.battlefield)
