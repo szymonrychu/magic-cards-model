@@ -2334,7 +2334,8 @@ class Game(
     #: it hit, "Enchanted player can't gain life." and "Players have no maximum
     #: hand size." are read off the battlefield, and a Crew N ability is
     #: once-per-turn; an older dump would resolve each of these as a no-op.
-    #: 169 (EP02-R2-T2, reserved 164, landed as 169): `Player` gained `cannot_cast_spells_for_rest_of_game`
+    #: EP-02-R2: T2, T4, T5 and T7 each reserved 164; the round lands as one version, 169.
+    #: 169 (EP02-R2-T2): `Player` gained `cannot_cast_spells_for_rest_of_game`
     #: and `CardState` gained `epic_suppressed` (epic, CR 702.50a/b), and
     #: `DelayedEffectSpec` gained the variant `epic_copy_spell`; a pending
     #: `AbilityOnStack` can carry it. Also behavioural changes to dispatch a
@@ -2344,7 +2345,7 @@ class Game(
     #: off a trigger, an equip cost scaled by the hand, and the free cast of an
     #: instant or sorcery bounded by "that damage"; an older dump would resolve
     #: each of these as a no-op.
-    #: 169 (EP02-R2-T4, reserved 164, landed as 169): `CardState` gained `prototyped` (CR 718.3b, the
+    #: 169 (EP02-R2-T4): `CardState` gained `prototyped` (CR 718.3b, the
     #: alternative mana cost, power and toughness of a prototyped spell and its
     #: permanent; a decoded older object is never prototyped); `AbilityOnStack`
     #: gained `cost_discarded_card_ids` and
@@ -2379,7 +2380,7 @@ class Game(
     #: subject, and a "colorless" word in a cost's card requirement; an older
     #: dump would resolve each of these as a no-op or fire the trigger on every
     #: creature.
-    #: 169 (EP02-R2-T7, reserved 164, landed as 169): `Game.mana_spent_on_spells_this_turn` (CR 700.14's
+    #: 169 (EP02-R2-T7): `Game.mana_spent_on_spells_this_turn` (CR 700.14's
     #: expend), `SpellCostReductionGrant.once` (Kaza's "the next instant or
     #: sorcery spell you cast this turn costs {1} less ..."), and a
     #: `DelayedEffectSpec` variant `damage_each_opponent_per_card_still_exiled`;
@@ -2391,7 +2392,7 @@ class Game(
     #: counts ("for each <type> card in your graveyard", "card types among
     #: cards in your graveyard", "that player's graveyard") now resolve where
     #: an older dump would have resolved the same text as a no-op.
-    #: 169 (EP-02-R2-T5, reserved 164, landed as 169): `machines/layers` gained the persisted selector variants
+    #: 169 (EP-02-R2-T5): `machines/layers` gained the persisted selector variants
     #: `CreaturesControlledByOpponentsOfWithPowerAtMost` and
     #: `PermanentsOfTypesWithCounter` and the modification variant
     #: `SetPowerToughnessToCounters`, all reachable from `Game.continuous_effects`;
