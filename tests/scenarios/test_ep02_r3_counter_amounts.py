@@ -174,3 +174,68 @@ def test_cultivator_does_not_pump_creatures_that_are_not_attacking():
     scenario, _cultivator, _bears = _cultivator_attack()
     lions = scenario.creature("Savannah Lions", "alice")
     assert _characteristics(scenario, lions) == (2, 1)
+
+
+# -- Unleash (CR 702.98a): may enter with a +1/+1 counter; can't block with one
+
+
+def _blocker_scenario(counter_choice):
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Grizzly Bears"], hand=["Hellhole Flailer"], library=["Forest"] * 8)
+        .player("bob", battlefield=["Grizzly Bears"], hand=["Rakdos Drake"], library=["Forest"] * 8)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scenario.will_take_the_may(counter_choice)
+    return scenario
+
+
+def test_unleash_taken_enters_with_a_counter():
+    scenario = _blocker_scenario(True)
+    flailer = scenario.put_onto_battlefield("Hellhole Flailer")
+    assert flailer.counter_count(Counter.PLUS_ONE) == 1
+
+
+def test_unleash_declined_enters_without_a_counter():
+    scenario = _blocker_scenario(False)
+    flailer = scenario.put_onto_battlefield("Hellhole Flailer")
+    assert flailer.counter_count(Counter.PLUS_ONE) == 0
+
+
+def test_unleashed_creature_with_a_counter_cannot_block():
+    from magic_cards_model.machines.combat import block_refusal
+
+    scenario = _blocker_scenario(True)
+    drake = scenario.put_onto_battlefield("Rakdos Drake", "bob")
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    bears = scenario.creature("Grizzly Bears", "alice")
+    scenario.attack_with(bears)
+    attack = scenario.game.combat.attack_by(bears.id)
+    reason = block_refusal(scenario.game, drake, attack)
+    assert reason is not None and "unleash" in reason.lower()
+
+
+def test_unleashed_creature_without_a_counter_can_block():
+    from magic_cards_model.machines.combat import block_refusal
+
+    scenario = _blocker_scenario(False)
+    drake = scenario.put_onto_battlefield("Rakdos Drake", "bob")
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    bears = scenario.creature("Grizzly Bears", "alice")
+    scenario.attack_with(bears)
+    attack = scenario.game.combat.attack_by(bears.id)
+    assert block_refusal(scenario.game, drake, attack) is None
+
+
+def test_unleashed_creature_blocks_again_once_the_counter_is_gone():
+    from magic_cards_model.machines.combat import block_refusal
+
+    scenario = _blocker_scenario(True)
+    drake = scenario.put_onto_battlefield("Rakdos Drake", "bob")
+    drake.remove_counters(Counter.PLUS_ONE, 1)
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    bears = scenario.creature("Grizzly Bears", "alice")
+    scenario.attack_with(bears)
+    attack = scenario.game.combat.attack_by(bears.id)
+    assert block_refusal(scenario.game, drake, attack) is None

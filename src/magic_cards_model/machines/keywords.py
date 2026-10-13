@@ -221,6 +221,10 @@ def executes(keyword: str) -> bool:
         # asking its controller, `machines/replacement._riot_modifiers` (the
         # haste half is `Game.enter_the_battlefield`'s `event.grants_haste`).
         "riot",
+        # CR 702.98a: the "enters with" half is `machines/replacement/enters.
+        # _unleash_modifiers`, the "can't block" half `machines/combat.
+        # block_refusal`.
+        "unleash",
         "cascade",
         "storm",
         # CR 702.153a: the additional cost is `machines/casting.Casting.
