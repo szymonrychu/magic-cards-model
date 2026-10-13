@@ -64,6 +64,7 @@ from ..ep02_r1_graveyard_counts import (
     parse_tapped_attacking_tokens_for_each_ability,
 )
 from ..ep02_r1_life_amounts import life_this_turn_count
+from ..ep02_r2_cards_in_zone_counts import hand_count_expression
 from ..layers import (
     BASIC_LAND_TYPES,
     Characteristics,
@@ -1122,6 +1123,11 @@ def count_expression(phrase: str) -> Callable[["Game", str], int] | None:
         # EP-02 R1 T5: "[the number of] <description> cards [named N] in your
         # graveyard / all graveyards", card types among, different mana values.
         return in_graveyard
+
+    if " in " in stripped and (in_zone := hand_count_expression(stripped)) is not None:
+        # EP-02 R2 T2: "[the number of] cards in your hand / their hand / your
+        # opponents' hands", cards with a keyword in a graveyard.
+        return in_zone
 
     if " ability in your graveyard" in stripped.lower() and (
         with_ability := _COUNT_CARDS_WITH_KEYWORD_ABILITY_IN_YOUR_GRAVEYARD_RE.fullmatch(stripped)

@@ -1,0 +1,140 @@
+{
+  "object": "card",
+  "id": "adfa16dc-03b3-4533-884c-a23b992b8d86",
+  "oracle_id": "eae7dd41-3d5f-49a7-baaa-2c03bb341c3a",
+  "multiverse_ids": [
+    455608
+  ],
+  "mtgo_id": 69363,
+  "arena_id": 68749,
+  "tcgplayer_id": 175569,
+  "cardmarket_id": 363836,
+  "name": "Ral's Staticaster",
+  "lang": "en",
+  "released_at": "2018-10-05",
+  "uri": "https://api.scryfall.com/cards/adfa16dc-03b3-4533-884c-a23b992b8d86",
+  "scryfall_uri": "https://scryfall.com/card/grn/268/rals-staticaster?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T09:14:55Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/a/d/adfa16dc-03b3-4533-884c-a23b992b8d86.jpg?1783934095",
+    "normal": "https://cards.scryfall.io/normal/front/a/d/adfa16dc-03b3-4533-884c-a23b992b8d86.jpg?1783934095",
+    "large": "https://cards.scryfall.io/large/front/a/d/adfa16dc-03b3-4533-884c-a23b992b8d86.jpg?1783934095",
+    "png": "https://cards.scryfall.io/png/front/a/d/adfa16dc-03b3-4533-884c-a23b992b8d86.png?1783934095",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/a/d/adfa16dc-03b3-4533-884c-a23b992b8d86.jpg?1783934095",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/a/d/adfa16dc-03b3-4533-884c-a23b992b8d86.jpg?1783934095",
+    "thumb": "https://cards.scryfall.io/thumb/front/a/d/adfa16dc-03b3-4533-884c-a23b992b8d86.webp?1783934095",
+    "grid": "https://cards.scryfall.io/grid/front/a/d/adfa16dc-03b3-4533-884c-a23b992b8d86.webp?1783934095",
+    "display": "https://cards.scryfall.io/display/front/a/d/adfa16dc-03b3-4533-884c-a23b992b8d86.webp?1783934095",
+    "art": "https://cards.scryfall.io/art/front/a/d/adfa16dc-03b3-4533-884c-a23b992b8d86.webp?1783934095",
+    "crop": "https://cards.scryfall.io/crop/front/a/d/adfa16dc-03b3-4533-884c-a23b992b8d86.webp?1783934095"
+  },
+  "mana_cost": "{2}{U}{R}",
+  "cmc": 4.0,
+  "type_line": "Creature \u2014 Lizard Wizard",
+  "oracle_text": "Trample (This creature can deal excess combat damage to the player or planeswalker it's attacking.)\nWhenever this creature attacks, if you control a Ral planeswalker, this creature gets +1/+0 for each card in your hand until end of turn.",
+  "power": "3",
+  "toughness": "3",
+  "colors": [
+    "R",
+    "U"
+  ],
+  "color_identity": [
+    "R",
+    "U"
+  ],
+  "keywords": [
+    "Trample"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "arena",
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": false,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "597c6d4a-8212-4903-a6af-12c4ae9e13f0",
+  "set": "grn",
+  "set_name": "Guilds of Ravnica",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/597c6d4a-8212-4903-a6af-12c4ae9e13f0",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Agrn&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/grn?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/adfa16dc-03b3-4533-884c-a23b992b8d86/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Aeae7dd41-3d5f-49a7-baaa-2c03bb341c3a&unique=prints",
+  "collector_number": "268",
+  "digital": false,
+  "rarity": "uncommon",
+  "watermark": "izzet",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Even Amundsen",
+  "artist_ids": [
+    "127faa6a-6c02-49a0-beba-ae76d06dd153"
+  ],
+  "illustration_id": "1859d600-69f5-4fd3-afc7-c4eaefd6dfdd",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "promo_types": [
+    "planeswalkerdeck"
+  ],
+  "edhrec_rank": 30565,
+  "prices": {
+    "usd": "0.18",
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": "0.10",
+    "eur_foil": null,
+    "tix": "2.85"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=455608&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DRal%2527s%2BStaticaster",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DRal%2527s%2BStaticaster",
+    "edhrec": "https://edhrec.com/route/?cc=Ral%27s+Staticaster"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F175569%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=363836&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/69363?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

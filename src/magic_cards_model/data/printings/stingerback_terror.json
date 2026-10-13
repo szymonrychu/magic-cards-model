@@ -1,0 +1,166 @@
+{
+  "object": "card",
+  "id": "2e9fa00b-bc34-4be8-a21f-11ae695f166d",
+  "oracle_id": "5cc6ca73-c38f-4ef8-a2c9-4f0342eebb73",
+  "multiverse_ids": [
+    657363
+  ],
+  "mtgo_id": 123793,
+  "tcgplayer_id": 544518,
+  "cardmarket_id": 764233,
+  "name": "Stingerback Terror",
+  "lang": "en",
+  "released_at": "2024-04-19",
+  "uri": "https://api.scryfall.com/cards/2e9fa00b-bc34-4be8-a21f-11ae695f166d",
+  "scryfall_uri": "https://scryfall.com/card/otj/336/stingerback-terror?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T03:02:31Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/2/e/2e9fa00b-bc34-4be8-a21f-11ae695f166d.jpg?1783911751",
+    "normal": "https://cards.scryfall.io/normal/front/2/e/2e9fa00b-bc34-4be8-a21f-11ae695f166d.jpg?1783911751",
+    "large": "https://cards.scryfall.io/large/front/2/e/2e9fa00b-bc34-4be8-a21f-11ae695f166d.jpg?1783911751",
+    "png": "https://cards.scryfall.io/png/front/2/e/2e9fa00b-bc34-4be8-a21f-11ae695f166d.png?1783911751",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/2/e/2e9fa00b-bc34-4be8-a21f-11ae695f166d.jpg?1783911751",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/2/e/2e9fa00b-bc34-4be8-a21f-11ae695f166d.jpg?1783911751",
+    "thumb": "https://cards.scryfall.io/thumb/front/2/e/2e9fa00b-bc34-4be8-a21f-11ae695f166d.webp?1783911751",
+    "grid": "https://cards.scryfall.io/grid/front/2/e/2e9fa00b-bc34-4be8-a21f-11ae695f166d.webp?1783911751",
+    "display": "https://cards.scryfall.io/display/front/2/e/2e9fa00b-bc34-4be8-a21f-11ae695f166d.webp?1783911751",
+    "art": "https://cards.scryfall.io/art/front/2/e/2e9fa00b-bc34-4be8-a21f-11ae695f166d.webp?1783911751",
+    "crop": "https://cards.scryfall.io/crop/front/2/e/2e9fa00b-bc34-4be8-a21f-11ae695f166d.webp?1783911751"
+  },
+  "mana_cost": "{2}{R}{R}",
+  "cmc": 4.0,
+  "type_line": "Creature \u2014 Scorpion Dragon",
+  "oracle_text": "Flying, trample\nThis creature gets -1/-1 for each card in your hand.\nPlot {2}{R} (You may pay {2}{R} and exile this card from your hand. Cast it as a sorcery on a later turn without paying its mana cost. Plot only as a sorcery.)",
+  "power": "7",
+  "toughness": "7",
+  "colors": [
+    "R"
+  ],
+  "color_identity": [
+    "R"
+  ],
+  "keywords": [
+    "Flying",
+    "Plot",
+    "Trample"
+  ],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "2e9fa00b-bc34-4be8-a21f-11ae695f166d",
+      "component": "combo_piece",
+      "name": "Stingerback Terror",
+      "type_line": "Creature \u2014 Scorpion Dragon",
+      "uri": "https://api.scryfall.com/cards/2e9fa00b-bc34-4be8-a21f-11ae695f166d"
+    },
+    {
+      "object": "related_card",
+      "id": "f07677af-88a4-4ff5-b591-e1e3ac05235d",
+      "component": "combo_piece",
+      "name": "Plot",
+      "type_line": "Card",
+      "uri": "https://api.scryfall.com/cards/f07677af-88a4-4ff5-b591-e1e3ac05235d"
+    }
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "55a85ebe-644e-4bef-8be8-5290408be3d1",
+  "set": "otj",
+  "set_name": "Outlaws of Thunder Junction",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/55a85ebe-644e-4bef-8be8-5290408be3d1",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Aotj&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/otj?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/2e9fa00b-bc34-4be8-a21f-11ae695f166d/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A5cc6ca73-c38f-4ef8-a2c9-4f0342eebb73&unique=prints",
+  "collector_number": "336",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Slawomir Maniak",
+  "artist_ids": [
+    "d887bc66-2779-416c-a1ff-d8720242063e"
+  ],
+  "illustration_id": "14905965-ce36-49f7-8cd7-fc8266c3e56f",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "extendedart"
+  ],
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "promo_types": [
+    "boosterfun"
+  ],
+  "edhrec_rank": 17836,
+  "penny_rank": 10147,
+  "preview": {
+    "source": "Brewer's Kitchen",
+    "source_uri": "https://twitter.com/Brewers_Kitchen/status/1773364436406808905",
+    "previewed_at": "2024-03-28"
+  },
+  "prices": {
+    "usd": "0.41",
+    "usd_foil": "0.49",
+    "usd_etched": null,
+    "eur": "0.65",
+    "eur_foil": "1.02",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=657363&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DStingerback%2BTerror",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DStingerback%2BTerror",
+    "edhrec": "https://edhrec.com/route/?cc=Stingerback+Terror"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F544518%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=764233&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/123793?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

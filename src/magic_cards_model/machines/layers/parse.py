@@ -39,6 +39,7 @@ from ..combat import (
     block_exception_keyword,
 )
 from ..designations import split_as_long_as, split_unless
+from ..ep02_r2_cards_in_zone_counts import attached_pump_per_zone_count, static_zone_count
 
 if TYPE_CHECKING:
     from ...models.game import Game
@@ -8382,6 +8383,9 @@ def _cda_base_count(phrase: str) -> CdaCountFactory | None:
     """
     if _CDA_PARTY_RE.fullmatch(phrase):
         return lambda source, context: CountParty()
+    if " in " in phrase and (zone_count := static_zone_count(phrase)) is not None:
+        # EP-02 R2 T2: cards in a hand / graveyard, singular or plural.
+        return zone_count
     if _CDA_HAND_RE.fullmatch(phrase):
         # CR 402.1: the hand is where a player holds cards; it is a zone the
         # layer engine never sees, so the size comes through the context.
@@ -11734,6 +11738,11 @@ def _parse_layer_sentence_ungated(sentence: str) -> EffectBuilder | None:
             subject=match.group("attachment").lower(),
             line=sentence,
         )
+    if (
+        " for each " in sentence
+        and (zone_pump := attached_pump_per_zone_count(sentence)) is not None
+    ):
+        return zone_pump
     if match := _ATTACHED_PUMP_PER_CONTROLLED_RE.fullmatch(sentence):
         attached_count = _controlled_count_factory(
             match.group("qualifier"), excludes_self=match.group("other") is not None
