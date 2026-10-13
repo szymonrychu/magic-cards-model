@@ -1,0 +1,134 @@
+{
+  "object": "card",
+  "id": "2d3e6a6a-4a19-41e1-b29e-a8f19838efe3",
+  "oracle_id": "8d579f04-b494-41a1-ba7c-b9779f75b818",
+  "multiverse_ids": [
+    391842
+  ],
+  "mtgo_id": 55580,
+  "mtgo_foil_id": 55581,
+  "tcgplayer_id": 95294,
+  "cardmarket_id": 271529,
+  "name": "Fruit of the First Tree",
+  "lang": "en",
+  "released_at": "2015-01-23",
+  "uri": "https://api.scryfall.com/cards/2d3e6a6a-4a19-41e1-b29e-a8f19838efe3",
+  "scryfall_uri": "https://scryfall.com/card/frf/132/fruit-of-the-first-tree?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T10:31:18Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/2/d/2d3e6a6a-4a19-41e1-b29e-a8f19838efe3.jpg?1783938678",
+    "normal": "https://cards.scryfall.io/normal/front/2/d/2d3e6a6a-4a19-41e1-b29e-a8f19838efe3.jpg?1783938678",
+    "large": "https://cards.scryfall.io/large/front/2/d/2d3e6a6a-4a19-41e1-b29e-a8f19838efe3.jpg?1783938678",
+    "png": "https://cards.scryfall.io/png/front/2/d/2d3e6a6a-4a19-41e1-b29e-a8f19838efe3.png?1783938678",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/2/d/2d3e6a6a-4a19-41e1-b29e-a8f19838efe3.jpg?1783938678",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/2/d/2d3e6a6a-4a19-41e1-b29e-a8f19838efe3.jpg?1783938678",
+    "thumb": "https://cards.scryfall.io/thumb/front/2/d/2d3e6a6a-4a19-41e1-b29e-a8f19838efe3.webp?1783938678",
+    "grid": "https://cards.scryfall.io/grid/front/2/d/2d3e6a6a-4a19-41e1-b29e-a8f19838efe3.webp?1783938678",
+    "display": "https://cards.scryfall.io/display/front/2/d/2d3e6a6a-4a19-41e1-b29e-a8f19838efe3.webp?1783938678",
+    "art": "https://cards.scryfall.io/art/front/2/d/2d3e6a6a-4a19-41e1-b29e-a8f19838efe3.webp?1783938678",
+    "crop": "https://cards.scryfall.io/crop/front/2/d/2d3e6a6a-4a19-41e1-b29e-a8f19838efe3.webp?1783938678"
+  },
+  "mana_cost": "{3}{G}",
+  "cmc": 4.0,
+  "type_line": "Enchantment \u2014 Aura",
+  "oracle_text": "Enchant creature\nWhen enchanted creature dies, you gain X life and draw X cards, where X is its toughness.",
+  "colors": [
+    "G"
+  ],
+  "color_identity": [
+    "G"
+  ],
+  "keywords": [
+    "Enchant"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "7bb5cb2b-081a-4c8c-b7e1-494046e6baa1",
+  "set": "frf",
+  "set_name": "Fate Reforged",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/7bb5cb2b-081a-4c8c-b7e1-494046e6baa1",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Afrf&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/frf?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/2d3e6a6a-4a19-41e1-b29e-a8f19838efe3/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A8d579f04-b494-41a1-ba7c-b9779f75b818&unique=prints",
+  "collector_number": "132",
+  "digital": false,
+  "rarity": "uncommon",
+  "flavor_text": "\"I will be the ancestor my descendants call upon for aid. On that day I will take up my sword for my family once more.\"",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Ryan Yee",
+  "artist_ids": [
+    "8955dca7-3e37-42b4-83a9-167c78a2178f"
+  ],
+  "illustration_id": "58fb6b69-13f0-4cb5-945f-e83b7cb81f49",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 12703,
+  "penny_rank": 14079,
+  "prices": {
+    "usd": "0.22",
+    "usd_foil": "1.69",
+    "usd_etched": null,
+    "eur": "0.20",
+    "eur_foil": "0.93",
+    "tix": "0.03"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=391842&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DFruit%2Bof%2Bthe%2BFirst%2BTree",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DFruit%2Bof%2Bthe%2BFirst%2BTree",
+    "edhrec": "https://edhrec.com/route/?cc=Fruit+of+the+First+Tree"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F95294%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=271529&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/55580?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

@@ -1,0 +1,149 @@
+{
+  "object": "card",
+  "id": "42e19e30-3853-49e5-a3a3-5616e25df4ea",
+  "oracle_id": "b209b4ae-ceba-4a98-b307-222d3c78f8a1",
+  "multiverse_ids": [
+    430400
+  ],
+  "tcgplayer_id": 132076,
+  "cardmarket_id": 298130,
+  "name": "Korozda Guildmage",
+  "lang": "en",
+  "released_at": "2017-06-09",
+  "uri": "https://api.scryfall.com/cards/42e19e30-3853-49e5-a3a3-5616e25df4ea",
+  "scryfall_uri": "https://scryfall.com/card/cma/181/korozda-guildmage?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T09:50:35Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/4/2/42e19e30-3853-49e5-a3a3-5616e25df4ea.jpg?1783936235",
+    "normal": "https://cards.scryfall.io/normal/front/4/2/42e19e30-3853-49e5-a3a3-5616e25df4ea.jpg?1783936235",
+    "large": "https://cards.scryfall.io/large/front/4/2/42e19e30-3853-49e5-a3a3-5616e25df4ea.jpg?1783936235",
+    "png": "https://cards.scryfall.io/png/front/4/2/42e19e30-3853-49e5-a3a3-5616e25df4ea.png?1783936235",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/4/2/42e19e30-3853-49e5-a3a3-5616e25df4ea.jpg?1783936235",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/4/2/42e19e30-3853-49e5-a3a3-5616e25df4ea.jpg?1783936235",
+    "thumb": "https://cards.scryfall.io/thumb/front/4/2/42e19e30-3853-49e5-a3a3-5616e25df4ea.webp?1783936235",
+    "grid": "https://cards.scryfall.io/grid/front/4/2/42e19e30-3853-49e5-a3a3-5616e25df4ea.webp?1783936235",
+    "display": "https://cards.scryfall.io/display/front/4/2/42e19e30-3853-49e5-a3a3-5616e25df4ea.webp?1783936235",
+    "art": "https://cards.scryfall.io/art/front/4/2/42e19e30-3853-49e5-a3a3-5616e25df4ea.webp?1783936235",
+    "crop": "https://cards.scryfall.io/crop/front/4/2/42e19e30-3853-49e5-a3a3-5616e25df4ea.webp?1783936235"
+  },
+  "mana_cost": "{B}{G}",
+  "cmc": 2.0,
+  "type_line": "Creature \u2014 Elf Shaman",
+  "oracle_text": "{1}{B}{G}: Target creature gets +1/+1 and gains intimidate until end of turn. (It can't be blocked except by artifact creatures and/or creatures that share a color with it.)\n{2}{B}{G}, Sacrifice a nontoken creature: Create X 1/1 green Saproling creature tokens, where X is the sacrificed creature's toughness.",
+  "power": "2",
+  "toughness": "2",
+  "colors": [
+    "B",
+    "G"
+  ],
+  "color_identity": [
+    "B",
+    "G"
+  ],
+  "keywords": [],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "ecd93e8e-5e06-4791-bcc5-e858b82443f3",
+      "component": "token",
+      "name": "Saproling",
+      "type_line": "Token Creature \u2014 Saproling",
+      "uri": "https://api.scryfall.com/cards/ecd93e8e-5e06-4791-bcc5-e858b82443f3"
+    },
+    {
+      "object": "related_card",
+      "id": "42e19e30-3853-49e5-a3a3-5616e25df4ea",
+      "component": "combo_piece",
+      "name": "Korozda Guildmage",
+      "type_line": "Creature \u2014 Elf Shaman",
+      "uri": "https://api.scryfall.com/cards/42e19e30-3853-49e5-a3a3-5616e25df4ea"
+    }
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": false,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "fd4d8463-0156-4c60-a40e-778762bb90e4",
+  "set": "cma",
+  "set_name": "Commander Anthology",
+  "set_type": "commander",
+  "set_uri": "https://api.scryfall.com/sets/fd4d8463-0156-4c60-a40e-778762bb90e4",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Acma&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/cma?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/42e19e30-3853-49e5-a3a3-5616e25df4ea/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Ab209b4ae-ceba-4a98-b307-222d3c78f8a1&unique=prints",
+  "collector_number": "181",
+  "digital": false,
+  "rarity": "uncommon",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Ryan Pancoast",
+  "artist_ids": [
+    "89cc9475-dda2-4d13-bf88-54b92867a25c"
+  ],
+  "illustration_id": "e119d2d4-f179-4d4c-a397-f61025a76889",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "edhrec_rank": 13497,
+  "penny_rank": 11009,
+  "prices": {
+    "usd": "0.18",
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": "0.24",
+    "eur_foil": null,
+    "tix": null
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=430400&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DKorozda%2BGuildmage",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DKorozda%2BGuildmage",
+    "edhrec": "https://edhrec.com/route/?cc=Korozda+Guildmage"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F132076%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=298130&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards?affiliate_id=scryfall&data%5Bsearch%5D=Korozda+Guildmage&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

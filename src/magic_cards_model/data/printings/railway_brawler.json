@@ -1,0 +1,161 @@
+{
+  "object": "card",
+  "id": "9ec1f76f-f21d-4f06-8c02-be6745183348",
+  "oracle_id": "b653db44-ddae-44e8-8fa6-6af3232cd586",
+  "multiverse_ids": [
+    655116
+  ],
+  "mtgo_id": 124261,
+  "arena_id": 90521,
+  "tcgplayer_id": 544452,
+  "cardmarket_id": 764271,
+  "name": "Railway Brawler",
+  "lang": "en",
+  "released_at": "2024-04-19",
+  "uri": "https://api.scryfall.com/cards/9ec1f76f-f21d-4f06-8c02-be6745183348",
+  "scryfall_uri": "https://scryfall.com/card/otj/175/railway-brawler?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T03:03:24Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/9/e/9ec1f76f-f21d-4f06-8c02-be6745183348.jpg?1783911804",
+    "normal": "https://cards.scryfall.io/normal/front/9/e/9ec1f76f-f21d-4f06-8c02-be6745183348.jpg?1783911804",
+    "large": "https://cards.scryfall.io/large/front/9/e/9ec1f76f-f21d-4f06-8c02-be6745183348.jpg?1783911804",
+    "png": "https://cards.scryfall.io/png/front/9/e/9ec1f76f-f21d-4f06-8c02-be6745183348.png?1783911804",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/9/e/9ec1f76f-f21d-4f06-8c02-be6745183348.jpg?1783911804",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/9/e/9ec1f76f-f21d-4f06-8c02-be6745183348.jpg?1783911804",
+    "thumb": "https://cards.scryfall.io/thumb/front/9/e/9ec1f76f-f21d-4f06-8c02-be6745183348.webp?1783911804",
+    "grid": "https://cards.scryfall.io/grid/front/9/e/9ec1f76f-f21d-4f06-8c02-be6745183348.webp?1783911804",
+    "display": "https://cards.scryfall.io/display/front/9/e/9ec1f76f-f21d-4f06-8c02-be6745183348.webp?1783911804",
+    "art": "https://cards.scryfall.io/art/front/9/e/9ec1f76f-f21d-4f06-8c02-be6745183348.webp?1783911804",
+    "crop": "https://cards.scryfall.io/crop/front/9/e/9ec1f76f-f21d-4f06-8c02-be6745183348.webp?1783911804"
+  },
+  "mana_cost": "{3}{G}{G}",
+  "cmc": 5.0,
+  "type_line": "Creature \u2014 Rhino Warrior",
+  "oracle_text": "Reach, trample\nWhenever another creature you control enters, put X +1/+1 counters on it, where X is its power.\nPlot {3}{G} (You may pay {3}{G} and exile this card from your hand. Cast it as a sorcery on a later turn without paying its mana cost. Plot only as a sorcery.)",
+  "power": "5",
+  "toughness": "5",
+  "colors": [
+    "G"
+  ],
+  "color_identity": [
+    "G"
+  ],
+  "keywords": [
+    "Reach",
+    "Plot",
+    "Trample"
+  ],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "78db8c96-e6b8-4d4a-9935-29f12385a151",
+      "component": "combo_piece",
+      "name": "Railway Brawler",
+      "type_line": "Creature \u2014 Rhino Warrior",
+      "uri": "https://api.scryfall.com/cards/78db8c96-e6b8-4d4a-9935-29f12385a151"
+    },
+    {
+      "object": "related_card",
+      "id": "f07677af-88a4-4ff5-b591-e1e3ac05235d",
+      "component": "combo_piece",
+      "name": "Plot",
+      "type_line": "Card",
+      "uri": "https://api.scryfall.com/cards/f07677af-88a4-4ff5-b591-e1e3ac05235d"
+    }
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "55a85ebe-644e-4bef-8be8-5290408be3d1",
+  "set": "otj",
+  "set_name": "Outlaws of Thunder Junction",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/55a85ebe-644e-4bef-8be8-5290408be3d1",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Aotj&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/otj?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/9ec1f76f-f21d-4f06-8c02-be6745183348/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Ab653db44-ddae-44e8-8fa6-6af3232cd586&unique=prints",
+  "collector_number": "175",
+  "digital": false,
+  "rarity": "mythic",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Kevin Sidharta",
+  "artist_ids": [
+    "e0bcff21-4a2b-4151-86a2-a462da7b5aaa"
+  ],
+  "illustration_id": "d639af60-03a8-4da6-a163-89c73dd84996",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 2538,
+  "preview": {
+    "source": "Nile Joan Rivers",
+    "source_uri": "https://twitter.com/NileJoanRivers/status/1773381859730210858",
+    "previewed_at": "2024-03-28"
+  },
+  "prices": {
+    "usd": "6.62",
+    "usd_foil": "5.71",
+    "usd_etched": null,
+    "eur": "6.12",
+    "eur_foil": "7.07",
+    "tix": "0.03"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=655116&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DRailway%2BBrawler",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DRailway%2BBrawler",
+    "edhrec": "https://edhrec.com/route/?cc=Railway+Brawler"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F544452%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=764271&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/124261?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

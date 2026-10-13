@@ -1,0 +1,136 @@
+{
+  "object": "card",
+  "id": "297eaa16-890b-41dc-a470-fa8c313e6e1b",
+  "oracle_id": "b233a9e4-0b4c-41e8-a5b8-77824241966b",
+  "multiverse_ids": [
+    522161
+  ],
+  "mtgo_id": 90543,
+  "tcgplayer_id": 239800,
+  "cardmarket_id": 566362,
+  "name": "Flay Essence",
+  "lang": "en",
+  "released_at": "2021-06-18",
+  "uri": "https://api.scryfall.com/cards/297eaa16-890b-41dc-a470-fa8c313e6e1b",
+  "scryfall_uri": "https://scryfall.com/card/mh2/85/flay-essence?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T07:14:21Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/2/9/297eaa16-890b-41dc-a470-fa8c313e6e1b.jpg?1783926861",
+    "normal": "https://cards.scryfall.io/normal/front/2/9/297eaa16-890b-41dc-a470-fa8c313e6e1b.jpg?1783926861",
+    "large": "https://cards.scryfall.io/large/front/2/9/297eaa16-890b-41dc-a470-fa8c313e6e1b.jpg?1783926861",
+    "png": "https://cards.scryfall.io/png/front/2/9/297eaa16-890b-41dc-a470-fa8c313e6e1b.png?1783926861",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/2/9/297eaa16-890b-41dc-a470-fa8c313e6e1b.jpg?1783926861",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/2/9/297eaa16-890b-41dc-a470-fa8c313e6e1b.jpg?1783926861",
+    "thumb": "https://cards.scryfall.io/thumb/front/2/9/297eaa16-890b-41dc-a470-fa8c313e6e1b.webp?1783926861",
+    "grid": "https://cards.scryfall.io/grid/front/2/9/297eaa16-890b-41dc-a470-fa8c313e6e1b.webp?1783926861",
+    "display": "https://cards.scryfall.io/display/front/2/9/297eaa16-890b-41dc-a470-fa8c313e6e1b.webp?1783926861",
+    "art": "https://cards.scryfall.io/art/front/2/9/297eaa16-890b-41dc-a470-fa8c313e6e1b.webp?1783926861",
+    "crop": "https://cards.scryfall.io/crop/front/2/9/297eaa16-890b-41dc-a470-fa8c313e6e1b.webp?1783926861"
+  },
+  "mana_cost": "{1}{B}{B}",
+  "cmc": 3.0,
+  "type_line": "Sorcery",
+  "oracle_text": "Exile target creature or planeswalker. You gain life equal to the number of counters on it.",
+  "colors": [
+    "B"
+  ],
+  "color_identity": [
+    "B"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "c1c7eb8c-f205-40ab-a609-767cb296544e",
+  "set": "mh2",
+  "set_name": "Modern Horizons 2",
+  "set_type": "draft_innovation",
+  "set_uri": "https://api.scryfall.com/sets/c1c7eb8c-f205-40ab-a609-767cb296544e",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Amh2&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/mh2?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/297eaa16-890b-41dc-a470-fa8c313e6e1b/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Ab233a9e4-0b4c-41e8-a5b8-77824241966b&unique=prints",
+  "collector_number": "85",
+  "digital": false,
+  "rarity": "uncommon",
+  "flavor_text": "\"Your argument as to why I should spare you lacked substance. Now, so do you.\"\n\u2014Geyadrone Dihada",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Bastien L. Deharme",
+  "artist_ids": [
+    "798f63ec-41ad-474e-9708-df08193345c6"
+  ],
+  "illustration_id": "0ba6098e-95fb-49f8-b27c-55cbba2b0c9c",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 15933,
+  "penny_rank": 10779,
+  "preview": {
+    "source": "Zopilote Garcia",
+    "source_uri": "https://twitter.com/zopilotegarcia/status/1397702534303608834",
+    "previewed_at": "2021-05-26"
+  },
+  "prices": {
+    "usd": "0.17",
+    "usd_foil": "0.32",
+    "usd_etched": null,
+    "eur": "0.05",
+    "eur_foil": "0.18",
+    "tix": "0.03"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=522161&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DFlay%2BEssence",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DFlay%2BEssence",
+    "edhrec": "https://edhrec.com/route/?cc=Flay+Essence"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F239800%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=566362&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/90543?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

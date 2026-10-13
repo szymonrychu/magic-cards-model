@@ -1,0 +1,131 @@
+{
+  "object": "card",
+  "id": "9624bbf9-15b0-40f9-9f02-f2af3f1220f8",
+  "oracle_id": "8038337b-aff9-49aa-800c-0e12d2688765",
+  "multiverse_ids": [
+    292759
+  ],
+  "mtgo_id": 46144,
+  "mtgo_foil_id": 46145,
+  "tcgplayer_id": 66334,
+  "cardmarket_id": 258132,
+  "name": "Overwhelming Intellect",
+  "lang": "en",
+  "released_at": "2012-09-07",
+  "uri": "https://api.scryfall.com/cards/9624bbf9-15b0-40f9-9f02-f2af3f1220f8",
+  "scryfall_uri": "https://scryfall.com/card/ddj/28/overwhelming-intellect?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T11:00:12Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/9/6/9624bbf9-15b0-40f9-9f02-f2af3f1220f8.jpg?1783940412",
+    "normal": "https://cards.scryfall.io/normal/front/9/6/9624bbf9-15b0-40f9-9f02-f2af3f1220f8.jpg?1783940412",
+    "large": "https://cards.scryfall.io/large/front/9/6/9624bbf9-15b0-40f9-9f02-f2af3f1220f8.jpg?1783940412",
+    "png": "https://cards.scryfall.io/png/front/9/6/9624bbf9-15b0-40f9-9f02-f2af3f1220f8.png?1783940412",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/9/6/9624bbf9-15b0-40f9-9f02-f2af3f1220f8.jpg?1783940412",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/9/6/9624bbf9-15b0-40f9-9f02-f2af3f1220f8.jpg?1783940412",
+    "thumb": "https://cards.scryfall.io/thumb/front/9/6/9624bbf9-15b0-40f9-9f02-f2af3f1220f8.webp?1783940412",
+    "grid": "https://cards.scryfall.io/grid/front/9/6/9624bbf9-15b0-40f9-9f02-f2af3f1220f8.webp?1783940412",
+    "display": "https://cards.scryfall.io/display/front/9/6/9624bbf9-15b0-40f9-9f02-f2af3f1220f8.webp?1783940412",
+    "art": "https://cards.scryfall.io/art/front/9/6/9624bbf9-15b0-40f9-9f02-f2af3f1220f8.webp?1783940412",
+    "crop": "https://cards.scryfall.io/crop/front/9/6/9624bbf9-15b0-40f9-9f02-f2af3f1220f8.webp?1783940412"
+  },
+  "mana_cost": "{4}{U}{U}",
+  "cmc": 6.0,
+  "type_line": "Instant",
+  "oracle_text": "Counter target creature spell. Draw cards equal to that spell's mana value.",
+  "colors": [
+    "U"
+  ],
+  "color_identity": [
+    "U"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": false,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "2dfea68b-b0c4-4f63-ba6c-36c9a6e3030f",
+  "set": "ddj",
+  "set_name": "Duel Decks: Izzet vs. Golgari",
+  "set_type": "duel_deck",
+  "set_uri": "https://api.scryfall.com/sets/2dfea68b-b0c4-4f63-ba6c-36c9a6e3030f",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Addj&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/ddj?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/9624bbf9-15b0-40f9-9f02-f2af3f1220f8/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A8038337b-aff9-49aa-800c-0e12d2688765&unique=prints",
+  "collector_number": "28",
+  "digital": false,
+  "rarity": "uncommon",
+  "flavor_text": "\"My brain hurts.\"",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Alex Horley-Orlandelli",
+  "artist_ids": [
+    "1631a2ad-bf03-4ab9-b86c-60da982d58a1"
+  ],
+  "illustration_id": "7c2cec7a-b103-466d-8576-9d4adc98409a",
+  "border_color": "black",
+  "frame": "2003",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "edhrec_rank": 18001,
+  "penny_rank": 15997,
+  "prices": {
+    "usd": "0.21",
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": "0.25",
+    "eur_foil": null,
+    "tix": "0.37"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=292759&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DOverwhelming%2BIntellect",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DOverwhelming%2BIntellect",
+    "edhrec": "https://edhrec.com/route/?cc=Overwhelming+Intellect"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F66334%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=258132&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/46144?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

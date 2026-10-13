@@ -1,0 +1,154 @@
+{
+  "object": "card",
+  "id": "b87d368f-e1e0-41ab-9da0-f07c01c8ae38",
+  "oracle_id": "86c9e08a-397a-4c24-8f4c-48a648889399",
+  "multiverse_ids": [
+    522104
+  ],
+  "mtgo_id": 90425,
+  "tcgplayer_id": 240236,
+  "cardmarket_id": 566804,
+  "name": "Scour the Desert",
+  "lang": "en",
+  "released_at": "2021-06-18",
+  "uri": "https://api.scryfall.com/cards/b87d368f-e1e0-41ab-9da0-f07c01c8ae38",
+  "scryfall_uri": "https://scryfall.com/card/mh2/28/scour-the-desert?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T07:14:45Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/b/8/b87d368f-e1e0-41ab-9da0-f07c01c8ae38.jpg?1783926885",
+    "normal": "https://cards.scryfall.io/normal/front/b/8/b87d368f-e1e0-41ab-9da0-f07c01c8ae38.jpg?1783926885",
+    "large": "https://cards.scryfall.io/large/front/b/8/b87d368f-e1e0-41ab-9da0-f07c01c8ae38.jpg?1783926885",
+    "png": "https://cards.scryfall.io/png/front/b/8/b87d368f-e1e0-41ab-9da0-f07c01c8ae38.png?1783926885",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/b/8/b87d368f-e1e0-41ab-9da0-f07c01c8ae38.jpg?1783926885",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/b/8/b87d368f-e1e0-41ab-9da0-f07c01c8ae38.jpg?1783926885",
+    "thumb": "https://cards.scryfall.io/thumb/front/b/8/b87d368f-e1e0-41ab-9da0-f07c01c8ae38.webp?1783926885",
+    "grid": "https://cards.scryfall.io/grid/front/b/8/b87d368f-e1e0-41ab-9da0-f07c01c8ae38.webp?1783926885",
+    "display": "https://cards.scryfall.io/display/front/b/8/b87d368f-e1e0-41ab-9da0-f07c01c8ae38.webp?1783926885",
+    "art": "https://cards.scryfall.io/art/front/b/8/b87d368f-e1e0-41ab-9da0-f07c01c8ae38.webp?1783926885",
+    "crop": "https://cards.scryfall.io/crop/front/b/8/b87d368f-e1e0-41ab-9da0-f07c01c8ae38.webp?1783926885"
+  },
+  "mana_cost": "{3}{W}{W}",
+  "cmc": 5.0,
+  "type_line": "Sorcery",
+  "oracle_text": "Exile target creature card from your graveyard. Create X 1/1 white Bird creature tokens with flying, where X is the exiled card's toughness.",
+  "colors": [
+    "W"
+  ],
+  "color_identity": [
+    "W"
+  ],
+  "keywords": [],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "b87d368f-e1e0-41ab-9da0-f07c01c8ae38",
+      "component": "combo_piece",
+      "name": "Scour the Desert",
+      "type_line": "Sorcery",
+      "uri": "https://api.scryfall.com/cards/b87d368f-e1e0-41ab-9da0-f07c01c8ae38"
+    },
+    {
+      "object": "related_card",
+      "id": "fe8e40dd-f435-4abc-a3e8-fd3d3a94e910",
+      "component": "token",
+      "name": "Bird",
+      "type_line": "Token Creature \u2014 Bird",
+      "uri": "https://api.scryfall.com/cards/fe8e40dd-f435-4abc-a3e8-fd3d3a94e910"
+    }
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "c1c7eb8c-f205-40ab-a609-767cb296544e",
+  "set": "mh2",
+  "set_name": "Modern Horizons 2",
+  "set_type": "draft_innovation",
+  "set_uri": "https://api.scryfall.com/sets/c1c7eb8c-f205-40ab-a609-767cb296544e",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Amh2&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/mh2?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/b87d368f-e1e0-41ab-9da0-f07c01c8ae38/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A86c9e08a-397a-4c24-8f4c-48a648889399&unique=prints",
+  "collector_number": "28",
+  "digital": false,
+  "rarity": "uncommon",
+  "flavor_text": "Even in the most barren wastelands, every death feeds more life.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Tyler Walpole",
+  "artist_ids": [
+    "70c4c8c7-61a8-44e7-8fb1-161b7f943e7e"
+  ],
+  "illustration_id": "a7bdf1bf-09f7-4eae-9cb3-1c6724b27d3d",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 22032,
+  "penny_rank": 17723,
+  "preview": {
+    "source": "The Mana Vortex",
+    "source_uri": "https://twitter.com/TheManaVortex/status/1398755507758899200",
+    "previewed_at": "2021-05-29"
+  },
+  "prices": {
+    "usd": "0.21",
+    "usd_foil": "0.19",
+    "usd_etched": null,
+    "eur": "0.07",
+    "eur_foil": "0.15",
+    "tix": "0.03"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=522104&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DScour%2Bthe%2BDesert",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DScour%2Bthe%2BDesert",
+    "edhrec": "https://edhrec.com/route/?cc=Scour+the+Desert"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F240236%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=566804&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/90425?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}
