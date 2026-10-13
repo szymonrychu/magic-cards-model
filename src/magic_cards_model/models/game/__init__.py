@@ -1972,7 +1972,7 @@ class Game(
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 164
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 169
     #: 67: `machines/cost.CostComponent` gained `link_to_permanent_id` (CR
     #: 607.2q), reachable from `Game` through a pending `AbilityOnStack.
     #: keyword_activation`/`.unless_payment`'s own `CostPayment.components`.
@@ -2350,6 +2350,17 @@ class Game(
     #: where X is that creature's power", the sacrificed permanent's mana value
     #: as X damage and life) now resolve where an older dump would have done
     #: nothing.
+    #: 169 (EP02-R2-T6, reserved: 163 + task 6): `AbilityOnStack` gained
+    #: `cost_tapped_card_ids`, `cost_tapped_powers` and `cost_sacrificed_types`
+    #: (the permanents a cost tapped or sacrificed, for "the power of the
+    #: creature tapped this way" and "if you sacrificed an Angel this way"), the
+    #: `DelayedEffectSpec` union gained `phase_in_each` (Out of Time's "phase out
+    #: until this enchantment leaves the battlefield") and
+    #: `reflexive_damage_equal_to_subject_mana_value` (Hidetsugu's "when you
+    #: exile a nonland card this way"), a permanent held phased out for a
+    #: duration carries `phased_out_under = "until:<source id>"`, and an
+    #: overloaded spell (CR 702.96a) resolves its changed text; an older dump
+    #: would resolve each of these as a no-op or as the unchanged spell.
     #: 163 (EP02-R1-T6, reserved: 157 + task 6): a `DelayedEffectSpec` variant
     #: `return_subject_then_discard_its_stat` (Vanish into Memory's return with
     #: its "if you do, discard cards equal to that creature's toughness"), and

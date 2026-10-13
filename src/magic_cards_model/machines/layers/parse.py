@@ -1066,6 +1066,48 @@ def _self_pump_per_player_counter_builder(
     return builder
 
 
+#: "Alrund gets +1/+1 for each card in your hand and each foretold card you own
+#: in exile." - a self bonus in sublayer 7c (CR 613.4c) counting the controller's
+#: hand (CR 402.1) plus the foretold cards (CR 702.143a) they own in exile,
+#: both read when the effect is built (`LayerContext`).
+_SELF_PUMP_PER_HAND_AND_FORETOLD_RE = re.compile(
+    r"^this (?:creature|token|permanent) gets (?P<power>[+-]\d+)/(?P<toughness>[+-]\d+) "
+    r"for each card in your hand and each foretold card you own in exile\.?$",
+    re.IGNORECASE,
+)
+
+
+def _self_pump_per_hand_and_foretold_builder(
+    power: int, toughness: int, *, line: str
+) -> EffectBuilder:
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        count = context.hand_size_of(source.controller) + context.foretold_in_exile_of(
+            source.controller
+        )
+        return [
+            ContinuousEffect(
+                description=(
+                    f"{source.name}: {power:+d}/{toughness:+d} for each card in hand "
+                    "and each foretold card in exile"
+                ),
+                layer=Layer.POWER_TOUGHNESS,
+                sublayer=Sublayer.MODIFY,
+                timestamp=timestamp,
+                source_id=source.id,
+                source_ability=_source_line_for(source, line),
+                selector=_only(source.id),
+                modification=modify_power_toughness_per(FixedCount(value=count), power, toughness),
+            )
+        ]
+
+    return builder
+
+
 #: "This creature gets +2/+2 for each Equipment attached to it." (Loxodon
 #: Punisher) and Winter Soldier, Icy Assassin's "Winter Soldier gets +2/+0
 #: for each Equipment attached to him." (a legend's own pronoun, CR 201.5's
@@ -2537,8 +2579,9 @@ _BECOMES_CREATURE_TYPE_WITH_BASE_PT_RE = re.compile(
     r"|(?P<subtype>[a-z'-]+(?: [a-z'-]+)*?)) with base power and "
     r"toughness (?:(?P<power>\d+)/(?P<toughness>\d+)"
     r"|each equal to (?P<each>\d+)(?: plus (?P<plus>\d+))?)"
-    r"(?:(?P<with_abilities>(?:,| and) (?!gains )[a-z][a-z ,]*?))?"
-    r"(?: and gains (?P<keywords>[a-z][a-z ,]*?))?(?P<until_eot> until end of turn)?\.?$",
+    r"(?:(?P<with_abilities>(?:,| and) (?!gains |loses )[a-z][a-z ,]*?))?"
+    r"(?P<loses_after>,? (?:and )?loses all abilities)?"
+    r"(?:,? and gains (?P<keywords>[a-z][a-z ,]*?))?(?P<until_eot> until end of turn)?\.?$",
     re.IGNORECASE,
 )
 
@@ -12097,7 +12140,8 @@ def _parse_layer_sentence_ungated(sentence: str) -> EffectBuilder | None:
             colors,
             power,
             toughness,
-            loses_abilities=match.group("loses") is not None,
+            loses_abilities=match.group("loses") is not None
+            or match.group("loses_after") is not None,
             artifact_creature=artifact,
             creature_card_type=creature,
             keywords=tuple(keywords),
@@ -13154,6 +13198,10 @@ def _parse_narrow_static_layer_sentence(sentence: str) -> EffectBuilder | None:
             int(match.group("toughness")),
             match.group("counter").lower(),
             line=sentence,
+        )
+    if match := _SELF_PUMP_PER_HAND_AND_FORETOLD_RE.fullmatch(sentence):
+        return _self_pump_per_hand_and_foretold_builder(
+            int(match.group("power")), int(match.group("toughness")), line=sentence
         )
     if match := _SELF_PUMP_PER_PLAYER_COUNTER_RE.fullmatch(sentence):
         from ..effects.amounts import parse_player_counter_phrase

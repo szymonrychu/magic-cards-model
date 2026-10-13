@@ -4768,6 +4768,41 @@ def awakened(game: Any, spell: CardState) -> bool:
     return (record.keyword or "").lower() == "awaken" and record.keyword_cost_paid
 
 
+_PARENTHETICAL_RE = re.compile(r"(\([^)]*\))")
+_TARGET_WORD_RE = re.compile(r"\btarget\b", re.IGNORECASE)
+
+
+def overloaded(game: Any, spell: CardState) -> bool:
+    """CR 702.96a: whether this spell was cast by paying its overload cost."""
+    if spell.is_permanent:
+        return False
+    record = game.cast_record_of(spell)
+    return (
+        record is not None
+        and (record.keyword or "").lower() == "overload"
+        and record.keyword_cost_paid
+    )
+
+
+def overload_text(text: str) -> str:
+    """CR 702.96a: "change its text by replacing all instances of the word
+    'target' with the word 'each.'" Reminder text and the keyword line itself
+    are not the spell's rules text and keep their words."""
+    lines = []
+    for line in text.split("\n"):
+        if re.match(r"overload\b", line, re.IGNORECASE):
+            lines.append(line)
+            continue
+        parts = _PARENTHETICAL_RE.split(line)
+        lines.append(
+            "".join(
+                part if part.startswith("(") else _TARGET_WORD_RE.sub("each", part)
+                for part in parts
+            )
+        )
+    return "\n".join(lines)
+
+
 @contextmanager
 def awaken_target_held_apart(game: Any, spell: CardState) -> Iterator[TargetRef | None]:
     """While the spell's own text resolves, its targets are only the ones that

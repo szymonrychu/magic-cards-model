@@ -5535,14 +5535,17 @@ def _parse_choose_card_name_for_source_clause(text: str) -> AbilityEffect | None
 #: hand this way." Read off the activated ability's own `effect` field
 #: (`{2}, {T}, Exile The Stone Brain:` and the trailing "Activate only as a
 #: sorcery." are both already stripped by `machines/abilities.py` before this
-#: text is ever seen).
+#: text is ever seen). The same instruction is a spell's whole text on Unmoored
+#: Ego, and with its other printed wording on Ancient Vendetta ("Then that
+#: player shuffles" with no draw), Lost Legacy (a nonartifact, nonland name,
+#: "any number of" cards) and Cranial Extraction ("all cards").
 _STONE_BRAIN_RE = re.compile(
-    r"^choose a card name\.\s*"
-    r"search target opponent's graveyard, hand, and library for up to "
-    rf"(?P<cap>{COUNT}) cards? "
+    r"^choose an? (?:(?P<quality>[a-z, -]+?) )?card name\.\s*"
+    r"search target (?P<who>opponent|player)'s graveyard, hand, and library for "
+    rf"(?:up to (?P<cap>{COUNT}) cards?|(?P<every>any number of|all) cards) "
     r"with that name and exile them\.\s*"
-    r"that player shuffles, then draws a card for each card exiled from "
-    r"their hand this way\.?$",
+    r"(?P<tail>that player shuffles, then draws a card for each card exiled from "
+    r"their hand this way|then that player shuffles)\.?$",
     re.IGNORECASE,
 )
 
@@ -5563,29 +5566,28 @@ _SURGICAL_EXTRACTION_RE = re.compile(
 
 
 def _parse_stone_brain_clause(text: str, *, for_spell: bool) -> TargetedClause | None:
-    """`_STONE_BRAIN_RE`'s shape. Ability-only (`for_spell=False`): nothing in
-    the pool prints this shape on a spell, and the effect reads `ability.
-    source_name` for its own search prompts, which a resolving spell has no
-    equivalent of the same way.
-    """
-    if for_spell:
-        return None
+    """`_STONE_BRAIN_RE`'s shape - an ability (The Stone Brain) or a
+    spell (Unmoored Ego, Lost Legacy, Ancient Vendetta). CR 701.23a: the
+    search of each of the three zones is its own single-zone search
+    (`_search_and_exile_matching_name`); CR 701.24a / 701.23d: the targeted
+    player's shuffle, and the draw for what left their hand, follow."""
     match = _STONE_BRAIN_RE.fullmatch(_strip_non_effect_preamble(text).strip())
     if match is None:
         return None
-    if not _targets_understood("target opponent", allow_player_targets=True):
+    who = match.group("who").lower()
+    if not _targets_understood(f"target {who}", allow_player_targets=True):
         return None
-    cap = parse_count(match.group("cap"))
-    if cap is None:
+    cap = parse_count(match.group("cap")) if match.group("cap") else None
+    if match.group("cap") and cap is None:
         return None
+    quality = (match.group("quality") or "").replace(",", "").strip().lower() or None
+    draws = match.group("tail").lower().startswith("that player shuffles, then draws")
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
-        ability = stack_object
-        assert isinstance(ability, AbilityOnStack)
-        controller = game.controller_of(ability)
-        source = ability.source_name
+        controller = game.controller_of(stack_object)
+        source = getattr(stack_object, "source_name", None) or stack_object.name
         target_player = next(
-            (target for target in game.resolve_targets(ability) if isinstance(target, Player)),
+            (target for target in game.resolve_targets(stack_object) if isinstance(target, Player)),
             None,
         )
         if target_player is None:
@@ -5594,12 +5596,19 @@ def _parse_stone_brain_clause(text: str, *, for_spell: bool) -> TargetedClause |
             Decision(
                 kind=DecisionKind.CHOOSE_A_QUALITY,
                 player=controller.username,
-                prompt="choose a card name",
+                prompt=f"choose {quality + ' ' if quality else ''}card name",
                 source=source,
-                source_id=source_id_of(ability),
+                source_id=source_id_of(stack_object),
+                quality=ChoiceKind.CARD_NAME.value,
             )
         )
         assert isinstance(name, str)
+        if quality is not None:
+            from ..replacement import _card_name_quality_refusal
+
+            refusal = _card_name_quality_refusal(name, quality)
+            if refusal is not None:
+                raise ValueError(f"{source}: {refusal}")
         _exiled, exiled_from_hand = _search_and_exile_matching_name(
             game,
             target_player,
@@ -5607,9 +5616,9 @@ def _parse_stone_brain_clause(text: str, *, for_spell: bool) -> TargetedClause |
             chooser=controller,
             cap=cap,
             source=source,
-            source_id=source_id_of(ability),
+            source_id=source_id_of(stack_object),
         )
-        if exiled_from_hand:
+        if draws and exiled_from_hand:
             game.draw_cards(target_player.username, exiled_from_hand)
 
     return effect

@@ -972,6 +972,19 @@ class LayerContext(EngineModel):
     #: resolved.
     hand_size_by_player: Mapping[str, int] = Field(default_factory=dict)
 
+    #: How many foretold cards (CR 702.143a: a card exiled by the foretell special
+    #: action) each player owns in exile, keyed by username - Alrund, God of the
+    #: Cosmos' "+1/+1 for each card in your hand and each foretold card you own
+    #: in exile". Exile is a shared zone the layer engine never sees; read when
+    #: the effects are built, like `hand_size_by_player`.
+    foretold_in_exile_by_player: Mapping[str, int] = Field(default_factory=dict)
+
+    def foretold_in_exile_of(self, player: str | None) -> int:
+        """How many foretold cards `player` owns in exile (0 when unknown)."""
+        if player is None:
+            return 0
+        return self.foretold_in_exile_by_player.get(player, 0)
+
     #: Each player's library size (CR 401.1), keyed by username - Living
     #: Conundrum's "As long as there are no cards in your library, ..." reads
     #: its controller's, which is not on the battlefield either. Read when the

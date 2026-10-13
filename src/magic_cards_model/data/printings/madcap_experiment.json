@@ -1,0 +1,132 @@
+{
+  "object": "card",
+  "id": "05768b87-d2df-42fc-bf63-e471d31b32e3",
+  "oracle_id": "684e2237-b860-45bf-a053-a02cc7ed1527",
+  "multiverse_ids": [
+    417695
+  ],
+  "mtgo_id": 61965,
+  "mtgo_foil_id": 61966,
+  "tcgplayer_id": 122696,
+  "cardmarket_id": 292534,
+  "name": "Madcap Experiment",
+  "lang": "en",
+  "released_at": "2016-09-30",
+  "uri": "https://api.scryfall.com/cards/05768b87-d2df-42fc-bf63-e471d31b32e3",
+  "scryfall_uri": "https://scryfall.com/card/kld/122/madcap-experiment?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T10:06:32Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/0/5/05768b87-d2df-42fc-bf63-e471d31b32e3.jpg?1783937192",
+    "normal": "https://cards.scryfall.io/normal/front/0/5/05768b87-d2df-42fc-bf63-e471d31b32e3.jpg?1783937192",
+    "large": "https://cards.scryfall.io/large/front/0/5/05768b87-d2df-42fc-bf63-e471d31b32e3.jpg?1783937192",
+    "png": "https://cards.scryfall.io/png/front/0/5/05768b87-d2df-42fc-bf63-e471d31b32e3.png?1783937192",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/0/5/05768b87-d2df-42fc-bf63-e471d31b32e3.jpg?1783937192",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/0/5/05768b87-d2df-42fc-bf63-e471d31b32e3.jpg?1783937192",
+    "thumb": "https://cards.scryfall.io/thumb/front/0/5/05768b87-d2df-42fc-bf63-e471d31b32e3.webp?1783937192",
+    "grid": "https://cards.scryfall.io/grid/front/0/5/05768b87-d2df-42fc-bf63-e471d31b32e3.webp?1783937192",
+    "display": "https://cards.scryfall.io/display/front/0/5/05768b87-d2df-42fc-bf63-e471d31b32e3.webp?1783937192",
+    "art": "https://cards.scryfall.io/art/front/0/5/05768b87-d2df-42fc-bf63-e471d31b32e3.webp?1783937192",
+    "crop": "https://cards.scryfall.io/crop/front/0/5/05768b87-d2df-42fc-bf63-e471d31b32e3.webp?1783937192"
+  },
+  "mana_cost": "{3}{R}",
+  "cmc": 4.0,
+  "type_line": "Sorcery",
+  "oracle_text": "Reveal cards from the top of your library until you reveal an artifact card. Put that card onto the battlefield and the rest on the bottom of your library in a random order. Madcap Experiment deals damage to you equal to the number of cards revealed this way.",
+  "colors": [
+    "R"
+  ],
+  "color_identity": [
+    "R"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "d667e468-be8f-411f-a030-473d148deb74",
+  "set": "kld",
+  "set_name": "Kaladesh",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/d667e468-be8f-411f-a030-473d148deb74",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Akld&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/kld?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/05768b87-d2df-42fc-bf63-e471d31b32e3/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A684e2237-b860-45bf-a053-a02cc7ed1527&unique=prints",
+  "collector_number": "122",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Joseph Meehan",
+  "artist_ids": [
+    "6befd6d5-7f8d-4b7c-87e3-5511391a3359"
+  ],
+  "illustration_id": "f0cd04fb-31ba-4525-9c38-418b085c0f8d",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 21858,
+  "penny_rank": 2916,
+  "prices": {
+    "usd": "0.29",
+    "usd_foil": "0.30",
+    "usd_etched": null,
+    "eur": "0.16",
+    "eur_foil": "0.88",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=417695&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DMadcap%2BExperiment",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DMadcap%2BExperiment",
+    "edhrec": "https://edhrec.com/route/?cc=Madcap+Experiment"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F122696%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=292534&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/61965?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

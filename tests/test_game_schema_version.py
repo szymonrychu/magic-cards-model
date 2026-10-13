@@ -2517,3 +2517,27 @@ def test_a_snapshot_written_before_the_counter_layer_variants_is_refused() -> No
         match=f"schema_version={_SCHEMA_VERSION_BEFORE_COUNTER_LAYERS}",
     ):
         Game.model_validate(dumped)
+
+
+#: The version stamped before EP02-R2-T6: the cost-tapped / cost-sacrificed
+#: records on a pending ability, two new `DelayedEffectSpec` variants, the
+#: duration phase-out marker and overload's changed text. The last shape without
+#: them is the R2 base, 163.
+_SCHEMA_VERSION_BEFORE_EP02_R2_T6_THIS_WAY = 163
+
+
+def test_a_snapshot_written_before_the_r2_t6_this_way_readers_is_refused() -> None:
+    """A version-163 dump could hold a pending activation that records no tapped
+    or sacrificed object, or a spell cast for its overload cost resolved as the
+    unchanged text: refused, not decoded."""
+    assert "cost_tapped_card_ids" in AbilityOnStack.model_fields
+    assert "cost_sacrificed_types" in AbilityOnStack.model_fields
+    assert Game.CURRENT_SCHEMA_VERSION > _SCHEMA_VERSION_BEFORE_EP02_R2_T6_THIS_WAY
+    dumped = _a_played_game().model_dump(mode="json")
+    dumped["schema_version"] = _SCHEMA_VERSION_BEFORE_EP02_R2_T6_THIS_WAY
+
+    with pytest.raises(
+        SchemaVersionMismatch,
+        match=f"schema_version={_SCHEMA_VERSION_BEFORE_EP02_R2_T6_THIS_WAY}",
+    ):
+        Game.model_validate(dumped)

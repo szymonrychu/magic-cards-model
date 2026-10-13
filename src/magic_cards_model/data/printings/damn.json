@@ -1,0 +1,133 @@
+{
+  "object": "card",
+  "id": "84056124-1a6f-4274-bee2-74cf0debddb5",
+  "oracle_id": "b01d61cc-9844-4191-86a0-f2db6d42d6e5",
+  "multiverse_ids": [
+    640487
+  ],
+  "mtgo_id": 118782,
+  "tcgplayer_id": 525729,
+  "cardmarket_id": 743543,
+  "name": "Damn",
+  "lang": "en",
+  "released_at": "2023-11-17",
+  "uri": "https://api.scryfall.com/cards/84056124-1a6f-4274-bee2-74cf0debddb5",
+  "scryfall_uri": "https://scryfall.com/card/lcc/191/damn?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T03:37:55Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/8/4/84056124-1a6f-4274-bee2-74cf0debddb5.jpg?1783913875",
+    "normal": "https://cards.scryfall.io/normal/front/8/4/84056124-1a6f-4274-bee2-74cf0debddb5.jpg?1783913875",
+    "large": "https://cards.scryfall.io/large/front/8/4/84056124-1a6f-4274-bee2-74cf0debddb5.jpg?1783913875",
+    "png": "https://cards.scryfall.io/png/front/8/4/84056124-1a6f-4274-bee2-74cf0debddb5.png?1783913875",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/8/4/84056124-1a6f-4274-bee2-74cf0debddb5.jpg?1783913875",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/8/4/84056124-1a6f-4274-bee2-74cf0debddb5.jpg?1783913875",
+    "thumb": "https://cards.scryfall.io/thumb/front/8/4/84056124-1a6f-4274-bee2-74cf0debddb5.webp?1783913875",
+    "grid": "https://cards.scryfall.io/grid/front/8/4/84056124-1a6f-4274-bee2-74cf0debddb5.webp?1783913875",
+    "display": "https://cards.scryfall.io/display/front/8/4/84056124-1a6f-4274-bee2-74cf0debddb5.webp?1783913875",
+    "art": "https://cards.scryfall.io/art/front/8/4/84056124-1a6f-4274-bee2-74cf0debddb5.webp?1783913875",
+    "crop": "https://cards.scryfall.io/crop/front/8/4/84056124-1a6f-4274-bee2-74cf0debddb5.webp?1783913875"
+  },
+  "mana_cost": "{B}{B}",
+  "cmc": 2.0,
+  "type_line": "Sorcery",
+  "oracle_text": "Destroy target creature. A creature destroyed this way can't be regenerated.\nOverload {2}{W}{W} (You may cast this spell for its overload cost. If you do, change \"target\" in its text to \"each.\")",
+  "colors": [
+    "B"
+  ],
+  "color_identity": [
+    "B",
+    "W"
+  ],
+  "keywords": [
+    "Overload"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": false,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "d253edc3-5bc7-4cf1-9446-a8540dedffa5",
+  "set": "lcc",
+  "set_name": "The Lost Caverns of Ixalan Commander",
+  "set_type": "commander",
+  "set_uri": "https://api.scryfall.com/sets/d253edc3-5bc7-4cf1-9446-a8540dedffa5",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Alcc&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/lcc?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/84056124-1a6f-4274-bee2-74cf0debddb5/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Ab01d61cc-9844-4191-86a0-f2db6d42d6e5&unique=prints",
+  "collector_number": "191",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Lucas Graciano",
+  "artist_ids": [
+    "ce98f39c-7cdd-47e6-a520-6c50443bb4c2"
+  ],
+  "illustration_id": "eb65010c-dbce-481b-ad00-54111425b654",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "edhrec_rank": 348,
+  "penny_rank": 44,
+  "prices": {
+    "usd": "1.96",
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": "2.05",
+    "eur_foil": null,
+    "tix": "0.26"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=640487&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DDamn",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DDamn",
+    "edhrec": "https://edhrec.com/route/?cc=Damn"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F525729%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=743543&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/118782?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

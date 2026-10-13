@@ -945,6 +945,27 @@ class StaticPrisonReturn(DelayedEffectSpecBase):
             game.put_onto_battlefield(card, card.owner, tapped=False)
 
 
+class PhaseInEach(DelayedEffectSpecBase):
+    """The end of "those creatures phase out until this enchantment leaves the
+    battlefield" (Out of Time; CR 702.26c, CR 610.3): when the source leaves, the
+    permanents it phased out phase back in. Which permanents is carried here (the
+    trigger's own `subject_id` is the source whose departure fires it). A
+    permanent that is not (or no longer) held out by this duration - gone, or
+    phased in by other means - is left alone."""
+
+    kind: Literal["phase_in_each"] = "phase_in_each"
+    ids: tuple[UUID, ...]
+    held_by: str
+    """`CardState.phased_out_under` as the duration recorded it (`until:<source id>`)."""
+
+    def __call__(self, game: "Game", ability: AbilityOnStack, trigger: "DelayedTrigger") -> None:
+        _drop_sibling_triggers(game, trigger)
+        for card_id in self.ids:
+            card = next((c for c in game.phased_out if c.id == card_id), None)
+            if card is not None and card.phased_out_under == self.held_by:
+                game.phase_in(card)
+
+
 class ReturnExiledCardAndAddCounters(DelayedEffectSpecBase):
     """Lagrella, the Magpie's second sentence: "When an exiled card enters
     under your control this way, put two +1/+1 counters on it."
@@ -1779,6 +1800,44 @@ class ReflexiveDamageEqualToSubjectPowerConsequence(DelayedEffectSpecBase):
             if isinstance(target, CardState) and target.zone is not Zone.BATTLEFIELD:
                 continue
             game.deal_damage(target, amount, source=dealer)
+
+
+class ReflexiveDamageEqualToSubjectManaValueConsequence(DelayedEffectSpecBase):
+    """ "When you reveal [or exile] a nonland card this way, `<source>` deals
+    damage equal to that card's mana value to any target." (CR 603.12) -
+    Calibrated Blast's and Hidetsugu, Devouring Chaos's reflexive trigger.
+
+    "That card" is the one the antecedent revealed or exiled - an object that
+    has already moved on (the bottom of a library, exile) and that no printed
+    description could re-derive - so its id is carried on
+    `DelayedTrigger.subject_id` (CR 603.7c) and its mana value (CR 202.3) is
+    read as the ability resolves. The damage is dealt by the source that
+    created the trigger (CR 120.1), found by id wherever it now is.
+    """
+
+    kind: Literal["reflexive_damage_equal_to_subject_mana_value_consequence"] = (
+        "reflexive_damage_equal_to_subject_mana_value_consequence"
+    )
+
+    def printed_ability(self, trigger: "DelayedTrigger") -> TriggeredAbility | None:
+        return _reflexive_when_you_do_ability(trigger)
+
+    def __call__(self, game: "Game", ability: AbilityOnStack, trigger: "DelayedTrigger") -> None:
+        if trigger.subject_id is None:
+            return
+        subject = game.find_by_id(trigger.subject_id)
+        if not isinstance(subject, CardState):
+            return
+        amount = game.characteristics_of(subject).mana_value
+        if not amount or amount <= 0:
+            return
+        dealer = game.find_by_id(trigger.source_id) if trigger.source_id is not None else None
+        for target in game.resolve_targets(ability):
+            if isinstance(target, CardState) and target.zone is not Zone.BATTLEFIELD:
+                continue
+            game.deal_damage(
+                target, int(amount), source=dealer if isinstance(dealer, CardState) else None
+            )
 
 
 class ReflexiveWhenYouDoConsequence(DelayedEffectSpecBase):
@@ -2619,6 +2678,7 @@ DelayedEffectSpec = Annotated[
     | ReturnEarthbentLand
     | DevourerOfDestinyFirstUpkeep
     | StaticPrisonReturn
+    | PhaseInEach
     | ReturnExiledCardAndAddCounters
     | CreateAttackingTokens
     | CreateTokensForController
@@ -2642,6 +2702,7 @@ DelayedEffectSpec = Annotated[
     | ReflexiveAttachSubjectToTargetConsequence
     | ReflexiveReturnThenAttachToSubjectConsequence
     | ReflexiveDamageEqualToSubjectPowerConsequence
+    | ReflexiveDamageEqualToSubjectManaValueConsequence
     | ReflexiveWhenYouDoConsequence
     | ReflexiveExileCopiedCard
     | ReflexivePreventedDamagePayoff

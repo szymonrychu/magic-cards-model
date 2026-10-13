@@ -4055,6 +4055,10 @@ def split_choose_target_prelude(text: str) -> "tuple[str, str] | None":
     rest = match.group("rest").strip()
     if len(re.findall(r"\btargets?\b", phrase, re.IGNORECASE)) != 1:
         return None
+    if re.search(r",\s*then\b|\bcard name\b", phrase, re.IGNORECASE):
+        # "Choose a card name, then target player mills a card." is a choice
+        # followed by an instruction, not an opener that names a target.
+        return None
     if re.search(r"\btargets?\b", rest, re.IGNORECASE):
         return None
     return phrase, rest

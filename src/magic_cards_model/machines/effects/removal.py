@@ -3120,7 +3120,8 @@ def _parse_mass_mv_comparison(
 #: `_CHOSEN_NAME_GROUP_LOSES_RE`'s `scope` group already reads for a group
 #: static, generalised for a mass destroy/exile sweep too.
 _MASS_CONTROLLER_SCOPE_RE = re.compile(
-    r"^(?P<inner>.+?)\s+(?P<scope>you control|your opponents control)$", re.IGNORECASE
+    r"^(?P<inner>.+?)\s+(?P<scope>you control|your opponents control|you don't control)$",
+    re.IGNORECASE,
 )
 
 
@@ -3211,7 +3212,7 @@ def _parse_mass_destroy_predicate(
             is_yours = permanent.controller == source.controller
             if controller_scope == "you control" and not is_yours:
                 return False
-            if controller_scope == "your opponents control" and is_yours:
+            if controller_scope in ("your opponents control", "you don't control") and is_yours:
                 return False
         if token_wanted is not None and is_token(permanent) is not token_wanted:
             return False

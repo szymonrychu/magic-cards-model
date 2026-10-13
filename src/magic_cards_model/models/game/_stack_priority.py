@@ -66,6 +66,7 @@ from ...machines.keywords import (
     awaken_target_held_apart,
     keyword_effect_for,
     keyword_triggered_abilities,
+    overloaded,
 )
 from ...machines.layers import (
     Characteristics,
@@ -79,6 +80,7 @@ from ...machines.next_spell import (
     next_spell_keyword_grants_for,
     spell_has_quality,
 )
+from ...machines.overload import overload_effect
 from ...machines.priority import PriorityOutcome
 from ...machines.replacement import (
     EventKind,
@@ -575,6 +577,9 @@ class StackPriorityMixin:
             faces_to_resolve = [
                 (face.name, face.oracle_text or "") for face in spell.card.card_faces
             ]
+        elif overloaded(self, spell):
+            # CR 702.96a: the overload cost changes the spell's text.
+            faces_to_resolve = [(spell.name, spell.oracle_text)]
         else:
             faces_to_resolve = [(spell.name, spell.oracle_text)]
         # CR 702.174j: an instant or sorcery's gift effect happens before any
@@ -606,7 +611,11 @@ class StackPriorityMixin:
         unread_faces: list[tuple[str, str]] = []
         if not spell.is_permanent:
             for face_name, face_text in faces_to_resolve:
-                effect = effect_for(face_name, face_text, x_value=x_value)
+                effect = (
+                    overload_effect(face_name, face_text, x_value=x_value)
+                    if overloaded(self, spell)
+                    else effect_for(face_name, face_text, x_value=x_value)
+                )
                 if effect is not None:
                     effects.append(effect)
                 elif face_text.strip():
@@ -684,6 +693,7 @@ class StackPriorityMixin:
             Zone.EXILE,
             Zone.BATTLEFIELD,
             Zone.LIBRARY,
+            Zone.HAND,
         ):
             # (Also a spell whose own text exiled it as it resolved - Burning
             # Wish's "Exile Burning Wish." (CR 201.5): CR 608.2n's final
@@ -2543,6 +2553,12 @@ class StackPriorityMixin:
             # CR 608.2b/CR 400.7: the object `find_by_id` just found is a new
             # object, not the one this reference named at announcement.
             return None
+
+        if isinstance(spell, CardState) and overloaded(self, spell):
+            # CR 702.96b: an overloaded spell has no targets, so what "each"
+            # reaches is not a target to be refused for protection, shroud or
+            # hexproof (CR 702.16b, CR 702.18a, CR 702.11b).
+            return thing
 
         source_card = self._source_card_of(spell)
         if (

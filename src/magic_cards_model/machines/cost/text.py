@@ -239,6 +239,15 @@ _SUBTYPE_COST_DECREASE = re.compile(
     r"less to cast\."
 )
 
+#: The supertype shape with a linked-pile count - The Kenriths' Royal Funeral's
+#: "Legendary spells you cast cost {1} less to cast for each card exiled with
+#: The Kenriths' Royal Funeral." (CR 607.2a: the cards the permanent's other
+#: ability exiled). The source is named by itself or as "this <noun>".
+_SUPERTYPE_PILE_COST_DECREASE = re.compile(
+    r"(?:^|(?<=[.\n]))\s*(?P<supertype>Legendary|Snow|Basic) spells you cast cost "
+    r"\{(?P<amount>\d+)\} less to cast for each card exiled with [^.]+\.?$"
+)
+
 #: Anything that talks about a spell costing more, or a floor on what a spell
 #: would cost, whether or not the shapes above could read it - Grand Arbiter
 #: Augustin IV's "Spells your opponents cast cost {1} more to cast" mentions
@@ -452,6 +461,14 @@ def _unconditional_cost_modifier_effect(text: str) -> CostModifierEffect | None:
                 applies_to_types=types,
                 per_each=each.strip() if each is not None else None,
             )
+    match = _SUPERTYPE_PILE_COST_DECREASE.search(text)
+    if match is not None:
+        return CostModifierEffect(
+            kind=CostModifierKind.TYPE_DECREASE,
+            amount=int(match.group("amount")),
+            applies_to_supertype=Supertype(match.group("supertype").lower()),
+            per_card_exiled_with_source=True,
+        )
     match = _SUBTYPE_COST_DECREASE.search(text)
     if match is not None:
         subtype = canonical_subtype(match.group("subtype"))
