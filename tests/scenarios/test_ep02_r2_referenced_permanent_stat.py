@@ -518,7 +518,8 @@ def _grab_the_reins(scenario, modes, *, entwined=False, targets=None):
     if targets:
         casting.choose_targets(targets)
     payment = casting.begin_paying()
-    for source in scenario.untapped_sources(*["Mountain"] * (7 if entwined else 4)):
+    paying = ["Mountain"] * 4 + ["Plains"] * (3 if entwined else 0)  # {3}{R}, entwine {2}{R}
+    for source in scenario.untapped_sources(*paying):
         payment.tap_for_mana(source, mana_from(source))
     payment.pay()
     scenario.put_on_stack(casting)
@@ -1268,3 +1269,129 @@ def test_sarkhan_minus_four_with_no_dragon_deals_nothing() -> None:
     sarkhan = scenario.find("Sarkhan the Mad", Zone.BATTLEFIELD, "alice")
     _activate_all(scenario, sarkhan, index=2, targets=[scenario.player("bob")])
     assert _life(scenario, "bob") == 20
+
+
+# ---------------------------------------------------------------------------
+# Grab the Reins: the first mode, and entwine (both modes, in printed order)
+# ---------------------------------------------------------------------------
+
+
+def test_grab_the_reins_first_mode_steals_the_creature_with_haste_until_end_of_turn() -> None:
+    scenario = _scenario([], ["Grizzly Bears"], hand=["Grab the Reins"])
+    bears = scenario.creature("Grizzly Bears", "bob")
+    _grab_the_reins(scenario, [1], targets=[bears])
+    assert scenario.game.controller_of(bears).username == "alice"
+    assert has_keyword(bears, "Haste", scenario.game)
+    while scenario.turn.active_player != "bob":
+        scenario.advance()
+    assert scenario.game.controller_of(bears).username == "bob"
+
+
+def test_grab_the_reins_first_mode_alone_sacrifices_nothing() -> None:
+    scenario = _scenario(["Serra Angel"], ["Grizzly Bears"], hand=["Grab the Reins"])
+    angel = scenario.creature("Serra Angel", "alice")
+    bears = scenario.creature("Grizzly Bears", "bob")
+    _grab_the_reins(scenario, [1], targets=[bears])
+    assert angel.zone is Zone.BATTLEFIELD
+    assert _life(scenario, "bob") == 20
+
+
+def test_grab_the_reins_entwined_steals_first_so_the_stolen_creature_can_be_the_sacrifice() -> None:
+    scenario = _scenario([], ["Grizzly Bears"], hand=["Grab the Reins"])
+    bears = scenario.creature("Grizzly Bears", "bob")
+    _grab_the_reins(scenario, [1, 2], entwined=True, targets=[bears, "bob"])
+    assert bears.zone is Zone.GRAVEYARD  # alice took it, then sacrificed it (CR 608.2c)
+    assert _life(scenario, "bob") == 20 - 2  # its power, the only creature she controlled
+
+
+# ---------------------------------------------------------------------------
+# Radagast the Brown: look at the top X cards, X is the entering creature's mana value
+# ---------------------------------------------------------------------------
+
+
+def test_radagast_takes_a_creature_that_shares_no_type_from_among_x_cards() -> None:
+    scenario = _scenario(
+        ["Radagast the Brown"],
+        hand=["Serra Angel"],
+        library=["Island", "Island", "Grizzly Bears", "Island", "Island", "Raging Goblin"]
+        + ["Island"] * 4,
+    )
+    bears = scenario.top_of_library(3)[2]
+    scenario.will_choose_cards(bears)
+    _cast_all(scenario, "Serra Angel")
+    assert bears.zone is Zone.HAND  # Serra Angel is mana value 5: five cards were looked at
+
+
+def test_radagast_does_not_see_past_the_mana_value() -> None:
+    scenario = _scenario(
+        ["Radagast the Brown"],
+        hand=["Grizzly Bears"],
+        library=["Island", "Island", "Raging Goblin", "Island", "Island"] + ["Island"] * 5,
+    )
+    goblin = scenario.top_of_library(3)[2]  # the third card; Grizzly Bears looks at two
+    _cast_all(scenario, "Grizzly Bears")
+    assert goblin.zone is Zone.LIBRARY
+    assert goblin is scenario.player("alice").library[0]
+
+
+def test_radagast_cannot_take_a_creature_sharing_a_type_with_one_you_control() -> None:
+    scenario = _scenario(
+        ["Radagast the Brown", "Serra Angel"],
+        hand=["Serra Angel"],
+        library=["Island", "Serra Angel", "Island", "Island", "Island"] + ["Island"] * 4,
+    )
+    angel_in_library = scenario.top_of_library(2)[1]
+    _cast_all(scenario, "Serra Angel")
+    assert angel_in_library.zone is Zone.LIBRARY  # an Angel shares a type with the Angels in play
+
+
+def test_radagast_himself_looks_at_his_own_mana_value() -> None:
+    scenario = _scenario(
+        [],
+        hand=["Radagast the Brown"],
+        library=["Island", "Island", "Island", "Island", "Raging Goblin"] + ["Island"] * 4,
+    )
+    goblin = scenario.top_of_library(5)[4]
+    _cast_all(scenario, "Radagast the Brown")
+    assert goblin.zone is Zone.LIBRARY  # mana value 4: the fifth card is out of reach
+
+
+def test_radagast_puts_the_rest_on_the_bottom() -> None:
+    scenario = _scenario(
+        ["Radagast the Brown"],
+        hand=["Grizzly Bears"],
+        library=["Forest", "Island"] + ["Island"] * 8,
+    )
+    looked = scenario.top_of_library(2)
+    _cast_all(scenario, "Grizzly Bears")
+    assert all(card in scenario.player("alice").library[-2:] for card in looked)
+
+
+# ---------------------------------------------------------------------------
+# The T3-reader cards: negative corners
+# ---------------------------------------------------------------------------
+
+
+def test_stormchaser_chimera_gets_nothing_from_a_land() -> None:
+    scenario = _scenario(["Stormchaser Chimera"], library=["Island"] * 5)
+    chimera = scenario.creature("Stormchaser Chimera", "alice")
+    base = chimera.power
+    _activate_all(scenario, chimera)
+    assert chimera.power == base
+
+
+def test_twilight_prophet_with_a_land_on_top_drains_nothing() -> None:
+    scenario = _scenario(["Twilight Prophet"], library=["Island"] * 9, step=Step.UNTAP)
+    scenario.player("alice").has_citys_blessing = True
+    _upkeep(scenario)
+    assert _life(scenario, "bob") == 20
+    assert _life(scenario, "alice") == 20
+
+
+def test_mercurial_chemister_discarding_a_land_deals_no_damage() -> None:
+    scenario = _scenario(["Mercurial Chemister"], ["Serra Angel"], hand=["Island"])
+    chemister = scenario.creature("Mercurial Chemister", "alice")
+    bob_angel = scenario.creature("Serra Angel", "bob")
+    discarded = scenario.find("Island", Zone.HAND, "alice")
+    _activate_all(scenario, chemister, index=1, discarding=[discarded], targets=[bob_angel])
+    assert bob_angel.damage == 0
