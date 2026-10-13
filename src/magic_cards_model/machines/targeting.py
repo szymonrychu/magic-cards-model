@@ -783,6 +783,13 @@ class TargetRequirement(EngineModel):
     303.4b) cannot be chosen. Read off the plain words; not the source itself
     (`excludes_source`), which is the Aura."""
 
+    excludes_event_player: bool = False
+    """"any number of target players other than that player" (Curse of
+    Surveillance) - the player the trigger event names (`event_player`, bound
+    by `TargetingProfile.for_event_player`, CR 603.3d) cannot be chosen. Unbound
+    (no event yet), it excludes nobody, the way every event-relative
+    restriction reads before its event."""
+
     total_mana_value_at_most: int | None = None
     """"up to two target creatures with total mana value 6 or less" (The Super
     Hero Civil War's chapter I) - like `distinct_controllers`, a restriction
@@ -2028,6 +2035,8 @@ class TargetRequirement(EngineModel):
     ) -> str | None:
         if not self.allows_players:
             return f"{self.phrase} cannot target the player {username}"
+        if self.excludes_event_player and username == self.event_player:
+            return f"{self.phrase} cannot target {username}, who is that player"
         if self.opponent_only and username == caster:
             return f"{self.phrase} cannot target {caster}, who is not an opponent"
         if self.dealt_damage_clause is not None and game is not None:
@@ -2161,6 +2170,7 @@ class TargetingProfile(EngineModel):
         as read, restriction unbound."""
         if player is None or not any(
             requirement.controller is ControllerRestriction.EVENT_PLAYER
+            or requirement.excludes_event_player
             for requirement in self.requirements
         ):
             return self
@@ -2169,6 +2179,7 @@ class TargetingProfile(EngineModel):
                 "requirements": tuple(
                     requirement.model_copy(update={"event_player": player})
                     if requirement.controller is ControllerRestriction.EVENT_PLAYER
+                    or requirement.excludes_event_player
                     else requirement
                     for requirement in self.requirements
                 )
@@ -5386,6 +5397,8 @@ _ON_THE_BATTLEFIELD_OR_CARD_RE = re.compile(
 
 #: " other than enchanted creature" - see `TargetRequirement.excludes_enchanted`.
 _OTHER_THAN_ENCHANTED_RE = re.compile(r" other than enchanted creature\b", re.IGNORECASE)
+#: " other than that player" - see `TargetRequirement.excludes_event_player`.
+_OTHER_THAN_THAT_PLAYER_RE = re.compile(r" other than that player\b", re.IGNORECASE)
 #: "enchanted creature deals ..." ahead of a solitary "any other target" in
 #: the same sentence (Pain for All) - the "other" is the enchanted creature.
 _ENCHANTED_CREATURE_DEALS_RE = re.compile(r"\benchanted creature deals\b", re.IGNORECASE)
@@ -5494,6 +5507,21 @@ def _read_phrase(prefix: str, suffix: str, *, strict: bool = False) -> TargetReq
             update={
                 "phrase": f"{base.phrase} other than enchanted creature",
                 "excludes_enchanted": True,
+            }
+        )
+    other_than_player = _OTHER_THAN_THAT_PLAYER_RE.search(suffix)
+    if other_than_player is not None:
+        base = _read_phrase(
+            prefix,
+            suffix[: other_than_player.start()] + suffix[other_than_player.end() :],
+            strict=strict,
+        )
+        if base is None:
+            return None
+        return base.model_copy(
+            update={
+                "phrase": f"{base.phrase} other than that player",
+                "excludes_event_player": True,
             }
         )
     battlefield_or_card = _ON_THE_BATTLEFIELD_OR_CARD_RE.match(suffix)

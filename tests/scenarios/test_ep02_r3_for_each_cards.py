@@ -57,6 +57,8 @@ LISTED = [
 
 PROOF = [
     "Silent-Chant Zubera",
+    "Lightkeeper of Emeria",
+    "Stronghold Arena",
 ]
 
 LANDS = ["Plains"] * 6 + ["Swamp"] * 4 + ["Island"] * 4 + ["Forest"] * 3 + ["Mountain"] * 4
@@ -115,6 +117,8 @@ def _resolve_all(scenario) -> None:
 def _cast_all(scenario, name: str, *, user: str = "alice", targets=None, x: int | None = None):
     """Cast `name` and resolve the spell, its triggers and everything they
     put on the stack."""
+    if scenario.priority_holder != user:
+        scenario.pass_priority()
     if x is None:
         scenario.cast_onto_stack(name, username=user, targets=targets, auto=True)
     else:
@@ -184,9 +188,7 @@ def test_deadly_embrace_counts_nothing_when_the_destroy_fails_to_kill() -> None:
 
 
 def test_floating_dream_zubera_draws_for_each_zubera_that_died() -> None:
-    scenario = _scenario(
-        ["Floating-Dream Zubera", "Floating-Dream Zubera"], hand=["Wrath of God"]
-    )
+    scenario = _scenario(["Floating-Dream Zubera", "Floating-Dream Zubera"], hand=["Wrath of God"])
     _cast_all(scenario, "Wrath of God")
     # each Zubera's trigger sees both deaths: two triggers x two Zubera
     assert _hand(scenario, "alice") == 4
@@ -221,8 +223,273 @@ def test_ashen_skin_zubera_discards_one_when_it_dies_alone() -> None:
 
 
 def test_silent_chant_zubera_gains_two_life_per_zubera_that_died() -> None:
-    scenario = _scenario(
-        ["Silent-Chant Zubera", "Floating-Dream Zubera"], hand=["Wrath of God"]
-    )
+    scenario = _scenario(["Silent-Chant Zubera", "Floating-Dream Zubera"], hand=["Wrath of God"])
     _cast_all(scenario, "Wrath of God")
     assert _life(scenario, "alice") == 20 + 2 * 2
+
+
+def _cast_kicked(scenario, name: str, times: int, *, user: str = "alice", targets=None, **kicker):
+    """Cast `name` paying its (multi)kicker `times` times, then resolve it and
+    everything it triggers."""
+    casting = scenario.cast(name, user, targets=targets)
+    if times:
+        casting.pay_kicker(times, **kicker)
+    scenario.auto_pay(casting.begin_paying(), username=user)
+    scenario.put_on_stack(casting)
+    _resolve_all(scenario)
+
+
+# ---------------------------------------------------------------------------
+# "for each time it was kicked" (CR 702.33d)
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(("times", "discards"), [(0, 0), (1, 1), (3, 3)])
+def test_bloodhusk_ritualist_discards_a_card_per_kick(times: int, discards: int) -> None:
+    scenario = _scenario([], hand=["Bloodhusk Ritualist"], bob_hand=["Island"] * 5)
+    scenario.choose_trigger_targets("Bloodhusk Ritualist", [scenario.player("bob")])
+    _cast_kicked(scenario, "Bloodhusk Ritualist", times)
+    assert _hand(scenario, "bob") == 5 - discards
+
+
+def test_lightkeeper_of_emeria_gains_two_life_per_kick() -> None:
+    scenario = _scenario([], hand=["Lightkeeper of Emeria"])
+    _cast_kicked(scenario, "Lightkeeper of Emeria", 2)
+    assert _life(scenario, "alice") == 20 + 4
+
+
+def test_lightkeeper_of_emeria_gains_nothing_unkicked() -> None:
+    scenario = _scenario([], hand=["Lightkeeper of Emeria"])
+    _cast_kicked(scenario, "Lightkeeper of Emeria", 0)
+    assert _life(scenario, "alice") == 20
+
+
+def test_stronghold_arena_gains_three_life_per_kick() -> None:
+    scenario = _scenario([], hand=["Stronghold Arena"])
+    _cast_kicked(scenario, "Stronghold Arena", 1, which="{G}")
+    assert _life(scenario, "alice") == 20 + 3
+
+
+# ---------------------------------------------------------------------------
+# "damage equal to the number of times that spell was kicked"
+# ---------------------------------------------------------------------------
+
+
+def test_rumbling_aftershocks_deals_damage_equal_to_the_kicks() -> None:
+    scenario = _scenario(
+        ["Rumbling Aftershocks"], hand=["Bloodhusk Ritualist"], bob_hand=["Island"]
+    )
+    scenario.will_take_the_may(True, source="Rumbling Aftershocks")
+    scenario.choose_trigger_targets("Rumbling Aftershocks", [scenario.player("bob")])
+    scenario.choose_trigger_targets("Bloodhusk Ritualist", [scenario.player("bob")])
+    _cast_kicked(scenario, "Bloodhusk Ritualist", 3)
+    assert _life(scenario, "bob") == 20 - 3
+
+
+def test_rumbling_aftershocks_ignores_an_unkicked_spell() -> None:
+    scenario = _scenario(["Rumbling Aftershocks"], hand=["Bloodhusk Ritualist"])
+    scenario.choose_trigger_targets("Bloodhusk Ritualist", [scenario.player("bob")])
+    _cast_kicked(scenario, "Bloodhusk Ritualist", 0)
+    assert _life(scenario, "bob") == 20
+
+
+def test_rumbling_aftershocks_may_decline() -> None:
+    scenario = _scenario(["Rumbling Aftershocks"], hand=["Bloodhusk Ritualist"])
+    scenario.will_take_the_may(False, source="Rumbling Aftershocks")
+    scenario.choose_trigger_targets("Bloodhusk Ritualist", [scenario.player("bob")])
+    _cast_kicked(scenario, "Bloodhusk Ritualist", 2)
+    assert _life(scenario, "bob") == 20
+
+
+# ---------------------------------------------------------------------------
+# "the number of cards target opponent discarded this turn" (CR 701.9a)
+# ---------------------------------------------------------------------------
+
+
+def test_dream_salvage_draws_for_each_card_the_opponent_discarded_this_turn() -> None:
+    scenario = _scenario(
+        [], hand=["Mind Rot", "Dream Salvage"], bob_hand=["Island", "Island", "Island"]
+    )
+    _cast_all(scenario, "Mind Rot", targets=["bob"])
+    assert _hand(scenario, "bob") == 1
+    before = _hand(scenario, "alice")
+    _cast_all(scenario, "Dream Salvage", targets=["bob"])
+    assert _hand(scenario, "alice") == before - 1 + 2  # the spell leaves, two cards come in
+
+
+def test_dream_salvage_draws_nothing_when_the_opponent_discarded_nothing() -> None:
+    scenario = _scenario([], hand=["Dream Salvage"], bob_hand=["Island"])
+    _cast_all(scenario, "Dream Salvage", targets=["bob"])
+    assert _hand(scenario, "alice") == 0
+
+
+def test_dream_salvage_does_not_count_the_casters_own_discards() -> None:
+    scenario = _scenario(
+        [], hand=["Mind Rot", "Dream Salvage", "Island", "Island"], bob_hand=["Island"]
+    )
+    _cast_all(scenario, "Mind Rot", targets=["alice"])  # alice discards her own two cards
+    _cast_all(scenario, "Dream Salvage", targets=["bob"])
+    assert _hand(scenario, "alice") == 0
+
+
+# ---------------------------------------------------------------------------
+# "the number of noncreature spells they've cast this turn"
+# ---------------------------------------------------------------------------
+
+
+def test_magebane_lizard_damages_the_caster_by_their_noncreature_spell_count() -> None:
+    scenario = _scenario(["Magebane Lizard"], bob_hand=["Opt", "Opt", "Opt"])
+    _cast_all(scenario, "Opt", user="bob")
+    assert _life(scenario, "bob") == 20 - 1
+    _cast_all(scenario, "Opt", user="bob")
+    assert _life(scenario, "bob") == 20 - 1 - 2
+    _cast_all(scenario, "Opt", user="bob")
+    assert _life(scenario, "bob") == 20 - 1 - 2 - 3
+
+
+def test_magebane_lizard_does_not_count_creature_spells() -> None:
+    scenario = _scenario(["Magebane Lizard"], hand=["Grizzly Bears", "Opt"])
+    _cast_all(scenario, "Grizzly Bears")
+    assert _life(scenario, "alice") == 20
+    _cast_all(scenario, "Opt")
+    assert _life(scenario, "alice") == 20 - 1
+
+
+def test_magebane_lizard_hurts_its_own_controller_for_their_spells_only() -> None:
+    scenario = _scenario(["Magebane Lizard"], hand=["Opt"], bob_hand=["Opt"])
+    _cast_all(scenario, "Opt", user="bob")
+    _cast_all(scenario, "Opt")
+    assert _life(scenario, "bob") == 20 - 1
+    assert _life(scenario, "alice") == 20 - 1  # alice's own first noncreature spell
+
+
+# ---------------------------------------------------------------------------
+# "the number of Goblins that entered the battlefield under your control this turn"
+# ---------------------------------------------------------------------------
+
+
+def test_hobgoblin_bandit_lord_deals_damage_per_goblin_that_entered_this_turn() -> None:
+    scenario = _scenario(
+        ["Hobgoblin Bandit Lord"], hand=["Goblin Guide", "Raging Goblin", "Grizzly Bears"]
+    )
+    for name in ("Goblin Guide", "Raging Goblin", "Grizzly Bears"):
+        _cast_all(scenario, name)
+    lord = scenario.creature("Hobgoblin Bandit Lord", "alice")
+    scenario.activate(lord, targets=["bob"], auto=True)
+    _resolve_all(scenario)
+    assert _life(scenario, "bob") == 20 - 2
+
+
+def test_hobgoblin_bandit_lord_counts_a_goblin_that_has_since_died() -> None:
+    scenario = _scenario(["Hobgoblin Bandit Lord"], hand=["Raging Goblin", "Lightning Bolt"])
+    _cast_all(scenario, "Raging Goblin")
+    _cast_all(scenario, "Lightning Bolt", targets=[scenario.creature("Raging Goblin", "alice")])
+    lord = scenario.creature("Hobgoblin Bandit Lord", "alice")
+    scenario.activate(lord, targets=["bob"], auto=True)
+    _resolve_all(scenario)
+    assert _life(scenario, "bob") == 20 - 1
+
+
+def test_hobgoblin_bandit_lord_deals_nothing_when_no_goblin_entered() -> None:
+    scenario = _scenario(["Hobgoblin Bandit Lord"])
+    lord = scenario.creature("Hobgoblin Bandit Lord", "alice")
+    scenario.activate(lord, targets=["bob"], auto=True)
+    _resolve_all(scenario)
+    assert _life(scenario, "bob") == 20
+
+
+# ---------------------------------------------------------------------------
+# "each different mana value among nonland permanents you control" (CR 202.3)
+# ---------------------------------------------------------------------------
+
+
+def test_lunar_insight_draws_for_each_different_mana_value() -> None:
+    scenario = _scenario(
+        ["Memnite", "Grizzly Bears", "Grizzly Bears", "Serra Angel", "Llanowar Elves"],
+        hand=["Lunar Insight"],
+        library=["Island"] * 12,
+    )
+    _cast_all(scenario, "Lunar Insight")
+    assert _hand(scenario, "alice") == 4  # mana values 0, 1, 2 and 5; the lands do not count
+
+
+def test_lunar_insight_counts_only_the_casters_board() -> None:
+    scenario = _scenario(["Grizzly Bears"], ["Serra Angel", "Memnite"], hand=["Lunar Insight"])
+    _cast_all(scenario, "Lunar Insight")
+    assert _hand(scenario, "alice") == 1
+
+
+def test_lunar_insight_draws_nothing_with_only_lands() -> None:
+    scenario = _scenario([], hand=["Lunar Insight"])
+    _cast_all(scenario, "Lunar Insight")
+    assert _hand(scenario, "alice") == 0
+
+
+# ---------------------------------------------------------------------------
+# Curses attached to a player (CR 303.4m)
+# ---------------------------------------------------------------------------
+
+
+def _curses_scenario(alice_curses: list[str], on_bob: list[bool], alice_hand=None, targets=None):
+    """Alice's Curses, each attached to bob or alice, on bob's upkeep."""
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("alice", battlefield=[*alice_curses], hand=alice_hand, library=["Island"] * 12)
+        .player("bob", library=["Island"] * 12)
+        .build()
+    )
+    scenario.start_at(Step.UPKEEP)
+    for curse, at_bob in zip(
+        [s for s in scenario.all_card_states() if s.zone is Zone.BATTLEFIELD], on_bob, strict=True
+    ):
+        curse.attach_to(scenario.player("bob" if at_bob else "alice"))
+    if targets is not None:
+        scenario.choose_trigger_targets(alice_curses[0], [scenario.player(t) for t in targets])
+    while not (scenario.step is Step.UPKEEP and scenario.turn.active_player == "bob"):
+        scenario.advance()
+    scenario.game.put_triggers_on_stack()
+    return scenario
+
+
+def test_curse_of_thirst_deals_damage_per_curse_on_the_player() -> None:
+    scenario = _curses_scenario(["Curse of Thirst", "Curse of Exhaustion"], [True, True])
+    scenario.pass_until_resolved()
+    assert _life(scenario, "bob") == 20 - 2
+    assert _life(scenario, "alice") == 20
+
+
+def test_curse_of_thirst_alone_deals_one() -> None:
+    scenario = _curses_scenario(["Curse of Thirst"], [True])
+    scenario.pass_until_resolved()
+    assert _life(scenario, "bob") == 20 - 1
+
+
+def test_curse_of_thirst_ignores_curses_on_another_player() -> None:
+    scenario = _curses_scenario(["Curse of Thirst", "Curse of Exhaustion"], [True, False])
+    scenario.pass_until_resolved()
+    assert _life(scenario, "bob") == 20 - 1
+
+
+def test_curse_of_surveillance_draws_for_the_other_player_by_the_curses_on_that_player() -> None:
+    scenario = _curses_scenario(
+        ["Curse of Surveillance", "Curse of Exhaustion"], [True, True], targets=["alice"]
+    )
+    scenario.pass_until_resolved()
+    assert _hand(scenario, "alice") == 2
+    assert _hand(scenario, "bob") == 0
+
+
+def test_curse_of_surveillance_may_target_no_one() -> None:
+    scenario = _curses_scenario(["Curse of Surveillance"], [True], targets=[])
+    scenario.pass_until_resolved()
+    assert _hand(scenario, "alice") == 0 and _hand(scenario, "bob") == 0
+
+
+def test_curse_of_surveillance_cannot_draw_for_the_enchanted_player() -> None:
+    """ "Other than that player": a choice of the enchanted player is illegal
+    (CR 115.1, CR 608.2b), so bob draws nothing and alice, not chosen, neither."""
+    scenario = _curses_scenario(["Curse of Surveillance"], [True], targets=["bob"])
+    scenario.pass_until_resolved()
+    assert _hand(scenario, "bob") == 0
+    assert _hand(scenario, "alice") == 0

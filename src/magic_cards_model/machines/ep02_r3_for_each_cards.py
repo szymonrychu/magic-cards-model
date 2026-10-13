@@ -13,11 +13,13 @@ travels the chain once and the answer is remembered (the classify budget).
 import re
 from collections.abc import Callable
 from functools import cache
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 from uuid import UUID
 
 from ..models.card_state import CardState
 from ..models.player import Player
+from ..numbers import COUNT, parse_count
+from .effects._chains import FORWARD, MIXED_CLAUSE
 
 if TYPE_CHECKING:
     from ..models.game import Game
@@ -87,9 +89,10 @@ def _cards_discarded_this_turn(phrase: str) -> NumberOf | None:
     """The cards a player other than "you" discarded this turn
     (`Game.cards_discarded_this_turn`, cycling counted: CR 702.29a), the
     player the printed words name; "each opponent" is the sum over them."""
-    if "discarded this turn" not in phrase.lower() or (
-        match := _DISCARDED_RE.fullmatch(phrase)
-    ) is None:
+    if (
+        "discarded this turn" not in phrase.lower()
+        or (match := _DISCARDED_RE.fullmatch(phrase)) is None
+    ):
         return None
     who = match.group("who").lower()
 
@@ -154,9 +157,10 @@ def _different_mana_values_among_permanents(phrase: str) -> NumberOf | None:
     """How many distinct mana values the permanents of a description the
     controller controls have, off the computed board (CR 613.5); a permanent
     with no mana cost is mana value 0 (CR 202.3a)."""
-    if "different mana value" not in phrase.lower() or (
-        match := _DIFFERENT_MV_RE.fullmatch(phrase)
-    ) is None:
+    if (
+        "different mana value" not in phrase.lower()
+        or (match := _DIFFERENT_MV_RE.fullmatch(phrase)) is None
+    ):
         return None
     from ..models.game import _permanent_quality
 
@@ -268,9 +272,10 @@ def _attachments_it_had_each(phrase: str) -> ForEach | None:
     Hateful Eidolon): the Auras the dying permanent had as it last existed on
     the battlefield (CR 603.10a), `CardState.last_known_attachments`, that the
     controller controlled."""
-    if " that was attached to it" not in phrase.lower() or (
-        match := _ATTACHED_TO_IT_EACH_RE.fullmatch(phrase)
-    ) is None:
+    if (
+        " that was attached to it" not in phrase.lower()
+        or (match := _ATTACHED_TO_IT_EACH_RE.fullmatch(phrase)) is None
+    ):
         return None
     kind = match.group("kind").lower()
 
@@ -331,3 +336,56 @@ def number_of_cards_counts(phrase: str) -> NumberOf | None:
         if (count := reader(text)) is not None:
             return count
     return None
+
+
+# --------------------------------------------------------------------------
+# "any number of target players other than that player each draw cards equal to ..."
+# --------------------------------------------------------------------------
+
+_PLAYERS_EACH_DRAW_RE = re.compile(
+    rf"^(?P<players>any number of|up to {COUNT}|{COUNT}) target players"
+    r"(?P<other> other than that player)? each draws? "
+    rf"(?:(?P<n>{COUNT}) cards?|cards equal to (?P<expr>.+))$",
+    re.IGNORECASE,
+)
+
+
+@MIXED_CLAUSE.rung("s30", for_spell=FORWARD)
+def _parse_target_players_each_draw_equal_clause(clause: str, *, for_spell: bool) -> Any:
+    """ "Any number of target players other than that player each draw cards
+    equal to the number of Curses attached to that player." (Curse of
+    Surveillance): each chosen player draws the one amount, counted once as the
+    ability resolves (CR 608.2h) - for the controller (CR 109.5), whose "that
+    player" is the enchanted player of the trigger's event. A target no longer
+    legal draws nothing (CR 608.2b); "any number" may choose no one (CR 107.1c).
+    """
+    text = " ".join(clause.split()).rstrip(".")
+    if " each draw" not in text.lower() or "target players" not in text.lower():
+        return None
+    match = _PLAYERS_EACH_DRAW_RE.fullmatch(text)
+    if match is None or (match.group("n") is None) == (match.group("expr") is None):
+        return None
+    from .effects._common import _targets_understood
+
+    phrase = f"{match.group('players')} target players{match.group('other') or ''}"
+    if not _targets_understood(phrase, allow_player_targets=True, count_agnostic=True):
+        return None
+    if match.group("n") is not None:
+        fixed = parse_count(match.group("n"))
+        if fixed is None:
+            return None
+        amount_of = lambda _game, _controller: fixed  # noqa: E731
+    else:
+        from .effects.amounts import count_expression
+
+        amount_of = count_expression(match.group("expr"))
+        if amount_of is None:
+            return None
+
+    def effect(game: "Game", stack_object: Any) -> None:
+        amount = amount_of(game, game.controller_of(stack_object).username)
+        for target in game.resolve_targets(stack_object):
+            if isinstance(target, Player) and amount > 0:
+                game.draw_cards(target.username, amount)
+
+    return effect
