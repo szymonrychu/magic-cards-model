@@ -7307,6 +7307,64 @@ def _parse_conditional_self_pump_instead_pair(
     return effect
 
 
+#: "`<Target phrase>` gets +A/+B until end of turn. That creature gets +C/+D
+#: instead if `<condition>`." - Festering Newt's dies
+#: trigger ("target creature an opponent controls gets -1/-1 ... That creature
+#: gets -4/-4 instead if you control a creature named Bogbrew Witch"). CR
+#: 614.1a: "instead" replaces the base pump outright, so exactly one of the
+#: two applies; the condition is read once, as the ability resolves (CR
+#: 608.2h), against the ability's controller (CR 109.5), and the target is
+#: the one the first sentence declared (CR 601.2c) - "that creature" adds no
+#: second target.
+_TARGET_PUMP_EOT_RE = re.compile(
+    r"^(?P<head>target [^.]+? gets) (?P<pt>[+-]\d+/[+-]\d+) until end of turn\.?$",
+    re.IGNORECASE,
+)
+_THAT_CREATURE_PUMP_INSTEAD_IF_RE = re.compile(
+    r"^that creature gets (?P<pt>[+-]\d+/[+-]\d+)(?: until end of turn)? instead "
+    r"if (?P<condition>[^.]+?)\.?$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s36")
+def _parse_target_pump_then_that_creature_instead_if_clause(text: str) -> AbilityEffect | None:
+    """`_TARGET_PUMP_EOT_RE` then `_THAT_CREATURE_PUMP_INSTEAD_IF_RE`, or `None`."""
+    if " instead if " not in text:
+        return None
+    sentences = [part.strip() for part in re.split(r"(?<=\.)\s+", text.strip()) if part.strip()]
+    if len(sentences) != 2:
+        return None
+    base = _TARGET_PUMP_EOT_RE.fullmatch(sentences[0])
+    upgrade = _THAT_CREATURE_PUMP_INSTEAD_IF_RE.fullmatch(sentences[1])
+    if base is None or upgrade is None:
+        return None
+    condition_text = upgrade.group("condition").strip()
+    if not _effect_condition_is_readable(condition_text):
+        return None
+    head = base.group("head")
+    base_text = f"{head} {base.group('pt')} until end of turn."
+    upgraded_text = f"{head} {upgrade.group('pt')} until end of turn."
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        source = ability.source(game)
+        if source is None:
+            return
+        targets = game.resolve_card_targets(ability)
+        if not targets:
+            return
+        held = _condition_holds_for_stack_object(game, ability, condition_text, source)
+        game.continuous_effects.create(
+            source,
+            targets=targets,
+            context=layer_context_for(game, game.controller_of(ability)),
+            ability_text=upgraded_text if held else base_text,
+            game=game,
+        )
+
+    return effect
+
+
 #: "This creature gets +N/+N until end of turn." followed by "If
 #: `<condition>`, this creature also gains `<keyword>` until end of turn." -
 #: Expressive Firedancer's own Opus rider: "also" (CR 608.2c) adds the

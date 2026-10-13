@@ -1658,10 +1658,13 @@ def _parse_target_player_may_search_named_card_clause(
 #: "a card named this creature", the object's own name). The controller's
 #: twin of `_TARGET_PLAYER_MAY_SEARCH_NAMED_CARD_RE`; CR 701.23b lets the
 #: searcher fail to find even a present card, which `Game.search_and_put`'s
-#: own optional search already honours.
+#: own optional search already honours. "named A or B" (Bogbrew Witch) accepts
+#: either name, and the find may go onto the battlefield, tapped or not,
+#: instead of into the hand (CR 701.23e: revealed only when the text says so).
 _YOU_SEARCH_NAMED_CARD_RE = re.compile(
-    r"^(?P<may>you may )?search your library for a card named (?P<name>.+?), reveal it, "
-    r"put it into your hand, then shuffle$",
+    r"^(?P<may>you may )?search your library for a card named (?P<name>.+?), "
+    r"(?:(?P<reveal>reveal it, put it into your hand)|"
+    r"put it onto the battlefield(?P<tapped> tapped)?), then shuffle$",
     re.IGNORECASE,
 )
 _SELF_NAME_RE = re.compile(
@@ -1680,20 +1683,27 @@ def _parse_you_search_named_card_clause(clause: str, *, for_spell: bool) -> Targ
     if not printed:
         return None
     optional = match.group("may") is not None
+    reveal = match.group("reveal") is not None
+    tapped = match.group("tapped") is not None
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
         source = stack_object.name if for_spell else stack_object.source_name  # type: ignore[union-attr]
         source_id = source_id_of(stack_object)
-        name = source.split(" // ")[0] if _SELF_NAME_RE.fullmatch(printed) else printed
+        names = (
+            [source.split(" // ")[0]]
+            if _SELF_NAME_RE.fullmatch(printed)
+            else [alternative.strip() for alternative in printed.split(" or ")]
+        )
         controller = game.controller_of(stack_object)
-        prompt = f"search your library for a card named {name}"
+        prompt = f"search your library for a card named {' or '.join(names)}"
         if optional and not game.may(controller, prompt, source=source, source_id=source_id):
             return
         game.search_and_put(
             controller,
-            lambda state: state.name == name,
-            destination=Zone.HAND,
-            reveal=True,
+            lambda state: state.name in names,
+            destination=Zone.HAND if reveal else Zone.BATTLEFIELD,
+            reveal=reveal,
+            tapped=tapped,
             source=source,
             source_id=source_id,
         )

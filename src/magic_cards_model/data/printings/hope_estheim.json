@@ -1,0 +1,146 @@
+{
+  "object": "card",
+  "id": "fbdb68cc-5516-481a-94c5-59f6c69b8a17",
+  "oracle_id": "187a110c-032a-42e1-be2d-3cfaaa9495f8",
+  "multiverse_ids": [],
+  "resource_id": "02B17D2018CC2051CEE3021179000350BD0AA04A45C2D37E6A762EFD64F40A61",
+  "mtgo_id": 141407,
+  "arena_id": 96098,
+  "tcgplayer_id": 633412,
+  "cardmarket_id": 826997,
+  "name": "Hope Estheim",
+  "lang": "en",
+  "released_at": "2025-06-13",
+  "uri": "https://api.scryfall.com/cards/fbdb68cc-5516-481a-94c5-59f6c69b8a17",
+  "scryfall_uri": "https://scryfall.com/card/fin/226/hope-estheim?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T01:36:09Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/f/b/fbdb68cc-5516-481a-94c5-59f6c69b8a17.jpg?1783906569",
+    "normal": "https://cards.scryfall.io/normal/front/f/b/fbdb68cc-5516-481a-94c5-59f6c69b8a17.jpg?1783906569",
+    "large": "https://cards.scryfall.io/large/front/f/b/fbdb68cc-5516-481a-94c5-59f6c69b8a17.jpg?1783906569",
+    "png": "https://cards.scryfall.io/png/front/f/b/fbdb68cc-5516-481a-94c5-59f6c69b8a17.png?1783906569",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/f/b/fbdb68cc-5516-481a-94c5-59f6c69b8a17.jpg?1783906569",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/f/b/fbdb68cc-5516-481a-94c5-59f6c69b8a17.jpg?1783906569",
+    "thumb": "https://cards.scryfall.io/thumb/front/f/b/fbdb68cc-5516-481a-94c5-59f6c69b8a17.webp?1783906569",
+    "grid": "https://cards.scryfall.io/grid/front/f/b/fbdb68cc-5516-481a-94c5-59f6c69b8a17.webp?1783906569",
+    "display": "https://cards.scryfall.io/display/front/f/b/fbdb68cc-5516-481a-94c5-59f6c69b8a17.webp?1783906569",
+    "art": "https://cards.scryfall.io/art/front/f/b/fbdb68cc-5516-481a-94c5-59f6c69b8a17.webp?1783906569",
+    "crop": "https://cards.scryfall.io/crop/front/f/b/fbdb68cc-5516-481a-94c5-59f6c69b8a17.webp?1783906569"
+  },
+  "mana_cost": "{W}{U}",
+  "cmc": 2.0,
+  "type_line": "Legendary Creature \u2014 Human Wizard",
+  "oracle_text": "Lifelink\nAt the beginning of your end step, each opponent mills X cards, where X is the amount of life you gained this turn.",
+  "power": "2",
+  "toughness": "2",
+  "colors": [
+    "U",
+    "W"
+  ],
+  "color_identity": [
+    "U",
+    "W"
+  ],
+  "keywords": [
+    "Lifelink",
+    "Mill"
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "arena",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "d7beb4b7-e1ff-4d35-ab07-5700f17ea1ea",
+  "set": "fin",
+  "set_name": "Final Fantasy",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/d7beb4b7-e1ff-4d35-ab07-5700f17ea1ea",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Afin&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/fin?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/fbdb68cc-5516-481a-94c5-59f6c69b8a17/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A187a110c-032a-42e1-be2d-3cfaaa9495f8&unique=prints",
+  "collector_number": "226",
+  "digital": false,
+  "rarity": "rare",
+  "flavor_text": "\"If we have the power to destroy Cocoon, then we have the power to save it.\"",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Fariba Khamseh",
+  "artist_ids": [
+    "f18a7bd6-4aca-4201-b2f5-942c28ee4f18"
+  ],
+  "illustration_id": "4c864159-f1e5-4ef0-b60b-ea1d5e47af4f",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "security_stamp": "triangle",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "promo_types": [
+    "ffxiii",
+    "universesbeyond"
+  ],
+  "edhrec_rank": 5826,
+  "penny_rank": 7853,
+  "prices": {
+    "usd": "0.33",
+    "usd_foil": "0.47",
+    "usd_etched": null,
+    "eur": "0.24",
+    "eur_foil": "0.62",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DHope%2BEstheim",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DHope%2BEstheim",
+    "edhrec": "https://edhrec.com/route/?cc=Hope+Estheim"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F633412%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=826997&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/141407?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}
