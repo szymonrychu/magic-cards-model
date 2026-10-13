@@ -1483,6 +1483,20 @@ def test_stalking_vengeance_it_is_the_creature_that_died_not_the_source() -> Non
     assert _life(scenario, "bob") == 20 - 4
 
 
+def test_impostor_syndrome_copies_the_creature_that_dealt_the_damage() -> None:
+    """Impostor Syndrome: "Whenever a nontoken creature you control deals combat
+    damage to a player, create a token that's a copy of it, except it isn't
+    legendary." With no earlier sentence, "it" is the event's subject (CR 603.2)."""
+    scenario = _scenario(["Impostor Syndrome", "Grizzly Bears"], step=Step.DECLARE_ATTACKERS)
+    scenario.attack_with(scenario.creature("Grizzly Bears", "alice"))
+    scenario.no_blocks()
+    scenario.combat_damage()
+    _resolve_all(scenario)
+    bears = [c for c in scenario.game.battlefield if c.name == "Grizzly Bears"]
+    assert len(bears) == 2
+    assert sum(1 for c in bears if c.token) == 1
+
+
 def test_banewasp_affliction_costs_the_controller_the_toughness_of_the_creature() -> None:
     scenario = _scenario([], ["Serra Angel"], hand=["Banewasp Affliction"])
     angel = scenario.creature("Serra Angel", "bob")

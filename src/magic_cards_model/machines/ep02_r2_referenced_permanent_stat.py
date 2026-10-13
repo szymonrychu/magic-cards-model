@@ -841,7 +841,14 @@ def _step_copy_token(exception: str) -> ResolutionStep | None:
 
     def step(game: "Game", stack_object: Any, state: State) -> bool:
         referent = state.referent
-        original = None if referent is None else game.find_by_id(referent.card_id)
+        if referent is not None:
+            original = game.find_by_id(referent.card_id)
+        else:
+            # No earlier sentence named it: "it" is the trigger event's subject
+            # (CR 603.2) - Impostor Syndrome's creature that dealt the damage.
+            event = getattr(stack_object, "event", None)
+            subject_id = None if event is None else event.subject_id
+            original = None if subject_id is None else game.find_by_id(subject_id)
         if isinstance(original, CardState):
             token_copy_of(game, original, game.controller_of(stack_object).username, **options)
         return True

@@ -34,13 +34,29 @@
   },
   "card": "Impostor Syndrome",
   "delta": {
-    "created": {},
+    "created": {
+      "A.I.M. Scientists@alice+1": {
+        "attached_to": null,
+        "class_level": 1,
+        "controller": "alice",
+        "counters": {},
+        "damage": 0,
+        "face_up": true,
+        "granted": [],
+        "monstrous": false,
+        "power": 3,
+        "tapped": false,
+        "toughness": 3,
+        "transformed": false,
+        "zone": "battlefield"
+      }
+    },
     "decisions": [],
-    "fields_changed": [],
+    "fields_changed": ["continuous_effects", "turn_counts", "turn_facts", "turn_history"],
     "notices": {},
     "objects": {},
     "players": {},
-    "stack": []
+    "stack": ["ability of A.I.M. Scientists@alice+1: When this creature enters, it connives."]
   },
   "family": "triggered",
   "format": 1,
