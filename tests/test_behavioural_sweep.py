@@ -179,6 +179,7 @@ from tests.scenarios.harness import PlayedScenario, ResolutionEffect, Scenario, 
 
 ALICE = "alice"
 BOB = "bob"
+CAROL = "carol"
 
 _BASICS = ["Plains", "Island", "Swamp", "Mountain", "Forest"]
 #: Enough mana of every colour (three of each, for {G}{G}{G} and "three or
@@ -379,6 +380,7 @@ def _board(
     active: str = ALICE,
     step: Step | None = Step.PRECOMBAT_MAIN,
     busy: bool = True,
+    third: bool = False,
     before: Callable[[PlayedScenario], Any] | None = None,
 ) -> PlayedScenario:
     """The stock board plus this attempt's own cards, at `step` of
@@ -451,6 +453,16 @@ def _board(
         },
     }
     order = [ALICE, BOB] if active == ALICE else [BOB, ALICE]
+    if third:
+        # A third seat, only when asked, so every two-player board recorded
+        # before it stays byte-identical.
+        seats[CAROL] = {
+            "library": list(_LIBRARY),
+            "hand": list(_HAND),
+            "battlefield": list(_BOB_LANDS),
+            "graveyard": list(_GRAVEYARD),
+        }
+        order.append(CAROL)
     _STAGING.board = {
         "variant": variant,
         "order": order,
@@ -4236,6 +4248,23 @@ def _player_event(case: Case, ability: TriggeredAbility, action: str) -> Iterato
         yield happen
 
 
+def _losing_the_game(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
+    """CR 104.3 + CR 800.4: one player loses the game while two others play
+    on, so the game does not end (CR 104.2a) and the source keeps watching.
+    The loser is each seat in turn that the condition allows."""
+    lowered = ability.condition.lower()
+    losers = [BOB, CAROL] if "opponent" in lowered else [ALICE, BOB, CAROL]
+    for loser in losers:
+
+        def lose(loser: str = loser) -> tuple[PlayedScenario, Any]:
+            scenario, source_id = _home(case, ability, third=True)
+            scenario.game.player_loses_the_game(loser)
+            _drive(scenario, case, source_id)
+            return scenario, source_id
+
+        yield lose
+
+
 def _discarding_itself(case: Case) -> Attempt:
     def discard_it() -> tuple[PlayedScenario, Any]:
         scenario = _board(hand=(case.card,))
@@ -4987,6 +5016,8 @@ def _attempts(case: Case) -> Iterator[Attempt]:
             yield from _player_event(case, ability, "lose")
         elif kind == "discards_a_card":
             yield from _player_event(case, ability, "discard")
+        elif kind == "player_loses_the_game":
+            yield from _losing_the_game(case, ability)
         elif kind == "player_counters_put":
             yield from _player_event(case, ability, "energy")
         elif kind == "scry_or_surveil":
@@ -5325,11 +5356,6 @@ SWEEP_DRIVER_GAPS: tuple[DriverGap, ...] = (
         kind="attacks",
         event="an opponent attacking a planeswalker the source's controller controls",
         precondition=r"an opponent attacks a planeswalker you control",
-    ),
-    # EP-01-R3 T1: covered by tests/scenarios/test_ep01_r3_d20_choice_rows.py.
-    DriverGap(
-        kind="player_loses_the_game",
-        event="a player losing the game while two others play on (CR 104.2a)",
     ),
     DriverGap(
         kind="leaves_the_battlefield",
