@@ -413,3 +413,110 @@ def test_fall_of_the_impostor_does_nothing_against_an_empty_board():
     scenario.game.add_counters(saga, Counter.LORE, 1)
     _settle(scenario)
     assert saga.zone is Zone.GRAVEYARD
+
+
+# -- Outlaw Stitcher: "two +1/+1 counters ... for each spell you've cast this
+# turn other than the first"
+
+
+def _cast_stitcher(prior_spells):
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Outlaw Stitcher", *(["Shock"] * prior_spells)],
+            battlefield=["Island"] * 4 + ["Mountain"] * (prior_spells + 1),
+            library=["Forest"] * 8,
+        )
+        .player("bob", library=["Forest"] * 8)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    for _ in range(prior_spells):
+        scenario.cast_and_resolve("Shock", *scenario.untapped_sources("Mountain"), targets=["bob"])
+    scenario.cast_and_resolve(
+        "Outlaw Stitcher", *scenario.untapped_sources("Island", "Island", "Island", "Island")
+    )
+    _settle(scenario)
+    return scenario
+
+
+def _zombie(scenario):
+    return [c for c in scenario.game.permanents_controlled_by("alice") if "Zombie" in c.name][0]
+
+
+def test_outlaw_stitcher_as_the_first_spell_adds_no_counters():
+    scenario = _cast_stitcher(0)
+    assert _zombie(scenario).counter_count(Counter.PLUS_ONE) == 0
+
+
+def test_outlaw_stitcher_as_the_second_spell_adds_two_counters():
+    scenario = _cast_stitcher(1)
+    assert _zombie(scenario).counter_count(Counter.PLUS_ONE) == 2
+
+
+def test_outlaw_stitcher_as_the_third_spell_adds_four_counters():
+    scenario = _cast_stitcher(2)
+    assert _zombie(scenario).counter_count(Counter.PLUS_ONE) == 4
+
+
+# -- Geralf, the Fleshwright: "put a +1/+1 counter on it for each other Zombie
+# that entered the battlefield under your control this turn"
+
+
+def _geralf_after_spells(spells):
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Shock"] * spells,
+            battlefield=["Geralf, the Fleshwright"] + ["Mountain"] * spells,
+            library=["Forest"] * 8,
+        )
+        .player("bob", library=["Forest"] * 8)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    for _ in range(spells):
+        scenario.cast_and_resolve("Shock", *scenario.untapped_sources("Mountain"), targets=["bob"])
+        _settle(scenario)
+    return scenario
+
+
+def _zombies(scenario):
+    return [c for c in scenario.game.permanents_controlled_by("alice") if "Zombie" in c.name]
+
+
+def test_geralf_first_zombie_has_no_other_zombie_so_no_counter():
+    scenario = _geralf_after_spells(2)
+    zombies = _zombies(scenario)
+    assert len(zombies) == 1
+    assert zombies[0].counter_count(Counter.PLUS_ONE) == 0
+
+
+def test_geralf_second_zombie_counts_the_first_one():
+    scenario = _geralf_after_spells(3)
+    zombies = _zombies(scenario)
+    assert len(zombies) == 2
+    assert sorted(z.counter_count(Counter.PLUS_ONE) for z in zombies) == [0, 1]
+
+
+def test_geralf_third_zombie_counts_both_earlier_ones():
+    scenario = _geralf_after_spells(4)
+    zombies = _zombies(scenario)
+    assert len(zombies) == 3
+    assert sorted(z.counter_count(Counter.PLUS_ONE) for z in zombies) == [0, 1, 2]
+
+
+# -- "during your turn other than your first spell that turn" (Geralf's token
+# trigger): the cast trigger condition reads "other than your first spell"
+
+
+def test_geralf_makes_no_zombie_for_the_first_spell_of_the_turn():
+    scenario = _geralf_after_spells(1)
+    assert _zombies(scenario) == []
+
+
+def test_geralf_makes_a_zombie_for_each_later_spell_of_the_turn():
+    scenario = _geralf_after_spells(3)
+    assert len(_zombies(scenario)) == 2

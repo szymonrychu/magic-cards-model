@@ -8,16 +8,22 @@ tokens." Each instance triggers separately (CR 702.123b).
 import re
 from typing import TYPE_CHECKING
 
+from ..models.card import Type
 from ..models.player import Player
 from ..models.zone import Zone
+from ..numbers import COUNT, parse_count
 from .abilities import KeywordAbility, TriggeredAbility, TriggerEvent, TriggerWord
+from .amount_sentences import parse_put_counters
 from .decisions import Decision, DecisionKind, source_id_of
-from .effects._chains import FORWARD, MIXED_CLAUSE
-from .effects._common import TargetedClause, _targets_understood
+from .effects._chains import ABILITY_TEXT, FORWARD, MIXED_CLAUSE, MIXED_CLAUSES
+from .effects._common import AbilityEffect, TargetedClause, _targets_understood
+from .effects.amounts import _for_each_multiplier
+from .effects.counters import _counter_kind
+from .effects.tokens import _parse_token_clause
 
 if TYPE_CHECKING:
     from ..models.game import Game
-    from .triggers import StackObject
+    from .triggers import AbilityOnStack, StackObject
 
 _WORDS = {1: "a", 2: "two", 3: "three", 4: "four", 5: "five", 6: "six"}
 
@@ -109,5 +115,103 @@ def _parse_remove_extremum_creature_of_target_player(
                 game.exile_permanent(pick)
             else:
                 game.destroy(pick)
+
+    return effect
+
+
+# -- "Create a <token>, then put N <kind> counters on it for each <thing>."
+
+_THEN_PUT_RE = re.compile(
+    r"^(?P<create>create .+?)(?:,|\.)\s+(?:and )?then put (?P<put>.+)$", re.IGNORECASE
+)
+_THAT_TOKEN_RE = re.compile(r"^(?:that token|it|each of them)$", re.IGNORECASE)
+
+
+@MIXED_CLAUSES.rung("s1", for_spell=FORWARD)
+def _parse_create_then_put_counters_for_each(
+    text: str, *, for_spell: bool
+) -> list[TargetedClause] | None:
+    """ "Create a 2/2 ... token, then put two +1/+1 counters on that token for
+    each spell you've cast this turn other than the first." (Outlaw Stitcher):
+    the counters go on the token(s) the first instruction just made (CR 608.2c,
+    instructions in order), `N` of them per counted thing, the count taken once
+    as the instruction applies (CR 608.2h). Without a "for each" it is the
+    plain "put N counters on it" riding on the new token."""
+    if " then put " not in text.lower() or " token" not in text.lower():
+        return None
+    split = _THEN_PUT_RE.fullmatch(" ".join(text.strip().split()))
+    if split is None:
+        return None
+    put = parse_put_counters(f"put {split.group('put').rstrip('.')}")
+    if put is None or put.x or _THAT_TOKEN_RE.fullmatch(put.on) is None:
+        return None
+    if put.each is not None and "this way" in put.each.lower():
+        return None  # the this-way ledger's count (ep02_r1_this_way_counts) is not a for-each
+    reader = _for_each_multiplier(put.each) if put.each is not None else None
+    if put.each is not None and reader is None:
+        return None
+    create = _parse_token_clause(split.group("create").rstrip(".").strip(), for_spell=for_spell)
+    if create is None:
+        return None
+    kind = _counter_kind(put.kind)
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        before = {existing.id for existing in game.battlefield}
+        create(game, stack_object)
+        created = [state for state in game.battlefield if state.id not in before]
+        amount = put.n
+        if reader is not None:
+            controller = game.controller_of(stack_object).username
+            amount *= reader(game, controller, source_id_of(stack_object))
+        if amount <= 0:
+            return
+        for token in created:
+            game.add_counters(token, kind, amount)
+
+    return [effect]
+
+
+# -- "Put a +1/+1 counter on it for each other Zombie that entered the
+# battlefield under your control this turn."
+
+_TYPE_WORDS = frozenset(kind.value.lower() for kind in Type)
+_ENTERED_THIS_TURN_COUNTERS_RE = re.compile(
+    rf"^put (?P<n>{COUNT}) (?P<kind>\+1/\+1|-1/-1|[a-z]+) counters? on it for each other "
+    r"(?P<what>[a-z]+) that entered the battlefield under your control this turn\.?$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s36")
+def _parse_counters_on_entering_object_for_each_other_entered(
+    effect_text: str,
+) -> AbilityEffect | None:
+    """Geralf, the Fleshwright: "Whenever a Zombie you control enters, put a
+    +1/+1 counter on it for each other Zombie that entered the battlefield
+    under your control this turn." "It" is the entering object (the trigger
+    event's subject); the count is `Game.turn_count`'s ledger of what entered
+    for its controller this turn (still true of ones that have since left,
+    CR 603.6a), less the subject itself, taken as the ability resolves
+    (CR 608.2h)."""
+    if "that entered the battlefield under your control this turn" not in effect_text.lower():
+        return None
+    match = _ENTERED_THIS_TURN_COUNTERS_RE.fullmatch(" ".join(effect_text.strip().split()))
+    if match is None:
+        return None
+    unit = parse_count(match.group("n"))
+    if unit is None:
+        return None
+    kind = _counter_kind(match.group("kind"))
+    what = match.group("what").lower()
+    fact = f"entered_type:{what}" if what in _TYPE_WORDS else f"entered_subtype:{what}"
+
+    def effect(game: "Game", ability: "AbilityOnStack") -> None:
+        event = ability.event
+        subject = game.find_by_id(event.subject_id) if event and event.subject_id else None
+        if subject is None or subject.zone is not Zone.BATTLEFIELD:
+            return
+        others = game.turn_count(fact, ability.controller) - 1
+        if others > 0:
+            game.add_counters(subject, kind, unit * others)
 
     return effect

@@ -1656,7 +1656,7 @@ _CARDS_EXILED_WITH_IT_RE = re.compile(
 #: moment this list gains an entry.
 _SPELLS_CAST_THIS_TURN_AMOUNT_RE = re.compile(
     r"^(?:the number of )?(?P<other>other )?(?:(?P<types>[a-z, ]+?) )?spells? you'?ve cast "
-    r"this turn$",
+    r"this turn(?P<not_first> other than the first)?$",
     re.IGNORECASE,
 )
 
@@ -1672,9 +1672,15 @@ def _spells_cast_this_turn_count(match: re.Match[str]) -> Callable[["Game", str]
     if match.group("types") is not None and types is None:
         return None
     leaves_out_resolving = match.group("other") is not None
+    # "other than the first" (Outlaw Stitcher): the first spell cast is not
+    # counted, so a lone spell counts none.
+    skipped = 1 if match.group("not_first") is not None else 0
 
     def count_spells_cast_this_turn(game: "Game", controller: str) -> int:
         resolving = game.resolving if leaves_out_resolving else None
+        return max(0, skipped_total(game, controller, resolving) - skipped)
+
+    def skipped_total(game: "Game", controller: str, resolving) -> int:
         return sum(
             1
             for state in game.spells_cast_this_turn.get(controller, [])
