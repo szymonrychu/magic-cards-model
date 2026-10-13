@@ -64,7 +64,6 @@ from ..ep02_r1_graveyard_counts import (
     parse_tapped_attacking_tokens_for_each_ability,
 )
 from ..ep02_r1_life_amounts import life_this_turn_count
-from ..ep02_r2_devotion_domain_party import up_to_x_targets, where_x_pump_text_normalised
 from ..ep02_r2_cards_in_zone_counts import (
     hand_count_expression,
     parse_attached_pump_until_end_of_turn_clause,
@@ -76,6 +75,7 @@ from ..ep02_r2_cards_in_zone_counts import (
     parse_return_half_permanents_spell,
     parse_search_target_library_and_exile,
 )
+from ..ep02_r2_devotion_domain_party import up_to_x_targets, where_x_pump_text_normalised
 from ..layers import (
     BASIC_LAND_TYPES,
     Characteristics,

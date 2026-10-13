@@ -21,8 +21,8 @@ from ..ep02_r1_controller_recipients import event_controller_clause, target_cont
 from ..ep02_r1_life_amounts import parse_life_loss_text
 from ..ep02_r1_moved_card_stat import moved_card_stat_effect
 from ..ep02_r1_referenced_stat import referenced_stat_effect
-from ..ep02_r2_devotion_domain_party import life_per_color_effect
 from ..ep02_r2_card_mana_value import card_mana_value_effect
+from ..ep02_r2_devotion_domain_party import life_per_color_effect
 from ..ep02_r2_referenced_permanent_stat import referenced_permanent_stat_effect
 from ..targeting import (
     permanent_description,
