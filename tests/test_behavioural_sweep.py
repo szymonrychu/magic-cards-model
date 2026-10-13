@@ -337,18 +337,22 @@ class _OneOptionalTarget(ScriptedAnswer):
 class _SomeOfAnyNumberExiled(ScriptedAnswer):
     """`_OneOptionalTarget`'s sibling for the untargeted "exile any number of
     <permanents>" choice (CR 107.1c - zero is a legal answer, and the
-    engine's own default): the case card's own non-exact `CHOOSE_CARDS`
-    question whose prompt is that exile is answered with the first card
-    offered, so the recorded resolution exiles something and its delayed
-    return is armed. Keyed by the prompt's shape, never by card; declined is
-    the second golden, as for an optional target."""
+    engine's own default) and "destroy up to one <permanent> <player>
+    controls" (CR 107.1c again): the case card's own non-exact
+    `CHOOSE_CARDS` question whose prompt is that exile or destroy is
+    answered with the first card offered, so the recorded resolution acts on
+    something (and an exile's delayed return is armed). Keyed by the
+    prompt's shape, never by card; declined is the second golden, as for an
+    optional target."""
 
     card: str = ""
 
     def matches(self, decision: Decision) -> bool:
         if decision.kind is not DecisionKind.CHOOSE_CARDS or decision.exact:
             return False
-        if not decision.cards or not decision.prompt.lower().startswith("exile any number of"):
+        if not decision.cards or not decision.prompt.lower().startswith(
+            ("exile any number of", "destroy up to one")
+        ):
             return False
         if decision.source is None or not _same_card(decision.source, self.card):
             return False
@@ -1110,6 +1114,24 @@ def _target_material(text: str) -> tuple[Material, ...]:
         return tuple(material)
     finally:
         _STAGING.variant, _STAGING.material = saved
+
+
+_NONBASIC_LAND_CHOICE_RE = re.compile(
+    r"\b(?:destroy|exile|sacrifice|return|tap) (?:up to \w+ |an? |one |each )?nonbasic lands?\b",
+    re.IGNORECASE,
+)
+#: A plain nonbasic land: no enter-tapped clause, no cost, nothing to trigger.
+_NONBASIC_LAND = "Reliquary Tower"
+
+
+def _chosen_land_material(text: str) -> tuple[Material, ...]:
+    """A nonbasic land on each side for an effect that chooses one without
+    targeting ("for each player, destroy up to one nonbasic land that player
+    controls"): the stock board's lands are all basic, so the choice would
+    otherwise be empty and the ability's delta a no-op."""
+    if _NONBASIC_LAND_CHOICE_RE.search(text) is None or "target" in text.lower():
+        return ()
+    return tuple(Material(_NONBASIC_LAND, owner, Zone.BATTLEFIELD) for owner in (ALICE, BOB))
 
 
 def _stack_probe(requirement: TargetRequirement, owner: str = ALICE) -> str:
@@ -5563,6 +5585,7 @@ def run_trigger_case(case: Case, only: dict[str, Any] | None = None) -> Outcome:
         )
         _STAGING.material = (
             _target_material(ability.text)
+            + _chosen_land_material(ability.text)
             + _precondition_material(ability.intervening_if or "")
             + _board_material(case.card, ability.intervening_if or "")
             + _enters_exile_material(case.card)

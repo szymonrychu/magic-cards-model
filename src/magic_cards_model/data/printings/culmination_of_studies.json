@@ -1,0 +1,162 @@
+{
+  "object": "card",
+  "id": "2483060e-9d3f-48ae-80ea-0119bf6b4d67",
+  "oracle_id": "d4e124af-d335-4c42-b60a-fe578f69f7ed",
+  "multiverse_ids": [
+    513665
+  ],
+  "mtgo_id": 88853,
+  "arena_id": 76581,
+  "tcgplayer_id": 235669,
+  "cardmarket_id": 557499,
+  "name": "Culmination of Studies",
+  "lang": "en",
+  "released_at": "2021-04-23",
+  "uri": "https://api.scryfall.com/cards/2483060e-9d3f-48ae-80ea-0119bf6b4d67",
+  "scryfall_uri": "https://scryfall.com/card/stx/173/culmination-of-studies?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T07:21:59Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/2/4/2483060e-9d3f-48ae-80ea-0119bf6b4d67.jpg?1783927319",
+    "normal": "https://cards.scryfall.io/normal/front/2/4/2483060e-9d3f-48ae-80ea-0119bf6b4d67.jpg?1783927319",
+    "large": "https://cards.scryfall.io/large/front/2/4/2483060e-9d3f-48ae-80ea-0119bf6b4d67.jpg?1783927319",
+    "png": "https://cards.scryfall.io/png/front/2/4/2483060e-9d3f-48ae-80ea-0119bf6b4d67.png?1783927319",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/2/4/2483060e-9d3f-48ae-80ea-0119bf6b4d67.jpg?1783927319",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/2/4/2483060e-9d3f-48ae-80ea-0119bf6b4d67.jpg?1783927319",
+    "thumb": "https://cards.scryfall.io/thumb/front/2/4/2483060e-9d3f-48ae-80ea-0119bf6b4d67.webp?1783927319",
+    "grid": "https://cards.scryfall.io/grid/front/2/4/2483060e-9d3f-48ae-80ea-0119bf6b4d67.webp?1783927319",
+    "display": "https://cards.scryfall.io/display/front/2/4/2483060e-9d3f-48ae-80ea-0119bf6b4d67.webp?1783927319",
+    "art": "https://cards.scryfall.io/art/front/2/4/2483060e-9d3f-48ae-80ea-0119bf6b4d67.webp?1783927319",
+    "crop": "https://cards.scryfall.io/crop/front/2/4/2483060e-9d3f-48ae-80ea-0119bf6b4d67.webp?1783927319"
+  },
+  "mana_cost": "{X}{U}{R}",
+  "cmc": 2.0,
+  "type_line": "Sorcery",
+  "oracle_text": "Exile the top X cards of your library. For each land card exiled this way, create a Treasure token. For each blue card exiled this way, draw a card. For each red card exiled this way, Culmination of Studies deals 1 damage to each opponent.",
+  "colors": [
+    "R",
+    "U"
+  ],
+  "color_identity": [
+    "R",
+    "U"
+  ],
+  "keywords": [
+    "Treasure"
+  ],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "1a2d027f-8996-4761-a776-47cd428f6779",
+      "component": "token",
+      "name": "Treasure",
+      "type_line": "Token Artifact \u2014 Treasure",
+      "uri": "https://api.scryfall.com/cards/1a2d027f-8996-4761-a776-47cd428f6779"
+    },
+    {
+      "object": "related_card",
+      "id": "1f198c49-9192-4b7f-bbc6-9f01395836f2",
+      "component": "combo_piece",
+      "name": "Culmination of Studies",
+      "type_line": "Sorcery",
+      "uri": "https://api.scryfall.com/cards/1f198c49-9192-4b7f-bbc6-9f01395836f2"
+    }
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "arena",
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "541c3c28-8747-40e5-a231-8e8f33234859",
+  "set": "stx",
+  "set_name": "Strixhaven: School of Mages",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/541c3c28-8747-40e5-a231-8e8f33234859",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Astx&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/stx?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/2483060e-9d3f-48ae-80ea-0119bf6b4d67/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Ad4e124af-d335-4c42-b60a-fe578f69f7ed&unique=prints",
+  "collector_number": "173",
+  "digital": false,
+  "rarity": "rare",
+  "watermark": "prismari",
+  "flavor_text": "Will's quick thinking meshed with Rowan's raw power to bring down the Blood Avatar.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Bryan Sola",
+  "artist_ids": [
+    "e6879299-a28b-48bc-8db1-9cafcf36de09"
+  ],
+  "illustration_id": "dfd1ab3a-17c1-4fa6-80aa-40d36259bb76",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": true,
+  "edhrec_rank": 17670,
+  "penny_rank": 13973,
+  "preview": {
+    "source": "Marshall Sutcliffe",
+    "source_uri": "https://twitter.com/Marshall_LR/status/1376957012370579461",
+    "previewed_at": "2021-03-30"
+  },
+  "prices": {
+    "usd": "0.14",
+    "usd_foil": "0.36",
+    "usd_etched": null,
+    "eur": "0.11",
+    "eur_foil": "0.32",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=513665&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DCulmination%2Bof%2BStudies",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DCulmination%2Bof%2BStudies",
+    "edhrec": "https://edhrec.com/route/?cc=Culmination+of+Studies"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F235669%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=557499&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/88853?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

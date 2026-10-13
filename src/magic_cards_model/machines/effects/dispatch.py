@@ -1150,7 +1150,8 @@ _BECOMES_PREPARED_TARGET_RE = re.compile(
 #: 107.1c's "any number" (zero included) is simply how many player targets
 #: the stack object carries.
 _EXILE_TARGET_PLAYERS_GRAVEYARD_RE = re.compile(
-    r"^exile (?P<phrase>.*target (?:(?:player|opponent)'s graveyard|players' graveyards))\.?$",
+    r"^exile (?P<phrase>(?!all ).*target "
+    r"(?:(?:player|opponent)'s graveyard|players' graveyards))\.?$",
     re.IGNORECASE,
 )
 #: "Exile all graveyards." (Rest in Peace) and "Exile all cards that are
@@ -2052,7 +2053,7 @@ def _parse_targeted_clause(clause: str, *, for_spell: bool) -> TargetedClause | 
             match.group("phrase"), count_agnostic=True, battlefield_only=False
         ):
             return None
-        return return_ability_targets_to_hand
+        return return_clause_targets_to_hand(match.group("phrase"))
 
     put_onto_battlefield = _parse_put_from_graveyard_onto_battlefield_clause(clause)
     if put_onto_battlefield is not None:
@@ -2083,7 +2084,7 @@ def _parse_targeted_clause(clause: str, *, for_spell: bool) -> TargetedClause | 
             match.group("phrase"), count_agnostic=True, battlefield_only=False
         ):
             return None
-        return return_ability_targets_to_hand
+        return return_clause_targets_to_hand(match.group("phrase"))
 
     if match := _GRAVEYARD_TO_BOTTOM_OF_LIBRARY_RE.fullmatch(clause):
         if not _targets_understood(
@@ -6669,7 +6670,7 @@ from .returns import (  # noqa: E402
     _parse_return_with_rider_clause,
     _return_ability_targets_to_battlefield_with_counter,
     return_ability_targets_to_battlefield,
-    return_ability_targets_to_hand,
+    return_clause_targets_to_hand,
 )
 from .search import (  # noqa: E402
     _parse_search_library_and_outside_distinct_names_opponent_chooses_clause,

@@ -35,6 +35,7 @@ from ...machines.cost import (
     cost_announces_x,
     total_cost_for_phrase,
 )
+from ...machines.counter_effects import event_count_target_text
 from ...machines.decisions import (
     Decision,
     DecisionKind,
@@ -2145,6 +2146,23 @@ class StackPriorityMixin:
             scripted = self.trigger_targets.get(front)
         if scripted is not None:
             profile, _ = self._trigger_target_profile(ability)
+            # Only a count the event fixes ("up to that many target", CR 601.2c
+            # via CR 603.3d) is held to here: the scripted answer could not be
+            # judged against it when it was recorded, ahead of the event.
+            maximum = profile.max_targets
+            fixed_by_event = isinstance(ability.ability, TriggeredAbility) and (
+                event_count_target_text(ability.ability.text, ability.event) != ability.ability.text
+            )
+            if (
+                fixed_by_event
+                and profile.understood
+                and maximum is not None
+                and len(scripted) > maximum
+            ):
+                raise ValueError(
+                    f"too many targets: {len(scripted)} chosen where {ability.source_name}'s "
+                    f"trigger takes at most {maximum}"
+                )
             return self.stamp_target_slots(
                 profile, list(scripted), ability.controller, ability.source_id
             )
@@ -2201,7 +2219,7 @@ class StackPriorityMixin:
         ]
 
     def why_cannot_target_with_trigger(
-        self: "Game", card_name: str, targets: list[object]
+        self: "Game", card_name: str, targets: list[object], event: GameEvent | None = None
     ) -> str | None:
         """Why this card's trigger could not target those, or None (CR 601.2c, 603.3d).
 
@@ -2223,6 +2241,13 @@ class StackPriorityMixin:
         `TargetingProfile.check` pair for real, so scripting a target this
         method would already refuse was scripting something real play could
         never have accepted either.
+
+        `event` is the trigger event whose count a "up to that many target"
+        reads (CR 601.2c via CR 603.3d). A trigger scripted ahead of its event
+        has none yet, so that count is read as unbounded here and held to the
+        event's own number when the ability goes on the stack
+        (`_targets_for_trigger`) - not as the one target a bare "that many"
+        would otherwise read as.
 
         A card may print more than one targeting trigger. The announcement names
         the card, not the ability, so the targets are legal if *any* of its
@@ -2301,7 +2326,9 @@ class StackPriorityMixin:
         ]
         reasons: list[str] = []
         for ability in printed:
-            profile = profile_for_text(ability.text)
+            profile = profile_for_text(
+                event_count_target_text(ability.text, event, unscoped_any=True)
+            )
             if profile.understood and profile.requirements:
                 try:
                     profile.check(list(targets), controller, self, source_id=source.id)

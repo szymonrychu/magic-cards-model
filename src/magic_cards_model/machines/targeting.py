@@ -2069,6 +2069,19 @@ class Division(EngineModel):
     or plain-X division that carries no such clause."""
 
 
+def _prior_player_refusal(requirement: "TargetRequirement", anchor: str, target: Any) -> str:
+    """Why `target` is not the one `requirement`'s `PRIOR_TARGET_PLAYER` names."""
+    if Zone.GRAVEYARD in requirement.zones:
+        return (
+            f"{requirement.phrase} needs a card in {anchor}'s graveyard, and "
+            f"{target.name} is not (CR 601.2c, CR 404.1)"
+        )
+    return (
+        f"{requirement.phrase} needs a creature {anchor} controls, and "
+        f"{target.name} is not (CR 601.2c)"
+    )
+
+
 def _player_named_by(target: Any) -> str | None:
     """The player a chosen target names for "that player": the player
     itself, or a permanent's controller (owner when it has none)."""
@@ -2378,10 +2391,7 @@ class TargetingProfile(EngineModel):
                         continue
                     found = _player_named_by(target)
                     if found is not None and found != anchor:
-                        raise ValueError(
-                            f"{requirement.phrase} needs a creature {anchor} controls, and "
-                            f"{target.name} is not (CR 601.2c)"
-                        )
+                        raise ValueError(_prior_player_refusal(requirement, anchor, target))
             return
         for requirement in self.requirements:
             if requirement.controller is not ControllerRestriction.PRIOR_TARGET_PLAYER:
@@ -2402,10 +2412,7 @@ class TargetingProfile(EngineModel):
                     target, "controller", None
                 )
                 if found is not None and str(found) != anchor:
-                    raise ValueError(
-                        f"{requirement.phrase} needs a creature {anchor} controls, and "
-                        f"{target.name} is not (CR 601.2c)"
-                    )
+                    raise ValueError(_prior_player_refusal(requirement, anchor, target))
 
     def _check_one_per_opponent(
         self, targets: list[Any], caster: str, game: Any, source_id: UUID | None
@@ -4674,6 +4681,32 @@ def _expand_support_keyword(text: str) -> str:
     return _SUPPORT_KEYWORD_RE.sub(expand, text)
 
 
+#: "Exile X target cards from target player's graveyard" (Suffer the Past) and
+#: every "N target cards from target player's/opponent's graveyard": two
+#: instances of the word "target" (CR 115.1), the player and the cards, the
+#: cards having to lie in the graveyard of the player chosen for the first
+#: (CR 404.1). Read as the pair "target player, N target cards from that
+#: player's graveyard" so each "target" is its own requirement in announcement
+#: order, the cards' "that player" being the player chosen just before them
+#: (`ControllerRestriction.PRIOR_TARGET_PLAYER`).
+_CARDS_FROM_TARGET_PLAYERS_GRAVEYARD = re.compile(
+    r"(?P<count>(?:up to )?(?:x|\d+|an?|one|two|three|four|five|six|seven|eight|nine|ten)\s+)?"
+    r"target (?P<noun>(?:[a-z-]+ )*?cards?) from target (?P<who>player|opponent)'s graveyard",
+    re.IGNORECASE,
+)
+#: What stands between the player target and the cards target once the pair
+#: above is written out: ", " and the cards' own count word.
+_PLAYER_THEN_THEIR_CARDS = re.compile(r"\s+(?:player|opponent), (?:[\w ]*)?$", re.IGNORECASE)
+
+
+def _cards_from_target_player_pair(match: "re.Match[str]") -> str:
+    count = match.group("count") or ""
+    return (
+        f"target {match.group('who')}, {count}target {match.group('noun')} "
+        "from that player's graveyard"
+    )
+
+
 @functools.lru_cache(maxsize=16384)
 def _parse(oracle_text: str, spell_only: bool = True) -> TargetingProfile:
     text = _spell_text(oracle_text) if spell_only else oracle_text
@@ -4697,6 +4730,7 @@ def _parse(oracle_text: str, spell_only: bool = True) -> TargetingProfile:
     text = _PUMP_ON_TARGET_IF_STAT_CONDITION.sub(r"\1", text)
     text = _SINGLE_TARGET_RESTRICTION.sub(_SINGLE_TARGET_PLACEHOLDER, text)
     text = _ANY_OTHER_TARGET_THEN_AND.sub(r"\1;", text)
+    text = _CARDS_FROM_TARGET_PLAYERS_GRAVEYARD.sub(_cards_from_target_player_pair, text)
     mentions = len(_TARGET_WORD.findall(text))
     if not mentions:
         return TargetingProfile()
@@ -4838,6 +4872,21 @@ def _parse(oracle_text: str, spell_only: bool = True) -> TargetingProfile:
             # opponent the same sentence's previous target named, not a
             # trigger event's player - the creature must be controlled by
             # whoever controls the target chosen for it (CR 601.2c).
+            requirement = requirement.model_copy(
+                update={"controller": ControllerRestriction.PRIOR_TARGET_PLAYER}
+            )
+        if (
+            requirement.controller is ControllerRestriction.EVENT_PLAYER
+            and Zone.GRAVEYARD in requirement.zones
+            and position > 0
+            and requirements
+            and requirements[-1].allows_players
+            and _PLAYER_THEN_THEIR_CARDS.fullmatch(text[scan[position - 1].end() : match.start()])
+        ):
+            # "target player, N target cards from that player's graveyard"
+            # (`_CARDS_FROM_TARGET_PLAYERS_GRAVEYARD`): the graveyard is the
+            # one belonging to the player the requirement printed just
+            # before it chose (CR 601.2c, CR 404.1).
             requirement = requirement.model_copy(
                 update={"controller": ControllerRestriction.PRIOR_TARGET_PLAYER}
             )

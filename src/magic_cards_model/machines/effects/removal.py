@@ -5268,7 +5268,7 @@ def _parse_may_exile_hand_if_you_do_clause(text: str) -> AbilityEffect | None:
 
 
 _FOR_EACH_OPPONENT_DESTROY_RE = re.compile(
-    r"^for each opponent, destroy up to one target (?P<desc>.+?) that player controls\.?$",
+    r"^for each opponent, destroy (?:up to one )?target (?P<desc>.+?) that player controls\.?$",
     re.IGNORECASE,
 )
 

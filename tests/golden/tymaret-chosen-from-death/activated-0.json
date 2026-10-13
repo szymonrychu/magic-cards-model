@@ -36,14 +36,18 @@
   "delta": {
     "created": {},
     "decisions": [],
-    "fields_changed": ["exile_residents_seen", "turn_counts"],
+    "fields_changed": ["exile_residents_seen", "life_gained_amount_this_turn", "life_gained_this_turn", "turn_counts"],
     "notices": {},
     "objects": {
       "Grizzly Bears@alice#2": {
         "zone": ["graveyard", "exile"]
       }
     },
-    "players": {},
+    "players": {
+      "alice": {
+        "life": [20, 21]
+      }
+    },
     "stack": []
   },
   "family": "activated",

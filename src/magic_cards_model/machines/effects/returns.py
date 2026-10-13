@@ -1,6 +1,6 @@
 import re
 from random import Random
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from magic_cards_model.phrases import with_indefinite_article
 
@@ -417,8 +417,56 @@ def _rejoin_search_clauses(clauses: list[str]) -> list[str]:
     return merged
 
 
+def _clause_targets(game: "Game", stack_object: "StackObject", phrase: str | None) -> list[Any]:
+    """The targets still legal on resolution (CR 608.2b) that `phrase` - one
+    clause's own "target ..." words - was announced for (CR 601.2c).
+
+    A spell or ability that targets for other clauses too (Morgue Burst's
+    "any target" next to its "target creature card from your graveyard")
+    carries every one of them on the one stack object; each target records
+    the requirement it filled (`TargetRef.slot`), and `_clause_slots` finds
+    this clause's requirements among those, so the other clause's targets
+    are never touched. Without a phrase, or one the targeting reader cannot
+    read, every legal target is the clause's - which is all of them when it
+    is the only one.
+    """
+    own = profile_for_text(phrase) if phrase else None
+    if (
+        own is None
+        or not own.understood
+        or not own.requirements
+        or len(game._stack_object_profile(stack_object).requirements) < 2
+    ):
+        return list(game.resolve_targets(stack_object))
+    slots = _clause_slots(game, stack_object, own)
+    found: list[Any] = []
+    for ref, slot in zip(stack_object.targets, slots, strict=True):
+        if slot is None:
+            continue
+        thing = game.legal_target(stack_object, ref)
+        if thing is not None:
+            found.append(thing)
+    return found
+
+
+def return_clause_targets_to_hand(phrase: str | None = None) -> AbilityEffect:
+    """`return_ability_targets_to_hand` for the clause whose target words are
+    `phrase`: only the targets announced for that clause go to hand."""
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        with game.returning_together():  # CR 603.2c: one instruction, one event
+            for target in _clause_targets(game, stack_object, phrase):
+                if isinstance(target, CardState):
+                    game.return_to_hand(target)
+
+    return effect
+
+
 def return_ability_targets_to_hand(game: "Game", stack_object: "StackObject") -> None:
-    """Return each permanent this still legally targets to its owner's hand.
+    """Return each card or permanent this still legally targets to its
+    owner's hand - every target the object has, for a clause that is its
+    only targeting one (`return_clause_targets_to_hand` takes only a named
+    clause's own).
 
     Not battlefield-only, for the same reason `exile_ability_targets` is not:
     "return" carries no CR-numbered keyword-action definition (CR 701's own
@@ -427,14 +475,9 @@ def return_ability_targets_to_hand(game: "Game", stack_object: "StackObject") ->
     "target creature card in your graveyard" is exactly this shape.
     `game.resolve_targets` already rechecks each target against the printed
     restriction's own zones (CR 608.2b), and `Game.return_to_hand` is
-    zone-agnostic (see its docstring), so there is nothing left to filter
-    here - a battlefield-only filter used to silently drop every
-    graveyard-or-exile return card's whole effect.
+    zone-agnostic (see its docstring).
     """
-    with game.returning_together():  # CR 603.2c: one instruction, one event
-        for target in game.resolve_targets(stack_object):
-            if isinstance(target, CardState):
-                game.return_to_hand(target)
+    return_clause_targets_to_hand()(game, stack_object)
 
 
 def return_ability_targets_to_battlefield(game: "Game", stack_object: "StackObject") -> None:
@@ -3005,6 +3048,7 @@ from .continuous import (  # noqa: E402
     continuous_effects,
 )
 from .counters import _counter_kind  # noqa: E402
+from .damage import _clause_slots  # noqa: E402
 from .dispatch import parse_mixed_effect  # noqa: E402
 from .library import _dead_self_found, _reveal_and_bring_into_hand  # noqa: E402
 from .text import _singular_card_type, _strip_non_effect_preamble  # noqa: E402

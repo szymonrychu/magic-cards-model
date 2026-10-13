@@ -1098,12 +1098,22 @@ def _search_library_and_or_graveyard(text: str, *, for_spell: bool):  # noqa: AN
 _UP_TO_THAT_MANY_TARGET_RE = re.compile(r"\bup to that many (?=target\b)", re.IGNORECASE)
 
 
-def event_count_target_text(text: str, event: GameEvent | None) -> str:
+def event_count_target_text(
+    text: str, event: GameEvent | None, *, unscoped_any: bool = False
+) -> str:
     """`text` with "up to that many target" written as the event's own count,
     for `machines/targeting.profile_for_text` to read - or `text` unchanged
-    when there is no count to write in."""
-    if event is None or event.amount is None or not _UP_TO_THAT_MANY_TARGET_RE.search(text):
+    when there is no count to write in.
+
+    `unscoped_any` is for a caller that has no trigger event yet (a trigger's
+    targets scripted ahead of the event that will fix the number, see
+    `Game.why_cannot_target_with_trigger`): "that many" is unknown there, so
+    the count is read as unbounded now and held to the event's own number
+    when the ability goes on the stack (CR 601.2c via CR 603.3d)."""
+    if not _UP_TO_THAT_MANY_TARGET_RE.search(text):
         return text
+    if event is None or event.amount is None:
+        return _UP_TO_THAT_MANY_TARGET_RE.sub("any number of ", text) if unscoped_any else text
     return _UP_TO_THAT_MANY_TARGET_RE.sub(f"up to {event.amount} ", text)
 
 
