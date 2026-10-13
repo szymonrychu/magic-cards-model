@@ -875,3 +875,145 @@ def _parse_look_top_exile_one_play_this_turn(text: str) -> Any:
         _bottom_in_random_order(game, player, [s for s in looked if s not in chosen])
 
     return effect
+
+
+# --------------------------------------------------------------------------
+# Revealed cards' mana symbols as the amount
+# --------------------------------------------------------------------------
+
+_COLOR_SYMBOL = {"white": "W", "blue": "U", "black": "B", "red": "R", "green": "G"}
+
+#: "for each green mana symbol in those cards' mana costs" (Phosphorescent
+#: Feast's chroma) - CR 107.4 names the mana symbols, CR 202.1 puts them in a
+#: card's mana cost; a hybrid symbol with that color in it is one of them.
+_SYMBOLS_IN_THOSE_RE = re.compile(
+    r"\bfor each (?P<color>white|blue|black|red|green) mana symbol in those cards' mana costs\b",
+    re.IGNORECASE,
+)
+
+
+def colored_symbols_in_costs(cards: list[CardState], color: str) -> int:
+    """How many of `cards`' mana symbols are `color` (W/U/B/R/G), a hybrid
+    or Phyrexian symbol containing it included (CR 107.4)."""
+    total = 0
+    for state in cards:
+        for symbol in re.findall(r"\{([^}]+)\}", state.card.mana_cost or ""):
+            if color in symbol.upper().split("/"):
+                total += 1
+    return total
+
+
+@functools.cache
+def _reveal_then_symbols_plan(text: str, for_spell: bool) -> tuple[str, str, str] | None:
+    from .effects.text import _strip_non_effect_preamble
+
+    whole = " ".join(_strip_non_effect_preamble(text).strip().split())
+    match = _FIRST_SENTENCE_RE.fullmatch(whole)
+    if match is None:
+        return None
+    first, rest = match.group("first"), match.group("rest").strip()
+    symbols = _SYMBOLS_IN_THOSE_RE.search(rest)
+    plan = _any_number_plan(first)
+    if symbols is None or plan is None or plan[0] != "reveal":
+        return None
+    payoff = _SYMBOLS_IN_THOSE_RE.sub("for each card revealed this way", rest)
+    if not _readable_for_numbers((payoff,), for_spell):
+        return None
+    return first, payoff, _COLOR_SYMBOL[symbols.group("color").lower()]
+
+
+def reveal_then_symbols_effect(text: str, for_spell: bool) -> Any:
+    """ "Reveal any number of cards in your hand. You gain 2 life for each
+    green mana symbol in those cards' mana costs.": the cards are chosen and
+    revealed (CR 107.1c, CR 701.20a), their symbols of that color counted
+    (CR 107.4, CR 202.1), and that count is what the payoff reads through
+    the count channel (CR 608.2c)."""
+    if "mana symbol in those cards" not in text.lower():
+        return None
+    plan = _reveal_then_symbols_plan(text, for_spell)
+    if plan is None:
+        return None
+    first, payoff, color = plan
+
+    def effect(game: "Game", stack_object: Any) -> None:
+        revealed = any_number_chosen(game, stack_object, first) or []
+        game.record_count(colored_symbols_in_costs(revealed, color))
+        reader = _parser(for_spell)(payoff)
+        if reader is not None:
+            reader(game, stack_object)
+
+    return effect
+
+
+@SPELL_TEXT.rung("s23")
+def _parse_reveal_then_symbols_spell(text: str) -> Any:
+    """`reveal_then_symbols_effect` as a spell's whole text."""
+    return reveal_then_symbols_effect(text, True)
+
+
+@ABILITY_TEXT.rung("s40", before=("parse_mixed_effect",))
+def _parse_reveal_then_symbols_ability(text: str) -> Any:
+    """`reveal_then_symbols_effect` as an ability's whole text."""
+    return reveal_then_symbols_effect(text, False)
+
+
+# --------------------------------------------------------------------------
+# "Starting with you, each player may pay any amount of life. Repeat this
+# process until no one pays life."
+# --------------------------------------------------------------------------
+
+_REPEATED_PAY_LIFE_RE = re.compile(
+    r"^starting with you, each player may pay any amount of life\. "
+    r"repeat this process until no one pays life\. "
+    r"each player creates (?P<rest>.+?) for each 1 life they paid this way\.?$",
+    re.IGNORECASE,
+)
+
+
+def _starting_with(game: "Game", username: str) -> list[Player]:
+    players = list(game.players_in_game)
+    names = [player.username for player in players]
+    start = names.index(username) if username in names else 0
+    return players[start:] + players[:start]
+
+
+def repeated_pay_life_effect(text: str) -> Any:
+    """Plague of Vermin: starting with the controller and going in turn
+    order (CR 101.4), each player may pay any amount of life (CR 119.4,
+    CR 107.1c); the round repeats until a whole round passes with no one
+    paying; then each player creates a token per 1 life they paid in all."""
+    from .amount_sentences import token_maker
+
+    if "repeat this process until no one pays life" not in text.lower():
+        return None
+    match = _REPEATED_PAY_LIFE_RE.fullmatch(" ".join(text.strip().split()))
+    if match is None:
+        return None
+    make = token_maker(match.group("rest"))
+    if make is None:
+        return None
+
+    def effect(game: "Game", stack_object: Any) -> None:
+        order = _starting_with(game, _controller(game, stack_object).username)
+        paid = {player.username: 0 for player in order}
+        name, source_id = _source_name(stack_object), source_id_of(stack_object)
+        while True:
+            round_paid = 0
+            for player in order:
+                if player not in game.players_in_game:
+                    continue
+                amount = game.pay_any_amount_of_life(player, source=name, source_id=source_id)
+                paid[player.username] += amount
+                round_paid += amount
+            if round_paid <= 0:
+                break
+        for player in order:
+            make(game, player.username, paid[player.username])
+
+    return effect
+
+
+@SPELL_TEXT.rung("s23")
+def _parse_repeated_pay_life_spell(text: str) -> Any:
+    """`repeated_pay_life_effect` as a spell's whole text."""
+    return repeated_pay_life_effect(text)

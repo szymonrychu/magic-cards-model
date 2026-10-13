@@ -284,8 +284,8 @@ _COUNT_PLANESWALKER_TYPES_RE = re.compile(
 #: count of what this object's own cost or earlier instruction moved,
 #: `counted_this_way`.
 _COUNT_THIS_WAY_RE = re.compile(
-    r"^(?:the )?number of (?P<noun>[a-z ]+?) "
-    r"(?P<verb>exiled|sacrificed|discarded|milled|tapped|returned|revealed) this way$",
+    r"^(?:the )?number of (?P<noun>[a-z ]+?|\{e\}) "
+    r"(?P<verb>exiled|sacrificed|discarded|milled|tapped|returned|revealed|paid) this way$",
     re.IGNORECASE,
 )
 #: "the total power of the sacrificed creatures" (Soulblast, Corpse Cobble),

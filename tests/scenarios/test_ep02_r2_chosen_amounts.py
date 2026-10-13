@@ -636,15 +636,25 @@ def test_florian_looks_at_the_life_opponents_lost_this_turn():
 def test_blood_tribute_kicked_gains_the_life_lost_this_way():
     scenario = _board(alice_hand=["Blood Tribute"], alice_battlefield=["Florian, Voldaren Scion"])
     vampire = scenario.creature("Florian, Voldaren Scion", "alice")
-    scenario.cast_and_resolve(
-        "Blood Tribute",
-        username="alice",
-        targets=[scenario.player("bob")],
-        auto=True,
-        tapping=[vampire],
-    )
+    casting = scenario.cast("Blood Tribute", "alice")
+    casting.pay_kicker(choosing=[vampire])  # CR 702.33a: tap an untapped Vampire
+    casting.choose_targets([scenario.player("bob")])
+    scenario.auto_pay(casting.begin_paying(), username="alice")
+    scenario.put_on_stack(casting)
+    scenario.resolve_top()
+    assert vampire.tapped
     assert scenario.player("bob").life == 10
     assert scenario.player("alice").life == 30
+
+
+def test_blood_tribute_unkicked_gains_nothing_and_rounds_the_half_up():
+    scenario = _board(alice_hand=["Blood Tribute"])
+    scenario.player("bob").life = 15
+    scenario.cast_and_resolve(
+        "Blood Tribute", username="alice", targets=[scenario.player("bob")], auto=True
+    )
+    assert scenario.player("bob").life == 7
+    assert scenario.player("alice").life == 20
 
 
 def test_buster_sword_draws_then_casts_a_spell_up_to_the_damage_free():

@@ -31,7 +31,9 @@ import re
 from collections.abc import Callable
 from typing import TYPE_CHECKING
 
-from ..numbers import AMOUNT
+from ..models.card_state import CardState
+from ..models.player import Player
+from ..numbers import AMOUNT, halve
 from .amount_sentences import (
     Amount,
     apply_life,
@@ -44,6 +46,7 @@ from .amount_sentences import (
     put_counters_on_source,
     recipient_amount,
 )
+from .conditions import claims
 
 if TYPE_CHECKING:
     from ..models.game import Game, StackObject
@@ -55,6 +58,24 @@ _WHO = frozenset(
 )
 
 _SEPARATOR_RE = re.compile(r"\.\s+|,\s*then\s+", re.IGNORECASE)
+_HALF_LOSS_RE = re.compile(
+    r"^(?P<who>[a-z ]+?) loses half (?:their|his or her) life,\s*rounded (?P<direction>up|down)$",
+    re.IGNORECASE,
+)
+_IF_CONDITION_RE = re.compile(r"^if (?P<condition>[^,]+), (?P<rest>.+)$", re.IGNORECASE)
+
+
+def _condition_holds(game: "Game", stack_object: "StackObject", condition: str) -> bool:
+    """`condition` read against the resolving spell or ability (CR 608.2c)."""
+    from .conditions import ConditionContext, read_condition
+
+    source = stack_object if isinstance(stack_object, CardState) else stack_object.source(game)
+    context = ConditionContext(
+        game=game, controller=controller_of(game, stack_object), source=source
+    )
+    return bool(read_condition(context, condition))
+
+
 #: The follow-up amounts: "the (total) life lost this way", "1 life lost this way".
 _LOST_THIS_WAY_RE = re.compile(r"^the (?:total )?life lost this way$", re.IGNORECASE)
 _PER_LIFE_LOST_RE = re.compile(r"^1 life lost this way$", re.IGNORECASE)
@@ -145,21 +166,42 @@ def parse_life_loss_text(text: str, *, for_spell: bool) -> "Resolution | None":
     if " loses " not in lowered:
         return None
     pieces = _SEPARATOR_RE.split(" ".join(text.strip().split()), maxsplit=1)
-    loss = parse_life_clause(pieces[0])
-    if loss is None or loss.gains or loss.who not in _WHO or loss.kind == "for_each":
-        return None
-    amount = life_clause_amount(loss, spell_x=for_spell)
-    if amount is None:
-        return None
+    half = _HALF_LOSS_RE.fullmatch(pieces[0].strip().rstrip("."))
+    amount: Amount | None
+    if half is not None and half.group("who").lower() in _WHO:
+        # Blood Tribute's "loses half their life, rounded up" - CR 107.1a
+        # rounds the half of the player's own life total (CR 119.1).
+        who = half.group("who").lower()
+        round_up = half.group("direction").lower() == "up"
+
+        def amount(game: "Game", stack_object: object, player: Player) -> int:
+            return halve(player.life, round_up=round_up)
+    else:
+        loss = parse_life_clause(pieces[0])
+        if loss is None or loss.gains or loss.who not in _WHO or loss.kind == "for_each":
+            return None
+        amount = life_clause_amount(loss, spell_x=for_spell)
+        if amount is None:
+            return None
+        who = loss.who
     follow_up = None
+    condition = None
     if len(pieces) == 2:
-        follow_up = _follow_up(pieces[1])
+        follow = pieces[1]
+        if (conditioned := _IF_CONDITION_RE.fullmatch(follow.strip())) is not None:
+            # "If this spell was kicked, you gain life equal to the life lost
+            # this way." - CR 702.33d's kicked, read off the cast record.
+            condition, follow = conditioned.group("condition"), conditioned.group("rest")
+            if not claims(condition):
+                return None
+        follow_up = _follow_up(follow)
         if follow_up is None:
             return None
-    who = loss.who
 
     def resolve(game: "Game", stack_object: "StackObject") -> None:
         lost = apply_life(game, stack_object, who, False, amount)
+        if condition is not None and not _condition_holds(game, stack_object, condition):
+            return
         if follow_up is not None and lost > 0:
             follow_up(game, stack_object, lost)
 
