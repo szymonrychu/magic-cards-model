@@ -909,3 +909,106 @@ def test_descent_into_madness_second_upkeep_exiles_two_each():
     assert descent.counter_count("despair") == 2
     assert len(scenario.game.permanents_controlled_by("alice")) <= 1  # two of three gone
     assert not scenario.game.permanents_controlled_by("bob")  # only one to exile
+
+
+# -- Blessing of Frost: X is the snow mana spent; distribute X counters; draw per big creature
+
+
+def _cast_blessing(scenario, lands):
+    scenario.cast_and_resolve("Blessing of Frost", *lands)
+
+
+def test_blessing_of_frost_distributes_counters_equal_to_snow_mana_spent_then_draws():
+    scenario = _board(
+        ["Grizzly Bears", "Llanowar Elves"] + ["Snow-Covered Forest"] * 4,
+        alice_hand=["Blessing of Frost"],
+    )
+    bears = scenario.creature("Grizzly Bears", "alice")
+    elves = scenario.creature("Llanowar Elves", "alice")
+    lands = scenario.untapped_sources(*["Snow-Covered Forest"] * 4)
+    for target in (bears, bears, bears, elves):
+        scenario.will_choose_cards(target, username="alice")
+    hand_before = len(scenario.player("alice").hand)
+    _cast_blessing(scenario, lands)
+    assert bears.counter_count(Counter.PLUS_ONE) == 3
+    assert elves.counter_count(Counter.PLUS_ONE) == 1
+    # Grizzly Bears is 5/5 now, Elves 2/2: one creature with power 4 or greater; the spell
+    # left the hand and one card came in.
+    assert len(scenario.player("alice").hand) == hand_before - 1 + 1
+
+
+def test_blessing_of_frost_counts_only_snow_mana():
+    scenario = _board(
+        ["Grizzly Bears", "Snow-Covered Forest", "Snow-Covered Forest", "Forest", "Forest"],
+        alice_hand=["Blessing of Frost"],
+    )
+    bears = scenario.creature("Grizzly Bears", "alice")
+    lands = scenario.untapped_sources("Snow-Covered Forest", "Snow-Covered Forest", "Forest", "Forest")
+    _cast_blessing(scenario, lands)
+    assert bears.counter_count(Counter.PLUS_ONE) == 2  # only the one creature to take them
+
+
+def test_blessing_of_frost_with_no_snow_mana_distributes_nothing():
+    scenario = _board(["Grizzly Bears"] + ["Forest"] * 4, alice_hand=["Blessing of Frost"])
+    bears = scenario.creature("Grizzly Bears", "alice")
+    _cast_blessing(scenario, scenario.untapped_sources(*["Forest"] * 4))
+    assert not bears.counters.counts
+
+
+# -- Lightning Storm: X is 3 plus its charge counters; any player may add two from the stack
+
+
+def _storm_board():
+    scenario = _board(
+        ["Mountain", "Mountain", "Mountain"],
+        alice_hand=["Lightning Storm", "Forest"],
+        bob_hand=["Forest", "Grizzly Bears"],
+    )
+    lands = scenario.untapped_sources("Mountain", "Mountain", "Mountain")
+    storm = scenario.cast_onto_stack("Lightning Storm", *lands, targets=["bob"])
+    return scenario, storm
+
+
+def test_lightning_storm_deals_three_with_no_charge_counters():
+    scenario, storm = _storm_board()
+    scenario.resolve_top()
+    assert scenario.player("bob").life == 17
+
+
+def test_lightning_storm_discarding_a_land_adds_two_counters_and_a_new_target():
+    scenario, storm = _storm_board()
+    forest = scenario.find("Forest", Zone.HAND, "alice")
+    scenario.activate(storm, discarding=[forest], username="alice")
+    scenario.will_choose_targets("alice", username="alice")
+    scenario.resolve_top()
+    assert storm.counter_count("charge") == 2
+    scenario.resolve_top()
+    assert scenario.player("alice").life == 15  # 3 + 2, retargeted at herself
+    assert scenario.player("bob").life == 20
+
+
+def test_lightning_storm_keeps_its_target_when_the_activator_declines_a_new_one():
+    scenario, storm = _storm_board()
+    forest = scenario.find("Forest", Zone.HAND, "alice")
+    scenario.activate(storm, discarding=[forest], username="alice")
+    scenario.will_take_the_may(False)
+    scenario.resolve_top()
+    scenario.resolve_top()
+    assert scenario.player("bob").life == 15
+
+
+def test_lightning_storm_can_be_activated_by_an_opponent_while_it_is_on_the_stack():
+    scenario, storm = _storm_board()
+    bob_forest = scenario.find("Forest", Zone.HAND, "bob")
+    scenario.pass_priority("alice")
+    assert scenario.why_cannot_activate(storm, 0, "bob") is None
+    scenario.activate(storm, discarding=[bob_forest], username="bob")
+    scenario.resolve_top()
+    assert storm.counter_count("charge") == 2
+    assert bob_forest.zone is Zone.GRAVEYARD
+
+
+def test_lightning_storm_cannot_be_activated_from_the_hand():
+    scenario = _board([], alice_hand=["Lightning Storm", "Forest"])
+    storm = scenario.find("Lightning Storm", Zone.HAND, "alice")
+    assert scenario.why_cannot_activate(storm, 0, "alice") is not None

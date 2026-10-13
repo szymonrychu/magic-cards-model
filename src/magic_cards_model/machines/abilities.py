@@ -4879,6 +4879,11 @@ _ACTIVATE_ONLY_IF_IN_GRAVEYARD = re.compile(
 )
 
 
+#: "Any player may activate this ability but only if Lightning Storm is on the
+#: stack." - an ability that states the zone it functions in (CR 113.6b).
+_ACTIVATE_ONLY_IF_ON_THE_STACK = re.compile(r"\bonly if [^.]+? is on the stack\b", re.IGNORECASE)
+
+
 def _activated_ability_zone(
     costs: list[Cost], effect: str, instructions: str | None = None
 ) -> tuple[Zone | None, str | None]:
@@ -4911,6 +4916,8 @@ def _activated_ability_zone(
         return Zone.GRAVEYARD, "CR 113.6m"
     if instructions and _ACTIVATE_ONLY_IF_SUSPENDED.search(instructions):
         return Zone.EXILE, "CR 702.62b"
+    if instructions and _ACTIVATE_ONLY_IF_ON_THE_STACK.search(instructions):
+        return Zone.STACK, "CR 113.6b"
     if instructions and _ACTIVATE_ONLY_IF_IN_GRAVEYARD.search(instructions):
         # Loathsome Troll: "Activate only if this card is in your graveyard."
         # - an ability that states the zone it functions in (CR 113.6b).

@@ -52,7 +52,7 @@ from .layers import (
     only_this_incarnation,
     set_power_toughness,
 )
-from .targeting import permanent_description
+from .targeting import RetargetScope, permanent_description
 
 if TYPE_CHECKING:
     from ..models.game import Game
@@ -1421,5 +1421,166 @@ def _parse_counter_on_each_subtype_on_battlefield(text: str):
         for permanent in list(game.battlefield):
             if subtype in {each.lower() for each in board.of(permanent).subtypes}:
                 game.add_counters(permanent, kind, amount)
+
+    return effect
+
+
+# ---------------------------------------------------------------------------
+# "Distribute X +1/+1 counters among any number of creatures you control, where X
+# is the amount of {S} spent to cast this spell. Then draw a card for each creature
+# you control with power 4 or greater." (Blessing of Frost). Snow mana is counted by
+# the cast record (CR 107.4h); the distribution is not targeted, so the caster picks
+# a creature for each counter as the spell resolves (CR 601.2d is for targets only,
+# CR 608.2d for this) and the draw counts after the counters are on (CR 608.2c).
+# ---------------------------------------------------------------------------
+
+_DISTRIBUTE_SNOW_RE = re.compile(
+    r"^distribute x (?P<kind>[+-]\d+/[+-]\d+|[a-z]+) counters among any number of creatures "
+    r"you control, where x is the amount of \{s\} spent to cast this spell\."
+    r"(?: then (?P<rest>draw a card for each creature you control with power \d+ or greater))?"
+    r"\.?$",
+    re.IGNORECASE,
+)
+
+
+@SPELL_TEXT.rung("s23", before=("parse_mixed_effect_for_spell",))
+def _parse_distribute_snow_counters_then_draw(text: str):
+    flat = " ".join(text.split())
+    if not flat.lower().startswith("distribute x "):
+        return None
+    match = _DISTRIBUTE_SNOW_RE.fullmatch(flat)
+    if match is None:
+        return None
+    kind = _counter_kind(match.group("kind").lower())
+    rest = match.group("rest")
+    count = None
+    if rest is not None:
+        count = amount_expression(
+            rest.replace("draw a card for each", "the number of", 1).replace(
+                "creature you control", "creatures you control", 1
+            )
+        )
+        if count is None:
+            return None
+
+    def effect(game: "Game", spell) -> None:
+        controller = game.controller_of(spell).username
+        record = game.cast_record(spell)
+        x = sum(record.snow_mana_spent.values()) if record is not None else 0
+        creatures = [
+            p
+            for p in game.permanents_controlled_by(controller)
+            if game.characteristics_of(p).is_creature
+        ]
+        for _ in range(x if creatures else 0):
+            if len(creatures) > 1:
+                answer = game.ask(
+                    Decision(
+                        kind=DecisionKind.CHOOSE_CARDS,
+                        player=controller,
+                        prompt=f"put a {kind} counter on which creature?",
+                        source=spell.name,
+                        source_id=source_id_of(spell),
+                        amount=1,
+                        cards=tuple(c.id for c in creatures),
+                        default_cards=(creatures[0].id,),
+                    )
+                )
+                pick = next(c for c in creatures if c.id == answer[0])
+            else:
+                pick = creatures[0]
+            game.add_counters(pick, kind, 1)
+        if count is not None:
+            draws = count(game, controller, spell, 0)
+            if draws > 0:
+                game.draw_cards(controller, draws)
+
+    return effect
+
+
+# ---------------------------------------------------------------------------
+# "Put two charge counters on <this spell>. You may choose a new target for it."
+# (Lightning Storm, from the stack: CR 113.6 puts an instant's abilities there).
+# The counters sit on the spell, where its own "X is 3 plus the number of charge
+# counters on" reads them; the retarget is CR 115.7a's optional change to another
+# legal target, asked of the player whose ability this is.
+# ---------------------------------------------------------------------------
+
+_COUNTERS_ON_SPELL_THEN_NEW_TARGET_RE = re.compile(
+    rf"^put (?P<n>{COUNT}) (?P<kind>[a-z]+) counters on (?:this spell|this card|[^.]+?)\. "
+    r"you may choose a new target for it\.?$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s40", before=("parse_mixed_effect",))
+def _parse_counters_on_spell_then_new_target(text: str):
+    flat = " ".join(text.split())
+    if not flat.lower().startswith("put ") or "choose a new target for it" not in flat.lower():
+        return None
+    match = _COUNTERS_ON_SPELL_THEN_NEW_TARGET_RE.fullmatch(flat)
+    if match is None:
+        return None
+    amount = parse_count(match.group("n"))
+    if amount is None:
+        return None
+    kind = _counter_kind(match.group("kind").lower())
+
+    def effect(game: "Game", ability) -> None:
+        spell = ability.source_or_last_known(game)
+        if spell is None or spell.zone is not Zone.STACK:
+            return
+        game.add_counters(spell, kind, amount)
+        game.change_targets(
+            spell,
+            ability.controller,
+            scope=RetargetScope.ALL,
+            optional=True,
+            source_name=ability.source_name,
+            source_id=source_id_of(ability),
+        )
+
+    return effect
+
+
+# ---------------------------------------------------------------------------
+# "<This spell> deals X damage to any target, where X is <amount>" with the amount
+# counting counters on the spell itself (Lightning Storm: "3 plus the number of
+# charge counters on" it). The count is taken as the spell resolves (CR 608.2h),
+# so counters added while it waited on the stack are in it, and written in for
+# the ordinary damage reader (CR 107.3b: X is the value the effect defines).
+# ---------------------------------------------------------------------------
+
+
+@functools.cache
+def _spell_with_x(base: str, n: int):
+    return parse_mixed_effect_for_spell(write_x(base, n))
+
+
+@SPELL_TEXT.rung("s23", before=("parse_mixed_effect_for_spell",))
+def _parse_spell_x_from_its_own_counters(text: str):
+    flat = " ".join(text.split())
+    lowered = flat.lower()
+    if ", where x is" not in lowered or " deals x damage" not in lowered:
+        return None
+    name = flat[: lowered.index(" deals x damage")]
+    if name.lower() != "this spell":
+        # The spell's own printed name stands for "this spell" (CR 201.5).
+        flat = flat.replace(name, "this spell")
+    if " counters on this spell" not in flat.lower():
+        return None
+    where = split_where_x(flat)
+    if where is None or "." in where[0].rstrip("."):
+        return None
+    base, expr = where
+    reader = amount_expression(expr)
+    if reader is None or _spell_with_x(base, 1) is None:
+        return None
+
+    def effect(game: "Game", spell) -> None:
+        controller = game.controller_of(spell).username
+        inner = _spell_with_x(base, reader(game, controller, spell, 0))
+        if inner is not None:
+            inner(game, spell)
 
     return effect

@@ -493,6 +493,8 @@ def _in_place(context: "ConditionContext", source: "CardState", place: str) -> b
     place = place.strip()
     if place == "on the battlefield":
         return source.zone is Zone.BATTLEFIELD
+    if place == "on the stack":
+        return source.zone is Zone.STACK
     if place in ("in exile", "exiled"):
         return source.zone is Zone.EXILE
     where, _, zone_word = place.rpartition(" ")
@@ -670,7 +672,10 @@ _SELF = (
     r"(?!(?:enchanted|equipped|target|that|another|each|an?|the|it|there|one|any) )"
     r"(?P<self>(?:(?!\b(?:or|and|you|if|there)\b)[^,.])+?)"
 )
-_PLACE = r"in (?:your|its owner's|a) (?:graveyard|hand|library)|on the battlefield|in exile|exiled"
+_PLACE = (
+    r"in (?:your|its owner's|a) (?:graveyard|hand|library)"
+    r"|on the battlefield|on the stack|in exile|exiled"
+)
 
 
 _SELF_IN_PLACES = re.compile(
