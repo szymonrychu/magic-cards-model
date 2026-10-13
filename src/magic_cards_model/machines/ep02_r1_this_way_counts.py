@@ -50,6 +50,7 @@ from .effects._chains import ABILITY_TEXT, FORWARD, MIXED_CLAUSE, SPELL_TEXT
 from .effects._common import (
     _TOKEN_CLAUSE_RE,
     _card_description_is_readable,
+    _players_in_apnap_order,
     _quality_matcher,
     _targets_understood,
 )
@@ -60,6 +61,7 @@ from .effects.tokens import (
     _is_notice_only,
     _parse_generic_token_descriptor,
 )
+from .targeting import profile_for_text
 
 if TYPE_CHECKING:
     from ..models.game import Game
@@ -591,7 +593,8 @@ def _stat_of(entry: Affected, stat: str) -> int:
 
 
 def _players_in_order(game: "Game") -> list[str]:
-    return [player.username for player in game.players]
+    """CR 101.4: players who act at the same time do so in APNAP order."""
+    return [player.username for player in _players_in_apnap_order(game)]
 
 
 def _apply(
@@ -613,8 +616,9 @@ def _apply(
             by_controller[entry.controller] += (
                 _stat_of(entry, payoff.stat) if payoff.stat else payoff.unit
             )
-        for player, amount in by_controller.items():
-            payoff.run(game, obj, player, amount)
+        for player in _players_in_order(game):
+            if player in by_controller:
+                payoff.run(game, obj, player, by_controller[player])
         return
     if payoff.greatest:
         per_owner = Counter(entry.owner or entry.controller for entry in moved)
@@ -706,31 +710,6 @@ def _for_each_player_destroys(text: str) -> Callable[["Game", Any], None] | None
     return effect
 
 
-_RETURN_FROM_YOUR_GRAVEYARD_RE = re.compile(
-    r"^return (?P<phrase>.*target.+from your graveyard) to your hand$", re.IGNORECASE
-)
-
-
-def _return_from_graveyard(text: str) -> Callable[["Game", Any], None] | None:
-    """ "Return target `<card>` from your graveyard to your hand." as the first
-    instruction of a text that carries more targets of its own (Morgue Burst's
-    "any target"): only the targets still in the graveyard are returned, where
-    the generic clause returns every target the object has."""
-    match = _RETURN_FROM_YOUR_GRAVEYARD_RE.fullmatch(text.strip().rstrip("."))
-    if match is None or not _targets_understood(
-        match.group("phrase"), count_agnostic=True, battlefield_only=False
-    ):
-        return None
-
-    def effect(game: "Game", obj: Any) -> None:
-        with game.returning_together():  # CR 603.2c: one instruction, one event
-            for target in game.resolve_targets(obj):
-                if isinstance(target, CardState) and target.zone is Zone.GRAVEYARD:
-                    game.return_to_hand(target)
-
-    return effect
-
-
 _EXILE_ALL_FROM_GRAVEYARD_RE = re.compile(
     r"^exile all (?P<quality>[a-z' ,-]+?) cards? from target (?:player|opponent)'s graveyard$",
     re.IGNORECASE,
@@ -762,13 +741,46 @@ def _parse_exile_all_quality_from_graveyard_clause(
     return effect
 
 
+_EXILE_CARDS_FROM_PLAYERS_GRAVEYARD_RE = re.compile(
+    r"^exile (?:(?:up to )?(?:x|\d+|an?|one|two|three|four|five|six|seven|eight|nine|ten) )?"
+    r"target (?P<noun>(?:[a-z-]+ )*?cards?) from target (?:player|opponent)'s graveyard$",
+    re.IGNORECASE,
+)
+
+
+def _exile_cards_from_players_graveyard(text: str) -> Callable[["Game", Any], None] | None:
+    """ "Exile `<N>` target cards from target player's graveyard." (CR 406.2,
+    CR 701.13a): two targets (CR 115.1) - the player and the cards in that
+    player's graveyard - of which only the cards are exiled; the player is the
+    "that player" a payoff after it names. The count is the announcement's
+    (CR 601.2c, `TargetingProfile.max_targets`), so what is exiled is every
+    card target still legal on resolution (CR 608.2b)."""
+    cleaned = text.strip().rstrip(".")
+    match = _EXILE_CARDS_FROM_PLAYERS_GRAVEYARD_RE.fullmatch(cleaned)
+    if match is None:
+        return None
+    quality = re.sub(r"\s*cards?$", "", match.group("noun"), flags=re.IGNORECASE)
+    if quality and not _card_description_is_readable(quality):
+        return None
+    profile = profile_for_text(cleaned)
+    if not profile.understood or len(profile.requirements) != 2:
+        return None
+
+    def effect(game: "Game", obj: Any) -> None:
+        for target in game.resolve_targets(obj):
+            if isinstance(target, CardState) and target.zone is Zone.GRAVEYARD:
+                game.exile_permanent(target)
+
+    return effect
+
+
 def _first_instruction(text: str, for_spell: bool) -> Callable[["Game", Any], None] | None:
-    returned = _return_from_graveyard(text)
-    if returned is not None:
-        return returned
     exiled = _parse_exile_all_quality_from_graveyard_clause(text, for_spell=for_spell)
     if exiled is not None:
         return exiled
+    exiled_cards = _exile_cards_from_players_graveyard(text)
+    if exiled_cards is not None:
+        return exiled_cards
     effect = _parse_cached(text, for_spell)
     if effect is not None:
         return effect  # type: ignore[no-any-return]

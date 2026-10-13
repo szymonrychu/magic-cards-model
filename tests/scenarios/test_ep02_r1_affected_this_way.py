@@ -318,6 +318,20 @@ def test_rampage_of_the_clans_gives_each_destroyed_permanent_s_controller_a_cent
         assert (characteristics.power, characteristics.toughness) == (3, 3)
 
 
+def test_rampage_of_the_clans_creates_the_active_players_tokens_before_the_others():
+    # CR 101.4: players who act at the same time do so in APNAP order. Bob's
+    # Ornithopter is the first permanent destroyed (it entered first), but alice
+    # is the active player, so her Centaur is created before his.
+    scenario = _board(
+        alice_hand=["Rampage of the Clans", "Sol Ring"],
+        bob_battlefield=["Ornithopter"],
+    )
+    _cast(scenario, "Sol Ring")
+    _cast(scenario, "Rampage of the Clans")
+    order = [s.controller for s in scenario.game.battlefield if s.name == "Centaur Token"]
+    assert order == ["alice", "bob"]
+
+
 def _settle(scenario):
     scenario.game.put_triggers_on_stack()
     while not scenario.game.stack_is_empty:
@@ -913,6 +927,160 @@ def test_froghemoth_exiling_fewer_cards_counts_only_those():
     assert scenario.player("alice").life == 20
 
 
+def test_froghemoth_scripted_targets_are_capped_by_the_damage_it_dealt():
+    # "up to that many target cards" - 4 combat damage (Froghemoth's power) is
+    # four targets, announced through the scripted-trigger shortcut exactly as
+    # real play would (CR 601.2c via CR 603.3d, with the trigger event known).
+    scenario = _board(
+        alice_battlefield=["Froghemoth"],
+        bob_graveyard=["Grizzly Bears", "Hill Giant", "Sol Ring", "Opt"],
+        start=Step.DECLARE_ATTACKERS,
+    )
+    froghemoth = scenario.creature("Froghemoth", "alice")
+    graveyard = list(scenario.player("bob").graveyard)
+    scenario.attack_with(froghemoth)
+    scenario.no_blocks()
+    scenario.choose_trigger_targets("Froghemoth", graveyard)
+    scenario.combat_damage()
+    _settle(scenario)
+    assert all(card.zone is Zone.EXILE for card in graveyard)
+    assert froghemoth.counters["+1/+1"] == 2
+    assert scenario.player("alice").life == 22
+
+
+def test_froghemoth_scripted_targets_beyond_the_damage_dealt_are_refused():
+    scenario = _board(
+        alice_battlefield=["Froghemoth"],
+        bob_graveyard=["Grizzly Bears", "Hill Giant", "Sol Ring", "Opt", "Plains"],
+        start=Step.DECLARE_ATTACKERS,
+    )
+    froghemoth = scenario.creature("Froghemoth", "alice")
+    graveyard = list(scenario.player("bob").graveyard)
+    scenario.attack_with(froghemoth)
+    scenario.no_blocks()
+    scenario.choose_trigger_targets("Froghemoth", graveyard)
+    with pytest.raises(ValueError, match="at most 4|up to 4|4 target"):
+        scenario.combat_damage()
+        _settle(scenario)
+
+
+# -- Suffer the Past: "Exile X target cards from target player's graveyard" -----
+#
+# CR 115.1 / CR 601.2c: the player and each card are separate targets; the
+# cards have to be in that player's graveyard (CR 404.1). CR 608.2c: "each card
+# exiled this way" is what the exile really took.
+
+
+def _suffer_the_past_board(**kwargs):
+    return _board(
+        alice_hand=["Suffer the Past"],
+        alice_lands=("Swamp", "Swamp", "Swamp", "Swamp", "Swamp"),
+        **kwargs,
+    )
+
+
+def test_suffer_the_past_reads_handled():
+    outcomes = {clause.outcome for clause in card_support(card("Suffer the Past")).clauses}
+    assert outcomes == {"handled"}
+
+
+def test_suffer_the_past_exiles_x_cards_and_drains_one_per_card():
+    scenario = _suffer_the_past_board(bob_graveyard=["Grizzly Bears", "Sol Ring", "Opt"])
+    bears = scenario.find("Grizzly Bears", Zone.GRAVEYARD, "bob")
+    ring = scenario.find("Sol Ring", Zone.GRAVEYARD, "bob")
+    opt = scenario.find("Opt", Zone.GRAVEYARD, "bob")
+    _cast_x(scenario, "Suffer the Past", 2, targets=["bob", bears, ring])
+    assert bears.zone is Zone.EXILE and ring.zone is Zone.EXILE
+    assert opt.zone is Zone.GRAVEYARD
+    assert scenario.player("bob").life == 18
+    assert scenario.player("alice").life == 22
+
+
+def test_suffer_the_past_with_x_zero_exiles_nothing_and_drains_nothing():
+    scenario = _suffer_the_past_board(bob_graveyard=["Grizzly Bears"])
+    bears = scenario.find("Grizzly Bears", Zone.GRAVEYARD, "bob")
+    _cast_x(scenario, "Suffer the Past", 0, targets=["bob"])
+    assert bears.zone is Zone.GRAVEYARD
+    assert scenario.player("bob").life == 20
+    assert scenario.player("alice").life == 20
+
+
+def test_suffer_the_past_can_aim_at_its_own_controller():
+    scenario = _suffer_the_past_board(alice_graveyard=["Grizzly Bears"])
+    bears = scenario.find("Grizzly Bears", Zone.GRAVEYARD, "alice")
+    _cast_x(scenario, "Suffer the Past", 1, targets=["alice", bears])
+    assert bears.zone is Zone.EXILE
+    assert scenario.player("alice").life == 20  # loses 1 and gains 1
+
+
+def test_suffer_the_past_refuses_more_cards_than_x():
+    scenario = _suffer_the_past_board(bob_graveyard=["Grizzly Bears", "Sol Ring"])
+    bears = scenario.find("Grizzly Bears", Zone.GRAVEYARD, "bob")
+    ring = scenario.find("Sol Ring", Zone.GRAVEYARD, "bob")
+    with pytest.raises(ValueError, match="too many targets"):
+        _cast_x(scenario, "Suffer the Past", 1, targets=["bob", bears, ring])
+
+
+def test_suffer_the_past_refuses_a_card_from_another_players_graveyard():
+    scenario = _suffer_the_past_board(
+        alice_graveyard=["Hill Giant"], bob_graveyard=["Grizzly Bears"]
+    )
+    giant = scenario.find("Hill Giant", Zone.GRAVEYARD, "alice")
+    with pytest.raises(ValueError, match="graveyard"):
+        _cast_x(scenario, "Suffer the Past", 1, targets=["bob", giant])
+
+
+def test_suffer_the_past_counts_only_the_cards_still_there_when_it_resolves():
+    scenario = _suffer_the_past_board(bob_graveyard=["Grizzly Bears", "Sol Ring"])
+    bears = scenario.find("Grizzly Bears", Zone.GRAVEYARD, "bob")
+    ring = scenario.find("Sol Ring", Zone.GRAVEYARD, "bob")
+    casting = scenario.cast("Suffer the Past")
+    casting.choose_modes([], x_value=2)
+    casting.choose_targets(["bob", bears, ring])
+    casting.determine_cost(x_value=2)
+    scenario.auto_pay(casting.begin_paying(), username="alice")
+    scenario.put_on_stack(casting)
+    scenario.game.exile_permanent(ring)  # gone in response (CR 608.2b)
+    scenario.resolve_top()
+    assert bears.zone is Zone.EXILE
+    assert scenario.player("bob").life == 19
+    assert scenario.player("alice").life == 21
+
+
+@pytest.mark.parametrize(
+    "text, cards",
+    [
+        ("Exile X target cards from target player's graveyard.", None),
+        ("Exile three target cards from target player's graveyard.", 3),
+        ("Exile up to two target cards from target opponent's graveyard.", 2),
+        ("Exile target card from target player's graveyard.", 1),
+        ("Exile two target creature cards from target player's graveyard.", 2),
+    ],
+)
+def test_the_targeting_profile_reads_every_n_cards_from_target_players_graveyard(text, cards):
+    from magic_cards_model.machines.targeting import ControllerRestriction, profile_for_text
+
+    profile = profile_for_text(text)
+    assert profile.understood
+    player, found = profile.requirements
+    assert player.allows_players
+    assert Zone.GRAVEYARD in found.zones
+    assert found.controller is ControllerRestriction.PRIOR_TARGET_PLAYER
+    if cards is not None:
+        assert found.count == cards
+
+
+def test_a_first_instruction_reader_exiles_n_cards_from_target_players_graveyard():
+    from magic_cards_model.machines.ep02_r1_this_way_counts import _first_instruction
+
+    for text in (
+        "Exile three target cards from target player's graveyard.",
+        "Exile up to two target cards from target opponent's graveyard.",
+        "Exile X target cards from target player's graveyard.",
+    ):
+        assert _first_instruction(text, True) is not None, text
+
+
 # -- Proof printings: not listed, not in an api deck, legal in Modern ----------
 #
 # Gorging Vulture (Pioneer, Modern): "mill four cards. You gain 1 life for each
@@ -998,3 +1166,50 @@ def test_necromancers_covenant_makes_a_zombie_per_card_exiled_from_the_graveyard
     _cast(scenario, "Necromancer's Covenant")
     _settle(scenario)
     assert _tokens(scenario, "Zombie") == ["alice", "alice"]
+
+
+# -- Shared return reader: only the targets the return clause names ------------
+#
+# Jeskai Revelation: "Return target spell or permanent to its owner's hand.
+# Jeskai Revelation deals 4 damage to any target." - the first target is the
+# bounced permanent, the second is only a damage target (CR 601.2c: each
+# target is announced for its own clause, CR 608.2c: resolved in order). The
+# profile lists "any target" first, so the damage target is announced first.
+
+
+def test_jeskai_revelation_returns_only_its_first_target_and_damages_the_second():
+    scenario = _board(
+        alice_hand=["Jeskai Revelation"],
+        alice_lands=("Plains", "Island", "Island", "Mountain", "Plains", "Island"),
+        bob_battlefield=["Grizzly Bears", "Hill Giant"],
+    )
+    bears = scenario.creature("Grizzly Bears", "bob")
+    giant = scenario.creature("Hill Giant", "bob")
+    _cast(scenario, "Jeskai Revelation", targets=[giant, bears])
+    assert bears.zone is Zone.HAND
+    assert giant.zone is Zone.GRAVEYARD  # 4 damage killed it; it was not bounced
+
+
+def test_clutch_of_currents_awakened_returns_only_the_creature_not_the_awakened_land():
+    scenario = _board(
+        alice_hand=["Clutch of Currents"],
+        alice_lands=("Island",) * 6,
+        bob_battlefield=["Grizzly Bears"],
+    )
+    bears = scenario.creature("Grizzly Bears", "bob")
+    land = scenario.untapped_sources("Island", username="alice")[0]
+    casting = scenario.cast("Clutch of Currents", username="alice")
+    casting.use_keyword("Awaken")
+    casting.choose_targets([bears, land])
+    payment = casting.begin_paying()
+    others = [
+        p
+        for p in scenario.game.permanents_controlled_by("alice")
+        if not p.tapped and p is not land and p.name == "Island"
+    ]
+    scenario.pay_with(payment, *others[:5])
+    scenario.put_on_stack(casting)
+    scenario.resolve_top()
+    assert bears.zone is Zone.HAND
+    assert land.zone is Zone.BATTLEFIELD
+    assert land.counters["+1/+1"] == 3

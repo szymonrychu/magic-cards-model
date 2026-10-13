@@ -676,6 +676,7 @@ from .returns import (
     _watch_for_departure_and_return_exiled_card,
     return_ability_targets_to_battlefield,
     return_ability_targets_to_hand,
+    return_clause_targets_to_hand,
 )
 from .search import (
     _BASIC_LAND_TYPE_NAMES,
@@ -5233,6 +5234,7 @@ __all__ = [
     "resolve_modal_spell",
     "return_ability_targets_to_battlefield",
     "return_ability_targets_to_hand",
+    "return_clause_targets_to_hand",
     "scry",
     "sequence",
     "spell_resolution_text",
