@@ -64,6 +64,7 @@ from ..ep02_r1_graveyard_counts import (
     parse_tapped_attacking_tokens_for_each_ability,
 )
 from ..ep02_r1_life_amounts import life_this_turn_count
+from ..ep02_r2_devotion_domain_party import up_to_x_targets, where_x_pump_text_normalised
 from ..layers import (
     BASIC_LAND_TYPES,
     Characteristics,
@@ -2374,7 +2375,7 @@ def _parse_where_x_is_continuous_effect(effect_text: str) -> AbilityEffect | Non
     instruction never ran at all once this function's own gate started
     passing for the pump half beside it.
     """
-    text = effect_text.strip()
+    text = where_x_pump_text_normalised(effect_text.strip())
     match = _WHERE_X_IS_INLINE_RE.search(text)
     if match is None:
         return None
@@ -2412,6 +2413,7 @@ def _parse_where_x_is_continuous_effect(effect_text: str) -> AbilityEffect | Non
     pump_first = pump_index == 0 or not remainder_sentences
     remainder_text = " ".join(remainder_sentences)
     remainder_effect = parse_mixed_effect(remainder_text) if remainder_text else None
+    capped_by_x = up_to_x_targets(pump_sentence)
 
     def run_pump(game: "Game", ability: AbilityOnStack) -> None:
         # CR 608.2h: a source its own cost removed (Priest of the Haunted Edge's
@@ -2449,6 +2451,8 @@ def _parse_where_x_is_continuous_effect(effect_text: str) -> AbilityEffect | Non
             if not requires_target and source_gone:
                 return
             targets = game.resolve_card_targets(ability) if requires_target else [source]
+        if capped_by_x:
+            targets = targets[: max(magnitude, 0)]
         if not targets:
             # CR 115.6: "up to one target" legally choosing zero, or every
             # chosen target since gone illegal (CR 608.2b) - nothing to affect.
@@ -2503,7 +2507,7 @@ def _parse_where_x_is_continuous_effect(effect_text: str) -> AbilityEffect | Non
 def _parse_where_x_is_continuous_effect_for_spell(effect_text: str) -> Effect | None:
     """The spell-side twin of `_parse_where_x_is_continuous_effect` - see the
     banner above."""
-    text = effect_text.strip()
+    text = where_x_pump_text_normalised(effect_text.strip())
     match = _WHERE_X_IS_INLINE_RE.search(text)
     if match is None:
         return None
@@ -2535,6 +2539,7 @@ def _parse_where_x_is_continuous_effect_for_spell(effect_text: str) -> Effect | 
     pump_first = pump_index == 0 or not remainder_sentences
     remainder_text = " ".join(remainder_sentences)
     remainder_effect = parse_mixed_effect_for_spell(remainder_text) if remainder_text else None
+    capped_by_x = up_to_x_targets(pump_sentence)
 
     def run_pump(game: "Game", spell: CardState) -> None:
         controller = game.controller_of(spell)
@@ -2557,6 +2562,8 @@ def _parse_where_x_is_continuous_effect_for_spell(effect_text: str) -> Effect | 
             profile = profile_for_text(literal)
             requires_target = profile.understood and bool(profile.requirements)
             targets = game.resolve_card_targets(spell) if requires_target else [spell]
+        if capped_by_x:
+            targets = targets[: max(magnitude, 0)]
         if not targets:
             # CR 115.6: "up to one target" legally choosing zero, or every
             # chosen target since gone illegal (CR 608.2b) - nothing to affect.

@@ -353,3 +353,137 @@ def test_thassa_s_oracle_wins_when_devotion_reaches_the_library_size():
     scenario.pass_until_resolved()
     # devotion to blue is Oracle {U}{U} = 2 >= 2 cards in library
     assert scenario.game.is_over
+
+
+# --------------------------------------------------------------------------
+# Domain as the look-at depth (CR 701.20 look / CR 701.20d reveal): Voda Sea
+# Scavenger, Shadow Prophecy, Nael, Sphinx of Clear Skies
+# --------------------------------------------------------------------------
+
+STACK = ["Grizzly Bears", "Hill Giant", "Serra Angel", "Llanowar Elves", "Goblin Guide", "Opt"]
+THREE_TYPES = ["Island", "Forest", "Swamp", "Island"]  # three basic land types
+
+
+def _names(cards):
+    return [state.name for state in cards]
+
+
+def test_voda_looks_at_domain_cards_and_may_put_one_on_top():
+    scenario = _main(_build(THREE_TYPES, hand=["Voda Sea Scavenger"], library=list(STACK)))
+    giant = scenario.find("Hill Giant", Zone.LIBRARY, "alice")
+    scenario.will_choose_cards(giant)
+    scenario.cast_and_resolve("Voda Sea Scavenger", auto=True, username="alice")
+    scenario.pass_until_resolved()
+    library = scenario.player("alice").library
+    assert library[0] is giant
+    # the two not kept went to the bottom, Bears and Angel in some order
+    assert sorted(_names(library[-2:])) == ["Grizzly Bears", "Serra Angel"]
+    assert _names(library[1:4]) == ["Llanowar Elves", "Goblin Guide", "Opt"]
+
+
+def test_voda_may_decline_and_every_card_looked_at_goes_to_the_bottom():
+    scenario = _main(_build(THREE_TYPES, hand=["Voda Sea Scavenger"], library=list(STACK)))
+    scenario.will_choose_cards()
+    scenario.cast_and_resolve("Voda Sea Scavenger", auto=True, username="alice")
+    scenario.pass_until_resolved()
+    library = scenario.player("alice").library
+    assert _names(library[:3]) == ["Llanowar Elves", "Goblin Guide", "Opt"]
+    assert sorted(_names(library[3:])) == ["Grizzly Bears", "Hill Giant", "Serra Angel"]
+
+
+def test_voda_with_no_basic_land_types_looks_at_nothing():
+    scenario = _main(_build([], hand=["Voda Sea Scavenger"], library=list(STACK)))
+    scenario.put_onto_battlefield("Voda Sea Scavenger", "alice")
+    scenario.pass_until_resolved()
+    assert _names(scenario.player("alice").library) == STACK
+    assert scenario.questions_asked() == []
+
+
+def test_voda_counts_a_land_type_once_however_many_lands_have_it():
+    """Four lands but only Island and Forest: X is 2."""
+    scenario = _main(
+        _build(["Island", "Island", "Island", "Forest"], hand=["Voda Sea Scavenger"], library=list(STACK))
+    )
+    scenario.will_choose_cards()
+    scenario.cast_and_resolve("Voda Sea Scavenger", auto=True, username="alice")
+    scenario.pass_until_resolved()
+    library = scenario.player("alice").library
+    assert _names(library[:4]) == ["Serra Angel", "Llanowar Elves", "Goblin Guide", "Opt"]
+
+
+def test_shadow_prophecy_takes_up_to_two_and_mills_the_rest():
+    scenario = _main(_build(["Swamp", "Swamp", "Swamp", "Forest"], hand=["Shadow Prophecy"], library=list(STACK)))
+    giant = scenario.find("Hill Giant", Zone.LIBRARY, "alice")
+    scenario.will_choose_cards(giant)
+    scenario.cast_and_resolve("Shadow Prophecy", auto=True, username="alice")
+    # domain 2 (Swamp, Forest): Bears and Giant looked at; Giant to hand, Bears milled
+    assert giant.zone is Zone.HAND
+    assert "Grizzly Bears" in _names(scenario.player("alice").graveyard)
+    assert _names(scenario.player("alice").library)[0] == "Serra Angel"
+    assert scenario.player("alice").life == 18
+
+
+def test_shadow_prophecy_puts_two_into_hand_and_the_remainder_into_the_graveyard():
+    scenario = _main(
+        _build(["Swamp", "Forest", "Island", "Plains"], hand=["Shadow Prophecy"], library=list(STACK))
+    )
+    # four types: Bears, Giant, Angel, Elves looked at
+    bears = scenario.find("Grizzly Bears", Zone.LIBRARY, "alice")
+    angel = scenario.find("Serra Angel", Zone.LIBRARY, "alice")
+    scenario.will_choose_cards(bears, angel)
+    scenario.cast_and_resolve("Shadow Prophecy", auto=True, username="alice")
+    assert bears.zone is Zone.HAND and angel.zone is Zone.HAND
+    graveyard = _names(scenario.player("alice").graveyard)
+    assert sorted(graveyard) == ["Hill Giant", "Llanowar Elves", "Shadow Prophecy"]
+    assert scenario.player("alice").life == 18
+
+
+def test_nael_looks_on_combat_damage_and_draws_only_with_five_types():
+    five = ["Plains", "Island", "Swamp", "Mountain", "Forest"]
+    scenario = _main(_build(five + ["Nael, Avizoa Aeronaut"], library=list(STACK)))
+    nael = scenario.creature("Nael, Avizoa Aeronaut", "alice")
+    scenario.will_choose_cards(scenario.find("Goblin Guide", Zone.LIBRARY, "alice"))
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    scenario.attack_with(nael)
+    scenario.no_blocks()
+    scenario.combat_damage()
+    scenario.game.put_triggers_on_stack()
+    while scenario.game.stack:
+        scenario.resolve_top()
+        scenario.game.put_triggers_on_stack()
+    # five looked at (Bears..Goblin Guide); Guide goes on top and is then drawn (five types)
+    assert _names(scenario.player("alice").hand) == ["Goblin Guide"]
+
+
+def test_nael_does_not_draw_with_fewer_than_five_types():
+    scenario = _main(_build(["Island", "Forest", "Nael, Avizoa Aeronaut"], library=list(STACK)))
+    nael = scenario.creature("Nael, Avizoa Aeronaut", "alice")
+    scenario.will_choose_cards()
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    scenario.attack_with(nael)
+    scenario.no_blocks()
+    scenario.combat_damage()
+    scenario.game.put_triggers_on_stack()
+    while scenario.game.stack:
+        scenario.resolve_top()
+        scenario.game.put_triggers_on_stack()
+    assert scenario.player("alice").hand == []
+
+
+def test_sphinx_of_clear_skies_splits_into_piles():
+    scenario = _main(_build(["Island", "Forest", "Swamp", "Sphinx of Clear Skies"], library=list(STACK)))
+    sphinx = scenario.creature("Sphinx of Clear Skies", "alice")
+    bears = scenario.find("Grizzly Bears", Zone.LIBRARY, "alice")
+    giant = scenario.find("Hill Giant", Zone.LIBRARY, "alice")
+    scenario.will_choose_cards(bears, username="bob")  # the opponent's pile one
+    scenario.will_choose_pile(True, username="alice")  # alice takes pile one into hand
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    scenario.attack_with(sphinx)
+    scenario.no_blocks()
+    scenario.combat_damage()
+    scenario.game.put_triggers_on_stack()
+    while scenario.game.stack:
+        scenario.resolve_top()
+        scenario.game.put_triggers_on_stack()
+    assert bears.zone is Zone.HAND
+    assert giant.zone is Zone.GRAVEYARD
