@@ -1,0 +1,142 @@
+{
+  "object": "card",
+  "id": "d6a5b3b2-4f27-4c97-9d87-d7bdcc06d36a",
+  "oracle_id": "4fd061f2-7269-4eea-bc7c-95a123893efa",
+  "multiverse_ids": [
+    534806
+  ],
+  "resource_id": "1B0BC2B3848871D4AF0B6376E546B7D83AA0AF77E7FAEA611461A5926A2B4EDB",
+  "mtgo_id": 93026,
+  "arena_id": 78377,
+  "tcgplayer_id": 248094,
+  "cardmarket_id": 574909,
+  "name": "Curse of Surveillance",
+  "lang": "en",
+  "released_at": "2021-09-24",
+  "uri": "https://api.scryfall.com/cards/d6a5b3b2-4f27-4c97-9d87-d7bdcc06d36a",
+  "scryfall_uri": "https://scryfall.com/card/mid/46/curse-of-surveillance?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T06:54:05Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/d/6/d6a5b3b2-4f27-4c97-9d87-d7bdcc06d36a.jpg?1783925645",
+    "normal": "https://cards.scryfall.io/normal/front/d/6/d6a5b3b2-4f27-4c97-9d87-d7bdcc06d36a.jpg?1783925645",
+    "large": "https://cards.scryfall.io/large/front/d/6/d6a5b3b2-4f27-4c97-9d87-d7bdcc06d36a.jpg?1783925645",
+    "png": "https://cards.scryfall.io/png/front/d/6/d6a5b3b2-4f27-4c97-9d87-d7bdcc06d36a.png?1783925645",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/d/6/d6a5b3b2-4f27-4c97-9d87-d7bdcc06d36a.jpg?1783925645",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/d/6/d6a5b3b2-4f27-4c97-9d87-d7bdcc06d36a.jpg?1783925645",
+    "thumb": "https://cards.scryfall.io/thumb/front/d/6/d6a5b3b2-4f27-4c97-9d87-d7bdcc06d36a.webp?1783925645",
+    "grid": "https://cards.scryfall.io/grid/front/d/6/d6a5b3b2-4f27-4c97-9d87-d7bdcc06d36a.webp?1783925645",
+    "display": "https://cards.scryfall.io/display/front/d/6/d6a5b3b2-4f27-4c97-9d87-d7bdcc06d36a.webp?1783925645",
+    "art": "https://cards.scryfall.io/art/front/d/6/d6a5b3b2-4f27-4c97-9d87-d7bdcc06d36a.webp?1783925645",
+    "crop": "https://cards.scryfall.io/crop/front/d/6/d6a5b3b2-4f27-4c97-9d87-d7bdcc06d36a.webp?1783925645"
+  },
+  "mana_cost": "{4}{U}",
+  "cmc": 5.0,
+  "type_line": "Enchantment \u2014 Aura Curse",
+  "oracle_text": "Enchant player\nAt the beginning of enchanted player's upkeep, any number of target players other than that player each draw cards equal to the number of Curses attached to that player.",
+  "colors": [
+    "U"
+  ],
+  "color_identity": [
+    "U"
+  ],
+  "keywords": [
+    "Enchant"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "arena",
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "44b8eb8f-fa23-401a-98b5-1fbb9871128e",
+  "set": "mid",
+  "set_name": "Innistrad: Midnight Hunt",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/44b8eb8f-fa23-401a-98b5-1fbb9871128e",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Amid&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/mid?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/d6a5b3b2-4f27-4c97-9d87-d7bdcc06d36a/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A4fd061f2-7269-4eea-bc7c-95a123893efa&unique=prints",
+  "collector_number": "46",
+  "digital": false,
+  "rarity": "rare",
+  "flavor_text": "For every eye gouged out, two blinked open.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Igor Kieryluk",
+  "artist_ids": [
+    "9c3e9d17-509f-485c-9360-46d897ce716b"
+  ],
+  "illustration_id": "62325874-80c2-4879-af82-e1341dd3d48b",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 10418,
+  "penny_rank": 7223,
+  "preview": {
+    "source": "Riley Knight",
+    "source_uri": "https://www.twitch.tv/videos/1141742175?t=02h09m12s",
+    "previewed_at": "2021-09-07"
+  },
+  "prices": {
+    "usd": "0.27",
+    "usd_foil": "0.34",
+    "usd_etched": null,
+    "eur": "0.20",
+    "eur_foil": "0.30",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=534806&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DCurse%2Bof%2BSurveillance",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DCurse%2Bof%2BSurveillance",
+    "edhrec": "https://edhrec.com/route/?cc=Curse+of+Surveillance"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F248094%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=574909&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/93026?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}
