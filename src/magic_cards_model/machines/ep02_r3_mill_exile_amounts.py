@@ -32,6 +32,8 @@ import re
 from typing import TYPE_CHECKING, Any
 
 from ..models.card_state import CardState
+from ..models.card import Color
+from ..models.mana import ManaCost, SymbolKind
 from ..models.zone import Zone
 from ..numbers import halve
 from .amount_sentences import (
@@ -247,5 +249,123 @@ def _parse_base_power_become_clause(effect_text: str) -> "AbilityEffect | None":
             ),
             game,
         )
+
+    return effect
+
+
+# --------------------------------------------------------------------------
+# "return to your hand the <quality> card in your graveyard with the greatest
+# power. If two or more cards are tied for greatest power, you choose one."
+# --------------------------------------------------------------------------
+
+_RETURN_EXTREMUM_RE = re.compile(
+    r"^return (?:to your hand )?(?:the )?(?P<quality>[a-z ]+?) card in your graveyard "
+    r"with the (?P<extremum>greatest|least) (?P<stat>power|toughness|mana value)"
+    r"(?: to your hand)?"
+    r"(?:\. if two or more cards are tied for (?:greatest|least) (?:power|toughness|mana value), "
+    r"you choose one of them)?\.?$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s8")
+def _parse_return_extremum_card_clause(effect_text: str) -> "AbilityEffect | None":
+    """The card in the controller's graveyard with the greatest (or least)
+    power, toughness or mana value, returned to hand; a tie is the
+    controller's choice (CR 608.2d), and a single candidate is no choice at
+    all. CR 208.5: a creature card whose power cannot be determined has power
+    0; CR 202.3 mana value."""
+    match = _RETURN_EXTREMUM_RE.fullmatch(clean(effect_text))
+    if match is None:
+        return None
+    from .effects._common import _card_description_is_readable, _quality_matcher
+
+    quality = match.group("quality").lower()
+    if not _card_description_is_readable(quality):
+        return None
+    wanted = _quality_matcher(quality)
+    greatest = match.group("extremum").lower() == "greatest"
+    stat = match.group("stat").lower()
+
+    def value_of(card: CardState) -> int:
+        if stat == "mana value":
+            return int(card.mana_value)
+        raw = card.power if stat == "power" else card.toughness
+        return int(raw) if isinstance(raw, int) else 0
+
+    def effect(game: "Game", ability: Any) -> None:
+        from .decisions import Decision, DecisionKind
+
+        player = game.player(controller_of(game, ability))
+        pool = [card for card in player.graveyard if wanted(card)]
+        if not pool:
+            return
+        best = max(map(value_of, pool)) if greatest else min(map(value_of, pool))
+        tied = [card for card in pool if value_of(card) == best]
+        chosen = tied[0]
+        if len(tied) > 1:
+            picked = game.ask(
+                Decision(
+                    kind=DecisionKind.CHOOSE_CARDS,
+                    player=player.username,
+                    prompt=f"choose one of the {quality} cards tied for the "
+                    f"{match.group('extremum').lower()} {stat}",
+                    source=ability.source_name,
+                    source_id=source_id_of(ability),
+                    amount=1,
+                    exact=True,
+                    cards=tuple(card.id for card in tied),
+                )
+            )
+            by_id = {card.id: card for card in tied}
+            chosen = next((by_id[i] for i in picked if i in by_id), tied[0])
+        game.return_to_hand(chosen)
+
+    return effect
+
+
+# --------------------------------------------------------------------------
+# "add mana equal to enchanted permanent's mana cost"
+# --------------------------------------------------------------------------
+
+_ADD_MANA_EQUAL_TO_COST_RE = re.compile(
+    r"^add mana equal to (?P<host>enchanted (?:permanent|creature|land|artifact)|"
+    r"equipped creature)['\u2019]s mana cost$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s8")
+def _parse_add_mana_equal_to_attached_cost_clause(effect_text: str) -> "AbilityEffect | None":
+    """The mana in the attached permanent's mana cost, symbol by symbol (CR 202.1):
+    generic as colorless (CR 107.4b), a coloured symbol as that colour, a
+    hybrid or Phyrexian symbol as one colour of the controller's choice
+    (CR 608.2d), {X} as 0 (CR 202.3e) and an absent cost as nothing."""
+    if _ADD_MANA_EQUAL_TO_COST_RE.fullmatch(clean(effect_text)) is None:
+        return None
+    from .effects.modal import _choose_mana_color
+
+    def effect(game: "Game", ability: Any) -> None:
+        source = ability.source(game)
+        host = None if source is None else game.find_by_id(source.attached_to)
+        if host is None or host.zone is not Zone.BATTLEFIELD or not host.mana_cost:
+            return
+        controller = game.player(controller_of(game, ability))
+        for symbol in ManaCost.parse(host.mana_cost).symbols:
+            if symbol.kind is SymbolKind.GENERIC:
+                controller.mana_pool.add(Color.COLORLESS, symbol.amount)
+            elif symbol.kind in (SymbolKind.COLORED, SymbolKind.MONOCOLORED_HYBRID):
+                controller.mana_pool.add(symbol.colors[0])
+            elif symbol.kind in (SymbolKind.HYBRID, SymbolKind.PHYREXIAN):
+                color = _choose_mana_color(
+                    game,
+                    controller.username,
+                    ability,
+                    symbol.colors,
+                    f"choose the colour of mana for {{{'/'.join(c.value for c in symbol.colors)}}}",
+                )
+                controller.mana_pool.add(color)
+            elif symbol.kind is SymbolKind.SNOW:
+                controller.mana_pool.add(Color.COLORLESS, 1, snow=True)
 
     return effect

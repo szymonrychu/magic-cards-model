@@ -397,3 +397,96 @@ def test_arni_boast_ignores_arnis_own_power():
     scenario.activate(arni, *scenario.untapped_sources("Mountain"), index=0)
     scenario.resolve_top()
     assert _pt(scenario, arni)[0] == 1  # 1 plus nothing (CR 107.2: 0)
+
+
+# --------------------------------------------------------------------------
+# Part 5 - "return to your hand the creature card in your graveyard with the
+# greatest power; if two or more are tied, you choose one" (Desecrator Hag).
+# CR 208.1 power; the controller's choice among ties is CR 608.2d's.
+# --------------------------------------------------------------------------
+
+
+def _hag(graveyard):
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Desecrator Hag"], graveyard=graveyard)
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    return scenario
+
+
+def test_desecrator_hag_returns_the_unique_greatest_power_creature():
+    scenario = _hag(["Grizzly Bears", "Hill Giant", "Memnite"])
+    scenario.put_onto_battlefield("Desecrator Hag", "alice")
+    scenario.pass_until_resolved()
+    hand = [c.name for c in scenario.player("alice").hand]
+    assert hand == ["Hill Giant"]
+
+
+def test_desecrator_hag_lets_the_controller_choose_among_tied_creatures():
+    scenario = _hag(["Grizzly Bears", "Gray Ogre", "Memnite"])
+    ogre = scenario.find("Gray Ogre", Zone.GRAVEYARD, "alice")
+    scenario.will_choose_cards(ogre, source="Desecrator Hag")
+    scenario.put_onto_battlefield("Desecrator Hag", "alice")
+    scenario.pass_until_resolved()
+    assert [c.name for c in scenario.player("alice").hand] == ["Gray Ogre"]
+    assert "Grizzly Bears" in [c.name for c in scenario.player("alice").graveyard]
+
+
+def test_desecrator_hag_ignores_noncreature_cards_with_a_graveyard_of_none():
+    scenario = _hag(["Island"])
+    scenario.put_onto_battlefield("Desecrator Hag", "alice")
+    scenario.pass_until_resolved()
+    assert scenario.player("alice").hand == []
+
+
+# --------------------------------------------------------------------------
+# Part 6 - "add mana equal to enchanted permanent's mana cost" (Elemental
+# Resonance). CR 202.1: a mana cost is the symbols; the mana added matches
+# them - generic as colorless (CR 107.4b), coloured as that colour, and for a
+# hybrid symbol "choose one" of its colours (the card's own reminder).
+# --------------------------------------------------------------------------
+
+
+def _resonance(host_name, host_owner="alice"):
+    from magic_cards_model.models import Color  # noqa: F401
+
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Elemental Resonance"] + ([host_name] if host_owner == "alice" else []))
+        .player("bob", battlefield=[host_name] if host_owner == "bob" else [])
+        .build()
+    )
+    scenario.start_at(Step.DRAW)
+    aura = scenario.find("Elemental Resonance", Zone.BATTLEFIELD, "alice")
+    aura.attach_to(scenario.find(host_name, Zone.BATTLEFIELD, host_owner))
+    return scenario
+
+
+def _floating(scenario):
+    return {c.value: n for c, n in scenario.player("alice").mana_pool.floating.items() if n}
+
+
+def test_elemental_resonance_adds_the_enchanted_permanents_mana_cost():
+    scenario = _resonance("Grizzly Bears")
+    scenario.advance()
+    assert scenario.step is Step.PRECOMBAT_MAIN
+    scenario.pass_until_resolved()
+    assert _floating(scenario) == {"C": 1, "G": 1}
+
+
+def test_elemental_resonance_lets_the_controller_choose_for_a_hybrid_symbol():
+    scenario = _resonance("Desecrator Hag", "bob")
+    scenario.will_choose("G", source="Elemental Resonance", times=2)
+    scenario.advance()
+    scenario.pass_until_resolved()
+    assert _floating(scenario) == {"C": 2, "G": 2}
+
+
+def test_elemental_resonance_on_a_land_adds_nothing():
+    scenario = _resonance("Forest")
+    scenario.advance()
+    scenario.pass_until_resolved()
+    assert _floating(scenario) == {}
