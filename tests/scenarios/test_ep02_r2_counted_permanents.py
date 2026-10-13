@@ -1017,7 +1017,7 @@ def test_muerra_adds_one_mana_of_a_listed_colour_per_raccoon(choices):
 
 
 def test_muerra_choice_is_made_once_per_raccoon_not_once_for_all():
-    scenario = _build(["Muerra, Trash Tactician", "Muerra, Trash Tactician"], [])
+    scenario = _build(["Muerra, Trash Tactician", "Coati Scavenger"], [])
     scenario.will_choose("R", username="alice", times=1)
     scenario.will_choose("G", username="alice", times=1)
     scenario.start_at(Step.UNTAP)
