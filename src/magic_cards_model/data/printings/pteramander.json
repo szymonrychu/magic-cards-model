@@ -1,0 +1,134 @@
+{
+  "object": "card",
+  "id": "0072bbbf-a695-47dd-9615-db2659f357db",
+  "oracle_id": "00187de2-bc48-4137-97d8-a9a0fafc76c1",
+  "multiverse_ids": [
+    658553
+  ],
+  "mtgo_id": 124677,
+  "tcgplayer_id": 545240,
+  "cardmarket_id": 764630,
+  "name": "Pteramander",
+  "lang": "en",
+  "released_at": "2024-04-19",
+  "uri": "https://api.scryfall.com/cards/0072bbbf-a695-47dd-9615-db2659f357db",
+  "scryfall_uri": "https://scryfall.com/card/otc/109/pteramander?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T03:05:37Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/0/0/0072bbbf-a695-47dd-9615-db2659f357db.jpg?1783911937",
+    "normal": "https://cards.scryfall.io/normal/front/0/0/0072bbbf-a695-47dd-9615-db2659f357db.jpg?1783911937",
+    "large": "https://cards.scryfall.io/large/front/0/0/0072bbbf-a695-47dd-9615-db2659f357db.jpg?1783911937",
+    "png": "https://cards.scryfall.io/png/front/0/0/0072bbbf-a695-47dd-9615-db2659f357db.png?1783911937",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/0/0/0072bbbf-a695-47dd-9615-db2659f357db.jpg?1783911937",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/0/0/0072bbbf-a695-47dd-9615-db2659f357db.jpg?1783911937",
+    "thumb": "https://cards.scryfall.io/thumb/front/0/0/0072bbbf-a695-47dd-9615-db2659f357db.webp?1783911937",
+    "grid": "https://cards.scryfall.io/grid/front/0/0/0072bbbf-a695-47dd-9615-db2659f357db.webp?1783911937",
+    "display": "https://cards.scryfall.io/display/front/0/0/0072bbbf-a695-47dd-9615-db2659f357db.webp?1783911937",
+    "art": "https://cards.scryfall.io/art/front/0/0/0072bbbf-a695-47dd-9615-db2659f357db.webp?1783911937",
+    "crop": "https://cards.scryfall.io/crop/front/0/0/0072bbbf-a695-47dd-9615-db2659f357db.webp?1783911937"
+  },
+  "mana_cost": "{U}",
+  "cmc": 1.0,
+  "type_line": "Creature \u2014 Salamander Drake",
+  "oracle_text": "Flying\n{7}{U}: Adapt 4. This ability costs {1} less to activate for each instant and sorcery card in your graveyard. (If this creature has no +1/+1 counters on it, put four +1/+1 counters on it.)",
+  "power": "1",
+  "toughness": "1",
+  "colors": [
+    "U"
+  ],
+  "color_identity": [
+    "U"
+  ],
+  "keywords": [
+    "Flying",
+    "Adapt"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": false,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "d6548798-0c10-4509-b71a-2d8b1d14665a",
+  "set": "otc",
+  "set_name": "Outlaws of Thunder Junction Commander",
+  "set_type": "commander",
+  "set_uri": "https://api.scryfall.com/sets/d6548798-0c10-4509-b71a-2d8b1d14665a",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Aotc&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/otc?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/0072bbbf-a695-47dd-9615-db2659f357db/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A00187de2-bc48-4137-97d8-a9a0fafc76c1&unique=prints",
+  "collector_number": "109",
+  "digital": false,
+  "rarity": "uncommon",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Simon Dominic",
+  "artist_ids": [
+    "b0e80135-db5a-4b88-a0bc-815a0e94faa1"
+  ],
+  "illustration_id": "702a5172-3b71-4b67-9e88-dff4b27ee8a6",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "edhrec_rank": 16339,
+  "penny_rank": 509,
+  "prices": {
+    "usd": "0.22",
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": "0.14",
+    "eur_foil": null,
+    "tix": "0.04"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=658553&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DPteramander",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DPteramander",
+    "edhrec": "https://edhrec.com/route/?cc=Pteramander"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F545240%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=764630&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/124677?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

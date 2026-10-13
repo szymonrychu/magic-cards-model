@@ -2338,6 +2338,13 @@ class Game(
     #: subject, and a "colorless" word in a cost's card requirement; an older
     #: dump would resolve each of these as a no-op or fire the trigger on every
     #: creature.
+    #: 162 (EP02-R1-T5, reserved: 157 + task 5): `ActivationCostReduction`
+    #: gained `graveyard_quality` (an activated ability's "costs {1} less ...
+    #: for each creature card in your graveyard"), reachable from `Game`
+    #: through a pending `AbilityOnStack.ability.cost_reduction`; graveyard
+    #: counts ("for each <type> card in your graveyard", "card types among
+    #: cards in your graveyard", "that player's graveyard") now resolve where
+    #: an older dump would have resolved the same text as a no-op.
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a

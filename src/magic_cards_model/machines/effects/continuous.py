@@ -5911,7 +5911,8 @@ def _attack_trigger_pump_subject(game: "Game", ability: AbilityOnStack) -> CardS
 #: scaled by a live for-each count, until end of turn" reader of its own to
 #: hand this to.
 _SELF_ATTACK_PUMP_FOR_EACH_RE = re.compile(
-    r"^it gets (?P<power>[+-]\d+)/(?P<toughness>[+-]\d+) until end of turn "
+    r"^(?P<lead>until end of turn, )?(?:it|this [a-z]+) gets "
+    r"(?P<power>[+-]\d+)/(?P<toughness>[+-]\d+)(?P<trail> until end of turn)? "
     r"for each (?P<each>.+?)\.?$",
     re.IGNORECASE,
 )
@@ -5921,7 +5922,9 @@ _SELF_ATTACK_PUMP_FOR_EACH_RE = re.compile(
 def _parse_self_pump_for_each_clause(text: str) -> AbilityEffect | None:
     """`_SELF_ATTACK_PUMP_FOR_EACH_RE`'s shape; see the banner above."""
     match = _SELF_ATTACK_PUMP_FOR_EACH_RE.fullmatch(text.strip())
-    if match is None:
+    if match is None or (match.group("lead") is None) == (match.group("trail") is None):
+        # A pump with no stated duration ("this creature gets +1/+1 for each
+        # ...") is a static ability's, read by the layer parser (CR 611.3).
         return None
     power = int(match.group("power"))
     toughness = int(match.group("toughness"))

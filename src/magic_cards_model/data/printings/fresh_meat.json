@@ -1,0 +1,149 @@
+{
+  "object": "card",
+  "id": "78bbdc81-d47f-4f0a-b359-c146cc07931d",
+  "oracle_id": "3be6e78f-f9ec-4bf4-b70f-40ba677aaa48",
+  "multiverse_ids": [
+    470712
+  ],
+  "mtgo_id": 77446,
+  "tcgplayer_id": 196649,
+  "cardmarket_id": 392442,
+  "name": "Fresh Meat",
+  "lang": "en",
+  "released_at": "2019-08-23",
+  "uri": "https://api.scryfall.com/cards/78bbdc81-d47f-4f0a-b359-c146cc07931d",
+  "scryfall_uri": "https://scryfall.com/card/c19/166/fresh-meat?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T08:52:27Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/7/8/78bbdc81-d47f-4f0a-b359-c146cc07931d.jpg?1783932747",
+    "normal": "https://cards.scryfall.io/normal/front/7/8/78bbdc81-d47f-4f0a-b359-c146cc07931d.jpg?1783932747",
+    "large": "https://cards.scryfall.io/large/front/7/8/78bbdc81-d47f-4f0a-b359-c146cc07931d.jpg?1783932747",
+    "png": "https://cards.scryfall.io/png/front/7/8/78bbdc81-d47f-4f0a-b359-c146cc07931d.png?1783932747",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/7/8/78bbdc81-d47f-4f0a-b359-c146cc07931d.jpg?1783932747",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/7/8/78bbdc81-d47f-4f0a-b359-c146cc07931d.jpg?1783932747",
+    "thumb": "https://cards.scryfall.io/thumb/front/7/8/78bbdc81-d47f-4f0a-b359-c146cc07931d.webp?1783932747",
+    "grid": "https://cards.scryfall.io/grid/front/7/8/78bbdc81-d47f-4f0a-b359-c146cc07931d.webp?1783932747",
+    "display": "https://cards.scryfall.io/display/front/7/8/78bbdc81-d47f-4f0a-b359-c146cc07931d.webp?1783932747",
+    "art": "https://cards.scryfall.io/art/front/7/8/78bbdc81-d47f-4f0a-b359-c146cc07931d.webp?1783932747",
+    "crop": "https://cards.scryfall.io/crop/front/7/8/78bbdc81-d47f-4f0a-b359-c146cc07931d.webp?1783932747"
+  },
+  "mana_cost": "{3}{G}",
+  "cmc": 4.0,
+  "type_line": "Instant",
+  "oracle_text": "Create a 3/3 green Beast creature token for each creature put into your graveyard from the battlefield this turn.",
+  "colors": [
+    "G"
+  ],
+  "color_identity": [
+    "G"
+  ],
+  "keywords": [],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "78bbdc81-d47f-4f0a-b359-c146cc07931d",
+      "component": "combo_piece",
+      "name": "Fresh Meat",
+      "type_line": "Instant",
+      "uri": "https://api.scryfall.com/cards/78bbdc81-d47f-4f0a-b359-c146cc07931d"
+    },
+    {
+      "object": "related_card",
+      "id": "564ed3be-ef91-42eb-90ff-452bc23463b5",
+      "component": "token",
+      "name": "Beast",
+      "type_line": "Token Creature \u2014 Beast",
+      "uri": "https://api.scryfall.com/cards/564ed3be-ef91-42eb-90ff-452bc23463b5"
+    }
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": false,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "0fa3ccbb-d86d-4a2e-a55e-c4979c4feeb2",
+  "set": "c19",
+  "set_name": "Commander 2019",
+  "set_type": "commander",
+  "set_uri": "https://api.scryfall.com/sets/0fa3ccbb-d86d-4a2e-a55e-c4979c4feeb2",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Ac19&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/c19?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/78bbdc81-d47f-4f0a-b359-c146cc07931d/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A3be6e78f-f9ec-4bf4-b70f-40ba677aaa48&unique=prints",
+  "collector_number": "166",
+  "digital": false,
+  "rarity": "rare",
+  "flavor_text": "A scavenger's favorite appetizer is death.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Dave Allsop",
+  "artist_ids": [
+    "99b8310a-4fd6-4ded-8ab7-3b5185821cbe"
+  ],
+  "illustration_id": "f1fabf9c-22a1-4d3a-9e91-dd41bed42f0b",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "edhrec_rank": 12085,
+  "penny_rank": 7537,
+  "prices": {
+    "usd": "0.28",
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": "0.28",
+    "eur_foil": null,
+    "tix": null
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=470712&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DFresh%2BMeat",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DFresh%2BMeat",
+    "edhrec": "https://edhrec.com/route/?cc=Fresh+Meat"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F196649%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=392442&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/77446?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}
