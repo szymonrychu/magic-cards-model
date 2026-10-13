@@ -284,3 +284,89 @@ def parse_for_each_create_text(text: str, *, for_spell: bool):
     ):
         return None
     return effect
+
+
+
+# --------------------------------------------------------------------------
+# "[You may have] target creature get +N/+N until end of turn. [If you do,]
+# sacrifice that creature at the beginning of the next end step." (Junkyo Bell)
+# --------------------------------------------------------------------------
+
+_PUMP_THEN_DELAYED_RE = re.compile(
+    r"^(?P<may>you may )?(?:have )?(?P<target>target creature(?: you control)?) "
+    r"(?:gets?) (?P<stats>[+-]\d+/[+-]\d+) until end of turn\.\s*"
+    r"(?:if you do,\s*)?(?P<delayed>(?:sacrifice|exile) (?:that creature|it) at the "
+    r"beginning of the next end step)\.?$",
+    re.IGNORECASE,
+)
+
+
+def parse_pump_then_delayed_text(text: str, *, for_spell: bool):
+    """A pump of a targeted creature followed by a delayed sacrifice / exile of the
+    same creature at the next end step. The delayed trigger (CR 603.7a) is created
+    only when the pump was done: a declined "may" (CR 608.2d) or a target that is no
+    longer a legal one (CR 608.2b) leaves nothing to sacrifice, and "if you do"
+    says the same. `None` when the pump or the delayed clause is not one the
+    engine reads."""
+    match = _PUMP_THEN_DELAYED_RE.match(" ".join(text.split()))
+    if match is None:
+        return None
+    from ..models.card_state import CardState
+    from ..models.zone import Zone
+    from .decisions import source_id_of
+    from .delayed import anaphoric_delayed_trigger, parse_anaphoric_delayed_clause
+    from .effects._common import _targets_understood
+    from .layers.model import (
+        ContinuousEffect,
+        Duration,
+        Layer,
+        Sublayer,
+        modify_power_toughness,
+        only_this_incarnation,
+    )
+
+    delayed = f"{match.group('delayed')}."
+    phrase = match.group("target")
+    if parse_anaphoric_delayed_clause(delayed) is None or not _targets_understood(phrase):
+        return None
+    power, toughness = (int(part) for part in match.group("stats").split("/"))
+    optional = match.group("may") is not None
+    prompt = f"{phrase} gets {match.group('stats')} until end of turn"
+
+    def effect(game, stack_object) -> None:
+        spell = isinstance(stack_object, CardState)
+        controller = game.controller_of(stack_object)
+        name = stack_object.name if spell else stack_object.source_name
+        source_id = stack_object.id if spell else stack_object.source_id
+        if optional and not game.may(
+            controller, prompt, source=name, source_id=source_id_of(stack_object)
+        ):
+            return
+        store = game.continuous_effects
+        for target in game.resolve_card_targets(stack_object):
+            if target.zone is not Zone.BATTLEFIELD:
+                continue
+            store.add(
+                ContinuousEffect(
+                    description=f"{name}: {target.name} gets {power:+d}/{toughness:+d}",
+                    layer=Layer.POWER_TOUGHNESS,
+                    sublayer=Sublayer.MODIFY,
+                    timestamp=store.tick(),
+                    duration=Duration.UNTIL_END_OF_TURN,
+                    selector=only_this_incarnation(target, target.zone_change_stamp),
+                    modification=modify_power_toughness(power, toughness),
+                ),
+                game,
+            )
+            trigger = anaphoric_delayed_trigger(
+                delayed,
+                subject=target,
+                controller=controller.username,
+                source_id=source_id,
+                source_name=name,
+                game=game,
+            )
+            if trigger is not None:
+                game.create_delayed_trigger(trigger)
+
+    return effect

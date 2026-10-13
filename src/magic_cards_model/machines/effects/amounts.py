@@ -5631,6 +5631,23 @@ def _parse_for_each_create_ability_text(text: str) -> AbilityEffect | None:
     return parse_for_each_create_text(text, for_spell=False)
 
 
+@SPELL_TEXT.rung("s23", after=["amounts._parse_counted_amount_spell_text"])
+def _parse_pump_then_delayed_spell_text(text: str) -> Effect | None:
+    """A pump then a delayed sacrifice / exile of the pumped creature, see
+    `ep02_r2_counted_permanents.parse_pump_then_delayed_text`."""
+    from ..ep02_r2_counted_permanents import parse_pump_then_delayed_text
+
+    return parse_pump_then_delayed_text(text, for_spell=True)
+
+
+@ABILITY_TEXT.rung("s40", after=["amounts._parse_counted_amount_ability_text"])
+def _parse_pump_then_delayed_ability_text(text: str) -> AbilityEffect | None:
+    """The ability side of the reader above."""
+    from ..ep02_r2_counted_permanents import parse_pump_then_delayed_text
+
+    return parse_pump_then_delayed_text(text, for_spell=False)
+
+
 @SPELL_TEXT.rung("s21")
 def _parse_discarded_card_value_spell_text(text: str) -> Effect | None:
     """The spell side of the banner above."""

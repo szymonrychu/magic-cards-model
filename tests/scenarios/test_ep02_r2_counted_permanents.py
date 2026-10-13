@@ -737,3 +737,56 @@ def test_quarry_colossus_in_a_shallow_library_puts_the_target_at_the_bottom():
     bears = scenario.find("Grizzly Bears", Zone.BATTLEFIELD, "bob")
     _enter(scenario, "Quarry Colossus", targets=[bears])
     assert scenario.player("bob").library.index(bears) == 3
+
+
+# --------------------------------------------------------------------------
+# "At the beginning of your upkeep, you may have target creature you control get
+# +X/+X until end of turn, where X is the number of creatures you control. If you
+# do, sacrifice that creature at the beginning of the next end step." (Junkyo Bell).
+# CR 603.7 (the delayed trigger is created only if the pump was done), CR 608.2d
+# (the "may"), CR 608.2h (X fixed as the ability resolves).
+# --------------------------------------------------------------------------
+
+
+def _advance_to(scenario, step):
+    """Step the turn forward to `step`, resolving whatever the steps put on the stack."""
+    while True:
+        while scenario.game.stack:
+            scenario.pass_until_resolved()
+        if scenario.step is step:
+            return
+        scenario.advance()
+
+
+def _junkyo_upkeep(creatures, *, take):
+    scenario = _build(
+        ["Junkyo Bell"] + ["Grizzly Bears"] * creatures,
+        ["Grizzly Bears", "Grizzly Bears"],
+    )
+    bears = _tokens(scenario, "Grizzly Bears")[0]
+    scenario.choose_trigger_targets("Junkyo Bell", [bears])
+    scenario.will_take_the_may(take, source="Junkyo Bell")
+    scenario.start_at(Step.UNTAP)
+    scenario.advance()  # untap -> upkeep: the trigger goes on the stack
+    assert scenario.step is Step.UPKEEP
+    _advance_to(scenario, Step.UPKEEP)
+    return scenario, bears
+
+
+@pytest.mark.parametrize("creatures", [1, 3])
+def test_junkyo_bell_pumps_by_the_creature_count_then_sacrifices_it_at_the_end_step(creatures):
+    scenario, bears = _junkyo_upkeep(creatures, take=True)
+    chars = scenario.game.characteristics_of(bears)
+    assert (chars.power, chars.toughness) == (2 + creatures, 2 + creatures)  # bob's not counted
+    assert bears.zone is Zone.BATTLEFIELD
+    _advance_to(scenario, Step.END_STEP)
+    assert bears.zone is Zone.GRAVEYARD
+    assert len(_tokens(scenario, "Grizzly Bears")) == creatures - 1
+
+
+def test_junkyo_bell_declined_neither_pumps_nor_sacrifices():
+    scenario, bears = _junkyo_upkeep(2, take=False)
+    chars = scenario.game.characteristics_of(bears)
+    assert (chars.power, chars.toughness) == (2, 2)
+    _advance_to(scenario, Step.END_STEP)
+    assert bears.zone is Zone.BATTLEFIELD
