@@ -1401,11 +1401,19 @@ _MASS_PUMP_TRAILING_FOR_EACH_RE = re.compile(
 #: The scaled placeholder `_MASS_PUMP_FOR_EACH_RE` leaves in a template -
 #: "+1*X" - substituted with the per-unit amount times the count.
 _SCALED_X_RE = re.compile(r"(?P<unit>[+-]\d+)\*x", re.IGNORECASE)
+#: A "+X" or "-X" stat slot in a pump template ("+X/+X", "+X/+0", "+0/-X").
+_HAVE_PREFIX_RE = re.compile(r"^have\s+", re.IGNORECASE)
+_X_SLOT_RE = re.compile(r"[+-]x\b", re.IGNORECASE)
 
 
 def _substitute_mass_pump_magnitude(template: str, magnitude: int) -> str:
     """ "+X/+X" and "+N*X" placeholders written out for `magnitude`."""
-    literal = re.sub(r"\+x/\+x", f"{magnitude:+d}/{magnitude:+d}", template, flags=re.IGNORECASE)
+    literal = re.sub(
+        r"([+-])x\b",
+        lambda m: f"{-magnitude if m.group(1) == '-' else magnitude:+d}",
+        template,
+        flags=re.IGNORECASE,
+    )
     return _SCALED_X_RE.sub(lambda m: f"{int(m.group('unit')) * magnitude:+d}", literal)
 
 
@@ -1449,6 +1457,10 @@ def _parse_mass_pump_clause(
     # grant `machines/layers.py` reads (checked below) - "Until end of turn,
     # creatures you control gain "{1}: ..."" (Grand Evolution's chapter III)
     # belongs to the quoted-grant reader, not here.
+    # "you may have other attacking creatures get +X/+X ..." (Cultivator of
+    # Blades) reaches this reader as "have ...": the optional wrapper strips
+    # only "you may".
+    text = _HAVE_PREFIX_RE.sub("", text)
     if duration_first := _MASS_PUMP_DURATION_FIRST_RE.fullmatch(text):
         text = f"{duration_first.group('rest')} until end of turn."
     if trailing := _MASS_PUMP_TRAILING_FOR_EACH_RE.search(text):
@@ -1482,7 +1494,7 @@ def _parse_mass_pump_clause(
         else:
             magnitude_expr = own
         template = text[: where_match.start()].rstrip(", ").rstrip(".") + "."
-        if "+x/+x" not in template.lower():
+        if _X_SLOT_RE.search(template) is None:
             return None
     elif for_each is not None:
         multiplier = _for_each_multiplier(for_each.group("each"))

@@ -1,0 +1,138 @@
+{
+  "object": "card",
+  "id": "04a81975-5f0e-4593-a2da-b9689f9a985f",
+  "oracle_id": "dc859ce2-a267-481f-80d5-2cc38935baa0",
+  "multiverse_ids": [
+    513606
+  ],
+  "mtgo_id": 88735,
+  "arena_id": 76522,
+  "tcgplayer_id": 235702,
+  "cardmarket_id": 557635,
+  "name": "Emergent Sequence",
+  "lang": "en",
+  "released_at": "2021-04-23",
+  "uri": "https://api.scryfall.com/cards/04a81975-5f0e-4593-a2da-b9689f9a985f",
+  "scryfall_uri": "https://scryfall.com/card/stx/129/emergent-sequence?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T07:22:23Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/0/4/04a81975-5f0e-4593-a2da-b9689f9a985f.jpg?1783927343",
+    "normal": "https://cards.scryfall.io/normal/front/0/4/04a81975-5f0e-4593-a2da-b9689f9a985f.jpg?1783927343",
+    "large": "https://cards.scryfall.io/large/front/0/4/04a81975-5f0e-4593-a2da-b9689f9a985f.jpg?1783927343",
+    "png": "https://cards.scryfall.io/png/front/0/4/04a81975-5f0e-4593-a2da-b9689f9a985f.png?1783927343",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/0/4/04a81975-5f0e-4593-a2da-b9689f9a985f.jpg?1783927343",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/0/4/04a81975-5f0e-4593-a2da-b9689f9a985f.jpg?1783927343",
+    "thumb": "https://cards.scryfall.io/thumb/front/0/4/04a81975-5f0e-4593-a2da-b9689f9a985f.webp?1783927343",
+    "grid": "https://cards.scryfall.io/grid/front/0/4/04a81975-5f0e-4593-a2da-b9689f9a985f.webp?1783927343",
+    "display": "https://cards.scryfall.io/display/front/0/4/04a81975-5f0e-4593-a2da-b9689f9a985f.webp?1783927343",
+    "art": "https://cards.scryfall.io/art/front/0/4/04a81975-5f0e-4593-a2da-b9689f9a985f.webp?1783927343",
+    "crop": "https://cards.scryfall.io/crop/front/0/4/04a81975-5f0e-4593-a2da-b9689f9a985f.webp?1783927343"
+  },
+  "mana_cost": "{1}{G}",
+  "cmc": 2.0,
+  "type_line": "Sorcery",
+  "oracle_text": "Search your library for a basic land card, put it onto the battlefield tapped, then shuffle. That land becomes a 0/0 green and blue Fractal creature that's still a land. Put a +1/+1 counter on it for each land you had enter the battlefield under your control this turn.",
+  "colors": [
+    "G"
+  ],
+  "color_identity": [
+    "G"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "arena",
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "541c3c28-8747-40e5-a231-8e8f33234859",
+  "set": "stx",
+  "set_name": "Strixhaven: School of Mages",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/541c3c28-8747-40e5-a231-8e8f33234859",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Astx&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/stx?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/04a81975-5f0e-4593-a2da-b9689f9a985f/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Adc859ce2-a267-481f-80d5-2cc38935baa0&unique=prints",
+  "collector_number": "129",
+  "digital": false,
+  "rarity": "uncommon",
+  "watermark": "quandrix",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Andreas Zafiratos",
+  "artist_ids": [
+    "e2f13a9a-57c5-40de-81d4-3b0723899cdf"
+  ],
+  "illustration_id": "4eae76ba-b496-4b1b-8543-16d033b54602",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 11285,
+  "penny_rank": 9189,
+  "preview": {
+    "source": "Numot The Nummy",
+    "source_uri": "https://www.youtube.com/watch?v=4wDbOv3RwX8",
+    "previewed_at": "2021-03-31"
+  },
+  "prices": {
+    "usd": "0.22",
+    "usd_foil": "0.21",
+    "usd_etched": null,
+    "eur": "0.09",
+    "eur_foil": "0.23",
+    "tix": "0.03"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=513606&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DEmergent%2BSequence",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DEmergent%2BSequence",
+    "edhrec": "https://edhrec.com/route/?cc=Emergent+Sequence"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F235702%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=557635&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/88735?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

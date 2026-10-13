@@ -1,0 +1,180 @@
+{
+  "object": "card",
+  "id": "bb95ffc2-ef35-49bf-8211-c5354d176051",
+  "oracle_id": "fa2c984a-6bc1-4ec8-93d7-87f9f06b841e",
+  "multiverse_ids": [
+    636911,
+    636912
+  ],
+  "mtgo_id": 118218,
+  "arena_id": 87351,
+  "tcgplayer_id": 526268,
+  "cardmarket_id": 743393,
+  "name": "Jade Seedstones // Jadeheart Attendant",
+  "lang": "en",
+  "released_at": "2023-11-17",
+  "uri": "https://api.scryfall.com/cards/bb95ffc2-ef35-49bf-8211-c5354d176051",
+  "scryfall_uri": "https://scryfall.com/card/lci/195/jade-seedstones-jadeheart-attendant?utm_source=api",
+  "layout": "transform",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T03:35:50Z",
+  "cmc": 4.0,
+  "type_line": "Artifact // Artifact Creature \u2014 Golem",
+  "color_identity": [
+    "G"
+  ],
+  "keywords": [
+    "Craft",
+    "Transform"
+  ],
+  "card_faces": [
+    {
+      "object": "card_face",
+      "name": "Jade Seedstones",
+      "mana_cost": "{3}{G}",
+      "type_line": "Artifact",
+      "oracle_text": "When this artifact enters, distribute three +1/+1 counters among one, two, or three target creatures you control.\nCraft with creature {5}{G}{G} ({5}{G}{G}, Exile this artifact, Exile a creature you control or a creature card from your graveyard: Return this card transformed under its owner's control. Craft only as a sorcery.)",
+      "colors": [
+        "G"
+      ],
+      "artist": "Alexandre Honor\u00e9",
+      "artist_id": "82ae431c-d7fa-438b-9611-01f704c3a958",
+      "illustration_id": "abfc52f9-8b91-427d-ad11-a3f80c22db85",
+      "image_uris": {
+        "small": "https://cards.scryfall.io/small/front/b/b/bb95ffc2-ef35-49bf-8211-c5354d176051.jpg?1783913750",
+        "normal": "https://cards.scryfall.io/normal/front/b/b/bb95ffc2-ef35-49bf-8211-c5354d176051.jpg?1783913750",
+        "large": "https://cards.scryfall.io/large/front/b/b/bb95ffc2-ef35-49bf-8211-c5354d176051.jpg?1783913750",
+        "png": "https://cards.scryfall.io/png/front/b/b/bb95ffc2-ef35-49bf-8211-c5354d176051.png?1783913750",
+        "art_crop": "https://cards.scryfall.io/art_crop/front/b/b/bb95ffc2-ef35-49bf-8211-c5354d176051.jpg?1783913750",
+        "border_crop": "https://cards.scryfall.io/border_crop/front/b/b/bb95ffc2-ef35-49bf-8211-c5354d176051.jpg?1783913750",
+        "thumb": "https://cards.scryfall.io/thumb/front/b/b/bb95ffc2-ef35-49bf-8211-c5354d176051.webp?1783913750",
+        "grid": "https://cards.scryfall.io/grid/front/b/b/bb95ffc2-ef35-49bf-8211-c5354d176051.webp?1783913750",
+        "display": "https://cards.scryfall.io/display/front/b/b/bb95ffc2-ef35-49bf-8211-c5354d176051.webp?1783913750",
+        "art": "https://cards.scryfall.io/art/front/b/b/bb95ffc2-ef35-49bf-8211-c5354d176051.webp?1783913750",
+        "crop": "https://cards.scryfall.io/crop/front/b/b/bb95ffc2-ef35-49bf-8211-c5354d176051.webp?1783913750"
+      }
+    },
+    {
+      "object": "card_face",
+      "name": "Jadeheart Attendant",
+      "mana_cost": "",
+      "type_line": "Artifact Creature \u2014 Golem",
+      "oracle_text": "When this creature enters, you gain life equal to the mana value of the exiled card used to craft it.",
+      "colors": [
+        "G"
+      ],
+      "color_indicator": [
+        "G"
+      ],
+      "power": "7",
+      "toughness": "7",
+      "flavor_text": "When the merfolk fled underground, they brought the life force of the jungle with them.",
+      "artist": "Alexandre Honor\u00e9",
+      "artist_id": "82ae431c-d7fa-438b-9611-01f704c3a958",
+      "illustration_id": "18a550e4-463b-471a-ba48-94a7ca5f8ed9",
+      "image_uris": {
+        "small": "https://cards.scryfall.io/small/back/b/b/bb95ffc2-ef35-49bf-8211-c5354d176051.jpg?1783913750",
+        "normal": "https://cards.scryfall.io/normal/back/b/b/bb95ffc2-ef35-49bf-8211-c5354d176051.jpg?1783913750",
+        "large": "https://cards.scryfall.io/large/back/b/b/bb95ffc2-ef35-49bf-8211-c5354d176051.jpg?1783913750",
+        "png": "https://cards.scryfall.io/png/back/b/b/bb95ffc2-ef35-49bf-8211-c5354d176051.png?1783913750",
+        "art_crop": "https://cards.scryfall.io/art_crop/back/b/b/bb95ffc2-ef35-49bf-8211-c5354d176051.jpg?1783913750",
+        "border_crop": "https://cards.scryfall.io/border_crop/back/b/b/bb95ffc2-ef35-49bf-8211-c5354d176051.jpg?1783913750",
+        "thumb": "https://cards.scryfall.io/thumb/back/b/b/bb95ffc2-ef35-49bf-8211-c5354d176051.webp?1783913750",
+        "grid": "https://cards.scryfall.io/grid/back/b/b/bb95ffc2-ef35-49bf-8211-c5354d176051.webp?1783913750",
+        "display": "https://cards.scryfall.io/display/back/b/b/bb95ffc2-ef35-49bf-8211-c5354d176051.webp?1783913750",
+        "art": "https://cards.scryfall.io/art/back/b/b/bb95ffc2-ef35-49bf-8211-c5354d176051.webp?1783913750",
+        "crop": "https://cards.scryfall.io/crop/back/b/b/bb95ffc2-ef35-49bf-8211-c5354d176051.webp?1783913750"
+      }
+    }
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "arena",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "70169a6e-89d1-4a3a-aef7-3152958d55ac",
+  "set": "lci",
+  "set_name": "The Lost Caverns of Ixalan",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/70169a6e-89d1-4a3a-aef7-3152958d55ac",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Alci&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/lci?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/bb95ffc2-ef35-49bf-8211-c5354d176051/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Afa2c984a-6bc1-4ec8-93d7-87f9f06b841e&unique=prints",
+  "collector_number": "195",
+  "digital": false,
+  "rarity": "uncommon",
+  "artist": "Alexandre Honor\u00e9",
+  "artist_ids": [
+    "82ae431c-d7fa-438b-9611-01f704c3a958"
+  ],
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 22644,
+  "preview": {
+    "source": "TulayangOfficial",
+    "source_uri": "https://t.bilibili.com/858691273925591043",
+    "previewed_at": "2023-10-31"
+  },
+  "prices": {
+    "usd": "0.10",
+    "usd_foil": "0.21",
+    "usd_etched": null,
+    "eur": "0.04",
+    "eur_foil": "0.05",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=636911&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DJade%2BSeedstones%2B%252F%252F%2BJadeheart%2BAttendant",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DJade%2BSeedstones%2B%252F%252F%2BJadeheart%2BAttendant",
+    "edhrec": "https://edhrec.com/route/?cc=Jade+Seedstones"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F526268%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=743393&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/118218?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

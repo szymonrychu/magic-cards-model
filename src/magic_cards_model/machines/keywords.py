@@ -323,6 +323,9 @@ def executes(keyword: str) -> bool:
         "mentor",
         "graft",
         "backup",
+        # CR 702.123a: `ep02_r3_counter_amounts.fabricate_ability`
+        # (`legacy_keywords.LEGACY_EXPANSIONS`).
+        "fabricate",
         "champion",
         # CR 701.45a: assemble is the keyword action `Game.assembling_count` asks
         # the replacement layer about (Steamflogger Boss doubles it).

@@ -1,0 +1,151 @@
+{
+  "object": "card",
+  "id": "52faa78e-252e-465b-91b5-6f64d828da81",
+  "oracle_id": "e0edb2fc-2533-407c-85e5-4337f4233f05",
+  "multiverse_ids": [
+    696450
+  ],
+  "mtgo_id": 138529,
+  "tcgplayer_id": 624336,
+  "cardmarket_id": 818870,
+  "name": "Kaya, Geist Hunter",
+  "lang": "en",
+  "released_at": "2025-04-11",
+  "uri": "https://api.scryfall.com/cards/52faa78e-252e-465b-91b5-6f64d828da81",
+  "scryfall_uri": "https://scryfall.com/card/tdc/294/kaya-geist-hunter?utm_source=api",
+  "layout": "normal",
+  "highres_image": false,
+  "image_status": "lowres",
+  "image_updated_at": "2026-07-13T01:43:46Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/5/2/52faa78e-252e-465b-91b5-6f64d828da81.jpg?1783907026",
+    "normal": "https://cards.scryfall.io/normal/front/5/2/52faa78e-252e-465b-91b5-6f64d828da81.jpg?1783907026",
+    "large": "https://cards.scryfall.io/large/front/5/2/52faa78e-252e-465b-91b5-6f64d828da81.jpg?1783907026",
+    "png": "https://cards.scryfall.io/png/front/5/2/52faa78e-252e-465b-91b5-6f64d828da81.png?1783907026",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/5/2/52faa78e-252e-465b-91b5-6f64d828da81.jpg?1783907026",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/5/2/52faa78e-252e-465b-91b5-6f64d828da81.jpg?1783907026",
+    "thumb": "https://cards.scryfall.io/thumb/front/5/2/52faa78e-252e-465b-91b5-6f64d828da81.webp?1783907026",
+    "grid": "https://cards.scryfall.io/grid/front/5/2/52faa78e-252e-465b-91b5-6f64d828da81.webp?1783907026",
+    "display": "https://cards.scryfall.io/display/front/5/2/52faa78e-252e-465b-91b5-6f64d828da81.webp?1783907026",
+    "art": "https://cards.scryfall.io/art/front/5/2/52faa78e-252e-465b-91b5-6f64d828da81.webp?1783907026",
+    "crop": "https://cards.scryfall.io/crop/front/5/2/52faa78e-252e-465b-91b5-6f64d828da81.webp?1783907026"
+  },
+  "mana_cost": "{1}{W}{B}",
+  "cmc": 3.0,
+  "type_line": "Legendary Planeswalker \u2014 Kaya",
+  "oracle_text": "+1: Creatures you control gain deathtouch until end of turn. Put a +1/+1 counter on up to one target creature token you control.\n\u22122: Until end of turn, if one or more tokens would be created under your control, twice that many of those tokens are created instead.\n\u22126: Exile all cards from all graveyards, then create a 1/1 white Spirit creature token with flying for each card exiled this way.",
+  "loyalty": "3",
+  "colors": [
+    "B",
+    "W"
+  ],
+  "color_identity": [
+    "B",
+    "W"
+  ],
+  "keywords": [],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "639b70ba-a421-47aa-b356-3b261444e79a",
+      "component": "token",
+      "name": "Spirit",
+      "type_line": "Token Creature \u2014 Spirit",
+      "uri": "https://api.scryfall.com/cards/639b70ba-a421-47aa-b356-3b261444e79a"
+    },
+    {
+      "object": "related_card",
+      "id": "52faa78e-252e-465b-91b5-6f64d828da81",
+      "component": "combo_piece",
+      "name": "Kaya, Geist Hunter",
+      "type_line": "Legendary Planeswalker \u2014 Kaya",
+      "uri": "https://api.scryfall.com/cards/52faa78e-252e-465b-91b5-6f64d828da81"
+    }
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": false,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "bca9779c-0a0b-4ac1-8794-f3fc25549cf4",
+  "set": "tdc",
+  "set_name": "Tarkir: Dragonstorm Commander",
+  "set_type": "commander",
+  "set_uri": "https://api.scryfall.com/sets/bca9779c-0a0b-4ac1-8794-f3fc25549cf4",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Atdc&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/tdc?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/52faa78e-252e-465b-91b5-6f64d828da81/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Ae0edb2fc-2533-407c-85e5-4337f4233f05&unique=prints",
+  "collector_number": "294",
+  "digital": false,
+  "rarity": "mythic",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Ryan Pancoast",
+  "artist_ids": [
+    "89cc9475-dda2-4d13-bf88-54b92867a25c"
+  ],
+  "illustration_id": "aa680658-9131-401b-8ac5-6b3bff6bf40c",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "edhrec_rank": 4510,
+  "penny_rank": 9341,
+  "prices": {
+    "usd": "0.38",
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": "0.42",
+    "eur_foil": null,
+    "tix": "0.44"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=696450&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DKaya%252C%2BGeist%2BHunter",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DKaya%252C%2BGeist%2BHunter",
+    "edhrec": "https://edhrec.com/route/?cc=Kaya%2C+Geist+Hunter"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F624336%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=818870&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/138529?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

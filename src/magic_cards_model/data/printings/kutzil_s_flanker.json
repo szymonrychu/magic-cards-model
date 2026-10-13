@@ -1,0 +1,143 @@
+{
+  "object": "card",
+  "id": "d1201811-54ab-4c4e-b6e1-19b0d07e5ede",
+  "oracle_id": "ba557e19-a409-4c02-a9ac-a8fb77762e43",
+  "multiverse_ids": [
+    636711
+  ],
+  "mtgo_id": 117818,
+  "arena_id": 87151,
+  "tcgplayer_id": 525619,
+  "cardmarket_id": 743956,
+  "name": "Kutzil's Flanker",
+  "lang": "en",
+  "released_at": "2023-11-17",
+  "uri": "https://api.scryfall.com/cards/d1201811-54ab-4c4e-b6e1-19b0d07e5ede",
+  "scryfall_uri": "https://scryfall.com/card/lci/20/kutzils-flanker?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T03:36:50Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/d/1/d1201811-54ab-4c4e-b6e1-19b0d07e5ede.jpg?1783913810",
+    "normal": "https://cards.scryfall.io/normal/front/d/1/d1201811-54ab-4c4e-b6e1-19b0d07e5ede.jpg?1783913810",
+    "large": "https://cards.scryfall.io/large/front/d/1/d1201811-54ab-4c4e-b6e1-19b0d07e5ede.jpg?1783913810",
+    "png": "https://cards.scryfall.io/png/front/d/1/d1201811-54ab-4c4e-b6e1-19b0d07e5ede.png?1783913810",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/d/1/d1201811-54ab-4c4e-b6e1-19b0d07e5ede.jpg?1783913810",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/d/1/d1201811-54ab-4c4e-b6e1-19b0d07e5ede.jpg?1783913810",
+    "thumb": "https://cards.scryfall.io/thumb/front/d/1/d1201811-54ab-4c4e-b6e1-19b0d07e5ede.webp?1783913810",
+    "grid": "https://cards.scryfall.io/grid/front/d/1/d1201811-54ab-4c4e-b6e1-19b0d07e5ede.webp?1783913810",
+    "display": "https://cards.scryfall.io/display/front/d/1/d1201811-54ab-4c4e-b6e1-19b0d07e5ede.webp?1783913810",
+    "art": "https://cards.scryfall.io/art/front/d/1/d1201811-54ab-4c4e-b6e1-19b0d07e5ede.webp?1783913810",
+    "crop": "https://cards.scryfall.io/crop/front/d/1/d1201811-54ab-4c4e-b6e1-19b0d07e5ede.webp?1783913810"
+  },
+  "mana_cost": "{2}{W}",
+  "cmc": 3.0,
+  "type_line": "Creature \u2014 Cat Warrior",
+  "oracle_text": "Flash\nWhen this creature enters, choose one \u2014\n\u2022 Put a +1/+1 counter on this creature for each creature that left the battlefield under your control this turn.\n\u2022 You gain 2 life and scry 2.\n\u2022 Exile target player's graveyard.",
+  "power": "3",
+  "toughness": "1",
+  "colors": [
+    "W"
+  ],
+  "color_identity": [
+    "W"
+  ],
+  "keywords": [
+    "Flash",
+    "Scry"
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "arena",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "70169a6e-89d1-4a3a-aef7-3152958d55ac",
+  "set": "lci",
+  "set_name": "The Lost Caverns of Ixalan",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/70169a6e-89d1-4a3a-aef7-3152958d55ac",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Alci&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/lci?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/d1201811-54ab-4c4e-b6e1-19b0d07e5ede/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Aba557e19-a409-4c02-a9ac-a8fb77762e43&unique=prints",
+  "collector_number": "20",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Michele Giorgi",
+  "artist_ids": [
+    "60ff7459-c81d-41e6-bec1-4264c2161014"
+  ],
+  "illustration_id": "d94ad4a5-a66a-4297-8d5d-3066d7cd8203",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 9439,
+  "penny_rank": 2984,
+  "preview": {
+    "source": "TheGamer",
+    "source_uri": "https://www.thegamer.com/exclusive-magic-the-gathering-mtg-lost-caverns-of-ixalan-reveal-kutzil-flanker-corpses-lost/",
+    "previewed_at": "2023-10-31"
+  },
+  "prices": {
+    "usd": "0.48",
+    "usd_foil": "0.65",
+    "usd_etched": null,
+    "eur": "0.36",
+    "eur_foil": "0.97",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=636711&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DKutzil%2527s%2BFlanker",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DKutzil%2527s%2BFlanker",
+    "edhrec": "https://edhrec.com/route/?cc=Kutzil%27s+Flanker"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F525619%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=743956&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/117818?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}
