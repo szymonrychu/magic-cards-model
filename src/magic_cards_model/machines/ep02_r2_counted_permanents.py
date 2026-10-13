@@ -258,7 +258,7 @@ def for_each_create_as_tail_form(text: str) -> str | None:
     tokens are created together (CR 111.1). `None` for anything not led by a
     "for each <group>, create ..." sentence."""
     stripped = text.strip()
-    if not stripped[:9].lower() == "for each ":
+    if stripped[:9].lower() != "for each ":
         return None
     match = _FOR_EACH_CREATE_RE.match(stripped)
     if match is None:
@@ -284,7 +284,6 @@ def parse_for_each_create_text(text: str, *, for_spell: bool):
     ):
         return None
     return effect
-
 
 
 # --------------------------------------------------------------------------

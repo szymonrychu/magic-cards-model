@@ -13829,6 +13829,12 @@ def read_cant_lose_cant_win(text: str) -> GameOutcomeProhibition | None:
     )
 
 
+from ..ep02_r2_counted_permanents import (  # noqa: E402
+    LAYER_SELF_PUMP_GROUP_RE as _R2_SELF_PUMP_GROUP_RE,
+)
+from ..ep02_r2_counted_permanents import (  # noqa: E402
+    layer_group_count_factory as _r2_group_count_factory,
+)
 from ._common import _COLOR_WORDS, _KNOWN_KEYWORDS, _YOU_CONTROL_ATTACHED_RE  # noqa: E402
 from .apply import EffectBuilder, LayerContext  # noqa: E402
 from .model import (  # noqa: E402
@@ -13942,11 +13948,4 @@ from .model import (  # noqa: E402
     set_controller,
     set_power_toughness,
     set_power_toughness_to_mana_value,
-)
-
-from ..ep02_r2_counted_permanents import (  # noqa: E402
-    LAYER_SELF_PUMP_GROUP_RE as _R2_SELF_PUMP_GROUP_RE,
-)
-from ..ep02_r2_counted_permanents import (  # noqa: E402
-    layer_group_count_factory as _r2_group_count_factory,
 )

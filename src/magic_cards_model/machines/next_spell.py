@@ -166,7 +166,9 @@ def next_spell_keyword_grants_for(
     ]
 
 
-def used_up_cost_reductions_for(game: object, spell: "CardState", caster: str) -> "list[SpellCostReductionGrant]":
+def used_up_cost_reductions_for(
+    game: object, spell: "CardState", caster: str
+) -> "list[SpellCostReductionGrant]":
     """The one-shot ("the next `<quality>` spell") cost reductions `spell`, which
     `caster` is casting, answers for - used up by it as it becomes cast (CR 601.2i)."""
     turn = getattr(game, "turn", None)

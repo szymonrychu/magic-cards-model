@@ -588,8 +588,12 @@ def add_mana_for_each_effect(text: str) -> "Callable[[Game, Any], None] | None":
     return effect
 
 
-def add_mana_times(game: "Game", controller: str, symbols: str, times: int) -> None:
-    """`symbols` into the controller's mana pool `times` times."""
+def add_mana_times(
+    game: "Game", controller: str, symbols: str, times: int, *, retain_until: Any = None
+) -> None:
+    """`symbols` into the controller's mana pool `times` times, each unit tagged
+    `retain_until` (`ManaRetentionScope`) when the text says the player does not
+    lose it as steps and phases end (CR 500.5)."""
     from ..models.card import Color
     from .effects._common import _MANA_SYMBOL_RE
 
@@ -597,7 +601,7 @@ def add_mana_times(game: "Game", controller: str, symbols: str, times: int) -> N
     pool = game.player(controller).mana_pool
     for _ in range(max(times, 0)):
         for color in colors:
-            pool.add(color)
+            pool.add(color, retain_until=retain_until)
 
 
 # --------------------------------------------------------------------------

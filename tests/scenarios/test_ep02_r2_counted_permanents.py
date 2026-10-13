@@ -21,6 +21,7 @@ import pytest
 from magic_cards_model.machines import Step
 from magic_cards_model.machines.combat import has_keyword
 from magic_cards_model.models import Zone
+from magic_cards_model.models.card import Color
 from magic_cards_model.models.token import create_predefined_tokens
 from tests.scenarios.harness import Scenario
 
@@ -503,7 +504,6 @@ def test_bloodtithe_harvester_kills_a_creature_when_twice_the_blood_tokens_cover
     assert bears.zone is Zone.GRAVEYARD
 
 
-
 # --------------------------------------------------------------------------
 # Counted legendary creatures / Allies as the count of a larger instruction
 # (The Ring Goes South, Bala Ged Thief, Vastwood Animist)
@@ -520,7 +520,14 @@ def test_ring_goes_south_puts_one_land_per_legendary_creature_onto_the_battlefie
             ["Forest"] * 4 + ["Isamaru, Hound of Konda", "Kaza, Roil Chaser"][:legends],
             ["Isamaru, Hound of Konda", "Kaza, Roil Chaser"],
             hand=["The Ring Goes South"],
-            alice_library=["Grizzly Bears", "Island", "Grizzly Bears", "Plains", "Swamp", "Mountain"],
+            alice_library=[
+                "Grizzly Bears",
+                "Island",
+                "Grizzly Bears",
+                "Plains",
+                "Swamp",
+                "Mountain",
+            ],
         )
     )
     lands_before = len(_lands(scenario))
@@ -631,9 +638,7 @@ def test_mire_s_toll_reveals_as_many_cards_as_swamps_and_discards_the_one_chosen
 
 
 def test_mire_s_toll_with_a_hand_no_bigger_than_the_swamps_reveals_it_all():
-    scenario = _main(
-        _build(["Swamp"] * 3, [], hand=["Mire's Toll"], bob_hand=["Forest", "Island"])
-    )
+    scenario = _main(_build(["Swamp"] * 3, [], hand=["Mire's Toll"], bob_hand=["Forest", "Island"]))
     island = scenario.find("Island", Zone.HAND, "bob")
     scenario.will_choose_cards(island, username="alice", times=None)
     _cast(scenario, "Mire's Toll", targets=["bob"])
@@ -732,7 +737,9 @@ def test_quarry_colossus_tucks_the_target_beneath_the_top_plains_count_cards(pla
 
 def test_quarry_colossus_in_a_shallow_library_puts_the_target_at_the_bottom():
     scenario = _main(
-        _build(["Plains"] * 7, ["Grizzly Bears"], hand=["Quarry Colossus"], bob_library=["Forest"] * 3)
+        _build(
+            ["Plains"] * 7, ["Grizzly Bears"], hand=["Quarry Colossus"], bob_library=["Forest"] * 3
+        )
     )
     bears = scenario.find("Grizzly Bears", Zone.BATTLEFIELD, "bob")
     _enter(scenario, "Quarry Colossus", targets=[bears])
@@ -857,3 +864,42 @@ def test_kaza_makes_only_the_next_instant_or_sorcery_cheaper_by_the_wizard_count
     assert sum(1 for island in islands if island.tapped) == paid  # opponent's Wizards: not counted
     _cast(scenario, "Divination")
     assert all(island.tapped for island in islands)  # the second one cost the full {2}{U}
+
+
+# --------------------------------------------------------------------------
+# The Bloodsky Massacre: I - a 2/3 Demon Berserker token; II - "Whenever a Berserker
+# attacks this turn, you draw a card and you lose 1 life."; III - "Add {R} for each
+# Berserker you control. Until end of turn, you don't lose this mana as steps and
+# phases end." CR 714.2 (chapters), CR 106.4 / 500.5 (mana empties as steps end,
+# unless an effect says otherwise), CR 514.2 (until end of turn ends in cleanup).
+# --------------------------------------------------------------------------
+
+
+def _resolve_everything(scenario):
+    scenario.game.put_triggers_on_stack()
+    while scenario.game.stack:
+        scenario.pass_until_resolved()
+
+
+@pytest.mark.parametrize("extra", [0, 2])
+def test_bloodsky_massacre_chapter_three_adds_red_per_berserker_and_keeps_it_all_turn(extra):
+    scenario = _main(
+        _build(["Swamp", "Mountain", "Island"], ["Grizzly Bears"], hand=["The Bloodsky Massacre"])
+    )
+    _cast(scenario, "The Bloodsky Massacre")  # enters with a lore counter: chapter I
+    _resolve_everything(scenario)
+    berserkers = _tokens(scenario, "Demon Berserker")
+    assert len(berserkers) == 1
+    assert "Berserker" in scenario.game.characteristics_of(berserkers[0]).subtypes
+    for _ in range(extra):
+        create_predefined_tokens(scenario.game, "Treasure", "alice")  # not Berserkers
+    scenario.game.saga_lore_step()  # II
+    _resolve_everything(scenario)
+    scenario.game.saga_lore_step()  # III
+    _resolve_everything(scenario)
+    assert scenario.player("alice").mana_pool.floating.get(Color.RED, 0) == 1  # bob's: no
+    scenario.advance()  # the mana survives the end of the step it was added in
+    assert scenario.player("alice").mana_pool.floating.get(Color.RED, 0) == 1
+    _advance_to(scenario, Step.END_STEP)
+    scenario.advance()  # cleanup: "until end of turn" is over
+    assert scenario.player("alice").mana_pool.floating.get(Color.RED, 0) == 0

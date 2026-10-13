@@ -276,7 +276,18 @@ def _targeted_pump(subject: str, power: int, toughness: int):
     return render
 
 
-def _counted_sentence(sentence: str) -> "tuple[_ObjectCount, Callable[[int], object]] | None":
+#: "Until end of turn, you don't lose this mana as steps and phases end." - the
+#: sentence after an "Add {M} for each ..." one that keeps its mana (CR 500.5).
+_KEEP_MANA_RE = re.compile(
+    r"^until end of (?P<scope>turn|combat), you don['’]?t lose this mana "
+    r"as steps and phases end\.?$",
+    re.IGNORECASE,
+)
+
+
+def _counted_sentence(
+    sentence: str, retention: object = None
+) -> "tuple[_ObjectCount, Callable[[int], object]] | None":
     """`(count, render)` for one sentence that prints its count after the verb,
     or `None`. `render(n)` is the same sentence with the count written in as a
     plain number (and `None` when that number means the sentence does nothing)."""
@@ -303,7 +314,7 @@ def _counted_sentence(sentence: str) -> "tuple[_ObjectCount, Callable[[int], obj
 
         def add(n: int):
             def run(game: "Game", obj: object) -> None:
-                add_mana_times(game, controller_of(game, obj), symbols, n)
+                add_mana_times(game, controller_of(game, obj), symbols, n, retain_until=retention)
 
             return run if n else None
 
@@ -356,6 +367,33 @@ def _counted_sentence(sentence: str) -> "tuple[_ObjectCount, Callable[[int], obj
     return None
 
 
+def _fold_mana_retention(sentences: list[str]):
+    """`(sentences without the retention sentences that follow a counted "Add {M} for
+    each ..." sentence, {that sentence: its ManaRetentionScope})`. A retention
+    sentence after anything else stays where it is, for the readers that know it."""
+    from ..models.mana import ManaRetentionScope
+
+    kept: list[str] = []
+    retentions: dict[str, object] = {}
+    for sentence in sentences:
+        match = _KEEP_MANA_RE.fullmatch(sentence.strip())
+        if (
+            match is not None
+            and kept
+            and kept[-1] not in retentions
+            and _counted_sentence(kept[-1], ManaRetentionScope.END_OF_TURN) is not None
+            and kept[-1].lower().startswith(("add ", "then add "))
+        ):
+            retentions[kept[-1]] = (
+                ManaRetentionScope.END_OF_TURN
+                if match.group("scope").lower() == "turn"
+                else ManaRetentionScope.END_OF_COMBAT
+            )
+            continue
+        kept.append(sentence)
+    return kept, retentions
+
+
 def parse_counted_amount_text(text: str, *, for_spell: bool):
     """A body whose sentences print their count after the verb ("Each opponent
     loses 1 life for each creature you control", "You draw X cards and you lose
@@ -377,7 +415,10 @@ def parse_counted_amount_text(text: str, *, for_spell: bool):
     sentences = _plain_resolution_sentences(_strip_non_effect_preamble(text))
     if for_spell and any(_ABILITY_LINE_RE.match(sentence) for sentence in sentences):
         return None
-    if not any(_counted_sentence(sentence) is not None for sentence in sentences):
+    sentences, retentions = _fold_mana_retention(sentences)
+    if not any(
+        _counted_sentence(sentence, retentions.get(sentence)) is not None for sentence in sentences
+    ):
         return None
 
     @functools.cache
@@ -405,7 +446,7 @@ def parse_counted_amount_text(text: str, *, for_spell: bool):
         return True
 
     for sentence in sentences:
-        counted = _counted_sentence(sentence)
+        counted = _counted_sentence(sentence, retentions.get(sentence))
         if counted is None:
             plain.append(sentence)
             continue

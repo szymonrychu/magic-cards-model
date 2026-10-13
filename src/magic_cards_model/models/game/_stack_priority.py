@@ -77,8 +77,8 @@ from ...machines.modes import (
 from ...machines.monarch import monarch_effect_for
 from ...machines.next_spell import (
     next_spell_keyword_grants_for,
-    used_up_cost_reductions_for,
     spell_has_quality,
+    used_up_cost_reductions_for,
 )
 from ...machines.priority import PriorityOutcome
 from ...machines.replacement import (
