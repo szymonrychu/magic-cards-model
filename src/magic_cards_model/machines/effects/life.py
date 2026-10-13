@@ -1417,8 +1417,8 @@ def _parse_referenced_stat_text(text: str, *, for_spell: bool) -> Effect | Abili
     return referenced_stat_effect(text, for_spell=for_spell)
 
 
-@ABILITY_TEXT.rung("s1", for_spell=False, after=["life._parse_referenced_stat_text"])
-@SPELL_TEXT.rung("s1", for_spell=True, after=["life._parse_referenced_stat_text"])
+@ABILITY_TEXT.rung("s39", for_spell=False)
+@SPELL_TEXT.rung("s22", for_spell=True)
 def _parse_moved_card_stat_text(text: str, *, for_spell: bool) -> Effect | AbilityEffect | None:
     """ "Create X tokens, where X is the sacrificed creature's toughness",
     "deals damage equal to that card's power" (the card it just returned),

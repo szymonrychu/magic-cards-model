@@ -31,7 +31,7 @@ object nothing moved counts as zero.
 import functools
 import re
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import TYPE_CHECKING, Any
 from uuid import UUID
 
@@ -86,7 +86,17 @@ def card_snapshot(game: "Game", card: CardState) -> Moved:
             subtypes=frozenset(sub.lower() for sub in characteristics.subtypes),
         )
         counters = 0
-        controller = game.controller_of(card).username if card.zone is Zone.STACK else None
+        controller = None
+        if card.zone is Zone.STACK:
+            controller = game.controller_of(card).username
+            record = game.cast_record_of(card)
+            if record is not None:
+                # CR 202.3e: on the stack an {X} in the cost is the value chosen for it.
+                base = replace(
+                    base,
+                    mana_value=base.mana_value
+                    + (card.mana_cost or "").count("{X}") * record.x_value,
+                )
     return Moved(
         card_id=base.card_id,
         power=base.power,
@@ -135,6 +145,8 @@ class Phrase:
     exile), "anaphor" (what an earlier part of the text or the trigger event
     named)."""
     stat: str
+    spell: bool = False
+    """The phrase names a spell ("that spell's mana value")."""
 
 
 @functools.cache
@@ -156,7 +168,7 @@ def parse_moved_phrase(phrase: str) -> Phrase | None:
             if "exiled" in subject
             else "anaphor"
         )
-        return Phrase(anchor, match.group("stat"))
+        return Phrase(anchor, match.group("stat"), spell=subject.endswith("spell"))
     match = _MOVED_OF_RE.fullmatch(text)
     if match is not None:
         subject = match.group("subject")
@@ -167,7 +179,7 @@ def parse_moved_phrase(phrase: str) -> Phrase | None:
             if "exiled" in subject
             else "anaphor"
         )
-        return Phrase(anchor, match.group("stat"))
+        return Phrase(anchor, match.group("stat"), spell=subject.endswith("spell"))
     ref = parse_stat_phrase(text)
     if ref is None:
         return None
@@ -198,9 +210,7 @@ def _cost_exiled_referent(game: "Game", stack_object: Any) -> Moved | None:
     return None
 
 
-def _referent_for(
-    game: "Game", stack_object: Any, state: "State", anchor: str
-) -> Referent | None:
+def _referent_for(game: "Game", stack_object: Any, state: "State", anchor: str) -> Referent | None:
     """The object an amount phrase refers to: what the text itself moved
     first, then what the cost paid, then the trigger event's subject."""
     if state.referent is not None:
@@ -243,7 +253,7 @@ class State:
         return target
 
 
-Step = Callable[["Game", Any, State], bool]
+ResolutionStep = Callable[["Game", Any, State], bool]
 """One part of the text. Returns `False` to end the resolution (a declined
 "you may", a missing target)."""
 
@@ -268,7 +278,8 @@ _PUT_ON_TOP_RE = re.compile(
     re.IGNORECASE,
 )
 _EXILE_GRAVEYARD_RE = re.compile(
-    r"^exile target (?:(?P<quality>.+?) )?card from (?:your|a) graveyard"
+    r"^exile target (?:(?P<quality>.+?) )?card from (?:your|a|an opponent's) graveyard"
+    r"(?: that was put there from the battlefield this turn)?"
     r"(?:,? then (?P<rest>.+))?$",
     re.IGNORECASE,
 )
@@ -339,7 +350,7 @@ def _step_counter_spell(game: "Game", stack_object: Any, state: State) -> bool:
     return True
 
 
-def _step_delegate_to_target(opening: str, *, for_spell: bool) -> Step | None:
+def _step_delegate_to_target(opening: str, *, for_spell: bool) -> ResolutionStep | None:
     """ "Exile target creature or planeswalker.": the established reader does
     the move, this step fixes the target's characteristics and counters first
     (CR 608.2h)."""
@@ -383,7 +394,7 @@ def _step_exile_top(game: "Game", stack_object: Any, state: State) -> bool:
     return True
 
 
-def _step_sacrifice(restriction_text: str, *, may: bool, for_spell: bool) -> Step | None:
+def _step_sacrifice(restriction_text: str, *, may: bool, for_spell: bool) -> ResolutionStep | None:
     from .decisions import Decision, DecisionKind, source_id_of
     from .effects._common import _permanent_id_and_name
     from .effects.modal import _choose_permanents_to_sacrifice
@@ -437,12 +448,14 @@ _IF_RETURNED_RE = re.compile(
 )
 _IF_IT_IS_RE = re.compile(r"^if it's an? (?P<kind>[a-z]+) card,? (?P<rest>.+)$", re.IGNORECASE)
 _AMOUNT_VAR = r"(?P<stat>.+?)"
+_AMOUNT_VAR_B = r"(?P<stat_b>.+)"
 
 _GAIN_DRAW_RE = re.compile(
     rf"^you gain x life and draw x cards, where x is {_AMOUNT_VAR}$", re.IGNORECASE
 )
 _LOSE_GAIN_RE = re.compile(
-    rf"^target (?P<who>player|opponent) loses x life and you gain x life, where x is {_AMOUNT_VAR}$",
+    r"^target (?P<who>player|opponent) loses x life and you gain x life, "
+    rf"where x is {_AMOUNT_VAR}$",
     re.IGNORECASE,
 )
 _LIFE_EQUAL_RE = re.compile(
@@ -452,7 +465,9 @@ _LIFE_EQUAL_RE = re.compile(
 )
 _DRAW_RE = re.compile(rf"^(?:you )?draw cards equal to {_AMOUNT_VAR}$", re.IGNORECASE)
 _DAMAGE_RE = re.compile(
-    rf"^(?P<source>.+?) deals damage equal to {_AMOUNT_VAR} to (?P<to>.+)$", re.IGNORECASE
+    rf"^(?P<source>.+?) deals damage equal to {_AMOUNT_VAR} to (?P<to>.+)$"
+    rf"|^(?P<source_b>.+?) deals damage to (?P<to_b>.+?) equal to {_AMOUNT_VAR_B}$",
+    re.IGNORECASE,
 )
 _DOUBLED_RE = re.compile(
     r"^if the sacrificed creature was an? (?P<kind>[a-z]+),? .+? deals twice that much "
@@ -476,7 +491,8 @@ _TOKEN_SIZE_RE = re.compile(
     re.IGNORECASE,
 )
 _PUMP_RE = re.compile(
-    r"^(?P<subject>target creature|this creature|it|.+?) gets (?P<power>[+-](?:x|\d+))/"
+    r"^(?P<subject>target creature|this creature|this permanent|"
+    r"(?-i:[A-Z][^ ]*(?: [A-Z][^ ]*)*)) gets (?P<power>[+-](?:x|\d+))/"
     r"(?P<toughness>[+-](?:x|y|\d+)) until end of turn, "
     r"where x is (?P<xstat>.+?)(?: and y is (?P<ystat>.+))?$",
     re.IGNORECASE,
@@ -496,7 +512,7 @@ def _amount(game: "Game", stack_object: Any, state: State, phrase: Phrase) -> in
     return moved_stat_value(_referent_for(game, stack_object, state, phrase.anchor), phrase.stat)
 
 
-def _step_gain_and_draw(phrase: Phrase) -> Step:
+def _step_gain_and_draw(phrase: Phrase) -> ResolutionStep:
     def step(game: "Game", stack_object: Any, state: State) -> bool:
         amount = _amount(game, stack_object, state, phrase)
         game.gain_life(game.controller_of(stack_object), amount)
@@ -506,7 +522,7 @@ def _step_gain_and_draw(phrase: Phrase) -> Step:
     return step
 
 
-def _step_lose_and_gain(phrase: Phrase) -> Step:
+def _step_lose_and_gain(phrase: Phrase) -> ResolutionStep:
     def step(game: "Game", stack_object: Any, state: State) -> bool:
         amount = _amount(game, stack_object, state, phrase)
         for target in game.resolve_targets(stack_object):
@@ -518,7 +534,7 @@ def _step_lose_and_gain(phrase: Phrase) -> Step:
     return step
 
 
-def _step_life_equal(who: str, gains: bool, phrase: Phrase) -> Step:
+def _step_life_equal(who: str, gains: bool, phrase: Phrase) -> ResolutionStep:
     def step(game: "Game", stack_object: Any, state: State) -> bool:
         amount = _amount(game, stack_object, state, phrase)
         if who.lower() == "you":
@@ -536,16 +552,20 @@ def _step_life_equal(who: str, gains: bool, phrase: Phrase) -> Step:
     return step
 
 
-def _step_draw(phrase: Phrase) -> Step:
+def _step_draw(phrase: Phrase) -> ResolutionStep:
     def step(game: "Game", stack_object: Any, state: State) -> bool:
-        game.draw_cards(game.controller_of(stack_object), _amount(game, stack_object, state, phrase))
+        game.draw_cards(
+            game.controller_of(stack_object), _amount(game, stack_object, state, phrase)
+        )
         return True
 
     return step
 
 
-_EACH_OPPOSING_CREATURE_RE = re.compile(
-    r"^each creature (?:your opponents|an opponent|you don't) control(?:s)?$", re.IGNORECASE
+_EACH_RE = re.compile(
+    r"^each (?P<kinds>(?:creature|planeswalker)(?: and each (?:creature|planeswalker))*)"
+    r"(?: (?P<who>your opponents|an opponent|you don't) controls?)?$",
+    re.IGNORECASE,
 )
 _ITS_CONTROLLER_RE = re.compile(
     r"^(?:its|that (?:spell|creature|permanent)'s) controller$", re.IGNORECASE
@@ -555,7 +575,7 @@ _TARGET_RE = re.compile(r"^(?:up to one )?(?:another )?target .+$|^any target$",
 
 @dataclass
 class _Damage:
-    """"<Source> deals damage equal to <stat> to <recipient>."; `doubled_for`
+    """ "<Source> deals damage equal to <stat> to <recipient>."; `doubled_for`
     is the kind named by a following "If the sacrificed creature was a <kind>,
     ... deals twice that much damage instead.\""""
 
@@ -566,18 +586,26 @@ class _Damage:
     def __call__(self, game: "Game", stack_object: Any, state: State) -> bool:
         referent = _referent_for(game, stack_object, state, self.phrase.anchor)
         amount = moved_stat_value(referent, self.phrase.stat)
-        if self.doubled_for is not None and referent is not None and referent.is_a(self.doubled_for):
+        if (
+            self.doubled_for is not None
+            and referent is not None
+            and referent.is_a(self.doubled_for)
+        ):
             amount *= 2
         source = _source_card(game, stack_object)
         recipient = self.recipient
-        if _EACH_OPPOSING_CREATURE_RE.fullmatch(recipient):
+        if (each := _EACH_RE.fullmatch(recipient)) is not None:
+            kinds = {word.lower() for word in re.findall(r"creature|planeswalker", each["kinds"])}
             controller = game.controller_of(stack_object).username
-            for opponent in _opponents(game, controller):
-                for creature in game.permanents_controlled_by(opponent):
-                    if "creature" in {
-                        str(kind.value).lower() for kind in game.characteristics_of(creature).types
-                    }:
-                        game.deal_damage(creature, amount, source=source)
+            if each["who"] is None:
+                holders = [player.username for player in game.players]
+            else:
+                holders = _opponents(game, controller)
+            for holder in holders:
+                for permanent in list(game.permanents_controlled_by(holder)):
+                    types = {str(k.value).lower() for k in game.characteristics_of(permanent).types}
+                    if types & kinds:
+                        game.deal_damage(permanent, amount, source=source)
         elif _ITS_CONTROLLER_RE.fullmatch(recipient):
             owner = None if referent is None else getattr(referent, "controller", None)
             if owner is not None:
@@ -596,11 +624,11 @@ def _step_tokens(
     *,
     size_stats: tuple[Phrase, Phrase] | None = None,
     sized_like_count: bool = False,
-) -> Step | None:
+) -> ResolutionStep | None:
     """Tokens made by `desc`: X of them (`phrase` sizes the count), or one
     X/X (`sized_like_count`), or one sized by two stats (`size_stats`)."""
-    from .effects.tokens import _token_definition_from_words
     from ..models.token import create_tokens
+    from .effects.tokens import _token_definition_from_words
 
     def build(count_or_size: int, toughness: int | None = None) -> Any:
         words = desc.strip()
@@ -644,7 +672,7 @@ def _step_pump(
     toughness: str,
     x_phrase: Phrase,
     y_phrase: Phrase | None,
-) -> Step | None:
+) -> ResolutionStep | None:
     """ "<Target creature | This creature> gets +X/+Y until end of turn, where X
     is ...": the pump with the numbers written in, made by the layer system
     the way every other "until end of turn" pump is (CR 611.2)."""
@@ -684,7 +712,7 @@ def _step_pump(
     return step
 
 
-def _step_counters(kind: str, on: str, phrase: Phrase) -> Step:
+def _step_counters(kind: str, on: str, phrase: Phrase) -> ResolutionStep:
     def step(game: "Game", stack_object: Any, state: State) -> bool:
         amount = _amount(game, stack_object, state, phrase)
         if on.lower() == "it":
@@ -693,18 +721,14 @@ def _step_counters(kind: str, on: str, phrase: Phrase) -> Step:
             recipient = None if subject_id is None else game.find_by_id(subject_id)
         else:
             recipient = state.next_target(game, stack_object)
-        if (
-            amount > 0
-            and isinstance(recipient, CardState)
-            and recipient.zone is Zone.BATTLEFIELD
-        ):
+        if amount > 0 and isinstance(recipient, CardState) and recipient.zone is Zone.BATTLEFIELD:
             game.add_counters(recipient, kind, amount)
         return True
 
     return step
 
 
-def _guarded(step: Step, test: Callable[[State], bool]) -> Step:
+def _guarded(step: ResolutionStep, test: Callable[[State], bool]) -> ResolutionStep:
     def guarded(game: "Game", stack_object: Any, state: State) -> bool:
         if not test(state):
             return True
@@ -722,32 +746,54 @@ def _clean(sentence: str) -> str:
     return " ".join(sentence.replace("’", "'").split()).rstrip(".").strip()
 
 
-def _amount_step(sentence: str, *, for_spell: bool) -> Step | None:
-    """One sentence that spends an amount (no opener)."""
+def _amount_step(sentence: str, *, for_spell: bool, opener: bool) -> ResolutionStep | None:
+    """One sentence that spends an amount.
+
+    With no opener in the text, an amount that refers to "its" / "that
+    creature's" / "that spell's" is the trigger event's or the target's, which
+    the established readers own (damage "equal to its power", "put X counters
+    ... where X is that spell's mana value"); only the shapes none of them
+    read are taken here: a target pumped by its own power, counters on a
+    target or on the entering creature, and life and cards from a creature
+    that died."""
+
+    def barred(phrase: Phrase, *, allowed: bool) -> bool:
+        return not opener and phrase.anchor == "anaphor" and (not allowed or phrase.spell)
+
     if (m := _GAIN_DRAW_RE.fullmatch(sentence)) and (p := _phrase(m.group("stat"))):
-        return _step_gain_and_draw(p)
+        return None if barred(p, allowed=True) else _step_gain_and_draw(p)
     if (m := _LOSE_GAIN_RE.fullmatch(sentence)) and (p := _phrase(m.group("stat"))):
-        return _step_lose_and_gain(p)
+        return None if barred(p, allowed=True) else _step_lose_and_gain(p)
     if (m := _LIFE_EQUAL_RE.fullmatch(sentence)) and (p := _phrase(m.group("stat"))):
+        if barred(p, allowed=False):
+            return None
         return _step_life_equal(m.group("who"), m.group("verb").lower().startswith("gain"), p)
     if (m := _DRAW_RE.fullmatch(sentence)) and (p := _phrase(m.group("stat"))):
-        return _step_draw(p)
-    if (m := _DAMAGE_RE.fullmatch(sentence)) and (p := _phrase(m.group("stat"))):
-        recipient = m.group("to").strip()
-        if not (
-            _EACH_OPPOSING_CREATURE_RE.fullmatch(recipient)
+        return None if barred(p, allowed=False) else _step_draw(p)
+    if (m := _DAMAGE_RE.fullmatch(sentence)) and (
+        p := _phrase(m.group("stat") or m.group("stat_b"))
+    ):
+        recipient = (m.group("to") or m.group("to_b")).strip()
+        if barred(p, allowed=False) or not (
+            _EACH_RE.fullmatch(recipient)
             or _ITS_CONTROLLER_RE.fullmatch(recipient)
             or _TARGET_RE.fullmatch(recipient)
         ):
             return None
         return _Damage(p, recipient)
     if (m := _TOKENS_X_RE.fullmatch(sentence)) and (p := _phrase(m.group("stat"))):
+        if barred(p, allowed=False):
+            return None
         return _step_tokens(m.group("desc"), m.group("tail"), p)
     if (m := _TOKEN_XX_RE.fullmatch(sentence)) and (p := _phrase(m.group("stat"))):
+        if barred(p, allowed=False):
+            return None
         return _step_tokens(m.group("desc"), None, p, sized_like_count=True)
     if (m := _PUMP_RE.fullmatch(sentence)) and (px := _phrase(m.group("xstat"))):
         py = _phrase(m.group("ystat")) if m.group("ystat") else None
         if m.group("ystat") and py is None:
+            return None
+        if barred(px, allowed=m.group("subject").lower() == "target creature"):
             return None
         return _step_pump(
             m.group("subject"),
@@ -757,11 +803,13 @@ def _amount_step(sentence: str, *, for_spell: bool) -> Step | None:
             py,
         )
     if (m := _COUNTERS_ON_RE.fullmatch(sentence)) and (p := _phrase(m.group("stat"))):
-        return _step_counters(m.group("kind"), m.group("on"), p)
+        return (
+            None if barred(p, allowed=True) else _step_counters(m.group("kind"), m.group("on"), p)
+        )
     return None
 
 
-def _opening_step(sentence: str, *, for_spell: bool) -> tuple[Step, str | None] | None:
+def _opening_step(sentence: str, *, for_spell: bool) -> tuple[ResolutionStep, str | None] | None:
     """An opening sentence that moves something, and the rest of the sentence
     when it carries a ", then ..." tail."""
     if _RETURN_RE.fullmatch(sentence):
@@ -777,12 +825,32 @@ def _opening_step(sentence: str, *, for_spell: bool) -> tuple[Step, str | None] 
     if _EXILE_TOP_RE.fullmatch(sentence):
         return _step_exile_top, None
     if m := _SACRIFICE_RE.fullmatch(sentence):
-        step = _step_sacrifice(m.group("restriction"), may=bool(m.group("may")), for_spell=for_spell)
+        step = _step_sacrifice(
+            m.group("restriction"), may=bool(m.group("may")), for_spell=for_spell
+        )
         return None if step is None else (step, None)
     if _EXILE_TARGET_RE.fullmatch(sentence):
         step = _step_delegate_to_target(f"{sentence}.", for_spell=for_spell)
         return None if step is None else (step, None)
     return None
+
+
+#: Cheap literal gates ahead of any regex: the text names a characteristic and
+#: an object some earlier part of the text or its cost moved.
+_GATE_STATS = ("power", "toughness", "mana value", "counters on it")
+_GATE_REFERENCES = (
+    "sacrificed",
+    "exiled",
+    "exile",
+    "that card",
+    "that spell",
+    "card returned",
+    "card you",
+    "counters on it",
+    "its power",
+    "its toughness",
+    "that creature",
+)
 
 
 @functools.cache
@@ -792,7 +860,9 @@ def moved_card_stat_effect(text: str, *, for_spell: bool) -> Callable[["Game", A
     lowered = text.lower()
     if " equal to " not in lowered and "where x is" not in lowered:
         return None
-    if not any(word in lowered for word in ("power", "toughness", "mana value", "counters on")):
+    if not any(word in lowered for word in _GATE_STATS):
+        return None
+    if not any(word in lowered for word in _GATE_REFERENCES):
         return None
     from .effects.text import _plain_resolution_sentences, _strip_non_effect_preamble
 
@@ -805,10 +875,14 @@ def moved_card_stat_effect(text: str, *, for_spell: bool) -> Callable[["Game", A
     sentences = [s for s in sentences if s and not s.lower().startswith("fuse")]
     if not sentences:
         return None
-    if sentences[-1].lower().startswith("exile ") and not _EXILE_TARGET_RE.fullmatch(sentences[-1]):
-        if not _EXILE_GRAVEYARD_RE.fullmatch(sentences[-1]):
-            return None  # "Exile <this spell>.": the spell reader strips it and asks again
-    steps: list[Step] = []
+    last = sentences[-1]
+    if (
+        last.lower().startswith("exile ")
+        and not _EXILE_TARGET_RE.fullmatch(last)
+        and not _EXILE_GRAVEYARD_RE.fullmatch(last)
+    ):
+        return None  # "Exile <this spell>.": the spell reader strips it and asks again
+    steps: list[ResolutionStep] = []
     uses_amount = False
     # An opening sentence, possibly with a ", then ..." tail.
     opening = _opening_step(sentences[0], for_spell=for_spell)
@@ -848,7 +922,7 @@ def moved_card_stat_effect(text: str, *, for_spell: bool) -> Callable[["Game", A
             step = _step_tokens(made.group("desc"), None, None, size_stats=(power, toughness))
             position += 1
         else:
-            step = _amount_step(sentence, for_spell=for_spell)
+            step = _amount_step(sentence, for_spell=for_spell, opener=opening is not None)
         if step is None:
             return None
         if isinstance(step, _Damage):

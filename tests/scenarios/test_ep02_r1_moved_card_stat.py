@@ -20,13 +20,18 @@ this file:
   before the ability is on the stack; "the sacrificed creature" and "the
   exiled card" are read from what the cost paid.
 - **CR 202.3** - a spell's or card's mana value comes from its mana cost.
-- **CR 701.6a** - to counter a spell is to cancel it; a spell that cannot be
-  countered still has been referred to by the rest of the text.
+- **CR 701.6a** - to counter a spell is to cancel it, removing it from the
+  stack; it is put into its owner's graveyard.
+- **CR 202.3e** - an {X} in a spell's mana cost is the number chosen for it
+  while the spell is on the stack.
+- **CR 400.7** - a card that changed zones is a new object: a creature card
+  in a graveyard has its printed power and toughness, not the counters it died
+  with.
 - **CR 701.21a** - to sacrifice a permanent, its controller moves it to the
   graveyard; the controller picks it.
 - **CR 107.1b** - a calculation that would be negative uses zero instead.
-- **CR 111.1** - a token is created under the control of the player the
-  instruction names.
+- **CR 111.2** - the player who creates a token is its owner, and it enters
+  under that player's control.
 """
 
 import pytest
@@ -159,7 +164,7 @@ def test_blood_chin_fanatic_cannot_sacrifice_a_non_warrior() -> None:
     scenario = _scenario(["Blood-Chin Fanatic", "Grizzly Bears", *MANA])
     fanatic = scenario.creature("Blood-Chin Fanatic", "alice")
     bears = scenario.creature("Grizzly Bears", "alice")
-    with pytest.raises(Exception):
+    with pytest.raises(ValueError):
         scenario.activate(fanatic, sacrificing=[bears], targets=["bob"], auto=True)
     assert bears.zone is Zone.BATTLEFIELD
 
@@ -190,7 +195,7 @@ def test_dina_gets_the_sacrificed_creatures_power_until_end_of_turn() -> None:
 def test_dina_cannot_sacrifice_herself_for_her_own_cost() -> None:
     scenario = _scenario(["Dina, Soul Steeper", *MANA])
     dina = scenario.creature("Dina, Soul Steeper", "alice")
-    with pytest.raises(Exception):
+    with pytest.raises(ValueError):
         scenario.activate(dina, sacrificing=[dina], auto=True)
 
 
@@ -225,7 +230,7 @@ def test_geralf_cannot_sacrifice_a_token() -> None:
     (token,) = create_tokens(
         scenario.game, TokenDefinition(subtypes=("Bear",), power=2, toughness=2), "alice", 1
     )
-    with pytest.raises(Exception):
+    with pytest.raises(ValueError):
         scenario.activate(geralf, sacrificing=[token], auto=True)
 
 
@@ -610,9 +615,7 @@ def test_lie_in_wait_returns_the_card_and_deals_damage_equal_to_its_power() -> N
 
 
 def test_lie_in_wait_damage_is_the_cards_printed_power_not_a_creature_it_was() -> None:
-    scenario = _scenario(
-        [*MANA], ["Craw Wurm"], hand=["Lie in Wait"], graveyard=["Grizzly Bears"]
-    )
+    scenario = _scenario([*MANA], ["Craw Wurm"], hand=["Lie in Wait"], graveyard=["Grizzly Bears"])
     bears = scenario.find("Grizzly Bears", Zone.GRAVEYARD, "alice")
     wurm = scenario.creature("Craw Wurm", "bob")
     scenario.cast_and_resolve("Lie in Wait", username="alice", targets=[bears, wurm], auto=True)
@@ -621,15 +624,26 @@ def test_lie_in_wait_damage_is_the_cards_printed_power_not_a_creature_it_was() -
     assert wurm.damage == 2
 
 
+def test_lie_in_wait_the_card_gone_before_resolution_deals_no_damage() -> None:
+    scenario = _scenario(
+        [*MANA], ["Wurmcoil Engine"], hand=["Lie in Wait"], graveyard=["Serra Angel"]
+    )
+    angel = scenario.find("Serra Angel", Zone.GRAVEYARD, "alice")
+    wurm = scenario.creature("Wurmcoil Engine", "bob")
+    scenario.cast_onto_stack("Lie in Wait", username="alice", targets=[angel, wurm], auto=True)
+    scenario.game.exile_permanent(angel)
+    scenario.resolve_top()
+    assert angel.zone is Zone.EXILE
+    assert wurm.damage == 0
+
+
 def test_pyretic_rebirth_damage_is_the_returned_cards_mana_value() -> None:
     scenario = _scenario(
         [*MANA], ["Wurmcoil Engine"], hand=["Pyretic Rebirth"], graveyard=["Serra Angel"]
     )
     angel = scenario.find("Serra Angel", Zone.GRAVEYARD, "alice")
     wurm = scenario.creature("Wurmcoil Engine", "bob")
-    scenario.cast_and_resolve(
-        "Pyretic Rebirth", username="alice", targets=[angel, wurm], auto=True
-    )
+    scenario.cast_and_resolve("Pyretic Rebirth", username="alice", targets=[angel, wurm], auto=True)
     assert angel.zone is Zone.HAND
     assert wurm.damage == 5
 
@@ -723,9 +737,7 @@ def test_dead_reckoning_puts_the_card_on_top_and_deals_its_power() -> None:
 
 
 def test_dead_reckoning_declining_does_nothing() -> None:
-    scenario = _scenario(
-        [*MANA], ["Craw Wurm"], hand=["Dead Reckoning"], graveyard=["Serra Angel"]
-    )
+    scenario = _scenario([*MANA], ["Craw Wurm"], hand=["Dead Reckoning"], graveyard=["Serra Angel"])
     angel = scenario.find("Serra Angel", Zone.GRAVEYARD, "alice")
     wurm = scenario.creature("Craw Wurm", "bob")
     scenario.will_take_the_may(False)
@@ -769,7 +781,9 @@ def test_morbid_bloom_exiles_from_any_graveyard_and_makes_saprolings() -> None:
 def test_ritual_of_the_returned_makes_a_zombie_with_the_cards_power_and_toughness() -> None:
     scenario = _scenario([*MANA], hand=["Ritual of the Returned"], graveyard=["Serra Angel"])
     angel = scenario.find("Serra Angel", Zone.GRAVEYARD, "alice")
-    scenario.cast_and_resolve("Ritual of the Returned", username="alice", targets=[angel], auto=True)
+    scenario.cast_and_resolve(
+        "Ritual of the Returned", username="alice", targets=[angel], auto=True
+    )
     assert angel.zone is Zone.EXILE
     (zombie,) = [p for p in scenario.game.battlefield if "Zombie" in p.name]
     assert (zombie.power, zombie.toughness) == (4, 4)
@@ -842,7 +856,7 @@ def test_essence_backlash_counters_a_creature_spell_and_hits_its_controller() ->
 
 def test_essence_backlash_cannot_target_a_noncreature_spell() -> None:
     scenario, spell = _countered("Divination", "Essence Backlash")
-    with pytest.raises(Exception):
+    with pytest.raises(ValueError):
         scenario.cast("Essence Backlash", username="bob", targets=[spell])
 
 
@@ -885,6 +899,18 @@ def test_spell_swindle_makes_treasures_equal_to_the_spells_mana_value() -> None:
     assert all(scenario.game.controller_of(t).username == "bob" for t in treasures)
 
 
+def test_spell_swindle_counts_the_x_chosen_for_a_spell_on_the_stack() -> None:
+    scenario = _scenario([*MANA], [*MANA], hand=["Fireball"], bob_hand=["Spell Swindle"])
+    casting = scenario.cast("Fireball", "alice", targets=["bob"])
+    casting.x_value = 3
+    scenario.auto_pay(casting.begin_paying(), "alice")
+    fireball = scenario.put_on_stack(casting)
+    scenario.pass_priority("alice")
+    _answer(scenario, "Spell Swindle", fireball)
+    assert fireball.zone is Zone.GRAVEYARD
+    assert len([p for p in scenario.game.battlefield if "Treasure" in p.name]) == 4
+
+
 def test_spell_swindle_a_free_spell_makes_no_treasure() -> None:
     scenario, memnite = _countered("Memnite", "Spell Swindle")
     _answer(scenario, "Spell Swindle", memnite)
@@ -921,3 +947,128 @@ def test_flay_essence_exiling_a_creature_with_no_counters_gains_nothing() -> Non
     scenario.cast_and_resolve("Flay Essence", username="alice", targets=[bears], auto=True)
     assert bears.zone is Zone.EXILE
     assert _life(scenario, "alice") == 20
+
+
+# ---------------------------------------------------------------------------
+# The same readers on printings that are not in the listed set
+# (Call for Blood, Tend the Pests, Corpse Lunge, Corpse
+# Explosion, Morgue Burst, Lobelia Sackville-Baggins)
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    "name",
+    [
+        "Call for Blood",
+        "Tend the Pests",
+        "Corpse Lunge",
+        "Corpse Explosion",
+        "Morgue Burst",
+        "Lobelia Sackville-Baggins",
+    ],
+)
+def test_the_proof_printings_are_handled(name: str) -> None:
+    clauses = classify_clauses(card(name))
+    assert all(clause.category == HANDLED for clause in clauses), [
+        (clause.text, clause.category) for clause in clauses if clause.category != HANDLED
+    ]
+
+
+def test_call_for_blood_shrinks_the_target_by_the_sacrificed_power() -> None:
+    scenario = _scenario([*MANA, "Serra Angel"], ["Craw Wurm"], hand=["Call for Blood"])
+    angel = scenario.creature("Serra Angel", "alice")
+    wurm = scenario.creature("Craw Wurm", "bob")
+    scenario.cast_and_resolve(
+        "Call for Blood", username="alice", targets=[wurm], sacrificing=[angel], auto=True
+    )
+    assert angel.zone is Zone.GRAVEYARD
+    assert wurm.zone is Zone.GRAVEYARD
+
+
+def test_call_for_blood_a_small_sacrifice_only_shrinks() -> None:
+    scenario = _scenario([*MANA, "Grizzly Bears"], ["Craw Wurm"], hand=["Call for Blood"])
+    bears = scenario.creature("Grizzly Bears", "alice")
+    wurm = scenario.creature("Craw Wurm", "bob")
+    scenario.cast_and_resolve(
+        "Call for Blood", username="alice", targets=[wurm], sacrificing=[bears], auto=True
+    )
+    assert wurm.zone is Zone.BATTLEFIELD
+    assert scenario.game.power_of(wurm) == 4
+    assert scenario.game.toughness_of(wurm) == 2
+
+
+def test_tend_the_pests_makes_pests_equal_to_the_sacrificed_power() -> None:
+    scenario = _scenario([*MANA, "Serra Angel"], hand=["Tend the Pests"])
+    angel = scenario.creature("Serra Angel", "alice")
+    scenario.cast_and_resolve("Tend the Pests", username="alice", sacrificing=[angel], auto=True)
+    assert len([p for p in scenario.game.battlefield if "Pest" in p.name]) == 4
+
+
+def test_corpse_lunge_deals_damage_equal_to_the_exiled_cards_power() -> None:
+    scenario = _scenario(
+        [*MANA], ["Wurmcoil Engine"], hand=["Corpse Lunge"], graveyard=["Serra Angel"]
+    )
+    angel = scenario.find("Serra Angel", Zone.GRAVEYARD, "alice")
+    wurm = scenario.creature("Wurmcoil Engine", "bob")
+    scenario.cast_and_resolve(
+        "Corpse Lunge", username="alice", targets=[wurm], exiling=[angel], auto=True
+    )
+    assert angel.zone is Zone.EXILE
+    assert wurm.damage == 4
+
+
+def test_corpse_lunge_a_zero_power_card_deals_no_damage() -> None:
+    scenario = _scenario(
+        [*MANA], ["Wurmcoil Engine"], hand=["Corpse Lunge"], graveyard=["Wall of Omens"]
+    )
+    wall = scenario.find("Wall of Omens", Zone.GRAVEYARD, "alice")
+    wurm = scenario.creature("Wurmcoil Engine", "bob")
+    scenario.cast_and_resolve(
+        "Corpse Lunge", username="alice", targets=[wurm], exiling=[wall], auto=True
+    )
+    assert wurm.damage == 0
+
+
+def test_corpse_explosion_hits_every_creature() -> None:
+    scenario = _scenario(
+        [*MANA, "Wurmcoil Engine"],
+        ["Wurmcoil Engine"],
+        hand=["Corpse Explosion"],
+        graveyard=["Serra Angel"],
+    )
+    angel = scenario.find("Serra Angel", Zone.GRAVEYARD, "alice")
+    mine = scenario.creature("Wurmcoil Engine", "alice")
+    theirs = scenario.creature("Wurmcoil Engine", "bob")
+    scenario.cast_and_resolve("Corpse Explosion", username="alice", exiling=[angel], auto=True)
+    assert angel.zone is Zone.EXILE
+    assert mine.damage == 4
+    assert theirs.damage == 4
+
+
+def test_morgue_burst_returns_the_card_and_deals_damage_equal_to_its_power() -> None:
+    scenario = _scenario([*MANA], hand=["Morgue Burst"], graveyard=["Serra Angel"])
+    angel = scenario.find("Serra Angel", Zone.GRAVEYARD, "alice")
+    scenario.cast_and_resolve("Morgue Burst", username="alice", targets=[angel, "bob"], auto=True)
+    assert angel.zone is Zone.HAND
+    assert _life(scenario, "bob") == 16
+
+
+def test_lobelia_cannot_target_a_card_that_was_not_put_there_this_turn() -> None:
+    scenario = _scenario([], [], hand=["Lobelia Sackville-Baggins"], bob_graveyard=["Serra Angel"])
+    angel = scenario.find("Serra Angel", Zone.GRAVEYARD, "bob")
+    with pytest.raises(ValueError):
+        scenario.choose_trigger_targets("Lobelia Sackville-Baggins", [angel])
+
+
+def test_lobelia_exiles_a_card_and_makes_treasures_equal_to_its_power() -> None:
+    scenario = _scenario([], ["Serra Angel"], hand=["Lobelia Sackville-Baggins"])
+    bob_angel = scenario.creature("Serra Angel", "bob")
+    scenario.game.destroy(bob_angel)
+    scenario.state_based_actions()
+    assert bob_angel.zone is Zone.GRAVEYARD
+    scenario.choose_trigger_targets("Lobelia Sackville-Baggins", [bob_angel])
+    scenario.put_onto_battlefield("Lobelia Sackville-Baggins", "alice")
+    scenario.game.put_triggers_on_stack()
+    scenario.pass_until_resolved()
+    assert bob_angel.zone is Zone.EXILE
+    assert len([p for p in scenario.game.battlefield if "Treasure" in p.name]) == 4
