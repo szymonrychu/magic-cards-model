@@ -205,6 +205,40 @@ def _parse_switch_power_toughness_then_draw_clause(text: str) -> Effect | None:
     return sequence(create_continuous_effect, draw_cards(count))
 
 
+#: "Until end of turn, you gain control of target creature and it gains haste."
+#: (Grab the Reins's first mode): the leading duration covers both verbs, so the
+#: grant is the same one Threaten-style text prints with its own "until end of
+#: turn" (CR 611.2a). Rewritten to that printed shape and read by the established
+#: clause readers.
+_UNTIL_EOT_GAIN_CONTROL_AND_GRANT_RE = re.compile(
+    r"^until end of turn, (?P<control>you gain control of target [^.,]*?) "
+    r"and (?P<grant>(?:it|that creature) gains [a-z][a-z, ]*?)\.?$",
+    re.IGNORECASE,
+)
+
+
+def until_eot_gain_control_and_grant_text(text: str) -> str | None:
+    """`text` rewritten with the grant's own duration, or `None`."""
+    if "until end of turn, " not in text.lower():
+        return None
+    match = _UNTIL_EOT_GAIN_CONTROL_AND_GRANT_RE.fullmatch(" ".join(text.strip().split()))
+    if match is None:
+        return None
+    return (
+        f"Until end of turn, {match.group('control')} and {match.group('grant')} until end of turn."
+    )
+
+
+@SPELL_TEXT.rung("s12")
+def _parse_until_eot_gain_control_and_grant_text(text: str) -> Effect | None:
+    """`until_eot_gain_control_and_grant_text`'s shape, read as the same text
+    with the grant's duration printed."""
+    from .dispatch import parse_mixed_effect_for_spell
+
+    rewritten = until_eot_gain_control_and_grant_text(text)
+    return None if rewritten is None else parse_mixed_effect_for_spell(rewritten)
+
+
 def layer_context_for(game: "Game", controller: Player) -> LayerContext:
     """The graveyards a resolving effect may need to count (CR 205.2a card types)."""
     everyone: list[CardState] = []

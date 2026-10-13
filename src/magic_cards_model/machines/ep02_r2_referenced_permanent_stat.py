@@ -35,7 +35,6 @@ from ..models.player import Player
 from ..models.zone import Zone
 from .amount_sentences import (
     apply_life,
-    parse_cards_clause,
     parse_life_clause,
     split_where_x,
 )
@@ -46,9 +45,8 @@ from .ep02_r1_moved_card_stat import (
     State,
     _amount_step,
     _clean,
-    _opening_step,
-    _step_stat_sized_token,
     _referent_for,
+    _step_stat_sized_token,
     card_snapshot,
     moved_stat_value,
     parse_moved_phrase,
@@ -57,11 +55,9 @@ from .ep02_r2_card_mana_value import (
     RunState,
     _bottom,
     _card_of,
-    _guarded,
     _name_and_id,
     _opener,
     _step_cast_free,
-    _step_event_spell,
     _step_put_in_hand,
     _unwrap_then,
 )
@@ -867,7 +863,7 @@ def _expand(sentence: str) -> list[str]:
             sentence = match.group("rest")
             break
     pieces: list[str] = []
-    for part in re.split(r", then ", sentence):
+    for part in re.split(r", then (?!put up to x land)", sentence, flags=re.IGNORECASE):
         pieces.extend(_LEADING_LIFE_RE.split(part))
     expanded: list[str] = []
     for piece in pieces:

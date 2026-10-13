@@ -1163,6 +1163,11 @@ _EXCEPT_SUBTYPE_PART_RE = re.compile(
     r"(?P<subtype>[A-Z][a-z]+) in addition to its other (?:creature )?types$"
 )
 _EXCEPT_HAS_PART_RE = re.compile(r"^(?:it )?has (?P<keywords>[a-z][a-z ]*)$", re.IGNORECASE)
+#: A bare size in the list - Soul Separator's "except it's 1/1, it's a Spirit in
+#: addition to its other types, and it has flying" (CR 707.9b).
+_EXCEPT_SIZE_PART_RE = re.compile(
+    r"^(?:it['’]?s|it is) (?P<power>\d+)/(?P<toughness>\d+)$", re.IGNORECASE
+)
 #: CR 707.9a's quoted form, stashed out of the list before it is split on
 #: commas (Delina: `it has "At end of combat, exile this token."`).
 _EXCEPT_QUOTE_RE = re.compile(r'["\u201c](?P<ability>[^"\u201d]+)["\u201d]')
@@ -1199,6 +1204,8 @@ def _read_copy_exception_list(except_text: str | None) -> _CopyExceptionList | N
             subtype = typed.group("subtype")
             if typed.group("power") is not None:
                 power, toughness = int(typed.group("power")), int(typed.group("toughness"))
+        elif (sized := _EXCEPT_SIZE_PART_RE.fullmatch(part)) is not None and power is None:
+            power, toughness = int(sized.group("power")), int(sized.group("toughness"))
         elif (granted := _EXCEPT_HAS_QUOTE_PART_RE.fullmatch(part)) is not None:
             abilities.append(quoted[int(granted.group("index"))])
         elif (has := _EXCEPT_HAS_PART_RE.fullmatch(part)) is not None:

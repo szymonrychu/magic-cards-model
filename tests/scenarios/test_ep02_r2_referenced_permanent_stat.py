@@ -344,9 +344,7 @@ def test_keldon_flamesage_cannot_exile_a_spell_above_x() -> None:
 
 
 def test_durkwood_tracker_fights_an_attacker_with_each_ones_power() -> None:
-    scenario = _scenario(
-        ["Durkwood Tracker", "Serra Angel"], step=Step.BEGINNING_OF_COMBAT
-    )
+    scenario = _scenario(["Durkwood Tracker", "Serra Angel"], step=Step.BEGINNING_OF_COMBAT)
     (angel,) = _attack(scenario, "Serra Angel")
     tracker = scenario.creature("Durkwood Tracker", "alice")
     _activate_all(scenario, tracker, targets=[angel])
@@ -366,9 +364,7 @@ def test_durkwood_tracker_reads_its_power_with_a_counter_on_it() -> None:
 
 
 def test_durkwood_tracker_does_nothing_once_it_has_left_the_battlefield() -> None:
-    scenario = _scenario(
-        ["Durkwood Tracker", "Serra Angel"], step=Step.BEGINNING_OF_COMBAT
-    )
+    scenario = _scenario(["Durkwood Tracker", "Serra Angel"], step=Step.BEGINNING_OF_COMBAT)
     (angel,) = _attack(scenario, "Serra Angel")
     tracker = scenario.creature("Durkwood Tracker", "alice")
     scenario.activate(tracker, auto=True, targets=[angel])
@@ -671,7 +667,6 @@ def _saddle(scenario, mount, *creatures):
 
 
 def test_the_gitrog_sacrifices_a_saddler_and_draws_and_puts_lands_by_its_power() -> None:
-    from magic_cards_model.machines.keywords import saddle_activation
 
     scenario = _scenario(
         ["The Gitrog, Ravenous Ride", "Serra Angel"],
@@ -686,16 +681,15 @@ def test_the_gitrog_sacrifices_a_saddler_and_draws_and_puts_lands_by_its_power()
     scenario.attack_with(gitrog)
     scenario.no_blocks()
     scenario.combat_damage()
-    scenario.will_choose_cards(
-        *scenario.player("alice").hand[:3], source="The Gitrog, Ravenous Ride"
-    )
+    hand_forests = list(scenario.player("alice").hand)
+    scenario.will_take_the_may(True, source="The Gitrog, Ravenous Ride")
+    scenario.will_choose_cards(angel, source="The Gitrog, Ravenous Ride")
+    scenario.will_choose_cards(*hand_forests, source="The Gitrog, Ravenous Ride")
     _resolve_all(scenario)
     assert angel.zone is Zone.GRAVEYARD
     hand = scenario.player("alice").hand
-    forests = [c for c in scenario.all_card_states() if c.name == "Forest" and c.zone is Zone.BATTLEFIELD]
     assert [c.name for c in hand] == ["Lightning Bolt"] * 4  # drew X = 4
-    assert len(forests) == 3  # all three Forests, tapped
-    assert all(f.tapped for f in forests)
+    assert all(f.zone is Zone.BATTLEFIELD and f.tapped for f in hand_forests)  # tapped
 
 
 # ---------------------------------------------------------------------------
