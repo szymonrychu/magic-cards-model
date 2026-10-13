@@ -1183,3 +1183,91 @@ def test_lantern_flare_cleave_is_an_alternative_cost_offered_beside_the_mana_cos
     (option,) = [option for option in casting.cast_options if option.keyword == "Cleave"]
     assert str(option.cost) == "{X}{R}{W}"
     assert not option.pays_mana_cost
+
+
+# Proof printings for cleave (not listed, not in any api deck): Winged Portent
+# ("Draw a card for each creature you control [with flying]"), Path of Peril
+# ("Destroy all creatures [with mana value 2 or less]") and Parasitic Grasp
+# ("deals 3 damage to target [Human] creature"), whose bracket narrows the target.
+
+
+def _cleave_cast(scenario, name, *, cleave, targets=None):
+    casting = scenario.cast(name, username="alice")
+    if cleave:
+        casting.use_keyword("Cleave")
+    if targets is not None:
+        casting.choose_targets(targets)
+    payment = casting.begin_paying()
+    scenario.auto_pay(payment)
+    scenario.put_on_stack(casting)
+    while scenario.game.stack:
+        scenario.pass_until_resolved()
+
+
+@pytest.mark.parametrize(
+    ("cleave", "drawn"),
+    [(False, 1), (True, 3)],
+)
+def test_winged_portent_counts_only_fliers_unless_cleaved(cleave, drawn):
+    scenario = _main(
+        _build(
+            ["Island"] * 3 + ["Forest"] * 3 + ["Grizzly Bears", "Grizzly Bears", "Birds of Paradise"],
+            [],
+            hand=["Winged Portent"],
+        )
+    )
+    hand_before = len(scenario.player("alice").hand)
+    _cleave_cast(scenario, "Winged Portent", cleave=cleave)
+    assert len(scenario.player("alice").hand) == hand_before - 1 + drawn
+
+
+@pytest.mark.parametrize(
+    ("cleave", "survivors"),
+    [(False, {"Craw Wurm"}), (True, set())],
+)
+def test_path_of_peril_destroys_only_cheap_creatures_unless_cleaved(cleave, survivors):
+    scenario = _main(
+        _build(
+            ["Swamp", "Swamp", "Swamp", "Plains", "Plains", "Plains", "Grizzly Bears"],
+            ["Craw Wurm", "Grizzly Bears"],
+            hand=["Path of Peril"],
+        )
+    )
+    _cleave_cast(scenario, "Path of Peril", cleave=cleave)
+    left = {
+        permanent.name
+        for owner in ("alice", "bob")
+        for permanent in scenario.game.permanents_controlled_by(owner)
+        if scenario.game.characteristics_of(permanent).is_creature
+    }
+    assert left == survivors
+
+
+def test_parasitic_grasp_targets_only_humans_unless_cleaved():
+    scenario = _main(
+        _build(
+            ["Swamp"] * 3,
+            ["Craw Wurm", "Elite Vanguard"],
+            hand=["Parasitic Grasp"],
+        )
+    )
+    wurm = scenario.find("Craw Wurm", Zone.BATTLEFIELD, "bob")
+    casting = scenario.cast("Parasitic Grasp", username="alice")
+    with pytest.raises(ValueError, match="(?i)target"):
+        casting.choose_targets([wurm])
+    _cleave_cast(scenario, "Parasitic Grasp", cleave=True, targets=[wurm])  # any creature
+    assert wurm.damage == 3
+    assert scenario.player("alice").life == 23
+
+
+def test_teapot_slinger_proves_expend_on_a_second_printing():
+    """Proof printing for the expend event (not listed, in no api deck): "Whenever you
+    expend 4, this creature deals 2 damage to each opponent." fires on the cast that
+    takes the turn's spell mana from 2 to 4, and not on the one that reaches 2."""
+    scenario = _main(
+        _build(["Teapot Slinger"] + ["Forest"] * 4, [], hand=["Grizzly Bears", "Runeclaw Bear"])
+    )
+    _cast_and_settle(scenario, "Grizzly Bears")
+    assert scenario.player("bob").life == 20
+    _cast_and_settle(scenario, "Runeclaw Bear")
+    assert scenario.player("bob").life == 18

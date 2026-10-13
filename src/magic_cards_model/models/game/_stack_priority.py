@@ -60,7 +60,12 @@ from ...machines.effects import (
     trigger_effect_for,
 )
 from ...machines.ep02_r1_counter_amounts import counters_counted_for, counters_read_from
-from ...machines.cleave import cleave_cost_announces_x, spell_text_as_cast, was_cleaved
+from ...machines.cleave import (
+    cleave_cost_announces_x,
+    cleaved_text,
+    spell_text_as_cast,
+    was_cleaved,
+)
 from ...machines.keywords import (
     ascend_as_a_spell_resolves,
     awaken_as_the_spell_resolves,
@@ -2850,6 +2855,12 @@ class StackPriorityMixin:
             except ValueError:
                 # Not a modal card after all; fall through to its plain text.
                 pass
+        if was_cleaved(self, spell):
+            # CR 702.148a: the targets were chosen under the text with the
+            # bracketed words removed, and are rechecked against it.
+            return spell_profile_for_text(
+                cleaved_text(substitute_x(spell.oracle_text, record.x_value or None)), spell.card
+            )
         kicked_alternative = kicked_instead_target_text(spell.oracle_text or "")
         if kicked_alternative is not None:
             # CR 601.2c's kicked targets, rechecked against the same sentence
