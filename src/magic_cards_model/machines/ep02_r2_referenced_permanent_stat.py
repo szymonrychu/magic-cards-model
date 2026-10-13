@@ -29,8 +29,11 @@ import re
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
+from uuid import UUID
 
+from ..models.card import Type
 from ..models.card_state import CardState
+from ..models.mana import ManaCost
 from ..models.player import Player
 from ..models.zone import Zone
 from .amount_sentences import (
@@ -40,6 +43,7 @@ from .amount_sentences import (
 )
 from .ep02_r1_moved_card_stat import (
     _IF_YOU_DO_RE,
+    Moved,
     Phrase,
     ResolutionStep,
     State,
@@ -120,6 +124,18 @@ class Run(RunState):
 # --------------------------------------------------------------------------
 # Openers
 # --------------------------------------------------------------------------
+
+#: What "its / that card's mana value" reads when the opening sentence found no
+#: card (an empty library or graveyard, a declined payment): nothing, which has
+#: no characteristics - so the amount is 0 (CR 107.1b) and no kind matches.
+NO_CARD = Moved(
+    card_id=UUID(int=0),
+    power=0,
+    toughness=0,
+    mana_value=0,
+    types=frozenset(),
+    subtypes=frozenset(),
+)
 
 _DESTROY_TARGET_RE = re.compile(r"^destroy target (?P<what>[a-z ]+?)$", re.IGNORECASE)
 _PUT_BOTTOM_RE = re.compile(
@@ -286,8 +302,245 @@ def _step_discard_chosen(game: "Game", stack_object: Any, state: State) -> bool:
     return True
 
 
+_EXILE_TOP_CARD_RE = re.compile(r"^exile the top card of your library$", re.IGNORECASE)
+_EXILE_UNTIL_NONLAND_RE = re.compile(
+    r"^exile cards from the top of your library until you exile a nonland card$", re.IGNORECASE
+)
+_PAY_AND_DISCARD_RE = re.compile(
+    r"^you may pay (?P<cost>(?:\{[^}]+\})+) and discard a card$", re.IGNORECASE
+)
+_EXILE_PERMANENT_FROM_GRAVEYARD_RE = re.compile(
+    r"^exile a permanent card from your graveyard$", re.IGNORECASE
+)
+_TURN_UP_RE = re.compile(r"^turn the exiled card face up$", re.IGNORECASE)
+_CONTROLLER_SACRIFICES_IT_RE = re.compile(
+    r"^target creature's controller sacrifices it(?:,? then (?P<rest>.+))?$", re.IGNORECASE
+)
+_THAT_PLAYER_CREATES_RE = re.compile(
+    r"^that player creates (?P<what>an? .+? tokens?(?: with .+)?)$", re.IGNORECASE
+)
+
+
+def _step_exile_top_card(game: "Game", stack_object: Any, state: State) -> bool:
+    """ "Exile the top card of your library." (CR 701.13a): the card the next
+    sentences call "that card" / "the exiled card", read as it is in exile
+    (CR 608.2h). An empty library exiles nothing."""
+    assert isinstance(state, RunState)
+    player = game.controller_of(stack_object)
+    state.card, state.referent, state.did = None, NO_CARD, False
+    if player.library:
+        top = player.library[0]
+        game.exile_permanent(top)
+        if top.zone is Zone.EXILE:
+            state.card, state.referent, state.did = top, card_snapshot(game, top), True
+    return True
+
+
+def _step_exile_until_nonland(game: "Game", stack_object: Any, state: State) -> bool:
+    """ "Exile cards from the top of your library until you exile a nonland
+    card." (CR 701.13a): each card goes to exile in turn; the nonland one is
+    "that card". A library of lands is exiled whole and leaves no card."""
+    assert isinstance(state, RunState)
+    player = game.controller_of(stack_object)
+    state.card, state.referent, state.did = None, NO_CARD, False
+    for card in list(player.library):
+        game.exile_permanent(card)
+        if not card.card.is_land and card.zone is Zone.EXILE:
+            state.card, state.referent, state.did = card, card_snapshot(game, card), True
+            break
+    return True
+
+
+def _step_pay_and_discard(cost: ManaCost) -> ResolutionStep:
+    """ "You may pay {cost} and discard a card" (CR 608.2c, CR 701.9a): the
+    payment is made first, then the player picks the card to discard; the card
+    is "the discarded card", with the mana value it had in hand (CR 608.2h).
+    Both parts are one optional action, so it is not offered with an empty
+    hand."""
+
+    def step(game: "Game", stack_object: Any, state: State) -> bool:
+        assert isinstance(state, RunState)
+        player = game.controller_of(stack_object)
+        name, source_id = _name_and_id(stack_object)
+        state.did, state.card, state.referent = False, None, NO_CARD
+        if not player.hand:
+            return True
+        if not game.may_pay_mana_cost(player, cost, source=name, source_id=source_id):
+            return True
+        chosen = _choose_among(
+            game,
+            player,
+            list(player.hand),
+            "choose a card to discard",
+            required=True,
+            name=name,
+            source_id=source_id,
+        )
+        if chosen is None:
+            return True
+        snapshot = card_snapshot(game, chosen)
+        game.discard_cards(player.username, [chosen], source=name)
+        if chosen.zone is Zone.GRAVEYARD:
+            state.card, state.referent, state.did = chosen, snapshot, True
+        return True
+
+    return step
+
+
+_PERMANENT_CARD_TYPES = frozenset(
+    {Type.ARTIFACT, Type.CREATURE, Type.ENCHANTMENT, Type.LAND, Type.PLANESWALKER, Type.BATTLE}
+)
+
+
+def _step_exile_permanent_from_graveyard(game: "Game", stack_object: Any, state: State) -> bool:
+    """ "Exile a permanent card from your graveyard." (CR 608.2d: the player
+    chooses): the card is exiled *with* the ability's source, the link the
+    source's other abilities read back (CR 607.2a)."""
+    from .exile_top_marked import mark_exiled
+
+    assert isinstance(state, RunState)
+    player = game.controller_of(stack_object)
+    name, source_id = _name_and_id(stack_object)
+    state.card, state.referent, state.did = None, NO_CARD, False
+    options = [card for card in player.graveyard if _PERMANENT_CARD_TYPES & set(card.types)]
+    chosen = _choose_among(
+        game,
+        player,
+        options,
+        "exile a permanent card from your graveyard",
+        required=True,
+        name=name,
+        source_id=source_id,
+    )
+    if chosen is None:
+        return True
+    (moved,) = game.exile_cards([chosen])
+    if moved.zone is Zone.EXILE:
+        mark_exiled(game, stack_object, moved)
+        state.card, state.referent, state.did = moved, card_snapshot(game, moved), True
+    return True
+
+
+def _step_load_exiled_card(game: "Game", stack_object: Any, state: State) -> bool:
+    """ "The exiled card" of a later chapter or ability: the card the source's
+    earlier ability exiled and linked to it (CR 607.2a)."""
+    from .exiled_with_peek import _pile
+
+    assert isinstance(state, RunState)
+    if getattr(stack_object, "source_id", None) is None:
+        return True
+    pile = _pile(game, stack_object)
+    state.card, state.referent = (
+        (pile[-1], card_snapshot(game, pile[-1])) if pile else (None, NO_CARD)
+    )
+    return True
+
+
+def _step_turn_exiled_face_up(game: "Game", stack_object: Any, state: State) -> bool:
+    """ "Turn the exiled card face up." (CR 406.3a): it now has its
+    characteristics, which the next sentences read."""
+    _step_load_exiled_card(game, stack_object, state)
+    assert isinstance(state, RunState)
+    if state.card is not None and state.card.zone is Zone.EXILE:
+        state.card.face_up = True
+        state.referent = card_snapshot(game, state.card)
+    return True
+
+
+def _step_return_source_and_card(game: "Game", stack_object: Any, state: State) -> bool:
+    """ "Return this Saga and the exiled card to their owner's hand."""
+    assert isinstance(state, RunState)
+    source = _source(game, stack_object)
+    if source is not None and source.zone is Zone.BATTLEFIELD:
+        game.return_to_hand(source)
+    if state.card is not None and state.card.zone is Zone.EXILE:
+        game.return_to_hand(state.card)
+    return True
+
+
+def _step_return_exiled_to_hand(game: "Game", stack_object: Any, state: State) -> bool:
+    assert isinstance(state, RunState)
+    if state.card is not None and state.card.zone is Zone.EXILE:
+        game.return_to_hand(state.card)
+    return True
+
+
+def _step_may_put_exiled_onto_battlefield(kind: str | None) -> ResolutionStep:
+    """ "You may put the exiled card onto the battlefield[ if it's a <kind>
+    card]": the offer is made only for a card of that kind, and what was done
+    is remembered for the "if you don't" that follows."""
+
+    def step(game: "Game", stack_object: Any, state: State) -> bool:
+        assert isinstance(state, RunState)
+        card = state.card
+        state.did = False
+        if card is None or card.zone is not Zone.EXILE:
+            return True
+        if kind is not None and (state.referent is None or not state.referent.is_a(kind)):
+            return True
+        name, source_id = _name_and_id(stack_object)
+        if not game.may(
+            game.controller_of(stack_object),
+            f"put {card.name} onto the battlefield",
+            source=name,
+            source_id=source_id,
+        ):
+            return True
+        game.put_onto_battlefield(card, game.controller_of(stack_object).username)
+        state.did = card.zone is Zone.BATTLEFIELD
+        return True
+
+    return step
+
+
+def _step_play_exiled_card(game: "Game", stack_object: Any, state: State) -> bool:
+    """ "You may play that card until end of turn." (CR 601.3, CR 305.1)."""
+    from .casting import PlayAction
+
+    assert isinstance(state, RunState)
+    card = state.card
+    if card is not None and card.zone is Zone.EXILE:
+        name, _ = _name_and_id(stack_object)
+        game.grant_play_permission(
+            card,
+            game.controller_of(stack_object).username,
+            action=PlayAction.PLAY,
+            source_name=name or "",
+            zone=Zone.EXILE,
+            until_end_of_turn=True,
+        )
+    return True
+
+
+def _step_then_creates(what: str) -> ResolutionStep | None:
+    """ "...then that player creates a 5/5 red Dragon creature token with
+    flying": the token's creator is the controller of the sacrificed permanent
+    (CR 111.2)."""
+    from .amount_sentences import token_maker
+
+    make = token_maker(what)
+    if make is None:
+        return None
+
+    def step(game: "Game", stack_object: Any, state: State) -> bool:
+        make(game, state.token_controller or game.controller_of(stack_object).username, 1)
+        return True
+
+    return step
+
+
 def _extra_opener(sentence: str, *, for_spell: bool) -> tuple[ResolutionStep, str | None] | None:
     """`(step, tail)` for the openers that none of the earlier readers read."""
+    if _EXILE_TOP_CARD_RE.fullmatch(sentence):
+        return _step_exile_top_card, None
+    if _EXILE_UNTIL_NONLAND_RE.fullmatch(sentence):
+        return _step_exile_until_nonland, None
+    if (match := _PAY_AND_DISCARD_RE.fullmatch(sentence)) is not None:
+        return _step_pay_and_discard(ManaCost.parse(match.group("cost"))), None
+    if _EXILE_PERMANENT_FROM_GRAVEYARD_RE.fullmatch(sentence):
+        return _step_exile_permanent_from_graveyard, None
+    if _TURN_UP_RE.fullmatch(sentence):
+        return _step_turn_exiled_face_up, None
     if (match := _DESTROY_TARGET_RE.fullmatch(sentence)) is not None:
         from .ep02_r1_moved_card_stat import _step_delegate_to_target
 
@@ -587,6 +840,169 @@ def _step_copy_token(exception: str) -> ResolutionStep | None:
     return step
 
 
+_SELF_DAMAGE_RE = re.compile(
+    r"^(?P<source>.+?) deals damage to (?:himself|herself|itself|themselves) equal to "
+    r"(?P<expr>.+)$",
+    re.IGNORECASE,
+)
+_MAY_HAVE_DEAL_RE = re.compile(
+    r"^you may have (?P<source>.+?) deal damage to (?P<to>that [a-z ]+) equal to (?P<expr>.+)$",
+    re.IGNORECASE,
+)
+_BECOMES_XX_RE = re.compile(r"^(?P<head>.+? becomes an? )x/x(?P<tail> .+)$", re.IGNORECASE)
+_HIGHEST_LIFE_TOKENS_RE = re.compile(
+    r"^create a number of (?P<what>.+?) equal to the highest life total among all players$",
+    re.IGNORECASE,
+)
+_EACH_DEALS_POWER_RE = re.compile(
+    r"^each (?P<quality>[a-z ]+?) you control deals damage equal to its power to "
+    r"(?P<to>target [a-z ]+?)$",
+    re.IGNORECASE,
+)
+_PLAY_THAT_CARD_RE = re.compile(
+    r"^you may play (?:that|the exiled) card (?:until end of turn|this turn)$", re.IGNORECASE
+)
+_RETURN_SOURCE_AND_CARD_RE = re.compile(
+    r"^return this [a-z]+ and the exiled card to their owner's hand$", re.IGNORECASE
+)
+_RETURN_EXILED_RE = re.compile(r"^put it into its owner's hand$", re.IGNORECASE)
+_MAY_PUT_EXILED_RE = re.compile(
+    r"^you may put (?:the exiled card|it|that card) onto the battlefield"
+    r"(?: if it's an? (?P<kind>[a-z]+) card)?$",
+    re.IGNORECASE,
+)
+
+
+def _step_may_deal_damage(phrase: Phrase) -> ResolutionStep:
+    """ "You may have <source> deal damage to that creature equal to <stat>":
+    declining is remembered for the "if you don't" that follows."""
+
+    def step(game: "Game", stack_object: Any, state: State) -> bool:
+        name, source_id = _name_and_id(stack_object)
+        state.did = False
+        if not game.may(
+            game.controller_of(stack_object),
+            f"have {name} deal the damage",
+            source=name,
+            source_id=source_id,
+        ):
+            return True
+        amount = stat_value(game, stack_object, state, phrase)
+        target = state.first_target(game, stack_object)
+        if target is not None:
+            game.deal_damage(target, amount, source=_source(game, stack_object))
+            state.did = True
+        return True
+
+    return step
+
+
+def _step_damage_to_self(phrase: Phrase) -> ResolutionStep:
+    """ "<It> deals damage to itself equal to <stat>": the source is both the
+    dealer and the recipient (CR 120.3)."""
+
+    def step(game: "Game", stack_object: Any, state: State) -> bool:
+        amount = stat_value(game, stack_object, state, phrase)
+        source = _source(game, stack_object)
+        if source is not None and source.zone is Zone.BATTLEFIELD:
+            game.deal_damage(source, amount, source=source)
+        return True
+
+    return step
+
+
+def _step_rewrite_with_value(head: str, tail: str, phrase: Phrase) -> ResolutionStep | None:
+    """ "<head>X/X<tail>, where X is <stat>": the continuous effect the layer
+    engine reads off the sentence with the stat written in (CR 608.2h: counted
+    once, as the effect applies; CR 611.2 the effect it creates)."""
+    from .effects import continuous_effects, layer_context_for
+    from .effects.text import _as_sentence
+    from .targeting import profile_for_text
+
+    def text_for(value: int) -> str:
+        return _as_sentence(f"{head}{value}/{value}{tail}")
+
+    profile = profile_for_text(text_for(1))
+    if not profile.understood:
+        return None
+    needs_target = bool(profile.requirements)
+
+    def step(game: "Game", stack_object: Any, state: State) -> bool:
+        source = _source(game, stack_object)
+        if source is None:
+            return True
+        if needs_target:
+            targets = game.resolve_card_targets(stack_object)
+        else:
+            targets = [source] if source.zone is Zone.BATTLEFIELD else []
+        if targets:
+            continuous_effects(game).create(
+                source,
+                targets=targets,
+                context=layer_context_for(game, game.controller_of(stack_object)),
+                ability_text=text_for(stat_value(game, stack_object, state, phrase)),
+                game=game,
+            )
+        return True
+
+    return step
+
+
+def _step_highest_life_tokens(what: str) -> ResolutionStep | None:
+    """ "Create a number of <tokens> equal to the highest life total among all
+    players" (CR 119.1): the total is read once, as the effect applies."""
+    from .amount_sentences import token_maker
+
+    make = token_maker(f"X {what}")
+    if make is None:
+        return None
+
+    def step(game: "Game", stack_object: Any, state: State) -> bool:
+        highest = max((player.life for player in game.players_in_game), default=0)
+        make(game, game.controller_of(stack_object).username, highest)
+        return True
+
+    return step
+
+
+def _step_each_deals_power(quality: str) -> ResolutionStep | None:
+    """ "Each <Dragon creature> you control deals damage equal to its power to
+    <target>": every matching permanent deals its own power (CR 613.5), each
+    amount read as the effect applies (CR 608.2h)."""
+    words = quality.lower().split()
+    types = {Type(word) for word in words if word in {t.value for t in Type}}
+    subtypes = {word for word in words if word not in {t.value for t in Type}}
+    if not types and not subtypes:
+        return None
+
+    def step(game: "Game", stack_object: Any, state: State) -> bool:
+        target = state.next_target(game, stack_object)
+        dealers = []
+        for permanent in game.permanents_controlled_by(game.controller_of(stack_object).username):
+            chars = game.characteristics_of(permanent)
+            if types <= set(chars.types) and subtypes <= {s.lower() for s in chars.subtypes}:
+                dealers.append((permanent, max(chars.power or 0, 0)))
+        if target is not None:
+            for permanent, amount in dealers:
+                game.deal_damage(target, amount, source=permanent)
+        return True
+
+    return step
+
+
+def _conditioned(step: ResolutionStep, condition: str) -> ResolutionStep:
+    """ "If you control <N> or more <things>, ...": the board condition is
+    checked as the instruction is reached (CR 608.2c)."""
+
+    def conditioned(game: "Game", stack_object: Any, state: State) -> bool:
+        holds = game.condition_holds(
+            game.controller_of(stack_object).username, condition, _source(game, stack_object)
+        )
+        return step(game, stack_object, state) if holds else True
+
+    return conditioned
+
+
 def _extra_step(sentence: str, *, for_spell: bool) -> ResolutionStep | None:
     """The amount sentences (and the plain sentences between them) that none
     of the earlier readers read."""
@@ -600,12 +1016,34 @@ def _extra_step(sentence: str, *, for_spell: bool) -> ResolutionStep | None:
             return _step_damage_and_life(match.group("source"), phrase)
         if _DRAW_THEN_LANDS_RE.fullmatch(body):
             return _step_draw_then_lands(phrase)
+        if (match := _BECOMES_XX_RE.fullmatch(body)) is not None:
+            return _step_rewrite_with_value(match.group("head"), match.group("tail"), phrase)
     if (life := parse_life_clause(sentence)) is not None and life.kind == "equal":
         phrase = parse_ref(life.expr or "")
         if phrase is not None and _ITS_CONTROLLER_RE.fullmatch(life.subject or ""):
             return _step_life_to_controller(life.gains, phrase)
     if (match := _DELAYED_SACRIFICE_RE.fullmatch(sentence)) is not None:
         return _step_delayed_sacrifice(match.group("what"))
+    if (match := _MAY_HAVE_DEAL_RE.fullmatch(sentence)) is not None:
+        phrase = parse_ref(match.group("expr"))
+        return None if phrase is None else _step_may_deal_damage(phrase)
+    if (match := _SELF_DAMAGE_RE.fullmatch(sentence)) is not None:
+        phrase = parse_ref(match.group("expr"))
+        return None if phrase is None else _step_damage_to_self(phrase)
+    if (match := _HIGHEST_LIFE_TOKENS_RE.fullmatch(sentence)) is not None:
+        return _step_highest_life_tokens(match.group("what"))
+    if (match := _EACH_DEALS_POWER_RE.fullmatch(sentence)) is not None:
+        return _step_each_deals_power(match.group("quality"))
+    if (match := _THAT_PLAYER_CREATES_RE.fullmatch(sentence)) is not None:
+        return _step_then_creates(match.group("what"))
+    if _PLAY_THAT_CARD_RE.fullmatch(sentence):
+        return _step_play_exiled_card
+    if _RETURN_SOURCE_AND_CARD_RE.fullmatch(sentence):
+        return _step_return_source_and_card
+    if _RETURN_EXILED_RE.fullmatch(sentence):
+        return _step_return_exiled_to_hand
+    if (match := _MAY_PUT_EXILED_RE.fullmatch(sentence)) is not None:
+        return _step_may_put_exiled_onto_battlefield(match.group("kind"))
     if _DISCARD_CHOSEN_RE.fullmatch(sentence):
         return _step_discard_chosen
     if _PUT_IT_IN_HAND_RE.fullmatch(sentence):
@@ -834,6 +1272,12 @@ def _look_macro(queue: list[str], position: int) -> tuple[ResolutionStep, int] |
 
 _IF_CANT_RE = re.compile(r"^if you can't (?P<what>.+?), (?P<rest>.+)$", re.IGNORECASE)
 _IF_WIN_RE = re.compile(r"^if you win,? (?P<rest>.+)$", re.IGNORECASE)
+_IF_DONT_RE = re.compile(
+    r"^if you don't(?: put it onto the battlefield)?,? (?P<rest>.+)$", re.IGNORECASE
+)
+_IF_CONTROL_RE = re.compile(
+    r"^(?:then )?if (?P<cond>you control [^,]+), (?P<rest>.+)$", re.IGNORECASE
+)
 _IF_KIND_RE = re.compile(
     r"^if it's an? (?P<kinds>[a-z]+(?: or [a-z]+)*) card,? (?P<rest>.+)$", re.IGNORECASE
 )
@@ -844,11 +1288,20 @@ _COMPOUND_AND_RE = re.compile(
 _PUT_IT_IN_HAND_RE = re.compile(r"^put it into your hand$", re.IGNORECASE)
 _LEADING_LIFE_RE = re.compile(r", (?=(?:lose|gain) life )")
 
-_GATE_WORDS = ("power", "toughness", "mana value")
+_GATE_WORDS = (
+    "power",
+    "toughness",
+    "mana value",
+    "the exiled card",
+    "highest life total",
+    "controller sacrifices it",
+)
 _GATE_FORMS = (
     "equal to",
     "where x is",
     "deals x damage",
+    "the exiled card",
+    "controller sacrifices it",
 )
 
 
@@ -882,6 +1335,11 @@ def _compile(sentences: list[str], *, for_spell: bool) -> list[ResolutionStep] |
     position = 0
     opened = False
     uses_amount = False
+    if "the exiled card" in " ".join(queue).lower() and not any(
+        _EXILE_PERMANENT_FROM_GRAVEYARD_RE.fullmatch(sentence) for sentence in queue
+    ):
+        steps.append(_step_load_exiled_card)  # an earlier ability exiled it (CR 607.2a)
+        opened = True
     while position < len(queue):
         if (look := _look_macro(queue, position)) is not None:
             steps.append(look[0])
@@ -891,7 +1349,13 @@ def _compile(sentences: list[str], *, for_spell: bool) -> list[ResolutionStep] |
         sentence = queue[position]
         position += 1
         guard: Callable[[RunState], bool] | None = None
-        if match := _IF_YOU_DO_RE.fullmatch(sentence):
+        condition: str | None = None
+        sentence = re.sub(r"^then ", "", sentence, flags=re.IGNORECASE)
+        if match := _IF_CONTROL_RE.fullmatch(sentence):
+            sentence, condition = match.group("rest"), match.group("cond")
+        elif match := _IF_DONT_RE.fullmatch(sentence):
+            sentence, guard = match.group("rest"), lambda s: not s.did
+        elif match := _IF_YOU_DO_RE.fullmatch(sentence):
             sentence, guard = match.group("rest"), lambda s: s.did
         elif match := _IF_CANT_RE.fullmatch(sentence):
             sentence, guard = match.group("rest"), lambda s: not s.did
@@ -919,6 +1383,7 @@ def _compile(sentences: list[str], *, for_spell: bool) -> list[ResolutionStep] |
         if opener is not None:
             step, tail = opener
             opened = True
+            uses_amount = uses_amount or _spends_amount(sentence)
             if tail:
                 queue.insert(position, tail)
         else:
@@ -933,6 +1398,8 @@ def _compile(sentences: list[str], *, for_spell: bool) -> list[ResolutionStep] |
             if step is None:
                 return None
             uses_amount = uses_amount or _spends_amount(sentence)
+        if condition is not None:
+            step = _conditioned(step, condition)
         steps.append(_gated(step, guard) if guard is not None else step)
     if not uses_amount:
         return None
@@ -996,5 +1463,69 @@ def referenced_permanent_stat_effect(
         for step in steps:
             if not step(game, stack_object, state):
                 return
+
+    return effect
+
+
+# --------------------------------------------------------------------------
+# Epic (CR 702.50)
+# --------------------------------------------------------------------------
+
+_EPIC_RE = re.compile(r"^(?P<body>.+?)\s*\n\s*epic(?: \(.*\))?\s*$", re.IGNORECASE | re.DOTALL)
+
+
+def _begin_epic(game: "Game", spell: CardState) -> None:
+    """CR 702.50a, the two spell abilities an epic spell's resolution runs: the
+    controller can't cast spells for the rest of the game (CR 702.50b: copies
+    are not cast, so the copies below are unaffected), and at the beginning of
+    each of their upkeeps the spell is copied."""
+    from .abilities import TriggerEvent
+    from .casting_restrictions import CastingRuleEffect, CastingRuleKind
+    from .delayed import DelayedTrigger, EpicCopy
+    from .layers import Duration
+    from .turn import Step
+
+    you = game.controller_of(spell).username
+    game.casting_rule_effects.append(
+        CastingRuleEffect(
+            kind=CastingRuleKind.TARGETED_CANT_CAST,
+            controller=you,
+            source_name=spell.name,
+            duration=Duration.INDEFINITE,
+            restricted_player=you,
+        )
+    )
+    game.create_delayed_trigger(
+        DelayedTrigger(
+            text="At the beginning of each of your upkeeps, copy this spell except for its epic.",
+            effect=EpicCopy(),
+            event=TriggerEvent.BEGINNING_OF_STEP,
+            step=Step.UPKEEP,
+            controller=you,
+            source_id=spell.id,
+            source_name=spell.name,
+            only_when_active=you,
+            remaining=None,
+        )
+    )
+
+
+@functools.cache
+def epic_spell_effect(text: str) -> Callable[["Game", Any], None] | None:
+    """A spell whose text ends in an epic line: what the rest of the text does,
+    then the epic abilities (CR 702.50a) - none for a copy, which is "except for
+    its epic ability"."""
+    if "\nepic" not in text.lower() or (match := _EPIC_RE.fullmatch(text.strip())) is None:
+        return None
+    from .effects.dispatch import _spell_effect_or_notice
+
+    body = _spell_effect_or_notice(match.group("body"))
+    if body is None:
+        return None
+
+    def effect(game: "Game", spell: Any) -> None:
+        body(game, spell)
+        if isinstance(spell, CardState) and not spell.is_copy:
+            _begin_epic(game, spell)
 
     return effect

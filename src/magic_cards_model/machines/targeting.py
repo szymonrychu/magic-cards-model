@@ -7054,6 +7054,9 @@ _WITH_COUNTER_RE = re.compile(
 #: general cutoff, not a card-specific one - proven on Makeshift Mannequin's
 #: differently-worded, differently-named ("mannequin") counter of the same
 #: shape.
+#: "creates" ends it as well: the "with flying" of "Target creature's controller
+#: sacrifices it, then that player creates a 5/5 red Dragon creature token with
+#: flying" describes the token, not the target (Sarkhan the Mad's -2).
 #: "for each" and "equal to the number of" end the scope too: they open the
 #: amount the effect applies, and a "with defender" inside it counts permanents
 #: rather than restricting the target (Vent Sentinel's "damage to target player
@@ -7061,7 +7064,7 @@ _WITH_COUNTER_RE = re.compile(
 #: "or equal to the number of" stays inside - that is a restriction (Drown in
 #: the Loch).
 _TARGET_CLAUSE_VERB_RE = re.compile(
-    r"\b(?:gains?|gets?|becomes?|loses?|(?:to|onto)\s+the\s+battlefield"
+    r"\b(?:gains?|gets?|becomes?|loses?|creates?|(?:to|onto)\s+the\s+battlefield"
     r"|for each)\b|(?<!or )\bequal to the number of\b",
     re.IGNORECASE,
 )

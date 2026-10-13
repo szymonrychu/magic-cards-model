@@ -222,6 +222,14 @@ def _cost_exiled_referent(game: "Game", stack_object: Any) -> Moved | None:
         card = game.find_by_id(card_id)
         if card is not None:
             return card_snapshot(game, card)
+    if getattr(stack_object, "source_id", None) is not None:
+        # "The exiled card" of a later chapter or ability: the card the source's
+        # own exiling ability linked to it (CR 607.2a).
+        from .exiled_with_peek import _pile
+
+        pile = _pile(game, stack_object)
+        if pile:
+            return card_snapshot(game, pile[-1])
     return None
 
 

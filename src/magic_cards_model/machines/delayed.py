@@ -442,6 +442,33 @@ class ReboundRecast(DelayedEffectSpecBase):
         )
 
 
+class EpicCopy(DelayedEffectSpecBase):
+    """CR 702.50a's delayed trigger: "At the beginning of each of your upkeeps
+    for the rest of the game, copy this spell except for its epic ability. If
+    the spell has any targets, you may choose new targets for the copy."
+
+    The spell is found by id in the graveyard it went to and copied as it last
+    existed on the stack (CR 608.2h, CR 707.10); the copy is not cast (CR
+    707.10) and so does not meet the epic restriction on casting. It begins no
+    epic of its own: the effect that starts one does nothing for a copy.
+    """
+
+    kind: Literal["epic_copy"] = "epic_copy"
+
+    def __call__(self, game: "Game", ability: AbilityOnStack, trigger: "DelayedTrigger") -> None:
+        spell = None if trigger.source_id is None else game.find_by_id(trigger.source_id)
+        if not isinstance(spell, CardState):
+            return
+        copy = game.copy_spell_as_last_known(spell, trigger.controller)
+        if copy is not None:
+            game.offer_new_targets_for_copy(
+                copy,
+                trigger.controller,
+                source_name=spell.name,
+                source_id=source_id_of(ability),
+            )
+
+
 class ParadigmCopyAndCast(DelayedEffectSpecBase):
     """CR 702.192a's own delayed trigger: "at the beginning of each of your
     precombat main phases for the rest of the game, create a copy of this
@@ -2527,6 +2554,7 @@ DelayedEffectSpec = Annotated[
     | ReturnSubjectToHand
     | ReboundRecast
     | ParadigmCopyAndCast
+    | EpicCopy
     | DrawACardForController
     | AddManaAmountForController
     | AddManaInAnyCombinationForController

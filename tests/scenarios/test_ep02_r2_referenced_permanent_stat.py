@@ -30,7 +30,10 @@ file:
 import pytest
 
 from magic_cards_model.machines import Step
+from magic_cards_model.machines.combat import has_keyword
 from magic_cards_model.models import Zone
+from magic_cards_model.models.card import Type
+from magic_cards_model.models.token import is_token
 from magic_cards_model.support import HANDLED, classify_clauses
 from tests.cards import card
 from tests.scenarios.harness import Scenario
@@ -734,3 +737,534 @@ def test_mercurial_chemister_damages_by_a_cheap_discard() -> None:
     discarded = scenario.find("Lightning Bolt", Zone.HAND, "alice")
     _activate_all(scenario, chemister, index=1, discarding=[discarded], targets=[bob_angel])
     assert bob_angel.zone is Zone.BATTLEFIELD and bob_angel.damage == 1
+
+
+# ---------------------------------------------------------------------------
+# Group B: the card mana value shapes T3's reader spends, in the openers it
+# does not read
+# ---------------------------------------------------------------------------
+
+
+def _tokens(scenario, who: str, name: str) -> list:
+    return [
+        p for p in scenario.game.permanents_controlled_by(who) if is_token(p) and name in p.name
+    ]
+
+
+# -- Slumbering Tora: "becomes an X/X Cat artifact creature, X is the discarded card's mana value"
+
+
+def test_slumbering_tora_becomes_an_x_x_cat_with_the_discarded_cards_mana_value() -> None:
+    scenario = _scenario(["Slumbering Tora"], hand=["Heed the Mists"])
+    tora = scenario.find("Slumbering Tora", Zone.BATTLEFIELD, "alice")
+    heed = scenario.find("Heed the Mists", Zone.HAND, "alice")
+    _activate_all(scenario, tora, discarding=[heed])
+    chars = scenario.game.characteristics_of(tora)
+    assert heed.zone is Zone.GRAVEYARD
+    assert chars.power_toughness == (5, 5)
+    assert "Cat" in chars.subtypes
+    assert Type.CREATURE in chars.types
+
+
+def test_slumbering_tora_takes_a_spirit_card_and_reads_its_own_mana_value() -> None:
+    scenario = _scenario(["Slumbering Tora"], hand=["Blademane Baku"])
+    tora = scenario.find("Slumbering Tora", Zone.BATTLEFIELD, "alice")
+    baku = scenario.find("Blademane Baku", Zone.HAND, "alice")
+    _activate_all(scenario, tora, discarding=[baku])
+    assert scenario.game.characteristics_of(tora).power_toughness == (2, 2)
+
+
+def test_slumbering_tora_cannot_discard_a_card_that_is_not_a_spirit_or_arcane() -> None:
+    scenario = _scenario(["Slumbering Tora"], hand=["Grizzly Bears"])
+    tora = scenario.find("Slumbering Tora", Zone.BATTLEFIELD, "alice")
+    bears = scenario.find("Grizzly Bears", Zone.HAND, "alice")
+    with pytest.raises(ValueError):
+        scenario.activate(tora, auto=True, discarding=[bears])
+    assert bears.zone is Zone.HAND
+
+
+def test_slumbering_tora_discarding_a_zero_cost_card_makes_it_a_dead_0_0() -> None:
+    scenario = _scenario(["Slumbering Tora"], hand=["Evermind"])
+    tora = scenario.find("Slumbering Tora", Zone.BATTLEFIELD, "alice")
+    evermind = scenario.find("Evermind", Zone.HAND, "alice")
+    _activate_all(scenario, tora, discarding=[evermind])
+    assert tora.zone is Zone.GRAVEYARD  # a 0/0 creature (CR 704.5f)
+
+
+# -- Spark of Creativity: exile the top card, may deal its mana value, else may play it
+
+
+def test_spark_of_creativity_deals_the_exiled_cards_mana_value_to_the_creature() -> None:
+    scenario = _scenario(
+        [],
+        ["Grizzly Bears"],
+        hand=["Spark of Creativity"],
+        library=["Serra Angel"] + ["Island"] * 8,
+    )
+    bears = scenario.creature("Grizzly Bears", "bob")
+    angel = scenario.top_of_library(1)[0]
+    scenario.will_take_the_may(True, source="Spark of Creativity")
+    _cast_all(scenario, "Spark of Creativity", targets=[bears])
+    assert angel.zone is Zone.EXILE
+    assert bears.zone is Zone.GRAVEYARD  # 5 damage
+
+
+def test_spark_of_creativity_damage_is_only_the_mana_value() -> None:
+    scenario = _scenario(
+        [],
+        ["Serra Angel"],
+        hand=["Spark of Creativity"],
+        library=["Lightning Bolt"] + ["Island"] * 8,
+    )
+    angel = scenario.creature("Serra Angel", "bob")
+    scenario.will_take_the_may(True, source="Spark of Creativity")
+    _cast_all(scenario, "Spark of Creativity", targets=[angel])
+    assert angel.damage == 1
+
+
+def test_spark_of_creativity_declined_lets_you_play_the_exiled_card_this_turn() -> None:
+    scenario = _scenario(
+        [], ["Grizzly Bears"], hand=["Spark of Creativity"], library=["Island"] * 9
+    )
+    bears = scenario.creature("Grizzly Bears", "bob")
+    island = scenario.top_of_library(1)[0]
+    scenario.will_take_the_may(False, source="Spark of Creativity")
+    _cast_all(scenario, "Spark of Creativity", targets=[bears])
+    assert bears.damage == 0
+    assert island.zone is Zone.EXILE
+    assert any(p.card_id == island.id for p in scenario.game.play_permissions)
+
+
+def test_spark_of_creativity_taken_gives_no_permission_to_play_the_card() -> None:
+    scenario = _scenario(
+        [], ["Grizzly Bears"], hand=["Spark of Creativity"], library=["Island"] * 9
+    )
+    bears = scenario.creature("Grizzly Bears", "bob")
+    scenario.will_take_the_may(True, source="Spark of Creativity")
+    _cast_all(scenario, "Spark of Creativity", targets=[bears])
+    assert not scenario.game.play_permissions
+
+
+# -- Undying Flames: exile until a nonland card, damage equal to its mana value; Epic
+
+
+def test_undying_flames_exiles_until_a_nonland_and_deals_its_mana_value() -> None:
+    scenario = _scenario(
+        [],
+        hand=["Undying Flames"],
+        library=["Island", "Forest", "Grizzly Bears", "Serra Angel"] + ["Island"] * 6,
+    )
+    top = scenario.top_of_library(4)
+    _cast_all(scenario, "Undying Flames", targets=[scenario.player("bob")])
+    assert [c.zone for c in top[:3]] == [Zone.EXILE] * 3
+    assert top[3].zone is Zone.LIBRARY
+    assert _life(scenario, "bob") == 20 - 2
+
+
+def test_undying_flames_with_only_lands_exiles_them_all_and_deals_nothing() -> None:
+    scenario = _scenario([], hand=["Undying Flames"], library=["Island"] * 5)
+    top = scenario.top_of_library(5)
+    _cast_all(scenario, "Undying Flames", targets=[scenario.player("bob")])
+    assert all(c.zone is Zone.EXILE for c in top)
+    assert _life(scenario, "bob") == 20
+
+
+def test_undying_flames_can_hit_a_creature() -> None:
+    scenario = _scenario(
+        [], ["Grizzly Bears"], hand=["Undying Flames"], library=["Lightning Bolt"] + ["Island"] * 5
+    )
+    bears = scenario.creature("Grizzly Bears", "bob")
+    _cast_all(scenario, "Undying Flames", targets=[bears])
+    assert bears.damage == 1
+
+
+def _to_upkeep_of(scenario, who: str) -> None:
+    scenario.advance()
+    while not (scenario.step is Step.UPKEEP and scenario.turn.active_player == who):
+        scenario.advance()
+        _resolve_all(scenario)
+
+
+def test_undying_flames_epic_stops_the_controller_casting_spells() -> None:
+    scenario = _scenario(
+        [], hand=["Undying Flames", "Lightning Bolt"], library=["Grizzly Bears"] + ["Island"] * 8
+    )
+    _cast_all(scenario, "Undying Flames", targets=[scenario.player("bob")])
+    assert _life(scenario, "bob") == 18
+    with pytest.raises(ValueError, match="can't cast"):
+        scenario.cast_onto_stack("Lightning Bolt", username="alice", targets=["bob"], auto=True)
+
+
+def test_undying_flames_epic_does_not_stop_the_opponent_casting_spells() -> None:
+    scenario = _scenario(
+        [],
+        hand=["Undying Flames"],
+        bob_hand=["Lightning Bolt"],
+        library=["Grizzly Bears"] + ["Island"] * 8,
+    )
+    _cast_all(scenario, "Undying Flames", targets=[scenario.player("bob")])
+    scenario.pass_priority()
+    _cast_all(scenario, "Lightning Bolt", user="bob", targets=["alice"])
+    assert _life(scenario, "alice") == 20 - 3
+
+
+def test_undying_flames_epic_copies_it_at_each_of_the_controllers_upkeeps() -> None:
+    scenario = _scenario(
+        [],
+        hand=["Undying Flames"],
+        library=["Grizzly Bears", "Lightning Bolt", "Mountain", "Serra Angel"] + ["Island"] * 8,
+    )
+    _cast_all(scenario, "Undying Flames", targets=[scenario.player("bob")])
+    assert _life(scenario, "bob") == 18
+    scenario.will_take_the_may(False, source="Undying Flames", times=None)
+    _to_upkeep_of(scenario, "alice")
+    _resolve_all(scenario)
+    assert _life(scenario, "bob") == 18 - 1  # the copy exiled Lightning Bolt: mana value 1
+    _to_upkeep_of(scenario, "alice")
+    _resolve_all(scenario)
+    assert (
+        _life(scenario, "bob") == 18 - 1 - 5
+    )  # and the next, Serra Angel (the draw step took the Mountain)
+
+
+def test_undying_flames_epic_copy_is_not_cast_and_starts_no_epic_of_its_own() -> None:
+    scenario = _scenario(
+        [],
+        hand=["Undying Flames"],
+        library=["Grizzly Bears"] + ["Lightning Bolt"] * 3 + ["Island"] * 8,
+    )
+    _cast_all(scenario, "Undying Flames", targets=[scenario.player("bob")])
+    scenario.will_take_the_may(False, source="Undying Flames", times=None)
+    _to_upkeep_of(scenario, "alice")
+    _resolve_all(scenario)
+    assert len(scenario.game.casting_rule_effects) == 1
+    triggers = [
+        t for t in scenario.game.delayed_triggers.triggers if t.source_name == "Undying Flames"
+    ]
+    assert len(triggers) == 1
+
+
+# -- Wolf of Devil's Breach: pay {1}{R} and discard a card, damage equal to its mana value
+
+
+def _wolf_attack(scenario):
+    _attack(scenario, "Wolf of Devil's Breach")
+    _resolve_all(scenario)
+
+
+def test_wolf_of_devils_breach_pays_discards_and_deals_the_discarded_mana_value() -> None:
+    scenario = _scenario(
+        ["Wolf of Devil's Breach"],
+        ["Serra Angel"],
+        hand=["Serra Angel", "Island"],
+        step=Step.BEGINNING_OF_COMBAT,
+    )
+    angel_in_hand = scenario.find("Serra Angel", Zone.HAND, "alice")
+    target = scenario.creature("Serra Angel", "bob")
+    scenario.will_pay_the_mana_cost(True, source="Wolf of Devil's Breach", times=None)
+    scenario.will_choose_targets(target)
+    scenario.will_choose_cards(angel_in_hand)
+    _wolf_attack(scenario)
+    assert angel_in_hand.zone is Zone.GRAVEYARD
+    assert target.zone is Zone.GRAVEYARD  # 5 damage to a 4/4
+
+
+def test_wolf_of_devils_breach_the_player_chooses_which_card_to_discard() -> None:
+    scenario = _scenario(
+        ["Wolf of Devil's Breach"],
+        ["Serra Angel"],
+        hand=["Serra Angel", "Lightning Bolt"],
+        step=Step.BEGINNING_OF_COMBAT,
+    )
+    bolt = scenario.find("Lightning Bolt", Zone.HAND, "alice")
+    target = scenario.creature("Serra Angel", "bob")
+    scenario.will_pay_the_mana_cost(True, source="Wolf of Devil's Breach", times=None)
+    scenario.will_choose_targets(target)
+    scenario.will_choose_cards(bolt)
+    _wolf_attack(scenario)
+    assert bolt.zone is Zone.GRAVEYARD
+    assert target.damage == 1
+
+
+def test_wolf_of_devils_breach_declined_discards_nothing_and_deals_nothing() -> None:
+    scenario = _scenario(
+        ["Wolf of Devil's Breach"],
+        ["Serra Angel"],
+        hand=["Serra Angel"],
+        step=Step.BEGINNING_OF_COMBAT,
+    )
+    angel_in_hand = scenario.find("Serra Angel", Zone.HAND, "alice")
+    target = scenario.creature("Serra Angel", "bob")
+    scenario.will_pay_the_mana_cost(False, source="Wolf of Devil's Breach")
+    scenario.will_choose_targets(target)
+    _wolf_attack(scenario)
+    assert angel_in_hand.zone is Zone.HAND
+    assert target.damage == 0
+
+
+def test_wolf_of_devils_breach_with_an_empty_hand_cannot_pay_the_discard() -> None:
+    scenario = _scenario(["Wolf of Devil's Breach"], ["Serra Angel"], step=Step.BEGINNING_OF_COMBAT)
+    target = scenario.creature("Serra Angel", "bob")
+    scenario.will_pay_the_mana_cost(True, source="Wolf of Devil's Breach", times=None)
+    scenario.will_choose_targets(target)
+    _wolf_attack(scenario)
+    assert target.damage == 0
+
+
+# -- Golbez: return a creature card, then with eight artifacts each opponent loses its power
+
+
+def _golbez_end_step(scenario) -> None:
+    while scenario.step is not Step.END_STEP:
+        scenario.advance()
+    _resolve_all(scenario)
+
+
+def test_golbez_returns_the_creature_and_drains_its_power_with_eight_artifacts() -> None:
+    scenario = _scenario(
+        ["Golbez, Crystal Collector"] + ["Ornithopter"] * 8, graveyard=["Serra Angel"]
+    )
+    angel = scenario.find("Serra Angel", Zone.GRAVEYARD, "alice")
+    _golbez_end_step(scenario)
+    assert angel.zone is Zone.HAND
+    assert _life(scenario, "bob") == 20 - 4
+
+
+def test_golbez_with_only_four_artifacts_returns_the_creature_without_the_drain() -> None:
+    scenario = _scenario(
+        ["Golbez, Crystal Collector"] + ["Ornithopter"] * 4, graveyard=["Serra Angel"]
+    )
+    angel = scenario.find("Serra Angel", Zone.GRAVEYARD, "alice")
+    _golbez_end_step(scenario)
+    assert angel.zone is Zone.HAND
+    assert _life(scenario, "bob") == 20
+
+
+def test_golbez_with_three_artifacts_does_nothing() -> None:
+    scenario = _scenario(
+        ["Golbez, Crystal Collector"] + ["Ornithopter"] * 3, graveyard=["Serra Angel"]
+    )
+    angel = scenario.find("Serra Angel", Zone.GRAVEYARD, "alice")
+    _golbez_end_step(scenario)
+    assert angel.zone is Zone.GRAVEYARD
+    assert _life(scenario, "bob") == 20
+
+
+def test_golbez_drains_the_power_of_the_creature_it_returned_not_another() -> None:
+    scenario = _scenario(
+        ["Golbez, Crystal Collector"] + ["Ornithopter"] * 8,
+        graveyard=["Serra Angel", "Grizzly Bears"],
+    )
+    bears = scenario.find("Grizzly Bears", Zone.GRAVEYARD, "alice")
+    scenario.will_choose_targets(bears)
+    _golbez_end_step(scenario)
+    assert bears.zone is Zone.HAND
+    assert _life(scenario, "bob") == 20 - 2
+
+
+# -- Sorin, Grim Nemesis -9: a number of lifelink Vampire Knights equal to the highest life total
+
+
+def _sorin_minus_nine(scenario) -> None:
+    sorin = scenario.find("Sorin, Grim Nemesis", Zone.BATTLEFIELD, "alice")
+    scenario.game.add_counters(sorin, "loyalty", 3)
+    _activate_all(scenario, sorin, index=2)
+
+
+def test_sorin_minus_nine_makes_tokens_equal_to_the_highest_life_total() -> None:
+    scenario = _scenario(["Sorin, Grim Nemesis"])
+    scenario.player("bob").life = 27
+    _sorin_minus_nine(scenario)
+    knights = _tokens(scenario, "alice", "Vampire Knight")
+    assert len(knights) == 27
+    assert scenario.game.characteristics_of(knights[0]).power_toughness == (1, 1)
+    assert all(has_keyword(knight, "Lifelink", scenario.game) for knight in knights)
+
+
+def test_sorin_minus_nine_counts_your_own_life_when_it_is_highest() -> None:
+    scenario = _scenario(["Sorin, Grim Nemesis"])
+    scenario.player("alice").life = 31
+    scenario.player("bob").life = 4
+    _sorin_minus_nine(scenario)
+    assert len(_tokens(scenario, "alice", "Vampire Knight")) == 31
+
+
+# -- The Aesir Escape Valhalla: a link between the Saga and the card it exiled
+
+
+def _cast_saga(scenario, name: str) -> object:
+    _cast_all(scenario, name)
+    return scenario.find(name, Zone.BATTLEFIELD, "alice")
+
+
+def test_aesir_chapter_one_exiles_a_permanent_card_and_gains_its_mana_value() -> None:
+    scenario = _scenario([], hand=["The Aesir Escape Valhalla"], graveyard=["Serra Angel"])
+    angel = scenario.find("Serra Angel", Zone.GRAVEYARD, "alice")
+    scenario.will_choose_cards(angel)
+    _cast_saga(scenario, "The Aesir Escape Valhalla")
+    assert angel.zone is Zone.EXILE
+    assert _life(scenario, "alice") == 25
+
+
+def test_aesir_chapter_two_puts_counters_equal_to_the_exiled_cards_mana_value() -> None:
+    scenario = _scenario(
+        ["Grizzly Bears"], hand=["The Aesir Escape Valhalla"], graveyard=["Serra Angel"]
+    )
+    bears = scenario.creature("Grizzly Bears", "alice")
+    angel = scenario.find("Serra Angel", Zone.GRAVEYARD, "alice")
+    scenario.will_choose_cards(angel)
+    _cast_saga(scenario, "The Aesir Escape Valhalla")
+    scenario.will_choose_targets(bears)
+    scenario.game.saga_lore_step()
+    _resolve_all(scenario)
+    assert bears.counters["+1/+1"] == 5
+
+
+def test_aesir_chapter_three_returns_the_saga_and_the_exiled_card_to_hand() -> None:
+    scenario = _scenario(
+        ["Grizzly Bears"], hand=["The Aesir Escape Valhalla"], graveyard=["Serra Angel"]
+    )
+    bears = scenario.creature("Grizzly Bears", "alice")
+    angel = scenario.find("Serra Angel", Zone.GRAVEYARD, "alice")
+    scenario.will_choose_cards(angel)
+    saga = _cast_saga(scenario, "The Aesir Escape Valhalla")
+    scenario.will_choose_targets(bears)
+    scenario.game.saga_lore_step()
+    _resolve_all(scenario)
+    scenario.game.saga_lore_step()
+    _resolve_all(scenario)
+    assert saga.zone is Zone.HAND
+    assert angel.zone is Zone.HAND
+
+
+def test_aesir_with_an_empty_graveyard_exiles_nothing_and_counts_zero() -> None:
+    scenario = _scenario(["Grizzly Bears"], hand=["The Aesir Escape Valhalla"])
+    bears = scenario.creature("Grizzly Bears", "alice")
+    _cast_saga(scenario, "The Aesir Escape Valhalla")
+    assert _life(scenario, "alice") == 20
+    scenario.will_choose_targets(bears)
+    scenario.game.saga_lore_step()
+    _resolve_all(scenario)
+    assert bears.counters["+1/+1"] == 0
+
+
+def test_aesir_only_exiles_permanent_cards() -> None:
+    scenario = _scenario([], hand=["The Aesir Escape Valhalla"], graveyard=["Lightning Bolt"])
+    bolt = scenario.find("Lightning Bolt", Zone.GRAVEYARD, "alice")
+    _cast_saga(scenario, "The Aesir Escape Valhalla")
+    assert bolt.zone is Zone.GRAVEYARD
+    assert _life(scenario, "alice") == 20
+
+
+# -- The Creation of Avacyn: search, exile face down, turn up, lose life, put onto the battlefield
+
+
+def _avacyn_through(scenario, card, chapters: int):
+    scenario.will_choose_cards(card)
+    saga = _cast_saga(scenario, "The Creation of Avacyn")
+    for _ in range(chapters):
+        scenario.game.saga_lore_step()
+        _resolve_all(scenario)
+    return saga
+
+
+def test_creation_of_avacyn_chapter_two_turns_it_up_and_loses_its_mana_value() -> None:
+    scenario = _scenario(
+        [], hand=["The Creation of Avacyn"], library=["Serra Angel"] + ["Island"] * 8
+    )
+    angel = scenario.top_of_library(1)[0]
+    _avacyn_through(scenario, angel, 1)
+    assert angel.zone is Zone.EXILE
+    assert angel.face_up
+    assert _life(scenario, "alice") == 20 - 5
+
+
+def test_creation_of_avacyn_a_noncreature_card_costs_no_life() -> None:
+    scenario = _scenario(
+        [], hand=["The Creation of Avacyn"], library=["Lightning Bolt"] + ["Island"] * 8
+    )
+    bolt = scenario.top_of_library(1)[0]
+    _avacyn_through(scenario, bolt, 1)
+    assert bolt.face_up
+    assert _life(scenario, "alice") == 20
+
+
+def test_creation_of_avacyn_chapter_three_puts_a_creature_onto_the_battlefield() -> None:
+    scenario = _scenario(
+        [], hand=["The Creation of Avacyn"], library=["Serra Angel"] + ["Island"] * 8
+    )
+    angel = scenario.top_of_library(1)[0]
+    scenario.will_take_the_may(True, source="The Creation of Avacyn")
+    _avacyn_through(scenario, angel, 2)
+    assert angel.zone is Zone.BATTLEFIELD
+
+
+def test_creation_of_avacyn_declining_puts_the_creature_into_hand() -> None:
+    scenario = _scenario(
+        [], hand=["The Creation of Avacyn"], library=["Serra Angel"] + ["Island"] * 8
+    )
+    angel = scenario.top_of_library(1)[0]
+    scenario.will_take_the_may(False, source="The Creation of Avacyn")
+    _avacyn_through(scenario, angel, 2)
+    assert angel.zone is Zone.HAND
+
+
+def test_creation_of_avacyn_a_noncreature_card_goes_to_hand() -> None:
+    scenario = _scenario(
+        [], hand=["The Creation of Avacyn"], library=["Lightning Bolt"] + ["Island"] * 8
+    )
+    bolt = scenario.top_of_library(1)[0]
+    _avacyn_through(scenario, bolt, 2)
+    assert bolt.zone is Zone.HAND
+
+
+# -- Sarkhan the Mad
+
+
+def test_sarkhan_zero_reveals_to_hand_and_hurts_himself_by_its_mana_value() -> None:
+    scenario = _scenario(["Sarkhan the Mad"], library=["Serra Angel"] + ["Island"] * 8)
+    sarkhan = scenario.find("Sarkhan the Mad", Zone.BATTLEFIELD, "alice")
+    angel = scenario.top_of_library(1)[0]
+    _activate_all(scenario, sarkhan, index=0)
+    assert angel.zone is Zone.HAND
+    assert sarkhan.loyalty == 7 - 5
+
+
+def test_sarkhan_zero_with_a_land_deals_him_nothing() -> None:
+    scenario = _scenario(["Sarkhan the Mad"], library=["Island"] * 9)
+    sarkhan = scenario.find("Sarkhan the Mad", Zone.BATTLEFIELD, "alice")
+    _activate_all(scenario, sarkhan, index=0)
+    assert sarkhan.loyalty == 7
+
+
+def test_sarkhan_minus_two_has_the_controller_sacrifice_and_make_a_dragon() -> None:
+    scenario = _scenario(["Sarkhan the Mad"], ["Grizzly Bears"])
+    sarkhan = scenario.find("Sarkhan the Mad", Zone.BATTLEFIELD, "alice")
+    bears = scenario.creature("Grizzly Bears", "bob")
+    _activate_all(scenario, sarkhan, index=1, targets=[bears])
+    assert bears.zone is Zone.GRAVEYARD
+    (dragon,) = _tokens(scenario, "bob", "Dragon")
+    assert scenario.game.characteristics_of(dragon).power_toughness == (5, 5)
+    assert _tokens(scenario, "alice", "Dragon") == []
+
+
+def test_sarkhan_minus_two_on_his_own_creature_gives_him_the_dragon() -> None:
+    scenario = _scenario(["Sarkhan the Mad", "Grizzly Bears"])
+    sarkhan = scenario.find("Sarkhan the Mad", Zone.BATTLEFIELD, "alice")
+    bears = scenario.creature("Grizzly Bears", "alice")
+    _activate_all(scenario, sarkhan, index=1, targets=[bears])
+    assert len(_tokens(scenario, "alice", "Dragon")) == 1
+
+
+def test_sarkhan_minus_four_has_each_dragon_deal_its_power_to_the_player() -> None:
+    scenario = _scenario(["Sarkhan the Mad", "Shivan Dragon", "Grizzly Bears"])
+    sarkhan = scenario.find("Sarkhan the Mad", Zone.BATTLEFIELD, "alice")
+    _activate_all(scenario, sarkhan, index=2, targets=[scenario.player("bob")])
+    assert _life(scenario, "bob") == 20 - 5  # one Dragon; Grizzly Bears is not one
+
+
+def test_sarkhan_minus_four_with_no_dragon_deals_nothing() -> None:
+    scenario = _scenario(["Sarkhan the Mad", "Grizzly Bears"])
+    sarkhan = scenario.find("Sarkhan the Mad", Zone.BATTLEFIELD, "alice")
+    _activate_all(scenario, sarkhan, index=2, targets=[scenario.player("bob")])
+    assert _life(scenario, "bob") == 20
