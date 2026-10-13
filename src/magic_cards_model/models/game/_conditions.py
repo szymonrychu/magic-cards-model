@@ -1188,6 +1188,23 @@ class ConditionsMixin:
         power, toughness = state.last_known_power_toughness()
         return power if stat == "power" else toughness
 
+    def _last_known_types(self: "Game", card_id: UUID) -> tuple[str, ...]:
+        """A departed permanent's card types and subtypes, lowercased, as CR 608.2h
+        reads them (the computed ones while it is still on the battlefield, its
+        own once it has left); empty for an id nothing finds."""
+        state = self.find_by_id(card_id)
+        if state is None:
+            return ()
+        if state.zone is Zone.BATTLEFIELD:
+            chars = self.characteristics_of(state)
+            return tuple(
+                word.lower() for word in (*(t.value for t in chars.types), *chars.subtypes)
+            )
+        card = state.card
+        return tuple(
+            word.lower() for word in (*(t.value for t in card.types), *card.subtypes)
+        )
+
     def _last_known_color_count(self: "Game", card_id: UUID) -> int:
         """How many colours a sacrificed permanent had (CR 105.1), the computed
         ones while it is still on the battlefield (CR 613.5) and its own once

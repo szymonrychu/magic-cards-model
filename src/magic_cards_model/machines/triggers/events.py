@@ -1002,6 +1002,22 @@ class AbilityOnStack(EngineModel):
     cost_sacrificed_toughnesses: tuple[int | None, ...] = ()
     """`cost_sacrificed_powers`' toughness twin."""
 
+    cost_sacrificed_types: tuple[tuple[str, ...], ...] = ()
+    """`cost_sacrificed_card_ids`' card types and subtypes, lowercased, aligned by
+    position and taken as this object is created (CR 608.2h's last known
+    information; a sacrificed token has ceased to exist, CR 704.5d, by
+    resolution) - Shilgengar's "If you sacrificed an Angel this way"."""
+
+    cost_tapped_card_ids: tuple[UUID, ...] = ()
+    """The permanents tapped to pay this ability's own cost other than its source
+    (CR 602.2b), for "the power of the creature tapped this way" (Impelled
+    Giant). They stay on the battlefield, so the id is enough to look them up."""
+
+    cost_tapped_powers: tuple[int | None, ...] = ()
+    """`cost_tapped_card_ids`' powers, aligned by position and taken as the cost is
+    paid (CR 608.2h's last known information - the tapped creature can leave the
+    battlefield before this ability resolves)."""
+
     mana_spent: dict[Color, int] = Field(default_factory=dict)
     """How much mana of each colour paid this ability's own activation cost
     (CR 601.2h, imported for activation by CR 602.2b), taken from `machines/

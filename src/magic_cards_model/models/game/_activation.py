@@ -3350,6 +3350,21 @@ class ActivationMixin:
                 self._last_known_stat(card_id, "toughness")
                 for card_id in on_stack.cost_sacrificed_card_ids
             )
+            on_stack.cost_sacrificed_types = tuple(
+                self._last_known_types(card_id) for card_id in on_stack.cost_sacrificed_card_ids
+            )
+            if paid is not None:
+                # CR 602.2b / CR 608.2h: the permanents tapped as part of the cost
+                # (not the source's own {T}), and the power each had then.
+                on_stack.cost_tapped_card_ids = tuple(
+                    card_id
+                    for card_id in _cost_moved(paid, ComponentKind.TAP)
+                    if card_id != permanent.id
+                )
+                on_stack.cost_tapped_powers = tuple(
+                    self._last_known_stat(card_id, "power")
+                    for card_id in on_stack.cost_tapped_card_ids
+                )
             self.stack.append(on_stack)
             # CR 602.2b's target announcement has settled (CR 601.2c, imported
             # wholesale), and the ability is on the stack, so anything watching
