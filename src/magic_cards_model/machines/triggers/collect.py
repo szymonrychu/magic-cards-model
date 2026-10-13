@@ -127,6 +127,8 @@ def _unread_trigger_events(condition: str) -> frozenset[TriggerEvent | ExtraTrig
         return frozenset({ExtraTriggerEvent.CRIME_COMMITTED})
     if _SEARCHES_LIBRARY_CONDITION.match(lowered):
         return frozenset({ExtraTriggerEvent.SEARCHES_LIBRARY})
+    if _EXPEND_CONDITION.match(lowered):
+        return frozenset({ExtraTriggerEvent.EXPEND})
     if _ROLLS_DICE_CONDITION.match(lowered):
         return frozenset({ExtraTriggerEvent.ROLLS_DICE})
     if _DOOR_UNLOCKED_CONDITION.match(lowered):
@@ -2125,6 +2127,7 @@ from ._common import (  # noqa: E402
     _REVEALED_FIRST_DRAW_CONDITION,
     _REVEALED_THIS_WAY_CONDITION,
     _RING_TEMPTS_YOU_CONDITION,
+    _EXPEND_CONDITION,
     _ROLLS_DICE_CONDITION,
     _SEARCHES_LIBRARY_CONDITION,
     _SELF_PUT_INTO_GRAVEYARD_FROM_ANYWHERE_CONDITION,

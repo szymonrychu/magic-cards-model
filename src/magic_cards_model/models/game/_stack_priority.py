@@ -446,6 +446,17 @@ class StackPriorityMixin:
             self.next_spell_keyword_grants = [
                 grant for grant in self.next_spell_keyword_grants if grant not in used
             ]
+        spent = sum(self.cast_record(card_state).mana_spent.values())
+        if spent > 0:
+            # CR 700.14: every N the running total crossed with this payment.
+            before = self.mana_spent_on_spells_this_turn.get(controller, 0)
+            self.mana_spent_on_spells_this_turn[controller] = before + spent
+            for threshold in range(before + 1, before + spent + 1):
+                self.emit(
+                    GameEvent(
+                        event=ExtraTriggerEvent.EXPEND, player=controller, amount=threshold
+                    )
+                )
         self.emit(
             GameEvent(
                 event=TriggerEvent.CAST_SPELL,

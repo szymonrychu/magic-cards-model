@@ -2467,3 +2467,27 @@ def test_a_snapshot_written_before_the_r3_t8_amount_readers_is_refused() -> None
         match=f"schema_version={_SCHEMA_VERSION_BEFORE_EP01_R3_T8_AMOUNTS}",
     ):
         Game.model_validate(dumped)
+
+
+#: The version stamped before EP02-R2-T7: `SpellCostReductionGrant.once` (Kaza's
+#: "the next instant or sorcery spell you cast this turn costs {1} less"),
+#: `Game.mana_spent_on_spells_this_turn` (CR 700.14's expend), and the
+#: `damage_each_opponent_per_card_still_exiled` delayed effect. The last shape
+#: without them is 163.
+_SCHEMA_VERSION_BEFORE_EP02_R2_T7_EXPEND = 163
+
+
+def test_a_snapshot_written_before_expend_and_once_grants_is_refused() -> None:
+    """A version-163 dump has no per-turn mana-spent total, so a decode as
+    current would count the next spell's mana from zero and expend nothing it
+    should have: refused instead."""
+    assert "mana_spent_on_spells_this_turn" in Game.model_fields
+    assert Game.CURRENT_SCHEMA_VERSION > _SCHEMA_VERSION_BEFORE_EP02_R2_T7_EXPEND
+    dumped = _a_played_game().model_dump(mode="json")
+    dumped["schema_version"] = _SCHEMA_VERSION_BEFORE_EP02_R2_T7_EXPEND
+
+    with pytest.raises(
+        SchemaVersionMismatch,
+        match=f"schema_version={_SCHEMA_VERSION_BEFORE_EP02_R2_T7_EXPEND}",
+    ):
+        Game.model_validate(dumped)

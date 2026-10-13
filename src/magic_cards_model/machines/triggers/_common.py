@@ -279,6 +279,10 @@ _CRIME_COMMITTED_CONDITION = re.compile(r"^you(?:'ve| have)? commits? a crime$",
 _SEARCHES_LIBRARY_CONDITION = re.compile(
     r"^(?P<who>you|an opponent|a player) search(?:es)? (?:your|their) library$", re.IGNORECASE
 )
+#: CR 700.14: "you expend 4" (Muerra, Trash Tactician); `n` is the threshold.
+_EXPEND_CONDITION = re.compile(
+    r"^(?P<who>you|an opponent|a player) expends? (?P<n>\d+)$", re.IGNORECASE
+)
 #: CR 706.2: "you roll one or more dice" (Barbarian Class's level 2).
 _ROLLS_DICE_CONDITION = re.compile(
     r"^(?P<who>you|an opponent|a player) rolls? one or more dice$", re.IGNORECASE

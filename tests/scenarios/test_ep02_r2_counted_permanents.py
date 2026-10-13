@@ -1032,3 +1032,86 @@ def test_muerra_adds_nothing_without_a_raccoon():
     scenario.start_at(Step.UNTAP)
     _advance_to(scenario, Step.PRECOMBAT_MAIN)
     assert sum(scenario.player("alice").mana_pool.floating.values()) == 0
+
+
+# --------------------------------------------------------------------------
+# Muerra, Trash Tactician: "Whenever you expend 4, you gain 3 life." / "Whenever you
+# expend 8, exile the top two cards of your library. Until the end of your next turn,
+# you may play those cards." CR 700.14: a player expends N when they pay a cost to cast
+# a spell and the mana they spent on spells this turn before paying it was less than N
+# and became at least N after.
+# --------------------------------------------------------------------------
+
+
+def _muerra_board(lands, hand, *, bob=()):
+    return _main(_build(["Muerra, Trash Tactician"] + list(lands), list(bob), hand=list(hand)))
+
+
+def _cast_and_settle(scenario, name, username="alice"):
+    scenario.cast_onto_stack(name, auto=True, username=username)
+    while scenario.game.stack:
+        scenario.pass_until_resolved()
+
+
+def test_expend_four_triggers_the_moment_the_fourth_mana_is_spent_on_spells():
+    scenario = _muerra_board(["Forest"] * 6, ["Grizzly Bears", "Runeclaw Bear"])
+    _cast_and_settle(scenario, "Grizzly Bears")  # 2 spent: not yet
+    assert scenario.player("alice").life == 20
+    _cast_and_settle(scenario, "Runeclaw Bear")  # 4 spent: expend 4
+    assert scenario.player("alice").life == 23
+    assert _exiled(scenario) == []  # expend 8 has not happened
+
+
+def test_one_big_spell_crosses_four_but_not_eight():
+    scenario = _muerra_board(["Forest"] * 6, ["Craw Wurm"])
+    _cast_and_settle(scenario, "Craw Wurm")  # 6 spent: crosses 4 only
+    assert scenario.player("alice").life == 23
+    assert _exiled(scenario) == []
+
+
+def test_spending_past_four_does_not_expend_four_again_in_the_same_turn():
+    scenario = _muerra_board(["Forest"] * 6, ["Grizzly Bears", "Runeclaw Bear", "Grizzly Bears"])
+    for name in ("Grizzly Bears", "Runeclaw Bear", "Grizzly Bears"):
+        _cast_and_settle(scenario, name)  # 2, 4 (expend 4), 6 (nothing)
+    assert scenario.player("alice").life == 23
+    assert _exiled(scenario) == []
+
+
+def test_expend_eight_exiles_two_cards_and_lets_you_play_them():
+    scenario = _muerra_board(["Forest"] * 8, ["Craw Wurm", "Grizzly Bears"])
+    _cast_and_settle(scenario, "Craw Wurm")  # 6: expend 4
+    assert scenario.player("alice").life == 23
+    assert _exiled(scenario) == []
+    _cast_and_settle(scenario, "Grizzly Bears")  # 8: expend 8
+    assert scenario.player("alice").life == 23  # expend 4 happened only once
+    exiled = _exiled(scenario)
+    assert len(exiled) == 2
+    permitted = {permission.card_id for permission in scenario.game.play_permissions}
+    assert {card.id for card in exiled} <= permitted
+    scenario.play_land("Forest", from_zone=Zone.EXILE)
+    assert len(_exiled(scenario)) == 1
+
+
+def test_one_cast_can_cross_both_thresholds():
+    scenario = _muerra_board(["Forest"] * 8, ["Craw Wurm", "Grizzly Bears"])
+    scenario.game.mana_spent_on_spells_this_turn["alice"] = 3
+    _cast_and_settle(scenario, "Craw Wurm")  # 3 -> 9: both 4 and 8 are crossed
+    assert scenario.player("alice").life == 23
+    assert len(_exiled(scenario)) == 2
+
+
+def test_an_opponents_spending_is_not_yours_to_expend():
+    scenario = _muerra_board(["Forest"] * 6, ["Grizzly Bears"], bob=["Forest"] * 6)
+    scenario.game.mana_spent_on_spells_this_turn["bob"] = 10
+    _cast_and_settle(scenario, "Grizzly Bears")  # alice: 2 spent
+    assert scenario.player("alice").life == 20
+
+
+def test_the_mana_spent_total_resets_each_turn():
+    scenario = _muerra_board(["Forest"] * 6, ["Grizzly Bears"])
+    _cast_and_settle(scenario, "Grizzly Bears")
+    assert scenario.game.mana_spent_on_spells_this_turn == {"alice": 2}
+    _advance_to(scenario, Step.END_STEP)
+    scenario.advance()
+    scenario.advance()
+    assert scenario.game.mana_spent_on_spells_this_turn == {}
