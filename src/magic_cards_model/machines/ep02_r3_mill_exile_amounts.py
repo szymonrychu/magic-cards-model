@@ -31,11 +31,14 @@ import functools
 import re
 from typing import TYPE_CHECKING, Any
 
+from ..models.card_state import CardState
+from ..models.zone import Zone
 from ..numbers import halve
 from .amount_sentences import (
     Amount,
     apply_mill,
     clean,
+    controller_of,
     parse_mill_clause,
     recipient_amount,
 )
@@ -130,5 +133,45 @@ def _parse_mill_amount_clause(clause: str, *, for_spell: bool) -> "TargetedClaus
 
     def effect(game: "Game", stack_object: Any) -> None:
         apply_mill(game, stack_object, who, amount)
+
+    return effect
+
+
+# --------------------------------------------------------------------------
+# "Destroy target <permanent> if its mana value is equal to the amount of
+# unspent mana you have"
+# --------------------------------------------------------------------------
+
+_DESTROY_IF_MV_EQUALS_UNSPENT_RE = re.compile(
+    r"^destroy (?P<phrase>target .+?) if its mana value is equal to the amount of "
+    r"unspent mana you have$",
+    re.IGNORECASE,
+)
+
+
+@MIXED_CLAUSE.rung("s36", for_spell=FORWARD)
+def _parse_destroy_if_mana_value_equals_unspent_mana(
+    clause: str, *, for_spell: bool
+) -> "TargetedClause | None":
+    """Destroy each legal target whose mana value (CR 202.3) equals the mana in
+    the controller's pool (CR 106.4) as the instruction applies (CR 608.2c).
+    The pool is counted once, before anything is destroyed (CR 608.2h)."""
+    match = _DESTROY_IF_MV_EQUALS_UNSPENT_RE.fullmatch(clean(clause))
+    if match is None:
+        return None
+    from .effects._common import _targets_understood
+
+    if not _targets_understood(match.group("phrase"), count_agnostic=True):
+        return None
+
+    def effect(game: "Game", stack_object: Any) -> None:
+        unspent = game.player(controller_of(game, stack_object)).mana_pool.total
+        for target in game.resolve_targets(stack_object):
+            if (
+                isinstance(target, CardState)
+                and target.zone is Zone.BATTLEFIELD
+                and game.characteristics_of(target).mana_value == unspent
+            ):
+                game.destroy(target)
 
     return effect

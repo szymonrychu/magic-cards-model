@@ -15,6 +15,8 @@ wrote this file:
 - **CR 608.2h** - the amount is taken once, as the instruction applies.
 """
 
+import pytest
+
 from magic_cards_model.machines import Step
 from magic_cards_model.models import Zone
 
@@ -208,3 +210,100 @@ def test_veteran_ice_climber_with_no_target_chosen_mills_nobody():
     scenario.attack_with(climber)
     _settle(scenario)
     assert _graveyard(scenario, "bob") == 0
+
+
+# --------------------------------------------------------------------------
+# Part 2 - "creature with total power and toughness 5 or less" (Cut Down)
+#
+# CR 208.1 power and toughness are two characteristics of a creature; the
+# restriction sums the two as the layers leave them (CR 613.4c).
+# --------------------------------------------------------------------------
+
+
+def _cut_down_board(*bob_creatures):
+    return (
+        Scenario()
+        .player("alice", hand=["Cut Down"], battlefield=[SWAMP])
+        .player("bob", battlefield=list(bob_creatures))
+        .build()
+    )
+
+
+def test_cut_down_destroys_a_creature_whose_stats_total_five_or_less():
+    scenario = _cut_down_board("Grizzly Bears")
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.creature("Grizzly Bears", "bob")
+    scenario.cast_and_resolve(
+        "Cut Down", *scenario.untapped_sources(SWAMP), targets=[bears]
+    )
+    assert "Grizzly Bears" not in scenario.battlefield_names()
+
+
+def test_cut_down_total_exactly_five_is_legal():
+    scenario = _cut_down_board("Kird Ape", "Forest")
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    ape = scenario.creature("Kird Ape", "bob")
+    scenario.cast_and_resolve(
+        "Cut Down", *scenario.untapped_sources(SWAMP), targets=[ape]
+    )
+    assert "Kird Ape" not in scenario.battlefield_names()
+
+
+def test_cut_down_cannot_target_a_creature_with_total_six():
+    scenario = _cut_down_board("Hill Giant")
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    giant = scenario.creature("Hill Giant", "bob")
+    with pytest.raises(ValueError, match="total power and toughness"):
+        scenario.cast("Cut Down", targets=[giant])
+
+
+# --------------------------------------------------------------------------
+# Part 3 - "Destroy target artifact if its mana value is equal to the amount
+# of unspent mana you have" (Glissa Sunseeker). The target is any artifact
+# (CR 115.1); the condition is read as the ability resolves (CR 608.2c), off
+# the mana pool (CR 106.4) and the artifact's mana value (CR 202.3).
+# --------------------------------------------------------------------------
+
+
+def _glissa_board(floating):
+    from magic_cards_model.models import Color
+
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Glissa Sunseeker"])
+        .player("bob", battlefield=["Sol Ring", "Mind Stone"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    glissa = scenario.creature("Glissa Sunseeker", "alice")
+    glissa.summoning_sick = False
+    if floating:
+        scenario.player("alice").mana_pool.add(Color.COLORLESS, floating)
+    return scenario, glissa
+
+
+def test_glissa_destroys_an_artifact_whose_mana_value_equals_the_unspent_mana():
+    scenario, glissa = _glissa_board(2)
+    scenario.activate(glissa, index=0, targets=[scenario.find("Mind Stone", Zone.BATTLEFIELD)])
+    scenario.resolve_top()
+    assert "Mind Stone" not in scenario.battlefield_names()
+
+
+def test_glissa_leaves_an_artifact_whose_mana_value_differs():
+    scenario, glissa = _glissa_board(2)
+    scenario.activate(glissa, index=0, targets=[scenario.find("Sol Ring", Zone.BATTLEFIELD)])
+    scenario.resolve_top()
+    assert "Sol Ring" in scenario.battlefield_names()
+
+
+def test_glissa_with_no_unspent_mana_destroys_only_a_zero_mana_value_artifact():
+    scenario, glissa = _glissa_board(0)
+    scenario.activate(glissa, index=0, targets=[scenario.find("Mind Stone", Zone.BATTLEFIELD)])
+    scenario.resolve_top()
+    assert "Mind Stone" in scenario.battlefield_names()
+
+
+def test_glissa_cannot_target_a_nonartifact():
+    scenario, glissa = _glissa_board(2)
+    with pytest.raises(ValueError):
+        scenario.activate(glissa, index=0, targets=[scenario.creature("Glissa Sunseeker")])

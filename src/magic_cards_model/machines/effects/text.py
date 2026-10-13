@@ -958,6 +958,9 @@ _IF_SENTENCE_CONSEQUENCE_RE = re.compile(
 )
 
 
+_TOTAL_POWER_AND_TOUGHNESS_RE = re.compile(r"\btotal power and toughness\b", re.IGNORECASE)
+
+
 def split_effect_clauses(text: str) -> list[str]:
     """`_split_effect_clauses`, memoised per text (a pure string split the
     effect ladder repeats per reader); every caller gets its own list."""
@@ -1030,6 +1033,11 @@ def _split_effect_clauses(text: str) -> list[str]:
         lambda m: m.group(0).replace(" and ", _AND_SENTINEL), masked
     )
     masked = _TOKEN_KEYWORD_AND_RE.sub(lambda m: m.group(0).replace(" and ", _AND_SENTINEL), masked)
+    # "with total power and toughness 5 or less" (Cut Down): one comparison
+    # over the sum of two characteristics (CR 208.1), not two instructions.
+    masked = _TOTAL_POWER_AND_TOUGHNESS_RE.sub(
+        lambda m: m.group(0).replace(" and ", _AND_SENTINEL), masked
+    )
     masked = _ZONE_PAIR_AND_RE.sub(lambda m: m.group(0).replace(" and ", _AND_SENTINEL), masked)
     masked = _IN_EXILE_AND_IN_GRAVEYARD_RE.sub(
         lambda m: m.group(0).replace(" and ", _AND_SENTINEL), masked
