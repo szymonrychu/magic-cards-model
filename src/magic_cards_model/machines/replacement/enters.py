@@ -3654,24 +3654,39 @@ def _bloodthirst_entering_counters(game: "Game", event: ReplaceableEvent) -> lis
     or not. The condition is the turn-history clause the condition reader
     already reads (`machines/conditions/history.py`), asked for the entering
     permanent's controller; N is the printed keyword's own count
-    (`KeywordAbility.count`). Each instance applies separately."""
+    (`KeywordAbility.count`). Each instance applies separately.
+
+    CR 702.54b: "Bloodthirst X" means "This permanent enters with X +1/+1
+    counters on it, where X is the total damage your opponents have been
+    dealt this turn" - no condition, X read by the shared damage-this-turn
+    amount reader (`ep02_r2_chosen_amounts.damage_this_turn_count`)."""
     from ...models.card_state import Counter
     from ..abilities import keyword_abilities
     from ..conditions import ConditionContext, read_condition
+    from ..ep02_r2_chosen_amounts import damage_this_turn_count
 
     entering = event.card
     if entering is None:
         return []
-    amounts = [
-        ability.count
+    bloodthirst = [
+        ability
         for ability in keyword_abilities(entering.card)
-        if ability.canonical.lower() == "bloodthirst" and ability.count is not None
+        if ability.canonical.lower() == "bloodthirst"
     ]
-    if not amounts:
-        return []
     controller = entering.controller or entering.owner
-    context = ConditionContext(game=game, controller=controller, source=entering)
-    if read_condition(context, "an opponent was dealt damage this turn") is not True:
+    opponents_damage = damage_this_turn_count("damage dealt to your opponents this turn")
+    amounts = [
+        opponents_damage(game, controller)
+        for ability in bloodthirst
+        if ability.count is None and (ability.cost or "").upper() == "X"
+    ]
+    numbered = [ability.count for ability in bloodthirst if ability.count is not None]
+    if numbered:
+        context = ConditionContext(game=game, controller=controller, source=entering)
+        if read_condition(context, "an opponent was dealt damage this turn") is True:
+            amounts.extend(numbered)
+    amounts = [amount for amount in amounts if amount and amount > 0]
+    if not amounts:
         return []
     found = []
     for index, amount in enumerate(amounts):

@@ -74,6 +74,10 @@ PROOFS = [
     "Jaddi Lifestrider",
     "Charge Across the Araba",
     "Rosheen, Roaring Prophet",
+    "Spectral Adversary",
+    "Harnessed Lightning",
+    "Petrified Wood-Kin",
+    "Pitiless Carnage",
 ]
 
 
@@ -766,3 +770,99 @@ def test_ziatoras_envoy_casts_the_top_card_up_to_the_damage_else_takes_it(top, w
         assert landed
     else:
         assert card_on_top.zone is Zone.HAND and not landed
+
+
+# --------------------------------------------------------------------------
+# Second printings proving each reader on a different wording (CR 107.1c,
+# CR 603.12, CR 608.2c, CR 702.54b)
+# --------------------------------------------------------------------------
+
+
+def test_spectral_adversary_phases_out_up_to_that_many_other_targets():
+    scenario = _board(
+        alice_hand=["Spectral Adversary"],
+        alice_lands=("Island", "Island", "Island", "Island"),
+        bob_battlefield=["Grizzly Bears", "Colossal Dreadmaw"],
+    )
+    bear = scenario.creature("Grizzly Bears", "bob")
+    dreadmaw = scenario.creature("Colossal Dreadmaw", "bob")
+    scenario.will_choose_an_amount(2, source="Spectral Adversary")
+    scenario.will_choose_targets(bear, dreadmaw, source="Spectral Adversary")
+    adversary = scenario.put_onto_battlefield("Spectral Adversary")
+    _resolve_all(scenario)
+    assert adversary.counters["+1/+1"] == 2
+    assert bear.phased_out and dreadmaw.phased_out
+    assert not adversary.phased_out
+
+
+def test_spectral_adversary_paying_nothing_phases_nothing_out():
+    scenario = _board(
+        alice_hand=["Spectral Adversary"],
+        alice_lands=("Island", "Island"),
+        bob_battlefield=["Grizzly Bears"],
+    )
+    bear = scenario.creature("Grizzly Bears", "bob")
+    scenario.will_choose_an_amount(0, source="Spectral Adversary")
+    adversary = scenario.put_onto_battlefield("Spectral Adversary")
+    _resolve_all(scenario)
+    assert adversary.counters["+1/+1"] == 0
+    assert not bear.phased_out
+
+
+@pytest.mark.parametrize("paid", [0, 2, 3])
+def test_harnessed_lightning_deals_the_energy_paid_as_damage(paid):
+    scenario = _board(alice_hand=["Harnessed Lightning"], bob_battlefield=["Colossal Dreadmaw"])
+    dreadmaw = scenario.creature("Colossal Dreadmaw", "bob")
+    scenario.will_pay_energy_amount(paid, source="Harnessed Lightning")
+    _cast(scenario, "Harnessed Lightning", targets=[dreadmaw])
+    assert dreadmaw.damage == paid
+    assert scenario.player("alice").energy == 3 - paid
+
+
+def test_petrified_wood_kin_enters_with_the_damage_opponents_were_dealt():
+    scenario = _board(
+        alice_hand=["Petrified Wood-Kin"], alice_lands=("Forest", "Forest", "Forest", "Forest")
+    )
+    scenario.game.deal_damage(scenario.player("bob"), 3, source=None)
+    scenario.game.deal_damage(scenario.player("alice"), 2, source=None)
+    _cast(scenario, "Petrified Wood-Kin")
+    (wood_kin,) = _on_battlefield(scenario, "Petrified Wood-Kin")
+    assert wood_kin.counters["+1/+1"] == 3
+
+
+def test_petrified_wood_kin_enters_with_no_counters_when_no_opponent_was_dealt_damage():
+    scenario = _board(
+        alice_hand=["Petrified Wood-Kin"], alice_lands=("Forest", "Forest", "Forest", "Forest")
+    )
+    scenario.game.deal_damage(scenario.player("alice"), 2, source=None)
+    _cast(scenario, "Petrified Wood-Kin")
+    (wood_kin,) = _on_battlefield(scenario, "Petrified Wood-Kin")
+    assert wood_kin.counters["+1/+1"] == 0
+
+
+@pytest.mark.parametrize("sacrificed", [0, 2])
+def test_pitiless_carnage_draws_one_per_permanent_really_sacrificed(sacrificed):
+    scenario = _board(
+        alice_hand=["Pitiless Carnage"],
+        alice_battlefield=["Grizzly Bears", "Grizzly Bears"],
+        alice_library=["Island"] * 10,
+    )
+    bears = _on_battlefield(scenario, "Grizzly Bears")
+    scenario.will_choose_cards(*bears[:sacrificed], source="Pitiless Carnage")
+    _cast(scenario, "Pitiless Carnage")
+    assert len(scenario.player("alice").hand) == sacrificed
+    assert len(_on_battlefield(scenario, "Grizzly Bears")) == 2 - sacrificed
+
+
+def test_pitiless_carnage_offers_only_the_casters_permanents():
+    scenario = _board(
+        alice_hand=["Pitiless Carnage"],
+        alice_lands=("Swamp", "Swamp", "Swamp"),
+        bob_battlefield=["Grizzly Bears"],
+    )
+    scenario.will_choose_cards(source="Pitiless Carnage")
+    _cast(scenario, "Pitiless Carnage")
+    (question,) = _question(scenario, "Pitiless Carnage")
+    bob_bear = scenario.creature("Grizzly Bears", "bob")
+    assert bob_bear.id not in question.cards
+    assert len(question.cards) == 6

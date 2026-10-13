@@ -94,9 +94,9 @@ def _singular(noun: str) -> str:
 _X_IN_COST_RE = re.compile(r"\s+with \{x\} in (?:its|their) mana costs?$", re.IGNORECASE)
 
 _ANY_NUMBER_RE = re.compile(
-    r"^(?:you may )?(?P<verb>tap|return|reveal) any number of (?P<desc>.+?)"
+    r"^(?:you may )?(?P<verb>tap|return|reveal|sacrifice) any number of (?P<desc>.+?)"
     r"(?P<where> you control(?: to (?:their|its) owners?'s? hands?)?"
-    r"| from your hand| in your hand)$",
+    r"| from your hand| in your hand|)$",
     re.IGNORECASE,
 )
 
@@ -165,6 +165,18 @@ def _any_number_plan(clause: str) -> tuple[str, Callable[..., bool], bool] | Non
     verb = match.group("verb").lower()
     where = match.group("where").strip().lower()
     description = match.group("desc")
+    if verb == "sacrifice":
+        # CR 701.21a: only a permanent its controller controls can be
+        # sacrificed, so "you control" may go unprinted. "Sacrifice any
+        # number of <card type>s." is `removal`'s Scapeshift reader.
+        from .effects.removal import _SACRIFICE_N_GROUP_RE
+
+        if where not in ("", "you control") or _SACRIFICE_N_GROUP_RE.fullmatch(clause.strip()):
+            return None
+        permanent = _permanent_matcher(description)
+        return None if permanent is None else ("sacrifice", permanent[1], False)
+    if not where:
+        return None
     if verb == "reveal":
         if where == "you control":
             return None
@@ -233,6 +245,10 @@ def any_number_chosen(game: "Game", stack_object: Any, clause: str) -> list[Card
         if verb == "tap":
             if not state.tapped and state.zone is Zone.BATTLEFIELD and game.tap_permanent(state):
                 done.append(state)
+        elif verb == "sacrifice":
+            if state.zone is Zone.BATTLEFIELD:
+                game.sacrifice(state)
+                done.append(state)
         elif verb == "return":
             if state.zone is Zone.BATTLEFIELD:
                 moved = game.return_to_hand(state)
@@ -249,9 +265,10 @@ def any_number_chosen(game: "Game", stack_object: Any, clause: str) -> list[Card
 def _parse_any_number_of_clause(clause: str, *, for_spell: bool) -> Any:
     """ "[You may] tap any number of untapped <permanents> you control",
     "Return any number of <permanents> you control to their owner's hand",
-    "Reveal any number of <cards> from your hand" (CR 107.1c, CR 701.26a,
-    CR 701.20a): the controller chooses, the chosen objects are tapped,
-    returned or revealed, and how many really were is recorded for a later
+    "Reveal any number of <cards> from your hand", "Sacrifice any number of
+    <permanents> [you control]" (CR 107.1c, CR 701.26a, CR 701.20a,
+    CR 701.21a): the controller chooses, the chosen objects are tapped,
+    returned, revealed or sacrificed, and how many really were is recorded for a later
     "for each ... this way" / "that many" (CR 608.2c)."""
     lowered = clause.lower()
     if "any number of" not in lowered or _any_number_plan(clause) is None:

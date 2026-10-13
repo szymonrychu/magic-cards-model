@@ -1720,7 +1720,7 @@ _TARGET_CANT_BLOCK_RE = re.compile(
 #: Mist's "Up to X target creatures phase out.") rides on the phrase, which
 #: `machines/targeting.py` reads in full.
 _TARGET_PHASES_OUT_RE = re.compile(
-    r"^(?P<phrase>(?:up to \w+ )?(?:another )?target .+?) phases? out\.?$", re.IGNORECASE
+    r"^(?P<phrase>(?:up to \w+ )?(?:an)?(?:other )?target .+?) phases? out\.?$", re.IGNORECASE
 )
 
 #: "`<target phrase>` gains `<keyword>`[, `<keyword>`, and `<keyword>`] until
