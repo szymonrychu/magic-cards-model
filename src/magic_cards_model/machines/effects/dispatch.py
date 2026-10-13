@@ -52,6 +52,7 @@ from ..delayed import (
     NextSpellCannotBeCountered,
 )
 from ..ep02_r1_counted_permanents import counting_controller
+from ..ep02_r2_cards_in_zone_counts import parse_half_of_zone_clause
 from ..layers import (
     ContinuousEffect,
     Duration,
@@ -947,6 +948,10 @@ def parse_clause_effect(clause: str) -> ClauseEffect | None:
             source_id=source_id,
             predicate=exile_predicate,
         )
+
+    if (half_zone := parse_half_of_zone_clause(clause)) is not None:
+        # EP-02 R2 T2: half the cards in a hand / half the permanents of a kind.
+        return half_zone
 
     if _DISCARD_HAND_RE.fullmatch(clause):
 

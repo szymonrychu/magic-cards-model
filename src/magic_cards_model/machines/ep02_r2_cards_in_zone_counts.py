@@ -245,3 +245,122 @@ def attached_pump_per_zone_count(sentence: str):
         return effects
 
     return builder
+
+
+# --------------------------------------------------------------------------
+# Half of a zone (CR 107.1a: the card prints which way the fraction rounds)
+# --------------------------------------------------------------------------
+#
+# The clause runs against the player the wrapper resolved ("target opponent
+# discards ...", "defending player ..."); "their"/"they" is that player.
+# `mills`/`exiles` half a library is `dispatch._HALF_OF_OWN_LIBRARY_RE`'s.
+
+_HALF_DISCARD_RE = re.compile(
+    r"^discards? half (?:the cards in )?(?:their|your) hand, rounded (?P<direction>up|down)$",
+    re.IGNORECASE,
+)
+_HALF_SACRIFICE_RE = re.compile(
+    r"^sacrifices? half the (?P<description>.+?) (?:they|you) control of (?:their|your) choice, "
+    r"rounded (?P<direction>up|down)$",
+    re.IGNORECASE,
+)
+
+
+def parse_half_of_zone_clause(clause: str):
+    """ "discards half the cards in their hand, rounded down" (Lord Xander),
+    "sacrifices half the creatures they control of their choice, rounded up"
+    (Rush of Dread), as a `ClauseEffect` `(game, player, source, source_id)`.
+
+    The size is taken once, as the effect applies (CR 608.2h). A discard is the
+    discarding player's own choice (CR 701.9b); a sacrifice picks among the
+    permanents that player controls (CR 701.21a) and asks nothing when every
+    one of them goes (CR 608.2d: no impossible choice)."""
+    from ..numbers import halve
+
+    text = clause.strip().rstrip(".")
+    if not text.lower().startswith(("discard", "sacrifice")) or " half " not in text.lower():
+        return None
+    if match := _HALF_DISCARD_RE.fullmatch(text):
+        round_up = match.group("direction").lower() == "up"
+
+        def discard_half(game, player, source, source_id):
+            from .effects.draw_discard import _discard_cards
+
+            count = halve(len(player.hand), round_up=round_up)
+            if count > 0:
+                _discard_cards(game, player, count, source, source_id=source_id, exact=True)
+
+        return discard_half
+    if match := _HALF_SACRIFICE_RE.fullmatch(text):
+        from .targeting import permanent_description
+
+        # "creatures" / "nonland permanents": the target grammar reads the singular.
+        requirement = permanent_description(re.sub(r"s$", "", match.group("description").strip()))
+        if requirement is None:
+            return None
+        round_up = match.group("direction").lower() == "up"
+
+        def sacrifice_half(game, player, source, source_id):
+            from ..models.zone import Zone
+            from .decisions import Decision, DecisionKind
+
+            candidates = [
+                permanent
+                for permanent in game.permanents_controlled_by(player.username)
+                if requirement.rejects(permanent, player.username, game) is None
+            ]
+            count = halve(len(candidates), round_up=round_up)
+            if count <= 0:
+                return
+            chosen = candidates
+            if count < len(candidates):
+                ids = game.ask(
+                    Decision(
+                        kind=DecisionKind.CHOOSE_CARDS,
+                        player=player.username,
+                        prompt=f"sacrifice {count} of {len(candidates)} permanents",
+                        source=source,
+                        amount=count,
+                        cards=tuple(permanent.id for permanent in candidates),
+                        source_id=source_id,
+                    )
+                )
+                by_id = {permanent.id: permanent for permanent in candidates}
+                chosen = [by_id[card_id] for card_id in ids if card_id in by_id]
+            for permanent in chosen:
+                if permanent.zone is Zone.BATTLEFIELD:
+                    game.sacrifice(permanent)
+
+        return sacrifice_half
+    return None
+
+
+def parse_defending_player_clause(clause: str, *, for_spell: bool):
+    """ "defending player mills half their library, rounded up" (Terisian
+    Mindbreaker), "defending player discards a card": the verb is any clause
+    `parse_clause_effect` reads, run against the defending player of the
+    attacker that triggered it (CR 508.5, `damage._defending_player_of_trigger`).
+    Ability-only: a spell has no attack event to name a defending player."""
+    text = clause.strip()
+    if for_spell or not text.lower().startswith("defending player "):
+        return None
+    from .decisions import source_id_of
+    from .effects.damage import _defending_player_of_trigger
+    from .effects.dispatch import parse_clause_effect
+    from .triggers.events import AbilityOnStack
+
+    rest = text[len("defending player ") :].strip()
+    clause_effect = parse_clause_effect(rest) or parse_clause_effect(f"you {rest}")
+    if clause_effect is None:
+        return None
+
+    def effect(game, stack_object):
+        assert isinstance(stack_object, AbilityOnStack)
+        defending = _defending_player_of_trigger(game, stack_object)
+        if defending is None:
+            return
+        clause_effect(
+            game, game.player(defending), stack_object.source_name, source_id_of(stack_object)
+        )
+
+    return effect

@@ -221,3 +221,230 @@ def test_avatar_destiny_counts_creature_cards_in_your_graveyard_and_adds_avatar(
     )
     assert _pt(scenario, bears) == (4, 4)
     assert "avatar" in scenario.game.computed_board().of(bears).subtypes
+
+
+# -- amounts driven by the hand: life, mana, upkeep triggers, mill ------------
+
+
+def _settle(scenario, limit=12):
+    for _ in range(limit):
+        scenario.game.put_triggers_on_stack()
+        if not scenario.stack_names():
+            return
+        scenario.pass_until_resolved()
+    raise AssertionError(f"stack never emptied: {scenario.stack_names()}")
+
+
+def _advance_to_upkeep_of(scenario, username):
+    scenario.advance()
+    while not (scenario.step is Step.UPKEEP and scenario.game.active_player.username == username):
+        scenario.advance()
+
+
+def test_presence_of_the_wise_gains_two_life_per_card_left_in_hand():
+    """CR 608.2h: counted as it resolves - the spell itself has left the hand."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Presence of the Wise", CARD, CARD, CARD],
+            battlefield=["Plains"] * 4,
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scenario.cast_and_resolve(
+        "Presence of the Wise", *scenario.untapped_sources("Plains", "Plains", "Plains", "Plains")
+    )
+    assert scenario.player("alice").life == 20 + 2 * 3
+
+
+def test_presence_of_the_wise_with_an_empty_hand_gains_nothing():
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Presence of the Wise"], battlefield=["Plains"] * 4)
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scenario.cast_and_resolve(
+        "Presence of the Wise", *scenario.untapped_sources("Plains", "Plains", "Plains", "Plains")
+    )
+    assert scenario.player("alice").life == 20
+
+
+def test_inner_fire_adds_red_for_each_card_left_in_hand():
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Inner Fire", CARD, CARD], battlefield=["Mountain"] * 4)
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scenario.cast_and_resolve(
+        "Inner Fire", *scenario.untapped_sources("Mountain", "Mountain", "Mountain", "Mountain")
+    )
+    floating = scenario.game.unspent_mana_of(scenario.player("alice")).floating
+    assert sum(floating.values()) == 2
+
+
+def test_sophic_centaur_counts_the_hand_after_paying_its_discard_cost():
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=[CARD, CARD, CARD],
+            battlefield=["Sophic Centaur", "Forest", "Forest", "Forest", "Forest"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    centaur = scenario.creature("Sophic Centaur", "alice")
+    discarded = scenario.player("alice").hand[0]
+    scenario.activate(
+        centaur,
+        *scenario.untapped_sources("Forest", "Forest", "Forest", "Forest"),
+        discarding=[discarded],
+    )
+    scenario.resolve_top()
+    assert scenario.player("alice").life == 20 + 2 * 2
+
+
+def test_venser_s_journal_gains_one_life_per_card_in_hand_at_your_upkeep():
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("alice", battlefield=["Venser's Journal"], hand=[CARD] * 3, library=[CARD] * 5)
+        .player("bob", library=[CARD] * 5)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    _advance_to_upkeep_of(scenario, "bob")
+    _advance_to_upkeep_of(scenario, "alice")
+    _settle(scenario)
+    assert scenario.player("alice").life == 20 + 3
+
+
+def test_dreamborn_muse_mills_each_player_for_their_own_hand_size():
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("alice", battlefield=["Dreamborn Muse"], hand=[CARD] * 2, library=[CARD] * 9)
+        .player("bob", hand=[CARD] * 4, library=[CARD] * 9)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    _advance_to_upkeep_of(scenario, "bob")
+    _settle(scenario)
+    assert len(scenario.player("bob").library) == 9 - 4
+    assert len(scenario.player("alice").library) == 9
+    _advance_to_upkeep_of(scenario, "alice")
+    _settle(scenario)
+    assert len(scenario.player("alice").library) == 9 - 2
+
+
+# -- half of a zone, rounded as the card says (CR 107.1a) --------------------
+
+
+def _xander(*, bob_hand=0, bob_library=0, bob_battlefield=()):
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("alice", hand=["Lord Xander, the Collector"], library=[CARD] * 3)
+        .player(
+            "bob",
+            hand=[CARD] * bob_hand,
+            library=[CARD] * bob_library,
+            battlefield=list(bob_battlefield),
+        )
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    return scenario
+
+
+def test_lord_xander_enters_and_the_opponent_discards_half_their_hand_rounded_down():
+    scenario = _xander(bob_hand=5)
+    scenario.will_choose_targets("bob", username="alice", source="Lord Xander, the Collector")
+    scenario.put_onto_battlefield("Lord Xander, the Collector")
+    _settle(scenario)
+    assert len(scenario.player("bob").hand) == 5 - 2
+    assert len(scenario.player("bob").graveyard) == 2
+
+
+def test_half_a_single_card_hand_rounded_down_discards_nothing():
+    scenario = _xander(bob_hand=1)
+    scenario.will_choose_targets("bob", username="alice", source="Lord Xander, the Collector")
+    scenario.put_onto_battlefield("Lord Xander, the Collector")
+    _settle(scenario)
+    assert len(scenario.player("bob").hand) == 1
+
+
+def test_lord_xander_attack_mills_half_the_defenders_library_rounded_down():
+    scenario = _xander(bob_library=7)
+    xander = scenario.put_onto_battlefield("Lord Xander, the Collector")
+    xander.summoning_sick = False
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    scenario.attack_with(xander)
+    _settle(scenario)
+    assert len(scenario.player("bob").library) == 7 - 3
+
+
+def test_lord_xander_dying_makes_the_opponent_sacrifice_half_their_nonland_permanents():
+    scenario = _xander(bob_battlefield=["Grizzly Bears"] * 3 + ["Forest"] * 2)
+    xander = scenario.put_onto_battlefield("Lord Xander, the Collector")
+    scenario.will_choose_targets("bob", username="alice", source="Lord Xander, the Collector")
+    _settle(scenario)
+    scenario.game.destroy(xander)
+    scenario.will_choose_targets("bob", username="alice", source="Lord Xander, the Collector")
+    _settle(scenario)
+    assert len(scenario.creatures("Grizzly Bears", username="bob")) == 2
+    assert (
+        len([c for c in scenario.game.permanents_controlled_by("bob") if c.card.name == "Forest"])
+        == 2
+    )
+
+
+def test_terisian_mindbreaker_attack_mills_half_the_library_rounded_up():
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("alice", battlefield=["Terisian Mindbreaker"])
+        .player("bob", library=[CARD] * 7)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    mindbreaker = scenario.creature("Terisian Mindbreaker", "alice")
+    mindbreaker.summoning_sick = False
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    scenario.attack_with(mindbreaker)
+    _settle(scenario)
+    assert len(scenario.player("bob").library) == 7 - 4
+
+
+def test_rush_of_dread_spree_modes_halve_creatures_hand_and_life_rounded_up():
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("alice", hand=["Rush of Dread"], battlefield=["Swamp"] * 8)
+        .player(
+            "bob",
+            hand=[CARD] * 3,
+            life=15,
+            battlefield=["Grizzly Bears"] * 3,
+        )
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    casting = scenario.cast("Rush of Dread")
+    casting.choose_modes([1, 2, 3])
+    casting.choose_targets(["bob", "bob", "bob"])
+    scenario.pay_with(casting.begin_paying(), *scenario.untapped_sources(*(["Swamp"] * 8)))
+    scenario.put_on_stack(casting)
+    while scenario.game.stack:
+        scenario.resolve_top()
+    assert len(scenario.creatures("Grizzly Bears", username="bob")) == 1
+    assert len(scenario.player("bob").hand) == 1
+    assert scenario.player("bob").life == 15 - 8

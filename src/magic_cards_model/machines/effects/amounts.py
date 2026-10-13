@@ -64,7 +64,7 @@ from ..ep02_r1_graveyard_counts import (
     parse_tapped_attacking_tokens_for_each_ability,
 )
 from ..ep02_r1_life_amounts import life_this_turn_count
-from ..ep02_r2_cards_in_zone_counts import hand_count_expression
+from ..ep02_r2_cards_in_zone_counts import hand_count_expression, parse_defending_player_clause
 from ..layers import (
     BASIC_LAND_TYPES,
     Characteristics,
@@ -5817,3 +5817,17 @@ def _parse_graveyard_count_ability_text(effect_text: str) -> AbilityEffect | Non
         or parse_pump_then_additional_per_count_ability(effect_text)
         or parse_tapped_attacking_tokens_for_each_ability(effect_text)
     )
+
+
+# --------------------------------------------------------------------------
+# EP-02 R2 T2: "defending player <verb> ..." - any per-player clause run
+# against the attacker's defending player.
+# --------------------------------------------------------------------------
+
+
+@MIXED_CLAUSE.rung("s37", for_spell=FORWARD)
+def _parse_defending_player_instruction_clause(
+    clause: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`parse_defending_player_clause`'s shape, gated on the literal subject."""
+    return parse_defending_player_clause(clause, for_spell=for_spell)
