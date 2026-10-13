@@ -1014,10 +1014,12 @@ def _parse_effect_then_group_base_pt(text: str):
     return effect
 
 
-@ABILITY_TEXT.rung("s40", before=("parse_mixed_effect",))
-def _parse_remove_x_counters_where_x(text: str):
+@MIXED_CLAUSE.rung("s26", for_spell=FORWARD)
+def _parse_remove_x_counters_where_x(text: str, *, for_spell: bool):
     """ "Remove X counters from target permanent, where X is <amount>." - a removal
     whose count is a computed amount (CR 107.3), with no instruction after it."""
+    if for_spell:
+        return None
     flat = " ".join(text.split())
     if not flat.lower().startswith("remove ") or ", where x is" not in flat.lower():
         return None

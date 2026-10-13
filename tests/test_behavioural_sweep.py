@@ -2506,7 +2506,9 @@ def _counter_threshold(scenario: PlayedScenario, source: CardState, condition: s
     if not condition:
         return
     match = re.search(
-        r"(?:this \w+|~) has (?P<count>[\w,]+) or more (?P<kind>\S+) counters on it",
+        rf"(?:this \w+|~|{re.escape(source.name.lower())}|{re.escape(source.name.split(',')[0].lower())})"
+        r" has (?P<count>[\w,]+) or more "
+        r"(?P<kind>\S+) counters on it",
         condition.lower(),
     )
     if match is None:
@@ -3946,6 +3948,21 @@ def _about_the_source(case: Case, ability: TriggeredAbility, action: str) -> Ite
             match = re.search(
                 r"there are (?P<count>[\w,]+) or more (?P<kind>[a-z]+) counters", lowered
             )
+            fewer = re.search(
+                r" has (?P<count>[\w,]+) or fewer (?P<kind>\S+) counters on (?:him|her|it|them)",
+                lowered,
+            )
+            if match is None and fewer is not None:
+                # "When Garruk has two or fewer loyalty counters on him" (CR 603.8):
+                # counters come off the source until the bound is met.
+                bound = parse_count(fewer.group("count"), article=False)
+                if bound is None:
+                    raise _Unavailable(f"cannot read {fewer.group('count')!r}")
+                kind = fewer.group("kind")
+                excess = source.counter_count(kind) - bound
+                if excess > 0:
+                    source.remove_counters(kind, excess)
+                return scenario, source_id
             if match is None:
                 if not reads_state_condition(ability.condition):
                     raise _Unavailable("no counter threshold in the condition")
@@ -6305,6 +6322,8 @@ def run_activation_case(case: Case, only: dict[str, Any] | None = None) -> Outco
     did something, `failed` otherwise. `only` replays one recorded recipe."""
     card = case.printing
     ability = _activated_ability(card, case.text)
+    if ability.zone is Zone.STACK:
+        return _run_on_stack(case, ability, only)
     if ability.zone not in (None, Zone.BATTLEFIELD):
         return _run_off_zone(case, ability, only)
     tried: list[str] = []
@@ -6391,6 +6410,47 @@ def run_activation_case(case: Case, only: dict[str, Any] | None = None) -> Outco
     if outcome is not None:
         return outcome
     return Outcome("failed", "; ".join(tried[-6:]))
+
+
+def _run_on_stack(
+    case: Case, ability: ActivatedAbility, only: dict[str, Any] | None = None
+) -> Outcome:
+    """An instant's or sorcery's ability that functions while the spell is on the
+    stack (CR 113.6b, Lightning Storm): the spell is cast, left on the stack, and
+    its ability activated there by the player the ability's instructions allow."""
+    card = case.printing
+    tried: list[str] = []
+    for variant in (QUIET, BUSY):
+        if only is not None and variant != only["variant"]:
+            continue
+        recipe = {"variant": variant, "enters": False, "on_stack": True}
+        _STAGING.variant, _STAGING.case = variant, case
+        _STAGING.material = _target_material(ability.effect) + _off_zone_cost_material(case)
+        _STAGING.board = None
+        try:
+            scenario = _board(hand=(card.name, "Forest"), step=_activation_step(ability))
+            game = scenario.game
+            spell = _cast(scenario, card.name, ALICE)
+            indexes = [i for i, a in enumerate(game.activated_abilities(spell)) if a.text == case.text]
+            if not indexes:
+                tried.append(f"{variant}: the ability is not listed on the spell")
+                continue
+            labels = golden.Labels(game)
+            try:
+                on_stack = _activate(scenario, spell, indexes[0], ability)
+            except (ValueError, AssertionError) as error:
+                tried.append(f"{variant}: activation refused: {error}")
+                continue
+            _settle(scenario)
+            effect, action_record, delta = _resolve_ours(scenario, on_stack, labels)
+            if effect.did_something:
+                return Outcome(
+                    "executed", repr(effect), _golden_record(case, recipe, action_record, delta)
+                )
+            tried.append(f"{variant}: resolved: {effect!r}")
+        finally:
+            _STAGING.variant, _STAGING.case, _STAGING.material = QUIET, None, ()
+    return Outcome("failed", "; ".join(tried))
 
 
 def _off_zone_home(case: Case, ability: ActivatedAbility) -> tuple[PlayedScenario, CardState]:

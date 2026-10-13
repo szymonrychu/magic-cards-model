@@ -122,18 +122,25 @@ def test_anim_pakal_makes_a_gnome_per_counter_when_a_non_gnome_attacks():
     assert all(g in scenario.attackers() for g in gnomes)
 
 
-def test_anim_pakal_does_not_trigger_for_gnomes_alone():
-    scenario = _board(["Anim Pakal, Thousandth Moon", "Grizzly Bears"])
+def test_anim_pakal_does_not_trigger_when_only_a_gnome_attacks():
+    scenario = _board(["Anim Pakal, Thousandth Moon", "Clockwork Servant"])
     pakal = scenario.creature("Anim Pakal, Thousandth Moon", "alice")
+    servant = scenario.creature("Clockwork Servant", "alice")
+    assert "Gnome" in scenario.game.characteristics_of(servant).subtypes
+    _attack(scenario, servant)
+    assert pakal.counter_count(Counter.PLUS_ONE) == 0
+    assert not _named(scenario, "Gnome Token")
+
+
+def test_anim_pakal_triggers_once_for_a_mixed_attack_and_its_tokens_do_not_retrigger():
+    scenario = _board(["Anim Pakal, Thousandth Moon", "Clockwork Servant", "Grizzly Bears"])
+    pakal = scenario.creature("Anim Pakal, Thousandth Moon", "alice")
+    servant = scenario.creature("Clockwork Servant", "alice")
     bears = scenario.creature("Grizzly Bears", "alice")
-    _attack(scenario, bears)
-    assert len(_named(scenario, "Gnome Token")) == 1
-    gnome = _named(scenario, "Gnome Token")[0]
-    assert gnome in scenario.attackers()
+    _attack(scenario, servant, bears)
     assert pakal.counter_count(Counter.PLUS_ONE) == 1
-    # A second declaration of only the Gnome (a token entering attacking never
-    # "attacked", CR 508.4) does not trigger again.
-    assert len(_named(scenario, "Gnome Token")) == 1
+    (gnome,) = _named(scenario, "Gnome Token")
+    assert gnome.tapped and gnome in scenario.attackers()  # CR 508.4
 
 
 # -- Urabrask's Forge: an X/1 token, X the oil counters (including the new one)
@@ -244,13 +251,22 @@ def test_rumbling_ruin_stops_smaller_creatures_blocking_by_counters_among_yours(
 
 
 def test_rumbling_ruin_with_no_counters_restricts_only_powerless_creatures():
-    scenario = _board(["Hill Giant"], ["Grizzly Bears"], alice_hand=["Rumbling Ruin"])
+    scenario = _board(
+        ["Hill Giant"], ["Grizzly Bears", "Market Gnome"], alice_hand=["Rumbling Ruin"]
+    )
     scenario.put_onto_battlefield("Rumbling Ruin", "alice")
     _settle(scenario)
     attacker = scenario.creature("Hill Giant", "alice")
     scenario.start_at(Step.DECLARE_ATTACKERS)
     scenario.attack_with(attacker)
     scenario.start_at(Step.DECLARE_BLOCKERS)
+    # zero counters: power 0 or less can't block; Market Gnome is 0/3, Grizzly Bears 2/2
+    try:
+        scenario.block(attacker, scenario.creature("Market Gnome", "bob"))
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("a power 0 creature blocked")
     scenario.block(attacker, scenario.creature("Grizzly Bears", "bob"))
 
 
@@ -1012,3 +1028,141 @@ def test_lightning_storm_cannot_be_activated_from_the_hand():
     scenario = _board([], alice_hand=["Lightning Storm", "Forest"])
     storm = scenario.find("Lightning Storm", Zone.HAND, "alice")
     assert scenario.why_cannot_activate(storm, 0, "alice") is not None
+
+
+# -- Second proof printings: the same readers on other cards (legal in Modern/Pioneer,
+#    in no listed deck, none of this task's cards)
+
+
+def test_mossborn_hydra_doubles_its_own_counters_on_landfall():
+    """Mossborn Hydra: "double the number of +1/+1 counters on this creature" - the
+    self form of Tanazir's doubling reader (CR 701.10e)."""
+    scenario = _board(["Mossborn Hydra"], alice_hand=["Forest", "Forest"])
+    hydra = scenario.creature("Mossborn Hydra", "alice")
+    hydra.add_counters(Counter.PLUS_ONE, 1)
+    scenario.play_land("Forest", "alice")
+    _settle(scenario)
+    assert hydra.counter_count(Counter.PLUS_ONE) == 2
+    scenario.game.put_onto_battlefield(scenario.find("Forest", Zone.HAND, "alice"), "alice")
+    _settle(scenario)
+    assert hydra.counter_count(Counter.PLUS_ONE) == 4
+
+
+def test_hex_parasite_gets_plus_one_power_for_each_counter_removed_this_way():
+    """Hex Parasite: "Remove up to X counters from target permanent. For each counter
+    removed this way, this creature gets +1/+0" - the removed-this-way reader."""
+    scenario = _board(
+        ["Hex Parasite", "Swamp", "Swamp", "Swamp"], bob=["Grizzly Bears"]
+    )
+    parasite = scenario.creature("Hex Parasite", "alice")
+    bears = scenario.creature("Grizzly Bears", "bob")
+    bears.add_counters(Counter.PLUS_ONE, 1)
+    before = _stats(scenario, parasite)
+    lands = [p for p in scenario.game.permanents_controlled_by("alice") if p.name == "Swamp"]
+    scenario.activate(parasite, *lands, x_value=2, targets=[bears])
+    _settle(scenario)
+    assert bears.counter_count(Counter.PLUS_ONE) == 0  # only one was there to remove
+    assert _stats(scenario, parasite) == (before[0] + 1, before[1])
+
+
+def test_skyship_plunderer_gives_another_counter_of_each_kind_on_the_target():
+    """Skyship Plunderer reads "for each kind of counter on target permanent or
+    player" - the kinds concept on a different card."""
+    scenario = _board(["Skyship Plunderer", "Grizzly Bears"])
+    plunderer = scenario.creature("Skyship Plunderer", "alice")
+    bears = scenario.creature("Grizzly Bears", "alice")
+    bears.add_counters(Counter.PLUS_ONE, 2)
+    bears.add_counters("charge", 1)
+    scenario.will_choose_targets(bears, source="Skyship Plunderer")
+    _attack(scenario, plunderer)
+    scenario.no_blocks()
+    scenario.combat_damage()
+    _settle(scenario)
+    assert bears.counter_count(Counter.PLUS_ONE) == 3
+    assert bears.counter_count("charge") == 2
+
+
+# -- Corner cases
+
+
+def test_tanazir_doubling_a_creature_with_no_counters_changes_nothing():
+    scenario = _board(["Grizzly Bears"], alice_hand=["Tanazir Quandrix"])
+    bears = scenario.creature("Grizzly Bears", "alice")
+    scenario.put_onto_battlefield("Tanazir Quandrix", "alice")
+    scenario.choose_trigger_targets("Tanazir Quandrix", [bears])
+    _settle(scenario)
+    assert not bears.counters.counts
+
+
+def test_sita_varma_with_x_zero_still_sets_the_others_to_her_power():
+    scenario = _board(["Sita Varma, Masked Racer", "Grizzly Bears"] + ["Forest"] * 2 + ["Island"] * 2)
+    sita = scenario.creature("Sita Varma, Masked Racer", "alice")
+    bears = scenario.creature("Grizzly Bears", "alice")
+    lands = [p for p in scenario.game.permanents_controlled_by("alice") if p.name in ("Forest", "Island")]
+    scenario.will_take_the_may(True)
+    scenario.activate(sita, *lands, x_value=0)
+    scenario.pass_until_resolved()
+    assert not sita.counters.counts
+    assert _stats(scenario, bears) == (2, 2)  # Sita is a 2/3: base power 2 for both
+
+
+def test_sita_varma_declining_the_set_leaves_the_others_alone():
+    scenario = _board(["Sita Varma, Masked Racer", "Grizzly Bears", "Craw Wurm"] + ["Forest"] * 3 + ["Island"] * 2)
+    sita = scenario.creature("Sita Varma, Masked Racer", "alice")
+    wurm = scenario.creature("Craw Wurm", "alice")
+    lands = [p for p in scenario.game.permanents_controlled_by("alice") if p.name in ("Forest", "Island")]
+    scenario.will_take_the_may(False)
+    scenario.activate(sita, *lands, x_value=1)
+    scenario.pass_until_resolved()
+    assert sita.counter_count(Counter.PLUS_ONE) == 1
+    assert _stats(scenario, wurm) == (6, 4)
+
+
+def test_galloping_lizrog_removing_every_counter_among_your_creatures_doubles_them_all_onto_it():
+    scenario, bears, lions = _lizrog_board()
+    scenario.will_choose_an_amount(4)
+    lizrog = scenario.put_onto_battlefield("Galloping Lizrog", "alice")
+    _settle(scenario)
+    assert bears.counter_count(Counter.PLUS_ONE) == 0 and lions.counter_count(Counter.PLUS_ONE) == 0
+    assert lizrog.counter_count(Counter.PLUS_ONE) == 8
+
+
+def test_omega_with_no_nonbasic_lands_taps_but_adds_no_counters_or_life():
+    scenario = _board(["Forest"], bob=["Grizzly Bears"], alice_hand=["Omega, Heartless Evolution"])
+    bears = scenario.creature("Grizzly Bears", "bob")
+    scenario.will_choose_targets(bears, source="Omega, Heartless Evolution")
+    scenario.put_onto_battlefield("Omega, Heartless Evolution", "alice")
+    _settle(scenario)
+    assert bears.tapped and bears.counter_count("stun") == 0
+    assert scenario.player("alice").life == 20
+
+
+def test_confront_the_past_with_x_zero_removes_nothing():
+    scenario = _board(["Swamp"], bob=["Jace, the Mind Sculptor"], alice_hand=["Confront the Past"])
+    jace = scenario.find("Jace, the Mind Sculptor", Zone.BATTLEFIELD, "bob")
+    _confront(scenario, 2, 0, [jace])
+    assert jace.counter_count("loyalty") == 3
+
+
+def test_lightning_storm_two_activations_stack_four_counters():
+    scenario = _board(
+        ["Mountain", "Mountain", "Mountain"],
+        alice_hand=["Lightning Storm", "Forest", "Forest"],
+    )
+    lands = scenario.untapped_sources("Mountain", "Mountain", "Mountain")
+    storm = scenario.cast_onto_stack("Lightning Storm", *lands, targets=["bob"])
+    for forest in scenario.player("alice").hand.copy():
+        if forest.name != "Forest":
+            continue
+        scenario.activate(storm, discarding=[forest], username="alice")
+        scenario.will_take_the_may(False)
+        scenario.resolve_top()
+    assert storm.counter_count("charge") == 4
+    scenario.resolve_top()
+    assert scenario.player("bob").life == 13  # 3 + 4
+
+
+def test_blessing_of_frost_with_no_creatures_still_resolves():
+    scenario = _board(["Snow-Covered Forest"] * 4, alice_hand=["Blessing of Frost"])
+    _cast_blessing(scenario, scenario.untapped_sources(*["Snow-Covered Forest"] * 4))
+    assert scenario.game.stack_is_empty
