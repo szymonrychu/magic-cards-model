@@ -24,7 +24,7 @@ from magic_cards_model.machines import Step
 from magic_cards_model.machines.abilities import keyword_abilities
 from magic_cards_model.machines.keywords import equip_activation
 from magic_cards_model.machines.zone_grants import effective_card
-from magic_cards_model.models import Zone
+from magic_cards_model.models import Color, Type, Zone
 
 from .harness import Scenario, mana_from
 
@@ -172,8 +172,9 @@ def _equipped(equipment, creature, alice_gy=(), hand=0, source_names=(), bob_han
         .player(
             "alice",
             battlefield=[creature, equipment, "Mountain", "Mountain", "Mountain"],
-            hand=[CARD] * hand,
+            hand=[CARD] * hand if isinstance(hand, int) else list(hand),
             graveyard=list(alice_gy),
+            library=[CARD] * 5,
         )
         .player("bob", hand=[CARD] * bob_hand)
         .build()
@@ -681,3 +682,125 @@ def test_hand_of_vecna_also_pumps_a_creature_named_vecna():
     vecna = scenario.creature("Vecna", "alice")
     assert _pt(scenario, bears) == (2 + 2, 2 + 2)
     assert _pt(scenario, vecna) == (base[0] + 2, base[1] + 2)
+
+
+# -- cast a spell free from hand, bounded by the damage dealt ---------------------
+
+
+def _glamdring_hit(creature, hand):
+    scenario, holder = _equipped("Glamdring", creature, hand=hand)
+    holder.summoning_sick = False
+    scenario.will_take_the_may(True, username="alice")
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    scenario.attack_with(holder)
+    scenario.no_blocks()
+    scenario.combat_damage()
+    _settle(scenario)
+    return scenario
+
+
+def test_glamdring_casts_an_instant_or_sorcery_with_mana_value_up_to_the_damage_for_free():
+    scenario = _glamdring_hit("Craw Wurm", ["Divination", "Grizzly Bears"])
+    assert scenario.player("bob").life == 20 - 6
+    names = [card.name for card in scenario.player("alice").hand]
+    assert "Divination" not in names and len(names) == 1 + 2  # bears stays, drew two
+    assert [c.name for c in scenario.player("alice").graveyard] == ["Divination"]
+
+
+def test_glamdring_does_not_offer_a_spell_costing_more_than_the_damage():
+    scenario = _glamdring_hit("Grizzly Bears", ["Divination"])
+    assert [card.name for card in scenario.player("alice").hand] == ["Divination"]
+
+
+# -- an animated land whose stats are a quoted count ---------------------------------
+
+
+def _svogthos(graveyard, library=()):
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=[
+                "Svogthos, the Restless Tomb",
+                "Swamp",
+                "Swamp",
+                "Swamp",
+                "Forest",
+                "Forest",
+            ],
+            graveyard=list(graveyard),
+            library=list(library),
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    land = scenario.find("Svogthos, the Restless Tomb", Zone.BATTLEFIELD, "alice")
+    scenario.activate(
+        land,
+        *scenario.untapped_sources("Swamp", "Swamp", "Swamp", "Forest", "Forest"),
+        index=1,
+    )
+    scenario.resolve_top()
+    return scenario, land
+
+
+def test_svogthos_becomes_a_creature_sized_by_creature_cards_in_your_graveyard():
+    scenario, land = _svogthos(["Grizzly Bears", "Grizzly Bears", "Lightning Bolt"])
+    chars = scenario.game.computed_board().of(land)
+    assert Type.CREATURE in chars.types and Type.LAND in chars.types
+    assert (chars.power, chars.toughness) == (2, 2)
+    assert set(chars.colors) == {Color.BLACK, Color.GREEN}
+    assert {"Plant", "Zombie"} <= set(chars.subtypes)
+
+
+def test_svogthos_follows_the_graveyard_as_it_changes():
+    scenario, land = _svogthos(["Grizzly Bears"], library=["Grizzly Bears"])
+    assert _pt(scenario, land) == (1, 1)
+    scenario.game.put_into_graveyard(scenario.top_of_library(1)[0])
+    assert _pt(scenario, land) == (2, 2)
+
+
+# -- an "instead create X of those tokens" rider keyed to the cast zone ----------------
+
+
+def _final_days(*, from_graveyard):
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=[] if from_graveyard else ["The Final Days"],
+            graveyard=["The Final Days", "Grizzly Bears", "Grizzly Bears", "Grizzly Bears"]
+            if from_graveyard
+            else ["Grizzly Bears"],
+            battlefield=["Swamp"] * 6,
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    if not from_graveyard:
+        scenario.cast_and_resolve("The Final Days", *scenario.untapped_sources(*(["Swamp"] * 4)))
+        return scenario
+    casting = scenario.cast("The Final Days", from_zone=Zone.GRAVEYARD)
+    casting.use_keyword("Flashback")
+    scenario.pay_with(casting.begin_paying(), *scenario.untapped_sources(*(["Swamp"] * 6)))
+    scenario.put_on_stack(casting)
+    scenario.resolve_top()
+    return scenario
+
+
+def test_the_final_days_cast_from_hand_makes_two_tapped_horrors():
+    scenario = _final_days(from_graveyard=False)
+    horrors = [
+        c for c in scenario.game.permanents_controlled_by("alice") if c.name == "Horror Token"
+    ]
+    assert len(horrors) == 2 and all(c.tapped for c in horrors)
+
+
+def test_the_final_days_flashed_back_makes_one_horror_per_creature_card_in_your_graveyard():
+    scenario = _final_days(from_graveyard=True)
+    horrors = [
+        c for c in scenario.game.permanents_controlled_by("alice") if c.name == "Horror Token"
+    ]
+    assert len(horrors) == 3 and all(c.tapped for c in horrors)

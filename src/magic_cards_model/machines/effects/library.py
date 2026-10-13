@@ -6577,7 +6577,8 @@ def _parse_look_top_cast_le_greatest_attacking_power_whole_text(
 #: is offered, so a hand with none asks nothing.
 _MAY_CAST_FROM_HAND_FREE_RE = re.compile(
     r"^you may cast an? (?P<quality>[^.]+?) spell"
-    r"(?: with mana value equal to (?P<n>\d+))?"
+    r"(?: with mana value (?:equal to (?P<n>\d+)|(?P<at_most>\d+) or less"
+    r"|(?P<damage>less than or equal to that damage)))?"
     r" from your hand without paying its mana cost\.?$",
     re.IGNORECASE,
 )
@@ -6586,25 +6587,45 @@ _MAY_CAST_FROM_HAND_FREE_RE = re.compile(
 @MIXED_CLAUSE.rung("s30", for_spell=FORWARD)
 def _parse_may_cast_from_hand_free_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
     """`_MAY_CAST_FROM_HAND_FREE_RE`'s shape, or `None`."""
-    match = _MAY_CAST_FROM_HAND_FREE_RE.fullmatch(" ".join(clause.strip().split()))
+    # "... from your hand with mana value less than or equal to that damage
+    # without ..." (Glamdring) puts the bound after the zone; read it as the
+    # same bound printed before it (Brain in a Jar).
+    text = re.sub(
+        r" from your hand( with mana value .+?) without paying",
+        r"\1 from your hand without paying",
+        " ".join(clause.strip().split()),
+        flags=re.IGNORECASE,
+    )
+    match = _MAY_CAST_FROM_HAND_FREE_RE.fullmatch(text)
     if match is None or not _card_description_is_readable(match.group("quality")):
         return None
     quality = _quality_matcher(match.group("quality"))
     value = int(match.group("n")) if match.group("n") else None
+    at_most = int(match.group("at_most")) if match.group("at_most") else None
     phrase = f"{match.group('quality')} spell" + (
         f" with mana value equal to {value}" if value is not None else ""
     )
+    if at_most is not None:
+        phrase += f" with mana value {at_most} or less"
+    if match.group("damage"):
+        phrase += " with mana value less than or equal to that damage"
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
         player = game.controller_of(stack_object)
         source = stack_object.name if for_spell else stack_object.source_name  # type: ignore[union-attr]
         source_id = source_id_of(stack_object)
+        limit = at_most
+        if match.group("damage"):
+            # CR 603.7c: "that damage" is the event's own amount.
+            event = getattr(stack_object, "event", None)
+            limit = getattr(event, "amount", None) or 0
         legal = [
             card
             for card in player.hand
             if not card.card.is_land
             and quality(card)
             and (value is None or card.mana_value == value)
+            and (limit is None or card.mana_value <= limit)
             and game.can_cast_during_resolution(card, player.username)
         ]
         if not legal or not game.may(

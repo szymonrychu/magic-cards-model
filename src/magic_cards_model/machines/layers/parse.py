@@ -2873,7 +2873,7 @@ _ANIMATION_RE = re.compile(
     r"^(?P<subject>[Tt]his (?:land|permanent|artifact|creature|enchantment)"
     r"|(?:[Uu]p to (?:one|two|three) )?(?:[Tt]arget|[Aa]nother target) [a-z]+(?: [a-z]+)*?"
     r"|[Ii]t|[Tt]hat (?:land|permanent|creature|artifact))"
-    r" becomes an? (?P<power>\d+)/(?P<toughness>\d+) "
+    r" becomes an? (?:(?P<power>\d+)/(?P<toughness>\d+) )?"
     r"(?P<colors>(?:white|blue|black|red|green)(?:(?:,| and|, and) "
     r"(?:white|blue|black|red|green))* )?"
     r"(?P<subtype>[A-Z][A-Za-z'-]*(?: [A-Z][A-Za-z'-]*)? )?"
@@ -2925,8 +2925,8 @@ def _animation_type_modifications(
 
 
 def _animation_builder(
-    power: int,
-    toughness: int,
+    power: int | None,
+    toughness: int | None,
     colors: list[Color],
     subtype: str | None,
     types: list[Type],
@@ -2997,8 +2997,9 @@ def _animation_builder(
                 continue
             stamp = only_this_incarnation(target, target.zone_change_stamp)
             named = f"{subtype} " if subtype is not None else ""
+            stats = "" if power is None else f"{power}/{toughness} "
             description = f"{source.name}: {target.name} becomes " + with_indefinite_article(
-                f"{power}/{toughness} {named}" + " ".join(card_type.value for card_type in types)
+                f"{stats}{named}" + " ".join(card_type.value for card_type in types)
             )
             for modification in type_modifications:
                 effects.append(
@@ -3040,17 +3041,20 @@ def _animation_builder(
                         ),
                     )
                 )
-            effects.append(
-                ContinuousEffect(
-                    description=f"{source.name}: {target.name} has base P/T {power}/{toughness}",
-                    layer=Layer.POWER_TOUGHNESS,
-                    sublayer=Sublayer.SET,
-                    timestamp=timestamp,
-                    duration=duration,
-                    selector=stamp,
-                    modification=set_power_toughness(power, toughness),
+            if power is not None and toughness is not None:
+                effects.append(
+                    ContinuousEffect(
+                        description=(
+                            f"{source.name}: {target.name} has base P/T {power}/{toughness}"
+                        ),
+                        layer=Layer.POWER_TOUGHNESS,
+                        sublayer=Sublayer.SET,
+                        timestamp=timestamp,
+                        duration=duration,
+                        selector=stamp,
+                        modification=set_power_toughness(power, toughness),
+                    )
                 )
-            )
             if granted is not None:
                 effects.append(
                     ContinuousEffect(
@@ -3142,6 +3146,14 @@ def _parse_animation_sentence(sentence: str) -> EffectBuilder | None:
             granted_effects = _parse_layer_sentence(granted)
             if granted_effects is None:
                 return None
+            if match.group("power") is None:
+                # The quoted line defines the stats itself ("This creature's
+                # power and toughness are each equal to the number of creature
+                # cards in your graveyard", Svogthos): it is read again on
+                # every board computation as a static ability the creature
+                # has (`sync_granted_ability_texts`), so it follows the count
+                # (CR 611.3a) instead of freezing one built here.
+                granted_effects = None
     raw_colors = match.group("colors")
     colors = (
         [_COLOR_WORDS[word] for word in re.findall(r"[a-z]+", raw_colors) if word in _COLOR_WORDS]
@@ -3150,9 +3162,11 @@ def _parse_animation_sentence(sentence: str) -> EffectBuilder | None:
     )
     subtype = match.group("subtype")
     subject = match.group("subject").lower()
+    if match.group("power") is None and granted is None:
+        return None  # no stats and nothing to define them: not an animation
     return _animation_builder(
-        int(match.group("power")),
-        int(match.group("toughness")),
+        int(match.group("power")) if match.group("power") else None,
+        int(match.group("toughness")) if match.group("toughness") else None,
         colors,
         subtype.strip() if subtype else None,
         [card_type for card_type in types if card_type is not None],

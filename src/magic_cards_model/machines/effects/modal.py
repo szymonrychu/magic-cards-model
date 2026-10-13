@@ -4896,6 +4896,14 @@ def _resolve_instead_alternative(base_text: str, alternative_text: str) -> Effec
         resolved = _instead_branch_effect(substituted)
         if resolved is not None:
             return resolved
+    # "instead create X of those tokens, where X is ..." (The Final Days): the
+    # base's own token, a different number.
+    if (those := _ABILITY_THOSE_TOKENS_ALTERNATIVE_RE.fullmatch(alternative_text.strip())) and (
+        rewritten := _ability_instead_alternative_text(base_text, alternative_text)
+    ):
+        resolved = _instead_branch_effect(rewritten)
+        if resolved is not None:
+            return resolved
     if re.search(r"\btarget\b", alternative_text, re.IGNORECASE):
         # Already names its own target (or lack of one, "any target") - a
         # failure to parse here is a real gap, not an elision, and splicing
@@ -4989,8 +4997,10 @@ _ABILITY_ELIDED_DAMAGE_ALTERNATIVE_RE = re.compile(
     rf"^(?P<subject>[^.]+?) deals (?P<m>{COUNT}) damage$", re.IGNORECASE
 )
 _ABILITY_BASE_DAMAGE_AMOUNT_RE = re.compile(rf"\bdeals (?P<n>{COUNT}) damage\b", re.IGNORECASE)
+#: ... or "X of those tokens, where X is the number of creature cards in your
+#: graveyard" (The Final Days), the count defined by the alternative's own tail.
 _ABILITY_THOSE_TOKENS_ALTERNATIVE_RE = re.compile(
-    rf"^create (?P<count>{COUNT}) of those tokens$", re.IGNORECASE
+    rf"^create (?P<count>{COUNT}|X) of those tokens(?P<where>, where X is .+)?$", re.IGNORECASE
 )
 _ABILITY_BASE_TOKEN_RE = re.compile(
     rf"^create (?P<count>{COUNT}) (?P<desc>.+?) tokens?(?P<tail>\b.*)$", re.IGNORECASE
@@ -5020,7 +5030,7 @@ def _ability_instead_alternative_text(base: str, alternative: str) -> str | None
             return None
         return " ".join(
             f"create {those.group('count')} {token.group('desc')} tokens {tail}".split()
-        )
+        ) + (those.group("where") or "")
     return _anaphoric_target_substitution(base, alternative)
 
 
