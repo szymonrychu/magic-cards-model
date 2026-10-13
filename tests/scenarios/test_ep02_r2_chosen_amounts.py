@@ -78,8 +78,11 @@ PROOFS = [
 
 @pytest.mark.parametrize("name", LISTED + PROOFS)
 def test_every_listed_and_proof_card_reads_handled(name):
-    outcomes = {clause.outcome for clause in card_support(card(name)).clauses}
-    assert outcomes == {"handled"}, name
+    support = card_support(card(name))
+    # A mana ability is not an effect clause (CR 605.3b) - its verdict is the
+    # card's own status - so only the clauses present are checked.
+    assert support.status == "handled", name
+    assert all(clause.outcome == "handled" for clause in support.clauses), name
 
 
 def _board(

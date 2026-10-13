@@ -49,7 +49,7 @@ from ..models.card_state import CardState
 from ..models.player import Player
 from ..models.zone import Zone
 from .decisions import Decision, DecisionKind, source_id_of
-from .effects._chains import FORWARD, MIXED_CLAUSE
+from .effects._chains import ABILITY_TEXT, FORWARD, MIXED_CLAUSE
 
 if TYPE_CHECKING:
     from ..models.game import Game
@@ -323,3 +323,225 @@ def damage_this_turn_count(phrase: str) -> Callable[["Game", str], int] | None:
         )
 
     return count
+
+
+# --------------------------------------------------------------------------
+# choose-amount-then-payoff: paying an amount
+# --------------------------------------------------------------------------
+
+
+def _times(cost_text: str, n: int) -> "Any":
+    from ..models.mana import ManaCost
+
+    return ManaCost.parse(cost_text * n)
+
+
+def most_payable_times(game: "Game", player: Player, cost_text: str, ceiling: int = 64) -> int:
+    """How many times `player` could pay `cost_text` right now from floating
+    mana and untapped mana sources (CR 118.3, CR 608.2g)."""
+    from .cost.payment import plan_mana_payment
+
+    sources = game._mana_sources_while_resolving(player)
+    times = 0
+    while times < ceiling:
+        cost = _times(cost_text, times + 1)
+        if plan_mana_payment(cost, sources, game=game, payer=player.username) is None:
+            break
+        times += 1
+    return times
+
+
+def pay_cost_chosen_times(
+    game: "Game", stack_object: Any, player: Player, cost_text: str, prompt: str
+) -> int:
+    """CR 107.1c / CR 608.2d: `player` chooses how many times to pay
+    `cost_text` - zero up to as many times as they can pay (CR 118.3), the
+    limit named in the question - and pays it that many times."""
+    limit = most_payable_times(game, player, cost_text)
+    chosen = game.choose_an_amount(
+        player,
+        limit,
+        source=_source_name(stack_object),
+        source_id=source_id_of(stack_object),
+        prompt=f"{prompt} (at most {limit}, CR 118.3)",
+    )
+    if chosen <= 0:
+        return 0
+    sources = game._mana_sources_while_resolving(player)
+    game._pay_mana_while_resolving(player, _times(cost_text, chosen), sources, prompt=prompt)
+    return chosen
+
+
+_PAY_ANY_AMOUNT_RE = re.compile(
+    r"^(?:then )?(?:you may )?pay any amount of (?P<what>\{e\}|mana)$", re.IGNORECASE
+)
+
+
+@MIXED_CLAUSE.rung("s32", for_spell=FORWARD)
+def _parse_pay_any_amount_clause(clause: str, *, for_spell: bool) -> Any:
+    """ "[You may] pay any amount of {E}" (CR 107.14) / "Pay any amount of
+    mana" (CR 118.3): the player chooses the amount, up to what they can pay,
+    pays it, and the amount paid is recorded for a later "that many" / "for
+    each {E} paid this way" (CR 608.2c)."""
+    if "any amount of" not in clause.lower():
+        return None
+    match = _PAY_ANY_AMOUNT_RE.fullmatch(clause.strip().rstrip("."))
+    if match is None:
+        return None
+    energy = match.group("what").lower() == "{e}"
+
+    def effect(game: "Game", stack_object: Any) -> None:
+        player = _controller(game, stack_object)
+        if energy:
+            paid = game.pay_any_amount_of_energy(
+                player, source=_source_name(stack_object), source_id=source_id_of(stack_object)
+            )
+        else:
+            paid = pay_cost_chosen_times(
+                game, stack_object, player, "{1}", "pay any amount of mana"
+            )
+        game.record_count(paid)
+
+    return effect
+
+
+_ANY_NUMBER_OF_TIMES_RE = re.compile(
+    r"^you may pay (?P<cost>(?:\{[^}]+\})+) any number of times\.\s*"
+    r"when you pay this cost one or more times, (?P<payoff>.+?)\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _that_many_written(payoff: str, n: int) -> str:
+    text = re.sub(r"\btwice that many\b", str(2 * n), payoff, flags=re.IGNORECASE)
+    text = re.sub(r"\bthree times that many\b", str(3 * n), text, flags=re.IGNORECASE)
+    return re.sub(r"\bthat many\b", str(n), text, flags=re.IGNORECASE)
+
+
+@functools.cache
+def _times_payoff_readable(payoff: str) -> bool:
+    from .effects.dispatch import _ability_effect_or_notice
+    from .effects.tokens import _is_notice_only
+
+    for n in (1, 2):
+        effect = _ability_effect_or_notice(_that_many_written(payoff, n) + ".")
+        if effect is None or _is_notice_only(effect):
+            return False
+    return True
+
+
+def any_number_of_times_effect(text: str) -> Any:
+    """ "You may pay {1}{W} any number of times. When you pay this cost one or
+    more times, <payoff with that many>." (the Adversary cycle) - the number
+    of payments is chosen (CR 107.1c) and paid, then a reflexive trigger
+    (CR 603.12) carries the payoff with "that many" read as that number."""
+    if "any number of times" not in text.lower():
+        return None
+    match = _ANY_NUMBER_OF_TIMES_RE.fullmatch(" ".join(text.strip().split()))
+    if match is None:
+        return None
+    cost_text, payoff = match.group("cost"), match.group("payoff")
+    if not _times_payoff_readable(payoff):
+        return None
+
+    def effect(game: "Game", ability: Any) -> None:
+        from .delayed import ReflexiveConsequence
+
+        player = _controller(game, ability)
+        paid = pay_cost_chosen_times(
+            game, ability, player, cost_text, f"pay {cost_text} any number of times"
+        )
+        if paid <= 0:
+            return
+        game.create_reflexive_trigger(
+            text=_that_many_written(payoff, paid) + ".",
+            controller=player.username,
+            source_id=getattr(ability, "source_id", None),
+            source_name=_source_name(ability),
+            callback=ReflexiveConsequence(),
+        )
+
+    return effect
+
+
+@ABILITY_TEXT.rung("s40", before=("parse_mixed_effect",))
+def _parse_any_number_of_times_ability(text: str) -> Any:
+    """`any_number_of_times_effect` as an ability's whole text."""
+    return any_number_of_times_effect(text)
+
+
+# --------------------------------------------------------------------------
+# A chosen amount, then a payoff that reads "that many"
+# --------------------------------------------------------------------------
+
+_FIRST_SENTENCE_RE = re.compile(r"^(?P<first>[^.]+?)(?:\.\s+|,\s*then\s+)(?P<rest>.+)$", re.DOTALL)
+
+
+def _chooser(clause: str, for_spell: bool) -> Any:
+    return _parse_pay_any_amount_clause(clause, for_spell=for_spell) or _parse_any_number_of_clause(
+        clause, for_spell=for_spell
+    )
+
+
+def _number_written(rest: str, n: int) -> str:
+    text = re.sub(
+        r"\blook at that many cards from the top of (?P<whose>your|their|its owner's) library",
+        lambda m: f"look at the top {n} cards of {m.group('whose')} library",
+        rest,
+        flags=re.IGNORECASE,
+    )
+    return _that_many_written(text, n)
+
+
+@functools.cache
+def _then_that_many_plan(text: str, for_spell: bool) -> tuple[Any, str] | None:
+    from .effects.dispatch import _ability_effect_or_notice, _spell_effect_or_notice
+    from .effects.text import _strip_non_effect_preamble
+    from .effects.tokens import _is_notice_only
+
+    whole = " ".join(_strip_non_effect_preamble(text).strip().split())
+    match = _FIRST_SENTENCE_RE.fullmatch(whole)
+    if match is None or "that many" not in match.group("rest").lower():
+        return None
+    chooser = _chooser(match.group("first"), for_spell)
+    if chooser is None:
+        return None
+    parse = _spell_effect_or_notice if for_spell else _ability_effect_or_notice
+    rest = match.group("rest").strip()
+    for n in (1, 2):
+        effect = parse(_number_written(rest, n))
+        if effect is None or _is_notice_only(effect):
+            return None
+    return chooser, rest
+
+
+def then_that_many_effect(text: str, for_spell: bool) -> Any:
+    """ "Pay any amount of mana. Look at that many cards from the top of your
+    library, then ..." (Karn, Living Legacy's -1): the chosen amount is paid,
+    then the rest is read with the number written in (CR 608.2c)."""
+    if "that many" not in text.lower() or "any " not in text.lower():
+        return None
+    plan = _then_that_many_plan(text, for_spell)
+    if plan is None:
+        return None
+    chooser, rest = plan
+
+    def effect(game: "Game", stack_object: Any) -> None:
+        from .effects.dispatch import _ability_effect_or_notice, _spell_effect_or_notice
+
+        chooser(game, stack_object)
+        n = game.recorded_count() or 0
+        if n <= 0:
+            return
+        parse = _spell_effect_or_notice if for_spell else _ability_effect_or_notice
+        payoff = parse(_number_written(rest, n))
+        if payoff is not None:
+            payoff(game, stack_object)
+
+    return effect
+
+
+@ABILITY_TEXT.rung("s40", before=("parse_mixed_effect",))
+def _parse_then_that_many_ability(text: str) -> Any:
+    """`then_that_many_effect` as an ability's whole text."""
+    return then_that_many_effect(text, False)
