@@ -42,11 +42,14 @@ from .amount_sentences import (
     parse_mill_clause,
     recipient_amount,
 )
-from .effects._chains import FORWARD, MIXED_CLAUSE
+from .decisions import source_id_of
+from .effects._chains import ABILITY_TEXT, FORWARD, MIXED_CLAUSE
+from .layers import ContinuousEffect, Duration, Layer, Sublayer, only_this_incarnation
+from .layers.model import SetPower
 
 if TYPE_CHECKING:
     from ..models.game import Game
-    from .effects._common import TargetedClause
+    from .effects._common import AbilityEffect, TargetedClause
 
 # --------------------------------------------------------------------------
 # "<who> mills <amount>": the subject and the amount
@@ -173,5 +176,76 @@ def _parse_destroy_if_mana_value_equals_unspent_mana(
                 and game.characteristics_of(target).mana_value == unspent
             ):
                 game.destroy(target)
+
+    return effect
+
+
+# --------------------------------------------------------------------------
+# "you may have this creature's base power become <amount> until end of turn"
+# --------------------------------------------------------------------------
+
+_BASE_POWER_BECOME_RE = re.compile(
+    r"^(?P<may>you may have )?(?P<subject>this creature|this permanent)['\u2019]s base power "
+    r"become (?:equal to )?(?P<amount>.+?) until end of turn$",
+    re.IGNORECASE,
+)
+_THAT_CREATURES_POWER_RE = re.compile(r"^that creature['\u2019]s power$", re.IGNORECASE)
+
+
+@ABILITY_TEXT.rung("s8")
+def _parse_base_power_become_clause(effect_text: str) -> "AbilityEffect | None":
+    """CR 613.4b: a layer 7b set of the source's base power (toughness left
+    alone) to "that creature's power" - the trigger's own event subject, read
+    once as the ability resolves (CR 608.2h) - or to an amount expression such
+    as "1 plus the greatest power among other creatures you control"."""
+    match = _BASE_POWER_BECOME_RE.fullmatch(clean(effect_text))
+    if match is None:
+        return None
+    amount_text = match.group("amount")
+    optional = match.group("may") is not None
+    from .effects.amounts import amount_expression
+    from .effects.continuous import _base_pt_become_object, continuous_effects
+
+    if _THAT_CREATURES_POWER_RE.fullmatch(amount_text):
+        reader = None
+    else:
+        reader = amount_expression(amount_text)
+        if reader is None:
+            return None
+
+    def effect(game: "Game", ability: Any) -> None:
+        source = ability.source(game)
+        if source is None or source.zone is not Zone.BATTLEFIELD:
+            return
+        if reader is None:
+            referent = _base_pt_become_object(game, ability, "that creature")
+            if referent is None:
+                return
+            if referent.zone is Zone.BATTLEFIELD:
+                power = game.characteristics_of(referent).numeric_power
+            else:
+                power = referent.power or 0  # CR 608.2h: last known information
+        else:
+            power = reader(game, controller_of(game, ability), source, 0)
+        if optional and not game.may(
+            controller_of(game, ability),
+            f"have {source.name}'s base power become {power} until end of turn",
+            source=ability.source_name,
+            source_id=source_id_of(ability),
+        ):
+            return
+        effects = continuous_effects(game)
+        effects.add(
+            ContinuousEffect(
+                description=f"{ability.source_name}: {source.name} has base power {power}",
+                layer=Layer.POWER_TOUGHNESS,
+                sublayer=Sublayer.SET,
+                timestamp=effects.tick(),
+                duration=Duration.UNTIL_END_OF_TURN,
+                selector=only_this_incarnation(source, source.zone_change_stamp),
+                modification=SetPower(power=power),
+            ),
+            game,
+        )
 
     return effect

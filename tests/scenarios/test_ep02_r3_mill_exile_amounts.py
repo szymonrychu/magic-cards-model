@@ -307,3 +307,93 @@ def test_glissa_cannot_target_a_nonartifact():
     scenario, glissa = _glissa_board(2)
     with pytest.raises(ValueError):
         scenario.activate(glissa, index=0, targets=[scenario.creature("Glissa Sunseeker")])
+
+
+# --------------------------------------------------------------------------
+# Part 4 - "this creature's base power becomes <amount> until end of turn"
+# (Belligerent Yearling, Arni Brokenbrow). CR 613.4b sets base power in layer
+# 7b; the toughness stays as it is, and the amount is taken once as the
+# ability resolves (CR 608.2h).
+# --------------------------------------------------------------------------
+
+
+def _pt(scenario, creature):
+    return scenario.game.computed_board().of(creature).power_toughness
+
+
+def test_belligerent_yearling_takes_the_entering_dinosaurs_power():
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Orazca Frillback"], battlefield=["Belligerent Yearling"])
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    yearling = scenario.creature("Belligerent Yearling", "alice")
+    printed = _pt(scenario, yearling)
+    scenario.will_take_the_may(True, source="Belligerent Yearling")
+    scenario.put_onto_battlefield("Orazca Frillback", "alice")
+    scenario.pass_until_resolved()
+    assert _pt(scenario, yearling) == (4, printed[1])
+
+
+def test_belligerent_yearling_declined_keeps_its_printed_power():
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Orazca Frillback"], battlefield=["Belligerent Yearling"])
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    yearling = scenario.creature("Belligerent Yearling", "alice")
+    printed = _pt(scenario, yearling)
+    scenario.will_take_the_may(False, source="Belligerent Yearling")
+    scenario.put_onto_battlefield("Orazca Frillback", "alice")
+    scenario.pass_until_resolved()
+    assert _pt(scenario, yearling) == printed
+
+
+def test_belligerent_yearling_ignores_a_non_dinosaur():
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Hill Giant"], battlefield=["Belligerent Yearling"])
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    yearling = scenario.creature("Belligerent Yearling", "alice")
+    printed = _pt(scenario, yearling)
+    scenario.put_onto_battlefield("Hill Giant", "alice")
+    scenario.pass_until_resolved()
+    assert scenario.pending_triggers == []
+    assert _pt(scenario, yearling) == printed
+
+
+def _arni_boast(*others):
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Arni Brokenbrow", "Mountain", *others])
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    arni = scenario.creature("Arni Brokenbrow", "alice")
+    arni.summoning_sick = False
+    scenario.attack_with(arni)
+    return scenario, arni
+
+
+def test_arni_boast_sets_base_power_to_one_plus_the_greatest_other_power():
+    scenario, arni = _arni_boast("Hill Giant", "Grizzly Bears")
+    scenario.will_take_the_may(True, source="Arni Brokenbrow")
+    scenario.activate(arni, *scenario.untapped_sources("Mountain"), index=0)
+    scenario.resolve_top()
+    assert _pt(scenario, arni)[0] == 4  # 1 + Hill Giant's 3
+
+
+def test_arni_boast_ignores_arnis_own_power():
+    scenario, arni = _arni_boast()
+    scenario.will_take_the_may(True, source="Arni Brokenbrow")
+    scenario.activate(arni, *scenario.untapped_sources("Mountain"), index=0)
+    scenario.resolve_top()
+    assert _pt(scenario, arni)[0] == 1  # 1 plus nothing (CR 107.2: 0)

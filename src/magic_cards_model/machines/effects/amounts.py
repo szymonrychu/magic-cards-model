@@ -424,7 +424,7 @@ _COUNT_CARDS_IN_YOUR_GRAVEYARD_UNFILTERED_RE = re.compile(
 #: the Machine's own amount) is the same extremum over CR 202.3's mana value.
 _GREATEST_CHARACTERISTIC_AMONG_RE = re.compile(
     r"^(?:the )?greatest (?P<characteristic>power|toughness|mana value) among "
-    r"(?P<qualifier>[a-z]+) you control$",
+    r"(?P<other>other )?(?P<qualifier>[a-z]+) you control$",
     re.IGNORECASE,
 )
 #: "different power among creatures you control" - Loot, the Nexus's own
@@ -888,6 +888,58 @@ def _nw06_counted_term(stripped: str) -> Callable[["Game", str], int] | None:
     if "color pairs" in lowered or "colour pairs" in lowered:
         return _color_pairs_count(stripped)
     return None
+
+
+def _greatest_among_reader(
+    match: "re.Match[str]",
+) -> Callable[["Game", str, UUID | None], int] | None:
+    """`_GREATEST_CHARACTERISTIC_AMONG_RE`'s extremum as a reader of
+    `(game, controller, excluded permanent id)`, `None` for a qualifier that is
+    neither a card type nor a creature subtype. "Other" (Arni Brokenbrow's "1
+    plus the greatest power among other creatures you control") is the caller
+    passing the source's id as the excluded one."""
+    card_type = _singular_card_type(match.group("qualifier"))
+    subtype = (
+        None
+        if card_type is not None
+        else _singular_subtype_for_count_expression(match.group("qualifier"))
+    )
+    if card_type is None and subtype is None:
+        return None
+    wants_power = match.group("characteristic").lower() == "power"
+    wants_mana_value = match.group("characteristic").lower() == "mana value"
+
+    def greatest_among(game: "Game", controller: str, exclude: UUID | None) -> int:
+        board = game.computed_board()
+        values: list[int] = []
+        for permanent in game.battlefield:
+            if permanent.id == exclude:
+                continue
+            chars = board.of(permanent)
+            if chars.controller != controller:
+                continue
+            if card_type is not None and card_type not in chars.types:
+                continue
+            if subtype is not None and not any(
+                word.lower() == subtype for word in chars.subtypes
+            ):
+                continue
+            if wants_mana_value:
+                values.append(int(permanent.mana_value))  # CR 202.3
+                continue
+            # CR 208.5: "If a creature somehow has no value for its power,
+            # its power is 0. The same is true for toughness." - a `*`
+            # printing whose characteristic-defining ability nothing has
+            # defined counts as 0, not as absent, which is exactly what
+            # `numeric_power`/`numeric_toughness` already answer.
+            values.append(chars.numeric_power if wants_power else chars.numeric_toughness)
+        # CR 107.2: "If anything needs to use a number that can't be
+        # determined, either as a result or in a calculation, it uses 0
+        # instead" - an empty group is not an error, it is X = 0.
+        return max(values) if values else 0
+
+    return greatest_among
+
 
 
 def count_expression(phrase: str) -> Callable[["Game", str], int] | None:
@@ -1414,53 +1466,12 @@ def count_expression(phrase: str) -> Callable[["Game", str], int] | None:
         return count_differently_named
 
     if match := _GREATEST_CHARACTERISTIC_AMONG_RE.fullmatch(stripped):
-        # ecl-T1's Pummeler for Hire ("the greatest power among Giants you
-        # control") and Sunderflock ("the greatest mana value among
-        # Elementals you control") name a creature *subtype*, not one of CR
-        # 205.2a's card types - `_singular_card_type` misses both, so a
-        # subtype the same vocabulary `count_expression`'s own "the number of
-        # `<qualifier>` you control" already reads (`_singular_subtype_for_
-        # count_expression`) is tried second, never guessed at when neither
-        # matches.
-        card_type = _singular_card_type(match.group("qualifier"))
-        subtype = (
-            None
-            if card_type is not None
-            else _singular_subtype_for_count_expression(match.group("qualifier"))
-        )
-        if card_type is None and subtype is None:
+        if match.group("other"):
+            return None  # "other" needs the source: `_amount_term` reads it
+        read = _greatest_among_reader(match)
+        if read is None:
             return None
-        wants_power = match.group("characteristic").lower() == "power"
-        wants_mana_value = match.group("characteristic").lower() == "mana value"
-
-        def greatest_among(game: "Game", controller: str) -> int:
-            board = game.computed_board()
-            values: list[int] = []
-            for permanent in game.battlefield:
-                chars = board.of(permanent)
-                if chars.controller != controller:
-                    continue
-                if card_type is not None and card_type not in chars.types:
-                    continue
-                if subtype is not None and not any(
-                    word.lower() == subtype for word in chars.subtypes
-                ):
-                    continue
-                if wants_mana_value:
-                    values.append(int(permanent.mana_value))  # CR 202.3
-                    continue
-                # CR 208.5: "If a creature somehow has no value for its power,
-                # its power is 0. The same is true for toughness." - a `*`
-                # printing whose characteristic-defining ability nothing has
-                # defined counts as 0, not as absent, which is exactly what
-                # `numeric_power`/`numeric_toughness` already answer.
-                values.append(chars.numeric_power if wants_power else chars.numeric_toughness)
-            # CR 107.2: "If anything needs to use a number that can't be
-            # determined, either as a result or in a calculation, it uses 0
-            # instead" - an empty group is not an error, it is X = 0.
-            return max(values) if values else 0
-
-        return greatest_among
+        return lambda game, controller: read(game, controller, None)
 
     if match := _DIFFERENT_CHARACTERISTIC_AMONG_RE.fullmatch(stripped):
         card_type = _singular_card_type(match.group("qualifier"))
@@ -1792,6 +1803,14 @@ def _amount_term(term: str) -> AmountReader | None:
     constant = parse_count(text)
     if constant is not None:
         return lambda _game, _controller, _object, _x: constant
+    if "greatest" in lowered and (other := _GREATEST_CHARACTERISTIC_AMONG_RE.fullmatch(text)):
+        greatest = _greatest_among_reader(other)
+        if greatest is None:
+            return None
+        has_other = bool(other.group("other"))
+        return lambda game, controller, obj, _x: greatest(
+            game, controller, obj.id if has_other and obj is not None else None
+        )
     if "devoured" in lowered and (devoured := _devoured_count(text)) is not None:
         # Ahead of the permanent counts below, which would otherwise read
         # "the number of Goblins" off the board and drop "it devoured".
