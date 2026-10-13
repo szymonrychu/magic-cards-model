@@ -2102,7 +2102,9 @@ def _amount_term(term: str) -> AmountReader | None:
     counted = count_expression(text) or _devotion_count(text)
     if counted is not None:
         return lambda game, controller, _object, _x: counted(game, controller)
-    return None
+    from ..ep02_r3_token_counts import amount_term
+
+    return amount_term(text)
 
 
 def amount_expression(phrase: str) -> AmountReader | None:
@@ -3369,7 +3371,13 @@ def _for_each_multiplier(phrase: str) -> Callable[["Game", str, str | None], int
         return lambda game, controller, _source_id: generic(game, controller)
     from ..ep02_r1_counted_permanents import counted_group_reader
 
-    return counted_group_reader(stripped) or _for_each_described_count(stripped)
+    from ..ep02_r3_token_counts import for_each_count
+
+    return (
+        counted_group_reader(stripped)
+        or _for_each_described_count(stripped)
+        or for_each_count(stripped)
+    )
 
 
 #: "`<description>` you control", the control clause anywhere in it -

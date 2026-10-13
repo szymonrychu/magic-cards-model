@@ -1,0 +1,150 @@
+{
+  "object": "card",
+  "id": "60da801e-c47c-4aac-928c-2e7eab2d24c6",
+  "oracle_id": "2f8872fe-84dc-4cda-a253-e7503a5c96a3",
+  "multiverse_ids": [
+    430387
+  ],
+  "tcgplayer_id": 132222,
+  "cardmarket_id": 298117,
+  "name": "Wolfbriar Elemental",
+  "lang": "en",
+  "released_at": "2017-06-09",
+  "uri": "https://api.scryfall.com/cards/60da801e-c47c-4aac-928c-2e7eab2d24c6",
+  "scryfall_uri": "https://scryfall.com/card/cma/168/wolfbriar-elemental?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T09:50:38Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/6/0/60da801e-c47c-4aac-928c-2e7eab2d24c6.jpg?1783936238",
+    "normal": "https://cards.scryfall.io/normal/front/6/0/60da801e-c47c-4aac-928c-2e7eab2d24c6.jpg?1783936238",
+    "large": "https://cards.scryfall.io/large/front/6/0/60da801e-c47c-4aac-928c-2e7eab2d24c6.jpg?1783936238",
+    "png": "https://cards.scryfall.io/png/front/6/0/60da801e-c47c-4aac-928c-2e7eab2d24c6.png?1783936238",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/6/0/60da801e-c47c-4aac-928c-2e7eab2d24c6.jpg?1783936238",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/6/0/60da801e-c47c-4aac-928c-2e7eab2d24c6.jpg?1783936238",
+    "thumb": "https://cards.scryfall.io/thumb/front/6/0/60da801e-c47c-4aac-928c-2e7eab2d24c6.webp?1783936238",
+    "grid": "https://cards.scryfall.io/grid/front/6/0/60da801e-c47c-4aac-928c-2e7eab2d24c6.webp?1783936238",
+    "display": "https://cards.scryfall.io/display/front/6/0/60da801e-c47c-4aac-928c-2e7eab2d24c6.webp?1783936238",
+    "art": "https://cards.scryfall.io/art/front/6/0/60da801e-c47c-4aac-928c-2e7eab2d24c6.webp?1783936238",
+    "crop": "https://cards.scryfall.io/crop/front/6/0/60da801e-c47c-4aac-928c-2e7eab2d24c6.webp?1783936238"
+  },
+  "mana_cost": "{2}{G}{G}",
+  "cmc": 4.0,
+  "type_line": "Creature \u2014 Elemental",
+  "oracle_text": "Multikicker {G} (You may pay an additional {G} any number of times as you cast this spell.)\nWhen this creature enters, create a 2/2 green Wolf creature token for each time it was kicked.",
+  "power": "4",
+  "toughness": "4",
+  "colors": [
+    "G"
+  ],
+  "color_identity": [
+    "G"
+  ],
+  "keywords": [
+    "Multikicker"
+  ],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "60da801e-c47c-4aac-928c-2e7eab2d24c6",
+      "component": "combo_piece",
+      "name": "Wolfbriar Elemental",
+      "type_line": "Creature \u2014 Elemental",
+      "uri": "https://api.scryfall.com/cards/60da801e-c47c-4aac-928c-2e7eab2d24c6"
+    },
+    {
+      "object": "related_card",
+      "id": "1d1d39c5-6c72-44c4-9353-3ca3ac6cd3a6",
+      "component": "token",
+      "name": "Wolf",
+      "type_line": "Token Creature \u2014 Wolf",
+      "uri": "https://api.scryfall.com/cards/1d1d39c5-6c72-44c4-9353-3ca3ac6cd3a6"
+    }
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": false,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "fd4d8463-0156-4c60-a40e-778762bb90e4",
+  "set": "cma",
+  "set_name": "Commander Anthology",
+  "set_type": "commander",
+  "set_uri": "https://api.scryfall.com/sets/fd4d8463-0156-4c60-a40e-778762bb90e4",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Acma&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/cma?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/60da801e-c47c-4aac-928c-2e7eab2d24c6/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A2f8872fe-84dc-4cda-a253-e7503a5c96a3&unique=prints",
+  "collector_number": "168",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Chippy",
+  "artist_ids": [
+    "a36f01a0-e51a-48b2-a556-b9b3bc73f969"
+  ],
+  "illustration_id": "609760be-e812-421e-911a-b5c3d7a85b86",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "edhrec_rank": 10433,
+  "penny_rank": 2061,
+  "prices": {
+    "usd": "0.42",
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": "0.34",
+    "eur_foil": null,
+    "tix": null
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=430387&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DWolfbriar%2BElemental",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DWolfbriar%2BElemental",
+    "edhrec": "https://edhrec.com/route/?cc=Wolfbriar+Elemental"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F132222%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=298117&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards?affiliate_id=scryfall&data%5Bsearch%5D=Wolfbriar+Elemental&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}
