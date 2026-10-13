@@ -147,6 +147,11 @@ def printed_characteristics(
     up_face = state.up_face
     power = _as_number(up_face.power) if up_face is not None else _as_number(card.power)
     toughness = _as_number(up_face.toughness) if up_face is not None else _as_number(card.toughness)
+    prototype = state.prototype_characteristics
+    if prototype is not None:
+        # CR 718.3b / CR 718.2a: the alternative power and toughness are
+        # copiable values, so layer 7a starts from them.
+        power, toughness = prototype.power, prototype.toughness
     return Characteristics(
         card_id=state.id,
         name=state.name,

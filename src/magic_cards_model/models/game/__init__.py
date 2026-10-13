@@ -2327,7 +2327,10 @@ class Game(
     #: it hit, "Enchanted player can't gain life." and "Players have no maximum
     #: hand size." are read off the battlefield, and a Crew N ability is
     #: once-per-turn; an older dump would resolve each of these as a no-op.
-    #: 164 (EP02-R2-T4): `AbilityOnStack` gained `cost_discarded_card_ids` and
+    #: 164 (EP02-R2-T4): `CardState` gained `prototyped` (CR 718.3b, the
+    #: alternative mana cost, power and toughness of a prototyped spell and its
+    #: permanent; a decoded older object is never prototyped); `AbilityOnStack`
+    #: gained `cost_discarded_card_ids` and
     #: `cost_discarded_mana_values` (the card an activation's "Discard a card"
     #: cost moved, for "damage equal to the discarded card's mana value" and
     #: "X/X, where X is the discarded card's mana value"); a decoded older

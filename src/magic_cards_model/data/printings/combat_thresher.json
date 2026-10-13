@@ -1,0 +1,140 @@
+{
+  "object": "card",
+  "id": "74dfabfd-e13b-4512-a733-abe514be6404",
+  "oracle_id": "0c460bdd-460b-4312-9ed2-32f3809a7d36",
+  "multiverse_ids": [
+    583620
+  ],
+  "mtgo_id": 104688,
+  "arena_id": 83683,
+  "tcgplayer_id": 451970,
+  "cardmarket_id": 682537,
+  "name": "Combat Thresher",
+  "lang": "en",
+  "released_at": "2022-11-18",
+  "uri": "https://api.scryfall.com/cards/74dfabfd-e13b-4512-a733-abe514be6404",
+  "scryfall_uri": "https://scryfall.com/card/bro/35/combat-thresher?utm_source=api",
+  "layout": "prototype",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T05:21:57Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/7/4/74dfabfd-e13b-4512-a733-abe514be6404.jpg?1783920117",
+    "normal": "https://cards.scryfall.io/normal/front/7/4/74dfabfd-e13b-4512-a733-abe514be6404.jpg?1783920117",
+    "large": "https://cards.scryfall.io/large/front/7/4/74dfabfd-e13b-4512-a733-abe514be6404.jpg?1783920117",
+    "png": "https://cards.scryfall.io/png/front/7/4/74dfabfd-e13b-4512-a733-abe514be6404.png?1783920117",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/7/4/74dfabfd-e13b-4512-a733-abe514be6404.jpg?1783920117",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/7/4/74dfabfd-e13b-4512-a733-abe514be6404.jpg?1783920117",
+    "thumb": "https://cards.scryfall.io/thumb/front/7/4/74dfabfd-e13b-4512-a733-abe514be6404.webp?1783920117",
+    "grid": "https://cards.scryfall.io/grid/front/7/4/74dfabfd-e13b-4512-a733-abe514be6404.webp?1783920117",
+    "display": "https://cards.scryfall.io/display/front/7/4/74dfabfd-e13b-4512-a733-abe514be6404.webp?1783920117",
+    "art": "https://cards.scryfall.io/art/front/7/4/74dfabfd-e13b-4512-a733-abe514be6404.webp?1783920117",
+    "crop": "https://cards.scryfall.io/crop/front/7/4/74dfabfd-e13b-4512-a733-abe514be6404.webp?1783920117"
+  },
+  "mana_cost": "{7}",
+  "cmc": 7.0,
+  "type_line": "Artifact Creature \u2014 Construct",
+  "oracle_text": "Prototype {2}{W} \u2014 1/1 (You may cast this spell with different mana cost, color, and size. It keeps its abilities and types.)\nDouble strike\nWhen this creature enters, draw a card.",
+  "power": "3",
+  "toughness": "3",
+  "colors": [],
+  "color_identity": [
+    "W"
+  ],
+  "keywords": [
+    "Double strike",
+    "Prototype"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "arena",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "4219a14e-6701-4ddd-a185-21dc054ab19b",
+  "set": "bro",
+  "set_name": "The Brothers' War",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/4219a14e-6701-4ddd-a185-21dc054ab19b",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Abro&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/bro?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/74dfabfd-e13b-4512-a733-abe514be6404/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A0c460bdd-460b-4312-9ed2-32f3809a7d36&unique=prints",
+  "collector_number": "35",
+  "digital": false,
+  "rarity": "uncommon",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Victor Harmatiuk",
+  "artist_ids": [
+    "651b47a5-b8c7-45eb-94db-baff516c3f00"
+  ],
+  "illustration_id": "52b98fc0-440b-42f4-92d4-4e68c357a95a",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 13495,
+  "penny_rank": 948,
+  "preview": {
+    "source": "Gamerbraves",
+    "source_uri": "https://www.gamerbraves.com/combat-thresher-in-mtg-brothers-war-is-a-fighty-way-to-get-more-cards/",
+    "previewed_at": "2022-11-01"
+  },
+  "prices": {
+    "usd": "0.17",
+    "usd_foil": "0.63",
+    "usd_etched": null,
+    "eur": "0.10",
+    "eur_foil": "0.22",
+    "tix": "0.03"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=583620&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DCombat%2BThresher",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DCombat%2BThresher",
+    "edhrec": "https://edhrec.com/route/?cc=Combat+Thresher"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F451970%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=682537&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/104688?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

@@ -16,7 +16,7 @@
       "alice": {
         "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Wastes", "Memnite", "Icehide Golem", "Bonesplitter", "Icy Manipulator", "Blademane Baku"],
         "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel"],
-        "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt", "Opt", "Opt"],
+        "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt", "Blademane Baku", "Blademane Baku"],
         "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
       },
       "bob": {
@@ -59,7 +59,7 @@
       }
     },
     "players": {},
-    "stack": ["Opt@alice#1"]
+    "stack": ["Blademane Baku@alice#2"]
   },
   "family": "triggered",
   "format": 1,
@@ -67,10 +67,10 @@
   "number": 0,
   "recipe": {
     "attempt": "cast_probe",
-    "index": 0,
+    "index": 12,
     "params": {
       "caster": "alice",
-      "probe": "Opt"
+      "probe": "Blademane Baku"
     },
     "variant": "quiet"
   }

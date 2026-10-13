@@ -31,6 +31,10 @@ file:
   face up.
 - **CR 702.50a/b** - epic: no spells for the rest of the game, a copy of the
   spell at each of the controller's upkeeps; copies are not cast.
+- **CR 718.3** - a prototype card is cast normally or prototyped (CR 702.160a).
+- **CR 718.3b** - a prototyped spell and its permanent have only the alternative
+  power, toughness and mana cost, and the colour of that cost.
+- **CR 718.4** - anywhere else, or cast normally, only the normal characteristics.
 - **CR 707.9b** - a copy effect may modify a characteristic ("except it's a 4/4
   black Zombie").
 """
@@ -38,7 +42,7 @@ file:
 import pytest
 
 from magic_cards_model.machines import Step
-from magic_cards_model.machines.combat import has_keyword
+from magic_cards_model.machines.combat import Keyword, has_keyword
 from magic_cards_model.models import Zone
 from magic_cards_model.models.card import Type
 from magic_cards_model.models.token import is_token
@@ -84,7 +88,12 @@ LISTED = [
 # Balduvian Berserker (Pioneer, Modern): "it deals damage equal to its power".
 # Banewasp Affliction (Modern): "that creature's controller loses life equal to its toughness".
 # The Scarab God (Pioneer, Modern): "a copy of it, except it's a 4/4 black Zombie".
-PROOF: list[str] = ["Balduvian Berserker", "Banewasp Affliction", "The Scarab God"]
+PROOF: list[str] = [
+    "Balduvian Berserker",
+    "Banewasp Affliction",
+    "The Scarab God",
+    "Combat Thresher",
+]
 
 LANDS = ["Plains"] * 6 + ["Swamp"] * 4 + ["Island"] * 4 + ["Forest"] * 3 + ["Mountain"] * 4
 
@@ -233,8 +242,6 @@ def test_fatal_frenzy_gives_trample_and_the_power_and_sacrifices_it_at_end_step(
     angel = scenario.creature("Serra Angel", "alice")
     _cast_all(scenario, "Fatal Frenzy", targets=[angel])
     assert angel.power == 8
-    from magic_cards_model.machines.combat import has_keyword
-
     assert has_keyword(angel, "Trample", scenario.game)
     while scenario.step is not Step.END_STEP:
         scenario.advance()
@@ -1472,3 +1479,99 @@ def test_the_scarab_god_makes_a_four_four_zombie_copy_of_the_exiled_creature_car
     chars = scenario.game.characteristics_of(copy)
     assert chars.power_toughness == (4, 4)
     assert "Zombie" in chars.subtypes
+
+
+# ---------------------------------------------------------------------------
+# Prototype (CR 702.160, CR 718): Spotter Thopter, Combat Thresher
+# ---------------------------------------------------------------------------
+
+
+def _cast_prototype(scenario, name: str, *, prototyped: bool, lands: list[str]):
+    casting = scenario.cast(name)
+    if prototyped:
+        casting.use_keyword("Prototype")
+    payment = casting.begin_paying()
+    scenario.pay_with(payment, *scenario.untapped_sources(*lands))
+    return casting, scenario.put_on_stack(casting)
+
+
+def test_prototype_is_offered_as_a_cast_option_with_its_own_cost() -> None:
+    from magic_cards_model.machines.casting import keyword_cast_options
+    from magic_cards_model.models.mana import ManaCost
+
+    options = [o for o in keyword_cast_options(card("Spotter Thopter")) if o.keyword == "Prototype"]
+    assert len(options) == 1 and options[0].cost is not None
+    assert options[0].cost.mana == ManaCost.parse("{3}{U}")
+    assert options[0].zone is Zone.HAND
+
+
+def test_a_prototyped_spell_and_its_permanent_use_the_alternative_characteristics() -> None:
+    scenario = _scenario([], hand=["Spotter Thopter"])
+    casting, spell = _cast_prototype(
+        scenario, "Spotter Thopter", prototyped=True, lands=["Island"] * 4
+    )
+    assert casting.total_cost.mana.converted == 4
+    assert spell.zone is Zone.STACK
+    assert (spell.mana_cost, spell.mana_value) == ("{3}{U}", 4)
+    assert [c.name for c in spell.colors] == ["BLUE"]
+    assert (spell.power, spell.toughness) == (2, 3)
+    scenario.resolve_top()
+    _resolve_all(scenario)
+    chars = scenario.game.characteristics_of(spell)
+    assert spell.zone is Zone.BATTLEFIELD
+    assert (chars.power, chars.toughness, chars.mana_value) == (2, 3, 4)
+    assert [c.name for c in chars.colors] == ["BLUE"]
+    assert Type.CREATURE in chars.types and has_keyword(spell, Keyword.FLYING, scenario.game)
+
+
+def test_a_prototyped_thopter_scries_its_alternative_power() -> None:
+    scenario = _scenario(
+        [],
+        hand=["Spotter Thopter"],
+        library=["Forest", "Island", "Swamp", "Plains", "Mountain", "Forest", "Island"],
+    )
+    top = scenario.top_of_library(3)
+    scenario.scry_bottoming(top[2])  # reachable only by a scry 3 or more, not by scry 2
+    _, spell = _cast_prototype(scenario, "Spotter Thopter", prototyped=True, lands=["Island"] * 4)
+    scenario.resolve_top()
+    with pytest.raises(ValueError):
+        _resolve_all(scenario)
+    assert spell.power == 2
+
+
+def test_cast_normally_a_prototype_card_keeps_its_normal_characteristics() -> None:
+    scenario = _scenario([], hand=["Spotter Thopter"])
+    _, spell = _cast_prototype(
+        scenario, "Spotter Thopter", prototyped=False, lands=["Plains"] * 6 + ["Swamp"] * 2
+    )
+    assert (spell.mana_value, spell.power, spell.toughness, spell.colors) == (8, 4, 5, ())
+    assert not spell.prototyped
+    scenario.resolve_top()
+    _resolve_all(scenario)
+    chars = scenario.game.characteristics_of(spell)
+    assert (chars.power, chars.toughness, chars.mana_value) == (4, 5, 8)
+
+
+def test_a_prototype_permanent_that_leaves_is_a_normal_card_again() -> None:
+    scenario = _scenario([], hand=["Spotter Thopter"])
+    _, spell = _cast_prototype(scenario, "Spotter Thopter", prototyped=True, lands=["Island"] * 4)
+    scenario.resolve_top()
+    _resolve_all(scenario)
+    scenario.game.return_to_hand(spell)
+    assert not spell.prototyped
+    assert (spell.mana_value, spell.power, spell.toughness) == (8, 4, 5)
+
+
+def test_a_second_prototype_printing_combat_thresher() -> None:
+    """Worded differently (white, double strike, draws on entering): the same
+    cast option and characteristics override, nothing keyed to the Thopter."""
+    scenario = _scenario([], hand=["Combat Thresher"], library=["Forest"] * 6)
+    before = len(scenario.player("alice").hand)
+    _, spell = _cast_prototype(scenario, "Combat Thresher", prototyped=True, lands=["Plains"] * 3)
+    assert (spell.mana_value, spell.power, spell.toughness) == (3, 1, 1)
+    assert [c.name for c in spell.colors] == ["WHITE"]
+    scenario.resolve_top()
+    _resolve_all(scenario)
+    chars = scenario.game.characteristics_of(spell)
+    assert (chars.power, chars.toughness) == (1, 1)
+    assert len(scenario.player("alice").hand) == before - 1 + 1
