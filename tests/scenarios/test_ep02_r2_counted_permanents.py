@@ -903,3 +903,94 @@ def test_bloodsky_massacre_chapter_three_adds_red_per_berserker_and_keeps_it_all
     _advance_to(scenario, Step.END_STEP)
     scenario.advance()  # cleanup: "until end of turn" is over
     assert scenario.player("alice").mana_pool.floating.get(Color.RED, 0) == 0
+
+
+# --------------------------------------------------------------------------
+# Dragonhawk, Fate's Tempest: "Whenever Dragonhawk enters or attacks, exile the top X
+# cards of your library, where X is the number of creatures you control with power 4
+# or greater. You may play those cards until your next end step. At the beginning of
+# your next end step, Dragonhawk deals 2 damage to each opponent for each of those
+# cards that are still exiled." CR 608.2h (X fixed as it resolves), CR 603.7 (delayed
+# trigger), CR 603.7c (only those very cards), CR 400.7 (a card that left exile is a
+# new object).
+# --------------------------------------------------------------------------
+
+
+def _exiled(scenario, username="alice"):
+    return [card for card in scenario.game.exile if card.owner == username]
+
+
+def _dragonhawk_attack(scenario, extra_big):
+    _advance_to(scenario, Step.DECLARE_ATTACKERS)
+    dragonhawk = scenario.find("Dragonhawk, Fate's Tempest", Zone.BATTLEFIELD, "alice")
+    dragonhawk.summoning_sick = False
+    scenario.attack_with(dragonhawk)
+    while scenario.game.stack:
+        scenario.pass_until_resolved()
+
+
+def _dragonhawk_board(extra_big, small=1):
+    return _build(
+        ["Dragonhawk, Fate's Tempest"] + ["Craw Wurm"] * extra_big + ["Grizzly Bears"] * small,
+        ["Craw Wurm"],
+    )
+
+
+@pytest.mark.parametrize("extra_big", [0, 2])
+def test_dragonhawk_attack_exiles_x_cards_for_each_big_creature_you_control(extra_big):
+    scenario = _main(_dragonhawk_board(extra_big))
+    library_before = len(scenario.player("alice").library)
+    _dragonhawk_attack(scenario, extra_big)
+    exiled = _exiled(scenario)
+    assert len(exiled) == extra_big + 1  # Dragonhawk 5/5 counts; Bears and bob's Wurm do not
+    assert len(scenario.player("alice").library) == library_before - (extra_big + 1)
+    assert len(scenario.game.play_permissions) == extra_big + 1
+
+
+def _bob_life_after_combat(scenario):
+    """Dragonhawk (a flier) is unblocked: bob's life once combat damage is done."""
+    _advance_to(scenario, Step.POSTCOMBAT_MAIN)
+    return scenario.player("bob").life
+
+
+def test_dragonhawk_deals_two_damage_per_card_still_exiled_at_your_next_end_step():
+    scenario = _main(_dragonhawk_board(2))
+    _dragonhawk_attack(scenario, 2)  # three cards exiled
+    base = _bob_life_after_combat(scenario)
+    scenario.play_land("Forest", from_zone=Zone.EXILE)  # one of them is played
+    _advance_to(scenario, Step.END_STEP)
+    assert scenario.player("bob").life == base - 2 * 2
+    assert scenario.player("alice").life == 20
+
+
+def test_dragonhawk_deals_nothing_when_every_exiled_card_was_played():
+    scenario = _main(_dragonhawk_board(0))
+    _dragonhawk_attack(scenario, 0)  # one card exiled
+    base = _bob_life_after_combat(scenario)
+    scenario.play_land("Forest", from_zone=Zone.EXILE)
+    _advance_to(scenario, Step.END_STEP)
+    assert scenario.player("bob").life == base
+
+
+def test_dragonhawk_damage_is_a_delayed_trigger_that_fires_once_at_the_next_end_step():
+    scenario = _main(_dragonhawk_board(1))
+    _dragonhawk_attack(scenario, 1)  # two cards exiled
+    base = _bob_life_after_combat(scenario)
+    _advance_to(scenario, Step.END_STEP)
+    assert scenario.player("bob").life == base - 4
+    scenario.advance()
+    assert scenario.player("bob").life == base - 4
+
+
+def test_dragonhawk_entering_triggers_the_same_way():
+    scenario = _main(
+        _build(
+            ["Mountain"] * 5 + ["Craw Wurm"],
+            ["Craw Wurm"],
+            hand=["Dragonhawk, Fate's Tempest"],
+        )
+    )
+    _enter(scenario, "Dragonhawk, Fate's Tempest")
+    assert len(_exiled(scenario)) == 2
+    _advance_to(scenario, Step.END_STEP)
+    assert scenario.player("bob").life == 20 - 4

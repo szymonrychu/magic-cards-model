@@ -547,6 +547,42 @@ class DrawACardForController(DelayedEffectSpecBase):
             game.draw_cards(trigger.controller, self.count)
 
 
+class DamageEachOpponentPerCardStillExiled(DelayedEffectSpecBase):
+    """ "At the beginning of your next end step, `<this>` deals `<n>` damage to
+    each opponent for each of those cards that are still exiled" - Dragonhawk,
+    Fate's Tempest's third sentence (CR 603.7).
+
+    CR 603.7c: the delayed ability refers to particular objects, so it names the
+    cards the first sentence exiled and counts only those still in the exile
+    zone as the same object. CR 400.7: a card that left exile (played, or
+    returned anywhere) is a new object, so its zone-change stamp no longer
+    matches the one captured when it was exiled. The count is taken once as the
+    ability resolves (CR 608.2h).
+    """
+
+    kind: Literal["damage_each_opponent_per_card_still_exiled"] = (
+        "damage_each_opponent_per_card_still_exiled"
+    )
+    card_ids: tuple[UUID, ...]
+    stamps: tuple[UUID | None, ...]
+    per_card: int
+
+    def __call__(self, game: "Game", ability: AbilityOnStack, trigger: "DelayedTrigger") -> None:
+        from .effects.damage import _opponents
+
+        still_exiled = 0
+        for card_id, stamp in zip(self.card_ids, self.stamps, strict=True):
+            card = game.find_by_id(card_id)
+            if card is not None and card.zone is Zone.EXILE and card.zone_change_stamp == stamp:
+                still_exiled += 1
+        amount = still_exiled * self.per_card
+        if amount <= 0:
+            return
+        source = ability.source_or_last_known(game)
+        for opponent in _opponents(game, trigger.controller):
+            game.deal_damage(opponent, amount, source=source)
+
+
 class AddManaAmountForController(DelayedEffectSpecBase):
     """ "Add an amount of `<color>` equal to `<n>` at the beginning of your
     next main phase" - Mana Sculpt's own delayed trigger (CR 603.7), created
@@ -2529,6 +2565,7 @@ DelayedEffectSpec = Annotated[
     | ParadigmCopyAndCast
     | DrawACardForController
     | AddManaAmountForController
+    | DamageEachOpponentPerCardStillExiled
     | AddManaInAnyCombinationForController
     | DestroySubject
     | TapSubject

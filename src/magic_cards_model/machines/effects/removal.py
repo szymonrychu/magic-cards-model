@@ -48,6 +48,7 @@ from ..chosen_type import (
 )
 from ..decisions import Decision, DecisionKind, source_id_of
 from ..delayed import (
+    DamageEachOpponentPerCardStillExiled,
     DelayedTrigger,
     PayOrElseReturnExiledCard,
     ReflexiveConsequence,
@@ -6782,6 +6783,13 @@ def _parse_exile_then_play_permission_clauses(
         consumed += 1
     one_of = permission.group("subject").lower().startswith("one of")
 
+    still_exiled_damage: int | None = None
+    if not for_spell and index + consumed < len(clauses):
+        damage_match = _STILL_EXILED_DAMAGE_RE.fullmatch(clauses[index + consumed].strip())
+        if damage_match is not None and duration is PermissionDuration.NEXT_END_STEP:
+            still_exiled_damage = parse_count(damage_match.group("n"))
+            consumed += 1
+
     def effect(game: "Game", stack_object: "StackObject") -> None:
         controller = game.controller_of(stack_object).username
         source_name = (
@@ -6808,7 +6816,25 @@ def _parse_exile_then_play_permission_clauses(
                     game.conditional_clause_notices.append(notice)
             elif held:
                 chosen_exile = alternative
-        for card in chosen_exile(game, stack_object):
+        exiled_cards = chosen_exile(game, stack_object)
+        if still_exiled_damage is not None and isinstance(stack_object, AbilityOnStack):
+            game.create_delayed_trigger(
+                DelayedTrigger(
+                    text=_STILL_EXILED_DAMAGE_TEXT,
+                    effect=DamageEachOpponentPerCardStillExiled(
+                        card_ids=tuple(card.id for card in exiled_cards),
+                        stamps=tuple(card.zone_change_stamp for card in exiled_cards),
+                        per_card=still_exiled_damage,
+                    ),
+                    event=TriggerEvent.BEGINNING_OF_STEP,
+                    step=Step.END_STEP,
+                    controller=controller,
+                    source_id=stack_object.source_id,
+                    source_name=source_name,
+                    only_when_active=controller,
+                )
+            )
+        for card in exiled_cards:
             game.grant_play_permission(
                 card,
                 controller,
@@ -6829,6 +6855,21 @@ def _parse_exile_then_play_permission_clauses(
             )
 
     return consumed, effect
+
+
+#: "At the beginning of your next end step, `<this>` deals N damage to each
+#: opponent for each of those cards that are still exiled." - Dragonhawk,
+#: Fate's Tempest's last sentence. Folded into the exile-then-permission merge
+#: because "those cards" is CR 607.1 anaphora onto that merge's own exile.
+_STILL_EXILED_DAMAGE_RE = re.compile(
+    rf"^at the beginning of your next end step, (?:this \w+|[^,]+?) deals (?P<n>{COUNT}) damage "
+    r"to each opponent for each of those cards that are still exiled$",
+    re.IGNORECASE,
+)
+_STILL_EXILED_DAMAGE_TEXT = (
+    "At the beginning of your next end step, this permanent deals damage to each "
+    "opponent for each of those cards that are still exiled."
+)
 
 
 #: "For each of those cards, its owner may play it for as long as it remains
