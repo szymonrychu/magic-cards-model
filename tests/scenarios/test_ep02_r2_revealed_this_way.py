@@ -92,6 +92,8 @@ def _board(
     bob_battlefield=(),
     bob_library=("Island",) * 8,
     bob_graveyard=(),
+    alice_exile=(),
+    bob_exile=(),
     start=Step.PRECOMBAT_MAIN,
 ):
     scenario = (
@@ -102,6 +104,7 @@ def _board(
             battlefield=[*alice_lands, *alice_lands, *alice_battlefield],
             library=list(alice_library),
             graveyard=list(alice_graveyard),
+            exile=list(alice_exile),
         )
         .player(
             "bob",
@@ -109,6 +112,7 @@ def _board(
             battlefield=["Swamp", "Swamp", *bob_battlefield],
             library=list(bob_library),
             graveyard=list(bob_graveyard),
+            exile=list(bob_exile),
         )
         .build()
     )
@@ -928,3 +932,252 @@ def test_reap_intellect_cannot_take_a_land_card():
     )
     _cast_x(scenario, "Reap Intellect", 1, targets=["bob"])
     assert scenario.game.exile == []
+
+
+# -- Declaration in Stone: exile it and its same-named siblings, then investigate --
+
+
+def _clues(scenario, username):
+    return sum(
+        1 for s in scenario.game.battlefield if s.controller == username and s.name == "Clue Token"
+    )
+
+
+def test_declaration_in_stone_exiles_every_same_named_creature_and_investigates_for_each():
+    scenario = _board(
+        alice_hand=["Declaration in Stone"],
+        alice_lands=("Plains", "Plains", "Plains"),
+        bob_battlefield=["Grizzly Bears", "Grizzly Bears", "Grizzly Bears", "Hill Giant"],
+    )
+    bears = scenario.creatures("Grizzly Bears", username="bob")
+    _cast(scenario, "Declaration in Stone", targets=[bears[0]])
+    assert _exiled_names(scenario) == ["Grizzly Bears"] * 3
+    assert [n for n in _battlefield_of(scenario, "bob") if n != "Clue Token"] == ["Hill Giant"]
+    assert _clues(scenario, "bob") == 3
+    assert _clues(scenario, "alice") == 0
+
+
+def test_declaration_in_stone_leaves_another_players_same_named_creature_alone():
+    scenario = _board(
+        alice_hand=["Declaration in Stone"],
+        alice_lands=("Plains", "Plains", "Plains"),
+        alice_battlefield=["Grizzly Bears"],
+        bob_battlefield=["Grizzly Bears"],
+    )
+    target = scenario.creature("Grizzly Bears", "bob")
+    _cast(scenario, "Declaration in Stone", targets=[target])
+    assert _battlefield_of(scenario, "alice") == ["Grizzly Bears"]
+    assert _clues(scenario, "bob") == 1
+
+
+def test_declaration_in_stone_gives_no_clue_for_an_exiled_token():
+    from magic_cards_model.models.token import TokenDefinition, create_tokens
+
+    scenario = _board(
+        alice_hand=["Declaration in Stone"],
+        alice_lands=("Plains", "Plains", "Plains"),
+        bob_battlefield=["Grizzly Bears"],
+    )
+    (bear_token,) = create_tokens(
+        scenario.game, TokenDefinition(power=2, toughness=2, subtypes=("Bear",)), "bob"
+    )
+    _cast(scenario, "Declaration in Stone", targets=[bear_token])
+    assert _clues(scenario, "bob") == 0
+    assert scenario.creature("Grizzly Bears", "bob").zone is Zone.BATTLEFIELD
+
+
+# -- Swift Silence: counter all other spells, draw for each one countered ----------
+
+
+def _silence_board(bob_library=("Forest", "Island", "Plains")):
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Lightning Bolt", "Opt"],
+            battlefield=["Mountain", "Mountain", "Island", "Island"],
+            library=["Forest"] * 4,
+        )
+        .player(
+            "bob",
+            hand=["Swift Silence"],
+            battlefield=["Plains", "Island", "Island", "Island", "Island"],
+            library=list(bob_library),
+        )
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    return scenario
+
+
+def test_swift_silence_counters_every_other_spell_and_draws_one_card_for_each():
+    scenario = _silence_board()
+    bolt = scenario.cast_onto_stack("Lightning Bolt", username="alice", auto=True, targets=["bob"])
+    opt = scenario.cast_onto_stack("Opt", username="alice", auto=True)
+    scenario.pass_priority("alice")
+    silence = scenario.cast_and_resolve("Swift Silence", username="bob", auto=True)
+    assert bolt.zone is Zone.GRAVEYARD and opt.zone is Zone.GRAVEYARD
+    assert silence.zone is Zone.GRAVEYARD  # "other" spells: it resolved rather than countered itself
+    assert scenario.stack_names() == []
+    assert len(scenario.player("bob").hand) == 2  # two spells countered this way
+    assert scenario.player("bob").life == 20
+
+
+def test_swift_silence_does_not_counter_an_ability_or_count_it():
+    scenario = _silence_board()
+    bolt = scenario.cast_onto_stack("Lightning Bolt", username="alice", auto=True, targets=["bob"])
+    scenario.pass_priority("alice")
+    scenario.cast_and_resolve("Swift Silence", username="bob", auto=True)
+    assert bolt.zone is Zone.GRAVEYARD
+    assert len(scenario.player("bob").hand) == 1
+
+
+# -- Elixir: shuffle the nonland cards of the graveyard back, gain that much -------
+
+
+def test_elixir_shuffles_the_nonland_graveyard_cards_in_and_gains_life_for_each():
+    scenario = _board(
+        alice_battlefield=["Elixir"],
+        alice_graveyard=["Lightning Bolt", "Grizzly Bears", "Forest", "Sol Ring"],
+        alice_library=["Island"],
+    )
+    elixir = scenario.find("Elixir", Zone.BATTLEFIELD, "alice")
+    scenario.activate(elixir, auto=True)
+    scenario.pass_until_resolved()
+    assert _names(scenario, "alice", Zone.GRAVEYARD) == ["Forest"]
+    assert sorted(_library(scenario)) == ["Grizzly Bears", "Island", "Lightning Bolt", "Sol Ring"]
+    assert scenario.player("alice").life == 23
+    assert elixir.zone is Zone.EXILE  # exiled as the cost
+
+
+def test_elixir_with_only_lands_in_the_graveyard_gains_nothing():
+    scenario = _board(alice_battlefield=["Elixir"], alice_graveyard=["Forest"])
+    elixir = scenario.find("Elixir", Zone.BATTLEFIELD, "alice")
+    scenario.activate(elixir, auto=True)
+    scenario.pass_until_resolved()
+    assert scenario.player("alice").life == 20
+    assert _names(scenario, "alice", Zone.GRAVEYARD) == ["Forest"]
+
+
+# -- Lammastide Weave: choose a name, mill a card, gain life if it was that card ---
+
+
+def test_lammastide_weave_gains_life_equal_to_the_milled_named_cards_mana_value():
+    scenario = _board(
+        alice_hand=["Lammastide Weave"],
+        alice_library=["Forest", "Island"],
+        bob_library=["Serra Angel", "Island"],
+    )
+    scenario.will_choose("Serra Angel", username="alice")
+    _cast(scenario, "Lammastide Weave", targets=["bob"])
+    assert _names(scenario, "bob", Zone.GRAVEYARD) == ["Serra Angel"]
+    assert scenario.player("alice").life == 25  # Serra Angel is mana value 5
+    assert len(scenario.player("alice").hand) == 1  # the unconditional draw
+
+
+def test_lammastide_weave_gains_nothing_when_the_milled_card_has_another_name():
+    scenario = _board(
+        alice_hand=["Lammastide Weave"],
+        alice_library=["Forest", "Island"],
+        bob_library=["Island", "Serra Angel"],
+    )
+    scenario.will_choose("Serra Angel", username="alice")
+    _cast(scenario, "Lammastide Weave", targets=["bob"])
+    assert scenario.player("alice").life == 20
+    assert len(scenario.player("alice").hand) == 1
+
+
+def test_lammastide_weave_can_mill_the_casters_own_library():
+    scenario = _board(
+        alice_hand=["Lammastide Weave"],
+        alice_library=["Grizzly Bears", "Forest", "Island"],
+    )
+    scenario.will_choose("Grizzly Bears", username="alice")
+    _cast(scenario, "Lammastide Weave", targets=["alice"])
+    assert scenario.player("alice").life == 22
+    assert _names(scenario, "alice", Zone.GRAVEYARD) == ["Grizzly Bears", "Lammastide Weave"]
+
+
+# -- Cragganwick Cremator: discard at random, burn for the creature's power --------
+
+
+def test_cragganwick_cremator_deals_damage_equal_to_the_discarded_creatures_power():
+    scenario = _board(alice_hand=["Cragganwick Cremator", "Hill Giant"])
+    scenario.choose_trigger_targets("Cragganwick Cremator", [scenario.player("bob")])
+    _cast(scenario, "Cragganwick Cremator")
+    _settle(scenario)
+    assert _names(scenario, "alice", Zone.GRAVEYARD) == ["Hill Giant"]
+    assert scenario.player("bob").life == 17
+
+
+def test_cragganwick_cremator_deals_nothing_for_a_discarded_noncreature():
+    scenario = _board(alice_hand=["Cragganwick Cremator", "Lightning Bolt"])
+    scenario.choose_trigger_targets("Cragganwick Cremator", [scenario.player("bob")])
+    _cast(scenario, "Cragganwick Cremator")
+    _settle(scenario)
+    assert _names(scenario, "alice", Zone.GRAVEYARD) == ["Lightning Bolt"]
+    assert scenario.player("bob").life == 20
+
+
+def test_cragganwick_cremator_with_an_empty_hand_discards_and_deals_nothing():
+    scenario = _board(alice_hand=["Cragganwick Cremator"])
+    scenario.choose_trigger_targets("Cragganwick Cremator", [scenario.player("bob")])
+    _cast(scenario, "Cragganwick Cremator")
+    _settle(scenario)
+    assert scenario.player("bob").life == 20
+
+
+# -- Kaya, Orzhov Usurper ----------------------------------------------------------
+
+
+def _kaya_board(**kwargs):
+    scenario = _board(alice_battlefield=["Kaya, Orzhov Usurper"], **kwargs)
+    return scenario, scenario.find("Kaya, Orzhov Usurper", Zone.BATTLEFIELD, "alice")
+
+
+def test_kaya_plus_one_gains_two_life_when_a_creature_card_was_exiled():
+    scenario, kaya = _kaya_board(bob_graveyard=["Grizzly Bears", "Lightning Bolt"])
+    cards = [scenario.find("Grizzly Bears", Zone.GRAVEYARD, "bob")]
+    scenario.activate(kaya, index=0, targets=cards)
+    scenario.pass_until_resolved()
+    assert [s.name for s in scenario.game.exile] == ["Grizzly Bears"]
+    assert scenario.player("alice").life == 22
+
+
+def test_kaya_plus_one_gains_nothing_when_no_creature_card_was_exiled():
+    scenario, kaya = _kaya_board(bob_graveyard=["Lightning Bolt", "Sol Ring"])
+    cards = [
+        scenario.find("Lightning Bolt", Zone.GRAVEYARD, "bob"),
+        scenario.find("Sol Ring", Zone.GRAVEYARD, "bob"),
+    ]
+    scenario.activate(kaya, index=0, targets=cards)
+    scenario.pass_until_resolved()
+    assert len(scenario.game.exile) == 2
+    assert scenario.player("alice").life == 20
+
+
+def test_kaya_plus_one_with_no_target_gains_nothing():
+    scenario, kaya = _kaya_board()
+    scenario.activate(kaya, index=0, targets=[])
+    scenario.pass_until_resolved()
+    assert scenario.player("alice").life == 20
+
+
+def test_kaya_minus_five_hits_for_the_cards_the_player_owns_in_exile_and_gains_that_much():
+    scenario, kaya = _kaya_board(
+        bob_exile=["Grizzly Bears", "Lightning Bolt", "Sol Ring"], alice_exile=["Hill Giant"]
+    )
+    kaya.add_counters("loyalty", 4)  # 3 -> 7
+    scenario.activate(kaya, index=2, targets=["bob"])
+    scenario.pass_until_resolved()
+    assert scenario.player("bob").life == 17  # Hill Giant is alice's, not bob's
+    assert scenario.player("alice").life == 23
+
+
+def test_kaya_minus_five_with_nothing_in_exile_deals_and_gains_nothing():
+    scenario, kaya = _kaya_board(alice_exile=["Hill Giant"])
+    kaya.add_counters("loyalty", 4)
+    scenario.activate(kaya, index=2, targets=["bob"])
+    scenario.pass_until_resolved()
+    assert scenario.player("bob").life == 20
+    assert scenario.player("alice").life == 20

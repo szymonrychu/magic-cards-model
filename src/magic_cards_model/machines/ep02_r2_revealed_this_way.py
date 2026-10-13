@@ -44,6 +44,7 @@ from uuid import UUID
 from ..models.card import Type
 from ..models.card_state import CardState, ChoiceKind
 from ..models.player import Player
+from ..models.token import is_token
 from ..models.zone import Zone
 from ..numbers import parse_count
 from .casting import PlayAction
@@ -57,10 +58,11 @@ from .effects._common import (
     _quality_matcher,
     _targets_understood,
 )
+from .effects.library import _mill
 from .effects.search import _search_and_exile_matching_name
 from .effects.dispatch import _ability_effect_or_notice, _spell_effect_or_notice
 from .effects.text import _plain_resolution_sentences, _strip_non_effect_preamble
-from .effects.tokens import _is_notice_only
+from .effects.tokens import _is_notice_only, investigate
 from .ep02_r1_this_way_counts import _VERBS as _r1_verbs
 from .ep02_r1_this_way_counts import _first_instruction as _r1_first_instruction
 from .ep02_r1_this_way_counts import _objects as _r1_objects
@@ -97,6 +99,7 @@ class _Ctx:
     referent: CardState | None = None
     referent_chars: Any = None  # the referent as it last existed (CR 608.2h)
     excess: int = 0
+    last_amount: int = 0  # the number the latest damage or life instruction used
 
     def subject_card(self) -> CardState | None:
         """The card "the revealed card" / "that card" names."""
@@ -596,6 +599,16 @@ def _search_step(match: re.Match[str]) -> Step | None:
     return step
 
 
+_INVESTIGATES_RE = re.compile(r"^(?:that player|its controller|they) investigates?$", re.IGNORECASE)
+
+
+def _investigate_step(_match: re.Match[str]) -> Step:
+    def step(game: "Game", obj: Any, ctx: _Ctx) -> None:
+        investigate(game, ctx.actor.username)
+
+    return step
+
+
 _NO_SPLIT = "\u0001"
 _SAME_NAME_RE = re.compile(r"(same name as that card) and exile them", re.IGNORECASE)
 _SEARCH_SAME_NAME_RE = re.compile(
@@ -687,7 +700,29 @@ def _count_moved(match: re.Match[str]) -> Amount:
     return lambda _g, _o, ctx: len(ctx.moved.get(zone, ()))
 
 
+def _count_in_moved(key: str) -> Callable[[re.Match[str]], Amount]:
+    return lambda _match: lambda _g, _o, ctx: len(ctx.moved.get(key, ()))
+
+
+def _cards_owned_in_exile(_match: re.Match[str]) -> Amount:
+    return lambda game, _o, ctx: sum(1 for c in game.exile if c.owner == ctx.actor.username)
+
+
 _AMOUNT_PATTERNS = (
+    (
+        re.compile(r"^(?:the number of )?spells? countered this way$", re.IGNORECASE),
+        _count_in_moved("countered"),
+    ),
+    (
+        re.compile(
+            r"^(?:the number of )?cards? shuffled into your library this way$", re.IGNORECASE
+        ),
+        _count_in_moved("shuffled"),
+    ),
+    (
+        re.compile(r"^the number of cards that player owns in exile$", re.IGNORECASE),
+        _cards_owned_in_exile,
+    ),
     (
         re.compile(
             r"^the number of (?:(?P<q>[a-z-]+) )?cards (?:(?:they|you) )?revealed this way$",
@@ -726,7 +761,8 @@ def _amount(expr: str) -> Amount | None:
 
 
 _DAMAGE_PLAYER_RE = re.compile(
-    r"^(?P<src>.+?) deals damage to (?P<to>you|that player) equal to (?P<expr>.+)$", re.IGNORECASE
+    r"^(?P<src>.+?) deals damage to (?P<to>you|that player|target player) equal to (?P<expr>.+)$",
+    re.IGNORECASE,
 )
 _DAMAGE_PLAYER_AND_CREATURES_RE = re.compile(
     r"^(?P<src>.+?) deals damage equal to (?P<expr>.+?) to (?P<to>that player) and each creature "
@@ -754,11 +790,18 @@ def _damage_players(match: re.Match[str]) -> Step | None:
     to_creatures = "each creature" in match.string.lower()
 
     def step(game: "Game", obj: Any, ctx: _Ctx) -> None:
+        to = match.group("to").lower()
+        if to == "target player":
+            targeted = _targeted_player(game, obj)
+            if targeted is None:
+                return
+            ctx.actor = targeted
         n = amount(game, obj, ctx)
+        ctx.last_amount = max(n, 0)
         if n <= 0:
             return
         source = _source_of(obj) or (obj.source(game) if hasattr(obj, "source") else None)
-        player = ctx.controller if match.group("to").lower() == "you" else ctx.actor
+        player = ctx.controller if to == "you" else ctx.actor
         game.deal_damage(player, n, source=source)
         if to_creatures:
             for state in list(game.permanents_controlled_by(player.username)):
@@ -1001,6 +1044,173 @@ def _play_that_card(_match: re.Match[str]) -> Step:
     return step
 
 
+_COUNTER_ALL_OTHER_RE = re.compile(r"^counter all other spells$", re.IGNORECASE)
+
+
+def _counter_all_other(_match: re.Match[str]) -> Step:
+    """CR 701.6a: every spell on the stack but this one is countered; an
+    uncounterable one stays (CR 113.6g), so the count is of what really left."""
+
+    def step(game: "Game", obj: Any, ctx: _Ctx) -> None:
+        for item in list(game.stack):
+            if isinstance(item, CardState) and item.id != getattr(obj, "id", None):
+                game.counter(item)
+                if item not in game.stack:
+                    ctx.moved.setdefault("countered", []).append(item)
+
+    return step
+
+
+_DRAW_FOR_EACH_RE = re.compile(
+    r"^(?:you )?draws? (?P<n>a|one|two|three|\d+) cards? for each (?P<each>.+)$", re.IGNORECASE
+)
+
+
+def _draw_for_each(match: re.Match[str]) -> Step | None:
+    count = _amount(match.group("each"))
+    if count is None:
+        return None
+    unit = 1 if match.group("n").lower() in ("a", "one") else parse_count(match.group("n"))
+    if unit is None:
+        return None
+
+    def step(game: "Game", obj: Any, ctx: _Ctx) -> None:
+        n = unit * count(game, obj, ctx)
+        if n > 0:
+            game.draw_cards(ctx.controller.username, n)
+
+    return step
+
+
+_SHUFFLE_GRAVEYARD_RE = re.compile(
+    r"^shuffle all (?P<q>[a-z-]+) cards from your graveyard into your library$", re.IGNORECASE
+)
+
+
+def _shuffle_graveyard(match: re.Match[str]) -> Step | None:
+    quality = match.group("q").strip().lower()
+    if not _card_description_is_readable(quality):
+        return None
+    matcher = _quality_matcher(quality)
+
+    def step(game: "Game", obj: Any, ctx: _Ctx) -> None:
+        player = ctx.controller
+        ctx.actor = player
+        cards = [c for c in player.graveyard if matcher(c)]
+        for state in cards:
+            player.move(state, Zone.LIBRARY)
+        game.shuffle_library(player)
+        ctx.moved.setdefault("shuffled", []).extend(cards)
+
+    return step
+
+
+_MILL_RE = re.compile(
+    r"^(?P<who>target player|target opponent|you|that player) mills? "
+    r"(?P<n>a|one|two|three|four|five|\d+) cards?$",
+    re.IGNORECASE,
+)
+
+
+def _mill_step(match: re.Match[str]) -> Step | None:
+    count = 1 if match.group("n").lower() in ("a", "one") else parse_count(match.group("n"))
+    who = match.group("who").lower()
+    if count is None:
+        return None
+
+    def step(game: "Game", obj: Any, ctx: _Ctx) -> None:
+        player = _actor_for(game, obj, ctx, who)
+        if player is None:
+            return
+        ctx.actor = player
+        ctx.moved.setdefault("milled", []).extend(_mill(game, player, count))
+
+    return step
+
+
+_IF_NAMED_MILLED_RE = re.compile(
+    r"^if a card with the chosen name was milled this way, you gain life equal to its mana value$",
+    re.IGNORECASE,
+)
+
+
+def _if_named_milled(_match: re.Match[str]) -> Step:
+    def step(game: "Game", obj: Any, ctx: _Ctx) -> None:
+        for card in ctx.moved.get("milled", ()):
+            if card.name == ctx.name:
+                value = int(game.characteristics_of(card).mana_value or 0)
+                if value > 0:
+                    game.gain_life(ctx.controller, value)
+                return
+
+    return step
+
+
+_DISCARD_RANDOM_RE = re.compile(r"^discard (?P<n>a|one|two|three|\d+) cards? at random$", re.I)
+
+
+def _discard_random(match: re.Match[str]) -> Step | None:
+    count = 1 if match.group("n").lower() in ("a", "one") else parse_count(match.group("n"))
+    if count is None:
+        return None
+
+    def step(game: "Game", obj: Any, ctx: _Ctx) -> None:
+        # CR 701.9b: a random discard asks nobody; the seed keeps a scenario replayable.
+        hand = list(ctx.controller.hand)
+        rng = Random(f"{game.shuffle_seed}:{game.shuffles_performed}:discard-at-random")  # noqa: S311
+        rng.shuffle(hand)
+        game.shuffles_performed += 1
+        ctx.moved.setdefault("discarded", []).extend(
+            game.discard_cards(ctx.controller.username, hand[:count], source=_source_name(obj))
+        )
+
+    return step
+
+
+_IF_DISCARDED_DAMAGE_RE = re.compile(
+    r"^if you discard an? (?P<q>[a-z-]+) card this way, (?P<src>.+?) deals damage equal to "
+    r"that card's (?P<stat>power|toughness|mana value) to (?P<to>target [a-z ]+)$",
+    re.IGNORECASE,
+)
+
+
+def _if_discarded_damage(match: re.Match[str]) -> Step | None:
+    quality = match.group("q")
+    if not _card_description_is_readable(quality) or not profile_for_text(match.group("to")).understood:
+        return None
+    matcher = _quality_matcher(quality)
+    stat = match.group("stat").lower().replace(" ", "_")
+
+    def step(game: "Game", obj: Any, ctx: _Ctx) -> None:
+        card = next((c for c in ctx.moved.get("discarded", ()) if matcher(c)), None)
+        if card is None:
+            return
+        amount = int(getattr(game.characteristics_of(card), stat, 0) or 0)
+        source = _source_of(obj) or (obj.source(game) if hasattr(obj, "source") else None)
+        for target in game.resolve_targets(obj):
+            if isinstance(target, Player) or (
+                isinstance(target, CardState) and target.zone is Zone.BATTLEFIELD
+            ):
+                if amount > 0:
+                    game.deal_damage(target, amount, source=source)
+                return
+
+    return step
+
+
+_GAIN_THAT_MUCH_RE = re.compile(r"^you (?P<verb>gain|lose) that much life$", re.IGNORECASE)
+
+
+def _that_much_life(match: re.Match[str]) -> Step:
+    gains = match.group("verb").lower() == "gain"
+
+    def step(game: "Game", obj: Any, ctx: _Ctx) -> None:
+        if ctx.last_amount > 0:
+            (game.gain_life if gains else game.lose_life)(ctx.controller, ctx.last_amount)
+
+    return step
+
+
 # Readers, tried in order; each is (pattern, builder).
 _READERS: tuple[tuple[re.Pattern[str], Callable[[re.Match[str]], Step | None]], ...] = (
     (_CHOOSE_NAME_RE, _choose_name),
@@ -1015,6 +1225,7 @@ _READERS: tuple[tuple[re.Pattern[str], Callable[[re.Match[str]], Step | None]], 
     (_SHUFFLE_BARE_RE, _shuffle_bare_step),
     (_SEARCH_RE, _search_step),
     (_SEARCH_SAME_NAME_RE, _search_same_name_step),
+    (_INVESTIGATES_RE, _investigate_step),
     (_DAMAGE_PLAYER_RE, _damage_players),
     (_DAMAGE_PLAYER_AND_CREATURES_RE, _damage_players),
     (_LIFE_FOR_EACH_RE, _life_for_each),
@@ -1029,6 +1240,14 @@ _READERS: tuple[tuple[re.Pattern[str], Callable[[re.Match[str]], Step | None]], 
     (_EXILE_TOP_RE, _exile_top),
     (_PLAY_THAT_CARD_RE, _play_that_card),
     (_PLAY_EXILED_RE, _play_that_card),
+    (_COUNTER_ALL_OTHER_RE, _counter_all_other),
+    (_DRAW_FOR_EACH_RE, _draw_for_each),
+    (_SHUFFLE_GRAVEYARD_RE, _shuffle_graveyard),
+    (_MILL_RE, _mill_step),
+    (_IF_NAMED_MILLED_RE, _if_named_milled),
+    (_DISCARD_RANDOM_RE, _discard_random),
+    (_IF_DISCARDED_DAMAGE_RE, _if_discarded_damage),
+    (_GAIN_THAT_MUCH_RE, _that_much_life),
 )
 
 # --------------------------------------------------------------------------
@@ -1194,33 +1413,110 @@ def _exile_graveyard_other_than(text: str) -> Callable[["Game", Any], None] | No
     return effect
 
 
+_EXILE_TARGET_AND_SAME_NAME_RE = re.compile(
+    r"^(?P<verb>exile|destroy) target (?P<desc>[a-z ]+?) and all other (?P<plural>[a-z ]+?) "
+    r"its controller controls with the same name as that (?P<noun>[a-z ]+)$",
+    re.IGNORECASE,
+)
+
+
+def _target_and_same_name_first(text: str) -> Callable[["Game", Any], None] | None:
+    """ "Exile target creature and all other creatures its controller controls
+    with the same name as that creature." - the target and every other
+    permanent of that quality its controller has under the same name, together
+    (CR 608.2b: a target that is gone leaves the rest of the sentence unread)."""
+    match = _EXILE_TARGET_AND_SAME_NAME_RE.fullmatch(text.strip().rstrip("."))
+    if match is None:
+        return None
+    desc = match.group("desc").strip().lower()
+    plural = match.group("plural").strip().lower()
+    if not _card_description_is_readable(desc) or not _card_description_is_readable(
+        plural.removesuffix("s")
+    ):
+        return None
+    if not profile_for_text(f"target {desc}").understood:
+        return None
+    wanted = _quality_matcher(plural.removesuffix("s"))
+    destroy = match.group("verb").lower() == "destroy"
+
+    def effect(game: "Game", obj: Any) -> None:
+        target = next(
+            (
+                t
+                for t in game.resolve_targets(obj)
+                if isinstance(t, CardState) and t.zone is Zone.BATTLEFIELD
+            ),
+            None,
+        )
+        if target is None:
+            return
+        owner = game.controller_of(target).username
+        group = [target] + [
+            p
+            for p in game.permanents_controlled_by(owner)
+            if p.id != target.id and p.name == target.name and wanted(p)
+        ]
+        for permanent in group:
+            if permanent.zone is Zone.BATTLEFIELD:
+                (game.destroy if destroy else game.exile_permanent)(permanent)
+
+    return effect
+
+
 def _first_instruction_of(text: str, for_spell: bool) -> Callable[["Game", Any], None] | None:
     return (
         _r1_first_instruction(text, for_spell)
         or _multi_target_first(text)
         or _exile_graveyard_other_than(text)
+        or _target_and_same_name_first(text)
     )
+
+
+_TRAILING_EACH_RE = re.compile(
+    r"^(?P<rest>.+?) for each (?P<each>(?:non)?(?:token )?[a-z' ,-]+? this way)$", re.IGNORECASE
+)
+_IF_ANY_RE = re.compile(
+    r"^(?P<rest>.+?) if at least one (?P<each>[a-z' ,-]+? (?:was|were) [a-z ]+? this way)$",
+    re.IGNORECASE,
+)
+_TOKEN_PREFIX_RE = re.compile(r"^(?P<tok>nontoken|token) (?P<rest>.+)$", re.IGNORECASE)
 
 
 @dataclass(frozen=True)
 class _EachPlan:
     first: Callable[["Game", Any], None]
     objects: Any  # ep02_r1_this_way_counts._Objects
+    token_wanted: bool | None
+    once: bool  # "if at least one ... this way": the steps run once, not per object
     inner: tuple[Step, ...]
     post: tuple[Step, ...]
 
 
 def _each_plan_uncached(text: str, for_spell: bool) -> _EachPlan | None:
     sentences = _r1_sentences(text)
-    index = next(
-        (i for i, s in enumerate(sentences) if _FOR_EACH_RE.match(s) and " this way" in s.lower()),
-        None,
-    )
-    if index is None or index == 0:
+    found = None
+    for i, sentence in enumerate(sentences):
+        if " this way" not in sentence.lower():
+            continue
+        match = (
+            _FOR_EACH_RE.fullmatch(sentence)
+            or _IF_ANY_RE.fullmatch(sentence)
+            or _TRAILING_EACH_RE.fullmatch(sentence)
+        )
+        if match is not None:
+            found = (i, match)
+            break
+    if found is None or found[0] == 0:
         return None
-    match = _FOR_EACH_RE.fullmatch(sentences[index])
-    assert match is not None
-    objects = _r1_objects(match.group("each"))
+    index, match = found
+    once = _IF_ANY_RE.fullmatch(sentences[index]) is not None
+    each = re.sub(r" (?:was|were) ", " ", match.group("each"))
+    token_match = _TOKEN_PREFIX_RE.fullmatch(each)
+    token_wanted = None
+    if token_match is not None:
+        token_wanted = token_match.group("tok").lower() == "token"
+        each = token_match.group("rest")
+    objects = _r1_objects(each)
     if objects is None:
         return None
     instruction = ". ".join(sentences[:index]) + "."
@@ -1230,9 +1526,9 @@ def _each_plan_uncached(text: str, for_spell: bool) -> _EachPlan | None:
     inner = _steps_of(_clauses(match.group("rest")), for_spell)
     post_clauses = [c for sentence in sentences[index + 1 :] for c in _clauses(sentence)]
     post = _steps_of(post_clauses, for_spell)
-    if inner is None or post is None or inner[1] + post[1] == 0:
+    if inner is None or post is None or (inner[1] + post[1] == 0 and not once):
         return None
-    return _EachPlan(first, objects, tuple(inner[0]), tuple(post[0]))
+    return _EachPlan(first, objects, token_wanted, once, tuple(inner[0]), tuple(post[0]))
 
 
 @functools.lru_cache(maxsize=1024)
@@ -1256,7 +1552,18 @@ def _for_each_effect(text: str, for_spell: bool) -> Any:
         marks = _r1_snapshot(game, verb.sources)
         plan.first(game, obj)
         controller = game.controller_of(obj)
-        moved = plan.objects.matching(_r1_affected(game, marks, verb), controller.username)
+        moved = [
+            entry
+            for entry in plan.objects.matching(_r1_affected(game, marks, verb), controller.username)
+            if plan.token_wanted is None or is_token(entry.card) is plan.token_wanted
+        ]
+        if plan.once:
+            if moved:
+                ctx = _Ctx(actor=controller, controller=controller)
+                ctx.moved["exile"] = [entry.card for entry in moved]
+                for step in plan.inner:
+                    step(game, obj, ctx)
+            return
         contexts: dict[str, _Ctx] = {}
         order = _players_in_apnap_order(game)
         for player in order:
@@ -1278,7 +1585,11 @@ def _for_each_effect(text: str, for_spell: bool) -> Any:
 
 def _gate(text: str) -> bool:
     lowered = text.lower()
-    return "this way" in lowered or "reveals cards from the top" in lowered
+    return (
+        "this way" in lowered
+        or "reveals cards from the top" in lowered
+        or "cards that player owns in exile" in lowered
+    )
 
 
 def _effect(text: str, for_spell: bool) -> Any:
