@@ -29,13 +29,16 @@ the classify budget.
 
 import functools
 import re
+from collections.abc import Callable
 from typing import TYPE_CHECKING, Any
 
 from ..models.card_state import CardState
 from ..models.card import Color
+from ..models.player import Player
 from ..models.mana import ManaCost, SymbolKind
 from ..models.zone import Zone
-from ..numbers import halve
+from ..numbers import halve, parse_count
+from .ep02_r1_referenced_stat import default_referent, parse_stat_phrase, stat_value
 from .amount_sentences import (
     Amount,
     apply_mill,
@@ -369,3 +372,90 @@ def _parse_add_mana_equal_to_attached_cost_clause(effect_text: str) -> "AbilityE
                 controller.mana_pool.add(Color.COLORLESS, 1, snow=True)
 
     return effect
+
+
+# --------------------------------------------------------------------------
+# An amount that reads the resolving object: "one plus the mana value of the
+# sacrificed artifact", "its power", "that card's mana value", or any game
+# amount `amount_expression` reads (CR 608.2h: taken once, as it resolves)
+# --------------------------------------------------------------------------
+
+_COUNT_PLUS_RE = re.compile(r"^(?P<n>\w+) plus (?P<rest>.+)$", re.IGNORECASE)
+
+
+@functools.cache
+def stack_amount(expression: str) -> "Callable[[Game, Any], int] | None":
+    """`expression` as a reader of `(game, stack_object)`, or `None`.
+
+    A referenced object's characteristic (`ep02_r1_referenced_stat`'s sacrificed
+    / died / anaphoric referents, as they last existed) comes first; anything
+    else is `amount_expression`'s, read for the resolving object's controller
+    against its source."""
+    text = clean(expression)
+    if (plus := _COUNT_PLUS_RE.fullmatch(text)) is not None:
+        count = parse_count(plus.group("n"))
+        inner = stack_amount(plus.group("rest")) if count is not None else None
+        if count is not None and inner is not None:
+            return lambda game, obj: count + inner(game, obj)
+    if (stat := parse_stat_phrase(text)) is not None:
+        return lambda game, obj: stat_value(default_referent(game, obj, stat.anchor), stat.stat)
+    from .effects.amounts import amount_expression
+
+    reader = amount_expression(text)
+    if reader is None:
+        return None
+
+    def read(game: "Game", obj: Any) -> int:
+        source = obj if isinstance(obj, CardState) else obj.source(game)
+        return reader(game, controller_of(game, obj), source, 0)
+
+    return read
+
+
+# --------------------------------------------------------------------------
+# "exile the top X cards of <whose> library, where X is <amount>" and
+# "exile cards equal to <amount> from the top of <whose> library"
+# --------------------------------------------------------------------------
+
+_EXILE_TOP_AMOUNT_RE = re.compile(
+    r"^exile (?:the top x cards of (?P<whose_x>your|target opponent's|target player's) library, "
+    r"where x is (?P<where_x>.+)"
+    r"|cards equal to (?P<equal>.+?) from the top of (?P<whose_eq>your|target opponent's|"
+    r"target player's|its owner's) library)$",
+    re.IGNORECASE,
+)
+
+
+def parse_exile_top_amount_antecedent(clause: str) -> "tuple[Callable[..., list[CardState]], bool] | None":
+    """The exile half of an exile-then-play instruction whose count is an
+    amount reading the resolving object (see `stack_amount`). The cards stay
+    owned by their library's owner (CR 108.3); a library shorter than the
+    count gives what it has (CR 406.2 exiles what is there). "Its owner's" is
+    the owner of the trigger's event subject, as it last existed (CR 603.10a)."""
+    match = _EXILE_TOP_AMOUNT_RE.fullmatch(clean(clause))
+    if match is None:
+        return None
+    whose = (match.group("whose_x") or match.group("whose_eq")).lower()
+    reader = stack_amount(match.group("where_x") or match.group("equal"))
+    if reader is None:
+        return None
+
+    def exile_top(game: "Game", stack_object: Any) -> list[CardState]:
+        if whose == "your":
+            players = [game.player(controller_of(game, stack_object))]
+        elif whose == "its owner's":
+            event = getattr(stack_object, "event", None)
+            subject = None if event is None else game.find_by_id(event.subject_id)
+            players = [] if subject is None else [game.player(subject.owner)]
+        else:
+            players = [t for t in game.resolve_targets(stack_object) if isinstance(t, Player)]
+        count = reader(game, stack_object)
+        exiled: list[CardState] = []
+        for player in players:
+            for _ in range(count):
+                if not player.library:
+                    break
+                exiled.append(game.exile_permanent(player.library[0]))
+        return exiled
+
+    return exile_top, True

@@ -490,3 +490,130 @@ def test_elemental_resonance_on_a_land_adds_nothing():
     scenario.advance()
     scenario.pass_until_resolved()
     assert _floating(scenario) == {}
+
+
+# --------------------------------------------------------------------------
+# Part 7 - "exile the top X cards ... / exile cards equal to <amount> from the
+# top of <whose> library, then you may play / cast those cards" (Memorial
+# Vault, Loot, Laughing Jasper Flint, Rakdos, Dead Man's Chest). CR 406.2
+# exile; CR 601.3 the permission; CR 609.4b "mana of any type".
+# --------------------------------------------------------------------------
+
+
+def _permissions(scenario, player="alice"):
+    return [p for p in scenario.game.play_permissions if p.player == player]
+
+
+def test_loot_exiles_one_card_per_card_type_among_other_nonland_permanents():
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=["Loot, the Key to Everything", "Grizzly Bears", "Sol Ring", "Forest"],
+            library=["Island"] * 6,
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.UNTAP)
+    scenario.advance()
+    scenario.pass_until_resolved()
+    assert len(scenario.player("alice").library) == 4  # creature + artifact; Loot and land excluded
+    assert len(_permissions(scenario)) == 2
+
+
+def test_loot_with_no_other_nonland_permanents_exiles_nothing():
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Loot, the Key to Everything", "Forest"], library=["Island"] * 3)
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.UNTAP)
+    scenario.advance()
+    scenario.pass_until_resolved()
+    assert len(scenario.player("alice").library) == 3
+    assert _permissions(scenario) == []
+
+
+def _vault(sacrificed):
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Memorial Vault", sacrificed], library=["Island"] * 6)
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    vault = scenario.find("Memorial Vault", Zone.BATTLEFIELD)
+    vault.summoning_sick = False
+    scenario.activate(
+        vault, index=0, sacrificing=[scenario.find(sacrificed, Zone.BATTLEFIELD)]
+    )
+    scenario.resolve_top()
+    return scenario
+
+
+def test_memorial_vault_exiles_one_plus_the_sacrificed_artifacts_mana_value():
+    scenario = _vault("Mind Stone")
+    assert len(scenario.player("alice").library) == 3  # 1 + 2
+    assert len(_permissions(scenario)) == 3
+
+
+def test_memorial_vault_with_a_mana_value_one_artifact_exiles_two():
+    scenario = _vault("Sol Ring")
+    assert len(scenario.player("alice").library) == 4
+    assert len(_permissions(scenario)) == 2
+
+
+def test_laughing_jasper_flint_exiles_from_the_target_opponents_library_per_outlaw():
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Laughing Jasper Flint"])
+        .player("bob", library=["Island"] * 5)
+        .build()
+    )
+    scenario.start_at(Step.UNTAP)
+    scenario.choose_trigger_targets("Laughing Jasper Flint", ["bob"])
+    scenario.advance()
+    scenario.pass_until_resolved()
+    assert len(scenario.player("bob").library) == 4  # Jasper is the one outlaw
+    permissions = _permissions(scenario)
+    assert len(permissions) == 1 and permissions[0].any_type_mana
+
+
+def test_rakdos_the_muscle_exiles_cards_equal_to_the_sacrificed_creatures_mana_value():
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Rakdos, the Muscle", "Grizzly Bears"])
+        .player("bob", library=["Island"] * 5)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    rakdos = scenario.creature("Rakdos, the Muscle", "alice")
+    rakdos.summoning_sick = False
+    scenario.choose_trigger_targets("Rakdos, the Muscle", ["bob"])
+    scenario.activate(rakdos, index=0, sacrificing=[scenario.creature("Grizzly Bears", "alice")])
+    scenario.pass_until_resolved()
+    assert len(scenario.player("bob").library) == 3  # Bears have mana value 2
+    permissions = _permissions(scenario)
+    assert len(permissions) == 2 and all(p.any_type_mana for p in permissions)
+
+
+def test_dead_man_chests_exiles_cards_equal_to_the_dead_creatures_power():
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Go for the Throat"], battlefield=["Dead Man's Chest", "Swamp", "Swamp"])
+        .player("bob", battlefield=["Hill Giant"], library=["Island"] * 6)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    chest = scenario.find("Dead Man's Chest", Zone.BATTLEFIELD, "alice")
+    giant = scenario.creature("Hill Giant", "bob")
+    chest.attach_to(giant)
+    scenario.cast_and_resolve(
+        "Go for the Throat", *scenario.untapped_sources("Swamp", "Swamp"), targets=[giant]
+    )
+    scenario.pass_until_resolved()
+    assert len(scenario.player("bob").library) == 3  # Hill Giant's power is 3
+    permissions = _permissions(scenario)
+    assert len(permissions) == 3 and all(p.any_type_mana for p in permissions)

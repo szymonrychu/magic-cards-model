@@ -2390,9 +2390,10 @@ _PLAY_PERMISSION_RE = re.compile(
     r"^(?P<leading>(?:until end of turn|until the end of your next turn"
     r"|until your next end step), )?"
     r"(?:you|they|that player) may (?P<action>cast|play) "
-    r"(?P<subject>it|that card|those cards|them|one of (?:those cards|them))"
+    r"(?P<subject>it|that card|those cards|them|one of (?:those cards|them)"
+    r"|spells from among those cards)"
     r"(?P<free> without paying (?:its|their) mana costs?)?"
-    r"(?P<trailing> this turn| for as long as it remains exiled"
+    r"(?P<trailing> this turn| for as long as (?:it remains|they remain) exiled"
     r"| until the end of your next turn| until your next end step)?$",
     re.IGNORECASE,
 )
@@ -2441,7 +2442,7 @@ def _permission_duration(match: re.Match[str]) -> PermissionDuration | None:
 #: exiled top card. Refusing a mismatch is what keeps a future card's sentence
 #: from being read as a shape it is not.
 _PLURAL_PERMISSION_SUBJECTS = frozenset(
-    {"those cards", "them", "one of those cards", "one of them"}
+    {"those cards", "them", "one of those cards", "one of them", "spells from among those cards"}
 )
 
 
@@ -2495,7 +2496,8 @@ _EXILE_UNTIL_QUALITY_THIRD_PERSON_RE = re.compile(
 #: than folded into `_PLAY_PERMISSION_RE`, which only ever sees the sentence
 #: up to that comma.
 _ANY_TYPE_MANA_STANDALONE_RE = re.compile(
-    r"^mana of any type can be spent to cast (?:it|that spell|them)\.?$", re.IGNORECASE
+    r"^mana of any type can be spent to cast (?:it|that spell|them|those spells)\.?$",
+    re.IGNORECASE,
 )
 
 

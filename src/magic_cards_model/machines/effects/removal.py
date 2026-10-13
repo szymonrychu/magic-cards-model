@@ -36,6 +36,7 @@ from ...numbers import (
     where_x_pattern,
 )
 from .. import combat as combat_rules
+from ..ep02_r3_mill_exile_amounts import parse_exile_top_amount_antecedent
 from ..abilities import (
     TriggerEvent,
 )
@@ -6741,6 +6742,8 @@ def _parse_exile_then_play_permission_clauses(
     antecedent = _parse_chosen_target_card_antecedent(clauses[index])
     if antecedent is None:
         antecedent = _parse_exile_top_of_other_libraries_antecedent(clauses[index])
+    if antecedent is None and not for_spell:
+        antecedent = parse_exile_top_amount_antecedent(clauses[index])
     if antecedent is None:
         antecedent = (
             _spell_safe_exile_antecedent(clauses[index])

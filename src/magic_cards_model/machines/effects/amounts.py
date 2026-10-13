@@ -1787,6 +1787,50 @@ def _counters_on_permanents_you_control(match: re.Match[str]) -> Callable[["Game
     return count
 
 
+#: "the number of card types among other nonland permanents you control" (Loot,
+#: the Key to Everything): the distinct CR 205.2a card types the matching
+#: permanents have, as the layers leave them (CR 613.1d), each counted once.
+_CARD_TYPES_AMONG_RE = re.compile(
+    r"^(?:the )?number of card types among (?P<other>other )?(?P<nonland>nonland )?"
+    r"permanents you control$",
+    re.IGNORECASE,
+)
+#: "the number of outlaws you control" (Laughing Jasper Flint): CR 205.3m's
+#: outlaw creature types, read off the computed subtypes (CR 613.1d).
+_OUTLAWS_YOU_CONTROL_RE = re.compile(r"^(?:the )?number of outlaws you control$", re.IGNORECASE)
+
+
+def _card_types_among_term(match: "re.Match[str]") -> AmountReader:
+    excludes_other = match.group("other") is not None
+    nonland = match.group("nonland") is not None
+
+    def count_types(game: "Game", controller: str, obj: CardState | None, _x: int) -> int:
+        board = game.computed_board()
+        types: set[Type] = set()
+        for permanent in game.battlefield:
+            if excludes_other and obj is not None and permanent.id == obj.id:
+                continue
+            chars = board.of(permanent)
+            if chars.controller != controller or (nonland and Type.LAND in chars.types):
+                continue
+            types.update(chars.types)
+        return len(types)
+
+    return count_types
+
+
+def _count_outlaws(game: "Game", controller: str, _obj: CardState | None, _x: int) -> int:
+    from ..conditions.board import OUTLAW_TYPES
+
+    board = game.computed_board()
+    total = 0
+    for permanent in game.battlefield:
+        chars = board.of(permanent)
+        if chars.controller == controller and Type.CREATURE in chars.types:
+            total += any(word.lower() in OUTLAW_TYPES for word in chars.subtypes)
+    return total
+
+
 def _amount_term(term: str) -> AmountReader | None:
     """One term of `amount_expression`, or `None` when it is not readable."""
     text = term.strip()
@@ -1803,6 +1847,10 @@ def _amount_term(term: str) -> AmountReader | None:
     constant = parse_count(text)
     if constant is not None:
         return lambda _game, _controller, _object, _x: constant
+    if "card types among" in lowered and (types := _CARD_TYPES_AMONG_RE.fullmatch(text)):
+        return _card_types_among_term(types)
+    if "outlaws" in lowered and _OUTLAWS_YOU_CONTROL_RE.fullmatch(text):
+        return _count_outlaws
     if "greatest" in lowered and (other := _GREATEST_CHARACTERISTIC_AMONG_RE.fullmatch(text)):
         greatest = _greatest_among_reader(other)
         if greatest is None:
