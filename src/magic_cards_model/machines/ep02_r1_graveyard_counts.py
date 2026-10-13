@@ -243,46 +243,11 @@ def _for_each_reader(phrase: str):
     return _for_each_multiplier(phrase)
 
 
-def _equal_to_reader(phrase: str):
-    """The same shape for an "equal to <phrase>" / "where X is <phrase>" amount
-    (`amount_expression`'s four-argument form, the source read by id)."""
-    from uuid import UUID
-
-    from .effects.amounts import amount_expression
-
-    reader = amount_expression(phrase)
-    if reader is None:
-        return None
-
-    def read(game: "Game", perspective: str, source_id: str | None) -> int:
-        source = None if source_id is None else game.find_by_id(UUID(source_id))
-        return reader(game, perspective, source, 0)
-
-    return read
-
-
-_LIFE_CLAUSE_RE = re.compile(
-    rf"^(?P<who>that player|they|target player|target opponent|each opponent) "
-    rf"(?P<verb>gains?|loses?) (?:(?P<n>{COUNT}) life for each (?P<each>.+)"
-    r"|life equal to (?P<expr>.+))$",
-    re.IGNORECASE,
+#: The subjects a graveyard-scaled life change names (CR 603.2's "that
+#: player"/"they" is the trigger event's player).
+_LIFE_SUBJECTS = frozenset(
+    {"that player", "they", "target player", "target opponent", "each opponent"}
 )
-
-
-def _recipients(game: "Game", stack_object, who: str, controller: str) -> "list[Player]":
-    """The players an instruction's subject names: the event's player for
-    "that player"/"they" (CR 603.2), the chosen targets, or each opponent."""
-    from .effects import _opponents
-    from .ep01_r3_amounts import event_player_username
-
-    if who == "each opponent":
-        return list(_opponents(game, controller))
-    if who.startswith("target"):
-        return [
-            target for target in game.resolve_targets(stack_object) if isinstance(target, Player)
-        ]
-    username = event_player_username(game, stack_object, who)
-    return [] if username is None else [game.player(username)]
 
 
 def parse_recipient_life_clause(clause: str, *, for_spell: bool):
@@ -291,113 +256,30 @@ def parse_recipient_life_clause(clause: str, *, for_spell: bool):
     creature card in their graveyard" (Liliana, Death Mage): a life change
     (CR 119.3) for the player the trigger's event concerns, a target, or each
     opponent, scaled by a graveyard count taken once as it applies (CR 608.2h).
+    The sentence, the recipient and the count are `amount_sentences`'.
     """
+    from .amount_sentences import apply_life, life_clause_amount, parse_life_clause
     from .effects import _targets_understood
 
-    match = _LIFE_CLAUSE_RE.fullmatch(clause.strip().rstrip("."))
-    if match is None or "graveyard" not in clause.lower():
+    if "graveyard" not in clause.lower():
         return None
-    who = match.group("who").lower()
+    parsed = parse_life_clause(clause)
+    if parsed is None or parsed.kind not in ("equal", "for_each"):
+        return None
+    who = parsed.who
+    if who not in _LIFE_SUBJECTS:
+        return None
     if for_spell and who in ("that player", "they"):
         return None  # a spell has no event to name "that player"
     if who.startswith("target") and not _targets_understood(who, allow_player_targets=True):
         return None
-    each, expr = match.group("each"), match.group("expr")
-    phrase, relative = recipient_view(each if each is not None else expr)
-    reader = _for_each_reader(phrase) if each is not None else _equal_to_reader(phrase)
-    unit = 1 if each is None else parse_count(match.group("n"))
-    if reader is None or unit is None:
+    amount = life_clause_amount(parsed, spell_x=False)
+    if amount is None:
         return None
-    gains = match.group("verb").lower().startswith("gain")
+    gains = parsed.gains
 
     def effect(game: "Game", stack_object) -> None:
-        controller = game.controller_of(stack_object).username
-        for player in _recipients(game, stack_object, who, controller):
-            amount = unit * reader(
-                game, player.username if relative else controller, source_id_of(stack_object)
-            )
-            if amount <= 0:
-                continue
-            if gains:
-                game.gain_life(player, amount)
-            else:
-                game.lose_life(player, amount)
-
-    return effect
-
-
-_MILL_WHERE_X_RE = re.compile(
-    r"^(?P<who>target player|target opponent) mills x cards?, where x is (?P<expr>.+)$",
-    re.IGNORECASE,
-)
-
-
-def parse_target_player_mills_where_x_clause(clause: str, *, for_spell: bool):
-    """ "Target player mills X cards, where X is the number of cards in that
-    player's graveyard" (Keening Stone), "... where X is the number of Lesson
-    cards in your graveyard" (Master Pakku): CR 701.17a's mill for the chosen
-    player, X counted once as the instruction applies (CR 608.2h) - after the
-    graveyard it is counted in is whatever that moment holds."""
-    from .effects import _targets_understood
-    from .effects.library import _mill
-
-    match = _MILL_WHERE_X_RE.fullmatch(clause.strip().rstrip("."))
-    if match is None or "graveyard" not in clause.lower():
-        return None
-    who = match.group("who").lower()
-    if not _targets_understood(who, allow_player_targets=True):
-        return None
-    phrase, relative = recipient_view(match.group("expr"))
-    reader = _equal_to_reader(phrase)
-    if reader is None:
-        return None
-
-    def effect(game: "Game", stack_object) -> None:
-        controller = game.controller_of(stack_object).username
-        for player in _recipients(game, stack_object, who, controller):
-            amount = reader(
-                game, player.username if relative else controller, source_id_of(stack_object)
-            )
-            if amount > 0:
-                _mill(game, player, amount)
-
-    return effect
-
-
-_SELF_COUNTERS_FOR_EACH_RE = re.compile(
-    rf"^(?:then )?put (?P<n>{COUNT}) (?P<kind>\+1/\+1|-1/-1|[a-z]+) counters? on "
-    r"(?P<subject>this [a-z]+) for each (?P<each>.+)$",
-    re.IGNORECASE,
-)
-
-
-def parse_self_counters_for_each_clause(clause: str, *, for_spell: bool):
-    """ "put a +1/+1 counter on this creature for each creature card in your
-    graveyard" (Moldgraf Millipede, Ooze Patrol): CR 122.1 counters on the
-    ability's own source, the count taken once as it applies (CR 608.2h) - so
-    after the "mill" instruction before it (CR 608.2c). A source that has
-    left the battlefield gets none (CR 400.7)."""
-    from ..models.zone import Zone
-    from .effects.counters import _counter_kind
-
-    if for_spell:
-        return None
-    match = _SELF_COUNTERS_FOR_EACH_RE.fullmatch(clause.strip().rstrip("."))
-    if match is None or "graveyard" not in clause.lower():
-        return None
-    unit = parse_count(match.group("n"))
-    reader = _for_each_reader(match.group("each"))
-    if unit is None or reader is None:
-        return None
-    kind = _counter_kind(match.group("kind"))
-
-    def effect(game: "Game", stack_object) -> None:
-        source = stack_object.source(game)
-        if source is None or source.zone is not Zone.BATTLEFIELD:
-            return
-        amount = unit * reader(game, stack_object.controller, source_id_of(stack_object))
-        if amount > 0:
-            game.add_counters(source, kind, amount)
+        apply_life(game, stack_object, who, gains, amount)
 
     return effect
 
@@ -443,35 +325,16 @@ def parse_for_each_counter_on_each_clause(clause: str, *, for_spell: bool):
     return effect
 
 
-_ADD_MANA_FOR_EACH_RE = re.compile(
-    r"^(?:then )?add (?P<mana>(?:\{[wubrgc]\})+) for each (?P<each>.+)$", re.IGNORECASE
-)
-
-
 def parse_add_mana_for_each_clause(clause: str, *, for_spell: bool):
     """ "then add {R} for each card named Rite of Flame in each graveyard"
     (Rite of Flame): CR 106.4's add-mana instruction, once per counted card
-    (CR 608.2h - counted when the instruction is followed)."""
-    from ..models.card import Color
-    from .effects._common import _MANA_SYMBOL_RE
+    (CR 608.2h - counted when the instruction is followed); the sentence and
+    the mana are `amount_sentences`'."""
+    from .amount_sentences import add_mana_for_each_effect
 
-    match = _ADD_MANA_FOR_EACH_RE.fullmatch(clause.strip().rstrip("."))
-    if match is None or "graveyard" not in clause.lower():
+    if "graveyard" not in clause.lower():
         return None
-    reader = _for_each_reader(match.group("each"))
-    if reader is None:
-        return None
-    colors = [Color(symbol.upper()) for symbol in _MANA_SYMBOL_RE.findall(match.group("mana"))]
-
-    def effect(game: "Game", stack_object) -> None:
-        controller = game.controller_of(stack_object).username
-        times = reader(game, controller, source_id_of(stack_object))
-        pool = game.player(controller).mana_pool
-        for _ in range(max(times, 0)):
-            for color in colors:
-                pool.add(color)
-
-    return effect
+    return add_mana_for_each_effect(clause)
 
 
 _SEARCH_VALUE_AT_MOST_COUNT_RE = re.compile(
@@ -523,9 +386,11 @@ def parse_search_value_at_most_count_ability(text: str):
     return _search_value_at_most_count(text, for_spell=False)
 
 
-_DAMAGE_PAIR_WHERE_X_RE = re.compile(
+#: The body of "<source> deals X damage to A and X damage to B, where X is ..."
+#: (`amount_sentences.split_where_x`).
+_DAMAGE_PAIR_X_RE = re.compile(
     r"^(?P<source>[^.,]+?) deals X damage to (?P<first>[^.,]+?) and X damage to "
-    r"(?P<second>itself|you|[^.,]+?),\s*where X is (?P<expr>[^.]+?)\.?$",
+    r"(?P<second>itself|you|[^.,]+?)$",
     re.IGNORECASE,
 )
 
@@ -540,12 +405,14 @@ def _damage_pair_where_x(text: str, *, for_spell: bool):
 
     if " and X damage to " not in text or "graveyard" not in text.lower():
         return None
+    from .amount_sentences import recipient_amount, split_where_x
     from .effects._common import _strip_non_effect_preamble
 
-    match = _DAMAGE_PAIR_WHERE_X_RE.fullmatch(" ".join(_strip_non_effect_preamble(text).split()))
-    if match is None:
+    split = split_where_x(" ".join(_strip_non_effect_preamble(text).split()))
+    match = None if split is None else _DAMAGE_PAIR_X_RE.fullmatch(split[0])
+    if split is None or match is None or "." in split[1]:
         return None
-    counted = _equal_to_reader(match.group("expr"))
+    counted = recipient_amount(split[1])
     if counted is None:
         return None
     read = _spell_effect_or_notice if for_spell else _ability_effect_or_notice
@@ -561,9 +428,7 @@ def _damage_pair_where_x(text: str, *, for_spell: bool):
         return None
 
     def effect(game: "Game", stack_object) -> None:
-        value = max(
-            counted(game, game.controller_of(stack_object).username, source_id_of(stack_object)), 0
-        )
+        value = max(counted(game, stack_object, game.controller_of(stack_object)), 0)
         resolved = read(written_with(value))
         if resolved is not None:
             resolved(game, stack_object)
@@ -629,6 +494,15 @@ def parse_tapped_attacking_tokens_for_each_ability(text: str):
     return effect
 
 
+def _parse_mill_x_clause(clause: str, *, for_spell: bool):
+    """ "Target player mills X cards, where X is the number of cards in that
+    player's graveyard" (Keening Stone) as a clause: the one mill-X reader,
+    `ep02_r1_life_amounts.parse_mill_x`."""
+    from .ep02_r1_life_amounts import parse_mill_x
+
+    return parse_mill_x(clause)
+
+
 def parse_graveyard_count_clause(clause: str, *, for_spell: bool):
     """The first of this module's instruction shapes that reads `clause`."""
     lowered = clause.lower()
@@ -636,8 +510,7 @@ def parse_graveyard_count_clause(clause: str, *, for_spell: bool):
         return None
     for parser in (
         parse_recipient_life_clause,
-        parse_target_player_mills_where_x_clause,
-        parse_self_counters_for_each_clause,
+        _parse_mill_x_clause,
         parse_for_each_counter_on_each_clause,
         parse_add_mana_for_each_clause,
     ):

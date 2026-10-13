@@ -42,13 +42,22 @@ from uuid import UUID
 
 from ..models.card_state import CardState
 from ..models.player import Player
-from ..models.token import create_tokens
 from ..models.zone import Zone
 from ..numbers import parse_count
+from .amount_sentences import (
+    change_life,
+    parse_cards_clause,
+    parse_create,
+    parse_damage_clause,
+    parse_life_clause,
+    parse_put_counters,
+    resolve_recipients,
+    split_where_x,
+    token_maker,
+)
 from .decisions import Decision, DecisionKind, source_id_of
 from .effects._chains import ABILITY_TEXT, FORWARD, MIXED_CLAUSE, SPELL_TEXT
 from .effects._common import (
-    _TOKEN_CLAUSE_RE,
     _card_description_is_readable,
     _players_in_apnap_order,
     _quality_matcher,
@@ -57,9 +66,7 @@ from .effects._common import (
 from .effects.dispatch import _ability_effect_or_notice, _spell_effect_or_notice
 from .effects.text import _plain_resolution_sentences, _strip_non_effect_preamble
 from .effects.tokens import (
-    PREDEFINED,
     _is_notice_only,
-    _parse_generic_token_descriptor,
 )
 from .targeting import profile_for_text
 
@@ -276,29 +283,11 @@ def _objects(phrase: str) -> _Objects | None:
 
 # -- the action half -------------------------------------------------------
 
-_RECIPIENT = r"(?P<who>you|its controller|that player|target player|each player|each opponent)"
-_NUM = r"(?P<k>an?|one|two|three|four|five|six|seven|eight|nine|ten|\d+)"
-
-_LIFE_RE = re.compile(rf"^{_RECIPIENT} (?P<what>gains?|loses?) {_NUM} life$", re.IGNORECASE)
-_LIFE_EQUAL_RE = re.compile(
-    rf"^{_RECIPIENT} (?P<what>gains?|loses?) life equal to (?P<expr>.+)$", re.IGNORECASE
+#: The recipients a payoff names.
+_RECIPIENTS = frozenset(
+    {"you", "its controller", "that player", "target player", "each player", "each opponent"}
 )
-_DRAW_RE = re.compile(rf"^(?:then )?{_RECIPIENT}? ?draws? {_NUM} cards?$", re.IGNORECASE)
-_DRAW_EQUAL_RE = re.compile(
-    rf"^(?:then )?{_RECIPIENT}? ?draws? cards equal to (?P<expr>.+)$", re.IGNORECASE
-)
-_CREATE_RE = re.compile(rf"^(?:{_RECIPIENT} )?creates? (?P<rest>.+)$", re.IGNORECASE)
-_DAMAGE_RE = re.compile(
-    rf"^(?P<source>.+?) deals {_NUM} damage to (?P<tgt>each opponent)$", re.IGNORECASE
-)
-_COUNTERS_RE = re.compile(
-    rf"^put {_NUM} (?P<kind>[+\-\d/a-z]+) counters? on (?P<tgt>this creature|this permanent)$",
-    re.IGNORECASE,
-)
-_DAMAGE_EQUAL_RE = re.compile(
-    r"^(?P<source>.+?) deals damage to (?P<tgt>any target|target [a-z ]+?) equal to (?P<expr>.+)$",
-    re.IGNORECASE,
-)
+_DAMAGE_EQUAL_TO_RE = re.compile(r"^(?:any target|target [a-z ]+?)$", re.IGNORECASE)
 _SEARCH_RE = re.compile(
     r"^(?:(?:its controller|you)(?: may)? )?search(?:es)? (?:their|your) library (?P<rest>.+)$",
     re.IGNORECASE,
@@ -323,9 +312,7 @@ def _as_player(game: "Game", obj: Any, username: str) -> Any:
 
 def _gain_or_lose(gain: bool) -> Callable[["Game", Any, str, int], None]:
     def run(game: "Game", obj: Any, player: str, amount: int) -> None:
-        if amount <= 0:
-            return
-        (game.gain_life if gain else game.lose_life)(player, amount)
+        change_life(game, [game.player(player)], [amount], gain)
 
     return run
 
@@ -379,49 +366,11 @@ def _text_action(
 
 
 def _token_action(rest: str) -> Callable[["Game", Any, str, int], None] | None:
-    """ "a 4/4 red Dragon creature token with flying", "an X/X colorless
-    Phyrexian Horror artifact creature token", "two 1/1 blue Faerie creature
-    tokens with flying and \"...\"" as a creator for one player. An `X/X` is
-    sized by the amount (CR 608.2h: counted once, when applied)."""
-    sized = re.search(r"\bx/x\b", rest, re.IGNORECASE) is not None
-
-    def definition(amount: int) -> tuple[Any, int, bool] | None:
-        text = re.sub(r"\bx/x\b", f"{amount}/{amount}", rest, flags=re.IGNORECASE)
-        match = _TOKEN_CLAUSE_RE.fullmatch(text)
-        if match is None:
-            return None
-        count = parse_count(match.group("n"))
-        words = match.group("desc").strip().split()
-        tail = match.group("tail")
-        tapped = bool(words) and words[0].lower() == "tapped"
-        if tapped:
-            words = words[1:]
-        if count is None or not words:
-            return None
-        name = " ".join(words)
-        token = (
-            PREDEFINED[name]
-            if tail is None and name in PREDEFINED
-            else _parse_generic_token_descriptor(words, tail)
-        )
-        return None if token is None else (token, count, tapped)
-
-    probe = definition(1)
-    if probe is None:
+    """`amount_sentences.token_maker` as a payoff run."""
+    make = token_maker(rest)
+    if make is None:
         return None
-
-    def run(game: "Game", obj: Any, player: str, amount: int) -> None:
-        if amount <= 0:
-            return
-        if sized:
-            built = definition(amount)
-            if built is not None:
-                create_tokens(game, built[0], player, built[1], tapped=built[2])
-            return
-        token, per_unit, tapped = probe
-        create_tokens(game, token, player, per_unit * amount, tapped=tapped)
-
-    return run
+    return lambda game, _obj, player, amount: make(game, player, amount)
 
 
 def _action(
@@ -429,27 +378,27 @@ def _action(
 ) -> tuple[str, int, Callable[..., None]] | None:
     """`(who, per-unit multiplier, run)` for one action clause, or `None`."""
     text = action.strip()
-    if (m := _LIFE_RE.fullmatch(text)) is not None:
-        k = parse_count(m.group("k"))
-        if k is not None:
-            return (
-                m.group("who").lower(),
-                k,
-                _gain_or_lose(m.group("what").lower().startswith("gain")),
-            )
-    if (m := _DRAW_RE.fullmatch(text)) is not None:
-        k = parse_count(m.group("k"))
-        if k is not None:
-            return (m.group("who") or "").lower() or "you", k, _draw
-    if (m := _CREATE_RE.fullmatch(text)) is not None:
-        run = _token_action(m.group("rest"))
+    life = parse_life_clause(text)
+    if life is not None and life.kind == "fixed" and life.who in _RECIPIENTS:
+        return life.who, life.n, _gain_or_lose(life.gains)
+    cards = parse_cards_clause(text)
+    if (
+        cards is not None
+        and cards.draws
+        and cards.kind == "fixed"
+        and (cards.who in _RECIPIENTS or cards.subject is None)
+    ):
+        return cards.who or "you", cards.n, _draw
+    created = parse_create(text)
+    if created is not None and (created[0] in _RECIPIENTS or not created[0]):
+        run = _token_action(created[1])
         if run is not None:
-            return (m.group("who") or "you").lower(), 1, run
-    if (m := _DAMAGE_RE.fullmatch(text)) is not None:
-        k = parse_count(m.group("k"))
-        run = _text_action(f"{m.group('source')} deals {{n}} damage to each opponent", for_spell)
-        if k is not None and run is not None:
-            return "you", k, run
+            return created[0] or "you", 1, run
+    damage = parse_damage_clause(text)
+    if damage is not None and damage.expr is None and damage.to.lower() == "each opponent":
+        run = _text_action(f"{damage.source} deals {{n}} damage to each opponent", for_spell)
+        if run is not None:
+            return "you", damage.n, run
     if (m := _SEARCH_RE.fullmatch(text)) is not None:
         template = "you may search your library " + m.group("rest").replace("{", "{{").replace(
             "}", "}}"
@@ -457,12 +406,16 @@ def _action(
         run = _text_action(template, for_spell, repeat=True)
         if run is not None:
             return "its controller", 1, run
-    if (m := _COUNTERS_RE.fullmatch(text)) is not None:
-        k = parse_count(m.group("k"))
-        template = f"put {{n}} {m.group('kind')} counters on {m.group('tgt')}"
-        run = _text_action(template, for_spell)
-        if k is not None and run is not None:
-            return "you", k, run
+    put = parse_put_counters(text)
+    if (
+        put is not None
+        and not put.x
+        and put.each is None
+        and put.on.lower() in ("this creature", "this permanent")
+    ):
+        run = _text_action(f"put {{n}} {put.kind} counters on {put.on}", for_spell)
+        if run is not None:
+            return "you", put.n, run
     return None
 
 
@@ -470,16 +423,20 @@ def _amount_action(action: str) -> tuple[str, str, Callable[..., None]] | None:
     """ "<who> gain(s)/lose(s) life equal to <expr>" or "<who> draw(s) cards
     equal to <expr>": `(who, expr, run)`."""
     text = action.strip()
-    if (m := _LIFE_EQUAL_RE.fullmatch(text)) is not None:
-        return (
-            m.group("who").lower(),
-            m.group("expr"),
-            _gain_or_lose(m.group("what").lower().startswith("gain")),
-        )
-    if (m := _DRAW_EQUAL_RE.fullmatch(text)) is not None:
-        return (m.group("who") or "each player").lower(), m.group("expr"), _draw
-    if (m := _DAMAGE_EQUAL_RE.fullmatch(text)) is not None:
-        return "you", m.group("expr"), _damage_to_target
+    life = parse_life_clause(text)
+    if life is not None and life.kind == "equal" and life.who in _RECIPIENTS:
+        return life.who, life.expr or "", _gain_or_lose(life.gains)
+    cards = parse_cards_clause(text)
+    if (
+        cards is not None
+        and cards.draws
+        and cards.kind == "equal"
+        and (cards.who in _RECIPIENTS or cards.subject is None)
+    ):
+        return cards.who or "each player", cards.expr or "", _draw
+    damage = parse_damage_clause(text)
+    if damage is not None and damage.expr is not None and _DAMAGE_EQUAL_TO_RE.fullmatch(damage.to):
+        return "you", damage.expr, _damage_to_target
     return None
 
 
@@ -487,9 +444,9 @@ def _amount_action(action: str) -> tuple[str, str, Callable[..., None]] | None:
 
 _FOR_EACH_LEAD_RE = re.compile(r"^for each (?P<each>.+? this way), (?P<action>.+)$", re.IGNORECASE)
 _FOR_EACH_TRAIL_RE = re.compile(r"^(?P<action>.+?) for each (?P<each>.+? this way)$", re.IGNORECASE)
-_WHERE_X_RE = re.compile(
-    r"^(?P<action>.+?), where x is (?P<expr>the number of .+? this way)(?P<rest>,.*)?$",
-    re.IGNORECASE,
+#: The tail of a ", where X is" payoff: the count, and the rest of the sentence.
+_WHERE_X_TAIL_RE = re.compile(
+    r"^(?P<expr>the number of .+? this way)(?P<rest>,.*)?$", re.IGNORECASE
 )
 _EQUAL_RE = re.compile(r"^(?P<action>.+? equal to) (?P<expr>.+)$", re.IGNORECASE)
 _FEWER_RE = re.compile(
@@ -541,17 +498,23 @@ def _parse_payoff(sentence: str, for_spell: bool) -> list[_Payoff] | None:
             for part in found
             if part is not None
         ]
-    if (m := _WHERE_X_RE.fullmatch(text)) is not None:
+    where = split_where_x(text)
+    if where is not None and (m := _WHERE_X_TAIL_RE.fullmatch(where[1])) is not None:
+        action = where[0]
         objects = _objects(m.group("expr"))
         if objects is None:
             return None
-        created = _CREATE_RE.fullmatch(m.group("action").strip())
-        if created is not None and not m.group("rest"):
-            run = _token_action(created.group("rest"))
+        created = parse_create(action)
+        if (
+            created is not None
+            and (created[0] in _RECIPIENTS or not created[0])
+            and not m.group("rest")
+        ):
+            run = _token_action(created[1])
             if run is None:
                 return None
-            return [_Payoff(objects, (created.group("who") or "you").lower(), run)]
-        template = m.group("action") + (m.group("rest") or "")
+            return [_Payoff(objects, created[0] or "you", run)]
+        template = action + (m.group("rest") or "")
         template = re.sub(
             r"\bx\b", "{n}", template.replace("{", "{{").replace("}", "}}"), flags=re.IGNORECASE
         )
@@ -629,23 +592,11 @@ def _apply(
         amount = payoff.unit * len({e.controller for e in moved if e.controller != controller})
     else:
         amount = payoff.unit * len(moved)
-    for player in _recipients(game, obj, controller, payoff.who, moved):
-        payoff.run(game, obj, player, amount)
-
-
-def _recipients(
-    game: "Game", obj: Any, controller: str, who: str, moved: list[Affected]
-) -> list[str]:
-    if who == "you":
-        return [controller]
-    if who == "each player":
-        return _players_in_order(game)
-    if who == "each opponent":
-        return [name for name in _players_in_order(game) if name != controller]
-    named = [t.username for t in game.resolve_targets(obj) if hasattr(t, "username")]
-    if named:
-        return named[:1]
-    return list(dict.fromkeys(entry.owner or entry.controller for entry in moved))[:1]
+    # "that player" with no player chosen is the owner of what moved.
+    owners = tuple(dict.fromkeys(entry.owner or entry.controller for entry in moved))
+    who = "that player" if payoff.who == "target player" else payoff.who
+    for player in resolve_recipients(game, obj, who, controller, fallback=owners):
+        payoff.run(game, obj, player.username, amount)
 
 
 # --------------------------------------------------------------------------

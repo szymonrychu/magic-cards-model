@@ -29,7 +29,7 @@ from typing import TYPE_CHECKING, Any
 from ..models.card_state import CardState
 from ..models.player import Player
 from ..models.zone import Zone
-from ..numbers import COUNT, parse_count
+from .amount_sentences import change_life, mill_players, parse_life_clause, parse_mill_clause
 from .ep02_r1_referenced_stat import (
     Anchor,
     Referent,
@@ -56,10 +56,6 @@ CONTROLLER_ANAPHOR = (
 )
 _RECIPIENT_RE = re.compile(rf"^{CONTROLLER_ANAPHOR} (?P<predicate>.+)$", re.IGNORECASE)
 
-_LIFE_FIXED_RE = re.compile(rf"^(?P<verb>loses|gains) (?P<n>{COUNT}) life$")
-_LIFE_STAT_RE = re.compile(r"^(?P<verb>loses|gains) life equal to (?P<amount>.+)$")
-_MILL_FIXED_RE = re.compile(rf"^mills (?P<n>{COUNT}) cards?$")
-_MILL_STAT_RE = re.compile(r"^mills cards equal to (?P<amount>.+)$")
 
 #: `(game, recipient, referent, source name, source id)`.
 Run = Callable[["Game", Player, "Referent | None", str, "str | None"], None]
@@ -78,19 +74,12 @@ class Predicate:
     claims only the texts the older pair parsers could not."""
 
 
-def _lose_or_gain(verb: str, amount: int | None, stat: str | None) -> Run:
-    gains = verb == "gains"
-
+def _lose_or_gain(gains: bool, amount: int | None, stat: str | None) -> Run:
     def run(
         game: "Game", player: Player, referent: Referent | None, name: str, source_id: str | None
     ) -> None:
         count = amount if stat is None else stat_value(referent, stat)
-        if count <= 0:
-            return  # CR 107.1b: a negative amount is zero
-        if gains:
-            game.gain_life(player, count)
-        else:
-            game.lose_life(player, count)
+        change_life(game, [player], [count or 0], gains)  # CR 107.1b: a negative amount is zero
 
     return run
 
@@ -99,40 +88,35 @@ def _mill(amount: int | None, stat: str | None) -> Run:
     def run(
         game: "Game", player: Player, referent: Referent | None, name: str, source_id: str | None
     ) -> None:
-        from .effects.library import _mill as mill
-
-        mill(game, player, amount if stat is None else stat_value(referent, stat))
+        mill_players(game, [player], [amount if stat is None else stat_value(referent, stat)])
 
     return run
+
+
+def _anaphor_stat(expr: str | None) -> str | None:
+    ref = parse_stat_phrase(expr or "")
+    return None if ref is None or ref.anchor is not Anchor.ANAPHOR else ref.stat
 
 
 @functools.cache
 def parse_predicate(text: str) -> Predicate | None:
     """The verb phrase of a recipient sentence ("loses 2 life", "mills three
-    cards", "loses life equal to its toughness"), or `None`. Other verbs
-    ("draws a card", "creates a Treasure token") have their own readers."""
-    phrase = " ".join(text.strip().rstrip(".").split())
-    lowered = phrase.lower()
-    if (match := _LIFE_FIXED_RE.fullmatch(lowered)) is not None:
-        amount = parse_count(match.group("n"))
-        if amount is None:
-            return None
-        return Predicate(_lose_or_gain(match.group("verb"), amount, None))
-    if (match := _LIFE_STAT_RE.fullmatch(lowered)) is not None:
-        ref = parse_stat_phrase(match.group("amount"))
-        if ref is None or ref.anchor is not Anchor.ANAPHOR:
-            return None
-        return Predicate(_lose_or_gain(match.group("verb"), None, ref.stat), ref.stat, True)
-    if (match := _MILL_FIXED_RE.fullmatch(lowered)) is not None:
-        amount = parse_count(match.group("n"))
-        if amount is None:
-            return None
-        return Predicate(_mill(amount, None), None, True)
-    if (match := _MILL_STAT_RE.fullmatch(lowered)) is not None:
-        ref = parse_stat_phrase(match.group("amount"))
-        if ref is None or ref.anchor is not Anchor.ANAPHOR:
-            return None
-        return Predicate(_mill(None, ref.stat), ref.stat, True)
+    cards", "loses life equal to its toughness"), or `None`; the wording is
+    `amount_sentences`'. Other verbs ("draws a card", "creates a Treasure
+    token") have their own readers."""
+    life = parse_life_clause(text)
+    if life is not None and life.subject is None:
+        if life.kind == "fixed":
+            return Predicate(_lose_or_gain(life.gains, life.n, None))
+        if life.kind == "equal" and (stat := _anaphor_stat(life.expr)) is not None:
+            return Predicate(_lose_or_gain(life.gains, None, stat), stat, True)
+        return None
+    mill = parse_mill_clause(text)
+    if mill is not None and mill.subject is None:
+        if mill.kind == "fixed":
+            return Predicate(_mill(mill.n, None), None, True)
+        if mill.kind == "equal" and (stat := _anaphor_stat(mill.expr)) is not None:
+            return Predicate(_mill(None, stat), stat, True)
     return None
 
 

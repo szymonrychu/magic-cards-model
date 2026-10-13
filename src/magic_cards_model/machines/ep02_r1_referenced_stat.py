@@ -37,6 +37,15 @@ from ..models.card import Type
 from ..models.card_state import CardState
 from ..models.player import Player
 from ..models.zone import Zone
+from .amount_sentences import (
+    apply_life,
+    apply_mill,
+    parse_cards_clause,
+    parse_damage_clause,
+    parse_life_clause,
+    parse_mill_clause,
+    parse_put_counters,
+)
 
 if TYPE_CHECKING:
     from ..models.game import Game
@@ -249,23 +258,8 @@ def default_referent(game: "Game", stack_object: Any, anchor: Anchor) -> Referen
 #: `(game, stack_object, referent) -> None`.
 Action = Callable[["Game", Any, "Referent | None"], None]
 
-_PLAYER_WORDS = r"you|target player|target opponent|that player"
-_LIFE_RE = re.compile(
-    rf"^(?P<who>{_PLAYER_WORDS}) (?P<verb>gain|gains|lose|loses) life equal to (?P<amount>.+)$"
-)
-_DRAW_RE = re.compile(r"^(?:you )?draw cards equal to (?P<amount>.+)$")
-_MILL_RE = re.compile(
-    r"^(?P<who>you|target player|target opponent) mills? cards equal to (?P<amount>.+)$"
-)
-_DISCARD_RE = re.compile(r"^(?:you )?discard cards equal to (?P<amount>.+)$")
-_DAMAGE_RE = re.compile(
-    r"^(?P<source>[^,]+?) deals damage equal to (?P<amount>.+?) to "
-    r"(?P<phrase>.*\btarget\b.+|any target)$"
-)
-_COUNTERS_RE = re.compile(
-    r"^put x (?P<kind>\+1/\+1|-1/-1) counters on (?P<phrase>target creature you control), "
-    r"where x is (?P<amount>.+)$"
-)
+#: The players an amount sentence names.
+_PLAYER_WORDS = frozenset({"you", "target player", "target opponent", "that player"})
 _MAY_PREFIX_RE = re.compile(r"^you may ")
 _IF_RE = re.compile(r"^if (?P<condition>.+?), (?P<rest>.+)$")
 _WAS_A_RE = re.compile(r"^(?:that creature|it|that card) was an? (?P<kind>[a-z]+)$")
@@ -277,12 +271,6 @@ def normalize(sentence: str) -> str:
     return " ".join(sentence.replace("’", "'").split()).rstrip(".").lower()
 
 
-def _players_for(game: "Game", stack_object: Any, who: str) -> list[Player]:
-    if who == "you":
-        return [game.controller_of(stack_object)]
-    return [target for target in game.resolve_targets(stack_object) if isinstance(target, Player)]
-
-
 def _source_of(game: "Game", stack_object: Any) -> CardState | None:
     if isinstance(stack_object, CardState):
         return stack_object
@@ -292,48 +280,27 @@ def _source_of(game: "Game", stack_object: Any) -> CardState | None:
 def _parse_effect_sentence(sentence: str) -> tuple[Action, StatRef, bool] | None:
     """`sentence` (normalised, no leading "if"/"you may") as an `Action`, the
     `StatRef` its amount uses and whether it targets a player."""
-    if (match := _LIFE_RE.fullmatch(sentence)) is not None:
-        ref = parse_stat_phrase(match.group("amount"))
-        if ref is None:
+    if (life := parse_life_clause(sentence)) is not None:
+        ref = parse_stat_phrase(life.expr or "") if life.kind == "equal" else None
+        if ref is None or life.who not in _PLAYER_WORDS:
             return None
-        gains = match.group("verb").startswith("gain")
-        who = match.group("who")
+        gains, who = life.gains, life.who
 
-        def life(game: "Game", stack_object: Any, referent: Referent | None) -> None:
+        def life_change(game: "Game", stack_object: Any, referent: Referent | None) -> None:
             amount = stat_value(referent, ref.stat)
-            for player in _players_for(game, stack_object, who):
-                if gains:
-                    game.gain_life(player, amount)
-                else:
-                    game.lose_life(player, amount)
+            apply_life(game, stack_object, who, gains, lambda *_: amount)
 
-        return life, ref, who.startswith("target")
-    if (match := _DRAW_RE.fullmatch(sentence)) is not None:
-        ref = parse_stat_phrase(match.group("amount"))
-        if ref is None:
+        return life_change, ref, who.startswith("target")
+    if (cards := parse_cards_clause(sentence)) is not None:
+        ref = parse_stat_phrase(cards.expr or "") if cards.kind == "equal" else None
+        if ref is None or cards.who not in ("", "you"):
             return None
+        if cards.draws:
 
-        def draw(game: "Game", stack_object: Any, referent: Referent | None) -> None:
-            game.draw_cards(game.controller_of(stack_object), stat_value(referent, ref.stat))
+            def draw(game: "Game", stack_object: Any, referent: Referent | None) -> None:
+                game.draw_cards(game.controller_of(stack_object), stat_value(referent, ref.stat))
 
-        return draw, ref, False
-    if (match := _MILL_RE.fullmatch(sentence)) is not None:
-        ref = parse_stat_phrase(match.group("amount"))
-        if ref is None:
-            return None
-        who = match.group("who")
-
-        def mill(game: "Game", stack_object: Any, referent: Referent | None) -> None:
-            from .effects.library import _mill
-
-            for player in _players_for(game, stack_object, who):
-                _mill(game, player, stat_value(referent, ref.stat))
-
-        return mill, ref, who.startswith("target")
-    if (match := _DISCARD_RE.fullmatch(sentence)) is not None:
-        ref = parse_stat_phrase(match.group("amount"))
-        if ref is None:
-            return None
+            return draw, ref, False
 
         def discard(game: "Game", stack_object: Any, referent: Referent | None) -> None:
             from .decisions import source_id_of
@@ -348,29 +315,46 @@ def _parse_effect_sentence(sentence: str) -> tuple[Action, StatRef, bool] | None
             )
 
         return discard, ref, False
-    if (match := _DAMAGE_RE.fullmatch(sentence)) is not None:
-        ref = parse_stat_phrase(match.group("amount"))
-        if ref is None or ref.anchor is not Anchor.SACRIFICED:
+    if (mill := parse_mill_clause(sentence)) is not None:
+        ref = parse_stat_phrase(mill.expr or "") if mill.kind == "equal" else None
+        if ref is None or mill.who not in ("you", "target player", "target opponent"):
+            return None
+        who = mill.who
+
+        def mill_cards(game: "Game", stack_object: Any, referent: Referent | None) -> None:
+            amount = stat_value(referent, ref.stat)
+            apply_mill(game, stack_object, who, lambda *_: amount)
+
+        return mill_cards, ref, who.startswith("target")
+    if (damage := parse_damage_clause(sentence)) is not None:
+        ref = parse_stat_phrase(damage.expr or "") if damage.expr is not None else None
+        if ref is None or ref.anchor is not Anchor.SACRIFICED or "," in damage.source:
             # Damage equal to the source's own, a target's or a bitten
             # creature's characteristic is the established damage rungs'.
             return None
         from .effects._common import _targets_understood
 
-        if not _targets_understood(match.group("phrase"), allow_player_targets=True):
+        if not re.search(r"\btarget\b", damage.to) or not _targets_understood(
+            damage.to, allow_player_targets=True
+        ):
             return None
 
-        def damage(game: "Game", stack_object: Any, referent: Referent | None) -> None:
+        def deal(game: "Game", stack_object: Any, referent: Referent | None) -> None:
             amount = stat_value(referent, ref.stat)
             source = _source_of(game, stack_object)
             for target in game.resolve_targets(stack_object):
                 game.deal_damage(target, amount, source=source)
 
-        return damage, ref, False
-    if (match := _COUNTERS_RE.fullmatch(sentence)) is not None:
-        ref = parse_stat_phrase(match.group("amount"))
-        if ref is None:
+        return deal, ref, False
+    if (put := parse_put_counters(sentence)) is not None:
+        ref = parse_stat_phrase(put.expr or "") if put.x else None
+        if (
+            ref is None
+            or put.kind not in ("+1/+1", "-1/-1")
+            or put.on != "target creature you control"
+        ):
             return None
-        kind = match.group("kind")
+        kind = put.kind
 
         def counters(game: "Game", stack_object: Any, referent: Referent | None) -> None:
             amount = stat_value(referent, ref.stat)
@@ -587,7 +571,6 @@ _RETURN_THAT_CARD_RE = re.compile(
     r"^return (?:it|that card|that creature|that permanent) to the battlefield "
     r"under its owner's control$"
 )
-_IF_YOU_DO_DISCARD_RE = re.compile(r"^if you do, discard cards equal to (?P<amount>.+)$")
 
 
 def _exile_return_discard(opening: str, amounts: tuple[AmountSentence, ...], tail: str):
@@ -617,8 +600,17 @@ def _exile_return_discard(opening: str, amounts: tuple[AmountSentence, ...], tai
     timing = _parse_delayed_timing_clause(sentences[0])
     if timing is None or _RETURN_THAT_CARD_RE.fullmatch(normalize(timing[1])) is None:
         return None
-    rider = _IF_YOU_DO_DISCARD_RE.fullmatch(normalize(sentences[1]))
-    rider_ref = None if rider is None else parse_stat_phrase(rider.group("amount"))
+    rider_text = normalize(sentences[1])
+    rider = (
+        parse_cards_clause(rider_text.removeprefix("if you do, "))
+        if rider_text.startswith("if you do, ")
+        else None
+    )
+    rider_ref = (
+        None
+        if rider is None or rider.draws or rider.kind != "equal" or rider.subject is not None
+        else parse_stat_phrase(rider.expr or "")
+    )
     if rider_ref is None or rider_ref.anchor is not Anchor.ANAPHOR:
         return None
     step = timing[0]

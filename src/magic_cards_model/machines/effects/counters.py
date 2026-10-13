@@ -4439,6 +4439,16 @@ def _parse_proliferate_clause(clause: str) -> TargetedClause | None:
 
 
 @MIXED_CLAUSE.rung("s37", for_spell=FORWARD)
+def _parse_self_counters_for_each_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
+    """ "Put a +1/+1 counter on this creature for each creature card in your
+    graveyard.", "Put a loyalty counter on this permanent for each creature
+    you control.": the one reader, `amount_sentences.self_counters_for_each_effect`."""
+    from ..amount_sentences import self_counters_for_each_effect
+
+    return self_counters_for_each_effect(clause, for_spell=for_spell)
+
+
+@MIXED_CLAUSE.rung("s37", for_spell=FORWARD)
 def _parse_minus_counters_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
     """`machines/minus_counters.parse_resolution_text`, tried as one more
     entry in `_parse_mixed_clause`'s own dispatch chain below.

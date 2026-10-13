@@ -29,6 +29,15 @@ import functools
 import re
 from collections.abc import Callable, Iterator
 
+from ..numbers import parse_count
+from .amount_sentences import (
+    cards_for_each_pattern,
+    parse_put_counters,
+    pump_for_each_pattern,
+    put_counters_pattern,
+    where_x_markers,
+    write_x,
+)
 from .ep01_r3_amounts import counters_on_it_total
 
 #: What the phrase reads as when no object is being resolved - the support
@@ -110,10 +119,21 @@ def _restored(text: str, names: tuple[str, ...]) -> str:
 
 @functools.cache
 def _where_x(names: tuple[str, ...] = ()) -> re.Pattern[str]:
+    # The expression of a ", where X is ..." (`amount_sentences.where_x_markers`).
     return re.compile(
-        rf",? where X is the number of {_KIND}{_COUNTERS} on {_self()}(?=[.,]|$)",
+        rf"the number of {_KIND}{_COUNTERS} on {_self()}(?=[.,]|$)",
         re.IGNORECASE,
     )
+
+
+def _where_x_split(text: str, expression: re.Pattern[str]) -> tuple[int, re.Match[str]] | None:
+    """The first ", where X is <expression>" in `text`: where its marker
+    starts, and the expression's match."""
+    for marker in where_x_markers(text):
+        found = expression.match(text, marker.end())
+        if found is not None:
+            return marker.start(), found
+    return None
 
 
 @functools.cache
@@ -139,9 +159,7 @@ def _equal_to(names: tuple[str, ...] = ()) -> re.Pattern[str]:
 def _for_each_pump(names: tuple[str, ...] = ()) -> re.Pattern[str]:
     # "gets +1/+1 until end of turn for each lore counter on this artifact"
     return re.compile(
-        rf"\b(?P<verb>gets?) (?P<p>[+-]\d+)/(?P<t>[+-]\d+)(?P<mid>(?: until end of turn)?)"
-        rf" for each {_KIND}{_COUNTERS} on {_self()}\b",
-        re.IGNORECASE,
+        rf"\b{pump_for_each_pattern(rf'{_KIND}{_COUNTERS} on {_self()}')}\b", re.IGNORECASE
     )
 
 
@@ -159,19 +177,24 @@ def _a_number_of_counters(names: tuple[str, ...] = ()) -> re.Pattern[str]:
 @functools.cache
 def _for_each_verb(names: tuple[str, ...] = ()) -> re.Pattern[str]:
     # "discards a card for each charge counter on this artifact"
+    each = rf"{_KIND}{_COUNTERS} on {_self()}"
     return re.compile(
-        rf"\b(?P<verb>discards?|draws?|mills?) (?:a|an|one) (?P<noun>card)"
-        rf"(?P<mid>[^.,]*?) for each {_KIND}{_COUNTERS} on {_self()}\b",
+        rf"\b(?P<verb>discards?|draws?|mills?) "
+        rf"{cards_for_each_pattern(each, count='a|an|one', noun='card', mid='[^.,]*?')}\b",
         re.IGNORECASE,
     )
 
 
+_COUNTED_KIND = r"(?:(?:\+1/\+1|-1/-1|[a-z]+) )?"
+_EACH_KIND_RE = re.compile(rf"^(?:(?P<kind>\+1/\+1|-1/-1|[a-z]+) )?{_COUNTERS} on ", re.IGNORECASE)
+
+
 @functools.cache
 def _for_each_put(names: tuple[str, ...] = ()) -> re.Pattern[str]:
-    # "put a -1/-1 counter on target creature for each -1/-1 counter on this creature"
+    # "put a -1/-1 counter on target creature for each -1/-1 counter on this
+    # creature": `amount_sentences`' put-counters wording, counting the source's.
     return re.compile(
-        rf"\b(?P<verb>puts?|distributes?) (?:a|an|one) (?P<ck>\+1/\+1|-1/-1|[a-z]+) counter"
-        rf"(?P<mid> [^.,]*?) for each {_KIND}{_COUNTERS} on {_self()}\b",
+        rf"\b{put_counters_pattern(rf'{_COUNTED_KIND}{_COUNTERS} on {_self()}')}\b",
         re.IGNORECASE,
     )
 
@@ -188,9 +211,7 @@ def _for_each_target(names: tuple[str, ...] = ()) -> re.Pattern[str]:
 
 
 _FOR_EACH_SCRIED = re.compile(
-    r"\b(?P<verb>gets?) (?P<p>[+-]\d+)/(?P<t>[+-]\d+)(?P<mid>(?: until end of turn)?)"
-    r" for each card looked at while scrying this way\b",
-    re.IGNORECASE,
+    rf"\b{pump_for_each_pattern('card looked at while scrying this way')}\b", re.IGNORECASE
 )
 
 
@@ -209,8 +230,7 @@ def _for_each_scried(text: str) -> str:
 
 
 _REMOVED_WHERE_X = re.compile(
-    r",? where X is the number of (?:(?:\+1/\+1|-1/-1|[a-z]+) )?counters? removed this way"
-    r"(?=[.,]|$)",
+    r"the number of (?:(?:\+1/\+1|-1/-1|[a-z]+) )?counters? removed this way(?=[.,]|$)",
     re.IGNORECASE,
 )
 _FOR_EACH_REMOVED = re.compile(
@@ -228,10 +248,9 @@ def _counters_removed_text(text: str) -> str:
     `PLACEHOLDER` when classifying."""
     removed = _REMOVED.get()
     n = PLACEHOLDER if removed is None else removed
-    where = _REMOVED_WHERE_X.search(text)
+    where = _where_x_split(text, _REMOVED_WHERE_X)
     if where is not None:
-        rest = text[: where.start()] + text[where.end() :]
-        text = re.sub(r"\bX\b", str(n), rest)
+        text = write_x(text[: where[0]] + text[where[1].end() :], n)
 
     def pump(m: re.Match[str]) -> str:
         p, t = int(m.group("p")) * n, int(m.group("t")) * n
@@ -243,27 +262,13 @@ def _counters_removed_text(text: str) -> str:
 def _placed_first(text: str) -> tuple[str, int] | None:
     """The kind and number of counters a leading "Put <n> <kind> counter(s) on
     <itself>, then ..." instruction adds before the rest of the text is read."""
-    match = re.match(
-        rf"\s*put (?P<n>an?|one|two|three|\d+) (?P<kind>\+1/\+1|-1/-1|[a-z]+) counters? "
-        rf"on {_self()}[,.] then ",
-        text,
-        re.IGNORECASE,
-    )
-    if match is None:
+    lead = re.match(r"\s*(?P<put>[^.,]+)[,.] then ", text, re.IGNORECASE)
+    put = None if lead is None else parse_put_counters(lead.group("put"))
+    if put is None or put.x or put.each is not None:
         return None
-    word = match.group("n").lower()
-    number = {"a": 1, "an": 1, "one": 1, "two": 2, "three": 3}.get(word)
-    return match.group("kind").lower(), number if number is not None else int(word)
-
-
-@functools.cache
-def _put_for_each_controlled(names: tuple[str, ...] = ()) -> re.Pattern[str]:
-    # "put a loyalty counter on this permanent for each creature you control"
-    return re.compile(
-        rf"\bput (?:a|an|one) (?P<ck>\+1/\+1|-1/-1|[a-z]+) counter on {_self()}"
-        rf" for each (?P<other>other )?(?P<noun>[a-z]+) you control\b",
-        re.IGNORECASE,
-    )
+    if re.fullmatch(_self(), put.on, re.IGNORECASE) is None:
+        return None
+    return put.kind.lower(), put.n
 
 
 def counters_counted_text(text: str, names: tuple[str, ...] = ()) -> str:
@@ -304,11 +309,10 @@ def _counted_tokenised(text: str) -> str:
         extra = placed[1] if placed is not None and kind in (None, placed[0]) else 0
         return _counted(kind) + extra
 
-    where = _where_x().search(text)
+    where = _where_x_split(text, _where_x())
     if where is not None:
-        number = n_of(where)
-        rest = text[: where.start()] + text[where.end() :]
-        text = re.sub(r"\bX\b", str(number), rest)
+        number = n_of(where[1])
+        text = write_x(text[: where[0]] + text[where[1].end() :], number)
     text = _a_number_of_counters().sub(lambda m: _plural(n_of(m), f"{m.group('ck')} counter"), text)
     equal = _equal_to().search(text)
     if equal is not None:
@@ -333,14 +337,18 @@ def _counted_tokenised(text: str) -> str:
     text = _for_each_verb().sub(verb_noun, text)
 
     def put_counters(m: re.Match[str]) -> str:
-        if m.group("mid").strip() == "on it" and not m.group(0).lower().endswith(" on it"):
+        if m.group("on").strip().lower() == "it":
             # "Put a counter on it for each <kind> counter on this enchantment"
             # (Alien Invasion): "it" is the token just created, not the object
             # counted, and its own reader counts the source's counters after
             # the token exists.
             return m.group(0)
-        n = n_of(m)
-        return f"{m.group('verb')} {_plural(n, m.group('ck') + ' counter')}{m.group('mid')}"
+        unit = parse_count(m.group("count"))
+        counted = _EACH_KIND_RE.match(m.group("each"))
+        if unit is None or counted is None:
+            return m.group(0)
+        n = unit * n_of(counted)
+        return f"{m.group('verb')} {_plural(n, m.group('kind') + ' counter')} on {m.group('on')}"
 
     text = _for_each_put().sub(put_counters, text)
 
@@ -350,17 +358,7 @@ def _counted_tokenised(text: str) -> str:
         wording = "one target " + noun if n == 1 else f"{n} target {noun}s"
         return f"{m.group('verb')} up to {wording}{m.group('tail')}"
 
-    text = _for_each_target().sub(targets, text)
-
-    def put_for_each(m: re.Match[str]) -> str:
-        # CR 122.1: the same count "where X is the number of <things> you control"
-        # the put-X-counters reader already knows, in the plural it wants.
-        return (
-            f"put X {m.group('ck')} counters on this permanent, where X is the number of "
-            f"{m.group('other') or ''}{m.group('noun')}s you control"
-        )
-
-    return _put_for_each_controlled().sub(put_for_each, text)
+    return _for_each_target().sub(targets, text)
 
 
 def counters_self_reference_normalised(text: str, names: tuple[str, ...]) -> str:

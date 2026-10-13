@@ -27,6 +27,8 @@ import re
 from collections.abc import Callable
 from typing import TYPE_CHECKING
 
+from .amount_sentences import cards_for_each_pattern, pump_for_each_pattern
+
 if TYPE_CHECKING:
     from ..models import Game
 
@@ -152,27 +154,17 @@ def counted_group_reader(phrase: str) -> CountedGroupReader | None:
 # --------------------------------------------------------------------------
 
 _NUMBER = r"\d+|an?|one|two|three|four|five"
-#: "<head> N life/cards/damage<mid> for each <P>" - the older clause readers
-#: either lack the verb ("Each opponent loses 1 life for each ..."), or cut the
-#: sentence apart at the commas and "and"s inside the counted list ("tapped
-#: artifact, creature, and land you control").
+#: "<head> N cards/damage<mid> for each <P>" - the older clause readers either
+#: lack the verb, or cut the sentence apart at the commas and "and"s inside the
+#: counted list ("tapped artifact, creature, and land you control"). Life is
+#: `amount_sentences.parse_life_clause`'s.
 _FOR_EACH_AMOUNT_RE = re.compile(
-    rf"^(?P<head>.*?\b)(?P<n>{_NUMBER}) (?P<noun>cards?|life|damage)\b(?P<mid>[^.]*?)"
-    r" for each (?P<each>[^.]+?)\.?$",
+    rf"^(?P<head>.*?\b){cards_for_each_pattern(count=_NUMBER, noun='cards?|damage')}\.?$",
     re.IGNORECASE,
 )
 _PUMP_FOR_EACH_RE = re.compile(
-    r"^(?:until end of turn, )?(?P<subject>.*?) gets? (?P<p>[+-]\d+)/(?P<t>[+-]\d+)"
-    r"(?: until end of turn)? for each (?P<each>[^.]+?)\.?$",
+    rf"^(?:until end of turn, )?(?P<subject>.*?) {pump_for_each_pattern()}\.?$",
     re.IGNORECASE,
-)
-_WHERE_X_RE = re.compile(r"^(?P<body>.*\bX\b.*?),\s*where X is (?P<expr>[^.]+?)\.?$", re.IGNORECASE)
-_LIFE_EQUAL_RE = re.compile(
-    r"^(?P<head>.*?\b)(?P<verb>loses|gains|lose|gain) life equal to (?P<expr>[^.]+?)\.?$",
-    re.IGNORECASE,
-)
-_MANA_FOR_EACH_RE = re.compile(
-    r"^add (?P<symbols>(?:\{[WUBRGC]\})+) for each (?P<each>[^.]+?)\.?$", re.IGNORECASE
 )
 _ENERGY_FOR_EACH_RE = re.compile(
     r"^(?:then )?(?:you )?gets? (?P<symbol>\{E\}) for each (?P<each>[^.]+?)\.?$", re.IGNORECASE
@@ -283,17 +275,34 @@ def _counted_sentence(sentence: str) -> "tuple[_ObjectCount, Callable[[int], obj
     """`(count, render)` for one sentence that prints its count after the verb,
     or `None`. `render(n)` is the same sentence with the count written in as a
     plain number (and `None` when that number means the sentence does nothing)."""
+    from .amount_sentences import (
+        add_mana_times,
+        controller_of,
+        parse_add_mana_for_each,
+        parse_life_clause,
+        split_where_x,
+        write_x,
+    )
+
     text = sentence.strip()
     if _CONDITIONAL_OPENING_RE.match(text):
         return None
-    if (m := _WHERE_X_RE.fullmatch(text)) is not None:
-        reader = _expression_reader(m.group("expr"))
-        body = m.group("body")
-        return None if reader is None else (reader, lambda n: re.sub(r"\bX\b", str(n), body) + ".")
-    if (m := _MANA_FOR_EACH_RE.fullmatch(text)) is not None:
-        reader = _each_reader(m.group("each"))
-        symbols = m.group("symbols")
-        return None if reader is None else (reader, lambda n: f"Add {symbols * n}." if n else None)
+    where = split_where_x(text)
+    if where is not None and re.search(r"\bX\b", where[0], re.IGNORECASE) and "." not in where[1]:
+        reader = _expression_reader(where[1])
+        body = where[0]
+        return None if reader is None else (reader, lambda n: write_x(body, n) + ".")
+    if (mana := parse_add_mana_for_each(text)) is not None:
+        reader = _each_reader(mana[1])
+        symbols = mana[0]
+
+        def add(n: int):
+            def run(game: "Game", obj: object) -> None:
+                add_mana_times(game, controller_of(game, obj), symbols, n)
+
+            return run if n else None
+
+        return None if reader is None else (reader, add)
     if (m := _ENERGY_FOR_EACH_RE.fullmatch(text)) is not None:
         reader = _each_reader(m.group("each"))
         symbol = m.group("symbol")
@@ -306,10 +315,16 @@ def _counted_sentence(sentence: str) -> "tuple[_ObjectCount, Callable[[int], obj
         return (
             None if reader is None else (reader, lambda n: f"You get {symbol * n}." if n else None)
         )
-    if (m := _LIFE_EQUAL_RE.fullmatch(text)) is not None:
-        reader = _expression_reader(m.group("expr"))
-        head, verb = m.group("head"), m.group("verb")
-        return None if reader is None else (reader, lambda n: f"{head}{verb} {n} life.")
+    life = parse_life_clause(text)
+    if life is not None and life.kind in ("equal", "for_each"):
+        reader = (
+            _expression_reader(life.expr or "")
+            if life.kind == "equal"
+            else _each_reader(life.expr or "")
+        )
+        head = f"{life.subject} " if life.subject else ""
+        verb, unit = life.verb, life.n
+        return None if reader is None else (reader, lambda n: f"{head}{verb} {unit * n} life.")
     if (m := _PUMP_FOR_EACH_RE.fullmatch(text)) is not None:
         reader = _each_reader(m.group("each"))
         subject, power, toughness = m.group("subject", "p", "t")

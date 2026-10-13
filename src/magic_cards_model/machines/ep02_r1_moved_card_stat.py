@@ -36,8 +36,18 @@ from typing import TYPE_CHECKING, Any
 from uuid import UUID
 
 from ..models.card_state import CardState
-from ..models.player import Player
 from ..models.zone import Zone
+from .amount_sentences import (
+    TokenMaker,
+    apply_life,
+    parse_cards_clause,
+    parse_create,
+    parse_damage_clause,
+    parse_life_clause,
+    parse_put_counters,
+    split_where_x,
+    token_maker,
+)
 from .ep01_r3_amounts import counters_on_it_total
 from .ep02_r1_referenced_stat import (
     Anchor,
@@ -447,40 +457,11 @@ _IF_RETURNED_RE = re.compile(
     re.IGNORECASE,
 )
 _IF_IT_IS_RE = re.compile(r"^if it's an? (?P<kind>[a-z]+) card,? (?P<rest>.+)$", re.IGNORECASE)
-_AMOUNT_VAR = r"(?P<stat>.+?)"
-_AMOUNT_VAR_B = r"(?P<stat_b>.+)"
 
-_GAIN_DRAW_RE = re.compile(
-    rf"^you gain x life and draw x cards, where x is {_AMOUNT_VAR}$", re.IGNORECASE
-)
-_LOSE_GAIN_RE = re.compile(
-    r"^target (?P<who>player|opponent) loses x life and you gain x life, "
-    rf"where x is {_AMOUNT_VAR}$",
-    re.IGNORECASE,
-)
-_LIFE_EQUAL_RE = re.compile(
-    rf"^(?P<who>you|target player|target opponent) (?P<verb>gains?|loses?) life equal to "
-    rf"{_AMOUNT_VAR}$",
-    re.IGNORECASE,
-)
-_DRAW_RE = re.compile(rf"^(?:you )?draw cards equal to {_AMOUNT_VAR}$", re.IGNORECASE)
-_DAMAGE_RE = re.compile(
-    rf"^(?P<source>.+?) deals damage equal to {_AMOUNT_VAR} to (?P<to>.+)$"
-    rf"|^(?P<source_b>.+?) deals damage to (?P<to_b>.+?) equal to {_AMOUNT_VAR_B}$",
-    re.IGNORECASE,
-)
 _DOUBLED_RE = re.compile(
     r"^if the sacrificed creature was an? (?P<kind>[a-z]+),? .+? deals twice that much "
     r"damage instead$",
     re.IGNORECASE,
-)
-_TOKENS_X_RE = re.compile(
-    r"^(?:you )?creates? x (?P<desc>.+?) \btokens?\b(?:\s+with\s+(?P<tail>.+?))?"
-    rf",?\s*where x is {_AMOUNT_VAR}$",
-    re.IGNORECASE,
-)
-_TOKEN_XX_RE = re.compile(
-    rf"^create an? x/x (?P<desc>.+?) \btoken\b,?\s*where x is {_AMOUNT_VAR}$", re.IGNORECASE
 )
 _TOKEN_STATS_RE = re.compile(
     r"^create an? (?P<desc>.+?) \btoken\b$",
@@ -493,15 +474,11 @@ _TOKEN_SIZE_RE = re.compile(
 _PUMP_RE = re.compile(
     r"^(?P<subject>target creature|this creature|this permanent|"
     r"(?-i:[A-Z][^ ]*(?: [A-Z][^ ]*)*)) gets (?P<power>[+-](?:x|\d+))/"
-    r"(?P<toughness>[+-](?:x|y|\d+)) until end of turn, "
-    r"where x is (?P<xstat>.+?)(?: and y is (?P<ystat>.+))?$",
+    r"(?P<toughness>[+-](?:x|y|\d+)) until end of turn$",
     re.IGNORECASE,
 )
-_COUNTERS_ON_RE = re.compile(
-    r"^put x (?P<kind>\+1/\+1|-1/-1) counters on (?P<on>it|target creature(?: you control)?), "
-    rf"where x is {_AMOUNT_VAR}$",
-    re.IGNORECASE,
-)
+_X_AND_Y_RE = re.compile(r"^(?P<xstat>.+?)(?: and y is (?P<ystat>.+))?$", re.IGNORECASE)
+_COUNTERS_ON_RE = re.compile(r"^(?:it|target creature(?: you control)?)$", re.IGNORECASE)
 
 
 def _phrase(text: str) -> Phrase | None:
@@ -512,41 +489,51 @@ def _amount(game: "Game", stack_object: Any, state: State, phrase: Phrase) -> in
     return moved_stat_value(_referent_for(game, stack_object, state, phrase.anchor), phrase.stat)
 
 
-def _step_gain_and_draw(phrase: Phrase) -> ResolutionStep:
+def _step_x_pair(parts: tuple[tuple[str, str, bool], ...], phrase: Phrase) -> ResolutionStep:
+    """ "You gain X life and draw X cards", "target player loses X life and you
+    gain X life", where X is the stat: the parts in order (CR 608.2c), one
+    amount for both (CR 608.2h)."""
+
     def step(game: "Game", stack_object: Any, state: State) -> bool:
         amount = _amount(game, stack_object, state, phrase)
-        game.gain_life(game.controller_of(stack_object), amount)
-        game.draw_cards(game.controller_of(stack_object), amount)
+        for verb, who, gains in parts:
+            if verb == "draw":
+                game.draw_cards(game.controller_of(stack_object), amount)
+            else:
+                apply_life(game, stack_object, who, gains, lambda *_: amount)
         return True
 
     return step
 
 
-def _step_lose_and_gain(phrase: Phrase) -> ResolutionStep:
-    def step(game: "Game", stack_object: Any, state: State) -> bool:
-        amount = _amount(game, stack_object, state, phrase)
-        for target in game.resolve_targets(stack_object):
-            if isinstance(target, Player):
-                game.lose_life(target, amount)
-        game.gain_life(game.controller_of(stack_object), amount)
-        return True
-
-    return step
+def _x_pair(body: str) -> tuple[tuple[str, str, bool], ...] | None:
+    """The two parts of an "X life and X life/cards" body, the second
+    inheriting the first's subject when it prints none."""
+    parts: list[tuple[str, str, bool]] = []
+    subject = ""
+    for part in re.split(r"\s+and\s+", body):
+        life = parse_life_clause(part)
+        if life is not None and life.kind == "x" and life.expr is None and life.n == 1:
+            subject = life.who or subject
+            if subject not in ("you", "target player", "target opponent"):
+                return None
+            parts.append(("life", subject, life.gains))
+            continue
+        cards = parse_cards_clause(part)
+        if cards is not None and cards.draws and cards.kind == "x":
+            if (cards.who or subject) != "you":
+                return None
+            parts.append(("draw", "you", False))
+            continue
+        return None
+    return tuple(parts) if len(parts) == 2 else None
 
 
 def _step_life_equal(who: str, gains: bool, phrase: Phrase) -> ResolutionStep:
     def step(game: "Game", stack_object: Any, state: State) -> bool:
         amount = _amount(game, stack_object, state, phrase)
-        if who.lower() == "you":
-            player: Any = game.controller_of(stack_object)
-        else:
-            player = state.next_target(game, stack_object)
-        if not isinstance(player, Player):
-            return True
-        if gains:
-            game.gain_life(player, amount)
-        else:
-            game.lose_life(player, amount)
+        targets = None if who == "you" else [state.next_target(game, stack_object)]
+        apply_life(game, stack_object, who, gains, lambda *_: amount, targets=targets)
         return True
 
     return step
@@ -617,30 +604,26 @@ class _Damage:
         return True
 
 
-def _step_tokens(
-    desc: str,
-    tail: str | None,
-    phrase: Phrase | None,
-    *,
-    size_stats: tuple[Phrase, Phrase] | None = None,
-    sized_like_count: bool = False,
-) -> ResolutionStep | None:
-    """Tokens made by `desc`: X of them (`phrase` sizes the count), or one
-    X/X (`sized_like_count`), or one sized by two stats (`size_stats`)."""
+def _step_made_tokens(make: TokenMaker, phrase: Phrase) -> ResolutionStep:
+    """X tokens, or one X/X, where X is the stat (`amount_sentences.token_maker`)."""
+
+    def step(game: "Game", stack_object: Any, state: State) -> bool:
+        controller = state.token_controller or game.controller_of(stack_object).username
+        make(game, controller, _amount(game, stack_object, state, phrase))
+        return True
+
+    return step
+
+
+def _step_stat_sized_token(desc: str, size_stats: tuple[Phrase, Phrase]) -> ResolutionStep | None:
+    """One token whose power and toughness are two stats ("Create a ...
+    token. Its power is equal to ... and its toughness is equal to ...")."""
     from ..models.token import create_tokens
     from .effects.tokens import _token_definition_from_words
 
-    def build(count_or_size: int, toughness: int | None = None) -> Any:
-        words = desc.strip()
-        if sized_like_count:
-            words = f"{count_or_size}/{count_or_size} {words}"
-        elif size_stats is not None:
-            words = f"{count_or_size}/{toughness} {words}"
-        return _definition(words, tail)
-
     @functools.cache
-    def _definition(words: str, tail_text: str | None) -> Any:
-        return _token_definition_from_words(words, tail_text)
+    def build(power: int, toughness: int) -> Any:
+        return _token_definition_from_words(f"{power}/{toughness} {desc.strip()}", None)
 
     # Parse once with a sample so an unreadable descriptor fails the whole text.
     if build(1, 1) is None:
@@ -648,19 +631,9 @@ def _step_tokens(
 
     def step(game: "Game", stack_object: Any, state: State) -> bool:
         controller = state.token_controller or game.controller_of(stack_object).username
-        if size_stats is not None:
-            power = _amount(game, stack_object, state, size_stats[0])
-            toughness = _amount(game, stack_object, state, size_stats[1])
-            create_tokens(game, build(power, toughness), controller, 1)
-            return True
-        assert phrase is not None
-        amount = _amount(game, stack_object, state, phrase)
-        if amount <= 0:
-            return True
-        if sized_like_count:
-            create_tokens(game, build(amount), controller, 1)
-        else:
-            create_tokens(game, build(0), controller, amount)
+        power = _amount(game, stack_object, state, size_stats[0])
+        toughness = _amount(game, stack_object, state, size_stats[1])
+        create_tokens(game, build(power, toughness), controller, 1)
         return True
 
     return step
@@ -760,20 +733,30 @@ def _amount_step(sentence: str, *, for_spell: bool, opener: bool) -> ResolutionS
     def barred(phrase: Phrase, *, allowed: bool) -> bool:
         return not opener and phrase.anchor == "anaphor" and (not allowed or phrase.spell)
 
-    if (m := _GAIN_DRAW_RE.fullmatch(sentence)) and (p := _phrase(m.group("stat"))):
-        return None if barred(p, allowed=True) else _step_gain_and_draw(p)
-    if (m := _LOSE_GAIN_RE.fullmatch(sentence)) and (p := _phrase(m.group("stat"))):
-        return None if barred(p, allowed=True) else _step_lose_and_gain(p)
-    if (m := _LIFE_EQUAL_RE.fullmatch(sentence)) and (p := _phrase(m.group("stat"))):
-        if barred(p, allowed=False):
-            return None
-        return _step_life_equal(m.group("who"), m.group("verb").lower().startswith("gain"), p)
-    if (m := _DRAW_RE.fullmatch(sentence)) and (p := _phrase(m.group("stat"))):
-        return None if barred(p, allowed=False) else _step_draw(p)
-    if (m := _DAMAGE_RE.fullmatch(sentence)) and (
-        p := _phrase(m.group("stat") or m.group("stat_b"))
+    where = split_where_x(sentence)
+    body, tail = where if where is not None else (sentence, "")
+    if where is not None and (pair := _x_pair(body)) and (p := _phrase(tail)):
+        return None if barred(p, allowed=True) else _step_x_pair(pair, p)
+    life = parse_life_clause(sentence)
+    if (
+        life is not None
+        and life.kind == "equal"
+        and life.who in ("you", "target player", "target opponent")
+        and (p := _phrase(life.expr or ""))
     ):
-        recipient = (m.group("to") or m.group("to_b")).strip()
+        return None if barred(p, allowed=False) else _step_life_equal(life.who, life.gains, p)
+    cards = parse_cards_clause(sentence)
+    if (
+        cards is not None
+        and cards.draws
+        and cards.kind == "equal"
+        and cards.who in ("", "you")
+        and (p := _phrase(cards.expr or ""))
+    ):
+        return None if barred(p, allowed=False) else _step_draw(p)
+    damage = parse_damage_clause(sentence)
+    if damage is not None and damage.expr is not None and (p := _phrase(damage.expr)):
+        recipient = damage.to.strip()
         if barred(p, allowed=False) or not (
             _EACH_RE.fullmatch(recipient)
             or _ITS_CONTROLLER_RE.fullmatch(recipient)
@@ -781,17 +764,25 @@ def _amount_step(sentence: str, *, for_spell: bool, opener: bool) -> ResolutionS
         ):
             return None
         return _Damage(p, recipient)
-    if (m := _TOKENS_X_RE.fullmatch(sentence)) and (p := _phrase(m.group("stat"))):
+    created = parse_create(body) if where is not None else None
+    if (
+        created is not None
+        and created[0] in ("", "you")
+        and re.match(r"^(?:x\s|an? x/x\s)", created[1], re.IGNORECASE)
+        and (p := _phrase(tail))
+    ):
         if barred(p, allowed=False):
             return None
-        return _step_tokens(m.group("desc"), m.group("tail"), p)
-    if (m := _TOKEN_XX_RE.fullmatch(sentence)) and (p := _phrase(m.group("stat"))):
-        if barred(p, allowed=False):
-            return None
-        return _step_tokens(m.group("desc"), None, p, sized_like_count=True)
-    if (m := _PUMP_RE.fullmatch(sentence)) and (px := _phrase(m.group("xstat"))):
-        py = _phrase(m.group("ystat")) if m.group("ystat") else None
-        if m.group("ystat") and py is None:
+        make = token_maker(created[1])
+        return None if make is None else _step_made_tokens(make, p)
+    if (
+        where is not None
+        and (m := _PUMP_RE.fullmatch(body))
+        and (stats := _X_AND_Y_RE.fullmatch(tail))
+        and (px := _phrase(stats.group("xstat")))
+    ):
+        py = _phrase(stats.group("ystat")) if stats.group("ystat") else None
+        if stats.group("ystat") and py is None:
             return None
         if barred(px, allowed=m.group("subject").lower() == "target creature"):
             return None
@@ -802,10 +793,15 @@ def _amount_step(sentence: str, *, for_spell: bool, opener: bool) -> ResolutionS
             px,
             py,
         )
-    if (m := _COUNTERS_ON_RE.fullmatch(sentence)) and (p := _phrase(m.group("stat"))):
-        return (
-            None if barred(p, allowed=True) else _step_counters(m.group("kind"), m.group("on"), p)
-        )
+    put = parse_put_counters(sentence)
+    if (
+        put is not None
+        and put.x
+        and put.kind in ("+1/+1", "-1/-1")
+        and _COUNTERS_ON_RE.fullmatch(put.on)
+        and (p := _phrase(put.expr or ""))
+    ):
+        return None if barred(p, allowed=True) else _step_counters(put.kind, put.on, p)
     return None
 
 
@@ -919,7 +915,7 @@ def moved_card_stat_effect(text: str, *, for_spell: bool) -> Callable[["Game", A
             power, toughness = _phrase(size.group("power")), _phrase(size.group("toughness"))
             if power is None or toughness is None:
                 return None
-            step = _step_tokens(made.group("desc"), None, None, size_stats=(power, toughness))
+            step = _step_stat_sized_token(made.group("desc"), (power, toughness))
             position += 1
         else:
             step = _amount_step(sentence, for_spell=for_spell, opener=opening is not None)
