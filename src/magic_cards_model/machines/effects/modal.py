@@ -5611,7 +5611,8 @@ def _parse_stone_brain_clause(text: str, *, for_spell: bool) -> TargetedClause |
             Decision(
                 kind=DecisionKind.CHOOSE_A_QUALITY,
                 player=controller.username,
-                prompt=f"choose {quality + ' ' if quality else ''}card name",
+                prompt="choose "
+                + with_indefinite_article(f"{quality} card name" if quality else "card name"),
                 source=source,
                 source_id=source_id_of(stack_object),
                 quality=ChoiceKind.CARD_NAME.value,
