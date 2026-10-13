@@ -335,6 +335,7 @@ _SUFFIXES: tuple[tuple[re.Pattern[str], str], ...] = (
     (re.compile(r"(?P<rest>.+?) (?:that )?you (?P<neg>don't |do not )?own"), "owned"),
     (re.compile(r"(?P<rest>.+?) (?:that )?you (?P<neg>don't |do not )?control"), "controlled"),
     (re.compile(r"(?P<rest>.+?) your opponents control"), "opponents"),
+    (re.compile(r"(?P<rest>.+?) of the chosen colors?"), "chosen_color"),
     (re.compile(r"(?P<rest>.+?) with (?P<keyword>[a-z][a-z -]*)"), "keyword"),
 )
 
@@ -396,6 +397,10 @@ def _suffix_test(kind: str, match: re.Match[str]) -> ObjectTest | None:
         return lambda ctx, state, chars: (chars.controller == ctx.controller) != negated
     if kind == "opponents":
         return lambda ctx, state, chars: chars.controller not in (None, ctx.controller)
+    if kind == "chosen_color":
+        from ..ep02_r1_controller_recipients import chosen_color_quality
+
+        return chosen_color_quality
     if kind == "keyword":
         from ..abilities import KEYWORD_ABILITY_NAMES
         from ..combat import has_keyword

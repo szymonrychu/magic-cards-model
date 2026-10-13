@@ -17,6 +17,7 @@ from ...numbers import (
 )
 from ..decisions import Decision, DecisionKind, source_id_of
 from ..ep01_r3_amounts import event_player_username, event_terms
+from ..ep02_r1_controller_recipients import event_controller_clause, target_controller_effect
 from ..ep02_r1_life_amounts import parse_life_loss_text
 from ..ep02_r1_referenced_stat import referenced_stat_effect
 from ..targeting import (
@@ -1431,3 +1432,26 @@ def _parse_referenced_stat_text(text: str, *, for_spell: bool) -> Effect | Abili
     power": an amount that is a characteristic of an object the text or its
     trigger names (`ep02_r1_referenced_stat`)."""
     return referenced_stat_effect(text, for_spell=for_spell)
+
+
+@ABILITY_TEXT.rung("s1", for_spell=False)
+@SPELL_TEXT.rung("s1", for_spell=True)
+def _parse_target_controller_recipient_text(
+    text: str, *, for_spell: bool
+) -> Effect | AbilityEffect | None:
+    """ "Destroy target nonartifact creature. Its controller mills cards equal
+    to that creature's power.": an opening about one target, then a mill or a
+    characteristic-sized amount for that target's controller
+    (`ep02_r1_controller_recipients`)."""
+    return target_controller_effect(text, for_spell=for_spell)
+
+
+@MIXED_CLAUSE.rung("s26", for_spell=FORWARD)
+def _parse_event_controller_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
+    """ "Its controller loses 2 life.", "That creature's controller mills three
+    cards.", "That creature's controller loses life equal to its toughness.":
+    a trigger effect aimed at the controller of the object its event names
+    (`ep02_r1_controller_recipients`). Ability-only: a spell has no event."""
+    if for_spell or " controller " not in clause.lower():
+        return None
+    return event_controller_clause(clause)

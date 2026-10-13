@@ -1,0 +1,138 @@
+{
+  "object": "card",
+  "id": "2cb4d0dd-3363-45f0-9081-7b9c8c39d63f",
+  "oracle_id": "7d8e20e5-6456-43f5-9188-263b54c0a923",
+  "multiverse_ids": [
+    425980
+  ],
+  "mtgo_id": 63483,
+  "mtgo_foil_id": 63484,
+  "tcgplayer_id": 128849,
+  "cardmarket_id": 296007,
+  "name": "Carnage Gladiator",
+  "lang": "en",
+  "released_at": "2017-03-17",
+  "uri": "https://api.scryfall.com/cards/2cb4d0dd-3363-45f0-9081-7b9c8c39d63f",
+  "scryfall_uri": "https://scryfall.com/card/mm3/155/carnage-gladiator?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T09:57:05Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/2/c/2cb4d0dd-3363-45f0-9081-7b9c8c39d63f.jpg?1783936625",
+    "normal": "https://cards.scryfall.io/normal/front/2/c/2cb4d0dd-3363-45f0-9081-7b9c8c39d63f.jpg?1783936625",
+    "large": "https://cards.scryfall.io/large/front/2/c/2cb4d0dd-3363-45f0-9081-7b9c8c39d63f.jpg?1783936625",
+    "png": "https://cards.scryfall.io/png/front/2/c/2cb4d0dd-3363-45f0-9081-7b9c8c39d63f.png?1783936625",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/2/c/2cb4d0dd-3363-45f0-9081-7b9c8c39d63f.jpg?1783936625",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/2/c/2cb4d0dd-3363-45f0-9081-7b9c8c39d63f.jpg?1783936625",
+    "thumb": "https://cards.scryfall.io/thumb/front/2/c/2cb4d0dd-3363-45f0-9081-7b9c8c39d63f.webp?1783936625",
+    "grid": "https://cards.scryfall.io/grid/front/2/c/2cb4d0dd-3363-45f0-9081-7b9c8c39d63f.webp?1783936625",
+    "display": "https://cards.scryfall.io/display/front/2/c/2cb4d0dd-3363-45f0-9081-7b9c8c39d63f.webp?1783936625",
+    "art": "https://cards.scryfall.io/art/front/2/c/2cb4d0dd-3363-45f0-9081-7b9c8c39d63f.webp?1783936625",
+    "crop": "https://cards.scryfall.io/crop/front/2/c/2cb4d0dd-3363-45f0-9081-7b9c8c39d63f.webp?1783936625"
+  },
+  "mana_cost": "{2}{B}{R}",
+  "cmc": 4.0,
+  "type_line": "Creature \u2014 Skeleton Warrior",
+  "oracle_text": "Whenever a creature blocks, that creature's controller loses 1 life.\n{1}{B}{R}: Regenerate this creature.",
+  "power": "4",
+  "toughness": "2",
+  "colors": [
+    "B",
+    "R"
+  ],
+  "color_identity": [
+    "B",
+    "R"
+  ],
+  "keywords": [
+    "Regenerate"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "02624962-f727-4c31-bbf2-a94fa6c5b653",
+  "set": "mm3",
+  "set_name": "Modern Masters 2017",
+  "set_type": "masters",
+  "set_uri": "https://api.scryfall.com/sets/02624962-f727-4c31-bbf2-a94fa6c5b653",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Amm3&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/mm3?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/2cb4d0dd-3363-45f0-9081-7b9c8c39d63f/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A7d8e20e5-6456-43f5-9188-263b54c0a923&unique=prints",
+  "collector_number": "155",
+  "digital": false,
+  "rarity": "uncommon",
+  "flavor_text": "Not the foulest or bloodiest act at Rix Maadi by a stretch.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Ryan Barger",
+  "artist_ids": [
+    "a4e0102e-bbeb-497c-babc-1c0741fea914"
+  ],
+  "illustration_id": "89f98ef3-2e07-4cf7-9b78-7a718f27964c",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 20480,
+  "penny_rank": 16645,
+  "prices": {
+    "usd": "0.08",
+    "usd_foil": "0.20",
+    "usd_etched": null,
+    "eur": "0.17",
+    "eur_foil": "0.37",
+    "tix": "0.05"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=425980&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DCarnage%2BGladiator",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DCarnage%2BGladiator",
+    "edhrec": "https://edhrec.com/route/?cc=Carnage+Gladiator"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F128849%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=296007&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/63483?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}
