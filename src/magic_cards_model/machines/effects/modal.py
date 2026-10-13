@@ -111,7 +111,13 @@ def reflexive_consequence_effect(text: str) -> AbilityEffect | None:
         return parsed
     sentence = _as_sentence(text)
     if _is_layer_effect_text(sentence) and parsed_layer_effects(sentence) is not None:
-        return create_continuous_effect_of_ability
+        # CR 608.2c: a layer sentence with other instructions beside it (Primal
+        # Adversary's "put N +1/+1 counters on this creature. Up to N target
+        # lands ... become ...") runs them all, in order, not the layer alone.
+        return (
+            _compose_layer_effect_with_remainder_for_ability(sentence)
+            or create_continuous_effect_of_ability
+        )
     # A whole-ability sentence whose "it" is the ability's own source ("When you
     # do, prevent all combat damage that would be dealt to it this turn." -
     # Oketra's Avenger, CR 701.43d's linked trigger).
@@ -6815,6 +6821,7 @@ from .amounts import (  # noqa: E402
     carries_sacrificed_power,
 )
 from .continuous import (  # noqa: E402
+    _compose_layer_effect_with_remainder_for_ability,
     _compose_layer_effect_with_remainder_for_ability_mode,
     _compose_layer_effect_with_remainder_for_mode,
     _is_layer_effect_text,

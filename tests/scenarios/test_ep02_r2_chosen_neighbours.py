@@ -28,7 +28,7 @@ import pytest
 
 from magic_cards_model.machines import Step
 from magic_cards_model.machines.casting.permissions import play_permissions_on
-from magic_cards_model.models import Zone
+from magic_cards_model.models import Type, Zone
 from magic_cards_model.models.card_state import Counter
 from magic_cards_model.support import card_support
 from tests.cards import card
@@ -401,7 +401,7 @@ def test_aether_spike_counters_unless_its_controller_pays_one_per_energy_paid():
     scenario = _spike_board()
     scenario.will_pay_energy_amount(2, username="bob", source="Aether Spike")
     scenario.will_pay_the_mana_cost(False, username="alice", source="Aether Spike")
-    opt = _opt_into_spike(scenario)
+    _opt_into_spike(scenario)
     assert len(scenario.player("alice").hand) == 0, "Opt was countered before it drew"
     assert scenario.player("bob").energy == 0
 
@@ -410,7 +410,7 @@ def test_aether_spike_does_nothing_when_the_controller_pays():
     scenario = _spike_board(alice_extra=["Island", "Island"])
     scenario.will_pay_energy_amount(2, username="bob", source="Aether Spike")
     scenario.will_pay_the_mana_cost(True, username="alice", source="Aether Spike")
-    opt = _opt_into_spike(scenario)
+    _opt_into_spike(scenario)
     assert len(scenario.player("alice").hand) == 1, "Opt resolved and drew"
     assert scenario.player("bob").energy == 0
     assert all(s.tapped for s in scenario.game.battlefield if s.controller == "alice")
@@ -419,7 +419,7 @@ def test_aether_spike_does_nothing_when_the_controller_pays():
 def test_aether_spike_paying_no_energy_counters_nothing_to_pay():
     scenario = _spike_board()
     scenario.will_pay_energy_amount(0, username="bob", source="Aether Spike")
-    opt = _opt_into_spike(scenario)
+    _opt_into_spike(scenario)
     assert scenario.player("bob").energy == 2
     assert len(scenario.player("alice").hand) == 1, "paying {0} owes nothing, so Opt resolved"
 
@@ -450,9 +450,9 @@ def test_primal_adversary_animates_up_to_that_many_lands_into_haste_wolves():
     for land in (forests[8], forests[9]):
         chars = scenario.game.characteristics_of(land)
         assert (chars.power, chars.toughness) == (3, 3)
-        type_line = str(chars.type_line)
-        assert "Land" in type_line and "Creature" in type_line and "Wolf" in type_line
-        assert "haste" in {k.lower() for k in chars.keywords}
+        assert Type.LAND in chars.types and Type.CREATURE in chars.types
+        assert "Wolf" in chars.subtypes
+        assert any("haste" in ability.lower() for ability in chars.abilities)
 
 
 def test_primal_adversary_one_payment_animates_at_most_one_land():

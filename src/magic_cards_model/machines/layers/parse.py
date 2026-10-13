@@ -2870,16 +2870,16 @@ def _fold_attached_pronoun_riders(sentences: list[str]) -> list[str]:
 #: sentence rather than granting half of it.
 _ANIMATION_RE = re.compile(
     r"^(?P<subject>[Tt]his (?:land|permanent|artifact|creature|enchantment)"
-    r"|(?:[Uu]p to (?:one|two|three) )?(?:[Tt]arget|[Aa]nother target) [a-z]+(?: [a-z]+)*?"
+    r"|(?:[Uu]p to (?:one|two|three|\d+) )?(?:[Tt]arget|[Aa]nother target) [a-z]+(?: [a-z]+)*?"
     r"|[Ii]t|[Tt]hat (?:land|permanent|creature|artifact))"
-    r" becomes an? (?P<power>\d+)/(?P<toughness>\d+) "
+    r" (?:becomes an?|become) (?P<power>\d+)/(?P<toughness>\d+) "
     r"(?P<colors>(?:white|blue|black|red|green)(?:(?:,| and|, and) "
     r"(?:white|blue|black|red|green))* )?"
     r"(?P<subtype>[A-Z][A-Za-z'-]*(?: [A-Z][A-Za-z'-]*)? )?"
-    r"(?P<types>(?:artifact |enchantment |land )*creature)"
+    r"(?P<types>(?:artifact |enchantment |land )*creatures?)"
     r"(?: with (?:(?:(?P<quoted_keywords>[^\"]+?) and )?\"(?P<granted>[^\"]+?)\.?\""
     r"|(?P<keywords>[^\"]+?)))?"
-    r"(?: that's still an? (?P<retained_inline>(?:[A-Za-z-]+ ){0,3}[a-z]+))?"
+    r"(?: that(?:'s| are) still (?:an? )?(?P<retained_inline>(?:[A-Za-z-]+ ){0,3}[a-z]+))?"
     r"(?P<until_eot> until end of turn)?"
     r"(?P<while_tapped> for as long as this (?:land|permanent|artifact|creature|enchantment) "
     r"remains tapped)?\.?"
@@ -3098,19 +3098,28 @@ _ALL_CREATURE_TYPES_ITEM_RE = re.compile(
 )
 
 
+def _singular_type_word(word: str) -> str:
+    """ "creatures" / "lands" (a plural animation: "up to two target lands ...
+    become 3/3 Wolf creatures ... that are still lands") read as the card type
+    each names."""
+    return word[:-1] if word.endswith("s") and _card_type_word(word) is None else word
+
+
 def _parse_animation_sentence(sentence: str) -> EffectBuilder | None:
     """`_ANIMATION_RE`'s match turned into its builder, or `None`."""
     match = _ANIMATION_RE.fullmatch(sentence)
     if match is None:
         return None
-    types = [_card_type_word(word) for word in match.group("types").split()]
+    types = [_card_type_word(_singular_type_word(word)) for word in match.group("types").split()]
     if any(card_type is None for card_type in types):
         return None
     retained_phrase = match.group("retained") or match.group("retained_inline")
     # "It's still a Cave land": the phrase's last word is the card type; the
     # words before it are subtypes or supertypes CR 205.1b already keeps.
     retained_word = retained_phrase.split()[-1] if retained_phrase is not None else None
-    retained = _card_type_word(retained_word) if retained_word is not None else None
+    retained = (
+        _card_type_word(_singular_type_word(retained_word)) if retained_word is not None else None
+    )
     if retained_word is not None and retained is None:
         return None
     keywords: list[str] = []

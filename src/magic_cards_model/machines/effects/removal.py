@@ -5314,9 +5314,10 @@ def _parse_for_each_opponent_destroy_clause(text: str, *, for_spell: bool) -> Ab
 #: to exist" - a copy not cast is removed. CR 707.10f: a cast copy of a
 #: permanent spell becomes a token as it resolves (`Game.resolve_top`).
 _EXILE_TARGET_CARD_COPY_IT_CAST_RE = re.compile(
-    r"^exile (?:up to one )?target [^.]+? from (?:your|a) graveyard"
-    r"(?:\s+and copy it|\.\s*(?:if you do,\s*)?copy it)\.\s*"
-    r"you may cast the copy(?P<free> without paying its mana cost)?\.?$",
+    r"^exile (?:up to (?:one|\d+) )?target [^.]+? from (?:your|a) graveyard"
+    r"(?:\s+and copy (?:it|them)|\.\s*(?:if you do,\s*)?copy (?:it|them))\.\s*"
+    r"you may cast (?:the copy|any number of the copies)"
+    r"(?P<free> without paying (?:its|their) mana costs?)?\.?$",
     re.IGNORECASE,
 )
 

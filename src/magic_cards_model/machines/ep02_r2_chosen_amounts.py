@@ -449,10 +449,19 @@ _ANY_NUMBER_OF_TIMES_RE = re.compile(
 )
 
 
+#: ", then up to N target lands you control become ..." - a layer-changing
+#: sentence after an earlier instruction; the layer reader takes whole
+#: sentences, and CR 608.2c's "then" is just the order, which two sentences keep.
+_THEN_ANIMATE_RE = re.compile(
+    r",\s*then ((?:up to \S+ )?target [a-z ]+? (?:becomes?) )", re.IGNORECASE
+)
+
+
 def _that_many_written(payoff: str, n: int) -> str:
     text = re.sub(r"\btwice that many\b", str(2 * n), payoff, flags=re.IGNORECASE)
     text = re.sub(r"\bthree times that many\b", str(3 * n), text, flags=re.IGNORECASE)
-    return re.sub(r"\bthat many\b", str(n), text, flags=re.IGNORECASE)
+    text = re.sub(r"\bthat many\b", str(n), text, flags=re.IGNORECASE)
+    return _THEN_ANIMATE_RE.sub(lambda m: ". " + m.group(1)[0].upper() + m.group(1)[1:], text)
 
 
 @functools.cache
@@ -1640,3 +1649,48 @@ def exile_hand_and_draw_paid_effect(text: str) -> Any:
 def _parse_exile_hand_and_draw_paid_spell(text: str) -> Any:
     """`exile_hand_and_draw_paid_effect` as a spell's whole text."""
     return exile_hand_and_draw_paid_effect(text)
+
+
+# --------------------------------------------------------------------------
+# "<instruction>, then exile up to N target <cards> from your graveyard and
+# copy them. You may cast any number of the copies ..." (Bloodthirsty
+# Adversary's payoff)
+# --------------------------------------------------------------------------
+
+_LEAD_THEN_EXILE_COPY_RE = re.compile(
+    r"^(?P<lead>[^.]+?),\s*then (?P<rest>exile up to \d+ target .+)$", re.IGNORECASE | re.DOTALL
+)
+
+
+def lead_then_exile_copy_cast_effect(text: str) -> Any:
+    """ "<instruction>, then exile up to N target <cards> from your graveyard
+    and copy them. You may cast any number of the copies without paying
+    their mana costs." (CR 608.2c, CR 707.12, CR 707.12a): the lead
+    instruction runs first, then the exile/copy/cast sentence pair, read by
+    the one reader that already reads "exile ... and copy it. You may cast
+    the copy" (`removal._parse_exile_target_card_copy_it_cast_clause`)."""
+    if ", then exile up to" not in text.lower():
+        return None
+    match = _LEAD_THEN_EXILE_COPY_RE.fullmatch(" ".join(text.strip().split()))
+    if match is None:
+        return None
+    from .effects.dispatch import _ability_effect_or_notice
+    from .effects.removal import _parse_exile_target_card_copy_it_cast_clause
+    from .effects.tokens import _is_notice_only
+
+    lead = _ability_effect_or_notice(match.group("lead") + ".")
+    rest = _parse_exile_target_card_copy_it_cast_clause(match.group("rest"))
+    if lead is None or _is_notice_only(lead) or rest is None:
+        return None
+
+    def effect(game: "Game", ability: Any) -> None:
+        lead(game, ability)
+        rest(game, ability)
+
+    return effect
+
+
+@ABILITY_TEXT.rung("s19")
+def _parse_lead_then_exile_copy_cast_ability(text: str) -> Any:
+    """`lead_then_exile_copy_cast_effect` as an ability's whole text."""
+    return lead_then_exile_copy_cast_effect(text)
