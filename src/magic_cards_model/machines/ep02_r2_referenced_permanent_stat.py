@@ -773,7 +773,12 @@ def _step_bite(dealer: str, recipient: str) -> ResolutionStep:
         source = object_named(game, stack_object, state, dealer)
         if not isinstance(source, CardState):
             return True
-        amount = moved_stat_value(card_snapshot(game, source), "power")
+        if source.zone is Zone.BATTLEFIELD:
+            amount = moved_stat_value(card_snapshot(game, source), "power")
+        else:
+            # Gone: its power as it last existed, counters and pumps included
+            # (CR 608.2h, CR 113.7a) - never the bare card in the graveyard.
+            amount = max(source.last_known_power_toughness()[0] or 0, 0)
         if recipient.lower() in ("this creature", "that creature"):
             target = object_named(game, stack_object, state, recipient)
         else:
@@ -986,6 +991,8 @@ def _step_each_deals_power(quality: str) -> ResolutionStep | None:
     <target>": every matching permanent deals its own power (CR 613.5), each
     amount read as the effect applies (CR 608.2h)."""
     words = quality.lower().split()
+    other = bool(words) and words[0] == "other"
+    words = words[1:] if other else words
     types = {Type(word) for word in words if word in {t.value for t in Type}}
     subtypes = {word for word in words if word not in {t.value for t in Type}}
     if not types and not subtypes:
@@ -994,7 +1001,10 @@ def _step_each_deals_power(quality: str) -> ResolutionStep | None:
     def step(game: "Game", stack_object: Any, state: State) -> bool:
         target = state.next_target(game, stack_object)
         dealers = []
+        source = _source(game, stack_object) if other else None
         for permanent in game.permanents_controlled_by(game.controller_of(stack_object).username):
+            if source is not None and permanent.id == source.id:
+                continue  # "each other <kind>" (CR 109.1's "other")
             chars = game.characteristics_of(permanent)
             if types <= set(chars.types) and subtypes <= {s.lower() for s in chars.subtypes}:
                 dealers.append((permanent, max(chars.power or 0, 0)))
@@ -1429,6 +1439,12 @@ def _compile(sentences: list[str], *, for_spell: bool) -> list[ResolutionStep] |
             if step is not None:
                 own = True
             elif allow_plain:
+                if re.search(r"\btargets?\b", sentence, re.IGNORECASE):
+                    # A plain step chooses its own targets out of the
+                    # ability's list without moving this run's cursor, so a
+                    # later "target" here would read the wrong one (Spoils of
+                    # the Hunt): such a text is the established readers'.
+                    return None
                 step = _step_plain(sentence, for_spell=for_spell)
             if step is None:
                 return None
