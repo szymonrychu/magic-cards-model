@@ -17,6 +17,7 @@ import pytest
 from magic_cards_model.machines import Step
 from magic_cards_model.machines.combat import has_keyword
 from magic_cards_model.models import Zone
+from magic_cards_model.models.card import Type
 from magic_cards_model.support import HANDLED, classify_clauses
 from tests.cards import card
 from tests.scenarios.harness import Scenario
@@ -291,3 +292,48 @@ def test_rubblebelt_rioters_ignores_an_opponents_bigger_creature() -> None:
     (rioters,) = _attack(scenario, "Rubblebelt Rioters")
     _resolve_all(scenario)
     assert _stats(scenario, rioters) == (0 + 2, 4)
+
+
+def test_zur_turns_an_enchantment_into_a_creature_as_big_as_its_mana_value() -> None:
+    scenario = _scenario(["Zur, Eternal Schemer", "Journey to Nowhere"])
+    zur = scenario.find("Zur, Eternal Schemer", Zone.BATTLEFIELD, "alice")
+    journey = scenario.find("Journey to Nowhere", Zone.BATTLEFIELD, "alice")
+    _activate_all(scenario, zur, index=0, targets=[journey])
+    chars = scenario.game.characteristics_of(journey)
+    assert chars.is_creature
+    assert Type.ENCHANTMENT in chars.types  # in addition to its other types
+    assert _stats(scenario, journey) == (2, 2)  # mana value {1}{W}
+    assert journey.zone is Zone.BATTLEFIELD
+
+
+def test_zur_effect_does_not_end_with_the_turn() -> None:
+    scenario = _scenario(["Zur, Eternal Schemer", "Journey to Nowhere"])
+    zur = scenario.find("Zur, Eternal Schemer", Zone.BATTLEFIELD, "alice")
+    journey = scenario.find("Journey to Nowhere", Zone.BATTLEFIELD, "alice")
+    _activate_all(scenario, zur, index=0, targets=[journey])
+    while scenario.step is not Step.CLEANUP:
+        scenario.advance()
+    scenario.advance()
+    assert scenario.game.characteristics_of(journey).is_creature
+
+
+def test_walking_bulwark_attacks_despite_defender_and_deals_its_toughness() -> None:
+    scenario = _scenario(["Walking Bulwark"])
+    bulwark = scenario.find("Walking Bulwark", Zone.BATTLEFIELD, "alice")
+    assert not scenario.can_attack(bulwark)  # defender
+    _activate_all(scenario, bulwark, index=0, targets=[bulwark])
+    _attack(scenario, "Walking Bulwark")
+    scenario.no_blocks()
+    scenario.combat_damage()
+    assert scenario.player("bob").life == 20 - 3  # Walking Bulwark is a 0/3
+
+
+def test_walking_bulwark_grant_ends_at_end_of_turn() -> None:
+    scenario = _scenario(["Walking Bulwark"])
+    bulwark = scenario.find("Walking Bulwark", Zone.BATTLEFIELD, "alice")
+    _activate_all(scenario, bulwark, index=0, targets=[bulwark])
+    while scenario.step is not Step.CLEANUP:
+        scenario.advance()
+    scenario.advance()
+    scenario.advance()  # bob's turn passes priority; the next alice turn is later
+    assert not has_keyword(bulwark, "Haste", scenario.game)

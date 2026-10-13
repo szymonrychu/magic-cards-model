@@ -341,3 +341,167 @@ def untap_the_target(text: str, *, for_spell: bool) -> Any:
                 target.untap(exert_applies=False)
 
     return effect
+
+
+# --------------------------------------------------------------------------
+# "Target <permanent> you control becomes a creature in addition to its other types and
+# has base power and base toughness each equal to its mana value." (no duration:
+# CR 611.2a lets the text state none, so it lasts for the rest of the game)
+# --------------------------------------------------------------------------
+
+_BECOMES_CREATURE_RE = re.compile(
+    r"^(?P<target>target [a-z -]+?) becomes an? creature in addition to its other types and "
+    r"has base power and (?:base )?toughness each equal to its mana value\.?$",
+    re.IGNORECASE,
+)
+
+
+def _becomes_creature_effect(text: str) -> Any:
+    flat = " ".join(text.split())
+    if "becomes a" not in flat.lower() or "mana value" not in flat.lower():
+        return None
+    match = _BECOMES_CREATURE_RE.fullmatch(flat)
+    if match is None:
+        return None
+    from ..models.card_state import CardState
+    from ..models.zone import Zone
+    from .effects._common import _targets_understood
+    from .effects.continuous import continuous_effects
+    from .layers import (
+        ContinuousEffect,
+        Duration,
+        Layer,
+        Sublayer,
+        add_type,
+        only_this_incarnation,
+        set_power_toughness,
+    )
+
+    if not _targets_understood(match.group("target")):
+        return None
+
+    def effect(game: "Game", stack_object: Any) -> None:
+        name = stack_object.name if isinstance(stack_object, CardState) else stack_object.source_name
+        for target in game.resolve_card_targets(stack_object):
+            if target.zone is not Zone.BATTLEFIELD:
+                continue
+            value = int(target.mana_value)  # CR 202.3, read once as it applies (CR 608.2h)
+            store = continuous_effects(game)
+            for layer, sublayer, modification, what in (
+                (Layer.TYPE, None, add_type(Type.CREATURE), "becomes a creature"),
+                (
+                    Layer.POWER_TOUGHNESS,
+                    Sublayer.SET,
+                    set_power_toughness(value, value),
+                    f"has base power and toughness {value}",
+                ),
+            ):
+                fields: dict[str, Any] = {} if sublayer is None else {"sublayer": sublayer}
+                store.add(
+                    ContinuousEffect(
+                        description=f"{name}: {target.name} {what}",
+                        layer=layer,
+                        timestamp=store.tick(),
+                        duration=Duration.INDEFINITE,
+                        selector=only_this_incarnation(target, target.zone_change_stamp),
+                        modification=modification,
+                        **fields,
+                    ),
+                    game,
+                )
+
+    return effect
+
+
+@ABILITY_TEXT.rung("s40", before=("parse_mixed_effect",))
+def becomes_creature_with_mana_value_stats(text: str) -> Any:
+    """`_becomes_creature_effect` as an ability's whole text."""
+    return _becomes_creature_effect(text)
+
+
+# --------------------------------------------------------------------------
+# "Until end of turn, target creature with defender gains haste, can attack as though it
+# didn't have defender, and assigns combat damage equal to its toughness rather than its
+# power." One continuous effect per listed grant (CR 611.2a), on the chosen creature (CR 611.2c).
+# --------------------------------------------------------------------------
+
+_GRANT_LIST_RE = re.compile(
+    r"^until end of turn, (?P<target>target creature(?: with defender)?) (?P<grants>gains? .+)$",
+    re.IGNORECASE,
+)
+_NO_DEFENDER = "can attack as though it didn't have defender"
+_TOUGHNESS_DAMAGE = "assigns combat damage equal to its toughness rather than its power"
+
+
+def _grant_items(grants: str) -> list[str] | None:
+    body = re.sub(r"^gains? ", "", grants.strip().rstrip("."), flags=re.IGNORECASE)
+    items = [i.strip() for i in re.split(r",\s*(?:and\s+)?|\s+and\s+", body) if i.strip()]
+    items = [re.sub(r"^and ", "", i) for i in items]
+    # "can attack as though it didn't have defender" and the damage clause hold "and"-free words.
+    return items or None
+
+
+def _grant_list_effect(text: str) -> Any:
+    flat = " ".join(text.split())
+    lowered = flat.lower()
+    if not lowered.startswith("until end of turn, target creature") or not (
+        _NO_DEFENDER in lowered or _TOUGHNESS_DAMAGE in lowered
+    ):
+        return None
+    match = _GRANT_LIST_RE.fullmatch(flat)
+    if match is None:
+        return None
+    items = _grant_items(match.group("grants"))
+    from .combat import ASSIGNS_DAMAGE_AS_TOUGHNESS_TEXT, ATTACK_WITHOUT_DEFENDER_TEXT
+    from .effects._common import _targets_understood
+    from .layers import grant_ability
+
+    if items is None or not _targets_understood(match.group("target")):
+        return None
+    grants = []
+    for item in items:
+        lowered_item = item.lower()
+        if lowered_item == _NO_DEFENDER:
+            grants.append(ATTACK_WITHOUT_DEFENDER_TEXT)
+        elif lowered_item == _TOUGHNESS_DAMAGE:
+            grants.append(ASSIGNS_DAMAGE_AS_TOUGHNESS_TEXT)
+        elif re.fullmatch(r"[a-z]+(?: [a-z]+)?", lowered_item) and lowered_item in _KEYWORDS:
+            grants.append(item[:1].upper() + item[1:])
+        else:
+            return None
+    from ..models.card_state import CardState
+    from ..models.zone import Zone
+    from .effects.continuous import continuous_effects
+    from .layers import ContinuousEffect, Duration, Layer, only_this_incarnation
+
+    def effect(game: "Game", stack_object: Any) -> None:
+        name = stack_object.name if isinstance(stack_object, CardState) else stack_object.source_name
+        for target in game.resolve_card_targets(stack_object):
+            if target.zone is not Zone.BATTLEFIELD:
+                continue
+            store = continuous_effects(game)
+            for granted in grants:
+                store.add(
+                    ContinuousEffect(
+                        description=f"{name}: {target.name} gains {granted.rstrip('.').lower()}",
+                        layer=Layer.ABILITY,
+                        timestamp=store.tick(),
+                        duration=Duration.UNTIL_END_OF_TURN,
+                        selector=only_this_incarnation(target, target.zone_change_stamp),
+                        modification=grant_ability(granted),
+                    ),
+                    game,
+                )
+
+    return effect
+
+
+_KEYWORDS = frozenset(
+    {"haste", "flying", "trample", "vigilance", "menace", "reach", "lifelink", "deathtouch"}
+)
+
+
+@ABILITY_TEXT.rung("s40", before=("parse_mixed_effect",))
+def target_gains_grant_list(text: str) -> Any:
+    """`_grant_list_effect` as an ability's whole text."""
+    return _grant_list_effect(text)
