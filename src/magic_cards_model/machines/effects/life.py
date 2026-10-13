@@ -21,6 +21,7 @@ from ..ep02_r1_controller_recipients import event_controller_clause, target_cont
 from ..ep02_r1_life_amounts import parse_life_loss_text
 from ..ep02_r1_moved_card_stat import moved_card_stat_effect
 from ..ep02_r1_referenced_stat import referenced_stat_effect
+from ..ep02_r2_devotion_domain_party import life_per_color_effect
 from ..targeting import (
     permanent_description,
 )
@@ -1467,3 +1468,13 @@ def _parse_moved_card_stat_text(text: str, *, for_spell: bool) -> Effect | Abili
     amount that is a characteristic of something the text or its cost moved
     (`ep02_r1_moved_card_stat`)."""
     return moved_card_stat_effect(text, for_spell=for_spell)
+
+
+@ABILITY_TEXT.rung("s1", for_spell=False)
+@SPELL_TEXT.rung("s1", for_spell=True)
+def _parse_life_per_color_text(text: str, *, for_spell: bool) -> Effect | AbilityEffect | None:
+    """ "Destroy target creature or planeswalker. You gain 1 life for each of its
+    colors.", "you may gain 1 life for each of that spell's colors. Do this only once
+    each turn.": life sized by the colors of a referenced object
+    (`ep02_r2_devotion_domain_party`)."""
+    return life_per_color_effect(text, for_spell=for_spell)

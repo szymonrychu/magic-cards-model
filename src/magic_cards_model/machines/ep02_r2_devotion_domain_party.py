@@ -367,8 +367,89 @@ def return_if_mana_value_effect(text: str) -> "Any | None":
     return effect
 
 
+# --------------------------------------------------------------------------
+# Life per color of an object (CR 105.1): "You gain 1 life for each of its colors."
+# after a destroy (Breathe Your Last), "you may gain 1 life for each of that spell's
+# colors. Do this only once each turn." (Ancient Cornucopia)
+# --------------------------------------------------------------------------
+
+_LIFE_PER_COLOR_RE = re.compile(
+    rf"^you (?P<may>may )?gain (?P<n>{COUNT}) life for each of (?P<ref>its|that spell's) colou?rs"
+    r"(?P<once>\.\s+do this only once each turn)?$",
+    re.IGNORECASE,
+)
+
+
+def colors_of(game: "Game", state: CardState | None) -> int:
+    """How many colors the object has (CR 105.1); colorless is no color (CR 105.2c)."""
+    from ..models.card import Color
+
+    if state is None:
+        return 0
+    return len({c for c in game.characteristics_of(state).colors if c is not Color.COLORLESS})
+
+
+@functools.cache
+def life_per_color_effect(text: str, *, for_spell: bool) -> "Any | None":
+    """The reader above (a leading instruction, if any, is read by the ordinary dispatcher)."""
+    from .effects.dispatch import parse_mixed_effect, parse_mixed_effect_for_spell
+    from .effects.text import _strip_non_effect_preamble
+
+    if "life for each of " not in text.lower():
+        return None
+    whole = " ".join(_strip_non_effect_preamble(text).split())
+    split = re.split(r"(?<=\.)\s+(?=you (?:may )?gain )", whole, maxsplit=1, flags=re.IGNORECASE)
+    lead, last = (split[0], split[1]) if len(split) == 2 else ("", whole)
+    match = _LIFE_PER_COLOR_RE.fullmatch(last.strip().rstrip("."))
+    unit = parse_count(match.group("n")) if match is not None else None
+    if match is None or unit is None:
+        return None
+    lead_effect = None
+    if lead:
+        lead_effect = (parse_mixed_effect_for_spell if for_spell else parse_mixed_effect)(lead)
+        if lead_effect is None:
+            return None
+    may = match.group("may") is not None
+    once = match.group("once") is not None
+    of_spell = match.group("ref").lower() != "its"
+
+    def effect(game: "Game", stack_object: Any) -> None:
+        controller = game.controller_of(stack_object)
+        if of_spell:
+            event = getattr(stack_object, "event", None)
+            ref = game.find_by_id(event.subject_id) if event and event.subject_id else None
+        else:
+            targets = [t for t in game.resolve_card_targets(stack_object) if isinstance(t, CardState)]
+            ref = targets[0] if targets else None
+        colors = colors_of(game, ref)  # read before the lead instruction can change it (CR 608.2h)
+        if lead_effect is not None:
+            lead_effect(game, stack_object)
+        if once:
+            key = f"{stack_object.source_id}:do-this-only-once-each-turn"
+            if game.once_per_turn_triggers.get(key):
+                return
+        name = getattr(stack_object, "source_name", None) or getattr(stack_object, "name", "")
+        if may and not game.may(controller.username, "gain life", source=name,
+                                source_id=source_id_of(stack_object)):
+            return
+        if once:
+            game.once_per_turn_triggers[key] = 1
+        if colors > 0:
+            game.gain_life(controller, unit * colors)
+
+    return effect
+
+
 _EACH_CREATURE_GETS_RE = re.compile(r"^each creature gets\b", re.IGNORECASE)
 _TARGETS_EACH_RE = re.compile(r"\b(target creatures) each (gain|get)\b", re.IGNORECASE)
+#: "Ally creatures you control get +X/+X ..., where X is the number of colors among those
+#: creatures" (General Tazri): the group the colors are counted among is the group
+#: the pump names.
+_TYPED_GROUP_THOSE_RE = re.compile(
+    r"^(?P<sub>[A-Z][a-z]+) creatures you control (?P<rest>(?:get|gain) [^,]*?),\s*where x is the "
+    r"number of colou?rs among those creatures\.?$",
+    re.IGNORECASE,
+)
 _UP_TO_X_TARGET_RE = re.compile(r"^up to x target\b", re.IGNORECASE)
 
 
@@ -378,6 +459,13 @@ def where_x_pump_text_normalised(text: str) -> str:
     creatures get ..." and "up to X target creatures each gain ..." (Mogis's
     Marauder) its "... target creatures gain ..." - the same group, the same effect."""
     lowered = text.lower()
+    typed = _TYPED_GROUP_THOSE_RE.match(text) if "those creatures" in lowered else None
+    if typed is not None:
+        noun = typed.group("sub")
+        plural = noun[:-1] + "ies" if noun.endswith("y") else noun[:-1] + "ves" if noun.endswith("f") else noun + "s"
+        group = f"{plural} you control"
+        text = f"{group[0].upper()}{group[1:]} {typed.group('rest')}, where X is the number of colors among {group}."
+        lowered = text.lower()
     if lowered.startswith("each creature gets"):
         text = _EACH_CREATURE_GETS_RE.sub("All creatures get", text)
     if " each g" in lowered:
@@ -399,4 +487,4 @@ def _domain(game: "Game", controller: str) -> int:
     return 0 if reader is None else reader(game, controller)
 
 
-__all__ = ["counters_amount_effect", "look_top_effect", "return_if_mana_value_effect", "up_to_x_targets", "where_x_pump_text_normalised"]
+__all__ = ["counters_amount_effect", "life_per_color_effect", "look_top_effect", "return_if_mana_value_effect", "up_to_x_targets", "where_x_pump_text_normalised"]

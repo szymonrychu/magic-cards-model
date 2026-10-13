@@ -131,6 +131,8 @@ def _singular_subtype_for_count_expression(word: str) -> str | None:
     candidates = [lowered, lowered.removesuffix("s")]
     if lowered.endswith("ves"):
         candidates.append(lowered.removesuffix("ves") + "f")
+    if lowered.endswith("ies"):
+        candidates.append(lowered.removesuffix("ies") + "y")  # Allies -> ally
     return next((candidate for candidate in candidates if candidate in vocabulary), None)
 
 
