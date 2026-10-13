@@ -1508,7 +1508,7 @@ _BASIC_LANDS = ("Plains", "Island", "Swamp", "Mountain", "Forest")
 
 
 @cache
-def _board_candidates(*, legendary: bool = False) -> tuple[str, ...]:
+def _board_candidates(*, legendary: bool = False, step: str = "") -> tuple[str, ...]:
     """Nonlegendary single-faced permanent printings of the pool, for a
     quality the stock board has too few of - the legendary ones instead when
     the quality is "legendary" (Rivendell's "if you control a legendary
@@ -1520,23 +1520,25 @@ def _board_candidates(*, legendary: bool = False) -> tuple[str, ...]:
         and set(card.types) & _PERMANENT_TYPES
         and ("Legendary" in (card.type_line or "")) is legendary
         and not card.is_land
-        and not _fires_at_a_step(card)
+        and not _fires_at_step(card, step)
     )
 
 
-def _fires_at_a_step(card: Card) -> bool:
-    """Whether the printing has a trigger of its own at the beginning of a
-    step or phase (CR 603.2) - staged as filler it would fire in the very
-    step a probe runs through (Abhorrent Overlord's upkeep sacrifice) and
-    change the board the probe's condition is read on."""
-    return any(
-        ability.event is not None and ability.event.value == "beginning_of_step"
+def _fires_at_step(card: Card, step: str) -> bool:
+    """Whether the printing has a trigger of its own at the very step the
+    probed trigger watches (CR 603.2) - staged as filler it would fire in
+    the same step (Abhorrent Overlord's upkeep sacrifice) and change the
+    board the probe's condition is read on."""
+    return bool(step) and any(
+        ability.event is not None
+        and ability.event.value == "beginning_of_step"
+        and ability.condition == step
         for ability in triggered_abilities_of(card)
     )
 
 
 @cache
-def _board_material(card_name: str, condition: str) -> tuple[Material, ...]:
+def _board_material(card_name: str, condition: str, step: str = "") -> tuple[Material, ...]:
     """Real printings (or predefined tokens, CR 111.10) that, added to the
     controller's side of the stock board, make a board condition true there
     after `_board_threshold` - the fewest copies of the first candidate the
@@ -1545,7 +1547,7 @@ def _board_material(card_name: str, condition: str) -> tuple[Material, ...]:
     105.2), one permanent of each missing color. A compound is staged one
     conjunct at a time (`_conjuncts`)."""
     if len(parts := _conjuncts(condition or "")) > 1:
-        return tuple(item for part in parts for item in _board_material(card_name, part))
+        return tuple(item for part in parts for item in _board_material(card_name, part, step))
     found = _board_clause(condition or "")
     if found is None:
         return ()
@@ -1555,7 +1557,9 @@ def _board_material(card_name: str, condition: str) -> tuple[Material, ...]:
     # so the legendary list is the one to look through, as it is for "legendary"
     # itself.
     lowered = condition.lower()
-    candidates = _board_candidates(legendary="legendary" in lowered or "planeswalker" in lowered)
+    candidates = _board_candidates(
+        legendary="legendary" in lowered or "planeswalker" in lowered, step=step
+    )
     saved = _STAGING.variant, _STAGING.material
     _STAGING.variant = QUIET
 
@@ -5740,7 +5744,7 @@ def run_trigger_case(case: Case, only: dict[str, Any] | None = None) -> Outcome:
             _target_material(ability.text)
             + _chosen_land_material(ability.text)
             + _precondition_material(ability.intervening_if or "")
-            + _board_material(case.card, ability.intervening_if or "")
+            + _board_material(case.card, ability.intervening_if or "", ability.condition)
             + _enters_exile_material(case.card)
             + whole_card_material
         )
@@ -6868,12 +6872,14 @@ def test_board_material_does_not_fire_in_the_probed_step(card: str) -> None:
     ability = next(
         a for a in triggered_abilities_of(pool()[card]) if a.event is not None and a.intervening_if
     )
-    material = _board_material(card, ability.intervening_if)
+    material = _board_material(card, ability.intervening_if, ability.condition)
     assert material
     for item in material:
         fires = [
             a
             for a in triggered_abilities_of(pool()[item.name])
-            if a.event is not None and a.event.value == "beginning_of_step"
+            if a.event is not None
+            and a.event.value == "beginning_of_step"
+            and a.condition == ability.condition
         ]
-        assert not fires, f"{item.name} triggers at the beginning of a step: {fires[0].text}"
+        assert not fires, f"{item.name} triggers at the probed step: {fires[0].text}"
