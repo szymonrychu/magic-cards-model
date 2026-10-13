@@ -46,7 +46,7 @@
         "source": "Vexing Arcanix"
       }
     ],
-    "fields_changed": ["damage_dealt_this_turn", "graveyard_arrivals_announced", "graveyard_arrivals_this_turn", "noncombat_damage_to_players_this_turn", "reveals", "turn_facts"],
+    "fields_changed": ["damage_dealt_this_turn", "graveyard_arrivals_announced", "graveyard_arrivals_this_turn", "noncombat_damage_to_players_this_turn", "reveals", "turn_counts", "turn_facts"],
     "notices": {},
     "objects": {
       "Forest@alice#6": {

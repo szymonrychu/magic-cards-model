@@ -42,7 +42,7 @@
         "kind": "may",
         "player": "alice",
         "players": [],
-        "prompt": "cast a spell with mana value 6 or less from your hand without paying its mana cost",
+        "prompt": "cast a spell with mana value less than or equal to that damage from your hand without paying its mana cost",
         "source": "Buster Sword"
       },
       {

@@ -64,7 +64,7 @@
         "source": "Grizzly Bears"
       }
     ],
-    "fields_changed": ["became_tapped_count_this_turn", "cast_records", "shuffles_performed", "spells_cast_this_turn", "turn_facts"],
+    "fields_changed": ["became_tapped_count_this_turn", "cast_records", "mana_spent_on_spells_this_turn", "shuffles_performed", "spells_cast_this_turn", "turn_facts"],
     "notices": {},
     "objects": {
       "Forest@alice#1": {
