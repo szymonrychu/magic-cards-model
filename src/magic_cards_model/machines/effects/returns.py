@@ -2577,7 +2577,8 @@ def _parse_each_player_returns_from_graveyard_to_hand_clause(
 #: enters trigger. `_RETURN_TARGET_RE`'s verb with no target at all: every
 #: permanent on the battlefield matching the description.
 _MASS_RETURN_TO_HAND_RE = re.compile(
-    r"^return all (?P<rest>.+?) to their owners'? hands\.?$", re.IGNORECASE
+    r"^return (?:all|each) (?P<rest>.+?) to (?:their owners'? hands|its owner'?s hand)\.?$",
+    re.IGNORECASE,
 )
 
 
@@ -2598,6 +2599,28 @@ def _parse_mass_return_to_hand_clause(clause: str, *, for_spell: bool) -> Target
     if match is None:
         return None
     text = match.group("rest").strip()
+    from .removal import _parse_mass_destroy_predicate
+
+    # The sweep grammar the mass destroy / exile readers share: a controller
+    # scope ("your opponents control") and a stat or mana-value bound ("with
+    # toughness 3 or less", CR 208.1 / CR 202.3), read off the computed board.
+    predicate = _parse_mass_destroy_predicate(text)
+    if predicate is not None and re.search(r"\b(?:control|with)\b", text, re.IGNORECASE):
+
+        def sweep(game: "Game", stack_object: "StackObject") -> None:
+            source = (
+                stack_object
+                if isinstance(stack_object, CardState)
+                else stack_object.source_or_last_known(game)
+            )
+            x_value = getattr(stack_object, "x_value", None)
+            chosen = [p for p in list(game.battlefield) if predicate(game, p, source, x_value)]
+            with game.returning_together():  # CR 603.2c: one instruction, one event
+                for permanent in chosen:
+                    if permanent.zone is Zone.BATTLEFIELD:
+                        game.return_to_hand(permanent)
+
+        return sweep
     excluded_subtype: str | None = None
     negated = _NON_SUBTYPE_PREFIX_RE.fullmatch(text)
     if negated is not None:

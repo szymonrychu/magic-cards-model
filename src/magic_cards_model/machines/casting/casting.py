@@ -36,6 +36,7 @@ from ..casting_restrictions import (
     targeted_cant_cast_restriction,
     zone_cast_prohibition_source,
 )
+from ..cleave import cleaved_text
 from ..cost import (
     TEAMWORK_TAP,
     CardRequirement,
@@ -1737,6 +1738,15 @@ class Casting(EngineModel):
                 # card)` fallback below would read instead.
                 return self._with_bestowed_target(
                     profile_for_text(substitute_x(self.spell.oracle_text, self.x_value or None))
+                )
+            if (self.keyword_used or "").lower() == "cleave":
+                # CR 702.148a: a spell cast for its cleave cost has the bracketed
+                # words removed, so "target [Human] creature" is any creature.
+                return self._with_bestowed_target(
+                    spell_profile_for_text(
+                        cleaved_text(substitute_x(self.spell.oracle_text, self.x_value or None)),
+                        self.spell.card,
+                    )
                 )
             per_kick = per_kick_target_text(self.spell.oracle_text or "", self.kicked)
             if per_kick is not None:

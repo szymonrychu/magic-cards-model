@@ -1,0 +1,142 @@
+{
+  "object": "card",
+  "id": "f0c5449a-d63b-4b22-9432-8f0365c3c4d9",
+  "oracle_id": "d41987b0-2ea0-4cc7-8608-70c486db76eb",
+  "multiverse_ids": [
+    540974
+  ],
+  "mtgo_id": 94576,
+  "arena_id": 78922,
+  "tcgplayer_id": 252969,
+  "cardmarket_id": 581663,
+  "name": "Path of Peril",
+  "lang": "en",
+  "released_at": "2021-11-19",
+  "uri": "https://api.scryfall.com/cards/f0c5449a-d63b-4b22-9432-8f0365c3c4d9",
+  "scryfall_uri": "https://scryfall.com/card/vow/124/path-of-peril?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T06:40:54Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/f/0/f0c5449a-d63b-4b22-9432-8f0365c3c4d9.jpg?1783924854",
+    "normal": "https://cards.scryfall.io/normal/front/f/0/f0c5449a-d63b-4b22-9432-8f0365c3c4d9.jpg?1783924854",
+    "large": "https://cards.scryfall.io/large/front/f/0/f0c5449a-d63b-4b22-9432-8f0365c3c4d9.jpg?1783924854",
+    "png": "https://cards.scryfall.io/png/front/f/0/f0c5449a-d63b-4b22-9432-8f0365c3c4d9.png?1783924854",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/f/0/f0c5449a-d63b-4b22-9432-8f0365c3c4d9.jpg?1783924854",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/f/0/f0c5449a-d63b-4b22-9432-8f0365c3c4d9.jpg?1783924854",
+    "thumb": "https://cards.scryfall.io/thumb/front/f/0/f0c5449a-d63b-4b22-9432-8f0365c3c4d9.webp?1783924854",
+    "grid": "https://cards.scryfall.io/grid/front/f/0/f0c5449a-d63b-4b22-9432-8f0365c3c4d9.webp?1783924854",
+    "display": "https://cards.scryfall.io/display/front/f/0/f0c5449a-d63b-4b22-9432-8f0365c3c4d9.webp?1783924854",
+    "art": "https://cards.scryfall.io/art/front/f/0/f0c5449a-d63b-4b22-9432-8f0365c3c4d9.webp?1783924854",
+    "crop": "https://cards.scryfall.io/crop/front/f/0/f0c5449a-d63b-4b22-9432-8f0365c3c4d9.webp?1783924854"
+  },
+  "mana_cost": "{1}{B}{B}",
+  "cmc": 3.0,
+  "type_line": "Sorcery",
+  "oracle_text": "Cleave {4}{W}{B} (You may cast this spell for its cleave cost. If you do, remove the words in square brackets.)\nDestroy all creatures [with mana value 2 or less].",
+  "colors": [
+    "B"
+  ],
+  "color_identity": [
+    "B",
+    "W"
+  ],
+  "keywords": [
+    "Cleave"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "arena",
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "8144b676-569f-4716-8005-bc8f0778f3fa",
+  "set": "vow",
+  "set_name": "Innistrad: Crimson Vow",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/8144b676-569f-4716-8005-bc8f0778f3fa",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Avow&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/vow?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/f0c5449a-d63b-4b22-9432-8f0365c3c4d9/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Ad41987b0-2ea0-4cc7-8608-70c486db76eb&unique=prints",
+  "collector_number": "124",
+  "digital": false,
+  "rarity": "rare",
+  "flavor_text": "To Olivia's guests, a welcome. To everyone else, a warning.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Kasia 'Kafis' Zieli\u0144ska",
+  "artist_ids": [
+    "a662cb71-4770-4b49-8b03-2cf8497049a7"
+  ],
+  "illustration_id": "f336939b-dff5-4444-8dc1-5facab5fa2ec",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 18902,
+  "penny_rank": 192,
+  "preview": {
+    "source": "Destructoid",
+    "source_uri": "https://www.destructoid.com/here-are-two-exclusive-magic-the-gathering-innistrad-crimson-vow-spoiler-cards/",
+    "previewed_at": "2021-10-29"
+  },
+  "prices": {
+    "usd": "0.31",
+    "usd_foil": "0.47",
+    "usd_etched": null,
+    "eur": "0.02",
+    "eur_foil": "0.67",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=540974&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DPath%2Bof%2BPeril",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DPath%2Bof%2BPeril",
+    "edhrec": "https://edhrec.com/route/?cc=Path+of+Peril"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F252969%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=581663&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/94576?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

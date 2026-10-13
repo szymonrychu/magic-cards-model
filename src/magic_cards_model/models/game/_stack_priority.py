@@ -28,6 +28,12 @@ from ...machines.casting_restrictions import (
     conditionally_cannot_be_countered,
     spell_protected_from_countering,
 )
+from ...machines.cleave import (
+    cleave_cost_announces_x,
+    cleaved_text,
+    spell_text_as_cast,
+    was_cleaved,
+)
 from ...machines.combat import (
     has_keyword,
 )
@@ -79,6 +85,7 @@ from ...machines.monarch import monarch_effect_for
 from ...machines.next_spell import (
     next_spell_keyword_grants_for,
     spell_has_quality,
+    used_up_cost_reductions_for,
 )
 from ...machines.overload import overload_effect
 from ...machines.priority import PriorityOutcome
@@ -437,11 +444,25 @@ class StackPriorityMixin:
         # CR 601.2i again: "the next `<quality>` spell you cast this turn has
         # `<keyword>`" - every such grant this spell answers for is used up
         # by it (two Don & Raph triggers both applied to this one spell).
+        used_reductions = used_up_cost_reductions_for(self, card_state, controller)
+        if used_reductions:
+            self.spell_cost_reduction_grants = [
+                grant for grant in self.spell_cost_reduction_grants if grant not in used_reductions
+            ]
         used = next_spell_keyword_grants_for(self, card_state, controller)
         if used:
             self.next_spell_keyword_grants = [
                 grant for grant in self.next_spell_keyword_grants if grant not in used
             ]
+        spent = sum(self.cast_record(card_state).mana_spent.values())
+        if spent > 0:
+            # CR 700.14: every N the running total crossed with this payment.
+            before = self.mana_spent_on_spells_this_turn.get(controller, 0)
+            self.mana_spent_on_spells_this_turn[controller] = before + spent
+            for threshold in range(before + 1, before + spent + 1):
+                self.emit(
+                    GameEvent(event=ExtraTriggerEvent.EXPEND, player=controller, amount=threshold)
+                )
         self.emit(
             GameEvent(
                 event=TriggerEvent.CAST_SPELL,
@@ -566,6 +587,10 @@ class StackPriorityMixin:
         cost_has_x = "{X}" in (spell.mana_cost or "") or any(
             cost_announces_x(phrase) for phrase in additional_cost_phrases(spell.card)
         )
+        # CR 702.148a: a cleaved spell's X is announced in its cleave cost.
+        cost_has_x = cost_has_x or (
+            was_cleaved(self, spell) and cleave_cost_announces_x(spell.card)
+        )
         x_value = self.cast_record(spell).x_value if cost_has_x else None
         # CR 702.102d: a fused split spell resolves the left half's
         # instructions and then the right half's - two independent texts,
@@ -581,7 +606,7 @@ class StackPriorityMixin:
             # CR 702.96a: the overload cost changes the spell's text.
             faces_to_resolve = [(spell.name, spell.oracle_text)]
         else:
-            faces_to_resolve = [(spell.name, spell.oracle_text)]
+            faces_to_resolve = [(spell.name, spell_text_as_cast(self, spell, spell.oracle_text))]
         # CR 702.174j: an instant or sorcery's gift effect happens before any
         # of the spell's other abilities - ahead of `effect_for`'s own
         # dispatch, not folded into it, because gift is never a clause of
@@ -2848,6 +2873,12 @@ class StackPriorityMixin:
             except ValueError:
                 # Not a modal card after all; fall through to its plain text.
                 pass
+        if was_cleaved(self, spell):
+            # CR 702.148a: the targets were chosen under the text with the
+            # bracketed words removed, and are rechecked against it.
+            return spell_profile_for_text(
+                cleaved_text(substitute_x(spell.oracle_text, record.x_value or None)), spell.card
+            )
         kicked_alternative = kicked_instead_target_text(spell.oracle_text or "")
         if kicked_alternative is not None:
             # CR 601.2c's kicked targets, rechecked against the same sentence

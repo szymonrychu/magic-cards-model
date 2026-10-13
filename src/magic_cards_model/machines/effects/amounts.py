@@ -909,6 +909,16 @@ def count_expression(phrase: str) -> Callable[["Game", str], int] | None:
     the function itself.
     """
     stripped = phrase.strip().rstrip(".")
+    if stripped.lower().startswith(("twice the number of ", "three times the number of ")):
+        # "twice the number of Blood tokens you control" (Bloodtithe Harvester): the
+        # same count, doubled (or tripled) - the multiplier is arithmetic on the
+        # counted number, taken once as the effect applies (CR 608.2h).
+        factor, _, counted_phrase = stripped.partition(" the number of ")
+        inner = count_expression(f"the number of {counted_phrase}")
+        if inner is None:
+            return None
+        times = 2 if factor.lower() == "twice" else 3
+        return lambda game, controller: times * inner(game, controller)
     if stripped.lower().endswith(_AS_YOU_CAST_SUFFIX):
         # "... as you cast this spell" (Jaws of Stone, Monstrous Onslaught):
         # the count was fixed while the spell was being cast (CR 601.2d needs it
@@ -5611,6 +5621,74 @@ def _parse_counted_amount_ability_text(text: str) -> AbilityEffect | None:
     from ..ep02_r1_counted_permanents import parse_counted_amount_text
 
     return parse_counted_amount_text(text, for_spell=False)
+
+
+@SPELL_TEXT.rung("s23", after=["amounts._parse_counted_amount_spell_text"])
+def _parse_where_x_whole_spell_text(text: str) -> Effect | None:
+    """A spell whose X is a counted group, see
+    `ep02_r2_counted_permanents.parse_where_x_whole_text`."""
+    from ..ep02_r2_counted_permanents import parse_where_x_whole_text
+
+    return parse_where_x_whole_text(text, for_spell=True)
+
+
+@ABILITY_TEXT.rung("s40", after=["amounts._parse_counted_amount_ability_text"])
+def _parse_where_x_whole_ability_text(text: str) -> AbilityEffect | None:
+    """The ability side of the reader above."""
+    from ..ep02_r2_counted_permanents import parse_where_x_whole_text
+
+    return parse_where_x_whole_text(text, for_spell=False)
+
+
+@SPELL_TEXT.rung("s23", after=["amounts._parse_counted_amount_spell_text"])
+def _parse_for_each_create_spell_text(text: str) -> Effect | None:
+    """ "For each <group>, create <tokens>" on a spell, see
+    `ep02_r2_counted_permanents.for_each_create_as_tail_form`."""
+    from ..ep02_r2_counted_permanents import parse_for_each_create_text
+
+    return parse_for_each_create_text(text, for_spell=True)
+
+
+@ABILITY_TEXT.rung("s40", after=["amounts._parse_counted_amount_ability_text"])
+def _parse_for_each_create_ability_text(text: str) -> AbilityEffect | None:
+    """The ability side of the reader above."""
+    from ..ep02_r2_counted_permanents import parse_for_each_create_text
+
+    return parse_for_each_create_text(text, for_spell=False)
+
+
+@SPELL_TEXT.rung("s23", after=["amounts._parse_counted_amount_spell_text"])
+def _parse_pump_then_delayed_spell_text(text: str) -> Effect | None:
+    """A pump then a delayed sacrifice / exile of the pumped creature, see
+    `ep02_r2_counted_permanents.parse_pump_then_delayed_text`."""
+    from ..ep02_r2_counted_permanents import parse_pump_then_delayed_text
+
+    return parse_pump_then_delayed_text(text, for_spell=True)
+
+
+@ABILITY_TEXT.rung("s40", after=["amounts._parse_counted_amount_ability_text"])
+def _parse_pump_then_delayed_ability_text(text: str) -> AbilityEffect | None:
+    """The ability side of the reader above."""
+    from ..ep02_r2_counted_permanents import parse_pump_then_delayed_text
+
+    return parse_pump_then_delayed_text(text, for_spell=False)
+
+
+@SPELL_TEXT.rung("s23", after=["amounts._parse_counted_amount_spell_text"])
+def _parse_base_stat_becomes_spell_text(text: str) -> Effect | None:
+    """A creature's base power set until end of turn, see
+    `ep02_r2_counted_permanents.parse_base_stat_becomes_text`."""
+    from ..ep02_r2_counted_permanents import parse_base_stat_becomes_text
+
+    return parse_base_stat_becomes_text(text, for_spell=True)
+
+
+@ABILITY_TEXT.rung("s40", after=["amounts._parse_counted_amount_ability_text"])
+def _parse_base_stat_becomes_ability_text(text: str) -> AbilityEffect | None:
+    """The ability side of the reader above."""
+    from ..ep02_r2_counted_permanents import parse_base_stat_becomes_text
+
+    return parse_base_stat_becomes_text(text, for_spell=False)
 
 
 @SPELL_TEXT.rung("s21")

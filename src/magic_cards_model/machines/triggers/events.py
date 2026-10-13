@@ -311,6 +311,12 @@ class ExtraTriggerEvent(StrEnum):
     #: you roll one or more dice"). `GameEvent.player` is who rolled.
     #: **Emitted by:** `Game.roll_dice`, once per roll instruction.
     ROLLS_DICE = "rolls_dice"
+    #: CR 700.14: a player expends N when they pay a cost to cast a spell and
+    #: the mana they spent on spells this turn before paying it was less than
+    #: N and became at least N after (Muerra, Trash Tactician's "Whenever you
+    #: expend 4"). `GameEvent.player` is who expended, `GameEvent.amount` is
+    #: N. **Emitted by:** `Game.put_on_stack`, once per N the cast crossed.
+    EXPEND = "expend"
     #: CR 709.5h: "Some abilities trigger when a player unlocks a particular
     #: half of a permanent. These abilities trigger when that permanent is
     #: given the appropriate unlocked designation, regardless of whether it

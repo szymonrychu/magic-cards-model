@@ -1479,9 +1479,15 @@ class ZonesMixin:
         source_id: str | None = None,
         zone: Zone = Zone.LIBRARY,
         caused_by: str | None = None,
+        searcher: str | None = None,
     ) -> list[CardState]:
         """Search one of a player's zones, take what was found out of it, and
         (library only) shuffle.
+
+        `searcher` is the player doing the searching when that is not the zone's
+        owner ("Search target player's library ...", Nightmare Incursion): CR
+        701.23a has the searcher find the cards, so the find is asked of them.
+        `None` is the owner searching their own zone.
 
         `caused_by` is Ashiok, Dream Render's own reader: the username of the
         spell or ability's controller that is causing this search, when the
@@ -1614,12 +1620,15 @@ class ZonesMixin:
                 chosen = self.ask(
                     Decision(
                         kind=DecisionKind.CHOOSE_CARDS,
-                        player=player.username,
+                        player=searcher or player.username,
                         prompt=(
                             f"choose up to {limit} card(s) to find while searching "
-                            f"your {zone.value}"
+                            f"{'your' if searcher is None else player.username + chr(39) + 's'} "
+                            f"{zone.value}"
                             if optional
-                            else f"choose {limit} card(s) to find while searching your {zone.value}"
+                            else f"choose {limit} card(s) to find while searching "
+                            f"{'your' if searcher is None else player.username + chr(39) + 's'} "
+                            f"{zone.value}"
                         ),
                         source=source,
                         source_id=source_id,

@@ -1,0 +1,141 @@
+{
+  "object": "card",
+  "id": "080585c6-d946-4435-954a-0ada936dc3f1",
+  "oracle_id": "0b8517c0-0441-4fd9-99ec-2274e57c3cb6",
+  "multiverse_ids": [
+    658676
+  ],
+  "mtgo_id": 124927,
+  "tcgplayer_id": 545593,
+  "cardmarket_id": 764916,
+  "name": "Kaza, Roil Chaser",
+  "lang": "en",
+  "released_at": "2024-04-19",
+  "uri": "https://api.scryfall.com/cards/080585c6-d946-4435-954a-0ada936dc3f1",
+  "scryfall_uri": "https://scryfall.com/card/otc/232/kaza-roil-chaser?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T03:04:57Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/0/8/080585c6-d946-4435-954a-0ada936dc3f1.jpg?1783911897",
+    "normal": "https://cards.scryfall.io/normal/front/0/8/080585c6-d946-4435-954a-0ada936dc3f1.jpg?1783911897",
+    "large": "https://cards.scryfall.io/large/front/0/8/080585c6-d946-4435-954a-0ada936dc3f1.jpg?1783911897",
+    "png": "https://cards.scryfall.io/png/front/0/8/080585c6-d946-4435-954a-0ada936dc3f1.png?1783911897",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/0/8/080585c6-d946-4435-954a-0ada936dc3f1.jpg?1783911897",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/0/8/080585c6-d946-4435-954a-0ada936dc3f1.jpg?1783911897",
+    "thumb": "https://cards.scryfall.io/thumb/front/0/8/080585c6-d946-4435-954a-0ada936dc3f1.webp?1783911897",
+    "grid": "https://cards.scryfall.io/grid/front/0/8/080585c6-d946-4435-954a-0ada936dc3f1.webp?1783911897",
+    "display": "https://cards.scryfall.io/display/front/0/8/080585c6-d946-4435-954a-0ada936dc3f1.webp?1783911897",
+    "art": "https://cards.scryfall.io/art/front/0/8/080585c6-d946-4435-954a-0ada936dc3f1.webp?1783911897",
+    "crop": "https://cards.scryfall.io/crop/front/0/8/080585c6-d946-4435-954a-0ada936dc3f1.webp?1783911897"
+  },
+  "mana_cost": "{U}{R}",
+  "cmc": 2.0,
+  "type_line": "Legendary Creature \u2014 Human Wizard",
+  "oracle_text": "Flying, haste\n{T}: The next instant or sorcery spell you cast this turn costs {X} less to cast, where X is the number of Wizards you control as this ability resolves.",
+  "power": "1",
+  "toughness": "2",
+  "colors": [
+    "R",
+    "U"
+  ],
+  "color_identity": [
+    "R",
+    "U"
+  ],
+  "keywords": [
+    "Flying",
+    "Haste"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": false,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "d6548798-0c10-4509-b71a-2d8b1d14665a",
+  "set": "otc",
+  "set_name": "Outlaws of Thunder Junction Commander",
+  "set_type": "commander",
+  "set_uri": "https://api.scryfall.com/sets/d6548798-0c10-4509-b71a-2d8b1d14665a",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Aotc&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/otc?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/080585c6-d946-4435-954a-0ada936dc3f1/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A0b8517c0-0441-4fd9-99ec-2274e57c3cb6&unique=prints",
+  "collector_number": "232",
+  "digital": false,
+  "rarity": "rare",
+  "flavor_text": "\"What sort of life is that, huddling in the familiar and safe? No thanks. Put me right in the center of the action.\"",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Ekaterina Burmak",
+  "artist_ids": [
+    "2a9f3780-fcc8-4ec5-b403-ee1d1370d3b4"
+  ],
+  "illustration_id": "c7b038fb-848b-4f85-8f83-b642539d47c3",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "edhrec_rank": 9014,
+  "penny_rank": 10243,
+  "prices": {
+    "usd": "0.23",
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": "0.18",
+    "eur_foil": null,
+    "tix": "0.03"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=658676&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DKaza%252C%2BRoil%2BChaser",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DKaza%252C%2BRoil%2BChaser",
+    "edhrec": "https://edhrec.com/route/?cc=Kaza%2C+Roil+Chaser"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F545593%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=764916&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/124927?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

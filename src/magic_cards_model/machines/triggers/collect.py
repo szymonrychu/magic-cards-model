@@ -127,6 +127,8 @@ def _unread_trigger_events(condition: str) -> frozenset[TriggerEvent | ExtraTrig
         return frozenset({ExtraTriggerEvent.CRIME_COMMITTED})
     if _SEARCHES_LIBRARY_CONDITION.match(lowered):
         return frozenset({ExtraTriggerEvent.SEARCHES_LIBRARY})
+    if _EXPEND_CONDITION.match(lowered):
+        return frozenset({ExtraTriggerEvent.EXPEND})
     if _ROLLS_DICE_CONDITION.match(lowered):
         return frozenset({ExtraTriggerEvent.ROLLS_DICE})
     if _DOOR_UNLOCKED_CONDITION.match(lowered):
@@ -2102,6 +2104,7 @@ from ._common import (  # noqa: E402
     _ENLISTS_A_CREATURE_CONDITION,
     _ENTERING_CAUSE_RE,
     _EXILE_FROM_GRAVEYARD_OR_BATTLEFIELD_CONDITION,
+    _EXPEND_CONDITION,
     _FINAL_CHAPTER_RESOLVES_CONDITION,
     _FORETELL_CONDITION,
     _LAND_ADDED_CHOSEN_MANA_CONDITION,

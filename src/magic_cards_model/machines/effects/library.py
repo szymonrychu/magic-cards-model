@@ -3206,6 +3206,51 @@ def _parse_look_hand_may_exile_owner_may_play_clause(text: str) -> AbilityEffect
     return effect
 
 
+#: "Put `<target>` into its owner's library just beneath the top `<n>` cards of
+#: that library." (Quarry Colossus, its X already read into `<n>`) / "... `<ordinal>`
+#: from the top". Unlike the owner-chooses forms above, the placement is fixed by the
+#: text: the card goes in below exactly `n` cards (CR 401.2's ordered library), or at
+#: the bottom when the library holds fewer (CR 609.3).
+_PUT_TARGET_BENEATH_TOP_CARDS_RE = re.compile(
+    r"^put (?P<phrase>target .+?) into its owner'?s library "
+    rf"(?:(?:just )?beneath the top (?P<n>{COUNT}) cards? of that library"
+    rf"|(?P<ordinal>{ORDINAL}) from the top)\.?$",
+    re.IGNORECASE,
+)
+
+
+@MIXED_CLAUSE.rung("s26", for_spell=FORWARD)
+def _parse_put_target_beneath_top_cards_clause(
+    clause: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`_PUT_TARGET_BENEATH_TOP_CARDS_RE`'s shape, or `None`."""
+    match = _PUT_TARGET_BENEATH_TOP_CARDS_RE.fullmatch(clause.strip())
+    if match is None:
+        return None
+    if not _targets_understood(match.group("phrase"), count_agnostic=True, battlefield_only=False):
+        return None
+    if match.group("n") is not None:
+        depth = parse_count(match.group("n"))
+    else:
+        ordinal = parse_ordinal(match.group("ordinal"))
+        depth = None if ordinal is None else ordinal - 1
+    if depth is None or depth < 0:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        for target in game.resolve_targets(stack_object):
+            if not isinstance(target, CardState) or target.owner is None:
+                continue
+            if target.zone is Zone.STACK:
+                _put_spell_in_library(game, target, top=True, depth=depth)
+                continue
+            game.put_cards_into_library([target])
+            if depth:
+                _reposition_in_owners_library(game, target, depth=depth)
+
+    return effect
+
+
 #: CR 701.57a: "'Discover N' means '...'" - a bare keyword action, the same
 #: shape as investigate/amass above, printed only with a plain digit in the
 #: pool ("discover 5", Trumpeting Carnosaur; "discover 3", Geological
@@ -3701,19 +3746,15 @@ _REVEAL_N_CARDS_FROM_HAND_THEN_CHOOSE_DISCARD_RE = re.compile(
 
 
 @ABILITY_TEXT.rung("s10", for_spell=False)
+@SPELL_TEXT.rung("s10", for_spell=True)
 def _parse_reveal_n_cards_then_choose_discard_whole_text(
     text: str, *, for_spell: bool
 ) -> AbilityEffect | None:
     """`_REVEAL_N_CARDS_FROM_HAND_THEN_CHOOSE_DISCARD_RE`'s shape, read
     whole - three sentences that all name the same target player and the
-    same revealed set, none readable alone.
-
-    Ability-only: `resolve_targets` names a player only for a resolving
-    ability/permanent's own targets here (no printing in the pool has a
-    spell do this).
+    same revealed set, none readable alone. An ability (Klaw, Sonic
+    Subjugator, Bala Ged Thief) or a spell (Mire's Toll) alike.
     """
-    if for_spell:
-        return None
     match = _REVEAL_N_CARDS_FROM_HAND_THEN_CHOOSE_DISCARD_RE.fullmatch(text.strip())
     if match is None:
         return None
@@ -3722,8 +3763,6 @@ def _parse_reveal_n_cards_then_choose_discard_whole_text(
         return None
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
-        if not is_ability(stack_object):
-            return
         ability = stack_object
         target_player = next(
             (t for t in game.resolve_targets(ability) if isinstance(t, Player)), None
@@ -3731,8 +3770,11 @@ def _parse_reveal_n_cards_then_choose_discard_whole_text(
         if target_player is None:
             return
         controller = game.controller_of(ability)
-        source = ability.source(game)
-        count = magnitude(game, controller.username, source, ability.x_value)
+        spell = isinstance(ability, CardState)
+        source = ability if spell else ability.source(game)
+        source_name = ability.name if spell else ability.source_name
+        x_value = game.cast_record(ability).x_value if spell else ability.x_value
+        count = magnitude(game, controller.username, source, x_value)
         count = min(max(count, 0), len(target_player.hand))
         if count <= 0:
             return
@@ -3743,7 +3785,7 @@ def _parse_reveal_n_cards_then_choose_discard_whole_text(
                     kind=DecisionKind.CHOOSE_CARDS,
                     player=target_player.username,
                     prompt=f"choose {count} cards from your hand to reveal",
-                    source=ability.source_name,
+                    source=source_name,
                     source_id=source_id_of(ability),
                     amount=count,
                     exact=True,
@@ -3754,13 +3796,13 @@ def _parse_reveal_n_cards_then_choose_discard_whole_text(
             by_id = {card.id: card for card in target_player.hand}
             revealed_ids = [by_id[card_id] for card_id in chosen]
         for card in revealed_ids:
-            game.reveal(card, source=ability.source_name)
+            game.reveal(card, source=source_name)
         chosen_one = game.ask(
             Decision(
                 kind=DecisionKind.CHOOSE_CARDS,
                 player=controller.username,
                 prompt="choose one of the revealed cards",
-                source=ability.source_name,
+                source=source_name,
                 source_id=source_id_of(ability),
                 amount=1,
                 cards=tuple(card.id for card in revealed_ids),

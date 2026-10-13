@@ -910,6 +910,78 @@ class CountBoardWhere(CountBase):
         return max(values, default=0)
 
 
+class GroupExtras(EngineModel):
+    """The qualifiers of a counted group that are properties of one permanent's
+    computed characteristics (CR 613.5), beyond its card types and subtypes:
+    "legendary" / "nonlegendary" and "basic" / "nonbasic" (supertypes, CR 205.4),
+    "named Wastes" (CR 201.2), "tokens" / "nontoken" (CR 111.1), and a power or
+    toughness bound ("with power 4 or greater", CR 208.1). `None` / empty means
+    the quality is not asked about."""
+
+    model_config = ConfigDict(frozen=True)
+
+    supertypes_all: tuple[Supertype, ...] = ()
+    supertypes_none: tuple[Supertype, ...] = ()
+    named: str | None = None
+    token: bool | None = None
+    power_at_least: int | None = None
+    power_at_most: int | None = None
+    toughness_at_least: int | None = None
+    toughness_at_most: int | None = None
+
+    def matches(self, chars: Characteristics) -> bool:
+        if any(word not in chars.supertypes for word in self.supertypes_all):
+            return False
+        if any(word in chars.supertypes for word in self.supertypes_none):
+            return False
+        if self.named is not None and chars.name.lower() != self.named.lower():
+            return False
+        if self.token is not None and chars.is_token != self.token:
+            return False
+        # CR 208.5: a permanent with no value for the characteristic reads as 0.
+        power, toughness = chars.power or 0, chars.toughness or 0
+        return (
+            (self.power_at_least is None or power >= self.power_at_least)
+            and (self.power_at_most is None or power <= self.power_at_most)
+            and (self.toughness_at_least is None or toughness >= self.toughness_at_least)
+            and (self.toughness_at_most is None or toughness <= self.toughness_at_most)
+        )
+
+
+class CountGroup(CountBase):
+    """How many permanents of a counted group a player controls, where the
+    group has a quality `CountPermanentsControlledBy` /
+    `CountPermanentsWithSubtypeControlledBy` cannot say: "for each legendary
+    creature you control" (Benalish Honor Guard), "for each basic Island you
+    control" (Tempest Djinn), "for each land you control named Wastes" (Walker
+    of the Wastes). `types_any` and `subtypes_any` are one disjunction (empty =
+    every permanent); `extras` narrows it further. Read off the board as the
+    asking sublayer sees it (CR 613.5) and recounted on every computation
+    (CR 613.4c).
+    """
+
+    kind: Literal["group"] = "group"
+    username: str | None = None
+    types_any: tuple[Type, ...] = ()
+    subtypes_any: tuple[str, ...] = ()
+    extras: GroupExtras = GroupExtras()
+    excludes_self: bool = False
+
+    def __call__(self, chars: Characteristics, board: Board) -> int:
+        return sum(
+            1
+            for other in board.values()
+            if other.controller == self.username
+            and not (self.excludes_self and other.card_id == chars.card_id)
+            and (
+                not (self.types_any or self.subtypes_any)
+                or any(card_type in other.types for card_type in self.types_any)
+                or any(word.lower() in self.subtypes_any for word in other.subtypes)
+            )
+            and self.extras.matches(other)
+        )
+
+
 class CountByControllerOfObject(CountBase):
     """A number that depends on who controls the asking object - "the number
     of cards in its controller's graveyard" (Disturbing Conversion, Death's
@@ -978,6 +1050,7 @@ Count = Annotated[
     | CountDevotion
     | CountParty
     | CountBoardWhere
+    | CountGroup
     | CountByControllerOfObject
     | CountObjectManaValue
     | CountAttachedWithAnySubtype,

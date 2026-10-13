@@ -6266,7 +6266,9 @@ def _parse_optional_mixed_clause(clause: str, *, for_spell: bool) -> TargetedCla
     if match is None:
         return None
     body = match.group("clause").strip().rstrip(".")
-    inner = _parse_mixed_clause(body, for_spell=for_spell)
+    from ..ep02_r2_counted_permanents import have_clause_as_plain
+
+    inner = _parse_mixed_clause(have_clause_as_plain(body) or body, for_spell=for_spell)
     if inner is None:
         return None
 

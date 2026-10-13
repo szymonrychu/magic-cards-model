@@ -2543,6 +2543,7 @@ class TurnSbaMixin:
             # answer once this is cleared.
             self.spells_cast_last_turn = self.spells_cast_this_turn
             self.spells_cast_this_turn = {}
+            self.mana_spent_on_spells_this_turn = {}  # CR 700.14's total is per turn
             self.previous_turn_active_player = previous_active_player
             self.permanents_left_battlefield_this_turn = {}
             self.lands_entered_this_turn = {}

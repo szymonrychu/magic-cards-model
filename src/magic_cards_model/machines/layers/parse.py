@@ -11775,6 +11775,17 @@ def _parse_layer_sentence_ungated(sentence: str) -> EffectBuilder | None:
             f"{match.group('other') or ''}{match.group('qualifier').lower()}",
             count,
         )
+    if match := _R2_SELF_PUMP_GROUP_RE.fullmatch(sentence):
+        # EP-02-R2-T7: a qualified group ("legendary creature", "basic Island",
+        # "land you control named Wastes").
+        group = _r2_group_count_factory(match.group("group"))
+        if group is not None:
+            return _self_pump_per_controlled_permanent_builder(
+                int(match.group("power")),
+                int(match.group("toughness")),
+                match.group("group").lower(),
+                group,
+            )
     if match := _ATTACHED_PUMP_PER_OWN_COUNTER_RE.fullmatch(sentence):
 
         def per_counter(box: str) -> int:
@@ -13894,6 +13905,12 @@ def read_cant_lose_cant_win(text: str) -> GameOutcomeProhibition | None:
     )
 
 
+from ..ep02_r2_counted_permanents import (  # noqa: E402
+    LAYER_SELF_PUMP_GROUP_RE as _R2_SELF_PUMP_GROUP_RE,
+)
+from ..ep02_r2_counted_permanents import (  # noqa: E402
+    layer_group_count_factory as _r2_group_count_factory,
+)
 from ._common import _COLOR_WORDS, _KNOWN_KEYWORDS, _YOU_CONTROL_ATTACHED_RE  # noqa: E402
 from .apply import EffectBuilder, LayerContext  # noqa: E402
 from .model import (  # noqa: E402

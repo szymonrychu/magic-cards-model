@@ -1463,6 +1463,52 @@ def _search_up_to_and_exile_effect(match: re.Match[str]) -> AbilityEffect | None
     return effect
 
 
+#: "Search target player's library for up to `<n>` cards and exile them. Then that
+#: player shuffles." - Nightmare Incursion, its X already read into `<n>`. The
+#: searcher is the caster, not the library's owner (CR 701.23a), and "cards" states
+#: no quality, so CR 701.23d's "simply for a quantity" binds: the caster must find
+#: that many, or as many as the library holds. The owner shuffles (CR 701.24b).
+_SEARCH_TARGET_LIBRARY_AND_EXILE_RE = re.compile(
+    rf"^search target (?P<who>player|opponent)'s library for up to (?P<n>{COUNT}) cards?,? "
+    r"and exile (?:it|them)\.\s*then that player shuffles\.?$",
+    re.IGNORECASE,
+)
+
+
+@SPELL_TEXT.rung("s10")
+def _parse_search_target_library_and_exile_spell(text: str) -> Effect | None:
+    """`_SEARCH_TARGET_LIBRARY_AND_EXILE_RE`'s shape, or `None`."""
+    match = _SEARCH_TARGET_LIBRARY_AND_EXILE_RE.fullmatch(
+        " ".join(_strip_non_effect_preamble(text).split())
+    )
+    if match is None or not _targets_understood(
+        f"target {match.group('who').lower()}", allow_player_targets=True
+    ):
+        return None
+    count = parse_count(match.group("n"))
+    if count is None:
+        return None
+
+    def effect(game: "Game", spell: "StackObject") -> None:
+        searcher = game.controller_of(spell).username
+        for target in game.resolve_targets(spell):
+            if not isinstance(target, Player):
+                continue
+            found = game.search_library(
+                target,
+                lambda _state: True,
+                count=count,
+                optional=False,
+                source=spell.name,
+                source_id=source_id_of(spell),
+                searcher=searcher,
+            )
+            for card in found:
+                game.exile_permanent(card)
+
+    return effect
+
+
 #: "You may search your library for up to that many land cards, put them
 #: onto the battlefield tapped, then shuffle." - Hexhaven Invigorator's own
 #: "Whenever this creature is dealt damage" trigger. "That many" here is

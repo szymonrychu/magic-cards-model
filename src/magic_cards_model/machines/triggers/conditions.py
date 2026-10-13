@@ -3901,6 +3901,21 @@ def _unread_condition_matches(
             return event.player != controller
         return True  # "a player" - anyone.
 
+    match = _EXPEND_CONDITION.match(condition)
+    if match is not None:
+        if (
+            event.event is not ExtraTriggerEvent.EXPEND
+            or event.player is None
+            or event.amount != int(match.group("n"))
+        ):
+            return False
+        who = match.group("who")
+        if who == "you":
+            return event.player == controller
+        if who == "an opponent":
+            return event.player != controller
+        return True  # "a player" - anyone.
+
     match = _ROLLS_DICE_CONDITION.match(condition)
     if match is not None:
         if event.event is not ExtraTriggerEvent.ROLLS_DICE or event.player is None:
@@ -6139,6 +6154,7 @@ from ._common import (  # noqa: E402
     _ENLISTS_A_CREATURE_CONDITION,
     _ENTERING_CAUSE_RE,
     _EXILE_FROM_GRAVEYARD_OR_BATTLEFIELD_CONDITION,
+    _EXPEND_CONDITION,
     _FINAL_CHAPTER_RESOLVES_CONDITION,
     _FORETELL_CONDITION,
     _LAND_ADDED_CHOSEN_MANA_CONDITION,

@@ -1,0 +1,141 @@
+{
+  "object": "card",
+  "id": "dfd59300-7b5c-4263-a7fd-775c9fcb05ad",
+  "oracle_id": "06a1c404-d76f-4206-8740-7ad7488fac33",
+  "multiverse_ids": [
+    540855
+  ],
+  "mtgo_id": 94338,
+  "arena_id": 78803,
+  "tcgplayer_id": 253061,
+  "cardmarket_id": 581864,
+  "name": "Lantern Flare",
+  "lang": "en",
+  "released_at": "2021-11-19",
+  "uri": "https://api.scryfall.com/cards/dfd59300-7b5c-4263-a7fd-775c9fcb05ad",
+  "scryfall_uri": "https://scryfall.com/card/vow/23/lantern-flare?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T06:41:56Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/d/f/dfd59300-7b5c-4263-a7fd-775c9fcb05ad.jpg?1783924916",
+    "normal": "https://cards.scryfall.io/normal/front/d/f/dfd59300-7b5c-4263-a7fd-775c9fcb05ad.jpg?1783924916",
+    "large": "https://cards.scryfall.io/large/front/d/f/dfd59300-7b5c-4263-a7fd-775c9fcb05ad.jpg?1783924916",
+    "png": "https://cards.scryfall.io/png/front/d/f/dfd59300-7b5c-4263-a7fd-775c9fcb05ad.png?1783924916",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/d/f/dfd59300-7b5c-4263-a7fd-775c9fcb05ad.jpg?1783924916",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/d/f/dfd59300-7b5c-4263-a7fd-775c9fcb05ad.jpg?1783924916",
+    "thumb": "https://cards.scryfall.io/thumb/front/d/f/dfd59300-7b5c-4263-a7fd-775c9fcb05ad.webp?1783924916",
+    "grid": "https://cards.scryfall.io/grid/front/d/f/dfd59300-7b5c-4263-a7fd-775c9fcb05ad.webp?1783924916",
+    "display": "https://cards.scryfall.io/display/front/d/f/dfd59300-7b5c-4263-a7fd-775c9fcb05ad.webp?1783924916",
+    "art": "https://cards.scryfall.io/art/front/d/f/dfd59300-7b5c-4263-a7fd-775c9fcb05ad.webp?1783924916",
+    "crop": "https://cards.scryfall.io/crop/front/d/f/dfd59300-7b5c-4263-a7fd-775c9fcb05ad.webp?1783924916"
+  },
+  "mana_cost": "{1}{W}",
+  "cmc": 2.0,
+  "type_line": "Instant",
+  "oracle_text": "Cleave {X}{R}{W} (You may cast this spell for its cleave cost. If you do, remove the words in square brackets.)\nLantern Flare deals X damage to target creature or planeswalker and you gain X life. [X is the number of creatures you control.]",
+  "colors": [
+    "W"
+  ],
+  "color_identity": [
+    "R",
+    "W"
+  ],
+  "keywords": [
+    "Cleave"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "arena",
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "8144b676-569f-4716-8005-bc8f0778f3fa",
+  "set": "vow",
+  "set_name": "Innistrad: Crimson Vow",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/8144b676-569f-4716-8005-bc8f0778f3fa",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Avow&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/vow?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/dfd59300-7b5c-4263-a7fd-775c9fcb05ad/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A06a1c404-d76f-4206-8740-7ad7488fac33&unique=prints",
+  "collector_number": "23",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Lie Setiawan",
+  "artist_ids": [
+    "6f771d3f-310e-4aa4-841f-5ba4ba9f025a"
+  ],
+  "illustration_id": "26744a8b-e457-41ab-a45b-603a0906cbed",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 20871,
+  "penny_rank": 14158,
+  "preview": {
+    "source": "Kotaku",
+    "source_uri": "https://www.kotaku.com.au/2021/11/innistrad-crimson-vow-preview/",
+    "previewed_at": "2021-11-01"
+  },
+  "prices": {
+    "usd": "0.20",
+    "usd_foil": "0.25",
+    "usd_etched": null,
+    "eur": "0.18",
+    "eur_foil": "0.20",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=540855&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DLantern%2BFlare",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DLantern%2BFlare",
+    "edhrec": "https://edhrec.com/route/?cc=Lantern+Flare"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F253061%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=581864&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/94338?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

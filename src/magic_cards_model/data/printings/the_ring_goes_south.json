@@ -1,0 +1,158 @@
+{
+  "object": "card",
+  "id": "3c8a4c7d-527c-49ea-a115-a9e747c0fd03",
+  "oracle_id": "3d36f0ab-d333-4a08-ad1b-5b7e1ddb647c",
+  "multiverse_ids": [
+    617016
+  ],
+  "mtgo_id": 112282,
+  "arena_id": 84878,
+  "tcgplayer_id": 499212,
+  "cardmarket_id": 717023,
+  "name": "The Ring Goes South",
+  "lang": "en",
+  "released_at": "2023-06-23",
+  "uri": "https://api.scryfall.com/cards/3c8a4c7d-527c-49ea-a115-a9e747c0fd03",
+  "scryfall_uri": "https://scryfall.com/card/ltr/186/the-ring-goes-south?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T04:17:41Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/3/c/3c8a4c7d-527c-49ea-a115-a9e747c0fd03.jpg?1783916261",
+    "normal": "https://cards.scryfall.io/normal/front/3/c/3c8a4c7d-527c-49ea-a115-a9e747c0fd03.jpg?1783916261",
+    "large": "https://cards.scryfall.io/large/front/3/c/3c8a4c7d-527c-49ea-a115-a9e747c0fd03.jpg?1783916261",
+    "png": "https://cards.scryfall.io/png/front/3/c/3c8a4c7d-527c-49ea-a115-a9e747c0fd03.png?1783916261",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/3/c/3c8a4c7d-527c-49ea-a115-a9e747c0fd03.jpg?1783916261",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/3/c/3c8a4c7d-527c-49ea-a115-a9e747c0fd03.jpg?1783916261",
+    "thumb": "https://cards.scryfall.io/thumb/front/3/c/3c8a4c7d-527c-49ea-a115-a9e747c0fd03.webp?1783916261",
+    "grid": "https://cards.scryfall.io/grid/front/3/c/3c8a4c7d-527c-49ea-a115-a9e747c0fd03.webp?1783916261",
+    "display": "https://cards.scryfall.io/display/front/3/c/3c8a4c7d-527c-49ea-a115-a9e747c0fd03.webp?1783916261",
+    "art": "https://cards.scryfall.io/art/front/3/c/3c8a4c7d-527c-49ea-a115-a9e747c0fd03.webp?1783916261",
+    "crop": "https://cards.scryfall.io/crop/front/3/c/3c8a4c7d-527c-49ea-a115-a9e747c0fd03.webp?1783916261"
+  },
+  "mana_cost": "{3}{G}",
+  "cmc": 4.0,
+  "type_line": "Sorcery",
+  "oracle_text": "The Ring tempts you. Then reveal cards from the top of your library until you reveal X land cards, where X is the number of legendary creatures you control. Put those land cards onto the battlefield tapped and the rest on the bottom of your library in a random order.",
+  "colors": [
+    "G"
+  ],
+  "color_identity": [
+    "G"
+  ],
+  "keywords": [],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "c7efd07d-98d5-4e92-86dd-1eb4e60183d6",
+      "component": "combo_piece",
+      "name": "The Ring Goes South",
+      "type_line": "Sorcery",
+      "uri": "https://api.scryfall.com/cards/c7efd07d-98d5-4e92-86dd-1eb4e60183d6"
+    },
+    {
+      "object": "related_card",
+      "id": "7215460e-8c06-47d0-94e5-d1832d0218af",
+      "component": "combo_piece",
+      "name": "The Ring // The Ring Tempts You",
+      "type_line": "Emblem // Card",
+      "uri": "https://api.scryfall.com/cards/7215460e-8c06-47d0-94e5-d1832d0218af"
+    }
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "mtgo",
+    "paper",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "08078706-ac5d-439b-8f01-894d38751367",
+  "set": "ltr",
+  "set_name": "The Lord of the Rings: Tales of Middle-earth",
+  "set_type": "draft_innovation",
+  "set_uri": "https://api.scryfall.com/sets/08078706-ac5d-439b-8f01-894d38751367",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Altr&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/ltr?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/3c8a4c7d-527c-49ea-a115-a9e747c0fd03/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A3d36f0ab-d333-4a08-ad1b-5b7e1ddb647c&unique=prints",
+  "collector_number": "186",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Wangjie Li",
+  "artist_ids": [
+    "eef3629c-af13-4cc4-a5d8-3d2ae6dd4ed6"
+  ],
+  "illustration_id": "18af5a2b-66e1-4411-8832-dad81cdd1078",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "triangle",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "promo_types": [
+    "universesbeyond"
+  ],
+  "edhrec_rank": 6590,
+  "preview": {
+    "source": "Wizards of the Coast",
+    "source_uri": "https://weibo.com/2634877355/N3swG0G8x",
+    "previewed_at": "2023-06-02"
+  },
+  "prices": {
+    "usd": "0.36",
+    "usd_foil": "0.48",
+    "usd_etched": null,
+    "eur": "0.27",
+    "eur_foil": "0.50",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=617016&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DThe%2BRing%2BGoes%2BSouth",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DThe%2BRing%2BGoes%2BSouth",
+    "edhrec": "https://edhrec.com/route/?cc=The+Ring+Goes+South"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F499212%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=717023&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/112282?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

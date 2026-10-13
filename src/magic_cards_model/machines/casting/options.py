@@ -551,6 +551,20 @@ def _option_from_keyword(ability: KeywordAbility) -> KeywordCastOption | None:
             understood=cost is not None,
         )
 
+    if canonical == "cleave":
+        # CR 702.148a: "You may cast this spell by paying [cost] rather than
+        # paying its mana cost" - an alternative cost from hand; the second
+        # half (the bracketed words are removed) is `machines/cleave.py`.
+        cost = total_cost_for_phrase(printed) if printed else None
+        return KeywordCastOption(
+            keyword=ability.canonical,
+            rule="CR 702.148a",
+            zone=Zone.HAND,
+            cost=cost,
+            pays_mana_cost=False,
+            understood=cost is not None,
+        )
+
     if canonical == "flashback":
         # CR 702.34a: two static abilities, one functioning in the graveyard.
         # The graveyard half is what makes this permission and not a discount.

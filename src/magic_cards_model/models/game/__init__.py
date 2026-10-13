@@ -1176,6 +1176,13 @@ class Game(
     scry/surveil put-back, one row per card per put, in order. See
     `LibraryOrderKept`."""
 
+    mana_spent_on_spells_this_turn: dict[str, int] = Field(default_factory=dict)
+    """The total mana each player has spent this turn to cast spells, keyed by
+    username (CR 700.14's "the amount of mana that player spent this turn to
+    cast spells"). `put_on_stack` adds each cast's `CastRecord.mana_spent` here
+    and emits `ExtraTriggerEvent.EXPEND` for every threshold the cast crossed;
+    reset where `spells_cast_this_turn` is."""
+
     spells_cast_this_turn: dict[str, list[CardState]] = Field(default_factory=dict)
     """Every spell each player has cast this turn, keyed by controller
     (CR 601.2a marks the casting event; `put_on_stack` records it here).
@@ -2372,6 +2379,11 @@ class Game(
     #: subject, and a "colorless" word in a cost's card requirement; an older
     #: dump would resolve each of these as a no-op or fire the trigger on every
     #: creature.
+    #: 164 (EP02-R2-T7): `Game.mana_spent_on_spells_this_turn` (CR 700.14's
+    #: expend), `SpellCostReductionGrant.once` (Kaza's "the next instant or
+    #: sorcery spell you cast this turn costs {1} less ..."), and a
+    #: `DelayedEffectSpec` variant `damage_each_opponent_per_card_still_exiled`;
+    #: an older dump has no running total, so it would expend from zero.
     #: 162 (EP02-R1-T5, reserved: 157 + task 5): `ActivationCostReduction`
     #: gained `graveyard_quality` (an activated ability's "costs {1} less ...
     #: for each creature card in your graveyard"), reachable from `Game`

@@ -568,7 +568,9 @@ def cards_for_each_pattern(
 # --------------------------------------------------------------------------
 
 _ADD_MANA_FOR_EACH_RE = re.compile(
-    r"^(?:then )?add (?P<symbols>(?:\{[wubrgc]\})+) for each (?P<each>.+)$", re.IGNORECASE
+    r"^(?:then )?add (?P<symbols>(?:\{[wubrgc]\})+|\{[wubrgc]\}(?: or \{[wubrgc]\})+)"
+    r" for each (?P<each>.+)$",
+    re.IGNORECASE,
 )
 
 
@@ -597,22 +599,55 @@ def add_mana_for_each_effect(text: str) -> "Callable[[Game, Any], None] | None":
     def effect(game: "Game", stack_object: Any) -> None:
         controller = controller_of(game, stack_object)
         add_mana_times(
-            game, controller, symbols, reader(game, controller, source_id_of(stack_object))
+            game,
+            controller,
+            symbols,
+            reader(game, controller, source_id_of(stack_object)),
+            stack_object=stack_object,
         )
 
     return effect
 
 
-def add_mana_times(game: "Game", controller: str, symbols: str, times: int) -> None:
-    """`symbols` into the controller's mana pool `times` times."""
+def add_mana_times(
+    game: "Game",
+    controller: str,
+    symbols: str,
+    times: int,
+    *,
+    retain_until: Any = None,
+    stack_object: Any = None,
+) -> None:
+    """`symbols` into the controller's mana pool `times` times, each unit tagged
+    `retain_until` (`ManaRetentionScope`) when the text says the player does not
+    lose it as steps and phases end (CR 500.5).
+
+    A listed "{R} or {G}" is one mana per unit, its colour chosen for each unit
+    separately as the instruction is followed (CR 608.2d; the pair is the
+    palette, `_choose_a_color(colors=...)`)."""
     from ..models.card import Color
+    from .decisions import source_id_of
     from .effects._common import _MANA_SYMBOL_RE
+    from .effects.modal import _choose_a_color
 
     colors = [Color(symbol.upper()) for symbol in _MANA_SYMBOL_RE.findall(symbols)]
-    pool = game.player(controller).mana_pool
+    player = game.player(controller)
+    pool = player.mana_pool
+    listed = " or " in symbols.lower()
     for _ in range(max(times, 0)):
+        if listed:
+            chosen = _choose_a_color(
+                game,
+                player,
+                getattr(stack_object, "source_name", None) or getattr(stack_object, "name", ""),
+                f"add {symbols}",
+                source_id=source_id_of(stack_object) if stack_object is not None else None,
+                colors=colors,
+            )
+            pool.add(chosen, retain_until=retain_until)
+            continue
         for color in colors:
-            pool.add(color)
+            pool.add(color, retain_until=retain_until)
 
 
 # --------------------------------------------------------------------------
