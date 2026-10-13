@@ -3205,6 +3205,51 @@ def _parse_look_hand_may_exile_owner_may_play_clause(text: str) -> AbilityEffect
     return effect
 
 
+#: "Put `<target>` into its owner's library just beneath the top `<n>` cards of
+#: that library." (Quarry Colossus, its X already read into `<n>`) / "... `<ordinal>`
+#: from the top". Unlike the owner-chooses forms above, the placement is fixed by the
+#: text: the card goes in below exactly `n` cards (CR 401.2's ordered library), or at
+#: the bottom when the library holds fewer (CR 609.3).
+_PUT_TARGET_BENEATH_TOP_CARDS_RE = re.compile(
+    r"^put (?P<phrase>target .+?) into its owner'?s library "
+    rf"(?:(?:just )?beneath the top (?P<n>{COUNT}) cards? of that library"
+    rf"|(?P<ordinal>{ORDINAL}) from the top)\.?$",
+    re.IGNORECASE,
+)
+
+
+@MIXED_CLAUSE.rung("s26", for_spell=FORWARD)
+def _parse_put_target_beneath_top_cards_clause(
+    clause: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`_PUT_TARGET_BENEATH_TOP_CARDS_RE`'s shape, or `None`."""
+    match = _PUT_TARGET_BENEATH_TOP_CARDS_RE.fullmatch(clause.strip())
+    if match is None:
+        return None
+    if not _targets_understood(match.group("phrase"), count_agnostic=True, battlefield_only=False):
+        return None
+    if match.group("n") is not None:
+        depth = parse_count(match.group("n"))
+    else:
+        ordinal = parse_ordinal(match.group("ordinal"))
+        depth = None if ordinal is None else ordinal - 1
+    if depth is None or depth < 0:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        for target in game.resolve_targets(stack_object):
+            if not isinstance(target, CardState) or target.owner is None:
+                continue
+            if target.zone is Zone.STACK:
+                _put_spell_in_library(game, target, top=True, depth=depth)
+                continue
+            game.put_cards_into_library([target])
+            if depth:
+                _reposition_in_owners_library(game, target, depth=depth)
+
+    return effect
+
+
 #: CR 701.57a: "'Discover N' means '...'" - a bare keyword action, the same
 #: shape as investigate/amass above, printed only with a plain digit in the
 #: pool ("discover 5", Trumpeting Carnosaur; "discover 3", Geological

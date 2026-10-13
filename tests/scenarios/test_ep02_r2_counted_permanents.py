@@ -702,3 +702,38 @@ def test_scourge_of_fleets_returns_opposing_creatures_up_to_the_island_count(isl
     assert sorted(card.name for card in scenario.player("bob").hand) == sorted(returned)
     assert len(_tokens(scenario, "Grizzly Bears", "alice")) == 1
     assert len(_lands(scenario, "bob")) == 1
+
+
+# --------------------------------------------------------------------------
+# "put target creature into its owner's library just beneath the top X cards of
+# that library, where X is the number of Plains you control" (Quarry Colossus).
+# CR 401.1/401.2 (a library's cards are in a set order), CR 608.2h (X fixed as the
+# ability resolves), CR 609.3 (a library shorter than X: as much as can be done).
+# --------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize("plains", [2, 4, 7])
+def test_quarry_colossus_tucks_the_target_beneath_the_top_plains_count_cards(plains):
+    """Bob's library holds 12 Forests: the Bears end up with exactly `plains` cards
+    above them. The Swamps and bob's own Plains are not counted."""
+    scenario = _main(
+        _build(
+            ["Plains"] * plains + ["Swamp"] * (7 - plains),
+            ["Grizzly Bears", "Plains", "Plains"],
+            hand=["Quarry Colossus"],
+        )
+    )
+    bears = scenario.find("Grizzly Bears", Zone.BATTLEFIELD, "bob")
+    _enter(scenario, "Quarry Colossus", targets=[bears])
+    library = scenario.player("bob").library
+    assert bears.zone is Zone.LIBRARY
+    assert library.index(bears) == plains
+
+
+def test_quarry_colossus_in_a_shallow_library_puts_the_target_at_the_bottom():
+    scenario = _main(
+        _build(["Plains"] * 7, ["Grizzly Bears"], hand=["Quarry Colossus"], bob_library=["Forest"] * 3)
+    )
+    bears = scenario.find("Grizzly Bears", Zone.BATTLEFIELD, "bob")
+    _enter(scenario, "Quarry Colossus", targets=[bears])
+    assert scenario.player("bob").library.index(bears) == 3
