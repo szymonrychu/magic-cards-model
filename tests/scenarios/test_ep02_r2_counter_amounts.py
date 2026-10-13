@@ -353,6 +353,21 @@ def test_descendant_of_masumaro_removes_only_counters_it_has():
     assert descendant.counter_count(Counter.PLUS_ONE) == 0  # +1 then at most 1 removed
 
 
+def test_descendant_of_masumaro_hand_count_amount_is_applied_once():
+    """Two readers on one clause would double the count: exactly one hand count lands."""
+    scenario = _board(
+        ["Descendant of Masumaro"],
+        alice_hand=["Forest", "Forest"],
+        bob_hand=[],
+        step=Step.UNTAP,
+    )
+    descendant = scenario.creature("Descendant of Masumaro", "alice")
+    _to_step(scenario, Step.UPKEEP)
+    scenario.choose_trigger_targets("Descendant of Masumaro", ["bob"])
+    _settle(scenario)
+    assert descendant.counter_count(Counter.PLUS_ONE) == 2
+
+
 # -- Sphere of Annihilation: exile everything with mana value up to its void counters
 
 

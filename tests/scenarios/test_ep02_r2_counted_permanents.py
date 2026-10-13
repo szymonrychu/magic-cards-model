@@ -677,6 +677,24 @@ def test_nightmare_incursion_exiles_up_to_the_swamp_count_from_the_targets_libra
     assert len(scenario.player("alice").library) == 12
 
 
+def test_search_target_library_and_exile_exiles_exactly_the_chosen_cards_once():
+    """One reader owns the shape: the chosen cards are exiled once (exile holds
+    exactly them) and the target's library shrinks by exactly that many."""
+    scenario = _main(
+        _build(
+            ["Swamp"] * 2 + ["Island"] * 4,
+            ["Swamp"] * 4,
+            hand=["Nightmare Incursion"],
+            bob_library=TARGET_LIBRARY,
+        )
+    )
+    picked = [scenario.find(name, Zone.LIBRARY, "bob") for name in TARGET_LIBRARY[:2]]
+    scenario.will_choose_cards(*picked, username="alice", times=None)
+    _cast(scenario, "Nightmare Incursion", targets=["bob"])
+    assert sorted(card.id for card in scenario.game.exile) == sorted(card.id for card in picked)
+    assert len(scenario.player("bob").library) == len(TARGET_LIBRARY) - 2
+
+
 # --------------------------------------------------------------------------
 # "return each creature your opponents control with toughness X or less to its
 # owner's hand, where X is the number of Islands you control" (Scourge of

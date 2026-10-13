@@ -31,6 +31,7 @@ from .ep02_r1_counter_amounts import (
     choose_counters_to_remove,
     choose_removal_allocation,
 )
+from .ep02_r2_cards_in_zone_counts import hand_count_expression
 from .layers import (
     ContinuousEffect,
     CountCountersOnIt,
@@ -554,9 +555,9 @@ def _parse_count_the_number_then_rest(text: str):
 
 # ---------------------------------------------------------------------------
 # "put/remove a <kind> counter on/from <it> for each card in <a hand>"
-# (Descendant of Masumaro). The cards-in-hand count itself is T2's shared part
-# (`cards-in-hand-count-amount`); this builds the minimum the counter pair needs
-# so the card reads in this tree, and is the one to drop at integration.
+# (Descendant of Masumaro). The cards-in-hand count itself is
+# `ep02_r2_cards_in_zone_counts.hand_count_expression`; this only reads the
+# counter pair around it.
 # ---------------------------------------------------------------------------
 
 _COUNTERS_FOR_EACH_CARD_IN_HAND_RE = re.compile(
@@ -565,18 +566,6 @@ _COUNTERS_FOR_EACH_CARD_IN_HAND_RE = re.compile(
     r"(?P<hand>your hand|target opponent's hand|that player's hand|target player's hand)$",
     re.IGNORECASE,
 )
-
-
-def _hand_owner(game: "Game", ability, hand: str) -> str:
-    controller = game.controller_of(ability).username
-    if hand.lower() == "your hand":
-        return controller
-    from ..models.player import Player
-
-    for target in game.resolve_targets(ability):
-        if isinstance(target, Player):
-            return target.username
-    return controller
 
 
 @MIXED_CLAUSE.rung("s26", for_spell=FORWARD)
@@ -595,13 +584,16 @@ def _parse_counters_for_each_card_in_hand_clause(clause: str, *, for_spell: bool
         return None
     kind = _counter_kind(match.group("kind").lower())
     putting = match.group("verb").lower() == "put"
-    hand = match.group("hand")
+    hand = "your hand" if match.group("hand").lower() == "your hand" else "that player's hand"
+    in_hand = hand_count_expression(f"cards in {hand}")
+    if in_hand is None:
+        return None
 
     def effect(game: "Game", ability) -> None:
         source = ability.source_or_last_known(game)
         if source is None or source.zone is not Zone.BATTLEFIELD:
             return
-        amount = unit * len(game.player(_hand_owner(game, ability, hand)).hand)
+        amount = unit * in_hand(game, game.controller_of(ability).username)
         if putting:
             game.add_counters(source, kind, amount)
         else:

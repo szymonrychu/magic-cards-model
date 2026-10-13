@@ -30,6 +30,8 @@ from collections.abc import Callable
 from functools import cache
 from typing import TYPE_CHECKING
 
+from ..numbers import COUNT
+
 if TYPE_CHECKING:
     from ..models.card_state import CardState
     from ..models.game import Game
@@ -718,7 +720,7 @@ def parse_cast_any_number_from_hand_free_clause(clause: str, *, for_spell: bool)
 
 _SEARCH_TARGET_LIBRARY_EXILE_RE = re.compile(
     r"^search target (?P<who>player|opponent)'s library for (?P<upto>up to )?"
-    r"(?P<n>\d+|a|an|one|two|three|four|five|x) cards?"
+    rf"(?P<n>{COUNT}|x) cards?"
     r"(?:, where x is (?P<where>.+?))?,? and exile (?:them|it)"
     r"(?:\.|,) then that player shuffles$",
     re.IGNORECASE,
