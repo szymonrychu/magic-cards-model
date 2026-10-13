@@ -1480,9 +1480,16 @@ class ZonesMixin:
         zone: Zone = Zone.LIBRARY,
         caused_by: str | None = None,
         searcher: str | None = None,
+        total_mana_value: int | None = None,
     ) -> list[CardState]:
         """Search one of a player's zones, take what was found out of it, and
         (library only) shuffle.
+
+        `total_mana_value` is "any number of `<cards>` with total mana value N
+        or less" (Protean Hulk): the finds may be any number, but their mana
+        values (CR 202.3) must add up to at most N. A set over the total is
+        an illegal answer (CR 608.2d) and is refused; the default answer is
+        the zone-order prefix that fits.
 
         `searcher` is the player doing the searching when that is not the zone's
         owner ("Search target player's library ...", Nightmare Incursion): CR
@@ -1616,6 +1623,12 @@ class ZonesMixin:
             candidates = [state for state in searchable if matches(state)]
             limit = min(count, len(candidates))
             found: list[CardState] = candidates[:limit]
+            if total_mana_value is not None:
+                found, spent = [], 0
+                for state in candidates:
+                    if len(found) < limit and spent + state.mana_value <= total_mana_value:
+                        found.append(state)
+                        spent += state.mana_value
             if candidates and (optional or len(candidates) > limit):
                 chosen = self.ask(
                     Decision(
@@ -1642,6 +1655,13 @@ class ZonesMixin:
                 assert isinstance(chosen, tuple)
                 by_id = {state.id: state for state in candidates}
                 found = [by_id[card_id] for card_id in chosen]
+                if total_mana_value is not None and (
+                    sum(state.mana_value for state in found) > total_mana_value
+                ):
+                    raise ValueError(
+                        f"the chosen cards' total mana value exceeds {total_mana_value} "
+                        "(CR 608.2d: an illegal choice cannot be made)"
+                    )
 
             for state in found:
                 player.cards_in(zone).remove(state)
@@ -1696,6 +1716,7 @@ class ZonesMixin:
         source: str | None = None,
         source_id: str | None = None,
         caused_by: str | None = None,
+        total_mana_value: int | None = None,
     ) -> list[CardState]:
         """Search a library for a stated quality, reveal the finds if the text
         says so, put them into the hand, onto the battlefield, or into the
@@ -1749,6 +1770,7 @@ class ZonesMixin:
                 source=source,
                 source_id=source_id,
                 caused_by=caused_by,
+                total_mana_value=total_mana_value,
             )
             if reveal:
                 for state in found:

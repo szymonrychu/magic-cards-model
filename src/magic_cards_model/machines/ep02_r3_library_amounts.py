@@ -32,17 +32,27 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
-from ..models.card import Color
+from ..models.card import Color, Type
 from ..models.card_state import CardState
 from ..models.player import Player
 from ..models.zone import Zone
 from ..numbers import COUNT, parse_count
+from .amount_sentences import token_maker
+from .chosen_type import shares_creature_type
+from .converge import colors_of_mana_spent
 from .decisions import Decision, DecisionKind, source_id_of
 from .delayed import ReflexiveDamageEqualToSubjectPowerConsequence
-from .effects._chains import ABILITY_TEXT, SPELL_TEXT
-from .effects._common import _card_description_is_readable, _quality_matcher
+from .effects._chains import ABILITY_TEXT, FORWARD, MIXED_CLAUSE, SPELL_TEXT
+from .effects._common import _card_description_is_readable, _quality_matcher, _targets_understood
 from .effects.amounts import count_expression
-from .effects.library import _bottom_in_random_order, _put_rest_on_bottom
+from .effects.dispatch import _ability_effect_or_notice, _parse_mixed_clause
+from .effects.library import (
+    _bottom_in_random_order,
+    _put_rest_on_bottom,
+    put_ability_targets_on_bottom_of_owners_library,
+)
+from .effects.search import _search_and_exile_matching_name, _single_names
+from .return_transformed_attached import _back_face_enchant_refusal
 from .triggers import is_ability
 
 if TYPE_CHECKING:
@@ -58,6 +68,10 @@ _SELF_POWER = r"(?:this creature|this permanent|~)'s power"
 _FIXED_BOUND_RE = re.compile(r"^(?P<n>\d+) or less$", re.IGNORECASE)
 _LTE_BOUND_RE = re.compile(r"^less than or equal to (?P<expr>.+)$", re.IGNORECASE)
 _X_BOUND_RE = re.compile(r"^x or less$", re.IGNORECASE)
+_THAT_SUBJECT_RE = re.compile(r"^that (?:aura|creature|permanent|card|spell)$", re.IGNORECASE)
+_CONVERGE_RE = re.compile(
+    r"^the number of colors of mana spent to cast (?:this spell|~)$", re.IGNORECASE
+)
 _CONVOKED_RE = re.compile(r"^the number of creatures that convoked (?:this creature|~)$")
 
 
@@ -95,6 +109,26 @@ def parse_mana_value_bound(bound: str, where_x: str | None = None) -> Bound | No
             return None if source is None else game.power_of(source)
 
         return power
+    subject = _THAT_SUBJECT_RE.fullmatch(expr)
+    if subject is not None:
+
+        def referenced(game: "Game", obj: Any, _controller: Player) -> int | None:
+            # "that Aura" / "that creature": the object the trigger event names,
+            # its mana value as it is now (CR 202.3, CR 608.2h).
+            event = getattr(obj, "event", None)
+            if event is None or event.subject_id is None:
+                return None
+            state = game.find_by_id(event.subject_id)
+            return None if state is None else int(state.mana_value)
+
+        return referenced
+    if _CONVERGE_RE.fullmatch(expr):
+
+        def converge(game: "Game", obj: Any, _controller: Player) -> int | None:
+            # Converge: the colors of mana spent to cast this spell (CR 105.1).
+            return colors_of_mana_spent(game, obj)
+
+        return converge
     counted = count_expression(expr)
     if counted is None:
         return None
@@ -559,3 +593,691 @@ def _parse_look_plan_spell(text: str) -> Any:
 def _parse_look_plan_ability(text: str) -> Any:
     """An ability that looks at the top of the library and takes some of it."""
     return _effect(text, for_spell=False)
+
+
+# --------------------------------------------------------------------------
+# Searching the library with an amount-bounded or relational criterion
+# --------------------------------------------------------------------------
+#
+# "Search your library for `<criterion>`[, reveal it], put it into your hand /
+# onto the battlefield[ tapped][ attached to this creature], then shuffle."
+# The criterion is read by `_criteria` into a predicate built at resolution
+# (CR 608.2h): a bound taken from the board, from the cast, from the trigger
+# event's subject or from the sacrificed creature. CR 701.23b: a stated quality
+# lets the searcher find fewer (or none), which `Game.search_library` honours.
+
+_SEARCH_JOIN_RE = re.compile(r"\.\s+(put (?:those cards|that card|them|it)\b)", re.IGNORECASE)
+_REMINDER_RE = re.compile(r"\s*\([^)]*\)")
+
+_SEARCH_PUT_RE = re.compile(
+    r"^(?P<may>you may )?search your library for (?P<crit>.+?)"
+    r"(?P<reveal>, reveal (?:it|them|that card|those cards))?"
+    r", put (?:it|them|that card|those cards) (?P<dest>into your hand|onto the battlefield)"
+    r"(?P<tapped> tapped)?(?P<attached> attached to (?:this creature|this permanent|~))?"
+    r", then shuffle(?P<tail>\.?(?: you gain 1 life for each \{s\} spent to cast this spell)?)\.?$",
+    re.IGNORECASE,
+)
+_TOTAL_RE = re.compile(
+    r"^any number of (?P<q>.+?) cards? with total mana value (?P<n>\d+) or less$", re.IGNORECASE
+)
+_UP_TO_RE = re.compile(
+    rf"^up to (?P<n>x|{COUNT}) (?P<q>.+?) cards?(?:, where x is (?P<wx>.+))?$", re.IGNORECASE
+)
+_NAMED_PAIR_RE = re.compile(
+    r"^a card named (?P<a>.+?) and/or a card named (?P<b>.+)$", re.IGNORECASE
+)
+_ALTERNATIVES_RE = re.compile(r"^an? .+? card(?:, an? .+? card)+,? or an? .+? card$", re.IGNORECASE)
+_SINGLE_RE = re.compile(
+    r"^an? (?:(?P<q>.+?) )?card"
+    r"(?: with mana value (?P<bound>.+?))?"
+    r"(?: and with a different name than each (?P<uniq>[a-z]+) you control)?"
+    r"(?: with the same (?P<same>total power and toughness))?"
+    r"(?P<shares> that shares a creature type with the sacrificed creature and has mana value "
+    r"equal to 1 plus that creature's mana value)?$",
+    re.IGNORECASE,
+)
+
+Predicate = Callable[[CardState], bool]
+PredicateFactory = Callable[["Game", Any, Player], Predicate | None]
+
+
+@dataclass(frozen=True)
+class _Crit:
+    make: PredicateFactory
+    count: Callable[["Game", Any, Player], int]
+    total: Callable[["Game", Any, Player], int] | None = None
+
+
+def _quality(text: str | None) -> Predicate | None:
+    """The card matcher for a `<quality>` card, `None` when unreadable; an
+    absent quality is "a card" (anything)."""
+    if text is None or not text.strip():
+        return lambda _state: True
+    cleaned = re.sub(r",\s+or\s+", ", ", text.strip(), flags=re.IGNORECASE)
+    if not _card_description_is_readable(cleaned):
+        return None
+    return _quality_matcher(cleaned)
+
+
+def _fixed(matcher: Predicate, count: int = 1) -> _Crit:
+    return _Crit(lambda _g, _o, _c: matcher, lambda _g, _o, _c: count)
+
+
+def _event_subject(game: "Game", obj: Any) -> CardState | None:
+    event = getattr(obj, "event", None)
+    if event is None or event.subject_id is None:
+        return None
+    return game.find_by_id(event.subject_id)
+
+
+def _total_power_toughness(game: "Game", state: CardState) -> int | None:
+    if state.zone is Zone.BATTLEFIELD:
+        power, toughness = game.power_of(state), game.toughness_of(state)
+    else:
+        try:
+            power, toughness = int(state.card.power or ""), int(state.card.toughness or "")
+        except ValueError:
+            return None
+    return None if power is None or toughness is None else power + toughness
+
+
+def _printed_total(state: CardState) -> int | None:
+    try:
+        return int(state.card.power or "") + int(state.card.toughness or "")
+    except ValueError:
+        return None
+
+
+@functools.lru_cache(maxsize=2048)
+def _criteria(text: str) -> _Crit | None:
+    total = _TOTAL_RE.fullmatch(text)
+    if total is not None:
+        matcher = _quality(total.group("q"))
+        if matcher is None:
+            return None
+        limit = int(total.group("n"))
+        return _Crit(
+            lambda _g, _o, _c: matcher,
+            lambda _g, _o, controller: len(controller.library),
+            lambda _g, _o, _c: limit,
+        )
+    up_to = _UP_TO_RE.fullmatch(text)
+    if up_to is not None:
+        matcher = _quality(up_to.group("q"))
+        if matcher is None:
+            return None
+        word = up_to.group("n").lower()
+        if word == "x":
+            amount = _where_x_amount(up_to.group("wx"))
+            if amount is None:
+                return None
+            return _Crit(lambda _g, _o, _c: matcher, amount)
+        number = parse_count(word)
+        return None if number is None else _fixed(matcher, number)
+    named = _NAMED_PAIR_RE.fullmatch(text)
+    if named is not None:
+        names = {named.group("a").strip(), named.group("b").strip()}
+        return _Crit(
+            lambda _g, _o, _c: lambda state: state.name in names,
+            lambda _g, _o, _c: len(names),
+        )
+    if _ALTERNATIVES_RE.fullmatch(text) is not None:
+        matchers = [_quality(item) for item in re.findall(r"an? (.+?) card", text, re.IGNORECASE)]
+        if not matchers or any(matcher is None for matcher in matchers):
+            return None
+        ready = [matcher for matcher in matchers if matcher is not None]
+        return _fixed(lambda state: any(matcher(state) for matcher in ready))
+    single = _SINGLE_RE.fullmatch(text)
+    if single is None:
+        return None
+    base = _quality(single.group("q"))
+    bound = None
+    if single.group("bound") is not None:
+        bound = parse_mana_value_bound(single.group("bound"))
+        if bound is None:
+            return None
+    if base is None:
+        return None
+    uniq, same, shares = single.group("uniq"), single.group("same"), single.group("shares")
+    if uniq is not None and not _card_description_is_readable(uniq):
+        return None
+
+    def make(game: "Game", obj: Any, controller: Player) -> Predicate | None:
+        ceiling = None
+        if bound is not None:
+            ceiling = bound(game, obj, controller)
+            if ceiling is None:
+                return None
+        taken: set[str] = set()
+        if uniq is not None:
+            kind = _quality_matcher(uniq)
+            taken = {
+                name
+                for permanent in game.permanents_controlled_by(controller.username)
+                if kind(permanent)
+                for name in _single_names(permanent.name)
+            }
+        wanted_total = None
+        if same is not None:
+            subject = _event_subject(game, obj)
+            wanted_total = None if subject is None else _total_power_toughness(game, subject)
+            if wanted_total is None:
+                return None
+        sacrificed: CardState | None = None
+        sacrificed_value = 0
+        if shares is not None:
+            ids = getattr(obj, "cost_sacrificed_card_ids", ())
+            values = getattr(obj, "cost_sacrificed_mana_values", ())
+            sacrificed = game.find_by_id(ids[0]) if ids else None
+            if sacrificed is None or not values:
+                return None
+            sacrificed_value = int(values[0])
+
+        def predicate(state: CardState) -> bool:
+            if not base(state):
+                return False
+            if ceiling is not None and state.mana_value > ceiling:
+                return False
+            if taken and not taken.isdisjoint(_single_names(state.card.name)):
+                return False
+            if wanted_total is not None and _printed_total(state) != wanted_total:
+                return False
+            return sacrificed is None or (
+                state.mana_value == sacrificed_value + 1
+                and shares_creature_type(game, sacrificed, state)
+            )
+
+        return predicate
+
+    return _Crit(make, lambda _g, _o, _c: 1)
+
+
+def _where_x_amount(where_x: str | None) -> Callable[["Game", Any, Player], int] | None:
+    if where_x is None:
+        return None
+    expr = where_x.strip().rstrip(".").lower()
+    if expr == "your speed":
+        # CR 702.179b: a player without speed has none; the count is 0.
+        return lambda _game, _obj, controller: controller.speed or 0
+    counted = count_expression(expr)
+    if counted is None:
+        return None
+    return lambda game, _obj, controller: counted(game, controller.username)
+
+
+@dataclass(frozen=True)
+class _SearchPlan:
+    optional: bool
+    crit: _Crit
+    prompt: str
+    battlefield: bool
+    tapped: bool
+    attached: bool
+    reveal: bool
+    snow_life: bool
+
+
+@functools.lru_cache(maxsize=2048)
+def _search_plan(text: str) -> _SearchPlan | None:
+    joined = _SEARCH_JOIN_RE.sub(r", \1", _REMINDER_RE.sub("", " ".join(text.strip().split())))
+    match = _SEARCH_PUT_RE.fullmatch(joined)
+    if match is None:
+        return None
+    crit = _criteria(match.group("crit").strip())
+    if crit is None:
+        return None
+    battlefield = match.group("dest").lower() == "onto the battlefield"
+    attached = match.group("attached") is not None
+    if attached and not battlefield:
+        return None
+    return _SearchPlan(
+        optional=match.group("may") is not None,
+        crit=crit,
+        prompt=f"search your library for {match.group('crit').strip()}",
+        battlefield=battlefield,
+        tapped=match.group("tapped") is not None,
+        attached=attached,
+        reveal=match.group("reveal") is not None,
+        snow_life="{s}" in match.group("tail").lower(),
+    )
+
+
+def _snow_mana_spent(game: "Game", obj: Any) -> int:
+    record = game.cast_record_of(obj)
+    return 0 if record is None else sum(record.snow_mana_spent.values())
+
+
+def _run_search(plan: _SearchPlan, game: "Game", obj: Any, *, for_spell: bool) -> None:
+    controller = game.controller_of(obj)
+    source = obj.name if for_spell else obj.source_name
+    source_id = source_id_of(obj)
+    if plan.optional and not game.may(controller, plan.prompt, source=source, source_id=source_id):
+        return
+    predicate = plan.crit.make(game, obj, controller)
+    if predicate is None:
+        game.shuffle_library(controller)  # nothing can qualify; the search still happens
+        return
+    host = None
+    if plan.attached:
+        host = obj.source(game) if is_ability(obj) else None
+        if host is None:
+            return
+        base = predicate
+
+        def predicate(state: CardState, _base=base, _host=host) -> bool:  # type: ignore[misc]
+            # CR 303.4i: an Aura that cannot enchant the host stays in the library.
+            return _base(state) and (
+                _back_face_enchant_refusal(
+                    game, state, _host, controller.username, transformed=False
+                )
+                is None
+            )
+
+    count = plan.crit.count(game, obj, controller)
+    total = None if plan.crit.total is None else plan.crit.total(game, obj, controller)
+    if plan.attached:
+        found = game.search_library(
+            controller,
+            predicate,
+            count=count,
+            optional=True,
+            shuffle=False,
+            source=source,
+            source_id=source_id,
+            caused_by=controller.username,
+        )
+        with game.entering_together():
+            for state in found:
+                entered = game.put_onto_battlefield(state, controller.username, tapped=plan.tapped)
+                if entered.zone is Zone.BATTLEFIELD and host is not None:
+                    entered.attach_to(host)
+        game.shuffle_library(controller)
+    else:
+        game.search_and_put(
+            controller,
+            predicate,
+            destination=Zone.BATTLEFIELD if plan.battlefield else Zone.HAND,
+            count=count,
+            reveal=plan.reveal,
+            tapped=plan.tapped,
+            source=source,
+            source_id=source_id,
+            caused_by=controller.username,
+            total_mana_value=total,
+        )
+    if plan.snow_life:
+        game.gain_life(controller, _snow_mana_spent(game, obj))
+
+
+# Bring to Light: converge - search, exile, then a free cast.
+_CONVERGE_EXILE_RE = re.compile(
+    r"^(?:converge\s+[-—]\s+)?search your library for (?P<crit>.+?), exile that card, then "
+    r"shuffle\. you may cast that card without paying its mana cost\.?$",
+    re.IGNORECASE,
+)
+
+
+@functools.lru_cache(maxsize=1024)
+def _converge_plan(text: str) -> _Crit | None:
+    match = _CONVERGE_EXILE_RE.fullmatch(" ".join(text.strip().split()))
+    return None if match is None else _criteria(match.group("crit").strip())
+
+
+def _run_search_exile_cast(crit: _Crit, game: "Game", obj: Any, *, for_spell: bool) -> None:
+    controller = game.controller_of(obj)
+    source = obj.name if for_spell else obj.source_name
+    source_id = source_id_of(obj)
+    predicate = crit.make(game, obj, controller)
+    found = (
+        []
+        if predicate is None
+        else game.search_library(
+            controller,
+            predicate,
+            count=1,
+            optional=True,
+            source=source,
+            source_id=source_id,
+            caused_by=controller.username,
+        )
+    )
+    game.exile_cards(found)
+    for state in found:
+        game.may_cast_during_resolution(
+            state,
+            controller.username,
+            prompt=f"cast {state.name} without paying its mana cost",
+            source=source,
+            source_id=source_id,
+            source_name=source,
+            rule="CR 608.2g",
+        )
+
+
+# Hide // Seek's second half: search an opponent's library, exile, gain life.
+_SEARCH_OPPONENT_EXILE_RE = re.compile(
+    r"^search target opponent's library for a card and exile it\. you gain life equal to its "
+    r"mana value\. then that player shuffles\.?$",
+    re.IGNORECASE,
+)
+
+
+def _search_opponent_exile(text: str, *, for_spell: bool) -> Any:
+    if _SEARCH_OPPONENT_EXILE_RE.fullmatch(" ".join(text.strip().split())) is None:
+        return None
+    if not _targets_understood("target opponent", allow_player_targets=True):
+        return None
+
+    def effect(game: "Game", obj: Any) -> None:
+        controller = game.controller_of(obj)
+        source = obj.name if for_spell else obj.source_name
+        target = next(
+            (t for t in game.resolve_targets(obj) if isinstance(t, Player)),
+            None,
+        )
+        if target is None:
+            return
+        # CR 701.23d: a search for "a card" with no quality finds one if it can.
+        found = game.search_library(
+            target,
+            lambda _state: True,
+            count=1,
+            optional=False,
+            shuffle=False,
+            searcher=controller.username,
+            source=source,
+            source_id=source_id_of(obj),
+        )
+        game.exile_cards(found)
+        for state in found:
+            game.gain_life(controller, int(state.mana_value))
+        game.shuffle_library(target)
+
+    return effect
+
+
+# Necromentia / The End: a name chosen or taken from a permanent, exiled from
+# the graveyard, hand and library of a player, then a payoff per card exiled
+# from the hand.
+_CHOOSE_NAME_EXILE_RE = re.compile(
+    r"^choose a card name other than a basic land card name\. search target opponent's "
+    r"graveyard, hand, and library for any number of cards with that name and exile them\. "
+    r"that player shuffles, then creates (?P<token>an? .+? tokens?) for each card exiled from "
+    r"their hand this way\.?$",
+    re.IGNORECASE,
+)
+_EXILE_TARGET_THEN_NAME_RE = re.compile(
+    r"^exile target (?P<what>[a-z ]+?)\. search its controller's graveyard, hand, and library "
+    r"for any number of cards with the same name as that permanent and exile them\. that "
+    r"player shuffles, then draws a card for each card exiled from their hand this way\.?$",
+    re.IGNORECASE,
+)
+
+
+def _is_basic_land_name(name: str) -> bool:
+    from ..data.printing_pool import resolve_printing
+    from ..models.card import Supertype, Type
+
+    printing = resolve_printing(name)
+    return (
+        printing is not None
+        and Supertype.BASIC in set(printing.supertypes)
+        and Type.LAND in set(printing.types)
+    )
+
+
+def _choose_name_exile(text: str, *, for_spell: bool) -> Any:
+    match = _CHOOSE_NAME_EXILE_RE.fullmatch(" ".join(text.strip().split()))
+    if match is None:
+        return None
+    if not _targets_understood("target opponent", allow_player_targets=True):
+        return None
+    maker = token_maker(match.group("token"))
+    if maker is None:
+        return None
+
+    def effect(game: "Game", obj: Any) -> None:
+        controller = game.controller_of(obj)
+        source = obj.name if for_spell else obj.source_name
+        target = next((t for t in game.resolve_targets(obj) if isinstance(t, Player)), None)
+        if target is None:
+            return
+        name = game.ask(
+            Decision(
+                kind=DecisionKind.CHOOSE_A_QUALITY,
+                player=controller.username,
+                prompt="choose a card name other than a basic land card name",
+                source=source,
+                source_id=source_id_of(obj),
+                quality="card name",
+            )
+        )
+        assert isinstance(name, str)
+        if _is_basic_land_name(name):
+            raise ValueError(f"{source}: {name!r} is a basic land card name (CR 201.4a)")
+        _exiled, from_hand = _search_and_exile_matching_name(
+            game,
+            target,
+            name,
+            chooser=controller,
+            cap=None,
+            source=source,
+            source_id=source_id_of(obj),
+        )
+        maker(game, target.username, from_hand)
+
+    return effect
+
+
+def _exile_then_name_exile(text: str, *, for_spell: bool) -> Any:
+    match = _EXILE_TARGET_THEN_NAME_RE.fullmatch(" ".join(text.strip().split()))
+    if match is None:
+        return None
+    if not _targets_understood(f"target {match.group('what')}", battlefield_only=True):
+        return None
+
+    def effect(game: "Game", obj: Any) -> None:
+        controller = game.controller_of(obj)
+        source = obj.name if for_spell else obj.source_name
+        target = next((t for t in game.resolve_targets(obj) if isinstance(t, CardState)), None)
+        if target is None or target.zone is not Zone.BATTLEFIELD:
+            return
+        owner_name = game.controller_of(target).username
+        name = target.name
+        game.exile_permanent(target)
+        owner = game.player(owner_name)
+        _exiled, from_hand = _search_and_exile_matching_name(
+            game,
+            owner,
+            name,
+            chooser=controller,
+            cap=None,
+            source=source,
+            source_id=source_id_of(obj),
+        )
+        if from_hand:
+            game.draw_cards(owner.username, from_hand)
+
+    return effect
+
+
+# Doubling Chant / Clarion Ultimatum: for each of a group of permanents, find a
+# card with the same name; all the finds enter together, then one shuffle.
+_FOR_EACH_SAME_NAME_RE = re.compile(
+    r"^for each (?P<what>creature|permanent) you control, you may search your library for "
+    r"an? (?:(?P<q>creature) )?card with the same name as that (?P=what)\. put those cards "
+    r"onto the battlefield(?P<tapped> tapped)?, then shuffle\.?$",
+    re.IGNORECASE,
+)
+_CHOSEN_SAME_NAME_RE = re.compile(
+    rf"^choose (?P<n>{COUNT}) permanents you control\. for each of those permanents, you may "
+    r"search your library for a card with the same name as that permanent\. put those cards "
+    r"onto the battlefield(?P<tapped> tapped)?, then shuffle\.?$",
+    re.IGNORECASE,
+)
+
+
+def _same_name_group(text: str, *, for_spell: bool) -> Any:
+    whole = " ".join(text.strip().split())
+    each = _FOR_EACH_SAME_NAME_RE.fullmatch(whole)
+    chosen = None if each is not None else _CHOSEN_SAME_NAME_RE.fullmatch(whole)
+    if each is None and chosen is None:
+        return None
+    match = each or chosen
+    assert match is not None
+    tapped = match.group("tapped") is not None
+    chosen_count = None if chosen is None else parse_count(chosen.group("n"))
+    if chosen is not None and chosen_count is None:
+        return None
+    only_creatures = each is not None and each.group("what").lower() == "creature"
+
+    def effect(game: "Game", obj: Any) -> None:
+        controller = game.controller_of(obj)
+        source = obj.name if for_spell else obj.source_name
+        source_id = source_id_of(obj)
+        group = [
+            permanent
+            for permanent in game.permanents_controlled_by(controller.username)
+            if not only_creatures or Type.CREATURE in game.characteristics_of(permanent).types
+        ]
+        if chosen_count is not None and len(group) > chosen_count:
+            answer = game.ask(
+                Decision(
+                    kind=DecisionKind.CHOOSE_CARDS,
+                    player=controller.username,
+                    prompt=f"choose {chosen_count} permanents you control",
+                    source=source,
+                    source_id=source_id,
+                    amount=chosen_count,
+                    exact=True,
+                    cards=tuple(permanent.id for permanent in group),
+                )
+            )
+            assert isinstance(answer, tuple)
+            group = [permanent for permanent in group if permanent.id in set(answer)]
+        names = [permanent.name for permanent in group]
+        entering: list[CardState] = []
+        for name in names:
+            single = _single_names(name)
+            entering.extend(
+                game.search_library(
+                    controller,
+                    lambda state, _single=single, _taken=entering: (
+                        not _single.isdisjoint(_single_names(state.card.name))
+                        and state not in _taken
+                        and (not only_creatures or state.card.is_creature)
+                    ),
+                    count=1,
+                    optional=True,
+                    shuffle=False,
+                    source=source,
+                    source_id=source_id,
+                    caused_by=controller.username,
+                )
+            )
+        with game.entering_together():
+            for state in entering:
+                game.put_onto_battlefield(state, controller.username, tapped=tapped)
+        game.shuffle_library(controller)
+
+    return effect
+
+
+def _search_effect(text: str, *, for_spell: bool) -> Any:
+    lowered = text.lower()
+    if "search " not in lowered:
+        return None
+    plan = _search_plan(text)
+    if plan is not None:
+
+        def effect(game: "Game", obj: Any) -> None:
+            _run_search(plan, game, obj, for_spell=for_spell)
+
+        return effect
+    crit = _converge_plan(text)
+    if crit is not None:
+
+        def converge_effect(game: "Game", obj: Any) -> None:
+            _run_search_exile_cast(crit, game, obj, for_spell=for_spell)
+
+        return converge_effect
+    for reader in (
+        _search_opponent_exile,
+        _choose_name_exile,
+        _exile_then_name_exile,
+        _same_name_group,
+    ):
+        found = reader(text, for_spell=for_spell)
+        if found is not None:
+            return found
+    return None
+
+
+@SPELL_TEXT.rung("s23", before=("parse_mixed_effect_for_spell",))
+def _parse_search_spell(text: str) -> Any:
+    """A spell that searches with an amount-bounded or relational criterion."""
+    return _search_effect(text, for_spell=True)
+
+
+@ABILITY_TEXT.rung("s40", before=("parse_mixed_effect",))
+def _parse_search_ability(text: str) -> Any:
+    """An ability that searches with an amount-bounded or relational criterion."""
+    return _search_effect(text, for_spell=False)
+
+
+# "put target <permanent> on the bottom of its owner's library" (Hide).
+_PUT_BOTTOM_RE = re.compile(
+    r"^put (?P<phrase>target [a-z, ]+?) on the bottom of its owner's library\.?$", re.IGNORECASE
+)
+
+
+@MIXED_CLAUSE.rung("s31", for_spell=FORWARD)
+def _parse_put_permanent_on_bottom_clause(clause: str, *, for_spell: bool) -> Any:
+    """CR 401.1: a permanent put on the bottom of its owner's library; the
+    battlefield twin of the graveyard reader (CR 401.2 keeps the order)."""
+    match = _PUT_BOTTOM_RE.fullmatch(clause.strip())
+    if match is None:
+        return None
+    if not _targets_understood(match.group("phrase"), count_agnostic=True):
+        return None
+    return put_ability_targets_on_bottom_of_owners_library
+
+
+# "deals twice N damage": X written in by CR 107.3a becomes a plain number.
+_TWICE_DAMAGE_RE = re.compile(r"\btwice (\d+) damage\b", re.IGNORECASE)
+
+
+@MIXED_CLAUSE.rung("s1", for_spell=FORWARD)
+def _parse_twice_n_damage_clause(clause: str, *, for_spell: bool) -> Any:
+    """ "`<source>` deals twice 3 damage to ..." is "deals 6 damage": the
+    doubled number, read by the ordinary damage clause readers."""
+    if "twice " not in clause.lower():
+        return None
+    rewritten = _TWICE_DAMAGE_RE.sub(lambda m: f"{2 * int(m.group(1))} damage", clause)
+    if rewritten == clause:
+        return None
+    return _parse_mixed_clause(rewritten, for_spell=for_spell)
+
+
+# "gets +X/+0 until end of turn, where X is the number of other attacking
+# creatures" is the per-attacker pump the older reader already performs.
+_WHERE_X_OTHER_ATTACKERS_RE = re.compile(
+    r"^(?P<subject>it|this creature|~) gets (?P<p>\+x|\+0)/(?P<t>\+x|\+0) until end of turn, "
+    r"where x is the number of other attacking creatures\.?$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s40", before=("parse_mixed_effect",))
+def _parse_pump_where_x_other_attackers(text: str) -> Any:
+    match = _WHERE_X_OTHER_ATTACKERS_RE.fullmatch(" ".join(text.strip().split()))
+    if match is None or (match.group("p") == "+0" and match.group("t") == "+0"):
+        return None
+
+    def per(value: str) -> str:
+        return "+1" if value.lower() == "+x" else "+0"
+
+    return _ability_effect_or_notice(
+        f"{match.group('subject')} gets {per(match.group('p'))}/{per(match.group('t'))} "
+        "until end of turn for each other attacking creature."
+    )
