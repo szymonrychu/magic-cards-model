@@ -46,9 +46,9 @@ from .layers import (
     add_type,
     creatures_controlled_by,
     creatures_controlled_by_opponents_of,
-    lose_all_abilities,
     creatures_controlled_by_opponents_of_with_power_at_most,
     grant_ability,
+    lose_all_abilities,
     only_this_incarnation,
     set_power_toughness,
 )
@@ -208,13 +208,17 @@ def perform_removal(game: "Game", ability, spec: RemoveCounters, x: int | None =
     which kind, from which permanent), and return how many came off. Zero when
     a "you may" is declined or nothing was there to take (CR 122.1)."""
     controller = game.controller_of(ability).username
-    if spec.may and spec.amount != "any" and not game.ask(
-        Decision(
-            kind=DecisionKind.MAY,
-            player=controller,
-            prompt=f"remove {spec.kind or ''} counters?".replace("  ", " "),
-            source=ability.source_name,
-            source_id=source_id_of(ability),
+    if (
+        spec.may
+        and spec.amount != "any"
+        and not game.ask(
+            Decision(
+                kind=DecisionKind.MAY,
+                player=controller,
+                prompt=f"remove {spec.kind or ''} counters?".replace("  ", " "),
+                source=ability.source_name,
+                source_id=source_id_of(ability),
+            )
         )
     ):
         return 0
@@ -957,7 +961,8 @@ def group_base_pt_effect(text: str):
         controller = game.controller_of(ability)
         if optional and not game.may(
             controller,
-            f"have the base power and toughness of your other creatures become {power}/{toughness}?",
+            "have the base power and toughness of your other creatures become "
+            f"{power}/{toughness}?",
             source=ability.source_name,
             source_id=source_id_of(ability),
         ):
@@ -1142,7 +1147,9 @@ def parse_counter_static_sentence(sentence: str):
                 **shared,
             ),
             ContinuousEffect(
-                description=f"{source.name}: planeswalkers' power and toughness equal {kind} counters",
+                description=(
+                    f"{source.name}: planeswalkers' power and toughness equal {kind} counters"
+                ),
                 layer=Layer.POWER_TOUGHNESS,
                 sublayer=Sublayer.SET,
                 modification=SetPowerToughnessToCounters(counter=kind),

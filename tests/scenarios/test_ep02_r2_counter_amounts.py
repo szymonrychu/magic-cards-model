@@ -446,13 +446,14 @@ def test_quarry_hauler_on_a_permanent_with_no_counters_does_nothing():
 
 
 def test_exotic_pets_puts_one_counter_per_kind_among_your_creatures_on_the_tokens():
-    scenario = _board(
-        ["Grizzly Bears", "Plains", "Island", "Plains"], alice_hand=["Exotic Pets"]
-    )
+    scenario = _board(["Grizzly Bears", "Plains", "Island", "Plains"], alice_hand=["Exotic Pets"])
     bears = scenario.creature("Grizzly Bears", "alice")
     bears.add_counters(Counter.PLUS_ONE, 3)
     bears.add_counters("charge", 1)
-    scenario.cast_and_resolve("Exotic Pets", *[p for p in scenario.game.permanents_controlled_by("alice") if p.name != "Grizzly Bears"])
+    scenario.cast_and_resolve(
+        "Exotic Pets",
+        *[p for p in scenario.game.permanents_controlled_by("alice") if p.name != "Grizzly Bears"],
+    )
     fish = _named(scenario, "Fish Token")
     assert len(fish) == 2
     assert sum(f.counter_count(Counter.PLUS_ONE) for f in fish) == 1
@@ -512,7 +513,9 @@ def test_sita_varma_puts_x_counters_then_sets_the_others_to_her_power():
     )
     sita = scenario.creature("Sita Varma, Masked Racer", "alice")
     bears = scenario.creature("Grizzly Bears", "alice")
-    lands = [p for p in scenario.game.permanents_controlled_by("alice") if p.name in ("Forest", "Island")]
+    lands = [
+        p for p in scenario.game.permanents_controlled_by("alice") if p.name in ("Forest", "Island")
+    ]
     scenario.will_take_the_may(True)
     scenario.activate(sita, *lands, x_value=2)
     scenario.pass_until_resolved()
@@ -783,9 +786,7 @@ def test_toxrill_shrinks_each_opposing_creature_per_slime_counter():
 
 
 def test_toxrill_end_step_counters_kill_a_small_creature_and_leave_a_slug():
-    scenario = _board(
-        ["Toxrill, the Corrosive"], bob=["Grizzly Bears"], step=Step.POSTCOMBAT_MAIN
-    )
+    scenario = _board(["Toxrill, the Corrosive"], bob=["Grizzly Bears"], step=Step.POSTCOMBAT_MAIN)
     bears = scenario.creature("Grizzly Bears", "bob")
     bears.add_counters("slime", 1)
     _to_step(scenario, Step.END_STEP)
@@ -816,7 +817,9 @@ def test_thelon_exiles_a_fungus_card_to_put_a_spore_counter_on_each_fungus():
     yours = scenario.creature("Mold Shambler", "alice")
     theirs = scenario.creature("Mold Shambler", "bob")
     thelon = scenario.creature("Thelon of Havenwood", "alice")
-    lands = [p for p in scenario.game.permanents_controlled_by("alice") if p.name in ("Swamp", "Forest")]
+    lands = [
+        p for p in scenario.game.permanents_controlled_by("alice") if p.name in ("Swamp", "Forest")
+    ]
     card = scenario.find("Mold Shambler", Zone.GRAVEYARD, "alice")
     scenario.activate(thelon, *lands, exiling=[card])
     _settle(scenario)
@@ -959,7 +962,9 @@ def test_blessing_of_frost_counts_only_snow_mana():
         alice_hand=["Blessing of Frost"],
     )
     bears = scenario.creature("Grizzly Bears", "alice")
-    lands = scenario.untapped_sources("Snow-Covered Forest", "Snow-Covered Forest", "Forest", "Forest")
+    lands = scenario.untapped_sources(
+        "Snow-Covered Forest", "Snow-Covered Forest", "Forest", "Forest"
+    )
     _cast_blessing(scenario, lands)
     assert bears.counter_count(Counter.PLUS_ONE) == 2  # only the one creature to take them
 
@@ -1051,9 +1056,7 @@ def test_mossborn_hydra_doubles_its_own_counters_on_landfall():
 def test_hex_parasite_gets_plus_one_power_for_each_counter_removed_this_way():
     """Hex Parasite: "Remove up to X counters from target permanent. For each counter
     removed this way, this creature gets +1/+0" - the removed-this-way reader."""
-    scenario = _board(
-        ["Hex Parasite", "Swamp", "Swamp", "Swamp"], bob=["Grizzly Bears"]
-    )
+    scenario = _board(["Hex Parasite", "Swamp", "Swamp", "Swamp"], bob=["Grizzly Bears"])
     parasite = scenario.creature("Hex Parasite", "alice")
     bears = scenario.creature("Grizzly Bears", "bob")
     bears.add_counters(Counter.PLUS_ONE, 1)
@@ -1095,10 +1098,14 @@ def test_tanazir_doubling_a_creature_with_no_counters_changes_nothing():
 
 
 def test_sita_varma_with_x_zero_still_sets_the_others_to_her_power():
-    scenario = _board(["Sita Varma, Masked Racer", "Grizzly Bears"] + ["Forest"] * 2 + ["Island"] * 2)
+    scenario = _board(
+        ["Sita Varma, Masked Racer", "Grizzly Bears"] + ["Forest"] * 2 + ["Island"] * 2
+    )
     sita = scenario.creature("Sita Varma, Masked Racer", "alice")
     bears = scenario.creature("Grizzly Bears", "alice")
-    lands = [p for p in scenario.game.permanents_controlled_by("alice") if p.name in ("Forest", "Island")]
+    lands = [
+        p for p in scenario.game.permanents_controlled_by("alice") if p.name in ("Forest", "Island")
+    ]
     scenario.will_take_the_may(True)
     scenario.activate(sita, *lands, x_value=0)
     scenario.pass_until_resolved()
@@ -1107,10 +1114,14 @@ def test_sita_varma_with_x_zero_still_sets_the_others_to_her_power():
 
 
 def test_sita_varma_declining_the_set_leaves_the_others_alone():
-    scenario = _board(["Sita Varma, Masked Racer", "Grizzly Bears", "Craw Wurm"] + ["Forest"] * 3 + ["Island"] * 2)
+    scenario = _board(
+        ["Sita Varma, Masked Racer", "Grizzly Bears", "Craw Wurm"] + ["Forest"] * 3 + ["Island"] * 2
+    )
     sita = scenario.creature("Sita Varma, Masked Racer", "alice")
     wurm = scenario.creature("Craw Wurm", "alice")
-    lands = [p for p in scenario.game.permanents_controlled_by("alice") if p.name in ("Forest", "Island")]
+    lands = [
+        p for p in scenario.game.permanents_controlled_by("alice") if p.name in ("Forest", "Island")
+    ]
     scenario.will_take_the_may(False)
     scenario.activate(sita, *lands, x_value=1)
     scenario.pass_until_resolved()

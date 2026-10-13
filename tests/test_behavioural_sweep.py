@@ -2505,9 +2505,9 @@ def _counter_threshold(scenario: PlayedScenario, source: CardState, condition: s
     are put on it, read off the condition's own words."""
     if not condition:
         return
+    names = "|".join(re.escape(n) for n in (source.name.lower(), source.name.split(",")[0].lower()))
     match = re.search(
-        rf"(?:this \w+|~|{re.escape(source.name.lower())}|{re.escape(source.name.split(',')[0].lower())})"
-        r" has (?P<count>[\w,]+) or more "
+        rf"(?:this \w+|~|{names}) has (?P<count>[\w,]+) or more "
         r"(?P<kind>\S+) counters on it",
         condition.lower(),
     )
@@ -5305,7 +5305,10 @@ SWEEP_DRIVER_GAPS: tuple[DriverGap, ...] = (
     DriverGap(
         kind="dies",
         event="a permanent with the counters the condition names dying",
-        precondition=r"with (?:an?|one or more) (?:\S+ )?counters? on it dies",
+        # An opponent's creature with a counter (Toxrill's slime counters) is staged by
+        # the stock board's counter material, so it is no longer a gap.
+        precondition=r"^(?!.*creature you don't control).*"
+        r"with (?:an?|one or more) (?:\S+ )?counters? on it dies",
     ),
     DriverGap(
         kind="ring_tempts_you",
@@ -6431,7 +6434,9 @@ def _run_on_stack(
             scenario = _board(hand=(card.name, "Forest"), step=_activation_step(ability))
             game = scenario.game
             spell = _cast(scenario, card.name, ALICE)
-            indexes = [i for i, a in enumerate(game.activated_abilities(spell)) if a.text == case.text]
+            indexes = [
+                i for i, a in enumerate(game.activated_abilities(spell)) if a.text == case.text
+            ]
             if not indexes:
                 tried.append(f"{variant}: the ability is not listed on the spell")
                 continue

@@ -56,9 +56,7 @@ def parse_other_static_sentence(sentence: str) -> EffectBuilder | None:
     lowered = sentence.lower()
     if "legendary" in lowered and _NOT_LEGENDARY_IF_TOKEN_RE.fullmatch(sentence):
         return _not_legendary_if_token_builder(sentence)
-    if " counter" in lowered and (
-        counted := _counter_static_sentence(sentence)
-    ) is not None:
+    if " counter" in lowered and (counted := _counter_static_sentence(sentence)) is not None:
         return counted
     if "except mana abilities" in lowered and (
         match := _LOSE_ALL_EXCEPT_MANA_RE.fullmatch(sentence)
