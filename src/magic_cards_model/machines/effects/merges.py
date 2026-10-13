@@ -3311,7 +3311,9 @@ _DISCARD_THAT_CARD_RE = re.compile(
 )
 #: "exile that card" (Thought-Knot Seer, when not folded into the previous
 #: sentence) - CR 701.13a's move, straight from the revealed hand.
-_EXILE_THAT_CARD_RE = re.compile(r"^(?:then )?exile (?:that card|those cards)$", re.IGNORECASE)
+_EXILE_THAT_CARD_RE = re.compile(
+    r"^(?:then )?exile (?:that card|those cards|them)$", re.IGNORECASE
+)
 #: "you lose N life" - Thoughtseize's own optional fourth sentence.
 _YOU_LOSE_LIFE_RE = re.compile(r"^you lose (?P<life>\d+) life$", re.IGNORECASE)
 

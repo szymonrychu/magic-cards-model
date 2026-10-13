@@ -66,6 +66,8 @@ from ...machines.keywords import (
     awaken_target_held_apart,
     keyword_effect_for,
     keyword_triggered_abilities,
+    overload_text,
+    overloaded,
 )
 from ...machines.layers import (
     Characteristics,
@@ -575,6 +577,9 @@ class StackPriorityMixin:
             faces_to_resolve = [
                 (face.name, face.oracle_text or "") for face in spell.card.card_faces
             ]
+        elif overloaded(self, spell):
+            # CR 702.96a: the overload cost changes the spell's text.
+            faces_to_resolve = [(spell.name, overload_text(spell.oracle_text))]
         else:
             faces_to_resolve = [(spell.name, spell.oracle_text)]
         # CR 702.174j: an instant or sorcery's gift effect happens before any

@@ -534,6 +534,23 @@ def _option_from_keyword(ability: KeywordAbility) -> KeywordCastOption | None:
             understood=cost is not None,
         )
 
+    if canonical == "overload":
+        # CR 702.96a: two static abilities that function while the spell is on
+        # the stack - "You may choose to pay [cost] rather than pay this
+        # spell's mana cost" and the text change ("target" becomes "each"),
+        # which `machines/keywords.overload_text` applies as the spell
+        # resolves. CR 702.96b: an overloaded spell requires no targets
+        # (`with_keyword_spell_ability_target`).
+        cost = total_cost_for_phrase(printed) if printed else None
+        return KeywordCastOption(
+            keyword=ability.canonical,
+            rule="CR 702.96a",
+            zone=Zone.HAND,
+            cost=cost,
+            pays_mana_cost=False,
+            understood=cost is not None,
+        )
+
     if canonical == "flashback":
         # CR 702.34a: two static abilities, one functioning in the graveyard.
         # The graveyard half is what makes this permission and not a discount.
@@ -1445,6 +1462,9 @@ def with_keyword_spell_ability_target(profile: Any, keyword_used: str | None) ->
     targets only if an alternative or additional cost ... was chosen for
     it"). Awaken's "target land you control" (CR 702.113b) and mutate's
     "target non-Human creature you own" (CR 702.140a)."""
+    if (keyword_used or "").lower() == "overload":
+        # CR 702.96b: "that spell won't require any targets".
+        return profile.model_copy(update={"requirements": ()})
     phrase = _KEYWORD_SPELL_ABILITY_TARGETS.get((keyword_used or "").lower())
     if phrase is None:
         return profile

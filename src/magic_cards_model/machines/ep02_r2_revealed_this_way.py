@@ -55,10 +55,20 @@ from .effects._common import (
     _card_description_is_readable,
     _players_in_apnap_order,
     _quality_matcher,
+    _targets_understood,
 )
+from .effects.search import _search_and_exile_matching_name
 from .effects.dispatch import _ability_effect_or_notice, _spell_effect_or_notice
 from .effects.text import _plain_resolution_sentences, _strip_non_effect_preamble
 from .effects.tokens import _is_notice_only
+from .ep02_r1_this_way_counts import _VERBS as _r1_verbs
+from .ep02_r1_this_way_counts import _first_instruction as _r1_first_instruction
+from .ep02_r1_this_way_counts import _objects as _r1_objects
+from .ep02_r1_this_way_counts import _plan as _r1_plan
+from .ep02_r1_this_way_counts import _sentences as _r1_sentences
+from .ep02_r1_this_way_counts import affected as _r1_affected
+from .ep02_r1_this_way_counts import snapshot as _r1_snapshot
+from .targeting import profile_for_text
 from .replacement.enters_choices import CARD_TYPE_OPTIONS
 
 if TYPE_CHECKING:
@@ -85,6 +95,7 @@ class _Ctx:
     name: str | None = None
     card_type: str | None = None
     referent: CardState | None = None
+    referent_chars: Any = None  # the referent as it last existed (CR 608.2h)
     excess: int = 0
 
     def subject_card(self) -> CardState | None:
@@ -133,9 +144,9 @@ def _stop_matcher(quality: str) -> Callable[["Game", _Ctx, CardState], bool] | N
     if quality == "that shares a card type with it":
 
         def shares(game: "Game", ctx: _Ctx, state: CardState) -> bool:
-            if ctx.referent is None:
+            if ctx.referent is None and ctx.referent_chars is None:
                 return False
-            chars = game.characteristics_of(ctx.referent)
+            chars = ctx.referent_chars or game.characteristics_of(ctx.referent)
             return bool(set(chars.types) & set(game.characteristics_of(state).types))
 
         return shares
@@ -160,7 +171,7 @@ _REVEAL_UNTIL_RE = re.compile(
     rf"^(?:{_WHO} )?(?P<verb>reveals?) cards from the top of {_LIBRARY} until "
     r"(?:(?:you|they|that player) reveal )?"
     r"(?:(?P<one>an?) (?P<q1>[a-z -]*?)\s*cards?"
-    r"(?P<named> with that name| that shares a card type with it)?"
+    r"(?P<named> with that name| that shares a card type with it)?(?: is revealed)?"
     r"|(?P<n>two|three|four|five|six|seven|eight|nine|ten|\d+) (?P<q2>[a-z -]*?)\s*cards"
     r"(?: are revealed)?)$",
     re.IGNORECASE,
@@ -332,7 +343,7 @@ def _choose_type(_match: re.Match[str]) -> Step:
 
 _SEL_TYPED = r"(?P<q>[a-z-]+(?: or [a-z-]+)?)"
 _SELECTOR = (
-    r"(?P<sel>that card|those cards|those (?P<kq>[a-z]+) cards|the revealed cards"
+    r"(?P<sel>that card|those cards|those (?P<kq>[a-z]+) cards|the revealed cards|the exiled cards"
     r"|all cards revealed this way|all other cards revealed this way"
     r"|all cards of the chosen type revealed this way"
     rf"|(?:all |the ){_SEL_TYPED} cards (?:(?:they|you) )?revealed this way"
@@ -349,21 +360,23 @@ _DEST = (
     r"))"
 )
 _DISPOSE_RE = re.compile(
-    rf"^(?:(?P<subj>you|they|that player|the player|its controller) )?(?P<verb>put|puts) "
+    rf"^(?:(?P<subj>you|they|that player|the player|its controller|those players) )?(?P<verb>put|puts) "
     rf"{_SELECTOR} {_DEST}$",
     re.IGNORECASE,
 )
 _EXILE_RE = re.compile(
-    rf"^(?:(?P<subj>you|they|that player|the player|its controller) )?(?P<verb>exile|exiles) "
+    rf"^(?:(?P<subj>you|they|that player|the player|its controller|those players) )?(?P<verb>exile|exiles) "
     rf"{_SELECTOR}$",
     re.IGNORECASE,
 )
 _SHUFFLE_IN_RE = re.compile(
-    rf"^(?:(?P<subj>you|they|that player|the player|its controller) )?shuffles? "
+    rf"^(?:(?P<subj>you|they|that player|the player|its controller|those players) )?shuffles? "
     rf"{_SELECTOR} into (?:your|their|that player's) library$",
     re.IGNORECASE,
 )
-_SHUFFLE_BARE_RE = re.compile(r"^(?:(?:you|they|that player) )?shuffles?$", re.IGNORECASE)
+_SHUFFLE_BARE_RE = re.compile(
+    r"^(?:(?:you|they|that player|those players|its controller) )?shuffles?$", re.IGNORECASE
+)
 
 
 def _selector(match: re.Match[str]) -> Callable[["Game", Any, _Ctx], list[CardState]] | None:
@@ -379,8 +392,16 @@ def _selector(match: re.Match[str]) -> Callable[["Game", Any, _Ctx], list[CardSt
     def pool(ctx: _Ctx) -> list[CardState]:
         return [c for c in ctx.revealed if c.id not in ctx.disposed]
 
-    if raw in ("that card",):
+    if raw == "that card":
         return lambda _g, _o, ctx: [c for c in ctx.stoppers[:1] if c.id not in ctx.disposed]
+    if raw == "the exiled cards":
+        return lambda _g, _o, ctx: [c for c in ctx.moved.get("exile", []) if c.zone is Zone.EXILE]
+    if raw == "those cards":
+        # Cards a search found (a for-each plan keeps every one the player
+        # found), else the cards the latest reveal stopped at.
+        return lambda _g, _o, ctx: [
+            c for c in (ctx.moved.get("found") or ctx.stoppers) if c.id not in ctx.disposed
+        ]
     if raw.startswith("those ") or raw.startswith("the ") and raw.endswith(" card") and quality:
         return lambda _g, _o, ctx: [
             c for c in ctx.stoppers if c.id not in ctx.disposed and (matcher is None or matcher(c))
@@ -526,6 +547,93 @@ def _shuffle_in_step(match: re.Match[str]) -> Step | None:
             ctx.disposed.add(state.id)
             game.player(state.owner or ctx.actor.username).move(state, Zone.LIBRARY)
         game.shuffle_library(ctx.actor)
+
+    return step
+
+
+def _shuffle_bare_step(_match: re.Match[str]) -> Step:
+    def step(game: "Game", obj: Any, ctx: _Ctx) -> None:
+        game.shuffle_library(ctx.actor)
+
+    return step
+
+
+_SEARCH_RE = re.compile(
+    r"^(?:(?P<subj>you|they|that player|its controller) )?(?P<may>may )?searche?s? "
+    r"(?:your|their|that player's) library for (?P<n>an?|one|two|three|four|\d+) "
+    r"(?P<q>[a-z' ,-]+?) cards?$",
+    re.IGNORECASE,
+)
+
+
+def _search_step(match: re.Match[str]) -> Step | None:
+    quality = match.group("q").strip().lower()
+    if not _card_description_is_readable(quality):
+        return None
+    matcher = _quality_matcher(quality)
+    count = 1 if match.group("n").lower() in ("a", "an", "one") else parse_count(match.group("n"))
+    if count is None:
+        return None
+    subj = (match.group("subj") or "you").lower()
+
+    def step(game: "Game", obj: Any, ctx: _Ctx) -> None:
+        player = ctx.controller if subj == "you" else ctx.actor
+        ctx.actor = player
+        # CR 701.23b: a search for a stated quality may find fewer; the shuffle
+        # is its own later instruction (CR 701.24b), so it is held back here.
+        found = game.search_library(
+            player,
+            lambda state: bool(matcher(state)),
+            count=count,
+            optional=True,
+            shuffle=False,
+            source=_source_name(obj),
+            source_id=source_id_of(obj),
+        )
+        ctx.revealed, ctx.stoppers = list(found), list(found)
+        ctx.moved.setdefault("found", []).extend(found)
+
+    return step
+
+
+_NO_SPLIT = "\u0001"
+_SAME_NAME_RE = re.compile(r"(same name as that card) and exile them", re.IGNORECASE)
+_SEARCH_SAME_NAME_RE = re.compile(
+    r"^(?:(?:you|they) )?searche?s? (?:that player's|their|your) "
+    r"(?P<zones>library|graveyard, hand, and library) for "
+    rf"(?P<amount>all|any number of|up to (?P<n>{_COUNT_WORD})) cards with the same name as "
+    rf"that card{_NO_SPLIT}exile them$",
+    re.IGNORECASE,
+)
+
+
+def _search_same_name_step(match: re.Match[str]) -> Step | None:
+    """CR 701.23a: search the named zones of the player for the cards sharing the
+    exiled card's name and exile them; the shuffle is a later instruction."""
+    cap = parse_count(match.group("n")) if match.group("n") else None
+    if match.group("n") and cap is None:
+        return None
+    zones = (
+        (Zone.LIBRARY,)
+        if match.group("zones").lower() == "library"
+        else (Zone.GRAVEYARD, Zone.HAND, Zone.LIBRARY)
+    )
+
+    def step(game: "Game", obj: Any, ctx: _Ctx) -> None:
+        if ctx.referent is None:
+            return
+        exiled, _from_hand = _search_and_exile_matching_name(
+            game,
+            ctx.actor,
+            ctx.referent.name,
+            chooser=ctx.controller,
+            cap=cap,
+            source=_source_name(obj),
+            source_id=source_id_of(obj),
+            zones=zones,
+            shuffle=False,
+        )
+        ctx.moved.setdefault("exile", []).extend(exiled)
 
     return step
 
@@ -904,6 +1012,9 @@ _READERS: tuple[tuple[re.Pattern[str], Callable[[re.Match[str]], Step | None]], 
     (_DISPOSE_RE, _dispose),
     (_EXILE_RE, _exile_step),
     (_SHUFFLE_IN_RE, _shuffle_in_step),
+    (_SHUFFLE_BARE_RE, _shuffle_bare_step),
+    (_SEARCH_RE, _search_step),
+    (_SEARCH_SAME_NAME_RE, _search_same_name_step),
     (_DAMAGE_PLAYER_RE, _damage_players),
     (_DAMAGE_PLAYER_AND_CREATURES_RE, _damage_players),
     (_LIFE_FOR_EACH_RE, _life_for_each),
@@ -933,7 +1044,10 @@ _REST_LEAD_RE = re.compile(r"^(the rest .*)$", re.IGNORECASE)
 
 
 def _clauses(sentence: str) -> list[str]:
-    parts = [p.strip() for p in _CLAUSE_SPLIT_RE.split(sentence.strip().rstrip("."))]
+    protected = _SAME_NAME_RE.sub(
+        rf"\1{_NO_SPLIT}exile them", re.sub(r"^then ", "", sentence.strip().rstrip("."), flags=re.I)
+    )
+    parts = [p.strip() for p in _CLAUSE_SPLIT_RE.split(protected)]
     out = []
     for part in parts:
         if not part:
@@ -973,35 +1087,193 @@ def _plan(text: str, for_spell: bool) -> _Plan | None:
         _PLAN_TEXT.pop()
 
 
-def _plan_uncached(text: str, for_spell: bool) -> _Plan | None:
+def _steps_of(clauses: list[str], for_spell: bool) -> tuple[list[Step], int] | None:
+    """One step per clause, and how many of them this module's own readers
+    built; `None` when a clause nothing reads is left over."""
     steps: list[Step] = []
     mine = 0
+    for clause in clauses:
+        step = None
+        for pattern, build in _READERS:
+            match = pattern.fullmatch(clause)
+            if match is not None:
+                step = build(match)
+                if step is not None:
+                    mine += 1
+                    break
+        if step is None:
+            effect = _parse_cached(clause + ".", for_spell)
+            if effect is None:
+                return None
+            step = _plain_step(effect)
+        steps.append(step)
+    return steps, mine
+
+
+def _plan_uncached(text: str, for_spell: bool) -> _Plan | None:
+    clauses: list[str] = []
     each_player = False
     for sentence in _plain_resolution_sentences(_strip_non_effect_preamble(text)):
         if re.match(r"^each player reveals", sentence.strip(), re.IGNORECASE):
             each_player = True
-        for clause in _clauses(sentence):
-            step = None
-            for pattern, build in _READERS:
-                match = pattern.fullmatch(clause)
-                if match is not None:
-                    step = build(match)
-                    if step is not None:
-                        mine += 1
-                        break
-            if step is None:
-                effect = _parse_cached(clause + ".", for_spell)
-                if effect is None:
-                    return None
-                step = _plain_step(effect)
-            steps.append(step)
-    if mine == 0:
+        clauses.extend(_clauses(sentence))
+    read = _steps_of(clauses, for_spell)
+    if read is None or read[1] == 0:
         return None
-    return _Plan(tuple(steps), each_player)
+    return _Plan(tuple(read[0]), each_player)
 
 
 def _plain_step(effect: Any) -> Step:
     return lambda game, obj, ctx: effect(game, obj)
+
+
+# --------------------------------------------------------------------------
+# "For each <permanent> <verb> this way, its controller ..." - the R1 ledger
+# --------------------------------------------------------------------------
+
+_FOR_EACH_RE = re.compile(r"^for each (?P<each>.+? this way), (?P<rest>.+)$", re.IGNORECASE)
+_MULTI_TARGET_FIRST_RE = re.compile(
+    r"^(?P<verb>exile|destroy) (?P<phrase>(?:up to |any number of |x )?[a-z ]*?target .+)$",
+    re.IGNORECASE,
+)
+
+
+def _multi_target_first(text: str) -> Callable[["Game", Any], None] | None:
+    """ "Exile up to one target artifact, up to one target creature, ... and/or
+    up to one target land." - every target the announcement chose that is still
+    on the battlefield (CR 608.2b) is exiled or destroyed; each target
+    requirement is its own "up to" choice (CR 115.6)."""
+    match = _MULTI_TARGET_FIRST_RE.fullmatch(text.strip().rstrip("."))
+    if match is None:
+        return None
+    profile = profile_for_text(match.group("phrase"))
+    if not profile.understood or len(profile.requirements) < 2:
+        return None
+    if any(r.allows_players or r.zones != frozenset({Zone.BATTLEFIELD}) for r in profile.requirements):
+        return None
+    destroy = match.group("verb").lower() == "destroy"
+
+    def effect(game: "Game", obj: Any) -> None:
+        for target in list(game.resolve_targets(obj)):
+            if isinstance(target, CardState) and target.zone is Zone.BATTLEFIELD:
+                (game.destroy if destroy else game.exile_permanent)(target)
+
+    return effect
+
+
+_EXILE_GRAVEYARD_OTHER_THAN_RE = re.compile(
+    r"^exile all cards from target (?:player|opponent)'s graveyard"
+    r"(?: other than (?P<q>[a-z ]+?) cards?)?$",
+    re.IGNORECASE,
+)
+
+
+def _exile_graveyard_other_than(text: str) -> Callable[["Game", Any], None] | None:
+    """ "Exile all cards from target player's graveyard other than basic land
+    cards." (CR 406.2, CR 701.13a): every card of the targeted player's
+    graveyard except the excluded quality."""
+    match = _EXILE_GRAVEYARD_OTHER_THAN_RE.fullmatch(text.strip().rstrip("."))
+    if match is None:
+        return None
+    quality = (match.group("q") or "").strip()
+    if quality and not _card_description_is_readable(quality):
+        return None
+    excluded = _quality_matcher(quality) if quality else None
+    if not _targets_understood(
+        "target player's graveyard", allow_player_targets=True, count_agnostic=True
+    ):
+        return None
+
+    def effect(game: "Game", obj: Any) -> None:
+        for target in game.resolve_targets(obj):
+            if isinstance(target, Player):
+                for state in list(target.graveyard):
+                    if excluded is None or not excluded(state):
+                        game.exile_permanent(state)
+
+    return effect
+
+
+def _first_instruction_of(text: str, for_spell: bool) -> Callable[["Game", Any], None] | None:
+    return (
+        _r1_first_instruction(text, for_spell)
+        or _multi_target_first(text)
+        or _exile_graveyard_other_than(text)
+    )
+
+
+@dataclass(frozen=True)
+class _EachPlan:
+    first: Callable[["Game", Any], None]
+    objects: Any  # ep02_r1_this_way_counts._Objects
+    inner: tuple[Step, ...]
+    post: tuple[Step, ...]
+
+
+def _each_plan_uncached(text: str, for_spell: bool) -> _EachPlan | None:
+    sentences = _r1_sentences(text)
+    index = next(
+        (i for i, s in enumerate(sentences) if _FOR_EACH_RE.match(s) and " this way" in s.lower()),
+        None,
+    )
+    if index is None or index == 0:
+        return None
+    match = _FOR_EACH_RE.fullmatch(sentences[index])
+    assert match is not None
+    objects = _r1_objects(match.group("each"))
+    if objects is None:
+        return None
+    instruction = ". ".join(sentences[:index]) + "."
+    first = _first_instruction_of(instruction, for_spell)
+    if first is None:
+        return None
+    inner = _steps_of(_clauses(match.group("rest")), for_spell)
+    post_clauses = [c for sentence in sentences[index + 1 :] for c in _clauses(sentence)]
+    post = _steps_of(post_clauses, for_spell)
+    if inner is None or post is None or inner[1] + post[1] == 0:
+        return None
+    return _EachPlan(first, objects, tuple(inner[0]), tuple(post[0]))
+
+
+@functools.lru_cache(maxsize=1024)
+def _each_plan(text: str, for_spell: bool) -> _EachPlan | None:
+    _READING.append(True)
+    try:
+        return _each_plan_uncached(text, for_spell)
+    finally:
+        _READING.pop()
+
+
+def _for_each_effect(text: str, for_spell: bool) -> Any:
+    if _r1_plan(text, for_spell) is not None:
+        return None  # the R1 payoffs read this text; one reader per text
+    plan = _each_plan(text, for_spell)
+    if plan is None:
+        return None
+    verb = _r1_verbs[plan.objects.verb]
+
+    def effect(game: "Game", obj: Any) -> None:
+        marks = _r1_snapshot(game, verb.sources)
+        plan.first(game, obj)
+        controller = game.controller_of(obj)
+        moved = plan.objects.matching(_r1_affected(game, marks, verb), controller.username)
+        contexts: dict[str, _Ctx] = {}
+        order = _players_in_apnap_order(game)
+        for player in order:
+            ctx = _Ctx(actor=player, controller=controller)
+            for entry in (e for e in moved if e.controller == player.username):
+                contexts[player.username] = ctx
+                ctx.referent, ctx.referent_chars = entry.card, entry.characteristics
+                for step in plan.inner:
+                    step(game, obj, ctx)
+        for player in order:
+            ctx = contexts.get(player.username)
+            if ctx is not None:
+                ctx.actor = player
+                for step in plan.post:
+                    step(game, obj, ctx)
+
+    return effect
 
 
 def _gate(text: str) -> bool:
@@ -1014,7 +1286,7 @@ def _effect(text: str, for_spell: bool) -> Any:
         return None
     plan = _plan(text, for_spell)
     if plan is None:
-        return None
+        return _for_each_effect(text, for_spell)
 
     def effect(game: "Game", obj: Any) -> None:
         controller = game.controller_of(obj)

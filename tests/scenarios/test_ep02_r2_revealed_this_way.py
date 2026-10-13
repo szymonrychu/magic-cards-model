@@ -579,3 +579,352 @@ def test_nahiris_warcrafting_excess_of_one_looks_at_one_card_and_may_exile_it():
     _cast(scenario, "Nahiri's Warcrafting", targets=[angel])
     assert [state.name for state in scenario.game.exile] == ["Sol Ring"]  # 5 - 4 lethal = 1
     assert _library(scenario) == ["Forest"]
+
+
+# ==========================================================================
+# Continuation 1: "for each <permanent> <verb> this way, its controller ..."
+# ==========================================================================
+
+
+def _cast_x(scenario, name, x_value, targets=None):
+    casting = scenario.cast(name)
+    casting.choose_modes([], x_value=x_value)  # X is announced before targets (CR 107.3a)
+    casting.choose_targets(targets or [])
+    casting.determine_cost(x_value=x_value)
+    payment = casting.begin_paying()
+    scenario.auto_pay(payment, username="alice")
+    scenario.put_on_stack(casting)
+    return scenario.resolve_top()
+
+
+def _cast_with(scenario, name, keyword, *, targets=None, username="alice"):
+    casting = scenario.cast(name, username=username)
+    casting.use_keyword(keyword)
+    if targets is not None:
+        casting.choose_targets(targets)
+    payment = casting.begin_paying()
+    scenario.auto_pay(payment, username=username)
+    scenario.put_on_stack(casting)
+    return scenario.resolve_top()
+
+
+def _lands_of(scenario, username):
+    return sorted(
+        (state.name, state.tapped)
+        for state in scenario.game.battlefield
+        if state.controller == username and "Land" in str(state.card.type_line)
+    )
+
+
+# -- Winds of Abandon (and overload, CR 702.96a) -----------------------------------
+
+
+def test_winds_of_abandon_exiles_the_creature_and_its_controller_fetches_a_tapped_basic():
+    scenario = _board(
+        alice_hand=["Winds of Abandon"],
+        bob_battlefield=["Grizzly Bears"],
+        bob_library=["Lightning Bolt", "Forest", "Island"],
+    )
+    bears = scenario.creature("Grizzly Bears", "bob")
+    scenario.will_choose_cards(scenario.find("Forest", Zone.LIBRARY, "bob"), username="bob")
+    _cast(scenario, "Winds of Abandon", targets=[bears])
+    assert [state.name for state in scenario.game.exile] == ["Grizzly Bears"]
+    assert ("Forest", True) in _lands_of(scenario, "bob")
+    assert "Forest" not in _library(scenario, "bob")
+    assert sorted(_library(scenario, "bob")) == ["Island", "Lightning Bolt"]
+
+
+def test_winds_of_abandon_without_a_basic_in_the_library_fetches_nothing():
+    scenario = _board(
+        alice_hand=["Winds of Abandon"],
+        bob_battlefield=["Grizzly Bears"],
+        bob_library=["Lightning Bolt"],
+    )
+    bears = scenario.creature("Grizzly Bears", "bob")
+    _cast(scenario, "Winds of Abandon", targets=[bears])
+    assert bears.zone is Zone.EXILE
+    assert _lands_of(scenario, "bob") == [("Swamp", False), ("Swamp", False)]
+
+
+def test_winds_of_abandon_overloaded_exiles_each_creature_you_dont_control():
+    scenario = _board(
+        alice_hand=["Winds of Abandon"],
+        alice_battlefield=["Hill Giant"],
+        alice_lands=("Plains",) * 6,
+        bob_battlefield=["Grizzly Bears", "Serra Angel"],
+        bob_library=["Forest", "Forest", "Lightning Bolt"],
+    )
+    _cast_with(scenario, "Winds of Abandon", "Overload")
+    assert sorted(state.name for state in scenario.game.exile) == ["Grizzly Bears", "Serra Angel"]
+    assert "Hill Giant" in _battlefield_of(scenario, "alice")
+    assert _lands_of(scenario, "bob").count(("Forest", True)) == 2
+    assert _library(scenario, "bob") == ["Lightning Bolt"]
+
+
+def test_winds_of_abandon_overloaded_needs_no_target():
+    scenario = _board(
+        alice_hand=["Winds of Abandon"],
+        alice_lands=("Plains",) * 6,
+        bob_battlefield=["Grizzly Bears"],
+    )
+    casting = scenario.cast("Winds of Abandon", username="alice")
+    casting.use_keyword("Overload")
+    assert casting.targets == [] or not casting.targets
+
+
+def test_winds_of_abandon_overloaded_each_players_creatures_give_each_their_own_land():
+    scenario = _board(
+        alice_hand=["Winds of Abandon"],
+        alice_lands=("Plains",) * 6,
+        bob_battlefield=["Grizzly Bears"],
+        bob_library=["Forest"],
+    )
+    _cast_with(scenario, "Winds of Abandon", "Overload")
+    assert _lands_of(scenario, "bob").count(("Forest", True)) == 1
+    assert _lands_of(scenario, "alice").count(("Forest", True)) == 0
+
+
+# -- Indomitable Creativity: reveal until an artifact or creature, exile, then put --
+
+
+def test_indomitable_creativity_gives_each_destroyed_permanents_controller_the_revealed_card():
+    scenario = _board(
+        alice_hand=["Indomitable Creativity"],
+        alice_lands=("Mountain",) * 7,
+        bob_battlefield=["Grizzly Bears", "Sol Ring"],
+        bob_library=["Forest", "Hill Giant", "Island", "Mind Stone", "Plains"],
+    )
+    bears = scenario.creature("Grizzly Bears", "bob")
+    ring = scenario.find("Sol Ring", Zone.BATTLEFIELD, "bob")
+    _cast_x(scenario, "Indomitable Creativity", 2, targets=[bears, ring])
+    assert sorted(_battlefield_of(scenario, "bob")) == ["Hill Giant", "Mind Stone"]
+    assert [state.name for state in scenario.game.exile] == []
+    assert sorted(_library(scenario, "bob")) == ["Forest", "Island", "Plains"]
+
+
+def test_indomitable_creativity_with_no_artifact_or_creature_to_find_exiles_the_revealed_pile():
+    scenario = _board(
+        alice_hand=["Indomitable Creativity"],
+        alice_lands=("Mountain",) * 6,
+        bob_battlefield=["Grizzly Bears"],
+        bob_library=["Forest", "Island"],
+    )
+    bears = scenario.creature("Grizzly Bears", "bob")
+    _cast_x(scenario, "Indomitable Creativity", 1, targets=[bears])
+    assert _battlefield_of(scenario, "bob") == []
+    assert sorted(_library(scenario, "bob")) == ["Forest", "Island"]
+
+
+def test_indomitable_creativity_pays_each_player_for_their_own_destroyed_permanent():
+    scenario = _board(
+        alice_hand=["Indomitable Creativity"],
+        alice_lands=("Mountain",) * 6,
+        alice_battlefield=["Sol Ring"],
+        alice_library=["Mind Stone", "Forest"],
+        bob_battlefield=["Grizzly Bears"],
+        bob_library=["Hill Giant", "Island"],
+    )
+    ring = scenario.find("Sol Ring", Zone.BATTLEFIELD, "alice")
+    bears = scenario.creature("Grizzly Bears", "bob")
+    _cast_x(scenario, "Indomitable Creativity", 2, targets=[ring, bears])
+    assert "Mind Stone" in _battlefield_of(scenario, "alice")
+    assert "Hill Giant" in _battlefield_of(scenario, "bob")
+
+
+def test_indomitable_creativity_indestructible_target_is_not_destroyed_this_way():
+    scenario = _board(
+        alice_hand=["Indomitable Creativity"],
+        alice_lands=("Mountain",) * 6,
+        bob_battlefield=["Darksteel Colossus"],
+        bob_library=["Hill Giant", "Island"],
+    )
+    colossus = scenario.creature("Darksteel Colossus", "bob")
+    _cast_x(scenario, "Indomitable Creativity", 1, targets=[colossus])
+    assert _battlefield_of(scenario, "bob") == ["Darksteel Colossus"]
+    assert _library(scenario, "bob") == ["Hill Giant", "Island"]
+
+
+# -- Chaotic Transformation: reveal until a card sharing a card type with it -------
+
+
+def test_chaotic_transformation_puts_a_card_sharing_a_type_with_each_exiled_permanent():
+    scenario = _board(
+        alice_hand=["Chaotic Transformation"],
+        alice_lands=("Mountain",) * 7,
+        bob_battlefield=["Grizzly Bears", "Forest"],
+        bob_library=["Island", "Mind Stone", "Hill Giant", "Mountain", "Plains"],
+    )
+    bears = scenario.creature("Grizzly Bears", "bob")
+    forest = scenario.find("Forest", Zone.BATTLEFIELD, "bob")
+    _cast(scenario, "Chaotic Transformation", targets=[bears, forest])
+    assert {state.name for state in scenario.game.exile} == {"Grizzly Bears", "Forest"}
+    assert "Hill Giant" in _battlefield_of(scenario, "bob")
+    # The bears' reveal ends at Hill Giant; the Forest's at a land card. Each
+    # ends with its own shuffle (CR 701.24a), so which land is not fixed.
+    fetched = [name for name, _tapped in _lands_of(scenario, "bob") if name not in ("Swamp",)]
+    assert len(fetched) == 1 and fetched[0] in ("Island", "Mountain", "Plains")
+    assert "Mind Stone" not in _battlefield_of(scenario, "bob")
+
+
+def test_chaotic_transformation_exiles_nothing_extra_when_no_card_shares_a_type():
+    scenario = _board(
+        alice_hand=["Chaotic Transformation"],
+        alice_lands=("Mountain",) * 7,
+        bob_battlefield=["Grizzly Bears"],
+        bob_library=["Island", "Plains"],
+    )
+    bears = scenario.creature("Grizzly Bears", "bob")
+    _cast(scenario, "Chaotic Transformation", targets=[bears])
+    assert bears.zone is Zone.EXILE
+    assert _battlefield_of(scenario, "bob") == []
+    assert sorted(_library(scenario, "bob")) == ["Island", "Plains"]
+
+
+def test_chaotic_transformation_targets_may_be_skipped_entirely():
+    scenario = _board(
+        alice_hand=["Chaotic Transformation"],
+        alice_lands=("Mountain",) * 7,
+        bob_battlefield=["Grizzly Bears"],
+        bob_library=["Hill Giant"],
+    )
+    _cast(scenario, "Chaotic Transformation", targets=[])
+    assert _battlefield_of(scenario, "bob") == ["Grizzly Bears"]
+    assert _library(scenario, "bob") == ["Hill Giant"]
+
+
+# ==========================================================================
+# Search and exile every card with a name (CR 701.23a), as a spell
+# ==========================================================================
+
+
+def _exiled_names(scenario):
+    return sorted(state.name for state in scenario.game.exile)
+
+
+def test_unmoored_ego_exiles_the_named_cards_from_all_three_zones_and_draws_for_the_hand():
+    scenario = _board(
+        alice_hand=["Unmoored Ego"],
+        alice_lands=("Island", "Swamp", "Island"),
+        bob_hand=["Lightning Bolt", "Lightning Bolt", "Forest"],
+        bob_graveyard=["Lightning Bolt"],
+        bob_library=["Lightning Bolt", "Island", "Plains"],
+    )
+    scenario.will_choose("Lightning Bolt", username="alice")
+    _cast(scenario, "Unmoored Ego", targets=["bob"])
+    assert _exiled_names(scenario) == ["Lightning Bolt"] * 4
+    assert _names(scenario, "bob", Zone.GRAVEYARD) == []
+    # two Bolts left the hand, so bob draws two cards (Plains and Island, in some order)
+    assert _names(scenario, "bob", Zone.HAND) == sorted(["Forest", *_hand_draws(scenario)])
+
+
+def _hand_draws(scenario):
+    return [name for name in _names(scenario, "bob", Zone.HAND) if name != "Forest"]
+
+
+def test_unmoored_ego_takes_at_most_four():
+    scenario = _board(
+        alice_hand=["Unmoored Ego"],
+        alice_lands=("Island", "Swamp", "Island"),
+        bob_hand=["Lightning Bolt"],
+        bob_graveyard=["Lightning Bolt", "Lightning Bolt"],
+        bob_library=["Lightning Bolt", "Lightning Bolt", "Forest"],
+    )
+    scenario.will_choose("Lightning Bolt", username="alice")
+    _cast(scenario, "Unmoored Ego", targets=["bob"])
+    assert len(scenario.game.exile) == 4
+
+
+def test_unmoored_ego_with_nothing_named_draws_nothing():
+    scenario = _board(
+        alice_hand=["Unmoored Ego"],
+        alice_lands=("Island", "Swamp", "Island"),
+        bob_hand=["Forest"],
+        bob_library=["Island"],
+    )
+    scenario.will_choose("Lightning Bolt", username="alice")
+    _cast(scenario, "Unmoored Ego", targets=["bob"])
+    assert _names(scenario, "bob", Zone.HAND) == ["Forest"]
+    assert scenario.game.exile == []
+
+
+# -- Haunting Echoes: for each card exiled this way, search the library ------------
+
+
+def test_haunting_echoes_exiles_the_graveyard_and_every_library_copy_of_what_left():
+    scenario = _board(
+        alice_hand=["Haunting Echoes"],
+        alice_lands=("Swamp",) * 5,
+        bob_graveyard=["Lightning Bolt", "Grizzly Bears", "Forest"],
+        bob_library=["Lightning Bolt", "Grizzly Bears", "Island", "Lightning Bolt"],
+    )
+    _cast(scenario, "Haunting Echoes", targets=["bob"])
+    assert _exiled_names(scenario) == ["Grizzly Bears"] * 2 + ["Lightning Bolt"] * 3
+    assert _names(scenario, "bob", Zone.GRAVEYARD) == ["Forest"]  # a basic land stays
+    assert _library(scenario, "bob") == ["Island"]
+
+
+def test_haunting_echoes_leaves_the_library_alone_when_the_graveyard_is_only_basics():
+    scenario = _board(
+        alice_hand=["Haunting Echoes"],
+        alice_lands=("Swamp",) * 5,
+        bob_graveyard=["Forest"],
+        bob_library=["Forest", "Island"],
+    )
+    _cast(scenario, "Haunting Echoes", targets=["bob"])
+    assert scenario.game.exile == []
+    assert sorted(_library(scenario, "bob")) == ["Forest", "Island"]
+
+
+def test_haunting_echoes_does_not_touch_a_hand_copy():
+    scenario = _board(
+        alice_hand=["Haunting Echoes"],
+        alice_lands=("Swamp",) * 5,
+        bob_hand=["Lightning Bolt"],
+        bob_graveyard=["Lightning Bolt"],
+        bob_library=["Lightning Bolt"],
+    )
+    _cast(scenario, "Haunting Echoes", targets=["bob"])
+    assert _names(scenario, "bob", Zone.HAND) == ["Lightning Bolt"]
+    assert _exiled_names(scenario) == ["Lightning Bolt"] * 2
+
+
+# -- Reap Intellect: reveal, choose up to X, exile, then every copy everywhere -----
+
+
+def test_reap_intellect_exiles_the_chosen_cards_and_every_copy_in_all_three_zones():
+    scenario = _board(
+        alice_hand=["Reap Intellect"],
+        alice_lands=("Island", "Swamp", "Island", "Swamp", "Island", "Swamp"),
+        bob_hand=["Lightning Bolt", "Lightning Bolt", "Grizzly Bears", "Forest"],
+        bob_graveyard=["Lightning Bolt"],
+        bob_library=["Lightning Bolt", "Island"],
+    )
+    bolt = scenario.find("Lightning Bolt", Zone.HAND, "bob")
+    scenario.will_choose_cards(bolt, username="alice")
+    _cast_x(scenario, "Reap Intellect", 1, targets=["bob"])
+    assert _exiled_names(scenario) == ["Lightning Bolt"] * 4
+    assert _names(scenario, "bob", Zone.HAND) == ["Forest", "Grizzly Bears"]
+    assert _library(scenario, "bob") == ["Island"]
+
+
+def test_reap_intellect_with_x_zero_exiles_nothing():
+    scenario = _board(
+        alice_hand=["Reap Intellect"],
+        alice_lands=("Island", "Swamp", "Island", "Swamp"),
+        bob_hand=["Lightning Bolt"],
+        bob_library=["Lightning Bolt"],
+    )
+    _cast_x(scenario, "Reap Intellect", 0, targets=["bob"])
+    assert scenario.game.exile == []
+    assert _names(scenario, "bob", Zone.HAND) == ["Lightning Bolt"]
+
+
+def test_reap_intellect_cannot_take_a_land_card():
+    scenario = _board(
+        alice_hand=["Reap Intellect"],
+        alice_lands=("Island", "Swamp", "Island", "Swamp", "Island"),
+        bob_hand=["Forest"],
+        bob_library=["Forest"],
+    )
+    _cast_x(scenario, "Reap Intellect", 1, targets=["bob"])
+    assert scenario.game.exile == []

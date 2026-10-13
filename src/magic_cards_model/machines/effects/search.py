@@ -1721,13 +1721,17 @@ def _search_and_exile_matching_name(
     cap: int | None,
     source: str,
     source_id: str | None,
+    zones: tuple[Zone, ...] = (Zone.GRAVEYARD, Zone.HAND, Zone.LIBRARY),
+    shuffle: bool = True,
 ) -> tuple[list[CardState], int]:
     """Search `zones_owner`'s graveyard, hand, and library, in that printed
     order, for cards named `name`, exile every one found (capped at `cap`
     total, or every match when `cap` is `None` - Surgical Extraction's own
     "any number"), and shuffle only the library (CR 701.24b), once,
     regardless of whether the library search itself found anything
-    (CR 701.24e).
+    (CR 701.24e). `zones` narrows the search (Haunting Echoes searches the
+    library alone) and `shuffle=False` leaves the shuffle to the card's own
+    later "Then that player shuffles" instruction.
 
     `chooser` is who decides *which* matches to take when there are more
     than `cap` of them - CR 701.23g's "you" search, not `zones_owner`, who is
@@ -1752,7 +1756,7 @@ def _search_and_exile_matching_name(
     "for each card exiled from their hand this way" count; Surgical
     Extraction's caller has no use for it and ignores it.
     """
-    zones_in_order = (Zone.GRAVEYARD, Zone.HAND, Zone.LIBRARY)
+    zones_in_order = zones
     candidates = {
         zone: [state for state in zones_owner.cards_in(zone) if state.name == name]
         for zone in zones_in_order
@@ -1787,6 +1791,7 @@ def _search_and_exile_matching_name(
             lambda state, wanted_ids=wanted_ids: state.id in wanted_ids,
             count=max(len(wanted_ids), 0) or 1,
             optional=False,
+            shuffle=shuffle,
             zone=zone,
             source=source,
             source_id=source_id,
