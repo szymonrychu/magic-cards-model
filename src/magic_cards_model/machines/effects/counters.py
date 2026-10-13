@@ -2155,16 +2155,9 @@ def _parse_remove_up_to_n_counters_from_target_clause(text: str) -> AbilityEffec
         for target in game.resolve_targets(ability):
             if not isinstance(target, CardState) or target.zone is not Zone.BATTLEFIELD:
                 continue
-            remaining = limit
-            kinds = sorted(target.counters, key=lambda kind: -target.counter_count(kind))
-            for kind in kinds:
-                if remaining <= 0:
-                    break
-                present = target.counter_count(kind)
-                take = min(remaining, present)
-                if take:
-                    target.remove_counters(kind, take)
-                    remaining -= take
+            from ..ep02_r1_counter_amounts import choose_counters_to_remove
+
+            choose_counters_to_remove(game, ability, target, limit)
 
     return effect
 

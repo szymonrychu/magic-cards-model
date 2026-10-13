@@ -2687,7 +2687,14 @@ class ActivationMixin:
                 # among`'s documented default).
                 from ...machines.cost import fill_from_among
 
-                fill_from_among(component, self, controller, None)
+                fill_from_among(
+                    component,
+                    self,
+                    controller,
+                    None,
+                    source=permanent.name,
+                    source_id=source_id_of(permanent),
+                )
                 continue
             if (
                 component.kind in (ComponentKind.PLACE_COUNTERS, ComponentKind.REMOVE_COUNTERS)

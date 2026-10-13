@@ -1053,3 +1053,78 @@ def test_glittering_stockpile_marks_itself_with_a_stash_counter_as_it_makes_red(
     assert scenario.activate(stockpile, index=0) is None
     assert scenario.player("alice").mana_pool.floating == {Color.RED: 1}
     assert stockpile.counter_count("stash") == 1
+
+
+# -- the controller chooses which counters come off, and from which permanents
+# (CR 122.1, CR 608.2d; Ooze Flux's cost CR 118.3 / CR 601.2b-h)
+
+_STOP = "no more counters"
+
+
+def _mixed_parasite(*answers, x=2):
+    scenario = _board(["Hex Parasite", "Swamp", "Swamp", "Swamp", "Grizzly Bears"])
+    parasite = scenario.creature("Hex Parasite", "alice")
+    target = scenario.creature("Grizzly Bears", "alice")
+    target.add_counters(Counter.PLUS_ONE, 2)
+    target.add_counters("oil", 1)
+    for answer in answers:
+        scenario.will_choose_mode(answer)
+    scenario.activate(parasite, auto=True, x_value=x, targets=[target])
+    _settle(scenario)
+    return scenario, parasite, target
+
+
+def test_hex_parasite_player_picks_the_kinds_it_removes():
+    # Unscripted, the larger pile (+1/+1) goes first; naming "oil" first changes it.
+    _, _, default_target = _mixed_parasite()
+    assert (
+        default_target.counter_count(Counter.PLUS_ONE),
+        default_target.counter_count("oil"),
+    ) == (
+        0,
+        1,
+    )
+    scenario, parasite, target = _mixed_parasite("oil", str(Counter.PLUS_ONE))
+    assert (target.counter_count(Counter.PLUS_ONE), target.counter_count("oil")) == (1, 0)
+    assert _stats(scenario, parasite) == (1 + 2, 1)
+
+
+def test_hex_parasite_player_may_stop_before_x_counters():
+    scenario, parasite, target = _mixed_parasite("oil", _STOP)
+    assert target.counter_count("oil") == 0
+    assert target.counter_count(Counter.PLUS_ONE) == 2
+    assert _stats(scenario, parasite) == (1 + 1, 1)
+
+
+def _mixed_flux(*answers, x=2):
+    scenario = _board(["Ooze Flux", "Forest", "Forest", "Grizzly Bears", "Hill Giant"])
+    bears, giant = (
+        scenario.creature("Grizzly Bears", "alice"),
+        scenario.creature("Hill Giant", "alice"),
+    )
+    bears.add_counters(Counter.PLUS_ONE, 2)
+    giant.add_counters(Counter.PLUS_ONE, 2)
+    for name in answers:
+        scenario.will_choose_cards(bears if name == "bears" else giant)
+    flux = scenario.find("Ooze Flux", Zone.BATTLEFIELD, "alice")
+    scenario.activate(flux, auto=True, x_value=x)
+    _settle(scenario)
+    return scenario, bears, giant
+
+
+def _plus(card):
+    return card.counter_count(Counter.PLUS_ONE)
+
+
+def test_ooze_flux_player_picks_which_creature_loses_the_counters():
+    _, bears, giant = _mixed_flux()
+    assert (_plus(bears), _plus(giant)) == (0, 2)
+    scenario, bears, giant = _mixed_flux("giant", "giant")
+    assert (_plus(bears), _plus(giant)) == (2, 0)
+    assert _stats(scenario, scenario.creature("Ooze Token", "alice")) == (2, 2)
+
+
+def test_ooze_flux_player_splits_the_counters_between_creatures():
+    scenario, bears, giant = _mixed_flux("giant", "bears")
+    assert (_plus(bears), _plus(giant)) == (1, 1)
+    assert _stats(scenario, scenario.creature("Ooze Token", "alice")) == (2, 2)

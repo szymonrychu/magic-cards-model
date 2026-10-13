@@ -333,6 +333,12 @@ def _counted_tokenised(text: str) -> str:
     text = _for_each_verb().sub(verb_noun, text)
 
     def put_counters(m: re.Match[str]) -> str:
+        if m.group("mid").strip() == "on it" and not m.group(0).lower().endswith(" on it"):
+            # "Put a counter on it for each <kind> counter on this enchantment"
+            # (Alien Invasion): "it" is the token just created, not the object
+            # counted, and its own reader counts the source's counters after
+            # the token exists.
+            return m.group(0)
         n = n_of(m)
         return f"{m.group('verb')} {_plural(n, m.group('ck') + ' counter')}{m.group('mid')}"
 
@@ -375,3 +381,83 @@ def counters_counted_for(text: str, source, names: tuple[str, ...]) -> str:
     as the ability goes on the stack)."""
     with counters_read_from(source):
         return counters_counted_text(text, names)
+
+
+# -- the player chooses which counters come off, and from which permanents
+
+#: The mode that ends an "up to N" removal early (CR 608.2d: up to N includes
+#: fewer, none included).
+STOP_REMOVING = "no more counters"
+
+
+def choose_counters_to_remove(game, ability, target, limit: int) -> int:
+    """Remove up to `limit` counters from `target`, one at a time, each time
+    asking the ability's controller which kind comes off next (CR 122.1: any
+    kind is a counter; CR 608.2d: the controller chooses as it resolves) or to
+    stop. The first option is the kind the target holds most of, so an
+    unscripted player removes the most counters. Returns how many came off."""
+    from .decisions import Decision, DecisionKind, source_id_of
+
+    order = sorted(target.counters, key=lambda kind: -target.counter_count(kind))
+    controller = game.controller_of(ability).username
+    removed = 0
+    while removed < limit:
+        kinds = tuple(str(kind) for kind in order if target.counter_count(kind) > 0)
+        if not kinds:
+            break
+        answer = game.ask(
+            Decision(
+                kind=DecisionKind.CHOOSE_A_MODE,
+                player=controller,
+                prompt=(
+                    f"choose the kind of counter to remove from {target.name} "
+                    f"({limit - removed} more allowed)"
+                ),
+                source=ability.name,
+                source_id=source_id_of(ability),
+                options=(*kinds, STOP_REMOVING),
+            )
+        )
+        if answer not in kinds:
+            break
+        target.remove_counters(answer, 1)
+        removed += 1
+    return removed
+
+
+def choose_removal_allocation(
+    game, payer: str, candidates, have: Callable, total: int, *, source=None, source_id=None
+) -> list:
+    """Which permanent each of `total` counters comes off, as a cost
+    "Remove N counters from among creatures you control" is paid (CR 118.3,
+    CR 601.2b/h): one question per counter over the permanents still holding
+    one, so the payer decides both which permanents and how many from each.
+    The first permanent offered is the first in battlefield order, so an
+    unscripted payer drains permanents front to back. Returns the permanents
+    chosen, one entry per counter."""
+    from .decisions import Decision, DecisionKind
+
+    left = {card.id: have(card) for card in candidates}
+    picks: list = []
+    for _ in range(total):
+        offered = [card for card in candidates if left[card.id] > 0]
+        if len(offered) > 1:
+            answer = game.ask(
+                Decision(
+                    kind=DecisionKind.CHOOSE_CARDS,
+                    player=payer,
+                    prompt=f"remove a counter from which permanent? ({total - len(picks)} to go)",
+                    source=source,
+                    source_id=source_id,
+                    amount=1,
+                    cards=tuple(card.id for card in offered),
+                    default_cards=(offered[0].id,),
+                )
+            )
+            by_id = {card.id: card for card in offered}
+            pick = by_id[answer[0]]
+        else:
+            pick = offered[0]
+        left[pick.id] -= 1
+        picks.append(pick)
+    return picks
