@@ -1062,5 +1062,5 @@ def test_card_mana_value_reader_declines_the_cosmic_cube_shape() -> None:
 def test_look_top_cast_free_has_a_single_resolution_body() -> None:
     from magic_cards_model.machines import ep02_r2_card_mana_value as mod
 
-    source = open(mod.__file__).read()
+    source = Path(mod.__file__).read_text()
     assert "game.cast_during_resolution(" not in source
