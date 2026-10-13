@@ -2364,6 +2364,17 @@ class CostModifierEffect(EngineModel):
     A spell qualifies when it has that subtype (CR 205.3), which a changeling
     spell always does for a creature type (CR 702.73a)."""
 
+    applies_to_supertype: Supertype | None = None
+    """`TYPE_DECREASE` only, for the supertype shape - The Kenriths' Royal
+    Funeral's "Legendary spells you cast cost {1} less to cast for each card
+    exiled with ~." A spell qualifies when it has that supertype (CR 205.4)."""
+
+    per_card_exiled_with_source: bool = False
+    """`TYPE_DECREASE` only: the "for each card exiled with `<this>`" tail
+    (CR 607.2a's linked pile) - the decrease is `amount` times the cards in
+    the pile of the permanent carrying the line, read afresh each time a cost
+    is determined (CR 611.3a)."""
+
     creature_only: bool = False
     """`CHOSEN_TYPE_DECREASE` only: Urza's Incubator's own "**Creature**
     spells of the chosen type cost `{2}` less to cast" - the spell must be a

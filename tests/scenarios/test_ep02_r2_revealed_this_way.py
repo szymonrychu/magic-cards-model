@@ -1352,3 +1352,72 @@ def test_tuktuk_scrapper_triggers_for_another_ally_entering():
     _settle(scenario)
     assert ring.zone is Zone.GRAVEYARD
     assert scenario.player("bob").life == 18
+
+
+# -- The Kenriths' Royal Funeral: X is the greatest mana value among the exiled ----
+
+KENRITHS = "The Kenriths' Royal Funeral"
+
+
+def _untapped_lands(scenario):
+    return sum(
+        1
+        for state in scenario.game.battlefield
+        if state.controller == "alice" and not state.tapped and "Land" in str(state.card.type_line)
+    )
+
+
+def _funeral(graveyard, targets, library=("Forest",) * 8):
+    scenario = _board(
+        alice_hand=[KENRITHS, "Shilgengar, Sire of Famine", "Sol Ring"],
+        alice_lands=("Plains", "Swamp", "Swamp", "Swamp"),
+        alice_graveyard=graveyard,
+        alice_library=library,
+    )
+    chosen = [scenario.find(name, Zone.GRAVEYARD, "alice") for name in targets]
+    scenario.choose_trigger_targets(KENRITHS, chosen)
+    _cast(scenario, KENRITHS)
+    _settle(scenario)
+    return scenario
+
+
+def test_kenriths_royal_funeral_draws_and_loses_the_greatest_mana_value_exiled():
+    scenario = _funeral(
+        ["Hidetsugu, Devouring Chaos", "Shilgengar, Sire of Famine", "Grizzly Bears"],
+        ["Hidetsugu, Devouring Chaos", "Shilgengar, Sire of Famine"],
+    )
+    assert _exiled_names(scenario) == ["Hidetsugu, Devouring Chaos", "Shilgengar, Sire of Famine"]
+    assert scenario.player("alice").life == 15  # Shilgengar is mana value 5
+    assert len(scenario.player("alice").hand) == 2 + 5  # Shilgengar, Sol Ring + five drawn
+
+
+def test_kenriths_royal_funeral_with_one_target_uses_that_cards_mana_value():
+    scenario = _funeral(["Hidetsugu, Devouring Chaos"], ["Hidetsugu, Devouring Chaos"])
+    mana_value = int(card("Hidetsugu, Devouring Chaos").cmc)
+    assert scenario.player("alice").life == 20 - mana_value
+
+
+def test_kenriths_royal_funeral_with_no_target_draws_and_loses_nothing():
+    scenario = _funeral(["Grizzly Bears"], [])
+    assert scenario.player("alice").life == 20
+    assert len(scenario.player("alice").hand) == 2
+
+
+def test_legendary_spells_cost_one_less_for_each_card_exiled_with_the_funeral():
+    scenario = _funeral(
+        ["Hidetsugu, Devouring Chaos", "Shilgengar, Sire of Famine"],
+        ["Hidetsugu, Devouring Chaos"],
+        library=("Forest",) * 12,
+    )
+    before = _untapped_lands(scenario)
+    _cast(scenario, "Shilgengar, Sire of Famine")
+    after = _untapped_lands(scenario)
+    assert before - after == 4  # {3}{B}{B} less {1}: one card is exiled with the Funeral
+
+
+def test_the_funerals_discount_does_not_apply_to_a_nonlegendary_spell():
+    scenario = _funeral(["Shilgengar, Sire of Famine"], ["Shilgengar, Sire of Famine"])
+    before = _untapped_lands(scenario)
+    _cast(scenario, "Sol Ring")
+    after = _untapped_lands(scenario)
+    assert before - after == 1

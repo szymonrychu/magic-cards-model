@@ -1888,6 +1888,20 @@ class ContinuousMixin:
                         decrease = self._counted_type_decrease(effect, permanent, spell, caster)
                         if decrease is not None:
                             decreases.append(decrease)
+                    elif (
+                        effect.applies_to_supertype is not None
+                        and effect.applies_to_supertype in spell.supertypes
+                    ):
+                        # CR 205.4: "Legendary spells you cast cost {1} less for
+                        # each card exiled with ~" - the permanent's linked pile
+                        # (CR 607.2a), counted now (CR 611.3a).
+                        units = effect.amount
+                        if effect.per_card_exiled_with_source:
+                            units *= len(
+                                self.cards_exiled_with(permanent.id, permanent.zone_change_stamp)
+                            )
+                        if units > 0:
+                            decreases.append(ManaCost.parse(f"{{{units}}}"))
                     elif effect.applies_to_subtype is not None and any(
                         subtype.lower() == effect.applies_to_subtype for subtype in spell.subtypes
                     ):
