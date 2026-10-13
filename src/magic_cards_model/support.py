@@ -4667,13 +4667,9 @@ def _unread_overload(printing: Card) -> str | None:
     `None` when it can: the overload cost is a cast option, but casting for it
     changes the spell's text ("target" becomes "each"), and that changed text must
     be one the engine reads or the overloaded spell would resolve as a notice."""
-    from .machines.effects import effect_for
-    from .machines.effects.tokens import _is_notice_only
-    from .machines.keywords import overload_text
+    from .machines.overload import overload_is_read
 
-    text = overload_text(printing.front_oracle_text or "")
-    effect = effect_for(printing.name, text, x_value=1)
-    if effect is not None and not _is_notice_only(effect):
+    if overload_is_read(printing):
         return None
     return (
         "the spell's text with 'target' changed to 'each' (CR 702.96a) is not one the engine reads"

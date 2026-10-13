@@ -414,6 +414,12 @@ class TargetRequirement(EngineModel):
     game), worse than refusing the target outright. `_read_phrase` now reads
     that trailing clause via `_extract_color_presence` the same way it
     already reads a trailing comparison or "with `<keyword>`" clause."""
+    snow_or_colorless_source: bool = False
+    """True for "target land **that is snow or could produce {C}**" (Break the
+    Ice): CR 205.4g's snow supertype, or CR 106.7's "could produce" read off the
+    land's mana abilities as the board stands (`Game.could_produce_colorless`).
+    With no game the second half cannot be asked and the restriction fails open,
+    like every other game-bound one."""
     historic: bool = False
     """True for "target historic ..." (Abstergo Entertainment). CR 700.6:
     "The term historic refers to an object that has the legendary supertype,
@@ -1208,6 +1214,17 @@ class TargetRequirement(EngineModel):
                 return (
                     f"{self.phrase} needs {with_indefinite_article(self.color_count)} permanent, "
                     f"and {target.name} is not one"
+                )
+        if self.snow_or_colorless_source and game is not None:
+            snow = Supertype.SNOW in (
+                game.characteristics_of(target).supertypes
+                if target.zone is Zone.BATTLEFIELD
+                else target.card.supertypes
+            )
+            if not snow and not game.could_produce_colorless(target):
+                return (
+                    f"{self.phrase} needs a snow permanent or one that could produce {{C}}, "
+                    f"and {target.name} is neither"
                 )
         historic = self._rejects_historic(target, game)
         if historic is not None:
@@ -5947,6 +5964,8 @@ def _read_phrase(prefix: str, suffix: str, *, strict: bool = False) -> TargetReq
 
     crewed_source_this_turn, rest = _extract_crewed_this_turn(rest)
 
+    snow_or_colorless_source, rest = _extract_snow_or_colorless_source(rest)
+
     color_presence, rest = _extract_color_presence(rest)
     color_count = adjectives.color_count
     if color_presence:
@@ -6237,6 +6256,7 @@ def _read_phrase(prefix: str, suffix: str, *, strict: bool = False) -> TargetReq
         event_comparison_operator=event_comparison_operator,
         must_be_token=adjectives.must_be_token,
         color_count=color_count,
+        snow_or_colorless_source=snow_or_colorless_source,
         historic=adjectives.historic,
         requires_outlaw=adjectives.requires_outlaw,
         excludes_outlaw=adjectives.excludes_outlaw,
@@ -7109,6 +7129,21 @@ def _extract_required_counter_kind(rest: str) -> tuple[str | None, str]:
 #: `machines/effects.py` already reads that shape) and is deliberately not
 #: matched here.
 _COLOR_PRESENCE_RE = re.compile(r"\bthat'?s\s+one\s+or\s+more\s+colors\b", re.IGNORECASE)
+
+
+_SNOW_OR_COLORLESS_SOURCE_RE = re.compile(
+    r"\bthat\s+is\s+snow\s+or\s+could\s+produce\s+\{?c\}?(?!\w)", re.IGNORECASE
+)
+
+
+def _extract_snow_or_colorless_source(rest: str) -> tuple[bool, str]:
+    """Read a trailing "that is snow or could produce {C}" clause out of `rest`
+    (Break the Ice), or leave it untouched when there is none. The noun scan has
+    already worn the braces off, so "{C}" arrives as a bare "c"."""
+    match = _SNOW_OR_COLORLESS_SOURCE_RE.search(rest)
+    if match is None:
+        return False, rest
+    return True, (rest[: match.start()] + rest[match.end() :]).strip()
 
 
 def _extract_color_presence(rest: str) -> tuple[bool, str]:

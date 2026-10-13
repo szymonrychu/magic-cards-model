@@ -140,6 +140,7 @@ if TYPE_CHECKING:
     from ..layers import Characteristics
 from ._chains import ABILITY_TEXT, FORWARD, MIXED_CLAUSE, MIXED_CLAUSES, SPELL_TEXT
 from ._common import (
+    _ANAPHOR_NOUN,
     _OBJECT_ANAPHOR,
     _SELF_ANAPHOR,
     AbilityEffect,
@@ -3700,7 +3701,7 @@ def _layer_remainder_or_composed(
     the remainder is always read the same way, regardless of which shape
     carries the layer sentence beside it.
     """
-    from ..becomes import counter_list_on_anaphor
+    from ..becomes import counter_list_on_anaphor, counters_on_what_became_this_way
 
     # Abigale, Eloquent First-Year's "Put a flying counter, a first strike
     # counter, and a lifelink counter on that creature." - one instruction
@@ -3708,6 +3709,11 @@ def _layer_remainder_or_composed(
     counters = counter_list_on_anaphor(remainder_text)
     if counters is not None:
         return counters
+    # Rise and Shine's "Put four +1/+1 counters on each artifact that became a
+    # creature this way." - the layer sentence's own target, checked.
+    became = counters_on_what_became_this_way(remainder_text)
+    if became is not None:
+        return became
     # Malicious Eclipse's "If a creature an opponent controls would die this
     # turn, exile it instead.", Death Frenzy's "Whenever a creature dies this
     # turn, ...", Predatory Rampage's "... blocks this turn if able." - the
@@ -3730,11 +3736,9 @@ def _layer_remainder_or_composed(
     return damage_to_layer_target_rider(remainder_text)
 
 
-#: CR 702.96a: overload is the keyword line printed beside a spell's own
-#: resolution text that *rewrites* that text ("change its text by replacing
-#: all instances of the word 'target' with the word 'each'"), so it is never
-#: dropped as resolution-neutral below - the spell does something different
-#: when it is used.
+#: CR 702.96a: overload rewrites "target" to "each" - read by
+#: `machines/overload.py` off the printed sentences, so the keyword line is
+#: resolution-neutral here like any other (kept as the name of that keyword).
 _TEXT_CHANGING_KEYWORD_LINE_RE = re.compile(r"^overload\b", re.IGNORECASE)
 
 
@@ -3745,10 +3749,11 @@ def _is_resolution_neutral_keyword_line(sentence: str) -> bool:
     hand, never an instruction of the resolving spell). `_plain_resolution_
     sentences` keeps such a line as a sentence of its own, and
     `_compose_layer_effect_with_remainder` would otherwise record it as an
-    unread remainder of a spell whose every instruction it applied."""
-    return _is_keyword_ability_line(sentence) and not _TEXT_CHANGING_KEYWORD_LINE_RE.match(
-        sentence.strip()
-    )
+    unread remainder of a spell whose every instruction it applied. Overload
+    (CR 702.96a) is one too: its cost is paid at casting, and what it changes
+    ("target" to "each") is read by `machines/overload.py` off the printed
+    sentences, never off this line."""
+    return _is_keyword_ability_line(sentence)
 
 
 @SPELL_TEXT.rung("s24")
@@ -6735,9 +6740,12 @@ def _parse_self_cant_block_clause(text: str) -> AbilityEffect | None:
 #: and CR 608.2c's own worked example of a rider that *modifies its
 #: antecedent* rather than running after it. Handled separately from every
 #: rider above for exactly that reason: see
-#: `_parse_cant_be_regenerated_clause_pair`.
+#: `_parse_cant_be_regenerated_clause_pair`. "A creature destroyed this way
+#: can't be regenerated." (Damn) is the same rider with the antecedent spelled
+#: out instead of pronouned.
 _RIDER_CANT_BE_REGENERATED_RE = re.compile(
-    rf"^{_OBJECT_ANAPHOR} can'?t be regenerated$", re.IGNORECASE
+    rf"^(?:{_OBJECT_ANAPHOR}|an? {_ANAPHOR_NOUN} destroyed this way) can'?t be regenerated$",
+    re.IGNORECASE,
 )
 
 
@@ -9817,7 +9825,10 @@ def _parse_mass_pump_group_clause(clause: str, *, for_spell: bool) -> TargetedCl
 _TARGET_PHRASE_PUMP_RE = re.compile(
     r"^(?:until end of turn, )?(?P<phrase>(?:another |up to one )?target .+?) gets "
     r"(?P<power>[+-]\d+)/(?P<toughness>[+-]\d+)"
-    r"(?: and gains (?P<keywords>[a-z][a-z0-9 ,]*?))?(?: until end of turn)?\.?$",
+    r"(?: and gains (?P<keywords>[a-z][a-z0-9 ,]*?))?(?: until end of turn)?"
+    # Chemister's Trick: "... gets -2/-0 until end of turn and attacks this turn
+    # if able." - CR 508.1d's requirement for the span the pump lasts.
+    r"(?: and (?P<attacks>attacks (?:each combat|this turn) if able))?\.?$",
     re.IGNORECASE,
 )
 
@@ -9844,6 +9855,8 @@ def _parse_target_phrase_pump_clause(clause: str, *, for_spell: bool) -> Targete
         if validated is None:
             return None
         keywords = validated
+    if match.group("attacks") is not None:
+        keywords = [*keywords, "This creature attacks each combat if able."]
     power, toughness = int(match.group("power")), int(match.group("toughness"))
 
     def effect(game: "Game", stack_object: "StackObject") -> None:

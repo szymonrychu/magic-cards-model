@@ -115,6 +115,45 @@ def counter_list_on_anaphor(text: str) -> StackEffect | None:
     return effect
 
 
+#: Rise and Shine's second sentence - "Put four +1/+1 counters on each artifact
+#: that became a creature this way." The antecedent is the layer sentence
+#: before it ("Target noncreature artifact you control becomes a 0/0 artifact
+#: creature."): the object it locked is the one that became a creature (CR
+#: 608.2c, CR 611.2c). The object is checked to *be* the creature now (CR
+#: 613.1d, layer 4), so a target the first sentence could not change gets
+#: nothing.
+_PUT_COUNTERS_ON_EACH_BECAME_THIS_WAY_RE = re.compile(
+    rf"^put (?P<items>{_COUNTER_ITEM}) on each (?:[a-z]+ )?that became an? "
+    r"(?P<became>[a-z]+) this way\.?$",
+    re.IGNORECASE,
+)
+
+
+def counters_on_what_became_this_way(text: str) -> StackEffect | None:
+    """`_PUT_COUNTERS_ON_EACH_BECAME_THIS_WAY_RE`'s shape, as a clause run after
+    the layer sentence that made the object what it names."""
+    match = _PUT_COUNTERS_ON_EACH_BECAME_THIS_WAY_RE.fullmatch(" ".join(text.split()))
+    if match is None:
+        return None
+    items = _counter_items(match.group("items"))
+    became = match.group("became").lower()
+    if items is None:
+        return None
+
+    def effect(game: Game, stack_object: StackObject) -> None:
+        from .turn_scoped_riders import layer_antecedent_objects
+
+        # The layer sentence's own objects, locked as it began (CR 611.2c): the
+        # targets are not re-checked against "noncreature" now that it is one.
+        for target in layer_antecedent_objects(game):
+            if became not in {t.value for t in game.characteristics_of(target).types}:
+                continue
+            for kind, amount in items:
+                game.add_counters(target, kind, amount)
+
+    return effect
+
+
 # ---------------------------------------------------------------------------
 # A layer sentence about a target chosen in the sentence before it, or gated
 # on the source's own creature type.

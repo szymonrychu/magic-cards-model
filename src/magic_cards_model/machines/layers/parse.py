@@ -2573,8 +2573,9 @@ _BECOMES_CREATURE_TYPE_WITH_BASE_PT_RE = re.compile(
     r"|(?P<subtype>[a-z'-]+(?: [a-z'-]+)*?)) with base power and "
     r"toughness (?:(?P<power>\d+)/(?P<toughness>\d+)"
     r"|each equal to (?P<each>\d+)(?: plus (?P<plus>\d+))?)"
-    r"(?:(?P<with_abilities>(?:,| and) (?!gains )[a-z][a-z ,]*?))?"
-    r"(?: and gains (?P<keywords>[a-z][a-z ,]*?))?(?P<until_eot> until end of turn)?\.?$",
+    r"(?:(?P<with_abilities>(?:,| and) (?!gains |loses )[a-z][a-z ,]*?))?"
+    r"(?P<loses_after>,? (?:and )?loses all abilities)?"
+    r"(?:,? and gains (?P<keywords>[a-z][a-z ,]*?))?(?P<until_eot> until end of turn)?\.?$",
     re.IGNORECASE,
 )
 
@@ -12111,7 +12112,8 @@ def _parse_layer_sentence_ungated(sentence: str) -> EffectBuilder | None:
             colors,
             power,
             toughness,
-            loses_abilities=match.group("loses") is not None,
+            loses_abilities=match.group("loses") is not None
+            or match.group("loses_after") is not None,
             artifact_creature=artifact,
             creature_card_type=creature,
             keywords=tuple(keywords),

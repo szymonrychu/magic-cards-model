@@ -1392,7 +1392,11 @@ def _may_move_any_number_counters(text: str, *, for_spell: bool):  # noqa: ANN20
 _PUT_COUNTER_THEN_DOUBLE_ON_THAT_RE = re.compile(
     r"^put (?P<n>an?|[\w-]+) (?P<kind>\+1/\+1|-1/-1|[a-z]+) counters? on "
     r"(?P<phrase>target .+?), then double the number of (?P<kind2>\+1/\+1|-1/-1|[a-z]+) "
-    r"counters? on (?:that creature|it|this [a-z]+)\.?$",
+    r"counters? on (?:that creature|it|this [a-z]+"
+    # Fangs of Kalonia: the one target is the one creature that had the counter
+    # put on it this way.
+    r"|each creature that had an? (?P<kind3>\+1/\+1|-1/-1|[a-z]+) counter put on it this way)"
+    r"\.?$",
     re.IGNORECASE,
 )
 
@@ -1408,6 +1412,8 @@ def _put_counter_then_double_on_that(text: str, *, for_spell: bool):  # noqa: AN
     from . import effects
 
     if match.group("kind").lower() != match.group("kind2").lower():
+        return None
+    if match.group("kind3") and match.group("kind3").lower() != match.group("kind").lower():
         return None
     kind = match.group("kind").lower()
     amount = parse_count(match.group("n"))

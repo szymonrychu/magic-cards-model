@@ -110,6 +110,22 @@ def _antecedent(objects: tuple[tuple[UUID, UUID], ...]) -> Iterator[None]:
         _LAYER_ANTECEDENT.reset(token)
 
 
+def layer_antecedent_objects(game: Game) -> list[CardState]:
+    """The objects of the layer sentence beside the running rider that are still
+    the same objects on the battlefield (CR 611.2c, CR 400.7), or an empty list
+    when no layer sentence is running."""
+    objects: list[CardState] = []
+    for card_id, stamp in _LAYER_ANTECEDENT.get() or ():
+        found = game.find_by_id(card_id)
+        if (
+            isinstance(found, CardState)
+            and found.zone is Zone.BATTLEFIELD
+            and found.zone_change_stamp == stamp
+        ):
+            objects.append(found)
+    return objects
+
+
 def run_with_antecedent(
     game: Game, stack_object: Any, rider: Rider, affected: Iterable[CardState]
 ) -> None:
