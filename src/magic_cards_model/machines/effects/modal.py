@@ -1493,6 +1493,14 @@ def parse_mode_effect(mode: Mode, x_value: int) -> Effect | None:
     c02_t6 = _c02_t6_spell_effect(text)
     if c02_t6 is not None:
         return c02_t6
+    # Plunge into Darkness's second mode: a chosen amount, then a payoff that
+    # reads it - the whole-text readers a non-modal spell reaches through
+    # `SPELL_TEXT`, which a mode's own text never does.
+    from ..ep02_r2_chosen_amounts import chosen_amount_spell_effect
+
+    chosen_amount = chosen_amount_spell_effect(text)
+    if chosen_amount is not None:
+        return chosen_amount
     # Witherbloom Charm's own first mode: "You may sacrifice a permanent. If
     # you do, draw two cards." (CR 118.12) is read whole by `_spell_effect_
     # or_notice` for a non-modal card, but a mode's own text never reaches

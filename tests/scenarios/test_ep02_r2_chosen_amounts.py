@@ -393,6 +393,14 @@ def test_hew_the_entwood_reveals_one_card_per_land_sacrificed():
     assert scenario.player("alice").library[-1].name == "Grizzly Bears"
 
 
+def _cast_modes(scenario, name, modes, entwined=False):
+    casting = scenario.cast(name, "alice")
+    casting.choose_modes(modes, entwined=entwined)
+    scenario.auto_pay(casting.begin_paying(), username="alice")
+    scenario.put_on_stack(casting)
+    return scenario.resolve_top()
+
+
 @pytest.mark.parametrize("sacrificed", [0, 2])
 def test_plunge_into_darkness_first_mode_gains_three_per_creature(sacrificed):
     scenario = _board(
@@ -400,12 +408,10 @@ def test_plunge_into_darkness_first_mode_gains_three_per_creature(sacrificed):
         alice_battlefield=["Grizzly Bears", "Grizzly Bears"],
     )
     bears = _on_battlefield(scenario, "Grizzly Bears")
-    scenario.will_choose_mode(
-        "Sacrifice any number of creatures. You gain 3 life for each creature sacrificed this way."
-    )
     scenario.will_choose_cards(*bears[:sacrificed], source="Plunge into Darkness")
-    _cast(scenario, "Plunge into Darkness")
+    _cast_modes(scenario, "Plunge into Darkness", [1])
     assert scenario.player("alice").life == 20 + 3 * sacrificed
+    assert len(_on_battlefield(scenario, "Grizzly Bears")) == 2 - sacrificed
 
 
 def test_plunge_into_darkness_second_mode_looks_at_life_paid_cards():
@@ -413,17 +419,30 @@ def test_plunge_into_darkness_second_mode_looks_at_life_paid_cards():
         alice_hand=["Plunge into Darkness"],
         alice_library=["Sol Ring", "Island", "Forest", "Forest"],
     )
-    scenario.will_choose_mode(
-        "Pay any amount of life, then look at that many cards from the top of your library. "
-        "Put one of those cards into your hand and exile the rest."
-    )
     scenario.will_pay_life_amount(3, source="Plunge into Darkness")
     ring = scenario.find("Sol Ring", Zone.LIBRARY, "alice")
     scenario.will_choose_cards(ring, source="Plunge into Darkness")
-    _cast(scenario, "Plunge into Darkness")
+    _cast_modes(scenario, "Plunge into Darkness", [2])
     assert scenario.player("alice").life == 17
     assert ring.zone is Zone.HAND
     assert len(scenario.game.exile) == 2
+    assert len(scenario.player("alice").library) == 1
+
+
+def test_plunge_into_darkness_entwined_does_both_in_order():
+    scenario = _board(
+        alice_hand=["Plunge into Darkness"],
+        alice_battlefield=["Grizzly Bears"],
+        alice_library=["Sol Ring", "Island", "Forest"],
+    )
+    bear = scenario.creature("Grizzly Bears", "alice")
+    scenario.will_choose_cards(bear, source="Plunge into Darkness")
+    scenario.will_pay_life_amount(2, source="Plunge into Darkness")
+    ring = scenario.find("Sol Ring", Zone.LIBRARY, "alice")
+    scenario.will_choose_cards(ring, source="Plunge into Darkness")
+    _cast_modes(scenario, "Plunge into Darkness", [1, 2], entwined=True)
+    assert scenario.player("alice").life == 20 + 3 - 2
+    assert ring.zone is Zone.HAND and len(scenario.game.exile) == 1
 
 
 def test_quintorius_ultimate_exiles_chosen_cards_and_adds_red_per_card():

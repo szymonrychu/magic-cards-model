@@ -373,27 +373,33 @@ def pay_cost_chosen_times(
 
 
 _PAY_ANY_AMOUNT_RE = re.compile(
-    r"^(?:then )?(?:you may )?pay any amount of (?P<what>\{e\}|mana)$", re.IGNORECASE
+    r"^(?:then )?(?:you may )?pay any amount of (?P<what>\{e\}|mana|life)$", re.IGNORECASE
 )
 
 
 @MIXED_CLAUSE.rung("s32", for_spell=FORWARD)
 def _parse_pay_any_amount_clause(clause: str, *, for_spell: bool) -> Any:
     """ "[You may] pay any amount of {E}" (CR 107.14) / "Pay any amount of
-    mana" (CR 118.3): the player chooses the amount, up to what they can pay,
-    pays it, and the amount paid is recorded for a later "that many" / "for
-    each {E} paid this way" (CR 608.2c)."""
+    mana" (CR 118.3) / "Pay any amount of life" (CR 119.4): the player
+    chooses the amount, up to what they can pay, pays it, and the amount
+    paid is recorded for a later "that many" / "for each {E} paid this way"
+    (CR 608.2c)."""
     if "any amount of" not in clause.lower():
         return None
     match = _PAY_ANY_AMOUNT_RE.fullmatch(clause.strip().rstrip("."))
     if match is None:
         return None
-    energy = match.group("what").lower() == "{e}"
+    what = match.group("what").lower()
 
     def effect(game: "Game", stack_object: Any) -> None:
         player = _controller(game, stack_object)
-        if energy:
+        if what == "{e}":
             paid = game.pay_any_amount_of_energy(
+                player, source=_source_name(stack_object), source_id=source_id_of(stack_object)
+            )
+        elif what == "life":
+            # CR 119.4: from 0 up to the player's life total.
+            paid = game.pay_any_amount_of_life(
                 player, source=_source_name(stack_object), source_id=source_id_of(stack_object)
             )
         else:
@@ -1017,3 +1023,88 @@ def repeated_pay_life_effect(text: str) -> Any:
 def _parse_repeated_pay_life_spell(text: str) -> Any:
     """`repeated_pay_life_effect` as a spell's whole text."""
     return repeated_pay_life_effect(text)
+
+
+#: "look at the top N cards of your library. Put one of those cards into your
+#: hand and exile the rest." (Plunge into Darkness, N read in from the life
+#: paid).
+_LOOK_TOP_ONE_TO_HAND_EXILE_REST_RE = re.compile(
+    r"^look at the top (?P<n>\d+) cards? of your library\. put one of (?:them|those cards) "
+    r"into your hand and exile the rest\.?$",
+    re.IGNORECASE,
+)
+
+
+def look_top_one_to_hand_exile_rest(clause: str) -> Any:
+    """CR 701.20e looks at the top N; one goes to the hand, the rest are
+    exiled (CR 406.1). N of zero looks at nothing."""
+    if "exile the rest" not in clause.lower():
+        return None
+    match = _LOOK_TOP_ONE_TO_HAND_EXILE_REST_RE.fullmatch(" ".join(clause.strip().split()))
+    if match is None:
+        return None
+    count = int(match.group("n"))
+
+    def effect(game: "Game", stack_object: Any) -> None:
+        player = _controller(game, stack_object)
+        name = _source_name(stack_object)
+        looked = list(player.library[:count])
+        if not looked:
+            return
+        for state in looked:
+            game.look(state, player.username, source=name)
+        chosen_ids = game.ask(
+            Decision(
+                kind=DecisionKind.CHOOSE_CARDS,
+                player=player.username,
+                prompt="put one of the cards looked at into your hand; the rest are exiled",
+                source=name,
+                source_id=source_id_of(stack_object),
+                amount=1,
+                cards=tuple(state.id for state in looked),
+                default_cards=(looked[0].id,),
+            )
+        )
+        by_id = {state.id: state for state in looked}
+        chosen = [by_id[card_id] for card_id in chosen_ids if card_id in by_id][:1]
+        for state in chosen:
+            player.move(state, Zone.HAND)
+        for state in looked:
+            if state not in chosen and state.zone is Zone.LIBRARY:
+                game.exile_permanent(state)
+
+    return effect
+
+
+@SPELL_TEXT.rung("s23")
+def _parse_look_top_one_to_hand_exile_rest_spell(text: str) -> Any:
+    """`look_top_one_to_hand_exile_rest` as a spell's whole text."""
+    return look_top_one_to_hand_exile_rest(text)
+
+
+@ABILITY_TEXT.rung("s40", before=("parse_mixed_effect",))
+def _parse_look_top_one_to_hand_exile_rest_ability(text: str) -> Any:
+    """`look_top_one_to_hand_exile_rest` as an ability's whole text."""
+    return look_top_one_to_hand_exile_rest(text)
+
+
+@SPELL_TEXT.rung("s23")
+def _parse_then_that_many_spell(text: str) -> Any:
+    """`then_that_many_effect` as a spell's whole text."""
+    return then_that_many_effect(text, True)
+
+
+def chosen_amount_spell_effect(text: str) -> Any:
+    """This module's whole-text spell readers, for a text that never reaches
+    `SPELL_TEXT` (a modal spell's mode, CR 700.2a)."""
+    for reader in (
+        lambda t: then_that_many_effect(t, True),
+        lambda t: amount_written_effect(t, True),
+        lambda t: reveal_then_symbols_effect(t, True),
+        look_top_one_to_hand_exile_rest,
+        repeated_pay_life_effect,
+    ):
+        effect = reader(text)
+        if effect is not None:
+            return effect
+    return None
