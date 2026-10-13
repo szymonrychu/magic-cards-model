@@ -75,6 +75,7 @@ LISTED = [
     "Mystic Genesis",
     "Spell Swindle",
     "Flay Essence",
+    "Ooze Garden",
 ]
 
 MANA = ["Plains"] * 3 + ["Swamp"] * 4 + ["Island"] * 4 + ["Forest"] * 3 + ["Mountain"] * 3
@@ -220,6 +221,33 @@ def test_geralf_makes_a_zombie_as_big_as_the_sacrificed_toughness() -> None:
     zombies = [p for p in scenario.game.battlefield if "Zombie" in p.name]
     assert len(zombies) == 1
     assert (zombies[0].power, zombies[0].toughness) == (4, 4)
+
+
+def test_ooze_garden_makes_an_ooze_as_big_as_the_sacrificed_non_ooze_power() -> None:
+    scenario = _scenario(["Ooze Garden", "Forest", "Forest", "Serra Angel"])
+    (garden,) = [
+        p for p in scenario.game.permanents_controlled_by("alice") if p.name == "Ooze Garden"
+    ]
+    angel = scenario.creature("Serra Angel", "alice")
+    scenario.activate(garden, sacrificing=[angel], auto=True)
+    scenario.pass_until_resolved()
+    oozes = [p for p in scenario.game.battlefield if "Ooze" in p.subtypes]
+    assert len(oozes) == 1
+    assert (oozes[0].power, oozes[0].toughness) == (4, 4)
+
+
+def test_ooze_garden_cannot_sacrifice_an_ooze() -> None:
+    scenario = _scenario(["Ooze Garden", "Forest", "Forest", "Serra Angel"])
+    (garden,) = [
+        p for p in scenario.game.permanents_controlled_by("alice") if p.name == "Ooze Garden"
+    ]
+    from magic_cards_model.models.token import TokenDefinition, create_tokens
+
+    (ooze,) = create_tokens(
+        scenario.game, TokenDefinition(subtypes=("Ooze",), power=1, toughness=1), "alice", 1
+    )
+    with pytest.raises(ValueError, match="Ooze"):
+        scenario.activate(garden, sacrificing=[ooze], auto=True)
 
 
 def test_geralf_cannot_sacrifice_a_token() -> None:

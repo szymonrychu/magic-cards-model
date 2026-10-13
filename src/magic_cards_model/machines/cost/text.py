@@ -1022,7 +1022,7 @@ _PHRASE_EXILE_AND_PAY_MANA_COST = re.compile(
 #: "Sacrifice another creature or artifact" (Vanguard of the Rose) reads
 #: "another" as `_PHRASE_EXILE` does below: one, excluding the source.
 _PHRASE_SACRIFICE = re.compile(
-    rf"^sacrifice (?:(?P<another>another)|{_COST_COUNT}) (?P<quality>[\w ,]+)$", re.IGNORECASE
+    rf"^sacrifice (?:(?P<another>another)|{_COST_COUNT}) (?P<quality>[\w ,-]+)$", re.IGNORECASE
 )
 #: "sacrifice all creatures you control" (Soulblast's additional cost),
 #: "Sacrifice all lands you control" (Tomb of Urami's activation cost) - no
@@ -1205,6 +1205,7 @@ def _requirement(quality: str) -> CardRequirement | None:
     types: list[Type] = []
     excluded_types: list[Type] = []
     subtypes: list[str] = []
+    excluded_subtypes: list[str] = []
     supertypes: list[Supertype] = []
     tapped: bool | None = None
     token: bool | None = None
@@ -1219,6 +1220,11 @@ def _requirement(quality: str) -> CardRequirement | None:
             colors.append(Color.COLORLESS)
             continue
         lowered = word.lower().rstrip("s")
+        if re.fullmatch(r"non-[A-Za-z]+", word) and word[4:5].isupper():
+            # Ooze Garden's "Sacrifice a non-Ooze creature": a negated
+            # subtype, the subtype twin of "nonland" below.
+            excluded_subtypes.append(word[4:])
+            continue
         if lowered in _QUALITY_CONNECTORS:
             continue
         if lowered in ("tapped", "untapped"):
@@ -1267,6 +1273,7 @@ def _requirement(quality: str) -> CardRequirement | None:
         types=types,
         excluded_types=excluded_types,
         subtypes=subtypes,
+        excluded_subtypes=excluded_subtypes,
         supertypes=supertypes,
         description=quality.strip(),
         tapped=tapped,
