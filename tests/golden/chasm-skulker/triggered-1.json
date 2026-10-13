@@ -34,9 +34,25 @@
   },
   "card": "Chasm Skulker",
   "delta": {
-    "created": {},
+    "created": {
+      "Squid Token@alice+1": {
+        "attached_to": null,
+        "class_level": 1,
+        "controller": "alice",
+        "counters": {},
+        "damage": 0,
+        "face_up": true,
+        "granted": [],
+        "monstrous": false,
+        "power": 1,
+        "tapped": false,
+        "toughness": 1,
+        "transformed": false,
+        "zone": "battlefield"
+      }
+    },
     "decisions": [],
-    "fields_changed": [],
+    "fields_changed": ["continuous_effects", "turn_counts", "turn_facts", "turn_history"],
     "notices": {},
     "objects": {},
     "players": {},

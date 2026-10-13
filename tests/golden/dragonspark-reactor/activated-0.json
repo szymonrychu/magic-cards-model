@@ -36,10 +36,18 @@
   "delta": {
     "created": {},
     "decisions": [],
-    "fields_changed": [],
+    "fields_changed": ["creatures_died_this_turn", "damage_dealt_this_turn", "graveyard_arrivals_announced", "graveyard_arrivals_this_turn", "noncombat_damage_to_players_this_turn", "nontoken_creatures_died_under_control_this_turn", "permanents_left_battlefield_this_turn", "turn_facts", "turn_history"],
     "notices": {},
-    "objects": {},
-    "players": {},
+    "objects": {
+      "Memnite@alice#1": {
+        "zone": ["battlefield", "graveyard"]
+      }
+    },
+    "players": {
+      "alice": {
+        "life": [20, 19]
+      }
+    },
     "stack": []
   },
   "family": "activated",

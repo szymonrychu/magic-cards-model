@@ -1,5 +1,5 @@
 {
-  "ability": "{3}{G}, {T}: Search your library for a creature card with mana value equal to the number of harmony counters on this permanent, reveal it, and put it into your hand. If that card is legendary, create a Treasure token. Then shuffle.",
+  "ability": "{3}{G}, {T}: Search your library for a creature card with mana value equal to the number of harmony counters on Instrument of the Bards, reveal it, and put it into your hand. If that card is legendary, create a Treasure token. Then shuffle.",
   "action": {
     "controller": "alice",
     "modes": [],

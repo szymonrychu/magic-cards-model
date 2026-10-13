@@ -39,10 +39,7 @@
     "fields_changed": ["creatures_died_this_turn", "graveyard_arrivals_announced", "graveyard_arrivals_this_turn", "nontoken_creatures_died_under_control_this_turn", "permanents_left_battlefield_this_turn", "turn_history"],
     "notices": {},
     "objects": {
-      "Icehide Golem@alice#1": {
-        "zone": ["battlefield", "graveyard"]
-      },
-      "Icehide Golem@bob#1": {
+      "Fleecemane Lion@bob#1": {
         "zone": ["battlefield", "graveyard"]
       }
     },

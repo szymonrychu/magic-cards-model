@@ -1,5 +1,5 @@
 {
-  "ability": "{2}{G}, {T}, Put a verse counter on this permanent: Search your library for a creature card with mana value equal to the number of verse counters on this permanent, put it onto the battlefield, then shuffle.",
+  "ability": "{2}{G}, {T}, Put a verse counter on Yisan: Search your library for a creature card with mana value equal to the number of verse counters on Yisan, put it onto the battlefield, then shuffle.",
   "action": {
     "controller": "alice",
     "modes": [],
