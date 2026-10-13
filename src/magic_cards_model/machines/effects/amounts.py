@@ -76,6 +76,7 @@ from ..ep02_r2_cards_in_zone_counts import (
     parse_search_target_library_and_exile,
 )
 from ..ep02_r2_devotion_domain_party import up_to_x_targets, where_x_pump_text_normalised
+from ..ep02_r3_life_total_amounts import amount_term, count_term, for_each_count
 from ..layers import (
     BASIC_LAND_TYPES,
     Characteristics,
@@ -909,6 +910,8 @@ def count_expression(phrase: str) -> Callable[["Game", str], int] | None:
     the function itself.
     """
     stripped = phrase.strip().rstrip(".")
+    if (player_level := count_term(stripped)) is not None:
+        return player_level
     if stripped.lower().startswith(("twice the number of ", "three times the number of ")):
         # "twice the number of Blood tokens you control" (Bloodtithe Harvester): the
         # same count, doubled (or tripled) - the multiplier is arithmetic on the
@@ -2102,7 +2105,7 @@ def _amount_term(term: str) -> AmountReader | None:
     counted = count_expression(text) or _devotion_count(text)
     if counted is not None:
         return lambda game, controller, _object, _x: counted(game, controller)
-    return None
+    return amount_term(text)
 
 
 def amount_expression(phrase: str) -> AmountReader | None:
@@ -3369,7 +3372,11 @@ def _for_each_multiplier(phrase: str) -> Callable[["Game", str, str | None], int
         return lambda game, controller, _source_id: generic(game, controller)
     from ..ep02_r1_counted_permanents import counted_group_reader
 
-    return counted_group_reader(stripped) or _for_each_described_count(stripped)
+    return (
+        counted_group_reader(stripped)
+        or _for_each_described_count(stripped)
+        or for_each_count(stripped)
+    )
 
 
 #: "`<description>` you control", the control clause anywhere in it -
@@ -4384,13 +4391,21 @@ def _parse_variable_count_token_clause(clause: str, *, for_spell: bool) -> Targe
         if name is not None:
             definition = definition.model_copy(update={"name": name.strip()})
 
-    reader = count_expression(match.group("expr"))
-    if reader is None:
+    counted = count_expression(match.group("expr"))
+    # A player-level term `count_expression` has no row for - "your life total" (Storm Herd),
+    # "your speed" - is an `amount_expression` term.
+    amount = None if counted is not None else amount_expression(match.group("expr"))
+    if counted is None and amount is None:
         return None
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
         controller = game.controller_of(stack_object).username
-        count = reader(game, controller)
+        if counted is not None:
+            count = counted(game, controller)
+        else:
+            assert amount is not None
+            source = stack_object if isinstance(stack_object, CardState) else None
+            count = amount(game, controller, source, 0)
         if count > 0:
             create_tokens(game, definition, controller, count, tapped=tapped)
 

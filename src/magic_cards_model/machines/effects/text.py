@@ -183,7 +183,18 @@ def _read_type_word_list(text: str) -> frozenset[Type] | None:
 #: here by the resolving card's own name, not a name table, keeps this generic
 #: for any future card of the same shape.
 def _strip_self_shuffle_clause(card_name: str, text: str) -> str:
-    if "shuffle " not in text.lower():
+    lowered = text.lower()
+    if "shuffle " not in lowered:
+        if "on the bottom of its owner's library" in lowered:
+            # Sanguine Sacrament's "Put <name> on the bottom of its owner's library." is
+            # the same final-step redirect (`replacement.model._put_on_bottom_instead`).
+            return re.sub(
+                rf"(?:^|(?<=[.\s]))Put {re.escape(card_name)} on the bottom of its owner's "
+                r"library\.?\s*",
+                "",
+                text,
+                flags=re.IGNORECASE,
+            )
         return text
     pattern = re.compile(
         rf"(?:^|(?<=[.\s]))Shuffle {re.escape(card_name)} into its owner's library\.?\s*",
