@@ -2123,8 +2123,22 @@ def _gate(text: str) -> bool:
     )
 
 
+@functools.lru_cache(maxsize=4096)
+def _read_without_this_module(text: str, for_spell: bool) -> bool:
+    """Whether the ordinary parsers already read `text` whole. This module only
+    takes a text nothing else reads, so a card an older, tested reader handles
+    keeps that reader's behaviour."""
+    lowered = text.lower()
+    if "where x is" in lowered and "this way" in lowered:
+        # The generic "gets +X/+0, where X is ..." reader accepts any X by reading
+        # the announced X (0 on an ability): it cannot tell what "this way"
+        # counts, so it does not count as having read the text.
+        return False
+    return _parse_cached(text, for_spell) is not None
+
+
 def _effect(text: str, for_spell: bool) -> Any:
-    if _READING or not _gate(text):
+    if _READING or not _gate(text) or _read_without_this_module(text, for_spell):
         return None
     plan = _plan(text, for_spell)
     if plan is None:

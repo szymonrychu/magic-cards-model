@@ -1062,7 +1062,7 @@ def _self_pump_per_player_counter_builder(
 
 #: "Alrund gets +1/+1 for each card in your hand and each foretold card you own
 #: in exile." - a self bonus in sublayer 7c (CR 613.4c) counting the controller's
-#: hand (CR 402.2) plus the foretold cards (CR 702.143a) they own in exile,
+#: hand (CR 402.1) plus the foretold cards (CR 702.143a) they own in exile,
 #: both read when the effect is built (`LayerContext`).
 _SELF_PUMP_PER_HAND_AND_FORETOLD_RE = re.compile(
     r"^this (?:creature|token|permanent) gets (?P<power>[+-]\d+)/(?P<toughness>[+-]\d+) "
