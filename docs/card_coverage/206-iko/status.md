@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 49 | 21.5% |
-| Works (untested) | 127 | 55.7% |
+| Tested | 50 | 21.9% |
+| Works (untested) | 128 | 56.1% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 52 | 22.8% |
+| Not working | 50 | 21.9% |
 
 ## Cards needing work
 
@@ -65,13 +65,11 @@
 | The Ozolith | silent | Whenever a creature you control leaves the battlefield, if it had counters on it, put those counters on The Ozolith. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Vadrok, Apex of Thunder | silent | Whenever this creature mutates, you may cast target noncreature card with mana value 3 or less from your graveyard without paying its mana cost. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Vivien, Monsters' Advocate | silent | +1: Create a 3/3 green Beast creature token. Put your choice of a reach counter, a vigilance counter, or a trample counter on it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Whisper Squad | silent | {1}{B}: Search your library for a card named Whisper Squad, put it onto the battlefield tapped, then shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Wingspan Mentor | silent | {2}{U}, {T}: Put a +1/+1 counter on each creature you control with flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Winota, Joiner of Forces | silent | Whenever a non-Human creature you control attacks, look at the top six cards of your library. You may put a Human creature card from among them onto the battlef | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Yidaro, Wandering Monster | silent | When you cycle this card, shuffle it into your library from your graveyard. If you've cycled a card named Yidaro, Wandering Monster four or more times this game | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Bushmeat Poacher | notice | {1}, {T}, Sacrifice another creature: You gain life equal to the sacrificed creature's toughness. Draw a card. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Call of the Death-Dweller | notice | Return up to two target creature cards with total mana value 3 or less from your graveyard to the battlefield. Put a deathtouch counter on either of them. Then  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Dire Tactics | notice | Exile target creature. If you don't control a Human, you lose life equal to that creature's toughness. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Heightened Reflexes | notice | Target creature gets +1/+0 until end of turn. Put a first strike counter on it. | unparsed remainder: Put a first strike counter on it. | Y/Y/- | not_working |
 | Monstrous Step | notice | Target creature gets +7/+7 until end of turn. Up to one other target creature blocks it this turn if able. Cycling {2} ({2}, Discard this card: Draw a card.) | unparsed remainder: Up to one other target creature blocks it this turn if able. | Y/Y/- | not_working |
 | Mythos of Illuna | notice | Create a token that's a copy of target permanent. If {R}{G} was spent to cast this spell, instead create a token that's a copy of that permanent, except the tok | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -202,6 +200,7 @@
 | Vulpikeet | handled | Whenever this creature mutates, put a +1/+1 counter on it. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Weaponize the Monsters | handled | {2}, Sacrifice a creature: This enchantment deals 2 damage to any target. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Whirlwind of Thought | handled | Whenever you cast a noncreature spell, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Whisper Squad | handled | {1}{B}: Search your library for a card named Whisper Squad, put it onto the battlefield tapped, then shuffle. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Wilt | handled | Destroy target artifact or enchantment. Cycling {2} ({2}, Discard this card: Draw a card.) | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Zagoth Crystal | handled | Cycling | machines/keywords.py (off_zone_abilities: cycling) | Y/Y/- | not_tested |
 | Zagoth Mamba | handled | Whenever this creature mutates, target creature an opponent controls gets -2/-2 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -209,7 +208,7 @@
 ## Fully supported
 
 <details>
-<summary>49 cards</summary>
+<summary>50 cards</summary>
 
 - Back for More
 - Blade Banish
@@ -218,6 +217,7 @@
 - Brokkos, Apex of Forever
 - Chevill, Bane of Monsters
 - Cunning Nightbonder
+- Dire Tactics
 - Drannith Magistrate
 - Ferocious Tigorilla
 - Fiend Artisan
@@ -279,7 +279,6 @@
 | destroy target creature. put a menace counter on a creature you control. (it can't be blocked except by two or more creatures.) | 1 | Blood Curdle | iko |
 | destroy target nonland permanent if it's a creature or if {M}{M} was spent to cast ~. | 1 | Mythos of Nethroi | iko |
 | each player chooses an artifact, a creature, an enchantment, and a planeswalker from among the nonland permanents they control, then sacrifices the rest. if {M} | 1 | Mythos of Snapdax | iko |
-| exile target creature. if you don"..."s toughness. | 1 | Dire Tactics | iko |
 | if {M}{M} was spent to cast ~, search your library for a card, put that card into your graveyard, then shuffle. return up to two permanent cards from your grave | 1 | Mythos of Brokkos | iko |
 | look at the top five cards of your library. put any number of permanent cards from among them onto the battlefield and the rest into your hand. exile ~. | 1 | Genesis Ultimatum | iko |
 | return any number of permanent cards with different names from your graveyard to the battlefield. | 1 | Eerie Ultimatum | iko |
@@ -316,7 +315,6 @@
 | {M}{M}, {M}: put a +N/+N counter on each creature you control with menace. | 1 | Frillscare Mentor | iko |
 | {M}{M}, {M}: put a +N/+N counter on each creature you control with trample. | 1 | Hornbash Mentor | iko |
 | {M}{M}, {M}: put a +N/+N counter on each creature you control with vigilance. | 1 | Keensight Mentor | iko |
-| {M}{M}: search your library for a card named ~, put it onto the battlefield tapped, then shuffle. | 1 | Whisper Squad | iko |
 | ~ has double strike as long as there are three or more instant and/or sorcery cards in your graveyard. | 1 | Spelleater Wolverine | iko |
 | ~ has flash as long as you control a permanent with flash. as an additional cost to cast ~, sacrifice a creature. destroy target creature. | 1 | Mutual Destruction | iko |
 

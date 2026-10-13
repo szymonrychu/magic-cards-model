@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 53 | 20.9% |
-| Works (untested) | 140 | 55.3% |
+| Tested | 56 | 22.1% |
+| Works (untested) | 139 | 54.9% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 60 | 23.7% |
+| Not working | 58 | 22.9% |
 
 ## Cards needing work
 
@@ -31,14 +31,12 @@
 | Aven Heartstabber | silent | As long as there are five or more mana values among cards in your graveyard, this creature gets +2/+2 and has deathtouch. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Backstreet Bruiser | silent | As long as there are two or more counters among creatures you control, this creature can attack as though it didn't have defender. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ballroom Brawlers | silent | Whenever this creature attacks, this creature and up to one other target creature you control both gain your choice of first strike or lifelink until end of tur | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Black Market Tycoon | silent | At the beginning of your upkeep, this creature deals 2 damage to you for each Treasure you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Brokers Ascendancy | silent | At the beginning of your end step, put a +1/+1 counter on each creature you control and a loyalty counter on each planeswalker you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Cabaretti Ascendancy | silent | At the beginning of your upkeep, look at the top card of your library. If it's a creature or planeswalker card, you may reveal it and put it into your hand. If  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Case the Joint | silent | Draw two cards, then look at the top card of each player's library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Celestial Regulator | silent | When this creature enters, choose target creature you don't control and tap it. If you control a creature with a counter on it, the chosen creature doesn't unta | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Cemetery Tampering | silent | At the beginning of your upkeep, you may mill three cards. Then if there are twenty or more cards in your graveyard, you may play the exiled card without paying | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Corpse Appraiser | silent | When this creature enters, exile up to one target creature card from a graveyard. If a card is put into exile this way, look at the top three cards of your libr | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Corpse Explosion | silent | As an additional cost to cast this spell, exile a creature card from your graveyard. Corpse Explosion deals damage equal to the exiled card's power to each crea | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Depopulate | silent | Each player who controls a multicolored creature draws a card. Then destroy all creatures. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Devilish Valet | silent | Alliance — Whenever another creature you control enters, double this creature's power until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Elspeth Resplendent | silent | +1: Choose up to one target creature. Put a +1/+1 counter and a counter from among flying, first strike, lifelink, or vigilance on it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -139,7 +137,6 @@
 | Forge Boss | handled | Whenever you sacrifice one or more other creatures, this creature deals 2 damage to each opponent. This ability triggers only once each turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Gilded Pinions | handled | When this Equipment enters, create a Treasure token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Glamorous Outlaw | handled | When this creature enters, it deals 2 damage to each opponent and you scry 2. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Glittering Stockpile | handled |  |  | Y/Y/- | not_tested |
 | Glittermonger | handled | {T}: Create a Treasure token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Goldhound | handled | First strike | machines/combat.py | Y/Y/- | not_tested |
 | Halo Fountain | handled | {W}, {T}, Untap a tapped creature you control: Create a 1/1 green and white Citizen creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -230,14 +227,16 @@
 ## Fully supported
 
 <details>
-<summary>53 cards</summary>
+<summary>56 cards</summary>
 
 - An Offer You Can't Refuse
 - Angel of Suffering
+- Black Market Tycoon
 - Body Launderer
 - Bouncer's Beatdown
 - Brass Knuckles
 - Caldaia Strongarm
+- Corpse Explosion
 - Dusk Mangler
 - Evelyn, the Covetous
 - Evolving Door
@@ -249,6 +248,7 @@
 - Getaway Car
 - Giada, Font of Hope
 - Girder Goons
+- Glittering Stockpile
 - Hold for Ransom
 - Hostile Takeover
 - Hypnotic Grifter
@@ -295,7 +295,6 @@
 | Alliance | 4 | Devilish Valet, Rumor Gatherer, Sizzling Soloist, Venom Connoisseur | snc |
 | Choose one | 1 | Extract the Truth | snc |
 | +N: choose up to one target creature. put a +N/+N counter and a counter from among flying, first strike, lifelink, or vigilance on it. | 1 | Elspeth Resplendent | snc |
-| as an additional cost to cast ~, exile a creature card from your graveyard. ~ deals damage equal to the exiled card's power to each creature and each planeswalk | 1 | Corpse Explosion | snc |
 | as an additional cost to cast ~, sacrifice a nonland permanent. each opponent chooses a permanent they control that shares a card type with the sacrificed perma | 1 | Fatal Grudge | snc |
 | as long as there are five or more mana values among cards in your graveyard, ~ gets +N/+N and has deathtouch. | 1 | Aven Heartstabber | snc |
 | as long as there are five or more mana values among cards in your graveyard, ~ gets +N/+N and has lifelink. | 1 | Snooping Newsie | snc |
@@ -305,7 +304,6 @@
 | at the beginning of your end step, put a +N/+N counter on each creature you control and a loyalty counter on each planeswalker you control. | 1 | Brokers Ascendancy | snc |
 | at the beginning of your upkeep, look at the top card of your library. if it"..."t put the card into your hand, you may put it on the bottom of your library. | 1 | Cabaretti Ascendancy | snc |
 | at the beginning of your upkeep, you may mill three cards. then if there are twenty or more cards in your graveyard, you may play the exiled card without paying | 1 | Cemetery Tampering | snc |
-| at the beginning of your upkeep, ~ deals N damage to you for each treasure you control. | 1 | Black Market Tycoon | snc |
 | casualty N (as you cast ~, you may sacrifice a creature with power N or greater. when you do, copy ~ and you may choose a new target for the copy.) choose targe | 1 | Grisly Sigil | snc |
 | casualty N (as you cast ~, you may sacrifice a creature with power N or greater. when you do, copy ~ and you may choose a new target for the copy.) ~ deals N da | 1 | Light 'Em Up | snc |
 | choose two target creatures controlled by the same player. that player sacrifices one of them of their choice. | 1 | Incriminate | snc |

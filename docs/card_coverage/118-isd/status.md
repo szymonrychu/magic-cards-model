@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 47 | 19.7% |
+| Tested | 51 | 21.3% |
 | Works (untested) | 155 | 64.9% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 37 | 15.5% |
+| Not working | 33 | 13.8% |
 
 ## Cards needing work
 
@@ -31,7 +31,6 @@
 | Caravan Vigil | silent | Search your library for a basic land card, reveal it, put it into your hand, then shuffle. Morbid — You may put that card onto the battlefield instead of puttin | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Cellar Door | silent | {3}, {T}: Target player puts the bottom card of their library into their graveyard. If it's a creature card, you create a 2/2 black Zombie creature token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Civilized Scholar // Homicidal Brute | silent | At the beginning of your end step, if this creature didn't attack this turn, tap this creature, then transform it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Corpse Lunge | silent | As an additional cost to cast this spell, exile a creature card from your graveyard. Corpse Lunge deals damage equal to the exiled card's power to target creatu | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Creeping Renaissance | silent | Choose a permanent type. Return all cards of the chosen type from your graveyard to your hand. Flashback {5}{G}{G} (You may cast this card from your graveyard f | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Creepy Doll | silent | Whenever this creature deals combat damage to a creature, flip a coin. If you win the flip, destroy that creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Curse of the Pierced Heart | silent | At the beginning of enchanted player's upkeep, this Aura deals 1 damage to that player or a planeswalker that player controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -45,14 +44,12 @@
 | Hamlet Captain | silent | Whenever this creature attacks or blocks, other Humans you control get +1/+1 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Heretic's Punishment | silent | {3}{R}: Choose any target, then mill three cards. This enchantment deals damage to that permanent or player equal to the greatest mana value among the milled ca | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Instigator Gang // Wildblood Pack | silent | Attacking creatures you control get +1/+0. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Kessig Cagebreakers | silent | Whenever this creature attacks, create a 2/2 green Wolf creature token that's tapped and attacking for each creature card in your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Make a Wish | silent | Return two cards at random from your graveyard to your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Manor Gargoyle | silent | {1}: Until end of turn, this creature loses defender and gains flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Memory's Journey | silent | Target player shuffles up to three target cards from their graveyard into their library. Flashback {G} (You may cast this card from your graveyard for its flash | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Mindshrieker | silent | {2}: Target player mills a card. This creature gets +X/+X until end of turn, where X is the milled card's mana value. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Moldgraf Monstrosity | silent | When this creature dies, exile it, then return two creature cards at random from your graveyard to the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Nightbird's Clutches | silent | Up to two target creatures can't block this turn. Flashback {3}{R} (You may cast this card from your graveyard for its flashback cost. Then exile it.) | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Paraselene | silent | Destroy all enchantments. You gain 1 life for each enchantment destroyed this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Runechanter's Pike | silent | Equipped creature has first strike and gets +X/+0, where X is the number of instant and sorcery cards in your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Runic Repetition | silent | Return target exiled card with flashback you own to your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Tree of Redemption | silent | {T}: Exchange your life total with this creature's toughness. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -62,7 +59,6 @@
 | Wooden Stake | silent | Whenever equipped creature blocks or becomes blocked by a Vampire, destroy that creature. It can't be regenerated. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Mirror-Mad Phantasm | notice | {1}{U}: This creature's owner shuffles it into their library. If that player does, they reveal cards from the top of that library until a card named Mirror-Mad  | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Sever the Bloodline | notice | Exile target creature and all other creatures with the same name as that creature. Flashback {5}{B}{B} (You may cast this card from your graveyard for its flash | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Tribute to Hunger | notice | Target opponent sacrifices a creature of their choice. You gain life equal to that creature's toughness. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Abattoir Ghoul | handled | Whenever a creature dealt damage by this creature this turn dies, you gain life equal to that creature's toughness. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Abbey Griffin | handled | Flying | machines/combat.py | Y/-/- | not_tested |
 | Altar's Reap | handled | As an additional cost to cast this spell, sacrifice a creature. Draw two cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -222,7 +218,7 @@
 ## Fully supported
 
 <details>
-<summary>47 cards</summary>
+<summary>51 cards</summary>
 
 - Ambush Viper
 - Army of the Damned
@@ -234,6 +230,7 @@
 - Cackling Counterpart
 - Claustrophobia
 - Cloistered Youth // Unholy Fiend
+- Corpse Lunge
 - Curse of Oblivion
 - Curse of the Nightly Hunt
 - Dearly Departed
@@ -248,6 +245,7 @@
 - Grimgrin, Corpse-Born
 - Inquisitor's Flail
 - Intangible Virtue
+- Kessig Cagebreakers
 - Laboratory Maniac
 - Liliana of the Veil
 - Ludevic's Test Subject // Ludevic's Abomination
@@ -256,6 +254,7 @@
 - Nevermore
 - Orchard Spirit
 - Parallel Lives
+- Paraselene
 - Past in Flames
 - Prey Upon
 - Rooftop Storm
@@ -264,6 +263,7 @@
 - Slayer of the Wicked
 - Snapcaster Mage
 - Stony Silence
+- Tribute to Hunger
 - Typhoid Rats
 - Unbreathing Horde
 - Undead Alchemist
@@ -278,13 +278,11 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| as an additional cost to cast ~, exile a creature card from your graveyard. ~ deals damage equal to the exiled card's power to target creature. | 1 | Corpse Lunge | isd |
 | at the beginning of enchanted player's upkeep, ~ deals N damage to that player or a planeswalker that player controls. | 1 | Curse of the Pierced Heart | isd |
 | at the beginning of your end step, if ~ didn't attack ~, tap ~, then transform it. | 1 | Civilized Scholar // Homicidal Brute | isd |
 | attacking creatures you control get +N/+N. | 1 | Instigator Gang // Wildblood Pack | isd |
 | choose a permanent type. return all cards of the chosen type from your graveyard to your hand. flashback {M}{M}{M} (you may cast ~ from your graveyard for its f | 1 | Creeping Renaissance | isd |
 | counter target spell unless its controller pays {M}. that player discards a card. | 1 | Frightful Delusion | isd |
-| destroy all enchantments. you gain N life for each enchantment destroyed ~. | 1 | Paraselene | isd |
 | destroy target non-vampire, non-werewolf, non-zombie creature. | 1 | Victim of Night | isd |
 | draw two cards, then discard a card at random. flashback {M}{M} (you may cast ~ from your graveyard for its flashback cost. then exile it.) | 1 | Desperate Ravings | isd |
 | each player chooses a creature they control. destroy the rest. flashback {M}{M}{M} (you may cast ~ from your graveyard for its flashback cost. then exile it.) | 1 | Divine Reckoning | isd |
@@ -296,7 +294,6 @@
 | return two cards at random from your graveyard to your hand. | 1 | Make a Wish | isd |
 | sacrifice ~: regenerate all werewolf creatures you control. | 1 | Full Moon's Rise | isd |
 | search your library for a basic land card, reveal it, put it into your hand, then shuffle. morbid — you may put that card onto the battlefield instead of puttin | 1 | Caravan Vigil | isd |
-| target opponent sacrifices a creature of their choice. you gain life equal to that creature's toughness. | 1 | Tribute to Hunger | isd |
 | target player shuffles up to three target cards from their graveyard into their library. flashback {M} (you may cast ~ from your graveyard for its flashback cos | 1 | Memory's Journey | isd |
 | up to two target creatures can't block ~. flashback {M}{M} (you may cast ~ from your graveyard for its flashback cost. then exile it.) | 1 | Nightbird's Clutches | isd |
 | when garruk has two or fewer loyalty counters on him, transform him. | 1 | Garruk Relentless // Garruk, the Veil-Cursed | isd |
@@ -306,7 +303,6 @@
 | whenever equipped creature attacks, defending player reveals cards from the top of their library until they reveal a land card. the creature gets +N/+N until en | 1 | Trepanation Blade | isd |
 | whenever equipped creature blocks or becomes blocked by a vampire, destroy that creature. it can't be regenerated. | 1 | Wooden Stake | isd |
 | whenever ~ attacks or blocks, other humans you control get +N/+N until end of turn. | 1 | Hamlet Captain | isd |
-| whenever ~ attacks, create a N/N green wolf creature token that's tapped and attacking for each creature card in your graveyard. | 1 | Kessig Cagebreakers | isd |
 | whenever ~ deals combat damage to a creature, flip a coin. if you win the flip, destroy that creature. | 1 | Creepy Doll | isd |
 | {M}, remove three study counters from ~ and sacrifice it: put all creature cards from all graveyards onto the battlefield under your control. they're black zomb | 1 | Grimoire of the Dead | isd |
 | {M}, {M}: target player puts the bottom card of their library into their graveyard. if it's a creature card, you create a N/N black zombie creature token. | 1 | Cellar Door | isd |

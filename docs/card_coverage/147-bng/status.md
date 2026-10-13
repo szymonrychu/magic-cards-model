@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 31 | 19.4% |
-| Works (untested) | 91 | 56.9% |
+| Tested | 32 | 20.0% |
+| Works (untested) | 92 | 57.5% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 38 | 23.8% |
+| Not working | 36 | 22.5% |
 
 ## Cards needing work
 
@@ -43,14 +43,12 @@
 | Hero of Leina Tower | silent | Heroic — Whenever you cast a spell that targets this creature, you may pay {X}. If you do, put X +1/+1 counters on this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Kiora, the Crashing Wave | silent | +1: Until your next turn, prevent all damage that would be dealt to and dealt by target permanent an opponent controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Mogis, God of Slaughter | silent | At the beginning of each opponent's upkeep, Mogis deals 2 damage to that player unless they sacrifice a creature of their choice. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Oracle of Bones | silent | When this creature enters, if tribute wasn't paid, you may cast an instant or sorcery spell from your hand without paying its mana cost. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Peregrination | silent | Search your library for up to two basic land cards, reveal those cards, and put one onto the battlefield tapped and the other into your hand. Shuffle, then scry | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Perplexing Chimera | silent | Whenever an opponent casts a spell, you may exchange control of this creature and that spell. If you do, you may choose new targets for the spell. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Pheres-Band Raiders | silent | Inspired — Whenever this creature becomes untapped, you may pay {2}{G}. If you do, create a 3/3 green Centaur enchantment creature token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Pillar of War | silent | As long as this creature is enchanted, it can attack as though it didn't have defender. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sanguimancy | silent | You draw X cards and you lose X life, where X is your devotion to black. (Each {B} in the mana costs of permanents you control counts toward your devotion to bl | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Satyr Nyx-Smith | silent | Inspired — Whenever this creature becomes untapped, you may pay {2}{R}. If you do, create a 3/1 red Elemental enchantment creature token with haste. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Servant of Tymaret | silent | Inspired — Whenever this creature becomes untapped, each opponent loses 1 life. You gain life equal to the life lost this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Spiteful Returned | silent | Whenever this creature or enchanted creature attacks, defending player loses 2 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sudden Storm | silent | Tap up to two target creatures. Those creatures don't untap during their controllers' next untap steps. Scry 1. (Look at the top card of your library. You may p | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Thassa's Rebuff | silent | Counter target spell unless its controller pays {X}, where X is your devotion to blue. (Each {U} in the mana costs of permanents you control counts toward your  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -124,6 +122,7 @@
 | Nyxborn Triton | handled | Enchanted creature gets +2/+3. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Nyxborn Wolf | handled | Enchanted creature gets +3/+1. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Odunos River Trawler | handled | When this creature enters, return target enchantment creature card from your graveyard to your hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Oracle of Bones | handled | When this creature enters, if tribute wasn't paid, you may cast an instant or sorcery spell from your hand without paying its mana cost. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Oracle's Insight | handled | Enchanted creature has "{T}: Scry 1, then draw a card." | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Oreskos Sun Guide | handled | Inspired — Whenever this creature becomes untapped, you gain 2 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Pharagax Giant | handled | When this creature enters, if tribute wasn't paid, this creature deals 5 damage to each opponent. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -159,7 +158,7 @@
 ## Fully supported
 
 <details>
-<summary>31 cards</summary>
+<summary>32 cards</summary>
 
 - Acolyte's Reward
 - Archetype of Endurance
@@ -185,6 +184,7 @@
 - Satyr Firedancer
 - Satyr Wayfinder
 - Searing Blood
+- Servant of Tymaret
 - Skyreaping
 - Snake of the Golden Grove
 - Spirit of the Labyrinth
@@ -199,7 +199,7 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| Inspired | 7 | Aerie Worshippers, Arbiter of the Ideal, Forlorn Pseudamma, God-Favored General, Pheres-Band Raiders | bng |
+| Inspired | 6 | Aerie Worshippers, Arbiter of the Ideal, Forlorn Pseudamma, God-Favored General, Pheres-Band Raiders | bng |
 | Heroic | 1 | Hero of Leina Tower | bng |
 | +N: until your next turn, prevent all damage that would be dealt to and dealt by target permanent an opponent controls. | 1 | Kiora, the Crashing Wave | bng |
 | as long as ~ is enchanted, it can attack as though it didn't have defender. | 1 | Pillar of War | bng |
@@ -222,7 +222,6 @@
 | target creature you control gains protection from creatures your opponents control until end of turn. untap it. | 1 | Crypsis | bng |
 | until end of turn, target creature gains "..." | 1 | Retraction Helix | bng |
 | when ~ enters, if tribute wasn"..."s hand." | 1 | Flame-Wreathed Phoenix | bng |
-| when ~ enters, if tribute wasn't paid, you may cast an instant or sorcery spell from your hand without paying its mana cost. | 1 | Oracle of Bones | bng |
 | whenever an opponent casts a spell, you may exchange control of ~ and that spell. if you do, you may choose new targets for the spell. | 1 | Perplexing Chimera | bng |
 | whenever brimaz attacks, create a N/N white cat soldier creature token with vigilance that's attacking. | 1 | Brimaz, King of Oreskos | bng |
 | whenever enchanted creature attacks, it gets +N/+N until end of turn, where N is your devotion to red. | 1 | Thunderous Might | bng |

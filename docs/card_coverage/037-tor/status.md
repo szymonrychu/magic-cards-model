@@ -17,18 +17,16 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 3 | 21.4% |
+| Tested | 5 | 35.7% |
 | Works (untested) | 8 | 57.1% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 3 | 21.4% |
+| Not working | 1 | 7.1% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
 | Ghostly Wings | silent | Discard a card: Return enchanted creature to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Mind Sludge | silent | Target player discards a card for each Swamp you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Mutilate | silent | All creatures get -1/-1 until end of turn for each Swamp you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Cabal Coffers | handled |  |  | Y/-/- | not_tested |
 | Deep Analysis | handled | Target player draws two cards. Flashback—{1}{U}, Pay 3 life. (You may cast this card from your graveyard for its flashback cost. Then exile it.) | the engine reads this text and performs it | Y/-/- | not_tested |
 | Faceless Butcher | handled | When this creature enters, exile another target creature. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -41,9 +39,11 @@
 ## Fully supported
 
 <details>
-<summary>3 cards</summary>
+<summary>5 cards</summary>
 
 - Ambassador Laquatus
+- Mind Sludge
+- Mutilate
 - Pay No Heed
 - Plagiarize
 
@@ -53,9 +53,7 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| all creatures get -N/-N until end of turn for each swamp you control. | 1 | Mutilate | tor |
 | discard a card: return enchanted creature to its owner's hand. | 1 | Ghostly Wings | tor |
-| target player discards a card for each swamp you control. | 1 | Mind Sludge | tor |
 
 ## Notes
 

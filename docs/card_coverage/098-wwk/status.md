@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 39 | 27.5% |
-| Works (untested) | 64 | 45.1% |
+| Tested | 43 | 30.3% |
+| Works (untested) | 65 | 45.8% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 39 | 27.5% |
+| Not working | 34 | 23.9% |
 
 ## Cards needing work
 
@@ -30,11 +30,9 @@
 | Aether Tradewinds | silent | Return target permanent you control and target permanent you don't control to their owners' hands. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Agadeem Occultist | silent | {T}: Put target creature card from an opponent's graveyard onto the battlefield under your control if its mana value is less than or equal to the number of Alli | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Akoum Battlesinger | silent | Whenever this creature or another Ally you control enters, you may have Ally creatures you control get +1/+0 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Archon of Redemption | silent | Whenever this creature or another creature you control with flying enters, you may gain life equal to that creature's power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Avenger of Zendikar | silent | Landfall — Whenever a land you control enters, you may put a +1/+1 counter on each Plant creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Bazaar Trader | silent | {T}: Target player gains control of target artifact, creature, or land you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Bloodhusk Ritualist | silent | When this creature enters, target opponent discards a card for each time it was kicked. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Brink of Disaster | silent | When enchanted permanent becomes tapped, destroy it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Calcite Snapper | silent | Landfall — Whenever a land you control enters, you may switch this creature's power and toughness until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Caustic Crawler | silent | Landfall — Whenever a land you control enters, you may have target creature get -1/-1 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Halimar Excavator | silent | Whenever this creature or another Ally you control enters, target player mills X cards, where X is the number of Allies you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -50,18 +48,15 @@
 | Spell Contortion | silent | Multikicker {1}{U} (You may pay an additional {1}{U} any number of times as you cast this spell.) Counter target spell unless its controller pays {2}. Draw a ca | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Stone Idol Trap | silent | This spell costs {1} less to cast for each attacking creature. Create a 6/12 colorless Construct artifact creature token with trample. Exile it at the beginning | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Talus Paladin | silent | Whenever this creature or another Ally you control enters, you may have Allies you control gain lifelink until end of turn, and you may put a +1/+1 counter on t | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Terastodon | silent | When this creature enters, you may destroy up to three target noncreature permanents. For each permanent put into a graveyard this way, its controller creates a | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Treasure Hunt | silent | Reveal cards from the top of your library until you reveal a nonland card, then put all cards revealed this way into your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Vapor Snare | silent | At the beginning of your upkeep, sacrifice this Aura unless you return a land you control to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Vastwood Animist | silent | {T}: Target land you control becomes an X/X Elemental creature until end of turn, where X is the number of Allies you control. It's still a land. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Voyager Drake | silent | When this creature enters, up to X target creatures gain flying until end of turn, where X is the number of times this creature was kicked. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Wolfbriar Elemental | silent | When this creature enters, create a 2/2 green Wolf creature token for each time it was kicked. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Wrexial, the Risen Deep | silent | Whenever Wrexial deals combat damage to a player, you may cast target instant or sorcery card from that player's graveyard without paying its mana cost. If that | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Dead Reckoning | notice | You may put target creature card from your graveyard on top of your library. If you do, Dead Reckoning deals damage equal to that card's power to target creatur | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Death's Shadow | notice | This creature gets -X/-X, where X is your life total. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Feral Contest | notice | Put a +1/+1 counter on target creature you control. Another target creature blocks it this turn if able. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Nemesis Trap | notice | If a white creature is attacking, you may pay {B}{B} rather than pay this spell's mana cost. Exile target attacking creature. Create a token that's a copy of th | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Roiling Terrain | notice | Destroy target land, then Roiling Terrain deals damage to that land's controller equal to the number of land cards in that player's graveyard. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Thada Adel, Acquisitor | notice | Whenever Thada Adel deals combat damage to a player, search that player's library for an artifact card and exile it. Then that player shuffles. Until end of tur | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Tuktuk Scrapper | notice | Whenever this creature or another Ally you control enters, you may destroy target artifact. If that artifact is put into a graveyard this way, this creature dea | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Urge to Feed | notice | Target creature gets -3/-3 until end of turn. You may tap any number of untapped Vampire creatures you control. If you do, put a +1/+1 counter on each of those  | unparsed remainder: You may tap any number of untapped Vampire creatures you control. If you do, put a +1/+1 counter on each of those Vampires. | Y/-/- | not_working |
@@ -69,6 +64,7 @@
 | Arbor Elf | handled | {T}: Untap target Forest. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Battle Hurda | handled | First strike | machines/combat.py | Y/-/- | not_tested |
 | Bojuka Brigand | handled | This creature can't block. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Brink of Disaster | handled | When enchanted permanent becomes tapped, destroy it. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Bull Rush | handled | Target creature gets +2/+0 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Butcher of Malakir | handled | Whenever this creature or another creature you control dies, each opponent sacrifices a creature of their choice. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Claws of Valakut | handled | Enchanted creature gets +1/+0 for each Mountain you control and has first strike. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -133,11 +129,12 @@
 ## Fully supported
 
 <details>
-<summary>39 cards</summary>
+<summary>43 cards</summary>
 
 - Abyssal Persecutor
 - Amulet of Vigor
 - Apex Hawks
+- Archon of Redemption
 - Basilisk Collar
 - Bestial Menace
 - Bojuka Bog
@@ -147,6 +144,7 @@
 - Comet Storm
 - Corrupted Zendikon
 - Crusher Zendikon
+- Dead Reckoning
 - Deathforge Shaman
 - Enclave Elite
 - Everflowing Chalice
@@ -166,11 +164,13 @@
 - Quest for Renewal
 - Refraction Trap
 - Ricochet Trap
+- Roiling Terrain
 - Ruthless Cullblade
 - Searing Blaze
 - Skitter of Lizards
 - Strength of the Tajuru
 - Tectonic Edge
+- Terastodon
 - Terra Eternal
 - Vastwood Zendikon
 - Wind Zendikon
@@ -185,7 +185,6 @@
 | at the beginning of each opponent's upkeep, if that player has no cards in hand and ~ has two or more quest counters on it, you may have that player lose N life | 1 | Quest for the Nihil Stone | wwk |
 | at the beginning of your upkeep, sacrifice ~ unless you return a land you control to its owner's hand. | 1 | Vapor Snare | wwk |
 | at the beginning of your upkeep, you may look at the top card of your library. if it's a creature card, you may reveal it and put a quest counter on ~. | 1 | Quest for Ula's Temple | wwk |
-| destroy target land, then ~ deals damage to that land"..."s graveyard. | 1 | Roiling Terrain | wwk |
 | if a white creature is attacking, you may pay {M}{M} rather than pay ~ mana cost. exile target attacking creature. create a token that's a copy of that creature | 1 | Nemesis Trap | wwk |
 | multikicker {M}{M} (you may pay an additional {M}{M} any number of times as you cast ~.) counter target spell unless its controller pays {M}. draw a card for ea | 1 | Spell Contortion | wwk |
 | put a +N/+N counter on target creature you control. another target creature blocks it ~ if able. | 1 | Feral Contest | wwk |
@@ -194,12 +193,10 @@
 | search your library for any number of nonland cards, exile them, then shuffle. | 1 | Selective Memory | wwk |
 | target creature gets -N/-N until end of turn. you may tap any number of untapped vampire creatures you control. if you do, put a +N/+N counter on each of those  | 1 | Urge to Feed | wwk |
 | target player reveals a number of cards from their hand equal to the number of swamps you control. you choose one of them. that player discards that card. | 1 | Mire's Toll | wwk |
-| when enchanted permanent becomes tapped, destroy it. | 1 | Brink of Disaster | wwk |
 | when ~ enters, create a N/N green wolf creature token for each time it was kicked. | 1 | Wolfbriar Elemental | wwk |
 | when ~ enters, target opponent discards a card for each time it was kicked. | 1 | Bloodhusk Ritualist | wwk |
 | when ~ enters, up to N target creatures gain flying until end of turn, where N is the number of times ~ was kicked. | 1 | Voyager Drake | wwk |
 | when ~ enters, you gain N life for each time it was kicked. | 1 | Lightkeeper of Emeria | wwk |
-| when ~ enters, you may destroy up to three target noncreature permanents. for each permanent put into a graveyard ~, its controller creates a N/N green elephant | 1 | Terastodon | wwk |
 | when ~ leaves the battlefield, return all cards exiled with it to the battlefield under their owners' control. | 1 | Admonition Angel | wwk |
 | whenever a creature an opponent controls attacks, if you"..."s controller pays {M}. | 1 | Kazuul, Tyrant of the Cliffs | wwk |
 | whenever thada adel deals combat damage to a player, search that player's library for an artifact card and exile it. then that player shuffles. until end of tur | 1 | Thada Adel, Acquisitor | wwk |
@@ -210,9 +207,7 @@
 | whenever ~ or another ally you control enters, you may destroy target artifact. if that artifact is put into a graveyard ~, ~ deals damage to that artifact's co | 1 | Tuktuk Scrapper | wwk |
 | whenever ~ or another ally you control enters, you may have allies you control gain lifelink until end of turn, and you may put a +N/+N counter on ~. | 1 | Talus Paladin | wwk |
 | whenever ~ or another ally you control enters, you may have ally creatures you control get +N/+N until end of turn. | 1 | Akoum Battlesinger | wwk |
-| whenever ~ or another creature you control with flying enters, you may gain life equal to that creature's power. | 1 | Archon of Redemption | wwk |
 | you may have ~ enter as a copy of any ally creature on the battlefield. | 1 | Jwari Shapeshifter | wwk |
-| you may put target creature card from your graveyard on top of your library. if you do, ~ deals damage equal to that card's power to target creature. | 1 | Dead Reckoning | wwk |
 | {M}: put target creature card from an opponent's graveyard onto the battlefield under your control if its mana value is less than or equal to the number of alli | 1 | Agadeem Occultist | wwk |
 | {M}: target land you control becomes an N/N elemental creature until end of turn, where N is the number of allies you control. it's still a land. | 1 | Vastwood Animist | wwk |
 | {M}: target player gains control of target artifact, creature, or land you control. | 1 | Bazaar Trader | wwk |

@@ -17,16 +17,15 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 26 | 16.0% |
-| Works (untested) | 96 | 59.3% |
+| Tested | 28 | 17.3% |
+| Works (untested) | 97 | 59.9% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 40 | 24.7% |
+| Not working | 37 | 22.8% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
-| Aether Vial | silent | {T}: You may put a creature card with mana value equal to the number of charge counters on this artifact from your hand onto the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Arcbound Fiend | silent | At the beginning of your upkeep, you may move a +1/+1 counter from target creature onto this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Arcbound Overseer | silent | At the beginning of your upkeep, put a +1/+1 counter on each creature you control with modular. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Auriok Siege Sled | silent | {1}: Target artifact creature can't block this creature this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -63,8 +62,6 @@
 | Murderous Spoils | notice | Destroy target nonblack creature. It can't be regenerated. You gain control of all Equipment that were attached to it. (This effect lasts indefinitely.) | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Pulse of the Forge | notice | Pulse of the Forge deals 4 damage to target player or planeswalker. Then if that player or that planeswalker's controller has more life than you, return Pulse o | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Second Sight | notice | Choose one — • Look at the top five cards of target opponent's library, then put them back in any order. • Look at the top five cards of your library, then put  | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Shriveling Rot | notice | Choose one — • Until end of turn, whenever a creature is dealt damage, destroy it. • Until end of turn, whenever a creature dies, that creature's controller los | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Tears of Rage | notice | Cast this spell only during the declare attackers step. Attacking creatures you control get +X/+0 until end of turn, where X is the number of attacking creature | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Unforge | notice | Destroy target Equipment. If that Equipment was attached to a creature, Unforge deals 2 damage to that creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Ageless Entity | handled | Whenever you gain life, put that many +1/+1 counters on this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Angel's Feather | handled | Whenever a player casts a white spell, you may gain 1 life. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -152,6 +149,7 @@
 | Talon of Pain | handled | Whenever a source you control other than this artifact deals damage to an opponent, put a charge counter on this artifact. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Tangle Golem | handled | Affinity | models/game.py (Game.cost_reduction_for, CR 702.41a) | Y/-/- | not_tested |
 | Tangle Spider | handled | Reach | machines/combat.py | Y/-/- | not_tested |
+| Tears of Rage | handled | Cast this spell only during the declare attackers step. Attacking creatures you control get +X/+0 until end of turn, where X is the number of attacking creature | the engine reads this text and performs it | Y/-/- | not_tested |
 | Tel-Jilad Outrider | handled | Protection | models/game.py | Y/-/- | not_tested |
 | Tel-Jilad Wolf | handled | Whenever this creature becomes blocked by an artifact creature, this creature gets +3/+3 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ur-Golem's Eye | handled |  |  | Y/-/- | not_tested |
@@ -166,9 +164,10 @@
 ## Fully supported
 
 <details>
-<summary>26 cards</summary>
+<summary>28 cards</summary>
 
 - Aether Snap
+- Aether Vial
 - Arcbound Ravager
 - Arcbound Worker
 - Carry Away
@@ -187,6 +186,7 @@
 - Pristine Angel
 - Serum Powder
 - Shield of Kaldra
+- Shriveling Rot
 - Sword of Fire and Ice
 - Tanglewalker
 - Test of Faith
@@ -201,12 +201,11 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| Choose one | 2 | Second Sight, Shriveling Rot | dst |
+| Choose one | 1 | Second Sight | dst |
 | Imprint | 1 | Panoptic Mirror | dst |
 | as long as a card exiled with ~ has flying, ~ has flying. the same is true for fear, first strike, double strike, haste, landwalk, protection, and trample. | 1 | Death-Mask Duplicant | dst |
 | at the beginning of your upkeep, put a +N/+N counter on each creature you control with modular. | 1 | Arcbound Overseer | dst |
 | at the beginning of your upkeep, you may move a +N/+N counter from target creature onto ~. | 1 | Arcbound Fiend | dst |
-| cast ~ only during the declare attackers step. attacking creatures you control get +N/+N until end of turn, where N is the number of attacking creatures. sacrif | 1 | Tears of Rage | dst |
 | counter target spell. that spell's controller may draw a card. | 1 | Vex | dst |
 | create a N/N green beast creature token. then if an opponent controls more creatures than you, return ~ to its owner's hand. | 1 | Pulse of the Tangle | dst |
 | destroy target artifact and all other artifacts with the same name as that artifact. | 1 | Echoing Ruin | dst |
@@ -238,7 +237,6 @@
 | {M}, {M}: target opponent reveals cards from the top of their library until an artifact card or N cards are revealed, whichever comes first. if an artifact card | 1 | Thought Dissector | dst |
 | {M}: target artifact creature can't block ~ ~. | 1 | Auriok Siege Sled | dst |
 | {M}: until end of turn, target artifact creature becomes blue and isn't an artifact. | 1 | Neurok Transmuter | dst |
-| {M}: you may put a creature card with mana value equal to the number of charge counters on ~ from your hand onto the battlefield. | 1 | Aether Vial | dst |
 | ~ deals N damage to target player or planeswalker. then if that player or that planeswalker"..."s hand. | 1 | Pulse of the Forge | dst |
 
 ## Notes

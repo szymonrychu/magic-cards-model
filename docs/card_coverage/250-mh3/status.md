@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 95 | 36.3% |
-| Works (untested) | 98 | 37.4% |
+| Tested | 97 | 37.0% |
+| Works (untested) | 99 | 37.8% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 69 | 26.3% |
+| Not working | 66 | 25.2% |
 
 ## Cards needing work
 
@@ -70,7 +70,6 @@
 | Rosecot Knight | silent | When this creature enters, look at the top six cards of your library. You may reveal an artifact or enchantment card from among them and put it into your hand.  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Rosheen, Roaring Prophet | silent | When Rosheen enters, mill six cards. You may put a card with {X} in its mana cost from among them into your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Rush of Inspiration // Crackling Falls | silent | Draw two cards. Then discard a card at random unless you pay {E}{E} (two energy counters). | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Scurry of Gremlins | silent | When this enchantment enters, create two 1/1 red Gremlin creature tokens. Then you get an amount of {E} equal to the number of creatures you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Shadow of the Second Sun | silent | At the beginning of each of enchanted player's postcombat main phases, there is an additional beginning phase after this phase. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Shilgengar, Sire of Famine | silent | Sacrifice another creature: Create a Blood token. If you sacrificed an Angel this way, create a number of Blood tokens equal to its toughness instead. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Springheart Nantuko | silent | Landfall — Whenever a land you control enters, you may pay {1}{G} if this permanent is attached to a creature you control. If you do, create a token that's a co | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -91,10 +90,8 @@
 | Estrid's Invocation | notice | You may have this enchantment enter as a copy of an enchantment you control, except it has "At the beginning of your upkeep, you may exile this enchantment. If  | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Etched Slith | notice | Whenever this creature deals combat damage to a player, put a +1/+1 counter on it. When you do, you may remove a counter from another target permanent or oppone | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Glimpse the Impossible | notice | Exile the top three cards of your library. You may play those cards this turn. At the beginning of the next end step, if any of those cards remain exiled, put t | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Imskir Iron-Eater | notice | {3}{R}, Sacrifice an artifact: Imskir deals damage equal to the sacrificed artifact's mana value to any target. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Obstinate Gargoyle | notice | This creature has flying as long as it's modified. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Propagator Drone | notice | Creature tokens you control have evolve. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Pyretic Rebirth | notice | Return target artifact or creature card from your graveyard to your hand. Pyretic Rebirth deals damage equal to that card's mana value to up to one target creat | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Accursed Marauder | handled | When this creature enters, each player sacrifices a nontoken creature of their choice. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Aerie Auxiliary | handled | When this creature enters, support 2. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Amphibian Downpour | handled | Enchanted creature loses all abilities and is a blue Frog creature with base power and toughness 1/1. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -135,6 +132,7 @@
 | Gravedig | handled | Choose one — • Target player creates a 2/2 black Zombie creature token. • Return target creature card from your graveyard to your hand. Entwine {2} (Choose both | the engine reads this text and performs it | Y/-/- | not_tested |
 | Guardian of the Forgotten | handled | Whenever a modified creature you control dies, manifest the top card of your library. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Horrific Assault | handled | Target creature you control deals damage equal to its power to target creature or planeswalker you don't control. If you control an Eldrazi, you gain 3 life. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Imskir Iron-Eater | handled | When Imskir enters, you draw X cards and you lose X life, where X is half the number of artifacts you control, rounded down. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Indebted Spirit | handled | Enchanted creature gets +1/+1 and has afterlife 1. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Inspired Inventor | handled | When this creature enters, choose one — • You get {E}{E}{E} . • Put a +1/+1 counter on target creature. • Create a 1/1 colorless Servo artifact creature token. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Inventor's Axe | handled | When this Equipment enters, you get {E}{E} . | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -197,7 +195,7 @@
 ## Fully supported
 
 <details>
-<summary>95 cards</summary>
+<summary>97 cards</summary>
 
 - Aether Revolt
 - Ajani, Nacatl Pariah // Ajani, Nacatl Avenger
@@ -261,9 +259,11 @@
 - Planar Genesis
 - Primal Prayers
 - Psychic Frog
+- Pyretic Rebirth
 - Ral, Monsoon Mage // Ral, Leyline Prodigy
 - Refurbished Familiar
 - Riddle Gate Gargoyle
+- Scurry of Gremlins
 - Shifting Woodland
 - Signature Slam
 - Sink into Stupor // Soporific Springs
@@ -333,13 +333,11 @@
 | overload | 1 | Fangs of Kalonia | mh3 |
 | prototype | 1 | Frogmyr Enforcer | mh3 |
 | reinforce | 1 | Fowl Strike | mh3 |
-| return target artifact or creature card from your graveyard to your hand. ~ deals damage equal to that card's mana value to up to one target creature or planesw | 1 | Pyretic Rebirth | mh3 |
 | sacrifice another creature: create a blood token. if you sacrificed an angel ~, create a number of blood tokens equal to its toughness instead. | 1 | Shilgengar, Sire of Famine | mh3 |
 | sacrifice any number of creatures. search your library and/or graveyard for a creature card with mana value less than or equal to the number of creatures sacrif | 1 | The Hunger Tide Rises | mh3 |
 | turn the exiled card face up. if it's a creature card, you lose life equal to its mana value. | 1 | The Creation of Avacyn | mh3 |
 | until end of turn, double target creature's power and it gains first strike. | 1 | Legion Leadership // Legion Stronghold | mh3 |
 | when rosheen enters, mill six cards. you may put a card with {M} in its mana cost from among them into your hand. | 1 | Rosheen, Roaring Prophet | mh3 |
-| when ~ enters, create two N/N red gremlin creature tokens. then you get an amount of {M} equal to the number of creatures you control. | 1 | Scurry of Gremlins | mh3 |
 | when ~ enters, exchange control of ~ and target creature an opponent controls. if you do, you get {M}{M}{M}{M}, then sacrifice that creature unless you pay an a | 1 | Volatile Stormdrake | mh3 |
 | when ~ enters, look at the top six cards of your library. you may reveal an artifact or enchantment card from among them and put it into your hand. put the rest | 1 | Rosecot Knight | mh3 |
 | when ~ enters, search your library for a card with mana value less than or equal to your devotion to black, reveal it, put it into your hand, then shuffle. you  | 1 | Grim Servant | mh3 |
@@ -364,7 +362,6 @@
 | {M}, {M}: move a counter from target permanent you control onto a second target permanent. activate only as a sorcery. | 1 | Nesting Grounds | mh3 |
 | {M}, {M}: target creature you control connives N, where N is the number of creatures that died ~. | 1 | Spymaster's Vault | mh3 |
 | {M}: return another target permanent you control and all auras you control attached to it to their owner's hand. activate only during your turn. | 1 | Essence Reliquary | mh3 |
-| {M}{M}, sacrifice an artifact: imskir deals damage equal to the sacrificed artifact's mana value to any target. | 1 | Imskir Iron-Eater | mh3 |
 | {M}{M}: each opponent loses N life and you gain N life. ~ costs {M}{M} less to activate if you've drawn three or more cards ~. activate only once each turn. | 1 | Kami of Jealous Thirst | mh3 |
 | ~ costs {M} less to cast for each N life your opponents have lost ~. target opponent exiles the top three cards of their library. until the end of your next tur | 1 | Bloodsoaked Insight // Sanguine Morass | mh3 |
 | ~ has flying as long as it's modified. | 1 | Obstinate Gargoyle | mh3 |

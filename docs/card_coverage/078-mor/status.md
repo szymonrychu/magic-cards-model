@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 25 | 16.9% |
+| Tested | 27 | 18.2% |
 | Works (untested) | 67 | 45.3% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 56 | 37.8% |
+| Not working | 54 | 36.5% |
 
 ## Cards needing work
 
@@ -50,7 +50,6 @@
 | Nightshade Schemers | silent | Kinship — At the beginning of your upkeep, you may look at the top card of your library. If it shares a creature type with this creature, you may reveal it. If  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Noggin Whack | silent | Prowl {1}{B} (You may cast this for its prowl cost if you dealt combat damage to a player this turn with a Rogue.) Target player reveals three cards from their  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Notorious Throng | silent | Prowl {5}{U} (You may cast this for its prowl cost if you dealt combat damage to a player this turn with a Rogue.) Create X 1/1 black Faerie Rogue creature toke | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Orchard Warden | silent | Whenever another Treefolk creature you control enters, you may gain life equal to that creature's toughness. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Preeminent Captain | silent | Whenever this creature attacks, you may put a Soldier creature card from your hand onto the battlefield tapped and attacking. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Pulling Teeth | silent | Clash with an opponent. If you win, target player discards two cards. Otherwise, that player discards a card. (Each clashing player reveals the top card of thei | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Pyroclast Consul | silent | Kinship — At the beginning of your upkeep, you may look at the top card of your library. If it shares a creature type with this creature, you may reveal it. If  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -69,7 +68,6 @@
 | Squeaking Pie Grubfellows | silent | Kinship — At the beginning of your upkeep, you may look at the top card of your library. If it shares a creature type with this creature, you may reveal it. If  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Stomping Slabs | silent | Reveal the top seven cards of your library, then put those cards on the bottom of your library in any order. If a card named Stomping Slabs was revealed this wa | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Stonehewer Giant | silent | {1}{W}, {T}: Search your library for an Equipment card, put it onto the battlefield, attach it to a creature you control, then shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Sunflare Shaman | silent | {1}{R}, {T}: This creature deals X damage to any target and X damage to itself, where X is the number of Elemental cards in your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Swell of Courage | silent | Reinforce | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Titan's Revenge | silent | Titan's Revenge deals X damage to any target. Clash with an opponent. If you win, return Titan's Revenge to its owner's hand. (Each clashing player reveals the  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Unstoppable Ash | silent | Whenever a creature you control becomes blocked, it gets +0/+5 until end of turn. | this trigger's condition can never be satisfied - it never triggers | Y/-/- | not_working |
@@ -153,7 +151,7 @@
 ## Fully supported
 
 <details>
-<summary>25 cards</summary>
+<summary>27 cards</summary>
 
 - Battletide Alchemist
 - Bramblewood Paragon
@@ -175,9 +173,11 @@
 - Negate
 - Obsidian Battle-Axe
 - Oona's Blackguard
+- Orchard Warden
 - Sage of Fables
 - Scapeshift
 - Stenchskipper
+- Sunflare Shaman
 - Thieves' Fortune
 - Weight of Conscience
 
@@ -218,12 +218,10 @@
 | whenever a creature you control becomes blocked, it gets +N/+N until end of turn. | 1 | Unstoppable Ash | mor |
 | whenever a creature you control enters, you may look at the top N cards of your library, where N is that creature's power. if you do, put one of those cards on  | 1 | Cream of the Crop | mor |
 | whenever a goblin or rogue you control deals combat damage to a player, if ~ is in your graveyard, you may return ~ to your hand. | 1 | Auntie's Snitch | mor |
-| whenever another treefolk creature you control enters, you may gain life equal to that creature's toughness. | 1 | Orchard Warden | mor |
 | whenever ~ attacks, you may put a soldier creature card from your hand onto the battlefield tapped and attacking. | 1 | Preeminent Captain | mor |
 | {M}: up to two target swamps each become N/N treefolk warrior creatures in addition to their other types until end of turn. | 1 | Fendeep Summoner | mor |
 | {M}{M}, remove a +N/+N counter from ~: target player searches their library for a basic land card, puts it onto the battlefield tapped, then shuffles. | 1 | Fertilid | mor |
 | {M}{M}, {M}: search your library for an equipment card, put it onto the battlefield, attach it to a creature you control, then shuffle. | 1 | Stonehewer Giant | mor |
-| {M}{M}, {M}: ~ deals N damage to any target and N damage to itself, where N is the number of elemental cards in your graveyard. | 1 | Sunflare Shaman | mor |
 | ~ has haste as long as a warrior card is in your graveyard. | 1 | Vengeful Firebrand | mor |
 
 ## Notes

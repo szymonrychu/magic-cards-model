@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 43 | 17.8% |
+| Tested | 45 | 18.7% |
 | Works (untested) | 157 | 65.1% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 41 | 17.0% |
+| Not working | 39 | 16.2% |
 
 ## Cards needing work
 
@@ -56,13 +56,11 @@
 | Reduce // Rubble | silent | Aftermath (Cast this spell only from your graveyard. Then exile it.) Up to three target lands don't untap during their controller's next untap step. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Rhet-Crop Spearmaster | silent | You may exert this creature as it attacks. When you do, it gets +1/+0 and gains first strike until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Shadow of the Grave | silent | Return to your hand all cards in your graveyard that you cycled or discarded this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Soulstinger | silent | When this creature dies, you may put a -1/-1 counter on target creature for each -1/-1 counter on this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Synchronized Strike | silent | Untap up to two target creatures. They each get +2/+2 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Temmet, Vizier of Naktamun | silent | At the beginning of combat on your turn, target creature token you control gets +1/+1 until end of turn and can't be blocked this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Watchers of the Dead | silent | Exile this creature: Each opponent chooses two cards in their graveyard and exiles the rest. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Grim Strider | notice | This creature gets -1/-1 for each card in your hand. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Hazoret's Favor | notice | At the beginning of combat on your turn, you may have target creature you control get +2/+0 and gain haste until end of turn. If you do, sacrifice it at the beg | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Onward // Victory | notice | Target creature gets +X/+0 until end of turn, where X is its power. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Shed Weakness | notice | Target creature gets +2/+2 until end of turn. You may remove a -1/-1 counter from it. | unparsed remainder: You may remove a -1/-1 counter from it. | Y/Y/- | not_working |
 | Thresher Lizard | notice | This creature gets +1/+2 as long as you have one or fewer cards in hand. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Vizier of Deferment | notice | When this creature enters, you may exile target creature if it attacked or blocked this turn. Return that card to the battlefield under its owner's control at t | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -228,7 +226,7 @@
 ## Fully supported
 
 <details>
-<summary>43 cards</summary>
+<summary>45 cards</summary>
 
 - Ahn-Crop Champion
 - Angel of Sanctions
@@ -256,6 +254,7 @@
 - Luxa River Shrine
 - New Perspectives
 - Oketra the True
+- Onward // Victory
 - Open into Wonder
 - Oracle's Vault
 - Protection of the Hekma
@@ -263,6 +262,7 @@
 - Sacred Excavation
 - Sandwurm Convergence
 - Soul-Scar Mage
+- Soulstinger
 - Start // Finish
 - Sunscorched Desert
 - Supply Caravan
@@ -298,10 +298,8 @@
 | put a -N/-N counter on each creature you don't control. you may search your library and/or graveyard for a card named liliana, death wielder, reveal it, and put | 1 | Liliana's Influence | akh |
 | put target spell or nonland permanent into its owner's library second from the top. | 1 | Commit // Memory | akh |
 | return to your hand all cards in your graveyard that you cycled or discarded ~. | 1 | Shadow of the Grave | akh |
-| target creature gets +N/+N until end of turn, where N is its power. | 1 | Onward // Victory | akh |
 | target creature gets +N/+N until end of turn. you may remove a -N/-N counter from it. | 1 | Shed Weakness | akh |
 | untap up to two target creatures. they each get +N/+N until end of turn. | 1 | Synchronized Strike | akh |
-| when ~ dies, you may put a -N/-N counter on target creature for each -N/-N counter on ~. | 1 | Soulstinger | akh |
 | when ~ enters, for each kind of counter on target permanent, put another counter of that kind on it or remove one from it. | 1 | Quarry Hauler | akh |
 | when ~ enters, you may exile target creature if it attacked or blocked ~. return that card to the battlefield under its owner's control at the beginning of the  | 1 | Vizier of Deferment | akh |
 | when ~ enters, you may have enchanted creature fight target creature an opponent controls. | 1 | Cartouche of Strength | akh |

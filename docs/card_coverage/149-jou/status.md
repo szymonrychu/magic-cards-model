@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 21 | 13.0% |
+| Tested | 24 | 14.9% |
 | Works (untested) | 103 | 64.0% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 37 | 23.0% |
+| Not working | 34 | 21.1% |
 
 ## Cards needing work
 
@@ -30,14 +30,12 @@
 | Athreos, God of Passage | silent | Whenever another creature you own dies, return it to your hand unless target opponent pays 3 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Blinding Flare | silent | Strive — This spell costs {R} more to cast for each target beyond the first. Any number of target creatures can't block this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Brain Maggot | silent | When this creature enters, target opponent reveals their hand and you choose a nonland card from it. Exile that card until this creature leaves the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Countermand | silent | Counter target spell. Its controller mills four cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Dakra Mystic | silent | {U}, {T}: Each player reveals the top card of their library. You may put the revealed cards into their owners' graveyards. If you don't, each player draws a car | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Daring Thief | silent | Inspired — Whenever this creature becomes untapped, you may exchange control of target nonland permanent you control and target permanent an opponent controls t | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Deicide | silent | Exile target enchantment. If the exiled card is a God card, search its controller's graveyard, hand, and library for any number of cards with the same name as t | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Disciple of Deceit | silent | Inspired — Whenever this creature becomes untapped, you may discard a nonland card. If you do, search your library for a card with the same mana value as that c | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Goldenhide Ox | silent | Constellation — Whenever this creature or another enchantment you control enters, target creature must be blocked this turn if able. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Harness by Force | silent | Strive — This spell costs {2}{R} more to cast for each target beyond the first. Gain control of any number of target creatures until end of turn. Untap those cr | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Hour of Need | silent | Strive — This spell costs {1}{U} more to cast for each target beyond the first. Exile any number of target creatures. For each creature exiled this way, its con | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Hubris | silent | Return target creature and all Auras attached to it to their owners' hands. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Hydra Broodmaster | silent | When this creature becomes monstrous, create X X/X green Hydra creature tokens. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Interpret the Signs | silent | Scry 3, then reveal the top card of your library. Draw cards equal to that card's mana value. (To scry 3, look at the top three cards of your library, then put  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -52,7 +50,6 @@
 | Quarry Colossus | silent | When this creature enters, put target creature into its owner's library just beneath the top X cards of that library, where X is the number of Plains you contro | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Renowned Weaver | silent | {1}{G}, Sacrifice this creature: Create a 1/3 green Spider enchantment creature token with reach. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Rise of Eagles | silent | Create two 2/2 blue Bird enchantment creature tokens with flying. Scry 1. (Look at the top card of your library. You may put that card on the bottom.) | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Ritual of the Returned | silent | Exile target creature card from your graveyard. Create a black Zombie creature token. Its power is equal to that card's power and its toughness is equal to that | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sage of Hours | silent | Remove all +1/+1 counters from this creature: For each five counters removed this way, take an extra turn after this one. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Scourge of Fleets | silent | When this creature enters, return each creature your opponents control with toughness X or less to its owner's hand, where X is the number of Islands you contro | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Stonewise Fortifier | silent | {4}{W}: Prevent all damage that would be dealt to this creature by target creature this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -170,17 +167,19 @@
 ## Fully supported
 
 <details>
-<summary>21 cards</summary>
+<summary>24 cards</summary>
 
 - Aegis of the Gods
 - Aerial Formation
 - Battlefield Thaumaturge
 - Bloodcrazed Hoplite
+- Countermand
 - Deserter's Quarters
 - Godhunter Octopus
 - Godsend
 - Hall of Triumph
 - Heroes' Bane
+- Hour of Need
 - Iroas, God of Victory
 - Keranos, God of Storms
 - Kruphix, God of Horizons
@@ -188,6 +187,7 @@
 - Mana Confluence
 - Master of the Feast
 - Oppressive Rays
+- Ritual of the Returned
 - Setessan Tactics
 - Sightless Brawler
 - Solidarity of Heroes
@@ -200,15 +200,13 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| Strive | 8 | Blinding Flare, Colossal Heroics, Harness by Force, Hour of Need, Nature's Panoply | jou |
+| Strive | 7 | Blinding Flare, Colossal Heroics, Harness by Force, Nature's Panoply, Polymorphous Rush | jou |
 | Inspired | 3 | Daring Thief, Disciple of Deceit, King Macar, the Gold-Cursed | jou |
 | Constellation | 1 | Goldenhide Ox | jou |
 | as an additional cost to cast ~, sacrifice a creature. target player discards a number of cards equal to the sacrificed creature's power. | 1 | Tormented Thoughts | jou |
-| counter target spell. its controller mills four cards. | 1 | Countermand | jou |
 | create two N/N blue bird enchantment creature tokens with flying. scry N. (look at the top card of your library. you may put that card on the bottom.) | 1 | Rise of Eagles | jou |
 | enchanted creature gets +N/+N as long as it's an enchantment. otherwise, it gets -N/-N. | 1 | Nyx Infusion | jou |
 | enchanted creature has double strike as long as it's an enchantment. otherwise, prevent all damage that would be dealt by enchanted creature. | 1 | Armament of Nyx | jou |
-| exile target creature card from your graveyard. create a black zombie creature token. its power is equal to that card"..."s toughness. | 1 | Ritual of the Returned | jou |
 | exile target enchantment. if the exiled card is a god card, search its controller's graveyard, hand, and library for any number of cards with the same name as t | 1 | Deicide | jou |
 | remove all +N/+N counters from ~: for each five counters removed ~, take an extra turn after ~. | 1 | Sage of Hours | jou |
 | return target creature and all auras attached to it to their owners' hands. | 1 | Hubris | jou |

@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 69 | 22.7% |
-| Works (untested) | 142 | 46.7% |
+| Tested | 74 | 24.3% |
+| Works (untested) | 144 | 47.4% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 93 | 30.6% |
+| Not working | 86 | 28.3% |
 
 ## Cards needing work
 
@@ -34,7 +34,6 @@
 | Choco, Seeker of Paradise | silent | Whenever one or more Birds you control attack, look at that many cards from the top of your library. You may put one of them into your hand. Then put any number | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Chocobo Kick | silent | Kicker—Return a land you control to its owner's hand. (You may return a land you control to its owner's hand in addition to any other costs as you cast this spe | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Clive's Hideaway | silent | {2}, {T}: You may play the exiled card without paying its mana cost if you control four or more legendary creatures. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Cloud of Darkness | silent | Particle Beam — When Cloud of Darkness enters, target creature an opponent controls gets -X/-X until end of turn, where X is the number of permanent cards in yo | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Deadly Embrace | silent | Destroy target creature an opponent controls. Then draw a card for each creature that died this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Demon Wall | silent | As long as this creature has a counter on it, it can attack as though it didn't have defender. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Elixir | silent | {5}, {T}, Exile this artifact: Shuffle all nonland cards from your graveyard into your library. You gain life equal to the number of cards shuffled into your li | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -43,12 +42,9 @@
 | Firion, Wild Rose Warrior | silent | Equipped creatures you control have haste. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | From Father to Son | silent | Search your library for a Vehicle card, reveal it, and put it into your hand. If this spell was cast from a graveyard, put that card onto the battlefield instea | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Garland, Knight of Cornelia // Chaos, the Endless | silent | {3}{B}{B}{R}{R}: Return this card from your graveyard to the battlefield transformed. Activate only as a sorcery. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Garnet, Princess of Alexandria | silent | Whenever Garnet attacks, you may remove a lore counter from each of any number of Sagas you control. Put a +1/+1 counter on Garnet for each lore counter removed | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Genji Glove | silent | Whenever equipped creature attacks, if it's the first combat phase of the turn, untap it. After this phase, there is an additional combat phase. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Gilgamesh, Master-at-Arms | silent | Whenever Gilgamesh enters or attacks, look at the top six cards of your library. You may put any number of Equipment cards from among them onto the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Gogo, Master of Mimicry | silent | {X}{X}, {T}: Copy target activated or triggered ability you control X times. You may choose new targets for the copies. This ability can't be copied and X can't | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Gran Pulse Ochu | silent | {8}: Until end of turn, this creature gets +1/+1 for each permanent card in your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Hope Estheim | silent | At the beginning of your end step, each opponent mills X cards, where X is the amount of life you gained this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Ignis Scientia | silent | I've Come Up with a New Recipe! — {1}{G}{U}, {T}: Exile target card from a graveyard. If a creature card was exiled this way, create a Food token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Jenova, Ancient Calamity | silent | At the beginning of combat on your turn, put a number of +1/+1 counters equal to Jenova's power on up to one other target creature. That creature becomes a Muta | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Jumbo Cactuar | silent | 10,000 Needles — Whenever this creature attacks, it gets +9999/+0 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -57,8 +53,6 @@
 | Lightning, Army of One | silent | Stagger — Whenever Lightning deals combat damage to a player, until your next turn, if a source would deal damage to that player or a permanent that player cont | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Lightning, Security Sergeant | silent | Whenever Lightning deals combat damage to a player, exile the top card of your library. You may play that card for as long as you control Lightning. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Louisoix's Sacrifice | silent | As an additional cost to cast this spell, sacrifice a legendary creature or pay {2}. Counter target activated ability, triggered ability, or noncreature spell. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Magitek Infantry | silent | {2}{W}: Search your library for a card named Magitek Infantry, put it onto the battlefield tapped, then shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Magitek Scythe | silent | A Test of Your Reflexes! — When this Equipment enters, you may attach it to target creature you control. If you do, that creature gains first strike until end o | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Malboro | silent | Bad Breath — When this creature enters, each opponent discards a card, loses 2 life, and exiles the top three cards of their library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Memories Returning | silent | Reveal the top five cards of your library. Put one of them into your hand. Then choose an opponent. They put one on the bottom of your library. Then you put one | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Nibelheim Aflame | silent | Choose target creature you control. It deals damage equal to its power to each other creature. If this spell was cast from a graveyard, discard your hand and dr | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -70,7 +64,6 @@
 | Reach the Horizon | silent | Search your library for up to two basic land cards and/or Town cards with different names, put them onto the battlefield tapped, then shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Reno and Rude | silent | Whenever Reno and Rude deals combat damage to a player, exile the top card of that player's library. Then you may sacrifice another creature or artifact. If you | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Ride the Shoopuf | silent | {5}{G}{G}: This enchantment becomes a 7/7 Beast creature in addition to its other types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Rinoa Heartilly | silent | Angelo Cannon — Whenever Rinoa Heartilly attacks, another target creature you control gets +1/+1 until end of turn for each creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Sage's Nouliths | silent | Equipped creature gets +1/+0, has "Whenever this creature attacks, untap target attacking creature," and is a Cleric in addition to its other types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Seifer Almasy | silent | Fire Cross — Whenever Seifer Almasy deals combat damage to a player, you may cast target instant or sorcery card with mana value 3 or less from your graveyard w | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Sidequest: Catch a Fish // Cooking Campsite | silent | At the beginning of your upkeep, look at the top card of your library. If it's an artifact or creature card, you may reveal it and put it into your hand. If you | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -194,6 +187,7 @@
 | Magic Damper | handled | Target creature you control gets +1/+1 and gains hexproof until end of turn. Untap it. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Magic Pot | handled | When this creature dies, create a Treasure token. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Magitek Armor | handled | When this Vehicle enters, create a 1/1 colorless Hero creature token. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Magitek Infantry | handled | This creature gets +1/+0 as long as you control another artifact. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Midgar, City of Mako // Reactor Raid | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Minwu, White Mage | handled | Whenever you gain life, put a +1/+1 counter on each Cleric you control. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Mysidian Elder | handled | When this creature enters, create a 0/1 black Wizard creature token with "Whenever you cast a noncreature spell, this token deals 1 damage to each opponent." | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -212,6 +206,7 @@
 | Resentful Revelation | handled | Look at the top three cards of your library. Put one of them into your hand and the rest into your graveyard. Flashback {6}{B} (You may cast this card from your | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Restoration Magic | handled | Tiered (Choose one additional cost.) • Cure — {0} — Target permanent gains hexproof and indestructible until end of turn. • Cura — {1} — Target permanent gains  | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Ring of the Lucii | handled | {2}, {T}, Pay 1 life: Tap target nonland permanent. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Rinoa Heartilly | handled | When Rinoa Heartilly enters, create Angelo, a legendary 1/1 green and white Dog creature token. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Rook Turret | handled | Whenever another artifact you control enters, you may draw a card. If you do, discard a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Rosa, Resolute White Mage | handled | At the beginning of combat on your turn, put a +1/+1 counter on target creature you control. It gains lifelink until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Rydia's Return | handled | Choose one — • Creatures you control get +3/+3 until end of turn. • Return up to two target permanent cards from your graveyard to your hand. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -265,7 +260,7 @@
 ## Fully supported
 
 <details>
-<summary>69 cards</summary>
+<summary>74 cards</summary>
 
 - A Realm Reborn
 - Absolute Virtue
@@ -281,6 +276,7 @@
 - Cid, Timeless Artificer
 - Clash of the Eikons
 - Clive, Ifrit's Dominant // Ifrit, Warden of Inferno
+- Cloud of Darkness
 - Cloud, Midgar Mercenary
 - Cloud, Planet's Champion
 - Coliseum Behemoth
@@ -290,13 +286,17 @@
 - Esper Origins // Summon: Esper Maduin
 - Exdeath, Void Warlock // Neo Exdeath, Dimension's End
 - Fire Magic
+- Garnet, Princess of Alexandria
 - Giott, King of the Dwarves
+- Gran Pulse Ochu
 - Haste Magic
+- Hope Estheim
 - Jill, Shiva's Dominant // Shiva, Warden of Ice
 - Joshua, Phoenix's Dominant // Phoenix, Warden of Fire
 - Judgment Bolt
 - Kuja, Genome Sorcerer // Trance Kuja, Fate Defied
 - Machinist's Arsenal
+- Magitek Scythe
 - Matoya, Archon Elder
 - Monk's Fist
 - Noctis, Prince of Lucis
@@ -344,20 +344,17 @@
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
 | equipped creature gets +N/+N, has "..." and is a cleric in addition to its other types. | 2 | Sage's Nouliths, White Mage's Staff | fin |
-| Angelo Cannon | 1 | Rinoa Heartilly | fin |
 | Bad Breath | 1 | Malboro | fin |
 | Blessing of Light | 1 | Venat, Heart of Hydaelyn // Hydaelyn, the Mothercrystal | fin |
 | Blue Magic | 1 | Quistis Trepe | fin |
 | Choose one | 1 | Aerith Rescue Mission | fin |
 | Fire Cross | 1 | Seifer Almasy | fin |
 | Landfall | 1 | Tifa Lockhart | fin |
-| Particle Beam | 1 | Cloud of Darkness | fin |
 | Stagger | 1 | Lightning, Army of One | fin |
 | Starscourge | 1 | Ardyn, the Usurper | fin |
 | The Minstrel's Ballad | 1 | The Wandering Minstrel | fin |
 | Wave Cannon | 1 | Omega, Heartless Evolution | fin |
 | N,N needles — whenever ~ attacks, it gets +N/+N until end of turn. | 1 | Jumbo Cactuar | fin |
-| a test of your reflexes! — when ~ enters, you may attach it to target creature you control. if you do, that creature gains first strike until end of turn and mu | 1 | Magitek Scythe | fin |
 | add {M}{M}, {M}{M}, {M}{M}, {M}{M}, and {M}{M}. exile esper terra, then return it to the battlefield . | 1 | Terra, Magical Adept // Esper Terra | fin |
 | as an additional cost to cast ~, sacrifice a legendary creature or pay {M}. counter target activated ability, triggered ability, or noncreature spell. | 1 | Louisoix's Sacrifice | fin |
 | as long as equipped creature is attacking, it has first strike and must be blocked if able. | 1 | The Masamune | fin |
@@ -365,7 +362,6 @@
 | at the beginning of combat on your turn, if you control an equipment, you may pay {M}. when you do, attach target equipment you control to target creature you c | 1 | Weapons Vendor | fin |
 | at the beginning of combat on your turn, put a number of +N/+N counters equal to jenova's power on up to one other target creature. that creature becomes a muta | 1 | Jenova, Ancient Calamity | fin |
 | at the beginning of combat on your turn, you may attach any number of equipment you control to target creature you control. | 1 | Beatrix, Loyal General | fin |
-| at the beginning of your end step, each opponent mills N cards, where N is the amount of life you gained ~. | 1 | Hope Estheim | fin |
 | at the beginning of your end step, exile target creature you control, then return it to the battlefield under its owner"..."s the first end step of the turn, th | 1 | Y'shtola Rhul | fin |
 | at the beginning of your end step, if you control four or more artifacts, return target creature card from your graveyard to your hand. then if you control eigh | 1 | Golbez, Crystal Collector | fin |
 | at the beginning of your end step, you may pay {M}{M}{M}{M}{M} and exile eight cards from your graveyard. if you do, transform ultimecia. | 1 | Ultimecia, Time Sorceress // Ultimecia, Omnipotent | fin |
@@ -410,7 +406,6 @@
 | whenever an opponent loses life during your turn, you draw that many cards. | 1 | Kefka, Court Mage // Kefka, Ruler of Ruin | fin |
 | whenever equipped creature attacks, if it's the first combat phase of the turn, untap it. after ~, there is an additional combat phase. | 1 | Genji Glove | fin |
 | whenever equipped creature deals combat damage to a player, draw a card, then you may cast a spell from your hand with mana value less than or equal to that dam | 1 | Buster Sword | fin |
-| whenever garnet attacks, you may remove a lore counter from each of any number of sagas you control. put a +N/+N counter on garnet for each lore counter removed | 1 | Garnet, Princess of Alexandria | fin |
 | whenever gilgamesh enters or attacks, look at the top six cards of your library. you may put any number of equipment cards from among them onto the battlefield. | 1 | Gilgamesh, Master-at-Arms | fin |
 | whenever kain deals combat damage to a player, that player gains control of kain. if they do, you draw that many cards, create that many tapped treasure tokens, | 1 | Kain, Traitorous Dragoon | fin |
 | whenever lightning deals combat damage to a player, exile the top card of your library. you may play that card for as long as you control lightning. | 1 | Lightning, Security Sergeant | fin |
@@ -429,9 +424,7 @@
 | {M}, {M}: target opponent gains control of another target permanent you control. if they do, you draw a card. | 1 | Stiltzkin, Moogle Merchant | fin |
 | {M}, {M}: you may play the exiled card without paying its mana cost if you control four or more legendary creatures. | 1 | Clive's Hideaway | fin |
 | {M}: until end of turn, ~ base power becomes equal to the number of towns you control. | 1 | PuPu UFO | fin |
-| {M}: until end of turn, ~ gets +N/+N for each permanent card in your graveyard. | 1 | Gran Pulse Ochu | fin |
 | {M}{M}, {M}: copy target activated or triggered ability you control N times. you may choose new targets for the copies. ~ can"..."t be N. | 1 | Gogo, Master of Mimicry | fin |
-| {M}{M}: search your library for a card named ~, put it onto the battlefield tapped, then shuffle. | 1 | Magitek Infantry | fin |
 | {M}{M}{M}: ~ becomes a N/N beast creature in addition to its other types. | 1 | Ride the Shoopuf | fin |
 | {M}{M}{M}{M}{M}: return ~ from your graveyard to the battlefield transformed. activate only as a sorcery. | 1 | Garland, Knight of Cornelia // Chaos, the Endless | fin |
 | ~ deals N damage to target creature. destroy up to one equipment attached to that creature. | 1 | Light of Judgment | fin |

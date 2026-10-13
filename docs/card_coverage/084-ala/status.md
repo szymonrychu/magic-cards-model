@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 32 | 14.3% |
-| Works (untested) | 143 | 64.1% |
+| Tested | 35 | 15.7% |
+| Works (untested) | 149 | 66.8% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 48 | 21.5% |
+| Not working | 39 | 17.5% |
 
 ## Cards needing work
 
@@ -29,11 +29,8 @@
 | Ad Nauseam | silent | Reveal the top card of your library and put that card into your hand. You lose life equal to its mana value. You may repeat this process any number of times. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Ajani Vengeant | silent | +1: Target permanent doesn't untap during its controller's next untap step. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Akrasan Squire | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Angel's Herald | silent | {2}{W}, {T}, Sacrifice a green creature, a white creature, and a blue creature: Search your library for a card named Empyrial Archangel, put it onto the battlef | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Angelic Benediction | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Banewasp Affliction | silent | When enchanted creature dies, that creature's controller loses life equal to its toughness. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Battlegrace Angel | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Behemoth's Herald | silent | {2}{G}, {T}, Sacrifice a red creature, a green creature, and a white creature: Search your library for a card named Godsire, put it onto the battlefield, then s | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Brilliant Ultimatum | silent | Exile the top five cards of your library. An opponent separates those cards into two piles. You may play lands and cast spells from one of those piles. If you c | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Call to Heel | silent | Return target creature to its owner's hand. Its controller draws a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Clarion Ultimatum | silent | Choose five permanents you control. For each of those permanents, you may search your library for a card with the same name as that permanent. Put those cards o | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -43,8 +40,6 @@
 | Cruel Ultimatum | silent | Target opponent sacrifices a creature of their choice, discards three cards, then loses 5 life. You return a creature card from your graveyard to your hand, dra | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Dawnray Archer | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Death Baron | silent | Skeletons you control and other Zombies you control get +1/+1 and have deathtouch. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Demon's Herald | silent | {2}{B}, {T}, Sacrifice a blue creature, a black creature, and a red creature: Search your library for a card named Prince of Thralls, put it onto the battlefiel | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Dragon's Herald | silent | {2}{R}, {T}, Sacrifice a black creature, a red creature, and a green creature: Search your library for a card named Hellkite Overlord, put it onto the battlefie | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Godsire | silent | {T}: Create an 8/8 Beast creature token that's red, green, and white. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Guardians of Akrasa | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Hindering Light | silent | Counter target spell that targets you or a permanent you control. Draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -65,21 +60,19 @@
 | Sighted-Caste Sorcerer | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Sigil of Distinction | silent | Equipped creature gets +1/+1 for each charge counter on this Equipment. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sigiled Paladin | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Soul's Might | silent | Put X +1/+1 counters on target creature, where X is that creature's power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Sphinx's Herald | silent | {2}{U}, {T}, Sacrifice a white creature, a blue creature, and a black creature: Search your library for a card named Sphinx Sovereign, put it onto the battlefie | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Tar Fiend | silent | When this creature enters, target player discards a card for each creature it devoured. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Thoughtcutter Agent | silent | {U}{B}, {T}: Target player loses 1 life and reveals their hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Waveskimmer Aven | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Bant Charm | notice | Choose one — • Destroy target artifact. • Put target creature on the bottom of its owner's library. • Counter target instant spell. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Ooze Garden | notice | {1}{G}, Sacrifice a non-Ooze creature: Create an X/X green Ooze creature token, where X is the sacrificed creature's power. Activate only as a sorcery. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Sigil Blessing | notice | Until end of turn, target creature you control gets +3/+3 and other creatures you control get +1/+1. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Windwright Mage | notice | This creature has flying as long as an artifact card is in your graveyard. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Agony Warp | handled | Target creature gets -3/-0 until end of turn. Target creature gets -0/-3 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Algae Gharial | handled | Whenever another creature dies, you may put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Angel's Herald | handled | {2}{W}, {T}, Sacrifice a green creature, a white creature, and a blue creature: Search your library for a card named Empyrial Archangel, put it onto the battlef | the engine reads this text and performs it | Y/-/- | not_tested |
 | Arcane Sanctum | handled | This land enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Archdemon of Unx | handled | At the beginning of your upkeep, sacrifice a non-Zombie creature, then create a 2/2 black Zombie creature token. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Bant Battlemage | handled | {G}, {T}: Target creature gains trample until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Bant Panorama | handled | {1}, {T}, Sacrifice this land: Search your library for a basic Forest, Plains, or Island card, put it onto the battlefield tapped, then shuffle. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Behemoth's Herald | handled | {2}{G}, {T}, Sacrifice a red creature, a green creature, and a white creature: Search your library for a card named Godsire, put it onto the battlefield, then s | the engine reads this text and performs it | Y/-/- | not_tested |
 | Blister Beetle | handled | When this creature enters, target creature gets -1/-1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Blood Cultist | handled | {T}: This creature deals 1 damage to target creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Bloodpyre Elemental | handled | Sacrifice this creature: It deals 4 damage to target creature. Activate only as a sorcery. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -100,8 +93,10 @@
 | Cunning Lethemancer | handled | At the beginning of your upkeep, each player discards a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Cylian Elf | handled |  |  | Y/-/- | not_tested |
 | Deathgreeter | handled | Whenever another creature dies, you may gain 1 life. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Demon's Herald | handled | {2}{B}, {T}, Sacrifice a blue creature, a black creature, and a red creature: Search your library for a card named Prince of Thralls, put it onto the battlefiel | the engine reads this text and performs it | Y/-/- | not_tested |
 | Dispeller's Capsule | handled | {2}{W}, {T}, Sacrifice this artifact: Destroy target artifact or enchantment. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Dragon Fodder | handled | Create two 1/1 red Goblin creature tokens. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Dragon's Herald | handled | {2}{R}, {T}, Sacrifice a black creature, a red creature, and a green creature: Search your library for a card named Hellkite Overlord, put it onto the battlefie | the engine reads this text and performs it | Y/-/- | not_tested |
 | Dreg Reaver | handled |  |  | Y/-/- | not_tested |
 | Dregscape Zombie | handled | Unearth | machines/keywords.py (off_zone_abilities: unearth) | Y/-/- | not_tested |
 | Druid of the Anima | handled |  |  | Y/-/- | not_tested |
@@ -193,11 +188,13 @@
 | Spearbreaker Behemoth | handled | {1}: Target creature with power 5 or greater gains indestructible until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Spell Snip | handled | Counter target spell unless its controller pays {1}. Cycling {2} ({2}, Discard this card: Draw a card.) | the engine reads this text and performs it | Y/-/- | not_tested |
 | Sphinx Sovereign | handled | At the beginning of your end step, you gain 3 life if this creature is untapped. Otherwise, each opponent loses 3 life. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Sphinx's Herald | handled | {2}{U}, {T}, Sacrifice a white creature, a blue creature, and a black creature: Search your library for a card named Sphinx Sovereign, put it onto the battlefie | the engine reads this text and performs it | Y/-/- | not_tested |
 | Sprouting Thrinax | handled | When this creature dies, create three 1/1 green Saproling creature tokens. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Steelclad Serpent | handled | This creature can't attack unless you control another artifact. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Steward of Valeron | handled | Vigilance | machines/combat.py | Y/-/- | not_tested |
 | Sunseed Nurturer | handled | At the beginning of your end step, if you control a creature with power 5 or greater, you may gain 2 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Swerve | handled | Change the target of target spell with a single target. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Tar Fiend | handled | When this creature enters, target player discards a card for each creature it devoured. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Thorn-Thrash Viashino | handled | {G}: This creature gains trample until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Tidehollow Sculler | handled | When this creature enters, target opponent reveals their hand and you choose a nonland card from it. Exile that card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Tidehollow Strix | handled | Deathtouch | machines/combat.py | Y/-/- | not_tested |
@@ -221,9 +218,10 @@
 ## Fully supported
 
 <details>
-<summary>32 cards</summary>
+<summary>35 cards</summary>
 
 - Angelsong
+- Banewasp Affliction
 - Blightning
 - Bone Splinters
 - Deft Duelist
@@ -239,6 +237,7 @@
 - Invincible Hymn
 - Lich's Mirror
 - Mindlock Orb
+- Ooze Garden
 - Punish Ignorance
 - Qasali Ambusher
 - Relic of Progenitus
@@ -250,6 +249,7 @@
 - Skullmulcher
 - Soul's Fire
 - Soul's Grace
+- Soul's Might
 - Stoic Angel
 - Tezzeret the Seeker
 - Thunder-Thrash Elder
@@ -270,7 +270,6 @@
 | enchanted land is a mountain, forest, and plains. | 1 | Lush Growth | ala |
 | equipped creature gets +N/+N for each charge counter on ~. | 1 | Sigil of Distinction | ala |
 | exile the top five cards of your library. an opponent separates those cards into two piles. you may play lands and cast spells from one of those piles. if you c | 1 | Brilliant Ultimatum | ala |
-| put N +N/+N counters on target creature, where N is that creature's power. | 1 | Soul's Might | ala |
 | return target creature to its owner's hand. its controller draws a card. | 1 | Call to Heel | ala |
 | reveal the top card of your library and put that card into your hand. you lose life equal to its mana value. you may repeat ~ any number of times. | 1 | Ad Nauseam | ala |
 | reveal the top three cards of your library. target opponent may choose to put those cards into your hand. if they don't, put those cards into your graveyard and | 1 | Covenant of Minds | ala |
@@ -278,9 +277,7 @@
 | target opponent sacrifices a creature of their choice, discards three cards, then loses N life. you return a creature card from your graveyard to your hand, dra | 1 | Cruel Ultimatum | ala |
 | target player discards a card at random. cycling {M}{M}{M}{M} ({M}{M}{M}{M}, discard ~: draw a card.) when you cycle ~, target player discards two cards at rand | 1 | Resounding Scream | ala |
 | until end of turn, target creature you control gets +N/+N and other creatures you control get +N/+N. | 1 | Sigil Blessing | ala |
-| when enchanted creature dies, that creature's controller loses life equal to its toughness. | 1 | Banewasp Affliction | ala |
 | when ~ enters, return all other nonland permanents to their owners' hands. | 1 | Kederekt Leviathan | ala |
-| when ~ enters, target player discards a card for each creature it devoured. | 1 | Tar Fiend | ala |
 | when ~ leaves the battlefield, return the exiled cards to the battlefield tapped under their owners' control. | 1 | Realm Razer | ala |
 | whenever a nontoken creature you control enters, you may pay {M}. if you do, create a token that's a copy of that creature, except it has haste and "..." | 1 | Minion Reflector | ala |
 | whenever a permanent an opponent controls is put into a graveyard, put that card onto the battlefield under your control unless that opponent pays N life. | 1 | Prince of Thralls | ala |
@@ -290,12 +287,6 @@
 | {M}, sacrifice ~: destroy all permanents except for artifacts and lands. activate only during your upkeep. | 1 | Scourglass | ala |
 | {M}: create an N/N beast creature token that's red, green, and white. | 1 | Godsire | ala |
 | {M}: reveal any number of creature cards with power N or greater from your hand. add {M} for each card revealed ~. | 1 | Sacellum Godspeaker | ala |
-| {M}{M}, sacrifice a non-ooze creature: create an N/N green ooze creature token, where N is the sacrificed creature's power. activate only as a sorcery. | 1 | Ooze Garden | ala |
-| {M}{M}, {M}, sacrifice a black creature, a red creature, and a green creature: search your library for a card named hellkite overlord, put it onto the battlefie | 1 | Dragon's Herald | ala |
-| {M}{M}, {M}, sacrifice a blue creature, a black creature, and a red creature: search your library for a card named prince of thralls, put it onto the battlefiel | 1 | Demon's Herald | ala |
-| {M}{M}, {M}, sacrifice a green creature, a white creature, and a blue creature: search your library for a card named empyrial archangel, put it onto the battlef | 1 | Angel's Herald | ala |
-| {M}{M}, {M}, sacrifice a red creature, a green creature, and a white creature: search your library for a card named godsire, put it onto the battlefield, then s | 1 | Behemoth's Herald | ala |
-| {M}{M}, {M}, sacrifice a white creature, a blue creature, and a black creature: search your library for a card named sphinx sovereign, put it onto the battlefie | 1 | Sphinx's Herald | ala |
 | {M}{M}, {M}: target player loses N life and reveals their hand. | 1 | Thoughtcutter Agent | ala |
 | {M}{M}{M}{M}, {M}: look at the top five cards of your library. you may put a creature card with power N or greater from among them onto the battlefield. put the | 1 | Mayael the Anima | ala |
 | ~ has flying as long as an artifact card is in your graveyard. | 1 | Windwright Mage | ala |

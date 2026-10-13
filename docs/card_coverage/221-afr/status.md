@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 60 | 23.3% |
-| Works (untested) | 135 | 52.5% |
+| Tested | 64 | 24.9% |
+| Works (untested) | 137 | 53.3% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 62 | 24.1% |
+| Not working | 56 | 21.8% |
 
 ## Cards needing work
 
@@ -40,17 +40,14 @@
 | Farideh's Fireball | silent | Farideh's Fireball deals 5 damage to target creature or planeswalker. Roll a d20. 1—9 \| Farideh's Fireball deals 2 damage to each player. 10—20 \| Farideh's Fi | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Fifty Feet of Rope | silent | Tie Up — {3}, {T}: Target creature doesn't untap during its controller's next untap step. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Flameskull | silent | Rejuvenation — When this creature dies, exile it. If you do, exile the top card of your library. Until the end of your next turn, you may play one of those card | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Froghemoth | silent | Whenever this creature deals combat damage to a player, exile up to that many target cards from their graveyard. Put a +1/+1 counter on this creature for each c | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Gelatinous Cube | silent | Dissolve — {X}{B}: Put target creature card with mana value X exiled with this creature into its owner's graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Gloom Stalker | silent | As long as you've completed a dungeon, this creature has double strike. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Grand Master of Flowers | silent | +1: Search your library and/or graveyard for a card named Monk of the Open Hand, reveal it, and put it into your hand. If you search your library this way, shuf | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Grazilaxx, Illithid Scholar | silent | Whenever a creature you control becomes blocked, you may return it to its owner's hand. | this trigger's condition can never be satisfied - it never triggers | Y/Y/- | not_working |
-| Green Dragon | silent | Poison Breath — When this creature enters, until end of turn, whenever a creature an opponent controls is dealt damage, destroy it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Guardian of Faith | silent | When this creature enters, any number of other target creatures you control phase out. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Hand of Vecna | silent | At the beginning of combat on your turn, equipped creature or a creature you control named Vecna gets +X/+X until end of turn, where X is the number of cards in | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Hobgoblin Bandit Lord | silent | {R}, {T}: This creature deals damage equal to the number of Goblins that entered the battlefield under your control this turn to any target. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Icingdeath, Frost Tyrant | silent | When Icingdeath, Frost Tyrant dies, create Icingdeath, Frost Tongue, a legendary white Equipment artifact token with "Equipped creature gets +2/+0," "Whenever e | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Instrument of the Bards | silent | {3}{G}, {T}: Search your library for a creature card with mana value equal to the number of harmony counters on Instrument of the Bards, reveal it, and put it i | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Kick in the Door | silent | Put a +1/+1 counter on target creature. That creature gains haste until end of turn and can't be blocked by Walls this turn. Venture into the dungeon. (Enter th | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Long Rest | silent | Return X target cards with different mana values from your graveyard to your hand. If eight or more cards were returned to your hand this way, your life total b | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Minion of the Mighty | silent | Pack tactics — Whenever this creature attacks, if you attacked with creatures with total power 6 or greater this combat, you may put a Dragon creature card from | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -61,18 +58,15 @@
 | Skeletal Swarming | silent | Each Skeleton you control has trample, attacks each combat if able, and gets +X/+0, where X is the number of other Skeletons you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sphere of Annihilation | silent | At the beginning of your upkeep, exile this artifact, all creatures and planeswalkers with mana value less than or equal to the number of void counters on it, a | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Split the Party | silent | Choose target player. Return half the creatures they control to their owner's hand, rounded up. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Sudden Insight | silent | Draw a card for each different mana value among nonland cards in your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Targ Nar, Demon-Fang Gnoll | silent | {2}{R}{G}: Double Targ Nar's power and toughness until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | The Book of Vile Darkness | silent | {T}, Exile The Book of Vile Darkness and artifacts you control named Eye of Vecna and Hand of Vecna: Create Vecna, a legendary 8/8 black Zombie God creature tok | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Tiamat | silent | When Tiamat enters, if you cast it, search your library for up to five Dragon cards not named Tiamat that each have different names, reveal them, put them into  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Varis, Silverymoon Ranger | silent | Whenever you complete a dungeon, create a 2/2 green Wolf creature token. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Vorpal Sword | silent | {5}{B}{B}{B}: Until end of turn, this Equipment gains "Whenever equipped creature deals combat damage to a player, that player loses the game." | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Warlock Class | silent | At the beginning of your end step, each opponent loses life equal to the life they lost this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Werewolf Pack Leader | silent | {3}{G}: Until end of turn, this creature has base power and toughness 5/3, gains trample, and isn't a Human. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Wight | silent | Life Drain — Whenever a creature dealt damage by this creature this turn dies, create a tapped 2/2 black Zombie creature token and exile that card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Xanathar, Guild Kingpin | silent | At the beginning of your upkeep, choose target opponent. Until end of turn, that player can't cast spells, you may look at the top card of their library any tim | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Bruenor Battlehammer | notice | Each creature you control gets +2/+0 for each Equipment attached to it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Cleric Class | notice | When this Class becomes level 3, return target creature card from your graveyard to the battlefield. You gain life equal to that creature's toughness. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Compelled Duel | notice | Target creature gets +3/+3 until end of turn and must be blocked this turn if able. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Divine Smite | notice | Target creature or planeswalker an opponent controls phases out. If that permanent is black, exile it instead. (If it phases out, treat it and anything attached | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Dragon's Fire | notice | As an additional cost to cast this spell, you may reveal a Dragon card from your hand or choose a Dragon you control. Dragon's Fire deals 3 damage to target cre | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -104,6 +98,7 @@
 | Celestial Unicorn | handled | Whenever you gain life, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Circle of Dreams Druid | handled |  |  | Y/Y/- | not_tested |
 | Clattering Skeletons | handled | When this creature dies, venture into the dungeon. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Cleric Class | handled | If you would gain life, you gain that much life plus 1 instead. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Clever Conjurer | handled | Mage Hand — {T}: Untap target permanent not named Clever Conjurer. Activate only as a sorcery. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Critical Hit | handled | Target creature gains double strike until end of turn. When you roll a natural 20, return this card from your graveyard to your hand. (A natural 20 is a roll th | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Dawnbringer Cleric | handled | When this creature enters, choose one — • Cure Wounds — You gain 2 life. • Dispel Magic — Destroy target enchantment. • Gentle Repose — Exile target card from a | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -133,6 +128,7 @@
 | Goblin Javelineer | handled | Whenever this creature becomes blocked, it deals 1 damage to target creature blocking it. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Goblin Morningstar | handled | Equipped creature gets +1/+0 and has trample. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Greataxe | handled | Equipped creature gets +4/+0. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Green Dragon | handled | Poison Breath — When this creature enters, until end of turn, whenever a creature an opponent controls is dealt damage, destroy it. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Gretchen Titchwillow | handled | {2}{G}{U}: Draw a card. You may put a land card from your hand onto the battlefield. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Grim Bounty | handled | Destroy target creature or planeswalker. Create a Treasure token. (It's an artifact with "{T}, Sacrifice this token: Add one mana of any color.") | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Guild Thief | handled | Whenever this creature deals combat damage to a player, put a +1/+1 counter on it. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -227,7 +223,7 @@
 ## Fully supported
 
 <details>
-<summary>60 cards</summary>
+<summary>64 cards</summary>
 
 - Aberrant Mind Sorcerer
 - Asmodeus the Archfiend
@@ -249,12 +245,14 @@
 - Ebondeath, Dracolich
 - Eccentric Apprentice
 - Fighter Class
+- Froghemoth
 - Gnoll Hunter
 - Grim Wanderer
 - Hall of Storm Giants
 - Hama Pashar, Ruin Seeker
 - Hired Hexblade
 - Hive of the Eye Tyrant
+- Instrument of the Bards
 - Iron Golem
 - Kalain, Reclusive Painter
 - Keen-Eared Sentry
@@ -274,6 +272,7 @@
 - Sorcerer Class
 - Spiked Pit Trap
 - Spoils of the Hunt
+- Sudden Insight
 - Swarming Goblins
 - Tasha's Hideous Laughter
 - Temple of the Dragon Queen
@@ -283,6 +282,7 @@
 - Tiger-Tribe Hunter
 - Treasure Chest
 - Veteran Dungeoneer
+- Warlock Class
 - Wish
 - Wizard Class
 - Wizard's Spellbook
@@ -303,7 +303,6 @@
 | Life Drain | 1 | Wight | afr |
 | Lightning Breath | 1 | Blue Dragon | afr |
 | Pack tactics | 1 | Minion of the Mighty | afr |
-| Poison Breath | 1 | Green Dragon | afr |
 | Rejuvenation | 1 | Flameskull | afr |
 | Teleport | 1 | Blink Dog | afr |
 | Tie Up | 1 | Fifty Feet of Rope | afr |
@@ -312,14 +311,12 @@
 | as long as you've completed a dungeon, ~ gets +N/+N and has flying. | 1 | Cloister Gargoyle | afr |
 | as long as you've completed a dungeon, ~ has double strike. | 1 | Gloom Stalker | afr |
 | at the beginning of combat on your turn, equipped creature or a creature you control named vecna gets +N/+N until end of turn, where N is the number of cards in | 1 | Hand of Vecna | afr |
-| at the beginning of your end step, each opponent loses life equal to the life they lost ~. | 1 | Warlock Class | afr |
 | at the beginning of your upkeep, choose target opponent. until end of turn, that player can't cast spells, you may look at the top card of their library any tim | 1 | Xanathar, Guild Kingpin | afr |
 | at the beginning of your upkeep, exile ~, all creatures and planeswalkers with mana value less than or equal to the number of void counters on it, and all creat | 1 | Sphere of Annihilation | afr |
 | choose one. until end of turn, target creature you control has that base power and toughness, becomes that creature type, and gains that ability. • N/N turtle w | 1 | Wild Shape | afr |
 | choose target creature an opponent controls, then roll a dN. N—N \| return it to its owner's hand. N—N \| its owner puts it on their choice of the top or bottom | 1 | Power of Persuasion | afr |
 | choose target player. return half the creatures they control to their owner's hand, rounded up. | 1 | Split the Party | afr |
 | destroy target non-angel, non-demon, non-devil, non-dragon creature. | 1 | Power Word Kill | afr |
-| draw a card for each different mana value among nonland cards in your graveyard. | 1 | Sudden Insight | afr |
 | each creature you control gets +N/+N for each equipment attached to it. | 1 | Bruenor Battlehammer | afr |
 | each skeleton you control has trample, attacks each combat if able, and gets +N/+N, where N is the number of other skeletons you control. | 1 | Skeletal Swarming | afr |
 | other creatures you control get +N/+N as long as you've completed a dungeon. | 1 | Nadaar, Selfless Paladin | afr |
@@ -334,7 +331,6 @@
 | until end of turn, target creature gains "..." | 1 | Feign Death | afr |
 | when equipped creature dies, you may have ~ become a N/N construct artifact creature with flying and ward {M}. if you do, it isn't an equipment. | 1 | Dancing Sword | afr |
 | when orcus enters, choose one — • each other creature gets -N/-N until end of turn. you lose N life. • return up to N target creature cards with total mana valu | 1 | Orcus, Prince of Undeath | afr |
-| when ~ becomes level N, return target creature card from your graveyard to the battlefield. you gain life equal to that creature's toughness. | 1 | Cleric Class | afr |
 | when ~ dies, create icingdeath, frost tongue, a legendary white equipment artifact token with "..." "..." and equip {M}. | 1 | Icingdeath, Frost Tyrant | afr |
 | when ~ enters, any number of other target creatures you control phase out. | 1 | Guardian of Faith | afr |
 | when ~ enters, if you cast it, search your library for up to five dragon cards not named ~ that each have different names, reveal them, put them into your hand, | 1 | Tiamat | afr |
@@ -344,10 +340,8 @@
 | whenever equipped creature attacks alone, defending player loses N life and you gain N life. | 1 | Reaper's Talisman | afr |
 | whenever you complete a dungeon, create a N/N green wolf creature token. | 1 | Varis, Silverymoon Ranger | afr |
 | whenever you complete a dungeon, you may return ~ from your graveyard to your hand. | 1 | Dungeon Crawler | afr |
-| whenever ~ deals combat damage to a player, exile up to that many target cards from their graveyard. put a +N/+N counter on ~ for each creature card exiled ~. y | 1 | Froghemoth | afr |
 | {M}, exile ~ and artifacts you control named eye of vecna and hand of vecna: create vecna, a legendary N/N black zombie god creature token with indestructible a | 1 | The Book of Vile Darkness | afr |
 | {M}, {M}: ~ deals damage equal to the number of goblins that entered the battlefield under your control ~ to any target. | 1 | Hobgoblin Bandit Lord | afr |
-| {M}{M}, {M}: search your library for a creature card with mana value equal to the number of harmony counters on ~, reveal it, and put it into your hand. if that | 1 | Instrument of the Bards | afr |
 | {M}{M}: until end of turn, ~ has base power and toughness N/N, gains trample, and isn't a human. | 1 | Werewolf Pack Leader | afr |
 | {M}{M}{M}, {M}, exile ~: put an enlightened counter on target angel. it gains "..." activate only as a sorcery. | 1 | The Book of Exalted Deeds | afr |
 | {M}{M}{M}: double targ nar's power and toughness until end of turn. | 1 | Targ Nar, Demon-Fang Gnoll | afr |

@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 69 | 27.7% |
+| Tested | 71 | 28.5% |
 | Works (untested) | 130 | 52.2% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 50 | 20.1% |
+| Not working | 48 | 19.3% |
 
 ## Cards needing work
 
@@ -36,7 +36,6 @@
 | Deathbonnet Sprout // Deathbonnet Hulk | silent | At the beginning of your upkeep, you may exile a card from a graveyard. If a creature card was exiled this way, put a +1/+1 counter on this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Fading Hope | silent | Return target creature to its owner's hand. If its mana value was 3 or less, scry 1. (Look at the top card of your library. You may put that card on the bottom. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Florian, Voldaren Scion | silent | At the beginning of each of your postcombat main phases, look at the top X cards of your library, where X is the total amount of life your opponents lost this t | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Ghoulcaller's Harvest | silent | Create X 2/2 black Zombie creature tokens with decayed, where X is half the number of creature cards in your graveyard, rounded up. (A creature with decayed can | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Gisa, Glorious Resurrector | silent | At the beginning of your upkeep, put all creature cards exiled with Gisa onto the battlefield under your control. They gain decayed. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Harvesttide Sentry | silent | Coven — At the beginning of combat on your turn, if you control three or more creatures with different powers, this creature can't be blocked by creatures with  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Hostile Hostel // Creeping Inn | silent | Whenever this creature attacks, you may exile a creature card from your graveyard. If you do, each opponent loses X life and you gain X life, where X is the num | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -61,7 +60,6 @@
 | Turn the Earth | silent | Choose up to three target cards in graveyards. The owners of those cards shuffle them into their libraries. You gain 2 life. Flashback {1}{G} (You may cast this | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Unnatural Growth | silent | At the beginning of each combat, double the power and toughness of each creature you control until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Village Watch // Village Reavers | silent | Wolves and Werewolves you control have haste. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Willow Geist | silent | When this creature dies, you gain life equal to its power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Bloodline Culling | notice | Choose one — • Target creature gets -5/-5 until end of turn. • Creature tokens get -2/-2 until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Bloodthirsty Adversary | notice | When this creature enters, you may pay {2}{R} any number of times. When you pay this cost one or more times, put that many +1/+1 counters on this creature, then | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Dire-Strain Rampage | notice | Destroy target artifact, enchantment, or land. If a land was destroyed this way, its controller may search their library for up to two basic land cards, put the | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -210,7 +208,7 @@
 ## Fully supported
 
 <details>
-<summary>69 cards</summary>
+<summary>71 cards</summary>
 
 - Augur of Autumn
 - Baithook Angler // Hook-Haunt Drifter
@@ -242,6 +240,7 @@
 - Galedrifter // Waildrifter
 - Gavony Dawnguard
 - Geistflame Reservoir
+- Ghoulcaller's Harvest
 - Graveyard Trespasser // Graveyard Glutton
 - Grizzly Ghoul
 - Haunted Ridge
@@ -280,6 +279,7 @@
 - Tavern Ruffian // Tavern Smasher
 - Vampire Socialite
 - Vengeful Strangler // Strangling Grasp
+- Willow Geist
 - Wrenn and Seven
 
 </details>
@@ -301,7 +301,6 @@
 | at the beginning of your upkeep, you may exile a card from a graveyard. if a creature card was exiled ~, put a +N/+N counter on ~. | 1 | Deathbonnet Sprout // Deathbonnet Hulk | mid |
 | choose up to three target cards in graveyards. the owners of those cards shuffle them into their libraries. you gain N life. flashback {M}{M} (you may cast ~ fr | 1 | Turn the Earth | mid |
 | choose up to two target creature cards in your graveyard. an opponent chooses one of them. return that card to your hand. return the other to the battlefield un | 1 | Wake to Slaughter | mid |
-| create N N/N black zombie creature tokens with decayed, where N is half the number of creature cards in your graveyard, rounded up. (a creature with decayed can | 1 | Ghoulcaller's Harvest | mid |
 | destroy target artifact, enchantment, or land. if a land was destroyed ~, its controller may search their library for up to two basic land cards, put them onto  | 1 | Dire-Strain Rampage | mid |
 | destroy target creature or planeswalker. its controller investigates. (they create a clue token. it's an artifact with "...") | 1 | Fateful Absence | mid |
 | exile target nonlegendary creature, then return it to the battlefield under its owner's control. if it entered under your control, put a +N/+N counter on it. ot | 1 | Hallowed Respite | mid |
@@ -315,7 +314,6 @@
 | target creature gets +N/+N until end of turn. if it's a human, instead it gets +N/+N and gains indestructible until end of turn. | 1 | Flare of Faith | mid |
 | target creature you control gets +N/+N and gains lifelink until end of turn. when that creature dies ~, create a N/N white spirit creature token with flying. | 1 | Blessed Defiance | mid |
 | up to two target creatures can't block ~. flashback {M}{M} (you may cast ~ from your graveyard for its flashback cost. then exile it.) | 1 | Abandon the Post | mid |
-| when ~ dies, you gain life equal to its power. | 1 | Willow Geist | mid |
 | when ~ enters, create two N/N black zombie creature tokens with decayed. when you do, exile up to two target cards from graveyards. | 1 | Diregraf Horde | mid |
 | when ~ enters, each creature gets -N/-N until end of turn. | 1 | The Meathook Massacre | mid |
 | when ~ enters, if enchanted creature is a wolf or werewolf, untap that creature. | 1 | Howl of the Hunt | mid |

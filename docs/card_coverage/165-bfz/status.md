@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 36 | 15.9% |
-| Works (untested) | 169 | 74.8% |
+| Tested | 38 | 16.8% |
+| Works (untested) | 170 | 75.2% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 21 | 9.3% |
+| Not working | 18 | 8.0% |
 
 ## Cards needing work
 
@@ -35,16 +35,13 @@
 | Fertile Thicket | silent | When this land enters, you may look at the top five cards of your library. If you do, reveal up to one basic land card from among them, then put that card on to | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Gideon, Ally of Zendikar | silent | +1: Until end of turn, Gideon becomes a 5/5 Human Soldier Ally creature with indestructible that's still a planeswalker. Prevent all damage that would be dealt  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Grip of Desolation | silent | Devoid (This card has no color.) Exile target creature and target land. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Infuse with the Elements | silent | Converge — Put X +1/+1 counters on target creature, where X is the number of colors of mana spent to cast this spell. That creature gains trample until end of t | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Munda, Ambush Leader | silent | Rally — Whenever Munda or another Ally you control enters, you may look at the top four cards of your library. If you do, reveal any number of Ally cards from a | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Quarantine Field | silent | When this enchantment enters, for each isolation counter on it, exile up to one target nonland permanent an opponent controls until this enchantment leaves the  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Silent Skimmer | silent | Whenever this creature attacks, defending player loses 2 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sire of Stagnation | silent | Whenever a land an opponent controls enters, that player exiles the top two cards of their library and you draw two cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Skyline Cascade | silent | When this land enters, target creature an opponent controls doesn't untap during its controller's next untap step. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Slab Hammer | silent | Whenever equipped creature attacks, you may return a land you control to its owner's hand. If you do, the creature gets +2/+2 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Transgress the Mind | silent | Devoid (This card has no color.) Target player reveals their hand. You choose a card from it with mana value 3 or greater and exile that card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Zada, Hedron Grinder | silent | Whenever you cast an instant or sorcery spell that targets only Zada, copy that spell for each other creature you control that the spell could target. Each copy | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Barrage Tyrant | notice | {2}{R}, Sacrifice another colorless creature: This creature deals damage equal to the sacrificed creature's power to any target. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Emeria Shepherd | notice | Landfall — Whenever a land you control enters, you may return target nonland permanent card from your graveyard to your hand. If that land is a Plains, you may  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Unnatural Aggression | notice | Devoid (This card has no color.) Target creature you control fights target creature an opponent controls. If the creature an opponent controls would die this tu | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Adverse Conditions | handled | Devoid (This card has no color.) Tap up to two target creatures. Those creatures don't untap during their controller's next untap step. Create a 1/1 colorless E | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -114,6 +111,7 @@
 | Hero of Goma Fada | handled | Rally — Whenever this creature or another Ally you control enters, creatures you control gain indestructible until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Horribly Awry | handled | Devoid (This card has no color.) Counter target creature spell with mana value 4 or less. If that spell is countered this way, exile it instead of putting it in | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Incubator Drone | handled | When this creature enters, create a 1/1 colorless Eldrazi Scion creature token. It has "Sacrifice this token: Add {C}." | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Infuse with the Elements | handled | Converge — Put X +1/+1 counters on target creature, where X is the number of colors of mana spent to cast this spell. That creature gains trample until end of t | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Jaddi Offshoot | handled | Landfall — Whenever a land you control enters, you gain 1 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Kalastria Healer | handled | Rally — Whenever this creature or another Ally you control enters, each opponent loses 1 life and you gain 1 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Kalastria Nightwatch | handled | Whenever you gain life, this creature gains flying until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -220,10 +218,11 @@
 ## Fully supported
 
 <details>
-<summary>36 cards</summary>
+<summary>38 cards</summary>
 
 - Akoum Hellkite
 - Aligned Hedron Network
+- Barrage Tyrant
 - Blisterpod
 - Breaker of Armies
 - Canopy Vista
@@ -240,6 +239,7 @@
 - Lithomancer's Focus
 - Murk Strider
 - Painful Truths
+- Quarantine Field
 - Radiant Flames
 - Reckless Cohort
 - Roilmage's Trick
@@ -265,7 +265,7 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| Converge | 3 | Bring to Light, Exert Influence, Infuse with the Elements | bfz |
+| Converge | 2 | Bring to Light, Exert Influence | bfz |
 | Landfall | 1 | Emeria Shepherd | bfz |
 | Rally | 1 | Munda, Ambush Leader | bfz |
 | +N: until end of turn, gideon becomes a N/N human soldier ally creature with indestructible that's still a planeswalker. prevent all damage that would be dealt  | 1 | Gideon, Ally of Zendikar | bfz |
@@ -273,7 +273,6 @@
 | devoid (~ has no color.) exile target nonbasic land. search its controller's graveyard, hand, and library for any number of cards with the same name as that lan | 1 | Crumble to Dust | bfz |
 | devoid (~ has no color.) target creature you control fights target creature an opponent controls. if the creature an opponent controls would die ~, exile it ins | 1 | Unnatural Aggression | bfz |
 | devoid (~ has no color.) target player reveals their hand. you choose a card from it with mana value N or greater and exile that card. | 1 | Transgress the Mind | bfz |
-| when ~ enters, for each isolation counter on it, exile up to one target nonland permanent an opponent controls until ~ leaves the battlefield. | 1 | Quarantine Field | bfz |
 | when ~ enters, target creature an opponent controls doesn"..."s next untap step. | 1 | Skyline Cascade | bfz |
 | when ~ enters, you may look at the top five cards of your library. if you do, reveal up to one basic land card from among them, then put that card on top of you | 1 | Fertile Thicket | bfz |
 | whenever a land an opponent controls enters, that player exiles the top two cards of their library and you draw two cards. | 1 | Sire of Stagnation | bfz |
@@ -282,7 +281,6 @@
 | whenever you cast an instant or sorcery spell that targets only zada, copy that spell for each other creature you control that the spell could target. each copy | 1 | Zada, Hedron Grinder | bfz |
 | whenever ~ attacks, defending player exiles two permanents they control. | 1 | Bane of Bala Ged | bfz |
 | whenever ~ attacks, defending player loses N life. | 1 | Silent Skimmer | bfz |
-| {M}{M}, sacrifice another colorless creature: ~ deals damage equal to the sacrificed creature's power to any target. | 1 | Barrage Tyrant | bfz |
 | {M}{M}{M}: draw a card. each opponent exiles the top card of their library. | 1 | Fathom Feeder | bfz |
 
 ## Notes

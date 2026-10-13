@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 35 | 19.2% |
+| Tested | 38 | 20.9% |
 | Works (untested) | 110 | 60.4% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 37 | 20.3% |
+| Not working | 34 | 18.7% |
 
 ## Cards needing work
 
@@ -32,7 +32,6 @@
 | Chandra's Firemaw | silent | When this creature enters, you may search your library and/or graveyard for a card named Chandra, Flame's Catalyst, reveal it, and put it into your hand. If you | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Chandra, Flame's Catalyst | silent | −8: Discard your hand, then draw seven cards. Until end of turn, you may cast spells from your hand without paying their mana costs. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Chandra, Heart of Fire | silent | +1: Discard your hand, then exile the top three cards of your library. Until end of turn, you may play cards exiled this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Conclave Mentor | silent | When this creature dies, you gain life equal to its power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Discontinuity | silent | During your turn, this spell costs {2}{U}{U} less to cast. End the turn. (Exile all spells and abilities from the stack, including this card. The player whose t | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Drowsing Tyrannodon | silent | As long as you control a creature with power 4 or greater, this creature can attack as though it didn't have defender. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Experimental Overload | silent | Create an X/X blue and red Weird creature token, where X is the number of instant and sorcery cards in your graveyard. Then you may return an instant or sorcery | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -40,12 +39,10 @@
 | Gadrak, the Crown-Scourge | silent | At the beginning of your end step, create a Treasure token for each nontoken creature that died this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Garruk's Harbinger | silent | Whenever this creature deals combat damage to a player or planeswalker, look at that many cards from the top of your library. You may reveal a creature card or  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Garruk's Warsteed | silent | When this creature enters, you may search your library and/or graveyard for a card named Garruk, Savage Herald, reveal it, and put it into your hand. If you sea | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Gloom Sower | silent | Whenever this creature becomes blocked by a creature, that creature's controller loses 2 life and you gain 2 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Gnarled Sage | silent | As long as you've drawn two or more cards this turn, this creature gets +0/+2 and has vigilance. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Goremand | silent | When this creature enters, each opponent sacrifices a creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Idol of Endurance | silent | When this artifact enters, exile all creature cards with mana value 3 or less from your graveyard until this artifact leaves the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Liliana's Scrounger | silent | At the beginning of each end step, if a creature died this turn, you may put a loyalty counter on a Liliana planeswalker you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Liliana, Death Mage | silent | −7: Target opponent loses 2 life for each creature card in their graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Malefic Scythe | silent | Equipped creature gets +1/+1 for each soul counter on this Equipment. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Necromentia | silent | Choose a card name other than a basic land card name. Search target opponent's graveyard, hand, and library for any number of cards with that name and exile the | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Seasoned Hallowblade | silent | Discard a card: Tap this creature. It gains indestructible until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -177,7 +174,7 @@
 ## Fully supported
 
 <details>
-<summary>35 cards</summary>
+<summary>38 cards</summary>
 
 - Archfiend's Vessel
 - Barrin, Tolarian Archmage
@@ -187,15 +184,18 @@
 - Chandra's Incinerator
 - Chromatic Orrery
 - Chrome Replicator
+- Conclave Mentor
 - Conspicuous Snoop
 - Demonic Embrace
 - Elder Gargaroth
 - Enthralling Hold
+- Gloom Sower
 - Griffin Aerie
 - Hooded Blightfang
 - Kinetic Augur
 - Leafkin Avenger
 - Liliana's Standard Bearer
+- Liliana, Death Mage
 - Liliana, Waker of the Dead
 - Mazemind Tome
 - Nine Lives
@@ -242,7 +242,6 @@
 | until end of turn, target creature gets +N/+N and another target creature gets -N/-N. | 1 | Rookie Mistake | m21 |
 | when niambi enters, you may return another target creature you control to its owner"..."s mana value. | 1 | Niambi, Esteemed Speaker | m21 |
 | when ~ dies, you gain N life for each creature that died ~. | 1 | Canopy Stalker | m21 |
-| when ~ dies, you gain life equal to its power. | 1 | Conclave Mentor | m21 |
 | when ~ enters, each opponent sacrifices a creature. | 1 | Goremand | m21 |
 | when ~ enters, exile all creature cards with mana value N or less from your graveyard until ~ leaves the battlefield. | 1 | Idol of Endurance | m21 |
 | when ~ enters, you may sacrifice a creature or discard a creature card. if you do, draw a card. | 1 | Crypt Lurker | m21 |
@@ -251,12 +250,10 @@
 | when ~ enters, you may search your library and/or graveyard for a card named teferi, timeless voyager, reveal it, and put it into your hand. if you search your  | 1 | Teferi's Wavecaster | m21 |
 | when ~ enters, you may search your library for a card named alpine watchdog and/or a card named igneous cur, reveal them, put them into your hand, then shuffle. | 1 | Alpine Houndmaster | m21 |
 | whenever ~ attacks, you may tap any number of untapped creatures you control. ~ gets +N/+N until end of turn for each creature tapped ~. | 1 | Siege Striker | m21 |
-| whenever ~ becomes blocked by a creature, that creature's controller loses N life and you gain N life. | 1 | Gloom Sower | m21 |
 | whenever ~ deals combat damage to a player or planeswalker, look at that many cards from the top of your library. you may reveal a creature card or garruk plane | 1 | Garruk's Harbinger | m21 |
 | ~ gets +N/+N, where N is the greatest power among creature cards in your graveyard. | 1 | Carrion Grub | m21 |
 | −N: discard your hand, then draw seven cards. until end of turn, you may cast spells from your hand without paying their mana costs. | 1 | Chandra, Flame's Catalyst | m21 |
 | −N: each creature target opponent controls phases out. until the end of your next turn, they can't phase in. | 1 | Teferi, Timeless Voyager | m21 |
-| −N: target opponent loses N life for each creature card in their graveyard. | 1 | Liliana, Death Mage | m21 |
 | −N: whenever one or more nontoken creatures attack ~, create that many N/N white soldier creature tokens that are tapped and attacking. | 1 | Basri Ket | m21 |
 
 ## Notes

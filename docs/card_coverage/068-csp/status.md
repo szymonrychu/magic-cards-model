@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 33 | 23.1% |
-| Works (untested) | 67 | 46.9% |
+| Tested | 36 | 25.2% |
+| Works (untested) | 68 | 47.6% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 43 | 30.1% |
+| Not working | 39 | 27.3% |
 
 ## Cards needing work
 
@@ -35,7 +35,6 @@
 | Counterbalance | silent | Whenever an opponent casts a spell, you may reveal the top card of your library. If you do, counter that spell if it has the same mana value as the revealed car | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Darien, King of Kjeldor | silent | Whenever you're dealt damage, you may create that many 1/1 white Soldier creature tokens. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Dark Depths | silent | When Dark Depths has no ice counters on it, sacrifice it. If you do, create Marit Lage, a legendary 20/20 black Avatar creature token with flying and indestruct | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
-| Diamond Faerie | silent | {1}{S}: Snow creatures you control get +1/+1 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Fury of the Horde | silent | You may exile two red cards from your hand rather than pay this spell's mana cost. Untap all creatures that attacked this turn. After this main phase, there is  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Garza's Assassin | silent | Recover | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Glacial Plating | silent | Enchanted creature gets +3/+3 for each age counter on this Aura. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -49,10 +48,8 @@
 | Kjeldoran Gargoyle | silent | Whenever this creature deals damage, you gain that much life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Krovikan Rot | silent | Recover | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Lightning Storm | silent | Lightning Storm deals X damage to any target, where X is 3 plus the number of charge counters on Lightning Storm. Discard a land card: Put two charge counters o | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Magmatic Core | silent | At the beginning of your end step, this enchantment deals X damage divided as you choose among any number of target creatures, where X is the number of age coun | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Resize | silent | Recover | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Rimehorn Aurochs | silent | {2}{S}: Target creature blocks target creature this turn if able. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Rite of Flame | silent | Add {R}{R}, then add {R} for each card named Rite of Flame in each graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Rune Snag | silent | Counter target spell unless its controller pays {2} plus an additional {2} for each card named Rune Snag in each graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Scrying Sheets | silent | {1}{S}, {T}: Look at the top card of your library. If that card is snow, you may reveal it and put it into your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Shape of the Wiitigo | silent | At the beginning of your upkeep, put a +1/+1 counter on enchanted creature if it attacked or blocked since your last upkeep. Otherwise, remove a +1/+1 counter f | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -68,7 +65,6 @@
 | Blizzard Specter | notice | Whenever this creature deals combat damage to a player, choose one — • That player returns a permanent they control to its owner's hand. • That player discards  | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Ohran Viper | notice | Whenever this creature deals combat damage to a creature, destroy that creature at end of combat. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Thermal Flux | notice | Choose one — • Target nonsnow permanent becomes snow until end of turn. • Target snow permanent isn't snow until end of turn. Draw a card at the beginning of th | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Vanish into Memory | notice | Exile target creature. You draw cards equal to that creature's power. At the beginning of your next upkeep, return that card to the battlefield under its owner' | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Arctic Flats | handled | This land enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Aurochs Herd | handled | When this creature enters, you may search your library for an Aurochs card, reveal it, put it into your hand, then shuffle. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Balduvian Frostwaker | handled | {U}, {T}: Target snow land becomes a 2/2 blue Elemental creature with flying. It's still a land. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -106,6 +102,7 @@
 | Krovikan Mist | handled | Krovikan Mist's power and toughness are each equal to the number of Illusions on the battlefield. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Krovikan Whispers | handled | You control enchanted creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Lightning Serpent | handled | This creature enters with X +1/+0 counters on it. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Magmatic Core | handled | At the beginning of your end step, this enchantment deals X damage divided as you choose among any number of target creatures, where X is the number of age coun | the engine reads this text and performs it | Y/-/- | not_tested |
 | Martyr of Bones | handled | {1}, Reveal X black cards from your hand, Sacrifice this creature: Exile up to X target cards from a single graveyard. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Martyr of Spores | handled | {1}, Reveal X green cards from your hand, Sacrifice this creature: Target creature gets +X/+X until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Mouth of Ronom | handled | {4}{S}, {T}, Sacrifice this land: It deals 4 damage to target creature. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -140,13 +137,14 @@
 ## Fully supported
 
 <details>
-<summary>33 cards</summary>
+<summary>36 cards</summary>
 
 - Adarkar Windform
 - Allosaurus Rider
 - Balduvian Warlord
 - Braid of Fire
 - Cover of Winter
+- Diamond Faerie
 - Feast of Flesh
 - Freyalise's Radiance
 - Goblin Furrier
@@ -164,6 +162,7 @@
 - Rimefeather Owl
 - Rimescale Dragon
 - Rimewind Cryomancer
+- Rite of Flame
 - Ronom Hulk
 - Ronom Serpent
 - Skred
@@ -172,6 +171,7 @@
 - Swift Maneuver
 - Thrumming Stone
 - Tresserhorn Skyknight
+- Vanish into Memory
 - Vexing Sphinx
 - Void Maw
 - Wilderness Elemental
@@ -185,14 +185,11 @@
 | recover | 7 | Controvert, Garza's Assassin, Grim Harvest, Icefall, Krovikan Rot | csp |
 | ripple | 5 | Surging Aether, Surging Dementia, Surging Flame, Surging Might, Surging Sentinels | csp |
 | Choose one | 1 | Thermal Flux | csp |
-| add {M}{M}, then add {M} for each card named ~ in each graveyard. | 1 | Rite of Flame | csp |
 | as long as ~ has an ice counter on it, prevent all combat damage it would deal and it has defender. | 1 | Woolly Razorback | csp |
 | at the beginning of each end step, each player gains control of all nontoken permanents they own. | 1 | Brooding Saurian | csp |
-| at the beginning of your end step, ~ deals N damage divided as you choose among any number of target creatures, where N is the number of age counters on it. | 1 | Magmatic Core | csp |
 | at the beginning of your upkeep, put a +N/+N counter on enchanted creature if it attacked or blocked since your last upkeep. otherwise, remove a +N/+N counter f | 1 | Shape of the Wiitigo | csp |
 | counter target spell unless its controller pays {M} plus an additional {M} for each card named ~ in each graveyard. | 1 | Rune Snag | csp |
 | enchanted creature gets +N/+N for each age counter on ~. | 1 | Glacial Plating | csp |
-| exile target creature. you draw cards equal to that creature"..."s control. if you do, discard cards equal to that creature's toughness. | 1 | Vanish into Memory | csp |
 | remove a healing counter from ~: prevent the next N damage that would be dealt to ~ ~. | 1 | Ursine Fylgja | csp |
 | when ~ enters, sacrifice it unless you sacrifice five lands. | 1 | Jokulmorder | csp |
 | when ~ has no ice counters on it, sacrifice it. if you do, create marit lage, a legendary N/N black avatar creature token with flying and indestructible. | 1 | Dark Depths | csp |
@@ -212,7 +209,6 @@
 | {M}: target artifact creature's controller sacrifices it. that player may search their library for a noncreature artifact card, put it onto the battlefield, the | 1 | Arcum Dagsson | csp |
 | {M}: when target creature other than ~ dies ~, return that card to the battlefield under your control. | 1 | Adarkar Valkyrie | csp |
 | {M}{M}, {M}: look at the top card of your library. if that card is snow, you may reveal it and put it into your hand. | 1 | Scrying Sheets | csp |
-| {M}{M}: snow creatures you control get +N/+N until end of turn. | 1 | Diamond Faerie | csp |
 | {M}{M}: target creature blocks target creature ~ if able. | 1 | Rimehorn Aurochs | csp |
 | ~ deals N damage to any target, where N is N plus the number of charge counters on ~. discard a land card: put two charge counters on ~. you may choose a new ta | 1 | Lightning Storm | csp |
 

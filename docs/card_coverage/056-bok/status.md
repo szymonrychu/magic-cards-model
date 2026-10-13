@@ -17,16 +17,15 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 22 | 13.8% |
-| Works (untested) | 84 | 52.8% |
+| Tested | 24 | 15.1% |
+| Works (untested) | 85 | 53.5% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 53 | 33.3% |
+| Not working | 50 | 31.4% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
-| Blademane Baku | silent | {1}, Remove X ki counters from this creature: For each counter removed, this creature gets +2/+0 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Blessing of Leeches | silent | {0}: Regenerate enchanted creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Body of Jukai | silent | Soulshift | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Budoka Pupil // Ichiga, Who Topples Oaks | silent | At the beginning of the end step, if there are two or more ki counters on this creature, you may flip it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -65,7 +64,6 @@
 | Patron of the Orochi | silent | {T}: Untap all Forests and all green creatures. Activate only once each turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Pus Kami | silent | Soulshift | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Reduce to Dreams | silent | Return all artifacts and enchantments to their owners' hands. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Ronin Warclub | silent | Whenever a creature you control enters, attach this Equipment to that creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Shimmering Glasskite | silent | Whenever this creature becomes the target of a spell or ability for the first time each turn, counter that spell or ability. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Shirei, Shizo's Caretaker | silent | Whenever a creature with power 1 or less is put into your graveyard from the battlefield, you may return that card to the battlefield at the beginning of the ne | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Shizuko, Caller of Autumn | silent | At the beginning of each player's upkeep, that player adds {G}{G}{G}. Until end of turn, they don't lose this mana as steps and phases end. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -76,7 +74,6 @@
 | Walker of Secret Ways | silent | Whenever this creature deals combat damage to a player, look at that player's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Ward of Piety | silent | {1}{W}: The next 1 damage that would be dealt to enchanted creature this turn is dealt to any target instead. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Yukora, the Prisoner | silent | When Yukora leaves the battlefield, sacrifice all non-Ogre creatures you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Call for Blood | notice | As an additional cost to cast this spell, sacrifice a creature. Target creature gets -X/-X until end of turn, where X is the sacrificed creature's power. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Kodama of the Center Tree | notice | Kodama of the Center Tree has soulshift X, where X is the number of Spirits you control. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Unchecked Growth | notice | Target creature gets +4/+4 until end of turn. If it's a Spirit, it gains trample until end of turn. | unparsed remainder: If it's a Spirit, it gains trample until end of turn. | Y/-/- | not_working |
 | Akki Blizzard-Herder | handled | When this creature dies, each player sacrifices a land of their choice. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -131,6 +128,7 @@
 | Ribbons of the Reikai | handled | Draw a card for each Spirit you control. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Roar of Jukai | handled | If you control a Forest, each blocked creature gets +2/+2 until end of turn. Splice onto Arcane—An opponent gains 5 life. (As you cast an Arcane spell, you may  | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ronin Cliffrider | handled | Whenever this creature attacks, you may have it deal 1 damage to each creature defending player controls. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Ronin Warclub | handled | Equipped creature gets +2/+1. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Sakura-Tribe Springcaller | handled | At the beginning of your upkeep, add {G}. Until end of turn, you don't lose this mana as steps and phases end. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Scaled Hulk | handled | Whenever you cast a Spirit or Arcane spell, this creature gets +2/+2 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Scourge of Numai | handled | At the beginning of your upkeep, you lose 2 life if you don't control an Ogre. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -167,10 +165,12 @@
 ## Fully supported
 
 <details>
-<summary>22 cards</summary>
+<summary>24 cards</summary>
 
 - Aura Barbs
 - Bile Urchin
+- Blademane Baku
+- Call for Blood
 - Clash of Realities
 - Disrupting Shoal
 - Flames of the Blood Hand
@@ -202,7 +202,6 @@
 | at the beginning of the end step, if there are two or more ki counters on ~, you may flip it. | 5 | Budoka Pupil // Ichiga, Who Topples Oaks, Callow Jushi // Jaraku the Interloper, Cunning Bandit // Azamuki, Treachery Incarnate, Faithful Squire // Kaiso, Memory of Loyalty, Hired Muscle // Scarmaker | bok |
 | offering | 3 | Patron of the Akki, Patron of the Kitsune, Patron of the Moon | bok |
 | whenever ~ becomes the target of a spell or ability for the first time each turn, counter that spell or ability. | 2 | Jetting Glasskite, Shimmering Glasskite | bok |
-| as an additional cost to cast ~, sacrifice a creature. target creature gets -N/-N until end of turn, where N is the sacrificed creature's power. | 1 | Call for Blood | bok |
 | at the beginning of each player"..."t lose ~ as steps and phases end. | 1 | Shizuko, Caller of Autumn | bok |
 | at the beginning of your upkeep, sacrifice chisei unless you remove a counter from a permanent you control. | 1 | Chisei, Heart of Oceans | bok |
 | counter target spell. that spell's controller reveals their hand, then discards each card with the same name as a card spliced onto that spell. | 1 | Minamo's Meddling | bok |
@@ -214,7 +213,6 @@
 | when iwamori enters, each opponent may put a legendary creature card from their hand onto the battlefield. | 1 | Iwamori of the Open Fist | bok |
 | when yukora leaves the battlefield, sacrifice all non-ogre creatures you control. | 1 | Yukora, the Prisoner | bok |
 | whenever a creature with power N or less is put into your graveyard from the battlefield, you may return that card to the battlefield at the beginning of the ne | 1 | Shirei, Shizo's Caretaker | bok |
-| whenever a creature you control enters, attach ~ to that creature. | 1 | Ronin Warclub | bok |
 | whenever a permanent is put into an opponent's graveyard, that player loses N life. | 1 | Patron of the Nezumi | bok |
 | whenever a player casts a spell, tap ~. | 1 | Ogre Recluse | bok |
 | whenever equipped creature deals damage to a creature, tap that creature. that creature doesn"..."s untap step for as long as ~ remains on the battlefield. | 1 | Neko-Te | bok |
@@ -225,7 +223,6 @@
 | whenever ~ is dealt damage, you gain that much life. | 1 | Kami of the Honored Dead | bok |
 | you and target opponent each gain control of all creatures the other controls until end of turn. untap those creatures. those creatures gain haste until end of  | 1 | Twist Allegiance | bok |
 | {M}, discard a spirit or arcane card: ~ becomes an N/N cat artifact creature until end of turn, where N is the discarded card's mana value. | 1 | Slumbering Tora | bok |
-| {M}, remove N ki counters from ~: for each counter removed, ~ gets +N/+N until end of turn. | 1 | Blademane Baku | bok |
 | {M}: enchanted forest becomes a N/N green spirit creature until end of turn. it's still a land. | 1 | Genju of the Cedars | bok |
 | {M}: enchanted island becomes a N/N blue spirit creature with flying until end of turn. it's still a land. | 1 | Genju of the Falls | bok |
 | {M}: enchanted land becomes a legendary N/N spirit creature with trample until end of turn. it's still a land. | 1 | Genju of the Realm | bok |

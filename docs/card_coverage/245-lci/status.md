@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 82 | 29.8% |
+| Tested | 84 | 30.5% |
 | Works (untested) | 140 | 50.9% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 53 | 19.3% |
+| Not working | 51 | 18.5% |
 
 ## Cards needing work
 
@@ -33,7 +33,6 @@
 | Belligerent Yearling | silent | Whenever another Dinosaur you control enters, you may have this creature's base power become equal to that creature's power until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Brass's Tunnel-Grinder // Tecutlan, the Searing Rift | silent | Whenever you cast a permanent spell using mana produced by Tecutlan, discover X, where X is that spell's mana value. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Cavern Stomper | silent | {3}{G}: This creature can't be blocked by creatures with power 2 or less this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Chupacabra Echo | silent | Fathomless descent — When this creature enters, target creature an opponent controls gets -X/-X until end of turn, where X is the number of permanent cards in y | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Compass Gnome | silent | When this creature enters, you may search your library for a basic land card or Cave card, reveal it, then shuffle and put that card on top. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Contested Game Ball | silent | Whenever you're dealt combat damage, the attacking player gains control of this artifact and untaps it. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
 | Curator of Sun's Creation | silent | Whenever you discover, discover again for the same value. This ability triggers only once each turn. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
@@ -62,7 +61,6 @@
 | Subterranean Schooner | silent | Whenever this Vehicle attacks, target creature that crewed it this turn explores. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Sunbird Standard // Sunbird Effigy | silent | Sunbird Effigy's power and toughness are each equal to the number of colors among the exiled cards used to craft it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Tarrian's Journal // The Tomb of Aclazotz | silent | {T}: You may cast a creature spell from your graveyard this turn. If you do, it enters with a finality counter on it and is a Vampire in addition to its other t | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Terror Tide | silent | Fathomless descent — All creatures get -X/-X until end of turn, where X is the number of permanent cards in your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | The Belligerent | silent | Whenever The Belligerent attacks, create a Treasure token. Until end of turn, you may look at the top card of your library any time, and you may play lands and  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | The Everflowing Well // The Myriad Pools | silent | Whenever you cast a permanent spell using mana produced by The Myriad Pools, up to one other target permanent you control becomes a copy of that spell until end | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | The Skullspore Nexus | silent | Whenever one or more nontoken creatures you control die, create a green Fungus Dinosaur creature token with base power and toughness each equal to the total pow | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -223,7 +221,7 @@
 ## Fully supported
 
 <details>
-<summary>82 cards</summary>
+<summary>84 cards</summary>
 
 - Abuelo's Awakening
 - Akawalli, the Seething Tower
@@ -240,6 +238,7 @@
 - Cartographer's Companion
 - Cavernous Maw
 - Chimil, the Inner Sun
+- Chupacabra Echo
 - Clay-Fired Bricks // Cosmium Kiln
 - Coati Scavenger
 - Cosmium Confluence
@@ -291,6 +290,7 @@
 - Starving Revenant
 - Sunken Citadel
 - Tendril of the Mycotyrant
+- Terror Tide
 - The Ancient One
 - The Millennium Calendar
 - The Mycotyrant
@@ -314,8 +314,8 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| Fathomless descent | 3 | Chupacabra Echo, Squirming Emergence, Terror Tide | lci |
 | explore | 3 | Deepfathom Echo, Defossilize, Glowcap Lantern | lci |
+| Fathomless descent | 1 | Squirming Emergence | lci |
 | as long as an artifact entered the battlefield under your control ~, ~ can attack as though it didn't have defender. | 1 | Shipwreck Sentry | lci |
 | as long as ~ has three or more counters on it, it has flying and vigilance. | 1 | Warden of the Inner Sky | lci |
 | at the beginning of your end step, if you descended ~, each opponent may discard a card or sacrifice a permanent of their choice. zoyowa deals N damage to each  | 1 | Zoyowa Lava-Tongue | lci |

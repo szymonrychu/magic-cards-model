@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 55 | 20.6% |
-| Works (untested) | 138 | 51.7% |
+| Tested | 56 | 21.0% |
+| Works (untested) | 139 | 52.1% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 74 | 27.7% |
+| Not working | 72 | 27.0% |
 
 ## Cards needing work
 
@@ -35,7 +35,6 @@
 | Bronze Cudgels | silent | {2}: Until end of turn, equipped creature gets +X/+0, where X is the number of times this ability has resolved this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Covert Technician | silent | Whenever this creature deals combat damage to a player, you may put an artifact card with mana value less than or equal to that damage from your hand onto the b | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Discover the Impossible | silent | Look at the top five cards of your library. Exile one of them face down and put the rest on the bottom of your library in a random order. You may cast the exile | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Dragonspark Reactor | silent | {4}, Sacrifice this artifact: It deals damage equal to the number of charge counters on it to target player and that much damage to up to one target creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Dramatist's Puppet | silent | When this creature enters, for each kind of counter on target permanent, put another counter of that kind on it or remove one from it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Eater of Virtue | silent | As long as a card exiled with Eater of Virtue has flying, equipped creature has flying. The same is true for first strike, double strike, deathtouch, haste, hex | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Eiganjo Uprising | silent | Create X 2/2 white Samurai creature tokens with vigilance. They gain menace and haste until end of turn. Each opponent creates X minus one 2/2 white Samurai cre | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -58,7 +57,6 @@
 | March of Burgeoning Life | silent | As an additional cost to cast this spell, you may exile any number of green cards from your hand. This spell costs {2} less to cast for each card exiled this wa | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | March of Reckless Joy | silent | As an additional cost to cast this spell, you may exile any number of red cards from your hand. This spell costs {2} less to cast for each card exiled this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Mechtitan Core | silent | {5}, Exile this Vehicle and four other artifact creatures and/or Vehicles you control: Create Mechtitan, a legendary 10/10 Construct artifact creature token wit | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Michiko's Reign of Truth // Portrait of Michiko | silent | I, II — Target creature gets +1/+1 until end of turn for each artifact and/or enchantment you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Mindlink Mech | silent | Whenever this Vehicle becomes crewed for the first time each turn, until end of turn, this Vehicle becomes a copy of target nonlegendary creature that crewed it | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Mirrorshell Crab | silent | Channel — {2}{U}, Discard this card: Counter target spell or ability unless its controller pays {3}. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Mobilizer Mech | silent | Whenever this Vehicle becomes crewed, up to one other target Vehicle you control becomes an artifact creature until end of turn. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
@@ -169,6 +167,7 @@
 | Lucky Offering | handled | Destroy target artifact with mana value 3 or less. You gain 3 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Master's Rebuke | handled | Target creature you control deals damage equal to its power to target creature or planeswalker you don't control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Mech Hangar | handled | {3}, {T}: Target Vehicle becomes an artifact creature until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Michiko's Reign of Truth // Portrait of Michiko | handled | I, II — Target creature gets +1/+1 until end of turn for each artifact and/or enchantment you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Mnemonic Sphere | handled | {1}{U}, Sacrifice this artifact: Draw two cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Moonfolk Puzzlemaker | handled | Whenever this creature becomes tapped, scry 1. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Moonsnare Specialist | handled | When this creature enters, return up to one target creature to its owner's hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -242,7 +241,7 @@
 ## Fully supported
 
 <details>
-<summary>55 cards</summary>
+<summary>56 cards</summary>
 
 - Boseiju, Who Endures
 - Brilliant Restoration
@@ -251,6 +250,7 @@
 - Colossal Skyturtle
 - Containment Construct
 - Crackling Emergence
+- Dragonspark Reactor
 - Eiganjo, Seat of the Empire
 - Experimental Synthesizer
 - Fable of the Mirror-Breaker // Reflection of Kiki-Jiki
@@ -335,7 +335,6 @@
 | return target creature or vehicle card from your graveyard to the battlefield. then put two +N/+N counters on that permanent if you control an artifact and an e | 1 | Okiba Salvage | neo |
 | return target permanent card from your graveyard to the battlefield, then distribute four +N/+N counters among any number of creatures and/or vehicles target pl | 1 | Invoke Justice | neo |
 | spells you cast cost {M} less to cast for each target. | 1 | Hinata, Dawn-Crowned | neo |
-| target creature gets +N/+N until end of turn for each artifact and/or enchantment you control. | 1 | Michiko's Reign of Truth // Portrait of Michiko | neo |
 | target creature gets +N/+N until end of turn, where N is the greatest mana value among permanents you control. untap it. | 1 | Boon of Boseiju | neo |
 | target creature gets +N/+N until end of turn. if it's an enchantment creature or legendary creature, instead put a +N/+N counter on it and it gets +N/+N until e | 1 | Regent's Authority | neo |
 | target creature gets -N/-N until end of turn. it gets an additional -N/-N until end of turn for each modified creature you controlled as you cast ~. (equipment, | 1 | Lethal Exploit | neo |
@@ -372,7 +371,6 @@
 | you may cast up to two instant and/or sorcery spells with total mana value N or less from your graveyard and/or hand without paying their mana costs. if those s | 1 | Invoke Calamity | neo |
 | {M}, exile ~ and four other artifact creatures and/or vehicles you control: create mechtitan, a legendary N/N construct artifact creature token with flying, vig | 1 | Mechtitan Core | neo |
 | {M}, sacrifice an artifact with mana value N: return target artifact card with mana value less than N from your graveyard to the battlefield. it gains haste unt | 1 | Scrap Welder | neo |
-| {M}, sacrifice ~: it deals damage equal to the number of charge counters on it to target player and that much damage to up to one target creature. | 1 | Dragonspark Reactor | neo |
 | {M}: until end of turn, equipped creature gets +N/+N, where N is the number of times ~ has resolved ~. | 1 | Bronze Cudgels | neo |
 | {M}{M}, {M}, return shigeki to its owner's hand: reveal the top four cards of your library. you may put a land card from among them onto the battlefield tapped. | 1 | Shigeki, Jukai Visionary | neo |
 | {M}{M}, {M}: exile the top card of your library. you may play that card ~. when you exile a nonland card ~, hidetsugu deals damage equal to the exiled card's ma | 1 | Hidetsugu, Devouring Chaos | neo |

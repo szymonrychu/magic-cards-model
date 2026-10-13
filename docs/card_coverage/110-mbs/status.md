@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 24 | 16.9% |
+| Tested | 25 | 17.6% |
 | Works (untested) | 101 | 71.1% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 17 | 12.0% |
+| Not working | 16 | 11.3% |
 
 ## Cards needing work
 
@@ -36,7 +36,6 @@
 | Magnetic Mine | silent | Whenever another artifact is put into a graveyard from the battlefield, this artifact deals 2 damage to that artifact's controller. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Mirrorworks | silent | Whenever another nontoken artifact you control enters, you may pay {2}. If you do, create a token that's a copy of that artifact. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Mitotic Manipulation | silent | Look at the top seven cards of your library. You may put one of those cards onto the battlefield if it has the same name as a permanent. Put the rest on the bot | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Phyrexian Rebirth | silent | Destroy all creatures, then create an X/X colorless Phyrexian Horror artifact creature token, where X is the number of creatures destroyed this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Praetor's Counsel | silent | Return all cards from your graveyard to your hand. Exile Praetor's Counsel. You have no maximum hand size for the rest of the game. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Spin Engine | silent | {R}: Target creature can't block this creature this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Spire Serpent | silent | Metalcraft — As long as you control three or more artifacts, this creature gets +2/+2 and can attack as though it didn't have defender. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -148,7 +147,7 @@
 ## Fully supported
 
 <details>
-<summary>24 cards</summary>
+<summary>25 cards</summary>
 
 - Accorder Paladin
 - Ardent Recruit
@@ -165,6 +164,7 @@
 - Lead the Stampede
 - Melira's Keepers
 - Phyrexian Hydra
+- Phyrexian Rebirth
 - Phyrexian Revoker
 - Rally the Forces
 - Septic Rats
@@ -184,7 +184,6 @@
 | Metalcraft | 1 | Spire Serpent | mbs |
 | at the beginning of your upkeep, you may have ~ become a copy of another target creature, except it has ~. | 1 | Cryptoplasm | mbs |
 | at the beginning of your upkeep, you may look at the top card of your library. you may cast it without paying its mana cost if it's an instant or sorcery spell. | 1 | Galvanoth | mbs |
-| destroy all creatures, then create an N/N colorless phyrexian horror artifact creature token, where N is the number of creatures destroyed ~. | 1 | Phyrexian Rebirth | mbs |
 | destroy target creature with flying. its controller gets a poison counter. | 1 | Pistus Strike | mbs |
 | look at the top seven cards of your library. you may put one of those cards onto the battlefield if it has the same name as a permanent. put the rest on the bot | 1 | Mitotic Manipulation | mbs |
 | put a -N/-N counter on each attacking creature. | 1 | Choking Fumes | mbs |

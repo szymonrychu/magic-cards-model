@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 27 | 14.8% |
+| Tested | 28 | 15.3% |
 | Works (untested) | 102 | 55.7% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 54 | 29.5% |
+| Not working | 53 | 29.0% |
 
 ## Cards needing work
 
@@ -47,7 +47,7 @@
 | Majestic Myriarch | silent | Majestic Myriarch's power and toughness are each equal to twice the number of creatures you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Manticore Eternal | silent | Afflict | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Merciless Eternal | silent | Afflict | no machine in the engine executes this keyword | Y/Y/- | not_working |
-| Neheb, the Eternal | silent | At the beginning of each of your postcombat main phases, add {R} for each 1 life your opponents have lost this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
+| Neheb, the Eternal | silent | Afflict | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Nicol Bolas, God-Pharaoh | silent | +1: Each opponent exiles two cards from their hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Nimble Obstructionist | silent | When you cycle this card, counter target activated or triggered ability you don't control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Nissa's Encouragement | silent | Search your library and graveyard for a card named Forest, a card named Brambleweft Behemoth, and a card named Nissa, Genesis Mage. Reveal those cards, put them | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -59,7 +59,6 @@
 | Sidewinder Naga | silent | As long as you control a Desert or there is a Desert card in your graveyard, this creature gets +1/+0 and has trample. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sifter Wurm | silent | When this creature enters, scry 3, then reveal the top card of your library. You gain life equal to that card's mana value. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Spellweaver Eternal | silent | Afflict | no machine in the engine executes this keyword | Y/Y/- | not_working |
-| Sunscourge Champion | silent | When this creature enters, you gain life equal to its power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Tenacious Hunter | silent | As long as a creature has a -1/-1 counter on it, this creature has vigilance and deathtouch. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Torment of Hailfire | silent | Repeat the following process X times. Each opponent loses 3 life unless that player sacrifices a nonland permanent of their choice or discards a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Torment of Scarabs | silent | At the beginning of enchanted player's upkeep, that player loses 3 life unless they sacrifice a nonland permanent of their choice or discard a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -69,7 +68,7 @@
 | Unesh, Criosphinx Sovereign | silent | Whenever Unesh or another Sphinx you control enters, reveal the top four cards of your library. An opponent separates those cards into two piles. Put one pile i | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Visage of Bolas | silent | When this artifact enters, you may search your library and/or graveyard for a card named Nicol Bolas, the Deceiver, reveal it, and put it into your hand. If you | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Vizier of the Anointed | silent | Whenever you activate an eternalize or embalm ability, draw a card. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
-| Wildfire Eternal | silent | Whenever this creature attacks and isn't blocked, you may cast an instant or sorcery spell from your hand without paying its mana cost. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
+| Wildfire Eternal | silent | Afflict | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Doomfall | notice | Choose one — • Target opponent exiles a creature they control. • Target opponent reveals their hand. You choose a nonland card from it. Exile that card. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Gideon's Defeat | notice | Exile target white creature that's attacking or blocking. If it was a Gideon planeswalker, you gain 5 life. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Hour of Eternity | notice | Exile X target creature cards from your graveyard. For each card exiled this way, create a token that's a copy of that card, except it's a 4/4 black Zombie. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -186,7 +185,7 @@
 ## Fully supported
 
 <details>
-<summary>27 cards</summary>
+<summary>28 cards</summary>
 
 - Abandoned Sarcophagus
 - Abrade
@@ -213,6 +212,7 @@
 - Saving Grace
 - Solemnity
 - Striped Riverwinder
+- Sunscourge Champion
 - Vizier of the True
 - Wall of Forgotten Pharaohs
 
@@ -222,7 +222,7 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| afflict | 6 | Eternal of Harsh Truths, Frontline Devastator, Khenra Eternal, Manticore Eternal, Merciless Eternal | hou |
+| afflict | 8 | Eternal of Harsh Truths, Frontline Devastator, Khenra Eternal, Manticore Eternal, Merciless Eternal | hou |
 | Choose one | 1 | Doomfall | hou |
 | +N: each opponent exiles two cards from their hand. | 1 | Nicol Bolas, God-Pharaoh | hou |
 | +N: untap up to two target creatures and up to two target lands. | 1 | Nissa, Genesis Mage | hou |
@@ -231,7 +231,6 @@
 | as long as you control a desert or there is a desert card in your graveyard, ~ gets +N/+N and has trample. | 1 | Sidewinder Naga | hou |
 | at the beginning of combat on your turn, you may exile a creature card from your graveyard. if you do, create a token that"..."s a N/N black zombie. it gains ha | 1 | God-Pharaoh's Gift | hou |
 | at the beginning of each end step, enchanted player mills N cards, where N is the number of cards put into their graveyard from anywhere ~. | 1 | Fraying Sanity | hou |
-| at the beginning of each of your postcombat main phases, add {M} for each N life your opponents have lost ~. | 1 | Neheb, the Eternal | hou |
 | at the beginning of enchanted player's upkeep, that player loses N life unless they sacrifice a nonland permanent of their choice or discard a card. | 1 | Torment of Scarabs | hou |
 | at the beginning of your upkeep, tap ~ unless you sacrifice another creature. | 1 | Apocalypse Demon | hou |
 | counter target blue spell. if it was a jace planeswalker spell, scry N. | 1 | Jace's Defeat | hou |
@@ -251,7 +250,6 @@
 | untap target creature. it gets +N/+N until end of turn and can block an additional creature ~. | 1 | Act of Heroism | hou |
 | when you cycle ~, counter target activated or triggered ability you don't control. | 1 | Nimble Obstructionist | hou |
 | when ~ enters, scry N, then reveal the top card of your library. you gain life equal to that card's mana value. | 1 | Sifter Wurm | hou |
-| when ~ enters, you gain life equal to its power. | 1 | Sunscourge Champion | hou |
 | when ~ enters, you may have target creature get +N/+N until end of turn, where N is ~ power. | 1 | Resilient Khenra | hou |
 | when ~ enters, you may search your library and/or graveyard for a card named nicol bolas, the deceiver, reveal it, and put it into your hand. if you search your | 1 | Visage of Bolas | hou |
 | whenever unesh or another sphinx you control enters, reveal the top four cards of your library. an opponent separates those cards into two piles. put one pile i | 1 | Unesh, Criosphinx Sovereign | hou |
@@ -259,7 +257,6 @@
 | whenever you cast a noncreature spell, you may have ~ become a N/N sphinx creature with flying in addition to its other types until end of turn. | 1 | Riddleform | hou |
 | whenever you cast a spell with mana value equal to the number of doom counters on ~, ~ deals that much damage to any target. then put a doom counter on ~. | 1 | Imminent Doom | hou |
 | whenever you cycle or discard a card, ~ gets +N/+N until end of turn and can't be blocked ~. | 1 | Cunning Survivor | hou |
-| whenever ~ attacks and isn't blocked, you may cast an instant or sorcery spell from your hand without paying its mana cost. | 1 | Wildfire Eternal | hou |
 | whenever ~ attacks, exile target card from defending player's graveyard. | 1 | Graven Abomination | hou |
 | whenever ~ deals combat damage to a player, remove all -N/-N counters from it. | 1 | Ammit Eternal | hou |
 | whenever ~ deals combat damage to a player, that player discards that many cards. | 1 | Dreamstealer | hou |

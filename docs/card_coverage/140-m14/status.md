@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 17 | 15.0% |
+| Tested | 21 | 18.6% |
 | Works (untested) | 71 | 62.8% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 25 | 22.1% |
+| Not working | 21 | 18.6% |
 
 ## Cards needing work
 
@@ -28,8 +28,6 @@
 |---|---|---|---|---|---|
 | Ajani's Chosen | silent | Whenever an enchantment you control enters, create a 2/2 white Cat creature token. If that enchantment is an Aura, you may attach it to the token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Blightcaster | silent | Whenever you cast an enchantment spell, you may have target creature get -2/-2 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Bogbrew Witch | silent | {2}, {T}: Search your library for a card named Festering Newt or Bubbling Cauldron, put it onto the battlefield tapped, then shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Bubbling Cauldron | silent | {1}, {T}, Sacrifice a creature named Festering Newt: Each opponent loses 4 life. You gain life equal to the life lost this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Chandra, Pyromaster | silent | −7: Exile the top ten cards of your library. Choose an instant or sorcery card exiled this way and copy it three times. You may cast the copies without paying t | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Devout Invocation | silent | Tap any number of untapped creatures you control. Create a 4/4 white Angel creature token with flying for each creature tapped this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Dismiss into Dream | silent | Each creature your opponents control is an Illusion in addition to its other types and has "When this creature becomes the target of a spell or ability, sacrifi | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -46,9 +44,7 @@
 | Staff of the Mind Magus | silent | Whenever you cast a blue spell or an Island you control enters, you gain 1 life. | this trigger's condition can never be satisfied - it never triggers | Y/Y/- | not_working |
 | Staff of the Sun Magus | silent | Whenever you cast a white spell or a Plains you control enters, you gain 1 life. | this trigger's condition can never be satisfied - it never triggers | Y/Y/- | not_working |
 | Staff of the Wild Magus | silent | Whenever you cast a green spell or a Forest you control enters, you gain 1 life. | this trigger's condition can never be satisfied - it never triggers | Y/Y/- | not_working |
-| Vastwood Hydra | silent | When this creature dies, you may distribute a number of +1/+1 counters equal to the number of +1/+1 counters on this creature among any number of creatures you  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Enlarge | notice | Target creature gets +7/+7 and gains trample until end of turn. It must be blocked this turn if able. (A creature with trample can deal excess combat damage to  | unparsed remainder: It must be blocked this turn if able. | Y/Y/- | not_working |
-| Festering Newt | notice | When this creature dies, target creature an opponent controls gets -1/-1 until end of turn. That creature gets -4/-4 instead if you control a creature named Bog | unparsed remainder: That creature gets -4/-4 instead if you control a creature named Bogbrew Witch. | Y/Y/- | not_working |
 | Jace's Mindseeker | notice | When this creature enters, target opponent mills five cards. You may cast an instant or sorcery spell from among them without paying its mana cost. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Scavenging Ooze | notice | {G}: Exile target card from a graveyard. If it was a creature card, put a +1/+1 counter on this creature and you gain 1 life. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Academy Raider | handled | Whenever this creature deals combat damage to a player, you may discard a card. If you do, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -126,13 +122,16 @@
 ## Fully supported
 
 <details>
-<summary>17 cards</summary>
+<summary>21 cards</summary>
 
 - Advocate of the Beast
 - Angelic Accord
 - Artificer's Hex
 - Awaken the Ancient
+- Bogbrew Witch
+- Bubbling Cauldron
 - Elvish Mystic
+- Festering Newt
 - Fiendslayer Paladin
 - Grim Return
 - Kalonian Hydra
@@ -143,6 +142,7 @@
 - Shadowborn Apostle
 - Shadowborn Demon
 - Sliver Construct
+- Vastwood Hydra
 - Voracious Wurm
 - Warden of Evos Isle
 
@@ -159,8 +159,6 @@
 | tap any number of untapped creatures you control. create a N/N white angel creature token with flying for each creature tapped ~. | 1 | Devout Invocation | m14 |
 | target creature gets +N/+N and gains trample until end of turn. it must be blocked ~ if able. (a creature with trample can deal excess combat damage to the play | 1 | Enlarge | m14 |
 | when a creature attacks you or a planeswalker you control, if ~ has defender, it loses defender and gains trample. | 1 | Guardian of the Ages | m14 |
-| when ~ dies, target creature an opponent controls gets -N/-N until end of turn. that creature gets -N/-N instead if you control a creature named bogbrew witch. | 1 | Festering Newt | m14 |
-| when ~ dies, you may distribute a number of +N/+N counters equal to the number of +N/+N counters on ~ among any number of creatures you control. | 1 | Vastwood Hydra | m14 |
 | when ~ enters, target opponent mills five cards. you may cast an instant or sorcery spell from among them without paying its mana cost. | 1 | Jace's Mindseeker | m14 |
 | whenever an enchantment you control enters, create a N/N white cat creature token. if that enchantment is an aura, you may attach it to the token. | 1 | Ajani's Chosen | m14 |
 | whenever you cast a black spell or a swamp you control enters, you gain N life. | 1 | Staff of the Death Magus | m14 |
@@ -169,9 +167,7 @@
 | whenever you cast a red spell or a mountain you control enters, you gain N life. | 1 | Staff of the Flame Magus | m14 |
 | whenever you cast a white spell or a plains you control enters, you gain N life. | 1 | Staff of the Sun Magus | m14 |
 | whenever you cast an enchantment spell, you may have target creature get -N/-N until end of turn. | 1 | Blightcaster | m14 |
-| {M}, {M}, sacrifice a creature named festering newt: each opponent loses N life. you gain life equal to the life lost ~. | 1 | Bubbling Cauldron | m14 |
 | {M}, {M}: copy the exiled card. you may cast the copy without paying its mana cost. N is the mana value of the exiled card. | 1 | Elite Arcanist | m14 |
-| {M}, {M}: search your library for a card named festering newt or bubbling cauldron, put it onto the battlefield tapped, then shuffle. | 1 | Bogbrew Witch | m14 |
 | {M}: each creature attacks ~ if able. | 1 | Goblin Diplomats | m14 |
 | {M}: exile target card from a graveyard. if it was a creature card, put a +N/+N counter on ~ and you gain N life. | 1 | Scavenging Ooze | m14 |
 | {M}: until end of turn, ~ becomes a N/N spirit artifact creature that's no longer an equipment. activate only if you control no creatures. | 1 | Haunted Plate Mail | m14 |

@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 37 | 21.9% |
-| Works (untested) | 75 | 44.4% |
+| Tested | 39 | 23.1% |
+| Works (untested) | 76 | 45.0% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 57 | 33.7% |
+| Not working | 54 | 32.0% |
 
 ## Cards needing work
 
@@ -30,7 +30,6 @@
 | Avatar of Discord | silent | When this creature enters, sacrifice it unless you discard two cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Biomantic Mastery | silent | Draw a card for each creature target player controls, then draw a card for each creature another target player controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Blessing of the Nephilim | silent | Enchanted creature gets +1/+1 for each of its colors. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Bond of Agony | silent | As an additional cost to cast this spell, pay X life. Each other player loses X life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Brain Pry | silent | Choose a nonland card name. Target player reveals their hand. That player discards a card with that name. If they can't, you draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Bronze Bombshell | silent | When a player other than this creature's owner controls it, that player sacrifices it. If the player does, this creature deals 7 damage to the player. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Condemn | silent | Put target attacking creature on the bottom of its owner's library. Its controller gains life equal to its toughness. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -52,7 +51,6 @@
 | Loaming Shaman | silent | When this creature enters, target player shuffles any number of target cards from their graveyard into their library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Momir Vig, Simic Visionary | silent | Whenever you cast a blue creature spell, reveal the top card of your library. If it's a creature card, put that card into your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Muse Vessel | silent | {3}, {T}: Target player exiles a card from their hand. Activate only as a sorcery. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Nettling Curse | silent | Whenever enchanted creature attacks or blocks, its controller loses 3 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Nightcreep | silent | Until end of turn, all creatures become black and all lands become Swamps. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Novijen, Heart of Progress | silent | {G}{U}, {T}: Put a +1/+1 counter on each creature that entered this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Odds // Ends | silent | Flip a coin. If it comes up heads, counter target instant or sorcery spell. If it comes up tails, copy that spell and you may choose new targets for the copy. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -61,7 +59,6 @@
 | Protean Hulk | silent | When this creature dies, search your library for any number of creature cards with total mana value 6 or less, put them onto the battlefield, then shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Pure // Simple | silent | Destroy all Auras and Equipment. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Rakdos Augermage | silent | {T}: Reveal your hand and discard a card of target opponent's choice. Then that player reveals their hand and discards a card of your choice. Activate only as a | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Rakdos Ickspitter | silent | {T}: This creature deals 1 damage to target creature and that creature's controller loses 1 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Rakdos Riteknife | silent | Equipped creature gets +1/+0 for each blood counter on this Equipment and has "{T}, Sacrifice a creature: Put a blood counter on Rakdos Riteknife." | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Rakdos the Defiler | silent | Whenever Rakdos attacks, sacrifice half the non-Demon permanents you control, rounded up. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Research // Development | silent | Shuffle up to four cards you own from outside the game into your library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -91,6 +88,7 @@
 | Azorius Herald | handled | This creature can't be blocked. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Azorius Signet | handled |  |  | Y/-/- | not_tested |
 | Beacon Hawk | handled | Whenever this creature deals combat damage to a player, you may untap target creature. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Bond of Agony | handled | As an additional cost to cast this spell, pay X life. Each other player loses X life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Cackling Flames | handled | Cackling Flames deals 3 damage to any target. Hellbent — Cackling Flames deals 5 damage instead if you have no cards in hand. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Celestial Ancient | handled | Whenever you cast an enchantment spell, put a +1/+1 counter on each creature you control. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Court Hussar | handled | When this creature enters, look at the top three cards of your library, then put one of them into your hand and the rest on the bottom of your library in any or | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -126,6 +124,7 @@
 | Proper Burial | handled | Whenever a creature you control dies, you gain life equal to that creature's toughness. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Rakdos Carnarium | handled | This land enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Rakdos Guildmage | handled | {3}{B}, Discard a card: Target creature gets -2/-2 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Rakdos Ickspitter | handled | {T}: This creature deals 1 damage to target creature and that creature's controller loses 1 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Rakdos Pit Dragon | handled | {R}{R}: This creature gains flying until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ratcatcher | handled | At the beginning of your upkeep, you may search your library for a Rat card, reveal it, put it into your hand, then shuffle. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Riot Spikes | handled | Enchanted creature gets +2/-1. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -154,7 +153,6 @@
 | Vigean Graftmage | handled | {1}{U}: Untap target creature with a +1/+1 counter on it. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Vision Skeins | handled | Each player draws two cards. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Voidslime | handled | Counter target spell, activated ability, or triggered ability. (Mana abilities can't be targeted.) | the engine reads this text and performs it | Y/-/- | not_tested |
-| Walking Archive | handled | This creature enters with a +1/+1 counter on it. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Whiptail Moloch | handled | When this creature enters, it deals 3 damage to target creature you control. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Wit's End | handled | Target player discards their hand. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Wrecking Ball | handled | Destroy target creature or land. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -162,7 +160,7 @@
 ## Fully supported
 
 <details>
-<summary>37 cards</summary>
+<summary>39 cards</summary>
 
 - Anthem of Rakdos
 - Azorius Aethermage
@@ -182,6 +180,7 @@
 - Guardian of the Guildpact
 - Hallowed Fountain
 - Hellhole Rats
+- Nettling Curse
 - Palliation Accord
 - Prahv, Spires of Order
 - Pride of the Clouds
@@ -198,6 +197,7 @@
 - Unliving Psychopath
 - Utopia Sprawl
 - Vigean Hydropon
+- Walking Archive
 - War's Toll
 - Weight of Spires
 - Writ of Passage
@@ -209,7 +209,6 @@
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
 | Hellbent | 2 | Jagged Poppet, Slithering Shade | dis |
-| as an additional cost to cast ~, pay N life. each other player loses N life. | 1 | Bond of Agony | dis |
 | as long as ~ is enchanted, it gets +N/+N, has trample, and has "..." | 1 | Flaring Flame-Kin | dis |
 | at the beginning of your first main phase, add mana equal to enchanted permanent's mana cost. | 1 | Elemental Resonance | dis |
 | cast ~ only during combat after blockers are declared. create a N/N green saproling creature token that's blocking target creature attacking you. draw a card. | 1 | Flash Foliage | dis |
@@ -246,7 +245,6 @@
 | when ~ enters, target player shuffles any number of target cards from their graveyard into their library. | 1 | Loaming Shaman | dis |
 | whenever a player casts a noncreature spell, counter that spell. that player creates N N/N white and blue bird creature tokens with flying, where N is the spell | 1 | Dovescape | dis |
 | whenever an opponent is dealt N or more damage by a single source, that player discards a card. | 1 | Pain Magnification | dis |
-| whenever enchanted creature attacks or blocks, its controller loses N life. | 1 | Nettling Curse | dis |
 | whenever isperia deals combat damage to a player, choose a card name. that player reveals their hand. if a card with the chosen name is revealed ~, search your  | 1 | Isperia the Inscrutable | dis |
 | whenever rakdos attacks, sacrifice half the non-demon permanents you control, rounded up. | 1 | Rakdos the Defiler | dis |
 | whenever you cast a blue creature spell, reveal the top card of your library. if it's a creature card, put that card into your hand. | 1 | Momir Vig, Simic Visionary | dis |
@@ -256,7 +254,6 @@
 | {M}, {M}: target player exiles a card from their hand. activate only as a sorcery. | 1 | Muse Vessel | dis |
 | {M}: reveal your hand and discard a card of target opponent's choice. then that player reveals their hand and discards a card of your choice. activate only as a | 1 | Rakdos Augermage | dis |
 | {M}: switch ~ power and toughness until end of turn. | 1 | Windreaver | dis |
-| {M}: ~ deals N damage to target creature and that creature's controller loses N life. | 1 | Rakdos Ickspitter | dis |
 | {M}{M}, {M}: put a +N/+N counter on each creature that entered ~. | 1 | Novijen, Heart of Progress | dis |
 | {M}{M}: creatures you control with defender can attack ~ as though they didn't have defender. | 1 | Wakestone Gargoyle | dis |
 | {M}{M}: move a +N/+N counter from target creature onto another target creature with the same controller. | 1 | Simic Guildmage | dis |

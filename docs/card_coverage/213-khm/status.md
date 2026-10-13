@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 59 | 20.6% |
-| Works (untested) | 151 | 52.6% |
+| Tested | 61 | 21.3% |
+| Works (untested) | 152 | 53.0% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 77 | 26.8% |
+| Not working | 74 | 25.8% |
 
 ## Cards needing work
 
@@ -74,10 +74,8 @@
 | Roots of Wisdom | silent | Mill three cards, then return a land card or Elf card from your graveyard to your hand. If you can't, draw a card. (To mill a card, put the top card of your lib | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Runed Crown | silent | When this Equipment enters, you may search your library, hand, and/or graveyard for a Rune card and put it onto the battlefield attached to this Equipment. If y | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sarulf, Realm Eater | silent | At the beginning of your upkeep, if Sarulf has one or more +1/+1 counters on it, you may remove all of them. If you do, exile each other nonland permanent with  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Skull Raid | silent | Target opponent discards two cards. If fewer than two cards were discarded this way, you draw cards equal to the difference. Foretell {1}{B} (During your turn,  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Smashing Success | silent | Destroy target artifact or land. If an artifact is destroyed this way, create a Treasure token. (It's an artifact with "{T}, Sacrifice this token: Add one mana  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Starnheim Unleashed | silent | Create a 4/4 white Angel Warrior creature token with flying and vigilance. If this spell was foretold, create X of those tokens instead. Foretell {X}{X}{W} (Dur | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Surtland Elementalist | silent | Whenever this creature attacks, you may cast an instant or sorcery spell from your hand without paying its mana cost. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Svella, Ice Shaper | silent | {3}, {T}: Create a colorless snow artifact token named Icy Manalith with "{T}: Add one mana of any color." | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Tergrid's Shadow | silent | Each player sacrifices two creatures. Foretell {2}{B}{B} (During your turn, you may pay {2} and exile this card from your hand face down. Cast it on a later tur | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Tergrid, God of Fright // Tergrid's Lantern | silent | Whenever an opponent sacrifices a nontoken permanent or discards a permanent card, you may put that card from a graveyard onto the battlefield under your contro | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -101,7 +99,6 @@
 | Return Upon the Tide | notice | Return target creature card from your graveyard to the battlefield. If it's an Elf, create two 1/1 green Elf Warrior creature tokens. Foretell {3}{B} (During yo | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Search for Glory | notice | Search your library for a snow permanent card, a legendary card, or a Saga card, reveal it, put it into your hand, then shuffle. You gain 1 life for each {S} sp | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Spirit of the Aldergard | notice | This creature gets +1/+0 for each other snow permanent you control. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Surtland Flinger | notice | Whenever this creature attacks, you may sacrifice another creature. When you do, this creature deals damage equal to the sacrificed creature's power to any targ | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Thornmantle Striker | notice | When this creature enters, choose one — • Remove X counters from target permanent, where X is the number of Elves you control. • Target creature an opponent con | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Alpine Meadow | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Alrund's Epiphany | handled | Create two 1/1 blue Bird creature tokens with flying. Take an extra turn after this one. Exile Alrund's Epiphany. Foretell {4}{U}{U} (During your turn, you may  | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -236,6 +233,7 @@
 | Story Seeker | handled | Lifelink | machines/combat.py | Y/Y/- | not_tested |
 | Struggle for Skemfar | handled | Put a +1/+1 counter on target creature you control. Then that creature fights up to one target creature you don't control. (Each deals damage equal to its power | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Sulfurous Mire | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Surtland Elementalist | handled | As an additional cost to cast this spell, reveal a Giant card from your hand or pay {2}. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Surtland Frostpyre | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Tormentor's Helm | handled | Equipped creature gets +1/+1. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Toski, Bearer of Secrets | handled | This spell can't be countered. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -258,7 +256,7 @@
 ## Fully supported
 
 <details>
-<summary>59 cards</summary>
+<summary>61 cards</summary>
 
 - Armed and Armored
 - Axgard Braggart
@@ -308,8 +306,10 @@
 - Shackles of Treachery
 - Sigrid, God-Favored
 - Skemfar Shadowsage
+- Skull Raid
 - Snakeskin Veil
 - Stalwart Valkyrie
+- Surtland Flinger
 - The Trickster-God's Heist
 - The World Tree
 - Tyvar Kell
@@ -366,7 +366,6 @@
 | return target creature to its owner's hand. you may have shapeshifters you control become copies of that creature until end of turn. | 1 | Absorb Identity | khm |
 | search your library for a snow permanent card, a legendary card, or a saga card, reveal it, put it into your hand, then shuffle. you gain N life for each {M} sp | 1 | Search for Glory | khm |
 | target giant you control gets +N/+N and gains trample until end of turn. whenever it deals combat damage to a player ~, exile that many cards from the top of yo | 1 | Fire Giant's Fury | khm |
-| target opponent discards two cards. if fewer than two cards were discarded ~, you draw cards equal to the difference. foretell {M}{M} (during your turn, you may | 1 | Skull Raid | khm |
 | the next giant spell you cast ~ costs {M} less to cast. | 1 | Invasion of the Giants | khm |
 | until end of turn, target creature gets +N/+N for each creature you control and gains trample. it must be blocked ~ if able. | 1 | King Harald's Revenge | khm |
 | when kardur enters, until your next turn, creatures your opponents control attack each combat if able and attack a player other than you if able. | 1 | Kardur, Doomscourge | khm |
@@ -390,8 +389,6 @@
 | whenever you cast a creature spell, if {M} of any of that spell's colors was spent to cast it, that creature enters with an additional +N/+N counter on it. | 1 | Boreal Outrider | khm |
 | whenever you cast an instant or sorcery spell, if it targets one or more other permanents you control, create a token that's a copy of one of those permanents. | 1 | Orvar, the All-Form | khm |
 | whenever ~ attacks, add {M}{M}{M} and you gain N life. until end of turn, you don't lose ~ as steps and phases end. | 1 | Colossal Plow | khm |
-| whenever ~ attacks, you may cast an instant or sorcery spell from your hand without paying its mana cost. | 1 | Surtland Elementalist | khm |
-| whenever ~ attacks, you may sacrifice another creature. when you do, ~ deals damage equal to the sacrificed creature's power to any target. if the sacrificed cr | 1 | Surtland Flinger | khm |
 | you gain N life for each foretold card you own in exile. | 1 | Niko Defies Destiny | khm |
 | {M}, {M}, sacrifice a creature: search your library for a creature card that shares a creature type with the sacrificed creature and has mana value equal to N p | 1 | Pyre of Heroes | khm |
 | {M}, {M}: create a colorless snow artifact token named icy manalith with "..." | 1 | Svella, Ice Shaper | khm |

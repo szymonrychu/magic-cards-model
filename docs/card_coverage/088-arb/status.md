@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 22 | 15.4% |
-| Works (untested) | 81 | 56.6% |
+| Tested | 27 | 18.9% |
+| Works (untested) | 80 | 55.9% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 40 | 28.0% |
+| Not working | 36 | 25.2% |
 
 ## Cards needing work
 
@@ -44,9 +44,7 @@
 | Jund Hackblade | silent | As long as you control another multicolored permanent, this creature gets +1/+1 and has haste. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Karrthus, Tyrant of Jund | silent | When Karrthus enters, gain control of all Dragons, then untap all Dragons. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Knight of New Alara | silent | Each other multicolored creature you control gets +1/+1 for each of its colors. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Lich Lord of Unx | silent | {U}{U}{B}{B}: Target player loses X life and mills X cards, where X is the number of Zombies you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Mind Funeral | silent | Target opponent reveals cards from the top of their library until four land cards are revealed. That player puts all cards revealed this way into their graveyar | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Morbid Bloom | silent | Exile target creature card from a graveyard, then create X 1/1 green Saproling creature tokens, where X is the exiled card's toughness. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Naya Hushblade | silent | As long as you control another multicolored permanent, this creature gets +1/+1 and has shroud. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Nemesis of Reason | silent | Whenever this creature attacks, defending player mills ten cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Nulltread Gargantuan | silent | When this creature enters, put a creature you control on top of its owner's library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -58,13 +56,11 @@
 | Skyclaw Thrash | silent | Whenever this creature attacks, flip a coin. If you win the flip, this creature gets +1/+1 and gains flying until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Soulquake | silent | Return all creatures on the battlefield and all creature cards in graveyards to their owners' hands. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sovereigns of Lost Alara | silent | Whenever a creature you control attacks alone, you may search your library for an Aura card that could enchant that creature, put it onto the battlefield attach | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Tainted Sigil | silent | {T}, Sacrifice this artifact: You gain life equal to the total life lost by all players this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Thought Hemorrhage | silent | Choose a nonland card name. Target player reveals their hand. Thought Hemorrhage deals 3 damage to that player for each card with the chosen name revealed this  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Thraximundar | silent | Whenever Thraximundar attacks, defending player sacrifices a creature of their choice. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Vedalken Ghoul | silent | Whenever this creature becomes blocked, defending player loses 4 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Aven Mimeomancer | notice | At the beginning of your upkeep, you may put a feather counter on target creature. If you do, that creature has base power and toughness 3/1 and has flying for  | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Slave of Bolas | notice | Gain control of target creature. Untap that creature. It gains haste until end of turn. Sacrifice it at the beginning of the next end step. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Vengeful Rebirth | notice | Return target card from your graveyard to your hand. If you return a nonland card to your hand this way, Vengeful Rebirth deals damage equal to that card's mana | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Zealous Persecution | notice | Until end of turn, creatures you control get +1/+1 and creatures your opponents control get -1/-1. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Bant Sojourners | handled | When you cycle this card and when this creature dies, you may create a 1/1 white Soldier creature token. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Behemoth Sledge | handled | Equipped creature gets +2/+2 and has trample and lifelink. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -117,7 +113,6 @@
 | Monstrous Carabid | handled | This creature attacks each combat if able. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Mycoid Shepherd | handled | Whenever this creature or another creature you control with power 5 or greater dies, you may gain 5 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Naya Sojourners | handled | When you cycle this card and when this creature dies, you may put a +1/+1 counter on target creature. | the engine reads this text and performs it | Y/-/- | not_tested |
-| Necromancer's Covenant | handled | When this enchantment enters, exile all creature cards from target player's graveyard, then create a 2/2 black Zombie creature token for each card exiled this w | the engine reads this text and performs it | Y/-/- | not_tested |
 | Offering to Asha | handled | Counter target spell unless its controller pays {4}. You gain 4 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Pale Recluse | handled | Reach | machines/combat.py | Y/-/- | not_tested |
 | Reborn Hope | handled | Return target multicolored card from your graveyard to your hand. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -151,7 +146,7 @@
 ## Fully supported
 
 <details>
-<summary>22 cards</summary>
+<summary>27 cards</summary>
 
 - Anathemancer
 - Architects of Will
@@ -163,17 +158,22 @@
 - Firewild Borderpost
 - Identity Crisis
 - Intimidation Bolt
+- Lich Lord of Unx
 - Maelstrom Nexus
 - Maelstrom Pulse
 - Mage Slayer
 - Marrow Chomper
+- Morbid Bloom
+- Necromancer's Covenant
 - Predatory Advantage
 - Putrid Leech
 - Sages of the Anima
 - Sigil Captain
 - Spellbound Dragon
 - Spellbreaker Behemoth
+- Tainted Sigil
 - Trace of Abundance
+- Vengeful Rebirth
 - Violent Outburst
 
 </details>
@@ -197,10 +197,8 @@
 | discard your hand. draw seven cards, then discard three cards at random. | 1 | Drastic Revelation | arb |
 | during turns other than yours, creatures you control get +N/+N. | 1 | Glory of Warfare | arb |
 | each other multicolored creature you control gets +N/+N for each of its colors. | 1 | Knight of New Alara | arb |
-| exile target creature card from a graveyard, then create N N/N green saproling creature tokens, where N is the exiled card's toughness. | 1 | Morbid Bloom | arb |
 | gain control of target creature. untap that creature. it gains haste until end of turn. sacrifice it at the beginning of the next end step. | 1 | Slave of Bolas | arb |
 | return all creatures on the battlefield and all creature cards in graveyards to their owners' hands. | 1 | Soulquake | arb |
-| return target card from your graveyard to your hand. if you return a nonland card to your hand ~, ~ deals damage equal to that card's mana value to any target.  | 1 | Vengeful Rebirth | arb |
 | target opponent reveals cards from the top of their library until four land cards are revealed. that player puts all cards revealed ~ into their graveyard. | 1 | Mind Funeral | arb |
 | until end of turn, creatures you control get +N/+N and creatures your opponents control get -N/-N. | 1 | Zealous Persecution | arb |
 | when enchanted creature becomes the target of a spell or ability, exile that creature. | 1 | Crystallization | arb |
@@ -216,9 +214,7 @@
 | whenever ~ attacks, defending player sacrifices a creature of their choice. | 1 | Thraximundar | arb |
 | whenever ~ attacks, flip a coin. if you win the flip, ~ gets +N/+N and gains flying until end of turn. | 1 | Skyclaw Thrash | arb |
 | whenever ~ becomes blocked, defending player loses N life. | 1 | Vedalken Ghoul | arb |
-| {M}, sacrifice ~: you gain life equal to the total life lost by all players ~. | 1 | Tainted Sigil | arb |
 | {M}: equipped creature gets +N/+N until end of turn. | 1 | Demonspine Whip | arb |
-| {M}{M}{M}{M}: target player loses N life and mills N cards, where N is the number of zombies you control. | 1 | Lich Lord of Unx | arb |
 
 ## Notes
 

@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 37 | 16.5% |
+| Tested | 41 | 18.3% |
 | Works (untested) | 110 | 49.1% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 77 | 34.4% |
+| Not working | 73 | 32.6% |
 
 ## Cards needing work
 
@@ -35,24 +35,20 @@
 | Carnival Hellsteed | silent | Unleash | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Chaos Imps | silent | Unleash | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Chemister's Trick | silent | Target creature you don't control gets -2/-0 until end of turn and attacks this turn if able. Overload {3}{U}{R} (You may cast this spell for its overload cost. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Chronic Flooding | silent | Whenever enchanted land becomes tapped, its controller mills three cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Civic Saber | silent | Equipped creature gets +1/+0 for each of its colors. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Conjured Currency | silent | At the beginning of your upkeep, you may exchange control of this enchantment and target permanent you neither own nor control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Counterflux | silent | Overload | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Coursers' Accord | silent | Create a 3/3 green Centaur creature token, then populate. (Create a token that's a copy of a creature token you control.) | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Cyclonic Rift | silent | Overload | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Dead Reveler | silent | Unleash | no machine in the engine executes this keyword | Y/Y/- | not_working |
-| Death's Presence | silent | Whenever a creature you control dies, put X +1/+1 counters on target creature you control, where X is the power of the creature that died. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Deathrite Shaman | silent | {T}: Exile target land card from a graveyard. Add one mana of any color. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Desecration Demon | silent | At the beginning of each combat, any opponent may sacrifice a creature of their choice. If a player does, tap this creature and put a +1/+1 counter on it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Detention Sphere | silent | When this enchantment leaves the battlefield, return the exiled cards to the battlefield under their owner's control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Doorkeeper | silent | {2}{U}, {T}: Target player mills X cards, where X is the number of creatures you control with defender. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Downsize | silent | Overload | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Druid's Deliverance | silent | Prevent all combat damage that would be dealt to you this turn. Populate. (Create a token that's a copy of a creature token you control.) | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Dynacharge | silent | Overload | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Electrickery | silent | Overload | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Epic Experiment | silent | Exile the top X cards of your library. You may cast instant and sorcery spells with mana value X or less from among them without paying their mana costs. Then p | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Essence Backlash | silent | Counter target creature spell. Essence Backlash deals damage equal to that spell's power to its controller. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Eyes in the Skies | silent | Create a 1/1 white Bird creature token with flying, then populate. (Create a token that's a copy of a creature token you control.) | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Faerie Impostor | silent | When this creature enters, sacrifice it unless you return another creature you control to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Firemind's Foresight | silent | Search your library for an instant card with mana value 3, reveal it, and put it into your hand. Then repeat this process for instant cards with mana values 2 a | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -217,7 +213,7 @@
 ## Fully supported
 
 <details>
-<summary>37 cards</summary>
+<summary>41 cards</summary>
 
 - Abrupt Decay
 - Ash Zealot
@@ -225,10 +221,14 @@
 - Azorius Guildgate
 - Batterhorn
 - Chromatic Lantern
+- Chronic Flooding
 - Cryptborn Horror
 - Dark Revenant
 - Deadbridge Goliath
+- Death's Presence
+- Doorkeeper
 - Dryad Militant
+- Essence Backlash
 - Ethereal Armor
 - Fencing Ace
 - Gatecreeper Vine
@@ -275,7 +275,6 @@
 | at the beginning of your upkeep, populate. | 1 | Growing Ranks | rtr |
 | at the beginning of your upkeep, target opponent reveals the top three cards of their library, may put a creature card from among them onto the battlefield, the | 1 | Guild Feud | rtr |
 | at the beginning of your upkeep, you may exchange control of ~ and target permanent you neither own nor control. | 1 | Conjured Currency | rtr |
-| counter target creature spell. ~ deals damage equal to that spell's power to its controller. | 1 | Essence Backlash | rtr |
 | create a N/N green centaur creature token, then populate. (create a token that's a copy of a creature token you control.) | 1 | Coursers' Accord | rtr |
 | create a N/N green rhino creature token with trample, then populate. (create a token that's a copy of a creature token you control.) | 1 | Horncaller's Chant | rtr |
 | create a N/N white bird creature token with flying, then populate. (create a token that's a copy of a creature token you control.) | 1 | Eyes in the Skies | rtr |
@@ -300,9 +299,7 @@
 | when ~ enters, sacrifice it unless you return another creature you control to its owner's hand. | 1 | Faerie Impostor | rtr |
 | when ~ leaves the battlefield, return the exiled cards to the battlefield under their owner's control. | 1 | Detention Sphere | rtr |
 | when ~ leaves the battlefield, return the exiled cards to their owners' hands. | 1 | Angel of Serenity | rtr |
-| whenever a creature you control dies, put N +N/+N counters on target creature you control, where N is the power of the creature that died. | 1 | Death's Presence | rtr |
 | whenever a creature you don't control dies, return it to the battlefield under your control with an additional +N/+N counter on it at the beginning of the next  | 1 | Grave Betrayal | rtr |
-| whenever enchanted land becomes tapped, its controller mills three cards. | 1 | Chronic Flooding | rtr |
 | whenever you cast a spell, if it's at least one of the chosen colors, you gain N life for each of the chosen colors it is. | 1 | Tablet of the Guilds | rtr |
 | whenever you play a card with the same name as one of the exiled cards, you may put one of those cards with that name into its owner's hand. then if there are n | 1 | Search the City | rtr |
 | whenever ~ attacks, detain up to two target nonland permanents your opponents control. | 1 | Archon of the Triumvirate | rtr |
@@ -311,7 +308,6 @@
 | {M}, pay N life: flip a coin. if you win the flip, you gain N life. | 1 | Tavern Swindler | rtr |
 | {M}, {M}, discard a card: ~ deals damage to target creature equal to the discarded card's mana value. | 1 | Mercurial Chemister | rtr |
 | {M}: exile target land card from a graveyard. add one mana of any color. | 1 | Deathrite Shaman | rtr |
-| {M}{M}, {M}: target player mills N cards, where N is the number of creatures you control with defender. | 1 | Doorkeeper | rtr |
 | {M}{M}: target player who lost life ~ loses N life. | 1 | Rix Maadi Guildmage | rtr |
 | {M}{M}{M}, {M}: populate. | 1 | Trostani, Selesnya's Voice | rtr |
 | {M}{M}{M}: detain target nonland permanent an opponent controls. | 1 | New Prahv Guildmage | rtr |

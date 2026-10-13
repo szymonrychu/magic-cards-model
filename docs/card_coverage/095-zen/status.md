@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 41 | 18.6% |
-| Works (untested) | 127 | 57.7% |
+| Tested | 43 | 19.5% |
+| Works (untested) | 130 | 59.1% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 52 | 23.6% |
+| Not working | 47 | 21.4% |
 
 ## Cards needing work
 
@@ -37,8 +37,6 @@
 | Chandra Ablaze | silent | −7: Cast any number of red instant and/or sorcery cards from your graveyard without paying their mana costs. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Conqueror's Pledge | silent | Kicker {6} (You may pay an additional {6} as you cast this spell.) Create six 1/1 white Kor Soldier creature tokens. If this spell was kicked, create twelve of  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Cosi's Trickster | silent | Whenever an opponent shuffles their library, you may put a +1/+1 counter on this creature. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
-| Eternity Vessel | silent | Landfall — Whenever a land you control enters, you may have your life total become the number of charge counters on this artifact. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Gigantiform | silent | When this Aura enters, if it was kicked, you may search your library for a card named Gigantiform, put it onto the battlefield, then shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Gomazoa | silent | {T}: Put this creature and each creature it's blocking on top of their owners' libraries, then those players shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Grappling Hook | silent | Whenever equipped creature attacks, you may have target creature block it this turn if able. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Hagra Diabolist | silent | Whenever this creature or another Ally you control enters, you may have target player lose life equal to the number of Allies you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -50,11 +48,8 @@
 | Lorthos, the Tidemaker | silent | Whenever Lorthos attacks, you may pay {8}. If you do, tap up to eight target permanents. Those permanents don't untap during their controllers' next untap steps | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Lullmage Mentor | silent | Whenever a spell or ability you control counters a spell, you may create a 1/1 blue Merfolk creature token. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Magosi, the Waterveil | silent | {U}, {T}: Put an eon counter on this land. Skip your next turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Malakir Bloodwitch | silent | When this creature enters, each opponent loses life equal to the number of Vampires you control. You gain life equal to the life lost this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Marsh Casualties | silent | Kicker {3} (You may pay an additional {3} as you cast this spell.) Creatures target player controls get -1/-1 until end of turn. If this spell was kicked, those | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Mire Blight | silent | When enchanted creature is dealt damage, destroy it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Murasa Pyromancer | silent | Whenever this creature or another Ally you control enters, you may have this creature deal damage to target creature equal to the number of Allies you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Nissa Revane | silent | +1: Search your library for a card named Nissa's Chosen, put it onto the battlefield, then shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Ob Nixilis, the Fallen | silent | Landfall — Whenever a land you control enters, you may have target player lose 3 life. If you do, put three +1/+1 counters on Ob Nixilis. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Ondu Cleric | silent | Whenever this creature or another Ally you control enters, you may gain life equal to the number of Allies you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Oran-Rief, the Vastwood | silent | {T}: Put a +1/+1 counter on each green creature that entered this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -101,6 +96,7 @@
 | Gatekeeper of Malakir | handled | When this creature enters, if it was kicked, target player sacrifices a creature of their choice. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Geyser Glider | handled | Landfall — Whenever a land you control enters, this creature gains flying until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Giant Scorpion | handled | Deathtouch | machines/combat.py | Y/-/- | not_tested |
+| Gigantiform | handled | Enchanted creature has base power and toughness 8/8 and has trample. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Goblin Bushwhacker | handled | When this creature enters, if it was kicked, creatures you control get +1/+0 and gain haste until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Goblin Ruinblaster | handled | When this creature enters, if it was kicked, destroy target nonbasic land. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Goblin Shortcutter | handled | When this creature enters, target creature can't block this turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -139,11 +135,13 @@
 | Merfolk Seastalkers | handled | {2}{U}: Tap target creature without flying. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Merfolk Wayfinder | handled | When this creature enters, reveal the top three cards of your library. Put all Island cards revealed this way into your hand and the rest on the bottom of your  | the engine reads this text and performs it | Y/-/- | not_tested |
 | Mindless Null | handled | This creature can't block unless you control a Vampire. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Mire Blight | handled | When enchanted creature is dealt damage, destroy it. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Molten Ravager | handled | {R}: This creature gets +1/+0 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Narrow Escape | handled | Return target permanent you control to its owner's hand. You gain 4 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Needlebite Trap | handled | If an opponent gained life this turn, you may pay {B} rather than pay this spell's mana cost. Target player loses 5 life and you gain 5 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Nimana Sell-Sword | handled | Whenever this creature or another Ally you control enters, you may put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Nimbus Wings | handled | Enchanted creature gets +1/+2 and has flying. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Nissa Revane | handled | +1: Search your library for a card named Nissa's Chosen, put it onto the battlefield, then shuffle. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Noble Vestige | handled | {T}: Prevent the next 1 damage that would be dealt to target player or planeswalker this turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Oracle of Mul Daya | handled | You may play an additional land on each of your turns. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Oran-Rief Recluse | handled | When this creature enters, if it was kicked, destroy target creature with flying. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -209,7 +207,7 @@
 ## Fully supported
 
 <details>
-<summary>41 cards</summary>
+<summary>43 cards</summary>
 
 - Aether Figment
 - Archive Trap
@@ -224,6 +222,7 @@
 - Crypt of Agadeem
 - Day of Judgment
 - Emeria, the Sky Ruin
+- Eternity Vessel
 - Expedition Map
 - Feast of Blood
 - Goblin Guide
@@ -234,6 +233,7 @@
 - Kor Outfitter
 - Lotus Cobra
 - Luminarch Ascension
+- Malakir Bloodwitch
 - Marsh Flats
 - Mindbreak Trap
 - Misty Rainforest
@@ -259,8 +259,7 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| Landfall | 5 | Adventuring Gear, Eternity Vessel, Ob Nixilis, the Fallen, Roil Elemental, Turntimber Basilisk | zen |
-| +N: search your library for a card named nissa's chosen, put it onto the battlefield, then shuffle. | 1 | Nissa Revane | zen |
+| Landfall | 4 | Adventuring Gear, Ob Nixilis, the Fallen, Roil Elemental, Turntimber Basilisk | zen |
 | at the beginning of your upkeep, sacrifice ~ unless you return a land you control to its owner's hand. | 1 | Living Tsunami | zen |
 | at the beginning of your upkeep, you lose N life unless an opponent has N or less life. | 1 | Vampire Lacerator | zen |
 | at the beginning of your upkeep, you may choose a card type. if you do, each player sacrifices a permanent of their choice of that type. | 1 | World Queller | zen |
@@ -278,9 +277,6 @@
 | remove five quest counters from ~ and sacrifice it: search your library for an equipment card, put it onto the battlefield, attach it to a creature you control, | 1 | Quest for the Holy Relic | zen |
 | remove four quest counters from ~ and sacrifice it: if any source you control would deal damage to a permanent or player ~, it deals double that damage to that  | 1 | Quest for Pure Flame | zen |
 | target player reveals their hand and discards all trap cards. | 1 | Trapfinder's Trick | zen |
-| when enchanted creature is dealt damage, destroy it. | 1 | Mire Blight | zen |
-| when ~ enters, each opponent loses life equal to the number of vampires you control. you gain life equal to the life lost ~. | 1 | Malakir Bloodwitch | zen |
-| when ~ enters, if it was kicked, you may search your library for a card named ~, put it onto the battlefield, then shuffle. | 1 | Gigantiform | zen |
 | when ~ enters, sacrifice it unless you sacrifice a land. | 1 | Scythe Tiger | zen |
 | whenever a card is put into an opponent's graveyard from anywhere, if ~ has three or more quest counters on it, you may have that player lose N life. if you do, | 1 | Bloodchief Ascension | zen |
 | whenever a card is put into your graveyard from anywhere, you may put a quest counter on ~. | 1 | Quest for Ancient Secrets | zen |

@@ -17,17 +17,16 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 14 | 24.6% |
+| Tested | 16 | 28.1% |
 | Works (untested) | 33 | 57.9% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 10 | 17.5% |
+| Not working | 8 | 14.0% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
 | Boil | silent | Destroy all Islands. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Death Pits of Rath | silent | Whenever a creature is dealt damage, destroy it. It can't be regenerated. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Elvish Fury | silent | Buyback | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Jinxed Idol | silent | Sacrifice a creature: Target opponent gains control of this artifact. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Rathi Dragon | silent | When this creature enters, sacrifice it unless you sacrifice two Mountains. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -35,7 +34,6 @@
 | Time Warp | silent | Target player takes an extra turn after this one. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Vhati il-Dal | silent | {T}: Until end of turn, target creature has base power 1 or base toughness 1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Whispers of the Muse | silent | Buyback | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Altar of Dementia | notice | Sacrifice a creature: Target player mills cards equal to the sacrificed creature's power. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Auratog | handled | Sacrifice an enchantment: This creature gets +2/+2 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Bottle Gnomes | handled | Sacrifice this creature: You gain 3 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Canopy Spider | handled | Reach | machines/combat.py | Y/Y/- | not_tested |
@@ -73,11 +71,13 @@
 ## Fully supported
 
 <details>
-<summary>14 cards</summary>
+<summary>16 cards</summary>
 
+- Altar of Dementia
 - Booby Trap
 - Choke
 - Dauthi Slayer
+- Death Pits of Rath
 - Diabolic Edict
 - Furnace of Rath
 - Goblin Bombardment
@@ -99,10 +99,8 @@
 | buyback | 2 | Elvish Fury, Whispers of the Muse | tmp |
 | destroy all islands. | 1 | Boil | tmp |
 | sacrifice a creature: target opponent gains control of ~. | 1 | Jinxed Idol | tmp |
-| sacrifice a creature: target player mills cards equal to the sacrificed creature's power. | 1 | Altar of Dementia | tmp |
 | target player takes an extra turn after ~. | 1 | Time Warp | tmp |
 | when ~ enters, sacrifice it unless you sacrifice two mountains. | 1 | Rathi Dragon | tmp |
-| whenever a creature is dealt damage, destroy it. it can't be regenerated. | 1 | Death Pits of Rath | tmp |
 | {M}: gain control of target creature for as long as that creature is enchanted. | 1 | Rootwater Matriarch | tmp |
 | {M}: until end of turn, target creature has base power N or base toughness N. | 1 | Vhati il-Dal | tmp |
 

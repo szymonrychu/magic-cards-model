@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 4 | 16.7% |
-| Works (untested) | 17 | 70.8% |
+| Tested | 5 | 20.8% |
+| Works (untested) | 16 | 66.7% |
 | Partial (unaudited) | 0 | 0.0% |
 | Not working | 3 | 12.5% |
 
@@ -29,7 +29,6 @@
 | Relentless Assault | silent | Untap all creatures that attacked this turn. After this main phase, there is an additional combat phase followed by an additional main phase. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Summer Bloom | silent | You may play up to three additional lands this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Teferi's Puzzle Box | silent | At the beginning of each player's draw step, that player puts the cards in their hand on the bottom of their library in any order, then draws that many cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Archangel | handled | Flying | machines/combat.py | Y/-/- | not_tested |
 | Coercion | handled | Target opponent reveals their hand. You choose a card from it. That player discards that card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Creeping Mold | handled | Destroy target artifact, enchantment, or land. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Funeral Charm | handled | Choose one — • Target player discards a card. • Target creature gets +2/-1 until end of turn. • Target creature gains swampwalk until end of turn. (It can't be  | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -50,8 +49,9 @@
 ## Fully supported
 
 <details>
-<summary>4 cards</summary>
+<summary>5 cards</summary>
 
+- Archangel
 - Cloud Elemental
 - Crypt Rats
 - Honorable Passage

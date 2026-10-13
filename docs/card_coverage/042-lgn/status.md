@@ -17,17 +17,16 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 4 | 23.5% |
+| Tested | 5 | 29.4% |
 | Works (untested) | 10 | 58.8% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 3 | 17.6% |
+| Not working | 2 | 11.8% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
 | Dreamborn Muse | silent | At the beginning of each player's upkeep, that player mills X cards, where X is the number of cards in their hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Graveborn Muse | silent | At the beginning of your upkeep, you draw X cards and lose X life, where X is the number of Zombies you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Phage the Untouchable | silent | Whenever Phage deals combat damage to a creature, destroy that creature. It can't be regenerated. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Akroma, Angel of Wrath | handled | Flying | machines/combat.py | Y/-/- | not_tested |
 | Enormous Baloth | handled |  |  | Y/-/- | not_tested |
@@ -43,9 +42,10 @@
 ## Fully supported
 
 <details>
-<summary>4 cards</summary>
+<summary>5 cards</summary>
 
 - Fugitive Wizard
+- Graveborn Muse
 - Lavaborn Muse
 - Mistform Ultimus
 - Seedborn Muse
@@ -57,7 +57,6 @@
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
 | at the beginning of each player's upkeep, that player mills N cards, where N is the number of cards in their hand. | 1 | Dreamborn Muse | lgn |
-| at the beginning of your upkeep, you draw N cards and lose N life, where N is the number of zombies you control. | 1 | Graveborn Muse | lgn |
 | whenever phage deals combat damage to a creature, destroy that creature. it can't be regenerated. | 1 | Phage the Untouchable | lgn |
 
 ## Notes

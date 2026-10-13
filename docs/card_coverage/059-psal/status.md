@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 7 | 8.9% |
+| Tested | 8 | 10.1% |
 | Works (untested) | 59 | 74.7% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 13 | 16.5% |
+| Not working | 12 | 15.2% |
 
 ## Cards needing work
 
@@ -33,7 +33,6 @@
 | Clutch of the Undercity | silent | Return target permanent to its owner's hand. Its controller loses 3 life. Transmute {1}{U}{B} ({1}{U}{B}, Discard this card: Search your library for a card with | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Fertile Imagination | silent | Choose a card type. Target opponent reveals their hand. Create two 1/1 green Saproling creature tokens for each card of the chosen type revealed this way. (Arti | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Infiltrator's Magemark | silent | Creatures you control that are enchanted get +1/+1 and can't be blocked except by creatures with defender. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Jedit Ojanen of Efrava | silent | Whenever Jedit Ojanen attacks or blocks, create a 2/2 green Cat Warrior creature token with forestwalk. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Lovisa Coldeyes | silent | Each creature that's a Barbarian, a Warrior, or a Berserker gets +2/+2 and has haste. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sanguine Praetor | silent | {B}, Sacrifice a creature: Destroy each creature with the same mana value as the sacrificed creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Seht's Tiger | silent | When this creature enters, you gain protection from the color of your choice until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -102,12 +101,13 @@
 ## Fully supported
 
 <details>
-<summary>7 cards</summary>
+<summary>8 cards</summary>
 
 - Arctic Nishoba
 - Detainment Spell
 - Frenzied Goblin
 - Grifter's Blade
+- Jedit Ojanen of Efrava
 - Nacatl War-Pride
 - Selesnya Sanctuary
 - Stalking Vengeance
@@ -127,7 +127,6 @@
 | when ~ enters, you gain protection from the color of your choice until end of turn. | 1 | Seht's Tiger | psal |
 | whenever a source deals damage to ~, that source's controller mills that many cards. | 1 | Belltower Sphinx | psal |
 | whenever an aura becomes attached to ~, create two N/N green saproling creature tokens. | 1 | Bramble Elemental | psal |
-| whenever jedit ojanen attacks or blocks, create a N/N green cat warrior creature token with forestwalk. | 1 | Jedit Ojanen of Efrava | psal |
 | {M}, sacrifice a creature: destroy each creature with the same mana value as the sacrificed creature. | 1 | Sanguine Praetor | psal |
 | {M}{M}: target creature can't block ~ ~. | 1 | Burning-Tree Bloodscale | psal |
 | ~ has flying as long as it's enchanted. | 1 | Skyrider Trainee | psal |

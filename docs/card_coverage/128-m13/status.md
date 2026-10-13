@@ -17,24 +17,21 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 15 | 14.0% |
-| Works (untested) | 67 | 62.6% |
+| Tested | 17 | 15.9% |
+| Works (untested) | 68 | 63.6% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 25 | 23.4% |
+| Not working | 22 | 20.6% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
-| Blood Reckoning | silent | Whenever a creature attacks you or a planeswalker you control, that creature's controller loses 1 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Cathedral of War | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Disciple of Bolas | silent | When this creature enters, sacrifice another creature. You gain X life and draw X cards, where X is that creature's power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Duskmantle Prowler | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Duty-Bound Dead | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Gem of Becoming | silent | {3}, {T}, Sacrifice this artifact: Search your library for an Island card, a Swamp card, and a Mountain card. Reveal those cards, put them into your hand, then  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Knight of Glory | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Knight of Infamy | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Liliana of the Dark Realms | silent | −3: Target creature gets +X/+X or -X/-X until end of turn, where X is the number of Swamps you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Mindclaw Shaman | silent | When this creature enters, target opponent reveals their hand. You may cast an instant or sorcery spell from among those cards without paying its mana cost. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Mwonvuli Beast Tracker | silent | When this creature enters, search your library for a creature card with deathtouch, hexproof, reach, or trample and reveal it. Shuffle and put that card on top. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Nefarox, Overlord of Grixis | silent | Whenever Nefarox attacks alone, defending player sacrifices a creature of their choice. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -86,6 +83,7 @@
 | Hydrosurge | handled | Target creature gets -5/-0 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Krenko's Command | handled | Create two 1/1 red Goblin creature tokens. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Krenko, Mob Boss | handled | {T}: Create X 1/1 red Goblin creature tokens, where X is the number of Goblins you control. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Liliana of the Dark Realms | handled | +1: Search your library for a Swamp card, reveal it, put it into your hand, then shuffle. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Liliana's Shade | handled | When this creature enters, you may search your library for a Swamp card, reveal it, put it into your hand, then shuffle. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Magmaquake | handled | Magmaquake deals X damage to each creature without flying and each planeswalker. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Mark of the Vampire | handled | Enchanted creature gets +2/+2 and has lifelink. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -122,10 +120,12 @@
 ## Fully supported
 
 <details>
-<summary>15 cards</summary>
+<summary>17 cards</summary>
 
 - Augur of Bolas
+- Blood Reckoning
 - Chandra's Fury
+- Disciple of Bolas
 - Elderscale Wurm
 - Encrust
 - Faith's Reward
@@ -153,10 +153,8 @@
 | at the beginning of your upkeep, put a +N/+N counter on equipped creature if it's white. | 1 | Ring of Thune | m13 |
 | destroy target creature an opponent controls. each other creature that player controls gets -N/-N until end of turn. | 1 | Public Execution | m13 |
 | exile target instant or sorcery card from your graveyard and target instant or sorcery card from an opponent's graveyard. copy those cards. cast the copies if a | 1 | Spelltwine | m13 |
-| when ~ enters, sacrifice another creature. you gain N life and draw N cards, where N is that creature's power. | 1 | Disciple of Bolas | m13 |
 | when ~ enters, search your library for a creature card with deathtouch, hexproof, reach, or trample and reveal it. shuffle and put that card on top. | 1 | Mwonvuli Beast Tracker | m13 |
 | when ~ enters, target opponent reveals their hand. you may cast an instant or sorcery spell from among those cards without paying its mana cost. | 1 | Mindclaw Shaman | m13 |
-| whenever a creature attacks you or a planeswalker you control, that creature's controller loses N life. | 1 | Blood Reckoning | m13 |
 | whenever nefarox attacks alone, defending player sacrifices a creature of their choice. | 1 | Nefarox, Overlord of Grixis | m13 |
 | whenever odric and at least three other creatures attack, you choose which creatures block ~ and how those creatures block. | 1 | Odric, Master Tactician | m13 |
 | {M}, {M}, sacrifice ~: search your library for an island card, a swamp card, and a mountain card. reveal those cards, put them into your hand, then shuffle. | 1 | Gem of Becoming | m13 |
@@ -164,7 +162,6 @@
 | {M}{M}, {M}: put a petrification counter on target creature. it gains defender and becomes a colorless artifact in addition to its other types. its activated ab | 1 | Xathrid Gorgon | m13 |
 | {M}{M}, {M}: put ~ and target creature on top of their owners' libraries, then those players shuffle their libraries. | 1 | Void Stalker | m13 |
 | ~ gets +N/+N for each other creature you control named ~. | 1 | Timberpack Wolf | m13 |
-| −N: target creature gets +N/+N or -N/-N until end of turn, where N is the number of swamps you control. | 1 | Liliana of the Dark Realms | m13 |
 
 ## Notes
 

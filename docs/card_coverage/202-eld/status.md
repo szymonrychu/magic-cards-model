@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 74 | 27.5% |
-| Works (untested) | 145 | 53.9% |
+| Tested | 76 | 28.3% |
+| Works (untested) | 146 | 54.3% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 50 | 18.6% |
+| Not working | 47 | 17.5% |
 
 ## Cards needing work
 
@@ -35,7 +35,6 @@
 | Clackbridge Troll | silent | At the beginning of combat on your turn, any opponent may sacrifice a creature of their choice. If a player does, tap this creature, you gain 3 life, and you dr | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Covetous Urge | silent | Target opponent reveals their hand. You choose a nonland card from that player's graveyard or hand and exile it. You may cast that card for as long as it remain | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Dance of the Manse | silent | Return up to X target artifact and/or non-Aura enchantment cards each with mana value X or less from your graveyard to the battlefield. If X is 6 or more, those | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Didn't Say Please | silent | Counter target spell. Its controller mills three cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Doom Foretold | silent | At the beginning of each player's upkeep, that player sacrifices a nonland, nontoken permanent of their choice. If that player can't, they discard a card, they  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Escape to the Wilds | silent | Exile the top five cards of your library. You may play cards exiled this way until the end of your next turn. You may play an additional land this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Faeburrow Elder | silent | {T}: For each color among permanents you control, add one mana of that color. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -53,13 +52,11 @@
 | Once and Future | silent | Return target card from your graveyard to your hand. Put up to one other target card from your graveyard on top of your library. Exile Once and Future. Adamant  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Opportunistic Dragon | silent | When this creature enters, choose target Human or artifact an opponent controls. For as long as this creature remains on the battlefield, gain control of that p | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Realm-Cloaked Giant // Cast Off | silent | Destroy all non-Giant creatures. (Then exile this card. You may cast the creature later from exile.) | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Revenge of Ravens | silent | Whenever a creature attacks you or a planeswalker you control, that creature's controller loses 1 life and you gain 1 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Robber of the Rich | silent | Whenever this creature attacks, if defending player has more cards in hand than you, exile the top card of their library. During any turn you attacked with a Ro | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Rosethorn Acolyte // Seasonal Ritual | silent | Add one mana of any color. (Then exile this card. You may cast the creature later from exile.) | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Rowan's Stalwarts | silent | When this creature enters, you may search your library and/or graveyard for a card named Rowan, Fearless Sparkmage, reveal it, and put it into your hand. If you | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Silverwing Squadron | silent | Whenever this creature attacks, create a number of 2/2 white Knight creature tokens with vigilance equal to the number of opponents you have. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Skullknocker Ogre | silent | Whenever this creature deals damage to an opponent, that player discards a card at random. If the player does, they draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Smitten Swordmaster // Curry Favor | silent | You gain X life and each opponent loses X life, where X is the number of Knights you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Specter's Shriek | silent | Target opponent reveals their hand. You may choose a nonland card from it. If you do, that player exiles that card. If a nonblack card is exiled this way, exile | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Wicked Guardian | silent | When this creature enters, you may have it deal 2 damage to another creature you control. If you do, draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Wishclaw Talisman | silent | {1}, {T}, Remove a wish counter from this artifact: Search your library for a card, put it into your hand, then shuffle. An opponent gains control of this artif | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -101,6 +98,7 @@
 | Crystal Slipper | handled | Equipped creature gets +1/+0 and has haste. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Curious Pair // Treats to Share | handled | Create a Food token. (Then exile this card. You may cast the creature later from exile. A Food token is an artifact with "{2}, {T}, Sacrifice this token: You ga | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Deathless Knight | handled | When you gain life for the first time each turn, return this card from your graveyard to your hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Didn't Say Please | handled | Counter target spell. Its controller mills three cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Edgewall Innkeeper | handled | Whenever you cast a creature spell that has an Adventure, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Elite Headhunter | handled | {B/R}{B/R}{B/R}, Sacrifice another creature or an artifact: This creature deals 2 damage to target creature or planeswalker. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Embereth Shieldbreaker // Battle Display | handled | Destroy target artifact. (Then exile this card. You may cast the creature later from exile.) | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -225,7 +223,7 @@
 ## Fully supported
 
 <details>
-<summary>74 cards</summary>
+<summary>76 cards</summary>
 
 - Archon of Absolution
 - Ardenvale Paladin
@@ -281,6 +279,7 @@
 - Rankle, Master of Pranks
 - Reaper of Night // Harvest Fear
 - Redcap Melee
+- Revenge of Ravens
 - Rimrock Knight // Boulder Rush
 - Rowan, Fearless Sparkmage
 - Run Away Together
@@ -290,6 +289,7 @@
 - Shambling Suit
 - Shimmer Dragon
 - Slaying Fire
+- Smitten Swordmaster // Curry Favor
 - Steelclaw Lance
 - Sundering Stroke
 - Syr Gwyn, Hero of Ashvale
@@ -316,7 +316,6 @@
 | at the beginning of combat on your turn, you may have target noncreature artifact you control become a N/N artifact creature. if you do, put four +N/+N counters | 1 | Workshop Elders | eld |
 | at the beginning of each player"..."t, they discard a card, they lose N life, you draw a card, you gain N life, you create a N/N white knight creature token wit | 1 | Doom Foretold | eld |
 | attacking non-human creatures you control get +N/+N and have trample. | 1 | Ferocity of the Wilds | eld |
-| counter target spell. its controller mills three cards. | 1 | Didn't Say Please | eld |
 | creatures of the creature type of your choice get -N/-N until end of turn. | 1 | Witch's Vengeance | eld |
 | destroy all non-giant creatures. (then exile ~. you may cast the creature later from exile.) | 1 | Realm-Cloaked Giant // Cast Off | eld |
 | enchanted creature gets +N/+N for each artifact and/or enchantment you control. | 1 | All That Glitters | eld |
@@ -339,7 +338,6 @@
 | when ~ enters, target knight gains deathtouch and lifelink until end of turn. | 1 | Blacklance Paragon | eld |
 | when ~ enters, you may have it deal N damage to another creature you control. if you do, draw a card. | 1 | Wicked Guardian | eld |
 | when ~ enters, you may search your library and/or graveyard for a card named rowan, fearless sparkmage, reveal it, and put it into your hand. if you search your | 1 | Rowan's Stalwarts | eld |
-| whenever a creature attacks you or a planeswalker you control, that creature's controller loses N life and you gain N life. | 1 | Revenge of Ravens | eld |
 | whenever another green creature you control enters, put a +N/+N counter on yorvo. then if that creature"..."s power, put another +N/+N counter on yorvo. | 1 | Yorvo, Lord of Garenbrig | eld |
 | whenever another non-human creature you control enters, you may pay {M}. when you do, put N +N/+N counters on ~. | 1 | Wildborn Preserver | eld |
 | whenever ~ attacks, create a number of N/N white knight creature tokens with vigilance equal to the number of opponents you have. | 1 | Silverwing Squadron | eld |
@@ -347,7 +345,6 @@
 | whenever ~ attacks, other knights you control get +N/+N until end of turn. | 1 | Belle of the Brawl | eld |
 | whenever ~ deals combat damage to a player, you may sacrifice it. when you do, destroy target artifact or enchantment. | 1 | Flaxen Intruder // Welcome Home | eld |
 | whenever ~ deals damage to an opponent, that player discards a card at random. if the player does, they draw a card. | 1 | Skullknocker Ogre | eld |
-| you gain N life and each opponent loses N life, where N is the number of knights you control. | 1 | Smitten Swordmaster // Curry Favor | eld |
 | you may have ~ enter as a copy of any artifact or enchantment on the battlefield. | 1 | Mirrormade | eld |
 | you may sacrifice a food. if you do, target creature gets +N/+N until end of turn. otherwise, that creature gets +N/+N until end of turn. | 1 | Insatiable Appetite | eld |
 | you may sacrifice two foods. if you do, create a N/N green giant creature token. otherwise, create three food tokens. (they're artifacts with "...") | 1 | Giant Opportunity | eld |

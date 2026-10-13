@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 8 | 17.4% |
+| Tested | 11 | 23.9% |
 | Works (untested) | 26 | 56.5% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 12 | 26.1% |
+| Not working | 9 | 19.6% |
 
 ## Cards needing work
 
@@ -29,15 +29,12 @@
 | Bribery | silent | Search target opponent's library for a creature card and put that card onto the battlefield under your control. Then that player shuffles. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Cowardice | silent | Whenever a creature becomes the target of a spell or ability, return that creature to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Hunted Wumpus | silent | When this creature enters, each other player may put a creature card from their hand onto the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Midnight Ritual | silent | Exile X target creature cards from your graveyard. For each creature card exiled this way, create a 2/2 black Zombie creature token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Natural Affinity | silent | All lands become 2/2 creatures until end of turn. They're still lands. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Nether Spirit | silent | At the beginning of your upkeep, if this card is the only creature card in your graveyard, you may return this card to the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Noble Purpose | silent | Whenever a creature you control deals combat damage, you gain that much life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Story Circle | silent | {W}: The next time a source of your choice of the chosen color would deal damage to you this turn, prevent that damage. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Thieves' Auction | silent | Exile all nontoken permanents. Starting with you, each player chooses one of the exiled cards and puts it onto the battlefield tapped under their control. Repea | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Deathgazer | notice | Whenever this creature blocks or becomes blocked by a nonblack creature, destroy that creature at end of combat. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Sever Soul | notice | Destroy target nonblack creature. It can't be regenerated. You gain life equal to its toughness. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Vendetta | notice | Destroy target nonblack creature. It can't be regenerated. You lose life equal to that creature's toughness. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Arms Dealer | handled | {1}{R}, Sacrifice a Goblin: This creature deals 4 damage to target creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ballista Squad | handled | {X}{W}, {T}: This creature deals X damage to target attacking or blocking creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Battle Rampart | handled | {T}: Target creature gains haste until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -68,7 +65,7 @@
 ## Fully supported
 
 <details>
-<summary>8 cards</summary>
+<summary>11 cards</summary>
 
 - Arrest
 - Cho-Manno, Revolutionary
@@ -77,7 +74,10 @@
 - Distorting Lens
 - Ivory Mask
 - Last Breath
+- Midnight Ritual
+- Sever Soul
 - Two-Headed Dragon
+- Vendetta
 
 </details>
 
@@ -87,9 +87,6 @@
 |---|---|---|---|
 | all lands become N/N creatures until end of turn. they're still lands. | 1 | Natural Affinity | mmq |
 | at the beginning of your upkeep, if ~ is the only creature card in your graveyard, you may return ~ to the battlefield. | 1 | Nether Spirit | mmq |
-| destroy target nonblack creature. it can"..."s toughness. | 1 | Vendetta | mmq |
-| destroy target nonblack creature. it can't be regenerated. you gain life equal to its toughness. | 1 | Sever Soul | mmq |
-| exile N target creature cards from your graveyard. for each creature card exiled ~, create a N/N black zombie creature token. | 1 | Midnight Ritual | mmq |
 | exile all nontoken permanents. starting with you, each player chooses one of the exiled cards and puts it onto the battlefield tapped under their control. repea | 1 | Thieves' Auction | mmq |
 | search target opponent's library for a creature card and put that card onto the battlefield under your control. then that player shuffles. | 1 | Bribery | mmq |
 | when ~ enters, each other player may put a creature card from their hand onto the battlefield. | 1 | Hunted Wumpus | mmq |

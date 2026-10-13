@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 19 | 19.4% |
+| Tested | 20 | 20.4% |
 | Works (untested) | 61 | 62.2% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 18 | 18.4% |
+| Not working | 17 | 17.3% |
 
 ## Cards needing work
 
@@ -34,7 +34,6 @@
 | Doubling Chant | silent | For each creature you control, you may search your library for a creature card with the same name as that creature. Put those cards onto the battlefield, then s | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Druidic Satchel | silent | {2}, {T}: Reveal the top card of your library. If it's a creature card, create a 1/1 green Saproling creature token. If it's a land card, put that card onto the | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Goblin Bangchuckers | silent | {T}: Flip a coin. If you win the flip, this creature deals 2 damage to any target. If you lose the flip, this creature deals 2 damage to itself. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Jace's Archivist | silent | {U}, {T}: Each player discards their hand, then draws cards equal to the greatest number of cards a player discarded this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Jace, Memory Adept | silent | −7: Any number of target players each draw twenty cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Monomania | silent | Target player chooses a card in their hand and discards the rest. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Scrambleverse | silent | For each nonland permanent, choose a player at random. Then each player gains control of each permanent for which they were chosen. Untap those permanents. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -109,7 +108,7 @@
 ## Fully supported
 
 <details>
-<summary>19 cards</summary>
+<summary>20 cards</summary>
 
 - Adaptive Automaton
 - Aegis Angel
@@ -121,6 +120,7 @@
 - Gorehorn Minotaurs
 - Grand Abolisher
 - Hunter's Insight
+- Jace's Archivist
 - Personal Sanctuary
 - Phantasmal Image
 - Scepter of Empires
@@ -150,7 +150,6 @@
 | whenever a creature without flying attacks you or a planeswalker you control, ~ deals N damage to that creature. | 1 | Circle of Flame | m12 |
 | whenever combat damage is dealt to you or a planeswalker you control, if ~ is in your graveyard, destroy target attacking creature, then put ~ on top of your li | 1 | Vengeful Pharaoh | m12 |
 | whenever you cast a vampire creature spell, it gains bloodthirst N. | 1 | Bloodlord of Vaasgoth | m12 |
-| {M}, {M}: each player discards their hand, then draws cards equal to the greatest number of cards a player discarded ~. | 1 | Jace's Archivist | m12 |
 | {M}, {M}: reveal the top card of your library. if it"..."s a land card, put that card onto the battlefield under your control. if it's a noncreature, nonland ca | 1 | Druidic Satchel | m12 |
 | {M}: flip a coin. if you win the flip, ~ deals N damage to any target. if you lose the flip, ~ deals N damage to itself. | 1 | Goblin Bangchuckers | m12 |
 | {M}{M}, {M}: ~ deals N damage to target attacking or blocking creature. ~ doesn't untap during your next untap step. | 1 | Arbalest Elite | m12 |

@@ -17,26 +17,23 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 65 | 25.2% |
+| Tested | 71 | 27.5% |
 | Works (untested) | 143 | 55.4% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 50 | 19.4% |
+| Not working | 44 | 17.1% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
 | Aeromoeba | silent | Discard a card: Switch this creature's power and toughness until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Altar of the Goyf | silent | Whenever a creature you control attacks alone, it gets +X/+X until end of turn, where X is the number of card types among cards in all graveyards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Arcbound Shikari | silent | When this creature enters, put a +1/+1 counter on each other artifact creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Bannerhide Krushok | silent | Reinforce | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Bottle Golems | silent | When this creature dies, you gain life equal to its power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Break Ties | silent | Reinforce | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Break the Ice | silent | Overload | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Calibrated Blast | silent | Reveal cards from the top of your library until you reveal a nonland card. Put the revealed cards on the bottom of your library in a random order. When you reve | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Chainer, Nightmare Adept | silent | Discard a card: You may cast a creature spell from your graveyard this turn. Activate only once each turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Chef's Kiss | silent | Gain control of target spell that targets only a single permanent or player. Copy it, then reselect the targets at random for the spell and the copy. The new ta | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Chitterspitter | silent | Squirrels you control get +1/+1 for each acorn counter on this artifact. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Chrome Courier | silent | When this creature enters, reveal the top two cards of your library. Put one of them into your hand and the other into your graveyard. If you put an artifact ca | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Damn | silent | Destroy target creature. A creature destroyed this way can't be regenerated. Overload {2}{W}{W} (You may cast this spell for its overload cost. If you do, chang | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Dihada's Ploy | silent | Jump | no machine in the engine executes this keyword | Y/-/- | not_working |
@@ -53,13 +50,11 @@
 | Landscaper Colos | silent | When this creature enters, put target card from an opponent's graveyard on the bottom of their library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Loathsome Curator | silent | When this creature exploits a creature, destroy target creature you don't control with mana value 3 or less. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Lonis, Cryptozoologist | silent | {T}, Sacrifice X Clues: Target opponent reveals the top X cards of their library. You may put a nonland permanent card with mana value X or less from among them | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Lucid Dreams | silent | Draw X cards, where X is the number of card types among cards in your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Magus of the Bridge | silent | When a creature is put into an opponent's graveyard from the battlefield, exile this creature. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Nettlecyst | silent | Equipped creature gets +1/+1 for each artifact and/or enchantment you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Nykthos Paragon | silent | Whenever you gain life, you may put that many +1/+1 counters on each creature you control. Do this only once each turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Out of Time | silent | When this enchantment enters, untap all creatures, then those creatures phase out until this enchantment leaves the battlefield. Put a time counter on this ench | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Rise and Shine | silent | Overload | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Scour the Desert | silent | Exile target creature card from your graveyard. Create X 1/1 white Bird creature tokens with flying, where X is the exiled card's toughness. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Scurry Oak | silent | Evolve | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Shattered Ego | silent | {3}{U}{U}: Put enchanted creature into its owner's library third from the top. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sojourner's Companion | silent | Affinity for artifacts Artifact landcycling {2} ({2}, Discard this card: Search your library for an artifact land card, reveal it, put it into your hand, then s | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -72,7 +67,6 @@
 | Wren's Run Hydra | silent | Reinforce | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Yusri, Fortune's Flame | silent | Whenever Yusri attacks, choose a number between 1 and 5. Flip that many coins. For each flip you win, draw a card. For each flip you lose, Yusri deals 2 damage  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Blacksmith's Skill | notice | Target permanent gains hexproof and indestructible until end of turn. If it's an artifact creature, it gets +2/+2 until end of turn. | unparsed remainder: If it's an artifact creature, it gets +2/+2 until end of turn. | Y/-/- | not_working |
-| Flay Essence | notice | Exile target creature or planeswalker. You gain life equal to the number of counters on it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Mount Velus Manticore | notice | At the beginning of combat on your turn, you may discard a card. When you do, this creature deals X damage to any target, where X is the number of card types th | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Unmarked Grave | notice | Search your library for a nonlegendary card, put that card into your graveyard, then shuffle. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Young Necromancer | notice | When this creature enters, you may exile two cards from your graveyard. When you do, return target creature card from your graveyard to the battlefield. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
@@ -223,11 +217,12 @@
 ## Fully supported
 
 <details>
-<summary>65 cards</summary>
+<summary>71 cards</summary>
 
 - Abiding Grace
 - Academy Manufactor
 - Aeve, Progenitor Ooze
+- Altar of the Goyf
 - Archon of Cruelty
 - Arcus Acolyte
 - Asmoranomardicadaistinaculdacar
@@ -235,9 +230,11 @@
 - Blessed Respite
 - Bloodbraid Marauder
 - Blossoming Calm
+- Bottle Golems
 - Breathless Knight
 - Carth the Lion
 - Chatterfang, Squirrel General
+- Chitterspitter
 - Dakkon, Shadow Slayer
 - Dauthi Voidwalker
 - Dermotaxi
@@ -247,6 +244,7 @@
 - Endurance
 - Fae Offering
 - Flametongue Yearling
+- Flay Essence
 - Gilt-Blade Prowler
 - Glinting Creeper
 - Glorious Enforcer
@@ -257,6 +255,7 @@
 - Harmonic Prodigy
 - Kaleidoscorch
 - Legion Vanguard
+- Lucid Dreams
 - Master of Death
 - Murktide Regent
 - Necrogoyf
@@ -269,6 +268,7 @@
 - Rustvale Bridge
 - Sanctifier en-Vec
 - Scion of Draco
+- Scour the Desert
 - Search the Premises
 - Serra's Emissary
 - Skyblade's Boon
@@ -304,19 +304,15 @@
 | destroy target creature. a creature destroyed ~ can't be regenerated. overload {M}{M}{M} (you may cast ~ for its overload cost. if you do, change "..." in its t | 1 | Damn | mh2 |
 | discard a card: switch ~ power and toughness until end of turn. | 1 | Aeromoeba | mh2 |
 | discard a card: you may cast a creature spell from your graveyard ~. activate only once each turn. | 1 | Chainer, Nightmare Adept | mh2 |
-| draw N cards, where N is the number of card types among cards in your graveyard. | 1 | Lucid Dreams | mh2 |
 | equipped creature gets +N/+N for each artifact and/or enchantment you control. | 1 | Nettlecyst | mh2 |
 | evolve | 1 | Scurry Oak | mh2 |
 | exalted | 1 | Ignoble Hierarch | mh2 |
-| exile target creature card from your graveyard. create N N/N white bird creature tokens with flying, where N is the exiled card's toughness. | 1 | Scour the Desert | mh2 |
-| exile target creature or planeswalker. you gain life equal to the number of counters on it. | 1 | Flay Essence | mh2 |
 | exile the top card of your library. during your next turn, you may play that card. storm (when you cast ~, copy it for each spell cast before it ~.) | 1 | Galvanic Relay | mh2 |
 | gain control of target spell that targets only a single permanent or player. copy it, then reselect the targets at random for the spell and the copy. the new ta | 1 | Chef's Kiss | mh2 |
 | jump | 1 | Dihada's Ploy | mh2 |
 | look at the top four cards of your library. put one of them into your hand and the rest into your graveyard. you gain life equal to the greatest power among cre | 1 | Discerning Taste | mh2 |
 | reveal cards from the top of your library until you reveal a nonland card. put the revealed cards on the bottom of your library in a random order. when you reve | 1 | Calibrated Blast | mh2 |
 | search your library for a nonlegendary card, put that card into your graveyard, then shuffle. | 1 | Unmarked Grave | mh2 |
-| squirrels you control get +N/+N for each acorn counter on ~. | 1 | Chitterspitter | mh2 |
 | suspend N—{M} until end of turn, you may play lands and cast spells from your graveyard. if a card would be put into your graveyard from anywhere ~, exile that  | 1 | Gaea's Will | mh2 |
 | suspend N—{M}{M} shuffle all permanents you own into your library, then reveal that many cards from the top of your library. put all non-aura permanent cards re | 1 | Glimpse of Tomorrow | mh2 |
 | suspend N—{M}{M}{M} (rather than cast ~ from your hand, pay {M}{M}{M} and exile it with three time counters on it. at the beginning of your upkeep, remove a tim | 1 | Inevitable Betrayal | mh2 |
@@ -324,7 +320,6 @@
 | target permanent gains hexproof and indestructible until end of turn. if it's an artifact creature, it gets +N/+N until end of turn. | 1 | Blacksmith's Skill | mh2 |
 | when a creature is put into an opponent's graveyard from the battlefield, exile ~. | 1 | Magus of the Bridge | mh2 |
 | when tourach enters, if it was kicked, target opponent discards two cards at random. | 1 | Tourach, Dread Cantor | mh2 |
-| when ~ dies, you gain life equal to its power. | 1 | Bottle Golems | mh2 |
 | when ~ enters, create a number of N/N green squirrel creature tokens equal to your devotion to black. | 1 | Underworld Hermit | mh2 |
 | when ~ enters, if it was kicked, target land becomes an island for as long as ~ remains on the battlefield. | 1 | Tide Shaper | mh2 |
 | when ~ enters, put a +N/+N counter on each other artifact creature you control. | 1 | Arcbound Shikari | mh2 |
@@ -333,7 +328,6 @@
 | when ~ enters, untap all creatures, then those creatures phase out until ~ leaves the battlefield. put a time counter on ~ for each creature that phased out ~. | 1 | Out of Time | mh2 |
 | when ~ enters, you may exile two cards from your graveyard. when you do, return target creature card from your graveyard to the battlefield. | 1 | Young Necromancer | mh2 |
 | when ~ exploits a creature, destroy target creature you don't control with mana value N or less. | 1 | Loathsome Curator | mh2 |
-| whenever a creature you control attacks alone, it gets +N/+N until end of turn, where N is the number of card types among cards in all graveyards. | 1 | Altar of the Goyf | mh2 |
 | whenever an opponent casts their first noncreature spell each turn, draw a card unless that player pays {M}, where N is ~ power. | 1 | Esper Sentinel | mh2 |
 | whenever equipped creature deals combat damage to a player, exile up to one target creature you own, then search your library for a basic land card. put both ca | 1 | Sword of Hearth and Home | mh2 |
 | whenever you gain life, you may put that many +N/+N counters on each creature you control. do ~ once each turn. | 1 | Nykthos Paragon | mh2 |

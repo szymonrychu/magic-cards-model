@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 52 | 29.2% |
+| Tested | 54 | 30.3% |
 | Works (untested) | 81 | 45.5% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 45 | 25.3% |
+| Not working | 43 | 24.2% |
 
 ## Cards needing work
 
@@ -44,7 +44,6 @@
 | Llanowar Mentor | silent | {G}, {T}, Discard a card: Create a 1/1 green Elf Druid creature token named Llanowar Elves. It has "{T}: Add {G}." | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Lost Hours | silent | Target player reveals their hand. You choose a nonland card from it. That player puts that card into their library third from the top. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Maelstrom Djinn | silent | When this creature is turned face up, put two time counters on it and it gains vanishing. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Minions' Murmurs | silent | You draw X cards and you lose X life, where X is the number of creatures you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Muraganda Petroglyphs | silent | Creatures with no abilities get +2/+2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Mystic Speculation | silent | Buyback | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Narcomoeba | silent | When this card is put into your graveyard from your library, you may put it onto the battlefield. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
@@ -52,7 +51,6 @@
 | Nix | silent | Counter target spell if no mana was spent to cast it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Oriss, Samite Guardian | silent | Grandeur — Discard another card named Oriss, Samite Guardian: Target player can't cast spells this turn, and creatures that player controls can't attack this tu | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Phosphorescent Feast | silent | Chroma — Reveal any number of cards in your hand. You gain 2 life for each green mana symbol in those cards' mana costs. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Pooling Venom | silent | Whenever enchanted land becomes tapped, its controller loses 2 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Putrid Cyclops | silent | When this creature enters, scry 1, then reveal the top card of your library. This creature gets -X/-X until end of turn, where X is that card's mana value. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Riddle of Lightning | silent | Choose any target. Scry 3, then reveal the top card of your library. Riddle of Lightning deals damage equal to that card's mana value to that permanent or playe | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Riftsweeper | silent | When this creature enters, choose target face-up exiled card. Its owner shuffles it into their library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -156,7 +154,7 @@
 ## Fully supported
 
 <details>
-<summary>52 cards</summary>
+<summary>54 cards</summary>
 
 - Akroma's Memorial
 - Angel of Salvation
@@ -190,9 +188,11 @@
 - Lymph Sliver
 - Magus of the Moat
 - Mesmeric Sliver
+- Minions' Murmurs
 - Mistmeadow Skulk
 - Molten Disaster
 - Pact of Negation
+- Pooling Venom
 - Pyromancer's Swath
 - Ravaging Riftwurm
 - Rites of Flourishing
@@ -245,11 +245,9 @@
 | whenever a card is put into an opponent's graveyard from anywhere, if ~ is suspended, you may remove a time counter from ~. | 1 | Nihilith | fut |
 | whenever a player casts a noncreature spell, each of that player's opponents may draw a card. | 1 | Heartwood Storyteller | fut |
 | whenever another creature enters, exile ~. return ~ to the battlefield under its owner's control at the beginning of the next end step. | 1 | Saltskitter | fut |
-| whenever enchanted land becomes tapped, its controller loses N life. | 1 | Pooling Venom | fut |
 | whenever you cast a sorcery spell, copy the enchanted instant card. you may cast the copy without paying its mana cost. if you do, exile the enchanted card and  | 1 | Spellweaver Volute | fut |
 | whenever you cast a spell, creatures you control can't be the targets of spells or abilities your opponents control ~. | 1 | Veilstone Amulet | fut |
 | whenever ~ deals combat damage to a player, that player reveals their hand. you choose a nonland card from it. search that player's graveyard, hand, and library | 1 | Shimian Specter | fut |
-| you draw N cards and you lose N life, where N is the number of creatures you control. | 1 | Minions' Murmurs | fut |
 | {M}, exile a nonland card from your hand: put four time counters on the exiled card. if it doesn't have suspend, it gains suspend. | 1 | Jhoira of the Ghitu | fut |
 | {M}, sacrifice ~: prevent the next N damage that would be dealt to each creature you control ~. | 1 | Samite Censer-Bearer | fut |
 | {M}, {M}, discard a card: create a N/N black zombie goblin creature token named festering goblin. it has "..." | 1 | Skirk Ridge Exhumer | fut |

@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 46 | 20.9% |
+| Tested | 52 | 23.6% |
 | Works (untested) | 131 | 59.5% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 43 | 19.5% |
+| Not working | 37 | 16.8% |
 
 ## Cards needing work
 
@@ -31,7 +31,6 @@
 | Baneful Omen | silent | At the beginning of your end step, you may reveal the top card of your library. If you do, each opponent loses life equal to that card's mana value. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Battle-Rattle Shaman | silent | At the beginning of combat on your turn, you may have target creature get +2/+0 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Brood Birthing | silent | If you control an Eldrazi Spawn, create three 0/1 colorless Eldrazi Spawn creature tokens. They have "Sacrifice this token: Add {C}." Otherwise, create one of t | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Contaminated Ground | silent | Whenever enchanted land becomes tapped, its controller loses 2 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Disaster Radius | silent | As an additional cost to cast this spell, reveal a creature card from your hand. Disaster Radius deals X damage to each creature your opponents control, where X | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Dormant Gomazoa | silent | Whenever you become the target of a spell, you may untap this creature. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Echo Mage | silent | {U}{U}, {T}: Copy target instant or sorcery spell twice. You may choose new targets for the copies. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -42,7 +41,6 @@
 | Irresistible Prey | silent | Target creature must be blocked this turn if able. Draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | It That Betrays | silent | Whenever an opponent sacrifices a nontoken permanent, put that card onto the battlefield under your control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Jaddi Lifestrider | silent | When this creature enters, you may tap any number of untapped creatures you control. You gain 2 life for each creature tapped this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Keening Stone | silent | {5}, {T}: Target player mills X cards, where X is the number of cards in that player's graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Lay Bare | silent | Counter target spell. Look at its controller's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Lightmine Field | silent | Whenever one or more creatures attack, this enchantment deals damage to each of those creatures equal to the number of attacking creatures. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Not of This World | silent | Counter target spell or ability that targets a permanent you control. This spell costs {7} less to cast if it targets a spell or ability that targets a creature | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -54,18 +52,14 @@
 | Sarkhan the Mad | silent | 0: Reveal the top card of your library and put it into your hand. Sarkhan deals damage to himself equal to that card's mana value. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | See Beyond | silent | Draw two cards, then shuffle a card from your hand into your library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Spawnsire of Ulamog | silent | {20}: Cast any number of Eldrazi spells from among cards you own outside the game without paying their mana costs. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Suffer the Past | silent | Exile X target cards from target player's graveyard. For each card exiled this way, that player loses 1 life and you gain 1 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Surrakar Spellblade | silent | Whenever this creature deals combat damage to a player, you may draw X cards, where X is the number of charge counters on it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Thought Gorger | silent | When this creature enters, put a +1/+1 counter on it for each card in your hand. If you do, discard your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Unified Will | silent | Counter target spell if you control more creatures than that spell's controller. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Valakut Fireboar | silent | Whenever this creature attacks, switch its power and toughness until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Venerated Teacher | silent | When this creature enters, put two level counters on each creature you control with level up. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Vent Sentinel | silent | {1}{R}, {T}: This creature deals damage to target player or planeswalker equal to the number of creatures you control with defender. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Warmonger's Chariot | silent | As long as equipped creature has defender, it can attack as though it didn't have defender. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | World at War | silent | After the second main phase this turn, there's an additional combat phase followed by an additional main phase. At the beginning of that combat, untap all creat | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Arrogant Bloodlord | notice | Whenever this creature blocks or becomes blocked by a creature with power 1 or less, destroy this creature at end of combat. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Champion's Drake | notice | This creature gets +3/+3 as long as you control a creature with three or more level counters on it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Consuming Vapors | notice | Target player sacrifices a creature of their choice. You gain life equal to that creature's toughness. Rebound (If you cast this spell from your hand, exile it  | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Distortion Strike | notice | Target creature gets +1/+0 until end of turn and can't be blocked this turn. Rebound (If you cast this spell from your hand, exile it as it resolves. At the beg | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Drana, Kalastria Bloodchief | notice | {X}{B}{B}: Target creature gets -0/-X until end of turn and Drana gets +X/+0 until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Induce Despair | notice | As an additional cost to cast this spell, reveal a creature card from your hand. Target creature gets -X/-X until end of turn, where X is the revealed card's ma | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
@@ -204,7 +198,7 @@
 ## Fully supported
 
 <details>
-<summary>46 cards</summary>
+<summary>52 cards</summary>
 
 - All Is Dust
 - Ancient Stirrings
@@ -212,6 +206,8 @@
 - Brimstone Mage
 - Cast Through Time
 - Conquering Manticore
+- Consuming Vapors
+- Contaminated Ground
 - Coralhelm Commander
 - Dawnglare Invoker
 - Eldrazi Temple
@@ -225,6 +221,7 @@
 - Hyena Umbra
 - Inquisition of Kozilek
 - Joraga Treespeaker
+- Keening Stone
 - Khalni Hydra
 - Living Destiny
 - Lord of Shatterskull Pass
@@ -245,10 +242,13 @@
 - Repay in Kind
 - Spawning Breath
 - Student of Warfare
+- Suffer the Past
+- Surrakar Spellblade
 - Tajuru Preserver
 - Ulamog's Crusher
 - Umbra Mystic
 - Vengevine
+- Vent Sentinel
 - Wall of Omens
 - Wrap in Flames
 - Zulaport Enforcer
@@ -273,7 +273,6 @@
 | counter target spell or ability that targets a permanent you control. ~ costs {M} less to cast if it targets a spell or ability that targets a creature you cont | 1 | Not of This World | roe |
 | counter target spell. look at its controller's hand. | 1 | Lay Bare | roe |
 | draw two cards, then shuffle a card from your hand into your library. | 1 | See Beyond | roe |
-| exile N target cards from target player's graveyard. for each card exiled ~, that player loses N life and you gain N life. | 1 | Suffer the Past | roe |
 | if you control an eldrazi spawn, create three N/N colorless eldrazi spawn creature tokens. they have "..." otherwise, create one of those tokens. | 1 | Brood Birthing | roe |
 | put target creature into its owner's library second from the top. its controller gains N life. | 1 | Oust | roe |
 | sacrifice all creatures you control, then create that many N/N red hellion creature tokens. | 1 | Hellion Eruption | roe |
@@ -281,25 +280,20 @@
 | target creature gets +N/+N until end of turn and can't be blocked ~. rebound (if you cast ~ from your hand, exile it as it resolves. at the beginning of your ne | 1 | Distortion Strike | roe |
 | target creature must be blocked ~ if able. draw a card. | 1 | Irresistible Prey | roe |
 | target opponent reveals their hand. you choose a card from it. that player shuffles that card into their library. | 1 | Perish the Thought | roe |
-| target player sacrifices a creature of their choice. you gain life equal to that creature's toughness. rebound (if you cast ~ from your hand, exile it as it res | 1 | Consuming Vapors | roe |
 | when ~ enters, put a +N/+N counter on it for each card in your hand. if you do, discard your hand. | 1 | Thought Gorger | roe |
 | when ~ enters, put two level counters on each creature you control with level up. | 1 | Venerated Teacher | roe |
 | when ~ enters, you may tap any number of untapped creatures you control. you gain N life for each creature tapped ~. | 1 | Jaddi Lifestrider | roe |
 | whenever a creature you control with power N or less attacks, ~ deals N damage to the player or planeswalker that creature is attacking. | 1 | Raid Bombardment | roe |
 | whenever an opponent sacrifices a nontoken permanent, put that card onto the battlefield under your control. | 1 | It That Betrays | roe |
 | whenever another creature you control enters, you may have ~ become a copy of that creature until end of turn. | 1 | Renegade Doppelganger | roe |
-| whenever enchanted land becomes tapped, its controller loses N life. | 1 | Contaminated Ground | roe |
 | whenever one or more creatures attack, ~ deals damage to each of those creatures equal to the number of attacking creatures. | 1 | Lightmine Field | roe |
 | whenever you become the target of a spell, you may untap ~. | 1 | Dormant Gomazoa | roe |
 | whenever you're dealt damage, you may put that many charge counters on ~. | 1 | Angelheart Vial | roe |
 | whenever ~ attacks, switch its power and toughness until end of turn. | 1 | Valakut Fireboar | roe |
 | whenever ~ blocks or becomes blocked by a creature with power N or less, destroy ~ at end of combat. | 1 | Arrogant Bloodlord | roe |
 | whenever ~ deals combat damage to a player, sacrifice all other permanents you control and discard your hand. exile the top six cards of your library. you may c | 1 | Hellcarver Demon | roe |
-| whenever ~ deals combat damage to a player, you may draw N cards, where N is the number of charge counters on it. | 1 | Surrakar Spellblade | roe |
-| {M}, {M}: target player mills N cards, where N is the number of cards in that player's graveyard. | 1 | Keening Stone | roe |
 | {M}: cast any number of eldrazi spells from among cards you own outside the game without paying their mana costs. | 1 | Spawnsire of Ulamog | roe |
 | {M}{M}, {M}: copy target instant or sorcery spell twice. you may choose new targets for the copies. | 1 | Echo Mage | roe |
-| {M}{M}, {M}: ~ deals damage to target player or planeswalker equal to the number of creatures you control with defender. | 1 | Vent Sentinel | roe |
 | {M}{M}{M}: target creature gets -N/-N until end of turn and drana gets +N/+N until end of turn. | 1 | Drana, Kalastria Bloodchief | roe |
 | ~ gets +N/+N as long as you control a creature with three or more level counters on it. | 1 | Champion's Drake | roe |
 

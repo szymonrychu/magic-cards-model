@@ -17,16 +17,15 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 54 | 21.1% |
-| Works (untested) | 144 | 56.2% |
+| Tested | 56 | 21.9% |
+| Works (untested) | 145 | 56.6% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 58 | 22.7% |
+| Not working | 55 | 21.5% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
-| Aatchik, Emerald Radian | silent | When Aatchik enters, create a 1/1 green Insect creature token for each artifact and/or creature card in your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Alacrian Armory | silent | At the beginning of combat on your turn, choose up to one target Mount or Vehicle you control. Until end of turn, that permanent becomes saddled if it's a Mount | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Ancient Vendetta | silent | Choose a card name. Search target opponent's graveyard, hand, and library for up to four cards with that name and exile them. Then that player shuffles. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Brightfield Mustang | silent | Whenever this creature attacks while saddled, untap it and put a +1/+1 counter on it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -42,7 +41,6 @@
 | Gonti, Night Minister | silent | Whenever a creature deals combat damage to one of your opponents, its controller looks at the top card of that opponent's library and exiles it face down. They  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Guidelight Matrix | silent | {2}, {T}: Target Mount you control becomes saddled until end of turn. Activate only as a sorcery. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Guidelight Pathmaker | silent | When this Vehicle enters, you may search your library for an artifact card and reveal it. Put it onto the battlefield if its mana value is 2 or less. Otherwise, | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Haunt the Network | silent | Choose target opponent. Create two 1/1 colorless Thopter artifact creature tokens with flying. Then the chosen player loses X life and you gain X life, where X  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Howlsquad Heavy | silent | At the beginning of combat on your turn, create a 1/1 red Goblin creature token. That token attacks this combat if able. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Kolodin, Triumph Caster | silent | Mounts and Vehicles you control have haste. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Lifecraft Engine | silent | Vehicle creatures you control are the chosen creature type in addition to their other types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -51,7 +49,6 @@
 | Mindspring Merfolk | silent | Exhaust — {X}{U}{U}, {T}: Draw X cards. Put a +1/+1 counter on each Merfolk creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Momentum Breaker | silent | When this enchantment enters, each opponent sacrifices a creature or Vehicle of their choice. Each opponent who can't discards a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Mu Yanling, Wind Rider | silent | When Mu Yanling enters, create a 3/2 colorless Vehicle artifact token with crew 1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Ooze Patrol | silent | When this creature enters, mill two cards, then put a +1/+1 counter on this creature for each artifact and/or creature card in your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Outpace Oblivion | silent | {2}, Sacrifice this enchantment: It deals 2 damage to each player who doesn't have max speed. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Oviya, Automech Artisan | silent | Each creature that's attacking one of your opponents has trample. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Pit Automaton | silent | {2}, {T}: When you next activate an exhaust ability that isn't a mana ability this turn, copy it. You may choose new targets for the copy. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -142,6 +139,7 @@
 | Grim Bauble | handled | When this artifact enters, target creature an opponent controls gets -2/-2 until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Guidelight Optimizer | handled |  |  | Y/Y/Y | not_tested |
 | Guidelight Synergist | handled | This creature gets +1/+0 for each artifact you control. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Haunt the Network | handled | Choose target opponent. Create two 1/1 colorless Thopter artifact creature tokens with flying. Then the chosen player loses X life and you gain X life, where X  | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Haunted Hellride | handled | Whenever you attack, target creature you control gets +1/+0 and gains deathtouch until end of turn. Untap it. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Hazard of the Dunes | handled | Exhaust — {6}{G}: Put three +1/+1 counters on this creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Hellish Sideswipe | handled | As an additional cost to cast this spell, sacrifice an artifact or creature. Destroy target creature or Vehicle. If the sacrificed permanent was a Vehicle, draw | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -232,8 +230,9 @@
 ## Fully supported
 
 <details>
-<summary>54 cards</summary>
+<summary>56 cards</summary>
 
+- Aatchik, Emerald Radian
 - Bleachbone Verge
 - Boom Scholar
 - Boommobile
@@ -265,6 +264,7 @@
 - March of the World Ooze
 - Mimeoplasm, Revered One
 - Monument to Endurance
+- Ooze Patrol
 - Pacesetter Paragon
 - Perilous Snare
 - Radiant Lotus
@@ -307,7 +307,6 @@
 | at the beginning of your end step, you draw N cards and lose N life, where N is your speed. | 1 | The Speed Demon | dft |
 | choose a card name. search target opponent's graveyard, hand, and library for up to four cards with that name and exile them. then that player shuffles. | 1 | Ancient Vendetta | dft |
 | choose target creature, planeswalker, or vehicle. mill two cards, then destroy the chosen permanent if its mana value is less than or equal to the number of car | 1 | Quag Feast | dft |
-| choose target opponent. create two N/N colorless thopter artifact creature tokens with flying. then the chosen player loses N life and you gain N life, where N  | 1 | Haunt the Network | dft |
 | during turns other than yours, ~ is an artifact creature. | 1 | Midnight Mangler | dft |
 | each creature that's attacking one of your opponents has trample. | 1 | Oviya, Automech Artisan | dft |
 | exchange control of target artifact or creature you control and target artifact or creature an opponent controls. cycling {M} ({M}, discard ~: draw a card.) | 1 | Trade the Helm | dft |
@@ -317,7 +316,6 @@
 | return up to one target creature card, up to one target mount card, up to one target vehicle card, and up to one target creature card with no abilities from you | 1 | Rise from the Wreck | dft |
 | tap three other untapped creatures you control: until end of turn, ~ becomes an artifact creature and gains flying. put a +N/+N counter on it. | 1 | Voyager Glidecar | dft |
 | vehicle creatures you control are the chosen creature type in addition to their other types. | 1 | Lifecraft Engine | dft |
-| when aatchik enters, create a N/N green insect creature token for each artifact and/or creature card in your graveyard. | 1 | Aatchik, Emerald Radian | dft |
 | when mu yanling enters, create a N/N colorless vehicle artifact token with crew N. | 1 | Mu Yanling, Wind Rider | dft |
 | when you cycle ~, create N N/N colorless pilot creature tokens with "..." | 1 | Valor's Flagship | dft |
 | when ~ enters, each opponent sacrifices a creature or vehicle of their choice. each opponent who can't discards a card. | 1 | Momentum Breaker | dft |
@@ -326,7 +324,6 @@
 | when ~ enters, for each player, destroy up to one target creature that player controls. if a creature you controlled was destroyed ~, put two +N/+N counters on  | 1 | Demonic Junker | dft |
 | when ~ enters, gain control of target creature an opponent controls for as long as you control ~. that creature can't attack or block for as long as you control | 1 | Possession Engine | dft |
 | when ~ enters, look at target player's hand. you may choose a card from it. if you do, that player discards that card, then draws a card. | 1 | Oildeep Gearhulk | dft |
-| when ~ enters, mill two cards, then put a +N/+N counter on ~ for each artifact and/or creature card in your graveyard. | 1 | Ooze Patrol | dft |
 | when ~ enters, mill two cards. then return a creature or vehicle card from your graveyard to your hand. | 1 | Carrion Cruiser | dft |
 | when ~ enters, put target creature card with mana value N or less from a graveyard onto the battlefield under your control with a finality counter on it. that c | 1 | Coalstoke Gearhulk | dft |
 | when ~ enters, return target creature or vehicle an opponent controls to its owner"..."s speed is greater than each other player"..."s speed by N. ~ can't reduc | 1 | Spikeshell Harrier | dft |

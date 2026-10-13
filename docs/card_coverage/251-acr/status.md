@@ -35,13 +35,13 @@
 | Chain Assassination | silent | Freerunning {1}{B} (You may cast this spell for its freerunning cost if you dealt combat damage to a player this turn with an Assassin or commander.) Destroy ta | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Desmond Miles | silent | Whenever Desmond Miles deals combat damage to a player, surveil X, where X is the amount of damage it dealt to that player. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Desynchronization | silent | Return each nonland permanent that's not historic to its owner's hand. (Artifacts, legendaries, and Sagas are historic.) | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Edward Kenway | silent | At the beginning of your end step, create a Treasure token for each tapped Assassin, Pirate, and/or Vehicle you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Edward Kenway | silent | Whenever a Vehicle you control deals combat damage to a player, look at the top card of that player's library, then exile it face down. You may play that card f | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Eivor, Wolf-Kissed | silent | Whenever Eivor deals combat damage to a player, you mill that many cards. You may put a Saga card and/or a land card from among them onto the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Ezio, Brash Novice | silent | As long as Ezio has two or more counters on it, it has first strike and is an Assassin in addition to its other types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Fall of the First Civilization | silent | III — Each player chooses three nonland permanents they control. Destroy all other nonland permanents. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Hemlock Vial | silent | {B}, {T}, Sacrifice this artifact: Each equipped creature and Equipment you control gains deathtouch until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Kassandra, Eagle Bearer | silent | When Kassandra enters, search your graveyard, hand, and library for a card named The Spear of Leonidas, put it onto the battlefield, then shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Leonardo da Vinci | silent | {3}{U}{U}: Until end of turn, Thopters you control have base power and toughness X/X, where X is the number of cards in your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Leonardo da Vinci | silent | {2}{U}, {T}: Draw a card, then discard a card. If the discarded card was an artifact card, exile it from your graveyard. If you do, create a token that's a copy | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Loyal Inventor | silent | When this creature enters, you may search your library for an artifact card, reveal it, then shuffle. Put that card into your hand if you control an Assassin. O | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Mary Read and Anne Bonny | silent | Whenever you discard an Island, Pirate, or Vehicle card, create a tapped Treasure token. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Monastery Raid | silent | Freerunning {X}{R} (You may cast this spell for its freerunning cost if you dealt combat damage to a player this turn with an Assassin or commander.) Exile the  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -149,7 +149,6 @@
 | Choose one or both | 1 | Auditore Ambush | acr |
 | as long as ezio has two or more counters on it, it has first strike and is an assassin in addition to its other types. | 1 | Ezio, Brash Novice | acr |
 | at the beginning of combat on your turn, if you control a legendary assassin, ~ gets +N/+N until end of turn and can't be blocked ~. | 1 | Brotherhood Spy | acr |
-| at the beginning of your end step, create a treasure token for each tapped assassin, pirate, and/or vehicle you control. | 1 | Edward Kenway | acr |
 | detain | 1 | Tax Collector | acr |
 | during your turn, other historic creatures you control have double strike. | 1 | Bayek of Siwa | acr |
 | each player chooses three nonland permanents they control. destroy all other nonland permanents. | 1 | Fall of the First Civilization | acr |
@@ -176,13 +175,14 @@
 | when ~ enters, you may search your library and/or graveyard for a card named eivor, battle-ready, reveal it, and put it into your hand. if you search your libra | 1 | Raven Clan War-Axe | acr |
 | when ~ enters, you may search your library for an artifact card, reveal it, then shuffle. put that card into your hand if you control an assassin. otherwise, pu | 1 | Loyal Inventor | acr |
 | whenever a creature you control with deathtouch deals combat damage to a player, put that many +N/+N counters on that creature. | 1 | Aveline de Grandpré | acr |
+| whenever a vehicle you control deals combat damage to a player, look at the top card of that player's library, then exile it face down. you may play that card f | 1 | Edward Kenway | acr |
 | whenever altaïr attacks, exile up to one target assassin creature card from your graveyard with a memory counter on it. then for each creature card you own in e | 1 | Altaïr Ibn-La'Ahad | acr |
 | whenever eivor deals combat damage to a player, you mill that many cards. you may put a saga card and/or a land card from among them onto the battlefield. | 1 | Eivor, Wolf-Kissed | acr |
 | whenever you discard an island, pirate, or vehicle card, create a tapped treasure token. | 1 | Mary Read and Anne Bonny | acr |
 | whenever ~ deals combat damage to a player, surveil N, where N is the amount of damage it dealt to that player. | 1 | Desmond Miles | acr |
 | {M}, pay N life, sacrifice apple of eden: look at target opponent"..."s hand. activate only as a sorcery. | 1 | Apple of Eden, Isu Relic | acr |
 | {M}, {M}, sacrifice ~: each equipped creature and equipment you control gains deathtouch until end of turn. | 1 | Hemlock Vial | acr |
-| {M}{M}{M}: until end of turn, thopters you control have base power and toughness N/N, where N is the number of cards in your hand. | 1 | Leonardo da Vinci | acr |
+| {M}{M}, {M}: draw a card, then discard a card. if the discarded card was an artifact card, exile it from your graveyard. if you do, create a token that"..."s a  | 1 | Leonardo da Vinci | acr |
 
 ## Notes
 

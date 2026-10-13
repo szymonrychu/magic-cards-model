@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 61 | 24.2% |
+| Tested | 62 | 24.6% |
 | Works (untested) | 124 | 49.2% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 67 | 26.6% |
+| Not working | 66 | 26.2% |
 
 ## Cards needing work
 
@@ -28,7 +28,6 @@
 |---|---|---|---|---|---|
 | All Will Be One | silent | Whenever you put one or more counters on a permanent or player, this enchantment deals that much damage to target opponent, creature an opponent controls, or pl | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Apostle of Invasion | silent | Corrupted — As long as an opponent has three or more poison counters, this creature has double strike. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Archfiend of the Dross | silent | Whenever a creature an opponent controls dies, its controller loses 2 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Argentum Masticore | silent | At the beginning of your upkeep, sacrifice this creature unless you discard a card. When you discard a card this way, destroy target nonland permanent an oppone | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Blade of Shared Souls | silent | Whenever this Equipment becomes attached to a creature, for as long as this Equipment remains attached to it, you may have that creature become a copy of anothe | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Blue Sun's Twilight | silent | Gain control of target creature with mana value X or less. If X is 5 or more, create a token that's a copy of that creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -41,7 +40,6 @@
 | Eye of Malcator | silent | Whenever another artifact you control enters, this artifact becomes a 4/4 Phyrexian Eye artifact creature until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ezuri, Stalker of Spheres | silent | When Ezuri enters, you may pay {3}. If you do, proliferate twice. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Feed the Infection | silent | You draw three cards and you lose 3 life. Corrupted — Each opponent who has three or more poison counters loses 3 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Font of Progress | silent | {3}, {T}: Target player mills X cards, where X is the number of oil counters on this artifact. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Furnace Punisher | silent | At the beginning of each player's upkeep, this creature deals 2 damage to that player unless they control two or more basic lands. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Gitaxian Anatomist | silent | When this creature enters, you may tap it. If you do, proliferate. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Goliath Hatchery | silent | Corrupted — At the beginning of your upkeep, if an opponent has three or more poison counters, choose a creature you control, then draw cards equal to its total | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -80,6 +78,7 @@
 | Zenith Chronicler | silent | Whenever a player casts their first multicolored spell each turn, each other player draws a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Zopandrel, Hunger Dominus | silent | At the beginning of each combat, double the power and toughness of each creature you control until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Anoint with Affliction | notice | Exile target creature if it has mana value 3 or less. Corrupted — Exile that creature instead if its controller has three or more poison counters. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
+| Archfiend of the Dross | notice | At the beginning of your upkeep, remove an oil counter from this creature. Then if it has no oil counters on it, you lose the game. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Atraxa's Skitterfang | notice | At the beginning of combat on your turn, you may remove an oil counter from this creature. When you do, target creature you control gains your choice of flying, | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Awaken the Sleeper | notice | Gain control of target creature until end of turn. Untap that creature. It gains haste until end of turn. If it's equipped, you may destroy all Equipment attach | unparsed remainder: Untap that creature. It gains haste until end of turn. If it's equipped, you may destroy all Equipment attached to that creature. | Y/Y/- | not_working |
 | Carnivorous Canopy | notice | Destroy target artifact, enchantment, or creature with flying. If that permanent's mana value was 3 or less, proliferate. (Choose any number of permanents and/o | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -221,7 +220,7 @@
 ## Fully supported
 
 <details>
-<summary>61 cards</summary>
+<summary>62 cards</summary>
 
 - Ambulatory Edifice
 - Annihilating Glare
@@ -242,6 +241,7 @@
 - Elesh Norn, Mother of Machines
 - Evolving Adaptive
 - Exuberant Fuseling
+- Font of Progress
 - Geth, Thane of Contracts
 - Graaz, Unstoppable Juggernaut
 - Hazardous Blast
@@ -303,6 +303,7 @@
 | at the beginning of each player's upkeep, ~ deals N damage to that player unless they control two or more basic lands. | 1 | Furnace Punisher | one |
 | at the beginning of your end step, return ~ to its owner's hand unless you remove two oil counters from it. | 1 | Magmatic Sprinter | one |
 | at the beginning of your end step, you may sacrifice another creature. if you do, reveal cards from the top of your library until you reveal a nonlegendary crea | 1 | Kethek, Crucible Goliath | one |
+| at the beginning of your upkeep, remove an oil counter from ~. then if it has no oil counters on it, you lose the game. | 1 | Archfiend of the Dross | one |
 | at the beginning of your upkeep, sacrifice ~ unless you discard a card. when you discard a card ~, destroy target nonland permanent an opponent controls with ma | 1 | Argentum Masticore | one |
 | at the beginning of your upkeep, you lose N life and create a N/N colorless phyrexian mite artifact creature token with toxic N and "..." | 1 | Skrelv's Hive | one |
 | counter target spell unless its controller pays {M}. corrupted — counter that spell instead if its controller has three or more poison counters. | 1 | Bring the Ending | one |
@@ -328,7 +329,6 @@
 | when ~ enters, up to one target artifact you control becomes an artifact creature with base power and toughness N/N for as long as ~ remains on the battlefield. | 1 | Unctus's Retrofitter | one |
 | when ~ enters, you may return another permanent you control to its owner"..."t block." | 1 | Indoctrination Attendant | one |
 | when ~ enters, you may tap it. if you do, proliferate. | 1 | Gitaxian Anatomist | one |
-| whenever a creature an opponent controls dies, its controller loses N life. | 1 | Archfiend of the Dross | one |
 | whenever a creature you control with toxic deals combat damage to a player, that player gets an additional poison counter. | 1 | Necrogen Rotpriest | one |
 | whenever a player casts their first multicolored spell each turn, each other player draws a card. | 1 | Zenith Chronicler | one |
 | whenever an equipped creature you control other than rhuk attacks or dies, you may attach all equipment attached to that creature to rhuk. | 1 | Rhuk, Hexgold Nabber | one |
@@ -346,7 +346,6 @@
 | whenever ~ becomes attached to a creature, for as long as ~ remains attached to it, you may have that creature become a copy of another target creature you cont | 1 | Blade of Shared Souls | one |
 | you draw three cards and you lose N life. corrupted — each opponent who has three or more poison counters loses N life. | 1 | Feed the Infection | one |
 | {M}, {M}: choose a color. another target creature you control gains toxic N and hexproof from that color until end of turn. it can't be blocked by creatures of  | 1 | Skrelv, Defector Mite | one |
-| {M}, {M}: target player mills N cards, where N is the number of oil counters on ~. | 1 | Font of Progress | one |
 | {M}: choose target nonland permanent card in your graveyard. if you haven"..."t cast additional spells ~. activate only as a sorcery. | 1 | Conduit of Worlds | one |
 | {M}: ~ becomes a N/N phyrexian construct artifact creature, loses all abilities, and gains indestructible and toxic N. activate only if there are nine or more l | 1 | Monument to Perfection | one |
 | ~ costs {M} more to cast if it targets a creature. exile target nonland permanent. | 1 | Vanish into Eternity | one |

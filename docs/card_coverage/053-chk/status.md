@@ -17,17 +17,16 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 54 | 19.1% |
-| Works (untested) | 158 | 55.8% |
+| Tested | 56 | 19.8% |
+| Works (untested) | 159 | 56.2% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 71 | 25.1% |
+| Not working | 68 | 24.0% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
 | Ashen-Skin Zubera | silent | When this creature dies, target opponent discards a card for each Zubera that died this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Bloodthirsty Ogre | silent | {T}: Target creature gets -X/-X until end of turn, where X is the number of devotion counters on this creature. Activate only if you control a Demon. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Brutal Deceiver | silent | {2}: Reveal the top card of your library. If it's a land card, this creature gets +1/+0 and gains first strike until end of turn. Activate only once each turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Budoka Gardener // Dokai, Weaver of Life | silent | {T}: You may put a land card from your hand onto the battlefield. If you control ten or more lands, flip this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Burr Grafter | silent | Soulshift | no machine in the engine executes this keyword | Y/-/- | not_working |
@@ -45,14 +44,12 @@
 | Harsh Deceiver | silent | {2}: Reveal the top card of your library. If it's a land card, untap this creature and it gets +1/+1 until end of turn. Activate only once each turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | He Who Hungers | silent | Soulshift | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Hisoka, Minamo Sensei | silent | {2}{U}, Discard a card: Counter target spell if it has the same mana value as the discarded card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Honden of Night's Reach | silent | At the beginning of your upkeep, target opponent discards a card for each Shrine you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Hundred-Talon Kami | silent | Soulshift | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Jushi Apprentice // Tomoya the Revealer | silent | {2}{U}, {T}: Draw a card. If you have nine or more cards in hand, flip this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Kami of Lunacy | silent | Soulshift | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Kami of the Painted Road | silent | Whenever you cast a Spirit or Arcane spell, this creature gains protection from the color of your choice until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Kami of the Palace Fields | silent | Soulshift | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Kitsune Mystic // Autumn-Tail, Kitsune Sage | silent | {1}: Attach target Aura attached to a creature to another creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Kokusho, the Evening Star | silent | When Kokusho dies, each opponent loses 5 life. You gain life equal to the life lost this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Kusari-Gama | silent | Whenever equipped creature deals damage to a blocking creature, this Equipment deals that much damage to each other creature defending player controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Mana Seism | silent | Sacrifice any number of lands, then add that much {C}. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Mindblaze | silent | Choose a nonland card name and a number greater than 0. Target player reveals their library. If that library contains exactly the chosen number of cards with th | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -107,6 +104,7 @@
 | Blessed Breath | handled | Target creature you control gains protection from the color of your choice until end of turn. Splice onto Arcane {W} (As you cast an Arcane spell, you may revea | the engine reads this text and performs it | Y/-/- | not_tested |
 | Blood Rites | handled | {1}{R}, Sacrifice a creature: This enchantment deals 2 damage to any target. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Blood Speaker | handled | At the beginning of your upkeep, you may sacrifice this creature. If you do, search your library for a Demon card, reveal that card, put it into your hand, then | the engine reads this text and performs it | Y/-/- | not_tested |
+| Bloodthirsty Ogre | handled | {T}: Put a devotion counter on this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Boseiju, Who Shelters All | handled | Boseiju enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Bushi Tenderfoot // Kenzo the Hardhearted | handled | When a creature dealt damage by this creature this turn dies, flip this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Cage of Hands | handled | Enchanted creature can't attack or block. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -259,7 +257,7 @@
 ## Fully supported
 
 <details>
-<summary>54 cards</summary>
+<summary>56 cards</summary>
 
 - Akki Lavarunner // Tok-Tok, Volcano Born
 - Azusa, Lost but Seeking
@@ -282,6 +280,7 @@
 - Honden of Cleansing Fire
 - Honden of Infinite Rage
 - Honden of Life's Web
+- Honden of Night's Reach
 - Honden of Seeing Winds
 - Imi Statue
 - Iname, Death Aspect
@@ -292,6 +291,7 @@
 - Kiki-Jiki, Mirror Breaker
 - Kitsune Healer
 - Kitsune Riftwalker
+- Kokusho, the Evening Star
 - Konda's Banner
 - Lava Spike
 - Marrow-Gnawer
@@ -326,7 +326,6 @@
 | as an additional cost to cast ~, you may sacrifice any number of spirits. target creature gets +N/+N until end of turn. for each spirit sacrificed ~, that creat | 1 | Devouring Rage | chk |
 | as an additional cost to cast ~, you may sacrifice any number of spirits. target player loses N life plus N life for each spirit sacrificed ~. you gain that muc | 1 | Devouring Greed | chk |
 | at the beginning of your upkeep, put a devotion counter on ~. then if a creature named eight-and-a-half-tails is on the battlefield, you gain N life for each de | 1 | Pious Kitsune | chk |
-| at the beginning of your upkeep, target opponent discards a card for each shrine you control. | 1 | Honden of Night's Reach | chk |
 | at the beginning of your upkeep, you may exile all cards from your hand face down. if you do, put all other cards you own exiled with ~ into your hand. | 1 | Moonring Mirror | chk |
 | at the beginning of your upkeep, you may have target creature you control get +N/+N until end of turn, where N is the number of creatures you control. if you do | 1 | Junkyo Bell | chk |
 | choose a nonland card name and a number greater than N. target player reveals their library. if that library contains exactly the chosen number of cards with th | 1 | Mindblaze | chk |
@@ -347,7 +346,6 @@
 | target permanent's controller sacrifices it. if the player does, they reveal cards from the top of their library until they reveal a permanent card that shares  | 1 | Reweave | chk |
 | untap target nonlegendary creature and gain control of it until end of turn. that creature gains haste until end of turn. | 1 | Blind with Anger | chk |
 | up to three target creatures can't block ~. | 1 | Unearthly Blizzard | chk |
-| when kokusho dies, each opponent loses N life. you gain life equal to the life lost ~. | 1 | Kokusho, the Evening Star | chk |
 | when yosei dies, target player skips their next untap step. tap up to five target permanents that player controls. | 1 | Yosei, the Morning Star | chk |
 | when ~ dies, create a N/N colorless spirit creature token for each zubera that died ~. | 1 | Dripping-Tongue Zubera | chk |
 | when ~ dies, draw a card for each zubera that died ~. | 1 | Floating-Dream Zubera | chk |
@@ -370,7 +368,6 @@
 | {M}: reveal the top card of your library. if it's a land card, ~ gets +N/+N and gains first strike until end of turn. activate only once each turn. | 1 | Brutal Deceiver | chk |
 | {M}: reveal the top card of your library. if it's a land card, ~ gets +N/+N and gains flying until end of turn. activate only once each turn. | 1 | Callous Deceiver | chk |
 | {M}: reveal the top card of your library. if it's a land card, ~ gets +N/+N and gains trample until end of turn. activate only once each turn. | 1 | Feral Deceiver | chk |
-| {M}: target creature gets -N/-N until end of turn, where N is the number of devotion counters on ~. activate only if you control a demon. | 1 | Bloodthirsty Ogre | chk |
 | {M}: target player dealt damage by ~ ~ loses N life. | 1 | Wicked Akuba | chk |
 | {M}: the next N damage that would be dealt to target legendary creature you control ~ is dealt to you instead. | 1 | Vassal's Duty | chk |
 | {M}: you may put a land card from your hand onto the battlefield. if you control ten or more lands, flip ~. | 1 | Budoka Gardener // Dokai, Weaver of Life | chk |

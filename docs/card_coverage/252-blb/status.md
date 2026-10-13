@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 53 | 20.5% |
-| Works (untested) | 123 | 47.7% |
+| Tested | 55 | 21.3% |
+| Works (untested) | 122 | 47.3% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 82 | 31.8% |
+| Not working | 81 | 31.4% |
 
 ## Cards needing work
 
@@ -85,7 +85,6 @@
 | Treetop Sentries | silent | When this creature enters, you may forage. If you do, draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Valley Mightcaller | silent | Whenever another Frog, Rabbit, Raccoon, or Squirrel you control enters, put a +1/+1 counter on this creature. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
 | Valley Questcaller | silent | Whenever one or more other Rabbits, Bats, Birds, and/or Mice you control enter, scry 1. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
-| Valley Rotcaller | silent | Whenever this creature attacks, each opponent loses X life and you gain X life, where X is the number of other Squirrels, Bats, Lizards, and Rats you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Veteran Guardmouse | silent | Valiant — Whenever this creature becomes the target of a spell or ability you control for the first time each turn, it gets +1/+0 and gains first strike until e | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Vren, the Relentless | silent | At the beginning of each end step, create X 1/1 black Rat creature tokens with "This token gets +1/+1 for each other Rat you control," where X is the number of  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Wandertale Mentor | silent | Whenever you expend 4, put a +1/+1 counter on this creature. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
@@ -153,7 +152,6 @@
 | Hivespine Wolverine | handled | When this creature enters, choose one — • Put a +1/+1 counter on target creature you control. • This creature fights target creature token. • Destroy target art | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Hugs, Grisly Guardian | handled | When Hugs enters, exile the top X cards of your library. Until the end of your next turn, you may play those cards. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Hunter's Talent | handled | When this Class enters, target creature you control deals damage equal to its power to target creature you don't control. | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Huskburster Swarm | handled | This spell costs {1} less to cast for each creature card you own in exile and in your graveyard. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Intrepid Rabbit | handled | When this creature enters, target creature you control gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Iridescent Vinelasher | handled | Landfall — Whenever a land you control enters, this creature deals 1 damage to target opponent. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Kindlespark Duo | handled | {T}: This creature deals 1 damage to target opponent. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -235,7 +233,7 @@
 ## Fully supported
 
 <details>
-<summary>53 cards</summary>
+<summary>55 cards</summary>
 
 - Alania, Divergent Storm
 - Artist's Talent
@@ -262,6 +260,7 @@
 - Heartfire Hero
 - Helga, Skittish Seer
 - Hop to It
+- Huskburster Swarm
 - Innkeeper's Talent
 - Into the Flood Maw
 - Jackdaw Savior
@@ -286,6 +285,7 @@
 - Thundertrap Trainer
 - Valley Flamecaller
 - Valley Floodcaller
+- Valley Rotcaller
 - Vinereap Mentor
 - Wildfire Howl
 - Ygra, Eater of All
@@ -363,7 +363,6 @@
 | whenever you gain or lose life during your turn, ~ gets +N/+N until end of turn. | 1 | Wax-Wane Witness | blb |
 | whenever you give a gift, draw a card. | 1 | Jolly Gerbils | blb |
 | whenever ~ attacks, defending player loses N life and you gain N life. | 1 | Agate-Blade Assassin | blb |
-| whenever ~ attacks, each opponent loses N life and you gain N life, where N is the number of other squirrels, bats, lizards, and rats you control. | 1 | Valley Rotcaller | blb |
 | whenever ~ attacks, up to one target artifact, creature, or planeswalker an opponent controls loses all abilities until your next turn. if it's a creature, it a | 1 | Azure Beastbinder | blb |
 | whenever ~ deals combat damage to a player, exile cards from the top of your library until you exile a nonland card. you may cast that card by discarding a card | 1 | The Infamous Cruelclaw | blb |
 | whenever ~ or another bird you control enters, exile up to one target creature you control without flying. return it to the battlefield under its owner's contro | 1 | Salvation Swan | blb |

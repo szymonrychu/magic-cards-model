@@ -17,20 +17,18 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 23 | 16.3% |
-| Works (untested) | 86 | 61.0% |
+| Tested | 30 | 21.3% |
+| Works (untested) | 85 | 60.3% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 32 | 22.7% |
+| Not working | 26 | 18.4% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
 | Aven Squire | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Blood Tyrant | silent | At the beginning of your upkeep, each player loses 1 life. Put a +1/+1 counter on this creature for each 1 life lost this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Child of Alara | silent | When Child of Alara dies, destroy all nonland permanents. They can't be regenerated. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Conflux | silent | Search your library for a white card, a blue card, a black card, a red card, and a green card. Reveal those cards, put them into your hand, then shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Corrupted Roots | silent | Whenever enchanted land becomes tapped, its controller loses 2 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Cylian Sunsinger | silent | {R}{G}{W}: This creature and each other creature with the same name as it get +3/+3 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Dragonsoul Knight | silent | {W}{U}{B}{R}{G}: Until end of turn, this creature becomes a Dragon, gets +5/+3, and gains flying and trample. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Extractor Demon | silent | Whenever another creature leaves the battlefield, you may have target player mill two cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -45,12 +43,8 @@
 | Rhox Bodyguard | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Rupture Spire | silent | When this land enters, sacrifice it unless you pay {1}. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Shard Convergence | silent | Search your library for a Plains card, an Island card, a Swamp card, and a Mountain card. Reveal those cards, put them into your hand, then shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Soul's Majesty | silent | Draw cards equal to the power of target creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Telemin Performance | silent | Target opponent reveals cards from the top of their library until they reveal a creature card. That player puts all noncreature cards revealed this way into the | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Vectis Agents | silent | {U}{B}: This creature gets -2/-0 until end of turn and can't be blocked this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Voices from the Void | silent | Domain — Target player discards a card for each basic land type among lands you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Wall of Reverence | silent | At the beginning of your end step, you may gain life equal to the power of target creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Wandering Goblins | silent | Domain — {3}: This creature gets +1/+0 until end of turn for each basic land type among lands you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Wretched Banquet | silent | Destroy target creature if it has the least power or is tied for least power among creatures on the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Brackwater Elemental | notice | When this creature attacks or blocks, sacrifice it at the beginning of the next end step. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Filigree Fracture | notice | Destroy target artifact or enchantment. If that permanent was blue or black, draw a card. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
@@ -105,7 +99,6 @@
 | Master Transmuter | handled | {U}, {T}, Return an artifact you control to its owner's hand: You may put an artifact card from your hand onto the battlefield. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Matca Rioters | handled | Domain — Matca Rioters's power and toughness are each equal to the number of basic land types among lands you control. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Meglonoth | handled | Whenever this creature blocks a creature, this creature deals damage to that creature's controller equal to this creature's power. | the engine reads this text and performs it | Y/-/- | not_tested |
-| Might of Alara | handled | Domain — Target creature gets +1/+1 until end of turn for each basic land type among lands you control. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Mirror-Sigil Sergeant | handled | At the beginning of your upkeep, if you control a blue permanent, you may create a token that's a copy of this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Molten Frame | handled | Destroy target artifact creature. Cycling {2} ({2}, Discard this card: Draw a card.) | the engine reads this text and performs it | Y/-/- | not_tested |
 | Nacatl Hunt-Pride | handled | {R}, {T}: Target creature can't block this turn. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -148,30 +141,37 @@
 ## Fully supported
 
 <details>
-<summary>23 cards</summary>
+<summary>30 cards</summary>
 
 - Aerie Mystics
 - Ancient Ziggurat
 - Apocalypse Hydra
 - Aven Trailblazer
 - Banefire
+- Blood Tyrant
 - Canyon Minotaur
 - Celestial Purge
+- Corrupted Roots
 - Exotic Orchard
 - Gleam of Resistance
 - Gwafa Hazid, Profiteer
 - Ignite Disorder
 - Magister Sphinx
 - Mark of Asylum
+- Might of Alara
 - Nyxathid
 - Path to Exile
 - Progenitus
 - Reliquary Tower
 - Skyward Eye Prophets
+- Soul's Majesty
 - Suicidal Charge
 - Thornling
+- Voices from the Void
 - Volcanic Fallout
 - Voracious Dragon
+- Wall of Reverence
+- Wandering Goblins
 - Worldheart Phoenix
 
 </details>
@@ -181,12 +181,9 @@
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
 | exalted | 5 | Aven Squire, Frontline Sage, Giltspire Avenger, Noble Hierarch, Rhox Bodyguard | con |
-| Domain | 3 | Manaforce Mace, Voices from the Void, Wandering Goblins | con |
-| at the beginning of your end step, you may gain life equal to the power of target creature you control. | 1 | Wall of Reverence | con |
-| at the beginning of your upkeep, each player loses N life. put a +N/+N counter on ~ for each N life lost ~. | 1 | Blood Tyrant | con |
+| Domain | 1 | Manaforce Mace | con |
 | destroy target artifact or enchantment. if that permanent was blue or black, draw a card. | 1 | Filigree Fracture | con |
 | destroy target creature if it has the least power or is tied for least power among creatures on the battlefield. | 1 | Wretched Banquet | con |
-| draw cards equal to the power of target creature you control. | 1 | Soul's Majesty | con |
 | search your library for a plains card, an island card, a swamp card, and a mountain card. reveal those cards, put them into your hand, then shuffle. | 1 | Shard Convergence | con |
 | search your library for a white card, a blue card, a black card, a red card, and a green card. reveal those cards, put them into your hand, then shuffle. | 1 | Conflux | con |
 | target creature gains flying until end of turn. if you control a white permanent, return ~ to its owner's hand. | 1 | View from Above | con |
@@ -197,7 +194,6 @@
 | when ~ enters, sacrifice it unless you pay {M}. | 1 | Rupture Spire | con |
 | when ~ enters, you may search your library for an artifact creature card, reveal it, put it into your hand, then shuffle. | 1 | Sphinx Summoner | con |
 | whenever another creature leaves the battlefield, you may have target player mill two cards. | 1 | Extractor Demon | con |
-| whenever enchanted land becomes tapped, its controller loses N life. | 1 | Corrupted Roots | con |
 | whenever ~ deals combat damage to a player, you may cast a spell from your hand without paying its mana cost. | 1 | Maelstrom Archangel | con |
 | {M}{M}: ~ gets -N/-N until end of turn and can't be blocked ~. | 1 | Vectis Agents | con |
 | {M}{M}{M}: ~ and each other creature with the same name as it get +N/+N until end of turn. | 1 | Cylian Sunsinger | con |

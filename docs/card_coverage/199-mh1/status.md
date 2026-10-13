@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 48 | 22.9% |
-| Works (untested) | 112 | 53.3% |
+| Tested | 49 | 23.3% |
+| Works (untested) | 113 | 53.8% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 50 | 23.8% |
+| Not working | 48 | 22.9% |
 
 ## Cards needing work
 
@@ -33,7 +33,6 @@
 | Bellowing Elk | silent | As long as you had another creature enter the battlefield under your control this turn, this creature has trample and indestructible. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Collected Conjuring | silent | Exile the top six cards of your library. You may cast up to two sorcery spells with mana value 3 or less from among them without paying their mana costs. Put th | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Cunning Evasion | silent | Whenever a creature you control becomes blocked, you may return it to its owner's hand. | this trigger's condition can never be satisfied - it never triggers | Y/-/- | not_working |
-| Dead of Winter | silent | All nonsnow creatures get -X/-X until end of turn, where X is the number of snow permanents you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Face of Divinity | silent | As long as another Aura is attached to enchanted creature, it has first strike and lifelink. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Gluttonous Slug | silent | Evolve | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Goblin Champion | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
@@ -46,7 +45,6 @@
 | Quakefoot Cyclops | silent | When this creature enters, up to two target creatures can't block this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Reap the Past | silent | Return X cards at random from your graveyard to your hand. Exile Reap the Past. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Recruit the Worthy | silent | Buyback | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Rotwidow Pack | silent | {3}{B}{G}, Exile a creature card from your graveyard: Create a 1/2 green Spider creature token with reach, then each opponent loses 1 life for each Spider you c | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Scale Up | silent | Overload | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Silumgar Scavenger | silent | Exploit | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Smoke Shroud | silent | When a Ninja you control enters, you may return this card from your graveyard to the battlefield attached to that creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -150,6 +148,7 @@
 | Reprobation | handled | Enchanted creature loses all abilities and is a Coward creature with base power and toughness 0/1. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Rhox Veteran | handled | Whenever this creature attacks, tap target creature an opponent controls. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Rime Tender | handled | {T}: Untap another target snow permanent. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Rotwidow Pack | handled | {3}{B}{G}, Exile a creature card from your graveyard: Create a 1/2 green Spider creature token with reach, then each opponent loses 1 life for each Spider you c | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ruination Rioter | handled | When this creature dies, you may have it deal damage to any target equal to the number of land cards in your graveyard. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Sadistic Obsession | handled | Enchanted creature has "{B}, {T}: Put a -1/-1 counter on target creature." | the engine reads this text and performs it | Y/-/- | not_tested |
 | Scour All Possibilities | handled | Scry 2, then draw a card. Flashback {4}{U} (You may cast this card from your graveyard for its flashback cost. Then exile it.) | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -192,12 +191,13 @@
 ## Fully supported
 
 <details>
-<summary>48 cards</summary>
+<summary>49 cards</summary>
 
 - Bogardan Dragonheart
 - Changeling Outcast
 - Collector Ouphe
 - Conifer Wurm
+- Dead of Winter
 - Dregscape Sliver
 - Enduring Sliver
 - Ephemerate
@@ -253,7 +253,6 @@
 | overload | 3 | Mind Rake, Scale Up, Stirring Address | mh1 |
 | Choose two | 1 | Kaya's Guile | mh1 |
 | Hellbent | 1 | Headless Specter | mh1 |
-| all nonsnow creatures get -N/-N until end of turn, where N is the number of snow permanents you control. | 1 | Dead of Winter | mh1 |
 | as long as another aura is attached to enchanted creature, it has first strike and lifelink. | 1 | Face of Divinity | mh1 |
 | as long as you had another creature enter the battlefield under your control ~, ~ has trample and indestructible. | 1 | Bellowing Elk | mh1 |
 | as long as you've drawn two or more cards ~, ~ has double strike. | 1 | Spinehorn Minotaur | mh1 |
@@ -289,7 +288,6 @@
 | whenever ~ deals combat damage to a player, that player exiles the top two cards of their library. until end of turn, you may play those cards without paying th | 1 | Fallen Shinobi | mh1 |
 | {M}: shuffle your library, then exile the top card. until end of turn, you may play that card without paying its mana cost. | 1 | Urza, Lord High Artificer | mh1 |
 | {M}: ~ can attack ~ as though it didn't have defender. | 1 | Wall of One Thousand Cuts | mh1 |
-| {M}{M}{M}, exile a creature card from your graveyard: create a N/N green spider creature token with reach, then each opponent loses N life for each spider you c | 1 | Rotwidow Pack | mh1 |
 | ~ costs {M} less to cast if there is a land card in your graveyard. | 1 | Igneous Elemental | mh1 |
 | ~ gets +N/+N as long as there is a land card in your graveyard. | 1 | Murasa Behemoth | mh1 |
 | ~ gets +N/+N as long as you had another creature enter the battlefield under your control ~. | 1 | Saddled Rimestag | mh1 |

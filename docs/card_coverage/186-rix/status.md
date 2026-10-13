@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 42 | 23.6% |
+| Tested | 44 | 24.7% |
 | Works (untested) | 98 | 55.1% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 38 | 21.3% |
+| Not working | 36 | 20.2% |
 
 ## Cards needing work
 
@@ -28,7 +28,6 @@
 |---|---|---|---|---|---|
 | Admiral's Order | silent | Raid — If you attacked this turn, you may pay {U} rather than pay this spell's mana cost. Counter target spell. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Angrath, Minotaur Pirate | silent | −11: Destroy all creatures target opponent controls. Angrath deals damage to that player equal to their total power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Angrath, the Flame-Chained | silent | −8: Each opponent loses life equal to the number of cards in their graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Awakened Amalgam | silent | Awakened Amalgam's power and toughness are each equal to the number of differently named lands you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Azor's Gateway // Sanctum of the Sun | silent | {1}, {T}: Draw a card, then exile a card from your hand. If cards with five or more different mana values are exiled with Azor's Gateway, you gain 5 life, untap | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Azor, the Lawbringer | silent | When Azor enters, each opponent can't cast instant or sorcery spells during that player's next turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -43,8 +42,6 @@
 | Etali, Primal Storm | silent | Whenever Etali attacks, exile the top card of each player's library, then you may cast any number of spells from among those cards without paying their mana cos | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Fathom Fleet Boarder | silent | When this creature enters, you lose 2 life unless you control another Pirate. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Golden Guardian // Gold-Forge Garrison | silent | {2}: This creature fights another target creature you control. When this creature dies this turn, return it to the battlefield transformed under your control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Gruesome Fate | silent | Each opponent loses 1 life for each creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Huatli, Radiant Champion | silent | +1: Put a loyalty counter on Huatli for each creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Induced Amnesia | silent | When this enchantment enters, target player exiles all cards from their hand face down, then draws that many cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Kumena's Awakening | silent | At the beginning of your upkeep, each player draws a card. If you have the city's blessing, instead only you draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sea Legs | silent | Enchanted creature gets +0/+2 as long as it's a Pirate. Otherwise, it gets -2/-0. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -55,6 +52,7 @@
 | Twilight Prophet | silent | At the beginning of your upkeep, if you have the city's blessing, reveal the top card of your library and put it into your hand. Each opponent loses X life and  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Vona's Hunger | silent | Ascend (If you control ten or more permanents, you get the city's blessing for the rest of the game.) Each opponent sacrifices a creature of their choice. If yo | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Warkite Marauder | silent | Whenever this creature attacks, target creature defending player controls loses all abilities and has base power and toughness 0/1 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
+| Angrath, the Flame-Chained | notice | −3: Gain control of target creature until end of turn. Untap it. It gains haste until end of turn. Sacrifice it at the beginning of the next end step if it has  | unparsed remainder: Untap it. It gains haste until end of turn. Sacrifice it at the beginning of the next end step if it has mana value 3 or less. | Y/Y/- | not_working |
 | Dusk Charger | notice | This creature gets +2/+2 as long as you have the city's blessing. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Expel from Orazca | notice | Ascend (If you control ten or more permanents, you get the city's blessing for the rest of the game.) Return target nonland permanent to its owner's hand. If yo | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Grasping Scoundrel | notice | This creature gets +1/+0 as long as it's attacking. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -166,7 +164,7 @@
 ## Fully supported
 
 <details>
-<summary>42 cards</summary>
+<summary>44 cards</summary>
 
 - Arch of Orazca
 - Blood Sun
@@ -179,6 +177,8 @@
 - Form of the Dinosaur
 - Ghalta, Primal Hunger
 - Golden Demise
+- Gruesome Fate
+- Huatli, Radiant Champion
 - Jadelight Ranger
 - Journey to Eternity // Atzal, Cave of Eternity
 - Mastermind's Acquisition
@@ -219,7 +219,6 @@
 |---|---|---|---|
 | ~ gets +N/+N as long as you have the city's blessing. | 3 | Dusk Charger, Snubhorn Sentry, Spire Winder | rix |
 | Raid | 1 | Admiral's Order | rix |
-| +N: put a loyalty counter on huatli for each creature you control. | 1 | Huatli, Radiant Champion | rix |
 | ascend (if you control ten or more permanents, you get the city"..."s blessing, instead each opponent sacrifices half the creatures they control of their choice | 1 | Vona's Hunger | rix |
 | ascend (if you control ten or more permanents, you get the city"..."s hand. if you have the city"..."s library instead. | 1 | Expel from Orazca | rix |
 | at the beginning of combat on your turn, put a +N/+N counter on target creature you control. then if that creature has three or more +N/+N counters on it, trans | 1 | Hadana's Climb // Winged Temple of Orazca | rix |
@@ -227,7 +226,6 @@
 | at the beginning of your upkeep, if you have the city"..."s mana value. | 1 | Twilight Prophet | rix |
 | attacking pirates you control get +N/+N. | 1 | Dire Fleet Neckbreaker | rix |
 | each opponent can"..."s next turn. | 1 | Sphinx's Decree | rix |
-| each opponent loses N life for each creature you control. | 1 | Gruesome Fate | rix |
 | each player chooses any number of creatures they control with total power N or less, then sacrifices all other creatures they control. | 1 | Slaughter the Strong | rix |
 | enchanted creature gets +N/+N as long as it's a pirate. otherwise, it gets -N/-N. | 1 | Sea Legs | rix |
 | equipped creature gets +N/+N, has menace, and is a pirate in addition to its other creature types. | 1 | Captain's Hook | rix |
@@ -252,7 +250,7 @@
 | ~ has flying as long as it's attacking. | 1 | Kitesail Corsair | rix |
 | ~'s power and toughness are each equal to the number of differently named lands you control. | 1 | Awakened Amalgam | rix |
 | −N: destroy all creatures target opponent controls. angrath deals damage to that player equal to their total power. | 1 | Angrath, Minotaur Pirate | rix |
-| −N: each opponent loses life equal to the number of cards in their graveyard. | 1 | Angrath, the Flame-Chained | rix |
+| −N: gain control of target creature until end of turn. untap it. it gains haste until end of turn. sacrifice it at the beginning of the next end step if it has  | 1 | Angrath, the Flame-Chained | rix |
 
 ## Notes
 

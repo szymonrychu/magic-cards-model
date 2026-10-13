@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 36 | 16.0% |
+| Tested | 37 | 16.4% |
 | Works (untested) | 163 | 72.4% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 26 | 11.6% |
+| Not working | 25 | 11.1% |
 
 ## Cards needing work
 
@@ -47,7 +47,6 @@
 | See the Unwritten | silent | Reveal the top eight cards of your library. You may put a creature card from among them onto the battlefield. Put the rest into your graveyard. Ferocious — If y | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Smoke Teller | silent | {1}{U}: Look at target face-down creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sorin, Solemn Visitor | silent | +1: Until your next turn, creatures you control get +1/+0 and gain lifelink. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| High Sentinels of Arashin | notice | This creature gets +1/+1 for each other creature you control with a +1/+1 counter on it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Ride Down | notice | Destroy target blocking creature. Creatures that were blocked by that creature this combat gain trample until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Rite of the Serpent | notice | Destroy target creature. If that creature had a +1/+1 counter on it, create a 1/1 green Snake creature token. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Temur Charm | notice | Choose one — • Target creature you control gets +1/+1 until end of turn. It fights target creature you don't control. • Counter target spell unless its controll | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -219,7 +218,7 @@
 ## Fully supported
 
 <details>
-<summary>36 cards</summary>
+<summary>37 cards</summary>
 
 - Abzan Charm
 - Abzan Falconer
@@ -240,6 +239,7 @@
 - Feat of Resistance
 - Ghostfire Blade
 - Hardened Scales
+- High Sentinels of Arashin
 - Hooded Hydra
 - Hooting Mandrills
 - Ivorytusk Fortress
@@ -289,7 +289,6 @@
 | whenever ~ attacks, exile it. return it to the battlefield under your control tapped and attacking at the beginning of the declare attackers step on your next t | 1 | Meandering Towershell | ktk |
 | whenever ~ or another creature you control is turned face up, untap that creature. | 1 | Pine Walker | ktk |
 | {M}{M}: look at target face-down creature. | 1 | Smoke Teller | ktk |
-| ~ gets +N/+N for each other creature you control with a +N/+N counter on it. | 1 | High Sentinels of Arashin | ktk |
 
 ## Notes
 

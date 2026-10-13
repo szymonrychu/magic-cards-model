@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 51 | 20.7% |
+| Tested | 52 | 21.1% |
 | Works (untested) | 143 | 58.1% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 52 | 21.1% |
+| Not working | 51 | 20.7% |
 
 ## Cards needing work
 
@@ -61,7 +61,6 @@
 | Skophos Maze-Warden | silent | Whenever another creature becomes the target of an ability of a land you control named Labyrinth of Skophos, you may have this creature fight that creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Storm Herald | silent | When this creature enters, return any number of Aura cards from your graveyard to the battlefield attached to creatures you control. Exile those Auras at the be | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Thassa's Oracle | silent | When this creature enters, look at the top X cards of your library, where X is your devotion to blue. Put up to one of them on top of your library and the rest  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| The Triumph of Anax | silent | I, II, III — Until end of turn, target creature gains trample and gets +X/+0, where X is the number of lore counters on this Saga. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Threnody Singer | silent | When this creature enters, target creature an opponent controls gets -X/-0 until end of turn, where X is your devotion to blue. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Tymaret Calls the Dead | silent | I, II — Mill three cards. Then you may exile a creature or enchantment card from your graveyard. If you do, create a 2/2 black Zombie creature token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Underworld Sentinel | silent | When this creature dies, put all cards exiled with it onto the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -225,7 +224,7 @@
 ## Fully supported
 
 <details>
-<summary>51 cards</summary>
+<summary>52 cards</summary>
 
 - Alirios, Enraptured
 - Altar of the Pantheon
@@ -267,6 +266,7 @@
 - Temple Thief
 - Thassa, Deep-Dwelling
 - The Akroan War
+- The Triumph of Anax
 - Treeshaker Chimera
 - Tymaret, Chosen from Death
 - Underworld Breach
@@ -306,7 +306,6 @@
 | sacrifice ~: equipped creature can't be blocked ~. sacrifice it at the beginning of the next end step. | 1 | Wings of Hubris | thb |
 | target creature gets +N/+N until end of turn. if it"..."t be the target of spells or abilities your opponents control. damage and effects that say "..." don't d | 1 | Karametra's Blessing | thb |
 | target opponent reveals their hand. you choose a nonland card from it or a card from their graveyard. exile that card. you lose N life. | 1 | Agonizing Remorse | thb |
-| until end of turn, target creature gains trample and gets +N/+N, where N is the number of lore counters on ~. | 1 | The Triumph of Anax | thb |
 | when atris enters, target opponent looks at the top three cards of your library and separates them into a face-down pile and a face-up pile. put one pile into y | 1 | Atris, Oracle of Half-Truths | thb |
 | when you cast a spell with the chosen name for the first time ~, draw two cards. | 1 | Medomai's Prophecy | thb |
 | when ~ dies, put all cards exiled with it onto the battlefield. | 1 | Underworld Sentinel | thb |

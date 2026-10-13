@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 22 | 12.3% |
-| Works (untested) | 117 | 65.4% |
+| Works (untested) | 118 | 65.9% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 40 | 22.3% |
+| Not working | 39 | 21.8% |
 
 ## Cards needing work
 
@@ -32,7 +32,6 @@
 | Crag Puca | silent | {U/R}: Switch this creature's power and toughness until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Desecrator Hag | silent | When this creature enters, return to your hand the creature card in your graveyard with the greatest power. If two or more cards are tied for greatest power, yo | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Dominus of Fealty | silent | At the beginning of your upkeep, you may gain control of target permanent until end of turn. If you do, untap it and it gains haste until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Doomgape | silent | At the beginning of your upkeep, sacrifice a creature. You gain life equal to that creature's toughness. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Endless Horizons | silent | When this enchantment enters, search your library for any number of Plains cards, exile them, then shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Fiery Bombardment | silent | Chroma — {2}, Sacrifice a creature: This enchantment deals damage to any target equal to the number of red mana symbols in the sacrificed creature's mana cost. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Gift of the Deity | silent | As long as enchanted creature is green, it gets +1/+1 and all creatures able to block it do so. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -87,6 +86,7 @@
 | Crumbling Ashes | handled | At the beginning of your upkeep, destroy target creature with a -1/-1 counter on it. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Deathbringer Liege | handled | Other white creatures you control get +1/+1. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Deity of Scars | handled | This creature enters with two -1/-1 counters on it. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Doomgape | handled | At the beginning of your upkeep, sacrifice a creature. You gain life equal to that creature's toughness. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Double Cleave | handled | Target creature gains double strike until end of turn. (It deals both first-strike and regular combat damage.) | the engine reads this text and performs it | Y/-/- | not_tested |
 | Drain the Well | handled | Destroy target land. You gain 2 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Dream Fracture | handled | Counter target spell. Its controller draws a card. Draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -221,7 +221,6 @@
 | Chroma | 6 | Fiery Bombardment, Light from Within, Primalcrux, Sanity Grinding, Springjack Shepherd | eve |
 | Vivid | 1 | Bloom Tender | eve |
 | as long as enchanted creature is green, it gets +N/+N and all creatures able to block it do so. | 1 | Gift of the Deity | eve |
-| at the beginning of your upkeep, sacrifice a creature. you gain life equal to that creature's toughness. | 1 | Doomgape | eve |
 | at the beginning of your upkeep, you may gain control of target permanent until end of turn. if you do, untap it and it gains haste until end of turn. | 1 | Dominus of Fealty | eve |
 | attacking creatures you control get +N/+N. | 1 | Nobilis of War | eve |
 | change the text of target spell or permanent by replacing all instances of one color word with another. retrace (you may cast ~ from your graveyard by discardin | 1 | Glamerdye | eve |

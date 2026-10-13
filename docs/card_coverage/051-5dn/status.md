@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 27 | 16.7% |
+| Tested | 29 | 17.9% |
 | Works (untested) | 104 | 64.2% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 31 | 19.1% |
+| Not working | 29 | 17.9% |
 
 ## Cards needing work
 
@@ -39,7 +39,6 @@
 | Grafted Wargear | silent | Whenever this Equipment becomes unattached from a permanent, sacrifice that permanent. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Helm of Kaldra | silent | {1}: If you control Equipment named Helm of Kaldra, Sword of Kaldra, and Shield of Kaldra, create Kaldra, a legendary 4/4 colorless Avatar creature token. Attac | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Magnetic Theft | silent | Attach target Equipment to target creature. (Control of the Equipment doesn't change.) | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Mana Geyser | silent | Add {R} for each tapped land your opponents control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Mephidross Vampire | silent | Each creature you control is a Vampire in addition to its other creature types and has "Whenever this creature deals damage to a creature, put a +1/+1 counter o | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Myr Quadropod | silent | {3}: Switch this creature's power and toughness until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Myr Servitor | silent | At the beginning of your upkeep, if this creature is on the battlefield, each player returns all cards named Myr Servitor from their graveyard to the battlefiel | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -52,7 +51,6 @@
 | Summoner's Egg | silent | Imprint — When this creature enters, you may exile a card from your hand face down. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Bringer of the Red Dawn | notice | At the beginning of your upkeep, you may untap target creature and gain control of it until end of turn. That creature gains haste until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Chimeric Coils | notice | {X}{1}: This artifact becomes an X/X Construct artifact creature. Sacrifice it at the beginning of the next end step. | unparsed remainder: Sacrifice it at the beginning of the next end step. | Y/-/- | not_working |
-| Devour in Shadow | notice | Destroy target creature. It can't be regenerated. You lose life equal to that creature's toughness. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Plunge into Darkness | notice | Choose one — • Sacrifice any number of creatures. You gain 3 life for each creature sacrificed this way. • Pay any amount of life, then look at that many cards  | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Rude Awakening | notice | Choose one — • Untap all lands you control. • Until end of turn, lands you control become 2/2 creatures that are still lands. Entwine {2}{G} (Choose both if you | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Spectral Shift | notice | Choose one — • Change the text of target spell or permanent by replacing all instances of one basic land type with another. (This effect lasts indefinitely.) •  | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
@@ -165,11 +163,12 @@
 ## Fully supported
 
 <details>
-<summary>27 cards</summary>
+<summary>29 cards</summary>
 
 - Beacon of Unrest
 - Cranial Plating
 - Crucible of Worlds
+- Devour in Shadow
 - Engineered Explosives
 - Eon Hub
 - Eternal Witness
@@ -178,6 +177,7 @@
 - Grinding Station
 - Lantern of Insight
 - Magma Jet
+- Mana Geyser
 - Mycosynth Golem
 - Night's Whisper
 - Opaline Bracers
@@ -203,7 +203,6 @@
 |---|---|---|---|
 | Choose one | 3 | Plunge into Darkness, Rude Awakening, Spectral Shift | 5dn |
 | Imprint | 1 | Summoner's Egg | 5dn |
-| add {M} for each tapped land your opponents control. | 1 | Mana Geyser | 5dn |
 | at the beginning of each end step, each player sacrifices a permanent of their choice unless they discard a card. | 1 | Possessed Portal | 5dn |
 | at the beginning of each opponent's upkeep, ~ deals N damage to that player unless they have exactly three or exactly four cards in hand. | 1 | Skullcage | 5dn |
 | at the beginning of your upkeep, if ~ is on the battlefield, each player returns all cards named ~ from their graveyard to the battlefield. | 1 | Myr Servitor | 5dn |
@@ -212,7 +211,6 @@
 | attach target equipment to target creature. (control of the equipment doesn't change.) | 1 | Magnetic Theft | 5dn |
 | counter target spell. if that spell is countered ~, its controller may put a creature card from their hand onto the battlefield. | 1 | Fold into Aether | 5dn |
 | destroy all creatures that dealt damage to you ~. | 1 | Retaliate | 5dn |
-| destroy target creature. it can"..."s toughness. | 1 | Devour in Shadow | 5dn |
 | double target player"..."s library. | 1 | Beacon of Immortality | 5dn |
 | each creature you control is a vampire in addition to its other creature types and has "..." | 1 | Mephidross Vampire | 5dn |
 | each player returns all artifact cards from their graveyard to the battlefield. | 1 | Roar of Reclamation | 5dn |

@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 17 | 11.9% |
-| Works (untested) | 90 | 62.9% |
+| Tested | 22 | 15.4% |
+| Works (untested) | 92 | 64.3% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 36 | 25.2% |
+| Not working | 29 | 20.3% |
 
 ## Cards needing work
 
@@ -32,13 +32,9 @@
 | Avarice Amulet | silent | Whenever equipped creature dies, target opponent gains control of this Equipment. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Boonweaver Giant | silent | When this creature enters, you may search your graveyard, hand, and/or library for an Aura card and put it onto the battlefield attached to this creature. If yo | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Brood Keeper | silent | Whenever an Aura becomes attached to this creature, create a 2/2 red Dragon creature token with flying. It has "{R}: This creature gets +1/+0 until end of turn. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
-| Chasm Skulker | silent | When this creature dies, create X 1/1 blue Squid creature tokens with islandwalk, where X is the number of +1/+1 counters on this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Chronostutter | silent | Put target creature into its owner's library second from the top. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Coral Barrier | silent | When this creature enters, create a 1/1 blue Squid creature token with islandwalk. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Festergloom | silent | Nonblack creatures get -1/-1 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Garruk, Apex Predator | silent | −3: Destroy target creature. You gain life equal to its toughness. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Glacial Crasher | silent | This creature can't attack unless there is a Mountain on the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Hot Soup | silent | Whenever equipped creature is dealt damage, destroy it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | In Garruk's Wake | silent | Destroy all creatures you don't control and all planeswalkers you don't control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Indulgent Tormentor | silent | At the beginning of your upkeep, draw a card unless target opponent sacrifices a creature of their choice or pays 3 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Invasive Species | silent | When this creature enters, return another permanent you control to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -57,10 +53,7 @@
 | The Chain Veil | silent | {4}, {T}: For each planeswalker you control, you may activate one of its loyalty abilities once this turn as though none of its loyalty abilities have been acti | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Waste Not | silent | Whenever an opponent discards a noncreature, nonland card, draw a card. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Xathrid Slyblade | silent | {3}{B}: Until end of turn, this creature loses hexproof and gains first strike and deathtouch. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Yisan, the Wanderer Bard | silent | {2}{G}, {T}, Put a verse counter on Yisan: Search your library for a creature card with mana value equal to the number of verse counters on Yisan, put it onto t | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Blastfire Bolt | notice | Blastfire Bolt deals 5 damage to target creature. Destroy all Equipment attached to that creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Life's Legacy | notice | As an additional cost to cast this spell, sacrifice a creature. Draw cards equal to the sacrificed creature's power. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Rotfeaster Maggot | notice | When this creature enters, exile target creature card from a graveyard. You gain life equal to that card's toughness. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Warden of the Beyond | notice | This creature gets +2/+2 as long as an opponent owns a card in exile. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Act on Impulse | handled | Exile the top three cards of your library. Until end of turn, you may play those cards. (If you cast a spell this way, you still pay its costs. You can play a l | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Aeronaut Tinkerer | handled | This creature has flying as long as you control an artifact. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -92,6 +85,7 @@
 | Heliod's Pilgrim | handled | When this creature enters, you may search your library for an Aura card, reveal it, put it into your hand, then shuffle. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Hornet Nest | handled | Whenever this creature is dealt damage, create that many 1/1 green Insect creature tokens with flying and deathtouch. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Hornet Queen | handled | When this creature enters, create four 1/1 green Insect creature tokens with flying and deathtouch. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Hot Soup | handled | Equipped creature can't be blocked. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Inferno Fist | handled | Enchanted creature gets +2/+0. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Jace, the Living Guildpact | handled | +1: Look at the top two cards of your library. Put one of them into your graveyard. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Jorubai Murk Lurker | handled | This creature gets +1/+1 as long as you control a Swamp. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -99,6 +93,7 @@
 | Kapsho Kitefins | handled | Whenever this creature or another creature you control enters, tap target creature an opponent controls. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Kird Chieftain | handled | This creature gets +1/+1 as long as you control a Forest. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Krenko's Enforcer | handled | Intimidate | machines/keywords.py | Y/Y/- | not_tested |
+| Life's Legacy | handled | As an additional cost to cast this spell, sacrifice a creature. Draw cards equal to the sacrificed creature's power. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Living Totem | handled | When this creature enters, you may put a +1/+1 counter on another target creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Marked by Honor | handled | Enchanted creature gets +2/+2 and has vigilance. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Meditation Puzzle | handled | Convoke (Your creatures can help cast this spell. Each creature you tap while casting this spell pays for {1} or one mana of that creature's color.) You gain 8  | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -156,12 +151,15 @@
 ## Fully supported
 
 <details>
-<summary>17 cards</summary>
+<summary>22 cards</summary>
 
 - Aggressive Mining
+- Chasm Skulker
+- Coral Barrier
 - Ensoul Artifact
 - Feast on the Fallen
 - First Response
+- Garruk, Apex Predator
 - Genesis Hydra
 - Goblin Kaboomist
 - Goblin Rabblemaster
@@ -170,11 +168,13 @@
 - Might Makes Right
 - Ob Nixilis, Unshackled
 - Resolute Archangel
+- Rotfeaster Maggot
 - Sanctified Charge
 - Shield of the Avatar
 - Sliver Hivelord
 - Soul of Shandalar
 - Undergrowth Scavenger
+- Yisan, the Wanderer Bard
 
 </details>
 
@@ -182,7 +182,6 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| as an additional cost to cast ~, sacrifice a creature. draw cards equal to the sacrificed creature's power. | 1 | Life's Legacy | m15 |
 | at the beginning of your upkeep, draw a card unless target opponent sacrifices a creature of their choice or pays N life. | 1 | Indulgent Tormentor | m15 |
 | convoke (your creatures can help cast ~. each creature you tap while casting ~ pays for {M} or one mana of that creature"..."s graveyard, hand, and library for  | 1 | Stain the Mind | m15 |
 | destroy all creatures you don"..."t control. | 1 | In Garruk's Wake | m15 |
@@ -191,11 +190,8 @@
 | nonblack creatures get -N/-N until end of turn. | 1 | Festergloom | m15 |
 | put target creature into its owner's library second from the top. | 1 | Chronostutter | m15 |
 | until end of turn, each creature target player controls loses all abilities and becomes a blue frog with base power and toughness N/N. | 1 | Polymorphist's Jest | m15 |
-| when ~ dies, create N N/N blue squid creature tokens with islandwalk, where N is the number of +N/+N counters on ~. | 1 | Chasm Skulker | m15 |
 | when ~ dies, return it to the battlefield tapped under its owner's control at the beginning of their next upkeep. | 1 | Phytotitan | m15 |
-| when ~ enters, create a N/N blue squid creature token with islandwalk. | 1 | Coral Barrier | m15 |
 | when ~ enters, destroy all walls your opponents control. | 1 | Siege Dragon | m15 |
-| when ~ enters, exile target creature card from a graveyard. you gain life equal to that card's toughness. | 1 | Rotfeaster Maggot | m15 |
 | when ~ enters, return another permanent you control to its owner's hand. | 1 | Invasive Species | m15 |
 | when ~ enters, sacrifice it unless you return another creature you control to its owner's hand. | 1 | Quickling | m15 |
 | when ~ enters, you may search your graveyard, hand, and/or library for an aura card and put it onto the battlefield attached to ~. if you search your library ~, | 1 | Boonweaver Giant | m15 |
@@ -203,19 +199,16 @@
 | whenever an aura becomes attached to ~, create a N/N red dragon creature token with flying. it has "..." | 1 | Brood Keeper | m15 |
 | whenever an opponent discards a noncreature, nonland card, draw a card. | 1 | Waste Not | m15 |
 | whenever equipped creature dies, target opponent gains control of ~. | 1 | Avarice Amulet | m15 |
-| whenever equipped creature is dealt damage, destroy it. | 1 | Hot Soup | m15 |
 | whenever you activate an ability of an artifact, if it isn't a mana ability, you may pay {M}. if you do, copy that ability. you may choose new targets for the c | 1 | Kurkesh, Onakke Ancient | m15 |
 | whenever ~ deals combat damage to a player, choose a card in your hand. that player guesses whether the card's mana value is greater than N. if the player guess | 1 | Master of Predicaments | m15 |
 | {M}, {M}: for each planeswalker you control, you may activate one of its loyalty abilities once ~ as though none of its loyalty abilities have been activated ~. | 1 | The Chain Veil | m15 |
 | {M}{M}, discard a creature card: draw a card. if the discarded card was a zombie card, create a tapped N/N black zombie creature token. | 1 | Necromancer's Stockpile | m15 |
-| {M}{M}, {M}, put a verse counter on yisan: search your library for a creature card with mana value equal to the number of verse counters on yisan, put it onto t | 1 | Yisan, the Wanderer Bard | m15 |
 | {M}{M}, {M}, sacrifice another creature: reveal cards from the top of your library until you reveal a nonlegendary creature card. put that card onto the battlef | 1 | Jalira, Master Polymorphist | m15 |
 | {M}{M}: prevent all damage that would be dealt to another target creature ~ by sources of the color of your choice. | 1 | Avacyn, Guardian Angel | m15 |
 | {M}{M}: until end of turn, ~ loses hexproof and gains first strike and deathtouch. | 1 | Xathrid Slyblade | m15 |
 | ~ can't attack unless there is a mountain on the battlefield. | 1 | Glacial Crasher | m15 |
 | ~ deals N damage to target creature. destroy all equipment attached to that creature. | 1 | Blastfire Bolt | m15 |
 | ~ gets +N/+N as long as an opponent owns a card in exile. | 1 | Warden of the Beyond | m15 |
-| −N: destroy target creature. you gain life equal to its toughness. | 1 | Garruk, Apex Predator | m15 |
 | −N: put a +N/+N counter on each creature you control and a loyalty counter on each other planeswalker you control. | 1 | Ajani Steadfast | m15 |
 | −N: search your library for any number of basic land cards, put them onto the battlefield, then shuffle. those lands become N/N elemental creatures with trample | 1 | Nissa, Worldwaker | m15 |
 

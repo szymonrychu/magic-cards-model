@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 52 | 19.5% |
-| Works (untested) | 147 | 55.3% |
+| Tested | 54 | 20.3% |
+| Works (untested) | 148 | 55.6% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 67 | 25.2% |
+| Not working | 64 | 24.1% |
 
 ## Cards needing work
 
@@ -41,7 +41,6 @@
 | Ego Drain | silent | Target opponent reveals their hand. You choose a nonland card from it. That player discards that card. If you don't control a Faerie, exile a card from your han | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Embereth Veteran | silent | {1}, Sacrifice this creature: Create a Young Hero Role token attached to another target creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Expel the Interlopers | silent | Choose a number between 0 and 10. Destroy all creatures with power greater than or equal to the chosen number. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Faerie Slumber Party | silent | Return all creatures to their owners' hands. For each opponent who controlled a creature returned this way, you create two 1/1 blue Faerie creature tokens with  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Farsight Ritual | silent | Bargain (You may sacrifice an artifact, enchantment, or token as you cast this spell.) Look at the top four cards of your library. If this spell was bargained,  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Faunsbane Troll | silent | {1}, Sacrifice an Aura attached to this creature: This creature fights target creature you don't control. If that creature would die this turn, exile it instead | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Feral Encounter | silent | Look at the top five cards of your library. You may exile a creature card from among them. Put the rest on the bottom of your library in a random order. You may | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -61,11 +60,9 @@
 | Rowan's Grim Search | silent | Bargain (You may sacrifice an artifact, enchantment, or token as you cast this spell.) If this spell was bargained, look at the top four cards of your library,  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Rowan, Scion of War | silent | {T}: Spells you cast this turn that are black and/or red cost {X} less to cast, where X is the amount of life you lost this turn. Activate only as a sorcery. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Sharae of Numbing Depths | silent | Whenever you tap one or more untapped creatures your opponents control, draw a card. This ability triggers only once each turn. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
-| Slumbering Keepguard | silent | {2}{W}: This creature gets +1/+1 until end of turn for each enchantment you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Solitary Sanctuary | silent | Whenever you tap an untapped creature an opponent controls, put a +1/+1 counter on target creature you control. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
 | Spell Stutter | silent | Counter target spell unless its controller pays {2} plus an additional {1} for each Faerie you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Syr Armont, the Redeemer | silent | When Syr Armont enters, create a Monster Role token attached to another target creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Syr Ginger, the Meal Ender | silent | {2}, {T}, Sacrifice Syr Ginger: You gain life equal to its power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Tattered Ratter | silent | Whenever a Rat you control becomes blocked, it gets +2/+0 until end of turn. | this trigger's condition can never be satisfied - it never triggers | Y/Y/Y | not_working |
 | Territorial Witchstalker | silent | At the beginning of combat on your turn, if you control a creature with power 4 or greater, this creature gets +1/+0 until end of turn and can attack this turn  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | The Apprentice's Folly | silent | I, II — Choose target nontoken creature you control that doesn't have the same name as a token you control. Create a token that's a copy of it, except it isn't  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -209,6 +206,7 @@
 | Succumb to the Cold | handled | Tap one or two target creatures an opponent controls. Put a stun counter on each of them. (If a permanent with a stun counter would become untapped, remove one  | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Sugar Rush | handled | Target creature gets +3/+0 until end of turn. Draw a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Sweettooth Witch | handled | When this creature enters, create a Food token. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Syr Ginger, the Meal Ender | handled | Syr Ginger has trample, hexproof, and haste as long as an opponent controls a planeswalker. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Taken by Nightmares | handled | Exile target creature. If you control an enchantment, scry 2. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Talion's Messenger | handled | Whenever you attack with one or more Faeries, draw a card, then discard a card. When you discard a card this way, put a +1/+1 counter on target Faerie you contr | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Tanglespan Lookout | handled | Whenever an Aura you control enters, draw a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -244,7 +242,7 @@
 ## Fully supported
 
 <details>
-<summary>52 cards</summary>
+<summary>54 cards</summary>
 
 - Agatha of the Vile Cauldron
 - Agatha's Champion
@@ -265,6 +263,7 @@
 - Eriette of the Charmed Apple
 - Extraordinary Journey
 - Faerie Fencing
+- Faerie Slumber Party
 - Fell Horseman // Deathly Ride
 - Frantic Firebolt
 - Gnawing Crescendo
@@ -290,6 +289,7 @@
 - Ruby, Daring Tracker
 - Shatter the Oath
 - Sleep-Cursed Faerie
+- Slumbering Keepguard
 - Song of Totentanz
 - Spiteful Hexmage
 - Stonesplitter Bolt
@@ -327,7 +327,6 @@
 | one or two target creatures each gain haste until end of turn. for each of those creatures, create a monster role token attached to it. (if you control another  | 1 | Become Brutes | woe |
 | other creatures you control get +N/+N for each aura and equipment attached to kellan. | 1 | Kellan, the Fae-Blooded // Birthright Boon | woe |
 | other creatures you control that are enchanted by auras you control have base power and toughness N/N and have flying. | 1 | Archon of the Wild Rose | woe |
-| return all creatures to their owners' hands. for each opponent who controlled a creature returned ~, you create two N/N blue faerie creature tokens with flying  | 1 | Faerie Slumber Party | woe |
 | sacrifice any number of artifacts, enchantments, and/or tokens. return that many creature cards from your graveyard to the battlefield. | 1 | Lich-Knights' Conquest | woe |
 | target creature you control gets +N/+N until end of turn. it can't be blocked by creatures with power N or greater ~. | 1 | Cheeky House-Mouse // Squeak By | woe |
 | target opponent reveals their hand. you choose a nonland card from it. that player discards that card. if you don't control a faerie, exile a card from your han | 1 | Ego Drain | woe |
@@ -357,14 +356,12 @@
 | you may sacrifice a creature. if you do, search your library for a creature or basic land card, reveal it, put it into your hand, then shuffle. | 1 | The Huntsman's Redemption | woe |
 | {M}, sacrifice an aura attached to ~: ~ fights target creature you don't control. if that creature would die ~, exile it instead. activate only as a sorcery. | 1 | Faunsbane Troll | woe |
 | {M}, sacrifice ~: create a young hero role token attached to another target creature. | 1 | Embereth Veteran | woe |
-| {M}, {M}, sacrifice syr ginger: you gain life equal to its power. | 1 | Syr Ginger, the Meal Ender | woe |
 | {M}, {M}: choose target enchantment you control that doesn"..."s a copy of it, except it isn't legendary. if the token is an aura, untap yenna, then scry N. act | 1 | Yenna, Redtooth Regent | woe |
 | {M}, {M}: tap target creature. ~ costs {M} less to activate during your turn. | 1 | Hylda's Crown of Winter | woe |
 | {M}: spells you cast ~ that are black and/or red cost {M} less to cast, where N is the amount of life you lost ~. activate only as a sorcery. | 1 | Rowan, Scion of War | woe |
 | {M}: spells you cast ~ that are white and/or blue cost {M} less to cast, where N is the amount of life you gained ~. activate only as a sorcery. | 1 | Will, Scion of Peace | woe |
 | {M}{M}: choose another player. that player gains control of target treasure you control. you draw a card. | 1 | Discerning Financier | woe |
 | {M}{M}: ~ can't be blocked by creatures with power N or less ~. | 1 | Verdant Outrider | woe |
-| {M}{M}: ~ gets +N/+N until end of turn for each enchantment you control. | 1 | Slumbering Keepguard | woe |
 | ~ costs {M} less to cast if your life total is N or less. exile target creature or planeswalker. search its controller's graveyard, hand, and library for any nu | 1 | The End | woe |
 | ~ has haste as long as you own a card in exile that has an adventure. | 1 | Howling Galefang | woe |
 

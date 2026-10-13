@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 66 | 26.1% |
+| Tested | 69 | 27.3% |
 | Works (untested) | 105 | 41.5% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 82 | 32.4% |
+| Not working | 79 | 31.2% |
 
 ## Cards needing work
 
@@ -64,13 +64,11 @@
 | Lantern of the Lost | silent | {1}, {T}, Exile this artifact: Exile all cards from all graveyards, then draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Lunar Rejection | silent | Cleave | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Mindleech Ghoul | silent | When this creature exploits a creature, each opponent exiles a card from their hand. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
-| Moldgraf Millipede | silent | When this creature enters, mill three cards, then put a +1/+1 counter on this creature for each creature card in your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Necroduality | silent | Whenever a nontoken Zombie you control enters, create a token that's a copy of that creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Odric, Blood-Cursed | silent | When Odric enters, create X Blood tokens, where X is the number of abilities from among flying, first strike, double strike, deathtouch, haste, hexproof, indest | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Old Rutstein | silent | When Old Rutstein enters and at the beginning of your upkeep, mill a card. If a land card is milled this way, create a Treasure token. If a creature card is mil | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ollenbock Escort | silent | Sacrifice this creature: Target creature you control with a +1/+1 counter on it gains lifelink and indestructible until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Overcharged Amalgam | silent | When this creature exploits a creature, counter target spell, activated ability, or triggered ability. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
-| Packsong Pup | silent | When this creature dies, you gain life equal to its power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Parasitic Grasp | silent | Cleave | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Parish-Blade Trainee | silent | Training | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Path of Peril | silent | Cleave {4}{W}{B} (You may cast this spell for its cleave cost. If you do, remove the words in square brackets.) Destroy all creatures [with mana value 2 or less | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -103,7 +101,6 @@
 | Cemetery Prowler | notice | Spells you cast cost {1} less to cast for each card type they share with cards exiled with this creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Dreamshackle Geist | notice | At the beginning of combat on your turn, choose up to one — • Tap target creature. • Target creature doesn't untap during its controller's next untap step. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Edgar, Charmed Groom // Edgar Markov's Coffin | notice | At the beginning of your upkeep, create a 1/1 white and black Vampire creature token with lifelink and put a bloodline counter on Edgar Markov's Coffin. Then if | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Geralf, Visionary Stitcher | notice | {U}, {T}, Sacrifice another nontoken creature: Create an X/X blue Zombie creature token, where X is the sacrificed creature's toughness. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Manaform Hellkite | notice | Whenever you cast a noncreature spell, create an X/X red Dragon Illusion creature token with flying and haste, where X is the amount of mana spent to cast that  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Oakshade Stalker // Moonlit Ambusher | notice | You may cast this spell as though it had flash if you pay {2} more to cast it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Reclusive Taxidermist | notice | This creature gets +3/+2 as long as there are four or more creature cards in your graveyard. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -217,7 +214,7 @@
 ## Fully supported
 
 <details>
-<summary>66 cards</summary>
+<summary>69 cards</summary>
 
 - Aim for the Head
 - Ancient Lumberknot
@@ -247,6 +244,7 @@
 - Faithbound Judge // Sinner's Judgment
 - Fear of Death
 - Fleeting Spirit
+- Geralf, Visionary Stitcher
 - Grolnok, the Omnivore
 - Gutter Skulker // Gutter Shortcut
 - Hamlet Vanguard
@@ -263,6 +261,8 @@
 - Militia Rallier
 - Mirrorhall Mimic // Ghastly Mimicry
 - Mischievous Catgeist // Catlike Curiosity
+- Moldgraf Millipede
+- Packsong Pup
 - Patchwork Crawler
 - Radiant Grace // Radiant Restraints
 - Reckless Impulse
@@ -326,10 +326,8 @@
 | until end of turn, target creature gets +N/+N, up to one other target creature gets +N/+N, and up to one other target creature gets +N/+N. those creatures gain  | 1 | Arm the Cathars | vow |
 | when odric enters, create N blood tokens, where N is the number of abilities from among flying, first strike, double strike, deathtouch, haste, hexproof, indest | 1 | Odric, Blood-Cursed | vow |
 | when you sacrifice ~, return it to the battlefield transformed under its owner's control at the beginning of the next end step. | 1 | Biolume Egg // Biolume Serpent | vow |
-| when ~ dies, you gain life equal to its power. | 1 | Packsong Pup | vow |
 | when ~ enters and at the beginning of your upkeep, mill a card. if a land card is milled ~, create a treasure token. if a creature card is milled ~, create a N/ | 1 | Old Rutstein | vow |
 | when ~ enters or dies, exile another card from a graveyard. when you do, choose one — • remove N counters from target permanent, where N is the mana value of th | 1 | Cemetery Desecrator | vow |
-| when ~ enters, mill three cards, then put a +N/+N counter on ~ for each creature card in your graveyard. | 1 | Moldgraf Millipede | vow |
 | when ~ enters, target creature an opponent controls gets -N/-N until end of turn if that opponent controls no other creatures. | 1 | Skulking Killer | vow |
 | when ~ enters, you gain life equal to the greatest toughness among other creatures you control. | 1 | Flourishing Hunter | vow |
 | when ~ exploits a creature, counter target spell, activated ability, or triggered ability. | 1 | Overcharged Amalgam | vow |
@@ -356,7 +354,6 @@
 | {M}, sacrifice ~: target creature gets -N/-N until end of turn, where N is twice the number of blood tokens you control. activate only as a sorcery. | 1 | Bloodtithe Harvester | vow |
 | {M}, {M}, exile a creature card from your graveyard: create a token that"..."s a N/N construct artifact in addition to its other types and it has "..." it gains | 1 | Dollhouse of Horrors | vow |
 | {M}, {M}, exile ~: exile all cards from all graveyards, then draw a card. | 1 | Lantern of the Lost | vow |
-| {M}, {M}, sacrifice another nontoken creature: create an N/N blue zombie creature token, where N is the sacrificed creature's toughness. | 1 | Geralf, Visionary Stitcher | vow |
 | {M}{M}: ~ and another target creature each get +N/+N until end of turn. | 1 | Alluring Suitor // Deadly Dancer | vow |
 | {M}{M}{M}: each creature you control with flying, deathtouch, and/or lifelink gets +N/+N until end of turn. | 1 | Henrika Domnathi // Henrika, Infernal Seer | vow |
 | ~ costs {M} less to cast if you control a spirit. it also costs {M} less to cast if you control an enchantment. counter target spell unless its controller pays  | 1 | Geistlight Snare | vow |

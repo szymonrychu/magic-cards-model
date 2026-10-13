@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 25 | 17.4% |
-| Works (untested) | 93 | 64.6% |
+| Tested | 29 | 20.1% |
+| Works (untested) | 92 | 63.9% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 26 | 18.1% |
+| Not working | 23 | 16.0% |
 
 ## Cards needing work
 
@@ -29,7 +29,6 @@
 | Blasphemous Edict | silent | You may pay {B} rather than pay this spell's mana cost if there are thirteen or more creatures on the battlefield. Each player sacrifices thirteen creatures of  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Bloodthirsty Conqueror | silent | Whenever an opponent loses life, you gain that much life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Bulk Up | silent | Double target creature's power until end of turn. Flashback {4}{R}{R} (You may cast this card from your graveyard for its flashback cost. Then exile it.) | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Dread Summons | silent | Each player mills X cards. For each creature card put into a graveyard this way, you create a tapped 2/2 black Zombie creature token. (To mill a card, a player  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Dropkick Bomber | silent | {R}: Until end of turn, another target Goblin you control gains flying and "When this creature deals combat damage, sacrifice it." | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Exemplar of Light | silent | Whenever you put one or more +1/+1 counters on this creature, draw a card. This ability triggers only once each turn. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
 | Faebloom Trick | silent | Create two 1/1 blue Faerie creature tokens with flying. When you do, tap target creature an opponent controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -38,8 +37,6 @@
 | Kellan, Planar Trailblazer | silent | {1}{R}: If Kellan is a Scout, it becomes a Human Faerie Detective and gains "Whenever Kellan deals combat damage to a player, exile the top card of your library | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Loot, Exuberant Explorer | silent | {4}{G}{G}, {T}: Look at the top six cards of your library. You may reveal a creature card with mana value less than or equal to the number of lands you control  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Lunar Insight | silent | Draw a card for each different mana value among nonland permanents you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Midnight Snack | silent | {2}{B}, Sacrifice this enchantment: Target opponent loses X life, where X is the amount of life you gained this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Ravenous Amulet | silent | {4}, {T}, Sacrifice this artifact: Each opponent loses life equal to the number of soul counters on this artifact. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Skyknight Squire | silent | As long as this creature has three or more +1/+1 counters on it, it has flying and is a Knight in addition to its other types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Sphinx of Forgotten Lore | silent | Whenever this creature attacks, target instant or sorcery card in your graveyard gains flashback until end of turn. The flashback cost is equal to that card's m | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Spinner of Souls | silent | Whenever another nontoken creature you control dies, you may reveal cards from the top of your library until you reveal a creature card. Put that card into your | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -122,7 +119,6 @@
 | Quakestrider Ceratops | handled |  |  | Y/Y/Y | not_tested |
 | Quick-Draw Katana | handled | During your turn, equipped creature gets +2/+0 and has first strike. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Refute | handled | Counter target spell. Draw a card, then discard a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Revenge of the Rats | handled | Create a tapped 1/1 black Rat creature token for each creature card in your graveyard. Flashback {2}{B}{B} (You may cast this card from your graveyard for its f | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Rite of the Dragoncaller | handled | Whenever you cast an instant or sorcery spell, create a 5/5 red Dragon creature token with flying. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Rune-Sealed Wall | handled | {T}: Surveil 1. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Sanguine Syphoner | handled | Whenever this creature attacks, each opponent loses 1 life and you gain 1 life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -149,13 +145,14 @@
 ## Fully supported
 
 <details>
-<summary>25 cards</summary>
+<summary>29 cards</summary>
 
 - Arbiter of Woe
 - Banner of Kinship
 - Crossway Troublemakers
 - Crystal Barricade
 - Curator of Destinies
+- Dread Summons
 - Elenda, Saint of Dusk
 - Fleeting Flight
 - Goblin Boarders
@@ -166,11 +163,14 @@
 - Hinterland Sanctifier
 - Inspiration from Beyond
 - Leyline Axe
+- Midnight Snack
 - Mossborn Hydra
 - Nine-Lives Familiar
 - Perforating Artist
 - Quilled Greatwurm
 - Raise the Past
+- Ravenous Amulet
+- Revenge of the Rats
 - Sire of Seven Deaths
 - Soul-Shackled Zombie
 - Soulstone Sanctuary
@@ -190,7 +190,6 @@
 | create two N/N blue faerie creature tokens with flying. when you do, tap target creature an opponent controls. | 1 | Faebloom Trick | fdn |
 | double target creature's power until end of turn. flashback {M}{M}{M} (you may cast ~ from your graveyard for its flashback cost. then exile it.) | 1 | Bulk Up | fdn |
 | draw a card for each different mana value among nonland permanents you control. | 1 | Lunar Insight | fdn |
-| each player mills N cards. for each creature card put into a graveyard ~, you create a tapped N/N black zombie creature token. (to mill a card, a player puts th | 1 | Dread Summons | fdn |
 | kicker {M}{M} (you may pay an additional {M}{M} as you cast ~.) target creature you control gains indestructible until end of turn. if ~ was kicked, instead any | 1 | Divine Resilience | fdn |
 | when ~ dies, if it wasn"..."s control with two +N/+N counters on it. it's a demon in addition to its other types. | 1 | Infernal Vessel | fdn |
 | whenever a nontoken, non-angel creature you control dies, return that card to the battlefield under its owner's control with a +N/+N counter on it. it has flyin | 1 | Valkyrie's Call | fdn |
@@ -201,10 +200,8 @@
 | whenever ~ attacks, target instant or sorcery card in your graveyard gains flashback until end of turn. the flashback cost is equal to that card's mana cost. | 1 | Sphinx of Forgotten Lore | fdn |
 | whenever ~ attacks, you may sacrifice another creature. if you do, draw a card and ~ can't be blocked ~. | 1 | Vampire Gourmand | fdn |
 | you may pay {M} rather than pay ~ mana cost if there are thirteen or more creatures on the battlefield. each player sacrifices thirteen creatures of their choic | 1 | Blasphemous Edict | fdn |
-| {M}, {M}, sacrifice ~: each opponent loses life equal to the number of soul counters on ~. | 1 | Ravenous Amulet | fdn |
 | {M}: exile target creature card from a graveyard that was put there ~. create a token that"..."s a nightmare in addition to its other types. then exile all othe | 1 | Abyssal Harvester | fdn |
 | {M}: until end of turn, another target goblin you control gains flying and "..." | 1 | Dropkick Bomber | fdn |
-| {M}{M}, sacrifice ~: target opponent loses N life, where N is the amount of life you gained ~. | 1 | Midnight Snack | fdn |
 | {M}{M}, {M}: double the number of each kind of counter on up to two target creatures and/or artifacts you control. | 1 | Zimone, Paradox Sculptor | fdn |
 | {M}{M}: if kellan is a scout, it becomes a human faerie detective and gains "..." | 1 | Kellan, Planar Trailblazer | fdn |
 | {M}{M}: look at the top four cards of your library. you may reveal a creature card with power N or less from among them and put it into your hand. put the rest  | 1 | Squad Rallier | fdn |

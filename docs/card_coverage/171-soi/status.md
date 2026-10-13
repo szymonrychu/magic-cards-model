@@ -17,16 +17,15 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 35 | 13.4% |
+| Tested | 37 | 14.2% |
 | Works (untested) | 188 | 72.0% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 38 | 14.6% |
+| Not working | 36 | 13.8% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
-| Brain in a Jar | silent | {1}, {T}: Put a charge counter on this artifact, then you may cast an instant or sorcery spell with mana value equal to the number of charge counters on this ar | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Breakneck Rider // Neck Breaker | silent | Attacking creatures you control get +1/+0 and have trample. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Corrupted Grafstone | silent | {T}: Choose a color of a card in your graveyard. Add one mana of that color. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Creeping Dread | silent | At the beginning of your upkeep, each player discards a card. Each opponent who discarded a card that shares a card type with the card you discarded loses 3 lif | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -41,7 +40,6 @@
 | Geier Reach Bandit // Vildin-Pack Alpha | silent | Whenever a Werewolf you control enters, you may transform it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Harness the Storm | silent | Whenever you cast an instant or sorcery spell from your hand, you may cast target card with the same name as that spell from your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Invasive Surgery | silent | Counter target sorcery spell. Delirium — If there are four or more card types among cards in your graveyard, search the graveyard, hand, and library of that spe | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Liliana's Indignation | silent | Mill X cards. Target player loses 2 life for each creature card put into your graveyard this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Neglected Heirloom // Ashmouth Blade | silent | When equipped creature transforms, transform this Equipment. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Not Forgotten | silent | Put target card from a graveyard on your choice of the top or bottom of its owner's library. Create a 1/1 white Spirit creature token with flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Olivia, Mobilized for War | silent | Whenever another creature you control enters, you may discard a card. If you do, put a +1/+1 counter on that creature, it gains haste until end of turn, and it  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -256,7 +254,7 @@
 ## Fully supported
 
 <details>
-<summary>35 cards</summary>
+<summary>37 cards</summary>
 
 - Accursed Witch // Infectious Curse
 - Always Watching
@@ -264,6 +262,7 @@
 - Avacynian Missionaries // Lunarch Inquisitors
 - Behold the Beyond
 - Bound by Moonsilver
+- Brain in a Jar
 - Briarbridge Patrol
 - Burn from Within
 - Clip Wings
@@ -276,6 +275,7 @@
 - Goldnight Castigator
 - Gryff's Boon
 - Lambholt Pacifist // Lambholt Butcher
+- Liliana's Indignation
 - Moonlight Hunt
 - Nahiri, the Harbinger
 - Odric, Lunarch Marshal
@@ -314,7 +314,6 @@
 | madness {M}{M} (if you discard ~, discard it into exile. when you do, cast it for its madness cost or put it into your graveyard.) ~ deals N damage divided as y | 1 | Avacyn's Judgment | soi |
 | madness {M}{M}{M} (if you discard ~, discard it into exile. when you do, cast it for its madness cost or put it into your graveyard.) create three tapped N/N bl | 1 | From Under the Floorboards | soi |
 | madness {M}{M}{M} (if you discard ~, discard it into exile. when you do, cast it for its madness cost or put it into your graveyard.) gain control of target cre | 1 | Welcome to the Fold | soi |
-| mill N cards. target player loses N life for each creature card put into your graveyard ~. | 1 | Liliana's Indignation | soi |
 | put target card from a graveyard on your choice of the top or bottom of its owner's library. create a N/N white spirit creature token with flying. | 1 | Not Forgotten | soi |
 | return any number of cards with different mana values from your graveyard to your hand. put ~ on the bottom of its owner's library. | 1 | Seasons Past | soi |
 | return to their owners' hands all creatures with toughness less than or equal to the number of islands you control. | 1 | Engulf the Shore | soi |
@@ -333,7 +332,6 @@
 | whenever you investigate for the first time each turn, investigate an additional time. | 1 | Erdwal Illuminator | soi |
 | whenever ~ attacks, you may pay {M}{M} and discard a card. if you do, ~ deals damage to target creature or planeswalker equal to the discarded card's mana value | 1 | Wolf of Devil's Breach | soi |
 | you may have ~ enter as a copy of any creature on the battlefield, except it enters with N additional +N/+N counters on it. | 1 | Altered Ego | soi |
-| {M}, {M}: put a charge counter on ~, then you may cast an instant or sorcery spell with mana value equal to the number of charge counters on ~ from your hand wi | 1 | Brain in a Jar | soi |
 | {M}: choose a color of a card in your graveyard. add one mana of that color. | 1 | Corrupted Grafstone | soi |
 | {M}{M}, sacrifice ~: reveal the top four cards of your library. you may put an artifact, creature, enchantment, land, or planeswalker card from among them into  | 1 | Vessel of Nascency | soi |
 | {M}{M}{M}: put ~ from your graveyard onto the battlefield transformed. activate only as a sorcery. | 1 | Startled Awake // Persistent Nightmare | soi |

@@ -17,17 +17,16 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 25 | 23.8% |
+| Tested | 26 | 24.8% |
 | Works (untested) | 65 | 61.9% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 15 | 14.3% |
+| Not working | 14 | 13.3% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
 | Autumn's Veil | silent | Spells you control can't be countered by blue or black spells this turn, and creatures you control can't be the targets of blue or black spells this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Blood Tithe | silent | Each opponent loses 3 life. You gain life equal to the life lost this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Cyclops Gladiator | silent | Whenever this creature attacks, you may have it deal damage equal to its power to target creature defending player controls. If you do, that creature deals dama | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Elixir of Immortality | silent | {2}, {T}: You gain 5 life. Shuffle this artifact and your graveyard into their owner's library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Gargoyle Sentinel | silent | {3}: Until end of turn, this creature loses defender and gains flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -110,11 +109,12 @@
 ## Fully supported
 
 <details>
-<summary>25 cards</summary>
+<summary>26 cards</summary>
 
 - Aether Adept
 - Ajani's Mantra
 - Angelic Arbiter
+- Blood Tithe
 - Bloodcrazed Goblin
 - Brittle Effigy
 - Captivating Vampire
@@ -146,7 +146,6 @@
 |---|---|---|---|
 | any number of target players each gain N life. | 1 | Hunters' Feast | m11 |
 | at the beginning of each player"..."s a land card, the player puts it onto the battlefield. otherwise, the player casts it without paying its mana cost if able. | 1 | Wild Evocation | m11 |
-| each opponent loses N life. you gain life equal to the life lost ~. | 1 | Blood Tithe | m11 |
 | exile all creatures you control, then reveal cards from the top of your library until you reveal that many creature cards. put all creature cards revealed ~ ont | 1 | Mass Polymorph | m11 |
 | spells you control can"..."t be the targets of blue or black spells ~. | 1 | Autumn's Veil | m11 |
 | target creature becomes red until end of turn and attacks ~ if able. | 1 | Incite | m11 |

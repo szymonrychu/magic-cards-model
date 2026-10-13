@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 5 | 16.7% |
+| Tested | 6 | 20.0% |
 | Works (untested) | 18 | 60.0% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 7 | 23.3% |
+| Not working | 6 | 20.0% |
 
 ## Cards needing work
 
@@ -32,7 +32,6 @@
 | Scour | silent | Exile target enchantment. Search its controller's graveyard, hand, and library for all cards with the same name as that enchantment and exile them. Then that pl | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sowing Salt | silent | Exile target nonbasic land. Search its controller's graveyard, hand, and library for all cards with the same name as that land and exile them. Then that player  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Splinter | silent | Exile target artifact. Search its controller's graveyard, hand, and library for all cards with the same name as that artifact and exile them. Then that player s | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Bloodshot Cyclops | notice | {T}, Sacrifice a creature: This creature deals damage equal to the sacrificed creature's power to any target. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Capashen Knight | handled | {1}{W}: This creature gets +1/+0 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Elvish Piper | handled | {G}, {T}: You may put a creature card from your hand onto the battlefield. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Extruder | handled | Sacrifice an artifact: Put a +1/+1 counter on target creature. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -55,9 +54,10 @@
 ## Fully supported
 
 <details>
-<summary>5 cards</summary>
+<summary>6 cards</summary>
 
 - Ancient Silverback
+- Bloodshot Cyclops
 - Emperor Crocodile
 - Storage Matrix
 - Thorn Elemental
@@ -75,7 +75,6 @@
 | exile target nonbasic land. search its controller's graveyard, hand, and library for all cards with the same name as that land and exile them. then that player  | 1 | Sowing Salt | uds |
 | exile target nonblack creature. search its controller's graveyard, hand, and library for all cards with the same name as that creature and exile them. then that | 1 | Eradicate | uds |
 | put two target lands on top of their owners' libraries. | 1 | Plow Under | uds |
-| {M}, sacrifice a creature: ~ deals damage equal to the sacrificed creature's power to any target. | 1 | Bloodshot Cyclops | uds |
 
 ## Notes
 

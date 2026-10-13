@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 76 | 30.2% |
+| Tested | 78 | 31.0% |
 | Works (untested) | 134 | 53.2% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 42 | 16.7% |
+| Not working | 40 | 15.9% |
 
 ## Cards needing work
 
@@ -32,7 +32,6 @@
 | Betor, Kin to All | silent | At the beginning of your end step, if creatures you control have total toughness 10 or greater, draw a card. Then if creatures you control have total toughness  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Bloomvine Regent // Claim Territory | silent | Search your library for up to two basic Forest cards, reveal them, put one onto the battlefield tapped and the other into your hand, then shuffle. (Also shuffle | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Call the Spirit Dragons | silent | At the beginning of your upkeep, for each color, put a +1/+1 counter on a Dragon you control of that color. If you put +1/+1 counters on five Dragons this way,  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Death Begets Life | silent | Destroy all creatures and enchantments. Draw a card for each permanent destroyed this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Descendant of Storms | silent | Endure | no machine in the engine executes this keyword | Y/Y/Y | not_working |
 | Dragon's Prey | silent | This spell costs {2} more to cast if it targets a Dragon. Destroy target creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Dragonbroods' Relic | silent | {3}{W}{U}{B}{R}{G}, Sacrifice this artifact: Create a 4/4 Dragon creature token named Reliquary Dragon that's all colors. It has flying, lifelink, and "When thi | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -60,10 +59,9 @@
 | Trade Route Envoy | silent | When this creature enters, draw a card if you control a creature with a counter on it. If you don't draw a card this way, put a +1/+1 counter on this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Traveling Botanist | silent | Whenever this creature becomes tapped, look at the top card of your library. If it's a land card, you may reveal it and put it into your hand. If you don't put  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Veteran Ice Climber | silent | Whenever this creature attacks, up to one target player mills cards equal to this creature's power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Warden of the Grove | silent | Whenever another nontoken creature you control enters, it endures X, where X is the number of counters on this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
+| Warden of the Grove | silent | Endure | no machine in the engine executes this keyword | Y/Y/Y | not_working |
 | Desperate Measures | notice | Target creature gets +1/-1 until end of turn. When it dies under your control this turn, draw two cards. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Kishla Trawlers | notice | When this creature enters, you may exile a creature card from your graveyard. When you do, return target instant or sorcery card from your graveyard to your han | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Lie in Wait | notice | Return target creature card from your graveyard to your hand. Lie in Wait deals damage equal to that card's power to target creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Naga Fleshcrafter | notice | Renew — {2}{U}, Exile this card from your graveyard: Put a +1/+1 counter on target nonlegendary creature you control. Each other creature you control becomes a  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Shiko, Paragon of the Way | notice | When Shiko enters, exile target nonland card with mana value 3 or less from your graveyard. Copy it, then you may cast the copy without paying its mana cost. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Synchronized Charge | notice | Distribute two +1/+1 counters among one or two target creatures you control. Creatures you control with counters on them gain vigilance and trample until end of | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
@@ -206,7 +204,7 @@
 ## Fully supported
 
 <details>
-<summary>76 cards</summary>
+<summary>78 cards</summary>
 
 - Aegis Sculptor
 - Agent of Kotis
@@ -219,6 +217,7 @@
 - Cori Mountain Monastery
 - Cori-Steel Cutter
 - Dalkovan Encampment
+- Death Begets Life
 - Delta Bloodflies
 - Dispelling Exhale
 - Dracogenesis
@@ -245,6 +244,7 @@
 - Jeskai Revelation
 - Karakyk Guardian
 - Krumar Initiate
+- Lie in Wait
 - Maelstrom of the Spirit Dragon
 - Magmatic Hellkite
 - Marang River Regent // Coil and Catch
@@ -291,18 +291,16 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| endure | 2 | Anafenza, Unyielding Lineage, Descendant of Storms | tdm |
+| endure | 3 | Anafenza, Unyielding Lineage, Descendant of Storms, Warden of the Grove | tdm |
 | Renew | 1 | Naga Fleshcrafter | tdm |
 | at the beginning of your end step, if creatures you control have total toughness N or greater, draw a card. then if creatures you control have total toughness N | 1 | Betor, Kin to All | tdm |
 | at the beginning of your upkeep, for each color, put a +N/+N counter on a dragon you control of that color. if you put +N/+N counters on five dragons ~, you win | 1 | Call the Spirit Dragons | tdm |
 | at the beginning of your upkeep, mill three cards. then if your library has no cards in it, exile ~ and put five cards from your graveyard on top of your librar | 1 | Stillness in Motion | tdm |
 | at the beginning of your upkeep, return up to two target creature cards with power N or less from your graveyard to the battlefield. put a +N/+N counter on each | 1 | Smile at Death | tdm |
-| destroy all creatures and enchantments. draw a card for each permanent destroyed ~. | 1 | Death Begets Life | tdm |
 | distribute two +N/+N counters among one or two target creatures you control. creatures you control with counters on them gain vigilance and trample until end of | 1 | Synchronized Charge | tdm |
 | double the power and toughness of each creature you control until end of turn. | 1 | Roar of Endless Song | tdm |
 | during your turn, spells you cast cost {M} less to cast for each creature you control with power N or greater. | 1 | Temur Battlecrier | tdm |
 | each non-dragon creature gets -N/-N until end of turn. (then shuffle ~ into its owner's library.) | 1 | Scavenger Regent // Exude Toxin | tdm |
-| return target creature card from your graveyard to your hand. ~ deals damage equal to that card's power to target creature. | 1 | Lie in Wait | tdm |
 | return target permanent card from your graveyard to the battlefield with a hexproof counter and an indestructible counter on it. | 1 | Perennation | tdm |
 | return up to two target permanent cards from your graveyard to your hand. target player shuffles up to four target cards from their graveyard into their library | 1 | Rite of Renewal | tdm |
 | search your library for up to two basic forest cards, reveal them, put one onto the battlefield tapped and the other into your hand, then shuffle. (also shuffle | 1 | Bloomvine Regent // Claim Territory | tdm |
@@ -318,7 +316,6 @@
 | when ~ enters, you may exile a creature card from your graveyard. when you do, return target instant or sorcery card from your graveyard to your hand. | 1 | Kishla Trawlers | tdm |
 | when ~ enters, you may search your library for a basic land card, reveal it, then shuffle and put that card on top. if you control a dragon, put that card onto  | 1 | Embermouth Sentinel | tdm |
 | whenever a card leaves your graveyard during your turn, draw a card. ~ triggers only once each turn. | 1 | Kishla Skimmer | tdm |
-| whenever another nontoken creature you control enters, it endures N, where N is the number of counters on ~. | 1 | Warden of the Grove | tdm |
 | whenever kotis deals combat damage to a player, exile the top N cards of their library, where N is the amount of damage dealt. you may cast any number of spells | 1 | Kotis, the Fangkeeper | tdm |
 | whenever one or more cards leave your graveyard during your turn, create a treasure token. | 1 | Kheru Goldkeeper | tdm |
 | whenever one or more cards leave your graveyard during your turn, put a +N/+N counter on ~. | 1 | Attuned Hunter | tdm |

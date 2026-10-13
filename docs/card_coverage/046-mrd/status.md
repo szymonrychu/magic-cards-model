@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 41 | 15.2% |
-| Works (untested) | 166 | 61.7% |
+| Tested | 43 | 16.0% |
+| Works (untested) | 168 | 62.5% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 62 | 23.0% |
+| Not working | 58 | 21.6% |
 
 ## Cards needing work
 
@@ -31,7 +31,6 @@
 | Chimney Imp | silent | When this creature dies, target opponent puts a card from their hand on top of their library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Chrome Mox | silent | {T}: Add one mana of any of the exiled card's colors. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Confusion in the Ranks | silent | Whenever an artifact, creature, or enchantment enters, its controller chooses target permanent another player controls that shares a card type with it. Exchange | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
-| Contaminated Bond | silent | Whenever enchanted creature attacks or blocks, its controller loses 3 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Crystal Shard | silent | {3}, {T} or {U}, {T}: Return target creature to its owner's hand unless its controller pays {1}. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Dead-Iron Sledge | silent | Whenever equipped creature blocks or becomes blocked by a creature, destroy both creatures. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Disarm | silent | Unattach all Equipment from target creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -49,7 +48,6 @@
 | Liar's Pendulum | silent | {2}, {T}: Choose a card name. Target opponent guesses whether a card with that name is in your hand. You may reveal your hand. If you do and your opponent guess | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Lumengrid Augur | silent | {1}, {T}: Target player draws a card, then discards a card. If that player discards an artifact card this way, untap this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | March of the Machines | silent | Each noncreature artifact is an artifact creature with power and toughness each equal to its mana value. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Mesmeric Orb | silent | Whenever a permanent becomes untapped, that permanent's controller mills a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Mourner's Shield | silent | {2}, {T}: Prevent all damage that would be dealt this turn by a source of your choice that shares a color with the exiled card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Myr Incubator | silent | {6}, {T}, Sacrifice this artifact: Search your library for any number of artifact cards, exile them, then create that many 1/1 colorless Myr artifact creature t | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Override | silent | Counter target spell unless its controller pays {1} for each artifact you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -74,13 +72,11 @@
 | Worldslayer | silent | Whenever equipped creature deals combat damage to a player, destroy all permanents other than this Equipment. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Wrench Mind | silent | Target player discards two cards unless they discard an artifact card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Blinding Beam | notice | Choose one — • Tap two target creatures. • Creatures don't untap during target player's next untap step. Entwine {1} (Choose both if you pay the entwine cost.) | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Bosh, Iron Golem | notice | {3}{R}, Sacrifice an artifact: Bosh deals damage equal to the sacrificed artifact's mana value to any target. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Clockwork Beetle | notice | Whenever this creature attacks or blocks, remove a +1/+1 counter from it at end of combat. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Clockwork Condor | notice | Whenever this creature attacks or blocks, remove a +1/+1 counter from it at end of combat. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Clockwork Dragon | notice | Whenever this creature attacks or blocks, remove a +1/+1 counter from it at end of combat. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Clockwork Vorrac | notice | Whenever this creature attacks or blocks, remove a +1/+1 counter from it at end of combat. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Copperhoof Vorrac | notice | This creature gets +1/+1 for each untapped permanent your opponents control. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Forge Armor | notice | As an additional cost to cast this spell, sacrifice an artifact. Put X +1/+1 counters on target creature, where X is the sacrificed artifact's mana value. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Grab the Reins | notice | Choose one — • Until end of turn, you gain control of target creature and it gains haste. • Sacrifice a creature. Grab the Reins deals damage equal to that crea | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Hum of the Radix | notice | Each artifact spell costs {1} more to cast for each artifact its controller controls. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Incite War | notice | Choose one — • Creatures target player controls attack this turn if able. • Creatures you control gain first strike until end of turn. Entwine {2} (Choose both  | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
@@ -119,6 +115,7 @@
 | Fireshrieker | handled | Equipped creature has double strike. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Fists of the Anvil | handled | Target creature gets +4/+0 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Flayed Nim | handled | Whenever this creature deals combat damage to a creature, that creature's controller loses that much life. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Forge Armor | handled | As an additional cost to cast this spell, sacrifice an artifact. Put X +1/+1 counters on target creature, where X is the sacrificed artifact's mana value. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Galvanic Key | handled | {3}, {T}: Untap target artifact. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Gilded Lotus | handled |  |  | Y/Y/Y | not_tested |
 | Goblin Dirigible | handled | This creature doesn't untap during your untap step. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -155,6 +152,7 @@
 | Mask of Memory | handled | Whenever equipped creature deals combat damage to a player, you may draw two cards. If you do, discard a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Mass Hysteria | handled | All creatures have haste. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Megatog | handled | Sacrifice an artifact: This creature gets +3/+3 and gains trample until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Mesmeric Orb | handled | Whenever a permanent becomes untapped, that permanent's controller mills a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Mind's Eye | handled | Whenever an opponent draws a card, you may pay {1}. If you do, draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Mirror Golem | handled | Imprint — When this creature enters, you may exile target card from a graveyard. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Molder Slug | handled | At the beginning of each player's upkeep, that player sacrifices an artifact of their choice. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -258,14 +256,16 @@
 ## Fully supported
 
 <details>
-<summary>41 cards</summary>
+<summary>43 cards</summary>
 
 - Aether Spellbomb
 - Auriok Steelshaper
 - Awe Strike
 - Bonesplitter
+- Bosh, Iron Golem
 - Chalice of the Void
 - Consume Spirit
+- Contaminated Bond
 - Damping Matrix
 - Domineer
 - Electrostatic Bolt
@@ -311,7 +311,6 @@
 | Choose one | 4 | Blinding Beam, Grab the Reins, Incite War, Journey of Discovery | mrd |
 | whenever ~ attacks or blocks, remove a +N/+N counter from it at end of combat. | 4 | Clockwork Beetle, Clockwork Condor, Clockwork Dragon, Clockwork Vorrac | mrd |
 | Imprint | 1 | Thought Prison | mrd |
-| as an additional cost to cast ~, sacrifice an artifact. put N +N/+N counters on target creature, where N is the sacrificed artifact's mana value. | 1 | Forge Armor | mrd |
 | as long as a card exiled with ~ is a creature card, ~ has the power, toughness, and creature types of the last creature card exiled with it. it's still a shapes | 1 | Duplicant | mrd |
 | at the beginning of each opponent's upkeep, that player chooses draw step, main phase, or combat phase. the player skips each instance of the chosen step or pha | 1 | Fatespinner | mrd |
 | at the beginning of each player"..."s an artifact, creature, enchantment, or land card, the player may put it onto the battlefield. | 1 | Gate to the Aether | mrd |
@@ -339,12 +338,10 @@
 | when ~ enters, look at target opponent's hand. | 1 | Wanderguard Sentry | mrd |
 | when ~ enters, you may pay {M}. if you do, search your library for an equipment card with mana value N or less, put that card onto the battlefield, then shuffle | 1 | Taj-Nar Swordsmith | mrd |
 | whenever a creature dealt damage by equipped creature ~ dies, return that card to the battlefield under your control. attach ~ to that creature. | 1 | Scythe of the Wretched | mrd |
-| whenever a permanent becomes untapped, that permanent's controller mills a card. | 1 | Mesmeric Orb | mrd |
 | whenever a player casts a card, if it has the same name as one of the cards exiled with ~, you may copy the other. if you do, you may cast the copy without payi | 1 | Spellweaver Helix | mrd |
 | whenever a spell or ability causes a player to shuffle their library, ~ deals N damage to that player. | 1 | Psychogenic Probe | mrd |
 | whenever an artifact is put into a graveyard from the battlefield, you may have target opponent lose N life. | 1 | Disciple of the Vault | mrd |
 | whenever an artifact, creature, or enchantment enters, its controller chooses target permanent another player controls that shares a card type with it. exchange | 1 | Confusion in the Ranks | mrd |
-| whenever enchanted creature attacks or blocks, its controller loses N life. | 1 | Contaminated Bond | mrd |
 | whenever enchanted creature becomes the target of a spell or ability, that spell or ability's controller gains control of that creature. | 1 | Fractured Loyalty | mrd |
 | whenever equipped creature blocks or becomes blocked by a creature, destroy both creatures. | 1 | Dead-Iron Sledge | mrd |
 | whenever equipped creature deals combat damage to a player, destroy all permanents other than ~. | 1 | Worldslayer | mrd |
@@ -361,7 +358,6 @@
 | {M}: add one mana of any of the exiled card's colors. | 1 | Chrome Mox | mrd |
 | {M}: destroy target artifact if its mana value is equal to the amount of unspent mana you have. | 1 | Glissa Sunseeker | mrd |
 | {M}: put target permanent you own on the bottom of your library. | 1 | Tel-Jilad Stylus | mrd |
-| {M}{M}, sacrifice an artifact: bosh deals damage equal to the sacrificed artifact's mana value to any target. | 1 | Bosh, Iron Golem | mrd |
 | {M}{M}, {M}: put target creature on the bottom of its owner"..."s controller reveals cards from the top of their library until they reveal a creature card. the  | 1 | Proteus Staff | mrd |
 | ~ gets +N/+N for each untapped permanent your opponents control. | 1 | Copperhoof Vorrac | mrd |
 

@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 72 | 26.9% |
+| Tested | 73 | 27.2% |
 | Works (untested) | 113 | 42.2% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 83 | 31.0% |
+| Not working | 82 | 30.6% |
 
 ## Cards needing work
 
@@ -61,7 +61,6 @@
 | Izoni, Center of the Web | silent | Whenever Izoni enters or attacks, you may collect evidence 4. If you do, create two 2/1 black and green Spider creature tokens with reach and menace. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Jaded Analyst | silent | Whenever you draw your second card each turn, this creature loses defender and gains vigilance until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Kaya, Spirits' Justice | silent | Whenever one or more creatures you control and/or creature cards in your graveyard are put into exile, you may choose a creature card from among them. Until end | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
-| Krenko's Buzzcrusher | silent | When this creature enters, for each player, destroy up to one nonbasic land that player controls. For each land destroyed this way, its controller may search th | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Kylox's Voltstrider | silent | Whenever this Vehicle attacks, you may cast an instant or sorcery spell from among cards exiled with it. If that spell would be put into a graveyard, put it on  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Kylox, Visionary Inventor | silent | Whenever Kylox attacks, sacrifice any number of other creatures, then exile the top X cards of your library, where X is their total power. You may cast any numb | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Lamplight Phoenix | silent | When this creature dies, you may exile it and collect evidence 4. If you do, return this card to the battlefield tapped. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -226,7 +225,7 @@
 ## Fully supported
 
 <details>
-<summary>72 cards</summary>
+<summary>73 cards</summary>
 
 - Absolving Lammasu
 - Aftermath Analyst
@@ -267,6 +266,7 @@
 - Ill-Timed Explosion
 - Judith, Carnage Connoisseur
 - Karlov Watchdog
+- Krenko's Buzzcrusher
 - Leyline of the Guildpact
 - Living Conundrum
 - Lost in the Maze
@@ -346,7 +346,6 @@
 | when ~ enters, cloak the top card of your library, then attach ~ to it. | 1 | Cryptic Coat | mkm |
 | when ~ enters, create a N/N white human creature token, a N/N blue merfolk creature token, and a N/N red goblin creature token. then secretly choose human, merf | 1 | A Killer Among Us | mkm |
 | when ~ enters, draw two cards. then discard two cards unless you discard an instant or sorcery card or a creature card with flying. | 1 | Steamcore Scholar | mkm |
-| when ~ enters, for each player, destroy up to one nonbasic land that player controls. for each land destroyed ~, its controller may search their library for a b | 1 | Krenko's Buzzcrusher | mkm |
 | when ~ enters, return target equipment card from your graveyard to the battlefield attached to ~. | 1 | Magnetic Snuffler | mkm |
 | when ~ enters, return up to one other target creature to its owner's hand. if you controlled it, investigate. | 1 | Hotshot Investigators | mkm |
 | when ~ enters, sacrifice it unless you tap an untapped artifact or land you control. | 1 | Public Thoroughfare | mkm |

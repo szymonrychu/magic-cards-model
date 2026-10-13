@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 39 | 15.9% |
-| Works (untested) | 155 | 63.0% |
+| Tested | 42 | 17.1% |
+| Works (untested) | 156 | 63.4% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 52 | 21.1% |
+| Not working | 48 | 19.5% |
 
 ## Cards needing work
 
@@ -47,7 +47,6 @@
 | Eager Construct | silent | When this creature enters, each player may scry 1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Elegant Edgecrafters | silent | Fabricate | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Empyreal Voyager | silent | Whenever this creature deals combat damage to a player, you get that many {E} . | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Fumigate | silent | Destroy all creatures. You gain 1 life for each creature destroyed this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Gearshift Ace | silent | Whenever this creature crews a Vehicle, that Vehicle gains first strike until end of turn. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Ghirapur Guide | silent | {2}{G}: Target creature you control can't be blocked by creatures with power 2 or less this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Glint-Sleeve Artisan | silent | Fabricate | no machine in the engine executes this keyword | Y/Y/- | not_working |
@@ -60,11 +59,8 @@
 | Marionette Master | silent | Fabricate | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Maulfist Squad | silent | Fabricate | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Metallurgic Summonings | silent | Whenever you cast an instant or sorcery spell, create an X/X colorless Construct artifact creature token, where X is that spell's mana value. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Morbid Curiosity | silent | As an additional cost to cast this spell, sacrifice an artifact or creature. Draw cards equal to the mana value of the sacrificed permanent. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Multiform Wonder | silent | Pay {E}: This creature gets +2/-2 or -2/+2 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Nissa, Nature's Artisan | silent | −4: Reveal the top two cards of your library. Put all land cards from among them onto the battlefield and the rest into your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Noxious Gearhulk | silent | When this creature enters, you may destroy another target creature. If a creature is destroyed this way, you gain life equal to its toughness. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Paradoxical Outcome | silent | Return any number of target nonland, nontoken permanents you control to their owners' hands. Draw a card for each card returned to your hand this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Peema Outrider | silent | Fabricate | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Propeller Pioneer | silent | Fabricate | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Rashmi, Eternities Crafter | silent | Whenever you cast your first spell each turn, reveal the top card of your library. You may cast it without paying its mana cost if it's a spell with lesser mana | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -161,6 +157,7 @@
 | Master Trinketeer | handled | Servos and Thopters you control get +1/+1. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Metalspinner's Puzzleknot | handled | When this artifact enters, you draw a card and you lose 1 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Minister of Inquiries | handled | When this creature enters, you get {E}{E} . | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Morbid Curiosity | handled | As an additional cost to cast this spell, sacrifice an artifact or creature. Draw cards equal to the mana value of the sacrificed permanent. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Narnam Cobra | handled | {G}: This creature gains deathtouch until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Nature's Way | handled | Target creature you control gains vigilance and trample until end of turn. It deals damage equal to its power to target creature you don't control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Night Market Lookout | handled | Whenever this creature becomes tapped, each opponent loses 1 life and you gain 1 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -237,7 +234,7 @@
 ## Fully supported
 
 <details>
-<summary>39 cards</summary>
+<summary>42 cards</summary>
 
 - Aetherstorm Roc
 - Armorcraft Judge
@@ -257,6 +254,7 @@
 - Fabrication Module
 - Fairgrounds Trumpeter
 - Fateful Showdown
+- Fumigate
 - Ghirapur Orrery
 - Gonti, Lord of Luxury
 - Harnessed Lightning
@@ -266,8 +264,10 @@
 - Maulfist Doorbuster
 - Metalwork Colossus
 - Midnight Oil
+- Noxious Gearhulk
 - Padeem, Consul of Innovation
 - Panharmonicon
+- Paradoxical Outcome
 - Revoke Privileges
 - Riparian Tiger
 - Scrapheap Scrounger
@@ -288,13 +288,11 @@
 | fabricate | 13 | Accomplished Automaton, Ambitious Aetherborn, Angel of Invention, Elegant Edgecrafters, Glint-Sleeve Artisan | kld |
 | Choose one | 1 | Insidious Will | kld |
 | +N: until your next turn, up to one target creature gets -N/-N and its activated abilities can't be activated. | 1 | Dovin Baan | kld |
-| as an additional cost to cast ~, sacrifice an artifact or creature. draw cards equal to the mana value of the sacrificed permanent. | 1 | Morbid Curiosity | kld |
 | choose a nonartifact, nonland card name. search target player's graveyard, hand, and library for any number of cards with that name and exile them. that player  | 1 | Lost Legacy | kld |
 | choose target artifact or creature. you get {M}{M}{M}{M} (four energy counters), then you may pay an amount of {M} equal to that permanent's mana value. if you  | 1 | Confiscation Coup | kld |
 | choose target creature. exile the top card of your library. you may have ~ deal damage to that creature equal to the exiled card"..."t, you may play that card u | 1 | Spark of Creativity | kld |
 | choose target creature. you get {M}{M} (two energy counters), then you may pay any amount of {M}. the creature gets -N/-N until end of turn for each {M} paid ~. | 1 | Die Young | kld |
 | creatures with no counters on them get -N/-N until end of turn. | 1 | Hazardous Conditions | kld |
-| destroy all creatures. you gain N life for each creature destroyed ~. | 1 | Fumigate | kld |
 | each vehicle you control gets +N/+N as long as it's a creature. | 1 | Depala, Pilot Exemplar | kld |
 | exchange control of target artifact you control and target artifact or creature you don't control. | 1 | Shrewd Negotiation | kld |
 | look at the top ten cards of your library, exile up to two creature cards from among them, then shuffle. target opponent may choose one of the exiled cards and  | 1 | Dubious Challenge | kld |
@@ -302,7 +300,6 @@
 | pay {M}: ~ gets +N/-N or -N/+N until end of turn. | 1 | Multiform Wonder | kld |
 | pay {M}{M}: prevent all damage that would be dealt to you ~ by a source of your choice. | 1 | Consulate Surveillance | kld |
 | pay {M}{M}: ~ can attack ~ as though it didn't have defender. | 1 | Hightide Hermit | kld |
-| return any number of target nonland, nontoken permanents you control to their owners' hands. draw a card for each card returned to your hand ~. | 1 | Paradoxical Outcome | kld |
 | reveal cards from the top of your library until you reveal an artifact card. put that card onto the battlefield and the rest on the bottom of your library in a  | 1 | Madcap Experiment | kld |
 | search your library for a basic land card and put it onto the battlefield tapped. search your library and graveyard for a card named nissa, nature's artisan, re | 1 | Verdant Crescendo | kld |
 | target attacking creature gets +N/+N until end of turn. if it's an artifact creature, it gains trample until end of turn. | 1 | Built to Smash | kld |
@@ -311,7 +308,6 @@
 | when ~ enters, each player may scry N. | 1 | Eager Construct | kld |
 | when ~ enters, move any number of +N/+N counters from other permanents you control onto ~. | 1 | Aetherborn Marauder | kld |
 | when ~ enters, target opponent may have you draw three cards. if the player doesn't, you mill three cards, then ~ deals damage to that player equal to the total | 1 | Combustible Gearhulk | kld |
-| when ~ enters, you may destroy another target creature. if a creature is destroyed ~, you gain life equal to its toughness. | 1 | Noxious Gearhulk | kld |
 | when ~ enters, you may return another permanent you control to its owner's hand. | 1 | Aviary Mechanic | kld |
 | whenever a permanent you control is put into a graveyard, you get {M} . | 1 | Aetherworks Marvel | kld |
 | whenever you cast an instant or sorcery spell, create an N/N colorless construct artifact creature token, where N is that spell's mana value. | 1 | Metallurgic Summonings | kld |

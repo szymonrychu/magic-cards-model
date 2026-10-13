@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 52 | 19.0% |
+| Tested | 58 | 21.2% |
 | Works (untested) | 149 | 54.4% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 73 | 26.6% |
+| Not working | 67 | 24.5% |
 
 ## Cards needing work
 
@@ -44,10 +44,8 @@
 | Faerie Swarm | silent | Faerie Swarm's power and toughness are each equal to the number of blue permanents you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Fate Transfer | silent | Move all counters from target creature onto another target creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Fossil Find | silent | Return a card at random from your graveyard to your hand, then reorder your graveyard as you choose. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Fracturing Gust | silent | Destroy all artifacts and enchantments. You gain 2 life for each permanent destroyed this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Ghastlord of Fugue | silent | Whenever this creature deals combat damage to a player, that player reveals their hand. You choose a card from it. That player exiles that card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Glamer Spinners | silent | When this creature enters, attach all Auras enchanting target permanent to another permanent with the same controller. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Grief Tyrant | silent | When this creature dies, put a -1/-1 counter on target creature for each -1/-1 counter on this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Heartmender | silent | At the beginning of your upkeep, remove a -1/-1 counter from each creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Hollowsage | silent | Whenever this creature becomes untapped, you may have target player discard a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Horde of Boggarts | silent | Horde of Boggarts's power and toughness are each equal to the number of red permanents you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -59,10 +57,8 @@
 | Knollspine Dragon | silent | When this creature enters, you may discard your hand and draw cards equal to the damage dealt to target opponent this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Leech Bonder | silent | {U}, {Q}: Move a counter from target creature onto a second target creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Lockjaw Snapper | silent | When this creature dies, put a -1/-1 counter on each creature with a -1/-1 counter on it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Lurebound Scarecrow | silent | When you control no permanents of the chosen color, sacrifice this creature. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Medicine Runner | silent | When this creature enters, you may remove a counter from target permanent. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Memory Plunder | silent | You may cast target instant or sorcery card from an opponent's graveyard without paying its mana cost. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Mercy Killing | silent | Target creature's controller sacrifices it, then creates X 1/1 green and white Elf Warrior creature tokens, where X is that creature's power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Midnight Banshee | silent | At the beginning of your upkeep, put a -1/-1 counter on each nonblack creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Oona, Queen of the Fae | silent | {X}{U/B}: Choose a color. Target opponent exiles the top X cards of their library. For each card of the chosen color exiled this way, create a 1/1 blue and blac | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Oversoul of Dusk | silent | Protection from blue, from black, and from red | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -80,7 +76,6 @@
 | Steel of the Godhead | silent | As long as enchanted creature is blue, it gets +1/+1 and can't be blocked. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Strip Bare | silent | Destroy all Auras and Equipment attached to target creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Tattermunge Witch | silent | {R}{G}: Each blocked creature gets +1/+0 and gains trample until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Toil to Renown | silent | You gain 1 life for each tapped artifact, creature, and land you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Torrent of Souls | silent | Return up to one target creature card from your graveyard to the battlefield if {B} was spent to cast this spell. Creatures target player controls get +2/+0 and | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Twilight Shepherd | silent | When this creature enters, return to your hand all cards in your graveyard that were put there from the battlefield this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Tyrannize | silent | Target player discards their hand unless they pay 7 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -91,7 +86,6 @@
 | Witherscale Wurm | silent | Whenever this creature deals damage to an opponent, remove all -1/-1 counters from it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Woeleecher | silent | {W}, {T}: Remove a -1/-1 counter from target creature. If you do, you gain 2 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Worldpurge | silent | Return all permanents to their owners' hands. Each player chooses up to seven cards in their hand, then shuffles the rest into their library. Each player loses  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Wound Reflection | silent | At the beginning of each end step, each opponent loses life equal to the life they lost this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Consign to Dream | notice | Return target permanent to its owner's hand. If that permanent is red or green, put it on top of its owner's library instead. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Gloomlance | notice | Destroy target creature. If that creature was green or white, its controller discards a card. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Gloomwidow's Feast | notice | Destroy target creature with flying. If that creature was blue or black, create a 1/2 green Spider creature token with reach. (It can block creatures with flyin | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
@@ -252,7 +246,7 @@
 ## Fully supported
 
 <details>
-<summary>52 cards</summary>
+<summary>58 cards</summary>
 
 - Beseech the Queen
 - Bloodshed Fever
@@ -271,15 +265,19 @@
 - Faerie Macabre
 - Firespout
 - Flourishing Defenses
+- Fracturing Gust
 - Gloomwidow
 - Godhead of Awe
 - Greater Auramancy
+- Grief Tyrant
 - Hollowborn Barghest
 - Illuminated Folio
 - Jaws of Stone
 - Kitchen Finks
 - Kulrath Knight
+- Lurebound Scarecrow
 - Manamorphose
+- Mercy Killing
 - Mirrorweave
 - Mistveil Plains
 - Mossbridge Troll
@@ -298,6 +296,7 @@
 - Sygg, River Cutthroat
 - Tatterkite
 - Thought Reflection
+- Toil to Renown
 - Tower Above
 - Traitor's Roar
 - Umbral Mantle
@@ -305,6 +304,7 @@
 - Whimwader
 - Wilt-Leaf Liege
 - Wort, the Raidmother
+- Wound Reflection
 - Zealous Guardian
 
 </details>
@@ -316,7 +316,6 @@
 | ({M} can be paid with any two mana or with {M}. ~ mana value is N.) look at the top five cards of your library. if you control more creatures than each other pl | 1 | Advice from the Fae | shm |
 | all cards that aren't on the battlefield, spells, and permanents are the chosen color in addition to their other colors. | 1 | Painter's Servant | shm |
 | as long as enchanted creature is blue, it gets +N/+N and can't be blocked. | 1 | Steel of the Godhead | shm |
-| at the beginning of each end step, each opponent loses life equal to the life they lost ~. | 1 | Wound Reflection | shm |
 | at the beginning of your upkeep, put a -N/-N counter on each nonblack creature. | 1 | Midnight Banshee | shm |
 | at the beginning of your upkeep, remove a -N/-N counter from each creature you control. | 1 | Heartmender | shm |
 | at the beginning of your upkeep, you may exchange control of target nonland permanent you control and target nonland permanent an opponent controls with equal o | 1 | Puca's Mischief | shm |
@@ -325,7 +324,6 @@
 | counter target spell. search its controller's graveyard, hand, and library for all cards with the same name as that spell and exile them. then that player shuff | 1 | Counterbore | shm |
 | create a N/N black and red elemental creature token. target opponent sacrifices a creature of their choice for each black creature you control, then sacrifices  | 1 | Din of the Fireherd | shm |
 | create two N/N white kithkin soldier creature tokens if {M} was spent to cast ~. counter up to one target creature spell if {M} was spent to cast ~. (do both if | 1 | Repel Intruders | shm |
-| destroy all artifacts and enchantments. you gain N life for each permanent destroyed ~. | 1 | Fracturing Gust | shm |
 | destroy all auras and equipment attached to target creature. | 1 | Strip Bare | shm |
 | destroy target creature with flying. if that creature was blue or black, create a N/N green spider creature token with reach. (it can block creatures with flyin | 1 | Gloomwidow's Feast | shm |
 | destroy target creature. if that creature was green or white, its controller discards a card. | 1 | Gloomlance | shm |
@@ -344,11 +342,8 @@
 | target creature becomes black and gains fear until end of turn. (it can't be blocked except by artifact creatures and/or black creatures.) draw a card. | 1 | Aphotic Wisps | shm |
 | target creature becomes green and gets +N/+N until end of turn. draw a card. | 1 | Viridescent Wisps | shm |
 | target creature becomes red and gains haste until end of turn. (it can attack and {M} ~.) draw a card. | 1 | Crimson Wisps | shm |
-| target creature"..."s power. | 1 | Mercy Killing | shm |
 | target player discards their hand unless they pay N life. | 1 | Tyrannize | shm |
-| when you control no permanents of the chosen color, sacrifice ~. | 1 | Lurebound Scarecrow | shm |
 | when ~ dies, put a -N/-N counter on each creature with a -N/-N counter on it. | 1 | Lockjaw Snapper | shm |
-| when ~ dies, put a -N/-N counter on target creature for each -N/-N counter on ~. | 1 | Grief Tyrant | shm |
 | when ~ enters, attach all auras enchanting target permanent to another permanent with the same controller. | 1 | Glamer Spinners | shm |
 | when ~ enters, discard a card at random. if you discard a creature card ~, ~ deals damage equal to that card's power to target player or planeswalker. | 1 | Cragganwick Cremator | shm |
 | when ~ enters, put target creature card from an opponent's graveyard onto the battlefield under your control. it gains haste. at the beginning of your next end  | 1 | Puppeteer Clique | shm |
@@ -365,7 +360,6 @@
 | whenever ~ deals combat damage to a player, reveal the top card of your library and put that card into your hand. you gain life equal to its mana value. | 1 | Augury Adept | shm |
 | whenever ~ deals combat damage to a player, that player reveals their hand. you choose a card from it. that player exiles that card. | 1 | Ghastlord of Fugue | shm |
 | whenever ~ deals damage to an opponent, remove all -N/-N counters from it. | 1 | Witherscale Wurm | shm |
-| you gain N life for each tapped artifact, creature, and land you control. | 1 | Toil to Renown | shm |
 | you may cast target instant or sorcery card from an opponent's graveyard without paying its mana cost. | 1 | Memory Plunder | shm |
 | {M}, sacrifice a forest: choose a player. that player adds {M}{M}{M}. | 1 | Valleymaker | shm |
 | {M}, {M}: look at the top card of your library. you may exile that card. | 1 | Puresight Merrow | shm |

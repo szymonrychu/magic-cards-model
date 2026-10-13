@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 56 | 22.7% |
+| Tested | 58 | 23.5% |
 | Works (untested) | 130 | 52.6% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 61 | 24.7% |
+| Not working | 59 | 23.9% |
 
 ## Cards needing work
 
@@ -48,7 +48,6 @@
 | Mindmoil | silent | Whenever you cast a spell, put the cards in your hand on the bottom of your library in any order, then draw that many cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Moonlight Bargain | silent | Look at the top five cards of your library. For each card, put that card into your graveyard unless you pay 2 life. Then put the rest into your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Mortipede | silent | {2}{G}: All creatures able to block this creature this turn do so. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Necroplasm | silent | At the beginning of your end step, destroy each creature with mana value equal to the number of +1/+1 counters on this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Ordruun Commando | silent | {W}: Prevent the next 1 damage that would be dealt to this creature this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Peel from Reality | silent | Return target creature you control and target creature you don't control to their owners' hands. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Perplex | silent | Counter target spell unless its controller discards their hand. Transmute {1}{U}{B} ({1}{U}{B}, Discard this card: Search your library for a card with the same  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -84,7 +83,6 @@
 | Rally the Righteous | notice | Radiance — Untap target creature and each other creature that shares a color with it. Those creatures get +2/+0 until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Remand | notice | Counter target spell. If that spell is countered this way, put it into its owner's hand instead of into that player's graveyard. Draw a card. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Transluminant | notice | {W}, Sacrifice this creature: Create a 1/1 white Spirit creature token with flying at the beginning of the next end step. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Twisted Justice | notice | Target player sacrifices a creature of their choice. You draw cards equal to that creature's power. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Vigor Mortis | notice | Return target creature card from your graveyard to the battlefield. If {G} was spent to cast this spell, that creature enters with an additional +1/+1 counter o | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Voyager Staff | notice | {2}, Sacrifice this artifact: Exile target creature. Return the exiled card to the battlefield under its owner's control at the beginning of the next end step. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Agrus Kos, Wojek Veteran | handled | Whenever Agrus Kos attacks, attacking red creatures get +2/+0 and attacking white creatures get +0/+2 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -221,7 +219,7 @@
 ## Fully supported
 
 <details>
-<summary>56 cards</summary>
+<summary>58 cards</summary>
 
 - Blazing Archon
 - Boros Fury-Shield
@@ -261,6 +259,7 @@
 - Mnemonic Nexus
 - Molten Sentry
 - Muddle the Mixture
+- Necroplasm
 - Netherborn Phalanx
 - Overgrown Tomb
 - Pariah's Shield
@@ -275,6 +274,7 @@
 - Suppression Field
 - Szadek, Lord of Secrets
 - Temple Garden
+- Twisted Justice
 - Watchwolf
 - Watery Grave
 - Wizened Snitches
@@ -291,7 +291,6 @@
 | ({M} can be paid with either {M} or {M}.) regenerate target creature. at ~ next end of combat, destroy all creatures that blocked or were blocked by it ~. | 1 | Gaze of the Gorgon | rav |
 | at the beginning of each opponent's upkeep, exile all cards from your hand face down. | 1 | Bottled Cloister | rav |
 | at the beginning of each player"..."t, sacrifice ~. | 1 | Woebringer Demon | rav |
-| at the beginning of your end step, destroy each creature with mana value equal to the number of +N/+N counters on ~. | 1 | Necroplasm | rav |
 | at the beginning of your end step, return to your hand all creature cards in your graveyard that were put there from the battlefield ~. | 1 | Gleancrawler | rav |
 | at the beginning of your upkeep, return enchanted creature and all auras attached to that creature to their owners' hands. | 1 | Mark of Eviction | rav |
 | cast ~ only before attackers are declared. you choose which creatures attack ~. you choose which creatures block ~ and how those creatures block. | 1 | Master Warcraft | rav |
@@ -309,7 +308,6 @@
 | search your library for up to three creature cards, reveal them, then shuffle and put those cards on top in any order. | 1 | Congregation at Dawn | rav |
 | target creature becomes the color or colors of your choice until end of turn. draw a card. | 1 | Quickchange | rav |
 | target player draws three cards. then that player discards two cards unless they discard a land card. | 1 | Compulsive Research | rav |
-| target player sacrifices a creature of their choice. you draw cards equal to that creature's power. | 1 | Twisted Justice | rav |
 | untap target creature and gain control of it until end of turn. that creature gains haste until end of turn. if {M} was spent to cast ~, the creature gains "... | 1 | Flash Conscription | rav |
 | until end of turn, you may cast target instant or sorcery card from your graveyard without paying its mana cost. if that spell would be put into your graveyard, | 1 | Sins of the Past | rav |
 | when enchanted creature deals combat damage to a player, sacrifice it and attach ~ to a creature you control. if you do, untap all creatures you control and aft | 1 | Breath of Fury | rav |

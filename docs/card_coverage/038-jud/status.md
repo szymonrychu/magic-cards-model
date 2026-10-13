@@ -17,18 +17,16 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 3 | 15.0% |
+| Tested | 5 | 25.0% |
 | Works (untested) | 11 | 55.0% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 6 | 30.0% |
+| Not working | 4 | 20.0% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
-| Ancestor's Chosen | silent | When this creature enters, you gain 1 life for each card in your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Browbeat | silent | Any player may have Browbeat deal 5 damage to them. If no one does, target player draws three cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Chastise | silent | Destroy target attacking creature. You gain life equal to its power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Nomad Mythmaker | silent | {W}, {T}: Put target Aura card from a graveyard onto the battlefield under your control attached to a creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Scalpelexis | silent | Whenever this creature deals combat damage to a player, that player exiles the top four cards of their library. If two or more of those cards have the same name | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Cephalid Constable | notice | Whenever this creature deals combat damage to a player, return up to that many target permanents that player controls to their owner's hand. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
@@ -47,8 +45,10 @@
 ## Fully supported
 
 <details>
-<summary>3 cards</summary>
+<summary>5 cards</summary>
 
+- Ancestor's Chosen
+- Chastise
 - Lava Dart
 - Solitary Confinement
 - Sutured Ghoul
@@ -60,8 +60,6 @@
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
 | any player may have ~ deal N damage to them. if no one does, target player draws three cards. | 1 | Browbeat | jud |
-| destroy target attacking creature. you gain life equal to its power. | 1 | Chastise | jud |
-| when ~ enters, you gain N life for each card in your graveyard. | 1 | Ancestor's Chosen | jud |
 | whenever ~ deals combat damage to a player, return up to that many target permanents that player controls to their owner's hand. | 1 | Cephalid Constable | jud |
 | whenever ~ deals combat damage to a player, that player exiles the top four cards of their library. if two or more of those cards have the same name, repeat ~. | 1 | Scalpelexis | jud |
 | {M}, {M}: put target aura card from a graveyard onto the battlefield under your control attached to a creature you control. | 1 | Nomad Mythmaker | jud |

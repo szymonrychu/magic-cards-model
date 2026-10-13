@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 64 | 23.9% |
+| Tested | 66 | 24.6% |
 | Works (untested) | 140 | 52.2% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 64 | 23.9% |
+| Not working | 62 | 23.1% |
 
 ## Cards needing work
 
@@ -72,7 +72,6 @@
 | Stronghold Overseer | silent | {B}{B}: Creatures with shadow get +1/+0 until end of turn and creatures without shadow get -1/-0 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Thelon of Havenwood | silent | Each Fungus creature gets +1/+1 for each spore counter on it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Truth or Tale | silent | Reveal the top five cards of your library and separate them into two piles. An opponent chooses one of those piles. Put a card from the chosen pile into your ha | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Urborg Syphon-Mage | silent | {2}{B}, {T}, Discard a card: Each other player loses 2 life. You gain life equal to the life lost this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Walk the Aeons | silent | Buyback—Sacrifice three Islands. (You may sacrifice three Islands in addition to any other costs as you cast this spell. If you do, put this card into your hand | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Weatherseed Totem | silent | When this artifact is put into a graveyard from the battlefield, if it was a creature, return this card to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Wormwood Dryad | silent | {G}: This creature gains forestwalk until end of turn and deals 1 damage to you. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -86,7 +85,6 @@
 | Locket of Yesterdays | notice | Spells you cast cost {1} less to cast for each card with the same name as that spell in your graveyard. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Magus of the Jar | notice | {T}, Sacrifice this creature: Each player exiles all cards from their hand face down and draws seven cards. At the beginning of the next end step, each player d | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Norin the Wary | notice | When a player casts a spell or a creature attacks, exile Norin. Return it to the battlefield under its owner's control at the beginning of the next end step. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Phthisis | notice | Destroy target creature. Its controller loses life equal to its power plus its toughness. Suspend 5—{1}{B} (Rather than cast this card from your hand, you may p | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Traitor's Clutch | notice | Target creature gets +1/+0, becomes black, and gains shadow until end of turn. (It can block or be blocked by only creatures with shadow.) Flashback {1}{B} (You | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Trickbind | notice | Split second (As long as this spell is on the stack, players can't cast spells or activate abilities that aren't mana abilities.) Counter target activated or tr | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Word of Seizing | notice | Split second (As long as this spell is on the stack, players can't cast spells or activate abilities that aren't mana abilities.) Untap target permanent and gai | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
@@ -234,7 +232,7 @@
 ## Fully supported
 
 <details>
-<summary>64 cards</summary>
+<summary>66 cards</summary>
 
 - Amrou Seekers
 - Ancestral Vision
@@ -275,6 +273,7 @@
 - Orcish Cannonade
 - Pentarch Ward
 - Phantom Wurm
+- Phthisis
 - Pit Keeper
 - Plated Pegasus
 - Pulmonic Sliver
@@ -295,6 +294,7 @@
 - Temporal Isolation
 - Thick-Skinned Goblin
 - Tromp the Domains
+- Urborg Syphon-Mage
 - Urza's Factory
 - Vampiric Sliver
 - Vesuva
@@ -316,7 +316,6 @@
 | buyback {M}{M}{M} (you may pay an additional {M}{M}{M} as you cast ~. if you do, put ~ into your hand as it resolves.) gain control of target creature of an opp | 1 | Evangelize | tsp |
 | buyback—sacrifice three islands. (you may sacrifice three islands in addition to any other costs as you cast ~. if you do, put ~ into your hand as it resolves.) | 1 | Walk the Aeons | tsp |
 | creatures of the chosen color get +N/+N. | 1 | Gauntlet of Power | tsp |
-| destroy target creature. its controller loses life equal to its power plus its toughness. suspend N—{M}{M} (rather than cast ~ from your hand, you may pay {M}{M | 1 | Phthisis | tsp |
 | each fungus creature gets +N/+N for each spore counter on it. | 1 | Thelon of Havenwood | tsp |
 | each player loses N life, discards a card, sacrifices a creature of their choice, then sacrifices a land of their choice. | 1 | Smallpox | tsp |
 | enchanted creature gets +N/+N, has reach, and can block creatures with shadow as though they didn't have shadow. | 1 | Aether Web | tsp |
@@ -363,7 +362,6 @@
 | {M}: the next N damage that would be dealt to ~ ~ is dealt to target creature you control instead. | 1 | Outrider en-Kor | tsp |
 | {M}: ~ gains forestwalk until end of turn and deals N damage to you. | 1 | Wormwood Dryad | tsp |
 | {M}: ~ gets +N/+N until end of turn. you skip your next turn. activate only once each turn and only if ~ is a creature. | 1 | Chronatog Totem | tsp |
-| {M}{M}, {M}, discard a card: each other player loses N life. you gain life equal to the life lost ~. | 1 | Urborg Syphon-Mage | tsp |
 | {M}{M}, {M}: if ~ is on the battlefield, it deals damage equal to its power to target attacking creature. that creature deals damage equal to its power to ~. | 1 | Durkwood Tracker | tsp |
 | {M}{M}: creatures with shadow get +N/+N until end of turn and creatures without shadow get -N/-N until end of turn. | 1 | Stronghold Overseer | tsp |
 | {M}{M}: return ~ from your graveyard to the battlefield tapped. you skip your next turn. | 1 | Chronosavant | tsp |

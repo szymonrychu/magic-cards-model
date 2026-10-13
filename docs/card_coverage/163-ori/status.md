@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 31 | 17.1% |
+| Tested | 34 | 18.8% |
 | Works (untested) | 108 | 59.7% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 42 | 23.2% |
+| Not working | 39 | 21.5% |
 
 ## Cards needing work
 
@@ -34,7 +34,6 @@
 | Gather the Pack | silent | Reveal the top five cards of your library. You may put a creature card from among them into your hand. Put the rest into your graveyard. Spell mastery — If ther | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Gilt-Leaf Winnower | silent | When this creature enters, you may destroy target non-Elf creature whose power and toughness aren't equal. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Goblin Glory Chaser | silent | As long as this creature is renowned, it has menace. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Graveblade Marauder | silent | Whenever this creature deals combat damage to a player, that player loses life equal to the number of creature cards in your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Hixus, Prison Warden | silent | Whenever a creature deals combat damage to you, if Hixus entered this turn, exile that creature until Hixus leaves the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Honored Hierarch | silent | As long as this creature is renowned, it has vigilance and "{T}: Add one mana of any color." | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Infectious Bloodlust | silent | Enchanted creature gets +2/+1, has haste, and attacks each combat if able. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -49,7 +48,6 @@
 | Relic Seeker | silent | When this creature becomes renowned, you may search your library for an Equipment card, reveal it, put it into your hand, then shuffle. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Seismic Elemental | silent | When this creature enters, creatures without flying can't block this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Send to Sleep | silent | Tap up to two target creatures. Spell mastery — If there are two or more instant and/or sorcery cards in your graveyard, those creatures don't untap during thei | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Shaman of the Pack | silent | When this creature enters, target opponent loses life equal to the number of Elves you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Somberwald Alpha | silent | Whenever a creature you control becomes blocked, it gets +1/+1 until end of turn. | this trigger's condition can never be satisfied - it never triggers | Y/Y/- | not_working |
 | Sphinx's Tutelage | silent | Whenever you draw a card, target opponent mills two cards. If two nonland cards that share a color were milled this way, repeat this process. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Starfield of Nyx | silent | As long as you control five or more enchantments, each other non-Aura enchantment you control is a creature in addition to its other types and has base power an | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -59,7 +57,6 @@
 | Thornbow Archer | silent | Whenever this creature attacks, each opponent who doesn't control an Elf loses 1 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Touch of Moonglove | silent | Target creature you control gets +1/+0 and gains deathtouch until end of turn. Whenever a creature dealt damage by that creature dies this turn, its controller  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Tragic Arrogance | silent | For each player, you choose from among the permanents that player controls an artifact, a creature, an enchantment, and a planeswalker. Then each player sacrifi | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Undead Servant | silent | When this creature enters, create a 2/2 black Zombie creature token for each card named Undead Servant in your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Valeron Wardens | silent | Whenever a creature you control becomes renowned, draw a card. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | War Horn | silent | Attacking creatures you control get +1/+0. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Willbreaker | silent | Whenever a creature an opponent controls becomes the target of a spell or ability you control, gain control of that creature for as long as you control this cre | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -180,7 +177,7 @@
 ## Fully supported
 
 <details>
-<summary>31 cards</summary>
+<summary>34 cards</summary>
 
 - Acolyte of the Inferno
 - Alhammarret's Archive
@@ -199,6 +196,7 @@
 - Exquisite Firecraft
 - Faerie Miscreant
 - Fiery Impulse
+- Graveblade Marauder
 - Hallowed Moonlight
 - Hangarback Walker
 - Jace, Vryn's Prodigy // Jace, Telepath Unbound
@@ -206,9 +204,11 @@
 - Mage-Ring Network
 - Orbs of Warding
 - Scab-Clan Berserker
+- Shaman of the Pack
 - Sigil of Valor
 - Suppression Bonds
 - Tainted Remedy
+- Undead Servant
 - Unholy Hunger
 - Vine Snare
 - Wild Instincts
@@ -245,9 +245,7 @@
 | target opponent reveals the top seven cards of their library. you may cast an instant or sorcery spell from among them without paying its mana cost. then that p | 1 | Talent of the Telepath | ori |
 | target opponent reveals their hand. you may choose a nonland card from it. if you do, that player discards that card. if you don't, that player discards two car | 1 | Nightsnare | ori |
 | when ~ becomes renowned, you may search your library for an equipment card, reveal it, put it into your hand, then shuffle. | 1 | Relic Seeker | ori |
-| when ~ enters, create a N/N black zombie creature token for each card named ~ in your graveyard. | 1 | Undead Servant | ori |
 | when ~ enters, creatures without flying can't block ~. | 1 | Seismic Elemental | ori |
-| when ~ enters, target opponent loses life equal to the number of elves you control. | 1 | Shaman of the Pack | ori |
 | when ~ enters, you may destroy target non-elf creature whose power and toughness aren't equal. | 1 | Gilt-Leaf Winnower | ori |
 | when ~ enters, you may search your library for a nonlegendary green creature card with mana value N or less, put it onto the battlefield, then shuffle. | 1 | Woodland Bellower | ori |
 | whenever a creature an opponent controls becomes the target of a spell or ability you control, gain control of that creature for as long as you control ~. | 1 | Willbreaker | ori |
@@ -258,7 +256,6 @@
 | whenever another nontoken creature you control dies, exile ~, then return her to the battlefield transformed under her owner's control. if you do, create a N/N  | 1 | Liliana, Heretical Healer // Liliana, Defiant Necromancer | ori |
 | whenever you draw a card, target opponent mills two cards. if two nonland cards that share a color were milled ~, repeat ~. | 1 | Sphinx's Tutelage | ori |
 | whenever ~ attacks, each opponent who doesn't control an elf loses N life. | 1 | Thornbow Archer | ori |
-| whenever ~ deals combat damage to a player, that player loses life equal to the number of creature cards in your graveyard. | 1 | Graveblade Marauder | ori |
 | you may cast ~ as though it had flash if you pay {M} more to cast it. | 1 | Harbinger of the Tides | ori |
 | −N: chandra deals N damage to each opponent. each player dealt damage ~ gets an emblem with "..." | 1 | Chandra, Fire of Kaladesh // Chandra, Roaring Flame | ori |
 | −N: create ashaya, the awoken world, a legendary N/N green elemental creature token. | 1 | Nissa, Vastwood Seer // Nissa, Sage Animist | ori |

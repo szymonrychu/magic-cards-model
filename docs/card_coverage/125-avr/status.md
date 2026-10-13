@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 47 | 21.7% |
-| Works (untested) | 132 | 60.8% |
+| Tested | 53 | 24.4% |
+| Works (untested) | 131 | 60.4% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 38 | 17.5% |
+| Not working | 33 | 15.2% |
 
 ## Cards needing work
 
@@ -32,15 +32,12 @@
 | Angelic Armaments | silent | Equipped creature gets +2/+2, has flying, and is a white Angel in addition to its other colors and types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Appetite for Brains | silent | Target opponent reveals their hand. You choose a card from it with mana value 4 or greater and exile that card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Banishing Stroke | silent | Put target artifact, creature, or enchantment on the bottom of its owner's library. Miracle {W} (You may cast this card for its miracle cost when you draw it if | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Battle Hymn | silent | Add {R} for each creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Bladed Bracers | silent | As long as equipped creature is a Human or an Angel, it has vigilance. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Bruna, Light of Alabaster | silent | Whenever Bruna attacks or blocks, you may attach to it any number of Auras on the battlefield and you may put onto the battlefield attached to it any number of  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Builder's Blessing | silent | Untapped creatures you control get +0/+2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Demonlord of Ashmouth | silent | When this creature enters, exile it unless you sacrifice another creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Descendants' Path | silent | At the beginning of your upkeep, reveal the top card of your library. If it's a creature card that shares a creature type with a creature you control, you may c | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Dread Slaver | silent | Whenever a creature dealt damage by this creature this turn dies, return it to the battlefield under your control. That creature is a black Zombie in addition t | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Dreadwaters | silent | Target player mills X cards, where X is the number of lands you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Essence Harvest | silent | Target player loses X life and you gain X life, where X is the greatest power among creatures you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Exquisite Blood | silent | Whenever an opponent loses life, you gain that much life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Fettergeist | silent | At the beginning of your upkeep, sacrifice this creature unless you pay {1} for each other creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Havengul Skaab | silent | Whenever this creature attacks, return another creature you control to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -62,8 +59,6 @@
 | Joint Assault | notice | Target creature gets +2/+2 until end of turn. If it's paired with a creature, that creature also gets +2/+2 until end of turn. | unparsed remainder: If it's paired with a creature, that creature also gets +2/+2 until end of turn. | Y/-/- | not_working |
 | Necrobite | notice | Target creature gains deathtouch until end of turn. Regenerate it. (The next time that creature would be destroyed this turn, instead tap it, remove it from com | unparsed remainder: Regenerate it. | Y/Y/- | not_working |
 | Revenge of the Hunted | notice | Until end of turn, target creature gets +6/+6 and gains trample, and all creatures able to block it this turn do so. Miracle {G} (You may cast this card for its | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Rush of Blood | notice | Target creature gets +X/+0 until end of turn, where X is its power. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Sheltering Word | notice | Target creature you control gains hexproof until end of turn. You gain life equal to that creature's toughness. (A creature with hexproof can't be the target of | unparsed remainder: You gain life equal to that creature's toughness. | Y/-/- | not_working |
 | Abundant Growth | handled | When this Aura enters, draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Alchemist's Apprentice | handled | Sacrifice this creature: Draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Amass the Components | handled | Draw three cards, then put a card from your hand on the bottom of your library. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -81,7 +76,6 @@
 | Commander's Authority | handled | Enchanted creature has "At the beginning of your upkeep, create a 1/1 white Human creature token." | the engine reads this text and performs it | Y/-/- | not_tested |
 | Conjurer's Closet | handled | At the beginning of your end step, you may exile target creature you control, then return that card to the battlefield under your control. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Corpse Traders | handled | {2}{B}, Sacrifice a creature: Target opponent reveals their hand. You choose a card from it. That player discards that card. Activate only as a sorcery. | the engine reads this text and performs it | Y/-/- | not_tested |
-| Crippling Chill | handled | Tap target creature. It doesn't untap during its controller's next untap step. Draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Cursebreak | handled | Destroy target enchantment. You gain 2 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Dangerous Wager | handled | Discard your hand, then draw two cards. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Dark Impostor | handled | {4}{B}{B}: Exile target creature and put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -95,6 +89,7 @@
 | Dual Casting | handled | Enchanted creature has "{R}, {T}: Copy target instant or sorcery spell you control. You may choose new targets for the copy." | the engine reads this text and performs it | Y/-/- | not_tested |
 | Elgaud Shieldmate | handled | As long as this creature is paired with another creature, both creatures have hexproof. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Emancipation Angel | handled | When this creature enters, return a permanent you control to its owner's hand. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Essence Harvest | handled | Target player loses X life and you gain X life, where X is the greatest power among creatures you control. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Evernight Shade | handled | {B}: This creature gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Falkenrath Exterminator | handled | Whenever this creature deals combat damage to a player, put a +1/+1 counter on it. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Farbog Explorer | handled | Landwalk | no code needed | Y/-/- | not_tested |
@@ -145,7 +140,6 @@
 | Nephalia Smuggler | handled | {3}{U}, {T}: Exile another target creature you control, then return that card to the battlefield under your control. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Nettle Swine | handled |  |  | Y/-/- | not_tested |
 | Nightshade Peddler | handled | As long as this creature is paired with another creature, both creatures have deathtouch. | the engine reads this text and performs it | Y/-/- | not_tested |
-| Otherworld Atlas | handled | {T}: Put a charge counter on this artifact. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Pathbreaker Wurm | handled | As long as this creature is paired with another creature, both creatures have trample. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Pillar of Flame | handled | Pillar of Flame deals 2 damage to any target. If a creature dealt damage this way would die this turn, exile it instead. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Polluted Dead | handled | When this creature dies, destroy target land. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -200,24 +194,27 @@
 ## Fully supported
 
 <details>
-<summary>47 cards</summary>
+<summary>53 cards</summary>
 
 - Aggravate
 - Angel of Jubilation
 - Arcane Melee
 - Avacyn, Angel of Hope
+- Battle Hymn
 - Blood Artist
 - Bower Passage
 - Burn at the Stake
 - Cavern of Souls
 - Champion of Lambholt
 - Craterhoof Behemoth
+- Crippling Chill
 - Deadeye Navigator
 - Defang
 - Demonic Rising
 - Demonic Taskmaster
 - Diregraf Escort
 - Divine Deflection
+- Dreadwaters
 - Entreat the Angels
 - Flowering Lumberknot
 - Galvanic Alchemist
@@ -234,10 +231,13 @@
 - Midnight Duelist
 - Misthollow Griffin
 - Moonlight Geist
+- Otherworld Atlas
 - Predator's Gambit
 - Reforge the Soul
 - Riders of Gavony
+- Rush of Blood
 - Scrapskin Drake
+- Sheltering Word
 - Sigarda, Host of Herons
 - Silverblade Paladin
 - Stern Mentor
@@ -257,7 +257,6 @@
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
 | +N: draw a card, then discard a card at random. | 1 | Tibalt, the Fiend-Blooded | avr |
-| add {M} for each creature you control. | 1 | Battle Hymn | avr |
 | as long as equipped creature is a human or an angel, it has vigilance. | 1 | Bladed Bracers | avr |
 | as long as you control exactly one creature, that creature gets +N/+N and has lifelink. | 1 | Homicidal Seclusion | avr |
 | at the beginning of your upkeep, put a despair counter on ~, then each player exiles N permanents they control and/or cards from their hand, where N is the numb | 1 | Descent into Madness | avr |
@@ -274,12 +273,8 @@
 | return target creature card from your graveyard to the battlefield. if it's an angel, put two +N/+N counters on it. | 1 | Defy Death | avr |
 | reveal the top two cards of your library. put all creature and land cards revealed ~ into your hand and the rest on the bottom of your library in any order. | 1 | Lair Delve | avr |
 | target creature gains deathtouch until end of turn. regenerate it. (the next time that creature would be destroyed ~, instead tap it, remove it from combat, and | 1 | Necrobite | avr |
-| target creature gets +N/+N until end of turn, where N is its power. | 1 | Rush of Blood | avr |
 | target creature gets +N/+N until end of turn. if it's paired with a creature, that creature also gets +N/+N until end of turn. | 1 | Joint Assault | avr |
-| target creature you control gains hexproof until end of turn. you gain life equal to that creature"..."t be the target of spells or abilities your opponents con | 1 | Sheltering Word | avr |
 | target opponent reveals their hand. you choose a card from it with mana value N or greater and exile that card. | 1 | Appetite for Brains | avr |
-| target player loses N life and you gain N life, where N is the greatest power among creatures you control. | 1 | Essence Harvest | avr |
-| target player mills N cards, where N is the number of lands you control. | 1 | Dreadwaters | avr |
 | untapped creatures you control get +N/+N. | 1 | Builder's Blessing | avr |
 | until end of turn, target creature gets +N/+N and gains trample, and all creatures able to block it ~ do so. miracle {M} (you may cast ~ for its miracle cost wh | 1 | Revenge of the Hunted | avr |
 | when ~ dies, you may have target creature get -N/-N until end of turn. | 1 | Undead Executioner | avr |

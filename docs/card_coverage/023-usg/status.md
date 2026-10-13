@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 22 | 33.3% |
+| Tested | 23 | 34.8% |
 | Works (untested) | 35 | 53.0% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 9 | 13.6% |
+| Not working | 8 | 12.1% |
 
 ## Cards needing work
 
@@ -33,7 +33,6 @@
 | Rewind | silent | Counter target spell. Untap up to four lands. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Shiv's Embrace | silent | {R}: Enchanted creature gets +1/+0 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sleeper Agent | silent | When this creature enters, target opponent gains control of it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Spreading Algae | silent | When enchanted land becomes tapped, destroy it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Victimize | silent | Choose two target creature cards in your graveyard. Sacrifice a creature. If you do, return the chosen cards to the battlefield tapped. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Angelic Chorus | handled | Whenever a creature you control enters, you gain life equal to its toughness. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Angelic Page | handled | {T}: Target attacking or blocking creature gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -74,7 +73,7 @@
 ## Fully supported
 
 <details>
-<summary>22 cards</summary>
+<summary>23 cards</summary>
 
 - Abundance
 - Arc Lightning
@@ -94,6 +93,7 @@
 - Redeem
 - Reflexes
 - Sanctum Guardian
+- Spreading Algae
 - Telepathy
 - Urza's Armor
 - Vernal Bloom
@@ -109,7 +109,6 @@
 | choose two target creature cards in your graveyard. sacrifice a creature. if you do, return the chosen cards to the battlefield tapped. | 1 | Victimize | usg |
 | counter target spell. untap up to four lands. | 1 | Rewind | usg |
 | sacrifice ~: return to your hand all creature cards in your graveyard that were put there from the battlefield ~. | 1 | No Rest for the Wicked | usg |
-| when enchanted land becomes tapped, destroy it. | 1 | Spreading Algae | usg |
 | when ~ enters, target opponent gains control of it. | 1 | Sleeper Agent | usg |
 | when ~ enters, you may put an aura card from your hand onto the battlefield attached to ~. | 1 | Academy Researchers | usg |
 | whenever a creature dies, that creature's controller may draw a card. | 1 | Fecundity | usg |

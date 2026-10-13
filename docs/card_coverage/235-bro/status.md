@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 47 | 18.4% |
+| Tested | 48 | 18.8% |
 | Works (untested) | 143 | 55.9% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 66 | 25.8% |
+| Not working | 65 | 25.4% |
 
 ## Cards needing work
 
@@ -30,9 +30,8 @@
 | Arcane Proxy | silent | When this creature enters, if you cast it, exile target instant or sorcery card with mana value less than or equal to this creature's power from your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Argivian Avenger | silent | {1}: Until end of turn, this creature gets -1/-1 and gains your choice of flying, vigilance, deathtouch, or haste. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Autonomous Assembler | silent | Prototype | no machine in the engine executes this keyword | Y/Y/- | not_working |
-| Battlefield Butcher | silent | {5}, {T}: Each opponent loses 2 life. This ability costs {1} less to activate for each creature card in your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Blitz Automaton | silent | Prototype | no machine in the engine executes this keyword | Y/Y/- | not_working |
-| Boulderbranch Golem | silent | When this creature enters, you gain life equal to its power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
+| Boulderbranch Golem | silent | Prototype | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Calamity's Wake | silent | Exile all graveyards. Players can't cast noncreature spells this turn. Exile Calamity's Wake. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Combat Thresher | silent | Prototype | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Cradle Clearcutter | silent | Prototype | no machine in the engine executes this keyword | Y/Y/- | not_working |
@@ -239,12 +238,13 @@
 ## Fully supported
 
 <details>
-<summary>47 cards</summary>
+<summary>48 cards</summary>
 
 - Aeronaut Cavalry
 - Alloy Animist
 - Argoth, Sanctum of Nature
 - Awaken the Woods
+- Battlefield Butcher
 - Bitter Reunion
 - Bladecoil Serpent
 - Brotherhood's End
@@ -295,7 +295,7 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| prototype | 14 | Autonomous Assembler, Blitz Automaton, Combat Thresher, Cradle Clearcutter, Depth Charge Colossus | bro |
+| prototype | 15 | Autonomous Assembler, Blitz Automaton, Boulderbranch Golem, Combat Thresher, Cradle Clearcutter | bro |
 | Choose two | 3 | Gix's Command, Kayla's Command, Urza's Command | bro |
 | +N: scry N. you may tap an untapped artifact you control. if you do, draw a card. | 1 | Saheeli, Filigree Master | bro |
 | as long as you control enchanted creature, it gets +N/+N. otherwise, it can't block. | 1 | Mishra's Domination | bro |
@@ -324,7 +324,6 @@
 | when ~ enters, mill three cards. you may put a plains card or a creature card with mana value N or less from among the cards milled ~ into your hand. if you don | 1 | Airlift Chaplain | bro |
 | when ~ enters, scry N, where N is its power. | 1 | Spotter Thopter | bro |
 | when ~ enters, you and target opponent each create a tapped powerstone token. | 1 | Thran Spider | bro |
-| when ~ enters, you gain life equal to its power. | 1 | Boulderbranch Golem | bro |
 | whenever an artifact you control enters, look at the top card of your library. if it"..."t put the card into your hand, you may put it into your graveyard. | 1 | Sarinth Steelseeker | bro |
 | whenever feldon is dealt damage, exile that many cards from the top of your library. choose one of them. until the end of your next turn, you may play that card | 1 | Feldon, Ronom Excavator | bro |
 | whenever mishra enters or attacks, choose three — • target opponent discards two cards. • mishra deals N damage to any target. • destroy target artifact or plan | 1 | Mishra, Lost to Phyrexia | bro |
@@ -337,7 +336,6 @@
 | {M}, {M}, exile ~: you gain protection from everything until your next turn. | 1 | The Stasis Coffin | bro |
 | {M}, {M}, sacrifice ~: exile the top two cards of your library. choose one of them. until the end of your next turn, you may play that card. | 1 | Mishra's Research Desk | bro |
 | {M}, {M}: discard all the cards in your hand, then draw that many cards. you may choose an artifact or creature card with mana value N you discarded ~, then do  | 1 | Queen Kayla bin-Kroog | bro |
-| {M}, {M}: each opponent loses N life. ~ costs {M} less to activate for each creature card in your graveyard. | 1 | Battlefield Butcher | bro |
 | {M}: until end of turn, ~ gets -N/-N and gains your choice of flying, vigilance, deathtouch, or haste. | 1 | Argivian Avenger | bro |
 | {M}: ~ loses defender and gains "..." | 1 | Surge Engine | bro |
 | {M}{M}: return target permanent you control to its owner"..."s hand. activate only during your turn. | 1 | Meticulous Excavation | bro |

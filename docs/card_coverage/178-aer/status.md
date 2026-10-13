@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 41 | 22.2% |
+| Tested | 46 | 24.9% |
 | Works (untested) | 114 | 61.6% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 30 | 16.2% |
+| Not working | 25 | 13.5% |
 
 ## Cards needing work
 
@@ -29,13 +29,11 @@
 | Aerial Modification | silent | As long as enchanted permanent is a Vehicle, it's a creature in addition to its other types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Aethersphere Harvester | silent | Pay {E}: This Vehicle gains lifelink until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Aethertide Whale | silent | When this creature enters, you get six {E} . | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Aetherwind Basker | silent | Whenever this creature enters or attacks, you get {E} for each creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ajani Unyielding | silent | +2: Reveal the top three cards of your library. Put all nonland permanent cards revealed this way into your hand and the rest on the bottom of your library in a | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ajani's Aid | silent | When this enchantment enters, you may search your library and/or graveyard for a card named Ajani, Valiant Protector, reveal it, and put it into your hand. If y | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Baral, Chief of Compliance | silent | Whenever a spell or ability you control counters a spell, you may draw a card. If you do, discard a card. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Dark Intimations | silent | Each opponent sacrifices a creature or planeswalker of their choice, then discards a card. You return a creature or planeswalker card from your graveyard to you | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Fourth Bridge Prowler | silent | When this creature enters, you may have target creature get -1/-1 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Gonti's Machinations | silent | Pay {E}{E}, Sacrifice this enchantment: Each opponent loses 3 life. You gain life equal to the life lost this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Greenbelt Rampager | silent | When this creature enters, pay {E}{E} . If you can't, return this creature to its owner's hand and you get {E}. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Gremlin Infestation | silent | At the beginning of your end step, this Aura deals 2 damage to enchanted artifact's controller. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Indomitable Creativity | silent | Destroy X target artifacts and/or creatures. For each permanent destroyed this way, its controller reveals cards from the top of their library until an artifact | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -43,14 +41,11 @@
 | Mechanized Production | silent | At the beginning of your upkeep, create a token that's a copy of enchanted artifact. Then if you control eight or more artifacts with the same name as one anoth | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Natural Obsolescence | silent | Put target artifact on the bottom of its owner's library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Peacewalker Colossus | silent | {1}{W}: Another target Vehicle you control becomes an artifact creature until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Peema Aether-Seer | silent | When this creature enters, you get an amount of {E} equal to the greatest power among creatures you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Restoration Specialist | silent | {W}, Sacrifice this creature: Return up to one target artifact card and up to one target enchantment card from your graveyard to your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Scrap Trawler | silent | Whenever this creature dies or another artifact you control is put into a graveyard from the battlefield, return to your hand target artifact card in your grave | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Siege Modification | silent | As long as enchanted permanent is a Vehicle, it's a creature in addition to its other types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Tezzeret's Touch | silent | When enchanted artifact is put into a graveyard, return that card to its owner's hand. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
-| Tezzeret, Master of Metal | silent | −3: Target opponent loses life equal to the number of artifacts you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Trophy Mage | silent | When this creature enters, you may search your library for an artifact card with mana value 3, reveal it, put it into your hand, then shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Call for Unity | notice | Creatures you control get +1/+1 for each unity counter on this enchantment. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Destructive Tampering | notice | Choose one — • Destroy target artifact. • Creatures without flying can't block this turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Kari Zev, Skyship Raider | notice | Whenever Kari Zev attacks, create Ragavan, a legendary 2/1 red Monkey creature token. Ragavan enters tapped and attacking. Exile that token at end of combat. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Lifecraft Awakening | notice | Put X +1/+1 counters on target artifact you control. If it isn't a creature or Vehicle, it becomes a 0/0 Construct artifact creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -174,15 +169,17 @@
 ## Fully supported
 
 <details>
-<summary>41 cards</summary>
+<summary>46 cards</summary>
 
 - Aether Chaser
 - Aether Swooper
 - Aetherstream Leopard
+- Aetherwind Basker
 - Aid from the Cowl
 - Audacious Infiltrator
 - Baral's Expertise
 - Bastion Enforcer
+- Call for Unity
 - Chandra's Revolution
 - Cogwork Assembler
 - Consulate Crackdown
@@ -193,6 +190,7 @@
 - Fatal Push
 - Fen Hauler
 - Foundry Hornet
+- Gonti's Machinations
 - Heart of Kiran
 - Hinterland Drake
 - Hope of Ghirapur
@@ -205,6 +203,7 @@
 - Metallic Rebuke
 - Monstrous Onslaught
 - Night Market Guard
+- Peema Aether-Seer
 - Quicksmith Rebel
 - Quicksmith Spy
 - Renegade Rallier
@@ -213,6 +212,7 @@
 - Scrounging Bandar
 - Skyship Plunderer
 - Sram's Expertise
+- Tezzeret, Master of Metal
 - Walking Ballista
 - Whir of Invention
 - Winding Constrictor
@@ -229,18 +229,15 @@
 | +N: reveal the top three cards of your library. put all nonland permanent cards revealed ~ into your hand and the rest on the bottom of your library in any orde | 1 | Ajani Unyielding | aer |
 | at the beginning of your end step, ~ deals N damage to enchanted artifact's controller. | 1 | Gremlin Infestation | aer |
 | at the beginning of your upkeep, create a token that's a copy of enchanted artifact. then if you control eight or more artifacts with the same name as one anoth | 1 | Mechanized Production | aer |
-| creatures you control get +N/+N for each unity counter on ~. | 1 | Call for Unity | aer |
 | destroy N target artifacts and/or creatures. for each permanent destroyed ~, its controller reveals cards from the top of their library until an artifact or cre | 1 | Indomitable Creativity | aer |
 | each opponent sacrifices a creature or planeswalker of their choice, then discards a card. you return a creature or planeswalker card from your graveyard to you | 1 | Dark Intimations | aer |
 | exile target nonland card from your graveyard. search your library for any number of cards with the same name as that card, reveal them, put them into your hand | 1 | Secret Salvage | aer |
 | pay {M}: ~ gains lifelink until end of turn. | 1 | Aethersphere Harvester | aer |
-| pay {M}{M}, sacrifice ~: each opponent loses N life. you gain life equal to the life lost ~. | 1 | Gonti's Machinations | aer |
 | put N +N/+N counters on target artifact you control. if it isn't a creature or vehicle, it becomes a N/N construct artifact creature. | 1 | Lifecraft Awakening | aer |
 | put target artifact on the bottom of its owner's library. | 1 | Natural Obsolescence | aer |
 | when enchanted artifact is put into a graveyard, return that card to its owner's hand. | 1 | Tezzeret's Touch | aer |
 | when ~ dies, reveal cards from the top of your library until you reveal a nonland card with mana value N or less. you may cast that card without paying its mana | 1 | Treasure Keeper | aer |
 | when ~ enters, pay {M}{M} . if you can"..."s hand and you get {M}. | 1 | Greenbelt Rampager | aer |
-| when ~ enters, you get an amount of {M} equal to the greatest power among creatures you control. | 1 | Peema Aether-Seer | aer |
 | when ~ enters, you get six {M} . | 1 | Aethertide Whale | aer |
 | when ~ enters, you may have target creature get -N/-N until end of turn. | 1 | Fourth Bridge Prowler | aer |
 | when ~ enters, you may search your library and/or graveyard for a card named ajani, valiant protector, reveal it, and put it into your hand. if you search your  | 1 | Ajani's Aid | aer |
@@ -249,10 +246,8 @@
 | whenever kari zev attacks, create ragavan, a legendary N/N red monkey creature token. ragavan enters tapped and attacking. exile that token at end of combat. | 1 | Kari Zev, Skyship Raider | aer |
 | whenever ~ attacks, you get {M}{M} , then you may pay eight {M}. if you pay, untap all creatures you control, and after ~, there is an additional combat phase. | 1 | Lightning Runner | aer |
 | whenever ~ dies or another artifact you control is put into a graveyard from the battlefield, return to your hand target artifact card in your graveyard with le | 1 | Scrap Trawler | aer |
-| whenever ~ enters or attacks, you get {M} for each creature you control. | 1 | Aetherwind Basker | aer |
 | {M}, sacrifice ~: return up to one target artifact card and up to one target enchantment card from your graveyard to your hand. | 1 | Restoration Specialist | aer |
 | {M}{M}: another target vehicle you control becomes an artifact creature until end of turn. | 1 | Peacewalker Colossus | aer |
-| −N: target opponent loses life equal to the number of artifacts you control. | 1 | Tezzeret, Master of Metal | aer |
 
 ## Notes
 

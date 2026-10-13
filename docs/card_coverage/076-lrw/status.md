@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 60 | 21.4% |
-| Works (untested) | 159 | 56.8% |
+| Tested | 62 | 22.1% |
+| Works (untested) | 160 | 57.1% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 61 | 21.8% |
+| Not working | 58 | 20.7% |
 
 ## Cards needing work
 
@@ -35,7 +35,6 @@
 | Colfenor's Urn | silent | At the beginning of the end step, if three or more cards have been exiled with this artifact, sacrifice it. If you do, return those cards to the battlefield und | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Dauntless Dourbark | silent | Dauntless Dourbark's power and toughness are each equal to the number of Forests you control plus the number of Treefolk you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Deathrender | silent | Whenever equipped creature dies, you may put a creature card from your hand onto the battlefield and attach this Equipment to it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Dread | silent | Whenever a creature deals damage to you, destroy it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Dreamspoiler Witches | silent | Whenever you cast a spell during an opponent's turn, you may have target creature get -1/-1 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Ego Erasure | silent | Changeling (This card is every creature type.) Creatures target player controls get -2/-0 and lose all creature types until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Entangling Trap | silent | Whenever you clash, tap target creature an opponent controls. If you won, that creature doesn't untap during its controller's next untap step. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
@@ -77,11 +76,9 @@
 | Windbrisk Heights | silent | {W}, {T}: You may play the exiled card without paying its mana cost if you attacked with three or more creatures this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Woodland Guidance | silent | Return target card from your graveyard to your hand. Clash with an opponent. If you win, untap all Forests you control. (Each clashing player reveals the top ca | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Blades of Velis Vel | notice | Changeling (This card is every creature type.) Up to two target creatures each get +2/+0 and gain all creature types until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Brion Stoutarm | notice | {R}, {T}, Sacrifice another creature: Brion Stoutarm deals damage equal to the sacrificed creature's power to target player or planeswalker. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Faerie Trickery | notice | Counter target non-Faerie spell. If that spell is countered this way, exile it instead of putting it into its owner's graveyard. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Fistful of Force | notice | Target creature gets +2/+2 until end of turn. Clash with an opponent. If you win, that creature gets an additional +2/+2 and gains trample until end of turn. (E | unparsed remainder: Clash with an opponent. If you win, that creature gets an additional +2/+2 and gains trample until end of turn. | Y/-/- | not_working |
 | Goatnapper | notice | When this creature enters, untap target Goat and gain control of it until end of turn. It gains haste until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Heal the Scars | notice | Regenerate target creature. You gain life equal to that creature's toughness. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Lowland Oaf | notice | {T}: Target Goblin creature you control gets +1/+0 and gains flying until end of turn. Sacrifice that creature at the beginning of the next end step. | unparsed remainder: Sacrifice that creature at the beginning of the next end step. | Y/-/- | not_working |
 | Makeshift Mannequin | notice | Return target creature card from your graveyard to the battlefield with a mannequin counter on it. For as long as that creature has a mannequin counter on it, i | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Nameless Inversion | notice | Changeling (This card is every creature type.) Target creature gets +3/-3 and loses all creature types until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
@@ -118,6 +115,7 @@
 | Consuming Bonfire | handled | Choose one — • Consuming Bonfire deals 4 damage to target non-Elemental creature. • Consuming Bonfire deals 7 damage to target Treefolk creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Dawnfluke | handled | When this creature enters, prevent the next 3 damage that would be dealt to any target this turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Deeptread Merrow | handled | {U}: This creature gains islandwalk until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Dread | handled | Whenever a creature deals damage to you, destroy it. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Drowner of Secrets | handled | Tap an untapped Merfolk you control: Target player mills a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Elvish Branchbender | handled | {T}: Until end of turn, target Forest becomes an X/X Treefolk creature in addition to its other types, where X is the number of Elves you control. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Elvish Eulogist | handled | Sacrifice this creature: You gain 1 life for each Elf card in your graveyard. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -250,13 +248,14 @@
 ## Fully supported
 
 <details>
-<summary>60 cards</summary>
+<summary>62 cards</summary>
 
 - Amoeboid Changeling
 - Aquitect's Will
 - Arbiter of Knollridge
 - Ashling's Prerogative
 - Battle Mastery
+- Brion Stoutarm
 - Ceaseless Searblades
 - Cenn's Heir
 - Changeling Hero
@@ -277,6 +276,7 @@
 - Goldmeadow Dodger
 - Goldmeadow Harrier
 - Guile
+- Heal the Scars
 - Hostility
 - Immaculate Magistrate
 - Jace Beleren
@@ -341,7 +341,6 @@
 | goblins you control and elementals you control have menace. | 1 | Caterwauling Boggart | lrw |
 | prevent all combat damage that would be dealt ~. clash with an opponent. if you win, creatures that player controls don"..."s next untap step. (each clashing pl | 1 | Pollen Lullaby | lrw |
 | put a +N/+N counter on target creature, two +N/+N counters on another target creature, and three +N/+N counters on a third target creature. | 1 | Incremental Growth | lrw |
-| regenerate target creature. you gain life equal to that creature's toughness. | 1 | Heal the Scars | lrw |
 | return target card from your graveyard to your hand. clash with an opponent. if you win, untap all forests you control. (each clashing player reveals the top ca | 1 | Woodland Guidance | lrw |
 | return target creature card from your graveyard to the battlefield with a mannequin counter on it. for as long as that creature has a mannequin counter on it, i | 1 | Makeshift Mannequin | lrw |
 | reveal cards from the top of your library until you reveal three nonland cards. put the nonland cards revealed ~ into your hand, then put the rest of the reveal | 1 | Fathom Trawl | lrw |
@@ -353,7 +352,6 @@
 | when ~ enters, return target creature card from your graveyard to your hand. if that card is a goblin card, ~ gains haste until end of turn. | 1 | Warren Pilferers | lrw |
 | when ~ enters, untap target goat and gain control of it until end of turn. it gains haste until end of turn. | 1 | Goatnapper | lrw |
 | when ~ enters, up to two target creatures can't block ~. | 1 | Glarewielder | lrw |
-| whenever a creature deals damage to you, destroy it. | 1 | Dread | lrw |
 | whenever a player casts a kithkin spell, you may have target player lose N life. | 1 | Quill-Slinger Boggart | lrw |
 | whenever equipped creature dies, you may put a creature card from your hand onto the battlefield and attach ~ to it. | 1 | Deathrender | lrw |
 | whenever you activate an ability, if it isn't a mana ability, you may pay {M}. if you do, copy that ability. you may choose new targets for the copy. | 1 | Rings of Brighthearth | lrw |
@@ -366,7 +364,6 @@
 | whenever ~ attacks, you may have target creature gain flying until end of turn. | 1 | Kinsbaile Balloonist | lrw |
 | you lose N life and draw two cards, then clash with an opponent. if you win, repeat ~. (each clashing player reveals the top card of their library, then puts th | 1 | Hoarder's Greed | lrw |
 | you may choose new targets for target instant or sorcery spell. then copy that spell. you may choose new targets for the copy. | 1 | Wild Ricochet | lrw |
-| {M}, {M}, sacrifice another creature: ~ deals damage equal to the sacrificed creature's power to target player or planeswalker. | 1 | Brion Stoutarm | lrw |
 | {M}, {M}: you may cast a spell from your hand without paying its mana cost if it has the same name as a spell that was cast ~. | 1 | Twinning Glass | lrw |
 | {M}, {M}: you may play the exiled card without paying its mana cost if a library has twenty or fewer cards in it. | 1 | Shelldock Isle | lrw |
 | {M}, {M}: you may play the exiled card without paying its mana cost if an opponent was dealt N or more damage ~. | 1 | Spinerock Knoll | lrw |

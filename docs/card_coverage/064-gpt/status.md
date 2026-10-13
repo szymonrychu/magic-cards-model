@@ -17,21 +17,19 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 22 | 14.8% |
-| Works (untested) | 85 | 57.0% |
+| Tested | 25 | 16.8% |
+| Works (untested) | 86 | 57.7% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 42 | 28.2% |
+| Not working | 38 | 25.5% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
 | Absolver Thrull | silent | Haunt | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Agent of Masks | silent | At the beginning of your upkeep, each opponent loses 1 life. You gain life equal to the life lost this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Beastmaster's Magemark | silent | Whenever a creature you control that's enchanted becomes blocked, it gets +1/+1 until end of turn for each creature blocking it. | this trigger's condition can never be satisfied - it never triggers | Y/-/- | not_working |
 | Belfry Spirit | silent | Haunt | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Benediction of Moons | silent | You gain 1 life for each player. Haunt (When this spell card is put into a graveyard after resolving, exile it haunting target creature.) When the creature this | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Bioplasm | silent | Whenever this creature attacks, exile the top card of your library. If it's a creature card, this creature gets +X/+Y until end of turn, where X is the exiled c | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Blind Hunter | silent | Haunt | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Conjurer's Ban | silent | Choose a card name. Until your next turn, spells with the chosen name can't be cast and lands with the chosen name can't be played. Draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Cry of Contrition | silent | Target player discards a card. Haunt (When this spell card is put into a graveyard after resolving, exile it haunting target creature.) When the creature this c | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -41,7 +39,6 @@
 | Exhumer Thrull | silent | Haunt | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Fencer's Magemark | silent | Creatures you control that are enchanted get +1/+1 and have first strike. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Graven Dominator | silent | When this creature enters or the creature it haunts dies, each other creature has base power and toughness 1/1 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Hissing Miasma | silent | Whenever a creature attacks you, its controller loses 1 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Ink-Treader Nephilim | silent | Whenever a player casts an instant or sorcery spell, if that spell targets only this creature, copy the spell for each other creature that spell could target. E | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Izzet Guildmage | silent | {2}{U}: Copy target instant spell you control with mana value 2 or less. You may choose new targets for the copy. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Living Inferno | silent | {T}: This creature deals damage equal to its power divided as you choose among any number of target creatures. Each of those creatures deals damage equal to its | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -51,7 +48,6 @@
 | Nivix, Aerie of the Firemind | silent | {2}{U}{R}, {T}: Exile the top card of your library. Until your next turn, you may cast it if it's an instant or sorcery spell. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Orzhov Euthanist | silent | Haunt | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Orzhov Pontiff | silent | Haunt | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Poisonbelly Ogre | silent | Whenever another creature enters, its controller loses 1 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Primeval Light | silent | Destroy all enchantments target player controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Quicken | silent | The next sorcery spell you cast this turn can be cast as though it had flash. (It can be cast any time you could cast an instant.) Draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Rabble-Rouser | silent | {R}, {T}: Attacking creatures get +X/+0 until end of turn, where X is this creature's power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -120,6 +116,7 @@
 | Petrahydrox | handled | When this creature becomes the target of a spell or ability, return this creature to its owner's hand. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Petrified Wood-Kin | handled | This spell can't be countered. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Pillory of the Sleepless | handled | Enchanted creature can't attack or block. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Poisonbelly Ogre | handled | Whenever another creature enters, its controller loses 1 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Pyromatics | handled | Replicate {1}{R} (When you cast this spell, copy it for each time you paid its replicate cost. You may choose new targets for the copies.) Pyromatics deals 1 da | the engine reads this text and performs it | Y/-/- | not_tested |
 | Repeal | handled | Return target nonland permanent with mana value X to its owner's hand. Draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Restless Bones | handled | {3}{B}, {T}: Target creature gains swampwalk until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -157,9 +154,11 @@
 ## Fully supported
 
 <details>
-<summary>22 cards</summary>
+<summary>25 cards</summary>
 
+- Agent of Masks
 - Battering Wurm
+- Bioplasm
 - Burning-Tree Shaman
 - Cerebral Vortex
 - Crash Landing
@@ -168,6 +167,7 @@
 - Gigadrowse
 - Godless Shrine
 - Gruul Turf
+- Hissing Miasma
 - Leyline of Lifeforce
 - Leyline of Singularity
 - Leyline of the Void
@@ -190,7 +190,6 @@
 |---|---|---|---|
 | haunt | 6 | Absolver Thrull, Belfry Spirit, Blind Hunter, Exhumer Thrull, Orzhov Euthanist | gpt |
 | as long as equipped creature is tapped, tapped creatures you control get +N/+N. | 1 | Sword of the Paruns | gpt |
-| at the beginning of your upkeep, each opponent loses N life. you gain life equal to the life lost ~. | 1 | Agent of Masks | gpt |
 | choose a card name. until your next turn, spells with the chosen name can"..."t be played. draw a card. | 1 | Conjurer's Ban | gpt |
 | create N N/N white pegasus creature tokens with flying, where N is your life total. | 1 | Storm Herd | gpt |
 | creatures you control that are enchanted get +N/+N and have first strike. | 1 | Fencer's Magemark | gpt |
@@ -207,13 +206,10 @@
 | when ~ enters, exchange control of target land you control and target land an opponent controls. | 1 | Vedalken Plotter | gpt |
 | when ~ enters, if {M} was spent to cast it, target player skips their next combat phase. | 1 | Revenant Patriarch | gpt |
 | when ~ enters, target opponent gains control of all other permanents you control. | 1 | Sky Swallower | gpt |
-| whenever a creature attacks you, its controller loses N life. | 1 | Hissing Miasma | gpt |
 | whenever a creature you control that's enchanted becomes blocked, it gets +N/+N until end of turn for each creature blocking it. | 1 | Beastmaster's Magemark | gpt |
 | whenever a player casts an instant or sorcery spell, if that spell targets only ~, copy the spell for each other creature that spell could target. each copy tar | 1 | Ink-Treader Nephilim | gpt |
 | whenever an opponent casts a spell, that player sacrifices a permanent of their choice unless they pay {M}. | 1 | Spelltithe Enforcer | gpt |
-| whenever another creature enters, its controller loses N life. | 1 | Poisonbelly Ogre | gpt |
 | whenever ~ attacks, each other attacking creature gains fear until end of turn. | 1 | Smogsteed Rider | gpt |
-| whenever ~ attacks, exile the top card of your library. if it"..."s power and y is its toughness. | 1 | Bioplasm | gpt |
 | whenever ~ blocks a creature, you may return ~ to its owner's hand. if you do, you may put a creature card from your hand onto the battlefield blocking that cre | 1 | Aetherplasm | gpt |
 | whenever ~ deals damage, you gain that much life. | 1 | Mourning Thrull | gpt |
 | whenever ~ is dealt combat damage, you gain that much life and attacking player loses that much life. | 1 | Souls of the Faultless | gpt |

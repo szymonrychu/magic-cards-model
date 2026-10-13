@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 45 | 17.4% |
+| Tested | 47 | 18.1% |
 | Works (untested) | 136 | 52.5% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 78 | 30.1% |
+| Not working | 76 | 29.3% |
 
 ## Cards needing work
 
@@ -60,7 +60,6 @@
 | Overzealous Muscle | silent | Whenever you commit a crime during your turn, this creature gains indestructible until end of turn. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
 | Patient Naturalist | silent | When this creature enters, mill three cards. Put a land card from among the milled cards into your hand. If you can't, create a Treasure token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Pitiless Carnage | silent | Sacrifice any number of permanents you control, then draw that many cards. Plot {1}{B}{B} (You may pay {1}{B}{B} and exile this card from your hand. Cast it as  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Railway Brawler | silent | Whenever another creature you control enters, put X +1/+1 counters on it, where X is its power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Rakdos Joins Up | silent | When Rakdos Joins Up enters, return target creature card from your graveyard to the battlefield with two additional +1/+1 counters on it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Rakdos, the Muscle | silent | Whenever you sacrifice another creature, exile cards equal to its mana value from the top of target player's library. Until your next end step, you may play tho | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Rambling Possum | silent | Whenever this creature attacks while saddled, it gets +1/+2 until end of turn. Then you may return any number of creatures that saddled it this turn to their ow | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -85,7 +84,6 @@
 | Getaway Glamer | notice | Spree (Choose one or more additional costs.) + {1} — Exile target nontoken creature. Return it to the battlefield under its owner's control at the beginning of  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Geyser Drake | notice | During turns other than yours, spells you cast cost {1} less to cast. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Ghired, Mirror of the Wilds | notice | Nontoken creatures you control have "{T}: Create a token that's a copy of target token you control that entered this turn." | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Gold Rush | notice | Create a Treasure token. Until end of turn, up to one target creature gets +2/+2 for each Treasure you control. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Great Train Heist | notice | Spree (Choose one or more additional costs.) + {2}{R} — Untap all creatures you control. If it's your combat phase, there is an additional combat phase after th | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Kaervek, the Punisher | notice | Whenever you commit a crime, exile up to one target black card from your graveyard and copy it. You may cast the copy. If you do, you lose 2 life. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Map the Frontier | notice | Search your library for up to two basic land cards and/or Desert cards, put them onto the battlefield tapped, then shuffle. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
@@ -244,7 +242,7 @@
 ## Fully supported
 
 <details>
-<summary>45 cards</summary>
+<summary>47 cards</summary>
 
 - Armored Armadillo
 - Betrayal at the Vault
@@ -259,6 +257,7 @@
 - Freestrider Commando
 - Giant Beaver
 - Gisa, the Hellraiser
+- Gold Rush
 - Goldvein Hydra
 - Hell to Pay
 - High Noon
@@ -279,6 +278,7 @@
 - Omenport Vigilante
 - Outcaster Greenblade
 - Prairie Dog
+- Railway Brawler
 - Satoru, the Infiltrator
 - Servant of the Stinger
 - Sheriff of Safe Passage
@@ -299,7 +299,6 @@
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
 | as long as you control a creature with power N or greater, ~ can attack as though it didn't have defender. | 1 | Bristlepack Sentry | otj |
-| create a treasure token. until end of turn, up to one target creature gets +N/+N for each treasure you control. | 1 | Gold Rush | otj |
 | creatures you control but don't own are mercenaries in addition to their other types. | 1 | Laughing Jasper Flint | otj |
 | during turns other than yours, spells you cast cost {M} less to cast. | 1 | Geyser Drake | otj |
 | during your turn, outlaws you control have first strike. | 1 | At Knifepoint | otj |
@@ -341,7 +340,6 @@
 | whenever a player casts a noncreature spell, ~ deals damage to that player equal to the number of noncreature spells they've cast ~. | 1 | Magebane Lizard | otj |
 | whenever a zombie you control enters, put a +N/+N counter on it for each other zombie that entered the battlefield under your control ~. | 1 | Geralf, the Fleshwright | otj |
 | whenever an aura you control becomes attached to a nonland permanent an opponent controls with mana value less than or equal to that aura's mana value, gain con | 1 | Eriette, the Beguiler | otj |
-| whenever another creature you control enters, put N +N/+N counters on it, where N is its power. | 1 | Railway Brawler | otj |
 | whenever bruse tarl enters or attacks, exile the top card of your library. if it's a land card, create a N/N white ox creature token. otherwise, you may cast it | 1 | Bruse Tarl, Roving Rancher | otj |
 | whenever calamity attacks while saddled, choose a nonlegendary creature that saddled it ~ and create a tapped and attacking token that's a copy of it. sacrifice | 1 | Calamity, Galloping Inferno | otj |
 | whenever equipped creature deals combat damage to a player, look at that many cards from the top of your library. you may exile a nonland card from among them.  | 1 | The Key to the Vault | otj |

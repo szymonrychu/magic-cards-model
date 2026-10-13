@@ -17,21 +17,19 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 52 | 21.3% |
-| Works (untested) | 124 | 50.8% |
+| Tested | 56 | 23.0% |
+| Works (untested) | 125 | 51.2% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 68 | 27.9% |
+| Not working | 63 | 25.8% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
 | Academy Loremaster | silent | At the beginning of each player's draw step, that player may draw an additional card. If they do, spells they cast this turn cost {2} more to cast. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Blight Pile | silent | {2}{B}, {T}: Each opponent loses X life, where X is the number of creatures with defender you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Bortuk Bonerattle | silent | Domain — When Bortuk Bonerattle enters, if you cast it, choose target creature card in your graveyard. Return that card to the battlefield if its mana value is  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Braids's Frightful Return | silent | III — Target opponent may sacrifice a nonland, nontoken permanent of their choice. If they don't, they lose 2 life and you draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Chaotic Transformation | silent | Exile up to one target artifact, up to one target creature, up to one target enchantment, up to one target planeswalker, and/or up to one target land. For each  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Coral Colony | silent | {1}{U}, {T}: Target player mills X cards, where X is the number of creatures you control with defender. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Cut Down | silent | Destroy target creature with total power and toughness 5 or less. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Danitha, Benalia's Hope | silent | When Danitha enters, you may put an Aura or Equipment card from your hand or graveyard onto the battlefield attached to Danitha. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Drag to the Bottom | silent | Domain — Each creature gets -X/-X until end of turn, where X is 1 plus the number of basic land types among lands you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -39,7 +37,6 @@
 | Founding the Third Path | silent | I — You may cast an instant or sorcery spell with mana value 1 or 2 from your hand without paying its mana cost. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Inscribed Tablet | silent | {1}, {T}, Sacrifice this artifact: Reveal the top five cards of your library. Put a land card from among them into your hand and the rest on the bottom of your  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Jaya, Fiery Negotiator | silent | −2: Choose target creature an opponent controls. Whenever you attack this turn, Jaya deals damage equal to the number of attacking creatures to that creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Jhoira, Ageless Innovator | silent | {T}: Put two ingenuity counters on Jhoira, then you may put an artifact card with mana value X or less from your hand onto the battlefield, where X is the numbe | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Join Forces | silent | Untap up to two target creatures. They each get +2/+2 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Karn, Living Legacy | silent | −1: Pay any amount of mana. Look at that many cards from the top of your library, then put one of those cards into your hand and the rest on the bottom of your  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Keldon Flamesage | silent | Whenever this creature attacks, look at the top X cards of your library, where X is this creature's power. You may exile an instant or sorcery card with mana va | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -49,7 +46,6 @@
 | Nael, Avizoa Aeronaut | silent | Domain — Whenever Nael deals combat damage to a player, look at the top X cards of your library, where X is the number of basic land types among lands you contr | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Phoenix Chick | silent | Whenever you attack with three or more creatures, you may pay {R}{R}. If you do, return this card from your graveyard to the battlefield tapped and attacking wi | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Protect the Negotiators | silent | Kicker {W} (You may pay an additional {W} as you cast this spell.) If this spell was kicked, create a 1/1 white Soldier creature token. Counter target spell unl | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Quirion Beastcaller | silent | When this creature dies, distribute X +1/+1 counters among any number of target creatures you control, where X is the number of +1/+1 counters on this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ratadrabik of Urborg | silent | Whenever another legendary creature you control dies, create a token that's a copy of that creature, except it's not legendary and it's a 2/2 black Zombie in ad | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Rulik Mons, Warren Chief | silent | Whenever Rulik Mons attacks, look at the top card of your library. If it's a land card, you may put it onto the battlefield tapped. If you didn't put a card ont | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Rundvelt Hordemaster | silent | Whenever this creature or another Goblin you control dies, exile the top card of your library. If it's a Goblin creature card, you may cast that card until the  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -61,12 +57,11 @@
 | Sphinx of Clear Skies | silent | Domain — Whenever this creature deals combat damage to a player, reveal the top X cards of your library, where X is the number of basic land types among lands y | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Stall for Time | silent | Kicker {1}{U} (You may pay an additional {1}{U} as you cast this spell.) Tap up to two target creatures. If this spell was kicked, put a stun counter on each of | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Stronghold Arena | silent | When this enchantment enters, you gain 3 life for each time it was kicked. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Sunbathing Rootwalla | silent | Domain — {3}{G}: Until end of turn, this creature gets +1/+1 for each basic land type among lands you control. Activate only once each turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Temporary Lockdown | silent | When this enchantment enters, exile each nonland permanent with mana value 2 or less until this enchantment leaves the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Territorial Maro | silent | Domain — Territorial Maro's power and toughness are each equal to twice the number of basic land types among lands you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | The Cruelty of Gix | silent | Read Ahead | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | The Elder Dragon War | silent | Read Ahead | no machine in the engine executes this keyword | Y/Y/- | not_working |
-| The Phasing of Zhalfir | silent | III — Destroy all creatures. For each creature destroyed this way, its controller creates a 2/2 black Phyrexian creature token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
+| The Phasing of Zhalfir | silent | Read Ahead | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | The Weatherseed Treaty | silent | Read Ahead | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | The World Spell | silent | III — Put up to two non-Saga permanent cards from your hand onto the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Threats Undetected | silent | Search your library for up to four creature cards with different powers and reveal them. An opponent chooses two of those cards. Shuffle the chosen cards into y | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -150,6 +145,7 @@
 | Idyllic Beachfront | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Impede Momentum | handled | Tap target creature and put three stun counters on it. (If a permanent with a stun counter would become untapped, remove one from it instead.) Scry 1. (Look at  | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Jaya's Firenado | handled | Jaya's Firenado deals 5 damage to target creature or planeswalker. Scry 1. (Look at the top card of your library. You may put that card on the bottom.) | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Jhoira, Ageless Innovator | handled | {T}: Put two ingenuity counters on Jhoira, then you may put an artifact card with mana value X or less from your hand onto the battlefield, where X is the numbe | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Jodah's Codex | handled | Domain — {5}, {T}: Draw a card. This ability costs {1} less to activate for each basic land type among lands you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Joint Exploration | handled | Kicker {G} (You may pay an additional {G} as you cast this spell.) Scry 2, then draw a card. If this spell was kicked, you may put a land card from your hand on | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Juniper Order Rootweaver | handled | When this creature enters, if it was kicked, put a +1/+1 counter on target creature you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -194,6 +190,7 @@
 | Splatter Goblin | handled | When this creature dies, target creature an opponent controls gets -1/-1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Sprouting Goblin | handled | When this creature enters, if it was kicked, search your library for a land card with a basic land type, reveal it, put it into your hand, then shuffle. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Strength of the Coalition | handled | Kicker {2}{W} (You may pay an additional {2}{W} as you cast this spell.) Target creature you control gets +2/+2 until end of turn. If this spell was kicked, put | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Sunbathing Rootwalla | handled | Domain — {3}{G}: Until end of turn, this creature gets +1/+1 for each basic land type among lands you control. Activate only once each turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Sunlit Marsh | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Take Up the Shield | handled | Put a +1/+1 counter on target creature. It gains lifelink and indestructible until end of turn. (Damage and effects that say "destroy" don't destroy it.) | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Talas Lookout | handled | When this creature dies, look at the top two cards of your library. Put one of them into your hand and the other into your graveyard. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -212,7 +209,6 @@
 | Vineshaper Prodigy | handled | When this creature enters, if it was kicked, look at the top three cards of your library. Put one of them into your hand and the rest on the bottom of your libr | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Vodalian Hexcatcher | handled | Other Merfolk you control get +1/+1. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Volshe Tideturner | handled |  |  | Y/Y/- | not_tested |
-| Wingmantle Chaplain | handled | When this creature enters, create a 1/1 white Bird creature token with flying for each creature with defender you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Wooded Ridgeline | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Writhing Necromass | handled | This spell costs {1} less to cast for each creature card in your graveyard. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Yavimaya Iconoclast | handled | When this creature enters, if it was kicked, it gets +1/+1 and gains haste until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -222,7 +218,7 @@
 ## Fully supported
 
 <details>
-<summary>52 cards</summary>
+<summary>56 cards</summary>
 
 - Aggressive Sabotage
 - Ajani, Sleeper Agent
@@ -231,7 +227,9 @@
 - Argivian Cavalier
 - Astor, Bearer of Blades
 - Baird, Argivian Recruiter
+- Blight Pile
 - Colossal Growth
+- Coral Colony
 - Cosmic Epiphany
 - Cult Conscript
 - Defiler of Dreams
@@ -255,6 +253,7 @@
 - Nishoba Brawler
 - Pixie Illusionist
 - Prayer of Binding
+- Quirion Beastcaller
 - Raff, Weatherlight Stalwart
 - Rith, Liberated Primeval
 - Rivaz of the Claw
@@ -276,6 +275,7 @@
 - Vodalian Mindsinger
 - Vohar, Vodalian Desecrator
 - Warhost's Frenzy
+- Wingmantle Chaplain
 
 </details>
 
@@ -283,15 +283,14 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| Domain | 11 | Bortuk Bonerattle, Drag to the Bottom, Llanowar Greenwidow, Nael, Avizoa Aeronaut, Shadow Prophecy | dmu |
-| read ahead | 4 | Love Song of Night and Day, The Cruelty of Gix, The Elder Dragon War, The Weatherseed Treaty | dmu |
+| Domain | 10 | Bortuk Bonerattle, Drag to the Bottom, Llanowar Greenwidow, Nael, Avizoa Aeronaut, Shadow Prophecy | dmu |
+| read ahead | 5 | Love Song of Night and Day, The Cruelty of Gix, The Elder Dragon War, The Phasing of Zhalfir, The Weatherseed Treaty | dmu |
 | Choose one | 1 | Twinferno | dmu |
 | as long as ~ entered ~, creatures you control have haste. | 1 | Keldon Strike Team | dmu |
 | at the beginning of each player's draw step, that player may draw an additional card. if they do, spells they cast ~ cost {M} more to cast. | 1 | Academy Loremaster | dmu |
 | at the beginning of your end step, choose one that hasn"..."kanar deals N damage to up to one other target creature or planeswalker. • exile sol"..."s control. | 1 | Sol'Kanar the Tainted | dmu |
 | at the beginning of your end step, you may pay {M}. if you do, draw N cards. N can't be greater than the amount of life you gained ~. | 1 | Shanna, Purifying Blade | dmu |
 | at the beginning of your end step, you may sacrifice an artifact, creature, enchantment, land, or planeswalker. if you do, each opponent may sacrifice a permane | 1 | Braids, Arisen Nightmare | dmu |
-| destroy all creatures. for each creature destroyed ~, its controller creates a N/N black phyrexian creature token. | 1 | The Phasing of Zhalfir | dmu |
 | destroy target creature with total power and toughness N or less. | 1 | Cut Down | dmu |
 | exile up to one target artifact, up to one target creature, up to one target enchantment, up to one target planeswalker, and/or up to one target land. for each  | 1 | Chaotic Transformation | dmu |
 | kicker {M} (you may pay an additional {M} as you cast ~.) if ~ was kicked, create a N/N white soldier creature token. counter target spell unless its controller | 1 | Protect the Negotiators | dmu |
@@ -310,7 +309,6 @@
 | untap up to two target creatures. they each get +N/+N until end of turn. | 1 | Join Forces | dmu |
 | up to one target artifact you control becomes an artifact creature with base power and toughness N/N until end of turn. | 1 | Yotia Declares War | dmu |
 | when danitha enters, you may put an aura or equipment card from your hand or graveyard onto the battlefield attached to danitha. | 1 | Danitha, Benalia's Hope | dmu |
-| when ~ dies, distribute N +N/+N counters among any number of target creatures you control, where N is the number of +N/+N counters on ~. | 1 | Quirion Beastcaller | dmu |
 | when ~ enters, choose up to one — • counter target spell, activated ability, or triggered ability. its controller draws a card. • destroy another target creatur | 1 | Ertai Resurrected | dmu |
 | when ~ enters, exile each nonland permanent with mana value N or less until ~ leaves the battlefield. | 1 | Temporary Lockdown | dmu |
 | when ~ enters, you gain N life for each time it was kicked. | 1 | Stronghold Arena | dmu |
@@ -329,10 +327,7 @@
 | you may cast an instant or sorcery spell with mana value N or N from your hand without paying its mana cost. | 1 | Founding the Third Path | dmu |
 | you may cast ~ as though it had flash if N is N or less. draw N cards. | 1 | Silver Scrutiny | dmu |
 | {M}, {M}, sacrifice ~: reveal the top five cards of your library. put a land card from among them into your hand and the rest on the bottom of your library in a | 1 | Inscribed Tablet | dmu |
-| {M}: put two ingenuity counters on jhoira, then you may put an artifact card with mana value N or less from your hand onto the battlefield, where N is the numbe | 1 | Jhoira, Ageless Innovator | dmu |
 | {M}: until end of turn, target creature with defender gains haste, can attack as though it didn't have defender, and assigns combat damage equal to its toughnes | 1 | Walking Bulwark | dmu |
-| {M}{M}, {M}: each opponent loses N life, where N is the number of creatures with defender you control. | 1 | Blight Pile | dmu |
-| {M}{M}, {M}: target player mills N cards, where N is the number of creatures you control with defender. | 1 | Coral Colony | dmu |
 | {M}{M}: if ~ is a cleric, put a deathtouch counter on it and it becomes a phyrexian human cleric with base power and toughness N/N. | 1 | Evolved Sleeper | dmu |
 | {M}{M}: target non-aura enchantment you control becomes a creature in addition to its other types and has base power and base toughness each equal to its mana v | 1 | Zur, Eternal Schemer | dmu |
 | {M}{M}{M}: put a +N/+N counter on king darien and create a N/N white soldier creature token. | 1 | King Darien XLVIII | dmu |

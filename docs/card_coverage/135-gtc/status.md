@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 31 | 13.4% |
-| Works (untested) | 128 | 55.2% |
+| Tested | 38 | 16.4% |
+| Works (untested) | 130 | 56.0% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 73 | 31.5% |
+| Not working | 64 | 27.6% |
 
 ## Cards needing work
 
@@ -36,7 +36,6 @@
 | Cartel Aristocrat | silent | Sacrifice another creature: This creature gains protection from the color of your choice until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Clinging Anemones | silent | Evolve | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Cloudfin Raptor | silent | Evolve | no machine in the engine executes this keyword | Y/Y/- | not_working |
-| Coerced Confession | silent | Target player mills four cards. You draw a card for each creature card put into their graveyard this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Consuming Aberration | silent | Whenever you cast a spell, each opponent reveals cards from the top of their library until they reveal a land card, then puts those cards into their graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Crocanura | silent | Evolve | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Diluvian Primordial | silent | When this creature enters, for each opponent, you may cast up to one target instant or sorcery card from that player's graveyard without paying its mana cost. I | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -49,7 +48,7 @@
 | Experiment One | silent | Remove two +1/+1 counters from this creature: Regenerate it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Fathom Mage | silent | Evolve | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Frontline Medic | silent | Sacrifice this creature: Counter target spell with {X} in its mana cost unless its controller pays {3}. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Gideon, Champion of Justice | silent | +1: Put a loyalty counter on Gideon for each creature target opponent controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
+| Gideon, Champion of Justice | silent | 0: Until end of turn, Gideon becomes a Human Soldier creature with power and toughness each equal to the number of loyalty counters on him and gains indestructi | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Gyre Sage | silent | Evolve | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Hands of Binding | silent | Cipher | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Hellkite Tyrant | silent | Whenever this creature deals combat damage to a player, gain control of all artifacts that player controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -62,11 +61,7 @@
 | Mental Vapors | silent | Cipher | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Midnight Recovery | silent | Cipher | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Mind Grind | silent | Each opponent reveals cards from the top of their library until they reveal X land cards, then puts all cards revealed this way into their graveyard. X can't be | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Mystic Genesis | silent | Counter target spell. Create an X/X green Ooze creature token, where X is that spell's mana value. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Ooze Flux | silent | {1}{G}, Remove one or more +1/+1 counters from among creatures you control: Create an X/X green Ooze creature token, where X is the number of +1/+1 counters rem | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Paranoid Delusions | silent | Cipher | no machine in the engine executes this keyword | Y/Y/- | not_working |
-| Predator's Rapport | silent | Choose target creature you control. You gain life equal to that creature's power plus its toughness. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Psychic Strike | silent | Counter target spell. Its controller mills two cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Realmwright | silent | Lands you control are the chosen type in addition to their other types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Rubblebelt Raiders | silent | Whenever this creature attacks, put a +1/+1 counter on it for each attacking creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sepulchral Primordial | silent | When this creature enters, for each opponent, you may put up to one target creature card from that player's graveyard onto the battlefield under your control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -77,7 +72,6 @@
 | Simic Manipulator | silent | {T}, Remove one or more +1/+1 counters from this creature: Gain control of target creature with power less than or equal to the number of +1/+1 counters removed | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Slate Street Ruffian | silent | Whenever this creature becomes blocked, defending player discards a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Soul Ransom | silent | Discard two cards: This Aura's controller sacrifices it, then draws two cards. Only your opponents may activate this ability. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Spell Rupture | silent | Counter target spell unless its controller pays {X}, where X is the greatest power among creatures you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Stolen Identity | silent | Cipher | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Thrull Parasite | silent | {T}, Pay 2 life: Remove a counter from target nonland permanent. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Undercity Informer | silent | {1}, Sacrifice a creature: Target player reveals cards from the top of their library until they reveal a land card, then puts those cards into their graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -86,18 +80,15 @@
 | Vizkopa Confessor | silent | When this creature enters, pay any amount of life. Target opponent reveals that many cards from their hand. You choose one of them and exile it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Vizkopa Guildmage | silent | {1}{W}{B}: Whenever you gain life this turn, each opponent loses that much life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Voidwalk | silent | Cipher | no machine in the engine executes this keyword | Y/Y/- | not_working |
-| Whispering Madness | silent | Each player discards their hand, then draws cards equal to the greatest number of cards a player discarded this way. Cipher (Then you may exile this spell card  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
+| Whispering Madness | silent | Cipher | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Zameck Guildmage | silent | {G}{U}: This turn, each creature you control enters with an additional +1/+1 counter on it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Devour Flesh | notice | Target player sacrifices a creature of their choice, then gains life equal to that creature's toughness. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Dimir Charm | notice | Choose one — • Counter target sorcery spell. • Destroy target creature with power 2 or less. • Look at the top three cards of target player's library. Put one b | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Grisly Spectacle | notice | Destroy target nonartifact creature. Its controller mills cards equal to that creature's power. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Gruul Charm | notice | Choose one — • Creatures without flying can't block this turn. • Gain control of all permanents you own. • Gruul Charm deals 3 damage to each creature with flyi | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Hellraiser Goblin | notice | Creatures you control have haste and attack each combat if able. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Molten Primordial | notice | When this creature enters, for each opponent, gain control of up to one target creature that player controls until end of turn. Untap those creatures. They gain | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Obzedat, Ghost Council | notice | At the beginning of your end step, you may exile Obzedat. If you do, return it to the battlefield under its owner's control at the beginning of your next upkeep | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Orzhov Charm | notice | Choose one — • Return target creature you control and all Auras you control attached to it to their owner's hand. • Destroy target creature and you lose life eq | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Rapid Hybridization | notice | Destroy target creature. It can't be regenerated. That creature's controller creates a 3/3 green Frog Lizard creature token. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Sylvan Primordial | notice | When this creature enters, for each opponent, destroy target noncreature permanent that player controls. Search your library for up to X Forest cards, where X i | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Wight of Precinct Six | notice | This creature gets +1/+1 for each creature card in your opponents' graveyards. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Alpha Authority | handled | Enchanted creature has hexproof and can't be blocked by more than one creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Angelic Edict | handled | Exile target creature or enchantment. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -183,6 +174,7 @@
 | Orzhov Keyrune | handled | {W}{B}: This artifact becomes a 1/4 white and black Thrull artifact creature with lifelink until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Pit Fight | handled | Target creature you control fights another target creature. (Each deals damage equal to its power to the other.) | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Primal Visitation | handled | Enchanted creature gets +3/+3 and has haste. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Psychic Strike | handled | Counter target spell. Its controller mills two cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Purge the Profane | handled | Target opponent discards two cards and you gain 2 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Razortip Whip | handled | {1}, {T}: This artifact deals 1 damage to target opponent or planeswalker. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Riot Gear | handled | Equipped creature gets +1/+2. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -207,6 +199,7 @@
 | Slaughterhorn | handled | Bloodrush — {G}, Discard this card: Target attacking creature gets +3/+2 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Smog Elemental | handled | Creatures with flying your opponents control get -1/-1. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Spark Trooper | handled | At the beginning of the end step, sacrifice this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Spell Rupture | handled | Counter target spell unless its controller pays {X}, where X is the greatest power among creatures you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Sunhome Guildmage | handled | {1}{R}{W}: Creatures you control get +1/+0 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Syndicate Enforcer | handled | Extort | machines/keywords.py | Y/Y/- | not_tested |
 | Thespian's Stage | handled | {2}, {T}: This land becomes a copy of target land, except it has this ability. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -231,7 +224,7 @@
 ## Fully supported
 
 <details>
-<summary>31 cards</summary>
+<summary>38 cards</summary>
 
 - Aerial Maneuver
 - Agoraphobia
@@ -241,11 +234,14 @@
 - Biovisionary
 - Boros Guildgate
 - Boros Reckoner
+- Coerced Confession
 - Death's Approach
 - Deathcult Rogue
+- Devour Flesh
 - Dimir Guildgate
 - Executioner's Swing
 - Glaring Spotlight
+- Grisly Spectacle
 - Gruul Guildgate
 - Guardian of the Gateless
 - Hindervines
@@ -253,8 +249,11 @@
 - Homing Lightning
 - Luminate Primordial
 - Mark for Death
+- Mystic Genesis
 - One Thousand Lashes
+- Ooze Flux
 - Orzhov Guildgate
+- Predator's Rapport
 - Prime Speaker Zegana
 - Serene Remembrance
 - Shielded Passage
@@ -262,6 +261,7 @@
 - Skullcrack
 - Spire Tracer
 - Structural Collapse
+- Sylvan Primordial
 - Syndic of Tithes
 - Way of the Thief
 
@@ -271,27 +271,21 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| cipher | 9 | Call of the Nightwing, Hands of Binding, Last Thoughts, Mental Vapors, Midnight Recovery | gtc |
+| cipher | 10 | Call of the Nightwing, Hands of Binding, Last Thoughts, Mental Vapors, Midnight Recovery | gtc |
 | evolve | 9 | Adaptive Snapjaw, Clinging Anemones, Cloudfin Raptor, Crocanura, Elusive Krasis | gtc |
 | Choose one | 3 | Dimir Charm, Gruul Charm, Orzhov Charm | gtc |
 | +N: look at the top card of your library. if it's a creature card, you may reveal it and put it into your hand. | 1 | Domri Rade | gtc |
-| +N: put a loyalty counter on gideon for each creature target opponent controls. | 1 | Gideon, Champion of Justice | gtc |
+| N: until end of turn, gideon becomes a human soldier creature with power and toughness each equal to the number of loyalty counters on him and gains indestructi | 1 | Gideon, Champion of Justice | gtc |
 | at the beginning of each combat, choose first strike, vigilance, or lifelink. creatures you control gain that ability until end of turn. | 1 | Angelic Skirmisher | gtc |
 | at the beginning of your end step, you may exile obzedat. if you do, return it to the battlefield under its owner's control at the beginning of your next upkeep | 1 | Obzedat, Ghost Council | gtc |
 | at the beginning of your upkeep, each player reveals the top card of their library, loses life equal to that card's mana value, then puts it into their hand. | 1 | Duskmantle Seer | gtc |
-| choose target creature you control. you gain life equal to that creature's power plus its toughness. | 1 | Predator's Rapport | gtc |
-| counter target spell unless its controller pays {M}, where N is the greatest power among creatures you control. | 1 | Spell Rupture | gtc |
-| counter target spell. create an N/N green ooze creature token, where N is that spell's mana value. | 1 | Mystic Genesis | gtc |
-| counter target spell. its controller mills two cards. | 1 | Psychic Strike | gtc |
 | creatures blocking or blocked by ~ have lifelink. | 1 | Alms Beast | gtc |
 | creatures you control have haste and attack each combat if able. | 1 | Hellraiser Goblin | gtc |
 | destroy target creature. it can"..."s controller creates a N/N green frog lizard creature token. | 1 | Rapid Hybridization | gtc |
-| destroy target nonartifact creature. its controller mills cards equal to that creature's power. | 1 | Grisly Spectacle | gtc |
 | discard two cards: ~ controller sacrifices it, then draws two cards. only your opponents may activate ~. | 1 | Soul Ransom | gtc |
 | draw cards equal to the number of cards in your library, then put a card from your hand on top of your library. you have no maximum hand size until your next tu | 1 | Enter the Infinite | gtc |
 | each opponent reveals cards from the top of their library until they reveal N land cards, then puts all cards revealed ~ into their graveyard. N can't be N. | 1 | Mind Grind | gtc |
 | each other creature you control enters with a number of additional +N/+N counters on it equal to ~ power and as a mutant in addition to its other types. | 1 | Master Biomancer | gtc |
-| each player discards their hand, then draws cards equal to the greatest number of cards a player discarded ~. cipher (then you may exile ~ card encoded on a cre | 1 | Whispering Madness | gtc |
 | lands you control are the chosen type in addition to their other types. | 1 | Realmwright | gtc |
 | move any number of +N/+N counters from target creature onto another target creature with the same controller. | 1 | Bioshift | gtc |
 | remove two +N/+N counters from ~: regenerate it. | 1 | Experiment One | gtc |
@@ -301,9 +295,6 @@
 | search your library for three creature cards and reveal them. if you reveal three cards with different names, choose one of them at random and put that card int | 1 | Signal the Clans | gtc |
 | shuffle your library, then reveal the top card. if it"..."s a land card, you may put it onto the battlefield and return ~ to its owner's hand. | 1 | Unexpected Results | gtc |
 | target player loses N life, discards a card, then sacrifices a permanent of their choice. cipher (then you may exile ~ card encoded on a creature you control. w | 1 | Undercity Plague | gtc |
-| target player mills four cards. you draw a card for each creature card put into their graveyard ~. | 1 | Coerced Confession | gtc |
-| target player sacrifices a creature of their choice, then gains life equal to that creature's toughness. | 1 | Devour Flesh | gtc |
-| when ~ enters, for each opponent, destroy target noncreature permanent that player controls. search your library for up to N forest cards, where N is the number | 1 | Sylvan Primordial | gtc |
 | when ~ enters, for each opponent, gain control of up to one target creature that player controls until end of turn. untap those creatures. they gain haste until | 1 | Molten Primordial | gtc |
 | when ~ enters, for each opponent, you may cast up to one target instant or sorcery card from that player's graveyard without paying its mana cost. if a spell ca | 1 | Diluvian Primordial | gtc |
 | when ~ enters, for each opponent, you may put up to one target creature card from that player's graveyard onto the battlefield under your control. | 1 | Sepulchral Primordial | gtc |
@@ -320,7 +311,6 @@
 | {M}, pay N life: remove a counter from target nonland permanent. | 1 | Thrull Parasite | gtc |
 | {M}, remove one or more +N/+N counters from ~: gain control of target creature with power less than or equal to the number of +N/+N counters removed ~. | 1 | Simic Manipulator | gtc |
 | {M}, sacrifice a creature: target player reveals cards from the top of their library until they reveal a land card, then puts those cards into their graveyard. | 1 | Undercity Informer | gtc |
-| {M}{M}, remove one or more +N/+N counters from among creatures you control: create an N/N green ooze creature token, where N is the number of +N/+N counters rem | 1 | Ooze Flux | gtc |
 | {M}{M}: ~ becomes a N/N blue and black horror artifact creature until end of turn and can't be blocked ~. | 1 | Dimir Keyrune | gtc |
 | {M}{M}: ~, each creature you control enters with an additional +N/+N counter on it. | 1 | Zameck Guildmage | gtc |
 | {M}{M}{M}: whenever a card is put into an opponent's graveyard from anywhere ~, that player loses N life. | 1 | Duskmantle Guildmage | gtc |

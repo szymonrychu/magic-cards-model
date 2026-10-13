@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 37 | 21.0% |
-| Works (untested) | 97 | 55.1% |
+| Tested | 40 | 22.7% |
+| Works (untested) | 95 | 54.0% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 42 | 23.9% |
+| Not working | 41 | 23.3% |
 
 ## Cards needing work
 
@@ -62,7 +62,6 @@
 | Yarok's Fenlurker | silent | When this creature enters, each opponent exiles a card from their hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Yarok's Wavecrasher | silent | When this creature enters, return another creature you control to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Elvish Reclaimer | notice | This creature gets +2/+2 as long as there are three or more land cards in your graveyard. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Growth Cycle | notice | Target creature gets +3/+3 until end of turn. It gets an additional +2/+2 until end of turn for each card named Growth Cycle in your graveyard. | unparsed remainder: It gets an additional +2/+2 until end of turn for each card named Growth Cycle in your graveyard. | Y/Y/- | not_working |
 | Legion's End | notice | Exile target creature an opponent controls with mana value 2 or less and all other creatures that player controls with the same name as that creature. Then that | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Masterful Replication | notice | Choose one — • Create two 3/3 colorless Golem artifact creature tokens. • Choose target artifact you control. Each other artifact you control becomes a copy of  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Thunderkin Awakener | notice | Whenever this creature attacks, choose target Elemental creature card in your graveyard with toughness less than this creature's toughness. Return that card to  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -106,7 +105,6 @@
 | Gargos, Vicious Watcher | handled | Hydra spells you cast cost {4} less to cast. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Gnarlback Rhino | handled | Whenever you cast a spell that targets this creature, draw a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Goblin Smuggler | handled | {T}: Another target creature with power 2 or less can't be blocked this turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Gorging Vulture | handled | When this creature enters, mill four cards. You gain 1 life for each creature card milled this way. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Gruesome Scourger | handled | When this creature enters, it deals damage to target opponent or planeswalker equal to the number of creatures you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Hanged Executioner | handled | When this creature enters, create a 1/1 white Spirit creature token with flying. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Hard Cover | handled | Enchanted creature gets +0/+2 and has "{T}: Draw a card, then discard a card." | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -160,7 +158,6 @@
 | Vengeful Warchief | handled | Whenever you lose life for the first time each turn, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Vivien's Crocodile | handled | This creature gets +1/+1 as long as you control a Vivien planeswalker. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Vivien, Nature's Avenger | handled | +1: Put three +1/+1 counters on up to one target creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Waterkin Shaman | handled | Whenever a creature you control with flying enters, this creature gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Winged Words | handled | This spell costs {1} less to cast if you control a creature with flying. Draw two cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Woodland Champion | handled | Whenever one or more tokens you control enter, put that many +1/+1 counters on this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Woodland Mystic | handled |  |  | Y/Y/- | not_tested |
@@ -169,7 +166,7 @@
 ## Fully supported
 
 <details>
-<summary>37 cards</summary>
+<summary>40 cards</summary>
 
 - Aether Gust
 - Agent of Treachery
@@ -189,6 +186,8 @@
 - Flame Sweep
 - Glint-Horn Buccaneer
 - Goblin Bird-Grabber
+- Gorging Vulture
+- Growth Cycle
 - Knight of the Ebon Legion
 - Leyline of Abundance
 - Lotus Field
@@ -206,6 +205,7 @@
 - Vilis, Broker of Blood
 - Vivien, Arkbow Ranger
 - Wakeroot Elemental
+- Waterkin Shaman
 - Wildfire Elemental
 - Wolfrider's Saddle
 
@@ -228,7 +228,6 @@
 | other multicolored creatures you control get +N/+N. | 1 | Rienne, Angel of Rebirth | m20 |
 | put target creature with power N or greater on the bottom of its owner's library. | 1 | Eternal Isolation | m20 |
 | return all nonland permanents to their owners' hands. if you return four or more nontoken permanents you control ~, you may put a permanent card from your hand  | 1 | Flood of Tears | m20 |
-| target creature gets +N/+N until end of turn. it gets an additional +N/+N until end of turn for each card named ~ in your graveyard. | 1 | Growth Cycle | m20 |
 | when you next cast an instant spell, cast a sorcery spell, or activate a loyalty ability ~, copy that spell or ability twice. you may choose new targets for the | 1 | Repeated Reverberation | m20 |
 | when ~ enters, choose one — • double the number of +N/+N counters on ~. • ~ fights target creature you don't control. | 1 | Voracious Hydra | m20 |
 | when ~ enters, each opponent exiles a card from their hand. | 1 | Yarok's Fenlurker | m20 |

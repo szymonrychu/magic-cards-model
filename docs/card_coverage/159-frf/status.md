@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 32 | 19.9% |
+| Tested | 34 | 21.1% |
 | Works (untested) | 82 | 50.9% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 47 | 29.2% |
+| Not working | 45 | 28.0% |
 
 ## Cards needing work
 
@@ -43,7 +43,6 @@
 | Fierce Invocation | silent | Manifest the top card of your library, then put two +1/+1 counters on it. (To manifest a card, put it onto the battlefield face down as a 2/2 creature. Turn it  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Formless Nurturing | silent | Manifest the top card of your library, then put a +1/+1 counter on it. (To manifest a card, put it onto the battlefield face down as a 2/2 creature. Turn it fac | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Friendly Fire | silent | Target creature's controller reveals a card at random from their hand. Friendly Fire deals damage to that creature and that player equal to the revealed card's  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Fruit of the First Tree | silent | When enchanted creature dies, you gain X life and draw X cards, where X is its toughness. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ghastly Conscription | silent | Exile all creature cards from target player's graveyard in a face-down pile, shuffle that pile, then manifest those cards. (To manifest a card, put it onto the  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Honor's Reward | silent | You gain 4 life. Bolster 2. (Choose a creature with the least toughness among creatures you control and put two +1/+1 counters on it.) | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Humble Defector | silent | {T}: Draw two cards. Target opponent gains control of this creature. Activate only during your turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -55,7 +54,6 @@
 | Rite of Undoing | silent | Delve (Each card you exile from your graveyard while casting this spell pays for {1}.) Return target nonland permanent you control and target nonland permanent  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sage's Reverie | silent | When this Aura enters, draw a card for each Aura you control that's attached to a creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sandsteppe Mastodon | silent | When this creature enters, bolster 5. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Scroll of the Masters | silent | {3}, {T}: Target creature you control gets +1/+1 until end of turn for each lore counter on this artifact. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Silumgar, the Drifting Death | silent | Whenever a Dragon you control attacks, creatures defending player controls get -1/-1 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Soulfire Grand Master | silent | Instant and sorcery spells you control have lifelink. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Soulflayer | silent | If a creature card with flying was exiled with this creature's delve ability, this creature has flying. The same is true for first strike, double strike, deatht | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -159,7 +157,7 @@
 ## Fully supported
 
 <details>
-<summary>32 cards</summary>
+<summary>34 cards</summary>
 
 - Ainok Guide
 - Arcbond
@@ -173,6 +171,7 @@
 - Flamerush Rider
 - Frontier Mastodon
 - Frontier Siege
+- Fruit of the First Tree
 - Grim Contest
 - Hewed Stone Retainers
 - Hungering Yeti
@@ -183,6 +182,7 @@
 - Monastery Siege
 - Outpost Siege
 - Palace Siege
+- Scroll of the Masters
 - Shifting Loyalties
 - Shockmaw Dragon
 - Temur Battle Rage
@@ -226,7 +226,6 @@
 | target creature"..."s mana value. | 1 | Friendly Fire | frf |
 | target opponent reveals their hand. you choose a nonland card from it. that player discards that card. if you control a warrior, that player loses N life. | 1 | Diplomacy of the Wastes | frf |
 | target player sacrifices an enchantment of their choice. bolster N. (choose a creature with the least toughness among creatures you control and put a +N/+N coun | 1 | Abzan Advantage | frf |
-| when enchanted creature dies, you gain N life and draw N cards, where N is its toughness. | 1 | Fruit of the First Tree | frf |
 | when ~ deals combat damage to a player, exile it and the top card of your library in a face-down pile, shuffle that pile, then manifest those cards. | 1 | Jeskai Infiltrator | frf |
 | when ~ dies, bolster N. | 1 | Abzan Skycaptain | frf |
 | when ~ enters, draw a card for each aura you control that's attached to a creature. | 1 | Sage's Reverie | frf |
@@ -237,7 +236,6 @@
 | whenever alesha attacks, you may pay {M}{M}. if you do, return target creature card with power N or less from your graveyard to the battlefield tapped and attac | 1 | Alesha, Who Smiles at Death | frf |
 | whenever ~ attacks, tap all creatures defending player controls. | 1 | Torrent Elemental | frf |
 | you gain N life. bolster N. (choose a creature with the least toughness among creatures you control and put two +N/+N counters on it.) | 1 | Honor's Reward | frf |
-| {M}, {M}: target creature you control gets +N/+N until end of turn for each lore counter on ~. | 1 | Scroll of the Masters | frf |
 | {M}: draw two cards. target opponent gains control of ~. activate only during your turn. | 1 | Humble Defector | frf |
 | {M}{M}: you may return another creature you control to its owner's hand. if you do, ~ gains indestructible until end of turn. | 1 | Temur Sabertooth | frf |
 | {M}{M}{M}: mill two cards, then return a nonland card of an opponent's choice from your graveyard to your hand. | 1 | Tasigur, the Golden Fang | frf |

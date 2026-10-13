@@ -17,17 +17,16 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 30 | 17.0% |
+| Tested | 32 | 18.2% |
 | Works (untested) | 118 | 67.0% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 28 | 15.9% |
+| Not working | 26 | 14.8% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
 | Deceiver of Form | silent | At the beginning of combat on your turn, reveal the top card of your library. If a creature card is revealed this way, you may have creatures you control other  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Dread Defiler | silent | {3}{C}, Exile a creature card from your graveyard: Target opponent loses life equal to the exiled card's power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Embodiment of Fury | silent | Landfall — Whenever a land you control enters, you may have target land you control become a 3/3 Elemental creature with haste until end of turn. It's still a l | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Embodiment of Insight | silent | Landfall — Whenever a land you control enters, you may have target land you control become a 3/3 Elemental creature with haste until end of turn. It's still a l | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | General Tazri | silent | {W}{U}{B}{R}{G}: Ally creatures you control get +X/+X until end of turn, where X is the number of colors among those creatures. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -38,7 +37,6 @@
 | Iona's Blessing | silent | Enchanted creature gets +2/+2, has vigilance, and can block an additional creature each combat. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Kozilek's Pathfinder | silent | {C}: Target creature can't block this creature this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Kozilek's Return | silent | Devoid (This card has no color.) Kozilek's Return deals 2 damage to each creature. Whenever you cast an Eldrazi creature spell with mana value 7 or greater, you | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Nissa, Voice of Zendikar | silent | −7: You gain X life and draw X cards, where X is the number of lands you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Reaver Drone | silent | At the beginning of your upkeep, you lose 1 life unless you control another colorless creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Remorseless Punishment | silent | Target opponent loses 5 life unless that player discards two cards or sacrifices a creature or planeswalker of their choice. Repeat this process once. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ruin in Their Wake | silent | Devoid (This card has no color.) Search your library for a basic land card and reveal it. You may put that card onto the battlefield tapped if you control a lan | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -176,11 +174,12 @@
 ## Fully supported
 
 <details>
-<summary>30 cards</summary>
+<summary>32 cards</summary>
 
 - Ayli, Eternal Pilgrim
 - Crumbling Vestige
 - Dazzling Reflection
+- Dread Defiler
 - Eldrazi Mimic
 - Eldrazi Obligator
 - Expedition Raptor
@@ -190,6 +189,7 @@
 - Matter Reshaper
 - Mirrorpool
 - Nissa's Judgment
+- Nissa, Voice of Zendikar
 - Oath of Gideon
 - Oath of Jace
 - Oath of Nissa
@@ -234,14 +234,12 @@
 | when ~ enters, return target creature an opponent controls to its owner"..."s owner can't cast spells with the same name as that creature until your next turn. | 1 | Reflector Mage | ogw |
 | when ~ enters, you may cast target instant or sorcery card with mana value N or less from your graveyard without paying its mana cost. if that spell would be pu | 1 | Goblin Dark-Dwellers | ogw |
 | {M}: target creature can't block ~ ~. | 1 | Kozilek's Pathfinder | ogw |
-| {M}{M}, exile a creature card from your graveyard: target opponent loses life equal to the exiled card's power. | 1 | Dread Defiler | ogw |
 | {M}{M}: each creature with toughness greater than its power can't block ~. | 1 | Immobilizer Eldrazi | ogw |
 | {M}{M}: target creature with a +N/+N counter on it gains flying and vigilance until end of turn. | 1 | Steppe Glider | ogw |
 | {M}{M}{M}{M}{M}: ally creatures you control get +N/+N until end of turn, where N is the number of colors among those creatures. | 1 | General Tazri | ogw |
 | ~ gets +N/+N for each land you control named wastes. | 1 | Walker of the Wastes | ogw |
 | ~ has first strike as long as it's attacking. | 1 | Kor Scythemaster | ogw |
 | ~ has haste as long as you control another colorless creature. | 1 | Eldrazi Aggressor | ogw |
-| −N: you gain N life and draw N cards, where N is the number of lands you control. | 1 | Nissa, Voice of Zendikar | ogw |
 
 ## Notes
 

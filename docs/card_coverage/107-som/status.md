@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 39 | 18.1% |
+| Tested | 41 | 19.1% |
 | Works (untested) | 136 | 63.3% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 40 | 18.6% |
+| Not working | 38 | 17.7% |
 
 ## Cards needing work
 
@@ -34,14 +34,12 @@
 | Copperhorn Scout | silent | Whenever this creature attacks, untap each other creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Elspeth Tirel | silent | −5: Destroy all other permanents except for lands and tokens. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Engulfing Slagwurm | silent | Whenever this creature blocks or becomes blocked by a creature, destroy that creature. You gain life equal to that creature's toughness. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Exsanguinate | silent | Each opponent loses X life. You gain life equal to the life lost this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Fulgent Distraction | silent | Choose two target creatures. Tap those creatures, then unattach all Equipment from them. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Genesis Wave | silent | Reveal the top X cards of your library. You may put any number of permanent cards with mana value X or less from among them onto the battlefield. Then put all c | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Geth, Lord of the Vault | silent | {X}{B}: Put target artifact or creature card with mana value X from an opponent's graveyard onto the battlefield tapped under your control. Then that player mil | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Glint Hawk | silent | When this creature enters, sacrifice it unless you return an artifact you control to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Glint Hawk Idol | silent | Whenever another artifact you control enters, you may have this artifact become a 2/2 Bird artifact creature with flying until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Grafted Exoskeleton | silent | Whenever this Equipment becomes unattached from a permanent, sacrifice that permanent. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
-| Grindclock | silent | {T}: Target player mills X cards, where X is the number of charge counters on this artifact. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Hoard-Smelter Dragon | silent | {3}{R}: Destroy target artifact. This creature gets +X/+0 until end of turn, where X is that artifact's mana value. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Kemba, Kha Regent | silent | At the beginning of your upkeep, create a 2/2 white Cat creature token for each Equipment attached to Kemba. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Liege of the Tangle | silent | Whenever this creature deals combat damage to a player, you may choose any number of target lands you control and put an awakening counter on each of them. Each | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -206,7 +204,7 @@
 ## Fully supported
 
 <details>
-<summary>39 cards</summary>
+<summary>41 cards</summary>
 
 - Arc Trail
 - Argent Sphinx
@@ -217,8 +215,10 @@
 - Darksteel Myr
 - Echo Circlet
 - Etched Champion
+- Exsanguinate
 - Ezuri, Renegade Leader
 - Galvanic Blast
+- Grindclock
 - Indomitable Archangel
 - Koth of the Hammer
 - Kuldotha Phoenix
@@ -261,7 +261,6 @@
 | choose a nonland card name. search target player's graveyard, hand, and library for any number of cards with that name and exile them. then that player shuffles | 1 | Memoricide | som |
 | choose two target creatures. tap those creatures, then unattach all equipment from them. | 1 | Fulgent Distraction | som |
 | counter target spell that targets a permanent you control. | 1 | Turn Aside | som |
-| each opponent loses N life. you gain life equal to the life lost ~. | 1 | Exsanguinate | som |
 | equipped creature gets +N/+N for each land on the battlefield with the same name as the exiled card. | 1 | Strata Scythe | som |
 | equipped creature gets +N/+N, has intimidate, and is a black zombie. | 1 | Nim Deathmantle | som |
 | reveal the top N cards of your library. you may put any number of permanent cards with mana value N or less from among them onto the battlefield. then put all c | 1 | Genesis Wave | som |
@@ -288,7 +287,6 @@
 | {M}, {M}: create a token that's a copy of the exiled card. N is the mana value of that card. | 1 | Prototype Portal | som |
 | {M}, {M}: proliferate twice. | 1 | Contagion Engine | som |
 | {M}, {M}: untap each other myr you control. | 1 | Myr Galvanizer | som |
-| {M}: target player mills N cards, where N is the number of charge counters on ~. | 1 | Grindclock | som |
 | {M}{M}: destroy target artifact. ~ gets +N/+N until end of turn, where N is that artifact's mana value. | 1 | Hoard-Smelter Dragon | som |
 | {M}{M}: put target artifact or creature card with mana value N from an opponent's graveyard onto the battlefield tapped under your control. then that player mil | 1 | Geth, Lord of the Vault | som |
 | ~ deals N damage to target creature. destroy all equipment attached to that creature. | 1 | Turn to Slag | som |

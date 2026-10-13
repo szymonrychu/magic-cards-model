@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 20 | 11.1% |
-| Works (untested) | 132 | 73.3% |
+| Tested | 22 | 12.2% |
+| Works (untested) | 134 | 74.4% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 28 | 15.6% |
+| Not working | 24 | 13.3% |
 
 ## Cards needing work
 
@@ -28,20 +28,16 @@
 |---|---|---|---|---|---|
 | Amulet of Safekeeping | silent | Whenever you become the target of a spell or ability an opponent controls, counter that spell or ability unless its controller pays {1}. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Apex of Power | silent | Exile the top seven cards of your library. Until end of turn, you may cast spells from among them. If this spell was cast from your hand, add ten mana of any on | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Arcades, the Strategist | silent | Each creature you control with defender assigns combat damage equal to its toughness rather than its power and can attack as though it didn't have defender. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
+| Arcades, the Strategist | silent | Whenever a creature you control with defender enters, draw a card. | this trigger's condition can never be satisfied - it never triggers | Y/Y/- | not_working |
 | Chromium, the Mutable | silent | Discard a card: Until end of turn, Chromium becomes a Human with base power and toughness 1/1, loses all abilities, and gains hexproof. It can't be blocked this | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Desecrated Tomb | silent | Whenever one or more creature cards leave your graveyard, create a 1/1 black Bat creature token with flying. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Detection Tower | silent | {1}, {T}: Until end of turn, your opponents and creatures your opponents control with hexproof can be the targets of spells and abilities you control as though  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Dryad Greenseeker | silent | {T}: Look at the top card of your library. If it's a land card, you may reveal it and put it into your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Dwindle | silent | When enchanted creature blocks, destroy it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Elvish Clancaller | silent | {4}{G}{G}, {T}: Search your library for a card named Elvish Clancaller, put it onto the battlefield, then shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Fraying Omnipotence | silent | Each player loses half their life, then discards half the cards in their hand, then sacrifices half the creatures they control of their choice. Round up each ti | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Infernal Reckoning | silent | Exile target colorless creature. You gain life equal to its power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Inferno Hellion | silent | At the beginning of each end step, if this creature attacked or blocked this turn, its owner shuffles it into their library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Liliana, the Necromancer | silent | −7: Destroy up to two target creatures. Put up to two creature cards from graveyards onto the battlefield under your control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Militia Bugler | silent | When this creature enters, look at the top four cards of your library. You may reveal a creature card with power 2 or less from among them and put it into your  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Novice Knight | silent | As long as this creature is enchanted or equipped, it can attack as though it didn't have defender. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Patient Rebuilding | silent | At the beginning of your upkeep, target opponent mills three cards, then you draw a card for each land card put into their graveyard this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sarkhan's Whelp | silent | Whenever you activate an ability of a Sarkhan planeswalker, this creature deals 1 damage to any target. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Sarkhan, Dragonsoul | silent | +2: Sarkhan deals 1 damage to each opponent and each creature your opponents control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sigiled Sword of Valeron | silent | Whenever equipped creature attacks, create a 2/2 white Knight creature token with vigilance that's attacking. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -88,6 +84,8 @@
 | Dragon's Hoard | handled | Whenever a Dragon you control enters, put a gold counter on this artifact. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Druid of Horns | handled | Whenever you cast an Aura spell that targets this creature, create a 3/3 green Beast creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Dwarven Priest | handled | When this creature enters, you gain 1 life for each creature you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Dwindle | handled | Enchanted creature gets -6/-0. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Elvish Clancaller | handled | Other Elves you control get +1/+1. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Elvish Rejuvenator | handled | When this creature enters, look at the top five cards of your library. You may put a land card from among them onto the battlefield tapped. Put the rest on the  | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Epicure of Blood | handled | Whenever you gain life, each opponent loses 1 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Exclusion Mage | handled | When this creature enters, return target creature an opponent controls to its owner's hand. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -190,7 +188,7 @@
 ## Fully supported
 
 <details>
-<summary>20 cards</summary>
+<summary>22 cards</summary>
 
 - Alpine Moon
 - Arisen Gorgon
@@ -199,6 +197,7 @@
 - Ghastbark Twins
 - Goreclaw, Terror of Qal Sisma
 - Hungering Hydra
+- Infernal Reckoning
 - Lena, Selfless Champion
 - Liliana's Contract
 - Liliana, Untouched by Death
@@ -207,6 +206,7 @@
 - Nicol Bolas, the Ravager // Nicol Bolas, the Arisen
 - One with the Machine
 - Palladia-Mors, the Ruiner
+- Patient Rebuilding
 - Sarkhan, Fireblood
 - Stitcher's Supplier
 - Suncleanser
@@ -224,17 +224,14 @@
 | N: until your next turn, target artifact you control becomes a N/N creature in addition to its other types. | 1 | Tezzeret, Cruel Machinist | m19 |
 | as long as ~ is enchanted or equipped, it can attack as though it didn't have defender. | 1 | Novice Knight | m19 |
 | at the beginning of each end step, if ~ attacked or blocked ~, its owner shuffles it into their library. | 1 | Inferno Hellion | m19 |
-| at the beginning of your upkeep, target opponent mills three cards, then you draw a card for each land card put into their graveyard ~. | 1 | Patient Rebuilding | m19 |
 | discard a card: until end of turn, chromium becomes a human with base power and toughness N/N, loses all abilities, and gains hexproof. it can't be blocked ~. | 1 | Chromium, the Mutable | m19 |
-| each creature you control with defender assigns combat damage equal to its toughness rather than its power and can attack as though it didn't have defender. | 1 | Arcades, the Strategist | m19 |
 | each player loses half their life, then discards half the cards in their hand, then sacrifices half the creatures they control of their choice. round up each ti | 1 | Fraying Omnipotence | m19 |
-| exile target colorless creature. you gain life equal to its power. | 1 | Infernal Reckoning | m19 |
 | exile the top seven cards of your library. until end of turn, you may cast spells from among them. if ~ was cast from your hand, add ten mana of any one color. | 1 | Apex of Power | m19 |
 | look at the top seven cards of your library. you may put a creature card from among them onto the battlefield. put the rest on the bottom of your library in a r | 1 | Vivien's Invocation | m19 |
 | target creature gets +N/+N until end of turn. all creatures able to block it ~ do so. | 1 | Declare Dominance | m19 |
-| when enchanted creature blocks, destroy it. | 1 | Dwindle | m19 |
 | when ~ enters, look at the top four cards of your library. you may reveal a creature card with power N or less from among them and put it into your hand. put th | 1 | Militia Bugler | m19 |
 | when ~ enters, target artifact you control becomes an artifact creature with base power and toughness N/N for as long as ~ remains on the battlefield. | 1 | Skilled Animator | m19 |
+| whenever a creature you control with defender enters, draw a card. | 1 | Arcades, the Strategist | m19 |
 | whenever equipped creature attacks, create a N/N white knight creature token with vigilance that's attacking. | 1 | Sigiled Sword of Valeron | m19 |
 | whenever one or more creature cards leave your graveyard, create a N/N black bat creature token with flying. | 1 | Desecrated Tomb | m19 |
 | whenever vaevictis asmadi attacks, for each player, choose target permanent that player controls. those players sacrifice those permanents. each player who sacr | 1 | Vaevictis Asmadi, the Dire | m19 |
@@ -245,7 +242,6 @@
 | {M}: look at the top card of your library. if it's a land card, you may reveal it and put it into your hand. | 1 | Dryad Greenseeker | m19 |
 | {M}{M}, {M}, sacrifice ~: creatures you control can't be blocked ~. | 1 | Tezzeret's Gatebreaker | m19 |
 | {M}{M}: ~ gets +N/+N and becomes a bear berserker until end of turn. activate only once each turn. | 1 | Ursine Champion | m19 |
-| {M}{M}{M}, {M}: search your library for a card named ~, put it onto the battlefield, then shuffle. | 1 | Elvish Clancaller | m19 |
 | −N: destroy up to two target creatures. put up to two creature cards from graveyards onto the battlefield under your control. | 1 | Liliana, the Necromancer | m19 |
 
 ## Notes

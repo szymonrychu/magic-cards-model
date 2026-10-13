@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 44 | 18.0% |
-| Works (untested) | 162 | 66.1% |
+| Tested | 46 | 18.8% |
+| Works (untested) | 161 | 65.7% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 39 | 15.9% |
+| Not working | 38 | 15.5% |
 
 ## Cards needing work
 
@@ -51,7 +51,6 @@
 | Ruin Raider | silent | Raid — At the beginning of your end step, if you attacked this turn, reveal the top card of your library and put that card into your hand. You lose life equal t | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sanguine Sacrament | silent | You gain twice X life. Put Sanguine Sacrament on the bottom of its owner's library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Shadowed Caravel | silent | Whenever a creature you control explores, put a +1/+1 counter on this Vehicle. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
-| Spell Swindle | silent | Counter target spell. Create X Treasure tokens, where X is that spell's mana value. (They're artifacts with "{T}, Sacrifice this token: Add one mana of any colo | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sun-Blessed Mount | silent | When this creature enters, you may search your library and/or graveyard for a card named Huatli, Dinosaur Knight, reveal it, then put it into your hand. If you  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sunbird's Invocation | silent | Whenever you cast a spell from your hand, reveal the top X cards of your library, where X is that spell's mana value. You may cast a spell with mana value X or  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sword-Point Diplomacy | silent | Reveal the top three cards of your library. For each of those cards, put that card into your hand unless any opponent pays 3 life. Then exile the rest. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -68,7 +67,6 @@
 | Ancient Brontodon | handled |  |  | Y/Y/- | not_tested |
 | Angrath's Marauders | handled | If a source you control would deal damage to a permanent or player, it deals double that damage to that permanent or player instead. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Bishop of Rebirth | handled | Whenever this creature attacks, you may return target creature card with mana value 3 or less from your graveyard to the battlefield. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Bishop of the Bloodstained | handled | When this creature enters, target opponent loses 1 life for each Vampire you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Bishop's Soldier | handled | Lifelink | machines/combat.py | Y/Y/Y | not_tested |
 | Blight Keeper | handled | {7}{B}, {T}, Sacrifice this creature: Target opponent loses 4 life and you gain 4 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Blossom Dryad | handled | {T}: Untap target land. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -231,7 +229,7 @@
 ## Fully supported
 
 <details>
-<summary>44 cards</summary>
+<summary>46 cards</summary>
 
 - Admiral Beckett Brass
 - Arcane Adaptation
@@ -240,6 +238,7 @@
 - Atzocan Archer
 - Belligerent Brontodon
 - Bellowing Aegisaur
+- Bishop of the Bloodstained
 - Blinding Fog
 - Bloodcrazed Paladin
 - Bonded Horncrest
@@ -269,6 +268,7 @@
 - Siren Stormtamer
 - Snapping Sailback
 - Sorcerous Spyglass
+- Spell Swindle
 - Spike-Tailed Ceratops
 - Storm Fleet Aerialist
 - Treasure Map // Treasure Cove
@@ -292,7 +292,6 @@
 | at the beginning of your upkeep, exile the top card of your library. if it's a nonland card, you may cast that card ~. | 1 | Vance's Blasting Cannons // Spitfire Bastion | xln |
 | at the beginning of your upkeep, you may have two target players exchange life totals. | 1 | Axis of Mortality | xln |
 | at the beginning of your upkeep, you may reveal a dinosaur card from your hand. if you do, you gain N life. | 1 | Priest of the Wakening Sun | xln |
-| counter target spell. create N treasure tokens, where N is that spell"..."re artifacts with "...") | 1 | Spell Swindle | xln |
 | exile target creature you control, then return that card to the battlefield under its owner's control. if a pirate was exiled ~, draw a card. | 1 | Siren's Ruse | xln |
 | exile up to five target creature cards from graveyards. an opponent separates those cards into two piles. put all cards from the pile of your choice onto the ba | 1 | Boneyard Parley | xln |
 | explore | 1 | Deadeye Tracker | xln |

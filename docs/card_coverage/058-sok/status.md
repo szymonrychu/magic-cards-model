@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 28 | 17.0% |
+| Tested | 29 | 17.6% |
 | Works (untested) | 81 | 49.1% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 56 | 33.9% |
+| Not working | 55 | 33.3% |
 
 ## Cards needing work
 
@@ -59,7 +59,6 @@
 | Nightsoil Kami | silent | Soulshift | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Okina Nightwatch | silent | As long as you have more cards in hand than each opponent, this creature gets +3/+3. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Oppressive Will | silent | Counter target spell unless its controller pays {1} for each card in your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Overwhelming Intellect | silent | Counter target creature spell. Draw cards equal to that spell's mana value. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Pain's Reward | silent | Each player may bid life. You start the bidding with a bid of any number. In turn order, each player may top the high bid. The bidding ends if the high bid stan | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Presence of the Wise | silent | You gain 2 life for each card in your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Promised Kannushi | silent | Soulshift | no machine in the engine executes this keyword | Y/-/- | not_working |
@@ -167,7 +166,7 @@
 ## Fully supported
 
 <details>
-<summary>28 cards</summary>
+<summary>29 cards</summary>
 
 - Burning-Eye Zubera
 - Cowed by Wisdom
@@ -186,6 +185,7 @@
 - Minamo Scrollkeeper
 - Miren, the Moaning Well
 - O-Naginata
+- Overwhelming Intellect
 - Pithing Needle
 - Promise of Bunrei
 - Razorjaw Oni
@@ -220,7 +220,6 @@
 | at the beginning of your upkeep, if you have more cards in hand than each opponent, you may sacrifice a swamp. if you do, return akuta from your graveyard to th | 1 | Akuta, Born of Ash | sok |
 | at the beginning of your upkeep, put a +N/+N counter on ~ for each card in your hand, then remove a +N/+N counter from ~ for each card in target opponent's hand | 1 | Descendant of Masumaro | sok |
 | cast ~ only during combat after blockers are declared. target unblocked attacking creature becomes blocked. (~ works on creatures that can't be blocked.) draw a | 1 | Curtain of Light | sok |
-| counter target creature spell. draw cards equal to that spell's mana value. | 1 | Overwhelming Intellect | sok |
 | counter target spell unless its controller pays {M} for each card in your hand. | 1 | Oppressive Will | sok |
 | create a N/N green snake creature token for each card in your hand. epic (for the rest of the game, you can't cast spells. at the beginning of each of your upke | 1 | Endless Swarm | sok |
 | destroy target artifact or enchantment if its mana value is less than or equal to the number of cards in your hand. draw a card. | 1 | Rending Vines | sok |

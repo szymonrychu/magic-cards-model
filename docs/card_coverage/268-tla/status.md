@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 81 | 29.2% |
+| Tested | 82 | 29.6% |
 | Works (untested) | 132 | 47.7% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 64 | 23.1% |
+| Not working | 63 | 22.7% |
 
 ## Cards needing work
 
@@ -54,7 +54,6 @@
 | Leaves from the Vine | silent | III — Draw a card if there's a creature or Lesson card in your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Lo and Li, Twin Tutors | silent | Noble creatures you control and Lesson spells you control have lifelink. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Mai, Jaded Edge | silent | Exhaust — {3}: Put a double strike counter on Mai. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Master Pakku | silent | Whenever Master Pakku becomes tapped, target player mills X cards, where X is the number of Lesson cards in your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | North Pole Patrol | silent | Waterbend | no machine in the engine executes this keyword | Y/Y/Y | not_working |
 | Otter-Penguin | silent | Whenever you draw your second card each turn, this creature gets +1/+2 until end of turn and can't be blocked this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Platypus-Bear | silent | As long as there is a Lesson card in your graveyard, this creature can attack as though it didn't have defender. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -76,7 +75,7 @@
 | Water Tribe Rallier | silent | Waterbend {5}: Look at the top four cards of your library. You may reveal a creature card with power 3 or less from among them and put it into your hand. Put th | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Waterbending Lesson | silent | Draw three cards. Then discard a card unless you waterbend {2}. (While paying a waterbend cost, you can tap your artifacts and creatures to help. Each one pays  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Watery Grasp | silent | Waterbend {5}: Enchanted creature's owner shuffles it into their library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Yue, the Moon Spirit | silent | Waterbend {5}, {T}: You may cast a noncreature spell from your hand without paying its mana cost. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
+| Yue, the Moon Spirit | silent | Waterbend | no machine in the engine executes this keyword | Y/Y/Y | not_working |
 | Earth Rumble Wrestlers | notice | This creature gets +1/+0 and has trample as long as you control a land creature or a land entered the battlefield under your control this turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Fire Nation Cadets | notice | This creature has firebending 2 as long as there's a Lesson card in your graveyard. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | First-Time Flyer | notice | This creature gets +1/+1 as long as there's a Lesson card in your graveyard. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
@@ -226,7 +225,7 @@
 ## Fully supported
 
 <details>
-<summary>81 cards</summary>
+<summary>82 cards</summary>
 
 - Aang's Iceberg
 - Aang, Swift Savior // Aang and La, Ocean's Fury
@@ -273,6 +272,7 @@
 - It'll Quench Ya!
 - Katara, Water Tribe's Hope
 - Kyoshi Battle Fan
+- Master Pakku
 - Momo, Friendly Flier
 - Momo, Playful Pet
 - Obsessive Pursuit
@@ -316,7 +316,7 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| waterbend | 3 | Benevolent River Spirit, Foggy Swamp Visions, North Pole Patrol | tla |
+| waterbend | 4 | Benevolent River Spirit, Foggy Swamp Visions, North Pole Patrol, Yue, the Moon Spirit | tla |
 | Exhaust | 2 | Jeong Jeong, the Deserter, Mai, Jaded Edge | tla |
 | Landfall | 1 | Rabaroo Troop | tla |
 | as an additional cost to cast ~, waterbend {M}. (while paying a waterbend cost, you can tap your artifacts and creatures to help. each one pays for {M}.) tap up | 1 | Crashing Wave | tla |
@@ -347,7 +347,6 @@
 | starting with you, each player chooses up to one permanent with mana value N or greater from among permanents your opponents control. exile those permanents. | 1 | The Legend of Yangchen // Avatar Yangchen | tla |
 | target creature you control gets +N/+N until end of turn. if that creature is an ally, it also gains flying until end of turn. | 1 | Yip Yip! | tla |
 | untap one or two target creatures. they each get +N/+N until end of turn. | 1 | Fancy Footwork | tla |
-| waterbend {M}, {M}: you may cast a noncreature spell from your hand without paying its mana cost. | 1 | Yue, the Moon Spirit | tla |
 | waterbend {M}: enchanted creature's owner shuffles it into their library. | 1 | Watery Grasp | tla |
 | waterbend {M}: look at the top four cards of your library. you may reveal a creature card with power N or less from among them and put it into your hand. put th | 1 | Water Tribe Rallier | tla |
 | when bumi enters, choose up to N, where N is the number of lesson cards in your graveyard — • put three +N/+N counters on bumi. • target player scries N. • eart | 1 | Bumi, King of Three Trials | tla |
@@ -369,7 +368,6 @@
 | whenever you scry or surveil, look at the top card of your library. you may cast that card without paying its mana cost. do ~ once each turn. | 1 | Planetarium of Wan Shi Tong | tla |
 | whenever ~ attacks, choose target creature an opponent controls. tap it, then you may sacrifice an artifact or creature. if you do, put a stun counter on the ch | 1 | Vengeful Villagers | tla |
 | whenever ~ attacks, each opponent loses N life and you gain N life, where N is the number of creatures you control with +N/+N counters on them. | 1 | Dai Li Agents | tla |
-| whenever ~ becomes tapped, target player mills N cards, where N is the number of lesson cards in your graveyard. | 1 | Master Pakku | tla |
 | whenever ~ enters or attacks, exile up to one target card from a graveyard. if a creature card is exiled ~, create a clue token. | 1 | Raven Eagle | tla |
 | {M}: mill a card. you may put a land card milled ~ into your hand. you gain N life if a lesson card is milled ~. | 1 | Sparring Dummy | tla |
 | {M}: until end of turn, ~ has base power N and gains trample. | 1 | Turtle-Duck | tla |

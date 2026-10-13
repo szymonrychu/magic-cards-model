@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 36 | 17.1% |
+| Tested | 40 | 19.0% |
 | Works (untested) | 138 | 65.4% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 37 | 17.5% |
+| Not working | 33 | 15.6% |
 
 ## Cards needing work
 
@@ -34,7 +34,6 @@
 | Bident of Thassa | silent | {1}{U}, {T}: Creatures your opponents control attack this turn if able. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Coastline Chimera | silent | {1}{W}: This creature can block an additional creature this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Colossus of Akros | silent | As long as this creature is monstrous, it has trample and can attack as though it didn't have defender. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Curse of the Swine | silent | Exile X target creatures. For each creature exiled this way, its controller creates a 2/2 green Boar creature token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Decorated Griffin | silent | {1}{W}: Prevent the next 1 combat damage that would be dealt to you this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Evangel of Heliod | silent | When this creature enters, create a number of 1/1 white Soldier creature tokens equal to your devotion to white. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Fate Foretold | silent | When enchanted creature dies, its controller draws a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -46,15 +45,12 @@
 | Master of Waves | silent | When this creature enters, create a number of 1/0 blue Elemental creature tokens equal to your devotion to blue. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Meletis Charlatan | silent | {2}{U}, {T}: The controller of target instant or sorcery spell copies it. That player may choose new targets for the copy. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Mogis's Marauder | silent | When this creature enters, up to X target creatures each gain intimidate and haste until end of turn, where X is your devotion to black. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Nemesis of Mortals | silent | {7}{G}{G}: Monstrosity 5. This ability costs {1} less to activate for each creature card in your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Nylea's Presence | silent | Enchanted land is every basic land type in addition to its other types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Psychic Intrusion | silent | Target opponent reveals their hand. You choose a nonland card from that player's graveyard or hand and exile it. You may cast that card for as long as it remain | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Returned Phalanx | silent | {1}{U}: This creature can attack this turn as though it didn't have defender. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Satyr Piper | silent | {3}{G}: Target creature must be blocked this turn if able. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Scholar of Athreos | silent | {2}{B}: Each opponent loses 1 life. You gain life equal to the life lost this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Steam Augury | silent | Reveal the top five cards of your library and separate them into two piles. An opponent chooses one of those piles. Put that pile into your hand and the other i | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Stoneshock Giant | silent | When this creature becomes monstrous, creatures without flying your opponents control can't block this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Tormented Hero | silent | Heroic — Whenever you cast a spell that targets this creature, each opponent loses 1 life. You gain life equal to the life lost this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Triton Tactics | silent | Up to two target creatures each get +0/+3 until end of turn. Untap those creatures. At this turn's next end of combat, tap each creature that was blocked by one | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Viper's Kiss | silent | Enchanted creature gets -1/-1, and its activated abilities can't be activated. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Boon of Erebos | notice | Target creature gets +2/+0 until end of turn. Regenerate it. You lose 2 life. | unparsed remainder: Regenerate it. You lose 2 life. | Y/Y/- | not_working |
@@ -205,12 +201,13 @@
 ## Fully supported
 
 <details>
-<summary>36 cards</summary>
+<summary>40 cards</summary>
 
 - Akroan Hoplite
 - Anger of the Gods
 - Arbor Colossus
 - Commune with the Gods
+- Curse of the Swine
 - Dauntless Onslaught
 - Defend the Hearth
 - Elspeth, Sun's Champion
@@ -224,6 +221,7 @@
 - Karametra's Acolyte
 - Lagonna-Band Elder
 - Medomai the Ageless
+- Nemesis of Mortals
 - Nessian Asp
 - Nighthowler
 - Nykthos, Shrine to Nyx
@@ -233,11 +231,13 @@
 - Purphoros, God of the Forge
 - Pyxis of Pandemonium
 - Reverent Hunter
+- Scholar of Athreos
 - Sealock Monster
 - Spellheart Chimera
 - Stormbreath Dragon
 - Swan Song
 - Time to Feed
+- Tormented Hero
 - Underworld Cerberus
 - Vaporkin
 - Warriors' Lesson
@@ -250,14 +250,13 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| Heroic | 3 | Anthousa, Setessan Hero, Artisan of Forms, Tormented Hero | ths |
+| Heroic | 2 | Anthousa, Setessan Hero, Artisan of Forms | ths |
 | as an additional cost to cast ~, sacrifice a creature. choose target creature card in your graveyard. return that card and the sacrificed card to the battlefiel | 1 | Rescue from the Underworld | ths |
 | as long as ~ is monstrous, it has reach and can block an additional ninety-nine creatures each combat. | 1 | Hundred-Handed One | ths |
 | as long as ~ is monstrous, it has trample and can attack as though it didn't have defender. | 1 | Colossus of Akros | ths |
 | discard a creature card: ~ gets +N/+N until end of turn. if ~ is an aura, enchanted creature gets +N/+N until end of turn instead. | 1 | Erebos's Emissary | ths |
 | enchanted creature gets -N/-N, and its activated abilities can't be activated. | 1 | Viper's Kiss | ths |
 | enchanted land is every basic land type in addition to its other types. | 1 | Nylea's Presence | ths |
-| exile N target creatures. for each creature exiled ~, its controller creates a N/N green boar creature token. | 1 | Curse of the Swine | ths |
 | reveal the top five cards of your library and separate them into two piles. an opponent chooses one of those piles. put that pile into your hand and the other i | 1 | Steam Augury | ths |
 | target creature gets +N/+N until end of turn. regenerate it. you lose N life. | 1 | Boon of Erebos | ths |
 | target opponent reveals their hand. you choose a nonland card from that player's graveyard or hand and exile it. you may cast that card for as long as it remain | 1 | Psychic Intrusion | ths |
@@ -276,13 +275,11 @@
 | {M}{M}, {M}, sacrifice a land: create a N/N colorless golem enchantment artifact creature token. | 1 | Hammer of Purphoros | ths |
 | {M}{M}, {M}: creatures your opponents control attack ~ if able. | 1 | Bident of Thassa | ths |
 | {M}{M}, {M}: the controller of target instant or sorcery spell copies it. that player may choose new targets for the copy. | 1 | Meletis Charlatan | ths |
-| {M}{M}: each opponent loses N life. you gain life equal to the life lost ~. | 1 | Scholar of Athreos | ths |
 | {M}{M}: prevent the next N combat damage that would be dealt to you ~. | 1 | Decorated Griffin | ths |
 | {M}{M}: target creature must be blocked ~ if able. | 1 | Satyr Piper | ths |
 | {M}{M}: ~ can attack ~ as though it didn't have defender. | 1 | Returned Phalanx | ths |
 | {M}{M}: ~ can block an additional creature ~. | 1 | Coastline Chimera | ths |
 | {M}{M}{M}: create a N/N white cleric enchantment creature token. | 1 | Heliod, God of the Sun | ths |
-| {M}{M}{M}: monstrosity N. ~ costs {M} less to activate for each creature card in your graveyard. | 1 | Nemesis of Mortals | ths |
 | ~ deals N damage to target creature. it can't be regenerated ~. scry N. (look at the top card of your library. you may put that card on the bottom.) | 1 | Rage of Purphoros | ths |
 | −N: put a creature card with mana value N exiled with ashiok onto the battlefield under your control. that creature is a nightmare in addition to its other type | 1 | Ashiok, Nightmare Weaver | ths |
 
