@@ -1546,6 +1546,12 @@ def parse_mode_effect(mode: Mode, x_value: int) -> Effect | None:
     where_x_targeted = _parse_where_x_is_continuous_effect_for_spell(text)
     if where_x_targeted is not None:
         return where_x_targeted
+    # Shriveling Rot's modes: "Until end of turn, whenever a creature is dealt
+    # damage, destroy it." - a chosen mode that creates a CR 603.7 delayed
+    # trigger, read the way the same sentence on a non-modal spell is.
+    created_trigger = _parse_created_trigger_spell_text(text)
+    if created_trigger is not None:
+        return created_trigger
     return parse_mixed_effect_for_spell(text)
 
 
@@ -6869,6 +6875,7 @@ from .text import (  # noqa: E402
 from .tokens import (  # noqa: E402
     _create_continuous_effect_for_mode_text,
     _parse_create_token_copies_except_clause,
+    _parse_created_trigger_spell_text,
     _parse_generic_token_descriptor,
     _parse_target_player_token_mode,
     _read_token_copy_except,

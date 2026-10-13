@@ -1,0 +1,132 @@
+{
+  "object": "card",
+  "id": "53f73e5f-6228-494f-b74e-aca3520dc2b2",
+  "oracle_id": "4459117a-d11c-44f4-9aac-caefc5b2d6f2",
+  "multiverse_ids": [
+    425859
+  ],
+  "mtgo_id": 63325,
+  "mtgo_foil_id": 63326,
+  "tcgplayer_id": 128855,
+  "cardmarket_id": 295923,
+  "name": "Crippling Chill",
+  "lang": "en",
+  "released_at": "2017-03-17",
+  "uri": "https://api.scryfall.com/cards/53f73e5f-6228-494f-b74e-aca3520dc2b2",
+  "scryfall_uri": "https://scryfall.com/card/mm3/34/crippling-chill?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T09:57:51Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/5/3/53f73e5f-6228-494f-b74e-aca3520dc2b2.jpg?1783936671",
+    "normal": "https://cards.scryfall.io/normal/front/5/3/53f73e5f-6228-494f-b74e-aca3520dc2b2.jpg?1783936671",
+    "large": "https://cards.scryfall.io/large/front/5/3/53f73e5f-6228-494f-b74e-aca3520dc2b2.jpg?1783936671",
+    "png": "https://cards.scryfall.io/png/front/5/3/53f73e5f-6228-494f-b74e-aca3520dc2b2.png?1783936671",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/5/3/53f73e5f-6228-494f-b74e-aca3520dc2b2.jpg?1783936671",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/5/3/53f73e5f-6228-494f-b74e-aca3520dc2b2.jpg?1783936671",
+    "thumb": "https://cards.scryfall.io/thumb/front/5/3/53f73e5f-6228-494f-b74e-aca3520dc2b2.webp?1783936671",
+    "grid": "https://cards.scryfall.io/grid/front/5/3/53f73e5f-6228-494f-b74e-aca3520dc2b2.webp?1783936671",
+    "display": "https://cards.scryfall.io/display/front/5/3/53f73e5f-6228-494f-b74e-aca3520dc2b2.webp?1783936671",
+    "art": "https://cards.scryfall.io/art/front/5/3/53f73e5f-6228-494f-b74e-aca3520dc2b2.webp?1783936671",
+    "crop": "https://cards.scryfall.io/crop/front/5/3/53f73e5f-6228-494f-b74e-aca3520dc2b2.webp?1783936671"
+  },
+  "mana_cost": "{2}{U}",
+  "cmc": 3.0,
+  "type_line": "Instant",
+  "oracle_text": "Tap target creature. It doesn't untap during its controller's next untap step.\nDraw a card.",
+  "colors": [
+    "U"
+  ],
+  "color_identity": [
+    "U"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "02624962-f727-4c31-bbf2-a94fa6c5b653",
+  "set": "mm3",
+  "set_name": "Modern Masters 2017",
+  "set_type": "masters",
+  "set_uri": "https://api.scryfall.com/sets/02624962-f727-4c31-bbf2-a94fa6c5b653",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Amm3&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/mm3?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/53f73e5f-6228-494f-b74e-aca3520dc2b2/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A4459117a-d11c-44f4-9aac-caefc5b2d6f2&unique=prints",
+  "collector_number": "34",
+  "digital": false,
+  "rarity": "common",
+  "flavor_text": "One breath of the geist turns veins to rivers of ice and freezes hearts midbeat.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Svetlin Velinov",
+  "artist_ids": [
+    "ffd063ae-c097-4f26-b2e6-b1e2137708bc"
+  ],
+  "illustration_id": "1f6fbc6c-1d1f-4760-896f-95301731645e",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 19980,
+  "penny_rank": 13968,
+  "prices": {
+    "usd": "0.12",
+    "usd_foil": "0.09",
+    "usd_etched": null,
+    "eur": "0.03",
+    "eur_foil": "0.19",
+    "tix": "0.04"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=425859&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DCrippling%2BChill",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DCrippling%2BChill",
+    "edhrec": "https://edhrec.com/route/?cc=Crippling+Chill"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F128855%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=295923&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/63325?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

@@ -243,6 +243,8 @@ def target_controller_effect(text: str, *, for_spell: bool) -> Callable[["Game",
         return None
     first = (parse_mixed_effect_for_spell if for_spell else parse_mixed_effect)(opening)
     if first is None:
+        first = layer_opening_effect(opening, for_spell=for_spell)
+    if first is None:
         return None
     wants_stat = any(predicate.stat is not None for predicate in predicates)
 
@@ -263,6 +265,26 @@ def target_controller_effect(text: str, *, for_spell: bool) -> Callable[["Game",
             )
 
     return effect
+
+
+def layer_opening_effect(opening: str, *, for_spell: bool) -> Callable[["Game", Any], None] | None:
+    """An opening that is a continuous effect on its target ("Up to one target
+    creature gets -2/-0 until end of turn.") which the clause parsers do not
+    read but the layer engine does (CR 611.2, CR 613.1f): the layer effect for
+    the opening's own text alone, so the sentences after it stay free for
+    their own readers (CR 608.2c)."""
+    from .effects.continuous import _is_layer_effect_text
+    from .effects.tokens import (
+        _create_continuous_effect_for_mode_text,
+        _create_continuous_effect_of_ability_for_mode_text,
+    )
+    from .layers import parsed_layer_effects
+
+    if not _is_layer_effect_text(opening) or parsed_layer_effects(opening) is None:
+        return None
+    if for_spell:
+        return _create_continuous_effect_for_mode_text(opening)
+    return _create_continuous_effect_of_ability_for_mode_text(opening)
 
 
 # --------------------------------------------------------------------------
