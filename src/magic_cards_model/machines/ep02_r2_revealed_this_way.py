@@ -42,6 +42,7 @@ from random import Random
 from typing import TYPE_CHECKING, Any
 from uuid import UUID
 
+from ..data.subtypes import canonical_subtype
 from ..models.card import Type
 from ..models.card_state import CardState, ChoiceKind
 from ..models.player import Player
@@ -52,7 +53,11 @@ from .casting import PlayAction
 from .conditions.history import excess_damage
 from .amount_sentences import recipient_amount
 from .decisions import Decision, DecisionKind, source_id_of
-from .delayed import ReflexiveDamageEqualToSubjectManaValueConsequence
+from .delayed import (
+    DelayedTrigger,
+    PhaseInEach,
+    ReflexiveDamageEqualToSubjectManaValueConsequence,
+)
 from .effects._chains import ABILITY_TEXT, SPELL_TEXT
 from .effects._common import (
     _card_description_is_readable,
@@ -61,6 +66,7 @@ from .effects._common import (
     _targets_understood,
 )
 from .effects.library import _mill
+from .effects.continuous import continuous_effects
 from .effects.search import _search_and_exile_matching_name
 from .effects.dispatch import _ability_effect_or_notice, _spell_effect_or_notice
 from .effects.text import _plain_resolution_sentences, _strip_non_effect_preamble
@@ -72,7 +78,9 @@ from .ep02_r1_this_way_counts import _plan as _r1_plan
 from .ep02_r1_this_way_counts import _sentences as _r1_sentences
 from .ep02_r1_this_way_counts import affected as _r1_affected
 from .ep02_r1_this_way_counts import snapshot as _r1_snapshot
+from .layers import ContinuousEffect, Layer, add_subtype, only_this_incarnation
 from .targeting import profile_for_text
+from .triggers import TriggerEvent
 from .replacement.enters_choices import CARD_TYPE_OPTIONS
 
 if TYPE_CHECKING:
@@ -705,6 +713,13 @@ def _count_moved(match: re.Match[str]) -> Amount:
     return lambda _g, _o, ctx: len(ctx.moved.get(zone, ()))
 
 
+def _power_tapped_for_cost(_match: re.Match[str]) -> Amount:
+    """CR 602.2b / CR 608.2h: the power the creature tapped to pay the cost had."""
+    return lambda _g, obj, _ctx: sum(
+        int(power or 0) for power in getattr(obj, "cost_tapped_powers", ())
+    )
+
+
 def _count_in_moved(key: str) -> Callable[[re.Match[str]], Amount]:
     return lambda _match: lambda _g, _o, ctx: len(ctx.moved.get(key, ()))
 
@@ -714,6 +729,10 @@ def _cards_owned_in_exile(_match: re.Match[str]) -> Amount:
 
 
 _AMOUNT_PATTERNS = (
+    (
+        re.compile(r"^the power of the (?:creature|permanent) tapped this way$", re.IGNORECASE),
+        _power_tapped_for_cost,
+    ),
     (
         re.compile(r"^(?:the number of )?spells? countered this way$", re.IGNORECASE),
         _count_in_moved("countered"),
@@ -1318,6 +1337,320 @@ def _damage_its_controller(match: re.Match[str]) -> Step | None:
     return step
 
 
+def _pump_source(game: "Game", obj: Any, power: int, toughness: int) -> None:
+    """"This creature gets +N/+M until end of turn", read by the ordinary clause
+    parsers once the numbers are written in, aimed at the object's source."""
+    pump = _parse_cached(f"this creature gets {power:+d}/{toughness:+d} until end of turn.", False)
+    if pump is not None:
+        pump(game, obj)
+
+
+_PUMP_WHERE_X_RE = re.compile(
+    r"^this creature gets \+x/\+(?P<t>x|\d+) until end of turn, where x is (?P<expr>.+)$",
+    re.IGNORECASE,
+)
+
+
+def _pump_where_x(match: re.Match[str]) -> Step | None:
+    amount = _amount(match.group("expr"))
+    if amount is None:
+        return None
+    toughness = match.group("t").lower()
+
+    def step(game: "Game", obj: Any, ctx: _Ctx) -> None:
+        n = amount(game, obj, ctx)
+        if n > 0 or toughness != "x":
+            _pump_source(game, obj, max(n, 0), max(n, 0) if toughness == "x" else int(toughness))
+
+    return step
+
+
+_TAP_ALL_RE = re.compile(r"^tap all untapped (?P<q>[a-z' -]+?) you control$", re.IGNORECASE)
+
+
+def _tap_all(match: re.Match[str]) -> Step | None:
+    quality = re.sub(r"s$", "", match.group("q").strip().lower())  # "wolf creatures"
+    if not _card_description_is_readable(quality):
+        return None
+    matcher = _quality_matcher(quality)
+
+    def step(game: "Game", obj: Any, ctx: _Ctx) -> None:
+        tapped = []
+        for permanent in list(game.permanents_controlled_by(ctx.controller.username)):
+            if not permanent.tapped and matcher(game.characteristics_of(permanent)):
+                if game.tap_permanent(permanent):
+                    tapped.append(permanent)
+        ctx.moved["tapped"] = tapped
+
+    return step
+
+
+_EACH_TAPPED_DEALS_RE = re.compile(
+    r"^each (?P<noun>[a-z]+) tapped this way deals damage equal to its power to "
+    r"(?P<to>target [a-z ]+)$",
+    re.IGNORECASE,
+)
+
+
+def _target_permanent(game: "Game", obj: Any) -> CardState | None:
+    return next(
+        (
+            t
+            for t in game.resolve_targets(obj)
+            if isinstance(t, CardState) and t.zone is Zone.BATTLEFIELD
+        ),
+        None,
+    )
+
+
+def _each_tapped_deals(match: re.Match[str]) -> Step | None:
+    if not profile_for_text(match.group("to")).understood:
+        return None
+
+    def step(game: "Game", obj: Any, ctx: _Ctx) -> None:
+        target = _target_permanent(game, obj)
+        ctx.referent = target
+        if target is None:
+            return
+        for source in ctx.moved.get("tapped", ()):
+            power = game.power_of(source) if source.zone is Zone.BATTLEFIELD else 0
+            if power and power > 0 and target.zone is Zone.BATTLEFIELD:
+                game.deal_damage(target, power, source=source)
+
+    return step
+
+
+_THAT_DEALS_DIVIDED_RE = re.compile(
+    r"^that (?P<noun>[a-z]+) deals damage equal to its power divided as its controller chooses "
+    r"among any number of those (?P<those>[a-z]+)$",
+    re.IGNORECASE,
+)
+
+
+def _that_deals_divided(_match: re.Match[str]) -> Step:
+    """The target's controller divides its power among the tapped creatures
+    (CR 608.2d): every share but the last is asked, the last takes the rest."""
+
+    def step(game: "Game", obj: Any, ctx: _Ctx) -> None:
+        creature = ctx.referent
+        if creature is None or creature.zone is not Zone.BATTLEFIELD:
+            return
+        power = int(game.power_of(creature) or 0)
+        recipients = [c for c in ctx.moved.get("tapped", ()) if c.zone is Zone.BATTLEFIELD]
+        if power <= 0 or not recipients:
+            return
+        chooser = game.controller_of(creature).username
+        remaining = power
+        shares: list[tuple[CardState, int]] = []
+        for index, recipient in enumerate(recipients):
+            if index == len(recipients) - 1:
+                share = remaining
+            else:
+                share = int(
+                    game.ask(
+                        Decision(
+                            kind=DecisionKind.CHOOSE_AN_AMOUNT,
+                            player=chooser,
+                            prompt=f"choose how much of {creature.name}'s damage {recipient.name} takes",
+                            source=_source_name(obj),
+                            source_id=source_id_of(obj),
+                            amount=remaining,
+                        )
+                    )
+                )
+                share = min(max(share, 0), remaining)
+            remaining -= share
+            shares.append((recipient, share))
+        for recipient, share in shares:
+            if share > 0 and recipient.zone is Zone.BATTLEFIELD:
+                game.deal_damage(recipient, share, source=creature)
+
+    return step
+
+
+_PHASE_OUT_UNTIL_RE = re.compile(
+    r"^those creatures phase out until this (?P<noun>[a-z]+) leaves the battlefield$", re.IGNORECASE
+)
+
+
+def _phase_out_until_leaves(_match: re.Match[str]) -> Step:
+    """CR 702.26a-b: the creatures phase out and stay out (they do not phase in at
+    their controller's untap step) until the source leaves the battlefield
+    (CR 610.3): three sibling delayed triggers watch for that."""
+
+    def step(game: "Game", obj: Any, ctx: _Ctx) -> None:
+        source = obj.source(game) if hasattr(obj, "source") else None
+        if not isinstance(source, CardState) or source.zone is not Zone.BATTLEFIELD:
+            return  # CR 610.3b: the duration is already over, so nothing phases out
+        held_by = f"until:{source.id}"
+        phased: list[CardState] = []
+        for permanent in [
+            p for p in game.battlefield if Type.CREATURE in game.characteristics_of(p).types
+        ]:
+            game.phase_out(permanent)
+            if permanent in game.phased_out:
+                permanent.phased_out_under = held_by
+                phased.append(permanent)
+        ctx.moved["phased"] = phased
+        if not phased:
+            return
+        effect = PhaseInEach(ids=tuple(p.id for p in phased), held_by=held_by)
+        text = f"When {source.name} leaves the battlefield, those creatures phase in."
+        siblings = [
+            game.create_delayed_trigger(
+                DelayedTrigger(
+                    text=text,
+                    event=event,
+                    controller=ctx.controller.username,
+                    source_id=source.id,
+                    source_name=source.name,
+                    subject_id=source.id,
+                    effect=effect,
+                )
+            )
+            for event in (
+                TriggerEvent.DIES,
+                TriggerEvent.LEAVES_BATTLEFIELD_TO_EXILE,
+                TriggerEvent.LEAVES_BATTLEFIELD_TO_HAND,
+            )
+        ]
+        for trigger in siblings:
+            trigger.sibling_ids = tuple(o.id for o in siblings if o is not trigger)
+
+    return step
+
+
+_COUNTERS_FOR_EACH_PHASED_RE = re.compile(
+    r"^put (?P<n>a|one|two|three|\d+) (?P<kind>[a-z+/0-9-]+) counters? on this (?P<noun>[a-z]+) "
+    r"for each creature that phased out this way$",
+    re.IGNORECASE,
+)
+
+
+def _counters_for_each_phased(match: re.Match[str]) -> Step | None:
+    unit = 1 if match.group("n").lower() in ("a", "one") else parse_count(match.group("n"))
+    if unit is None:
+        return None
+    kind = match.group("kind").lower()
+
+    def step(game: "Game", obj: Any, ctx: _Ctx) -> None:
+        source = obj.source(game) if hasattr(obj, "source") else None
+        n = unit * len(ctx.moved.get("phased", ()))
+        if isinstance(source, CardState) and source.zone is Zone.BATTLEFIELD and n > 0:
+            game.add_counters(source, kind, n)
+
+    return step
+
+
+_RETURN_ALL_RE = re.compile(
+    r"^return each (?P<q>[a-z' -]+?) cards? from your graveyard to the battlefield"
+    r"(?P<tapped> tapped)?(?: with an? (?P<kind>[a-z]+) counter on (?:it|them))?$",
+    re.IGNORECASE,
+)
+
+
+def _return_all(match: re.Match[str]) -> Step | None:
+    """CR 400.7 / CR 614.1c: every matching card in the controller's graveyard enters
+    together, each with the counter."""
+    quality = match.group("q").strip().lower()
+    if not _card_description_is_readable(quality):
+        return None
+    matcher = _quality_matcher(quality)
+    tapped = match.group("tapped") is not None
+    kind = (match.group("kind") or "").lower() or None
+
+    def step(game: "Game", obj: Any, ctx: _Ctx) -> None:
+        returned: list[CardState] = []
+        with game.entering_together():  # CR 603.6a: one arrival, together
+            for card in [c for c in ctx.controller.graveyard if matcher(c)]:
+                permanent = game.put_onto_battlefield(card, ctx.controller.username, tapped=tapped)
+                if permanent.zone is Zone.BATTLEFIELD:
+                    if kind is not None:
+                        game.add_counters(permanent, kind, 1)
+                    returned.append(permanent)
+        ctx.moved["returned"] = returned
+
+    return step
+
+
+_THOSE_ARE_RE = re.compile(
+    r"^those creatures are (?P<types>[A-Za-z][A-Za-z' ,-]*?) in addition to their other types$",
+    re.IGNORECASE,
+)
+
+
+def _those_are(match: re.Match[str]) -> Step | None:
+    words = [w.strip() for w in re.split(r",| and ", match.group("types")) if w.strip()]
+    found = [canonical_subtype(word) for word in words]  # "Vampires" -> "vampire"
+    if not found or any(subtype is None for subtype in found):
+        return None
+    subtypes = [subtype.title() for subtype in found if subtype is not None]
+
+    def step(game: "Game", obj: Any, ctx: _Ctx) -> None:
+        store = continuous_effects(game)
+        timestamp = store.tick()
+        for permanent in ctx.moved.get("returned", ()):
+            if permanent.zone is not Zone.BATTLEFIELD:
+                continue
+            for subtype in subtypes:
+                store.add(
+                    ContinuousEffect(
+                        description=f"{_source_name(obj)}: {permanent.name} is a {subtype}",
+                        layer=Layer.TYPE,
+                        timestamp=timestamp,
+                        selector=only_this_incarnation(permanent, permanent.zone_change_stamp),
+                        modification=add_subtype(subtype),
+                    ),
+                    game,
+                )
+
+    return step
+
+
+@dataclass(frozen=True)
+class _Instead:
+    """A clause that replaces the clause before it when its condition holds
+    (CR 608.2c: "instead" modifies the earlier instruction)."""
+
+    condition: Callable[["Game", Any, _Ctx], bool]
+    replacement: Step
+
+
+_IF_SACRIFICED_INSTEAD_RE = re.compile(
+    r"^if you sacrificed an? (?P<q>[a-z-]+) this way, create a number of (?P<token>[A-Za-z ]+?) "
+    r"tokens equal to its (?P<stat>power|toughness) instead$",
+    re.IGNORECASE,
+)
+
+
+def _if_sacrificed_instead(match: re.Match[str]) -> _Instead | None:
+    from ..models.token import PREDEFINED, create_tokens
+
+    quality = match.group("q").lower()
+    definition = PREDEFINED.get(match.group("token").strip())
+    if definition is None:
+        return None
+    stat = match.group("stat").lower()
+
+    def sacrificed_index(obj: Any) -> int | None:
+        types = getattr(obj, "cost_sacrificed_types", ())
+        return next((i for i, words in enumerate(types) if quality in words), None)
+
+    def condition(_game: "Game", obj: Any, _ctx: _Ctx) -> bool:
+        return sacrificed_index(obj) is not None
+
+    def replacement(game: "Game", obj: Any, ctx: _Ctx) -> None:
+        index = sacrificed_index(obj)
+        if index is None:
+            return
+        values = obj.cost_sacrificed_powers if stat == "power" else obj.cost_sacrificed_toughnesses
+        amount = int(values[index] or 0)
+        if amount > 0:
+            create_tokens(game, definition, ctx.controller.username, amount)
+
+    return _Instead(condition, replacement)
+
+
 # Readers, tried in order; each is (pattern, builder).
 _READERS: tuple[tuple[re.Pattern[str], Callable[[re.Match[str]], Step | None]], ...] = (
     (_CHOOSE_NAME_RE, _choose_name),
@@ -1359,6 +1692,15 @@ _READERS: tuple[tuple[re.Pattern[str], Callable[[re.Match[str]], Step | None]], 
     (_PUT_COUNTERS_ON_IT_RE, _put_counters_on_chosen),
     (_X_CLAUSE_RE, _x_clause),
     (_DAMAGE_ITS_CONTROLLER_RE, _damage_its_controller),
+    (_PUMP_WHERE_X_RE, _pump_where_x),
+    (_TAP_ALL_RE, _tap_all),
+    (_EACH_TAPPED_DEALS_RE, _each_tapped_deals),
+    (_THAT_DEALS_DIVIDED_RE, _that_deals_divided),
+    (_PHASE_OUT_UNTIL_RE, _phase_out_until_leaves),
+    (_COUNTERS_FOR_EACH_PHASED_RE, _counters_for_each_phased),
+    (_RETURN_ALL_RE, _return_all),
+    (_THOSE_ARE_RE, _those_are),
+    (_IF_SACRIFICED_INSTEAD_RE, _if_sacrificed_instead),
 )
 
 # --------------------------------------------------------------------------
@@ -1417,6 +1759,16 @@ def _plan(text: str, for_spell: bool) -> _Plan | None:
         _PLAN_TEXT.pop()
 
 
+def _either(instead: "_Instead", base: Step) -> Step:
+    def step(game: "Game", obj: Any, ctx: _Ctx) -> None:
+        if instead.condition(game, obj, ctx):
+            instead.replacement(game, obj, ctx)
+        else:
+            base(game, obj, ctx)
+
+    return step
+
+
 def _steps_of(clauses: list[str], for_spell: bool) -> tuple[list[Step], int] | None:
     """One step per clause, and how many of them this module's own readers
     built; `None` when a clause nothing reads is left over."""
@@ -1436,6 +1788,11 @@ def _steps_of(clauses: list[str], for_spell: bool) -> tuple[list[Step], int] | N
             if effect is None:
                 return None
             step = _plain_step(effect)
+        if isinstance(step, _Instead):
+            if not steps:
+                return None
+            steps[-1] = _either(step, steps[-1])
+            continue
         steps.append(step)
     return steps, mine
 
@@ -1762,6 +2119,7 @@ def _gate(text: str) -> bool:
         "this way" in lowered
         or "reveals cards from the top" in lowered
         or "cards that player owns in exile" in lowered
+        or "those creatures are " in lowered
     )
 
 

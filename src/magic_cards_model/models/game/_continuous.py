@@ -85,6 +85,7 @@ from ..card_state import (
     CardState,
     ChoiceKind,
     Counter,
+    ExileMarker,
     TargetRef,
 )
 from ..mana import ManaCost
@@ -1043,6 +1044,9 @@ class ContinuousMixin:
             hand_size_by_player={
                 player.username: len(player.hand) for player in self.players_in_game
             },
+            # CR 702.143a: Alrund, God of the Cosmos' "each foretold card you own
+            # in exile" - a shared zone's cards, counted per owner.
+            foretold_in_exile_by_player=self._foretold_in_exile_counts(),
             # CR 401.1: Living Conundrum's "As long as there are no cards in
             # your library" reads a library size, no more a characteristic
             # than a hand size is.
@@ -1929,6 +1933,19 @@ class ContinuousMixin:
                 decreases.append(ManaCost.parse(f"{{{grant.amount}}}"))
 
         return increases, decreases, floor
+
+    def _foretold_in_exile_counts(self: "Game") -> dict[str, int]:
+        """Foretold cards (CR 702.143a) in exile, per owner."""
+        counts: dict[str, int] = {}
+        for card in self.exile:
+            annotation = getattr(card, "exile_annotation", None)
+            if (
+                annotation is not None
+                and annotation.marker is ExileMarker.FORETOLD
+                and card.owner is not None
+            ):
+                counts[card.owner] = counts.get(card.owner, 0) + 1
+        return counts
 
     def has_static_spells_flash_grant(self: "Game", caster: str, spell: CardState) -> bool:
         """Whether some permanent `caster` controls grants *every* spell

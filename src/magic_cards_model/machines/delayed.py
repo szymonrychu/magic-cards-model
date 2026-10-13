@@ -864,6 +864,27 @@ class StaticPrisonReturn(DelayedEffectSpecBase):
             game.put_onto_battlefield(card, card.owner, tapped=False)
 
 
+class PhaseInEach(DelayedEffectSpecBase):
+    """The end of "those creatures phase out until this enchantment leaves the
+    battlefield" (Out of Time; CR 702.26c, CR 610.3): when the source leaves, the
+    permanents it phased out phase back in. Which permanents is carried here (the
+    trigger's own `subject_id` is the source whose departure fires it). A
+    permanent that is not (or no longer) held out by this duration - gone, or
+    phased in by other means - is left alone."""
+
+    kind: Literal["phase_in_each"] = "phase_in_each"
+    ids: tuple[UUID, ...]
+    held_by: str
+    """`CardState.phased_out_under` as the duration recorded it (`until:<source id>`)."""
+
+    def __call__(self, game: "Game", ability: AbilityOnStack, trigger: "DelayedTrigger") -> None:
+        _drop_sibling_triggers(game, trigger)
+        for card_id in self.ids:
+            card = next((c for c in game.phased_out if c.id == card_id), None)
+            if card is not None and card.phased_out_under == self.held_by:
+                game.phase_in(card)
+
+
 class ReturnExiledCardAndAddCounters(DelayedEffectSpecBase):
     """Lagrella, the Magpie's second sentence: "When an exiled card enters
     under your control this way, put two +1/+1 counters on it."
@@ -2574,6 +2595,7 @@ DelayedEffectSpec = Annotated[
     | ReturnEarthbentLand
     | DevourerOfDestinyFirstUpkeep
     | StaticPrisonReturn
+    | PhaseInEach
     | ReturnExiledCardAndAddCounters
     | CreateAttackingTokens
     | CreateTokensForController
