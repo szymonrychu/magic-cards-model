@@ -4377,6 +4377,27 @@ def read_turn_damage_spec(text: str) -> CreatedReplacementSpec | None:
     return TurnDamageGroup(parts=parts)
 
 
+#: "Lands you control enter tapped" once "this turn" is taken off.
+_ENTERS_TAPPED_RE = re.compile(
+    r"^(?P<what>lands|creatures|artifacts|enchantments|permanents) you control enter tapped\.?$",
+    re.IGNORECASE,
+)
+_PLURAL_TYPES = {
+    "lands": (Type.LAND,),
+    "creatures": (Type.CREATURE,),
+    "artifacts": (Type.ARTIFACT,),
+    "enchantments": (Type.ENCHANTMENT,),
+    "permanents": (),
+}
+
+
+def _read_enters_tapped(body: str) -> "EntersTappedThisTurn | None":
+    match = _ENTERS_TAPPED_RE.fullmatch(body.strip())
+    if match is None:
+        return None
+    return EntersTappedThisTurn(types=_PLURAL_TYPES[match.group("what").lower()])
+
+
 def created_replacement_spec(sentence: str) -> CreatedReplacementSpec | None:
     """The resolution-created replacement a sentence prints, or `None`.
 
@@ -4398,6 +4419,9 @@ def created_replacement_spec(sentence: str) -> CreatedReplacementSpec | None:
     entering = _read_enter_under_your_control(body)
     if entering is not None:
         return entering
+    enters_tapped = _read_enters_tapped(body)
+    if enters_tapped is not None:
+        return enters_tapped
     # "damage that would reduce your life total to less than N reduces it to
     # N instead" (Angel of Grace's until-end-of-turn form) has no leading
     # "If", so the generic `_parse_sentence` loop below never claims it (see
@@ -4439,6 +4463,7 @@ from .model import (  # noqa: E402
     CounterAmountReplacement,
     DamageLifeFloorReplacement,
     DrawSkipReplacement,
+    EntersTappedThisTurn,
     EnterUncastExile,
     EventKind,
 )

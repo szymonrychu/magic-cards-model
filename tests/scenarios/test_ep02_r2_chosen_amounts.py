@@ -337,6 +337,30 @@ def test_rosheen_adds_two_colorless_per_x_card_revealed():
     assert scenario.player("alice").mana_pool.floating.get(Color.COLORLESS, 0) == 2
 
 
+def test_rosheen_enters_mills_six_and_takes_an_x_card_from_among_them():
+    scenario = _board(
+        alice_hand=["Rosheen, Roaring Prophet"],
+        alice_library=[
+            "Grizzly Bears",
+            "Nahiri's Lithoforming",
+            "Forest",
+            "Forest",
+            "Forest",
+            "Forest",
+            "Island",
+        ],
+    )
+    x_card = scenario.find("Nahiri's Lithoforming", Zone.LIBRARY, "alice")
+    bears = scenario.find("Grizzly Bears", Zone.LIBRARY, "alice")
+    scenario.will_take_the_may(True, source="Rosheen, Roaring Prophet")
+    scenario.will_choose_cards(x_card, source="Rosheen, Roaring Prophet")
+    scenario.put_onto_battlefield("Rosheen, Roaring Prophet")
+    _resolve_all(scenario)
+    assert x_card.zone is Zone.HAND
+    assert bears.zone is Zone.GRAVEYARD  # not an {X} card: never offered
+    assert len(scenario.player("alice").library) == 1
+
+
 # --------------------------------------------------------------------------
 # "Sacrifice any number of <things>" / "Sacrifice X lands" + payoffs
 # --------------------------------------------------------------------------
@@ -344,35 +368,57 @@ def test_rosheen_adds_two_colorless_per_x_card_revealed():
 
 def test_nahiris_lithoforming_draws_per_land_sacrificed_and_grants_land_plays():
     scenario = _board(
-        alice_hand=["Nahiri's Lithoforming"],
+        alice_hand=["Nahiri's Lithoforming", "Forest", "Forest"],
         alice_lands=("Mountain", "Mountain", "Mountain", "Mountain"),
     )
     hand_before = len(scenario.player("alice").hand) - 1
     mountains = _on_battlefield(scenario, "Mountain")
     scenario.will_choose_cards(*mountains[:2], source="Nahiri's Lithoforming")
-    scenario.game.cast_x = 2  # announced X, read off the cast record
-    scenario.cast_and_resolve("Nahiri's Lithoforming", username="alice", auto=True)
+    casting = scenario.cast("Nahiri's Lithoforming", "alice")
+    casting.x_value = 2  # CR 107.3a: X announced as the spell is cast
+    scenario.auto_pay(casting.begin_paying(), username="alice")
+    scenario.put_on_stack(casting)
+    scenario.resolve_top()
     assert len(_on_battlefield(scenario, "Mountain")) == 6
     assert len(scenario.player("alice").hand) == hand_before + 2
+    # Three land plays this turn (one plus X=2), each land entering tapped.
+    forests = [s for s in scenario.player("alice").hand if s.name == "Forest"]
+    assert len(forests) == 4  # two kept, two drawn
+    for _ in range(3):
+        scenario.play_land("Forest", username="alice")
+    played = [s for s in _on_battlefield(scenario, "Forest") if s.id in {f.id for f in forests}]
+    assert len(played) == 3 and all(s.tapped for s in played)
+    with pytest.raises(ValueError, match="CR 305.2"):
+        scenario.play_land("Forest", username="alice")
 
 
 def test_hunger_tide_rises_chapter_four_searches_up_to_creatures_sacrificed():
     scenario = _board(
+        alice_hand=["The Hunger Tide Rises"],
         alice_battlefield=["Grizzly Bears", "Llanowar Elves"],
         alice_library=["Colossal Dreadmaw", "Grizzly Bears", "Forest", "Forest"],
     )
-    saga = scenario.put_onto_battlefield("The Hunger Tide Rises", from_zone=Zone.LIBRARY)
+    saga = scenario.put_onto_battlefield("The Hunger Tide Rises")
+    _resolve_all(scenario)
     creatures = [
         *_on_battlefield(scenario, "Grizzly Bears"),
         *_on_battlefield(scenario, "Llanowar Elves"),
     ]
     scenario.will_choose_cards(*creatures, source="The Hunger Tide Rises")
     bears = scenario.find("Grizzly Bears", Zone.LIBRARY, "alice")
-    scenario.will_choose_cards(bears, source="The Hunger Tide Rises")
+    chapter = "The Hunger Tide Rises's triggered ability"
+    scenario.will_take_the_may(True, source=chapter)  # search the library too
+    scenario.will_choose_cards(bears, source=chapter)
     for _ in range(3):
         scenario.game.add_counters(saga, "lore", 1)
         _resolve_all(scenario)
-    assert any(s.name == "Grizzly Bears" for s in scenario.game.battlefield)
+    assert bears.zone is Zone.BATTLEFIELD or any(
+        s.name == "Grizzly Bears" and s.controller == "alice" for s in scenario.game.battlefield
+    )
+    choice = [q for q in scenario.questions_asked() if q.prompt.startswith("choose up to one")]
+    # Two creatures sacrificed: the 6-mana Dreadmaw is never offered.
+    dreadmaw = scenario.find("Colossal Dreadmaw", Zone.LIBRARY, "alice")
+    assert choice and dreadmaw.id not in choice[-1].cards
 
 
 def test_hew_the_entwood_reveals_one_card_per_land_sacrificed():
@@ -453,7 +499,7 @@ def test_quintorius_ultimate_exiles_chosen_cards_and_adds_red_per_card():
     quintorius = scenario.find("Quintorius Kand", Zone.BATTLEFIELD, "alice")
     quintorius.counters.add("loyalty", 2)
     graveyard = list(scenario.player("alice").graveyard)
-    scenario.activate(quintorius, index=3, targets=graveyard[:2], username="alice")
+    scenario.activate(quintorius, index=2, targets=graveyard[:2], username="alice")
     _resolve_all(scenario)
     assert scenario.player("alice").mana_pool.floating.get(Color.RED, 0) == 2
     assert all(state.zone is Zone.EXILE for state in graveyard[:2])

@@ -1555,7 +1555,10 @@ _SELECT_FROM_TOP_RE = re.compile(
     r"planeswalker) |(?P<negated>non[a-z]+(?:, ?non[a-z]+)*) )?"
     # "from among them" and "from among the cards milled this way" name the
     # same set - the cards this clause's own first sentence just saw.
-    r"cards? from among (?:them|the cards milled this way) "
+    # Rosheen, Roaring Prophet's "a card with {X} in its mana cost" (CR 107.3,
+    # CR 202.1) narrows whichever kind is named.
+    r"cards?(?P<with_x> with \{x\} in (?:its|their) mana costs?)? "
+    r"from among (?:them|the cards milled this way) "
     r"(?P<dest>into your hand|onto the battlefield tapped|onto the battlefield"
     r"|into your graveyard)\.\s*"
     r"(?:(?P<decline_counter>if you don't, put a \+1/\+1 counter on this creature\.\s*)"
@@ -1619,6 +1622,12 @@ def _select_from_top_runner(
         if found is None:
             return None
         predicate = found
+    if match.group("with_x") is not None:
+        kind_predicate = predicate
+
+        def predicate(state: CardState) -> bool:
+            return "{X}" in (state.card.mana_cost or "").upper() and kind_predicate(state)
+
     destination = match.group("dest").lower()
     counter_when_declined = match.group("decline_counter") is not None
     decline_dest = (match.group("decline_dest") or "").lower()

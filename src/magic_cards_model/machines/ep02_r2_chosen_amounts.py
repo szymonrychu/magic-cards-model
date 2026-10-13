@@ -587,6 +587,13 @@ _EVENT_REWRITES: tuple[tuple[re.Pattern[str], Callable[[re.Match[str], int], str
     ),
 )
 
+#: "mana value less than or equal to <a counted amount>".
+_AT_MOST_COUNT_RE = re.compile(
+    r"\bmana value less than or equal to (?P<expr>the (?:number|amount) of [^.]+?)"
+    r"(?= and |\.|,|$)",
+    re.IGNORECASE,
+)
+
 #: ", where X is <expr>" ending its sentence, its X used anywhere in the text.
 _WHERE_X_SENTENCE_RE = re.compile(r",\s*where x is (?P<expr>[^.]+)(?=\.|$)", re.IGNORECASE)
 
@@ -619,18 +626,35 @@ def amount_measure(expr: str) -> Measure | None:
     return measure
 
 
-def _written_template(text: str) -> tuple[Measure, Callable[[int], str]] | None:
+def _written_template(
+    text: str, *, after_prefix: bool = False
+) -> tuple[Measure, Callable[[int], str]] | None:
     """`(measure, template)`: the amount `text` names and `text` with that
-    amount written as a number, or `None` when it names none of these."""
+    amount written as a number, or `None` when it names none of these.
+    `after_prefix`: earlier instructions run first, so even a one-sentence
+    "..., where X is ..." is read here, once they have."""
     from .amount_sentences import write_x
 
     where = _WHERE_X_SENTENCE_RE.search(text)
     if where is not None:
+        # Otherwise only an X that reaches past its own sentence: a
+        # one-sentence "..., where X is ..." is the ordinary readers' own.
+        later = text[where.end() :]
         measure = amount_measure(where.group("expr"))
         if measure is None:
             return None
-        body = text[: where.start()] + text[where.end() :]
+        body = text[: where.start()] + later
         return measure, lambda n: write_x(body, n)
+    if after_prefix and (bound := _AT_MOST_COUNT_RE.search(text)) is not None:
+        # "with mana value less than or equal to the number of creatures
+        # sacrificed this way" (The Hunger Tide Rises), read once the
+        # sacrifice before it has happened (CR 608.2c).
+        bound_measure = amount_measure(bound.group("expr"))
+        if bound_measure is not None:
+            return (
+                bound_measure,
+                lambda n: text[: bound.start()] + f"mana value {n} or less" + text[bound.end() :],
+            )
     if not any(pattern.search(text) for pattern, _ in _EVENT_REWRITES):
         return None
 
@@ -672,35 +696,63 @@ def amount_written_effect(text: str, for_spell: bool) -> Any:
 
     lowered = text.lower()
     if "where x is" not in lowered and not any(
-        word in lowered for word in ("damage", "life you gained", "life they gained")
+        word in lowered
+        for word in ("damage", "life you gained", "life they gained", "less than or equal to the")
     ):
         return None
     whole = " ".join(_strip_non_effect_preamble(text).strip().split())
-    plan = _written_template(whole)
+    prefix, body = "", whole
+    sentences = re.split(r"(?<=\.)\s+", whole)
+    where_at = next(
+        (
+            i
+            for i, sentence in enumerate(sentences)
+            if _WHERE_X_SENTENCE_RE.search(sentence) or _AT_MOST_COUNT_RE.search(sentence)
+        ),
+        0,
+    )
+    if where_at > 0:
+        # "Sacrifice any number of lands. Reveal the top X cards ..., where X
+        # is the number of lands sacrificed this way. ..." - the instructions
+        # before X is defined are followed first (CR 608.2c), then X is read.
+        prefix, body = " ".join(sentences[:where_at]), " ".join(sentences[where_at:])
+    plan = _written_template(body, after_prefix=bool(prefix))
     if plan is None:
         return None
     measure, template = plan
-    if template(1) == whole or not _readable_for_numbers(
-        tuple(template(n) for n in (1, 2, 3)), for_spell
+    if template(1) == body or not _readable_for_numbers(
+        tuple(template(n) for n in (1, 2, 3)) + ((prefix,) if prefix else ()), for_spell
     ):
         return None
 
     def effect(game: "Game", stack_object: Any) -> None:
+        parse = _parser(for_spell)
+        if prefix:
+            first = parse(prefix)
+            if first is not None:
+                first(game, stack_object)
         n = measure(game, stack_object)
-        payoff = _parser(for_spell)(template(n))
+        payoff = parse(template(n))
         if payoff is not None:
             payoff(game, stack_object)
 
     return effect
 
 
-@ABILITY_TEXT.rung("s40", before=("parse_mixed_effect",))
+@ABILITY_TEXT.rung("s40", after=("parse_mixed_effect", "_parse_counted_amount_ability_text"))
 def _parse_amount_written_ability(text: str) -> Any:
     """`amount_written_effect` as an ability's whole text."""
     return amount_written_effect(text, False)
 
 
-@SPELL_TEXT.rung("s23")
+@SPELL_TEXT.rung(
+    "s23",
+    after=(
+        "_parse_counted_amount_spell_text",
+        "parse_mixed_effect_for_spell",
+        "_parse_affected_this_way_spell",
+    ),
+)
 def _parse_amount_written_spell(text: str) -> Any:
     """`amount_written_effect` as a spell's whole text."""
     return amount_written_effect(text, True)
@@ -1108,3 +1160,222 @@ def chosen_amount_spell_effect(text: str) -> Any:
         if effect is not None:
             return effect
     return None
+
+
+# --------------------------------------------------------------------------
+# "Lands you control enter tapped this turn." as one instruction of several
+# --------------------------------------------------------------------------
+
+
+@MIXED_CLAUSE.rung("s32", for_spell=FORWARD)
+def _parse_enters_tapped_this_turn_clause(clause: str, *, for_spell: bool) -> Any:
+    """ "<Permanents> you control enter tapped this turn." after other
+    instructions (Nahiri's Lithoforming): a replacement effect created as the
+    instruction resolves (CR 614.1a) lasting the turn (CR 611.2a), ended by
+    the cleanup step (CR 514.2)."""
+    from .replacement import CreatedReplacement, EntersTappedThisTurn
+    from .replacement.parse import created_replacement_spec
+
+    if "enter tapped" not in clause.lower():
+        return None
+    spec = created_replacement_spec(clause)
+    if not isinstance(spec, EntersTappedThisTurn):
+        return None
+    label = " ".join(clause.split())
+
+    def effect(game: "Game", stack_object: Any) -> None:
+        source_id = getattr(stack_object, "source_id", None) or getattr(stack_object, "id", None)
+        game.created_replacements.append(
+            CreatedReplacement(
+                spec=spec,
+                label=label,
+                controller=_controller(game, stack_object).username,
+                source_id=source_id,
+                source_name=_source_name(stack_object),
+            )
+        )
+
+    return effect
+
+
+#: "For each land sacrificed this way, draw a card." - the count fronted.
+_LEADING_FOR_EACH_RE = re.compile(r"^for each (?P<each>[^,]+), (?P<body>.+?)\.?$", re.IGNORECASE)
+
+
+@MIXED_CLAUSE.rung("s32", for_spell=FORWARD)
+def _parse_leading_for_each_clause(clause: str, *, for_spell: bool) -> Any:
+    """ "For each <counted thing>, <instruction>" is the same instruction as
+    "<instruction> for each <counted thing>" (CR 608.2c), read that way."""
+    from .effects.dispatch import _parse_mixed_clause
+
+    if not clause.lower().startswith("for each "):
+        return None
+    match = _LEADING_FOR_EACH_RE.fullmatch(" ".join(clause.strip().split()))
+    if match is None or "this way" not in match.group("each").lower():
+        return None
+    return _parse_mixed_clause(
+        f"{match.group('body')} for each {match.group('each')}", for_spell=for_spell
+    )
+
+
+#: "Reveal the top N cards of your library. Choose any number of artifact
+#: and/or land cards revealed this way. Put all nonland cards chosen this way
+#: onto the battlefield, then put all land cards chosen this way onto the
+#: battlefield tapped, then put the rest on the bottom of your library in a
+#: random order." (Hew the Entwood, N read in from the lands sacrificed).
+_REVEAL_CHOOSE_PUT_RE = re.compile(
+    r"^reveal the top (?P<n>\d+) cards? of your library\. "
+    r"choose any number of (?P<types>[a-z ,/]+?) cards revealed this way\. "
+    r"put all nonland cards chosen this way onto the battlefield, "
+    r"then put all land cards chosen this way onto the battlefield tapped, "
+    r"then put the rest on the bottom of your library in a random order\.?$",
+    re.IGNORECASE,
+)
+_TYPE_WORDS = {
+    "artifact": "Artifact",
+    "creature": "Creature",
+    "enchantment": "Enchantment",
+    "land": "Land",
+    "planeswalker": "Planeswalker",
+    "battle": "Battle",
+}
+
+
+def _type_list(words: str) -> tuple[str, ...] | None:
+    parts = [p for p in re.split(r"\s*(?:,|and/or|\bor\b|\band\b)\s*", words.lower()) if p]
+    if not parts or any(part not in _TYPE_WORDS for part in parts):
+        return None
+    return tuple(_TYPE_WORDS[part] for part in parts)
+
+
+def reveal_choose_put_effect(text: str) -> Any:
+    """CR 701.20a reveals the top N; any number (CR 107.1c) of the named
+    types are chosen; the chosen nonland cards enter, then the chosen lands
+    enter tapped (CR 608.2c's order), and the rest go to the bottom in a
+    random order (CR 401.4)."""
+    if "cards chosen this way onto the battlefield" not in text.lower():
+        return None
+    match = _REVEAL_CHOOSE_PUT_RE.fullmatch(" ".join(text.strip().split()))
+    if match is None:
+        return None
+    types = _type_list(match.group("types"))
+    if types is None:
+        return None
+    count = int(match.group("n"))
+
+    def effect(game: "Game", stack_object: Any) -> None:
+        from .effects.library import _bottom_in_random_order
+
+        player = _controller(game, stack_object)
+        name = _source_name(stack_object)
+        revealed = list(player.library[:count])
+        for state in revealed:
+            game.reveal(state, source=name)
+        candidates = [
+            state for state in revealed if any(t in str(state.card.type_line) for t in types)
+        ]
+        chosen = choose_any_number(
+            game, stack_object, player, candidates, "choose cards revealed this way"
+        )
+        for state in [c for c in chosen if not c.card.is_land]:
+            game.put_onto_battlefield(state, player.username)
+        for state in [c for c in chosen if c.card.is_land]:
+            game.put_onto_battlefield(state, player.username, tapped=True)
+        _bottom_in_random_order(
+            game, player, [s for s in revealed if s not in chosen and s.zone is Zone.LIBRARY]
+        )
+
+    return effect
+
+
+@SPELL_TEXT.rung("s23")
+def _parse_reveal_choose_put_spell(text: str) -> Any:
+    """`reveal_choose_put_effect` as a spell's whole text."""
+    return reveal_choose_put_effect(text)
+
+
+@ABILITY_TEXT.rung("s40", before=("parse_mixed_effect",))
+def _parse_reveal_choose_put_ability(text: str) -> Any:
+    """`reveal_choose_put_effect` as an ability's whole text."""
+    return reveal_choose_put_effect(text)
+
+
+# --------------------------------------------------------------------------
+# "... You may play those cards this turn." after an exile of a chosen number
+# --------------------------------------------------------------------------
+
+_PLAY_THOSE_THIS_TURN_RE = re.compile(
+    r"^(?P<prefix>.+\.)\s+you may play (?:those cards|them|the exiled cards) this turn\.?$",
+    re.IGNORECASE,
+)
+
+
+@functools.cache
+def _play_exiled_plan(text: str, for_spell: bool) -> tuple[str, str] | None:
+    from .effects.text import _strip_non_effect_preamble
+
+    whole = " ".join(_strip_non_effect_preamble(text).strip().split())
+    match = _PLAY_THOSE_THIS_TURN_RE.fullmatch(whole)
+    if match is None:
+        return None
+    exile, _, middle = match.group("prefix").partition(". ")
+    if not exile.lower().startswith("exile any number of "):
+        return None
+    exile += "."
+    middle = middle.strip()
+    if not _readable_for_numbers((exile, middle) if middle else (exile,), for_spell):
+        return None
+    return exile, middle
+
+
+def play_exiled_this_turn_effect(text: str, for_spell: bool) -> Any:
+    """ "Exile any number of target cards from your graveyard. Add {R} for
+    each card exiled this way. You may play those cards this turn."
+    (Quintorius Kand's -6): the earlier instructions are followed (CR
+    608.2c), and each card they really exiled may be played this turn
+    (CR 601.3, CR 305.2 for a land)."""
+    if "may play" not in text.lower() or "this turn" not in text.lower():
+        return None
+    plan = _play_exiled_plan(text, for_spell)
+    if plan is None:
+        return None
+    exile, middle = plan
+
+    def effect(game: "Game", stack_object: Any) -> None:
+        from .casting.permissions import PlayAction
+
+        parse = _parser(for_spell)
+        before = {state.id for state in game.exile}
+        first = parse(exile)
+        if first is not None:
+            first(game, stack_object)
+        exiled = [s for s in game.exile if s.id not in before]
+        # "for each card exiled this way" reads what really moved (CR 608.2c).
+        game.record_count(len(exiled))
+        then = parse(middle) if middle else None
+        if then is not None:
+            then(game, stack_object)
+        player = _controller(game, stack_object)
+        for state in exiled:
+            game.grant_play_permission(
+                state,
+                player.username,
+                action=PlayAction.PLAY,
+                source_name=_source_name(stack_object),
+                zone=Zone.EXILE,
+                rule="CR 601.3",
+            )
+
+    return effect
+
+
+@ABILITY_TEXT.rung("s40", before=("parse_mixed_effect",))
+def _parse_play_exiled_this_turn_ability(text: str) -> Any:
+    """`play_exiled_this_turn_effect` as an ability's whole text."""
+    return play_exiled_this_turn_effect(text, False)
+
+
+@SPELL_TEXT.rung("s23")
+def _parse_play_exiled_this_turn_spell(text: str) -> Any:
+    """`play_exiled_this_turn_effect` as a spell's whole text."""
+    return play_exiled_this_turn_effect(text, True)
