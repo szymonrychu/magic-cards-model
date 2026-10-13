@@ -12,6 +12,7 @@ import re
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
+from ..models.card import Type
 from ..models.card_state import CardState
 from ..models.zone import Zone
 from ..numbers import COUNT, parse_count
@@ -32,9 +33,20 @@ from .ep02_r1_counter_amounts import (
 )
 from .layers import (
     ContinuousEffect,
+    CountCountersOnIt,
+    CreaturesWithSubtype,
     Duration,
     Layer,
+    ModifyPowerToughnessPer,
+    PermanentsOfTypesWithCounter,
+    SetPowerToughnessToCounters,
+    SetTypesAndSubtypes,
     Sublayer,
+    add_subtype,
+    add_type,
+    creatures_controlled_by,
+    creatures_controlled_by_opponents_of,
+    lose_all_abilities,
     creatures_controlled_by_opponents_of_with_power_at_most,
     grant_ability,
     only_this_incarnation,
@@ -1040,3 +1052,374 @@ def _parse_twice_n_counters_clause(text: str, *, for_spell: bool):
         return lambda game, ability: None
     rewritten = f"{match.group('verb')} {count} {match.group('rest')}."
     return parse_mixed_effect_for_spell(rewritten) if for_spell else parse_mixed_effect(rewritten)
+
+
+# ---------------------------------------------------------------------------
+# loyalty-and-counter-sized statics. "Creatures you don't control get -1/-1 for
+# each slime counter on them" (Toxrill), "Each Fungus creature gets +1/+1 for each
+# spore counter on it" (Thelon): a layer 7c pump counted per object, off that
+# object's own counters (CR 613.4c, CR 122.1). "Each planeswalker with one or more
+# loyalty counters on it loses all abilities and is a creature with power and
+# toughness each equal to the number of loyalty counters on it" (Spark Rupture):
+# layer 4 adds the type (CR 613.1d), layer 6 removes the abilities (CR 613.1f),
+# layer 7b sets the size (CR 613.4b). Read by `layers/other_statics`.
+# ---------------------------------------------------------------------------
+
+_COUNTER_PUMP_STATIC_RE = re.compile(
+    r"^(?P<group>creatures you don't control|creatures your opponents control"
+    r"|creatures you control|each (?P<sub>[a-z]+) creature)"
+    r" gets? (?P<p>[+-]\d+)/(?P<t>[+-]\d+) for each (?P<kind>[a-z0-9+/-]+) counter on "
+    r"(?:them|it)\.?$",
+    re.IGNORECASE,
+)
+_PLANESWALKER_CREATURES_RE = re.compile(
+    r"^each planeswalker with one or more (?P<kind>[a-z0-9+/-]+) counters on it loses all "
+    r"abilities and is a creature with power and toughness each equal to the number of "
+    r"(?P=kind) counters on it\.?$",
+    re.IGNORECASE,
+)
+
+
+@functools.cache
+def parse_counter_static_sentence(sentence: str):
+    """The layer builder for one of the shapes above, or `None`."""
+    from .layers.parse import _source_line_for
+
+    flat = " ".join(sentence.split())
+    pump = _COUNTER_PUMP_STATIC_RE.fullmatch(flat)
+    walkers = _PLANESWALKER_CREATURES_RE.fullmatch(flat)
+    if pump is None and walkers is None:
+        return None
+
+    def builder(source, timestamp, targets, context):
+        line = _source_line_for(source, sentence)
+        if pump is not None:
+            group = pump.group("group").lower()
+            if pump.group("sub"):
+                selector = CreaturesWithSubtype(subtype=pump.group("sub").title())
+            elif group.endswith("you control"):
+                selector = creatures_controlled_by(source.controller)
+            else:
+                selector = creatures_controlled_by_opponents_of(source.controller)
+            return [
+                ContinuousEffect(
+                    description=f"{source.name}: {group} get {pump.group('p')}/{pump.group('t')} "
+                    f"for each {pump.group('kind')} counter",
+                    layer=Layer.POWER_TOUGHNESS,
+                    sublayer=Sublayer.MODIFY,
+                    timestamp=timestamp,
+                    source_id=source.id,
+                    source_ability=line,
+                    selector=selector,
+                    modification=ModifyPowerToughnessPer(
+                        count=CountCountersOnIt(counter=pump.group("kind").lower()),
+                        power=int(pump.group("p")),
+                        toughness=int(pump.group("t")),
+                    ),
+                )
+            ]
+        kind = walkers.group("kind").lower()
+        selector = PermanentsOfTypesWithCounter(card_types=(Type.PLANESWALKER,), counter=kind)
+        shared = {
+            "timestamp": timestamp,
+            "source_id": source.id,
+            "source_ability": line,
+            "selector": selector,
+        }
+        return [
+            ContinuousEffect(
+                description=f"{source.name}: planeswalkers with {kind} counters are creatures",
+                layer=Layer.TYPE,
+                modification=add_type(Type.CREATURE),
+                **shared,
+            ),
+            ContinuousEffect(
+                description=f"{source.name}: planeswalkers with {kind} counters lose all abilities",
+                layer=Layer.ABILITY,
+                modification=lose_all_abilities,
+                **shared,
+            ),
+            ContinuousEffect(
+                description=f"{source.name}: planeswalkers' power and toughness equal {kind} counters",
+                layer=Layer.POWER_TOUGHNESS,
+                sublayer=Sublayer.SET,
+                modification=SetPowerToughnessToCounters(counter=kind),
+                **shared,
+            ),
+        ]
+
+    return builder
+
+
+# ---------------------------------------------------------------------------
+# "Until end of turn, <it> becomes a <subtypes> creature with power and toughness
+# each equal to the number of <kind> counters on <it> and gains <keyword>. It's
+# still a <type>. Prevent all damage that would be dealt to it this turn."
+# (Gideon, Champion of Justice's 0). Layer 4 adds the types (CR 205.1b, kept
+# because it is "still a planeswalker"), layer 6 the keyword (CR 613.1f), layer 7b
+# the size, read live off the counters (CR 613.4b); the prevention is the ordinary
+# clause reader's.
+# ---------------------------------------------------------------------------
+
+_BECOMES_CREATURE_BY_COUNTERS_RE = re.compile(
+    r"^until end of turn, (?P<subject>(?!target\b).+?) becomes an? (?P<subs>[a-z]+(?: [a-z]+)*?) "
+    r"creature with power and toughness each equal to the number of (?P<kind>[a-z0-9+/-]+) "
+    r"counters on (?:him|her|it|them|this [a-z]+)(?: and gains (?P<keyword>[a-z ]+?))?\."
+    r"(?: (?:he|she|it)'s still an? (?P<kept>[a-z]+)\.)?"
+    r"(?: (?P<rest>prevent all damage that would be dealt to (?:him|her|it|this [a-z]+) "
+    r"this turn)\.?)?$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s40", before=("parse_mixed_effect",))
+def _parse_becomes_creature_sized_by_counters(text: str):
+    flat = " ".join(text.split())
+    if "creature with power and toughness each equal to the number of" not in flat.lower():
+        return None
+    match = _BECOMES_CREATURE_BY_COUNTERS_RE.fullmatch(flat)
+    if match is None:
+        return None
+    rest = match.group("rest")
+    rider = parse_mixed_effect(rest + ".") if rest else None
+    if rest and rider is None:
+        return None
+    subtypes = tuple(word.title() for word in match.group("subs").split())
+    kind = match.group("kind").lower()
+    keyword = match.group("keyword")
+    kept = match.group("kept")
+
+    def effect(game: "Game", ability) -> None:
+        source = ability.source(game)
+        if source is None or source.zone is not Zone.BATTLEFIELD:
+            return
+        effects = continuous_effects(game)
+        timestamp = effects.tick()
+        selector = only_this_incarnation(source, source.zone_change_stamp)
+        if kept is not None:
+            types_layer = [add_type(Type.CREATURE)] + [add_subtype(each) for each in subtypes]
+        else:
+            types_layer = [SetTypesAndSubtypes(types=(Type.CREATURE,), subtypes=subtypes)]
+        changes = [(Layer.TYPE, None, modification) for modification in types_layer]
+        changes.append(
+            (Layer.POWER_TOUGHNESS, Sublayer.SET, SetPowerToughnessToCounters(counter=kind))
+        )
+        if keyword:
+            changes.append((Layer.ABILITY, None, grant_ability(keyword.strip().title())))
+        for layer, sublayer, modification in changes:
+            effects.add(
+                ContinuousEffect(
+                    description=f"{ability.source_name} becomes a creature until end of turn",
+                    layer=layer,
+                    sublayer=sublayer,
+                    timestamp=timestamp,
+                    duration=Duration.UNTIL_END_OF_TURN,
+                    selector=selector,
+                    modification=modification,
+                ),
+                game,
+            )
+        if rider is not None:
+            rider(game, ability)
+
+    return effect
+
+
+# ---------------------------------------------------------------------------
+# "Put a number of <kind> counters equal to <source>'s power on up to one other
+# target creature. That creature becomes a <subtype> in addition to its other
+# types." (Jenova, Ancient Calamity). The power is the source's as the ability
+# resolves (CR 608.2h); the new type has no duration (CR 613.1d).
+# ---------------------------------------------------------------------------
+
+_COUNTERS_EQUAL_TO_POWER_BECOMES_RE = re.compile(
+    r"^put a number of (?P<kind>[a-z0-9+/-]+) counters equal to (?:this creature|[^.]+?)['\u2019]s "
+    r"power on up to one other target creature\. that creature becomes an? "
+    r"(?P<sub>[a-z]+) in addition to its other types\.?$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s40", before=("parse_mixed_effect",))
+def _parse_counters_equal_to_power_then_becomes(text: str):
+    flat = " ".join(text.split())
+    if not flat.lower().startswith("put a number of "):
+        return None
+    match = _COUNTERS_EQUAL_TO_POWER_BECOMES_RE.fullmatch(flat)
+    if match is None:
+        return None
+    kind = _counter_kind(match.group("kind").lower())
+    subtype = match.group("sub").title()
+
+    def effect(game: "Game", ability) -> None:
+        source = ability.source_or_last_known(game)
+        if source is None:
+            return
+        amount = _source_characteristic(game, source, "power")
+        for target in game.resolve_card_targets(ability):
+            if target.zone is not Zone.BATTLEFIELD:
+                continue
+            if amount > 0:
+                game.add_counters(target, kind, amount)
+            effects = continuous_effects(game)
+            effects.add(
+                ContinuousEffect(
+                    description=f"{ability.source_name}: {target.name} becomes a {subtype}",
+                    layer=Layer.TYPE,
+                    timestamp=effects.tick(),
+                    duration=Duration.INDEFINITE,
+                    selector=only_this_incarnation(target, target.zone_change_stamp),
+                    modification=add_subtype(subtype),
+                ),
+                game,
+            )
+
+    return effect
+
+
+# ---------------------------------------------------------------------------
+# "For each opponent, tap up to one target <permanent> that opponent controls.
+# Put X stun counters on each of those permanents and you gain X life, where X is
+# <amount>." (Omega, Heartless Evolution). The count is taken once as the ability
+# resolves (CR 608.2h); the life is gained once, not per permanent; a stun counter
+# stops the next untap (CR 122.1d).
+# ---------------------------------------------------------------------------
+
+_TAP_EACH_OPPONENT_STUN_RE = re.compile(
+    r"^for each opponent, tap up to one target [a-z ]+ that opponent controls\. "
+    r"put x (?P<kind>[a-z]+) counters on each of those permanents and you gain x life, "
+    r"where x is (?P<expr>.+?)\.?$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s40", before=("parse_mixed_effect",))
+def _parse_tap_each_opponents_then_counters_and_life(text: str):
+    flat = " ".join(text.split())
+    if not flat.lower().startswith("for each opponent, tap up to one target"):
+        return None
+    match = _TAP_EACH_OPPONENT_STUN_RE.fullmatch(flat)
+    if match is None:
+        return None
+    reader = amount_expression(match.group("expr"))
+    if reader is None:
+        return None
+    kind = _counter_kind(match.group("kind").lower())
+
+    def effect(game: "Game", ability) -> None:
+        controller = game.controller_of(ability).username
+        x = reader(game, controller, ability.source_or_last_known(game), 0)
+        for target in game.resolve_card_targets(ability):
+            if target.zone is not Zone.BATTLEFIELD:
+                continue
+            game.tap_permanent(target)
+            if x > 0:
+                game.add_counters(target, kind, x)
+        if x > 0:
+            game.gain_life(controller, x)
+
+    return effect
+
+
+# ---------------------------------------------------------------------------
+# "Put a <kind> counter on <this>, then each player exiles X permanents they control
+# and/or cards from their hand, where X is the number of <kind> counters on <this>."
+# (Descent into Madness). The counter first, then X counted (CR 608.2c); each
+# player, in turn order, chooses exactly as many as they have up to X (CR 608.2d)
+# and all of them are exiled.
+# ---------------------------------------------------------------------------
+
+_COUNTER_THEN_EACH_PLAYER_EXILES_RE = re.compile(
+    r"^put an? (?P<kind>[a-z]+) counter on (?:this [a-z]+|it), then each player exiles "
+    r"(?P<n>x|\d+) permanents they control and/or cards from their hand"
+    r"(?:, where x is the number of (?P=kind) counters on (?:this [a-z]+|it))?\.?$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s40", before=("parse_mixed_effect",))
+def _parse_counter_then_each_player_exiles_x(text: str):
+    """The text arrives either whole ("exiles X ..., where X is the number of despair
+    counters ...") or with that count already read as a number (`ep02_r1_counter_amounts.
+    counters_counted_text`, which counts the counter this ability is about to put)."""
+    flat = " ".join(text.split())
+    if not flat.lower().startswith("put a") or " each player exiles " not in flat.lower():
+        return None
+    match = _COUNTER_THEN_EACH_PLAYER_EXILES_RE.fullmatch(flat)
+    if match is None:
+        return None
+    kind = _counter_kind(match.group("kind").lower())
+    fixed = None if match.group("n").lower() == "x" else int(match.group("n"))
+
+    def effect(game: "Game", ability) -> None:
+        source = ability.source_or_last_known(game)
+        if source is None:
+            return
+        if source.zone is Zone.BATTLEFIELD:
+            game.add_counters(source, kind, 1)
+        x = source.counter_count(kind) if fixed is None else fixed
+        players = list(game.players)
+        start = next(i for i, p in enumerate(players) if p.username == game.active_player.username)
+        for player in players[start:] + players[:start]:
+            name = player.username
+            options = list(game.permanents_controlled_by(name)) + list(player.hand)
+            take = min(x, len(options))
+            if take <= 0:
+                continue
+            answer = game.ask(
+                Decision(
+                    kind=DecisionKind.CHOOSE_CARDS,
+                    player=name,
+                    prompt=f"exile {take} permanents you control and/or cards from your hand",
+                    source=ability.source_name,
+                    source_id=source_id_of(ability),
+                    amount=take,
+                    cards=tuple(card.id for card in options),
+                    default_cards=tuple(card.id for card in options[:take]),
+                )
+            )
+            by_id = {card.id: card for card in options}
+            for card_id in answer:
+                chosen = by_id[card_id]
+                if chosen.zone is Zone.BATTLEFIELD:
+                    game.exile_permanent(chosen)
+                else:
+                    game.exile_cards([chosen])
+
+    return effect
+
+
+# ---------------------------------------------------------------------------
+# "Put a spore counter on each Fungus on the battlefield." (Thelon of Havenwood):
+# a group named by creature type alone, whoever controls it (CR 205.3m), so no
+# "you control" tail for `counters._COUNTER_EACH_GROUP_RE` to read.
+# ---------------------------------------------------------------------------
+
+_COUNTER_EACH_SUBTYPE_ON_BATTLEFIELD_RE = re.compile(
+    rf"^put (?P<n>{COUNT}) (?P<kind>[+-]\d+/[+-]\d+|[a-z]+) counters? on each "
+    r"(?P<sub>[a-z]+) on the battlefield\.?$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s40", before=("parse_mixed_effect",))
+def _parse_counter_on_each_subtype_on_battlefield(text: str):
+    flat = " ".join(text.split())
+    if " on the battlefield" not in flat.lower() or not flat.lower().startswith("put "):
+        return None
+    match = _COUNTER_EACH_SUBTYPE_ON_BATTLEFIELD_RE.fullmatch(flat)
+    if match is None:
+        return None
+    amount = parse_count(match.group("n"))
+    if amount is None:
+        return None
+    kind = _counter_kind(match.group("kind").lower())
+    subtype = match.group("sub").lower()
+
+    def effect(game: "Game", ability) -> None:
+        board = game.computed_board()
+        for permanent in list(game.battlefield):
+            if subtype in {each.lower() for each in board.of(permanent).subtypes}:
+                game.add_counters(permanent, kind, amount)
+
+    return effect

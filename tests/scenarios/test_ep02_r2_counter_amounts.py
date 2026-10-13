@@ -15,6 +15,7 @@ source's last known information when it has left, CR 603.10a), CR 701.10e
 
 from magic_cards_model.machines import Step
 from magic_cards_model.models import Zone
+from magic_cards_model.models.card import Type
 from magic_cards_model.models.card_state import Counter
 from tests.scenarios.harness import Scenario
 
@@ -657,3 +658,254 @@ def test_confront_the_past_returns_a_planeswalker_card_with_mana_value_x_or_less
     jace = scenario.find("Jace, the Mind Sculptor", Zone.GRAVEYARD, "alice")
     _confront(scenario, 1, 4, [jace])
     assert _named(scenario, "Jace, the Mind Sculptor")
+
+
+# -- Garruk Relentless: a state trigger on its own loyalty, and a one-sided fight back
+
+
+def test_garruk_fights_back_and_transforms_when_loyalty_falls_to_two_or_fewer():
+    scenario = _board(["Garruk Relentless"], bob=["Grizzly Bears"])
+    garruk = scenario.find("Garruk Relentless", Zone.BATTLEFIELD, "alice")
+    bears = scenario.creature("Grizzly Bears", "bob")
+    assert garruk.counter_count("loyalty") == 3
+    scenario.activate(garruk, index=0, targets=[bears])
+    _settle(scenario)
+    assert bears.zone is Zone.GRAVEYARD  # 3 damage
+    assert garruk.counter_count("loyalty") == 1  # the bear hit back for 2
+    assert garruk.transformed
+    assert scenario.game.characteristics_of(garruk).name == "Garruk, the Veil-Cursed"
+
+
+def test_garruk_transforms_at_exactly_two_loyalty():
+    scenario = _board(["Garruk Relentless"], bob=["Llanowar Elves"])
+    garruk = scenario.find("Garruk Relentless", Zone.BATTLEFIELD, "alice")
+    elves = scenario.creature("Llanowar Elves", "bob")
+    scenario.activate(garruk, index=0, targets=[elves])
+    _settle(scenario)
+    assert garruk.counter_count("loyalty") == 2 and garruk.transformed  # 3 - 1
+
+
+def test_garruk_does_not_transform_at_three_loyalty():
+    scenario = _board(["Garruk Relentless"])
+    garruk = scenario.find("Garruk Relentless", Zone.BATTLEFIELD, "alice")
+    _settle(scenario)
+    assert not garruk.transformed
+
+
+# -- Gideon, Champion of Justice
+
+
+def test_gideon_champion_of_justice_plus_one_counts_the_opponents_creatures():
+    scenario = _board(["Gideon, Champion of Justice"], bob=["Grizzly Bears", "Llanowar Elves"])
+    gideon = scenario.find("Gideon, Champion of Justice", Zone.BATTLEFIELD, "alice")
+    scenario.activate(gideon, index=0, targets=["bob"])
+    _settle(scenario)
+    assert gideon.counter_count("loyalty") == 4 + 1 + 2  # cost, then two creatures
+
+
+def test_gideon_champion_of_justice_zero_is_an_indestructible_creature_with_loyalty_stats():
+    scenario = _board(["Gideon, Champion of Justice"], bob=["Grizzly Bears"])
+    gideon = scenario.find("Gideon, Champion of Justice", Zone.BATTLEFIELD, "alice")
+    scenario.activate(gideon, index=1)
+    _settle(scenario)
+    chars = scenario.game.characteristics_of(gideon)
+    assert chars.is_creature
+    assert Type.PLANESWALKER in chars.types
+    assert {"Human", "Soldier"} <= set(chars.subtypes)
+    assert (chars.power, chars.toughness) == (4, 4)
+    assert any("ndestructible" in a for a in chars.abilities)
+    scenario.game.deal_damage(gideon, 3, source=scenario.creature("Grizzly Bears", "bob"))
+    assert gideon.counter_count("loyalty") == 4  # all damage to him is prevented
+
+
+def test_gideon_champion_of_justice_stats_follow_loyalty_and_end_with_the_turn():
+    scenario = _board(["Gideon, Champion of Justice"])
+    gideon = scenario.find("Gideon, Champion of Justice", Zone.BATTLEFIELD, "alice")
+    gideon.add_counters("loyalty", 2)
+    scenario.activate(gideon, index=1)
+    _settle(scenario)
+    assert _stats(scenario, gideon) == (6, 6)
+    _to_step(scenario, Step.CLEANUP)
+    scenario.turn_based_actions()
+    assert not scenario.game.characteristics_of(gideon).is_creature
+
+
+# -- Spark Rupture: planeswalkers with loyalty counters lose abilities and are creatures
+
+
+def test_spark_rupture_turns_planeswalkers_into_vanilla_creatures_sized_by_loyalty():
+    scenario = _board(["Spark Rupture"], bob=["Jace, the Mind Sculptor"], alice_hand=[])
+    jace = scenario.find("Jace, the Mind Sculptor", Zone.BATTLEFIELD, "bob")
+    chars = scenario.game.characteristics_of(jace)
+    assert chars.is_creature
+    assert (chars.power, chars.toughness) == (3, 3)
+    assert not chars.abilities
+    jace.add_counters("loyalty", 2)
+    assert _stats(scenario, jace) == (5, 5)
+
+
+def test_spark_rupture_leaves_other_permanents_alone():
+    scenario = _board(["Spark Rupture", "Forest"], bob=["Grizzly Bears"])
+    forest = scenario.find("Forest", Zone.BATTLEFIELD, "alice")
+    assert not scenario.game.characteristics_of(forest).is_creature
+    assert _stats(scenario, scenario.creature("Grizzly Bears", "bob")) == (2, 2)
+
+
+# -- Toxrill, the Corrosive: -1/-1 per slime counter
+
+
+def test_toxrill_shrinks_each_opposing_creature_per_slime_counter():
+    scenario = _board(["Toxrill, the Corrosive"], bob=["Craw Wurm", "Grizzly Bears"])
+    wurm = scenario.creature("Craw Wurm", "bob")
+    bears = scenario.creature("Grizzly Bears", "bob")
+    wurm.add_counters("slime", 2)
+    bears.add_counters("slime", 1)
+    assert _stats(scenario, wurm) == (4, 2)
+    assert _stats(scenario, bears) == (1, 1)
+    scenario.creature("Toxrill, the Corrosive", "alice").add_counters("slime", 3)
+    assert _stats(scenario, scenario.creature("Toxrill, the Corrosive", "alice")) == (7, 7)
+
+
+def test_toxrill_end_step_counters_kill_a_small_creature_and_leave_a_slug():
+    scenario = _board(
+        ["Toxrill, the Corrosive"], bob=["Grizzly Bears"], step=Step.POSTCOMBAT_MAIN
+    )
+    bears = scenario.creature("Grizzly Bears", "bob")
+    bears.add_counters("slime", 1)
+    _to_step(scenario, Step.END_STEP)
+    _settle(scenario)
+    assert bears.zone is Zone.GRAVEYARD
+    assert len(_named(scenario, "Slug Token")) == 1
+
+
+# -- Thelon of Havenwood: spore counters grow every Fungus
+
+
+def test_thelon_gives_each_fungus_plus_one_per_spore_counter_on_it():
+    scenario = _board(["Thelon of Havenwood", "Mold Shambler"], bob=["Grizzly Bears"])
+    shambler = scenario.creature("Mold Shambler", "alice")
+    bears = scenario.creature("Grizzly Bears", "bob")
+    shambler.add_counters("spore", 2)
+    bears.add_counters("spore", 2)
+    assert _stats(scenario, shambler) == (5, 5)
+    assert _stats(scenario, bears) == (2, 2)  # not a Fungus
+
+
+def test_thelon_exiles_a_fungus_card_to_put_a_spore_counter_on_each_fungus():
+    scenario = _board(
+        ["Thelon of Havenwood", "Mold Shambler", "Swamp", "Forest"],
+        bob=["Mold Shambler"],
+        alice_graveyard=["Mold Shambler"],
+    )
+    yours = scenario.creature("Mold Shambler", "alice")
+    theirs = scenario.creature("Mold Shambler", "bob")
+    thelon = scenario.creature("Thelon of Havenwood", "alice")
+    lands = [p for p in scenario.game.permanents_controlled_by("alice") if p.name in ("Swamp", "Forest")]
+    card = scenario.find("Mold Shambler", Zone.GRAVEYARD, "alice")
+    scenario.activate(thelon, *lands, exiling=[card])
+    _settle(scenario)
+    assert yours.counter_count("spore") == 1 and theirs.counter_count("spore") == 1
+    assert card.zone is Zone.EXILE
+    assert _stats(scenario, yours) == (4, 4)
+
+
+# -- Jenova, Ancient Calamity: its power in counters, and a new creature type
+
+
+def test_jenova_puts_counters_equal_to_its_power_and_makes_the_target_a_mutant():
+    scenario = _board(["Jenova, Ancient Calamity", "Grizzly Bears"], step=Step.UPKEEP)
+    jenova = scenario.creature("Jenova, Ancient Calamity", "alice")
+    bears = scenario.creature("Grizzly Bears", "alice")
+    jenova.add_counters(Counter.PLUS_ONE, 2)
+    scenario.will_choose_targets(bears, source="Jenova, Ancient Calamity")
+    _to_step(scenario, Step.BEGINNING_OF_COMBAT)
+    _settle(scenario)
+    assert bears.counter_count(Counter.PLUS_ONE) == 3  # Jenova is 1/5 + 2 counters
+    assert "Mutant" in scenario.game.characteristics_of(bears).subtypes
+
+
+def test_jenova_mutant_dying_on_your_turn_draws_its_power():
+    scenario = _board(["Jenova, Ancient Calamity", "Grizzly Bears"], step=Step.UPKEEP)
+    bears = scenario.creature("Grizzly Bears", "alice")
+    scenario.will_choose_targets(bears, source="Jenova, Ancient Calamity")
+    _to_step(scenario, Step.BEGINNING_OF_COMBAT)
+    _settle(scenario)
+    hand_before = len(scenario.player("alice").hand)
+    scenario.game.destroy(bears)
+    _settle(scenario)
+    assert len(scenario.player("alice").hand) == hand_before + 3  # 2/2 + one counter
+
+
+def test_jenova_with_no_target_does_nothing():
+    scenario = _board(["Jenova, Ancient Calamity", "Grizzly Bears"], step=Step.UPKEEP)
+    bears = scenario.creature("Grizzly Bears", "alice")
+    scenario.will_choose_targets(username="alice", source="Jenova, Ancient Calamity")
+    _to_step(scenario, Step.BEGINNING_OF_COMBAT)
+    _settle(scenario)
+    assert not bears.counters.counts
+
+
+# -- Omega, Heartless Evolution: X stun counters and X life, X = your nonbasic lands
+
+
+def test_omega_stuns_one_permanent_per_opponent_and_gains_life_for_nonbasic_lands():
+    scenario = _board(
+        ["Blood Crypt", "Breeding Pool", "Forest"],
+        bob=["Grizzly Bears", "Forest"],
+        alice_hand=["Omega, Heartless Evolution"],
+    )
+    bears = scenario.creature("Grizzly Bears", "bob")
+    scenario.will_choose_targets(bears, source="Omega, Heartless Evolution")
+    scenario.put_onto_battlefield("Omega, Heartless Evolution", "alice")
+    _settle(scenario)
+    assert bears.tapped
+    assert bears.counter_count("stun") == 2
+    assert scenario.player("alice").life == 22
+
+
+def test_omega_never_targets_a_land_and_can_choose_nothing():
+    scenario = _board(["Blood Crypt"], bob=["Forest"], alice_hand=["Omega, Heartless Evolution"])
+    scenario.put_onto_battlefield("Omega, Heartless Evolution", "alice")
+    _settle(scenario)
+    forest = scenario.find("Forest", Zone.BATTLEFIELD, "bob")
+    assert not forest.tapped and forest.counter_count("stun") == 0
+
+
+# -- Descent into Madness: a despair counter, then each player exiles that many
+
+
+def test_descent_into_madness_makes_each_player_exile_x_permanents_or_cards():
+    scenario = _board(
+        ["Descent into Madness", "Forest", "Island"],
+        bob=["Grizzly Bears", "Forest"],
+        bob_hand=["Island"],
+        step=Step.UNTAP,
+    )
+    descent = scenario.find("Descent into Madness", Zone.BATTLEFIELD, "alice")
+    forest = scenario.find("Forest", Zone.BATTLEFIELD, "alice")
+    bears = scenario.creature("Grizzly Bears", "bob")
+    scenario.will_choose_cards(forest, username="alice")
+    scenario.will_choose_cards(bears, username="bob")
+    _to_step(scenario, Step.UPKEEP)
+    _settle(scenario)
+    assert descent.counter_count("despair") == 1
+    assert forest.zone is Zone.EXILE
+    assert bears.zone is Zone.EXILE
+
+
+def test_descent_into_madness_second_upkeep_exiles_two_each():
+    scenario = _board(
+        ["Descent into Madness", "Forest", "Island"],
+        bob=["Grizzly Bears"],
+        step=Step.UNTAP,
+    )
+    descent = scenario.find("Descent into Madness", Zone.BATTLEFIELD, "alice")
+    descent.add_counters("despair", 1)
+    forest = scenario.find("Forest", Zone.BATTLEFIELD, "alice")
+    island = scenario.find("Island", Zone.BATTLEFIELD, "alice")
+    scenario.will_choose_cards(forest, island, username="alice")
+    _to_step(scenario, Step.UPKEEP)
+    _settle(scenario)
+    assert descent.counter_count("despair") == 2
+    assert len(scenario.game.permanents_controlled_by("alice")) <= 1  # two of three gone
+    assert not scenario.game.permanents_controlled_by("bob")  # only one to exile

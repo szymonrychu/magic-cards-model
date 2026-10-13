@@ -2335,7 +2335,8 @@ _RIDER_DEALS_DAMAGE_EQUAL_TO_ITS_POWER_TO_YOU_RE = re.compile(
 )
 _RIDER_DEALS_DAMAGE_EQUAL_TO_ITS_POWER_RE = re.compile(
     rf"^{_OBJECT_ANAPHOR} deals damage equal to its power to "
-    rf"(?:(?P<phrase>.*\btarget\b.+)|{_RIDER_DAMAGE_HOLDER_PHRASE}|(?P<self>this creature))$",
+    rf"(?:(?P<phrase>.*\btarget\b.+)|{_RIDER_DAMAGE_HOLDER_PHRASE}"
+    r"|(?P<self>this (?:creature|planeswalker|permanent)|him|her))$",
     re.IGNORECASE,
 )
 
