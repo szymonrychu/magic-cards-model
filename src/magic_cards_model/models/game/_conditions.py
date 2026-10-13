@@ -1201,9 +1201,7 @@ class ConditionsMixin:
                 word.lower() for word in (*(t.value for t in chars.types), *chars.subtypes)
             )
         card = state.card
-        return tuple(
-            word.lower() for word in (*(t.value for t in card.types), *card.subtypes)
-        )
+        return tuple(word.lower() for word in (*(t.value for t in card.types), *card.subtypes))
 
     def _last_known_color_count(self: "Game", card_id: UUID) -> int:
         """How many colours a sacrificed permanent had (CR 105.1), the computed

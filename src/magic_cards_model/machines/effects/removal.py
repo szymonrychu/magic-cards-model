@@ -3120,7 +3120,8 @@ def _parse_mass_mv_comparison(
 #: `_CHOSEN_NAME_GROUP_LOSES_RE`'s `scope` group already reads for a group
 #: static, generalised for a mass destroy/exile sweep too.
 _MASS_CONTROLLER_SCOPE_RE = re.compile(
-    r"^(?P<inner>.+?)\s+(?P<scope>you control|your opponents control|you don't control)$", re.IGNORECASE
+    r"^(?P<inner>.+?)\s+(?P<scope>you control|your opponents control|you don't control)$",
+    re.IGNORECASE,
 )
 
 

@@ -4637,9 +4637,7 @@ def _keyword_clauses(printing: Card) -> list[SupportClause]:
                     source="keyword",
                 )
             )
-        elif lowered == "protection" and (unread := _unread_protection(printing)) is not None:
-            found.append(_clause("keyword", keyword, NOTICE, where, unread))
-        elif lowered == "overload" and (unread := _unread_overload(printing)) is not None:
+        elif (unread := _unread_keyword(printing, lowered)) is not None:
             found.append(_clause("keyword", keyword, NOTICE, where, unread))
         else:
             found.append(
@@ -4655,6 +4653,15 @@ def _keyword_clauses(printing: Card) -> list[SupportClause]:
     return found
 
 
+def _unread_keyword(printing: Card, keyword: str) -> str | None:
+    """Why a keyword the engine runs is still not played in full, or `None`."""
+    if keyword == "protection":
+        return _unread_protection(printing)
+    if keyword == "overload":
+        return _unread_overload(printing)
+    return None
+
+
 def _unread_overload(printing: Card) -> str | None:
     """Why this printing's overload cost (CR 702.96a) cannot be played in full, or
     `None` when it can: the overload cost is a cast option, but casting for it
@@ -4668,7 +4675,9 @@ def _unread_overload(printing: Card) -> str | None:
     effect = effect_for(printing.name, text, x_value=1)
     if effect is not None and not _is_notice_only(effect):
         return None
-    return "the spell's text with 'target' changed to 'each' (CR 702.96a) is not one the engine reads"
+    return (
+        "the spell's text with 'target' changed to 'each' (CR 702.96a) is not one the engine reads"
+    )
 
 
 def _unread_protection(printing: Card) -> str | None:

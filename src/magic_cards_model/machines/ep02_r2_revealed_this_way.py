@@ -49,9 +49,9 @@ from ..models.player import Player
 from ..models.token import is_token
 from ..models.zone import Zone
 from ..numbers import parse_count
+from .amount_sentences import recipient_amount
 from .casting import PlayAction
 from .conditions.history import excess_damage
-from .amount_sentences import recipient_amount
 from .decisions import Decision, DecisionKind, source_id_of
 from .delayed import (
     DelayedTrigger,
@@ -65,10 +65,10 @@ from .effects._common import (
     _quality_matcher,
     _targets_understood,
 )
-from .effects.library import _mill
 from .effects.continuous import continuous_effects
-from .effects.search import _search_and_exile_matching_name
 from .effects.dispatch import _ability_effect_or_notice, _spell_effect_or_notice
+from .effects.library import _mill
+from .effects.search import _search_and_exile_matching_name
 from .effects.text import _plain_resolution_sentences, _strip_non_effect_preamble
 from .effects.tokens import _is_notice_only, investigate
 from .ep02_r1_this_way_counts import _VERBS as _r1_verbs
@@ -79,9 +79,9 @@ from .ep02_r1_this_way_counts import _sentences as _r1_sentences
 from .ep02_r1_this_way_counts import affected as _r1_affected
 from .ep02_r1_this_way_counts import snapshot as _r1_snapshot
 from .layers import ContinuousEffect, Layer, add_subtype, only_this_incarnation
+from .replacement.enters_choices import CARD_TYPE_OPTIONS
 from .targeting import profile_for_text
 from .triggers import TriggerEvent
-from .replacement.enters_choices import CARD_TYPE_OPTIONS
 
 if TYPE_CHECKING:
     from ..models.game import Game
@@ -375,14 +375,13 @@ _DEST = (
     r"(?P<order> in a random order| in any order)?"
     r"))"
 )
+_SUBJECT = r"(?:(?P<subj>you|they|that player|the player|its controller|those players) )?"
 _DISPOSE_RE = re.compile(
-    rf"^(?:(?P<subj>you|they|that player|the player|its controller|those players) )?(?P<verb>put|puts) "
-    rf"{_SELECTOR} {_DEST}$",
+    rf"^{_SUBJECT}(?P<verb>put|puts) {_SELECTOR} {_DEST}$",
     re.IGNORECASE,
 )
 _EXILE_RE = re.compile(
-    rf"^(?:(?P<subj>you|they|that player|the player|its controller|those players) )?(?P<verb>exile|exiles) "
-    rf"{_SELECTOR}$",
+    rf"^{_SUBJECT}(?P<verb>exile|exiles) {_SELECTOR}$",
     re.IGNORECASE,
 )
 _SHUFFLE_IN_RE = re.compile(
@@ -1200,7 +1199,10 @@ _IF_DISCARDED_DAMAGE_RE = re.compile(
 
 def _if_discarded_damage(match: re.Match[str]) -> Step | None:
     quality = match.group("q")
-    if not _card_description_is_readable(quality) or not profile_for_text(match.group("to")).understood:
+    if (
+        not _card_description_is_readable(quality)
+        or not profile_for_text(match.group("to")).understood
+    ):
         return None
     matcher = _quality_matcher(quality)
     stat = match.group("stat").lower().replace(" ", "_")
@@ -1235,9 +1237,7 @@ def _that_much_life(match: re.Match[str]) -> Step:
     return step
 
 
-_CHOOSE_PERMANENT_RE = re.compile(
-    r"^choose an? (?P<q>[a-z' -]+?) you control$", re.IGNORECASE
-)
+_CHOOSE_PERMANENT_RE = re.compile(r"^choose an? (?P<q>[a-z' -]+?) you control$", re.IGNORECASE)
 
 
 def _choose_permanent(match: re.Match[str]) -> Step | None:
@@ -1248,7 +1248,9 @@ def _choose_permanent(match: re.Match[str]) -> Step | None:
     matcher = _quality_matcher(quality)
 
     def step(game: "Game", obj: Any, ctx: _Ctx) -> None:
-        candidates = [p for p in game.permanents_controlled_by(ctx.controller.username) if matcher(p)]
+        candidates = [
+            p for p in game.permanents_controlled_by(ctx.controller.username) if matcher(p)
+        ]
         ctx.chosen = None
         if not candidates:
             return
@@ -1338,7 +1340,7 @@ def _damage_its_controller(match: re.Match[str]) -> Step | None:
 
 
 def _pump_source(game: "Game", obj: Any, power: int, toughness: int) -> None:
-    """"This creature gets +N/+M until end of turn", read by the ordinary clause
+    """ "This creature gets +N/+M until end of turn", read by the ordinary clause
     parsers once the numbers are written in, aimed at the object's source."""
     pump = _parse_cached(f"this creature gets {power:+d}/{toughness:+d} until end of turn.", False)
     if pump is not None:
@@ -1377,9 +1379,12 @@ def _tap_all(match: re.Match[str]) -> Step | None:
     def step(game: "Game", obj: Any, ctx: _Ctx) -> None:
         tapped = []
         for permanent in list(game.permanents_controlled_by(ctx.controller.username)):
-            if not permanent.tapped and matcher(game.characteristics_of(permanent)):
-                if game.tap_permanent(permanent):
-                    tapped.append(permanent)
+            if (
+                not permanent.tapped
+                and matcher(game.characteristics_of(permanent))
+                and game.tap_permanent(permanent)
+            ):
+                tapped.append(permanent)
         ctx.moved["tapped"] = tapped
 
     return step
@@ -1451,7 +1456,10 @@ def _that_deals_divided(_match: re.Match[str]) -> Step:
                         Decision(
                             kind=DecisionKind.CHOOSE_AN_AMOUNT,
                             player=chooser,
-                            prompt=f"choose how much of {creature.name}'s damage {recipient.name} takes",
+                            prompt=(
+                                f"choose how much of {creature.name}'s damage "
+                                f"{recipient.name} takes"
+                            ),
                             source=_source_name(obj),
                             source_id=source_id_of(obj),
                             amount=remaining,
@@ -1839,7 +1847,9 @@ def _multi_target_first(text: str) -> Callable[["Game", Any], None] | None:
         return None
     if len(profile.requirements) < 2 and not match.group("lead"):
         return None  # one ordinary target is the clause parsers' own
-    if any(r.allows_players or r.zones != frozenset({Zone.BATTLEFIELD}) for r in profile.requirements):
+    if any(
+        r.allows_players or r.zones != frozenset({Zone.BATTLEFIELD}) for r in profile.requirements
+    ):
         return None
     destroy = match.group("verb").lower() == "destroy"
 
@@ -2014,6 +2024,10 @@ def _each_plan_uncached(text: str, for_spell: bool) -> _EachPlan | None:
         each = token_match.group("rest")
     objects = _r1_objects(each)
     if objects is None:
+        return None
+    if objects.verb == "exiled" and re.search(r"\breturns?\b", " ".join(sentences[:index])):
+        # An exile followed by a return (a blink) leaves the card where it started: the
+        # ledger would count nothing "exiled this way" though it was.
         return None
     first = None
     pre: tuple[Step, ...] = ()

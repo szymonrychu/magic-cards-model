@@ -1017,7 +1017,9 @@ def test_swift_silence_counters_every_other_spell_and_draws_one_card_for_each():
     scenario.pass_priority("alice")
     silence = scenario.cast_and_resolve("Swift Silence", username="bob", auto=True)
     assert bolt.zone is Zone.GRAVEYARD and opt.zone is Zone.GRAVEYARD
-    assert silence.zone is Zone.GRAVEYARD  # "other" spells: it resolved rather than countered itself
+    assert (
+        silence.zone is Zone.GRAVEYARD
+    )  # "other" spells: it resolved rather than countered itself
     assert scenario.stack_names() == []
     assert len(scenario.player("bob").hand) == 2  # two spells countered this way
     assert scenario.player("bob").life == 20
@@ -1334,7 +1336,9 @@ def test_tuktuk_scrapper_does_nothing_when_the_player_declines():
 
 
 def test_tuktuk_scrapper_deals_no_damage_if_the_artifact_was_not_destroyed():
-    scenario, colossus = _tuktuk(bob_battlefield=("Darksteel Colossus",), target="Darksteel Colossus")
+    scenario, colossus = _tuktuk(
+        bob_battlefield=("Darksteel Colossus",), target="Darksteel Colossus"
+    )
     assert colossus.zone is Zone.BATTLEFIELD
     assert scenario.player("bob").life == 20
 
@@ -1475,9 +1479,7 @@ def test_out_of_time_creatures_phase_in_when_it_leaves_the_battlefield():
 
 
 def test_out_of_time_with_no_creatures_gets_no_counters():
-    scenario = _board(
-        alice_hand=["Out of Time"], alice_lands=("Plains", "Plains", "Plains")
-    )
+    scenario = _board(alice_hand=["Out of Time"], alice_lands=("Plains", "Plains", "Plains"))
     _cast(scenario, "Out of Time")
     _settle(scenario)
     assert scenario.find("Out of Time", Zone.BATTLEFIELD, "alice").counter_count("time") == 0
@@ -1488,7 +1490,11 @@ def test_out_of_time_with_no_creatures_gets_no_counters():
 
 def _hunt(target_name="Hill Giant"):
     scenario = _board(
-        alice_battlefield=["Master of the Wild Hunt", "Ascendant Packleader", "Ascendant Packleader"],
+        alice_battlefield=[
+            "Master of the Wild Hunt",
+            "Ascendant Packleader",
+            "Ascendant Packleader",
+        ],
         bob_battlefield=[target_name],
     )
     master = scenario.creature("Master of the Wild Hunt", "alice")
@@ -1571,9 +1577,7 @@ def test_impelled_giant_pump_lasts_only_until_end_of_turn():
 
 
 def _all_named(scenario, name, username):
-    return [
-        s for s in scenario.game.battlefield if s.name == name and s.controller == username
-    ]
+    return [s for s in scenario.game.battlefield if s.name == name and s.controller == username]
 
 
 def _blood(scenario, username="alice"):
@@ -1613,7 +1617,11 @@ def test_shilgengar_returns_the_graveyard_creatures_as_vampires_with_finality_co
     scenario.activate(shil, index=1, sacrificing=bloods, auto=True)
     scenario.pass_until_resolved()
     returned = sorted(
-        (s.name, s.counter_count("finality"), "Vampire" in scenario.game.characteristics_of(s).subtypes)
+        (
+            s.name,
+            s.counter_count("finality"),
+            "Vampire" in scenario.game.characteristics_of(s).subtypes,
+        )
         for s in scenario.game.battlefield
         if s.controller == "alice" and s.name in ("Grizzly Bears", "Serra Angel")
     )
@@ -1649,7 +1657,9 @@ def test_alrund_counts_a_foretold_card_in_exile_as_well_as_the_hand():
     scenario, alrund = _alrund_board(["Lupine Harbingers", "Forest"])
     harbingers = scenario.find("Lupine Harbingers", Zone.HAND, "alice")
     action = MarkedExile.foretell(scenario.game, harbingers, "alice")
-    scenario.pay_with(action.begin_paying(), *scenario.untapped_sources("Forest", "Forest", username="alice"))
+    scenario.pay_with(
+        action.begin_paying(), *scenario.untapped_sources("Forest", "Forest", username="alice")
+    )
     action.take()
     # one card left in hand, one foretold card in exile
     assert scenario.game.power_of(alrund) == 1 + 1 + 1
@@ -1715,9 +1725,10 @@ def test_mizzium_mortars_overloaded_hits_every_creature_you_dont_control_but_not
         bob_battlefield=["Hill Giant", "Serra Angel"],
     )
     _cast_with(scenario, "Mizzium Mortars", "Overload")
-    assert _battlefield_of(scenario, "bob") == ["Serra Angel"] or _battlefield_of(
-        scenario, "bob"
-    ) == []
+    assert (
+        _battlefield_of(scenario, "bob") == ["Serra Angel"]
+        or _battlefield_of(scenario, "bob") == []
+    )
     assert "Hill Giant" not in _battlefield_of(scenario, "bob")
     assert _battlefield_of(scenario, "alice") == ["Grizzly Bears"]
 
@@ -1808,12 +1819,18 @@ def test_smashing_success_makes_a_treasure_only_when_an_artifact_was_destroyed()
         alice_lands=("Mountain", "Mountain", "Mountain"),
         bob_battlefield=["Sol Ring"],
     )
-    _cast(scenario, "Smashing Success", targets=[scenario.find("Sol Ring", Zone.BATTLEFIELD, "bob")])
-    assert any(s.name == "Treasure Token" and s.controller == "alice" for s in scenario.game.battlefield)
+    _cast(
+        scenario, "Smashing Success", targets=[scenario.find("Sol Ring", Zone.BATTLEFIELD, "bob")]
+    )
+    assert any(
+        s.name == "Treasure Token" and s.controller == "alice" for s in scenario.game.battlefield
+    )
 
 
 def test_smashing_success_destroying_a_land_makes_no_treasure():
-    scenario = _board(alice_hand=["Smashing Success"], alice_lands=("Mountain", "Mountain", "Mountain"))
+    scenario = _board(
+        alice_hand=["Smashing Success"], alice_lands=("Mountain", "Mountain", "Mountain")
+    )
     land = scenario.find("Swamp", Zone.BATTLEFIELD, "bob")
     _cast(scenario, "Smashing Success", targets=[land])
     assert land.zone is Zone.GRAVEYARD
@@ -1832,7 +1849,9 @@ def _ignis(graveyard_card):
 def test_ignis_scientia_makes_a_food_when_a_creature_card_was_exiled():
     scenario, card = _ignis("Grizzly Bears")
     assert card.zone is Zone.EXILE
-    assert any(s.name == "Food Token" and s.controller == "alice" for s in scenario.game.battlefield)
+    assert any(
+        s.name == "Food Token" and s.controller == "alice" for s in scenario.game.battlefield
+    )
 
 
 def test_ignis_scientia_exiling_a_noncreature_card_makes_no_food():

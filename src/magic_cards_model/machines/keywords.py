@@ -4763,7 +4763,9 @@ def overloaded(game: Any, spell: CardState) -> bool:
         return False
     record = game.cast_record_of(spell)
     return (
-        record is not None and (record.keyword or "").lower() == "overload" and record.keyword_cost_paid
+        record is not None
+        and (record.keyword or "").lower() == "overload"
+        and record.keyword_cost_paid
     )
 
 
