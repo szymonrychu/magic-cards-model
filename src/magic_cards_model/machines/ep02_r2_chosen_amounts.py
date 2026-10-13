@@ -886,8 +886,8 @@ _LOOK_TOP_EXILE_ONE_PLAY_RE = re.compile(
 @ABILITY_TEXT.rung("s40", before=("parse_mixed_effect",))
 def _parse_look_top_exile_one_play_this_turn(text: str) -> Any:
     """CR 701.20e looks at the top N; one is exiled (CR 406.1) and may be
-    played this turn (CR 601.3), the rest go to the bottom in a random order
-    (CR 401.4). N of zero looks at nothing."""
+    played this turn (CR 601.3), the rest go to the bottom in a random order.
+    N of zero looks at nothing."""
     if "may play the exiled card this turn" not in text.lower():
         return None
     match = _LOOK_TOP_EXILE_ONE_PLAY_RE.fullmatch(" ".join(text.strip().split()))
@@ -1037,7 +1037,7 @@ def _starting_with(game: "Game", username: str) -> list[Player]:
 
 def repeated_pay_life_effect(text: str) -> Any:
     """Plague of Vermin: starting with the controller and going in turn
-    order (CR 101.4), each player may pay any amount of life (CR 119.4,
+    order, each player may pay any amount of life (CR 119.4,
     CR 107.1c); the round repeats until a whole round passes with no one
     paying; then each player creates a token per 1 life they paid in all."""
     from .amount_sentences import token_maker
@@ -1252,7 +1252,7 @@ def reveal_choose_put_effect(text: str) -> Any:
     """CR 701.20a reveals the top N; any number (CR 107.1c) of the named
     types are chosen; the chosen nonland cards enter, then the chosen lands
     enter tapped (CR 608.2c's order), and the rest go to the bottom in a
-    random order (CR 401.4)."""
+    random order."""
     if "cards chosen this way onto the battlefield" not in text.lower():
         return None
     match = _REVEAL_CHOOSE_PUT_RE.fullmatch(" ".join(text.strip().split()))
