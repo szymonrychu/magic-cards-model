@@ -32,7 +32,7 @@ def have_clause_as_plain(body: str) -> str | None:
         return None
     verb = match.group("verb").lower()
     third = verb + ("es" if verb.endswith(("ss", "sh", "ch", "x")) else "s")
-    return f"{match.group('subject')} {third}{body[match.end():]}"
+    return f"{match.group('subject')} {third}{body[match.end() :]}"
 
 
 # --------------------------------------------------------------------------
@@ -92,8 +92,11 @@ def split_group_extras(phrase: str):
     token = _TOKEN_NOUN_RE.match(text)
     if token is not None:
         fields["token"] = True
-        text = (token.group("kind").strip() + " permanents" if not token.group("kind").strip()
-                else token.group("kind").strip()) + token.group("tail")
+        text = (
+            token.group("kind").strip() + " permanents"
+            if not token.group("kind").strip()
+            else token.group("kind").strip()
+        ) + token.group("tail")
     if not fields:
         return phrase, None
     return " ".join(text.split()), GroupExtras(**fields)
@@ -240,7 +243,7 @@ _FOR_EACH_CREATE_RE = re.compile(
 
 @functools.cache
 def for_each_create_as_tail_form(text: str) -> str | None:
-    """"For each land you control, create a Treasure token." as the same instruction
+    """ "For each land you control, create a Treasure token." as the same instruction
     with the count after the verb ("Create a Treasure token for each land you
     control."), which the token readers already perform: the number of tokens is the
     count of the group as the instruction is performed, once (CR 608.2h), and the

@@ -19,7 +19,9 @@ board as well.
 import pytest
 
 from magic_cards_model.machines import Step
+from magic_cards_model.machines.combat import has_keyword
 from magic_cards_model.models import Zone
+from magic_cards_model.models.token import create_predefined_tokens
 from tests.scenarios.harness import Scenario
 
 LIBRARY = ["Forest"] * 12
@@ -100,11 +102,15 @@ def test_ondu_cleric_optional_life_gain_can_be_declined():
 
 
 def test_another_ally_entering_triggers_the_ally_already_on_the_battlefield():
-    """"Whenever this creature or another Ally you control enters": both Clerics
+    """ "Whenever this creature or another Ally you control enters": both Clerics
     trigger when the second enters, each counting both Allies (two Allies = 2 life
     each); the non-Ally Bears entering afterwards triggers nothing."""
     scenario = _main(
-        _build(["Plains"] * 2 + ["Forest"] * 3 + ["Ondu Cleric"], [], hand=["Ondu Cleric", "Grizzly Bears"])
+        _build(
+            ["Plains"] * 2 + ["Forest"] * 3 + ["Ondu Cleric"],
+            [],
+            hand=["Ondu Cleric", "Grizzly Bears"],
+        )
     )
     scenario.will_take_the_may(True, times=None)
     scenario.cast_onto_stack("Ondu Cleric", auto=True, username="alice")
@@ -207,6 +213,7 @@ def test_sea_gate_loremaster_draws_per_ally(others):
 # (Walker of the Wastes). The qualifier is a supertype / a name, not a type.
 # --------------------------------------------------------------------------
 
+SHRINES = ["Honden of Life's Web", "Honden of Night's Reach"]  # legendary: distinct names
 LEGENDS = ["Isamaru, Hound of Konda", "Thalia, Guardian of Thraben"]
 
 
@@ -223,9 +230,7 @@ def test_benalish_honor_guard_counts_only_legendary_creatures_you_control(legend
 
 
 def test_benalish_honor_guard_is_recounted_when_a_legend_dies():
-    scenario = _main(
-        _build(["Benalish Honor Guard", "Isamaru, Hound of Konda"], [], hand=[])
-    )
+    scenario = _main(_build(["Benalish Honor Guard", "Isamaru, Hound of Konda"], [], hand=[]))
     assert _chars(scenario, "Benalish Honor Guard", "alice").power == 3
     scenario.game.destroy(scenario.find("Isamaru, Hound of Konda", Zone.BATTLEFIELD, "alice"))
     assert _chars(scenario, "Benalish Honor Guard", "alice").power == 2
@@ -305,3 +310,194 @@ def test_flow_of_knowledge_draws_per_island_you_control(swamps):
     _cast(scenario, "Flow of Knowledge")
     assert len(scenario.player("alice").library) == 12 - 8
     assert len(scenario.player("alice").hand) == 8 - 2
+
+
+def _tokens(scenario, name, username="alice"):
+    return [
+        permanent
+        for permanent in scenario.game.permanents_controlled_by(username)
+        if permanent.name in (name, f"{name} Token")
+    ]
+
+
+def _lands(scenario, username="alice"):
+    return [
+        permanent
+        for permanent in scenario.game.permanents_controlled_by(username)
+        if scenario.game.characteristics_of(permanent).is_land
+    ]
+
+
+# --------------------------------------------------------------------------
+# "For each <group> you control, create <tokens>" - the leading form (Brass's
+# Bounty, Crescent Island Temple, Moogles' Valor). The count is taken once, as the
+# instruction is performed (CR 608.2h), and the tokens are made together.
+# --------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize("extra_lands", [0, 2])
+def test_brass_s_bounty_makes_a_treasure_for_each_land_you_control(extra_lands):
+    scenario = _main(
+        _build(
+            ["Mountain"] * (7 + extra_lands) + ["Grizzly Bears"],
+            ["Forest"] * 4,
+            hand=["Brass's Bounty"],
+        )
+    )
+    _cast(scenario, "Brass's Bounty")
+    assert len(_tokens(scenario, "Treasure")) == 7 + extra_lands
+    assert len(_tokens(scenario, "Treasure", "bob")) == 0
+
+
+@pytest.mark.parametrize("other_shrines", [0, 1])
+def test_crescent_island_temple_makes_a_monk_for_each_shrine_you_control(other_shrines):
+    scenario = _main(
+        _build(
+            ["Mountain"] * 4 + ["Honden of Life's Web"] * other_shrines,
+            ["Honden of Life's Web"],
+            hand=["Crescent Island Temple"],
+        )
+    )
+    _enter(scenario, "Crescent Island Temple")
+    assert len(_tokens(scenario, "Monk")) == 1 + other_shrines  # the Temple counts itself
+    monk = _tokens(scenario, "Monk")[0]
+    chars = scenario.game.characteristics_of(monk)
+    assert (chars.power, chars.toughness) == (1, 1)
+
+
+def test_crescent_island_temple_makes_one_more_monk_when_another_shrine_enters():
+    scenario = _main(
+        _build(
+            ["Mountain"] * 4 + ["Forest"] * 7,
+            [],
+            hand=["Crescent Island Temple", "Honden of Life's Web"],
+        )
+    )
+    _enter(scenario, "Crescent Island Temple")
+    assert len(_tokens(scenario, "Monk")) == 1
+    scenario.cast_onto_stack("Honden of Life's Web", auto=True, username="alice")
+    while scenario.game.stack:
+        scenario.pass_until_resolved()
+    assert len(_tokens(scenario, "Monk")) == 2
+
+
+@pytest.mark.parametrize("creatures", [0, 1, 3])
+def test_moogles_valor_makes_a_lifelink_token_per_creature_then_grants_indestructible(creatures):
+    scenario = _main(
+        _build(
+            ["Plains"] * 5 + ["Grizzly Bears"] * creatures,
+            ["Grizzly Bears"] * 2,
+            hand=["Moogles' Valor"],
+        )
+    )
+    _cast(scenario, "Moogles' Valor")
+    moogles = _tokens(scenario, "Moogle")
+    assert len(moogles) == creatures  # counted before the tokens exist; opponent's not counted
+    for moogle in moogles:
+        chars = scenario.game.characteristics_of(moogle)
+        assert (chars.power, chars.toughness) == (1, 2)
+    for creature in [*moogles, *_tokens(scenario, "Grizzly Bears")]:
+        assert has_keyword(creature, "indestructible", scenario.game)
+    for bear in _tokens(scenario, "Grizzly Bears", "bob"):
+        assert not has_keyword(bear, "indestructible", scenario.game)
+
+
+# --------------------------------------------------------------------------
+# "..., where X is the number of <group> you control" over a whole multi-sentence
+# body (Kyoshi Island Plaza, Nessian Game Warden, Seismic Sense)
+# --------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize("other_shrines", [0, 1, 2])
+def test_kyoshi_island_plaza_fetches_a_tapped_basic_per_shrine(other_shrines):
+    scenario = _main(
+        _build(
+            ["Forest"] * 4 + SHRINES[:other_shrines],
+            [],
+            hand=["Kyoshi Island Plaza"],
+            alice_library=["Forest"] * 6 + ["Plains"] * 4,
+        )
+    )
+    lands_before = len(_lands(scenario))
+    _enter(scenario, "Kyoshi Island Plaza")
+    fetched = len(_lands(scenario)) - lands_before
+    assert fetched == 1 + other_shrines
+    assert len(scenario.player("alice").library) == 10 - fetched
+    assert sum(1 for land in _lands(scenario) if land.tapped) >= fetched
+
+
+@pytest.mark.parametrize("forests", [2, 3, 4])
+def test_nessian_game_warden_looks_at_a_card_per_forest(forests):
+    """The Bears are third from the top: seen with three or more Forests. The Warden is
+    not a Forest and the Islands beside the Forests are not counted."""
+    scenario = _main(
+        _build(
+            ["Forest"] * forests + ["Island"] * (5 - forests if forests < 5 else 0) + ["Island"],
+            [],
+            hand=["Nessian Game Warden"],
+            alice_library=["Island", "Island", "Grizzly Bears", "Plains", "Plains", "Plains"],
+        )
+    )
+    if forests >= 3:  # the Bears are third from the top: seen, and taken
+        scenario.scry_bottoming(
+            scenario.find("Grizzly Bears", Zone.LIBRARY, "alice"), username="alice"
+        )
+    scenario.cast_onto_stack("Nessian Game Warden", auto=True, username="alice")
+    while scenario.game.stack:
+        scenario.pass_until_resolved()
+    in_hand = [card.name for card in scenario.player("alice").hand]
+    assert ("Grizzly Bears" in in_hand) == (forests >= 3)
+    # whatever was looked at and not taken went to the bottom
+    assert len(scenario.player("alice").library) == 6 - (1 if forests >= 3 else 0)
+
+
+@pytest.mark.parametrize("extra_lands", [0, 1, 3])
+def test_seismic_sense_looks_at_a_card_per_land(extra_lands):
+    lands = 1 + extra_lands  # the Forest that pays for it counts
+    scenario = _main(
+        _build(
+            ["Forest"] + ["Island"] * extra_lands,
+            ["Island"] * 5,
+            hand=["Seismic Sense"],
+            alice_library=["Island"] * 2 + ["Grizzly Bears"] + ["Plains"] * 3,
+        )
+    )
+    if lands >= 3:  # the Bears are third from the top: seen, and taken
+        scenario.scry_bottoming(
+            scenario.find("Grizzly Bears", Zone.LIBRARY, "alice"), username="alice"
+        )
+    _cast(scenario, "Seismic Sense")
+    in_hand = [card.name for card in scenario.player("alice").hand]
+    # The Bears are third from the top: seen with three or more lands (bob's do not count)
+    assert ("Grizzly Bears" in in_hand) == (lands >= 3)
+
+
+# --------------------------------------------------------------------------
+# "where X is twice the number of Blood tokens you control" (Bloodtithe Harvester)
+# --------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize("blood", [1, 2])
+def test_bloodtithe_harvester_shrinks_by_twice_the_blood_tokens(blood):
+    scenario = _main(_build(["Bloodtithe Harvester"], ["Shivan Dragon"]))
+    for _ in range(blood):
+        create_predefined_tokens(scenario.game, "Blood", "alice")
+    create_predefined_tokens(scenario.game, "Blood", "bob")  # not counted
+    harvester = scenario.find("Bloodtithe Harvester", Zone.BATTLEFIELD, "alice")
+    harvester.summoning_sick = False
+    dragon = scenario.find("Shivan Dragon", Zone.BATTLEFIELD, "bob")
+    scenario.activate(harvester, targets=[dragon])
+    scenario.pass_until_resolved()
+    assert scenario.game.characteristics_of(dragon).power == 5 - 2 * blood
+
+
+def test_bloodtithe_harvester_kills_a_creature_when_twice_the_blood_tokens_covers_its_toughness():
+    scenario = _main(_build(["Bloodtithe Harvester"], ["Grizzly Bears"]))
+    for _ in range(2):
+        create_predefined_tokens(scenario.game, "Blood", "alice")
+    harvester = scenario.find("Bloodtithe Harvester", Zone.BATTLEFIELD, "alice")
+    harvester.summoning_sick = False
+    bears = scenario.find("Grizzly Bears", Zone.BATTLEFIELD, "bob")
+    scenario.activate(harvester, targets=[bears])
+    scenario.pass_until_resolved()
+    assert bears.zone is Zone.GRAVEYARD

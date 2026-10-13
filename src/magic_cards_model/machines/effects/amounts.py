@@ -896,6 +896,16 @@ def count_expression(phrase: str) -> Callable[["Game", str], int] | None:
     the function itself.
     """
     stripped = phrase.strip().rstrip(".")
+    if stripped.lower().startswith(("twice the number of ", "three times the number of ")):
+        # "twice the number of Blood tokens you control" (Bloodtithe Harvester): the
+        # same count, doubled (or tripled) - the multiplier is arithmetic on the
+        # counted number, taken once as the effect applies (CR 608.2h).
+        factor, _, counted_phrase = stripped.partition(" the number of ")
+        inner = count_expression(f"the number of {counted_phrase}")
+        if inner is None:
+            return None
+        times = 2 if factor.lower() == "twice" else 3
+        return lambda game, controller: times * inner(game, controller)
     if stripped.lower().endswith(_AS_YOU_CAST_SUFFIX):
         # "... as you cast this spell" (Jaws of Stone, Monstrous Onslaught):
         # the count was fixed while the spell was being cast (CR 601.2d needs it
