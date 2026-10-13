@@ -1,0 +1,141 @@
+{
+  "object": "card",
+  "id": "21f52564-9820-42dc-a08d-459d51afc397",
+  "oracle_id": "6a84a8a4-c8b0-45ce-af6f-605fcffc395b",
+  "multiverse_ids": [],
+  "resource_id": "9D9B534588246ABC5B2B1542E9C4581BA8CA01AB07FB7F1236F3A9996EC4DE53",
+  "mtgo_id": 144826,
+  "arena_id": 97448,
+  "tcgplayer_id": 660618,
+  "cardmarket_id": 857467,
+  "name": "Diligent Zookeeper",
+  "lang": "en",
+  "released_at": "2025-11-21",
+  "uri": "https://api.scryfall.com/cards/21f52564-9820-42dc-a08d-459d51afc397",
+  "scryfall_uri": "https://scryfall.com/card/tla/171/diligent-zookeeper?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T01:09:06Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/2/1/21f52564-9820-42dc-a08d-459d51afc397.jpg?1783904946",
+    "normal": "https://cards.scryfall.io/normal/front/2/1/21f52564-9820-42dc-a08d-459d51afc397.jpg?1783904946",
+    "large": "https://cards.scryfall.io/large/front/2/1/21f52564-9820-42dc-a08d-459d51afc397.jpg?1783904946",
+    "png": "https://cards.scryfall.io/png/front/2/1/21f52564-9820-42dc-a08d-459d51afc397.png?1783904946",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/2/1/21f52564-9820-42dc-a08d-459d51afc397.jpg?1783904946",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/2/1/21f52564-9820-42dc-a08d-459d51afc397.jpg?1783904946",
+    "thumb": "https://cards.scryfall.io/thumb/front/2/1/21f52564-9820-42dc-a08d-459d51afc397.webp?1783904946",
+    "grid": "https://cards.scryfall.io/grid/front/2/1/21f52564-9820-42dc-a08d-459d51afc397.webp?1783904946",
+    "display": "https://cards.scryfall.io/display/front/2/1/21f52564-9820-42dc-a08d-459d51afc397.webp?1783904946",
+    "art": "https://cards.scryfall.io/art/front/2/1/21f52564-9820-42dc-a08d-459d51afc397.webp?1783904946",
+    "crop": "https://cards.scryfall.io/crop/front/2/1/21f52564-9820-42dc-a08d-459d51afc397.webp?1783904946"
+  },
+  "mana_cost": "{3}{G}",
+  "cmc": 4.0,
+  "type_line": "Creature \u2014 Human Citizen Ally",
+  "oracle_text": "Each non-Human creature you control gets +1/+1 for each of its creature types, to a maximum of 10.",
+  "power": "4",
+  "toughness": "4",
+  "colors": [
+    "G"
+  ],
+  "color_identity": [
+    "G"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "arena",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "118f7e64-5caa-4cb7-99a8-184f4d3a7422",
+  "set": "tla",
+  "set_name": "Avatar: The Last Airbender",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/118f7e64-5caa-4cb7-99a8-184f4d3a7422",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Atla&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/tla?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/21f52564-9820-42dc-a08d-459d51afc397/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A6a84a8a4-c8b0-45ce-af6f-605fcffc395b&unique=prints",
+  "collector_number": "171",
+  "digital": false,
+  "rarity": "rare",
+  "flavor_text": "\"I wish I could get her a big, open prairie like she likes. I'd let her hop her way to happiness.\"",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Maojin Lee",
+  "artist_ids": [
+    "aa40e688-7c3b-4242-b2d3-4bc7b722fbb5"
+  ],
+  "illustration_id": "71a6ed98-aa2d-457e-9027-8cfb3a0a43dc",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "promo_types": [
+    "universesbeyond"
+  ],
+  "edhrec_rank": 16552,
+  "preview": {
+    "source": "LoadingReadyRun",
+    "source_uri": "https://www.youtube.com/watch?v=r_KeYC2D4LM",
+    "previewed_at": "2025-10-29"
+  },
+  "prices": {
+    "usd": "0.35",
+    "usd_foil": "0.31",
+    "usd_etched": null,
+    "eur": "0.14",
+    "eur_foil": "0.31",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DDiligent%2BZookeeper",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DDiligent%2BZookeeper",
+    "edhrec": "https://edhrec.com/route/?cc=Diligent+Zookeeper"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F660618%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=857467&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/144826?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

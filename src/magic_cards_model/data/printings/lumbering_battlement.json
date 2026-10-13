@@ -1,0 +1,142 @@
+{
+  "object": "card",
+  "id": "2469bc93-57ca-4077-bda2-160b4160adad",
+  "oracle_id": "dcf7d099-a726-4388-9744-70d37c5ea860",
+  "multiverse_ids": [
+    457159
+  ],
+  "mtgo_id": 71030,
+  "arena_id": 69143,
+  "tcgplayer_id": 183249,
+  "cardmarket_id": 368415,
+  "name": "Lumbering Battlement",
+  "lang": "en",
+  "released_at": "2019-01-25",
+  "uri": "https://api.scryfall.com/cards/2469bc93-57ca-4077-bda2-160b4160adad",
+  "scryfall_uri": "https://scryfall.com/card/rna/15/lumbering-battlement?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T09:08:41Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/2/4/2469bc93-57ca-4077-bda2-160b4160adad.jpg?1783933721",
+    "normal": "https://cards.scryfall.io/normal/front/2/4/2469bc93-57ca-4077-bda2-160b4160adad.jpg?1783933721",
+    "large": "https://cards.scryfall.io/large/front/2/4/2469bc93-57ca-4077-bda2-160b4160adad.jpg?1783933721",
+    "png": "https://cards.scryfall.io/png/front/2/4/2469bc93-57ca-4077-bda2-160b4160adad.png?1783933721",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/2/4/2469bc93-57ca-4077-bda2-160b4160adad.jpg?1783933721",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/2/4/2469bc93-57ca-4077-bda2-160b4160adad.jpg?1783933721",
+    "thumb": "https://cards.scryfall.io/thumb/front/2/4/2469bc93-57ca-4077-bda2-160b4160adad.webp?1783933721",
+    "grid": "https://cards.scryfall.io/grid/front/2/4/2469bc93-57ca-4077-bda2-160b4160adad.webp?1783933721",
+    "display": "https://cards.scryfall.io/display/front/2/4/2469bc93-57ca-4077-bda2-160b4160adad.webp?1783933721",
+    "art": "https://cards.scryfall.io/art/front/2/4/2469bc93-57ca-4077-bda2-160b4160adad.webp?1783933721",
+    "crop": "https://cards.scryfall.io/crop/front/2/4/2469bc93-57ca-4077-bda2-160b4160adad.webp?1783933721"
+  },
+  "mana_cost": "{4}{W}",
+  "cmc": 5.0,
+  "type_line": "Creature \u2014 Beast",
+  "oracle_text": "Vigilance\nWhen this creature enters, exile any number of other nontoken creatures you control until it leaves the battlefield.\nThis creature gets +2/+2 for each card exiled with it.",
+  "power": "4",
+  "toughness": "5",
+  "colors": [
+    "W"
+  ],
+  "color_identity": [
+    "W"
+  ],
+  "keywords": [
+    "Vigilance"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "arena",
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "97a7fd84-8d89-45a3-b48b-c951f6a3f9f1",
+  "set": "rna",
+  "set_name": "Ravnica Allegiance",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/97a7fd84-8d89-45a3-b48b-c951f6a3f9f1",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Arna&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/rna?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/2469bc93-57ca-4077-bda2-160b4160adad/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Adcf7d099-a726-4388-9744-70d37c5ea860&unique=prints",
+  "collector_number": "15",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Simon Dominic",
+  "artist_ids": [
+    "b0e80135-db5a-4b88-a0bc-815a0e94faa1"
+  ],
+  "illustration_id": "dc995a36-aab9-4726-b16e-ca2a27308c41",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 16564,
+  "penny_rank": 10249,
+  "preview": {
+    "source": "Jumbo Commander",
+    "source_uri": "https://www.youtube.com/watch?v=fUP4xZbQZrk",
+    "previewed_at": "2019-01-09"
+  },
+  "prices": {
+    "usd": "0.29",
+    "usd_foil": "0.69",
+    "usd_etched": null,
+    "eur": "0.17",
+    "eur_foil": "0.44",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=457159&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DLumbering%2BBattlement",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DLumbering%2BBattlement",
+    "edhrec": "https://edhrec.com/route/?cc=Lumbering+Battlement"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F183249%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=368415&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/71030?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}
