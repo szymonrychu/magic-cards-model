@@ -741,7 +741,7 @@ _ON_BATTLEFIELD_RE = re.compile(
     r"^if this creature is on the battlefield,? (?P<rest>.+)$", re.IGNORECASE
 )
 _COPY_TOKEN_RE = re.compile(
-    r"^create a token that'?s a copy of that card, except (?P<exception>.+)$", re.IGNORECASE
+    r"^create a token that'?s a copy of (?:that card|it), except (?P<exception>.+)$", re.IGNORECASE
 )
 _SIZED_TOKEN_RE = re.compile(
     r"^create an? (?P<desc>.+?) tokens? with power equal to (?P<power>.+?) "
@@ -790,7 +790,7 @@ def _step_guard_source_on_battlefield(inner: ResolutionStep) -> ResolutionStep:
 
 def _step_copy_token(exception: str) -> ResolutionStep | None:
     """ "Create a token that's a copy of that card, except <exception>" (CR 707.2,
-    CR 707.9a): the copy is of the card an earlier sentence moved, read as the
+    CR 707.9a, CR 707.9b): the copy is of the card an earlier sentence moved, read as the
     card it is where it went."""
     from ..models.token import token_copy_of
     from .effects.tokens import (
@@ -950,7 +950,7 @@ def _step_rewrite_with_value(head: str, tail: str, phrase: Phrase) -> Resolution
 
 def _step_highest_life_tokens(what: str) -> ResolutionStep | None:
     """ "Create a number of <tokens> equal to the highest life total among all
-    players" (CR 119.1): the total is read once, as the effect applies."""
+    players": the total is read once (CR 608.2h), as the effect applies."""
     from .amount_sentences import token_maker
 
     make = token_maker(f"X {what}")
@@ -1272,6 +1272,7 @@ def _look_macro(queue: list[str], position: int) -> tuple[ResolutionStep, int] |
 
 _IF_CANT_RE = re.compile(r"^if you can't (?P<what>.+?), (?P<rest>.+)$", re.IGNORECASE)
 _IF_WIN_RE = re.compile(r"^if you win,? (?P<rest>.+)$", re.IGNORECASE)
+_UNREAD_CONDITION_RE = re.compile(r"^(?:if|when|whenever|unless|as long as) ", re.IGNORECASE)
 _IF_DONT_RE = re.compile(
     r"^if you don't(?: put it onto the battlefield)?,? (?P<rest>.+)$", re.IGNORECASE
 )
@@ -1295,6 +1296,8 @@ _GATE_WORDS = (
     "the exiled card",
     "highest life total",
     "controller sacrifices it",
+    "a copy of that card",
+    "a copy of it",
 )
 _GATE_FORMS = (
     "equal to",
@@ -1302,6 +1305,7 @@ _GATE_FORMS = (
     "deals x damage",
     "the exiled card",
     "controller sacrifices it",
+    ", except ",
 )
 
 
@@ -1335,6 +1339,10 @@ def _compile(sentences: list[str], *, for_spell: bool) -> list[ResolutionStep] |
     position = 0
     opened = False
     uses_amount = False
+    # A text that is one plain sentence is what the established readers are
+    # reading right now: asking them for it again is a re-entrant parse, which
+    # answers `None` and caches it for the outer call.
+    allow_plain = not (len(sentences) == 1 and len(queue) == 1)
     if "the exiled card" in " ".join(queue).lower() and not any(
         _EXILE_PERMANENT_FROM_GRAVEYARD_RE.fullmatch(sentence) for sentence in queue
     ):
@@ -1367,6 +1375,8 @@ def _compile(sentences: list[str], *, for_spell: bool) -> list[ResolutionStep] |
             guard = lambda s, kinds=kinds: (  # noqa: E731
                 s.referent is not None and any(s.referent.is_a(kind) for kind in kinds)
             )
+        if _UNREAD_CONDITION_RE.match(sentence) and not _ON_BATTLEFIELD_RE.match(sentence):
+            return None  # a condition none of the guards above reads: never run it unconditionally
         if re.match(r"^(?:gain|lose) ", sentence, re.IGNORECASE):
             sentence = f"you {sentence}"
         step: ResolutionStep | None = None
@@ -1393,7 +1403,7 @@ def _compile(sentences: list[str], *, for_spell: bool) -> list[ResolutionStep] |
                 step = None if inner is None else _asked(inner)
             if step is None:
                 step = _amount_step(sentence, for_spell=for_spell, opener=opened)
-            if step is None:
+            if step is None and allow_plain:
                 step = _step_plain(sentence, for_spell=for_spell)
             if step is None:
                 return None

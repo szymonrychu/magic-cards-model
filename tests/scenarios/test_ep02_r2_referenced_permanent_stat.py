@@ -25,6 +25,14 @@ file:
   graveyard; only its controller can.
 - **CR 701.22a** - to scry N is to look at the top N cards.
 - **CR 107.1b** - a negative number counts as zero.
+- **CR 607.2a** - an ability that refers to "the exiled card" reads the cards
+  the object's own exiling ability exiled (the Sagas).
+- **CR 406.3a** - a card exiled face down has no characteristics until turned
+  face up.
+- **CR 702.50a/b** - epic: no spells for the rest of the game, a copy of the
+  spell at each of the controller's upkeeps; copies are not cast.
+- **CR 707.9b** - a copy effect may modify a characteristic ("except it's a 4/4
+  black Zombie").
 """
 
 import pytest
@@ -71,7 +79,12 @@ LISTED = [
     "Durkwood Tracker",
 ]
 
-PROOF: list[str] = []
+# Second printings of the readers added or widened here, each worded differently
+# from the listed cards (Scryfall legalities checked 2026-10-13, none in the api decks):
+# Balduvian Berserker (Pioneer, Modern): "it deals damage equal to its power".
+# Banewasp Affliction (Modern): "that creature's controller loses life equal to its toughness".
+# The Scarab God (Pioneer, Modern): "a copy of it, except it's a 4/4 black Zombie".
+PROOF: list[str] = ["Balduvian Berserker", "Banewasp Affliction", "The Scarab God"]
 
 LANDS = ["Plains"] * 6 + ["Swamp"] * 4 + ["Island"] * 4 + ["Forest"] * 3 + ["Mountain"] * 4
 
@@ -1395,3 +1408,67 @@ def test_mercurial_chemister_discarding_a_land_deals_no_damage() -> None:
     discarded = scenario.find("Island", Zone.HAND, "alice")
     _activate_all(scenario, chemister, index=1, discarding=[discarded], targets=[bob_angel])
     assert bob_angel.damage == 0
+
+
+# ---------------------------------------------------------------------------
+# Proof printings
+# ---------------------------------------------------------------------------
+
+
+def test_balduvian_berserker_deals_its_power_to_the_target_when_it_dies() -> None:
+    scenario = _scenario(["Balduvian Berserker"])
+    berserker = scenario.creature("Balduvian Berserker", "alice")
+    scenario.will_choose_targets("bob")
+    scenario.game.sacrifice(berserker)
+    _resolve_all(scenario)
+    assert _life(scenario, "bob") == 20 - 1
+
+
+def test_balduvian_berserker_reads_the_power_it_had_with_counters() -> None:
+    scenario = _scenario(["Balduvian Berserker"])
+    berserker = scenario.creature("Balduvian Berserker", "alice")
+    scenario.game.add_counters(berserker, "+1/+1", 2)
+    scenario.will_choose_targets("bob")
+    scenario.game.sacrifice(berserker)
+    _resolve_all(scenario)
+    assert _life(scenario, "bob") == 20 - 3
+
+
+def test_balduvian_berserker_can_hit_a_creature() -> None:
+    scenario = _scenario(["Balduvian Berserker"], ["Serra Angel"])
+    berserker = scenario.creature("Balduvian Berserker", "alice")
+    angel = scenario.creature("Serra Angel", "bob")
+    scenario.will_choose_targets(angel)
+    scenario.game.sacrifice(berserker)
+    _resolve_all(scenario)
+    assert angel.damage == 1
+
+
+def test_banewasp_affliction_costs_the_controller_the_toughness_of_the_creature() -> None:
+    scenario = _scenario([], ["Serra Angel"], hand=["Banewasp Affliction"])
+    angel = scenario.creature("Serra Angel", "bob")
+    _cast_all(scenario, "Banewasp Affliction", targets=[angel])
+    scenario.game.add_counters(angel, "+1/+1", 1)
+    scenario.game.sacrifice(angel)
+    _resolve_all(scenario)
+    assert _life(scenario, "bob") == 20 - 5  # its controller, by the toughness it had
+    assert _life(scenario, "alice") == 20
+
+
+def test_banewasp_affliction_does_nothing_while_the_creature_lives() -> None:
+    scenario = _scenario([], ["Serra Angel"], hand=["Banewasp Affliction"])
+    angel = scenario.creature("Serra Angel", "bob")
+    _cast_all(scenario, "Banewasp Affliction", targets=[angel])
+    assert _life(scenario, "bob") == 20
+
+
+def test_the_scarab_god_makes_a_four_four_zombie_copy_of_the_exiled_creature_card() -> None:
+    scenario = _scenario(["The Scarab God"], graveyard=["Serra Angel"])
+    god = scenario.find("The Scarab God", Zone.BATTLEFIELD, "alice")
+    angel = scenario.find("Serra Angel", Zone.GRAVEYARD, "alice")
+    _activate_all(scenario, god, index=0, targets=[angel])
+    assert angel.zone is Zone.EXILE
+    (copy,) = _tokens(scenario, "alice", "Serra Angel")
+    chars = scenario.game.characteristics_of(copy)
+    assert chars.power_toughness == (4, 4)
+    assert "Zombie" in chars.subtypes
