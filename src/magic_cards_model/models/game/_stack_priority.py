@@ -684,6 +684,7 @@ class StackPriorityMixin:
             Zone.EXILE,
             Zone.BATTLEFIELD,
             Zone.LIBRARY,
+            Zone.HAND,
         ):
             # (Also a spell whose own text exiled it as it resolved - Burning
             # Wish's "Exile Burning Wish." (CR 201.5): CR 608.2n's final

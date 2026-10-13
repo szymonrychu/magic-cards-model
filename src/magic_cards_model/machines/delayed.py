@@ -1700,6 +1700,44 @@ class ReflexiveDamageEqualToSubjectPowerConsequence(DelayedEffectSpecBase):
             game.deal_damage(target, amount, source=dealer)
 
 
+class ReflexiveDamageEqualToSubjectManaValueConsequence(DelayedEffectSpecBase):
+    """ "When you reveal [or exile] a nonland card this way, `<source>` deals
+    damage equal to that card's mana value to any target." (CR 603.12) -
+    Calibrated Blast's and Hidetsugu, Devouring Chaos's reflexive trigger.
+
+    "That card" is the one the antecedent revealed or exiled - an object that
+    has already moved on (the bottom of a library, exile) and that no printed
+    description could re-derive - so its id is carried on
+    `DelayedTrigger.subject_id` (CR 603.7c) and its mana value (CR 202.3) is
+    read as the ability resolves. The damage is dealt by the source that
+    created the trigger (CR 120.1), found by id wherever it now is.
+    """
+
+    kind: Literal["reflexive_damage_equal_to_subject_mana_value_consequence"] = (
+        "reflexive_damage_equal_to_subject_mana_value_consequence"
+    )
+
+    def printed_ability(self, trigger: "DelayedTrigger") -> TriggeredAbility | None:
+        return _reflexive_when_you_do_ability(trigger)
+
+    def __call__(self, game: "Game", ability: AbilityOnStack, trigger: "DelayedTrigger") -> None:
+        if trigger.subject_id is None:
+            return
+        subject = game.find_by_id(trigger.subject_id)
+        if not isinstance(subject, CardState):
+            return
+        amount = game.characteristics_of(subject).mana_value
+        if not amount or amount <= 0:
+            return
+        dealer = game.find_by_id(trigger.source_id) if trigger.source_id is not None else None
+        for target in game.resolve_targets(ability):
+            if isinstance(target, CardState) and target.zone is not Zone.BATTLEFIELD:
+                continue
+            game.deal_damage(
+                target, int(amount), source=dealer if isinstance(dealer, CardState) else None
+            )
+
+
 class ReflexiveWhenYouDoConsequence(DelayedEffectSpecBase):
     """ "`<mandatory instruction>`. When you do, `<effect>`." (CR 603.12) -
     Red Hulk's "put a +1/+1 counter on him. When you do, he deals damage
@@ -2559,6 +2597,7 @@ DelayedEffectSpec = Annotated[
     | ReflexiveAttachSubjectToTargetConsequence
     | ReflexiveReturnThenAttachToSubjectConsequence
     | ReflexiveDamageEqualToSubjectPowerConsequence
+    | ReflexiveDamageEqualToSubjectManaValueConsequence
     | ReflexiveWhenYouDoConsequence
     | ReflexiveExileCopiedCard
     | ReflexivePreventedDamagePayoff
