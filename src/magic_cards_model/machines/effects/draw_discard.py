@@ -38,6 +38,7 @@ from ..delayed import (
 )
 from ..designations import designation_holds, split_if
 from ..ep01_r3_amounts import event_player_username
+from ..ep02_r2_devotion_domain_party import discard_hand_draw_per_color_effect
 from ..layers import (
     Characteristics,
 )
@@ -1491,6 +1492,13 @@ def _parse_discard_hand_draw_x_clause(text: str) -> AbilityEffect | None:
                 game.deal_damage(opponent, discarded, source=source)
 
     return effect
+
+
+@ABILITY_TEXT.rung("s35")
+def _parse_discard_hand_draw_per_color_clause(text: str) -> AbilityEffect | None:
+    """ "You may discard your hand. If you do, draw a card for each of that spell's colors."
+    (`ep02_r2_devotion_domain_party`)."""
+    return discard_hand_draw_per_color_effect(text)
 
 
 #: "draw cards equal to the difference" - The Ten Rings', Doctor Octopus,

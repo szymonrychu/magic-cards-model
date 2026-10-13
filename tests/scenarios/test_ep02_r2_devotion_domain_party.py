@@ -41,6 +41,14 @@ def _build(alice=(), bob=(), *, hand=(), library=None, bob_library=None, graveya
     )
 
 
+STACK = ["Grizzly Bears", "Hill Giant", "Serra Angel", "Llanowar Elves", "Goblin Guide", "Opt"]
+THREE_TYPES = ["Island", "Forest", "Swamp", "Island"]  # three basic land types
+
+
+def _names(cards):
+    return [state.name for state in cards]
+
+
 def _main(scenario):
     scenario.start_at(Step.PRECOMBAT_MAIN)
     return scenario
@@ -341,20 +349,79 @@ def test_mogis_marauder_gives_intimidate_and_haste_to_up_to_devotion_creatures()
     assert not has_keyword(other, Keyword.HASTE, scenario.game)
 
 
+def test_mogis_marauder_gives_nothing_beyond_the_devotion_cap():
+    """ "Up to X target creatures": the X the text defines is also the most targets
+    (CR 601.2c with CR 107.3f). Devotion to black is the Marauder's {B} + Nighthawk {B}{B} = 3,
+    so a fourth chosen creature gets neither keyword."""
+    scenario = _main(
+        _build(
+            ["Swamp"] * 3
+            + ["Vampire Nighthawk", "Grizzly Bears", "Hill Giant", "Runeclaw Bear", "Goblin Guide"],
+            hand=["Mogis's Marauder"],
+        )
+    )
+    four = scenario.creatures(
+        "Grizzly Bears", "Hill Giant", "Runeclaw Bear", "Goblin Guide", username="alice"
+    )
+    _creature_etb(scenario, "Mogis's Marauder", targets=four)
+    granted = [has_keyword(c, Keyword.INTIMIDATE, scenario.game) for c in four]
+    assert sum(granted) <= 3
+
+
+def test_mogis_marauder_with_no_targets_does_nothing():
+    scenario = _main(_build(["Swamp"] * 3 + ["Grizzly Bears"], hand=["Mogis's Marauder"]))
+    bears = scenario.creature("Grizzly Bears", "alice")
+    _creature_etb(scenario, "Mogis's Marauder", targets=[])
+    assert not has_keyword(bears, Keyword.HASTE, scenario.game)
+    assert not has_keyword(bears, Keyword.INTIMIDATE, scenario.game)
+
+
+def test_mogis_marauder_with_one_target_gives_just_that_creature_both_keywords():
+    scenario = _main(
+        _build(["Swamp"] * 3 + ["Grizzly Bears", "Hill Giant"], hand=["Mogis's Marauder"])
+    )
+    bears = scenario.creature("Grizzly Bears", "alice")
+    giant = scenario.creature("Hill Giant", "alice")
+    _creature_etb(scenario, "Mogis's Marauder", targets=[bears])
+    assert has_keyword(bears, Keyword.HASTE, scenario.game)
+    assert has_keyword(bears, Keyword.INTIMIDATE, scenario.game)
+    assert not has_keyword(giant, Keyword.HASTE, scenario.game)
+
+
 # --------------------------------------------------------------------------
 # Devotion as the look-at depth - Thassa's Oracle
 # --------------------------------------------------------------------------
 
 
 def test_thassa_s_oracle_keeps_one_on_top_and_bottoms_the_rest():
-    library = ["Island" if i % 2 else "Forest" for i in range(8)]
-    scenario = _main(_build(["Island"] * 2, hand=["Thassa's Oracle"], library=library))
-    top = scenario.top_of_library(2)
+    """Devotion to blue is the Oracle's {U}{U} = 2: Bears and Giant are looked at, Giant is
+    kept on top, Bears goes to the bottom, the unseen cards keep their order."""
+    scenario = _main(_build(["Island"] * 2, hand=["Thassa's Oracle"], library=list(STACK)))
+    giant = scenario.find("Hill Giant", Zone.LIBRARY, "alice")
+    scenario.will_choose_cards(giant)
     scenario.cast_and_resolve("Thassa's Oracle", auto=True, username="alice")
     scenario.pass_until_resolved()
-    assert len(scenario.player("alice").library) == 8
+    library = scenario.player("alice").library
+    assert _names(library) == [
+        "Hill Giant",
+        "Serra Angel",
+        "Llanowar Elves",
+        "Goblin Guide",
+        "Opt",
+        "Grizzly Bears",
+    ]
     assert scenario.player("alice").life == 20
-    assert top  # the two cards looked at were the top two
+    assert not scenario.game.is_over
+
+
+def test_thassa_s_oracle_may_keep_none_and_both_go_to_the_bottom():
+    scenario = _main(_build(["Island"] * 2, hand=["Thassa's Oracle"], library=list(STACK)))
+    scenario.will_choose_cards()
+    scenario.cast_and_resolve("Thassa's Oracle", auto=True, username="alice")
+    scenario.pass_until_resolved()
+    library = scenario.player("alice").library
+    assert _names(library[:4]) == ["Serra Angel", "Llanowar Elves", "Goblin Guide", "Opt"]
+    assert sorted(_names(library[4:])) == ["Grizzly Bears", "Hill Giant"]
 
 
 def test_thassa_s_oracle_wins_when_devotion_reaches_the_library_size():
@@ -369,13 +436,6 @@ def test_thassa_s_oracle_wins_when_devotion_reaches_the_library_size():
 # Domain as the look-at depth (CR 701.20 look / CR 701.20d reveal): Voda Sea
 # Scavenger, Shadow Prophecy, Nael, Sphinx of Clear Skies
 # --------------------------------------------------------------------------
-
-STACK = ["Grizzly Bears", "Hill Giant", "Serra Angel", "Llanowar Elves", "Goblin Guide", "Opt"]
-THREE_TYPES = ["Island", "Forest", "Swamp", "Island"]  # three basic land types
-
-
-def _names(cards):
-    return [state.name for state in cards]
 
 
 def test_voda_looks_at_domain_cards_and_may_put_one_on_top():
@@ -750,3 +810,201 @@ def test_tarnation_vista_counts_only_monocolored_permanents():
     pool = _mana_pool(scenario)
     assert pool.red == 1  # Hill Giant; Kitchen Finks is multicolored and adds nothing
     assert pool.green == 0 and pool.white == 0
+
+
+# --------------------------------------------------------------------------
+# Second printings that prove the readers are about the mechanic, not the card
+# --------------------------------------------------------------------------
+
+
+def _rebuff_board(bob_permanents):
+    return (
+        Scenario()
+        .player("alice", hand=["Grizzly Bears"], battlefield=["Forest", "Forest"], library=FOREST10)
+        .player(
+            "bob",
+            hand=["Thassa's Rebuff"],
+            battlefield=["Island", "Island", *bob_permanents],
+            library=FOREST10,
+        )
+        .build()
+    )
+
+
+def test_thassa_s_rebuff_counters_when_its_controller_cannot_pay_the_devotion():
+    """Devotion to blue counts Kraken of the Straits' {U}{U}, so X is 2; alice has one
+    floating mana (CR 118.12a: she may pay, and cannot)."""
+    scenario = _rebuff_board(["Kraken of the Straits"])
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scenario.player("alice").mana_pool.add(Color.COLORLESS, 1)
+    bears = scenario.cast_onto_stack("Grizzly Bears", auto=True, username="alice")
+    scenario.pass_priority("alice")
+    islands = scenario.untapped_sources("Island", "Island", username="bob")
+    scenario.cast_and_resolve("Thassa's Rebuff", *islands, username="bob", targets=[bears])
+    assert bears.zone is Zone.GRAVEYARD
+
+
+def test_thassa_s_rebuff_lets_the_spell_resolve_when_its_controller_pays_the_devotion():
+    scenario = _rebuff_board(["Kraken of the Straits"])
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    alice = scenario.player("alice")
+    alice.mana_pool.add(Color.COLORLESS, 2)
+    bears = scenario.cast_onto_stack("Grizzly Bears", auto=True, username="alice")
+    scenario.pass_priority("alice")
+    scenario.will_pay_the_mana_cost(True, username="alice", source="Thassa's Rebuff")
+    islands = scenario.untapped_sources("Island", "Island", username="bob")
+    scenario.cast_and_resolve("Thassa's Rebuff", *islands, username="bob", targets=[bears])
+    assert bears.zone is Zone.STACK
+    assert alice.mana_pool.total == 0
+
+
+def test_thassa_s_rebuff_with_no_blue_devotion_asks_for_nothing():
+    """X is 0 (CR 118.3a: a player can always pay 0): the spell is not countered."""
+    scenario = _rebuff_board([])
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.cast_onto_stack("Grizzly Bears", auto=True, username="alice")
+    scenario.pass_priority("alice")
+    scenario.will_pay_the_mana_cost(True, username="alice", source="Thassa's Rebuff")
+    islands = scenario.untapped_sources("Island", "Island", username="bob")
+    scenario.cast_and_resolve("Thassa's Rebuff", *islands, username="bob", targets=[bears])
+    assert bears.zone is Zone.STACK
+
+
+def test_might_of_the_nephilim_pumps_by_two_for_each_of_the_targets_colors():
+    scenario = _main(
+        _build(
+            ["Forest", "Forest", "Kitchen Finks", "Grizzly Bears"], hand=["Might of the Nephilim"]
+        )
+    )
+    finks = scenario.creature("Kitchen Finks", "alice")
+    scenario.cast_and_resolve("Might of the Nephilim", auto=True, username="alice", targets=[finks])
+    assert _pt(scenario, finks) == (3 + 4, 2 + 4)  # green and white: two colors, +4/+4
+
+
+def test_might_of_the_nephilim_gives_a_mono_colored_creature_plus_two():
+    scenario = _main(_build(["Forest", "Forest", "Grizzly Bears"], hand=["Might of the Nephilim"]))
+    bears = scenario.creature("Grizzly Bears", "alice")
+    scenario.cast_and_resolve("Might of the Nephilim", auto=True, username="alice", targets=[bears])
+    assert _pt(scenario, bears) == (4, 4)
+
+
+def test_might_of_the_nephilim_gives_a_colorless_creature_nothing():
+    """CR 105.2c: colorless is not a color, so there is nothing to count."""
+    scenario = _main(_build(["Forest", "Forest", "Ornithopter"], hand=["Might of the Nephilim"]))
+    thopter = scenario.creature("Ornithopter", "alice")
+    scenario.cast_and_resolve(
+        "Might of the Nephilim", auto=True, username="alice", targets=[thopter]
+    )
+    assert _pt(scenario, thopter) == (0, 2)
+
+
+def _cast_and_settle(scenario, name):
+    scenario.cast_onto_stack(name, auto=True, username="alice")
+    scenario.game.put_triggers_on_stack()
+    while scenario.game.stack:
+        scenario.resolve_top()
+        scenario.game.put_triggers_on_stack()
+
+
+def test_ramos_gets_a_counter_for_each_color_of_each_spell_cast():
+    scenario = _main(
+        _build(
+            ["Ramos, Dragon Engine", "Forest", "Forest", "Forest", "Forest", "Plains"],
+            hand=["Kitchen Finks", "Grizzly Bears"],
+        )
+    )
+    ramos = scenario.creature("Ramos, Dragon Engine", "alice")
+    _cast_and_settle(scenario, "Kitchen Finks")
+    assert ramos.counter_count(Counter.PLUS_ONE) == 2
+    _cast_and_settle(scenario, "Grizzly Bears")
+    assert ramos.counter_count(Counter.PLUS_ONE) == 3
+
+
+def test_ramos_gets_nothing_for_a_colorless_spell():
+    scenario = _main(_build(["Ramos, Dragon Engine", "Plains"], hand=["Ornithopter"]))
+    ramos = scenario.creature("Ramos, Dragon Engine", "alice")
+    _cast_and_settle(scenario, "Ornithopter")
+    assert ramos.counter_count(Counter.PLUS_ONE) == 0
+
+
+def _block_and_cast_tactics(party):
+    scenario = _main(
+        _build(
+            ["Plains", "Hill Giant", *party],
+            bob=["Serra Angel"],
+            hand=["Practiced Tactics"],
+        )
+    )
+    giant = scenario.creature("Hill Giant", "alice")
+    angel = scenario.creature("Serra Angel", "bob")
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    scenario.attack_with(giant)
+    scenario.block(giant, angel)
+    scenario.cast_and_resolve("Practiced Tactics", auto=True, username="alice", targets=[angel])
+    return angel
+
+
+def test_practiced_tactics_deals_twice_the_party_to_the_chosen_blocker():
+    """Party: a Cleric and a Rogue (CR 700.8) is two, so 4 damage kills the blocking Angel."""
+    angel = _block_and_cast_tactics(["Codespell Cleric", "Deathcult Rogue"])
+    assert angel.zone is Zone.GRAVEYARD
+
+
+def test_practiced_tactics_with_no_party_deals_no_damage():
+    angel = _block_and_cast_tactics([])
+    assert angel.zone is Zone.BATTLEFIELD
+    assert angel.damage == 0
+
+
+def test_slimefoots_survey_fetches_two_typed_lands_then_looks_at_domain_cards():
+    """Island and Swamp come in tapped beside the Forests: three basic land types, so the
+    three cards left (the whole library) are looked at and the Angel is kept on top."""
+    scenario = _main(
+        _build(
+            ["Forest"] * 5,
+            hand=["Slimefoot's Survey"],
+            library=["Island", "Swamp", "Grizzly Bears", "Hill Giant", "Serra Angel"],
+        )
+    )
+    angel = scenario.find("Serra Angel", Zone.LIBRARY, "alice")
+    scenario.will_choose_cards(
+        scenario.find("Island", Zone.LIBRARY, "alice"),
+        scenario.find("Swamp", Zone.LIBRARY, "alice"),
+    )
+    scenario.will_choose_cards(angel)
+    scenario.cast_and_resolve("Slimefoot's Survey", auto=True, username="alice")
+    scenario.pass_until_resolved()
+    fetched = [s for s in scenario.game.battlefield if s.name in ("Island", "Swamp")]
+    assert sorted(s.name for s in fetched) == ["Island", "Swamp"]
+    assert all(s.tapped for s in fetched)
+    library = scenario.player("alice").library
+    assert library[0] is angel
+    assert sorted(_names(library[1:])) == ["Grizzly Bears", "Hill Giant"]
+
+
+def test_moonveil_regent_discards_the_hand_and_draws_per_color_of_the_spell():
+    scenario = _main(
+        _build(
+            ["Moonveil Regent", "Forest", "Forest", "Forest", "Plains"],
+            hand=["Kitchen Finks", "Hill Giant", "Opt"],
+            library=list(STACK),
+        )
+    )
+    scenario.will_take_the_may(True, username="alice")
+    _cast_and_settle(scenario, "Kitchen Finks")
+    hand = _names(scenario.player("alice").hand)
+    assert hand == ["Grizzly Bears", "Hill Giant"]  # two colors: two cards off the top
+    assert {"Hill Giant", "Opt"} <= set(_names(scenario.player("alice").graveyard))
+
+
+def test_moonveil_regent_may_decline_and_keeps_its_hand():
+    scenario = _main(
+        _build(
+            ["Moonveil Regent", "Forest", "Forest", "Forest"],
+            hand=["Grizzly Bears", "Hill Giant"],
+            library=list(STACK),
+        )
+    )
+    scenario.will_take_the_may(False, username="alice")
+    _cast_and_settle(scenario, "Grizzly Bears")
+    assert _names(scenario.player("alice").hand) == ["Hill Giant"]

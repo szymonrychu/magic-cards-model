@@ -7029,4 +7029,4 @@ def _parse_look_top_amount_text(text: str, *, for_spell: bool) -> Effect | Abili
     Put up to one of them on top ...", "Reveal the top X cards ... An opponent
     separates those cards into two piles ...": a look or reveal sized by an
     amount, then the kept cards and the rest (`ep02_r2_devotion_domain_party`)."""
-    return look_top_effect(text)
+    return look_top_effect(text, for_spell=for_spell)

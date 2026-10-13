@@ -1,11 +1,11 @@
 {
-  "ability": "When this creature dies, it deals X damage to any target, where X is the number of colors among permanents you control.",
+  "ability": "Whenever you cast a spell, you may discard your hand. If you do, draw a card for each of that spell's colors.",
   "action": {
     "controller": "alice",
     "modes": [],
     "on_stack": true,
     "source": "Moonveil Regent@alice#1",
-    "targets": ["Memnite@alice#1"],
+    "targets": [],
     "x": 0
   },
   "board": {
@@ -16,7 +16,7 @@
       "alice": {
         "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Wastes", "Memnite", "Icehide Golem", "Bonesplitter", "Icy Manipulator", "Moonveil Regent"],
         "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel"],
-        "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt"],
+        "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt", "Opt", "Opt"],
         "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
       },
       "bob": {
@@ -35,22 +35,52 @@
   "card": "Moonveil Regent",
   "delta": {
     "created": {},
-    "decisions": [],
-    "fields_changed": [],
+    "decisions": [
+      {
+        "amount": 0,
+        "cards": [],
+        "kind": "may",
+        "player": "alice",
+        "players": [],
+        "prompt": "discard your hand",
+        "source": "Moonveil Regent"
+      }
+    ],
+    "fields_changed": ["cards_discarded_this_turn", "cards_drawn_this_turn", "graveyard_arrivals_announced", "graveyard_arrivals_this_turn"],
     "notices": {},
-    "objects": {},
+    "objects": {
+      "Forest@alice#4": {
+        "zone": ["hand", "graveyard"]
+      },
+      "Forest@alice#6": {
+        "zone": ["library", "hand"]
+      },
+      "Grizzly Bears@alice#1": {
+        "zone": ["hand", "graveyard"]
+      },
+      "Lightning Bolt@alice#1": {
+        "zone": ["hand", "graveyard"]
+      },
+      "Opt@alice#2": {
+        "zone": ["hand", "graveyard"]
+      },
+      "Opt@alice#3": {
+        "zone": ["hand", "graveyard"]
+      }
+    },
     "players": {},
-    "stack": []
+    "stack": ["Opt@alice#1"]
   },
   "family": "triggered",
   "format": 1,
-  "kind": "dies",
+  "kind": "cast_spell",
   "number": 0,
   "recipe": {
-    "attempt": "itself",
+    "attempt": "cast_probe",
     "index": 0,
     "params": {
-      "removal": "destroy"
+      "caster": "alice",
+      "probe": "Opt"
     },
     "variant": "quiet"
   }

@@ -82,22 +82,37 @@ _DRAW_TAIL_RE = re.compile(
     r"draw a card$",
     re.IGNORECASE,
 )
+_LOOK_OPENING_RE = re.compile(r"^(?:look at|reveal) the top\b", re.IGNORECASE)
 _SENTENCE_END_RE = re.compile(r"(?<=[.])\s+(?=[A-Z])")
 
 
 @functools.cache
-def look_top_effect(text: str) -> "Any | None":
+def look_top_effect(text: str, *, for_spell: bool = False) -> "Any | None":
     """The whole-text reader described in the module docstring, or `None`.
-    Works for a spell (`(game, spell)`) and for an ability (`(game, ability)`)."""
+    Works for a spell (`(game, spell)`) and for an ability (`(game, ability)`).
+    Sentences before the look or reveal are an ordinary instruction run first
+    ("Search your library for up to two land cards ..., then shuffle." - Slimefoot's
+    Survey)."""
+    from .effects.dispatch import parse_mixed_effect, parse_mixed_effect_for_spell
     from .effects.text import _strip_non_effect_preamble
 
     lowered = text.lower()
     if "the top " not in lowered or " of your library" not in lowered:
         return None
     whole = " ".join(_strip_non_effect_preamble(text).split())
-    head = _LOOK_RE.match(whole)
+    opening = _SENTENCE_END_RE.split(whole)
+    at = next((i for i, part in enumerate(opening) if _LOOK_OPENING_RE.match(part)), None)
+    if at is None:
+        return None
+    lead = " ".join(opening[:at])
+    head = _LOOK_RE.match(" ".join(opening[at:]))
     if head is None:
         return None
+    lead_effect = None
+    if lead:
+        lead_effect = (parse_mixed_effect_for_spell if for_spell else parse_mixed_effect)(lead)
+        if lead_effect is None:
+            return None
     reveal = head.group("verb").lower() == "reveal"
     count_word = head.group("n").lower()
     expr = head.group("expr")
@@ -148,7 +163,15 @@ def look_top_effect(text: str) -> "Any | None":
         depth = None if fixed is None else (lambda _g, _o, _who, _n=fixed: _n)
     if depth is None:
         return None
-    return _build(reveal, depth, kept_kind, k, rest_to, win, draw_at, tuple(life_tails))
+    look = _build(reveal, depth, kept_kind, k, rest_to, win, draw_at, tuple(life_tails))
+    if lead_effect is None:
+        return look
+
+    def lead_then_look(game: "Game", stack_object: Any) -> None:
+        lead_effect(game, stack_object)
+        look(game, stack_object)
+
+    return lead_then_look
 
 
 def _build(reveal, depth, kept_kind, k, rest_to, win, draw_at, life_tails):  # noqa: ANN001, ANN202
@@ -307,17 +330,22 @@ def counters_amount_effect(text: str) -> "Any | None":
 
         return each_effect
     put = parse_put_counters(body)
-    if put is None or put.x or put.each is None or put.on.lower() != "it":
+    if put is None or put.x or put.each is None or not (put.on.lower() == "it" or put.on_self):
         return None
+    colors = colors_of_reference(put.each)
     per = recipient_for_each(put.each)
-    if per is None:
-        return None
+    if (per is None and colors is None) or (put.on_self and colors is None):
+        return None  # a plain count on the source is `self_counters_for_each_effect`'s
     unit, kind = put.n, _counter_kind(put.kind)
     lead_in = chosen is not None
+    on_self = put.on_self
 
     def it_effect(game: "Game", stack_object: Any) -> None:
-        amount = unit * per(game, stack_object, game.controller_of(stack_object))
-        subject = _it_subject(game, stack_object, lead_in)
+        if colors is not None:
+            amount = unit * colors(game, stack_object)
+        else:
+            amount = unit * per(game, stack_object, game.controller_of(stack_object))
+        subject = stack_object.source(game) if on_self else _it_subject(game, stack_object, lead_in)
         if subject is not None and subject.zone is Zone.BATTLEFIELD and amount > 0:
             game.add_counters(subject, kind, amount)
 
@@ -391,6 +419,33 @@ def colors_of(game: "Game", state: CardState | None) -> int:
     return len({c for c in game.characteristics_of(state).colors if c is not Color.COLORLESS})
 
 
+_COLORS_OF_RE = re.compile(r"^(?:of )?(?P<ref>its|that spell's) colou?rs$", re.IGNORECASE)
+
+
+@functools.cache
+def colors_of_reference(each: str) -> "Any | None":
+    """`(game, stack_object) -> int` for the counted phrase "each of its colors" (the
+    first card target, Might of the Nephilim, Breathe Your Last) or "each of that spell's
+    colors" (the spell a cast trigger is about, Ramos, Ancient Cornucopia), or `None`."""
+    match = _COLORS_OF_RE.match(clean(each))
+    if match is None:
+        return None
+    of_spell = match.group("ref").lower() != "its"
+
+    def count(game: "Game", stack_object: Any) -> int:
+        if of_spell:
+            event = getattr(stack_object, "event", None)
+            ref = game.find_by_id(event.subject_id) if event and event.subject_id else None
+        else:
+            targets = [
+                t for t in game.resolve_card_targets(stack_object) if isinstance(t, CardState)
+            ]
+            ref = targets[0] if targets else None
+        return colors_of(game, ref)
+
+    return count
+
+
 @functools.cache
 def life_per_color_effect(text: str, *, for_spell: bool) -> "Any | None":
     """The reader above (a leading instruction, if any, is read by the ordinary dispatcher)."""
@@ -413,19 +468,14 @@ def life_per_color_effect(text: str, *, for_spell: bool) -> "Any | None":
             return None
     may = match.group("may") is not None
     once = match.group("once") is not None
-    of_spell = match.group("ref").lower() != "its"
+    count_colors = colors_of_reference(match.group("ref") + " colors")
+    assert count_colors is not None
 
     def effect(game: "Game", stack_object: Any) -> None:
         controller = game.controller_of(stack_object)
-        if of_spell:
-            event = getattr(stack_object, "event", None)
-            ref = game.find_by_id(event.subject_id) if event and event.subject_id else None
-        else:
-            targets = [
-                t for t in game.resolve_card_targets(stack_object) if isinstance(t, CardState)
-            ]
-            ref = targets[0] if targets else None
-        colors = colors_of(game, ref)  # read before the lead instruction can change it (CR 608.2h)
+        colors = count_colors(
+            game, stack_object
+        )  # read before the lead instruction can change it (CR 608.2h)
         if lead_effect is not None:
             lead_effect(game, stack_object)
         if once:
@@ -441,6 +491,45 @@ def life_per_color_effect(text: str, *, for_spell: bool) -> "Any | None":
             game.once_per_turn_triggers[key] = 1
         if colors > 0:
             game.gain_life(controller, unit * colors)
+
+    return effect
+
+
+_DISCARD_HAND_DRAW_PER_COLOR_RE = re.compile(
+    r"^you may discard your hand\.\s*if you do, draw a card for each (?P<each>of [^.]+)$",
+    re.IGNORECASE,
+)
+
+
+@functools.cache
+def discard_hand_draw_per_color_effect(text: str) -> "Any | None":
+    """ "You may discard your hand. If you do, draw a card for each of that spell's colors."
+    (Moonveil Regent): the colors are read first (CR 608.2h); the draw follows only if a hand
+    was discarded (CR 701.9a)."""
+    from .effects.text import _strip_non_effect_preamble
+
+    if "discard your hand" not in text.lower():
+        return None
+    whole = " ".join(_strip_non_effect_preamble(text).split())
+    match = _DISCARD_HAND_DRAW_PER_COLOR_RE.fullmatch(whole.rstrip("."))
+    count_colors = colors_of_reference(match.group("each")) if match is not None else None
+    if count_colors is None:
+        return None
+
+    def effect(game: "Game", stack_object: Any) -> None:
+        controller = game.controller_of(stack_object)
+        colors = count_colors(game, stack_object)
+        name = getattr(stack_object, "source_name", "")
+        if not game.may(
+            controller.username,
+            "discard your hand",
+            source=name,
+            source_id=source_id_of(stack_object),
+        ):
+            return
+        hand = list(controller.hand)
+        if hand and len(game.discard_cards(controller.username, hand, source=name)) and colors:
+            game.draw_cards(controller.username, colors)
 
     return effect
 
@@ -501,6 +590,7 @@ def _domain(game: "Game", controller: str) -> int:
 
 __all__ = [
     "counters_amount_effect",
+    "discard_hand_draw_per_color_effect",
     "life_per_color_effect",
     "look_top_effect",
     "return_if_mana_value_effect",
