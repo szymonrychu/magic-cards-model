@@ -314,7 +314,14 @@ def _counted_sentence(
 
         def add(n: int):
             def run(game: "Game", obj: object) -> None:
-                add_mana_times(game, controller_of(game, obj), symbols, n, retain_until=retention)
+                add_mana_times(
+                    game,
+                    controller_of(game, obj),
+                    symbols,
+                    n,
+                    retain_until=retention,
+                    stack_object=obj,
+                )
 
             return run if n else None
 

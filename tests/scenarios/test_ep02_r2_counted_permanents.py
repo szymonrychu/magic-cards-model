@@ -994,3 +994,41 @@ def test_dragonhawk_entering_triggers_the_same_way():
     assert len(_exiled(scenario)) == 2
     _advance_to(scenario, Step.END_STEP)
     assert scenario.player("bob").life == 20 - 4
+
+
+# --------------------------------------------------------------------------
+# Muerra, Trash Tactician: "At the beginning of your first main phase, add {R} or {G}
+# for each Raccoon you control." CR 106.4 (adding mana), CR 608.2h (the count is
+# taken as the trigger resolves), CR 107.4b/CR 106.1 (each unit is one mana of a
+# colour the player picks from the printed pair).
+# --------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize("choices", [["R"], ["G"]])
+def test_muerra_adds_one_mana_of_a_listed_colour_per_raccoon(choices):
+    scenario = _build(["Muerra, Trash Tactician", "Grizzly Bears"], ["Muerra, Trash Tactician"])
+    for color in choices:
+        scenario.will_choose(color, username="alice", times=1)
+    scenario.start_at(Step.UNTAP)
+    _advance_to(scenario, Step.PRECOMBAT_MAIN)
+    pool = scenario.player("alice").mana_pool.floating
+    assert pool.get(Color(choices[0]), 0) == 1  # one Raccoon: Muerra; Bears and bob's Muerra: no
+    assert sum(pool.values()) == 1
+
+
+def test_muerra_choice_is_made_once_per_raccoon_not_once_for_all():
+    scenario = _build(["Muerra, Trash Tactician", "Muerra, Trash Tactician"], [])
+    scenario.will_choose("R", username="alice", times=1)
+    scenario.will_choose("G", username="alice", times=1)
+    scenario.start_at(Step.UNTAP)
+    _advance_to(scenario, Step.PRECOMBAT_MAIN)
+    pool = scenario.player("alice").mana_pool.floating
+    assert pool.get(Color.RED, 0) + pool.get(Color.GREEN, 0) == 2
+    assert pool.get(Color.RED, 0) == 1
+
+
+def test_muerra_adds_nothing_without_a_raccoon():
+    scenario = _build(["Grizzly Bears"], [])
+    scenario.start_at(Step.UNTAP)
+    _advance_to(scenario, Step.PRECOMBAT_MAIN)
+    assert sum(scenario.player("alice").mana_pool.floating.values()) == 0
