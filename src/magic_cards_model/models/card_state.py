@@ -1,5 +1,6 @@
 """A card as it exists in a game, as opposed to the printing it was cut from."""
 
+import re
 from collections.abc import Iterable, Mapping
 from enum import StrEnum
 from typing import Any, Literal, Self
@@ -1650,6 +1651,18 @@ class CardState(EngineModel):
     all. `Casting.cast` is what sets it (CR 601.2b's announcement is where
     "you may choose to cast it bestowed" is answered)."""
 
+    prototyped: bool = False
+    """True while this object was cast prototyped (CR 702.160a, CR 718.3).
+
+    CR 718.3b: "Both a prototyped spell and the permanent it becomes have only
+    its alternative set of power, toughness, and mana cost characteristics",
+    and the colour of that cost. `mana_cost`, `mana_value`, `colors`,
+    `printed_power` and `printed_toughness` read the alternative set (the
+    printed "Prototype {cost} - P/T" line, `prototype_characteristics`) while
+    this is set. Carried across exactly one zone change, the spell becoming
+    its permanent, like `bestowed`; any other move is CR 400.7's new object
+    (CR 718.4). `Casting` sets it as the spell goes on the stack."""
+
     discarded_by: str | None = None
     """Who discarded this card (CR 701.9a), for as long as it stays where the
     discard put it. `None` for a card that reached its zone any other way.
@@ -2225,6 +2238,15 @@ class CardState(EngineModel):
         return tuple(self.card.supertypes)
 
     @property
+    def prototype_characteristics(self) -> "PrototypeCharacteristics | None":
+        """The alternative mana cost, power and toughness this object has right
+        now (CR 718.3b), or None when it was not cast prototyped or is face
+        down (CR 708.2)."""
+        if not self.prototyped or self.face_down_characteristics is not None:
+            return None
+        return prototype_of(self.oracle_text)
+
+    @property
     def colors(self) -> tuple[Color, ...]:
         """This object's colors (CR 105.2, CR 202.2, CR 708.2).
 
@@ -2238,6 +2260,9 @@ class CardState(EngineModel):
             return ()  # CR 406.3a
         if self.face_down_characteristics is not None:
             return ()
+        prototype = self.prototype_characteristics
+        if prototype is not None:
+            return prototype.colors  # CR 718.3b
         up_face = self.up_face
         if up_face is not None and up_face.colors is not None:
             return tuple(up_face.colors)
@@ -2351,6 +2376,9 @@ class CardState(EngineModel):
             return None  # CR 406.3a
         if self.face_down_characteristics is not None:
             return self.face_down_characteristics.mana_cost
+        prototype = self.prototype_characteristics
+        if prototype is not None:
+            return prototype.mana_cost  # CR 718.3b
         if self.flipped:
             front_face = self.card.front_face
             return front_face.mana_cost if front_face is not None else None  # CR 710.1c
@@ -2380,6 +2408,11 @@ class CardState(EngineModel):
         if self.has_no_characteristics or self.face_down_characteristics is not None:
             # CR 406.3a / CR 708.2: no mana cost, so CR 202.3a says 0.
             return 0.0
+        prototype = self.prototype_characteristics
+        if prototype is not None:
+            from .mana import ManaCost
+
+            return float(ManaCost.parse(prototype.mana_cost).converted)  # CR 718.3b
         if self.meld_result is not None and self.meld_combined_mana_value is not None:
             # CR 202.3c/712.8g: the *sum* of both cards' own front-face mana
             # values - not `self.meld_result.cmc`, which is the combined back
@@ -2542,6 +2575,9 @@ class CardState(EngineModel):
         grant = self.off_battlefield_characteristics
         if grant is not None and grant.toughness is not None:
             return grant.toughness + self.counters.power_toughness_modifier  # CR 113.6c
+        prototype = self.prototype_characteristics
+        if prototype is not None:
+            return prototype.toughness + self.counters.power_toughness_modifier  # CR 718.3b
         up_face = self.up_face
         printed = _as_number(up_face.toughness if up_face is not None else self.card.toughness)
         return None if printed is None else printed + self.counters.power_toughness_modifier
@@ -2584,6 +2620,9 @@ class CardState(EngineModel):
         grant = self.off_battlefield_characteristics
         if grant is not None and grant.power is not None:
             return grant.power + self.counters.power_toughness_modifier  # CR 113.6c
+        prototype = self.prototype_characteristics
+        if prototype is not None:
+            return prototype.power + self.counters.power_toughness_modifier  # CR 718.3b
         up_face = self.up_face
         printed = _as_number(up_face.power if up_face is not None else self.card.power)
         return None if printed is None else printed + self.counters.power_toughness_modifier
@@ -3228,6 +3267,7 @@ class CardState(EngineModel):
             # the Aura CR 702.103b promises. Detective's Phoenix (hardcast
             # and cast from the graveyard alike) is the proof this was wrong.
             self.bestowed = False
+            self.prototyped = False  # CR 718.4
         # CR 400.7: see `cast_with_keyword` - set again by `Game.enter_the_
         # battlefield` for the one move that carries a cast spell's choice.
         self.cast_with_keyword = None
@@ -3894,3 +3934,34 @@ def _as_number(printed: str | None) -> int | None:
         return int(printed)
     except ValueError:
         return None
+
+
+class PrototypeCharacteristics(EngineModel):
+    """CR 718.2's alternative mana cost, power and toughness, with the colours
+    that cost gives (CR 718.3b, CR 105.2)."""
+
+    mana_cost: str
+    power: int
+    toughness: int
+    colors: tuple[Color, ...]
+
+
+_PROTOTYPE_LINE_RE = re.compile(
+    r"^Prototype (?P<cost>(?:\{[^}]+\})+) \u2014 (?P<p>\d+)/(?P<t>\d+)", re.M
+)
+_COLOR_LETTERS = "WUBRG"
+
+
+def prototype_of(oracle_text: str | None) -> PrototypeCharacteristics | None:
+    """Read a printed "Prototype {cost} - P/T" line (CR 702.160a, CR 718.1)."""
+    match = _PROTOTYPE_LINE_RE.search(oracle_text or "")
+    if match is None:
+        return None
+    cost = match.group("cost")
+    symbols = {part for symbol in re.findall(r"\{([^}]+)\}", cost) for part in symbol.split("/")}
+    return PrototypeCharacteristics(
+        mana_cost=cost,
+        power=int(match.group("p")),
+        toughness=int(match.group("t")),
+        colors=tuple(Color(letter) for letter in _COLOR_LETTERS if letter in symbols),
+    )

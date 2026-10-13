@@ -1,0 +1,133 @@
+{
+  "object": "card",
+  "id": "2efbcea0-53ba-444d-b2e0-6d184f945f92",
+  "oracle_id": "6afe197b-0779-4284-a192-357a3c89b7e3",
+  "multiverse_ids": [
+    667629
+  ],
+  "mtgo_id": 128044,
+  "tcgplayer_id": 556367,
+  "cardmarket_id": 775540,
+  "name": "The Aesir Escape Valhalla",
+  "lang": "en",
+  "released_at": "2024-07-05",
+  "uri": "https://api.scryfall.com/cards/2efbcea0-53ba-444d-b2e0-6d184f945f92",
+  "scryfall_uri": "https://scryfall.com/card/acr/39/the-aesir-escape-valhalla?utm_source=api",
+  "layout": "saga",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T02:49:36Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/2/e/2efbcea0-53ba-444d-b2e0-6d184f945f92.jpg?1783910976",
+    "normal": "https://cards.scryfall.io/normal/front/2/e/2efbcea0-53ba-444d-b2e0-6d184f945f92.jpg?1783910976",
+    "large": "https://cards.scryfall.io/large/front/2/e/2efbcea0-53ba-444d-b2e0-6d184f945f92.jpg?1783910976",
+    "png": "https://cards.scryfall.io/png/front/2/e/2efbcea0-53ba-444d-b2e0-6d184f945f92.png?1783910976",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/2/e/2efbcea0-53ba-444d-b2e0-6d184f945f92.jpg?1783910976",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/2/e/2efbcea0-53ba-444d-b2e0-6d184f945f92.jpg?1783910976",
+    "thumb": "https://cards.scryfall.io/thumb/front/2/e/2efbcea0-53ba-444d-b2e0-6d184f945f92.webp?1783910976",
+    "grid": "https://cards.scryfall.io/grid/front/2/e/2efbcea0-53ba-444d-b2e0-6d184f945f92.webp?1783910976",
+    "display": "https://cards.scryfall.io/display/front/2/e/2efbcea0-53ba-444d-b2e0-6d184f945f92.webp?1783910976",
+    "art": "https://cards.scryfall.io/art/front/2/e/2efbcea0-53ba-444d-b2e0-6d184f945f92.webp?1783910976",
+    "crop": "https://cards.scryfall.io/crop/front/2/e/2efbcea0-53ba-444d-b2e0-6d184f945f92.webp?1783910976"
+  },
+  "mana_cost": "{2}{G}",
+  "cmc": 3.0,
+  "type_line": "Enchantment \u2014 Saga",
+  "oracle_text": "(As this Saga enters and after your draw step, add a lore counter.)\nI \u2014 Exile a permanent card from your graveyard. You gain life equal to its mana value.\nII \u2014 Put a number of +1/+1 counters on target creature you control equal to the mana value of the exiled card.\nIII \u2014 Return this Saga and the exiled card to their owner's hand.",
+  "colors": [
+    "G"
+  ],
+  "color_identity": [
+    "G"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "54b67b0b-cd3f-4e0d-ac25-fef5d966409b",
+  "set": "acr",
+  "set_name": "Assassin's Creed",
+  "set_type": "draft_innovation",
+  "set_uri": "https://api.scryfall.com/sets/54b67b0b-cd3f-4e0d-ac25-fef5d966409b",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Aacr&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/acr?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/2efbcea0-53ba-444d-b2e0-6d184f945f92/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A6afe197b-0779-4284-a192-357a3c89b7e3&unique=prints",
+  "collector_number": "39",
+  "digital": false,
+  "rarity": "uncommon",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Allen Morris",
+  "artist_ids": [
+    "5d65ec8f-0c70-41f0-8585-5c91bd7f6f2e"
+  ],
+  "illustration_id": "a5e5db47-6272-4822-bbed-e3b8242cd4e3",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "triangle",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "promo_types": [
+    "universesbeyond"
+  ],
+  "edhrec_rank": 6840,
+  "prices": {
+    "usd": "0.34",
+    "usd_foil": "0.37",
+    "usd_etched": null,
+    "eur": "0.22",
+    "eur_foil": "0.35",
+    "tix": "0.76"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=667629&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DThe%2BAesir%2BEscape%2BValhalla",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DThe%2BAesir%2BEscape%2BValhalla",
+    "edhrec": "https://edhrec.com/route/?cc=The+Aesir+Escape+Valhalla"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F556367%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=775540&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/128044?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

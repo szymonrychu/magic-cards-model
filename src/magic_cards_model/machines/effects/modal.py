@@ -1493,6 +1493,13 @@ def parse_mode_effect(mode: Mode, x_value: int) -> Effect | None:
     c02_t6 = _c02_t6_spell_effect(text)
     if c02_t6 is not None:
         return c02_t6
+    # Grab the Reins's second mode: "Sacrifice a creature. ~ deals damage equal
+    # to that creature's power to any target." - an amount that spends a
+    # characteristic of the object an earlier sentence of the mode moved, which
+    # a mode never reaches the spell-text ladder to have read.
+    referenced_stat = referenced_permanent_stat_effect(text, for_spell=True)
+    if referenced_stat is not None:
+        return referenced_stat
     # Witherbloom Charm's own first mode: "You may sacrifice a permanent. If
     # you do, draw two cards." (CR 118.12) is read whole by `_spell_effect_
     # or_notice` for a non-modal card, but a mode's own text never reaches
@@ -1552,6 +1559,9 @@ def parse_mode_effect(mode: Mode, x_value: int) -> Effect | None:
     created_trigger = _parse_created_trigger_spell_text(text)
     if created_trigger is not None:
         return created_trigger
+    gain_control_and_grant = until_eot_gain_control_and_grant_text(text)
+    if gain_control_and_grant is not None:
+        return parse_mixed_effect_for_spell(gain_control_and_grant)
     return parse_mixed_effect_for_spell(text)
 
 
@@ -6779,6 +6789,9 @@ def _parse_if_self_isnt_a_creature_clause(effect_text: str) -> AbilityEffect | N
 
 
 from ..damage_modification import DamageModifierReplacement  # noqa: E402
+from ..ep02_r2_referenced_permanent_stat import (  # noqa: E402
+    referenced_permanent_stat_effect,
+)
 from ..replacement.model import CreatedReplacement  # noqa: E402
 from ..replacement.parse import read_turn_damage_spec  # noqa: E402
 from ._common import (  # noqa: E402
@@ -6824,6 +6837,7 @@ from .continuous import (  # noqa: E402
     _parse_mass_gain_control_untap_clause,
     continuous_effects,
     layer_context_for,
+    until_eot_gain_control_and_grant_text,  # noqa: E402
 )
 from .control_copy import _parse_if_control_colored_permanent_damage_clause  # noqa: E402
 from .counters import (  # noqa: E402

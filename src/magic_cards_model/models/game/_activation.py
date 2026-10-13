@@ -3318,6 +3318,9 @@ class ActivationMixin:
                     if paid is not None
                     else ((exiled_for_cost.id,) if exiled_for_cost is not None else ())
                 ),
+                cost_discarded_card_ids=(
+                    _cost_moved(paid, ComponentKind.DISCARD) if paid is not None else ()
+                ),
                 # CR 601.2h via CR 602.2b: what actually paid this activation's
                 # cost, read off the settled payment the same moment the two
                 # fields just above are - `CastRecord.mana_spent`'s own twin
@@ -3338,6 +3341,9 @@ class ActivationMixin:
             # exist (CR 704.5d) before this ability resolves.
             on_stack.cost_sacrificed_mana_values = tuple(
                 self.last_known_mana_value(card_id) for card_id in on_stack.cost_sacrificed_card_ids
+            )
+            on_stack.cost_discarded_mana_values = tuple(
+                self.last_known_mana_value(card_id) for card_id in on_stack.cost_discarded_card_ids
             )
             on_stack.cost_sacrificed_color_counts = tuple(
                 self._last_known_color_count(card_id)

@@ -1,0 +1,132 @@
+{
+  "object": "card",
+  "id": "718bf224-5e1b-439c-a998-ceec5c0a8903",
+  "oracle_id": "22504fd0-0353-4ef0-baf4-4b7be28d1a66",
+  "multiverse_ids": [
+    417704
+  ],
+  "mtgo_id": 61715,
+  "mtgo_foil_id": 61716,
+  "tcgplayer_id": 123074,
+  "cardmarket_id": 292780,
+  "name": "Spark of Creativity",
+  "lang": "en",
+  "released_at": "2016-09-30",
+  "uri": "https://api.scryfall.com/cards/718bf224-5e1b-439c-a998-ceec5c0a8903",
+  "scryfall_uri": "https://scryfall.com/card/kld/131/spark-of-creativity?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T10:06:28Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/7/1/718bf224-5e1b-439c-a998-ceec5c0a8903.jpg?1783937188",
+    "normal": "https://cards.scryfall.io/normal/front/7/1/718bf224-5e1b-439c-a998-ceec5c0a8903.jpg?1783937188",
+    "large": "https://cards.scryfall.io/large/front/7/1/718bf224-5e1b-439c-a998-ceec5c0a8903.jpg?1783937188",
+    "png": "https://cards.scryfall.io/png/front/7/1/718bf224-5e1b-439c-a998-ceec5c0a8903.png?1783937188",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/7/1/718bf224-5e1b-439c-a998-ceec5c0a8903.jpg?1783937188",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/7/1/718bf224-5e1b-439c-a998-ceec5c0a8903.jpg?1783937188",
+    "thumb": "https://cards.scryfall.io/thumb/front/7/1/718bf224-5e1b-439c-a998-ceec5c0a8903.webp?1783937188",
+    "grid": "https://cards.scryfall.io/grid/front/7/1/718bf224-5e1b-439c-a998-ceec5c0a8903.webp?1783937188",
+    "display": "https://cards.scryfall.io/display/front/7/1/718bf224-5e1b-439c-a998-ceec5c0a8903.webp?1783937188",
+    "art": "https://cards.scryfall.io/art/front/7/1/718bf224-5e1b-439c-a998-ceec5c0a8903.webp?1783937188",
+    "crop": "https://cards.scryfall.io/crop/front/7/1/718bf224-5e1b-439c-a998-ceec5c0a8903.webp?1783937188"
+  },
+  "mana_cost": "{R}",
+  "cmc": 1.0,
+  "type_line": "Sorcery",
+  "oracle_text": "Choose target creature. Exile the top card of your library. You may have Spark of Creativity deal damage to that creature equal to the exiled card's mana value. If you don't, you may play that card until end of turn.",
+  "colors": [
+    "R"
+  ],
+  "color_identity": [
+    "R"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "d667e468-be8f-411f-a030-473d148deb74",
+  "set": "kld",
+  "set_name": "Kaladesh",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/d667e468-be8f-411f-a030-473d148deb74",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Akld&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/kld?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/718bf224-5e1b-439c-a998-ceec5c0a8903/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A22504fd0-0353-4ef0-baf4-4b7be28d1a66&unique=prints",
+  "collector_number": "131",
+  "digital": false,
+  "rarity": "uncommon",
+  "flavor_text": "\"To invent is to rebel.\"\n\u2014Pia Nalaar",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Johann Bodin",
+  "artist_ids": [
+    "d92e2dd9-9ef6-43f6-81f8-df87f9066983"
+  ],
+  "illustration_id": "0fa1c1d7-daaa-4829-b5b8-be8a03fa2941",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 12937,
+  "penny_rank": 9970,
+  "prices": {
+    "usd": "0.12",
+    "usd_foil": "0.66",
+    "usd_etched": null,
+    "eur": "0.16",
+    "eur_foil": "0.38",
+    "tix": "0.03"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=417704&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DSpark%2Bof%2BCreativity",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DSpark%2Bof%2BCreativity",
+    "edhrec": "https://edhrec.com/route/?cc=Spark+of+Creativity"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F123074%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=292780&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/61715?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

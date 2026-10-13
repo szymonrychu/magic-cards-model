@@ -2225,6 +2225,10 @@ class Casting(EngineModel):
             # its origin zone, and `CardState.move_to` clears the flag on the
             # way (CR 400.7).
             self.spell.bestowed = True
+        if option.keyword.lower() == "prototype":
+            # CR 718.3b: the spell (and the permanent it becomes) has only the
+            # alternative power, toughness and mana cost.
+            self.spell.prototyped = True
         # CR 610.5's grant happens "at the time the player proposes the
         # casting", and CR 400.7b keeps it on the permanent the spell becomes.
         # Recorded on the object rather than left implicit in the grantor's

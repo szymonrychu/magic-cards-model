@@ -521,6 +521,14 @@ def executed_keywords(printing: Card) -> dict[str, str]:
             "machines/face_down_keywords.py (token_copy_keyword_activation)"
         )
 
+    # Epic (CR 702.50a): the two spell abilities a resolving epic spell runs,
+    # read off the spell text by `epic_spell_effect`.
+    if "epic" in printed and printing.oracle_text:
+        from .machines.ep02_r2_referenced_permanent_stat import epic_spell_effect
+
+        if epic_spell_effect(printing.oracle_text) is not None:
+            found["epic"] = "machines/ep02_r2_referenced_permanent_stat.py (epic, CR 702.50a)"
+
     # Cloak (CR 701.58a): a keyword action the card's own clause performs
     # through `machines/effects/library._parse_cloak_clause`.
     if any(k.lower() == "cloak" for k in printing.keywords) and prints_cloak_clause(printing):

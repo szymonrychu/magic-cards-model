@@ -1,0 +1,189 @@
+{
+  "object": "card",
+  "id": "a21b1734-a773-4107-95c1-b44d5ccdfd82",
+  "oracle_id": "f9ef90b9-a2b4-4a5b-92fb-2268ea7d709f",
+  "multiverse_ids": [
+    607120,
+    607121
+  ],
+  "mtgo_id": 110012,
+  "arena_id": 84356,
+  "tcgplayer_id": 490562,
+  "cardmarket_id": 704361,
+  "name": "Ayara, Widow of the Realm // Ayara, Furnace Queen",
+  "lang": "en",
+  "released_at": "2023-04-21",
+  "uri": "https://api.scryfall.com/cards/a21b1734-a773-4107-95c1-b44d5ccdfd82",
+  "scryfall_uri": "https://scryfall.com/card/mom/90/ayara-widow-of-the-realm-ayara-furnace-queen?utm_source=api",
+  "layout": "transform",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T04:30:27Z",
+  "cmc": 3.0,
+  "type_line": "Legendary Creature \u2014 Elf Noble // Legendary Creature \u2014 Phyrexian Elf Noble",
+  "color_identity": [
+    "B",
+    "R"
+  ],
+  "keywords": [
+    "Transform"
+  ],
+  "card_faces": [
+    {
+      "object": "card_face",
+      "name": "Ayara, Widow of the Realm",
+      "mana_cost": "{1}{B}{B}",
+      "type_line": "Legendary Creature \u2014 Elf Noble",
+      "oracle_text": "{T}, Sacrifice another creature or artifact: Ayara deals X damage to target opponent or battle and you gain X life, where X is the sacrificed permanent's mana value.\n{5}{R/P}: Transform Ayara. Activate only as a sorcery. ({R/P} can be paid with either {R} or 2 life.)",
+      "colors": [
+        "B"
+      ],
+      "power": "3",
+      "toughness": "3",
+      "artist": "Anna Podedworna",
+      "artist_id": "1874cb2c-f690-475f-a217-c14f11166758",
+      "illustration_id": "b641215d-7836-48c6-956b-5c677ca98270",
+      "image_uris": {
+        "small": "https://cards.scryfall.io/small/front/a/2/a21b1734-a773-4107-95c1-b44d5ccdfd82.jpg?1783917027",
+        "normal": "https://cards.scryfall.io/normal/front/a/2/a21b1734-a773-4107-95c1-b44d5ccdfd82.jpg?1783917027",
+        "large": "https://cards.scryfall.io/large/front/a/2/a21b1734-a773-4107-95c1-b44d5ccdfd82.jpg?1783917027",
+        "png": "https://cards.scryfall.io/png/front/a/2/a21b1734-a773-4107-95c1-b44d5ccdfd82.png?1783917027",
+        "art_crop": "https://cards.scryfall.io/art_crop/front/a/2/a21b1734-a773-4107-95c1-b44d5ccdfd82.jpg?1783917027",
+        "border_crop": "https://cards.scryfall.io/border_crop/front/a/2/a21b1734-a773-4107-95c1-b44d5ccdfd82.jpg?1783917027",
+        "thumb": "https://cards.scryfall.io/thumb/front/a/2/a21b1734-a773-4107-95c1-b44d5ccdfd82.webp?1783917027",
+        "grid": "https://cards.scryfall.io/grid/front/a/2/a21b1734-a773-4107-95c1-b44d5ccdfd82.webp?1783917027",
+        "display": "https://cards.scryfall.io/display/front/a/2/a21b1734-a773-4107-95c1-b44d5ccdfd82.webp?1783917027",
+        "art": "https://cards.scryfall.io/art/front/a/2/a21b1734-a773-4107-95c1-b44d5ccdfd82.webp?1783917027",
+        "crop": "https://cards.scryfall.io/crop/front/a/2/a21b1734-a773-4107-95c1-b44d5ccdfd82.webp?1783917027"
+      }
+    },
+    {
+      "object": "card_face",
+      "name": "Ayara, Furnace Queen",
+      "mana_cost": "",
+      "type_line": "Legendary Creature \u2014 Phyrexian Elf Noble",
+      "oracle_text": "At the beginning of combat on your turn, return up to one target artifact or creature card from your graveyard to the battlefield. It gains haste. Exile it at the beginning of the next end step.",
+      "colors": [
+        "B",
+        "R"
+      ],
+      "color_indicator": [
+        "B",
+        "R"
+      ],
+      "power": "4",
+      "toughness": "4",
+      "flavor_text": "Ayara cherished her new machine servitors just as much as she once did her many suitors: not at all.",
+      "artist": "Anna Podedworna",
+      "artist_id": "1874cb2c-f690-475f-a217-c14f11166758",
+      "illustration_id": "bcc22e1e-97c3-4be6-ad1b-ac88c3375a15",
+      "image_uris": {
+        "small": "https://cards.scryfall.io/small/back/a/2/a21b1734-a773-4107-95c1-b44d5ccdfd82.jpg?1783917027",
+        "normal": "https://cards.scryfall.io/normal/back/a/2/a21b1734-a773-4107-95c1-b44d5ccdfd82.jpg?1783917027",
+        "large": "https://cards.scryfall.io/large/back/a/2/a21b1734-a773-4107-95c1-b44d5ccdfd82.jpg?1783917027",
+        "png": "https://cards.scryfall.io/png/back/a/2/a21b1734-a773-4107-95c1-b44d5ccdfd82.png?1783917027",
+        "art_crop": "https://cards.scryfall.io/art_crop/back/a/2/a21b1734-a773-4107-95c1-b44d5ccdfd82.jpg?1783917027",
+        "border_crop": "https://cards.scryfall.io/border_crop/back/a/2/a21b1734-a773-4107-95c1-b44d5ccdfd82.jpg?1783917027",
+        "thumb": "https://cards.scryfall.io/thumb/back/a/2/a21b1734-a773-4107-95c1-b44d5ccdfd82.webp?1783917027",
+        "grid": "https://cards.scryfall.io/grid/back/a/2/a21b1734-a773-4107-95c1-b44d5ccdfd82.webp?1783917027",
+        "display": "https://cards.scryfall.io/display/back/a/2/a21b1734-a773-4107-95c1-b44d5ccdfd82.webp?1783917027",
+        "art": "https://cards.scryfall.io/art/back/a/2/a21b1734-a773-4107-95c1-b44d5ccdfd82.webp?1783917027",
+        "crop": "https://cards.scryfall.io/crop/back/a/2/a21b1734-a773-4107-95c1-b44d5ccdfd82.webp?1783917027"
+      }
+    }
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "arena",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "392f7315-dc53-40a3-a2cc-5482dbd498b3",
+  "set": "mom",
+  "set_name": "March of the Machine",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/392f7315-dc53-40a3-a2cc-5482dbd498b3",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Amom&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/mom?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/a21b1734-a773-4107-95c1-b44d5ccdfd82/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Af9ef90b9-a2b4-4a5b-92fb-2268ea7d709f&unique=prints",
+  "collector_number": "90",
+  "digital": false,
+  "rarity": "rare",
+  "artist": "Anna Podedworna",
+  "artist_ids": [
+    "1874cb2c-f690-475f-a217-c14f11166758"
+  ],
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 7243,
+  "penny_rank": 10333,
+  "preview": {
+    "source": "Sheldon Menery",
+    "source_uri": "https://twitter.com/SheldonMenery/status/1641624752291758082",
+    "previewed_at": "2023-03-30"
+  },
+  "prices": {
+    "usd": "0.43",
+    "usd_foil": "0.47",
+    "usd_etched": null,
+    "eur": "0.24",
+    "eur_foil": "0.32",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=607120&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DAyara%252C%2BWidow%2Bof%2Bthe%2BRealm%2B%252F%252F%2BAyara%252C%2BFurnace%2BQueen",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DAyara%252C%2BWidow%2Bof%2Bthe%2BRealm%2B%252F%252F%2BAyara%252C%2BFurnace%2BQueen",
+    "edhrec": "https://edhrec.com/route/?cc=Ayara%2C+Widow+of+the+Realm"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F490562%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=704361&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/110012?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

@@ -458,12 +458,24 @@ _PUT_RE = re.compile(
 )
 
 
+_PUT_NUMBER_OF_RE = re.compile(
+    rf"^(?P<verb>puts?) a number of (?P<kind>{COUNTER_KIND}) counters on (?P<on>.+?) "
+    r"equal to (?P<expr>.+)$",
+    re.IGNORECASE,
+)
+
+
 @functools.cache
 def parse_put_counters(text: str) -> PutCounters | None:
-    """The counters `text` puts, or `None`."""
+    """The counters `text` puts, or `None`. "Put a number of +1/+1 counters on
+    target creature equal to <amount>" reads as "put X ... counters, where X is
+    <amount>"."""
     sentence = clean(text)
     where = None
-    if (split := split_where_x(sentence)) is not None:
+    if (number_of := _PUT_NUMBER_OF_RE.fullmatch(sentence)) is not None:
+        sentence = f"{number_of['verb']} x {number_of['kind']} counters on {number_of['on']}"
+        where = number_of["expr"]
+    elif (split := split_where_x(sentence)) is not None:
         sentence, where = split
     match = _PUT_RE.fullmatch(sentence)
     if match is None:

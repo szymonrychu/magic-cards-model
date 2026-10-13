@@ -1,0 +1,131 @@
+{
+  "object": "card",
+  "id": "943be0ee-cab1-4678-9ee0-960919ed519e",
+  "oracle_id": "b61a87e3-dc98-4db9-abed-b47b677d81ab",
+  "multiverse_ids": [],
+  "resource_id": "3EDE0C41B12631092D1AA8C979A4CCD9B25C59B7672DE113832CAFCB6495396F",
+  "mtgo_id": 146139,
+  "tcgplayer_id": 671194,
+  "cardmarket_id": 865034,
+  "name": "Cream of the Crop",
+  "lang": "en",
+  "released_at": "2026-01-23",
+  "uri": "https://api.scryfall.com/cards/943be0ee-cab1-4678-9ee0-960919ed519e",
+  "scryfall_uri": "https://scryfall.com/card/ecc/102/cream-of-the-crop?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T01:02:27Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/9/4/943be0ee-cab1-4678-9ee0-960919ed519e.jpg?1783904547",
+    "normal": "https://cards.scryfall.io/normal/front/9/4/943be0ee-cab1-4678-9ee0-960919ed519e.jpg?1783904547",
+    "large": "https://cards.scryfall.io/large/front/9/4/943be0ee-cab1-4678-9ee0-960919ed519e.jpg?1783904547",
+    "png": "https://cards.scryfall.io/png/front/9/4/943be0ee-cab1-4678-9ee0-960919ed519e.png?1783904547",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/9/4/943be0ee-cab1-4678-9ee0-960919ed519e.jpg?1783904547",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/9/4/943be0ee-cab1-4678-9ee0-960919ed519e.jpg?1783904547",
+    "thumb": "https://cards.scryfall.io/thumb/front/9/4/943be0ee-cab1-4678-9ee0-960919ed519e.webp?1783904547",
+    "grid": "https://cards.scryfall.io/grid/front/9/4/943be0ee-cab1-4678-9ee0-960919ed519e.webp?1783904547",
+    "display": "https://cards.scryfall.io/display/front/9/4/943be0ee-cab1-4678-9ee0-960919ed519e.webp?1783904547",
+    "art": "https://cards.scryfall.io/art/front/9/4/943be0ee-cab1-4678-9ee0-960919ed519e.webp?1783904547",
+    "crop": "https://cards.scryfall.io/crop/front/9/4/943be0ee-cab1-4678-9ee0-960919ed519e.webp?1783904547"
+  },
+  "mana_cost": "{1}{G}",
+  "cmc": 2.0,
+  "type_line": "Enchantment",
+  "oracle_text": "Whenever a creature you control enters, you may look at the top X cards of your library, where X is that creature's power. If you do, put one of those cards on top of your library and the rest on the bottom of your library in any order.",
+  "colors": [
+    "G"
+  ],
+  "color_identity": [
+    "G"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": false,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "805b5a0c-f8bb-4555-86ea-eb9ec36a011a",
+  "set": "ecc",
+  "set_name": "Lorwyn Eclipsed Commander",
+  "set_type": "commander",
+  "set_uri": "https://api.scryfall.com/sets/805b5a0c-f8bb-4555-86ea-eb9ec36a011a",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Aecc&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/ecc?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/943be0ee-cab1-4678-9ee0-960919ed519e/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Ab61a87e3-dc98-4db9-abed-b47b677d81ab&unique=prints",
+  "collector_number": "102",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Howard Lyon",
+  "artist_ids": [
+    "6dd06426-59fe-4b9c-aad5-6da8446a5c3d"
+  ],
+  "illustration_id": "c3eff218-4ea6-4fc8-aba8-86b9446534d3",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "enchantment"
+  ],
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "edhrec_rank": 5366,
+  "penny_rank": 10360,
+  "prices": {
+    "usd": "0.39",
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": "0.83",
+    "eur_foil": null,
+    "tix": "0.09"
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DCream%2Bof%2Bthe%2BCrop",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DCream%2Bof%2Bthe%2BCrop",
+    "edhrec": "https://edhrec.com/route/?cc=Cream+of+the+Crop"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F671194%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=865034&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/146139?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

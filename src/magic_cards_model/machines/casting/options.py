@@ -6,7 +6,7 @@ from typing import Any
 from pydantic import ConfigDict
 
 from ...models.card import Card, Type
-from ...models.card_state import CardState, ExileMarker
+from ...models.card_state import CardState, ExileMarker, prototype_of
 from ...models.mana import ManaCost
 from ...models.zone import Zone
 from ...phrases import with_indefinite_article
@@ -1007,6 +1007,24 @@ def _warp_from_exile(ability: KeywordAbility) -> KeywordCastOption:
     )
 
 
+def _prototype_option(card: Card, ability: KeywordAbility) -> KeywordCastOption:
+    """CR 702.160a: "A player who casts a spell with prototype can choose to
+    cast that card 'prototyped.'" CR 718.3a: only the alternative mana cost is
+    used to see if it can be cast, so this is the printed "Prototype {cost} -
+    P/T" cost paid in place of the mana cost, from the hand like any default
+    cast. The alternative power, toughness and colour are `CardState.
+    prototyped`'s (CR 718.3b), set by `Casting` as the spell goes on the stack."""
+    prototype = prototype_of(card.oracle_text)
+    return KeywordCastOption(
+        keyword=ability.canonical,
+        rule="CR 702.160a",
+        zone=Zone.HAND,
+        cost=TotalCost.of(ManaCost.parse(prototype.mana_cost)) if prototype else None,
+        pays_mana_cost=False,
+        understood=prototype is not None,
+    )
+
+
 def keyword_cast_options(card: Card) -> list[KeywordCastOption]:
     """Every way this card's own text lets it be cast, in printed order (CR 601.3).
 
@@ -1018,7 +1036,11 @@ def keyword_cast_options(card: Card) -> list[KeywordCastOption]:
     """
     options: list[KeywordCastOption] = []
     for ability in keyword_abilities(card):
-        option = _option_from_keyword(ability)
+        option = (
+            _prototype_option(card, ability)
+            if ability.canonical.lower() == "prototype"
+            else _option_from_keyword(ability)
+        )
         if option is None:
             continue
         options.append(option)

@@ -1,0 +1,152 @@
+{
+  "object": "card",
+  "id": "26c1ba92-556e-4da9-8e3a-a4a82612cb29",
+  "oracle_id": "e70a93e4-2fe7-46d3-8958-153ab2fcfd99",
+  "multiverse_ids": [
+    193659
+  ],
+  "mtgo_id": 36338,
+  "mtgo_foil_id": 36339,
+  "tcgplayer_id": 34908,
+  "cardmarket_id": 22380,
+  "name": "Sarkhan the Mad",
+  "lang": "en",
+  "released_at": "2010-04-23",
+  "uri": "https://api.scryfall.com/cards/26c1ba92-556e-4da9-8e3a-a4a82612cb29",
+  "scryfall_uri": "https://scryfall.com/card/roe/214/sarkhan-the-mad?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T11:25:58Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/2/6/26c1ba92-556e-4da9-8e3a-a4a82612cb29.jpg?1783941958",
+    "normal": "https://cards.scryfall.io/normal/front/2/6/26c1ba92-556e-4da9-8e3a-a4a82612cb29.jpg?1783941958",
+    "large": "https://cards.scryfall.io/large/front/2/6/26c1ba92-556e-4da9-8e3a-a4a82612cb29.jpg?1783941958",
+    "png": "https://cards.scryfall.io/png/front/2/6/26c1ba92-556e-4da9-8e3a-a4a82612cb29.png?1783941958",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/2/6/26c1ba92-556e-4da9-8e3a-a4a82612cb29.jpg?1783941958",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/2/6/26c1ba92-556e-4da9-8e3a-a4a82612cb29.jpg?1783941958",
+    "thumb": "https://cards.scryfall.io/thumb/front/2/6/26c1ba92-556e-4da9-8e3a-a4a82612cb29.webp?1783941958",
+    "grid": "https://cards.scryfall.io/grid/front/2/6/26c1ba92-556e-4da9-8e3a-a4a82612cb29.webp?1783941958",
+    "display": "https://cards.scryfall.io/display/front/2/6/26c1ba92-556e-4da9-8e3a-a4a82612cb29.webp?1783941958",
+    "art": "https://cards.scryfall.io/art/front/2/6/26c1ba92-556e-4da9-8e3a-a4a82612cb29.webp?1783941958",
+    "crop": "https://cards.scryfall.io/crop/front/2/6/26c1ba92-556e-4da9-8e3a-a4a82612cb29.webp?1783941958"
+  },
+  "mana_cost": "{3}{B}{R}",
+  "cmc": 5.0,
+  "type_line": "Legendary Planeswalker \u2014 Sarkhan",
+  "oracle_text": "0: Reveal the top card of your library and put it into your hand. Sarkhan deals damage to himself equal to that card's mana value.\n\u22122: Target creature's controller sacrifices it, then that player creates a 5/5 red Dragon creature token with flying.\n\u22124: Each Dragon creature you control deals damage equal to its power to target player or planeswalker.",
+  "loyalty": "7",
+  "colors": [
+    "B",
+    "R"
+  ],
+  "color_identity": [
+    "B",
+    "R"
+  ],
+  "keywords": [],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "991a5840-adc7-45b5-8d5f-b24dae384bab",
+      "component": "token",
+      "name": "Dragon",
+      "type_line": "Token Creature \u2014 Dragon",
+      "uri": "https://api.scryfall.com/cards/991a5840-adc7-45b5-8d5f-b24dae384bab"
+    },
+    {
+      "object": "related_card",
+      "id": "26c1ba92-556e-4da9-8e3a-a4a82612cb29",
+      "component": "combo_piece",
+      "name": "Sarkhan the Mad",
+      "type_line": "Legendary Planeswalker \u2014 Sarkhan",
+      "uri": "https://api.scryfall.com/cards/26c1ba92-556e-4da9-8e3a-a4a82612cb29"
+    }
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "eadb8a82-ec56-4623-b50e-42e7e60cb535",
+  "set": "roe",
+  "set_name": "Rise of the Eldrazi",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/eadb8a82-ec56-4623-b50e-42e7e60cb535",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Aroe&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/roe?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/26c1ba92-556e-4da9-8e3a-a4a82612cb29/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Ae70a93e4-2fe7-46d3-8958-153ab2fcfd99&unique=prints",
+  "collector_number": "214",
+  "digital": false,
+  "rarity": "mythic",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Chippy",
+  "artist_ids": [
+    "a36f01a0-e51a-48b2-a556-b9b3bc73f969"
+  ],
+  "illustration_id": "86a7917a-4367-462f-aff7-1692b1ce421a",
+  "border_color": "black",
+  "frame": "2003",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 18929,
+  "penny_rank": 7667,
+  "prices": {
+    "usd": "1.64",
+    "usd_foil": "7.41",
+    "usd_etched": null,
+    "eur": "1.22",
+    "eur_foil": "3.00",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=193659&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DSarkhan%2Bthe%2BMad",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DSarkhan%2Bthe%2BMad",
+    "edhrec": "https://edhrec.com/route/?cc=Sarkhan+the+Mad"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F34908%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=22380&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/36338?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

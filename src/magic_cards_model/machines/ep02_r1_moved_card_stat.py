@@ -179,6 +179,8 @@ def parse_moved_phrase(phrase: str) -> Phrase | None:
             if "sacrificed" in subject
             else "exiled"
             if "exiled" in subject
+            else "discarded"
+            if "discarded" in subject
             else "anaphor"
         )
         return Phrase(anchor, match.group("stat"), spell=subject.endswith("spell"))
@@ -220,6 +222,29 @@ def _cost_exiled_referent(game: "Game", stack_object: Any) -> Moved | None:
         card = game.find_by_id(card_id)
         if card is not None:
             return card_snapshot(game, card)
+    if getattr(stack_object, "source_id", None) is not None:
+        # "The exiled card" of a later chapter or ability: the card the source's
+        # own exiling ability linked to it (CR 607.2a).
+        from .exiled_with_peek import _pile
+
+        pile = _pile(game, stack_object)
+        if pile:
+            return card_snapshot(game, pile[-1])
+    return None
+
+
+def _cost_discarded_referent(game: "Game", stack_object: Any) -> Moved | None:
+    """The card an activation's cost discarded (CR 602.2b), with the mana value
+    it had when it was discarded (CR 608.2h)."""
+    ids: tuple[UUID, ...] = tuple(getattr(stack_object, "cost_discarded_card_ids", ()) or ())
+    values = tuple(getattr(stack_object, "cost_discarded_mana_values", ()) or ())
+    for position, card_id in enumerate(ids):
+        card = game.find_by_id(card_id)
+        if card is not None:
+            snapshot = card_snapshot(game, card)
+            if position < len(values):
+                snapshot = replace(snapshot, mana_value=int(values[position]))
+            return snapshot
     return None
 
 
@@ -230,6 +255,8 @@ def _referent_for(game: "Game", stack_object: Any, state: "State", anchor: str) 
         return state.referent
     if anchor == "exiled":
         return _cost_exiled_referent(game, stack_object)
+    if anchor == "discarded":
+        return _cost_discarded_referent(game, stack_object)
     return default_referent(
         game, stack_object, Anchor.SACRIFICED if anchor == "sacrificed" else Anchor.ANAPHOR
     )
@@ -483,9 +510,11 @@ _TOKEN_SIZE_RE = re.compile(
     re.IGNORECASE,
 )
 _PUMP_RE = re.compile(
-    r"^(?P<subject>target creature|that creature|this creature|this permanent|"
-    r"(?-i:[A-Z][^ ]*(?: [A-Z][^ ]*)*)) gets (?P<power>[+-](?:x|\d+))/"
-    r"(?P<toughness>[+-](?:x|y|\d+)) until end of turn$",
+    r"^(?:until end of turn, )?"
+    r"(?P<subject>target creature(?: you control)?|that creature|this creature|this permanent|"
+    r"(?-i:[A-Z][^ ]*(?: [A-Z][^ ]*)*)) "
+    r"(?:gains (?P<grants>[a-z]+(?:, [a-z]+)*) and )?"
+    r"gets (?P<power>[+-](?:x|\d+))/(?P<toughness>[+-](?:x|y|\d+))(?: until end of turn)?$",
     re.IGNORECASE,
 )
 _X_AND_Y_RE = re.compile(r"^(?P<xstat>.+?)(?: and y is (?P<ystat>.+))?$", re.IGNORECASE)
@@ -711,13 +740,14 @@ def _step_pump(
     toughness: str,
     x_phrase: Phrase,
     y_phrase: Phrase | None,
+    grants: str = "",
 ) -> ResolutionStep | None:
     """ "<Target creature | This creature> gets +X/+Y until end of turn, where X
     is ...": the pump with the numbers written in, made by the layer system
     the way every other "until end of turn" pump is (CR 611.2)."""
     from .effects.continuous import continuous_effects, layer_context_for
 
-    on_target = subject.lower() == "target creature"
+    on_target = subject.lower().startswith("target creature")
     on_that = subject.lower() == "that creature"
 
     def literal(x: int, y: int) -> str:
@@ -727,7 +757,8 @@ def _step_pump(
             return f"{spec[0]}{value}"
 
         who = "Target creature" if on_target or on_that else "This creature"
-        return f"{who} gets {number(power)}/{number(toughness)} until end of turn."
+        gains = f" gains {grants} and" if grants else ""
+        return f"{who}{gains} gets {number(power)}/{number(toughness)} until end of turn."
 
     def step(game: "Game", stack_object: Any, state: State) -> bool:
         x = _amount(game, stack_object, state, x_phrase)
@@ -863,7 +894,7 @@ def _amount_step(sentence: str, *, for_spell: bool, opener: bool) -> ResolutionS
         py = _phrase(stats.group("ystat")) if stats.group("ystat") else None
         if stats.group("ystat") and py is None:
             return None
-        if barred(px, allowed=m.group("subject").lower() == "target creature"):
+        if barred(px, allowed=m.group("subject").lower().startswith("target creature")):
             return None
         return _step_pump(
             m.group("subject"),
@@ -871,6 +902,7 @@ def _amount_step(sentence: str, *, for_spell: bool, opener: bool) -> ResolutionS
             m.group("toughness"),
             px,
             py,
+            m.group("grants") or "",
         )
     put = parse_put_counters(sentence)
     if (
