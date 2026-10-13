@@ -1972,7 +1972,7 @@ class Game(
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 157
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 163
     #: 67: `machines/cost.CostComponent` gained `link_to_permanent_id` (CR
     #: 607.2q), reachable from `Game` through a pending `AbilityOnStack.
     #: keyword_activation`/`.unless_payment`'s own `CostPayment.components`.
@@ -2327,6 +2327,17 @@ class Game(
     #: it hit, "Enchanted player can't gain life." and "Players have no maximum
     #: hand size." are read off the battlefield, and a Crew N ability is
     #: once-per-turn; an older dump would resolve each of these as a no-op.
+    #: 163 (EP02-R1-T6, reserved: 157 + task 6): a `DelayedEffectSpec` variant
+    #: `return_subject_then_discard_its_stat` (Vanish into Memory's return with
+    #: its "if you do, discard cards equal to that creature's toughness"), and
+    #: behavioural changes to dispatch a decoded game could already point at -
+    #: "you gain life / draw cards / mill cards equal to its power", "deals
+    #: damage equal to the sacrificed creature's power" off an activation cost,
+    #: "equal to that creature's toughness" after a destroy, exile or edict, an
+    #: "enters" condition qualified by a subtype-and-creature or "with flying"
+    #: subject, and a "colorless" word in a cost's card requirement; an older
+    #: dump would resolve each of these as a no-op or fire the trigger on every
+    #: creature.
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a

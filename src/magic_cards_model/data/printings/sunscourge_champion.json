@@ -1,0 +1,153 @@
+{
+  "object": "card",
+  "id": "f0bb41cc-6edb-4a31-92cb-b17850b49432",
+  "oracle_id": "f5e9c69f-b949-4e9a-91d8-e0d52f8d8d3e",
+  "multiverse_ids": [
+    430715
+  ],
+  "mtgo_id": 64536,
+  "mtgo_foil_id": 64537,
+  "tcgplayer_id": 136720,
+  "cardmarket_id": 298801,
+  "name": "Sunscourge Champion",
+  "lang": "en",
+  "released_at": "2017-07-14",
+  "uri": "https://api.scryfall.com/cards/f0bb41cc-6edb-4a31-92cb-b17850b49432",
+  "scryfall_uri": "https://scryfall.com/card/hou/26/sunscourge-champion?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T09:47:36Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/f/0/f0bb41cc-6edb-4a31-92cb-b17850b49432.jpg?1783936056",
+    "normal": "https://cards.scryfall.io/normal/front/f/0/f0bb41cc-6edb-4a31-92cb-b17850b49432.jpg?1783936056",
+    "large": "https://cards.scryfall.io/large/front/f/0/f0bb41cc-6edb-4a31-92cb-b17850b49432.jpg?1783936056",
+    "png": "https://cards.scryfall.io/png/front/f/0/f0bb41cc-6edb-4a31-92cb-b17850b49432.png?1783936056",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/f/0/f0bb41cc-6edb-4a31-92cb-b17850b49432.jpg?1783936056",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/f/0/f0bb41cc-6edb-4a31-92cb-b17850b49432.jpg?1783936056",
+    "thumb": "https://cards.scryfall.io/thumb/front/f/0/f0bb41cc-6edb-4a31-92cb-b17850b49432.webp?1783936056",
+    "grid": "https://cards.scryfall.io/grid/front/f/0/f0bb41cc-6edb-4a31-92cb-b17850b49432.webp?1783936056",
+    "display": "https://cards.scryfall.io/display/front/f/0/f0bb41cc-6edb-4a31-92cb-b17850b49432.webp?1783936056",
+    "art": "https://cards.scryfall.io/art/front/f/0/f0bb41cc-6edb-4a31-92cb-b17850b49432.webp?1783936056",
+    "crop": "https://cards.scryfall.io/crop/front/f/0/f0bb41cc-6edb-4a31-92cb-b17850b49432.webp?1783936056"
+  },
+  "mana_cost": "{2}{W}",
+  "cmc": 3.0,
+  "type_line": "Creature \u2014 Human Wizard",
+  "oracle_text": "When this creature enters, you gain life equal to its power.\nEternalize\u2014{2}{W}{W}, Discard a card. ({2}{W}{W}, Discard a card, Exile this card from your graveyard: Create a token that's a copy of it, except it's a 4/4 black Zombie Human Wizard with no mana cost. Eternalize only as a sorcery.)",
+  "power": "2",
+  "toughness": "3",
+  "colors": [
+    "W"
+  ],
+  "color_identity": [
+    "W"
+  ],
+  "keywords": [
+    "Eternalize"
+  ],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "289a9593-151e-47d0-b0de-5eb9f061515a",
+      "component": "token",
+      "name": "Sunscourge Champion",
+      "type_line": "Token Creature \u2014 Zombie Human Wizard",
+      "uri": "https://api.scryfall.com/cards/289a9593-151e-47d0-b0de-5eb9f061515a"
+    },
+    {
+      "object": "related_card",
+      "id": "f0bb41cc-6edb-4a31-92cb-b17850b49432",
+      "component": "combo_piece",
+      "name": "Sunscourge Champion",
+      "type_line": "Creature \u2014 Human Wizard",
+      "uri": "https://api.scryfall.com/cards/f0bb41cc-6edb-4a31-92cb-b17850b49432"
+    }
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "65ff168b-bb94-47a5-a8f9-4ec6c213e768",
+  "set": "hou",
+  "set_name": "Hour of Devastation",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/65ff168b-bb94-47a5-a8f9-4ec6c213e768",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Ahou&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/hou?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/f0bb41cc-6edb-4a31-92cb-b17850b49432/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Af5e9c69f-b949-4e9a-91d8-e0d52f8d8d3e&unique=prints",
+  "collector_number": "26",
+  "digital": false,
+  "rarity": "uncommon",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Josu Hernaiz",
+  "artist_ids": [
+    "74246024-92b4-43d0-a5af-a3f9f2a35d5f"
+  ],
+  "illustration_id": "3161c9e0-0e8b-44b2-8c6b-30d49eb50431",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 25385,
+  "penny_rank": 2576,
+  "prices": {
+    "usd": "0.10",
+    "usd_foil": "0.24",
+    "usd_etched": null,
+    "eur": "0.06",
+    "eur_foil": "0.34",
+    "tix": "0.03"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=430715&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DSunscourge%2BChampion",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DSunscourge%2BChampion",
+    "edhrec": "https://edhrec.com/route/?cc=Sunscourge+Champion"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F136720%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=298801&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/64536?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

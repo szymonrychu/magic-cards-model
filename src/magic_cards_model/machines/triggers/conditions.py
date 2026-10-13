@@ -695,7 +695,7 @@ def _required_dying_subtype(condition: str) -> tuple[str, ...] | None:
 #: the capture would land on "nontoken" itself and fail the `[A-Z]` class.
 _ENTERING_SUBTYPE = re.compile(
     r"^(?:an?|one or more|another) (?:nontoken )?(?P<subtype>[A-Z][A-Za-z]*?)(?P<plural_s>s?) "
-    r"(?:you control |an opponent controls )?enters?\b"
+    r"(?:creatures? )?(?:you control |an opponent controls )?enters?\b"
 )
 
 
@@ -722,7 +722,15 @@ def _required_tapped_subtype(condition: str) -> str | None:
 _ENTERING_SUBTYPE_LIST = re.compile(
     r"^(?:an?|one or more|another) (?:nontoken )?"
     r"(?P<subtypes>[A-Z][A-Za-z]*(?:,\s*[A-Z][A-Za-z]*)*,?\s+or\s+[A-Z][A-Za-z]*) "
-    r"(?:you control |an opponent controls )?enters?\b"
+    r"(?:creatures? )?(?:you control |an opponent controls )?enters?\b"
+)
+
+
+#: "... you control with flying enters": the entering object has a keyword
+#: ability (CR 702) - the qualifier Archon of Redemption's trigger prints.
+_ENTERING_KEYWORD_QUALIFIER = re.compile(
+    r"\bwith (?P<keyword>flying|first strike|double strike|deathtouch|haste|hexproof"
+    r"|indestructible|lifelink|menace|reach|trample|vigilance|defender)\b"
 )
 
 
@@ -1993,7 +2001,18 @@ def _condition_matches(
         if power_or_toughness is False:
             return False
         mana_value = _entering_mana_value_qualifier_holds(game, condition, event.subject_id)
-        return mana_value is None or mana_value
+        if mana_value is False:
+            return False
+        keyword = _ENTERING_KEYWORD_QUALIFIER.search(lowered)
+        if keyword is not None:
+            # "another creature you control with flying enters" (Archon of
+            # Redemption): the entering object has the keyword right now
+            # (CR 613.5's computed board).
+            from ..combat import has_keyword
+
+            subject = game.find_by_id(event.subject_id) if event.subject_id else None
+            return subject is not None and has_keyword(subject, keyword.group("keyword"), game)
+        return True
 
     if ability.event is TriggerEvent.DIES:
         if "enchanted" in lowered:

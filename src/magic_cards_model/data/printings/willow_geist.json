@@ -1,0 +1,139 @@
+{
+  "object": "card",
+  "id": "1c40c71c-4cdc-4a28-8ea3-4636c936f8aa",
+  "oracle_id": "7a7096a7-ef1b-4015-b1eb-5c2174d7ec9a",
+  "multiverse_ids": [
+    534998
+  ],
+  "resource_id": "8521CDD5A0A49D8324BB872CCEB6EA46416D4FD5D8C4A22C0E1304B38CE30889",
+  "mtgo_id": 93410,
+  "arena_id": 78569,
+  "tcgplayer_id": 248085,
+  "cardmarket_id": 574950,
+  "name": "Willow Geist",
+  "lang": "en",
+  "released_at": "2021-09-24",
+  "uri": "https://api.scryfall.com/cards/1c40c71c-4cdc-4a28-8ea3-4636c936f8aa",
+  "scryfall_uri": "https://scryfall.com/card/mid/207/willow-geist?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T06:52:48Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/1/c/1c40c71c-4cdc-4a28-8ea3-4636c936f8aa.jpg?1783925568",
+    "normal": "https://cards.scryfall.io/normal/front/1/c/1c40c71c-4cdc-4a28-8ea3-4636c936f8aa.jpg?1783925568",
+    "large": "https://cards.scryfall.io/large/front/1/c/1c40c71c-4cdc-4a28-8ea3-4636c936f8aa.jpg?1783925568",
+    "png": "https://cards.scryfall.io/png/front/1/c/1c40c71c-4cdc-4a28-8ea3-4636c936f8aa.png?1783925568",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/1/c/1c40c71c-4cdc-4a28-8ea3-4636c936f8aa.jpg?1783925568",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/1/c/1c40c71c-4cdc-4a28-8ea3-4636c936f8aa.jpg?1783925568",
+    "thumb": "https://cards.scryfall.io/thumb/front/1/c/1c40c71c-4cdc-4a28-8ea3-4636c936f8aa.webp?1783925568",
+    "grid": "https://cards.scryfall.io/grid/front/1/c/1c40c71c-4cdc-4a28-8ea3-4636c936f8aa.webp?1783925568",
+    "display": "https://cards.scryfall.io/display/front/1/c/1c40c71c-4cdc-4a28-8ea3-4636c936f8aa.webp?1783925568",
+    "art": "https://cards.scryfall.io/art/front/1/c/1c40c71c-4cdc-4a28-8ea3-4636c936f8aa.webp?1783925568",
+    "crop": "https://cards.scryfall.io/crop/front/1/c/1c40c71c-4cdc-4a28-8ea3-4636c936f8aa.webp?1783925568"
+  },
+  "mana_cost": "{G}",
+  "cmc": 1.0,
+  "type_line": "Creature \u2014 Treefolk Spirit",
+  "oracle_text": "Trample\nWhenever one or more cards leave your graveyard, put a +1/+1 counter on this creature.\nWhen this creature dies, you gain life equal to its power.",
+  "power": "1",
+  "toughness": "1",
+  "colors": [
+    "G"
+  ],
+  "color_identity": [
+    "G"
+  ],
+  "keywords": [
+    "Trample"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "arena",
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "44b8eb8f-fa23-401a-98b5-1fbb9871128e",
+  "set": "mid",
+  "set_name": "Innistrad: Midnight Hunt",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/44b8eb8f-fa23-401a-98b5-1fbb9871128e",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Amid&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/mid?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/1c40c71c-4cdc-4a28-8ea3-4636c936f8aa/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A7a7096a7-ef1b-4015-b1eb-5c2174d7ec9a&unique=prints",
+  "collector_number": "207",
+  "digital": false,
+  "rarity": "rare",
+  "flavor_text": "Die beneath a tree, wake up a part of it.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Ryan Yee",
+  "artist_ids": [
+    "8955dca7-3e37-42b4-83a9-167c78a2178f"
+  ],
+  "illustration_id": "c74ae6e3-75f5-4a6f-a953-5a67b709c34e",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 10774,
+  "penny_rank": 6514,
+  "prices": {
+    "usd": "0.31",
+    "usd_foil": "0.36",
+    "usd_etched": null,
+    "eur": "0.24",
+    "eur_foil": "0.43",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=534998&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DWillow%2BGeist",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DWillow%2BGeist",
+    "edhrec": "https://edhrec.com/route/?cc=Willow+Geist"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F248085%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=574950&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/93410?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

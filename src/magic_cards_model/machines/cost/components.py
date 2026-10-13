@@ -337,7 +337,11 @@ class CardRequirement(EngineModel):
             subtypes = {subtype.lower() for subtype in card.subtypes}
             mana_value = card.mana_value
 
-        if self.colors and not colors & set(self.colors):
+        # CR 105.2c: a colorless object has no colour, so `Color.COLORLESS`
+        # is met by an empty colour set rather than by a member of it.
+        if self.colors and not (
+            colors & set(self.colors) or (Color.COLORLESS in self.colors and not colors)
+        ):
             wanted = "/".join(color.value for color in self.colors)
             return f"{card.name} is not {wanted}"
         if self.supertypes and not set(self.supertypes) <= supertypes:

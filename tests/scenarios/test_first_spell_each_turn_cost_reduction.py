@@ -98,8 +98,9 @@ def test_an_earlier_non_qualifying_spell_does_not_spend_the_discount():
     with flying" either, so casting it first leaves Momo's discount
     untouched for the flying creature cast right after it."""
     scenario = _momo_board(["Grizzly Bears", "Wind Drake"])
+    # Bears has no flying, so Momo's "another creature you control with flying
+    # enters" trigger does not fire and there is nothing further to resolve.
     scenario.cast_and_resolve("Grizzly Bears", auto=True)
-    scenario.pass_until_resolved()  # Momo's own ETB trigger, off the stack
 
     casting = scenario.cast("Wind Drake")
     scenario.game.determine_total_cost(casting)

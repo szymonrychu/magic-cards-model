@@ -1,0 +1,140 @@
+{
+  "object": "card",
+  "id": "e0e3974e-3753-4f25-8930-6d96b40332ce",
+  "oracle_id": "0c8cb2ec-5b58-497c-a6e7-2d25512d5a44",
+  "multiverse_ids": [
+    479703
+  ],
+  "mtgo_id": 80375,
+  "arena_id": 71250,
+  "tcgplayer_id": 212111,
+  "cardmarket_id": 451888,
+  "name": "Dire Tactics",
+  "lang": "en",
+  "released_at": "2020-04-24",
+  "uri": "https://api.scryfall.com/cards/e0e3974e-3753-4f25-8930-6d96b40332ce",
+  "scryfall_uri": "https://scryfall.com/card/iko/183/dire-tactics?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T08:23:45Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/e/0/e0e3974e-3753-4f25-8930-6d96b40332ce.jpg?1783931025",
+    "normal": "https://cards.scryfall.io/normal/front/e/0/e0e3974e-3753-4f25-8930-6d96b40332ce.jpg?1783931025",
+    "large": "https://cards.scryfall.io/large/front/e/0/e0e3974e-3753-4f25-8930-6d96b40332ce.jpg?1783931025",
+    "png": "https://cards.scryfall.io/png/front/e/0/e0e3974e-3753-4f25-8930-6d96b40332ce.png?1783931025",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/e/0/e0e3974e-3753-4f25-8930-6d96b40332ce.jpg?1783931025",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/e/0/e0e3974e-3753-4f25-8930-6d96b40332ce.jpg?1783931025",
+    "thumb": "https://cards.scryfall.io/thumb/front/e/0/e0e3974e-3753-4f25-8930-6d96b40332ce.webp?1783931025",
+    "grid": "https://cards.scryfall.io/grid/front/e/0/e0e3974e-3753-4f25-8930-6d96b40332ce.webp?1783931025",
+    "display": "https://cards.scryfall.io/display/front/e/0/e0e3974e-3753-4f25-8930-6d96b40332ce.webp?1783931025",
+    "art": "https://cards.scryfall.io/art/front/e/0/e0e3974e-3753-4f25-8930-6d96b40332ce.webp?1783931025",
+    "crop": "https://cards.scryfall.io/crop/front/e/0/e0e3974e-3753-4f25-8930-6d96b40332ce.webp?1783931025"
+  },
+  "mana_cost": "{W}{B}",
+  "cmc": 2.0,
+  "type_line": "Instant",
+  "oracle_text": "Exile target creature. If you don't control a Human, you lose life equal to that creature's toughness.",
+  "colors": [
+    "B",
+    "W"
+  ],
+  "color_identity": [
+    "B",
+    "W"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "arena",
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "19feda43-15ab-427e-a0e4-148a4bf2b03a",
+  "set": "iko",
+  "set_name": "Ikoria: Lair of Behemoths",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/19feda43-15ab-427e-a0e4-148a4bf2b03a",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Aiko&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/iko?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/e0e3974e-3753-4f25-8930-6d96b40332ce/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A0c8cb2ec-5b58-497c-a6e7-2d25512d5a44&unique=prints",
+  "collector_number": "183",
+  "digital": false,
+  "rarity": "uncommon",
+  "flavor_text": "\"I will preserve human life at all costs. I will stand alone against behemoths before I let them touch my city. I will hold the wall.\"\n\u2014Oath of the Coppercoats",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Daarken",
+  "artist_ids": [
+    "e607a0d4-fc12-4c01-9e3f-501f5269b9cb"
+  ],
+  "illustration_id": "c8c5b2e3-72fb-4d3a-939b-46b21b121ec7",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 6339,
+  "penny_rank": 3021,
+  "preview": {
+    "source": "MTGGoldfish",
+    "source_uri": "https://www.mtggoldfish.com/articles/a-tactic-for-dire-situations-exclusive-ikoria-commander-2020-preview",
+    "previewed_at": "2020-04-03"
+  },
+  "prices": {
+    "usd": "0.27",
+    "usd_foil": "0.64",
+    "usd_etched": null,
+    "eur": "0.17",
+    "eur_foil": "0.45",
+    "tix": "0.03"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=479703&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DDire%2BTactics",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DDire%2BTactics",
+    "edhrec": "https://edhrec.com/route/?cc=Dire+Tactics"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F212111%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=451888&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/80375?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}
