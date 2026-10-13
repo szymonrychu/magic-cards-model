@@ -43,6 +43,7 @@ from ...machines.delayed import (
     DelayedEffectSpec,
     DelayedTrigger,
     ParadigmCopyAndCast,
+    copy_epic_spell,
     paradigm_copy_and_cast,
 )
 from ...machines.effects import (
@@ -228,6 +229,38 @@ class TriggersDecisionsMixin:
                 ability = ability.model_copy(update={"event": event})
             self.pending_triggers.append(ability)
             return ability
+
+    def _resolve_epic(self: "Game", spell: CardState) -> None:
+        """CR 702.50a: "Epic represents two spell abilities, one of which
+        creates a delayed triggered ability." As a spell with epic resolves its
+        controller can't cast spells for the rest of the game (CR 702.50b), and
+        "at the beginning of each of your upkeeps for the rest of the game"
+        (CR 603.7b, `remaining=None`) a copy of the spell is put on the stack
+        (`CopyEpicSpell`). The copy that trigger makes is `epic_suppressed` and
+        so makes neither; a spell that was countered or fizzled never resolved
+        and does neither either (this runs only on resolution)."""
+        if spell.epic_suppressed or not any(k.lower() == "epic" for k in spell.card.keywords):
+            return
+        controller = spell.controller or self.active_player.username
+        self.player(controller).cannot_cast_spells_for_rest_of_game = True
+        self.delayed_triggers.create(
+            DelayedTrigger(
+                text=(
+                    "At the beginning of each of your upkeeps for the rest of the game, "
+                    "copy this spell except for its epic ability. If the spell has any "
+                    "targets, you may choose new targets for the copy."
+                ),
+                event=TriggerEvent.BEGINNING_OF_STEP,
+                step=Step.UPKEEP,
+                only_when_active=controller,  # CR 702.50a: "each of *your* upkeeps"
+                remaining=None,  # CR 603.7b: "for the rest of the game"
+                controller=controller,
+                source_id=spell.id,
+                source_name=spell.name,
+                subject_id=spell.id,
+                effect=copy_epic_spell,
+            )
+        )
 
     def _create_paradigm_delayed_trigger(self: "Game", spell: CardState) -> None:
         """CR 702.192a's own delayed trigger, the other half of Paradigm:

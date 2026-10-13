@@ -988,3 +988,126 @@ def test_the_great_synthesis_third_chapter_casts_spells_free_and_returns_front_f
     assert len(scenario.player("alice").hand) == hand_before + 1 - 2 + 4
     names = [c.name for c in scenario.game.permanents_controlled_by("alice")]
     assert "Jin-Gitaxias" in names and "The Great Synthesis" not in names
+
+
+# -- Epic (CR 702.50) -----------------------------------------------------------------
+#
+# CR 702.50a, read with `mise run rules:find 702.50` in this session: epic is
+# two spell abilities. "For the rest of the game, you can't cast spells", and
+# "at the beginning of each of your upkeeps for the rest of the game, copy this
+# spell except for its epic ability. If the spell has any targets, you may
+# choose new targets for the copy." CR 702.50b: a player can't cast spells once
+# a spell with epic they control resolves, but effects can still put copies of
+# spells onto the stack.
+
+
+def _snakes(scenario, username="alice"):
+    return len(
+        [c for c in scenario.game.permanents_controlled_by(username) if c.name == "Snake Token"]
+    )
+
+
+def _epic_swarm(hand=3):
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Endless Swarm", "Grizzly Bears", *[CARD] * (hand - 1)],
+            battlefield=["Forest"] * 8,
+            library=[CARD] * 12,
+        )
+        .player("bob", library=[CARD] * 12)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scenario.cast_and_resolve("Endless Swarm", *scenario.untapped_sources(*(["Forest"] * 8)))
+    return scenario
+
+
+def test_endless_swarm_makes_a_snake_per_card_in_hand_when_cast():
+    scenario = _epic_swarm(hand=3)
+    assert _snakes(scenario) == 3
+
+
+def test_a_resolved_epic_spell_stops_its_controller_casting_spells():
+    scenario = _epic_swarm()
+    with pytest.raises(ValueError, match="epic"):
+        scenario.cast("Grizzly Bears")
+
+
+def test_epic_copies_the_spell_at_each_of_your_upkeeps_without_epic_itself():
+    scenario = _epic_swarm(hand=3)
+    _advance_to_upkeep_of(scenario, "bob")
+    _settle(scenario)
+    assert _snakes(scenario) == 3  # not an upkeep of alice's
+    _advance_to_upkeep_of(scenario, "alice")
+    _settle(scenario)
+    assert _snakes(scenario) == 3 + 3  # the copy counts the hand again
+    scenario.game.player("alice").hand.pop()
+    _advance_to_upkeep_of(scenario, "bob")
+    _advance_to_upkeep_of(scenario, "alice")
+    _settle(scenario)
+    # one copy a turn: the first copy made no delayed trigger of its own (CR 702.50a)
+    # (hand: 3 cards, plus the turn's draw, less the one just removed)
+    assert _snakes(scenario) == 6 + len(scenario.player("alice").hand)
+
+
+def _epic_torment():
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Neverending Torment", CARD, CARD],
+            battlefield=["Swamp"] * 6,
+            library=[CARD] * 12,
+        )
+        .player("bob", library=["Plains"] * 3 + ["Island"] * 3 + ["Swamp"] * 4)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scenario.cast_and_resolve(
+        "Neverending Torment", *scenario.untapped_sources(*(["Swamp"] * 6)), targets=["bob"]
+    )
+    return scenario
+
+
+def test_neverending_torment_exiles_a_card_per_card_in_hand_from_the_targets_library():
+    scenario = _epic_torment()
+    assert len(scenario.player("bob").library) == 10 - 2
+    assert len(scenario.game.exile) == 2
+
+
+def test_neverending_torment_copy_at_upkeep_searches_again_with_a_new_hand_count():
+    scenario = _epic_torment()
+    _advance_to_upkeep_of(scenario, "bob")
+    _advance_to_upkeep_of(scenario, "alice")
+    _settle(scenario)
+    assert len(scenario.game.exile) == 4
+    assert len(scenario.player("bob").library) == 10 - 2 - 2 - 1  # bob drew a card in between
+
+
+def test_neverending_torment_copy_may_take_a_new_target():
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Neverending Torment", CARD, CARD],
+            battlefield=["Swamp"] * 6,
+            library=[CARD] * 12,
+        )
+        .player("bob", library=["Plains"] * 6)
+        .player("carol", library=["Island"] * 6)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scenario.cast_and_resolve(
+        "Neverending Torment", *scenario.untapped_sources(*(["Swamp"] * 6)), targets=["bob"]
+    )
+    assert len(scenario.player("bob").library) == 6 - 2
+    scenario.will_take_the_may(True, username="alice")
+    scenario.will_choose_targets("carol", username="alice")
+    _advance_to_upkeep_of(scenario, "alice")
+    _settle(scenario)
+    # each opponent drew a card on the way round; the copy exiled two from carol only
+    assert len(scenario.player("carol").library) == 6 - 1 - 2
+    assert len(scenario.player("bob").library) == 6 - 2 - 1

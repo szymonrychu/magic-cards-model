@@ -587,6 +587,12 @@ def executed_keywords(printing: Card) -> dict[str, str]:
     if profile is not None and profile.entwine_cost is not None:
         found["entwine"] = "machines/casting.py (additional cost)"
 
+    # Epic (CR 702.50a) is two spell abilities performed as the spell resolves:
+    # `Game._resolve_epic` bars the controller from casting spells and creates
+    # the upkeep `CopyEpicSpell` delayed trigger.
+    if any(k.lower() == "epic" for k in printing.keywords):
+        found["epic"] = "models/game/_triggers_decisions.py (_resolve_epic, CR 702.50a)"
+
     # Tiered (CR 702.183a: "Choose one. As an additional cost to cast this
     # spell, pay the cost associated with that mode.") is a CR 700.2h modal
     # keyword: its reminder text ("Choose one additional cost.") and each

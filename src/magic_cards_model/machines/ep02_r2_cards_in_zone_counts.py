@@ -709,3 +709,90 @@ def parse_cast_any_number_from_hand_free_clause(clause: str, *, for_spell: bool)
                 return  # the cast was not made; offering it again would loop
 
     return effect
+
+
+# --------------------------------------------------------------------------
+# "Search target player's library for X cards, where X is the number of cards
+# in your hand, and exile them. Then that player shuffles."
+# --------------------------------------------------------------------------
+
+_SEARCH_TARGET_LIBRARY_EXILE_RE = re.compile(
+    r"^search target (?P<who>player|opponent)'s library for (?P<upto>up to )?"
+    r"(?P<n>\d+|a|an|one|two|three|four|five|x) cards?"
+    r"(?:, where x is (?P<where>.+?))?,? and exile (?:them|it)"
+    r"(?:\.|,) then that player shuffles$",
+    re.IGNORECASE,
+)
+
+
+def parse_search_target_library_and_exile(text: str):
+    """Neverending Torment's spell ability. The spell's controller - not the
+    library's owner - searches the targeted player's library (CR 701.23a) for a
+    quantity of cards (CR 701.23d: they must find that many, or as many as
+    possible), exiles them, and that player shuffles (CR 701.24a). X is the
+    count the "where X is" tail defines, taken once as the search begins
+    (CR 608.2h, CR 107.3c). A target gone by resolution, or a ban on searching
+    libraries (CR 101.2), does nothing. Returns an `Effect`/`AbilityEffect`
+    `(game, stack_object)`, or `None`."""
+    from ..numbers import parse_count
+
+    if "search target" not in text.lower() or "exile" not in text.lower():
+        return None
+    from .effects._common import _strip_non_effect_preamble
+
+    match = _SEARCH_TARGET_LIBRARY_EXILE_RE.fullmatch(
+        " ".join(_strip_non_effect_preamble(text).split()).rstrip(".")
+    )
+    if match is None:
+        return None
+    from .effects.amounts import count_expression
+
+    where = match.group("where")
+    counted = count_expression(where.strip()) if where else None
+    printed = match.group("n").lower()
+    if printed == "x" and counted is None:
+        return None
+    fixed = None if printed == "x" else parse_count(printed)
+    if fixed is None and printed != "x":
+        return None
+    up_to = match.group("upto") is not None
+
+    def effect(game, stack_object):
+        from ..models.player import Player
+        from .decisions import Decision, DecisionKind, source_id_of
+        from .player_action_prohibitions import library_search_blocked
+
+        controller = game.controller_of(stack_object)
+        targets = [t for t in game.resolve_targets(stack_object) if isinstance(t, Player)]
+        if not targets:
+            return  # CR 608.2b
+        owner = targets[0]
+        if library_search_blocked(game, owner.username) is not None:
+            return  # CR 101.2
+        wanted = fixed if counted is None else counted(game, controller.username)
+        candidates = list(owner.library)
+        limit = min(max(wanted, 0), len(candidates))
+        found = candidates[:limit]
+        if candidates and limit and (up_to or len(candidates) > limit):
+            source = getattr(stack_object, "source_name", None) or stack_object.name
+            chosen = game.ask(
+                Decision(
+                    kind=DecisionKind.CHOOSE_CARDS,
+                    player=controller.username,
+                    prompt=f"choose {limit} card(s) to find in {owner.username}'s library",
+                    source=source,
+                    source_id=source_id_of(stack_object),
+                    amount=limit,
+                    cards=tuple(card.id for card in candidates),
+                    card_labels=tuple(card.name for card in candidates),
+                    exact=not up_to,
+                    default_cards=tuple(card.id for card in found),
+                )
+            )
+            by_id = {card.id: card for card in candidates}
+            found = [by_id[card_id] for card_id in chosen if card_id in by_id]
+        if found:
+            game.exile_cards(found)
+        game.shuffle_library(owner)
+
+    return effect

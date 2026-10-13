@@ -844,6 +844,12 @@ class CardState(EngineModel):
     `_resolve_token_subclass` reads this instead of `token` to choose which
     class rebuilds a decoded dict.
     """
+    epic_suppressed: bool = False
+    """CR 702.50a: this spell is the copy an epic delayed trigger made "except
+    for its epic ability", so resolving it neither stops its controller casting
+    spells nor creates another delayed trigger. A copy of such a copy keeps it
+    (CR 707.2: copiable values include copy-effect exceptions)."""
+
     is_copy: bool = False
     """CR 112.1a: "A copy of a spell is also a spell, even if it has no card
     associated with it." Built around the same `Card` its original was (this
