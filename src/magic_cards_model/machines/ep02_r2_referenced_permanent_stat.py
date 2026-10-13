@@ -756,6 +756,15 @@ def _step_bite(dealer: str, recipient: str) -> ResolutionStep:
     if it has since left."""
 
     def object_named(game: "Game", stack_object: Any, state: State, word: str) -> Any:
+        if word.lower() == "it":
+            # "Whenever another creature you control dies, it deals ...": "it"
+            # is the trigger event's subject (CR 603.2), as it last existed
+            # (CR 608.2h); the source itself only when there is no event.
+            event = getattr(stack_object, "event", None)
+            subject_id = None if event is None else event.subject_id
+            subject = None if subject_id is None else game.find_by_id(subject_id)
+            if isinstance(subject, CardState):
+                return subject
         if word.lower() in ("it", "this creature"):
             return _source(game, stack_object)
         return state.first_target(game, stack_object)
@@ -1339,6 +1348,12 @@ def _compile(sentences: list[str], *, for_spell: bool) -> list[ResolutionStep] |
     position = 0
     opened = False
     uses_amount = False
+    # Whether any sentence is one this module reads itself. A text every
+    # sentence of which only the established readers read is theirs, read
+    # whole: run sentence by sentence here, an "if you do" after a plain step
+    # never learns whether it was done, and "its toughness" after "return it
+    # to its owner's hand" loses the last known information (CR 608.2h).
+    own = False
     # A text that is one plain sentence is what the established readers are
     # reading right now: asking them for it again is a re-entrant parse, which
     # answers `None` and caches it for the outer call.
@@ -1353,6 +1368,7 @@ def _compile(sentences: list[str], *, for_spell: bool) -> list[ResolutionStep] |
             steps.append(look[0])
             position = look[1]
             uses_amount = True
+            own = True
             continue
         sentence = queue[position]
         position += 1
@@ -1403,7 +1419,9 @@ def _compile(sentences: list[str], *, for_spell: bool) -> list[ResolutionStep] |
                 step = None if inner is None else _asked(inner)
             if step is None:
                 step = _amount_step(sentence, for_spell=for_spell, opener=opened)
-            if step is None and allow_plain:
+            if step is not None:
+                own = True
+            elif allow_plain:
                 step = _step_plain(sentence, for_spell=for_spell)
             if step is None:
                 return None
@@ -1411,7 +1429,7 @@ def _compile(sentences: list[str], *, for_spell: bool) -> list[ResolutionStep] |
         if condition is not None:
             step = _conditioned(step, condition)
         steps.append(_gated(step, guard) if guard is not None else step)
-    if not uses_amount:
+    if not uses_amount or not (own or opened):
         return None
     return steps
 
@@ -1458,7 +1476,7 @@ def referenced_permanent_stat_effect(
     sentences = [
         _clean(sentence)
         for sentence in _plain_resolution_sentences(
-            _strip_non_effect_preamble(" ".join(text.split()))
+            " ".join(_strip_non_effect_preamble(text).split())
         )
     ]
     sentences = [s for s in sentences if s]
@@ -1473,69 +1491,5 @@ def referenced_permanent_stat_effect(
         for step in steps:
             if not step(game, stack_object, state):
                 return
-
-    return effect
-
-
-# --------------------------------------------------------------------------
-# Epic (CR 702.50)
-# --------------------------------------------------------------------------
-
-_EPIC_RE = re.compile(r"^(?P<body>.+?)\s*\n\s*epic(?: \(.*\))?\s*$", re.IGNORECASE | re.DOTALL)
-
-
-def _begin_epic(game: "Game", spell: CardState) -> None:
-    """CR 702.50a, the two spell abilities an epic spell's resolution runs: the
-    controller can't cast spells for the rest of the game (CR 702.50b: copies
-    are not cast, so the copies below are unaffected), and at the beginning of
-    each of their upkeeps the spell is copied."""
-    from .abilities import TriggerEvent
-    from .casting_restrictions import CastingRuleEffect, CastingRuleKind
-    from .delayed import DelayedTrigger, EpicCopy
-    from .layers import Duration
-    from .turn import Step
-
-    you = game.controller_of(spell).username
-    game.casting_rule_effects.append(
-        CastingRuleEffect(
-            kind=CastingRuleKind.TARGETED_CANT_CAST,
-            controller=you,
-            source_name=spell.name,
-            duration=Duration.INDEFINITE,
-            restricted_player=you,
-        )
-    )
-    game.create_delayed_trigger(
-        DelayedTrigger(
-            text="At the beginning of each of your upkeeps, copy this spell except for its epic.",
-            effect=EpicCopy(),
-            event=TriggerEvent.BEGINNING_OF_STEP,
-            step=Step.UPKEEP,
-            controller=you,
-            source_id=spell.id,
-            source_name=spell.name,
-            only_when_active=you,
-            remaining=None,
-        )
-    )
-
-
-@functools.cache
-def epic_spell_effect(text: str) -> Callable[["Game", Any], None] | None:
-    """A spell whose text ends in an epic line: what the rest of the text does,
-    then the epic abilities (CR 702.50a) - none for a copy, which is "except for
-    its epic ability"."""
-    if "\nepic" not in text.lower() or (match := _EPIC_RE.fullmatch(text.strip())) is None:
-        return None
-    from .effects.dispatch import _spell_effect_or_notice
-
-    body = _spell_effect_or_notice(match.group("body"))
-    if body is None:
-        return None
-
-    def effect(game: "Game", spell: Any) -> None:
-        body(game, spell)
-        if isinstance(spell, CardState) and not spell.is_copy:
-            _begin_epic(game, spell)
 
     return effect

@@ -958,11 +958,30 @@ def test_undying_flames_epic_copy_is_not_cast_and_starts_no_epic_of_its_own() ->
     scenario.will_take_the_may(False, source="Undying Flames", times=None)
     _to_upkeep_of(scenario, "alice")
     _resolve_all(scenario)
-    assert len(scenario.game.casting_rule_effects) == 1
+    assert scenario.game.player("alice").cannot_cast_spells_for_rest_of_game
     triggers = [
         t for t in scenario.game.delayed_triggers.triggers if t.source_name == "Undying Flames"
     ]
     assert len(triggers) == 1
+
+
+def test_undying_flames_epic_makes_exactly_one_copy_per_upkeep_once_only() -> None:
+    """CR 702.50a is read once: one delayed trigger for the resolved epic spell
+    and one copy at the upkeep - never a second reader's trigger or copy."""
+    scenario = _scenario(
+        [],
+        hand=["Undying Flames"],
+        library=["Grizzly Bears", "Lightning Bolt", "Lightning Bolt"] + ["Island"] * 8,
+    )
+    _cast_all(scenario, "Undying Flames", targets=[scenario.player("bob")])
+    triggers = [
+        t for t in scenario.game.delayed_triggers.triggers if t.source_name == "Undying Flames"
+    ]
+    assert len(triggers) == 1
+    scenario.will_take_the_may(False, source="Undying Flames", times=None)
+    _to_upkeep_of(scenario, "alice")
+    _resolve_all(scenario)
+    assert _life(scenario, "bob") == 18 - 1  # one copy, one Lightning Bolt exiled
 
 
 # -- Wolf of Devil's Breach: pay {1}{R} and discard a card, damage equal to its mana value
@@ -1449,6 +1468,19 @@ def test_balduvian_berserker_can_hit_a_creature() -> None:
     scenario.game.sacrifice(berserker)
     _resolve_all(scenario)
     assert angel.damage == 1
+
+
+def test_stalking_vengeance_it_is_the_creature_that_died_not_the_source() -> None:
+    """Stalking Vengeance: "Whenever another creature you control dies, it deals
+    damage equal to its power to target player or planeswalker." "It" is the
+    creature that died (CR 603.2's event subject), its power as it last existed
+    (CR 608.2h) - Serra Angel's 4, never Stalking Vengeance's own 5."""
+    scenario = _scenario(["Stalking Vengeance", "Serra Angel"])
+    angel = scenario.creature("Serra Angel", "alice")
+    scenario.will_choose_targets("bob")
+    scenario.game.sacrifice(angel)
+    _resolve_all(scenario)
+    assert _life(scenario, "bob") == 20 - 4
 
 
 def test_banewasp_affliction_costs_the_controller_the_toughness_of_the_creature() -> None:

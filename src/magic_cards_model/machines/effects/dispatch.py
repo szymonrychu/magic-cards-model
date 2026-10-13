@@ -3377,12 +3377,6 @@ def _spell_effect_or_notice(effect_text: str) -> Effect | None:
     all ones `_KNOWN_KEYWORDS` and a single-keyword grant can read - records a
     `LayerNotice` rather than the card doing nothing with no trace.
     """
-    from ..ep02_r2_referenced_permanent_stat import epic_spell_effect
-
-    # CR 702.50a: the epic line is a keyword line `_strip_non_effect_preamble`
-    # drops, so it is read off the text as printed.
-    if (epic := epic_spell_effect(effect_text)) is not None:
-        return epic
     whole = _strip_non_effect_preamble(effect_text).strip()
     counter_resolution = _parse_counter_resolution_text(whole, for_spell=True)
     if counter_resolution is not None:

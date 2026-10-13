@@ -36,7 +36,7 @@
   "delta": {
     "created": {},
     "decisions": [],
-    "fields_changed": ["damage_dealt_this_turn", "graveyard_arrivals_announced", "graveyard_arrivals_this_turn", "permanents_left_battlefield_this_turn", "turn_counts", "turn_history"],
+    "fields_changed": ["damage_dealt_this_turn", "turn_counts"],
     "notices": {},
     "objects": {
       "Kaito, Bane of Nightmares@bob#1": {
@@ -44,9 +44,10 @@
           {
             "loyalty": 4
           },
-          {}
-        ],
-        "zone": ["battlefield", "graveyard"]
+          {
+            "loyalty": 1
+          }
+        ]
       }
     },
     "players": {},
