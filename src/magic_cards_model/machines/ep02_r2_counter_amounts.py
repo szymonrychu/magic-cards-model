@@ -848,8 +848,14 @@ def _parse_double_counters(text: str):
 
     def effect(game: "Game", ability) -> None:
         if match.group("self"):
-            source = ability.source_or_last_known(game)
-            subjects = [source] if source is not None else []
+            # "it" in a trigger about another object is that object (Byrke's "double
+            # the number of +1/+1 counters on it" is the creature that attacked).
+            event = getattr(ability, "event", None)
+            if match.group("self").lower() == "it" and event and event.subject_id is not None:
+                found = game.find_by_id(event.subject_id)
+            else:
+                found = ability.source_or_last_known(game)
+            subjects = [found] if found is not None else []
         else:
             subjects = game.resolve_card_targets(ability)
         for subject in subjects:

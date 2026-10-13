@@ -1177,3 +1177,95 @@ def test_blessing_of_frost_with_no_creatures_still_resolves():
     scenario = _board(["Snow-Covered Forest"] * 4, alice_hand=["Blessing of Frost"])
     _cast_blessing(scenario, scenario.untapped_sources(*["Snow-Covered Forest"] * 4))
     assert scenario.game.stack_is_empty
+
+
+# -- Cards the same readers made handled beyond the task's list (Modern/Pioneer/Standard
+#    legal, in no listed deck)
+
+
+def test_byrke_doubles_the_counters_on_the_creature_that_attacked_not_on_itself():
+    scenario = _board(["Byrke, Long Ear of the Law", "Grizzly Bears", "Llanowar Elves"])
+    byrke = scenario.creature("Byrke, Long Ear of the Law", "alice")
+    bears = scenario.creature("Grizzly Bears", "alice")
+    elves = scenario.creature("Llanowar Elves", "alice")
+    byrke.add_counters(Counter.PLUS_ONE, 1)
+    bears.add_counters(Counter.PLUS_ONE, 2)
+    _attack(scenario, bears, elves)
+    assert bears.counter_count(Counter.PLUS_ONE) == 4
+    assert byrke.counter_count(Counter.PLUS_ONE) == 1  # it did not attack
+    assert elves.counter_count(Counter.PLUS_ONE) == 0  # no counter, no trigger
+
+
+def test_byrke_puts_a_counter_on_each_of_up_to_two_targets_when_it_enters():
+    scenario = _board(
+        ["Grizzly Bears", "Llanowar Elves"], alice_hand=["Byrke, Long Ear of the Law"]
+    )
+    bears = scenario.creature("Grizzly Bears", "alice")
+    elves = scenario.creature("Llanowar Elves", "alice")
+    scenario.will_choose_targets(bears, elves, source="Byrke, Long Ear of the Law")
+    scenario.put_onto_battlefield("Byrke, Long Ear of the Law", "alice")
+    _settle(scenario)
+    assert bears.counter_count(Counter.PLUS_ONE) == 1 and elves.counter_count(Counter.PLUS_ONE) == 1
+
+
+def test_ornery_tumblewagg_doubles_the_target_only_while_saddled():
+    scenario = _board(["Ornery Tumblewagg", "Grizzly Bears"])
+    wagg = scenario.creature("Ornery Tumblewagg", "alice")
+    bears = scenario.creature("Grizzly Bears", "alice")
+    bears.add_counters(Counter.PLUS_ONE, 3)
+    wagg.saddled = True
+    scenario.will_choose_targets(bears, source="Ornery Tumblewagg")
+    _attack(scenario, wagg)
+    assert bears.counter_count(Counter.PLUS_ONE) == 6
+
+
+def test_ornery_tumblewagg_unsaddled_attack_does_not_double():
+    scenario = _board(["Ornery Tumblewagg", "Grizzly Bears"])
+    wagg = scenario.creature("Ornery Tumblewagg", "alice")
+    bears = scenario.creature("Grizzly Bears", "alice")
+    bears.add_counters(Counter.PLUS_ONE, 3)
+    _attack(scenario, wagg)
+    assert bears.counter_count(Counter.PLUS_ONE) == 3
+
+
+def test_ornery_tumblewagg_adds_a_counter_at_the_beginning_of_combat():
+    scenario = _board(["Ornery Tumblewagg", "Grizzly Bears"], step=Step.PRECOMBAT_MAIN)
+    bears = scenario.creature("Grizzly Bears", "alice")
+    scenario.will_choose_targets(bears, source="Ornery Tumblewagg")
+    _to_step(scenario, Step.BEGINNING_OF_COMBAT)
+    _settle(scenario)
+    assert bears.counter_count(Counter.PLUS_ONE) == 1
+
+
+WARLEADER_TOKEN = "Create a 1/1 white Rabbit creature token that's tapped and attacking."
+WARLEADER_PUMP = "Attacking creatures you control get +1/+1 until end of turn."
+
+
+def test_warren_warleader_makes_a_tapped_and_attacking_rabbit():
+    scenario = _board(["Warren Warleader", "Grizzly Bears"])
+    bears = scenario.creature("Grizzly Bears", "alice")
+    scenario.will_choose_mode(WARLEADER_TOKEN, source="Warren Warleader")
+    _attack(scenario, bears)
+    (rabbit,) = _named(scenario, "Rabbit Token")
+    assert rabbit.tapped and rabbit in scenario.attackers()
+
+
+def test_warren_warleader_pump_mode_makes_the_attackers_bigger():
+    scenario = _board(["Warren Warleader", "Grizzly Bears"])
+    bears = scenario.creature("Grizzly Bears", "alice")
+    scenario.will_choose_mode(WARLEADER_PUMP, source="Warren Warleader")
+    _attack(scenario, bears)
+    assert _stats(scenario, bears) == (3, 3)
+    assert not _named(scenario, "Rabbit Token")
+
+
+def test_lilianas_influence_puts_a_minus_counter_on_each_creature_you_dont_control():
+    scenario = _board(
+        ["Swamp"] * 6,
+        bob=["Grizzly Bears", "Hill Giant"],
+        alice_hand=["Liliana's Influence"],
+    )
+    scenario.will_take_the_may(False)
+    scenario.cast_and_resolve("Liliana's Influence", *scenario.untapped_sources(*["Swamp"] * 6))
+    assert scenario.creature("Grizzly Bears", "bob").counter_count(Counter.MINUS_ONE) == 1
+    assert scenario.creature("Hill Giant", "bob").counter_count(Counter.MINUS_ONE) == 1

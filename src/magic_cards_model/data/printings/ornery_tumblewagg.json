@@ -1,0 +1,143 @@
+{
+  "object": "card",
+  "id": "0020c31b-002a-4121-bc61-2c2c16e9afc8",
+  "oracle_id": "f8d7bcbd-9a1d-4fc6-abdd-88a7e01b9411",
+  "multiverse_ids": [
+    655112
+  ],
+  "mtgo_id": 124253,
+  "arena_id": 90517,
+  "tcgplayer_id": 544653,
+  "cardmarket_id": 764041,
+  "name": "Ornery Tumblewagg",
+  "lang": "en",
+  "released_at": "2024-04-19",
+  "uri": "https://api.scryfall.com/cards/0020c31b-002a-4121-bc61-2c2c16e9afc8",
+  "scryfall_uri": "https://scryfall.com/card/otj/171/ornery-tumblewagg?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T03:03:26Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/0/0/0020c31b-002a-4121-bc61-2c2c16e9afc8.jpg?1783911806",
+    "normal": "https://cards.scryfall.io/normal/front/0/0/0020c31b-002a-4121-bc61-2c2c16e9afc8.jpg?1783911806",
+    "large": "https://cards.scryfall.io/large/front/0/0/0020c31b-002a-4121-bc61-2c2c16e9afc8.jpg?1783911806",
+    "png": "https://cards.scryfall.io/png/front/0/0/0020c31b-002a-4121-bc61-2c2c16e9afc8.png?1783911806",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/0/0/0020c31b-002a-4121-bc61-2c2c16e9afc8.jpg?1783911806",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/0/0/0020c31b-002a-4121-bc61-2c2c16e9afc8.jpg?1783911806",
+    "thumb": "https://cards.scryfall.io/thumb/front/0/0/0020c31b-002a-4121-bc61-2c2c16e9afc8.webp?1783911806",
+    "grid": "https://cards.scryfall.io/grid/front/0/0/0020c31b-002a-4121-bc61-2c2c16e9afc8.webp?1783911806",
+    "display": "https://cards.scryfall.io/display/front/0/0/0020c31b-002a-4121-bc61-2c2c16e9afc8.webp?1783911806",
+    "art": "https://cards.scryfall.io/art/front/0/0/0020c31b-002a-4121-bc61-2c2c16e9afc8.webp?1783911806",
+    "crop": "https://cards.scryfall.io/crop/front/0/0/0020c31b-002a-4121-bc61-2c2c16e9afc8.webp?1783911806"
+  },
+  "mana_cost": "{2}{G}",
+  "cmc": 3.0,
+  "type_line": "Creature \u2014 Brushwagg Mount",
+  "oracle_text": "At the beginning of combat on your turn, put a +1/+1 counter on target creature.\nWhenever this creature attacks while saddled, double the number of +1/+1 counters on target creature.\nSaddle 2 (Tap any number of other creatures you control with total power 2 or more: This Mount becomes saddled until end of turn. Saddle only as a sorcery.)",
+  "power": "2",
+  "toughness": "2",
+  "colors": [
+    "G"
+  ],
+  "color_identity": [
+    "G"
+  ],
+  "keywords": [
+    "Saddle",
+    "Double"
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "55a85ebe-644e-4bef-8be8-5290408be3d1",
+  "set": "otj",
+  "set_name": "Outlaws of Thunder Junction",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/55a85ebe-644e-4bef-8be8-5290408be3d1",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Aotj&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/otj?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/0020c31b-002a-4121-bc61-2c2c16e9afc8/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Af8d7bcbd-9a1d-4fc6-abdd-88a7e01b9411&unique=prints",
+  "collector_number": "171",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Izzy",
+  "artist_ids": [
+    "2c3d2473-ff5d-4309-8194-e0b2def2ab65"
+  ],
+  "illustration_id": "1c789a9e-d9f6-423c-bbdd-ae9b87fa3054",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 5145,
+  "penny_rank": 4329,
+  "preview": {
+    "source": "Jen_FilthyMTGCasuals",
+    "source_uri": "https://twitter.com/filthymtgcasual/status/1773730240600342729",
+    "previewed_at": "2024-03-29"
+  },
+  "prices": {
+    "usd": "0.38",
+    "usd_foil": "0.39",
+    "usd_etched": null,
+    "eur": "0.39",
+    "eur_foil": "0.38",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=655112&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DOrnery%2BTumblewagg",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DOrnery%2BTumblewagg",
+    "edhrec": "https://edhrec.com/route/?cc=Ornery+Tumblewagg"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F544653%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=764041&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/124253?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}
