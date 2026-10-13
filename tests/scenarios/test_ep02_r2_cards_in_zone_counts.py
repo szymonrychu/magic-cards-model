@@ -20,6 +20,8 @@ wrote this file:
   with typecycling is "a card with cycling".
 """
 
+import pytest
+
 from magic_cards_model.machines import Step
 from magic_cards_model.machines.abilities import keyword_abilities
 from magic_cards_model.machines.keywords import equip_activation
@@ -849,3 +851,66 @@ def test_avatar_destiny_may_take_no_milled_creature():
     scenario, giant, wurm = _avatar_destiny_dies(take=False)
     assert [c.name for c in scenario.player("alice").hand] == ["Avatar Destiny"]
     assert wurm.zone is Zone.GRAVEYARD and giant.zone is Zone.GRAVEYARD
+
+
+# -- pawprint modes (CR 700.2i) ----------------------------------------------------
+
+
+def _season_of_loss(modes):
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player(
+            "alice",
+            hand=["Season of Loss"],
+            battlefield=["Swamp"] * 5 + ["Grizzly Bears"],
+            graveyard=["Grizzly Bears"],
+            library=[CARD] * 6,
+        )
+        .player("bob", battlefield=["Hill Giant"], library=[CARD] * 3)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    casting = scenario.cast("Season of Loss")
+    casting.choose_modes(modes)
+    return scenario, casting
+
+
+def _resolve_season(scenario, casting):
+    scenario.pay_with(casting.begin_paying(), *scenario.untapped_sources(*(["Swamp"] * 5)))
+    scenario.put_on_stack(casting)
+    while scenario.game.stack:
+        scenario.resolve_top()
+
+
+def test_season_of_loss_sacrifice_then_drain_by_creature_cards_in_your_graveyard():
+    scenario, casting = _season_of_loss([1, 3])
+    _resolve_season(scenario, casting)
+    assert _count_named(scenario, "Grizzly Bears", "alice") == 0
+    assert _count_named(scenario, "Hill Giant", "bob") == 0
+    # the creature already there plus the one just sacrificed
+    assert scenario.player("bob").life == 20 - 2
+
+
+def test_season_of_loss_draws_per_creature_that_died_under_your_control():
+    scenario, casting = _season_of_loss([1, 2])
+    _resolve_season(scenario, casting)
+    assert len(scenario.player("alice").hand) == 1
+
+
+def test_season_of_loss_may_repeat_a_mode_within_five_pawprints():
+    scenario, casting = _season_of_loss([3, 1, 1])
+    _resolve_season(scenario, casting)
+    assert scenario.player("bob").life == 20 - 2
+
+
+def test_season_of_loss_refuses_more_than_five_pawprints():
+    scenario, casting = _season_of_loss([])
+    with pytest.raises(ValueError, match="pawprint"):
+        casting.choose_modes([3, 3])
+
+
+def test_season_of_loss_refuses_a_repeat_total_over_budget():
+    scenario, casting = _season_of_loss([])
+    with pytest.raises(ValueError, match="pawprint"):
+        casting.choose_modes([2, 2, 2])
