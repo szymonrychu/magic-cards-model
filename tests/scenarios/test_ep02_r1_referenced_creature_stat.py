@@ -138,16 +138,24 @@ def test_the_life_gained_is_the_power_it_last_had_counters_and_effects_included(
 
 
 def test_a_creature_with_zero_power_gains_no_life_when_it_dies() -> None:
-    scenario = _scenario(["Willow Geist"])
+    scenario = _scenario(["Willow Geist", "Bottle Golems"])
+    golems = scenario.creature("Bottle Golems", "alice")
+    _dies(scenario, golems)
+    scenario.pass_until_resolved()
+    assert scenario.player("alice").life == 23, "control: a 3-power creature gains 3"
     geist = scenario.creature("Willow Geist", "alice")
     scenario.game.add_counters(geist, Counter.MINUS_ONE, 3)
     _dies(scenario, geist)
     scenario.pass_until_resolved()
-    assert scenario.player("alice").life == 20
+    assert scenario.player("alice").life == 23
 
 
 def test_negative_power_gains_no_life_it_never_loses_it() -> None:
-    scenario = _scenario(["Packsong Pup"])
+    scenario = _scenario(["Packsong Pup", "Bottle Golems"])
+    golems = scenario.creature("Bottle Golems", "alice")
+    _dies(scenario, golems)
+    scenario.pass_until_resolved()
+    assert scenario.player("alice").life == 23, "control: a 3-power creature gains 3"
     pup = scenario.creature("Packsong Pup", "alice")
     scenario.game.add_counters(pup, Counter.MINUS_ONE, 3)
     scenario.game.destroy(pup)
@@ -155,7 +163,7 @@ def test_negative_power_gains_no_life_it_never_loses_it() -> None:
     scenario.game.put_triggers_on_stack()
     if scenario.stack_names():
         scenario.pass_until_resolved()
-    assert scenario.player("alice").life == 20
+    assert scenario.player("alice").life == 23
 
 
 def test_conclave_mentor_counters_bonus_counts_in_its_last_known_power() -> None:
@@ -256,20 +264,31 @@ def test_archon_ignores_a_creature_without_flying() -> None:
 
 
 def test_archon_ignores_a_flyer_an_opponent_controls() -> None:
-    scenario = _scenario(["Archon of Redemption"], bob_hand=["Serra Angel"])
-    scenario.put_onto_battlefield("Serra Angel", "bob")
-    scenario.game.put_triggers_on_stack()
-    assert scenario.stack_names() == []
-    assert scenario.player("alice").life == 20
-
-
-def test_archon_the_gain_is_optional() -> None:
-    scenario = _scenario(["Archon of Redemption"], hand=["Serra Angel"])
-    scenario.will_take_the_may(False)
+    scenario = _scenario(["Archon of Redemption"], hand=["Serra Angel"], bob_hand=["Serra Angel"])
+    scenario.will_take_the_may(True)
     scenario.put_onto_battlefield("Serra Angel", "alice")
     scenario.game.put_triggers_on_stack()
     scenario.pass_until_resolved()
-    assert scenario.player("alice").life == 20
+    assert scenario.player("alice").life == 24, "control: your own flyer gains its power"
+    scenario.put_onto_battlefield("Serra Angel", "bob")
+    scenario.game.put_triggers_on_stack()
+    assert scenario.stack_names() == []
+    assert scenario.player("alice").life == 24
+
+
+def test_archon_the_gain_is_optional() -> None:
+    scenario = _scenario(["Archon of Redemption"], hand=["Serra Angel", "Serra Angel"])
+    scenario.will_take_the_may(True)
+    scenario.put_onto_battlefield("Serra Angel", "alice")
+    scenario.game.put_triggers_on_stack()
+    scenario.pass_until_resolved()
+    assert scenario.player("alice").life == 24, "control: accepting gains the power"
+    scenario.will_take_the_may(False)
+    scenario.put_onto_battlefield("Serra Angel", "alice")
+    scenario.game.put_triggers_on_stack()
+    assert scenario.stack_names() == ["Archon of Redemption's triggered ability"]
+    scenario.pass_until_resolved()
+    assert scenario.player("alice").life == 24
 
 
 def test_orchard_warden_gains_the_toughness_of_another_treefolk() -> None:
@@ -289,19 +308,30 @@ def test_orchard_warden_ignores_a_non_treefolk() -> None:
 
 
 def test_orchard_warden_does_not_trigger_on_itself() -> None:
-    scenario = _scenario([], hand=["Orchard Warden"])
+    scenario = _scenario([], hand=["Orchard Warden", "Indomitable Ancients"])
+    scenario.will_take_the_may(True)
     scenario.put_onto_battlefield("Orchard Warden", "alice")
     scenario.game.put_triggers_on_stack()
     assert scenario.stack_names() == []
-
-
-def test_orchard_warden_declining_gains_nothing() -> None:
-    scenario = _scenario(["Orchard Warden"], hand=["Indomitable Ancients"])
-    scenario.will_take_the_may(False)
     scenario.put_onto_battlefield("Indomitable Ancients", "alice")
     scenario.game.put_triggers_on_stack()
     scenario.pass_until_resolved()
-    assert scenario.player("alice").life == 20
+    assert scenario.player("alice").life == 30, "control: another Treefolk does trigger it"
+
+
+def test_orchard_warden_declining_gains_nothing() -> None:
+    scenario = _scenario(["Orchard Warden"], hand=["Indomitable Ancients", "Indomitable Ancients"])
+    scenario.will_take_the_may(True)
+    scenario.put_onto_battlefield("Indomitable Ancients", "alice")
+    scenario.game.put_triggers_on_stack()
+    scenario.pass_until_resolved()
+    assert scenario.player("alice").life == 30, "control: accepting gains the toughness"
+    scenario.will_take_the_may(False)
+    scenario.put_onto_battlefield("Indomitable Ancients", "alice")
+    scenario.game.put_triggers_on_stack()
+    assert scenario.stack_names() == ["Orchard Warden's triggered ability"]
+    scenario.pass_until_resolved()
+    assert scenario.player("alice").life == 30
 
 
 # ---------------------------------------------------------------------------
@@ -333,14 +363,16 @@ def test_wall_of_reverence_reads_the_targets_current_power_with_pumps() -> None:
 
 
 def test_wall_of_reverence_declined_gains_nothing() -> None:
-    scenario = _scenario(["Wall of Reverence", "Serra Angel"])
+    scenario = _scenario(["Wall of Reverence", "Wall of Reverence", "Serra Angel"])
     angel = scenario.creature("Serra Angel", "alice")
+    scenario.will_take_the_may(True)
     scenario.will_take_the_may(False)
     scenario.choose_trigger_targets("Wall of Reverence", [angel])
     scenario.start_at(Step.POSTCOMBAT_MAIN)
     scenario.advance()
+    assert scenario.stack_names() == ["Wall of Reverence's triggered ability"] * 2
     scenario.pass_until_resolved()
-    assert scenario.player("alice").life == 20
+    assert scenario.player("alice").life == 24, "one Wall accepted (+4), the other declined"
 
 
 def test_wall_of_reverence_can_target_itself_and_gains_its_own_power() -> None:
@@ -381,21 +413,33 @@ def test_deaths_presence_counts_the_dead_creatures_counters_and_effects() -> Non
 
 
 def test_deaths_presence_ignores_an_opponents_creature_dying() -> None:
-    scenario = _scenario(["Death's Presence", "Grizzly Bears"], ["Serra Angel"])
-    angel = scenario.creature("Serra Angel", "bob")
-    _dies(scenario, angel)
+    scenario = _scenario(["Death's Presence", "Grizzly Bears", "Savannah Lions"], ["Serra Angel"])
+    bears = scenario.creature("Grizzly Bears", "alice")
+    scenario.choose_trigger_targets("Death's Presence", [bears])
+    _dies(scenario, scenario.creature("Savannah Lions", "alice"))
+    scenario.pass_until_resolved()
+    assert bears.counters[Counter.PLUS_ONE] == 2, "control: your own creature dying counts"
+    _dies(scenario, scenario.creature("Serra Angel", "bob"))
     assert scenario.stack_names() == []
+    assert bears.counters[Counter.PLUS_ONE] == 2
 
 
 def test_deaths_presence_zero_power_puts_no_counters() -> None:
-    scenario = _scenario(["Death's Presence", "Wall of Omens", "Grizzly Bears"])
+    scenario = _scenario(
+        ["Death's Presence", "Wall of Omens", "Grizzly Bears"], hand=["Serra Angel"]
+    )
     wall = scenario.creature("Wall of Omens", "alice")
     bears = scenario.creature("Grizzly Bears", "alice")
     scenario.choose_trigger_targets("Death's Presence", [bears])
     _dies(scenario, wall)
-    if scenario.stack_names():
-        scenario.pass_until_resolved()
+    assert scenario.stack_names() == ["Death's Presence's triggered ability"]
+    scenario.pass_until_resolved()
     assert bears.counters[Counter.PLUS_ONE] == 0
+    angel = scenario.put_onto_battlefield("Serra Angel", "alice")
+    scenario.choose_trigger_targets("Death's Presence", [bears])
+    _dies(scenario, angel)
+    scenario.pass_until_resolved()
+    assert bears.counters[Counter.PLUS_ONE] == 4, "control: a 4-power creature dying adds 4"
 
 
 # ---------------------------------------------------------------------------
@@ -433,12 +477,16 @@ def test_altar_of_dementia_reads_a_pumped_sacrificed_creature() -> None:
 
 
 def test_altar_of_dementia_a_zero_power_sacrifice_mills_nothing() -> None:
-    scenario = _scenario(["Altar of Dementia", "Wall of Omens"])
+    scenario = _scenario(["Altar of Dementia", "Wall of Omens", "Grizzly Bears"])
     altar = scenario.find("Altar of Dementia", Zone.BATTLEFIELD, "alice")
+    bears = scenario.creature("Grizzly Bears", "alice")
+    scenario.activate(altar, sacrificing=[bears], targets=["bob"])
+    scenario.resolve_top()
+    assert len(scenario.player("bob").graveyard) == 2, "control: a 2-power sacrifice mills 2"
     wall = scenario.creature("Wall of Omens", "alice")
     scenario.activate(altar, sacrificing=[wall], targets=["bob"])
     scenario.resolve_top()
-    assert len(scenario.player("bob").graveyard) == 0
+    assert len(scenario.player("bob").graveyard) == 2
 
 
 def test_altar_of_dementia_reads_a_token_that_has_ceased_to_exist() -> None:
@@ -451,11 +499,15 @@ def test_altar_of_dementia_reads_a_token_that_has_ceased_to_exist() -> None:
 
 
 def test_altar_of_dementia_cannot_sacrifice_a_noncreature() -> None:
-    scenario = _scenario(["Altar of Dementia", "Glorious Anthem"])
+    scenario = _scenario(["Altar of Dementia", "Glorious Anthem", "Grizzly Bears"])
     altar = scenario.find("Altar of Dementia", Zone.BATTLEFIELD, "alice")
     anthem = scenario.find("Glorious Anthem", Zone.BATTLEFIELD, "alice")
     with pytest.raises(ValueError):
         scenario.activate(altar, sacrificing=[anthem], targets=["bob"])
+    bears = scenario.creature("Grizzly Bears", "alice")
+    scenario.activate(altar, sacrificing=[bears], targets=["bob"])
+    scenario.resolve_top()
+    assert len(scenario.player("bob").graveyard) == 3, "control: a creature is accepted"
 
 
 def test_bloodshot_cyclops_deals_the_sacrificed_power_to_a_player() -> None:
@@ -493,23 +545,32 @@ def test_bloodshot_cyclops_can_sacrifice_a_token_for_its_power() -> None:
 
 
 def test_bloodshot_cyclops_zero_power_deals_no_damage() -> None:
-    scenario = _scenario(["Bloodshot Cyclops", "Wall of Omens"])
+    scenario = _scenario(["Bloodshot Cyclops", "Wall of Omens", "Grizzly Bears"])
     cyclops = scenario.creature("Bloodshot Cyclops", "alice")
     cyclops.summoning_sick = False
+    bears = scenario.creature("Grizzly Bears", "alice")
+    scenario.activate(cyclops, sacrificing=[bears], targets=["bob"])
+    scenario.resolve_top()
+    assert scenario.player("bob").life == 18, "control: a 2-power sacrifice deals 2"
+    cyclops.tapped = False
     wall = scenario.creature("Wall of Omens", "alice")
     scenario.activate(cyclops, sacrificing=[wall], targets=["bob"])
     scenario.resolve_top()
-    assert scenario.player("bob").life == 20
+    assert scenario.player("bob").life == 18
 
 
 def test_bloodshot_cyclops_may_sacrifice_itself() -> None:
-    scenario = _scenario(["Bloodshot Cyclops"])
+    scenario = _scenario(["Bloodshot Cyclops", "Grizzly Bears"])
     cyclops = scenario.creature("Bloodshot Cyclops", "alice")
     cyclops.summoning_sick = False
     with pytest.raises(ValueError):
         # {T} and the sacrifice of itself: it is tapped as a cost first, then
         # sacrificed - legal to ask, but it must still name a creature.
         scenario.activate(cyclops, sacrificing=[], targets=["bob"])
+    bears = scenario.creature("Grizzly Bears", "alice")
+    scenario.activate(cyclops, sacrificing=[bears], targets=["bob"])
+    scenario.resolve_top()
+    assert scenario.player("bob").life == 18, "control: naming a creature works"
 
 
 def test_barrage_tyrant_sacrifices_another_colorless_creature() -> None:
@@ -522,18 +583,26 @@ def test_barrage_tyrant_sacrifices_another_colorless_creature() -> None:
 
 
 def test_barrage_tyrant_refuses_a_colored_creature() -> None:
-    scenario = _scenario(["Barrage Tyrant", "Grizzly Bears", "Mountain", "Mountain", "Mountain"])
+    scenario = _scenario(["Barrage Tyrant", "Grizzly Bears", "Sliver Construct", *["Mountain"] * 6])
     tyrant = scenario.creature("Barrage Tyrant", "alice")
     bears = scenario.creature("Grizzly Bears", "alice")
     with pytest.raises(ValueError):
         scenario.activate(tyrant, index=0, sacrificing=[bears], targets=["bob"], auto=True)
+    construct = scenario.creature("Sliver Construct", "alice")
+    scenario.activate(tyrant, index=0, sacrificing=[construct], targets=["bob"], auto=True)
+    scenario.resolve_top()
+    assert scenario.player("bob").life == 18, "control: a colorless creature is accepted"
 
 
 def test_barrage_tyrant_refuses_to_sacrifice_itself() -> None:
-    scenario = _scenario(["Barrage Tyrant", "Mountain", "Mountain", "Mountain"])
+    scenario = _scenario(["Barrage Tyrant", "Sliver Construct", *["Mountain"] * 6])
     tyrant = scenario.creature("Barrage Tyrant", "alice")
     with pytest.raises(ValueError):
         scenario.activate(tyrant, index=0, sacrificing=[tyrant], targets=["bob"], auto=True)
+    construct = scenario.creature("Sliver Construct", "alice")
+    scenario.activate(tyrant, index=0, sacrificing=[construct], targets=["bob"], auto=True)
+    scenario.resolve_top()
+    assert scenario.player("bob").life == 18, "control: another creature is accepted"
 
 
 def test_barrage_tyrant_reads_a_big_colorless_creature_with_a_counter() -> None:
@@ -565,14 +634,21 @@ def test_brion_stoutarm_cannot_target_a_creature() -> None:
     wall = scenario.creature("Wall of Omens", "bob")
     with pytest.raises(ValueError):
         scenario.activate(brion, sacrificing=[bears], targets=[wall], auto=True)
+    scenario.activate(brion, sacrificing=[bears], targets=["bob"], auto=True)
+    scenario.resolve_top()
+    assert scenario.player("bob").life == 18, "control: a player is a legal target"
 
 
 def test_brion_stoutarm_cannot_sacrifice_itself_for_its_own_cost() -> None:
-    scenario = _scenario(["Brion Stoutarm", "Mountain"])
+    scenario = _scenario(["Brion Stoutarm", "Grizzly Bears", "Mountain", "Mountain"])
     brion = scenario.creature("Brion Stoutarm", "alice")
     brion.summoning_sick = False
     with pytest.raises(ValueError):
         scenario.activate(brion, sacrificing=[brion], targets=["bob"], auto=True)
+    bears = scenario.creature("Grizzly Bears", "alice")
+    scenario.activate(brion, sacrificing=[bears], targets=["bob"], auto=True)
+    scenario.resolve_top()
+    assert scenario.player("bob").life == 18, "control: another creature is accepted"
 
 
 def test_brion_stoutarm_lifelink_on_its_own_damage_is_unaffected() -> None:
@@ -632,10 +708,12 @@ def test_sever_soul_reads_the_toughness_with_counters_and_effects() -> None:
 
 
 def test_sever_soul_refuses_a_black_creature() -> None:
-    scenario = _spell("Sever Soul", theirs=["Vampire Nighthawk"])
+    scenario = _spell("Sever Soul", theirs=["Vampire Nighthawk", "Serra Angel"])
     nighthawk = _creature(scenario, "Vampire Nighthawk")
     with pytest.raises(ValueError):
         _cast(scenario, "Sever Soul", nighthawk)
+    _cast(scenario, "Sever Soul", _creature(scenario, "Serra Angel"))
+    assert scenario.player("alice").life == 24, "control: a nonblack creature is accepted"
 
 
 def test_vendetta_costs_the_target_controller_nothing_only_the_caster_loses() -> None:
@@ -666,10 +744,16 @@ def test_life_loss_that_is_lethal_ends_the_game() -> None:
 
 
 def test_a_target_that_became_illegal_makes_the_spell_do_nothing() -> None:
-    scenario = _spell("Sever Soul", theirs=["Serra Angel"])
-    angel = _creature(scenario, "Serra Angel")
-    casting = scenario.cast_onto_stack("Sever Soul", username="alice", targets=[angel], auto=True)
-    scenario.game.destroy(angel)
+    scenario = _scenario(
+        [*MANA, *["Swamp"] * 4, "Serra Angel"],
+        ["Wall of Omens", "Hill Giant"],
+        hand=["Sever Soul", "Sever Soul"],
+    )
+    _cast(scenario, "Sever Soul", _creature(scenario, "Wall of Omens"))
+    assert scenario.player("alice").life == 24, "control: a legal target gains its toughness"
+    giant = _creature(scenario, "Hill Giant")
+    casting = scenario.cast_onto_stack("Sever Soul", username="alice", targets=[giant], auto=True)
+    scenario.game.destroy(giant)
     life = scenario.player("alice").life
     scenario.resolve_top()
     assert scenario.player("alice").life == life
@@ -759,10 +843,12 @@ def test_infernal_reckoning_exiles_a_colorless_creature_and_gains_its_power() ->
 
 
 def test_infernal_reckoning_refuses_a_colored_creature() -> None:
-    scenario = _spell("Infernal Reckoning", theirs=["Serra Angel"])
+    scenario = _spell("Infernal Reckoning", theirs=["Serra Angel", "Wurmcoil Engine"])
     angel = _creature(scenario, "Serra Angel")
     with pytest.raises(ValueError):
         _cast(scenario, "Infernal Reckoning", angel)
+    _cast(scenario, "Infernal Reckoning", _creature(scenario, "Wurmcoil Engine"))
+    assert scenario.player("alice").life == 26, "control: a colorless creature is accepted"
 
 
 def test_infernal_reckoning_reads_the_power_with_counters() -> None:
@@ -803,6 +889,10 @@ def test_chastise_cannot_target_a_creature_that_is_not_attacking() -> None:
     scenario, angel = _chastise_board()
     with pytest.raises(ValueError):
         scenario.cast_and_resolve("Chastise", username="bob", targets=[angel], auto=True)
+    scenario.attack_with(angel)
+    scenario.pass_priority("alice")
+    scenario.cast_and_resolve("Chastise", username="bob", targets=[angel], auto=True)
+    assert scenario.player("bob").life == 24, "control: an attacker is a legal target"
 
 
 def test_chastise_gains_the_power_the_attacker_had_with_counters() -> None:
@@ -823,10 +913,12 @@ def test_sheltering_word_grants_hexproof_and_gains_toughness() -> None:
 
 
 def test_sheltering_word_needs_a_creature_you_control() -> None:
-    scenario = _spell("Sheltering Word", theirs=["Serra Angel"])
+    scenario = _spell("Sheltering Word", mine=["Grizzly Bears"], theirs=["Serra Angel"])
     angel = _creature(scenario, "Serra Angel")
     with pytest.raises(ValueError):
         _cast(scenario, "Sheltering Word", angel)
+    _cast(scenario, "Sheltering Word", _creature(scenario, "Grizzly Bears", "alice"))
+    assert scenario.player("alice").life == 22, "control: your own creature is accepted"
 
 
 def test_sheltering_word_gains_the_toughness_the_creature_has_after_resolving() -> None:
@@ -845,11 +937,15 @@ def test_souls_majesty_draws_cards_equal_to_the_targets_power() -> None:
 
 
 def test_souls_majesty_a_zero_power_creature_draws_nothing() -> None:
-    scenario = _spell("Soul's Majesty", mine=["Wall of Omens"])
-    wall = _creature(scenario, "Wall of Omens", "alice")
+    scenario = _scenario(
+        [*MANA, "Wall of Omens", "Serra Angel"], hand=["Soul's Majesty", "Soul's Majesty"]
+    )
     before = len(scenario.player("alice").hand)
-    _cast(scenario, "Soul's Majesty", wall)
-    assert len(scenario.player("alice").hand) == before - 1
+    _cast(scenario, "Soul's Majesty", _creature(scenario, "Serra Angel", "alice"))
+    assert len(scenario.player("alice").hand) == before - 1 + 4, "control: power 4 draws 4"
+    now = len(scenario.player("alice").hand)
+    _cast(scenario, "Soul's Majesty", _creature(scenario, "Wall of Omens", "alice"))
+    assert len(scenario.player("alice").hand) == now - 1
 
 
 def test_souls_majesty_reads_the_power_with_counters() -> None:
@@ -862,10 +958,13 @@ def test_souls_majesty_reads_the_power_with_counters() -> None:
 
 
 def test_souls_majesty_cannot_target_an_opponents_creature() -> None:
-    scenario = _spell("Soul's Majesty", theirs=["Serra Angel"])
+    scenario = _spell("Soul's Majesty", mine=["Grizzly Bears"], theirs=["Serra Angel"])
     angel = _creature(scenario, "Serra Angel")
     with pytest.raises(ValueError):
         _cast(scenario, "Soul's Majesty", angel)
+    before = len(scenario.player("alice").hand)
+    _cast(scenario, "Soul's Majesty", _creature(scenario, "Grizzly Bears", "alice"))
+    assert len(scenario.player("alice").hand) == before - 1 + 2, "control: your creature draws"
 
 
 # ---------------------------------------------------------------------------
@@ -894,9 +993,15 @@ def test_tribute_to_hunger_the_opponent_chooses_which_creature() -> None:
 
 
 def test_tribute_to_hunger_with_no_creature_gains_nothing() -> None:
-    scenario = _spell("Tribute to Hunger")
+    scenario = _scenario(
+        [*MANA, "Swamp", "Swamp", "Swamp", "Swamp"],
+        ["Serra Angel"],
+        hand=["Tribute to Hunger", "Tribute to Hunger"],
+    )
     scenario.cast_and_resolve("Tribute to Hunger", targets=["bob"], auto=True)
-    assert scenario.player("alice").life == 20
+    assert scenario.player("alice").life == 24, "control: a sacrificed Angel gains 4"
+    scenario.cast_and_resolve("Tribute to Hunger", targets=["bob"], auto=True)
+    assert scenario.player("alice").life == 24
 
 
 def test_tribute_to_hunger_reads_the_chosen_creatures_pumped_toughness() -> None:
@@ -916,9 +1021,11 @@ def test_tribute_to_hunger_a_sacrificed_token_still_counts() -> None:
 
 
 def test_tribute_to_hunger_cannot_target_yourself_as_an_opponent() -> None:
-    scenario = _spell("Tribute to Hunger", mine=["Serra Angel"])
+    scenario = _spell("Tribute to Hunger", mine=["Serra Angel"], theirs=["Serra Angel"])
     with pytest.raises(ValueError):
         scenario.cast_and_resolve("Tribute to Hunger", targets=["alice"], auto=True)
+    scenario.cast_and_resolve("Tribute to Hunger", targets=["bob"], auto=True)
+    assert scenario.player("alice").life == 24, "control: an opponent is a legal target"
 
 
 def test_twisted_justice_draws_cards_equal_to_the_sacrificed_power() -> None:
@@ -938,10 +1045,17 @@ def test_twisted_justice_can_target_yourself_and_you_draw_for_your_own_creature(
 
 
 def test_twisted_justice_with_no_creature_draws_nothing() -> None:
-    scenario = _spell("Twisted Justice")
+    scenario = _scenario(
+        [*MANA, *["Swamp"] * 4, *["Island"] * 4],
+        ["Serra Angel"],
+        hand=["Twisted Justice", "Twisted Justice"],
+    )
     before = len(scenario.player("alice").hand)
     scenario.cast_and_resolve("Twisted Justice", targets=["bob"], auto=True)
-    assert len(scenario.player("alice").hand) == before - 1
+    assert len(scenario.player("alice").hand) == before - 1 + 4, "control: an Angel draws 4"
+    now = len(scenario.player("alice").hand)
+    scenario.cast_and_resolve("Twisted Justice", targets=["bob"], auto=True)
+    assert len(scenario.player("alice").hand) == now - 1
 
 
 def _long_game(bob_battlefield: list[str], *, hand: list[str], alice: list[str] | None = None):
@@ -996,10 +1110,22 @@ def test_consuming_vapors_gains_toughness_now_and_again_on_rebound() -> None:
 
 
 def test_consuming_vapors_with_no_creature_still_rebounds() -> None:
-    scenario = _spell("Consuming Vapors")
+    scenario = _long_game([], hand=["Consuming Vapors"])
     scenario.cast_and_resolve("Consuming Vapors", targets=["bob"], auto=True)
     assert scenario.player("alice").life == 20
-    assert scenario.find("Consuming Vapors", Zone.EXILE, "alice").zone is Zone.EXILE
+    vapors = scenario.find("Consuming Vapors", Zone.EXILE, "alice")
+    assert vapors.zone is Zone.EXILE
+    (token,) = create_tokens(scenario.game, BEARS_TOKEN, "bob", 1)
+    scenario.game.decisions.add(
+        ScriptedAnswer(
+            kind=DecisionKind.CHOOSE_TARGETS, value=("bob",), player="alice", source=None, uses=1
+        )
+    )
+    _to_alices_next_upkeep(scenario)
+    scenario.resolve_top()  # the rebound trigger: cast it again for free
+    scenario.resolve_top()  # the second Consuming Vapors
+    assert token.zone is not Zone.BATTLEFIELD, "the rebound cast found a creature"
+    assert scenario.player("alice").life == 22, "control: the rebound cast gains its toughness"
 
 
 def test_vanish_into_memory_draws_the_power_and_exiles_the_creature() -> None:
@@ -1057,14 +1183,12 @@ def test_vanish_into_memory_discard_is_the_toughness_it_has_on_return() -> None:
     _cast(scenario, "Vanish into Memory", bears)
     _to_alices_next_upkeep(scenario)
     islands = [card for card in scenario.player("alice").hand if card.name == "Island"][:2]
+    held = len([c for c in scenario.player("alice").hand if c.name == "Island"])
     scenario.will_choose_cards(*islands, username="alice")
     scenario.resolve_top()
     assert bears.zone is Zone.BATTLEFIELD
     assert all(island.zone is Zone.GRAVEYARD for island in islands)
-    assert (
-        len([c for c in scenario.player("alice").hand if c.name == "Island"]) == 3 + 2 - 2 + 0
-        or True
-    )
+    assert len([c for c in scenario.player("alice").hand if c.name == "Island"]) == held - 2
 
 
 def test_vanish_into_memory_a_token_is_exiled_and_never_returns() -> None:
@@ -1084,7 +1208,6 @@ def test_vanish_into_memory_a_token_is_exiled_and_never_returns() -> None:
 PROOF = [
     "Devour Flesh",
     "Predator's Rapport",
-    "Waterkin Shaman",
     "Bosh, Iron Golem",
     "Sunscourge Champion",
     "Garruk, Apex Predator",
@@ -1118,9 +1241,11 @@ def test_devour_flesh_on_yourself_sacrifices_your_own_choice_and_gains() -> None
 
 
 def test_devour_flesh_with_no_creature_gains_nothing() -> None:
-    scenario = _spell("Devour Flesh")
+    scenario = _scenario([*MANA], ["Serra Angel"], hand=["Devour Flesh", "Devour Flesh"])
     scenario.cast_and_resolve("Devour Flesh", targets=["bob"], auto=True)
-    assert scenario.player("bob").life == 20
+    assert scenario.player("bob").life == 24, "control: a sacrificed Angel gains 4"
+    scenario.cast_and_resolve("Devour Flesh", targets=["bob"], auto=True)
+    assert scenario.player("bob").life == 24
 
 
 def test_predators_rapport_gains_power_plus_toughness() -> None:
@@ -1139,15 +1264,18 @@ def test_predators_rapport_counts_counters_and_effects_in_both_numbers() -> None
 
 
 def test_predators_rapport_needs_a_creature_you_control() -> None:
-    scenario = _spell("Predator's Rapport", theirs=["Serra Angel"])
+    scenario = _spell("Predator's Rapport", mine=["Serra Angel"], theirs=["Serra Angel"])
     angel = _creature(scenario, "Serra Angel")
     with pytest.raises(ValueError):
         _cast(scenario, "Predator's Rapport", angel)
+    _cast(scenario, "Predator's Rapport", _creature(scenario, "Serra Angel", "alice"))
+    assert scenario.player("alice").life == 28, "control: your own creature is accepted"
 
 
 def test_waterkin_shaman_triggers_only_for_a_flyer_entering() -> None:
     scenario = _scenario(["Waterkin Shaman"], hand=["Serra Angel", "Grizzly Bears"])
     shaman = scenario.creature("Waterkin Shaman", "alice")
+    assert all(c.category == HANDLED for c in classify_clauses(card("Waterkin Shaman")))
     base = scenario.game.power_of(shaman)
     scenario.put_onto_battlefield("Grizzly Bears", "alice")
     scenario.game.put_triggers_on_stack()
@@ -1159,10 +1287,22 @@ def test_waterkin_shaman_triggers_only_for_a_flyer_entering() -> None:
 
 
 def test_waterkin_shaman_ignores_an_opponents_flyer() -> None:
-    scenario = _scenario(["Waterkin Shaman"], bob_hand=["Serra Angel"])
+    scenario = _scenario(
+        ["Waterkin Shaman"], hand=["Serra Angel", "Grizzly Bears"], bob_hand=["Serra Angel"]
+    )
+    shaman = scenario.creature("Waterkin Shaman", "alice")
+    base = scenario.game.power_of(shaman)
+    scenario.put_onto_battlefield("Grizzly Bears", "alice")
+    scenario.game.put_triggers_on_stack()
+    assert scenario.stack_names() == [], "control: a creature without flying does not trigger it"
+    scenario.put_onto_battlefield("Serra Angel", "alice")
+    scenario.game.put_triggers_on_stack()
+    scenario.pass_until_resolved()
+    assert scenario.game.power_of(shaman) == base + 1, "control: your own flyer pumps it"
     scenario.put_onto_battlefield("Serra Angel", "bob")
     scenario.game.put_triggers_on_stack()
     assert scenario.stack_names() == []
+    assert scenario.game.power_of(shaman) == base + 1
 
 
 def test_bosh_deals_the_sacrificed_artifacts_mana_value() -> None:
@@ -1175,12 +1315,26 @@ def test_bosh_deals_the_sacrificed_artifacts_mana_value() -> None:
 
 
 def test_bosh_a_free_artifact_deals_no_damage() -> None:
-    scenario = _scenario(["Bosh, Iron Golem", "Memnite", "Mountain", "Mountain", *LANDS])
+    scenario = _scenario(
+        [
+            "Bosh, Iron Golem",
+            "Memnite",
+            "Sliver Construct",
+            "Mountain",
+            "Mountain",
+            "Mountain",
+            *LANDS,
+        ]
+    )
     bosh = scenario.creature("Bosh, Iron Golem", "alice")
+    construct = scenario.creature("Sliver Construct", "alice")
+    scenario.activate(bosh, sacrificing=[construct], targets=["bob"], auto=True)
+    scenario.resolve_top()
+    assert scenario.player("bob").life == 17, "control: a {3} artifact deals 3"
     memnite = scenario.creature("Memnite", "alice")
     scenario.activate(bosh, sacrificing=[memnite], targets=["bob"], auto=True)
     scenario.resolve_top()
-    assert scenario.player("bob").life == 20
+    assert scenario.player("bob").life == 17
 
 
 def test_sunscourge_champion_gains_its_own_power_when_it_enters() -> None:
