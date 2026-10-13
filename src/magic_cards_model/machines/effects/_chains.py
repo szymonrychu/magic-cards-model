@@ -229,6 +229,7 @@ FAMILIES = (
     "registries",
     "dispatch",
     "ep02_r1_this_way_counts",
+    "ep02_r2_chosen_amounts",
 )
 
 ABILITY_TEXT = Chain(

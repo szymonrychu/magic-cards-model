@@ -207,6 +207,17 @@ _SYMBOL_FOR_EACH_RE = re.compile(
     re.IGNORECASE,
 )
 _CHOOSE_A_COLOR_PREAMBLE = re.compile(r"^Choose a color\.\s*", re.IGNORECASE)
+#: "Reveal any number of creature cards with power 5 or greater from your
+#: hand. Add {G} for each card revealed this way." (Sacellum Godspeaker) - the
+#: reveal is the count: CR 107.1c's any number, chosen as the ability resolves
+#: (CR 605.3b: immediately), each revealed card one more of the symbols.
+_REVEAL_ANY_NUMBER_PREAMBLE = re.compile(
+    r"^(?P<reveal>reveal any number of [^.]+? (?:from|in) your hand)\.\s*(?=add\b)",
+    re.IGNORECASE,
+)
+_SYMBOLS_FOR_EACH_REVEALED_RE = re.compile(
+    r"^(?P<symbols>(?:\{[WUBRGC]\})+) for each card revealed this way$", re.IGNORECASE
+)
 _MANA_COST_IN_COST = re.compile(r"\{(\d+|[WUBRGCX])\}")
 #: An X printed in an activation cost - "{X}" or "Remove X storage counters"
 #: - which CR 107.3a has the controller announce (`ANNOUNCED_X`).
@@ -308,6 +319,10 @@ def _mana_count_expression_readable(expression: str) -> bool:
     player taps it.
     """
     stripped = expression.strip().rstrip(".")
+    if stripped.lower().startswith("reveal any number of "):
+        from .ep02_r2_chosen_amounts import reveal_any_number_readable
+
+        return reveal_any_number_readable(stripped)
     if (
         _SELF_CHARACTERISTIC_RE.fullmatch(stripped)
         or _SELF_COUNTERS_ON_RE.fullmatch(stripped)
@@ -336,6 +351,8 @@ def resolve_mana_count_expression(
     expression: str,
     x_value: int | None = None,
     sacrificed_ids: "Sequence[UUID]" = (),
+    *,
+    choosing: bool = False,
 ) -> int:
     """The board-derived count a mana ability's "where X is ..." definition
     asks for, read at the moment the ability resolves (CR 605.3b: immediately,
@@ -353,6 +370,14 @@ def resolve_mana_count_expression(
     had not been able to read the definition at all.
     """
     stripped = expression.strip().rstrip(".")
+    if stripped.lower().startswith("reveal any number of "):
+        # CR 107.1c: the reveal is chosen as the ability resolves; a caller
+        # with no activation in hand (an auto-tap plan) reveals nothing.
+        if not choosing:
+            return 0
+        from .ep02_r2_chosen_amounts import reveal_any_number_count
+
+        return reveal_any_number_count(game, source, stripped)
     if stripped == ANNOUNCED_X:
         # CR 107.3a: the X this activation's own cost announced; a caller with
         # no activation in hand (an auto-tap plan) announced none.
@@ -4954,7 +4979,9 @@ def _parse_activated(text: str, common: dict) -> ActivatedAbility | None:
     # paragraph - `_ADD` anchors at the start of the text and would otherwise
     # never see the "Add" at all. `effect` on the returned ability keeps the
     # full printed text, unchanged.
-    add = _ADD.match(_CHOOSE_A_COLOR_PREAMBLE.sub("", effect_text))
+    reveal = _REVEAL_ANY_NUMBER_PREAMBLE.match(effect_text)
+    add_text = effect_text[reveal.end() :] if reveal is not None else effect_text
+    add = _ADD.match(_CHOOSE_A_COLOR_PREAMBLE.sub("", add_text))
     cost_parts = _merge_disjunctive_sacrifice_cost(_split_top_level(cost))
     costs = [_classify_cost(part) for part in cost_parts]
     # CR 606.2 makes an ability a loyalty ability when a loyalty symbol is in
@@ -4966,7 +4993,14 @@ def _parse_activated(text: str, common: dict) -> ActivatedAbility | None:
         loyalty = _loyalty_symbol(costs[0].text)
 
     mana = None
-    if add:
+    if add and reveal is not None:
+        symbols = _SYMBOLS_FOR_EACH_REVEALED_RE.fullmatch(add.group("effect").strip())
+        if symbols is not None and _mana_count_expression_readable(reveal.group("reveal")):
+            mana = ManaAbility(
+                options=[[Color(s.upper()) for s in _SYMBOL.findall(symbols.group("symbols"))]],
+                for_each_expression=reveal.group("reveal"),
+            )
+    elif add:
         mana = _parse_effect(
             add.group("effect"),
             cost_announces_x=any(_COST_X.search(piece.text) for piece in costs),

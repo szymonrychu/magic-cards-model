@@ -285,7 +285,7 @@ _COUNT_PLANESWALKER_TYPES_RE = re.compile(
 #: `counted_this_way`.
 _COUNT_THIS_WAY_RE = re.compile(
     r"^(?:the )?number of (?P<noun>[a-z ]+?) "
-    r"(?P<verb>exiled|sacrificed|discarded|milled|tapped) this way$",
+    r"(?P<verb>exiled|sacrificed|discarded|milled|tapped|returned|revealed) this way$",
     re.IGNORECASE,
 )
 #: "the total power of the sacrificed creatures" (Soulblast, Corpse Cobble),
@@ -1259,6 +1259,12 @@ def count_expression(phrase: str) -> Callable[["Game", str], int] | None:
 
     if (life_total := life_this_turn_count(stripped)) is not None:
         return life_total
+
+    if "damage dealt to" in stripped.lower():
+        from ..ep02_r2_chosen_amounts import damage_this_turn_count
+
+        if (damage_total := damage_this_turn_count(stripped)) is not None:
+            return damage_total
 
     if _AMOUNT_OF_LIFE_GAINED_THIS_TURN_RE.fullmatch(stripped):
 

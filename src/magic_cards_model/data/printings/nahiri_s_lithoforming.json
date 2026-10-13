@@ -1,0 +1,139 @@
+{
+  "object": "card",
+  "id": "06bb4bc1-6ef9-4015-9f5f-36f51dbac87e",
+  "oracle_id": "888e711a-1251-4704-8ef1-b4b98ec54b5a",
+  "multiverse_ids": [
+    491792
+  ],
+  "mtgo_id": 83277,
+  "arena_id": 73353,
+  "tcgplayer_id": 222093,
+  "cardmarket_id": 496245,
+  "name": "Nahiri's Lithoforming",
+  "lang": "en",
+  "released_at": "2020-09-25",
+  "uri": "https://api.scryfall.com/cards/06bb4bc1-6ef9-4015-9f5f-36f51dbac87e",
+  "scryfall_uri": "https://scryfall.com/card/znr/151/nahiris-lithoforming?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T07:55:55Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/0/6/06bb4bc1-6ef9-4015-9f5f-36f51dbac87e.jpg?1783929355",
+    "normal": "https://cards.scryfall.io/normal/front/0/6/06bb4bc1-6ef9-4015-9f5f-36f51dbac87e.jpg?1783929355",
+    "large": "https://cards.scryfall.io/large/front/0/6/06bb4bc1-6ef9-4015-9f5f-36f51dbac87e.jpg?1783929355",
+    "png": "https://cards.scryfall.io/png/front/0/6/06bb4bc1-6ef9-4015-9f5f-36f51dbac87e.png?1783929355",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/0/6/06bb4bc1-6ef9-4015-9f5f-36f51dbac87e.jpg?1783929355",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/0/6/06bb4bc1-6ef9-4015-9f5f-36f51dbac87e.jpg?1783929355",
+    "thumb": "https://cards.scryfall.io/thumb/front/0/6/06bb4bc1-6ef9-4015-9f5f-36f51dbac87e.webp?1783929355",
+    "grid": "https://cards.scryfall.io/grid/front/0/6/06bb4bc1-6ef9-4015-9f5f-36f51dbac87e.webp?1783929355",
+    "display": "https://cards.scryfall.io/display/front/0/6/06bb4bc1-6ef9-4015-9f5f-36f51dbac87e.webp?1783929355",
+    "art": "https://cards.scryfall.io/art/front/0/6/06bb4bc1-6ef9-4015-9f5f-36f51dbac87e.webp?1783929355",
+    "crop": "https://cards.scryfall.io/crop/front/0/6/06bb4bc1-6ef9-4015-9f5f-36f51dbac87e.webp?1783929355"
+  },
+  "mana_cost": "{X}{R}{R}",
+  "cmc": 2.0,
+  "type_line": "Sorcery",
+  "oracle_text": "Sacrifice X lands. For each land sacrificed this way, draw a card. You may play X additional lands this turn. Lands you control enter tapped this turn.",
+  "colors": [
+    "R"
+  ],
+  "color_identity": [
+    "R"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "arena",
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "f4e01fa7-b254-42dd-849f-69b58027a8c4",
+  "set": "znr",
+  "set_name": "Zendikar Rising",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/f4e01fa7-b254-42dd-849f-69b58027a8c4",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Aznr&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/znr?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/06bb4bc1-6ef9-4015-9f5f-36f51dbac87e/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A888e711a-1251-4704-8ef1-b4b98ec54b5a&unique=prints",
+  "collector_number": "151",
+  "digital": false,
+  "rarity": "rare",
+  "flavor_text": "\"Zendikar has suffered enough. It is time, at last, for my home to know peace.\"",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Campbell White",
+  "artist_ids": [
+    "d281eab4-463a-4ba8-9039-8943737960a0"
+  ],
+  "illustration_id": "09576eac-4072-44ec-a5f7-96b821810897",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": true,
+  "edhrec_rank": 4189,
+  "penny_rank": 11029,
+  "preview": {
+    "source": "The Vorthos Cast",
+    "source_uri": "https://twitter.com/TheVorthosCast/status/1302924580122746880",
+    "previewed_at": "2020-09-07"
+  },
+  "prices": {
+    "usd": "0.50",
+    "usd_foil": "1.06",
+    "usd_etched": null,
+    "eur": "0.47",
+    "eur_foil": "0.50",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=491792&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DNahiri%2527s%2BLithoforming",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DNahiri%2527s%2BLithoforming",
+    "edhrec": "https://edhrec.com/route/?cc=Nahiri%27s+Lithoforming"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F222093%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=496245&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/83277?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

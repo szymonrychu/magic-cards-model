@@ -1,0 +1,133 @@
+{
+  "object": "card",
+  "id": "02c52e00-ad17-42aa-9f5f-38fb52dad5ea",
+  "oracle_id": "d9ecb346-7745-4106-a3e1-c467a3b91ec7",
+  "multiverse_ids": [
+    74201
+  ],
+  "mtgo_id": 22038,
+  "mtgo_foil_id": 22039,
+  "tcgplayer_id": 12402,
+  "cardmarket_id": 12630,
+  "name": "Barrel Down Sokenzan",
+  "lang": "en",
+  "released_at": "2005-06-03",
+  "uri": "https://api.scryfall.com/cards/02c52e00-ad17-42aa-9f5f-38fb52dad5ea",
+  "scryfall_uri": "https://scryfall.com/card/sok/94/barrel-down-sokenzan?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T12:02:29Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/0/2/02c52e00-ad17-42aa-9f5f-38fb52dad5ea.jpg?1783944149",
+    "normal": "https://cards.scryfall.io/normal/front/0/2/02c52e00-ad17-42aa-9f5f-38fb52dad5ea.jpg?1783944149",
+    "large": "https://cards.scryfall.io/large/front/0/2/02c52e00-ad17-42aa-9f5f-38fb52dad5ea.jpg?1783944149",
+    "png": "https://cards.scryfall.io/png/front/0/2/02c52e00-ad17-42aa-9f5f-38fb52dad5ea.png?1783944149",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/0/2/02c52e00-ad17-42aa-9f5f-38fb52dad5ea.jpg?1783944149",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/0/2/02c52e00-ad17-42aa-9f5f-38fb52dad5ea.jpg?1783944149",
+    "thumb": "https://cards.scryfall.io/thumb/front/0/2/02c52e00-ad17-42aa-9f5f-38fb52dad5ea.webp?1783944149",
+    "grid": "https://cards.scryfall.io/grid/front/0/2/02c52e00-ad17-42aa-9f5f-38fb52dad5ea.webp?1783944149",
+    "display": "https://cards.scryfall.io/display/front/0/2/02c52e00-ad17-42aa-9f5f-38fb52dad5ea.webp?1783944149",
+    "art": "https://cards.scryfall.io/art/front/0/2/02c52e00-ad17-42aa-9f5f-38fb52dad5ea.webp?1783944149",
+    "crop": "https://cards.scryfall.io/crop/front/0/2/02c52e00-ad17-42aa-9f5f-38fb52dad5ea.webp?1783944149"
+  },
+  "mana_cost": "{2}{R}",
+  "cmc": 3.0,
+  "type_line": "Instant \u2014 Arcane",
+  "oracle_text": "Sweep \u2014 Return any number of Mountains you control to their owner's hand. Barrel Down Sokenzan deals damage to target creature equal to twice the number of Mountains returned this way.",
+  "colors": [
+    "R"
+  ],
+  "color_identity": [
+    "R"
+  ],
+  "keywords": [
+    "Sweep"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "4db16ad3-2b95-442f-bb6b-e9aa7fe7f769",
+  "set": "sok",
+  "set_name": "Saviors of Kamigawa",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/4db16ad3-2b95-442f-bb6b-e9aa7fe7f769",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Asok&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/sok?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/02c52e00-ad17-42aa-9f5f-38fb52dad5ea/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Ad9ecb346-7745-4106-a3e1-c467a3b91ec7&unique=prints",
+  "collector_number": "94",
+  "digital": false,
+  "rarity": "common",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Greg Staples",
+  "artist_ids": [
+    "93d65564-bf00-447b-8406-e2031f03b6b1"
+  ],
+  "illustration_id": "4959cd48-781c-4147-9a7b-5850b8ab1127",
+  "border_color": "black",
+  "frame": "2003",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 23618,
+  "penny_rank": 14562,
+  "prices": {
+    "usd": "0.13",
+    "usd_foil": "0.66",
+    "usd_etched": null,
+    "eur": "0.08",
+    "eur_foil": "0.34",
+    "tix": "0.05"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=74201&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DBarrel%2BDown%2BSokenzan",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DBarrel%2BDown%2BSokenzan",
+    "edhrec": "https://edhrec.com/route/?cc=Barrel+Down+Sokenzan"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F12402%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=12630&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/22038?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}
