@@ -3124,6 +3124,14 @@ _MASS_CONTROLLER_SCOPE_RE = re.compile(
 )
 
 
+#: The same scope written ahead of a bound: "creature your opponents control with
+#: toughness 3 or less" (Scourge of Fleets) - the bound still qualifies the group.
+_MASS_CONTROLLER_SCOPE_BEFORE_BOUND_RE = re.compile(
+    r"^(?P<inner>.+?)\s+(?P<scope>you control|your opponents control)(?P<bound>\s+with\s+.+)$",
+    re.IGNORECASE,
+)
+
+
 def _parse_mass_destroy_predicate(
     rest: str,
 ) -> Callable[["Game", CardState, CardState | None, int | None], bool] | None:
@@ -3146,10 +3154,12 @@ def _parse_mass_destroy_predicate(
             return None
         text = controller_match.group("qualifier").strip()
     controller_scope: str | None = None
-    scope_match = _MASS_CONTROLLER_SCOPE_RE.fullmatch(text)
+    scope_match = _MASS_CONTROLLER_SCOPE_RE.fullmatch(
+        text
+    ) or _MASS_CONTROLLER_SCOPE_BEFORE_BOUND_RE.fullmatch(text)
     if scope_match is not None:
         controller_scope = scope_match.group("scope").lower()
-        text = scope_match.group("inner").strip()
+        text = (scope_match.group("inner") + (scope_match.groupdict().get("bound") or "")).strip()
     entered_this_turn = False
     entered_match = _MASS_ENTERED_THIS_TURN_RE.fullmatch(text)
     if entered_match is not None:

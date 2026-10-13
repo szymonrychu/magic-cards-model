@@ -670,3 +670,35 @@ def test_nightmare_incursion_exiles_up_to_the_swamp_count_from_the_targets_libra
     for card in picked:
         assert card.zone is Zone.EXILE
     assert len(scenario.player("alice").library) == 12
+
+
+# --------------------------------------------------------------------------
+# "return each creature your opponents control with toughness X or less to its
+# owner's hand, where X is the number of Islands you control" (Scourge of
+# Fleets). CR 608.2h: X is fixed as the ability resolves; CR 400.3: a card
+# returned goes to its owner's hand; CR 208.1 (toughness).
+# --------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    ("islands", "returned"),
+    [
+        (2, ["Grizzly Bears"]),
+        (3, ["Grizzly Bears", "Hill Giant"]),
+        (4, ["Grizzly Bears", "Hill Giant", "Serra Angel"]),
+    ],
+)
+def test_scourge_of_fleets_returns_opposing_creatures_up_to_the_island_count(islands, returned):
+    """Toughness 2, 3 and 4 against 2, 3 and 4 Islands; the Swamps beside the Islands
+    and the caster's own creature are not touched."""
+    scenario = _main(
+        _build(
+            ["Island"] * islands + ["Swamp"] * (7 - islands) + ["Grizzly Bears"],
+            ["Grizzly Bears", "Hill Giant", "Serra Angel", "Island"],
+            hand=["Scourge of Fleets"],
+        )
+    )
+    _enter(scenario, "Scourge of Fleets")
+    assert sorted(card.name for card in scenario.player("bob").hand) == sorted(returned)
+    assert len(_tokens(scenario, "Grizzly Bears", "alice")) == 1
+    assert len(_lands(scenario, "bob")) == 1
