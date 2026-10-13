@@ -103,7 +103,7 @@ from .triggers import TriggerEvent
 if TYPE_CHECKING:
     from ..models.game import Game
 
-Step = Callable[["Game", Any, "_Ctx"], None]
+PlanStep = Callable[["Game", Any, "_Ctx"], None]
 
 
 # --------------------------------------------------------------------------
@@ -240,7 +240,7 @@ def _revealer(match: re.Match[str]) -> str | None:
     return "they" if match.group("verb").lower() == "reveals" else None
 
 
-def _reveal_until(match: re.Match[str]) -> Step | None:
+def _reveal_until(match: re.Match[str]) -> PlanStep | None:
     named = (match.group("named") or "").strip()
     quality = named if named else (match.group("q1") if match.group("one") else match.group("q2"))
     quality = quality or ""
@@ -273,7 +273,7 @@ def _reveal_until(match: re.Match[str]) -> Step | None:
     return step
 
 
-def _reveal_top(match: re.Match[str]) -> Step:
+def _reveal_top(match: re.Match[str]) -> PlanStep:
     count = parse_count(match.group("n")) if match.group("n") else 1
     who = _revealer(match)
 
@@ -289,7 +289,7 @@ def _reveal_top(match: re.Match[str]) -> Step:
     return step
 
 
-def _reveal_number(match: re.Match[str]) -> Step | None:
+def _reveal_number(match: re.Match[str]) -> PlanStep | None:
     quality = match.group("q").strip().lower()
     if quality.endswith("permanents"):
         base = quality.removesuffix(" permanents").strip()
@@ -317,7 +317,7 @@ def _reveal_number(match: re.Match[str]) -> Step | None:
     return step
 
 
-def _look_top(match: re.Match[str]) -> Step:
+def _look_top(match: re.Match[str]) -> PlanStep:
     count = parse_count(match.group("n")) or 1
 
     def step(game: "Game", obj: Any, ctx: _Ctx) -> None:
@@ -331,7 +331,7 @@ _CHOOSE_NAME_RE = re.compile(r"^choose a (?P<nonland>nonland )?card name$", re.I
 _CHOOSE_TYPE_RE = re.compile(r"^choose a card type$", re.IGNORECASE)
 
 
-def _choose_name(match: re.Match[str]) -> Step:
+def _choose_name(match: re.Match[str]) -> PlanStep:
     nonland = match.group("nonland") is not None
 
     def step(game: "Game", obj: Any, ctx: _Ctx) -> None:
@@ -351,7 +351,7 @@ def _choose_name(match: re.Match[str]) -> Step:
     return step
 
 
-def _choose_type(_match: re.Match[str]) -> Step:
+def _choose_type(_match: re.Match[str]) -> PlanStep:
     def step(game: "Game", obj: Any, ctx: _Ctx) -> None:
         answer = game.ask(
             Decision(
@@ -520,7 +520,7 @@ def _move_cards(
         ctx.moved[zone].append(state)
 
 
-def _dispose(match: re.Match[str]) -> Step | None:
+def _dispose(match: re.Match[str]) -> PlanStep | None:
     select = _selector(match)
     if select is None:
         return None
@@ -557,7 +557,7 @@ def _dispose(match: re.Match[str]) -> Step | None:
     return step
 
 
-def _exile_step(match: re.Match[str]) -> Step | None:
+def _exile_step(match: re.Match[str]) -> PlanStep | None:
     select = _selector(match)
     if select is None:
         return None
@@ -568,7 +568,7 @@ def _exile_step(match: re.Match[str]) -> Step | None:
     return step
 
 
-def _shuffle_in_step(match: re.Match[str]) -> Step | None:
+def _shuffle_in_step(match: re.Match[str]) -> PlanStep | None:
     select = _selector(match)
     if select is None:
         return None
@@ -583,7 +583,7 @@ def _shuffle_in_step(match: re.Match[str]) -> Step | None:
     return step
 
 
-def _shuffle_bare_step(_match: re.Match[str]) -> Step:
+def _shuffle_bare_step(_match: re.Match[str]) -> PlanStep:
     def step(game: "Game", obj: Any, ctx: _Ctx) -> None:
         game.shuffle_library(ctx.actor)
 
@@ -598,7 +598,7 @@ _SEARCH_RE = re.compile(
 )
 
 
-def _search_step(match: re.Match[str]) -> Step | None:
+def _search_step(match: re.Match[str]) -> PlanStep | None:
     quality = match.group("q").strip().lower()
     if not _card_description_is_readable(quality):
         return None
@@ -631,7 +631,7 @@ def _search_step(match: re.Match[str]) -> Step | None:
 _INVESTIGATES_RE = re.compile(r"^(?:that player|its controller|they) investigates?$", re.IGNORECASE)
 
 
-def _investigate_step(_match: re.Match[str]) -> Step:
+def _investigate_step(_match: re.Match[str]) -> PlanStep:
     def step(game: "Game", obj: Any, ctx: _Ctx) -> None:
         investigate(game, ctx.actor.username)
 
@@ -649,7 +649,7 @@ _SEARCH_SAME_NAME_RE = re.compile(
 )
 
 
-def _search_same_name_step(match: re.Match[str]) -> Step | None:
+def _search_same_name_step(match: re.Match[str]) -> PlanStep | None:
     """CR 701.23a: search the named zones of the player for the cards sharing the
     exiled card's name and exile them; the shuffle is a later instruction."""
     cap = parse_count(match.group("n")) if match.group("n") else None
@@ -685,8 +685,6 @@ def _search_same_name_step(match: re.Match[str]) -> Step | None:
 # --------------------------------------------------------------------------
 
 Amount = Callable[["Game", Any, _Ctx], int]
-
-_AMOUNT_PATTERNS: tuple[tuple[re.Pattern[str], Callable[[re.Match[str]], Amount | None]], ...]
 
 
 def _count_revealed(match: re.Match[str]) -> Amount | None:
@@ -823,7 +821,7 @@ _IF_REVEALED_RETURN_RE = re.compile(
 )
 
 
-def _damage_players(match: re.Match[str]) -> Step | None:
+def _damage_players(match: re.Match[str]) -> PlanStep | None:
     amount = _amount(match.group("expr"))
     if amount is None:
         return None
@@ -853,7 +851,7 @@ def _damage_players(match: re.Match[str]) -> Step | None:
     return step
 
 
-def _life_for_each(match: re.Match[str]) -> Step | None:
+def _life_for_each(match: re.Match[str]) -> PlanStep | None:
     each = match.group("each").strip()
     count = _amount(each)
     if count is None:
@@ -871,7 +869,7 @@ def _life_for_each(match: re.Match[str]) -> Step | None:
     return step
 
 
-def _life_equal(match: re.Match[str]) -> Step | None:
+def _life_equal(match: re.Match[str]) -> PlanStep | None:
     amount = _amount(match.group("expr"))
     if amount is None:
         return None
@@ -887,7 +885,7 @@ def _life_equal(match: re.Match[str]) -> Step | None:
     return step
 
 
-def _if_revealed_return(match: re.Match[str]) -> Step | None:
+def _if_revealed_return(match: re.Match[str]) -> PlanStep | None:
     quality = match.group("q")
     if not _card_description_is_readable(quality):
         return None
@@ -909,7 +907,7 @@ _WHEN_REVEAL_DAMAGE_RE = re.compile(
 )
 
 
-def _when_reveal_damage(match: re.Match[str]) -> Step | None:
+def _when_reveal_damage(match: re.Match[str]) -> PlanStep | None:
     quality = match.group("q").strip()
     if not _card_description_is_readable(quality):
         return None
@@ -942,7 +940,7 @@ _SACRIFICE_CONTROLLER_RE = re.compile(
 )
 
 
-def _sacrifice_by_controller(match: re.Match[str]) -> Step | None:
+def _sacrifice_by_controller(match: re.Match[str]) -> PlanStep | None:
     quality = match.group("q").strip()
     if not _card_description_is_readable(quality):
         return None
@@ -975,7 +973,7 @@ _PUMP_REVEALED_RE = re.compile(
 _PLAN_TEXT: list[str] = []
 
 
-def _deal_damage_noting_excess(match: re.Match[str]) -> Step | None:
+def _deal_damage_noting_excess(match: re.Match[str]) -> PlanStep | None:
     """ "`<source>` deals N damage to target `<thing>`." when a later instruction
     counts the excess damage dealt this way (CR 120.10)."""
     if not _PLAN_TEXT or "excess damage" not in _PLAN_TEXT[-1].lower():
@@ -995,7 +993,7 @@ def _deal_damage_noting_excess(match: re.Match[str]) -> Step | None:
     return step
 
 
-def _look_top_excess(_match: re.Match[str]) -> Step:
+def _look_top_excess(_match: re.Match[str]) -> PlanStep:
     def step(game: "Game", obj: Any, ctx: _Ctx) -> None:
         ctx.actor = ctx.controller
         ctx.revealed, ctx.stoppers = list(ctx.controller.library[: ctx.excess]), []
@@ -1003,7 +1001,7 @@ def _look_top_excess(_match: re.Match[str]) -> Step:
     return step
 
 
-def _may_exile_one(_match: re.Match[str]) -> Step:
+def _may_exile_one(_match: re.Match[str]) -> PlanStep:
     def step(game: "Game", obj: Any, ctx: _Ctx) -> None:
         pool = [c for c in ctx.revealed if c.id not in ctx.disposed]
         if not pool:
@@ -1030,7 +1028,7 @@ def _may_exile_one(_match: re.Match[str]) -> Step:
     return step
 
 
-def _pump_per_revealed(match: re.Match[str]) -> Step | None:
+def _pump_per_revealed(match: re.Match[str]) -> PlanStep | None:
     power, toughness = int(match.group("p")), int(match.group("t"))
 
     def step(game: "Game", obj: Any, ctx: _Ctx) -> None:
@@ -1055,7 +1053,7 @@ _EXILE_TOP_RE = re.compile(r"^exile the top card of your library$", re.IGNORECAS
 _PLAY_THAT_CARD_RE = re.compile(r"^you may play that card this turn$", re.IGNORECASE)
 
 
-def _exile_top(_match: re.Match[str]) -> Step:
+def _exile_top(_match: re.Match[str]) -> PlanStep:
     def step(game: "Game", obj: Any, ctx: _Ctx) -> None:
         ctx.actor = ctx.controller
         if not ctx.controller.library:
@@ -1067,7 +1065,7 @@ def _exile_top(_match: re.Match[str]) -> Step:
     return step
 
 
-def _play_that_card(_match: re.Match[str]) -> Step:
+def _play_that_card(_match: re.Match[str]) -> PlanStep:
     def step(game: "Game", obj: Any, ctx: _Ctx) -> None:
         for card in ctx.moved.get("exile", [])[-1:]:
             game.grant_play_permission(
@@ -1087,7 +1085,7 @@ def _play_that_card(_match: re.Match[str]) -> Step:
 _COUNTER_ALL_OTHER_RE = re.compile(r"^counter all other spells$", re.IGNORECASE)
 
 
-def _counter_all_other(_match: re.Match[str]) -> Step:
+def _counter_all_other(_match: re.Match[str]) -> PlanStep:
     """CR 701.6a: every spell on the stack but this one is countered; an
     uncounterable one stays (CR 113.6g), so the count is of what really left."""
 
@@ -1106,7 +1104,7 @@ _DRAW_FOR_EACH_RE = re.compile(
 )
 
 
-def _draw_for_each(match: re.Match[str]) -> Step | None:
+def _draw_for_each(match: re.Match[str]) -> PlanStep | None:
     count = _amount(match.group("each"))
     if count is None:
         return None
@@ -1127,7 +1125,7 @@ _SHUFFLE_GRAVEYARD_RE = re.compile(
 )
 
 
-def _shuffle_graveyard(match: re.Match[str]) -> Step | None:
+def _shuffle_graveyard(match: re.Match[str]) -> PlanStep | None:
     quality = match.group("q").strip().lower()
     if not _card_description_is_readable(quality):
         return None
@@ -1152,7 +1150,7 @@ _MILL_RE = re.compile(
 )
 
 
-def _mill_step(match: re.Match[str]) -> Step | None:
+def _mill_step(match: re.Match[str]) -> PlanStep | None:
     count = 1 if match.group("n").lower() in ("a", "one") else parse_count(match.group("n"))
     who = match.group("who").lower()
     if count is None:
@@ -1174,7 +1172,7 @@ _IF_NAMED_MILLED_RE = re.compile(
 )
 
 
-def _if_named_milled(_match: re.Match[str]) -> Step:
+def _if_named_milled(_match: re.Match[str]) -> PlanStep:
     def step(game: "Game", obj: Any, ctx: _Ctx) -> None:
         for card in ctx.moved.get("milled", ()):
             if card.name == ctx.name:
@@ -1189,7 +1187,7 @@ def _if_named_milled(_match: re.Match[str]) -> Step:
 _DISCARD_RANDOM_RE = re.compile(r"^discard (?P<n>a|one|two|three|\d+) cards? at random$", re.I)
 
 
-def _discard_random(match: re.Match[str]) -> Step | None:
+def _discard_random(match: re.Match[str]) -> PlanStep | None:
     count = 1 if match.group("n").lower() in ("a", "one") else parse_count(match.group("n"))
     if count is None:
         return None
@@ -1214,7 +1212,7 @@ _IF_DISCARDED_DAMAGE_RE = re.compile(
 )
 
 
-def _if_discarded_damage(match: re.Match[str]) -> Step | None:
+def _if_discarded_damage(match: re.Match[str]) -> PlanStep | None:
     quality = match.group("q")
     if (
         not _card_description_is_readable(quality)
@@ -1244,7 +1242,7 @@ def _if_discarded_damage(match: re.Match[str]) -> Step | None:
 _GAIN_THAT_MUCH_RE = re.compile(r"^you (?P<verb>gain|lose) that much life$", re.IGNORECASE)
 
 
-def _that_much_life(match: re.Match[str]) -> Step:
+def _that_much_life(match: re.Match[str]) -> PlanStep:
     gains = match.group("verb").lower() == "gain"
 
     def step(game: "Game", obj: Any, ctx: _Ctx) -> None:
@@ -1257,7 +1255,7 @@ def _that_much_life(match: re.Match[str]) -> Step:
 _CHOOSE_PERMANENT_RE = re.compile(r"^choose an? (?P<q>[a-z' -]+?) you control$", re.IGNORECASE)
 
 
-def _choose_permanent(match: re.Match[str]) -> Step | None:
+def _choose_permanent(match: re.Match[str]) -> PlanStep | None:
     """ "Choose a planeswalker you control." - the controller picks one (CR 608.2d)."""
     quality = match.group("q").strip().lower()
     if not _card_description_is_readable(quality):
@@ -1296,7 +1294,7 @@ _PUT_COUNTERS_ON_IT_RE = re.compile(
 )
 
 
-def _put_counters_on_chosen(match: re.Match[str]) -> Step | None:
+def _put_counters_on_chosen(match: re.Match[str]) -> PlanStep | None:
     count = 1 if match.group("n").lower() in ("a", "one") else parse_count(match.group("n"))
     if count is None:
         return None
@@ -1314,7 +1312,12 @@ _X_CLAUSE_RE = re.compile(
 )
 
 
-def _x_clause(match: re.Match[str]) -> Step | None:
+_X_ALLOWED: list[bool] = []  # set while the clauses of a ", where X is ..." sentence are read
+
+
+def _x_clause(match: re.Match[str]) -> PlanStep | None:
+    if not _X_ALLOWED:
+        return None  # a bare "gain X life" is the spell's own X, not this plan's
     verb, what = match.group("verb").lower(), match.group("what").lower()
     if (verb == "draw") != what.startswith("card"):
         return None
@@ -1339,7 +1342,7 @@ _DAMAGE_ITS_CONTROLLER_RE = re.compile(
 )
 
 
-def _damage_its_controller(match: re.Match[str]) -> Step | None:
+def _damage_its_controller(match: re.Match[str]) -> PlanStep | None:
     reader = recipient_amount(match.group("expr"))
     if reader is None:
         return None
@@ -1370,7 +1373,7 @@ _PUMP_WHERE_X_RE = re.compile(
 )
 
 
-def _pump_where_x(match: re.Match[str]) -> Step | None:
+def _pump_where_x(match: re.Match[str]) -> PlanStep | None:
     amount = _amount(match.group("expr"))
     if amount is None:
         return None
@@ -1387,7 +1390,7 @@ def _pump_where_x(match: re.Match[str]) -> Step | None:
 _TAP_ALL_RE = re.compile(r"^tap all untapped (?P<q>[a-z' -]+?) you control$", re.IGNORECASE)
 
 
-def _tap_all(match: re.Match[str]) -> Step | None:
+def _tap_all(match: re.Match[str]) -> PlanStep | None:
     quality = re.sub(r"s$", "", match.group("q").strip().lower())  # "wolf creatures"
     if not _card_description_is_readable(quality):
         return None
@@ -1425,7 +1428,7 @@ def _target_permanent(game: "Game", obj: Any) -> CardState | None:
     )
 
 
-def _each_tapped_deals(match: re.Match[str]) -> Step | None:
+def _each_tapped_deals(match: re.Match[str]) -> PlanStep | None:
     if not profile_for_text(match.group("to")).understood:
         return None
 
@@ -1449,7 +1452,7 @@ _THAT_DEALS_DIVIDED_RE = re.compile(
 )
 
 
-def _that_deals_divided(_match: re.Match[str]) -> Step:
+def _that_deals_divided(_match: re.Match[str]) -> PlanStep:
     """The target's controller divides its power among the tapped creatures
     (CR 608.2d): every share but the last is asked, the last takes the rest."""
 
@@ -1498,7 +1501,7 @@ _PHASE_OUT_UNTIL_RE = re.compile(
 )
 
 
-def _phase_out_until_leaves(_match: re.Match[str]) -> Step:
+def _phase_out_until_leaves(_match: re.Match[str]) -> PlanStep:
     """CR 702.26a-b: the creatures phase out and stay out (they do not phase in at
     their controller's untap step) until the source leaves the battlefield
     (CR 610.3): three sibling delayed triggers watch for that."""
@@ -1552,7 +1555,7 @@ _COUNTERS_FOR_EACH_PHASED_RE = re.compile(
 )
 
 
-def _counters_for_each_phased(match: re.Match[str]) -> Step | None:
+def _counters_for_each_phased(match: re.Match[str]) -> PlanStep | None:
     unit = 1 if match.group("n").lower() in ("a", "one") else parse_count(match.group("n"))
     if unit is None:
         return None
@@ -1574,7 +1577,7 @@ _RETURN_ALL_RE = re.compile(
 )
 
 
-def _return_all(match: re.Match[str]) -> Step | None:
+def _return_all(match: re.Match[str]) -> PlanStep | None:
     """CR 400.7 / CR 614.1c: every matching card in the controller's graveyard enters
     together, each with the counter."""
     quality = match.group("q").strip().lower()
@@ -1604,7 +1607,7 @@ _THOSE_ARE_RE = re.compile(
 )
 
 
-def _those_are(match: re.Match[str]) -> Step | None:
+def _those_are(match: re.Match[str]) -> PlanStep | None:
     words = [w.strip() for w in re.split(r",| and ", match.group("types")) if w.strip()]
     found = [canonical_subtype(word) for word in words]  # "Vampires" -> "vampire"
     if not found or any(subtype is None for subtype in found):
@@ -1638,7 +1641,7 @@ class _Instead:
     (CR 608.2c: "instead" modifies the earlier instruction)."""
 
     condition: Callable[["Game", Any, _Ctx], bool]
-    replacement: Step
+    replacement: PlanStep
 
 
 _IF_SACRIFICED_INSTEAD_RE = re.compile(
@@ -1677,7 +1680,7 @@ def _if_sacrificed_instead(match: re.Match[str]) -> _Instead | None:
 
 
 # Readers, tried in order; each is (pattern, builder).
-_READERS: tuple[tuple[re.Pattern[str], Callable[[re.Match[str]], Step | None]], ...] = (
+_READERS: tuple[tuple[re.Pattern[str], Callable[[re.Match[str]], PlanStep | None]], ...] = (
     (_CHOOSE_NAME_RE, _choose_name),
     (_CHOOSE_TYPE_RE, _choose_type),
     (_REVEAL_UNTIL_RE, _reveal_until),
@@ -1771,7 +1774,7 @@ def _parse_cached(text: str, for_spell: bool) -> Any:
 
 @dataclass(frozen=True)
 class _Plan:
-    steps: tuple[Step, ...]
+    steps: tuple[PlanStep, ...]
     each_player: bool
 
 
@@ -1784,7 +1787,7 @@ def _plan(text: str, for_spell: bool) -> _Plan | None:
         _PLAN_TEXT.pop()
 
 
-def _either(instead: "_Instead", base: Step) -> Step:
+def _either(instead: "_Instead", base: PlanStep) -> PlanStep:
     def step(game: "Game", obj: Any, ctx: _Ctx) -> None:
         if instead.condition(game, obj, ctx):
             instead.replacement(game, obj, ctx)
@@ -1794,10 +1797,10 @@ def _either(instead: "_Instead", base: Step) -> Step:
     return step
 
 
-def _steps_of(clauses: list[str], for_spell: bool) -> tuple[list[Step], int] | None:
+def _steps_of(clauses: list[str], for_spell: bool) -> tuple[list[PlanStep], int] | None:
     """One step per clause, and how many of them this module's own readers
     built; `None` when a clause nothing reads is left over."""
-    steps: list[Step] = []
+    steps: list[PlanStep] = []
     mine = 0
     for clause in clauses:
         step = None
@@ -1835,7 +1838,7 @@ def _plan_uncached(text: str, for_spell: bool) -> _Plan | None:
     return _Plan(tuple(read[0]), each_player)
 
 
-def _plain_step(effect: Any) -> Step:
+def _plain_step(effect: Any) -> PlanStep:
     return lambda game, obj, ctx: effect(game, obj)
 
 
@@ -1994,13 +1997,13 @@ _TOKEN_PREFIX_RE = re.compile(r"^(?P<tok>nontoken|token) (?P<rest>.+)$", re.IGNO
 @dataclass(frozen=True)
 class _EachPlan:
     first: Callable[["Game", Any], None]
-    pre: tuple[Step, ...]  # sentences between the first instruction and the payoff
+    pre: tuple[PlanStep, ...]  # sentences between the first instruction and the payoff
     objects: Any  # ep02_r1_this_way_counts._Objects
     token_wanted: bool | None
     mode: str  # "each" per object, "any" once if some moved, "always" once
     x_amount: Amount | None  # ", where X is ..." read once before the steps
-    inner: tuple[Step, ...]
-    post: tuple[Step, ...]
+    inner: tuple[PlanStep, ...]
+    post: tuple[PlanStep, ...]
 
 
 def _ledger_sentence(sentences: list[str]) -> tuple[int, str, str, str, Amount | None] | None:
@@ -2047,7 +2050,7 @@ def _each_plan_uncached(text: str, for_spell: bool) -> _EachPlan | None:
         # ledger would count nothing "exiled this way" though it was.
         return None
     first = None
-    pre: tuple[Step, ...] = ()
+    pre: tuple[PlanStep, ...] = ()
     for cut in range(index, 0, -1):
         first = _first_instruction_of(". ".join(sentences[:cut]) + ".", for_spell)
         if first is None:
@@ -2061,7 +2064,13 @@ def _each_plan_uncached(text: str, for_spell: bool) -> _EachPlan | None:
         first = None
     if first is None:
         return None
-    inner = _steps_of(_clauses(rest), for_spell)
+    if mode == "always":
+        _X_ALLOWED.append(True)
+    try:
+        inner = _steps_of(_clauses(rest), for_spell)
+    finally:
+        if mode == "always":
+            _X_ALLOWED.pop()
     post_clauses = [c for sentence in sentences[index + 1 :] for c in _clauses(sentence)]
     post = _steps_of(post_clauses, for_spell)
     if inner is None or post is None:
