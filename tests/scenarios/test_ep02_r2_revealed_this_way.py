@@ -1421,3 +1421,245 @@ def test_the_funerals_discount_does_not_apply_to_a_nonlegendary_spell():
     _cast(scenario, "Sol Ring")
     after = _untapped_lands(scenario)
     assert before - after == 1
+
+
+# -- Out of Time: untap, phase out until it leaves, a time counter for each --------
+
+
+def _phased_names(scenario):
+    return sorted(state.name for state in scenario.game.phased_out)
+
+
+def test_out_of_time_phases_out_every_creature_and_counts_them():
+    scenario = _board(
+        alice_hand=["Out of Time"],
+        alice_lands=("Plains", "Plains", "Plains"),
+        alice_battlefield=["Grizzly Bears"],
+        bob_battlefield=["Hill Giant"],
+    )
+    scenario.creature("Grizzly Bears", "alice").tapped = True
+    _cast(scenario, "Out of Time")
+    _settle(scenario)
+    assert _phased_names(scenario) == ["Grizzly Bears", "Hill Giant"]
+    assert _battlefield_of(scenario, "alice") == ["Out of Time"]
+    oot = scenario.find("Out of Time", Zone.BATTLEFIELD, "alice")
+    assert oot.counter_count("time") == 2
+
+
+def test_out_of_time_creatures_stay_out_through_their_controllers_untap_step():
+    scenario = _board(
+        alice_hand=["Out of Time"],
+        alice_lands=("Plains", "Plains", "Plains"),
+        bob_battlefield=["Hill Giant"],
+    )
+    _cast(scenario, "Out of Time")
+    _settle(scenario)
+    scenario.game.phase_in_for("bob")  # the phasing turn-based action of bob's untap step
+    assert _phased_names(scenario) == ["Hill Giant"]
+
+
+def test_out_of_time_creatures_phase_in_when_it_leaves_the_battlefield():
+    scenario = _board(
+        alice_hand=["Out of Time", "Disenchant"],
+        alice_lands=("Plains", "Plains", "Plains", "Plains", "Plains"),
+        bob_battlefield=["Hill Giant"],
+    )
+    _cast(scenario, "Out of Time")
+    _settle(scenario)
+    oot = scenario.find("Out of Time", Zone.BATTLEFIELD, "alice")
+    _cast(scenario, "Disenchant", targets=[oot])
+    _settle(scenario)
+    assert oot.zone is Zone.GRAVEYARD
+    assert _phased_names(scenario) == []
+    assert _battlefield_of(scenario, "bob") == ["Hill Giant"]
+
+
+def test_out_of_time_with_no_creatures_gets_no_counters():
+    scenario = _board(
+        alice_hand=["Out of Time"], alice_lands=("Plains", "Plains", "Plains")
+    )
+    _cast(scenario, "Out of Time")
+    _settle(scenario)
+    assert scenario.find("Out of Time", Zone.BATTLEFIELD, "alice").counter_count("time") == 0
+
+
+# -- Master of the Wild Hunt: tapped wolves hit a creature, it divides its answer --
+
+
+def _hunt(target_name="Hill Giant"):
+    scenario = _board(
+        alice_battlefield=["Master of the Wild Hunt", "Ascendant Packleader", "Ascendant Packleader"],
+        bob_battlefield=[target_name],
+    )
+    master = scenario.creature("Master of the Wild Hunt", "alice")
+    target = scenario.creature(target_name, "bob")
+    return scenario, master, target
+
+
+def test_master_of_the_wild_hunt_taps_the_wolves_which_each_deal_their_power():
+    scenario, master, target = _hunt()
+    wolves = _all_named(scenario, "Ascendant Packleader", "alice")
+    # Hill Giant (3/3) hits back for 3 divided as its controller chooses: 1 to the
+    # first wolf, the rest (2) to the other.
+    scenario.will_choose_an_amount(1, username="bob")
+    scenario.activate(master, targets=[target])
+    scenario.pass_until_resolved()
+    assert target.zone is Zone.GRAVEYARD  # 2 + 2 damage from the wolves
+    assert all(wolf.zone is Zone.GRAVEYARD for wolf in wolves)  # each wolf is 2/1
+
+
+def test_master_of_the_wild_hunt_target_can_put_all_its_damage_on_one_wolf():
+    scenario, master, target = _hunt()
+    wolves = _all_named(scenario, "Ascendant Packleader", "alice")
+    scenario.will_choose_an_amount(3, username="bob")
+    scenario.activate(master, targets=[target])
+    scenario.pass_until_resolved()
+    assert sorted(wolf.zone.value for wolf in wolves) == ["battlefield", "graveyard"]
+
+
+def test_master_of_the_wild_hunt_ignores_a_wolf_that_was_already_tapped():
+    scenario, master, target = _hunt("Serra Angel")
+    first, second = _all_named(scenario, "Ascendant Packleader", "alice")
+    first.tapped = True
+    scenario.activate(master, targets=[target])
+    scenario.pass_until_resolved()
+    assert target.damage == 2  # only the untapped wolf dealt damage
+    assert first.zone is Zone.BATTLEFIELD  # it was not tapped by the ability, so it took nothing
+
+
+# -- Impelled Giant: +X/+0 where X is the power of the creature tapped -------------
+
+
+def test_impelled_giant_gets_the_power_of_the_red_creature_tapped_to_pay():
+    scenario = _board(alice_battlefield=["Impelled Giant", "Hill Giant", "Grizzly Bears"])
+    giant = scenario.creature("Impelled Giant", "alice")
+    hill = scenario.creature("Hill Giant", "alice")
+    scenario.activate(giant, tapping_for_cost=[hill])
+    scenario.pass_until_resolved()
+    assert hill.tapped
+    assert scenario.game.power_of(giant) == 3 + 3
+
+
+def test_impelled_giant_cannot_tap_a_nonred_creature():
+    scenario = _board(alice_battlefield=["Impelled Giant", "Grizzly Bears"])
+    giant = scenario.creature("Impelled Giant", "alice")
+    bears = scenario.creature("Grizzly Bears", "alice")
+    with pytest.raises(ValueError):
+        scenario.activate(giant, tapping_for_cost=[bears])
+
+
+def test_impelled_giant_cannot_tap_itself_for_its_own_cost():
+    scenario = _board(alice_battlefield=["Impelled Giant"])
+    giant = scenario.creature("Impelled Giant", "alice")
+    with pytest.raises(ValueError):
+        scenario.activate(giant, tapping_for_cost=[giant])
+
+
+def test_impelled_giant_pump_lasts_only_until_end_of_turn():
+    scenario = _board(alice_battlefield=["Impelled Giant", "Hill Giant"])
+    giant = scenario.creature("Impelled Giant", "alice")
+    scenario.activate(giant, tapping_for_cost=[scenario.creature("Hill Giant", "alice")])
+    scenario.pass_until_resolved()
+    assert scenario.game.power_of(giant) == 6
+    while scenario.step is not Step.CLEANUP:
+        scenario.advance()
+    scenario.advance()
+    assert scenario.game.power_of(giant) == 3
+
+
+# -- Shilgengar, Sire of Famine ---------------------------------------------------
+
+
+def _all_named(scenario, name, username):
+    return [
+        s for s in scenario.game.battlefield if s.name == name and s.controller == username
+    ]
+
+
+def _blood(scenario, username="alice"):
+    return sum(
+        1 for s in scenario.game.battlefield if s.controller == username and s.name == "Blood Token"
+    )
+
+
+def test_shilgengar_makes_one_blood_for_a_sacrificed_nonangel():
+    scenario = _board(alice_battlefield=["Shilgengar, Sire of Famine", "Grizzly Bears"])
+    shil = scenario.creature("Shilgengar, Sire of Famine", "alice")
+    scenario.activate(shil, sacrificing=[scenario.creature("Grizzly Bears", "alice")])
+    scenario.pass_until_resolved()
+    assert _blood(scenario) == 1
+
+
+def test_shilgengar_makes_blood_equal_to_an_sacrificed_angels_toughness_instead():
+    scenario = _board(alice_battlefield=["Shilgengar, Sire of Famine", "Serra Angel"])
+    shil = scenario.creature("Shilgengar, Sire of Famine", "alice")
+    scenario.activate(shil, sacrificing=[scenario.creature("Serra Angel", "alice")])
+    scenario.pass_until_resolved()
+    assert _blood(scenario) == 4  # Serra Angel's toughness
+
+
+def test_shilgengar_returns_the_graveyard_creatures_as_vampires_with_finality_counters():
+    scenario = _board(
+        alice_battlefield=["Shilgengar, Sire of Famine", "Serra Angel", "Serra Angel"],
+        alice_graveyard=["Grizzly Bears"],
+        alice_lands=("Plains", "Swamp", "Swamp", "Plains"),
+    )
+    shil = scenario.creature("Shilgengar, Sire of Famine", "alice")
+    for angel in _all_named(scenario, "Serra Angel", "alice"):
+        scenario.activate(shil, index=0, sacrificing=[angel])
+        scenario.pass_until_resolved()
+    assert _blood(scenario) == 8
+    bloods = [s for s in scenario.game.battlefield if s.name == "Blood Token"][:6]
+    scenario.activate(shil, index=1, sacrificing=bloods, auto=True)
+    scenario.pass_until_resolved()
+    returned = sorted(
+        (s.name, s.counter_count("finality"), "Vampire" in scenario.game.characteristics_of(s).subtypes)
+        for s in scenario.game.battlefield
+        if s.controller == "alice" and s.name in ("Grizzly Bears", "Serra Angel")
+    )
+    assert returned == [
+        ("Grizzly Bears", 1, True),
+        ("Serra Angel", 1, True),
+        ("Serra Angel", 1, True),
+    ]
+    assert _blood(scenario) == 2
+
+
+# -- Alrund, God of the Cosmos: +1/+1 for each card in hand and foretold in exile --
+
+
+def _alrund_board(hand):
+    scenario = _board(
+        alice_battlefield=["Alrund, God of the Cosmos"],
+        alice_hand=hand,
+        alice_lands=("Forest",) * 4,
+    )
+    return scenario, scenario.find("Alrund, God of the Cosmos", Zone.BATTLEFIELD, "alice")
+
+
+def test_alrund_gets_plus_one_for_each_card_in_hand():
+    scenario, alrund = _alrund_board(["Forest", "Forest", "Island"])
+    assert scenario.game.power_of(alrund) == 1 + 3
+    assert scenario.game.toughness_of(alrund) == 1 + 3
+
+
+def test_alrund_counts_a_foretold_card_in_exile_as_well_as_the_hand():
+    from magic_cards_model.machines.casting import MarkedExile
+
+    scenario, alrund = _alrund_board(["Lupine Harbingers", "Forest"])
+    harbingers = scenario.find("Lupine Harbingers", Zone.HAND, "alice")
+    action = MarkedExile.foretell(scenario.game, harbingers, "alice")
+    scenario.pay_with(action.begin_paying(), *scenario.untapped_sources("Forest", "Forest", username="alice"))
+    action.take()
+    # one card left in hand, one foretold card in exile
+    assert scenario.game.power_of(alrund) == 1 + 1 + 1
+
+
+def test_alrund_does_not_count_an_unforetold_exiled_card_or_the_opponents_foretold_card():
+    scenario = _board(
+        alice_battlefield=["Alrund, God of the Cosmos"],
+        alice_exile=["Lupine Harbingers"],
+        bob_hand=["Forest"],
+    )
+    alrund = scenario.find("Alrund, God of the Cosmos", Zone.BATTLEFIELD, "alice")
+    assert scenario.game.power_of(alrund) == 1
