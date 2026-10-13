@@ -522,7 +522,8 @@ def parse_graveyard_count_clause(clause: str, *, for_spell: bool):
 
 _PUMP_THEN_ADDITIONAL_PER_RE = re.compile(
     r"^(?P<subject>target creature) gets (?P<power>[+-]\d+)/(?P<toughness>[+-]\d+) until end of "
-    r"turn\.\s*it gets an additional (?P<extra_power>[+-]\d+)/(?P<extra_toughness>[+-]\d+) "
+    r"turn\.\s*(?P<kicked>if this spell was kicked, )?(?:it|that creature) gets an "
+    r"additional (?P<extra_power>[+-]\d+)/(?P<extra_toughness>[+-]\d+) "
     r"until end of turn for each (?P<each>.+?)\.?$",
     re.IGNORECASE,
 )
@@ -539,9 +540,13 @@ def _pump_then_additional_per_count(text: str, *, for_spell: bool):
     from .effects.continuous import continuous_effects, layer_context_for
     from .layers import parsed_layer_effects
 
-    if "it gets an additional" not in text.lower():
+    if "gets an additional" not in text.lower():
         return None
-    match = _PUMP_THEN_ADDITIONAL_PER_RE.fullmatch(" ".join(text.split()))
+    from .effects._common import _strip_non_effect_preamble
+
+    match = _PUMP_THEN_ADDITIONAL_PER_RE.fullmatch(
+        " ".join(_strip_non_effect_preamble(text).split())
+    )
     if match is None or "graveyard" not in match.group("each").lower():
         return None
     reader = _for_each_reader(match.group("each"))
@@ -559,6 +564,10 @@ def _pump_then_additional_per_count(text: str, *, for_spell: bool):
     def effect(game: "Game", stack_object) -> None:
         controller = game.controller_of(stack_object)
         count = max(reader(game, controller.username, source_id_of(stack_object)), 0)
+        if match.group("kicked") and (
+            not hasattr(stack_object, "oracle_text") or game.cast_record(stack_object).kicked <= 0
+        ):
+            count = 0  # CR 702.33d: the rider is only for a kicked spell
         builder = parsed_layer_effects(written_with(count))
         targets = game.resolve_card_targets(stack_object)
         source = (

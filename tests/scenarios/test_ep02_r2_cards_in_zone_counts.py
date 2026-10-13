@@ -21,7 +21,9 @@ wrote this file:
 """
 
 from magic_cards_model.machines import Step
+from magic_cards_model.machines.abilities import keyword_abilities
 from magic_cards_model.machines.keywords import equip_activation
+from magic_cards_model.machines.zone_grants import effective_card
 from magic_cards_model.models import Zone
 
 from .harness import Scenario, mana_from
@@ -164,7 +166,7 @@ def test_vile_manifestation_counts_cards_with_cycling_in_your_graveyard():
     assert _pt(scenario, manifestation) == (1, 4)
 
 
-def _equipped(equipment, creature, alice_gy=(), hand=0, source_names=()):
+def _equipped(equipment, creature, alice_gy=(), hand=0, source_names=(), bob_hand=0):
     scenario = (
         Scenario()
         .player(
@@ -173,7 +175,7 @@ def _equipped(equipment, creature, alice_gy=(), hand=0, source_names=()):
             hand=[CARD] * hand,
             graveyard=list(alice_gy),
         )
-        .player("bob")
+        .player("bob", hand=[CARD] * bob_hand)
         .build()
     )
     scenario.start_at(Step.PRECOMBAT_MAIN)
@@ -449,3 +451,233 @@ def test_rush_of_dread_spree_modes_halve_creatures_hand_and_life_rounded_up():
     assert _count_named(scenario, "Grizzly Bears", "bob") == 1
     assert len(scenario.player("bob").hand) == 1
     assert scenario.player("bob").life == 15 - 8
+
+
+# -- difference between two hand sizes ------------------------------------------
+
+
+def _balance_of_power(alice_extra, bob_hand):
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Balance of Power", *[CARD] * alice_extra],
+            battlefield=["Island"] * 5,
+            library=[CARD] * 8,
+        )
+        .player("bob", hand=[CARD] * bob_hand)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scenario.cast_and_resolve(
+        "Balance of Power", *scenario.untapped_sources(*(["Island"] * 5)), targets=["bob"]
+    )
+    return scenario
+
+
+def test_balance_of_power_draws_the_difference_when_the_opponent_has_more():
+    scenario = _balance_of_power(alice_extra=1, bob_hand=5)
+    assert len(scenario.player("alice").hand) == 1 + 4
+
+
+def test_balance_of_power_draws_nothing_on_a_tie():
+    scenario = _balance_of_power(alice_extra=2, bob_hand=2)
+    assert len(scenario.player("alice").hand) == 2
+
+
+def test_balance_of_power_draws_nothing_when_you_have_more():
+    scenario = _balance_of_power(alice_extra=4, bob_hand=1)
+    assert len(scenario.player("alice").hand) == 4
+
+
+# -- an attack trigger pump counted per card in hand ----------------------------
+
+
+def _staticaster(*, with_ral, hand):
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=["Ral's Staticaster", *(["Ral, Izzet Viceroy"] if with_ral else [])],
+            hand=[CARD] * hand,
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    staticaster = scenario.creature("Ral's Staticaster", "alice")
+    staticaster.summoning_sick = False
+    scenario.attack_with(staticaster)
+    _settle(scenario)
+    return scenario, staticaster
+
+
+def test_rals_staticaster_gets_plus_one_power_per_card_in_hand_with_a_ral():
+    scenario, staticaster = _staticaster(with_ral=True, hand=3)
+    assert _pt(scenario, staticaster) == (3 + 3, 3)
+
+
+def test_rals_staticaster_gets_nothing_without_a_ral_planeswalker():
+    scenario, staticaster = _staticaster(with_ral=False, hand=3)
+    assert _pt(scenario, staticaster) == (3, 3)
+
+
+# -- a kicked rider scaled by a graveyard count ---------------------------------
+
+
+def _tribute_to_urborg(*, kicked):
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player(
+            "alice",
+            hand=["Tribute to Urborg"],
+            battlefield=["Swamp", "Swamp", "Island", "Island"],
+            graveyard=["Lightning Bolt", "Divination", "Grizzly Bears"],
+        )
+        .player("bob", battlefield=["Colossal Dreadmaw"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    dreadmaw = scenario.creature("Colossal Dreadmaw", "bob")
+    casting = scenario.cast("Tribute to Urborg")
+    if kicked:
+        casting.pay_kicker()
+    casting.choose_targets([dreadmaw])
+    payment = casting.begin_paying()
+    lands = ["Swamp", "Swamp", "Island", "Island"] if kicked else ["Swamp", "Swamp"]
+    for source in scenario.untapped_sources(*lands):
+        payment.tap_for_mana(source, mana_from(source))
+    payment.pay()
+    scenario.put_on_stack(casting)
+    scenario.resolve_top()
+    return scenario, dreadmaw
+
+
+def test_tribute_to_urborg_unkicked_gives_only_the_flat_minus_two():
+    scenario, dreadmaw = _tribute_to_urborg(kicked=False)
+    assert _pt(scenario, dreadmaw) == (6 - 2, 6 - 2)
+
+
+def test_tribute_to_urborg_kicked_adds_minus_one_per_instant_and_sorcery_in_the_graveyard():
+    """The two spells in the graveyard count, the creature card does not, and
+    the resolving spell is still on the stack so it is not counted."""
+    scenario, dreadmaw = _tribute_to_urborg(kicked=True)
+    assert _pt(scenario, dreadmaw) == (6 - 2 - 2, 6 - 2 - 2)
+
+
+# -- a pair of clauses counting different players' hands ----------------------
+
+
+def test_sword_of_war_and_peace_damages_per_their_hand_and_gains_per_your_hand():
+    scenario, bears = _equipped("Sword of War and Peace", "Grizzly Bears", hand=2, bob_hand=5)
+    bears.summoning_sick = False
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    scenario.attack_with(bears)
+    scenario.no_blocks()
+    scenario.combat_damage()
+    _settle(scenario)
+    # 4 combat damage (2/2 plus the sword's +2/+2), then 5 from the sword
+    assert scenario.player("bob").life == 20 - 4 - 5
+    assert scenario.player("alice").life == 20 + 2
+
+
+# -- look at the top X cards, X the cards in your hand --------------------------
+
+
+def _soramaro(hand):
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=["Descendant of Soramaro", "Island", "Island"],
+            hand=[CARD] * hand,
+            library=["Plains", "Swamp", "Mountain", "Island", "Forest", "Forest"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    descendant = scenario.creature("Descendant of Soramaro", "alice")
+    scenario.activate(descendant, *scenario.untapped_sources("Island", "Island"))
+    _settle(scenario)
+    return scenario
+
+
+def test_descendant_of_soramaro_looks_at_as_many_cards_as_are_in_your_hand():
+    scenario = _soramaro(hand=3)
+    asked = [q for q in scenario.questions_asked() if q.player == "alice"]
+    assert len(asked[-1].cards) == 3
+    assert [c.card.name for c in scenario.top_of_library(3)] == ["Plains", "Swamp", "Mountain"]
+
+
+def test_descendant_of_soramaro_with_an_empty_hand_looks_at_nothing():
+    scenario = _soramaro(hand=0)
+    assert [c.card.name for c in scenario.top_of_library(2)] == ["Plains", "Swamp"]
+
+
+# -- an equip cost scaled by the hand, and a combat pump scaled by it ---------------
+
+
+def _vecna(*, hand, named_vecna=False):
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=["Grizzly Bears", "Hand of Vecna", *(["Vecna"] if named_vecna else [])],
+            hand=[CARD] * hand,
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.creature("Grizzly Bears", "alice")
+    hand_of_vecna = scenario.find("Hand of Vecna", Zone.BATTLEFIELD, "alice")
+    return scenario, bears, hand_of_vecna
+
+
+def _life_equip(scenario, bears, hand_of_vecna):
+    ability = next(
+        a
+        for a in keyword_abilities(effective_card(scenario.game, hand_of_vecna))
+        if a.canonical == "Equip" and not a.cost_is_mana
+    )
+    activation = equip_activation(scenario.game, hand_of_vecna, bears, "alice", ability=ability)
+    activation.begin_paying().pay()
+    activation.activate()
+    scenario.resolve_top()
+
+
+def test_hand_of_vecna_life_equip_costs_one_life_per_card_in_your_hand():
+    scenario, bears, hand_of_vecna = _vecna(hand=3)
+    _life_equip(scenario, bears, hand_of_vecna)
+    assert scenario.player("alice").life == 20 - 3
+    assert hand_of_vecna.attached_to == bears.id
+
+
+def test_hand_of_vecna_life_equip_with_an_empty_hand_is_free():
+    scenario, bears, hand_of_vecna = _vecna(hand=0)
+    _life_equip(scenario, bears, hand_of_vecna)
+    assert scenario.player("alice").life == 20
+    assert hand_of_vecna.attached_to == bears.id
+
+
+def test_hand_of_vecna_pumps_the_equipped_creature_at_the_beginning_of_combat():
+    scenario, bears, hand_of_vecna = _vecna(hand=3)
+    _life_equip(scenario, bears, hand_of_vecna)
+    scenario.advance()
+    assert scenario.step is Step.BEGINNING_OF_COMBAT
+    _settle(scenario)
+    assert _pt(scenario, bears) == (2 + 3, 2 + 3)
+
+
+def test_hand_of_vecna_also_pumps_a_creature_named_vecna():
+    scenario, bears, hand_of_vecna = _vecna(hand=2, named_vecna=True)
+    _life_equip(scenario, bears, hand_of_vecna)
+    base = _pt(scenario, scenario.creature("Vecna", "alice"))
+    scenario.advance()
+    assert scenario.step is Step.BEGINNING_OF_COMBAT
+    _settle(scenario)
+    vecna = scenario.creature("Vecna", "alice")
+    assert _pt(scenario, bears) == (2 + 2, 2 + 2)
+    assert _pt(scenario, vecna) == (base[0] + 2, base[1] + 2)

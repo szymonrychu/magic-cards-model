@@ -364,3 +364,151 @@ def parse_defending_player_clause(clause: str, *, for_spell: bool):
         )
 
     return effect
+
+
+# --------------------------------------------------------------------------
+# The difference between two hand sizes
+# --------------------------------------------------------------------------
+
+_HAND_DIFFERENCE_SPELL_RE = re.compile(
+    r"^if target (?:opponent|player) has more cards in hand than you, "
+    r"draw cards equal to the difference$",
+    re.IGNORECASE,
+)
+
+
+def parse_hand_difference_spell(text: str):
+    """ "If target opponent has more cards in hand than you, draw cards equal
+    to the difference." (Balance of Power): both hand sizes are read as the
+    spell resolves (CR 608.2h), so the spell itself has already left the
+    caster's hand. A tie, or a target with fewer cards, draws nothing
+    (CR 608.2c). Returns an `Effect` `(game, spell)`, or `None`."""
+    if "equal to the difference" not in text.lower():
+        return None
+    if _HAND_DIFFERENCE_SPELL_RE.fullmatch(" ".join(text.split()).rstrip(".")) is None:
+        return None
+    from ..models.player import Player
+
+    def effect(game, spell):
+        controller = game.controller_of(spell)
+        targets = [t for t in game.resolve_targets(spell) if isinstance(t, Player)]
+        if not targets:
+            return  # CR 608.2b: no legal target, nothing happens
+        difference = len(targets[0].hand) - len(controller.hand)
+        if difference > 0:
+            game.draw_cards(controller.username, difference)
+
+    return effect
+
+
+# --------------------------------------------------------------------------
+# An attached creature (and a named creature) pumped by a hand count
+# --------------------------------------------------------------------------
+
+_ATTACHED_PUMP_UNTIL_EOT_RE = re.compile(
+    r"^(?P<attachment>equipped|enchanted) creature"
+    r"(?: or an? (?:other )?creature you control named (?P<named>.+?))? "
+    r"gets (?P<power>[+-](?:\d+|x))/(?P<toughness>[+-](?:\d+|x)) until end of turn"
+    r"(?:, where x is (?P<where>.+?))?$",
+    re.IGNORECASE,
+)
+
+
+def parse_attached_pump_until_end_of_turn_clause(clause: str, *, for_spell: bool):
+    """ "equipped creature or a creature you control named Vecna gets +X/+X
+    until end of turn, where X is the number of cards in your hand" (Hand of
+    Vecna), "equipped creature gets +1/+1 until end of turn" off a beginning
+    of combat trigger: a one-shot continuous effect (CR 611.2) on each creature
+    the phrase names as the ability resolves - the creature the source is
+    attached to, and every creature its controller controls with the printed
+    name (CR 201.2). X is taken once, as the ability resolves (CR 608.2h), and
+    an unattached source pumps only the named creature (CR 301.5). Ability-only:
+    the source is a permanent. Returns an `AbilityEffect`, or `None`."""
+    if for_spell:
+        return None
+    match = _ATTACHED_PUMP_UNTIL_EOT_RE.fullmatch(" ".join(clause.split()).rstrip("."))
+    if match is None:
+        return None
+    from .effects.amounts import count_expression
+
+    where = match.group("where")
+    count = count_expression(where.strip()) if where else None
+    if count is None and "x" in (match.group("power") + match.group("toughness")).lower():
+        return None
+    named = match.group("named")
+    power, toughness = match.group("power").lower(), match.group("toughness").lower()
+
+    def effect(game, ability):
+        from ..models.card_state import CardState
+        from ..models.zone import Zone
+        from .effects.continuous import continuous_effects
+        from .layers import (
+            ContinuousEffect,
+            Duration,
+            Layer,
+            Sublayer,
+            modify_power_toughness,
+        )
+        from .layers.model import only_this_incarnation
+
+        controller = game.controller_of(ability)
+        x = count(game, controller.username) if count is not None else 0
+
+        def amount(printed: str) -> int:
+            return int(printed[0] + "1") * x if printed[1:] == "x" else int(printed)
+
+        source = ability.source_or_last_known(game)
+        recipients = []
+        if source is not None and source.attached_to is not None:
+            attached = game.find_by_id(source.attached_to)
+            if isinstance(attached, CardState) and attached.zone is Zone.BATTLEFIELD:
+                recipients.append(attached)
+        if named is not None:
+            for permanent in game.permanents_controlled_by(controller.username):
+                if permanent.name.lower() == named.strip().lower() and permanent not in recipients:
+                    recipients.append(permanent)
+        store = continuous_effects(game)
+        for recipient in recipients:
+            store.add(
+                ContinuousEffect(
+                    description=(
+                        f"{recipient.name}: gets {amount(power):+d}/{amount(toughness):+d} "
+                        "until end of turn"
+                    ),
+                    layer=Layer.POWER_TOUGHNESS,
+                    sublayer=Sublayer.MODIFY,
+                    timestamp=store.tick(),
+                    duration=Duration.UNTIL_END_OF_TURN,
+                    source_id=ability.source_id,
+                    selector=only_this_incarnation(recipient, recipient.zone_change_stamp),
+                    modification=modify_power_toughness(amount(power), amount(toughness)),
+                )
+            )
+
+    return effect
+
+
+# --------------------------------------------------------------------------
+# A keyword cost scaled by the hand: "Equip - Pay 1 life for each card in your hand"
+# --------------------------------------------------------------------------
+
+_PAY_LIFE_PER_HAND_CARD_RE = re.compile(
+    r"^pay (?P<n>\d+) life for each card in your hand$", re.IGNORECASE
+)
+
+
+def hand_scaled_cost(phrase: str, game, payer: str):
+    """ "Pay 1 life for each card in your hand" (Hand of Vecna's equip) as a
+    `TotalCost`: the amount is the hand size now, as the cost is determined
+    (CR 601.2f via CR 602.2b), so an empty hand pays nothing (CR 118.3b: 0 life
+    is always payable). `None` when `phrase` is not that shape."""
+    match = _PAY_LIFE_PER_HAND_CARD_RE.fullmatch(phrase.strip().rstrip("."))
+    if match is None or game is None:
+        return None
+    from .cost import pay_life_cost
+    from .cost.components import TotalCost
+
+    amount = int(match.group("n")) * len(game.player(payer).hand)
+    return TotalCost(components=[pay_life_cost(amount, payer, description=phrase)]).assign_payer(
+        payer
+    )

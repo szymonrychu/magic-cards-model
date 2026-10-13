@@ -89,6 +89,7 @@ from .crew_saddle_statics import contribution, station_amount, total_contributio
 from .decisions import Decision, DecisionKind, source_id_of
 from .delayed import anaphoric_delayed_trigger
 from .designations import designation_holds, split_as_long_as
+from .ep02_r2_cards_in_zone_counts import hand_scaled_cost
 from .equip_block_statics import (
     attach_refusal,
     crew_activation_key,
@@ -3538,8 +3539,12 @@ def equip_activation(
     player: str,
     *,
     pay_zero: bool = True,
+    ability: KeywordAbility | None = None,
 ) -> KeywordActivation:
     """Build the activation for an Equipment's equip ability (CR 702.6a).
+
+    `ability` names which printed equip ability to activate (CR 702.6c lets the
+    player choose); by default the cheapest one the target qualifies for.
 
     "Equip is an activated ability of Equipment cards. 'Equip [cost]' means
     "[Cost]: Attach this permanent to target creature you control. Activate
@@ -3580,7 +3585,7 @@ def equip_activation(
     usable = [
         ability for ability, refusal in zip(candidates, refusals, strict=True) if refusal is None
     ]
-    chosen = min(usable, key=_equip_ability_price, default=None)
+    chosen = ability if ability in usable else min(usable, key=_equip_ability_price, default=None)
     if candidates and chosen is None:
         raise ValueError(next(refusal for refusal in refusals if refusal is not None))
     if (why := attach_refusal(game, equipment, target)) is not None:
@@ -3668,7 +3673,7 @@ def unannounced_equip_activation(
     ability = ability or _keyword(effective_card(game, equipment), "equip")
     if ability is None:
         raise ValueError(f"{equipment.name} has no equip ability ({KeywordRule.EQUIP})")
-    cost = _keyword_cost(ability, player)
+    cost = _keyword_cost(ability, player) or hand_scaled_cost(ability.cost or "", game, player)
     if cost is None:
         raise ValueError(
             f"{equipment.name}'s equip cost {ability.cost!r} could not be read, "
