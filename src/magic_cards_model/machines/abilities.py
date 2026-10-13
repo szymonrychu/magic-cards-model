@@ -4096,7 +4096,8 @@ _INTERVENING_IF_CAST_THIS_TURN_BOUNDARY = re.compile(
 #: the naive split over ground this regex has already covered.
 _CAST_TYPE_LIST_CONDITION_BOUNDARY = re.compile(
     r"^(?P<condition>(?:you|target player|each player|an? opponent|a player) "
-    r"casts? an? [a-z]+(?:,\s*[a-z]+)*(?:,)?\s+or\s+[a-z]+ spells?)\s*,\s*",
+    r"casts? an? [a-z]+(?:,\s*[a-z]+)*(?:,)?\s+or\s+[a-z]+ spells?(?: from (?:your|their) hand)?)"
+    r"\s*,\s*",
     re.IGNORECASE,
 )
 

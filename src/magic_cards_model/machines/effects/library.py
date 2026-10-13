@@ -6473,6 +6473,61 @@ def _bottom_in_random_order(game: "Game", player: Player, cards: list[CardState]
     game.shuffles_performed += 1
 
 
+def _look_at_top_cast_free_bottom_rest(
+    game: "Game",
+    controller: Player,
+    count: int,
+    *,
+    ceiling: int,
+    prompt: str,
+    source_name: str | None,
+    source_id: str | None,
+    reveal: bool = False,
+) -> None:
+    """Look at (or reveal) the top `count` cards of `controller`'s library,
+    offer a free cast of one nonland spell among them with mana value below
+    `ceiling` (CR 118.9, CR 608.2g, CR 608.2d: only a card that can really be
+    cast is offered), and put the rest on the bottom in a random order. The one
+    body behind Cosmic Cube and every "look at the top X, cast one free, bottom
+    the rest" reader."""
+    looked_at = list(controller.library[: max(count, 0)])
+    for state in looked_at:
+        if reveal:
+            game.reveal(state, source=source_name)
+        else:
+            game.look(state, controller.username, source=source_name)
+    legal = [
+        state
+        for state in looked_at
+        if not state.card.is_land
+        and game.can_cast_during_resolution(state, controller.username, mana_value_below=ceiling)
+    ]
+    chosen: CardState | None = None
+    if legal and game.may(
+        controller, prompt, source=source_name, source_id=source_id, cards=tuple(legal)
+    ):
+        chosen_ids = game.ask(
+            Decision(
+                kind=DecisionKind.CHOOSE_CARDS,
+                player=controller.username,
+                prompt="choose a spell to cast without paying its mana cost",
+                source=source_name,
+                source_id=source_id,
+                amount=1,
+                cards=tuple(state.id for state in legal),
+            )
+        )
+        assert isinstance(chosen_ids, tuple)
+        chosen = next(state for state in legal if state.id == chosen_ids[0])
+    if chosen is not None:
+        game.cast_during_resolution(
+            chosen, controller.username, source_name=source_name or "", rule="CR 608.2g"
+        )
+    _bottom_in_random_order(
+        game, controller, [state for state in looked_at if chosen is None or state.id != chosen.id]
+    )
+
+
 #: "Whenever you attack, look at the top `<n>` cards of your library. You may
 #: cast a spell from among them with mana value less than or equal to the
 #: greatest power among attacking creatures you control without paying its
@@ -6525,47 +6580,18 @@ def _parse_look_top_cast_le_greatest_attacking_power_whole_text(
             and state.controller == controller.username
         ]
         greatest = max((game.power_of(state) or 0 for state in attackers), default=0)
-        looked_at = list(controller.library[: max(n, 0)])
-        for state in looked_at:
-            game.look(state, controller.username, source=ability.source_name)
-        legal = [
-            state
-            for state in looked_at
-            if not state.card.is_land
-            and game.can_cast_during_resolution(
-                state, controller.username, mana_value_below=greatest + 1
-            )
-        ]
-        chosen: CardState | None = None
-        if legal:
-            taken = game.may(
-                controller,
+        _look_at_top_cast_free_bottom_rest(
+            game,
+            controller,
+            n,
+            ceiling=greatest + 1,
+            prompt=(
                 f"cast a spell among the top {n} cards of your library with mana "
-                f"value {greatest} or less, without paying its mana cost",
-                source=ability.source_name,
-                source_id=source_id_of(ability),
-                cards=tuple(legal),
-            )
-            if taken:
-                chosen_ids = game.ask(
-                    Decision(
-                        kind=DecisionKind.CHOOSE_CARDS,
-                        player=controller.username,
-                        prompt="choose a spell to cast without paying its mana cost",
-                        source=ability.source_name,
-                        source_id=source_id_of(ability),
-                        amount=1,
-                        cards=tuple(state.id for state in legal),
-                    )
-                )
-                assert isinstance(chosen_ids, tuple)
-                chosen = next(state for state in legal if state.id == chosen_ids[0])
-        if chosen is not None:
-            game.cast_during_resolution(
-                chosen, controller.username, source_name=ability.source_name, rule="CR 608.2g"
-            )
-        rest = [state for state in looked_at if chosen is None or state.id != chosen.id]
-        _bottom_in_random_order(game, controller, rest)
+                f"value {greatest} or less, without paying its mana cost"
+            ),
+            source_name=ability.source_name,
+            source_id=source_id_of(ability),
+        )
 
     return effect
 

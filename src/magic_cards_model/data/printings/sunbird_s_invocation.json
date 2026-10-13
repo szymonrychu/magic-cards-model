@@ -1,0 +1,130 @@
+{
+  "object": "card",
+  "id": "75c1eb6a-2183-4f60-b075-f7289df35be7",
+  "oracle_id": "10d482fd-e034-4187-b148-51fe15885360",
+  "multiverse_ids": [
+    519215
+  ],
+  "mtgo_id": 89461,
+  "tcgplayer_id": 236357,
+  "cardmarket_id": 559096,
+  "name": "Sunbird's Invocation",
+  "lang": "en",
+  "released_at": "2021-04-23",
+  "uri": "https://api.scryfall.com/cards/75c1eb6a-2183-4f60-b075-f7289df35be7",
+  "scryfall_uri": "https://scryfall.com/card/c21/180/sunbirds-invocation?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T07:25:39Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/7/5/75c1eb6a-2183-4f60-b075-f7289df35be7.jpg?1783927539",
+    "normal": "https://cards.scryfall.io/normal/front/7/5/75c1eb6a-2183-4f60-b075-f7289df35be7.jpg?1783927539",
+    "large": "https://cards.scryfall.io/large/front/7/5/75c1eb6a-2183-4f60-b075-f7289df35be7.jpg?1783927539",
+    "png": "https://cards.scryfall.io/png/front/7/5/75c1eb6a-2183-4f60-b075-f7289df35be7.png?1783927539",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/7/5/75c1eb6a-2183-4f60-b075-f7289df35be7.jpg?1783927539",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/7/5/75c1eb6a-2183-4f60-b075-f7289df35be7.jpg?1783927539",
+    "thumb": "https://cards.scryfall.io/thumb/front/7/5/75c1eb6a-2183-4f60-b075-f7289df35be7.webp?1783927539",
+    "grid": "https://cards.scryfall.io/grid/front/7/5/75c1eb6a-2183-4f60-b075-f7289df35be7.webp?1783927539",
+    "display": "https://cards.scryfall.io/display/front/7/5/75c1eb6a-2183-4f60-b075-f7289df35be7.webp?1783927539",
+    "art": "https://cards.scryfall.io/art/front/7/5/75c1eb6a-2183-4f60-b075-f7289df35be7.webp?1783927539",
+    "crop": "https://cards.scryfall.io/crop/front/7/5/75c1eb6a-2183-4f60-b075-f7289df35be7.webp?1783927539"
+  },
+  "mana_cost": "{5}{R}",
+  "cmc": 6.0,
+  "type_line": "Enchantment",
+  "oracle_text": "Whenever you cast a spell from your hand, reveal the top X cards of your library, where X is that spell's mana value. You may cast a spell with mana value X or less from among cards revealed this way without paying its mana cost. Put the rest on the bottom of your library in a random order.",
+  "colors": [
+    "R"
+  ],
+  "color_identity": [
+    "R"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": false,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "27bf6dbd-a9e1-4904-afa7-d28fc7745c4f",
+  "set": "c21",
+  "set_name": "Commander 2021",
+  "set_type": "commander",
+  "set_uri": "https://api.scryfall.com/sets/27bf6dbd-a9e1-4904-afa7-d28fc7745c4f",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Ac21&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/c21?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/75c1eb6a-2183-4f60-b075-f7289df35be7/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A10d482fd-e034-4187-b148-51fe15885360&unique=prints",
+  "collector_number": "180",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Christine Choi",
+  "artist_ids": [
+    "b8266529-1ffe-41e7-9969-fcf39f61426b"
+  ],
+  "illustration_id": "342b84b8-d1b7-44b7-bae5-ee321754fbc3",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "edhrec_rank": 1932,
+  "penny_rank": 8163,
+  "prices": {
+    "usd": "0.39",
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": "0.40",
+    "eur_foil": null,
+    "tix": null
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=519215&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DSunbird%2527s%2BInvocation",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DSunbird%2527s%2BInvocation",
+    "edhrec": "https://edhrec.com/route/?cc=Sunbird%27s+Invocation"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F236357%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=559096&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/89461?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

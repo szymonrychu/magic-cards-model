@@ -982,7 +982,18 @@ def _becomes_blocked_by_qualifier_holds(
 _CAST_SUBTYPE_WORD = re.compile(r"\b(?:a|an)\s+([A-Z][a-z]+)\s+spell\b")
 
 
-def _required_cast_subtype(condition: str) -> str | None:
+#: "a Spirit or Arcane spell" (Bounteous Kirin), "a Kraken, Leviathan, Octopus,
+#: or Serpent spell" (Kiora, Sovereign of the Deep): a list of subtypes, any of
+#: which qualifies.
+_CAST_SUBTYPE_LIST = re.compile(
+    r"\b(?:a|an)\s+([A-Z][a-z]+(?:(?:,\s*or\s+|,\s*|\s+or\s+)[A-Z][a-z]+)+)\s+spells?\b"
+)
+
+
+def _required_cast_subtype(condition: str) -> str | tuple[str, ...] | None:
+    listed = _CAST_SUBTYPE_LIST.search(condition)
+    if listed is not None:
+        return tuple(re.split(r",\s*or\s+|,\s*|\s+or\s+", listed.group(1)))
     match = _CAST_SUBTYPE_WORD.search(condition)
     return match.group(1) if match else None
 

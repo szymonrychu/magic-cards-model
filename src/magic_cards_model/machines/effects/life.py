@@ -22,6 +22,7 @@ from ..ep02_r1_life_amounts import parse_life_loss_text
 from ..ep02_r1_moved_card_stat import moved_card_stat_effect
 from ..ep02_r1_referenced_stat import referenced_stat_effect
 from ..ep02_r2_devotion_domain_party import life_per_color_effect
+from ..ep02_r2_card_mana_value import card_mana_value_effect
 from ..targeting import (
     permanent_description,
 )
@@ -1478,3 +1479,14 @@ def _parse_life_per_color_text(text: str, *, for_spell: bool) -> Effect | Abilit
     each turn.": life sized by the colors of a referenced object
     (`ep02_r2_devotion_domain_party`)."""
     return life_per_color_effect(text, for_spell=for_spell)
+
+
+@ABILITY_TEXT.rung("s39", for_spell=False, after=[_parse_moved_card_stat_text])
+@SPELL_TEXT.rung("s22", for_spell=True, after=[_parse_moved_card_stat_text])
+def _parse_card_mana_value_text(text: str, *, for_spell: bool) -> Effect | AbilityEffect | None:
+    """ "Whenever you cast a creature spell, create X tokens, where X is that
+    spell's mana value", "Reveal the top card of your library and put that card
+    into your hand. You gain life equal to its mana value": the mana value of
+    the spell a cast trigger names, or of a card the text reveals, mills,
+    discards or exiles (`ep02_r2_card_mana_value`)."""
+    return card_mana_value_effect(text, for_spell=for_spell)

@@ -2584,6 +2584,7 @@ class KeywordActivation(EngineModel):
                     subject_name=self.card.name,
                     subject_card=self.card.card,
                     player=self.player,
+                    amount=self.x_value,
                 )
             )
 
@@ -2653,7 +2654,7 @@ def cycling_abilities(card: Card) -> list[KeywordAbility]:
 
 
 def cycling_activation(
-    game: Any, card: CardState, player: str, index: int = 0
+    game: Any, card: CardState, player: str, index: int = 0, *, x_value: int = 0
 ) -> KeywordActivation:
     """Build the activation for a card's cycling ability (CR 702.29a).
 
@@ -2665,6 +2666,11 @@ def cycling_activation(
     cycling ability can be activated only if the card is in a player's hand, it
     continues to exist while the object is on the battlefield and in all other
     zones."
+
+    `x_value` is the X of a cycling cost that prints one (Shark Typhoon's
+    `{X}{1}{U}`), announced with the activation (CR 107.3a) and carried on the
+    `AbilityOnStack` and on the cycle event (CR 107.3k: independent of any
+    other X of the card).
     """
     printed = cycling_abilities(effective_card(game, card))
     if index >= len(printed):
@@ -2682,6 +2688,8 @@ def cycling_activation(
     if game is not None and cycling_costs_nothing(game, player):
         # CR 118.9: "you may pay {0} rather than pay cycling costs".
         cost = TotalCost()
+    elif cost.mana is not None and cost.mana.x_count:
+        cost = TotalCost(mana=cost.mana.with_x(x_value), components=list(cost.components))
     # CR 702.29a: discarding the card is part of the activation cost, not the
     # effect - which is what makes a cycled card findable in the graveyard by
     # the time the draw happens.
@@ -2702,6 +2710,7 @@ def cycling_activation(
             rule=str(KeywordRule.TYPECYCLING if typed else KeywordRule.CYCLING),
             zone=Zone.HAND,
             cost=cost,
+            x_value=x_value,
             ability=_synthetic_ability(
                 ability,
                 cost_text=f"{ability.cost or ''}, Discard this card".strip(", "),
@@ -2811,6 +2820,7 @@ def cycle(
     player: str,
     payment_hook: Callable[[CostPayment], None] | None = None,
     index: int = 0,
+    x_value: int = 0,
 ) -> Any:
     """Activate and resolve a cycling ability, when nobody responds.
 
@@ -2821,7 +2831,7 @@ def cycle(
     `resolve` - is the one to reach for when the scenario is about the window in
     between, because a cycling ability uses the stack and can be responded to.
     """
-    activation = cycling_activation(game, card, player, index)
+    activation = cycling_activation(game, card, player, index, x_value=x_value)
     payment = activation.begin_paying()
     if payment_hook is not None:
         payment_hook(payment)

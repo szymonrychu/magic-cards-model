@@ -1,0 +1,147 @@
+{
+  "object": "card",
+  "id": "81039daf-0d54-4474-a833-fa287ec10cf9",
+  "oracle_id": "18591d9e-c9f5-4ae8-aee1-8580bc8fa600",
+  "multiverse_ids": [
+    607286
+  ],
+  "mtgo_id": 110344,
+  "arena_id": 84522,
+  "tcgplayer_id": 490503,
+  "cardmarket_id": 704057,
+  "name": "Hidetsugu and Kairi",
+  "lang": "en",
+  "released_at": "2023-04-21",
+  "uri": "https://api.scryfall.com/cards/81039daf-0d54-4474-a833-fa287ec10cf9",
+  "scryfall_uri": "https://scryfall.com/card/mom/228/hidetsugu-and-kairi?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T04:29:08Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/8/1/81039daf-0d54-4474-a833-fa287ec10cf9.jpg?1783916948",
+    "normal": "https://cards.scryfall.io/normal/front/8/1/81039daf-0d54-4474-a833-fa287ec10cf9.jpg?1783916948",
+    "large": "https://cards.scryfall.io/large/front/8/1/81039daf-0d54-4474-a833-fa287ec10cf9.jpg?1783916948",
+    "png": "https://cards.scryfall.io/png/front/8/1/81039daf-0d54-4474-a833-fa287ec10cf9.png?1783916948",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/8/1/81039daf-0d54-4474-a833-fa287ec10cf9.jpg?1783916948",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/8/1/81039daf-0d54-4474-a833-fa287ec10cf9.jpg?1783916948",
+    "thumb": "https://cards.scryfall.io/thumb/front/8/1/81039daf-0d54-4474-a833-fa287ec10cf9.webp?1783916948",
+    "grid": "https://cards.scryfall.io/grid/front/8/1/81039daf-0d54-4474-a833-fa287ec10cf9.webp?1783916948",
+    "display": "https://cards.scryfall.io/display/front/8/1/81039daf-0d54-4474-a833-fa287ec10cf9.webp?1783916948",
+    "art": "https://cards.scryfall.io/art/front/8/1/81039daf-0d54-4474-a833-fa287ec10cf9.webp?1783916948",
+    "crop": "https://cards.scryfall.io/crop/front/8/1/81039daf-0d54-4474-a833-fa287ec10cf9.webp?1783916948"
+  },
+  "mana_cost": "{2}{U}{U}{B}",
+  "cmc": 5.0,
+  "type_line": "Legendary Creature \u2014 Ogre Demon Dragon",
+  "oracle_text": "Flying\nWhen Hidetsugu and Kairi enters, draw three cards, then put two cards from your hand on top of your library in any order.\nWhen Hidetsugu and Kairi dies, exile the top card of your library. Target opponent loses life equal to its mana value. If it's an instant or sorcery card, you may cast it without paying its mana cost.",
+  "power": "5",
+  "toughness": "4",
+  "colors": [
+    "B",
+    "U"
+  ],
+  "color_identity": [
+    "B",
+    "U"
+  ],
+  "keywords": [
+    "Flying"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "arena",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "392f7315-dc53-40a3-a2cc-5482dbd498b3",
+  "set": "mom",
+  "set_name": "March of the Machine",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/392f7315-dc53-40a3-a2cc-5482dbd498b3",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Amom&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/mom?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/81039daf-0d54-4474-a833-fa287ec10cf9/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A18591d9e-c9f5-4ae8-aee1-8580bc8fa600&unique=prints",
+  "collector_number": "228",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Chris Rahn",
+  "artist_ids": [
+    "7742047e-0f80-4c0f-a530-d07460165e86"
+  ],
+  "illustration_id": "baaed344-c9fc-48dc-8ddb-f9eee957b080",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 8141,
+  "penny_rank": 3745,
+  "preview": {
+    "source": "Limited Resources",
+    "source_uri": "https://www.patreon.com/posts/official-lr-mom-80760953",
+    "previewed_at": "2023-03-30"
+  },
+  "prices": {
+    "usd": "0.38",
+    "usd_foil": "0.35",
+    "usd_etched": null,
+    "eur": "0.14",
+    "eur_foil": "0.59",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=607286&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DHidetsugu%2Band%2BKairi",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DHidetsugu%2Band%2BKairi",
+    "edhrec": "https://edhrec.com/route/?cc=Hidetsugu+and+Kairi"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F490503%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=704057&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/110344?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

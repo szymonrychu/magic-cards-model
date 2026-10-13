@@ -4171,10 +4171,14 @@ def _up_to_one_of_each_card_type_profile() -> TargetingProfile:
 #: `_EXILE_TARGET_REFLEXIVE_CREATURE_RE` has to agree on this same boundary.
 #: A third: "When this ability resolves for the third time this turn, ..."
 #: (Gimli, Mournful Avenger; `effects.modal._RESOLVES_FOR_NTH_TIME_RE`), a
-#: reflexive ability whose trigger event is the resolution itself.
+#: reflexive ability whose trigger event is the resolution itself. A fourth:
+#: "When you win the flip, ..." / "When you lose the flip, ..." (Breeches, the
+#: Blastmaker), a reflexive ability per result of the coin flip the outer
+#: ability just made (CR 705.1).
 _REFLEXIVE_CLAUSE_TAIL = re.compile(
     r"\bwhen you do,.*$|\bwhen [^,]+ this way,.*$"
-    r"|\bwhen this ability resolves for the [a-z]+ time this turn,.*$",
+    r"|\bwhen this ability resolves for the [a-z]+ time this turn,.*$"
+    r"|\bwhen you (?:win|lose) the flip,.*$",
     re.IGNORECASE | re.DOTALL,
 )
 
@@ -4183,7 +4187,8 @@ _REFLEXIVE_CLAUSE_TAIL = re.compile(
 #: created ability's own words, read by `reflexive_consequence_text` below.
 _REFLEXIVE_CLAUSE_CONSEQUENCE_RE = re.compile(
     r"\bwhen you do,\s*(?P<consequence>.*)$|\bwhen [^,]+ this way,\s*(?P<consequence2>.*)$"
-    r"|\bwhen this ability resolves for the [a-z]+ time this turn,\s*(?P<consequence3>.*)$",
+    r"|\bwhen this ability resolves for the [a-z]+ time this turn,\s*(?P<consequence3>.*)$"
+    r"|\bwhen you (?:win|lose) the flip,\s*(?P<consequence4>.*)$",
     re.IGNORECASE | re.DOTALL,
 )
 
@@ -4234,6 +4239,7 @@ def reflexive_consequence_text(text: str) -> str | None:
         match.group("consequence")
         or match.group("consequence2")
         or match.group("consequence3")
+        or match.group("consequence4")
         or ""
     )
     return consequence.strip()
