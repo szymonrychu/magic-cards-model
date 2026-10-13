@@ -3389,6 +3389,7 @@ class ActivationMixin:
 
 
 from ...machines import game_rule_statics  # noqa: E402
+from ...machines.cost.payment import colors_among_now  # noqa: E402
 from ...machines.ep02_r1_graveyard_counts import graveyard_count_expression  # noqa: E402
 from ._common import _SPEND_AS_ANY_COLOR_STATIC_RE, _SPEND_AS_ANY_COLOR_TO_ACTIVATE_RE  # noqa: E402
 from ._conditions import (  # noqa: E402
@@ -3400,5 +3401,3 @@ from ._conditions import (  # noqa: E402
 )
 from ._costs_mana import _cost_moved, _cost_refers_to_self  # noqa: E402
 from ._zones import _exiles_itself_by_name, moves_a_library_card  # noqa: E402
-
-from ...machines.cost.payment import colors_among_now  # noqa: E402

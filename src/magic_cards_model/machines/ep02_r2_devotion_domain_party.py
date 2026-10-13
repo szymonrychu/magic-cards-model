@@ -224,9 +224,7 @@ def _build(reveal, depth, kept_kind, k, rest_to, win, draw_at, life_tails):  # n
             _bottom_in_random_order(game, controller, rest)
         for clause, amount in life_tails:
             apply_life(game, stack_object, clause.who, clause.gains, amount)
-        if draw_at is not None and (
-            _domain(game, controller.username) >= draw_at
-        ):
+        if draw_at is not None and (_domain(game, controller.username) >= draw_at):
             game.draw_cards(controller.username, 1)
         if win and x >= len(controller.library):
             game.player_wins_the_game(controller.username)
@@ -242,7 +240,9 @@ def _build(reveal, depth, kept_kind, k, rest_to, win, draw_at, life_tails):  # n
 # land types among lands you control." (Zar Ojanen)
 # --------------------------------------------------------------------------
 
-_CHOOSE_TARGET_RE = re.compile(r"^choose (?P<target>target [^.]+?)\.\s+(?P<rest>.+)$", re.IGNORECASE)
+_CHOOSE_TARGET_RE = re.compile(
+    r"^choose (?P<target>target [^.]+?)\.\s+(?P<rest>.+)$", re.IGNORECASE
+)
 _EACH_WITH_STAT_RE = re.compile(
     rf"^put (?P<n>{COUNT}) (?P<kind>\+1/\+1|-1/-1|[a-z]+) counters? on each "
     r"(?P<group>creature you control) with (?P<stat>power|toughness) "
@@ -299,7 +299,9 @@ def counters_amount_effect(text: str) -> "Any | None":
                 chars = game.computed_board().of(permanent)
                 if chars.controller != controller.username or Type.CREATURE not in chars.types:
                     continue
-                value = game.power_of(permanent) if stat == "power" else game.toughness_of(permanent)
+                value = (
+                    game.power_of(permanent) if stat == "power" else game.toughness_of(permanent)
+                )
                 if value is not None and compare(value, bound):
                     game.add_counters(permanent, kind, unit)
 
@@ -419,7 +421,9 @@ def life_per_color_effect(text: str, *, for_spell: bool) -> "Any | None":
             event = getattr(stack_object, "event", None)
             ref = game.find_by_id(event.subject_id) if event and event.subject_id else None
         else:
-            targets = [t for t in game.resolve_card_targets(stack_object) if isinstance(t, CardState)]
+            targets = [
+                t for t in game.resolve_card_targets(stack_object) if isinstance(t, CardState)
+            ]
             ref = targets[0] if targets else None
         colors = colors_of(game, ref)  # read before the lead instruction can change it (CR 608.2h)
         if lead_effect is not None:
@@ -429,8 +433,9 @@ def life_per_color_effect(text: str, *, for_spell: bool) -> "Any | None":
             if game.once_per_turn_triggers.get(key):
                 return
         name = getattr(stack_object, "source_name", None) or getattr(stack_object, "name", "")
-        if may and not game.may(controller.username, "gain life", source=name,
-                                source_id=source_id_of(stack_object)):
+        if may and not game.may(
+            controller.username, "gain life", source=name, source_id=source_id_of(stack_object)
+        ):
             return
         if once:
             game.once_per_turn_triggers[key] = 1
@@ -462,9 +467,16 @@ def where_x_pump_text_normalised(text: str) -> str:
     typed = _TYPED_GROUP_THOSE_RE.match(text) if "those creatures" in lowered else None
     if typed is not None:
         noun = typed.group("sub")
-        plural = noun[:-1] + "ies" if noun.endswith("y") else noun[:-1] + "ves" if noun.endswith("f") else noun + "s"
+        plural = (
+            noun[:-1] + "ies"
+            if noun.endswith("y")
+            else noun[:-1] + "ves"
+            if noun.endswith("f")
+            else noun + "s"
+        )
         group = f"{plural} you control"
-        text = f"{group[0].upper()}{group[1:]} {typed.group('rest')}, where X is the number of colors among {group}."
+        subject = f"{group[0].upper()}{group[1:]}"
+        text = f"{subject} {typed.group('rest')}, where X is the number of colors among {group}."
         lowered = text.lower()
     if lowered.startswith("each creature gets"):
         text = _EACH_CREATURE_GETS_RE.sub("All creatures get", text)
@@ -487,4 +499,11 @@ def _domain(game: "Game", controller: str) -> int:
     return 0 if reader is None else reader(game, controller)
 
 
-__all__ = ["counters_amount_effect", "life_per_color_effect", "look_top_effect", "return_if_mana_value_effect", "up_to_x_targets", "where_x_pump_text_normalised"]
+__all__ = [
+    "counters_amount_effect",
+    "life_per_color_effect",
+    "look_top_effect",
+    "return_if_mana_value_effect",
+    "up_to_x_targets",
+    "where_x_pump_text_normalised",
+]

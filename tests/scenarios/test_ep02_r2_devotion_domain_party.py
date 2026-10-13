@@ -177,7 +177,10 @@ def test_klothys_design_pumps_only_your_creatures_on_resolution():
     scenario.cast_and_resolve("Klothys's Design", auto=True, username="alice")
     mine = scenario.creature("Grizzly Bears", "alice")
     theirs = scenario.creature("Grizzly Bears", "bob")
-    assert _pt(scenario, mine) == (4, 4)  # Elves and Bears: one {G} each = 2 (the spell is not a permanent)
+    assert _pt(scenario, mine) == (
+        4,
+        4,
+    )  # Elves and Bears: one {G} each = 2 (the spell is not a permanent)
     assert _pt(scenario, theirs) == (2, 2)
 
 
@@ -191,8 +194,14 @@ def test_klothys_design_does_not_reach_a_creature_that_arrives_later():
     )
     scenario.cast_and_resolve("Klothys's Design", auto=True, username="alice")
     scenario.put_onto_battlefield("Hill Giant", "alice")
-    assert _pt(scenario, scenario.creature("Hill Giant", "alice")) == (3, 3)  # arrived after: no pump
-    assert _pt(scenario, scenario.creature("Grizzly Bears", "alice")) == (3, 3)  # Bears alone: devotion 1
+    assert _pt(scenario, scenario.creature("Hill Giant", "alice")) == (
+        3,
+        3,
+    )  # arrived after: no pump
+    assert _pt(scenario, scenario.creature("Grizzly Bears", "alice")) == (
+        3,
+        3,
+    )  # Bears alone: devotion 1
 
 
 def test_blight_breath_catoblepas_shrinks_an_opposing_creature():
@@ -338,7 +347,7 @@ def test_mogis_marauder_gives_intimidate_and_haste_to_up_to_devotion_creatures()
 
 
 def test_thassa_s_oracle_keeps_one_on_top_and_bottoms_the_rest():
-    library = [f"Island" if i % 2 else "Forest" for i in range(8)]
+    library = ["Island" if i % 2 else "Forest" for i in range(8)]
     scenario = _main(_build(["Island"] * 2, hand=["Thassa's Oracle"], library=library))
     top = scenario.top_of_library(2)
     scenario.cast_and_resolve("Thassa's Oracle", auto=True, username="alice")
@@ -403,7 +412,11 @@ def test_voda_with_no_basic_land_types_looks_at_nothing():
 def test_voda_counts_a_land_type_once_however_many_lands_have_it():
     """Four lands but only Island and Forest: X is 2."""
     scenario = _main(
-        _build(["Island", "Island", "Island", "Forest"], hand=["Voda Sea Scavenger"], library=list(STACK))
+        _build(
+            ["Island", "Island", "Island", "Forest"],
+            hand=["Voda Sea Scavenger"],
+            library=list(STACK),
+        )
     )
     scenario.will_choose_cards()
     scenario.cast_and_resolve("Voda Sea Scavenger", auto=True, username="alice")
@@ -413,7 +426,9 @@ def test_voda_counts_a_land_type_once_however_many_lands_have_it():
 
 
 def test_shadow_prophecy_takes_up_to_two_and_mills_the_rest():
-    scenario = _main(_build(["Swamp", "Swamp", "Swamp", "Forest"], hand=["Shadow Prophecy"], library=list(STACK)))
+    scenario = _main(
+        _build(["Swamp", "Swamp", "Swamp", "Forest"], hand=["Shadow Prophecy"], library=list(STACK))
+    )
     giant = scenario.find("Hill Giant", Zone.LIBRARY, "alice")
     scenario.will_choose_cards(giant)
     scenario.cast_and_resolve("Shadow Prophecy", auto=True, username="alice")
@@ -426,7 +441,9 @@ def test_shadow_prophecy_takes_up_to_two_and_mills_the_rest():
 
 def test_shadow_prophecy_puts_two_into_hand_and_the_remainder_into_the_graveyard():
     scenario = _main(
-        _build(["Swamp", "Forest", "Island", "Plains"], hand=["Shadow Prophecy"], library=list(STACK))
+        _build(
+            ["Swamp", "Forest", "Island", "Plains"], hand=["Shadow Prophecy"], library=list(STACK)
+        )
     )
     # four types: Bears, Giant, Angel, Elves looked at
     bears = scenario.find("Grizzly Bears", Zone.LIBRARY, "alice")
@@ -472,7 +489,9 @@ def test_nael_does_not_draw_with_fewer_than_five_types():
 
 
 def test_sphinx_of_clear_skies_splits_into_piles():
-    scenario = _main(_build(["Island", "Forest", "Swamp", "Sphinx of Clear Skies"], library=list(STACK)))
+    scenario = _main(
+        _build(["Island", "Forest", "Swamp", "Sphinx of Clear Skies"], library=list(STACK))
+    )
     sphinx = scenario.creature("Sphinx of Clear Skies", "alice")
     bears = scenario.find("Grizzly Bears", Zone.LIBRARY, "alice")
     giant = scenario.find("Hill Giant", Zone.LIBRARY, "alice")
@@ -526,7 +545,14 @@ def test_drag_to_the_bottom_with_no_lands_but_its_own_cost_is_minus_one():
 def test_zar_ojanen_counters_only_the_small_creatures_when_it_becomes_tapped():
     scenario = _main(
         _build(
-            ["Plains", "Forest", "Island", "Zar Ojanen, Scion of Efrava", "Grizzly Bears", "Hill Giant"],
+            [
+                "Plains",
+                "Forest",
+                "Island",
+                "Zar Ojanen, Scion of Efrava",
+                "Grizzly Bears",
+                "Hill Giant",
+            ],
             bob=["Grizzly Bears"],
         )
     )
@@ -571,10 +597,15 @@ def test_the_party_counts_only_your_own_creatures():
 
 def test_strength_of_solidarity_counts_the_party_onto_the_chosen_creature():
     scenario = _main(
-        _build(["Forest", "Codespell Cleric", "Deathcult Rogue", "Grizzly Bears"], hand=["Strength of Solidarity"])
+        _build(
+            ["Forest", "Codespell Cleric", "Deathcult Rogue", "Grizzly Bears"],
+            hand=["Strength of Solidarity"],
+        )
     )
     bears = scenario.creature("Grizzly Bears", "alice")
-    scenario.cast_and_resolve("Strength of Solidarity", auto=True, username="alice", targets=[bears])
+    scenario.cast_and_resolve(
+        "Strength of Solidarity", auto=True, username="alice", targets=[bears]
+    )
     assert bears.counter_count(Counter.PLUS_ONE) == 2
 
 
@@ -635,7 +666,10 @@ def test_breathe_your_last_gains_nothing_for_a_colorless_permanent():
 
 def test_ancient_cornucopia_gains_once_per_turn_for_each_color_of_the_spell():
     scenario = _main(
-        _build(["Ancient Cornucopia", "Forest", "Forest", "Swamp", "Plains"], hand=["Kitchen Finks", "Grizzly Bears"])
+        _build(
+            ["Ancient Cornucopia", "Forest", "Forest", "Swamp", "Plains"],
+            hand=["Kitchen Finks", "Grizzly Bears"],
+        )
     )
     scenario.cast_onto_stack("Kitchen Finks", auto=True, username="alice")
     scenario.game.put_triggers_on_stack()
@@ -708,7 +742,9 @@ def test_faeburrow_elder_taps_for_each_of_its_colors_and_gets_the_same_bonus():
 
 
 def test_tarnation_vista_counts_only_monocolored_permanents():
-    scenario = _main(_build(["Tarnation Vista", "Kitchen Finks", "Hill Giant", "Mountain", "Forest"]))
+    scenario = _main(
+        _build(["Tarnation Vista", "Kitchen Finks", "Hill Giant", "Mountain", "Forest"])
+    )
     vista = scenario.find("Tarnation Vista", Zone.BATTLEFIELD, "alice")
     scenario.activate(vista, auto=True, index=1)
     pool = _mana_pool(scenario)
