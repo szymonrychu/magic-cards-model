@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 45 | 18.7% |
-| Works (untested) | 157 | 65.1% |
+| Tested | 48 | 19.9% |
+| Works (untested) | 158 | 65.6% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 39 | 16.2% |
+| Not working | 35 | 14.5% |
 
 ## Cards needing work
 
@@ -30,7 +30,6 @@
 | Bitterblade Warrior | silent | You may exert this creature as it attacks. When you do, it gets +1/+0 and gains deathtouch until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Bounty of the Luxa | silent | At the beginning of your first main phase, remove all flood counters from this enchantment. If no counters were removed this way, put a flood counter on this en | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Cartouche of Strength | silent | When this Aura enters, you may have enchanted creature fight target creature an opponent controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Commit // Memory | silent | Put target spell or nonland permanent into its owner's library second from the top. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Cruel Reality | silent | At the beginning of enchanted player's upkeep, that player sacrifices a creature or planeswalker of their choice. If the player can't, they lose 5 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Defiant Greatmaw | silent | Whenever you put one or more -1/-1 counters on this creature, remove a -1/-1 counter from another target creature you control. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Dispossess | silent | Choose an artifact card name. Search target opponent's graveyard, hand, and library for any number of cards with the chosen name and exile them. Then that playe | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -46,12 +45,10 @@
 | Gust Walker | silent | You may exert this creature as it attacks. When you do, it gets +1/+1 and gains flying until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Hooded Brawler | silent | You may exert this creature as it attacks. When you do, it gets +2/+2 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Kefnet's Monument | silent | Whenever you cast a creature spell, target creature an opponent controls doesn't untap during its controller's next untap step. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Liliana's Influence | silent | Put a -1/-1 counter on each creature you don't control. You may search your library and/or graveyard for a card named Liliana, Death Wielder, reveal it, and put | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Liliana, Death's Majesty | silent | −7: Destroy all non-Zombie creatures. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Lord of the Accursed | silent | {1}{B}, {T}: All Zombies gain menace until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Nef-Crop Entangler | silent | You may exert this creature as it attacks. When you do, it gets +1/+2 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Nissa, Steward of Elements | silent | 0: Look at the top card of your library. If it's a land card or a creature card with mana value less than or equal to the number of loyalty counters on Nissa, y | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Quarry Hauler | silent | When this creature enters, for each kind of counter on target permanent, put another counter of that kind on it or remove one from it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Rags // Riches | silent | Aftermath (Cast this spell only from your graveyard. Then exile it.) Each opponent chooses a creature they control. You gain control of those creatures. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Reduce // Rubble | silent | Aftermath (Cast this spell only from your graveyard. Then exile it.) Up to three target lands don't untap during their controller's next untap step. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Rhet-Crop Spearmaster | silent | You may exert this creature as it attacks. When you do, it gets +1/+0 and gains first strike until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -59,7 +56,6 @@
 | Synchronized Strike | silent | Untap up to two target creatures. They each get +2/+2 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Temmet, Vizier of Naktamun | silent | At the beginning of combat on your turn, target creature token you control gets +1/+1 until end of turn and can't be blocked this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Watchers of the Dead | silent | Exile this creature: Each opponent chooses two cards in their graveyard and exiles the rest. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Grim Strider | notice | This creature gets -1/-1 for each card in your hand. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Hazoret's Favor | notice | At the beginning of combat on your turn, you may have target creature you control get +2/+0 and gain haste until end of turn. If you do, sacrifice it at the beg | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Shed Weakness | notice | Target creature gets +2/+2 until end of turn. You may remove a -1/-1 counter from it. | unparsed remainder: You may remove a -1/-1 counter from it. | Y/Y/- | not_working |
 | Thresher Lizard | notice | This creature gets +1/+2 as long as you have one or fewer cards in hand. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -89,6 +85,7 @@
 | Champion of Rhonas | handled | You may exert this creature as it attacks. When you do, you may put a creature card from your hand onto the battlefield. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Channeler Initiate | handled | When this creature enters, put three -1/-1 counters on target creature you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Colossapede | handled |  |  | Y/Y/- | not_tested |
+| Commit // Memory | handled | Put target spell or nonland permanent into its owner's library second from the top. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Companion of the Trials | handled | {1}{W}: Untap target creature. Activate only if you control a Gideon planeswalker. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Compelling Argument | handled | Target player mills five cards. Cycling {U} ({U}, Discard this card: Draw a card.) | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Compulsory Rest | handled | Enchanted creature can't attack or block. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -226,7 +223,7 @@
 ## Fully supported
 
 <details>
-<summary>45 cards</summary>
+<summary>48 cards</summary>
 
 - Ahn-Crop Champion
 - Angel of Sanctions
@@ -246,11 +243,13 @@
 - Enigma Drake
 - Gideon of the Trials
 - Gideon's Intervention
+- Grim Strider
 - Harsh Mentor
 - Harvest Season
 - Hazoret the Fervent
 - Insult // Injury
 - Kefnet the Mindful
+- Liliana's Influence
 - Luxa River Shrine
 - New Perspectives
 - Oketra the True
@@ -258,6 +257,7 @@
 - Open into Wonder
 - Oracle's Vault
 - Protection of the Hekma
+- Quarry Hauler
 - Rhonas the Indomitable
 - Sacred Excavation
 - Sandwurm Convergence
@@ -295,12 +295,9 @@
 | end the turn. (exile all spells and abilities from the stack, including ~. the player whose turn it is discards down to their maximum hand size. damage wears of | 1 | Glorious End | akh |
 | exile ~: each opponent chooses two cards in their graveyard and exiles the rest. | 1 | Watchers of the Dead | akh |
 | if ~ was cast from your hand and you"..."s library seventh from the top and you gain N life. | 1 | Approach of the Second Sun | akh |
-| put a -N/-N counter on each creature you don't control. you may search your library and/or graveyard for a card named liliana, death wielder, reveal it, and put | 1 | Liliana's Influence | akh |
-| put target spell or nonland permanent into its owner's library second from the top. | 1 | Commit // Memory | akh |
 | return to your hand all cards in your graveyard that you cycled or discarded ~. | 1 | Shadow of the Grave | akh |
 | target creature gets +N/+N until end of turn. you may remove a -N/-N counter from it. | 1 | Shed Weakness | akh |
 | untap up to two target creatures. they each get +N/+N until end of turn. | 1 | Synchronized Strike | akh |
-| when ~ enters, for each kind of counter on target permanent, put another counter of that kind on it or remove one from it. | 1 | Quarry Hauler | akh |
 | when ~ enters, you may exile target creature if it attacked or blocked ~. return that card to the battlefield under its owner's control at the beginning of the  | 1 | Vizier of Deferment | akh |
 | when ~ enters, you may have enchanted creature fight target creature an opponent controls. | 1 | Cartouche of Strength | akh |
 | when ~ enters, you may search your library and/or graveyard for a card named gideon, martial paragon, reveal it, and put it into your hand. if you search your l | 1 | Gideon's Resolve | akh |
@@ -316,7 +313,6 @@
 | {M}, {M}, sacrifice ~: search your graveyard, hand, and/or library for a card named god-pharaoh's gift and put it onto the battlefield. if you search your libra | 1 | Gate to the Afterlife | akh |
 | {M}{M}, {M}: all zombies gain menace until end of turn. | 1 | Lord of the Accursed | akh |
 | ~ gets +N/+N as long as you have one or fewer cards in hand. | 1 | Thresher Lizard | akh |
-| ~ gets -N/-N for each card in your hand. | 1 | Grim Strider | akh |
 | −N: destroy all non-zombie creatures. | 1 | Liliana, Death's Majesty | akh |
 
 ## Notes

@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 27 | 18.2% |
+| Tested | 29 | 19.6% |
 | Works (untested) | 67 | 45.3% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 54 | 36.5% |
+| Not working | 52 | 35.1% |
 
 ## Cards needing work
 
@@ -32,7 +32,6 @@
 | Burrenton Bombardier | silent | Reinforce | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Coordinated Barrage | silent | Choose a creature type. Coordinated Barrage deals damage to target attacking or blocking creature equal to the number of permanents you control of the chosen ty | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Countryside Crusher | silent | At the beginning of your upkeep, reveal the top card of your library. If it's a land card, put it into your graveyard and repeat this process. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Cream of the Crop | silent | Whenever a creature you control enters, you may look at the top X cards of your library, where X is that creature's power. If you do, put one of those cards on  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Earthbrawn | silent | Reinforce | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Earwig Squad | silent | When this creature enters, if its prowl cost was paid, search target opponent's library for three cards and exile them. Then that player shuffles. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Fendeep Summoner | silent | {T}: Up to two target Swamps each become 3/5 Treefolk Warrior creatures in addition to their other types until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -49,7 +48,6 @@
 | Mudbutton Clanger | silent | Kinship — At the beginning of your upkeep, you may look at the top card of your library. If it shares a creature type with this creature, you may reveal it. If  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Nightshade Schemers | silent | Kinship — At the beginning of your upkeep, you may look at the top card of your library. If it shares a creature type with this creature, you may reveal it. If  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Noggin Whack | silent | Prowl {1}{B} (You may cast this for its prowl cost if you dealt combat damage to a player this turn with a Rogue.) Target player reveals three cards from their  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Notorious Throng | silent | Prowl {5}{U} (You may cast this for its prowl cost if you dealt combat damage to a player this turn with a Rogue.) Create X 1/1 black Faerie Rogue creature toke | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Preeminent Captain | silent | Whenever this creature attacks, you may put a Soldier creature card from your hand onto the battlefield tapped and attacking. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Pulling Teeth | silent | Clash with an opponent. If you win, target player discards two cards. Otherwise, that player discards a card. (Each clashing player reveals the top card of thei | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Pyroclast Consul | silent | Kinship — At the beginning of your upkeep, you may look at the top card of your library. If it shares a creature type with this creature, you may reveal it. If  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -151,11 +149,12 @@
 ## Fully supported
 
 <details>
-<summary>27 cards</summary>
+<summary>29 cards</summary>
 
 - Battletide Alchemist
 - Bramblewood Paragon
 - Cenn's Tactician
+- Cream of the Crop
 - Deglamer
 - Distant Melody
 - Floodchaser
@@ -171,6 +170,7 @@
 - Morsel Theft
 - Mutavault
 - Negate
+- Notorious Throng
 - Obsidian Battle-Axe
 - Oona's Blackguard
 - Orchard Warden
@@ -198,7 +198,6 @@
 | choose two target creatures that share no creature types. those creatures fight each other. (each deals damage equal to its power to the other.) | 1 | Rivals' Duel | mor |
 | clash with an opponent. if you win, target player discards two cards. otherwise, that player discards a card. (each clashing player reveals the top card of thei | 1 | Pulling Teeth | mor |
 | draw a card. clash with an opponent. if you win, return ~ to its owner's hand. (each clashing player reveals the top card of their library, then puts that card  | 1 | Research the Deep | mor |
-| prowl {M}{M} (you may cast ~ its prowl cost if you dealt combat damage to a player ~ with a rogue.) create N N/N black faerie rogue creature tokens with flying, | 1 | Notorious Throng | mor |
 | prowl {M}{M} (you may cast ~ its prowl cost if you dealt combat damage to a player ~ with a rogue.) search target opponent's library for an instant or sorcery c | 1 | Knowledge Exploitation | mor |
 | prowl {M}{M} (you may cast ~ its prowl cost if you dealt combat damage to a player ~ with a rogue.) target player reveals three cards from their hand. you choos | 1 | Noggin Whack | mor |
 | return target creature card from a graveyard to its owner"..."s hand. (each clashing player reveals the top card of their library, then puts that card on their  | 1 | Revive the Fallen | mor |
@@ -216,7 +215,6 @@
 | when ~ leaves the battlefield, choose an opponent. if that player has more cards in hand than you, draw cards equal to the difference. | 1 | Slithermuse | mor |
 | whenever a creature you control attacks, it gets +N/+N until end of turn for each other attacking creature that shares a creature type with it. | 1 | Shared Animosity | mor |
 | whenever a creature you control becomes blocked, it gets +N/+N until end of turn. | 1 | Unstoppable Ash | mor |
-| whenever a creature you control enters, you may look at the top N cards of your library, where N is that creature's power. if you do, put one of those cards on  | 1 | Cream of the Crop | mor |
 | whenever a goblin or rogue you control deals combat damage to a player, if ~ is in your graveyard, you may return ~ to your hand. | 1 | Auntie's Snitch | mor |
 | whenever ~ attacks, you may put a soldier creature card from your hand onto the battlefield tapped and attacking. | 1 | Preeminent Captain | mor |
 | {M}: up to two target swamps each become N/N treefolk warrior creatures in addition to their other types until end of turn. | 1 | Fendeep Summoner | mor |

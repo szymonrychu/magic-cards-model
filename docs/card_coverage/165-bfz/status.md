@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 38 | 16.8% |
-| Works (untested) | 170 | 75.2% |
+| Works (untested) | 171 | 75.7% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 18 | 8.0% |
+| Not working | 17 | 7.5% |
 
 ## Cards needing work
 
@@ -36,7 +36,6 @@
 | Gideon, Ally of Zendikar | silent | +1: Until end of turn, Gideon becomes a 5/5 Human Soldier Ally creature with indestructible that's still a planeswalker. Prevent all damage that would be dealt  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Grip of Desolation | silent | Devoid (This card has no color.) Exile target creature and target land. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Munda, Ambush Leader | silent | Rally — Whenever Munda or another Ally you control enters, you may look at the top four cards of your library. If you do, reveal any number of Ally cards from a | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Silent Skimmer | silent | Whenever this creature attacks, defending player loses 2 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sire of Stagnation | silent | Whenever a land an opponent controls enters, that player exiles the top two cards of their library and you draw two cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Skyline Cascade | silent | When this land enters, target creature an opponent controls doesn't untap during its controller's next untap step. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Slab Hammer | silent | Whenever equipped creature attacks, you may return a land you control to its owner's hand. If you do, the creature gets +2/+2 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -180,6 +179,7 @@
 | Shadow Glider | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
 | Shambling Vent | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Shatterskull Recruit | handled | Menace | machines/combat.py | Y/Y/- | not_tested |
+| Silent Skimmer | handled | Whenever this creature attacks, defending player loses 2 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Skitterskin | handled | This creature can't block. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Sludge Crawler | handled | {2}: This creature gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Smoldering Marsh | handled | This land enters tapped unless you control two or more basic lands. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -280,7 +280,6 @@
 | whenever equipped creature attacks, you may return a land you control to its owner's hand. if you do, the creature gets +N/+N until end of turn. | 1 | Slab Hammer | bfz |
 | whenever you cast an instant or sorcery spell that targets only zada, copy that spell for each other creature you control that the spell could target. each copy | 1 | Zada, Hedron Grinder | bfz |
 | whenever ~ attacks, defending player exiles two permanents they control. | 1 | Bane of Bala Ged | bfz |
-| whenever ~ attacks, defending player loses N life. | 1 | Silent Skimmer | bfz |
 | {M}{M}{M}: draw a card. each opponent exiles the top card of their library. | 1 | Fathom Feeder | bfz |
 
 ## Notes

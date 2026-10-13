@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 78 | 31.0% |
+| Tested | 79 | 31.3% |
 | Works (untested) | 134 | 53.2% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 40 | 15.9% |
+| Not working | 39 | 15.5% |
 
 ## Cards needing work
 
@@ -40,7 +40,6 @@
 | Herd Heirloom | silent | {T}: Until end of turn, target creature you control with power 4 or greater gains trample and "Whenever this creature deals combat damage to a player, draw a ca | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Kheru Goldkeeper | silent | Whenever one or more cards leave your graveyard during your turn, create a Treasure token. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
 | Kishla Skimmer | silent | Whenever a card leaves your graveyard during your turn, draw a card. This ability triggers only once each turn. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
-| Kotis, the Fangkeeper | silent | Whenever Kotis deals combat damage to a player, exile the top X cards of their library, where X is the amount of damage dealt. You may cast any number of spells | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Krotiq Nestguard | silent | {2}{G}: This creature can attack this turn as though it didn't have defender. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Lotuslight Dancers | silent | When this creature enters, search your library for a black card, a green card, and a blue card. Put those cards into your graveyard, then shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Mardu Siegebreaker | silent | Whenever this creature attacks, for each opponent, create a tapped token that's a copy of the exiled card attacking that opponent. At the beginning of your next | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -204,7 +203,7 @@
 ## Fully supported
 
 <details>
-<summary>78 cards</summary>
+<summary>79 cards</summary>
 
 - Aegis Sculptor
 - Agent of Kotis
@@ -243,6 +242,7 @@
 - Inevitable Defeat
 - Jeskai Revelation
 - Karakyk Guardian
+- Kotis, the Fangkeeper
 - Krumar Initiate
 - Lie in Wait
 - Maelstrom of the Spirit Dragon
@@ -316,7 +316,6 @@
 | when ~ enters, you may exile a creature card from your graveyard. when you do, return target instant or sorcery card from your graveyard to your hand. | 1 | Kishla Trawlers | tdm |
 | when ~ enters, you may search your library for a basic land card, reveal it, then shuffle and put that card on top. if you control a dragon, put that card onto  | 1 | Embermouth Sentinel | tdm |
 | whenever a card leaves your graveyard during your turn, draw a card. ~ triggers only once each turn. | 1 | Kishla Skimmer | tdm |
-| whenever kotis deals combat damage to a player, exile the top N cards of their library, where N is the amount of damage dealt. you may cast any number of spells | 1 | Kotis, the Fangkeeper | tdm |
 | whenever one or more cards leave your graveyard during your turn, create a treasure token. | 1 | Kheru Goldkeeper | tdm |
 | whenever one or more cards leave your graveyard during your turn, put a +N/+N counter on ~. | 1 | Attuned Hunter | tdm |
 | whenever ~ attacks, for each opponent, create a tapped token that's a copy of the exiled card attacking that opponent. at the beginning of your next end step, s | 1 | Mardu Siegebreaker | tdm |

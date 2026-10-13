@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 28 | 15.3% |
-| Works (untested) | 102 | 55.7% |
+| Tested | 30 | 16.4% |
+| Works (untested) | 104 | 56.8% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 53 | 29.0% |
+| Not working | 49 | 26.8% |
 
 ## Cards needing work
 
@@ -36,7 +36,6 @@
 | Eternal of Harsh Truths | silent | Afflict | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Fraying Sanity | silent | At the beginning of each end step, enchanted player mills X cards, where X is the number of cards put into their graveyard from anywhere this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Frontline Devastator | silent | Afflict | no machine in the engine executes this keyword | Y/Y/- | not_working |
-| God-Pharaoh's Gift | silent | At the beginning of combat on your turn, you may exile a creature card from your graveyard. If you do, create a token that's a copy of that card, except it's a  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Graven Abomination | silent | Whenever this creature attacks, exile target card from defending player's graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Hazoret's Undying Fury | silent | Shuffle your library, then exile the top four cards. You may cast any number of spells with mana value 5 or less from among them without paying their mana costs | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Imaginary Threats | silent | Creatures target opponent controls attack this turn if able. During that player's next untap step, creatures they control don't untap. Cycling {2} ({2}, Discard | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -57,7 +56,6 @@
 | Rhonas's Stalwart | silent | You may exert this creature as it attacks. When you do, it gets +1/+1 until end of turn and can't be blocked by creatures with power 2 or less this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Riddleform | silent | Whenever you cast a noncreature spell, you may have this enchantment become a 3/3 Sphinx creature with flying in addition to its other types until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sidewinder Naga | silent | As long as you control a Desert or there is a Desert card in your graveyard, this creature gets +1/+0 and has trample. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Sifter Wurm | silent | When this creature enters, scry 3, then reveal the top card of your library. You gain life equal to that card's mana value. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Spellweaver Eternal | silent | Afflict | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Tenacious Hunter | silent | As long as a creature has a -1/-1 counter on it, this creature has vigilance and deathtouch. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Torment of Hailfire | silent | Repeat the following process X times. Each opponent loses 3 life unless that player sacrifices a nonland permanent of their choice or discards a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -65,7 +63,6 @@
 | Torment of Venom | silent | Put three -1/-1 counters on target creature. Its controller loses 3 life unless they sacrifice another nonland permanent of their choice or discard a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Tragic Lesson | silent | Draw two cards. Then discard a card unless you return a land you control to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Uncage the Menagerie | silent | Search your library for up to X creature cards with different names that each have mana value X, reveal them, put them into your hand, then shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Unesh, Criosphinx Sovereign | silent | Whenever Unesh or another Sphinx you control enters, reveal the top four cards of your library. An opponent separates those cards into two piles. Put one pile i | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Visage of Bolas | silent | When this artifact enters, you may search your library and/or graveyard for a card named Nicol Bolas, the Deceiver, reveal it, and put it into your hand. If you | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Vizier of the Anointed | silent | Whenever you activate an eternalize or embalm ability, draw a card. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Wildfire Eternal | silent | Afflict | no machine in the engine executes this keyword | Y/Y/- | not_working |
@@ -78,7 +75,6 @@
 | Samut, the Tested | notice | −7: Search your library for up to two creature and/or planeswalker cards, put them onto the battlefield, then shuffle. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Solitary Camel | notice | This creature has lifelink as long as you control a Desert or there is a Desert card in your graveyard. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Thorned Moloch | notice | This creature has first strike as long as it's attacking. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Vile Manifestation | notice | This creature gets +1/+0 for each card with cycling in your graveyard. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Accursed Horde | handled | {1}{B}: Target attacking Zombie gains indestructible until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Adorned Pouncer | handled | Double strike | machines/combat.py | Y/Y/- | not_tested |
 | Aerial Guide | handled | Whenever this creature attacks, another target attacking creature gains flying until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -124,6 +120,7 @@
 | Gift of Strength | handled | Target creature gets +3/+3 and gains reach until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Gilded Cerodon | handled | Whenever this creature attacks, if you control a Desert or there is a Desert card in your graveyard, target creature can't block this turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | God-Pharaoh's Faithful | handled | Whenever you cast a blue, black, or red spell, you gain 1 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| God-Pharaoh's Gift | handled | At the beginning of combat on your turn, you may exile a creature card from your graveyard. If you do, create a token that's a copy of that card, except it's a  | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Granitic Titan | handled | Menace | machines/combat.py | Y/Y/- | not_tested |
 | Grind // Dust | handled | Put a -1/-1 counter on each of up to two target creatures. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Grisly Survivor | handled | Whenever you cycle or discard a card, this creature gets +2/+0 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -175,6 +172,7 @@
 | Survivors' Encampment | handled |  |  | Y/Y/- | not_tested |
 | Swarm Intelligence | handled | Whenever you cast an instant or sorcery spell, you may copy that spell. You may choose new targets for the copy. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Unconventional Tactics | handled | Target creature gets +3/+3 and gains flying until end of turn. Whenever a Zombie you control enters, you may pay {W}. If you do, return this card from your grav | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Unesh, Criosphinx Sovereign | handled | Sphinx spells you cast cost {2} less to cast. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Unquenchable Thirst | handled | When this Aura enters, if you control a Desert or there is a Desert card in your graveyard, tap enchanted creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Unraveling Mummy | handled | {1}{W}: Target attacking Zombie gains lifelink until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Wasp of the Bitter End | handled | Whenever you cast a Bolas planeswalker spell, you may sacrifice this creature. If you do, destroy target creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -185,7 +183,7 @@
 ## Fully supported
 
 <details>
-<summary>28 cards</summary>
+<summary>30 cards</summary>
 
 - Abandoned Sarcophagus
 - Abrade
@@ -210,9 +208,11 @@
 - Resolute Survivors
 - Sand Strangler
 - Saving Grace
+- Sifter Wurm
 - Solemnity
 - Striped Riverwinder
 - Sunscourge Champion
+- Vile Manifestation
 - Vizier of the True
 - Wall of Forgotten Pharaohs
 
@@ -229,7 +229,6 @@
 | aftermath (cast ~ only from your graveyard. then exile it.) look at the top card of your library. you may put it onto the battlefield if it"..."t, put it into y | 1 | Reason // Believe | hou |
 | as long as a creature has a -N/-N counter on it, ~ has vigilance and deathtouch. | 1 | Tenacious Hunter | hou |
 | as long as you control a desert or there is a desert card in your graveyard, ~ gets +N/+N and has trample. | 1 | Sidewinder Naga | hou |
-| at the beginning of combat on your turn, you may exile a creature card from your graveyard. if you do, create a token that"..."s a N/N black zombie. it gains ha | 1 | God-Pharaoh's Gift | hou |
 | at the beginning of each end step, enchanted player mills N cards, where N is the number of cards put into their graveyard from anywhere ~. | 1 | Fraying Sanity | hou |
 | at the beginning of enchanted player's upkeep, that player loses N life unless they sacrifice a nonland permanent of their choice or discard a card. | 1 | Torment of Scarabs | hou |
 | at the beginning of your upkeep, tap ~ unless you sacrifice another creature. | 1 | Apocalypse Demon | hou |
@@ -249,10 +248,8 @@
 | shuffle your library, then exile the top four cards. you may cast any number of spells with mana value N or less from among them without paying their mana costs | 1 | Hazoret's Undying Fury | hou |
 | untap target creature. it gets +N/+N until end of turn and can block an additional creature ~. | 1 | Act of Heroism | hou |
 | when you cycle ~, counter target activated or triggered ability you don't control. | 1 | Nimble Obstructionist | hou |
-| when ~ enters, scry N, then reveal the top card of your library. you gain life equal to that card's mana value. | 1 | Sifter Wurm | hou |
 | when ~ enters, you may have target creature get +N/+N until end of turn, where N is ~ power. | 1 | Resilient Khenra | hou |
 | when ~ enters, you may search your library and/or graveyard for a card named nicol bolas, the deceiver, reveal it, and put it into your hand. if you search your | 1 | Visage of Bolas | hou |
-| whenever unesh or another sphinx you control enters, reveal the top four cards of your library. an opponent separates those cards into two piles. put one pile i | 1 | Unesh, Criosphinx Sovereign | hou |
 | whenever you activate an eternalize or embalm ability, draw a card. | 1 | Vizier of the Anointed | hou |
 | whenever you cast a noncreature spell, you may have ~ become a N/N sphinx creature with flying in addition to its other types until end of turn. | 1 | Riddleform | hou |
 | whenever you cast a spell with mana value equal to the number of doom counters on ~, ~ deals that much damage to any target. then put a doom counter on ~. | 1 | Imminent Doom | hou |
@@ -263,7 +260,6 @@
 | you may exert ~ as it attacks. when you do, it gets +N/+N until end of turn and can't be blocked by creatures with power N or less ~. | 1 | Rhonas's Stalwart | hou |
 | you may exert ~ as it attacks. when you do, it gets +N/+N until end of turn. | 1 | Khenra Scrapper | hou |
 | ~ gets +N/+N as long as there is a desert card in your graveyard. | 1 | Ramunap Hydra | hou |
-| ~ gets +N/+N for each card with cycling in your graveyard. | 1 | Vile Manifestation | hou |
 | ~ has first strike as long as it's attacking. | 1 | Thorned Moloch | hou |
 | ~ has lifelink as long as you control a desert or there is a desert card in your graveyard. | 1 | Solitary Camel | hou |
 | ~'s power and toughness are each equal to twice the number of creatures you control. | 1 | Majestic Myriarch | hou |

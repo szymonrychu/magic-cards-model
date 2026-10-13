@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 29 | 17.9% |
+| Tested | 30 | 18.5% |
 | Works (untested) | 104 | 64.2% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 29 | 17.9% |
+| Not working | 28 | 17.3% |
 
 ## Cards needing work
 
@@ -51,7 +51,6 @@
 | Summoner's Egg | silent | Imprint — When this creature enters, you may exile a card from your hand face down. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Bringer of the Red Dawn | notice | At the beginning of your upkeep, you may untap target creature and gain control of it until end of turn. That creature gains haste until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Chimeric Coils | notice | {X}{1}: This artifact becomes an X/X Construct artifact creature. Sacrifice it at the beginning of the next end step. | unparsed remainder: Sacrifice it at the beginning of the next end step. | Y/-/- | not_working |
-| Plunge into Darkness | notice | Choose one — • Sacrifice any number of creatures. You gain 3 life for each creature sacrificed this way. • Pay any amount of life, then look at that many cards  | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Rude Awakening | notice | Choose one — • Untap all lands you control. • Until end of turn, lands you control become 2/2 creatures that are still lands. Entwine {2}{G} (Choose both if you | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Spectral Shift | notice | Choose one — • Change the text of target spell or permanent by replacing all instances of one basic land type with another. (This effect lasts indefinitely.) •  | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Tangle Asp | notice | Whenever this creature blocks or becomes blocked by a creature, destroy that creature at end of combat. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
@@ -163,7 +162,7 @@
 ## Fully supported
 
 <details>
-<summary>29 cards</summary>
+<summary>30 cards</summary>
 
 - Beacon of Unrest
 - Cranial Plating
@@ -182,6 +181,7 @@
 - Night's Whisper
 - Opaline Bracers
 - Paradise Mantle
+- Plunge into Darkness
 - Razorgrass Screen
 - Relentless Rats
 - Rite of Passage
@@ -201,7 +201,7 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| Choose one | 3 | Plunge into Darkness, Rude Awakening, Spectral Shift | 5dn |
+| Choose one | 2 | Rude Awakening, Spectral Shift | 5dn |
 | Imprint | 1 | Summoner's Egg | 5dn |
 | at the beginning of each end step, each player sacrifices a permanent of their choice unless they discard a card. | 1 | Possessed Portal | 5dn |
 | at the beginning of each opponent's upkeep, ~ deals N damage to that player unless they have exactly three or exactly four cards in hand. | 1 | Skullcage | 5dn |

@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 36 | 25.2% |
+| Tested | 37 | 25.9% |
 | Works (untested) | 68 | 47.6% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 39 | 27.3% |
+| Not working | 38 | 26.6% |
 
 ## Cards needing work
 
@@ -47,7 +47,6 @@
 | Karplusan Minotaur | silent | Whenever you win a coin flip, this creature deals 1 damage to any target. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Kjeldoran Gargoyle | silent | Whenever this creature deals damage, you gain that much life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Krovikan Rot | silent | Recover | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Lightning Storm | silent | Lightning Storm deals X damage to any target, where X is 3 plus the number of charge counters on Lightning Storm. Discard a land card: Put two charge counters o | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Resize | silent | Recover | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Rimehorn Aurochs | silent | {2}{S}: Target creature blocks target creature this turn if able. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Rune Snag | silent | Counter target spell unless its controller pays {2} plus an additional {2} for each card named Rune Snag in each graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -137,7 +136,7 @@
 ## Fully supported
 
 <details>
-<summary>36 cards</summary>
+<summary>37 cards</summary>
 
 - Adarkar Windform
 - Allosaurus Rider
@@ -153,6 +152,7 @@
 - Kjeldoran Javelineer
 - Kjeldoran War Cry
 - Krovikan Scoundrel
+- Lightning Storm
 - Luminesce
 - Martyr of Ashes
 - Martyr of Sands
@@ -210,7 +210,6 @@
 | {M}: when target creature other than ~ dies ~, return that card to the battlefield under your control. | 1 | Adarkar Valkyrie | csp |
 | {M}{M}, {M}: look at the top card of your library. if that card is snow, you may reveal it and put it into your hand. | 1 | Scrying Sheets | csp |
 | {M}{M}: target creature blocks target creature ~ if able. | 1 | Rimehorn Aurochs | csp |
-| ~ deals N damage to any target, where N is N plus the number of charge counters on ~. discard a land card: put two charge counters on ~. you may choose a new ta | 1 | Lightning Storm | csp |
 
 ## Notes
 

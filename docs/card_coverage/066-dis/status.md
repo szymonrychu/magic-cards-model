@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 39 | 23.1% |
-| Works (untested) | 76 | 45.0% |
+| Tested | 47 | 27.8% |
+| Works (untested) | 77 | 45.6% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 54 | 32.0% |
+| Not working | 45 | 26.6% |
 
 ## Cards needing work
 
@@ -32,11 +32,9 @@
 | Blessing of the Nephilim | silent | Enchanted creature gets +1/+1 for each of its colors. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Brain Pry | silent | Choose a nonland card name. Target player reveals their hand. That player discards a card with that name. If they can't, you draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Bronze Bombshell | silent | When a player other than this creature's owner controls it, that player sacrifices it. If the player does, this creature deals 7 damage to the player. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
-| Condemn | silent | Put target attacking creature on the bottom of its owner's library. Its controller gains life equal to its toughness. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Crypt Champion | silent | When this creature enters, each player puts a creature card with mana value 3 or less from their graveyard onto the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Cytoplast Root-Kin | silent | When this creature enters, put a +1/+1 counter on each other creature you control with a +1/+1 counter on it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Cytoshape | silent | Choose a nonlegendary creature on the battlefield. Target creature becomes a copy of that creature until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Dovescape | silent | Whenever a player casts a noncreature spell, counter that spell. That player creates X 1/1 white and blue Bird creature tokens with flying, where X is the spell | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Drekavac | silent | When this creature enters, sacrifice it unless you discard a noncreature card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Elemental Resonance | silent | At the beginning of your first main phase, add mana equal to enchanted permanent's mana cost. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Evolution Vat | silent | {3}, {T}: Tap target creature and put a +1/+1 counter on it. Until end of turn, that creature gains "{2}{G}{U}: Double the number of +1/+1 counters on this crea | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -45,9 +43,7 @@
 | Govern the Guildless | silent | Gain control of target monocolored creature. Forecast — {1}{U}, Reveal this card from your hand: Target creature becomes the color or colors of your choice unti | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Hide // Seek | silent | Put target artifact or enchantment on the bottom of its owner's library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Isperia the Inscrutable | silent | Whenever Isperia deals combat damage to a player, choose a card name. That player reveals their hand. If a card with the chosen name is revealed this way, searc | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Jagged Poppet | silent | Hellbent — Whenever this creature deals combat damage to a player, if you have no cards in hand, that player discards cards equal to the damage. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Kill-Suit Cultist | silent | {B}, Sacrifice this creature: The next time damage would be dealt to target creature this turn, destroy that creature instead. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Kindle the Carnage | silent | Discard a card at random. If you do, Kindle the Carnage deals damage equal to that card's mana value to each creature. You may repeat this process any number of | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Loaming Shaman | silent | When this creature enters, target player shuffles any number of target cards from their graveyard into their library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Momir Vig, Simic Visionary | silent | Whenever you cast a blue creature spell, reveal the top card of your library. If it's a creature card, put that card into your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Muse Vessel | silent | {3}, {T}: Target player exiles a card from their hand. Activate only as a sorcery. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -67,19 +63,14 @@
 | Simic Guildmage | silent | {1}{G}: Move a +1/+1 counter from target creature onto another target creature with the same controller. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Slithering Shade | silent | Hellbent — This creature can attack as though it didn't have defender as long as you have no cards in hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Street Savvy | silent | Enchanted creature gets +0/+2 and can block creatures with landwalk abilities as though they didn't have those abilities. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Swift Silence | silent | Counter all other spells. Draw a card for each spell countered this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Trial // Error | silent | Return all creatures blocking or blocked by target creature to their owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Twinstrike | silent | Twinstrike deals 2 damage to each of two target creatures. Hellbent — Destroy those creatures instead if you have no cards in hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Valor Made Real | silent | Target creature can block any number of creatures this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Vigean Intuition | silent | Choose a card type, then reveal the top four cards of your library. Put all cards of the chosen type revealed this way into your hand and the rest into your gra | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Wakestone Gargoyle | silent | {1}{W}: Creatures you control with defender can attack this turn as though they didn't have defender. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Windreaver | silent | {U}: Switch this creature's power and toughness until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Dread Slag | notice | This creature gets -4/-4 for each card in your hand. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Experiment Kraj | notice | Experiment Kraj has all activated abilities of each other creature with a +1/+1 counter on it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Hit // Run | notice | Target player sacrifices an artifact or creature of their choice. Hit deals damage to that player equal to that permanent's mana value. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Ignorant Bliss | notice | Exile all cards from your hand face down. At the beginning of the next end step, return those cards to your hand, then draw a card. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Infernal Tutor | notice | Reveal a card from your hand. Search your library for a card with the same name as that card, reveal it, put it into your hand, then shuffle. Hellbent — If you  | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Might of the Nephilim | notice | Target creature gets +2/+2 until end of turn for each of its colors. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Aquastrand Spider | handled | {G}: Target creature with a +1/+1 counter on it gains reach until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Assault Zeppelid | handled | Flying | machines/combat.py | Y/-/- | not_tested |
 | Aurora Eidolon | handled | {W}, Sacrifice this creature: Prevent the next 3 damage that would be dealt to any target this turn. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -151,6 +142,7 @@
 | Utvara Scalper | handled | This creature attacks each combat if able. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Verdant Eidolon | handled | Whenever you cast a multicolored spell, you may return this card from your graveyard to your hand. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Vigean Graftmage | handled | {1}{U}: Untap target creature with a +1/+1 counter on it. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Vigean Intuition | handled | Choose a card type, then reveal the top four cards of your library. Put all cards of the chosen type revealed this way into your hand and the rest into your gra | the engine reads this text and performs it | Y/-/- | not_tested |
 | Vision Skeins | handled | Each player draws two cards. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Voidslime | handled | Counter target spell, activated ability, or triggered ability. (Mana abilities can't be targeted.) | the engine reads this text and performs it | Y/-/- | not_tested |
 | Whiptail Moloch | handled | When this creature enters, it deals 3 damage to target creature you control. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -160,7 +152,7 @@
 ## Fully supported
 
 <details>
-<summary>39 cards</summary>
+<summary>47 cards</summary>
 
 - Anthem of Rakdos
 - Azorius Aethermage
@@ -172,7 +164,10 @@
 - Breeding Pool
 - Carom
 - Coiling Oracle
+- Condemn
 - Demonfire
+- Dovescape
+- Dread Slag
 - Enemy of the Guildpact
 - Flame-Kin War Scout
 - Ghost Quarter
@@ -180,6 +175,10 @@
 - Guardian of the Guildpact
 - Hallowed Fountain
 - Hellhole Rats
+- Hit // Run
+- Jagged Poppet
+- Kindle the Carnage
+- Might of the Nephilim
 - Nettling Curse
 - Palliation Accord
 - Prahv, Spires of Order
@@ -193,6 +192,7 @@
 - Simic Growth Chamber
 - Simic Initiate
 - Spell Snare
+- Swift Silence
 - Taste for Mayhem
 - Unliving Psychopath
 - Utopia Sprawl
@@ -208,16 +208,13 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| Hellbent | 2 | Jagged Poppet, Slithering Shade | dis |
+| Hellbent | 1 | Slithering Shade | dis |
 | as long as ~ is enchanted, it gets +N/+N, has trample, and has "..." | 1 | Flaring Flame-Kin | dis |
 | at the beginning of your first main phase, add mana equal to enchanted permanent's mana cost. | 1 | Elemental Resonance | dis |
 | cast ~ only during combat after blockers are declared. create a N/N green saproling creature token that's blocking target creature attacking you. draw a card. | 1 | Flash Foliage | dis |
-| choose a card type, then reveal the top four cards of your library. put all cards of the chosen type revealed ~ into your hand and the rest into your graveyard. | 1 | Vigean Intuition | dis |
 | choose a nonland card name. target player reveals their hand. that player discards a card with that name. if they can't, you draw a card. | 1 | Brain Pry | dis |
 | choose a nonlegendary creature on the battlefield. target creature becomes a copy of that creature until end of turn. | 1 | Cytoshape | dis |
-| counter all other spells. draw a card for each spell countered ~. | 1 | Swift Silence | dis |
 | destroy all auras and equipment. | 1 | Pure // Simple | dis |
-| discard a card at random. if you do, ~ deals damage equal to that card's mana value to each creature. you may repeat ~ any number of times. | 1 | Kindle the Carnage | dis |
 | draw a card for each creature target player controls, then draw a card for each creature another target player controls. | 1 | Biomantic Mastery | dis |
 | enchanted creature gets +N/+N and can block creatures with landwalk abilities as though they didn't have those abilities. | 1 | Street Savvy | dis |
 | enchanted creature gets +N/+N for each of its colors. | 1 | Blessing of the Nephilim | dis |
@@ -226,15 +223,12 @@
 | flip a coin. if it comes up heads, counter target instant or sorcery spell. if it comes up tails, copy that spell and you may choose new targets for the copy. | 1 | Odds // Ends | dis |
 | gain control of target monocolored creature. forecast — {M}{M}, reveal ~ from your hand: target creature becomes the color or colors of your choice until end of | 1 | Govern the Guildless | dis |
 | put target artifact or enchantment on the bottom of its owner's library. | 1 | Hide // Seek | dis |
-| put target attacking creature on the bottom of its owner's library. its controller gains life equal to its toughness. | 1 | Condemn | dis |
 | return all creatures blocking or blocked by target creature to their owner's hand. | 1 | Trial // Error | dis |
 | return target creature card from a graveyard and target creature on the battlefield to their owners' hands. | 1 | Rise // Fall | dis |
 | reveal a card from your hand. search your library for a card with the same name as that card, reveal it, put it into your hand, then shuffle. hellbent — if you  | 1 | Infernal Tutor | dis |
 | reveal the top four cards of your library. you may put a creature card from among them onto the battlefield. it gains "..." then put the rest of the cards revea | 1 | Aethermage's Touch | dis |
 | shuffle up to four cards you own from outside the game into your library. | 1 | Research // Development | dis |
 | target creature can block any number of creatures ~. | 1 | Valor Made Real | dis |
-| target creature gets +N/+N until end of turn for each of its colors. | 1 | Might of the Nephilim | dis |
-| target player sacrifices an artifact or creature of their choice. ~ deals damage to that player equal to that permanent's mana value. | 1 | Hit // Run | dis |
 | until end of turn, all creatures become black and all lands become swamps. | 1 | Nightcreep | dis |
 | when a player other than ~ owner controls it, that player sacrifices it. if the player does, ~ deals N damage to the player. | 1 | Bronze Bombshell | dis |
 | when ~ dies, search your library for any number of creature cards with total mana value N or less, put them onto the battlefield, then shuffle. | 1 | Protean Hulk | dis |
@@ -243,7 +237,6 @@
 | when ~ enters, sacrifice it unless you discard a noncreature card. | 1 | Drekavac | dis |
 | when ~ enters, sacrifice it unless you discard two cards. | 1 | Avatar of Discord | dis |
 | when ~ enters, target player shuffles any number of target cards from their graveyard into their library. | 1 | Loaming Shaman | dis |
-| whenever a player casts a noncreature spell, counter that spell. that player creates N N/N white and blue bird creature tokens with flying, where N is the spell | 1 | Dovescape | dis |
 | whenever an opponent is dealt N or more damage by a single source, that player discards a card. | 1 | Pain Magnification | dis |
 | whenever isperia deals combat damage to a player, choose a card name. that player reveals their hand. if a card with the chosen name is revealed ~, search your  | 1 | Isperia the Inscrutable | dis |
 | whenever rakdos attacks, sacrifice half the non-demon permanents you control, rounded up. | 1 | Rakdos the Defiler | dis |
@@ -259,7 +252,6 @@
 | {M}{M}: move a +N/+N counter from target creature onto another target creature with the same controller. | 1 | Simic Guildmage | dis |
 | {M}{M}: until end of turn, target creature with a +N/+N counter on it gains "..." | 1 | Simic Basilisk | dis |
 | ~ deals N damage to each of two target creatures. hellbent — destroy those creatures instead if you have no cards in hand. | 1 | Twinstrike | dis |
-| ~ gets -N/-N for each card in your hand. | 1 | Dread Slag | dis |
 | ~ has all activated abilities of each other creature with a +N/+N counter on it. | 1 | Experiment Kraj | dis |
 
 ## Notes

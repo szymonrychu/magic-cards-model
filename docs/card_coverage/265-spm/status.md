@@ -17,17 +17,16 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 48 | 25.7% |
+| Tested | 49 | 26.2% |
 | Works (untested) | 102 | 54.5% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 37 | 19.8% |
+| Not working | 36 | 19.3% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
 | Black Cat, Cunning Thief | silent | When Black Cat enters, look at the top nine cards of target opponent's library, exile two of them face down, then put the rest on the bottom of their library in | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Cheering Crowd | silent | At the beginning of each player's first main phase, that player may put a +1/+1 counter on this creature. If they do, they add {C} for each counter on it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Cosmic Spider-Man | silent | At the beginning of combat on your turn, other Spiders you control gain flying, first strike, trample, lifelink, and haste until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Gwen Stacy // Ghost-Spider | silent | When Gwen Stacy enters, exile the top card of your library. You may play that card for as long as you control this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Gwenom, Remorseless | silent | Whenever Gwenom attacks, until end of turn, you may look at the top card of your library any time and you may play cards from the top of your library. If you ca | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -169,7 +168,7 @@
 ## Fully supported
 
 <details>
-<summary>48 cards</summary>
+<summary>49 cards</summary>
 
 - Alien Symbiosis
 - Anti-Venom, Horrifying Healer
@@ -177,6 +176,7 @@
 - Aunt May
 - Behold the Sinister Six!
 - Carnage, Crimson Chaos
+- Cheering Crowd
 - Doc Ock's Henchmen
 - Doc Ock's Tentacles
 - Doc Ock, Sinister Scientist
@@ -231,7 +231,6 @@
 | animal may-ham — other spiders, boars, bats, bears, birds, cats, dogs, frogs, jackals, lizards, mice, otters, rabbits, raccoons, rats, squirrels, turtles, and w | 1 | Spider-Ham, Peter Porker | spm |
 | at the beginning of combat on your turn, other spiders you control gain flying, first strike, trample, lifelink, and haste until end of turn. | 1 | Cosmic Spider-Man | spm |
 | at the beginning of combat on your turn, target non-equipment artifact you control becomes an artifact creature with base power and toughness N/N until end of t | 1 | Living Brain, Mechanical Marvel | spm |
-| at the beginning of each player's first main phase, that player may put a +N/+N counter on ~. if they do, they add {M} for each counter on it. | 1 | Cheering Crowd | spm |
 | at the beginning of your end step, two target players each reveal the top card of their library. they each lose life equal to the mana value of the card reveale | 1 | Parker Luck | spm |
 | at the beginning of your end step, you may tap two untapped creatures and/or treasures you control. if you do, draw a card. otherwise, sacrifice ~. | 1 | Rent Is Due | spm |
 | each player may discard a card. each player who doesn't loses N life. | 1 | The Death of Gwen Stacy | spm |

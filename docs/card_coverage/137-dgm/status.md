@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 31 | 21.7% |
-| Works (untested) | 77 | 53.8% |
+| Tested | 33 | 23.1% |
+| Works (untested) | 79 | 55.2% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 35 | 24.5% |
+| Not working | 31 | 21.7% |
 
 ## Cards needing work
 
@@ -32,7 +32,6 @@
 | Breaking // Entering | silent | Put a creature card from a graveyard onto the battlefield under your control. It gains haste until end of turn. Fuse (You may cast one or both halves of this ca | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Catch // Release | silent | Each player sacrifices an artifact, a creature, an enchantment, a land, and a planeswalker of their choice. Fuse (You may cast one or both halves of this card f | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Deadbridge Chant | silent | At the beginning of your upkeep, choose a card at random in your graveyard. If it's a creature card, put it onto the battlefield. Otherwise, put it into your ha | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Dragonshift | silent | Until end of turn, target creature you control becomes a blue and red Dragon with base power and toughness 4/4, loses all abilities, and gains flying. Overload  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Exava, Rakdos Blood Witch | silent | Unleash | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Fluxcharger | silent | Whenever you cast an instant or sorcery spell, you may switch this creature's power and toughness until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Gruul War Chant | silent | Attacking creatures you control get +1/+0 and have menace. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -46,12 +45,10 @@
 | Maze Glider | silent | Multicolored creatures you control have flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Maze Rusher | silent | Multicolored creatures you control have haste. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Maze Sentinel | silent | Multicolored creatures you control have vigilance. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Mirko Vosk, Mind Drinker | silent | Whenever Mirko Vosk deals combat damage to a player, that player reveals cards from the top of their library until they reveal four land cards, then puts those  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Nivix Cyclops | silent | Whenever you cast an instant or sorcery spell, this creature gets +3/+0 until end of turn and can attack this turn as though it didn't have defender. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Pyrewild Shaman | silent | Whenever one or more creatures you control deal combat damage to a player, if this card is in your graveyard, you may pay {3}. If you do, return this card to yo | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Rakdos Drake | silent | Unleash | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Ral Zarek | silent | −7: Flip five coins. Take an extra turn after this one for each coin that comes up heads. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Reap Intellect | silent | Target opponent reveals their hand. You choose up to X nonland cards from it and exile them. For each card exiled this way, search that player's graveyard, hand | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Render Silent | silent | Counter target spell. Its controller can't cast spells this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Renegade Krasis | silent | Whenever this creature evolves, put a +1/+1 counter on each other creature you control with a +1/+1 counter on it. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Restore the Peace | silent | Return each creature that dealt damage this turn to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -59,7 +56,6 @@
 | Trait Doctoring | silent | Change the text of target permanent by replacing all instances of one color word with another or one basic land type with another until end of turn. Cipher (The | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Vorel of the Hull Clade | silent | {G}{U}, {T}: Double the number of each kind of counter on target artifact, creature, or land. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Wake the Reflections | silent | Populate. (Create a token that's a copy of a creature token you control.) | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Weapon Surge | silent | Overload | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Pontiff of Blight | notice | Other creatures you control have extort. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Advent of the Wurm | handled | Create a 5/5 green Wurm creature token with trample. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Alive // Well | handled | Create a 3/3 green Centaur creature token. Fuse (You may cast one or both halves of this card from your hand.) | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -93,6 +89,7 @@
 | Maw of the Obzedat | handled | Sacrifice a creature: Creatures you control get +1/+1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Mending Touch | handled | Regenerate target creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Mindstatic | handled | Counter target spell unless its controller pays {6}. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Mirko Vosk, Mind Drinker | handled | Whenever Mirko Vosk deals combat damage to a player, that player reveals cards from the top of their library until they reveal four land cards, then puts those  | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Murmuring Phantasm | handled | Defender | machines/combat.py | Y/Y/- | not_tested |
 | Mutant's Prey | handled | Target creature you control with a +1/+1 counter on it fights target creature an opponent controls. (Each deals damage equal to its power to the other.) | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Obzedat's Aid | handled | Return target permanent card from your graveyard to the battlefield. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -135,6 +132,7 @@
 | Viashino Firstblade | handled | When this creature enters, it gets +2/+2 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Warleader's Helix | handled | Warleader's Helix deals 4 damage to any target and you gain 4 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Warped Physique | handled | Target creature gets +X/-X until end of turn, where X is the number of cards in your hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Weapon Surge | handled | Target creature you control gets +1/+0 and gains first strike until end of turn. Overload {1}{R} (You may cast this spell for its overload cost. If you do, chan | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Woodlot Crawler | handled | Landwalk | no code needed | Y/Y/- | not_tested |
 | Zhur-Taa Ancient | handled | Whenever a player taps a land for mana, that player adds one mana of any type that land produced. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Zhur-Taa Druid | handled | Whenever you tap this creature for mana, it deals 1 damage to each opponent. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -142,7 +140,7 @@
 ## Fully supported
 
 <details>
-<summary>31 cards</summary>
+<summary>33 cards</summary>
 
 - Aetherling
 - Beck // Call
@@ -153,6 +151,7 @@
 - Council of the Absolute
 - Crypt Incursion
 - Debt to the Deathless
+- Dragonshift
 - Drown in Filth
 - Emmara Tandris
 - Flesh // Blood
@@ -168,6 +167,7 @@
 - Possibility Storm
 - Protect // Serve
 - Ready // Willing
+- Reap Intellect
 - Riot Control
 - Showstopper
 - Sinister Possession
@@ -199,15 +199,11 @@
 | multicolored creatures you control have trample. | 1 | Maze Behemoth | dgm |
 | multicolored creatures you control have vigilance. | 1 | Maze Sentinel | dgm |
 | other creatures you control have extort. | 1 | Pontiff of Blight | dgm |
-| overload | 1 | Weapon Surge | dgm |
 | populate. (create a token that's a copy of a creature token you control.) | 1 | Wake the Reflections | dgm |
 | put a creature card from a graveyard onto the battlefield under your control. it gains haste until end of turn. fuse (you may cast one or both halves of ~ from  | 1 | Breaking // Entering | dgm |
 | return each creature that dealt damage ~ to its owner's hand. | 1 | Restore the Peace | dgm |
-| target opponent reveals their hand. you choose up to N nonland cards from it and exile them. for each card exiled ~, search that player's graveyard, hand, and l | 1 | Reap Intellect | dgm |
-| until end of turn, target creature you control becomes a blue and red dragon with base power and toughness N/N, loses all abilities, and gains flying. overload  | 1 | Dragonshift | dgm |
 | when lavinia enters, detain each nonland permanent your opponents control with mana value N or less. | 1 | Lavinia of the Tenth | dgm |
 | when ~ enters, if you cast it from your hand, create a N/N white bird creature token with flying, then populate. | 1 | Scion of Vitu-Ghazi | dgm |
-| whenever mirko vosk deals combat damage to a player, that player reveals cards from the top of their library until they reveal four land cards, then puts those  | 1 | Mirko Vosk, Mind Drinker | dgm |
 | whenever one or more creatures you control deal combat damage to a player, if ~ is in your graveyard, you may pay {M}. if you do, return ~ to your hand. | 1 | Pyrewild Shaman | dgm |
 | whenever you cast an instant or sorcery spell, you may switch ~ power and toughness until end of turn. | 1 | Fluxcharger | dgm |
 | whenever you cast an instant or sorcery spell, ~ gets +N/+N until end of turn and can attack ~ as though it didn't have defender. | 1 | Nivix Cyclops | dgm |

@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 21 | 18.6% |
+| Tested | 22 | 19.5% |
 | Works (untested) | 71 | 62.8% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 21 | 18.6% |
+| Not working | 20 | 17.7% |
 
 ## Cards needing work
 
@@ -29,7 +29,6 @@
 | Ajani's Chosen | silent | Whenever an enchantment you control enters, create a 2/2 white Cat creature token. If that enchantment is an Aura, you may attach it to the token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Blightcaster | silent | Whenever you cast an enchantment spell, you may have target creature get -2/-2 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Chandra, Pyromaster | silent | −7: Exile the top ten cards of your library. Choose an instant or sorcery card exiled this way and copy it three times. You may cast the copies without paying t | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Devout Invocation | silent | Tap any number of untapped creatures you control. Create a 4/4 white Angel creature token with flying for each creature tapped this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Dismiss into Dream | silent | Each creature your opponents control is an Illusion in addition to its other types and has "When this creature becomes the target of a spell or ability, sacrifi | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Elite Arcanist | silent | {X}, {T}: Copy the exiled card. You may cast the copy without paying its mana cost. X is the mana value of the exiled card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Goblin Diplomats | silent | {T}: Each creature attacks this turn if able. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -122,7 +121,7 @@
 ## Fully supported
 
 <details>
-<summary>21 cards</summary>
+<summary>22 cards</summary>
 
 - Advocate of the Beast
 - Angelic Accord
@@ -130,6 +129,7 @@
 - Awaken the Ancient
 - Bogbrew Witch
 - Bubbling Cauldron
+- Devout Invocation
 - Elvish Mystic
 - Festering Newt
 - Fiendslayer Paladin
@@ -156,7 +156,6 @@
 | creatures without flying can't block ~. | 1 | Seismic Stomp | m14 |
 | each creature your opponents control is an illusion in addition to its other types and has "..." | 1 | Dismiss into Dream | m14 |
 | put all creature cards from all graveyards onto the battlefield under your control. | 1 | Rise of the Dark Realms | m14 |
-| tap any number of untapped creatures you control. create a N/N white angel creature token with flying for each creature tapped ~. | 1 | Devout Invocation | m14 |
 | target creature gets +N/+N and gains trample until end of turn. it must be blocked ~ if able. (a creature with trample can deal excess combat damage to the play | 1 | Enlarge | m14 |
 | when a creature attacks you or a planeswalker you control, if ~ has defender, it loses defender and gains trample. | 1 | Guardian of the Ages | m14 |
 | when ~ enters, target opponent mills five cards. you may cast an instant or sorcery spell from among them without paying its mana cost. | 1 | Jace's Mindseeker | m14 |

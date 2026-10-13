@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 46 | 18.8% |
+| Tested | 48 | 19.6% |
 | Works (untested) | 161 | 65.7% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 38 | 15.5% |
+| Not working | 36 | 14.7% |
 
 ## Cards needing work
 
@@ -48,11 +48,9 @@
 | River Heralds' Boon | silent | Put a +1/+1 counter on target creature and a +1/+1 counter on up to one target Merfolk. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | River's Rebuke | silent | Return all nonland permanents target player controls to their owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Rowdy Crew | silent | When this creature enters, draw three cards, then discard two cards at random. If two cards that share a card type are discarded this way, put two +1/+1 counter | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Ruin Raider | silent | Raid — At the beginning of your end step, if you attacked this turn, reveal the top card of your library and put that card into your hand. You lose life equal t | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sanguine Sacrament | silent | You gain twice X life. Put Sanguine Sacrament on the bottom of its owner's library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Shadowed Caravel | silent | Whenever a creature you control explores, put a +1/+1 counter on this Vehicle. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Sun-Blessed Mount | silent | When this creature enters, you may search your library and/or graveyard for a card named Huatli, Dinosaur Knight, reveal it, then put it into your hand. If you  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Sunbird's Invocation | silent | Whenever you cast a spell from your hand, reveal the top X cards of your library, where X is that spell's mana value. You may cast a spell with mana value X or  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sword-Point Diplomacy | silent | Reveal the top three cards of your library. For each of those cards, put that card into your hand unless any opponent pays 3 life. Then exile the rest. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Vance's Blasting Cannons // Spitfire Bastion | silent | At the beginning of your upkeep, exile the top card of your library. If it's a nonland card, you may cast that card this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Wakening Sun's Avatar | silent | When this creature enters, if you cast it from your hand, destroy all non-Dinosaur creatures. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -229,7 +227,7 @@
 ## Fully supported
 
 <details>
-<summary>46 cards</summary>
+<summary>48 cards</summary>
 
 - Admiral Beckett Brass
 - Arcane Adaptation
@@ -263,6 +261,7 @@
 - Ranging Raptors
 - Raptor Companion
 - Rigging Runner
+- Ruin Raider
 - Search for Azcanta // Azcanta, the Sunken Ruin
 - Settle the Wreckage
 - Siren Stormtamer
@@ -271,6 +270,7 @@
 - Spell Swindle
 - Spike-Tailed Ceratops
 - Storm Fleet Aerialist
+- Sunbird's Invocation
 - Treasure Map // Treasure Cove
 - Trove of Temptation
 - Unclaimed Territory
@@ -284,7 +284,6 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| Raid | 1 | Ruin Raider | xln |
 | +N: whenever one or more creatures you control deal combat damage to a player ~, draw a card, then discard a card. | 1 | Jace, Cunning Castaway | xln |
 | as long as you control a jace planeswalker, ~ gets +N/+N and can't be blocked. | 1 | Jace's Sentinel | xln |
 | as long as ~ is attacking, it gets +N/+N. | 1 | Adanto Vanguard | xln |
@@ -317,7 +316,6 @@
 | whenever a creature you control explores, target creature an opponent controls gets -N/-N until end of turn. | 1 | Lurking Chupacabra | xln |
 | whenever equipped creature deals combat damage to a player, you may transform ~. | 1 | Dowsing Dagger // Lost Vale | xln |
 | whenever gishath deals combat damage to a player, reveal that many cards from the top of your library. put any number of dinosaur creature cards from among them | 1 | Gishath, Sun's Avatar | xln |
-| whenever you cast a spell from your hand, reveal the top N cards of your library, where N is that spell's mana value. you may cast a spell with mana value N or  | 1 | Sunbird's Invocation | xln |
 | whenever ~ enters or attacks, you may exile target card from a graveyard. if a creature card is exiled ~, you gain N life. if a noncreature card is exiled ~, ~  | 1 | Deathgorge Scavenger | xln |
 | you gain twice N life. put ~ on the bottom of its owner's library. | 1 | Sanguine Sacrament | xln |
 | {M}: untap target attacking creature an opponent controls and remove it from combat. | 1 | Thaumatic Compass // Spires of Orazca | xln |

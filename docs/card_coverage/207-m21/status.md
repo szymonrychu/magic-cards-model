@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 38 | 20.9% |
+| Tested | 39 | 21.4% |
 | Works (untested) | 110 | 60.4% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 34 | 18.7% |
+| Not working | 33 | 18.1% |
 
 ## Cards needing work
 
@@ -47,7 +47,6 @@
 | Necromentia | silent | Choose a card name other than a basic land card name. Search target opponent's graveyard, hand, and library for any number of cards with that name and exile the | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Seasoned Hallowblade | silent | Discard a card: Tap this creature. It gains indestructible until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | See the Truth | silent | Look at the top three cards of your library. Put one of those cards into your hand and the rest on the bottom of your library in any order. If this spell was ca | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Siege Striker | silent | Whenever this creature attacks, you may tap any number of untapped creatures you control. This creature gets +1/+1 until end of turn for each creature tapped th | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Teferi's Wavecaster | silent | When this creature enters, you may search your library and/or graveyard for a card named Teferi, Timeless Voyager, reveal it, and put it into your hand. If you  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Teferi, Timeless Voyager | silent | −8: Each creature target opponent controls phases out. Until the end of your next turn, they can't phase in. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Unleash Fury | silent | Double the power of target creature until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -174,7 +173,7 @@
 ## Fully supported
 
 <details>
-<summary>38 cards</summary>
+<summary>39 cards</summary>
 
 - Archfiend's Vessel
 - Barrin, Tolarian Archmage
@@ -207,6 +206,7 @@
 - Sanctum of Fruitful Harvest
 - Sanctum of Tranquil Light
 - Shacklegeist
+- Siege Striker
 - Soul Sear
 - Speaker of the Heavens
 - Teferi, Master of Time
@@ -249,7 +249,6 @@
 | when ~ enters, you may search your library and/or graveyard for a card named garruk, savage herald, reveal it, and put it into your hand. if you search your lib | 1 | Garruk's Warsteed | m21 |
 | when ~ enters, you may search your library and/or graveyard for a card named teferi, timeless voyager, reveal it, and put it into your hand. if you search your  | 1 | Teferi's Wavecaster | m21 |
 | when ~ enters, you may search your library for a card named alpine watchdog and/or a card named igneous cur, reveal them, put them into your hand, then shuffle. | 1 | Alpine Houndmaster | m21 |
-| whenever ~ attacks, you may tap any number of untapped creatures you control. ~ gets +N/+N until end of turn for each creature tapped ~. | 1 | Siege Striker | m21 |
 | whenever ~ deals combat damage to a player or planeswalker, look at that many cards from the top of your library. you may reveal a creature card or garruk plane | 1 | Garruk's Harbinger | m21 |
 | ~ gets +N/+N, where N is the greatest power among creature cards in your graveyard. | 1 | Carrion Grub | m21 |
 | −N: discard your hand, then draw seven cards. until end of turn, you may cast spells from your hand without paying their mana costs. | 1 | Chandra, Flame's Catalyst | m21 |

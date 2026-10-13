@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 64 | 24.2% |
+| Tested | 65 | 24.5% |
 | Works (untested) | 117 | 44.2% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 84 | 31.7% |
+| Not working | 83 | 31.3% |
 
 ## Cards needing work
 
@@ -66,7 +66,6 @@
 | Oblivious Bookworm | silent | At the beginning of your end step, you may draw a card. If you do, discard a card unless a permanent entered the battlefield face down under your control this t | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Omnivorous Flytrap | silent | Delirium — Whenever this creature enters or attacks, if there are four or more card types among cards in your graveyard, distribute two +1/+1 counters among one | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Optimistic Scavenger | silent | Eerie — Whenever an enchantment you control enters and whenever you fully unlock a Room, put a +1/+1 counter on target creature. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
-| Orphans of the Wheat | silent | Whenever this creature attacks, tap any number of untapped creatures you control. This creature gets +1/+1 until end of turn for each creature tapped this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Osseous Sticktwister | silent | Delirium — At the beginning of your end step, if there are four or more card types among cards in your graveyard, each opponent may sacrifice a nonland permanen | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Paranormal Analyst | silent | Whenever you manifest dread, put a card you put into your graveyard this way into your hand. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
 | Reluctant Role Model | silent | Survival — At the beginning of your second main phase, if this creature is tapped, put a flying, lifelink, or +1/+1 counter on it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -231,7 +230,7 @@
 ## Fully supported
 
 <details>
-<summary>64 cards</summary>
+<summary>65 cards</summary>
 
 - Abhorrent Oculus
 - Arabella, Abandoned Doll
@@ -274,6 +273,7 @@
 - Mirror Room // Fractured Realm
 - Nashi, Searcher in the Dark
 - Nowhere to Run
+- Orphans of the Wheat
 - Overlord of the Balemurk
 - Overlord of the Mistmoors
 - Patched Plaything
@@ -350,7 +350,6 @@
 | whenever one or more land cards are put into your graveyard from your library, put them onto the battlefield tapped. | 1 | Hedge Shredder | dsk |
 | whenever you manifest dread, put a card you put into your graveyard ~ into your hand. | 1 | Paranormal Analyst | dsk |
 | whenever you turn a permanent face up, put a +N/+N counter on it. | 1 | Growing Dread | dsk |
-| whenever ~ attacks, tap any number of untapped creatures you control. ~ gets +N/+N until end of turn for each creature tapped ~. | 1 | Orphans of the Wheat | dsk |
 | whenever ~ attacks, target creature defending player controls gets -N/-N and loses flying until your next turn. | 1 | Fear of Falling | dsk |
 | whenever ~ attacks, you may have it get +N/+N until end of turn. if you do, sacrifice it at the beginning of the next end step. | 1 | Attack-in-the-Box | dsk |
 | whenever ~ deals combat damage to a player, choose one that hasn't been chosen — • put two +N/+N counters on ~. • draw a card. • ~ becomes a copy of another tar | 1 | Silent Hallcreeper | dsk |

@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 41 | 19.1% |
-| Works (untested) | 136 | 63.3% |
+| Tested | 45 | 20.9% |
+| Works (untested) | 137 | 63.7% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 38 | 17.7% |
+| Not working | 33 | 15.3% |
 
 ## Cards needing work
 
@@ -28,7 +28,6 @@
 |---|---|---|---|---|---|
 | Auriok Replica | silent | {W}, Sacrifice this creature: Prevent all damage a source of your choice would deal to you this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Carnifex Demon | silent | {B}, Remove a -1/-1 counter from this creature: Put a -1/-1 counter on each other creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Cerebral Eruption | silent | Target opponent reveals the top card of their library. Cerebral Eruption deals damage equal to the revealed card's mana value to that player and each creature t | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Clone Shell | silent | Imprint — When this creature enters, look at the top four cards of your library, exile one face down, then put the rest on the bottom of your library in any ord | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Contagion Engine | silent | {4}, {T}: Proliferate twice. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Copperhorn Scout | silent | Whenever this creature attacks, untap each other creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -40,10 +39,8 @@
 | Glint Hawk | silent | When this creature enters, sacrifice it unless you return an artifact you control to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Glint Hawk Idol | silent | Whenever another artifact you control enters, you may have this artifact become a 2/2 Bird artifact creature with flying until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Grafted Exoskeleton | silent | Whenever this Equipment becomes unattached from a permanent, sacrifice that permanent. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
-| Hoard-Smelter Dragon | silent | {3}{R}: Destroy target artifact. This creature gets +X/+0 until end of turn, where X is that artifact's mana value. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Kemba, Kha Regent | silent | At the beginning of your upkeep, create a 2/2 white Cat creature token for each Equipment attached to Kemba. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Liege of the Tangle | silent | Whenever this creature deals combat damage to a player, you may choose any number of target lands you control and put an awakening counter on each of them. Each | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Memoricide | silent | Choose a nonland card name. Search target player's graveyard, hand, and library for any number of cards with that name and exile them. Then that player shuffles | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Myr Battlesphere | silent | Whenever this creature attacks, you may tap X untapped Myr you control. If you do, this creature gets +X/+0 until end of turn and deals X damage to the player o | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Myr Galvanizer | silent | {1}, {T}: Untap each other Myr you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Nim Deathmantle | silent | Equipped creature gets +2/+2, has intimidate, and is a black Zombie. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -53,11 +50,9 @@
 | Precursor Golem | silent | Whenever a player casts an instant or sorcery spell that targets only a single Golem, that player copies that spell for each other Golem that spell could target | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Prototype Portal | silent | {X}, {T}: Create a token that's a copy of the exiled card. X is the mana value of that card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Psychic Miasma | silent | Target player discards a card. If a land card is discarded this way, return Psychic Miasma to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Shape Anew | silent | The controller of target artifact sacrifices it, then reveals cards from the top of their library until they reveal an artifact card. That player puts that card | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Strata Scythe | silent | Equipped creature gets +1/+1 for each land on the battlefield with the same name as the exiled card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sunblast Angel | silent | When this creature enters, destroy all tapped creatures. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Turn Aside | silent | Counter target spell that targets a permanent you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Venser's Journal | silent | At the beginning of your upkeep, you gain 1 life for each card in your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Venser, the Sojourner | silent | −1: Creatures can't be blocked this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Vigil for the Lost | silent | Whenever a creature you control dies, you may pay {X}. If you do, you gain X life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Viridian Revel | silent | Whenever an artifact is put into an opponent's graveyard from the battlefield, you may draw a card. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
@@ -134,6 +129,7 @@
 | Lumengrid Drake | handled | Metalcraft — When this creature enters, if you control three or more artifacts, return target creature to its owner's hand. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Lux Cannon | handled | {T}: Put a charge counter on this artifact. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Melt Terrain | handled | Destroy target land. Melt Terrain deals 2 damage to that land's controller. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Memoricide | handled | Choose a nonland card name. Search target player's graveyard, hand, and library for any number of cards with that name and exile them. Then that player shuffles | the engine reads this text and performs it | Y/-/- | not_tested |
 | Molder Beast | handled | Whenever an artifact is put into a graveyard from the battlefield, this creature gets +2/+0 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Moriok Reaver | handled |  |  | Y/-/- | not_tested |
 | Moriok Replica | handled | {1}{B}, Sacrifice this creature: You draw two cards and you lose 2 life. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -204,13 +200,14 @@
 ## Fully supported
 
 <details>
-<summary>41 cards</summary>
+<summary>45 cards</summary>
 
 - Arc Trail
 - Argent Sphinx
 - Asceticism
 - Assault Strobe
 - Carrion Call
+- Cerebral Eruption
 - Darkslick Shores
 - Darksteel Myr
 - Echo Circlet
@@ -219,6 +216,7 @@
 - Ezuri, Renegade Leader
 - Galvanic Blast
 - Grindclock
+- Hoard-Smelter Dragon
 - Indomitable Archangel
 - Koth of the Hammer
 - Kuldotha Phoenix
@@ -236,6 +234,7 @@
 - Rust Tick
 - Rusted Relic
 - Semblance Anvil
+- Shape Anew
 - Soul Parry
 - Spikeshot Elder
 - Steel Hellkite
@@ -245,6 +244,7 @@
 - True Conviction
 - Tunnel Ignus
 - Twisted Image
+- Venser's Journal
 - Volition Reins
 - Wurmcoil Engine
 
@@ -257,16 +257,12 @@
 | Imprint | 1 | Clone Shell | som |
 | as an additional cost to cast ~, sacrifice a creature. destroy target creature. its controller loses life equal to the number of creatures that died ~. | 1 | Flesh Allergy | som |
 | at the beginning of your upkeep, create a N/N white cat creature token for each equipment attached to kemba. | 1 | Kemba, Kha Regent | som |
-| at the beginning of your upkeep, you gain N life for each card in your hand. | 1 | Venser's Journal | som |
-| choose a nonland card name. search target player's graveyard, hand, and library for any number of cards with that name and exile them. then that player shuffles | 1 | Memoricide | som |
 | choose two target creatures. tap those creatures, then unattach all equipment from them. | 1 | Fulgent Distraction | som |
 | counter target spell that targets a permanent you control. | 1 | Turn Aside | som |
 | equipped creature gets +N/+N for each land on the battlefield with the same name as the exiled card. | 1 | Strata Scythe | som |
 | equipped creature gets +N/+N, has intimidate, and is a black zombie. | 1 | Nim Deathmantle | som |
 | reveal the top N cards of your library. you may put any number of permanent cards with mana value N or less from among them onto the battlefield. then put all c | 1 | Genesis Wave | som |
-| target opponent reveals the top card of their library. ~ deals damage equal to the revealed card"..."s hand. | 1 | Cerebral Eruption | som |
 | target player discards a card. if a land card is discarded ~, return ~ to its owner's hand. | 1 | Psychic Miasma | som |
-| the controller of target artifact sacrifices it, then reveals cards from the top of their library until they reveal an artifact card. that player puts that card | 1 | Shape Anew | som |
 | when ~ enters, destroy all tapped creatures. | 1 | Sunblast Angel | som |
 | when ~ enters, sacrifice it unless you return an artifact you control to its owner's hand. | 1 | Glint Hawk | som |
 | whenever a creature you control dies, you may pay {M}. if you do, you gain N life. | 1 | Vigil for the Lost | som |
@@ -287,7 +283,6 @@
 | {M}, {M}: create a token that's a copy of the exiled card. N is the mana value of that card. | 1 | Prototype Portal | som |
 | {M}, {M}: proliferate twice. | 1 | Contagion Engine | som |
 | {M}, {M}: untap each other myr you control. | 1 | Myr Galvanizer | som |
-| {M}{M}: destroy target artifact. ~ gets +N/+N until end of turn, where N is that artifact's mana value. | 1 | Hoard-Smelter Dragon | som |
 | {M}{M}: put target artifact or creature card with mana value N from an opponent's graveyard onto the battlefield tapped under your control. then that player mil | 1 | Geth, Lord of the Vault | som |
 | ~ deals N damage to target creature. destroy all equipment attached to that creature. | 1 | Turn to Slag | som |
 | −N: creatures can't be blocked ~. | 1 | Venser, the Sojourner | som |

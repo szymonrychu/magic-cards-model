@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 51 | 21.3% |
+| Tested | 54 | 22.6% |
 | Works (untested) | 155 | 64.9% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 33 | 13.8% |
+| Not working | 30 | 12.6% |
 
 ## Cards needing work
 
@@ -39,7 +39,6 @@
 | Elite Inquisitor | silent | First strike, vigilance Protection from Vampires, from Werewolves, and from Zombies | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Frightful Delusion | silent | Counter target spell unless its controller pays {1}. That player discards a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Full Moon's Rise | silent | Sacrifice this enchantment: Regenerate all Werewolf creatures you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Garruk Relentless // Garruk, the Veil-Cursed | silent | When Garruk has two or fewer loyalty counters on him, transform him. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Grimoire of the Dead | silent | {T}, Remove three study counters from Grimoire of the Dead and sacrifice it: Put all creature cards from all graveyards onto the battlefield under your control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Hamlet Captain | silent | Whenever this creature attacks or blocks, other Humans you control get +1/+1 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Heretic's Punishment | silent | {3}{R}: Choose any target, then mill three cards. This enchantment deals damage to that permanent or player equal to the greatest mana value among the milled ca | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -47,13 +46,11 @@
 | Make a Wish | silent | Return two cards at random from your graveyard to your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Manor Gargoyle | silent | {1}: Until end of turn, this creature loses defender and gains flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Memory's Journey | silent | Target player shuffles up to three target cards from their graveyard into their library. Flashback {G} (You may cast this card from your graveyard for its flash | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Mindshrieker | silent | {2}: Target player mills a card. This creature gets +X/+X until end of turn, where X is the milled card's mana value. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Moldgraf Monstrosity | silent | When this creature dies, exile it, then return two creature cards at random from your graveyard to the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Nightbird's Clutches | silent | Up to two target creatures can't block this turn. Flashback {3}{R} (You may cast this card from your graveyard for its flashback cost. Then exile it.) | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Runechanter's Pike | silent | Equipped creature has first strike and gets +X/+0, where X is the number of instant and sorcery cards in your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Runic Repetition | silent | Return target exiled card with flashback you own to your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Tree of Redemption | silent | {T}: Exchange your life total with this creature's toughness. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Trepanation Blade | silent | Whenever equipped creature attacks, defending player reveals cards from the top of their library until they reveal a land card. The creature gets +1/+0 until en | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Victim of Night | silent | Destroy target non-Vampire, non-Werewolf, non-Zombie creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Witchbane Orb | silent | When this artifact enters, destroy all Curses attached to you. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Wooden Stake | silent | Whenever equipped creature blocks or becomes blocked by a Vampire, destroy that creature. It can't be regenerated. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -218,7 +215,7 @@
 ## Fully supported
 
 <details>
-<summary>51 cards</summary>
+<summary>54 cards</summary>
 
 - Ambush Viper
 - Army of the Damned
@@ -240,6 +237,7 @@
 - Essence of the Wild
 - Festerhide Boar
 - Forbidden Alchemy
+- Garruk Relentless // Garruk, the Veil-Cursed
 - Ghostly Possession
 - Grave Bramble
 - Grimgrin, Corpse-Born
@@ -250,6 +248,7 @@
 - Liliana of the Veil
 - Ludevic's Test Subject // Ludevic's Abomination
 - Manor Skeleton
+- Mindshrieker
 - Moonmist
 - Nevermore
 - Orchard Spirit
@@ -263,6 +262,7 @@
 - Slayer of the Wicked
 - Snapcaster Mage
 - Stony Silence
+- Trepanation Blade
 - Tribute to Hunger
 - Typhoid Rats
 - Unbreathing Horde
@@ -296,18 +296,15 @@
 | search your library for a basic land card, reveal it, put it into your hand, then shuffle. morbid — you may put that card onto the battlefield instead of puttin | 1 | Caravan Vigil | isd |
 | target player shuffles up to three target cards from their graveyard into their library. flashback {M} (you may cast ~ from your graveyard for its flashback cos | 1 | Memory's Journey | isd |
 | up to two target creatures can't block ~. flashback {M}{M} (you may cast ~ from your graveyard for its flashback cost. then exile it.) | 1 | Nightbird's Clutches | isd |
-| when garruk has two or fewer loyalty counters on him, transform him. | 1 | Garruk Relentless // Garruk, the Veil-Cursed | isd |
 | when ~ dies, exile it, then return two creature cards at random from your graveyard to the battlefield. | 1 | Moldgraf Monstrosity | isd |
 | when ~ dies, you may search your library for a curse card, put it onto the battlefield attached to target player, then shuffle. | 1 | Bitterheart Witch | isd |
 | when ~ enters, destroy all curses attached to you. | 1 | Witchbane Orb | isd |
-| whenever equipped creature attacks, defending player reveals cards from the top of their library until they reveal a land card. the creature gets +N/+N until en | 1 | Trepanation Blade | isd |
 | whenever equipped creature blocks or becomes blocked by a vampire, destroy that creature. it can't be regenerated. | 1 | Wooden Stake | isd |
 | whenever ~ attacks or blocks, other humans you control get +N/+N until end of turn. | 1 | Hamlet Captain | isd |
 | whenever ~ deals combat damage to a creature, flip a coin. if you win the flip, destroy that creature. | 1 | Creepy Doll | isd |
 | {M}, remove three study counters from ~ and sacrifice it: put all creature cards from all graveyards onto the battlefield under your control. they're black zomb | 1 | Grimoire of the Dead | isd |
 | {M}, {M}: target player puts the bottom card of their library into their graveyard. if it's a creature card, you create a N/N black zombie creature token. | 1 | Cellar Door | isd |
 | {M}: exchange your life total with ~ toughness. | 1 | Tree of Redemption | isd |
-| {M}: target player mills a card. ~ gets +N/+N until end of turn, where N is the milled card's mana value. | 1 | Mindshrieker | isd |
 | {M}: until end of turn, ~ loses defender and gains flying. | 1 | Manor Gargoyle | isd |
 | {M}{M}: choose any target, then mill three cards. ~ deals damage to that permanent or player equal to the greatest mana value among the milled cards. | 1 | Heretic's Punishment | isd |
 | {M}{M}: ~ owner shuffles it into their library. if that player does, they reveal cards from the top of that library until a card named ~ is revealed. the player | 1 | Mirror-Mad Phantasm | isd |

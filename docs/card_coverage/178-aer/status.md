@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 46 | 24.9% |
+| Tested | 47 | 25.4% |
 | Works (untested) | 114 | 61.6% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 25 | 13.5% |
+| Not working | 24 | 13.0% |
 
 ## Cards needing work
 
@@ -36,7 +36,6 @@
 | Fourth Bridge Prowler | silent | When this creature enters, you may have target creature get -1/-1 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Greenbelt Rampager | silent | When this creature enters, pay {E}{E} . If you can't, return this creature to its owner's hand and you get {E}. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Gremlin Infestation | silent | At the beginning of your end step, this Aura deals 2 damage to enchanted artifact's controller. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Indomitable Creativity | silent | Destroy X target artifacts and/or creatures. For each permanent destroyed this way, its controller reveals cards from the top of their library until an artifact | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Lightning Runner | silent | Whenever this creature attacks, you get {E}{E} , then you may pay eight {E}. If you pay, untap all creatures you control, and after this phase, there is an addi | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Mechanized Production | silent | At the beginning of your upkeep, create a token that's a copy of enchanted artifact. Then if you control eight or more artifacts with the same name as one anoth | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Natural Obsolescence | silent | Put target artifact on the bottom of its owner's library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -169,7 +168,7 @@
 ## Fully supported
 
 <details>
-<summary>46 cards</summary>
+<summary>47 cards</summary>
 
 - Aether Chaser
 - Aether Swooper
@@ -195,6 +194,7 @@
 - Hinterland Drake
 - Hope of Ghirapur
 - Hungry Flames
+- Indomitable Creativity
 - Inspiring Statuary
 - Kari Zev's Expertise
 - Maulfist Revolutionary
@@ -229,7 +229,6 @@
 | +N: reveal the top three cards of your library. put all nonland permanent cards revealed ~ into your hand and the rest on the bottom of your library in any orde | 1 | Ajani Unyielding | aer |
 | at the beginning of your end step, ~ deals N damage to enchanted artifact's controller. | 1 | Gremlin Infestation | aer |
 | at the beginning of your upkeep, create a token that's a copy of enchanted artifact. then if you control eight or more artifacts with the same name as one anoth | 1 | Mechanized Production | aer |
-| destroy N target artifacts and/or creatures. for each permanent destroyed ~, its controller reveals cards from the top of their library until an artifact or cre | 1 | Indomitable Creativity | aer |
 | each opponent sacrifices a creature or planeswalker of their choice, then discards a card. you return a creature or planeswalker card from your graveyard to you | 1 | Dark Intimations | aer |
 | exile target nonland card from your graveyard. search your library for any number of cards with the same name as that card, reveal them, put them into your hand | 1 | Secret Salvage | aer |
 | pay {M}: ~ gains lifelink until end of turn. | 1 | Aethersphere Harvester | aer |

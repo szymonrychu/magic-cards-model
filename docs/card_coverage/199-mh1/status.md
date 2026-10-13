@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 49 | 23.3% |
-| Works (untested) | 113 | 53.8% |
+| Tested | 51 | 24.3% |
+| Works (untested) | 116 | 55.2% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 48 | 22.9% |
+| Not working | 43 | 20.5% |
 
 ## Cards needing work
 
@@ -38,18 +38,14 @@
 | Goblin Champion | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Goblin Oriflamme | silent | Attacking creatures you control get +1/+0. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Headless Specter | silent | Hellbent — Whenever this creature deals combat damage to a player, if you have no cards in hand, that player discards a card at random. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Iceberg Cancrix | silent | Whenever another snow permanent you control enters, you may have target player mill two cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Igneous Elemental | silent | This spell costs {2} less to cast if there is a land card in your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Mind Rake | silent | Overload | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Phantasmal Form | silent | Until end of turn, up to two target creatures each have base power and toughness 3/3, gain flying, and become blue Illusions in addition to their other colors a | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Quakefoot Cyclops | silent | When this creature enters, up to two target creatures can't block this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Reap the Past | silent | Return X cards at random from your graveyard to your hand. Exile Reap the Past. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Recruit the Worthy | silent | Buyback | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Scale Up | silent | Overload | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Silumgar Scavenger | silent | Exploit | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Smoke Shroud | silent | When a Ninja you control enters, you may return this card from your graveyard to the battlefield attached to that creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Spinehorn Minotaur | silent | As long as you've drawn two or more cards this turn, this creature has double strike. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Stirring Address | silent | Overload | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Stream of Thought | silent | Target player mills four cards. You shuffle up to four cards from your graveyard into your library. Replicate {2}{U}{U} (When you cast this spell, copy it for e | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | String of Disappearances | silent | Return target creature to its owner's hand. Then that creature's controller may pay {U}{U}. If the player does, they may copy this spell and may choose a new ta | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sword of Sinew and Steel | silent | Whenever equipped creature deals combat damage to a player, destroy up to one target planeswalker and up to one target artifact. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -59,7 +55,6 @@
 | Unbound Flourishing | silent | Whenever you cast a permanent spell with a mana cost that contains {X}, double the value of X. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Wall of One Thousand Cuts | silent | {W}: This creature can attack this turn as though it didn't have defender. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Winding Way | silent | Choose creature or land. Reveal the top four cards of your library. Put all cards of the chosen type revealed this way into your hand and the rest into your gra | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Winds of Abandon | silent | Exile target creature you don't control. For each creature exiled this way, its controller searches their library for a basic land card. Those players put those | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Archmage's Charm | notice | Choose one — • Counter target spell. • Target player draws two cards. • Gain control of target nonland permanent with mana value 1 or less. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Cabal Therapist | notice | At the beginning of your first main phase, you may sacrifice a creature. When you do, choose a nonland card name, then target player reveals their hand and disc | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Eyekite | notice | This creature gets +2/+0 as long as you've drawn two or more cards this turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
@@ -111,6 +106,7 @@
 | Graveshifter | handled | When this creature enters, you may return target creature card from your graveyard to your hand. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Hall of Heliod's Generosity | handled | {1}{W}, {T}: Put target enchantment card from your graveyard on top of your library. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Hexdrinker | handled | Level Up | machines/keywords.py | Y/-/- | not_tested |
+| Iceberg Cancrix | handled | Whenever another snow permanent you control enters, you may have target player mill two cards. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Impostor of the Sixth Pride | handled | Changeling | machines/keywords.py | Y/-/- | not_tested |
 | Ingenious Infiltrator | handled | Whenever a Ninja you control deals combat damage to a player, draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Irregular Cohort | handled | When this creature enters, create a 2/2 colorless Shapeshifter creature token with changeling. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -123,6 +119,7 @@
 | Llanowar Tribe | handled |  |  | Y/-/- | not_tested |
 | Magmatic Sinkhole | handled | Delve (Each card you exile from your graveyard while casting this spell pays for {1}.) Magmatic Sinkhole deals 5 damage to target creature or planeswalker. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Marit Lage's Slumber | handled | Whenever Marit Lage's Slumber or another snow permanent you control enters, scry 1. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Mind Rake | handled | Target player discards two cards. Overload {1}{B} (You may cast this spell for its overload cost. If you do, change "target" in its text to "each.") | the engine reads this text and performs it | Y/-/- | not_tested |
 | Mist-Syndicate Naga | handled | Whenever this creature deals combat damage to a player, create a token that's a copy of this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Mob | handled | Convoke (Your creatures can help cast this spell. Each creature you tap while casting this spell pays for {1} or one mana of that creature's color.) Destroy tar | the engine reads this text and performs it | Y/-/- | not_tested |
 | Moonblade Shinobi | handled | Whenever this creature deals combat damage to a player, create a 1/1 blue Illusion creature token with flying. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -165,6 +162,7 @@
 | Spiteful Sliver | handled | Sliver creatures you control have "Whenever this creature is dealt damage, it deals that much damage to target player or planeswalker." | the engine reads this text and performs it | Y/-/- | not_tested |
 | Splicer's Skill | handled | Create a 3/3 colorless Phyrexian Golem artifact creature token. Splice onto instant or sorcery {3}{W} (As you cast an instant or sorcery spell, you may reveal t | the engine reads this text and performs it | Y/-/- | not_tested |
 | Springbloom Druid | handled | When this creature enters, you may sacrifice a land. If you do, search your library for up to two basic land cards, put them onto the battlefield tapped, then s | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Stirring Address | handled | Target creature you control gets +2/+2 until end of turn. Overload {5}{W} (You may cast this spell for its overload cost. If you do, change "target" in its text | the engine reads this text and performs it | Y/-/- | not_tested |
 | Talisman of Conviction | handled |  |  | Y/-/- | not_tested |
 | Talisman of Creativity | handled |  |  | Y/-/- | not_tested |
 | Talisman of Hierarchy | handled |  |  | Y/-/- | not_tested |
@@ -191,7 +189,7 @@
 ## Fully supported
 
 <details>
-<summary>49 cards</summary>
+<summary>51 cards</summary>
 
 - Bogardan Dragonheart
 - Changeling Outcast
@@ -225,6 +223,7 @@
 - Ranger-Captain of Eos
 - Return from Extinction
 - Savage Swipe
+- Scale Up
 - Scuttling Sliver
 - Seasoned Pyromancer
 - Silent Clearing
@@ -238,6 +237,7 @@
 - Valiant Changeling
 - Watcher for Tomorrow
 - Windcaller Aven
+- Winds of Abandon
 - Winter's Rest
 - Wrenn and Six
 - Yawgmoth, Thran Physician
@@ -250,7 +250,6 @@
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
 | Choose one | 3 | Archmage's Charm, Shatter Assumptions, Twisted Reflection | mh1 |
-| overload | 3 | Mind Rake, Scale Up, Stirring Address | mh1 |
 | Choose two | 1 | Kaya's Guile | mh1 |
 | Hellbent | 1 | Headless Specter | mh1 |
 | as long as another aura is attached to enchanted creature, it has first strike and lifelink. | 1 | Face of Divinity | mh1 |
@@ -264,7 +263,6 @@
 | equipped creature gets +N/+N and is every creature type. | 1 | Amorphous Axe | mh1 |
 | evolve | 1 | Gluttonous Slug | mh1 |
 | exalted | 1 | Goblin Champion | mh1 |
-| exile target creature you don't control. for each creature exiled ~, its controller searches their library for a basic land card. those players put those cards  | 1 | Winds of Abandon | mh1 |
 | exile the top six cards of your library. you may cast up to two sorcery spells with mana value N or less from among them without paying their mana costs. put th | 1 | Collected Conjuring | mh1 |
 | exploit | 1 | Silumgar Scavenger | mh1 |
 | gain control of target creature until end of turn. untap that creature. it gains haste until end of turn. if that creature is a goat, it also gets +N/+N until e | 1 | Goatnap | mh1 |
@@ -280,7 +278,6 @@
 | when ~ enters, you may search your library for an artifact card with mana value N, reveal that card, put it into your hand, then shuffle. | 1 | Tribute Mage | mh1 |
 | whenever a creature you control becomes blocked, you may return it to its owner's hand. | 1 | Cunning Evasion | mh1 |
 | whenever a creature you control enters, you gain N life. if ~ isn't a creature, it becomes a N/N angel creature with flying in addition to its other types until | 1 | Answered Prayers | mh1 |
-| whenever another snow permanent you control enters, you may have target player mill two cards. | 1 | Iceberg Cancrix | mh1 |
 | whenever equipped creature deals combat damage to a player, destroy up to one target planeswalker and up to one target artifact. | 1 | Sword of Sinew and Steel | mh1 |
 | whenever equipped creature deals combat damage to a player, put a +N/+N counter on a creature you control, then proliferate. | 1 | Sword of Truth and Justice | mh1 |
 | whenever you cast a permanent spell with a mana cost that contains {M}, double the value of N. | 1 | Unbound Flourishing | mh1 |

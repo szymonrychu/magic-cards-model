@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 22 | 15.4% |
-| Works (untested) | 92 | 64.3% |
+| Works (untested) | 95 | 66.4% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 29 | 20.3% |
+| Not working | 26 | 18.2% |
 
 ## Cards needing work
 
@@ -32,7 +32,6 @@
 | Avarice Amulet | silent | Whenever equipped creature dies, target opponent gains control of this Equipment. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Boonweaver Giant | silent | When this creature enters, you may search your graveyard, hand, and/or library for an Aura card and put it onto the battlefield attached to this creature. If yo | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Brood Keeper | silent | Whenever an Aura becomes attached to this creature, create a 2/2 red Dragon creature token with flying. It has "{R}: This creature gets +1/+0 until end of turn. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
-| Chronostutter | silent | Put target creature into its owner's library second from the top. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Festergloom | silent | Nonblack creatures get -1/-1 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Glacial Crasher | silent | This creature can't attack unless there is a Mountain on the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | In Garruk's Wake | silent | Destroy all creatures you don't control and all planeswalkers you don't control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -40,7 +39,6 @@
 | Invasive Species | silent | When this creature enters, return another permanent you control to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Jalira, Master Polymorphist | silent | {2}{U}, {T}, Sacrifice another creature: Reveal cards from the top of your library until you reveal a nonlegendary creature card. Put that card onto the battlef | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Kurkesh, Onakke Ancient | silent | Whenever you activate an ability of an artifact, if it isn't a mana ability, you may pay {R}. If you do, copy that ability. You may choose new targets for the c | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Leeching Sliver | silent | Whenever a Sliver you control attacks, defending player loses 1 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Master of Predicaments | silent | Whenever this creature deals combat damage to a player, choose a card in your hand. That player guesses whether the card's mana value is greater than 4. If the  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Necromancer's Stockpile | silent | {1}{B}, Discard a creature card: Draw a card. If the discarded card was a Zombie card, create a tapped 2/2 black Zombie creature token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Nissa, Worldwaker | silent | −7: Search your library for any number of basic land cards, put them onto the battlefield, then shuffle. Those lands become 4/4 Elemental creatures with trample | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -49,7 +47,6 @@
 | Quickling | silent | When this creature enters, sacrifice it unless you return another creature you control to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Siege Dragon | silent | When this creature enters, destroy all Walls your opponents control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Spectra Ward | silent | Enchanted creature gets +2/+2 and has protection from each color. This effect doesn't remove Auras. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Stain the Mind | silent | Convoke (Your creatures can help cast this spell. Each creature you tap while casting this spell pays for {1} or one mana of that creature's color.) Choose a no | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | The Chain Veil | silent | {4}, {T}: For each planeswalker you control, you may activate one of its loyalty abilities once this turn as though none of its loyalty abilities have been acti | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Waste Not | silent | Whenever an opponent discards a noncreature, nonland card, draw a card. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Xathrid Slyblade | silent | {3}{B}: Until end of turn, this creature loses hexproof and gains first strike and deathtouch. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -67,6 +64,7 @@
 | Carnivorous Moss-Beast | handled | {5}{G}{G}: Put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Carrion Crow | handled | This creature enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Chief Engineer | handled | Artifact spells you cast have convoke. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Chronostutter | handled | Put target creature into its owner's library second from the top. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Constricting Sliver | handled | Sliver creatures you control have "When this creature enters, you may exile target creature an opponent controls until this creature leaves the battlefield." | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Covenant of Blood | handled | Convoke (Your creatures can help cast this spell. Each creature you tap while casting this spell pays for {1} or one mana of that creature's color.) Covenant of | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Crowd's Favor | handled | Convoke (Your creatures can help cast this spell. Each creature you tap while casting this spell pays for {1} or one mana of that creature's color.) Target crea | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -93,6 +91,7 @@
 | Kapsho Kitefins | handled | Whenever this creature or another creature you control enters, tap target creature an opponent controls. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Kird Chieftain | handled | This creature gets +1/+1 as long as you control a Forest. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Krenko's Enforcer | handled | Intimidate | machines/keywords.py | Y/Y/- | not_tested |
+| Leeching Sliver | handled | Whenever a Sliver you control attacks, defending player loses 1 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Life's Legacy | handled | As an additional cost to cast this spell, sacrifice a creature. Draw cards equal to the sacrificed creature's power. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Living Totem | handled | When this creature enters, you may put a +1/+1 counter on another target creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Marked by Honor | handled | Enchanted creature gets +2/+2 and has vigilance. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -133,6 +132,7 @@
 | Soul of Theros | handled | {4}{W}{W}: Creatures you control get +2/+2 and gain first strike and lifelink until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Soul of Zendikar | handled | {3}{G}{G}: Create a 3/3 green Beast creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Spirit Bonds | handled | Whenever a nontoken creature you control enters, you may pay {W}. If you do, create a 1/1 white Spirit creature token with flying. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Stain the Mind | handled | Convoke (Your creatures can help cast this spell. Each creature you tap while casting this spell pays for {1} or one mana of that creature's color.) Choose a no | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Statute of Denial | handled | Counter target spell. If you control a blue creature, draw a card, then discard a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Stoke the Flames | handled | Convoke (Your creatures can help cast this spell. Each creature you tap while casting this spell pays for {1} or one mana of that creature's color.) Stoke the F | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Sunblade Elf | handled | This creature gets +1/+1 as long as you control a Plains. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -183,19 +183,16 @@
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
 | at the beginning of your upkeep, draw a card unless target opponent sacrifices a creature of their choice or pays N life. | 1 | Indulgent Tormentor | m15 |
-| convoke (your creatures can help cast ~. each creature you tap while casting ~ pays for {M} or one mana of that creature"..."s graveyard, hand, and library for  | 1 | Stain the Mind | m15 |
 | destroy all creatures you don"..."t control. | 1 | In Garruk's Wake | m15 |
 | enchanted creature gets +N/+N and has protection from each color. ~ doesn't remove auras. | 1 | Spectra Ward | m15 |
 | for each attacking creature, its owner puts it on their choice of the top or bottom of their library. | 1 | Aetherspouts | m15 |
 | nonblack creatures get -N/-N until end of turn. | 1 | Festergloom | m15 |
-| put target creature into its owner's library second from the top. | 1 | Chronostutter | m15 |
 | until end of turn, each creature target player controls loses all abilities and becomes a blue frog with base power and toughness N/N. | 1 | Polymorphist's Jest | m15 |
 | when ~ dies, return it to the battlefield tapped under its owner's control at the beginning of their next upkeep. | 1 | Phytotitan | m15 |
 | when ~ enters, destroy all walls your opponents control. | 1 | Siege Dragon | m15 |
 | when ~ enters, return another permanent you control to its owner's hand. | 1 | Invasive Species | m15 |
 | when ~ enters, sacrifice it unless you return another creature you control to its owner's hand. | 1 | Quickling | m15 |
 | when ~ enters, you may search your graveyard, hand, and/or library for an aura card and put it onto the battlefield attached to ~. if you search your library ~, | 1 | Boonweaver Giant | m15 |
-| whenever a sliver you control attacks, defending player loses N life. | 1 | Leeching Sliver | m15 |
 | whenever an aura becomes attached to ~, create a N/N red dragon creature token with flying. it has "..." | 1 | Brood Keeper | m15 |
 | whenever an opponent discards a noncreature, nonland card, draw a card. | 1 | Waste Not | m15 |
 | whenever equipped creature dies, target opponent gains control of ~. | 1 | Avarice Amulet | m15 |

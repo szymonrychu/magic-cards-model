@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 56 | 22.1% |
+| Tested | 59 | 23.3% |
 | Works (untested) | 139 | 54.9% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 58 | 22.9% |
+| Not working | 55 | 21.7% |
 
 ## Cards needing work
 
@@ -41,7 +41,6 @@
 | Devilish Valet | silent | Alliance — Whenever another creature you control enters, double this creature's power until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Elspeth Resplendent | silent | +1: Choose up to one target creature. Put a +1/+1 counter and a counter from among flying, first strike, lifelink, or vigilance on it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Errant, Street Artist | silent | {1}{U}, {T}: Copy target spell you control that wasn't cast. You may choose new targets for the copy. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Exotic Pets | silent | Create two 1/1 blue Fish creature tokens with "This token can't be blocked." Then for each kind of counter among creatures you control, put a counter of that ki | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Fatal Grudge | silent | As an additional cost to cast this spell, sacrifice a nonland permanent. Each opponent chooses a permanent they control that shares a card type with the sacrifi | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Freelance Muscle | silent | Whenever this creature attacks or blocks, it gets +X/+X until end of turn, where X is the greatest power and/or toughness among other creatures you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Gathering Throng | silent | When this creature enters, you may search your library for any number of cards named Gathering Throng, reveal them, put them into your hand, then shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -50,7 +49,6 @@
 | Incriminate | silent | Choose two target creatures controlled by the same player. That player sacrifices one of them of their choice. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Jetmir, Nexus of Revels | silent | Creatures you control also get +1/+0 and have trample as long as you control six or more creatures. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Light 'Em Up | silent | Casualty 2 (As you cast this spell, you may sacrifice a creature with power 2 or greater. When you do, copy this spell and you may choose a new target for the c | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Lord Xander, the Collector | silent | When Lord Xander enters, target opponent discards half the cards in their hand, rounded down. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Luxior, Giada's Gift | silent | Equipped creature gets +1/+1 for each counter on it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Majestic Metamorphosis | silent | Until end of turn, target artifact or creature becomes a 4/4 Angel artifact creature and gains flying. Draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Meeting of the Five | silent | Exile the top ten cards of your library. You may cast spells with exactly three colors from among them this turn. Add {W}{W}{U}{U}{B}{B}{R}{R}{G}{G}. Spend this | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -72,7 +70,6 @@
 | Vampire Scrivener | silent | Whenever you lose life during your turn, put a +1/+1 counter on this creature. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Widespread Thieving | silent | Whenever you cast a multicolored spell, create a Treasure token. Then you may pay {W}{U}{B}{R}{G}. If you do, you may play the exiled card without paying its ma | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Wiretapping | silent | Whenever you draw your first card during each of your draw steps, draw a card. Then if you have nine or more cards in hand, you may play the exiled card without | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
-| Ziatora's Envoy | silent | Whenever this creature deals combat damage to a player, look at the top card of your library. You may play a land from the top of your library or cast a spell w | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Crew Captain | notice | This creature has indestructible as long as it entered this turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Extract the Truth | notice | Choose one — • Target opponent reveals their hand. You may choose a creature, enchantment, or planeswalker card from it. That player discards that card. • Targe | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Extraction Specialist | notice | When this creature enters, return target creature card with mana value 2 or less from your graveyard to the battlefield. That creature can't attack or block for | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -227,7 +224,7 @@
 ## Fully supported
 
 <details>
-<summary>56 cards</summary>
+<summary>59 cards</summary>
 
 - An Offer You Can't Refuse
 - Angel of Suffering
@@ -240,6 +237,7 @@
 - Dusk Mangler
 - Evelyn, the Covetous
 - Evolving Door
+- Exotic Pets
 - Expendable Lackey
 - Falco Spara, Pactweaver
 - Fight Rigging
@@ -257,6 +255,7 @@
 - Jinnie Fay, Jetmir's Second
 - Join the Maestros
 - Lagrella, the Magpie
+- Lord Xander, the Collector
 - Maestros Ascendancy
 - Maestros Diabolist
 - Mayhem Patrol
@@ -284,6 +283,7 @@
 - Urabrask, Heretic Praetor
 - Vivien on the Hunt
 - Witness Protection
+- Ziatora's Envoy
 - Ziatora, the Incinerator
 
 </details>
@@ -307,7 +307,6 @@
 | casualty N (as you cast ~, you may sacrifice a creature with power N or greater. when you do, copy ~ and you may choose a new target for the copy.) choose targe | 1 | Grisly Sigil | snc |
 | casualty N (as you cast ~, you may sacrifice a creature with power N or greater. when you do, copy ~ and you may choose a new target for the copy.) ~ deals N da | 1 | Light 'Em Up | snc |
 | choose two target creatures controlled by the same player. that player sacrifices one of them of their choice. | 1 | Incriminate | snc |
-| create two N/N blue fish creature tokens with "..." then for each kind of counter among creatures you control, put a counter of that kind on either of those tok | 1 | Exotic Pets | snc |
 | creatures you control also get +N/+N and have trample as long as you control six or more creatures. | 1 | Jetmir, Nexus of Revels | snc |
 | draw two cards, then look at the top card of each player's library. | 1 | Case the Joint | snc |
 | each player who controls a multicolored creature draws a card. then destroy all creatures. | 1 | Depopulate | snc |
@@ -316,7 +315,6 @@
 | for each color, return up to one target creature card of that color from your graveyard to your hand. | 1 | Rogues' Gallery | snc |
 | put a +N/+N counter on target creature. it phases out. (treat it and anything attached to it as though they don"..."s next turn.) | 1 | Slip Out the Back | snc |
 | until end of turn, target artifact or creature becomes a N/N angel artifact creature and gains flying. draw a card. | 1 | Majestic Metamorphosis | snc |
-| when lord xander enters, target opponent discards half the cards in their hand, rounded down. | 1 | Lord Xander, the Collector | snc |
 | when ~ enters, choose target creature you don"..."t untap during its controller's next untap step. | 1 | Celestial Regulator | snc |
 | when ~ enters, choose two — • destroy target artifact or enchantment. • target player gains N life. • create a N/N green rhino warrior creature token. • put a s | 1 | Titan of Industry | snc |
 | when ~ enters, destroy up to three other target nonland permanents. for each of those permanents, its controller creates a N/N white angel creature token with f | 1 | Soul of Emancipation | snc |
@@ -337,7 +335,6 @@
 | whenever ~ attacks or blocks, it gets +N/+N until end of turn, where N is the greatest power and/or toughness among other creatures you control. | 1 | Freelance Muscle | snc |
 | whenever ~ attacks, defending player may have you draw a card. if they do, untap ~ and remove it from combat. | 1 | Shakedown Heavy | snc |
 | whenever ~ attacks, ~ and up to one other target creature you control both gain your choice of first strike or lifelink until end of turn. | 1 | Ballroom Brawlers | snc |
-| whenever ~ deals combat damage to a player, look at the top card of your library. you may play a land from the top of your library or cast a spell with mana val | 1 | Ziatora's Envoy | snc |
 | whenever ~ enters or attacks, exile up to one other target creature until ~ leaves the battlefield. if a creature is put into exile ~, return each other card ex | 1 | Mysterious Limousine | snc |
 | you may have ~ enter as a copy of any creature on the battlefield, except it enters with a shield counter on it if you control that creature. | 1 | Undercover Operative | snc |
 | {M}, {M}, discard a card: create a token that's a copy of another target creature you control. it gains haste and "..." sacrifice it at the beginning of the nex | 1 | Jaxis, the Troublemaker | snc |

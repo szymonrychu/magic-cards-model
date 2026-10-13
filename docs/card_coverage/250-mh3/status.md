@@ -17,21 +17,19 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 97 | 37.0% |
-| Works (untested) | 99 | 37.8% |
+| Tested | 106 | 40.5% |
+| Works (untested) | 100 | 38.2% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 66 | 25.2% |
+| Not working | 56 | 21.4% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
-| Aether Spike | silent | Choose target spell. You get {E}{E} (two energy counters), then you may pay any amount of {E}. Counter that spell unless its controller pays {1} for each {E} pa | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Ajani Fells the Godsire | silent | II — Create a 2/1 white Cat Warrior creature token, then put a vigilance counter on a creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Amped Raptor | silent | When this creature enters, you get {E}{E} . Then if you cast it from your hand, exile cards from the top of your library until you exile a nonland card. You may | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Arna Kennerüd, Skycaptain | silent | Whenever a modified creature you control attacks, double the number of each kind of counter on it. Then for each nontoken permanent attached to it, create a tok | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Bloodsoaked Insight // Sanguine Morass | silent | This spell costs {1} less to cast for each 1 life your opponents have lost this turn. Target opponent exiles the top three cards of their library. Until the end | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Breathe Your Last | silent | Destroy target creature or planeswalker. You gain 1 life for each of its colors. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Crabomination | silent | When this creature enters, target opponent exiles the top card of their library, a card at random from their graveyard, and a card at random from their hand. Yo | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Eladamri, Korvecdal | silent | {G}, {T}, Tap two untapped creatures you control: Reveal a card from your hand or the top card of your library. If you reveal a creature card this way, put it o | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Electrozoa | silent | At the beginning of your first main phase, tap this creature unless you pay {E}. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -39,13 +37,10 @@
 | Essence Reliquary | silent | {T}: Return another target permanent you control and all Auras you control attached to it to their owner's hand. Activate only during your turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Expanding Ooze | silent | Whenever this creature attacks, put a +1/+1 counter on target modified creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Expel the Unworthy | silent | Kicker {2}{W} (You may pay an additional {2}{W} as you cast this spell.) Choose target creature with mana value 3 or less. If this spell was kicked, instead cho | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Fangs of Kalonia | silent | Overload | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Flare of Cultivation | silent | You may sacrifice a nontoken green creature rather than pay this spell's mana cost. Search your library for up to two basic land cards, reveal those cards, put  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Flare of Fortitude | silent | You may sacrifice a nontoken white creature rather than pay this spell's mana cost. Until end of turn, your life total can't change, and permanents you control  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Fowl Strike | silent | Reinforce | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Frogmyr Enforcer | silent | Prototype | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Glyph Elemental | silent | Enchanted creature gets +1/+1 for each +1/+1 counter on this Aura. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Grim Servant | silent | When this creature enters, search your library for a card with mana value less than or equal to your devotion to black, reveal it, put it into your hand, then s | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Grist, Voracious Larva // Grist, the Plague Swarm | silent | +1: Create a 1/1 black and green Insect creature token, then mill two cards. Put a deathtouch counter on the token if a black card was milled this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Horrid Shadowspinner | silent | Whenever this creature attacks, you may draw cards equal to its power. If you do, discard that many cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Infernal Captor | silent | When this creature exploits a creature, gain control of target artifact or creature until end of turn. Untap that permanent. It gains haste until end of turn. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
@@ -68,23 +63,18 @@
 | Reckless Pyrosurfer | silent | Landfall — Whenever a land you control enters, this creature gains battle cry until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Ripples of Undeath | silent | At the beginning of your first main phase, mill three cards. Then you may pay {1} and 3 life. If you do, put a card from among those cards into your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Rosecot Knight | silent | When this creature enters, look at the top six cards of your library. You may reveal an artifact or enchantment card from among them and put it into your hand.  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Rosheen, Roaring Prophet | silent | When Rosheen enters, mill six cards. You may put a card with {X} in its mana cost from among them into your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Rush of Inspiration // Crackling Falls | silent | Draw two cards. Then discard a card at random unless you pay {E}{E} (two energy counters). | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Shadow of the Second Sun | silent | At the beginning of each of enchanted player's postcombat main phases, there is an additional beginning phase after this phase. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Shilgengar, Sire of Famine | silent | Sacrifice another creature: Create a Blood token. If you sacrificed an Angel this way, create a number of Blood tokens equal to its toughness instead. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Springheart Nantuko | silent | Landfall — Whenever a land you control enters, you may pay {1}{G} if this permanent is attached to a creature you control. If you do, create a token that's a co | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Spymaster's Vault | silent | {B}, {T}: Target creature you control connives X, where X is the number of creatures that died this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Strength of the Harvest // Haven of the Harvest | silent | Enchanted creature gets +1/+1 for each creature and/or enchantment you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sundering Eruption // Volcanic Fissure | silent | Destroy target land. Its controller may search their library for a basic land card, put it onto the battlefield tapped, then shuffle. Creatures without flying c | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Temperamental Oozewagg | silent | Modified creatures you control have trample. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Territory Culler | silent | Landfall — Whenever a land you control enters, look at the top card of your library. If it's a creature card, you may reveal it and put it into your hand. If yo | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| The Creation of Avacyn | silent | II — Turn the exiled card face up. If it's a creature card, you lose life equal to its mana value. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| The Hunger Tide Rises | silent | IV — Sacrifice any number of creatures. Search your library and/or graveyard for a creature card with mana value less than or equal to the number of creatures s | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Triton Wavebreaker | silent | As long as this permanent is a creature, it has prowess. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Ugin's Binding | silent | Devoid (This card has no color.) Return target nonland permanent you don't control to its owner's hand. Whenever you cast a colorless spell with mana value 7 or | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Unstable Amulet | silent | {T}, Pay {E}{E}: Exile the top card of your library. You may play it until you exile another card with this artifact. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Volatile Stormdrake | silent | When this creature enters, exchange control of this creature and target creature an opponent controls. If you do, you get {E}{E}{E}{E}, then sacrifice that crea | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Wheel of Potential | silent | You get {E}{E}{E} (three energy counters), then you may pay any amount of {E}. Each player may exile their hand and draw a number of cards equal to the amount o | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Abstruse Appropriation | notice | Devoid (This card has no color.) Exile target nonland permanent. You may cast that card for as long as it remains exiled, and you may spend colorless mana as th | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Charitable Levy | notice | Whenever a player casts a noncreature spell, put a collection counter on this enchantment. Then if there are three or more collection counters on it, sacrifice  | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Estrid's Invocation | notice | You may have this enchantment enter as a copy of an enchantment you control, except it has "At the beginning of your upkeep, you may exile this enchantment. If  | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
@@ -125,6 +115,7 @@
 | Fetid Gargantua | handled | {2}{B}: Adapt 2. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Flare of Duplication | handled | You may sacrifice a nontoken red creature rather than pay this spell's mana cost. Copy target instant or sorcery spell. You may choose new targets for the copy. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Foreboding Landscape | handled | {T}, Sacrifice this land: Search your library for a basic Swamp, Forest, or Island card, put it onto the battlefield tapped, then shuffle. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Frogmyr Enforcer | handled | Affinity | models/game.py (Game.cost_reduction_for, CR 702.41a) | Y/-/- | not_tested |
 | Furnace Hellkite | handled | {R}: This creature gets +1/+0 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ghostfire Slice | handled | Devoid (This card has no color.) This spell costs {2} less to cast if an opponent controls a multicolored permanent. Ghostfire Slice deals 4 damage to any targe | the engine reads this text and performs it | Y/-/- | not_tested |
 | Gift of the Viper | handled | Put a +1/+1 counter, a reach counter, and a deathtouch counter on target creature. Untap it. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -195,9 +186,10 @@
 ## Fully supported
 
 <details>
-<summary>97 cards</summary>
+<summary>106 cards</summary>
 
 - Aether Revolt
+- Aether Spike
 - Ajani, Nacatl Pariah // Ajani, Nacatl Avenger
 - Archway of Innovation
 - Arena of Glory
@@ -205,6 +197,7 @@
 - Birthing Ritual
 - Boggart Trawler // Boggart Bog
 - Breaker of Creation
+- Breathe Your Last
 - Bridgeworks Battle // Tanglespan Bridgeworks
 - Conduit Goblin
 - Consign to Memory
@@ -225,6 +218,7 @@
 - Emrakul, the World Anew
 - Etherium Pteramander
 - Fanatic of Rhonas
+- Fangs of Kalonia
 - Fell the Profane // Fell Mire
 - Flare of Denial
 - Flare of Malice
@@ -232,6 +226,7 @@
 - Genku, Future Shaper
 - Glaring Fleshraker
 - Golden-Tail Trainer
+- Grim Servant
 - Guide of Souls
 - Harbinger of the Seas
 - Herigast, Erupting Nullkite
@@ -263,8 +258,10 @@
 - Ral, Monsoon Mage // Ral, Leyline Prodigy
 - Refurbished Familiar
 - Riddle Gate Gargoyle
+- Rosheen, Roaring Prophet
 - Scurry of Gremlins
 - Shifting Woodland
+- Shilgengar, Sire of Famine
 - Signature Slam
 - Sink into Stupor // Soporific Springs
 - Six
@@ -276,6 +273,8 @@
 - Suppression Ray // Orderly Plaza
 - Tamiyo Meets the Story Circle
 - Tamiyo, Inquisitive Student // Tamiyo, Seasoned Scholar
+- The Creation of Avacyn
+- The Hunger Tide Rises
 - The Necrobloom
 - Thief of Existence
 - Thraben Charm
@@ -289,6 +288,7 @@
 - Voltstorm Angel
 - Wastescape Battlemage
 - Waterlogged Teachings // Inundated Archive
+- Wheel of Potential
 - White Orchid Phantom
 - Winter Moon
 - Witch Enchanter // Witch-Blessed Meadow
@@ -310,12 +310,10 @@
 | at the beginning of your first main phase, mill three cards. then you may pay {M} and N life. if you do, put a card from among those cards into your hand. | 1 | Ripples of Undeath | mh3 |
 | at the beginning of your first main phase, tap ~ unless you pay {M}. | 1 | Electrozoa | mh3 |
 | choose target spell, then flip a coin. if you win the flip, gain control of that spell and you may choose new targets for it. if you lose the flip, counter that | 1 | Invert Polarity | mh3 |
-| choose target spell. you get {M}{M} (two energy counters), then you may pay any amount of {M}. counter that spell unless its controller pays {M} for each {M} pa | 1 | Aether Spike | mh3 |
 | choose up to one target artifact or creature card in your graveyard. you get {M}{M} (two energy counters). then you may pay an amount of {M} equal to that card' | 1 | Jolted Awake | mh3 |
 | create a N/N white cat warrior creature token, then put a vigilance counter on a creature you control. | 1 | Ajani Fells the Godsire | mh3 |
 | create a spellgorger weird token. | 1 | Ral and the Implicit Maze | mh3 |
 | creature tokens you control have evolve. | 1 | Propagator Drone | mh3 |
-| destroy target creature or planeswalker. you gain N life for each of its colors. | 1 | Breathe Your Last | mh3 |
 | destroy target land. its controller may search their library for a basic land card, put it onto the battlefield tapped, then shuffle. creatures without flying c | 1 | Sundering Eruption // Volcanic Fissure | mh3 |
 | devoid (~ has no color.) exile target nonland permanent. you may cast that card for as long as it remains exiled, and you may spend colorless mana as though it  | 1 | Abstruse Appropriation | mh3 |
 | devoid (~ has no color.) return target nonland permanent you don"..."s hand. whenever you cast a colorless spell with mana value N or greater, you may exile ~ f | 1 | Ugin's Binding | mh3 |
@@ -330,17 +328,10 @@
 | modified creatures you control have lifelink. | 1 | Envoy of the Ancestors | mh3 |
 | modified creatures you control have trample. | 1 | Temperamental Oozewagg | mh3 |
 | other creatures have base power and toughness N/N and are bears in addition to their other types. | 1 | Kudo, King Among Bears | mh3 |
-| overload | 1 | Fangs of Kalonia | mh3 |
-| prototype | 1 | Frogmyr Enforcer | mh3 |
 | reinforce | 1 | Fowl Strike | mh3 |
-| sacrifice another creature: create a blood token. if you sacrificed an angel ~, create a number of blood tokens equal to its toughness instead. | 1 | Shilgengar, Sire of Famine | mh3 |
-| sacrifice any number of creatures. search your library and/or graveyard for a creature card with mana value less than or equal to the number of creatures sacrif | 1 | The Hunger Tide Rises | mh3 |
-| turn the exiled card face up. if it's a creature card, you lose life equal to its mana value. | 1 | The Creation of Avacyn | mh3 |
 | until end of turn, double target creature's power and it gains first strike. | 1 | Legion Leadership // Legion Stronghold | mh3 |
-| when rosheen enters, mill six cards. you may put a card with {M} in its mana cost from among them into your hand. | 1 | Rosheen, Roaring Prophet | mh3 |
 | when ~ enters, exchange control of ~ and target creature an opponent controls. if you do, you get {M}{M}{M}{M}, then sacrifice that creature unless you pay an a | 1 | Volatile Stormdrake | mh3 |
 | when ~ enters, look at the top six cards of your library. you may reveal an artifact or enchantment card from among them and put it into your hand. put the rest | 1 | Rosecot Knight | mh3 |
-| when ~ enters, search your library for a card with mana value less than or equal to your devotion to black, reveal it, put it into your hand, then shuffle. you  | 1 | Grim Servant | mh3 |
 | when ~ enters, target opponent exiles the top card of their library, a card at random from their graveyard, and a card at random from their hand. you may cast a | 1 | Crabomination | mh3 |
 | when ~ enters, you get {M}{M} . then if you cast it from your hand, exile cards from the top of your library until you exile a nonland card. you may cast that c | 1 | Amped Raptor | mh3 |
 | when ~ exploits a creature, gain control of target artifact or creature until end of turn. untap that permanent. it gains haste until end of turn. | 1 | Infernal Captor | mh3 |
@@ -353,7 +344,6 @@
 | whenever ~ attacks, put a +N/+N counter on target modified creature you control. | 1 | Expanding Ooze | mh3 |
 | whenever ~ attacks, you may draw cards equal to its power. if you do, discard that many cards. | 1 | Horrid Shadowspinner | mh3 |
 | whenever ~ deals combat damage to a player, put a +N/+N counter on it. when you do, you may remove a counter from another target permanent or opponent. | 1 | Etched Slith | mh3 |
-| you get {M}{M}{M} (three energy counters), then you may pay any amount of {M}. each player may exile their hand and draw a number of cards equal to the amount o | 1 | Wheel of Potential | mh3 |
 | you may have ~ enter as a copy of an enchantment you control, except it has "..." | 1 | Estrid's Invocation | mh3 |
 | you may sacrifice a nontoken green creature rather than pay ~ mana cost. search your library for up to two basic land cards, reveal those cards, put one onto th | 1 | Flare of Cultivation | mh3 |
 | you may sacrifice a nontoken white creature rather than pay ~ mana cost. until end of turn, your life total can't change, and permanents you control gain hexpro | 1 | Flare of Fortitude | mh3 |

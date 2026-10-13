@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 32 | 18.2% |
+| Tested | 34 | 19.3% |
 | Works (untested) | 118 | 67.0% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 26 | 14.8% |
+| Not working | 24 | 13.6% |
 
 ## Cards needing work
 
@@ -29,7 +29,6 @@
 | Deceiver of Form | silent | At the beginning of combat on your turn, reveal the top card of your library. If a creature card is revealed this way, you may have creatures you control other  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Embodiment of Fury | silent | Landfall — Whenever a land you control enters, you may have target land you control become a 3/3 Elemental creature with haste until end of turn. It's still a l | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Embodiment of Insight | silent | Landfall — Whenever a land you control enters, you may have target land you control become a 3/3 Elemental creature with haste until end of turn. It's still a l | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| General Tazri | silent | {W}{U}{B}{R}{G}: Ally creatures you control get +X/+X until end of turn, where X is the number of colors among those creatures. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Goblin Dark-Dwellers | silent | When this creature enters, you may cast target instant or sorcery card with mana value 3 or less from your graveyard without paying its mana cost. If that spell | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Hedron Alignment | silent | At the beginning of your upkeep, you may reveal your hand. If you do, you win the game if you own a card named Hedron Alignment in exile, in your hand, in your  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Immobilizer Eldrazi | silent | {2}{C}: Each creature with toughness greater than its power can't block this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -51,7 +50,6 @@
 | Reflector Mage | notice | When this creature enters, return target creature an opponent controls to its owner's hand. That creature's owner can't cast spells with the same name as that c | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Sweep Away | notice | Return target creature to its owner's hand. If that creature is attacking, you may put it on top of its owner's library instead. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Unnatural Endurance | notice | Devoid (This card has no color.) Target creature gets +2/+0 until end of turn. Regenerate it. | unparsed remainder: Regenerate it. | Y/Y/- | not_working |
-| Walker of the Wastes | notice | This creature gets +1/+1 for each land you control named Wastes. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Abstruse Interference | handled | Devoid (This card has no color.) Counter target spell unless its controller pays {1}. You create a 1/1 colorless Eldrazi Scion creature token. It has "Sacrifice | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Affa Protector | handled | Vigilance | machines/combat.py | Y/Y/- | not_tested |
 | Akoum Flameseeker | handled | Cohort — {T}, Tap an untapped Ally you control: Discard a card. If you do, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -174,7 +172,7 @@
 ## Fully supported
 
 <details>
-<summary>32 cards</summary>
+<summary>34 cards</summary>
 
 - Ayli, Eternal Pilgrim
 - Crumbling Vestige
@@ -184,6 +182,7 @@
 - Eldrazi Obligator
 - Expedition Raptor
 - Flaying Tendrils
+- General Tazri
 - Kalitas, Traitor of Ghet
 - Kozilek, the Great Distortion
 - Matter Reshaper
@@ -203,6 +202,7 @@
 - Tyrant of Valakut
 - Vile Redeemer
 - Visions of Brutality
+- Walker of the Wastes
 - Wall of Resurgence
 - Warping Wail
 - Wastes
@@ -236,8 +236,6 @@
 | {M}: target creature can't block ~ ~. | 1 | Kozilek's Pathfinder | ogw |
 | {M}{M}: each creature with toughness greater than its power can't block ~. | 1 | Immobilizer Eldrazi | ogw |
 | {M}{M}: target creature with a +N/+N counter on it gains flying and vigilance until end of turn. | 1 | Steppe Glider | ogw |
-| {M}{M}{M}{M}{M}: ally creatures you control get +N/+N until end of turn, where N is the number of colors among those creatures. | 1 | General Tazri | ogw |
-| ~ gets +N/+N for each land you control named wastes. | 1 | Walker of the Wastes | ogw |
 | ~ has first strike as long as it's attacking. | 1 | Kor Scythemaster | ogw |
 | ~ has haste as long as you control another colorless creature. | 1 | Eldrazi Aggressor | ogw |
 

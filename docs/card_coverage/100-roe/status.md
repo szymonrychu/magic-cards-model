@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 52 | 23.6% |
-| Works (untested) | 131 | 59.5% |
+| Tested | 56 | 25.5% |
+| Works (untested) | 132 | 60.0% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 37 | 16.8% |
+| Not working | 32 | 14.5% |
 
 ## Cards needing work
 
@@ -28,19 +28,16 @@
 |---|---|---|---|---|---|
 | Angelheart Vial | silent | Whenever you're dealt damage, you may put that many charge counters on this artifact. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Aura Finesse | silent | Attach target Aura you control to target creature. Draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Baneful Omen | silent | At the beginning of your end step, you may reveal the top card of your library. If you do, each opponent loses life equal to that card's mana value. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Battle-Rattle Shaman | silent | At the beginning of combat on your turn, you may have target creature get +2/+0 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Brood Birthing | silent | If you control an Eldrazi Spawn, create three 0/1 colorless Eldrazi Spawn creature tokens. They have "Sacrifice this token: Add {C}." Otherwise, create one of t | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Disaster Radius | silent | As an additional cost to cast this spell, reveal a creature card from your hand. Disaster Radius deals X damage to each creature your opponents control, where X | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Dormant Gomazoa | silent | Whenever you become the target of a spell, you may untap this creature. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Echo Mage | silent | {U}{U}, {T}: Copy target instant or sorcery spell twice. You may choose new targets for the copies. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Explosive Revelation | silent | Choose any target. Reveal cards from the top of your library until you reveal a nonland card. Explosive Revelation deals damage equal to that card's mana value  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Gideon Jura | silent | +2: During target opponent's next turn, creatures that player controls attack Gideon Jura if able. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Hellcarver Demon | silent | Whenever this creature deals combat damage to a player, sacrifice all other permanents you control and discard your hand. Exile the top six cards of your librar | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Hellion Eruption | silent | Sacrifice all creatures you control, then create that many 4/4 red Hellion creature tokens. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Irresistible Prey | silent | Target creature must be blocked this turn if able. Draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | It That Betrays | silent | Whenever an opponent sacrifices a nontoken permanent, put that card onto the battlefield under your control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Jaddi Lifestrider | silent | When this creature enters, you may tap any number of untapped creatures you control. You gain 2 life for each creature tapped this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Lay Bare | silent | Counter target spell. Look at its controller's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Lightmine Field | silent | Whenever one or more creatures attack, this enchantment deals damage to each of those creatures equal to the number of attacking creatures. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Not of This World | silent | Counter target spell or ability that targets a permanent you control. This spell costs {7} less to cast if it targets a spell or ability that targets a creature | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -49,7 +46,6 @@
 | Raid Bombardment | silent | Whenever a creature you control with power 2 or less attacks, this enchantment deals 1 damage to the player or planeswalker that creature is attacking. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Realms Uncharted | silent | Search your library for up to four land cards with different names and reveal them. An opponent chooses two of those cards. Put the chosen cards into your grave | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Renegade Doppelganger | silent | Whenever another creature you control enters, you may have this creature become a copy of that creature until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Sarkhan the Mad | silent | 0: Reveal the top card of your library and put it into your hand. Sarkhan deals damage to himself equal to that card's mana value. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | See Beyond | silent | Draw two cards, then shuffle a card from your hand into your library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Spawnsire of Ulamog | silent | {20}: Cast any number of Eldrazi spells from among cards you own outside the game without paying their mana costs. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Thought Gorger | silent | When this creature enters, put a +1/+1 counter on it for each card in your hand. If you do, discard your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -62,7 +58,6 @@
 | Champion's Drake | notice | This creature gets +3/+3 as long as you control a creature with three or more level counters on it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Distortion Strike | notice | Target creature gets +1/+0 until end of turn and can't be blocked this turn. Rebound (If you cast this spell from your hand, exile it as it resolves. At the beg | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Drana, Kalastria Bloodchief | notice | {X}{B}{B}: Target creature gets -0/-X until end of turn and Drana gets +X/+0 until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Induce Despair | notice | As an additional cost to cast this spell, reveal a creature card from your hand. Target creature gets -X/-X until end of turn, where X is the revealed card's ma | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Affa Guard Hound | handled | When this creature enters, target creature gets +0/+3 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Akoum Boulderfoot | handled | When this creature enters, it deals 1 damage to any target. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Artisan of Kozilek | handled | When you cast this spell, you may return target creature card from your graveyard to the battlefield. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -120,6 +115,7 @@
 | Halimar Wavewatch | handled | Landwalk | no code needed | Y/-/- | not_tested |
 | Hand of Emrakul | handled | You may sacrifice four Eldrazi Spawn rather than pay this spell's mana cost. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ikiral Outrider | handled | Vigilance | machines/combat.py | Y/-/- | not_tested |
+| Induce Despair | handled | As an additional cost to cast this spell, reveal a creature card from your hand. Target creature gets -X/-X until end of turn, where X is the revealed card's ma | the engine reads this text and performs it | Y/-/- | not_tested |
 | Jwari Scuttler | handled |  |  | Y/-/- | not_tested |
 | Kabira Vindicator | handled | Other creatures you control get +1/+1. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Kargan Dragonlord | handled | {R}: This creature gets +1/+0 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -198,11 +194,12 @@
 ## Fully supported
 
 <details>
-<summary>52 cards</summary>
+<summary>56 cards</summary>
 
 - All Is Dust
 - Ancient Stirrings
 - Aura Gnarlid
+- Baneful Omen
 - Brimstone Mage
 - Cast Through Time
 - Conquering Manticore
@@ -213,6 +210,7 @@
 - Eldrazi Temple
 - Emrakul, the Aeons Torn
 - Essence Feed
+- Explosive Revelation
 - Gravity Well
 - Harmless Assault
 - Haze Frog
@@ -220,6 +218,7 @@
 - Hedron-Field Purists
 - Hyena Umbra
 - Inquisition of Kozilek
+- Jaddi Lifestrider
 - Joraga Treespeaker
 - Keening Stone
 - Khalni Hydra
@@ -240,6 +239,7 @@
 - Recurring Insight
 - Reinforced Bulwark
 - Repay in Kind
+- Sarkhan the Mad
 - Spawning Breath
 - Student of Warfare
 - Suffer the Past
@@ -260,15 +260,11 @@
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
 | +N: during target opponent's next turn, creatures that player controls attack ~ if able. | 1 | Gideon Jura | roe |
-| N: reveal the top card of your library and put it into your hand. sarkhan deals damage to himself equal to that card's mana value. | 1 | Sarkhan the Mad | roe |
 | after the second main phase ~, there's an additional combat phase followed by an additional main phase. at the beginning of that combat, untap all creatures tha | 1 | World at War | roe |
-| as an additional cost to cast ~, reveal a creature card from your hand. target creature gets -N/-N until end of turn, where N is the revealed card's mana value. | 1 | Induce Despair | roe |
 | as an additional cost to cast ~, reveal a creature card from your hand. ~ deals N damage to each creature your opponents control, where N is the revealed card's | 1 | Disaster Radius | roe |
 | as long as equipped creature has defender, it can attack as though it didn't have defender. | 1 | Warmonger's Chariot | roe |
 | at the beginning of combat on your turn, you may have target creature get +N/+N until end of turn. | 1 | Battle-Rattle Shaman | roe |
-| at the beginning of your end step, you may reveal the top card of your library. if you do, each opponent loses life equal to that card's mana value. | 1 | Baneful Omen | roe |
 | attach target aura you control to target creature. draw a card. | 1 | Aura Finesse | roe |
-| choose any target. reveal cards from the top of your library until you reveal a nonland card. ~ deals damage equal to that card's mana value to that permanent o | 1 | Explosive Revelation | roe |
 | counter target spell if you control more creatures than that spell's controller. | 1 | Unified Will | roe |
 | counter target spell or ability that targets a permanent you control. ~ costs {M} less to cast if it targets a spell or ability that targets a creature you cont | 1 | Not of This World | roe |
 | counter target spell. look at its controller's hand. | 1 | Lay Bare | roe |
@@ -282,7 +278,6 @@
 | target opponent reveals their hand. you choose a card from it. that player shuffles that card into their library. | 1 | Perish the Thought | roe |
 | when ~ enters, put a +N/+N counter on it for each card in your hand. if you do, discard your hand. | 1 | Thought Gorger | roe |
 | when ~ enters, put two level counters on each creature you control with level up. | 1 | Venerated Teacher | roe |
-| when ~ enters, you may tap any number of untapped creatures you control. you gain N life for each creature tapped ~. | 1 | Jaddi Lifestrider | roe |
 | whenever a creature you control with power N or less attacks, ~ deals N damage to the player or planeswalker that creature is attacking. | 1 | Raid Bombardment | roe |
 | whenever an opponent sacrifices a nontoken permanent, put that card onto the battlefield under your control. | 1 | It That Betrays | roe |
 | whenever another creature you control enters, you may have ~ become a copy of that creature until end of turn. | 1 | Renegade Doppelganger | roe |

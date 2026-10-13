@@ -17,16 +17,15 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 84 | 30.5% |
+| Tested | 86 | 31.3% |
 | Works (untested) | 140 | 50.9% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 51 | 18.5% |
+| Not working | 49 | 17.8% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
-| Anim Pakal, Thousandth Moon | silent | Whenever you attack with one or more non-Gnome creatures, put a +1/+1 counter on Anim Pakal, then create X 1/1 colorless Gnome artifact creature tokens that are | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Another Chance | silent | You may mill two cards. Then return up to two creature cards from your graveyard to your hand. (To mill two cards, put the top two cards of your library into yo | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Armored Kincaller | silent | When this creature enters, you may reveal a Dinosaur card from your hand. If you do or if you control another Dinosaur, you gain 3 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Bat Colony | silent | When this enchantment enters, create a 1/1 black Bat creature token with flying for each mana from a Cave spent to cast it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -74,7 +73,6 @@
 | Disturbed Slumber | notice | Until end of turn, target land you control becomes a 4/4 Dinosaur creature with reach and haste. It's still a land. It must be blocked this turn if able. | unparsed remainder: It must be blocked this turn if able. | Y/Y/Y | not_working |
 | Grasping Shadows // Shadows' Lair | notice | Whenever a creature you control attacks alone, it gains deathtouch and lifelink until end of turn. Put a dread counter on this enchantment. Then if there are th | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Kutzil's Flanker | notice | When this creature enters, choose one — • Put a +1/+1 counter on this creature for each creature that left the battlefield under your control this turn. • You g | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Quintorius Kand | notice | −6: Exile any number of target cards from your graveyard. Add {R} for each card exiled this way. You may play those cards this turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Scampering Surveyor | notice | When this creature enters, search your library for a basic land card or Cave card, put it onto the battlefield tapped, then shuffle. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | The Enigma Jewel // Locus of Enlightenment | notice | Locus of Enlightenment has each activated ability of the exiled cards used to craft it. You may activate each of those abilities only once each turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Abuelo, Ancestral Echo | handled | {1}{W}{U}: Exile another target creature or artifact you control. Return it to the battlefield under its owner's control at the beginning of the next end step. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -221,11 +219,12 @@
 ## Fully supported
 
 <details>
-<summary>84 cards</summary>
+<summary>86 cards</summary>
 
 - Abuelo's Awakening
 - Akawalli, the Seething Tower
 - Amalia Benavides Aguirre
+- Anim Pakal, Thousandth Moon
 - Basking Capybara
 - Bedrock Tortoise
 - Bitter Triumph
@@ -274,6 +273,7 @@
 - Preacher of the Schism
 - Promising Vein
 - Pugnacious Hammerskull
+- Quintorius Kand
 - Rampaging Ceratops
 - Restless Anchorage
 - Restless Reef
@@ -350,7 +350,6 @@
 | whenever one or more creatures your opponents control are dealt excess noncombat damage, create a treasure token. | 1 | Magmatic Galleon | lci |
 | whenever one or more nontoken creatures you control die, create a green fungus dinosaur creature token with base power and toughness each equal to the total pow | 1 | The Skullspore Nexus | lci |
 | whenever the grim captain attacks, each opponent sacrifices a nonland permanent of their choice. then you may put an exiled creature card used to craft the grim | 1 | Throne of the Grim Captain // The Grim Captain | lci |
-| whenever you attack with one or more non-gnome creatures, put a +N/+N counter on anim pakal, then create N N/N colorless gnome artifact creature tokens that are | 1 | Anim Pakal, Thousandth Moon | lci |
 | whenever you cast a permanent spell using mana produced by tecutlan, discover N, where N is that spell's mana value. | 1 | Brass's Tunnel-Grinder // Tecutlan, the Searing Rift | lci |
 | whenever you cast a permanent spell using mana produced by the myriad pools, up to one other target permanent you control becomes a copy of that spell until end | 1 | The Everflowing Well // The Myriad Pools | lci |
 | whenever you discover, discover again for the same value. ~ triggers only once each turn. | 1 | Curator of Sun's Creation | lci |
@@ -362,7 +361,6 @@
 | {M}: add one mana of any of the exiled cards' colors. | 1 | Pit of Offerings | lci |
 | {M}: you may cast a creature spell from your graveyard ~. if you do, it enters with a finality counter on it and is a vampire in addition to its other types. | 1 | Tarrian's Journal // The Tomb of Aclazotz | lci |
 | {M}{M}: ~ can't be blocked by creatures with power N or less ~. | 1 | Cavern Stomper | lci |
-| −N: exile any number of target cards from your graveyard. add {M} for each card exiled ~. you may play those cards ~. | 1 | Quintorius Kand | lci |
 
 ## Notes
 

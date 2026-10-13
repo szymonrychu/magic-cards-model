@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 26 | 24.8% |
-| Works (untested) | 65 | 61.9% |
+| Works (untested) | 66 | 62.9% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 14 | 13.3% |
+| Not working | 13 | 12.4% |
 
 ## Cards needing work
 
@@ -32,7 +32,6 @@
 | Gargoyle Sentinel | silent | {3}: Until end of turn, this creature loses defender and gains flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Hunters' Feast | silent | Any number of target players each gain 6 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Incite | silent | Target creature becomes red until end of turn and attacks this turn if able. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Jace's Erasure | silent | Whenever you draw a card, you may have target player mill a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Mass Polymorph | silent | Exile all creatures you control, then reveal cards from the top of your library until you reveal that many creature cards. Put all creature cards revealed this  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Merfolk Spy | silent | Whenever this creature deals combat damage to a player, that player reveals a card at random from their hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Necrotic Plague | silent | When enchanted creature dies, its controller chooses target creature one of their opponents controls. Return this card from its owner's graveyard to the battlef | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -69,6 +68,7 @@
 | Hoarding Dragon | handled | When this creature enters, you may search your library for an artifact card, exile it, then shuffle. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Hornet Sting | handled | Hornet Sting deals 1 damage to any target. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Inspired Charge | handled | Creatures you control get +2/+1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Jace's Erasure | handled | Whenever you draw a card, you may have target player mill a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Jace's Ingenuity | handled | Draw three cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Knight Exemplar | handled | Other Knight creatures you control get +1/+1 and have indestructible. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Leyline of Anticipation | handled | If this card is in your opening hand, you may begin the game with it on the battlefield. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -151,7 +151,6 @@
 | target creature becomes red until end of turn and attacks ~ if able. | 1 | Incite | m11 |
 | when enchanted creature dies, its controller chooses target creature one of their opponents controls. return ~ from its owner's graveyard to the battlefield att | 1 | Necrotic Plague | m11 |
 | when ~ enters, you may search your library for up to three cards named ~, reveal them, put them into your hand, then shuffle. | 1 | Squadron Hawk | m11 |
-| whenever you draw a card, you may have target player mill a card. | 1 | Jace's Erasure | m11 |
 | whenever ~ attacks, you may have it deal damage equal to its power to target creature defending player controls. if you do, that creature deals damage equal to  | 1 | Cyclops Gladiator | m11 |
 | whenever ~ deals combat damage to a player, that player reveals a card at random from their hand. | 1 | Merfolk Spy | m11 |
 | you may choose new targets for target spell. | 1 | Redirect | m11 |

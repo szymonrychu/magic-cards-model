@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 24 | 15.1% |
+| Tested | 26 | 16.4% |
 | Works (untested) | 85 | 53.5% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 50 | 31.4% |
+| Not working | 48 | 30.2% |
 
 ## Cards needing work
 
@@ -42,7 +42,6 @@
 | Genju of the Realm | silent | {2}: Enchanted land becomes a legendary 8/12 Spirit creature with trample until end of turn. It's still a land. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Genju of the Spires | silent | {2}: Enchanted Mountain becomes a 6/1 red Spirit creature until end of turn. It's still a land. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Harbinger of Spring | silent | Soulshift | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Heed the Mists | silent | Mill a card, then draw cards equal to the milled card's mana value. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Hired Muscle // Scarmaker | silent | At the beginning of the end step, if there are two or more ki counters on this creature, you may flip it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Ink-Eyes, Servant of Oni | silent | Whenever Ink-Eyes deals combat damage to a player, you may put target creature card from that player's graveyard onto the battlefield under your control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Iwamori of the Open Fist | silent | When Iwamori enters, each opponent may put a legendary creature card from their hand onto the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -67,7 +66,6 @@
 | Shimmering Glasskite | silent | Whenever this creature becomes the target of a spell or ability for the first time each turn, counter that spell or ability. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Shirei, Shizo's Caretaker | silent | Whenever a creature with power 1 or less is put into your graveyard from the battlefield, you may return that card to the battlefield at the beginning of the ne | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Shizuko, Caller of Autumn | silent | At the beginning of each player's upkeep, that player adds {G}{G}{G}. Until end of turn, they don't lose this mana as steps and phases end. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Slumbering Tora | silent | {2}, Discard a Spirit or Arcane card: This artifact becomes an X/X Cat artifact creature until end of turn, where X is the discarded card's mana value. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Stream of Consciousness | silent | Target player shuffles up to four target cards from their graveyard into their library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Tallowisp | silent | Whenever you cast a Spirit or Arcane spell, you may search your library for an Aura card with enchant creature, reveal it, put it into your hand, then shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Twist Allegiance | silent | You and target opponent each gain control of all creatures the other controls until end of turn. Untap those creatures. Those creatures gain haste until end of  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -165,7 +163,7 @@
 ## Fully supported
 
 <details>
-<summary>24 cards</summary>
+<summary>26 cards</summary>
 
 - Aura Barbs
 - Bile Urchin
@@ -178,6 +176,7 @@
 - Goblin Cohort
 - Goryo's Vengeance
 - Heart of Light
+- Heed the Mists
 - Hokori, Dust Drinker
 - Kami of False Hope
 - Kentaro, the Smiling Cat
@@ -187,6 +186,7 @@
 - Orb of Dreams
 - Sakiko, Mother of Summer
 - Shining Shoal
+- Slumbering Tora
 - Sway of the Stars
 - That Which Was Taken
 - Tomorrow, Azami's Familiar
@@ -206,7 +206,6 @@
 | at the beginning of your upkeep, sacrifice chisei unless you remove a counter from a permanent you control. | 1 | Chisei, Heart of Oceans | bok |
 | counter target spell. that spell's controller reveals their hand, then discards each card with the same name as a card spliced onto that spell. | 1 | Minamo's Meddling | bok |
 | each time target permanent would deal damage to a permanent or player ~, it deals double that damage to that permanent or player instead. splice onto arcane {M} | 1 | Overblaze | bok |
-| mill a card, then draw cards equal to the milled card's mana value. | 1 | Heed the Mists | bok |
 | return all artifacts and enchantments to their owners' hands. | 1 | Reduce to Dreams | bok |
 | target creature gets +N/+N until end of turn. if it's a spirit, it gains trample until end of turn. | 1 | Unchecked Growth | bok |
 | target player shuffles up to four target cards from their graveyard into their library. | 1 | Stream of Consciousness | bok |
@@ -222,7 +221,6 @@
 | whenever ~ deals combat damage to a player, look at that player's hand. | 1 | Walker of Secret Ways | bok |
 | whenever ~ is dealt damage, you gain that much life. | 1 | Kami of the Honored Dead | bok |
 | you and target opponent each gain control of all creatures the other controls until end of turn. untap those creatures. those creatures gain haste until end of  | 1 | Twist Allegiance | bok |
-| {M}, discard a spirit or arcane card: ~ becomes an N/N cat artifact creature until end of turn, where N is the discarded card's mana value. | 1 | Slumbering Tora | bok |
 | {M}: enchanted forest becomes a N/N green spirit creature until end of turn. it's still a land. | 1 | Genju of the Cedars | bok |
 | {M}: enchanted island becomes a N/N blue spirit creature with flying until end of turn. it's still a land. | 1 | Genju of the Falls | bok |
 | {M}: enchanted land becomes a legendary N/N spirit creature with trample until end of turn. it's still a land. | 1 | Genju of the Realm | bok |

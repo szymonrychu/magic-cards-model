@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 29 | 26.1% |
+| Tested | 31 | 27.9% |
 | Works (untested) | 71 | 64.0% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 11 | 9.9% |
+| Not working | 9 | 8.1% |
 
 ## Cards needing work
 
@@ -30,13 +30,11 @@
 | Awakener Druid | silent | When this creature enters, target Forest becomes a 4/5 green Treefolk creature for as long as this creature remains on the battlefield. It's still a land. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Capricious Efreet | silent | At the beginning of your upkeep, choose target nonland permanent you control and up to two target nonland permanents you don't control. Destroy one of them at r | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Hive Mind | silent | Whenever a player casts an instant or sorcery spell, each other player copies that spell. Each of those players may choose new targets for their copy. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Master of the Wild Hunt | silent | {T}: Tap all untapped Wolf creatures you control. Each Wolf tapped this way deals damage equal to its power to target creature. That creature deals damage equal | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Mirror of Fate | silent | {T}, Sacrifice this artifact: Choose up to seven face-up exiled cards you own. Exile all the cards from your library, then put the chosen cards on top of your l | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Open the Vaults | silent | Return all artifact and enchantment cards from all graveyards to the battlefield under their owners' control. (Auras with nothing to enchant remain in graveyard | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sphinx Ambassador | silent | Whenever this creature deals combat damage to a player, search that player's library for a card, then that player chooses a card name. If you searched for a cre | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Djinn of Wishes | notice | {2}{U}{U}, Remove a wish counter from this creature: Reveal the top card of your library. You may play that card without paying its mana cost. If you don't, exi | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Rise from the Grave | notice | Put target creature card from a graveyard onto the battlefield under your control. That creature is a black Zombie in addition to its other colors and types. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Xathrid Demon | notice | At the beginning of your upkeep, sacrifice a creature other than this creature, then each opponent loses life equal to the sacrificed creature's power. If you c | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Acolyte of Xathrid | handled | {1}{B}, {T}: Target player loses 1 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Angel's Mercy | handled | You gain 7 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ant Queen | handled | {1}{G}: Create a 1/1 green Insect creature token. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -112,7 +110,7 @@
 ## Fully supported
 
 <details>
-<summary>29 cards</summary>
+<summary>31 cards</summary>
 
 - Acidic Slime
 - Act of Treason
@@ -132,6 +130,7 @@
 - Inferno Elemental
 - Jackal Familiar
 - Lifelink
+- Master of the Wild Hunt
 - Palace Guard
 - Prized Unicorn
 - Protean Hydra
@@ -142,6 +141,7 @@
 - Silence
 - Sleep
 - Vampire Nocturnus
+- Xathrid Demon
 - Yawning Fissure
 
 </details>
@@ -151,14 +151,12 @@
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
 | at the beginning of your upkeep, choose target nonland permanent you control and up to two target nonland permanents you don't control. destroy one of them at r | 1 | Capricious Efreet | m10 |
-| at the beginning of your upkeep, sacrifice a creature other than ~, then each opponent loses life equal to the sacrificed creature"..."t sacrifice a creature, t | 1 | Xathrid Demon | m10 |
 | put target creature card from a graveyard onto the battlefield under your control. that creature is a black zombie in addition to its other colors and types. | 1 | Rise from the Grave | m10 |
 | return all artifact and enchantment cards from all graveyards to the battlefield under their owners' control. (auras with nothing to enchant remain in graveyard | 1 | Open the Vaults | m10 |
 | when ~ enters, target forest becomes a N/N green treefolk creature for as long as ~ remains on the battlefield. it's still a land. | 1 | Awakener Druid | m10 |
 | whenever a player casts an instant or sorcery spell, each other player copies that spell. each of those players may choose new targets for their copy. | 1 | Hive Mind | m10 |
 | whenever ~ deals combat damage to a player, search that player"..."t have that name, you may put it onto the battlefield under your control. then that player sh | 1 | Sphinx Ambassador | m10 |
 | {M}, sacrifice ~: choose up to seven face-up exiled cards you own. exile all the cards from your library, then put the chosen cards on top of your library. | 1 | Mirror of Fate | m10 |
-| {M}: tap all untapped wolf creatures you control. each wolf tapped ~ deals damage equal to its power to target creature. that creature deals damage equal to its | 1 | Master of the Wild Hunt | m10 |
 | {M}: target creature an opponent controls attacks you ~ if able. | 1 | Alluring Siren | m10 |
 | {M}{M}{M}, remove a wish counter from ~: reveal the top card of your library. you may play that card without paying its mana cost. if you don't, exile it. | 1 | Djinn of Wishes | m10 |
 

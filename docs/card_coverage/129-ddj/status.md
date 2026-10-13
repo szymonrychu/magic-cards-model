@@ -18,18 +18,18 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 2 | 33.3% |
-| Works (untested) | 3 | 50.0% |
+| Works (untested) | 4 | 66.7% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 1 | 16.7% |
+| Not working | 0 | 0.0% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
-| Street Spasm | silent | Overload | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Dreg Mangler | handled | Scavenge | machines/keywords.py (off_zone_abilities: scavenge) | Y/Y/- | not_tested |
 | Goblin Electromancer | handled | Instant and sorcery spells you cast cost {1} less to cast. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Izzet Charm | handled | Choose one — • Counter target noncreature spell unless its controller pays {2}. • Izzet Charm deals 2 damage to target creature. • Draw two cards, then discard  | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Street Spasm | handled | Street Spasm deals X damage to target creature without flying you don't control. Overload {X}{X}{R}{R} (You may cast this spell for its overload cost. If you do | the engine reads this text and performs it | Y/Y/- | not_tested |
 
 ## Fully supported
 
@@ -43,9 +43,7 @@
 
 ## Missing mechanics
 
-| Mechanic (label / template) | Count | Example cards | Sets |
-|---|---|---|---|
-| overload | 1 | Street Spasm | ddj |
+None.
 
 ## Notes
 

@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 41 | 18.3% |
-| Works (untested) | 110 | 49.1% |
+| Tested | 49 | 21.9% |
+| Works (untested) | 115 | 51.3% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 73 | 32.6% |
+| Not working | 60 | 26.8% |
 
 ## Cards needing work
 
@@ -31,23 +31,16 @@
 | Azorius Arrester | silent | When this creature enters, detain target creature an opponent controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Azorius Justiciar | silent | When this creature enters, detain up to two target creatures your opponents control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Bloodfray Giant | silent | Unleash | no machine in the engine executes this keyword | Y/Y/- | not_working |
-| Blustersquall | silent | Overload | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Carnival Hellsteed | silent | Unleash | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Chaos Imps | silent | Unleash | no machine in the engine executes this keyword | Y/Y/- | not_working |
-| Chemister's Trick | silent | Target creature you don't control gets -2/-0 until end of turn and attacks this turn if able. Overload {3}{U}{R} (You may cast this spell for its overload cost. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Civic Saber | silent | Equipped creature gets +1/+0 for each of its colors. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Conjured Currency | silent | At the beginning of your upkeep, you may exchange control of this enchantment and target permanent you neither own nor control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Counterflux | silent | Overload | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Coursers' Accord | silent | Create a 3/3 green Centaur creature token, then populate. (Create a token that's a copy of a creature token you control.) | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Cyclonic Rift | silent | Overload | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Dead Reveler | silent | Unleash | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Deathrite Shaman | silent | {T}: Exile target land card from a graveyard. Add one mana of any color. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Desecration Demon | silent | At the beginning of each combat, any opponent may sacrifice a creature of their choice. If a player does, tap this creature and put a +1/+1 counter on it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Detention Sphere | silent | When this enchantment leaves the battlefield, return the exiled cards to the battlefield under their owner's control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Downsize | silent | Overload | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Druid's Deliverance | silent | Prevent all combat damage that would be dealt to you this turn. Populate. (Create a token that's a copy of a creature token you control.) | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Dynacharge | silent | Overload | no machine in the engine executes this keyword | Y/Y/- | not_working |
-| Electrickery | silent | Overload | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Epic Experiment | silent | Exile the top X cards of your library. You may cast instant and sorcery spells with mana value X or less from among them without paying their mana costs. Then p | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Eyes in the Skies | silent | Create a 1/1 white Bird creature token with flying, then populate. (Create a token that's a copy of a creature token you control.) | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Faerie Impostor | silent | When this creature enters, sacrifice it unless you return another creature you control to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -64,9 +57,6 @@
 | Jarad's Orders | silent | Search your library for up to two creature cards and reveal them. Put one into your hand and the other into your graveyard. Then shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Lyev Skyknight | silent | When this creature enters, detain target nonland permanent an opponent controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Martial Law | silent | At the beginning of your upkeep, detain target creature an opponent controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Mercurial Chemister | silent | {R}, {T}, Discard a card: This creature deals damage to target creature equal to the discarded card's mana value. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Mizzium Mortars | silent | Overload | no machine in the engine executes this keyword | Y/Y/- | not_working |
-| Mizzium Skin | silent | Overload | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | New Prahv Guildmage | silent | {3}{W}{U}: Detain target nonland permanent an opponent controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ogre Jailbreaker | silent | This creature can attack as though it didn't have defender as long as you control a Gate. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Psychic Spiral | silent | Shuffle all cards from your graveyard into your library. Target player mills that many cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -78,7 +68,6 @@
 | Search Warrant | silent | Target player reveals their hand. You gain life equal to the number of cards in that player's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Search the City | silent | Whenever you play a card with the same name as one of the exiled cards, you may put one of those cards with that name into its owner's hand. Then if there are n | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Skull Rend | silent | Skull Rend deals 2 damage to each opponent. Those players each discard two cards at random. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Slaughter Games | silent | This spell can't be countered. Choose a nonland card name. Search target opponent's graveyard, hand, and library for any number of cards with that name and exil | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Soul Tithe | silent | At the beginning of the upkeep of enchanted permanent's controller, that player sacrifices it unless they pay {X}, where X is its mana value. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Soulsworn Spirit | silent | When this creature enters, detain target creature an opponent controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Spawn of Rix Maadi | silent | Unleash | no machine in the engine executes this keyword | Y/Y/- | not_working |
@@ -86,19 +75,17 @@
 | Sundering Growth | silent | Destroy target artifact or enchantment, then populate. (Create a token that's a copy of a creature token you control.) | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Tablet of the Guilds | silent | Whenever you cast a spell, if it's at least one of the chosen colors, you gain 1 life for each of the chosen colors it is. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Tavern Swindler | silent | {T}, Pay 3 life: Flip a coin. If you win the flip, you gain 6 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Teleportal | silent | Overload | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Thrill-Kill Assassin | silent | Unleash | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Transguild Promenade | silent | When this land enters, sacrifice it unless you pay {1}. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Trostani's Judgment | silent | Exile target creature, then populate. (Create a token that's a copy of a creature token you control.) | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Trostani, Selesnya's Voice | silent | {1}{G}{W}, {T}: Populate. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Vandalblast | silent | Overload | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Vitu-Ghazi Guildmage | silent | {2}{G}{W}: Populate. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Vraska the Unseen | silent | +1: Until your next turn, whenever a creature deals combat damage to Vraska, destroy that creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Wayfaring Temple | silent | Whenever this creature deals combat damage to a player, populate. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Assassin's Strike | notice | Destroy target creature. Its controller discards a card. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Destroy the Evidence | notice | Destroy target land. Its controller reveals cards from the top of their library until they reveal a land card, then puts those cards into their graveyard. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Grave Betrayal | notice | Whenever a creature you don't control dies, return it to the battlefield under your control with an additional +1/+1 counter on it at the beginning of the next  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Rakdos Charm | notice | Choose one — • Exile target player's graveyard. • Destroy target artifact. • Each creature deals 1 damage to its controller. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
+| Teleportal | notice | Target creature you control gets +1/+0 until end of turn and can't be blocked this turn. Overload {3}{U}{R} (You may cast this spell for its overload cost. If y | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Aerial Predation | handled | Destroy target creature with flying. You gain 2 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Annihilating Fire | handled | Annihilating Fire deals 3 damage to any target. If a creature dealt damage this way would die this turn, exile it instead. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Aquus Steed | handled | {2}{U}, {T}: Target creature gets -2/-0 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -128,11 +115,14 @@
 | Corpsejack Menace | handled | If one or more +1/+1 counters would be put on a creature you control, twice that many +1/+1 counters are put on it instead. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Crosstown Courier | handled | Whenever this creature deals combat damage to a player, that player mills that many cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Daggerdrome Imp | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
+| Destroy the Evidence | handled | Destroy target land. Its controller reveals cards from the top of their library until they reveal a land card, then puts those cards into their graveyard. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Deviant Glee | handled | Enchanted creature gets +2/+1 and has "{R}: This creature gains trample until end of turn." | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Drainpipe Vermin | handled | When this creature dies, you may pay {B}. If you do, target player discards a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Dramatic Rescue | handled | Return target creature to its owner's hand. You gain 2 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Dreadbore | handled | Destroy target creature or planeswalker. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Drudge Beetle | handled | Scavenge | machines/keywords.py (off_zone_abilities: scavenge) | Y/Y/- | not_tested |
+| Dynacharge | handled | Target creature you control gets +2/+0 until end of turn. Overload {2}{R} (You may cast this spell for its overload cost. If you do, change "target" in its text | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Electrickery | handled | Electrickery deals 1 damage to target creature you don't control. Overload {1}{R} (You may cast this spell for its overload cost. If you do, change "target" in  | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Explosive Impact | handled | Explosive Impact deals 5 damage to any target. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Fall of the Gavel | handled | Counter target spell. You gain 5 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Frostburn Weird | handled | {U/R}: This creature gets +1/-1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -155,6 +145,7 @@
 | Lotleth Troll | handled | Discard a creature card: Put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Mana Bloom | handled | This enchantment enters with X charge counters on it. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Minotaur Aggressor | handled | First strike | machines/combat.py | Y/Y/- | not_tested |
+| Mizzium Skin | handled | Target creature you control gets +0/+1 and gains hexproof until end of turn. Overload {1}{U} (You may cast this spell for its overload cost. If you do, change " | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Necropolis Regent | handled | Whenever a creature you control deals combat damage to a player, put that many +1/+1 counters on it. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Niv-Mizzet, Dracogenius | handled | Whenever Niv-Mizzet deals damage to a player, you may draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Nivmagus Elemental | handled | Exile an instant or sorcery spell you control: Put two +1/+1 counters on this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -179,6 +170,7 @@
 | Seller of Songbirds | handled | When this creature enters, create a 1/1 white Bird creature token with flying. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Skyline Predator | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
 | Skymark Roc | handled | Whenever this creature attacks, you may return target creature defending player controls with toughness 2 or less to its owner's hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Slaughter Games | handled | This spell can't be countered. Choose a nonland card name. Search target opponent's graveyard, hand, and library for any number of cards with that name and exil | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Slime Molding | handled | Create an X/X green Ooze creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Slitherhead | handled | Scavenge | machines/keywords.py (off_zone_abilities: scavenge) | Y/Y/- | not_tested |
 | Sluiceway Scorpion | handled | Scavenge | machines/keywords.py (off_zone_abilities: scavenge) | Y/Y/- | not_tested |
@@ -213,20 +205,25 @@
 ## Fully supported
 
 <details>
-<summary>41 cards</summary>
+<summary>49 cards</summary>
 
 - Abrupt Decay
 - Ash Zealot
 - Axebane Guardian
 - Azorius Guildgate
 - Batterhorn
+- Blustersquall
+- Chemister's Trick
 - Chromatic Lantern
 - Chronic Flooding
+- Counterflux
 - Cryptborn Horror
+- Cyclonic Rift
 - Dark Revenant
 - Deadbridge Goliath
 - Death's Presence
 - Doorkeeper
+- Downsize
 - Dryad Militant
 - Essence Backlash
 - Ethereal Armor
@@ -241,6 +238,8 @@
 - Izzet Guildgate
 - Izzet Staticaster
 - Loxodon Smiter
+- Mercurial Chemister
+- Mizzium Mortars
 - Nivix Guildmage
 - Oak Street Innkeeper
 - Palisade Giant
@@ -255,6 +254,7 @@
 - Shrieking Affliction
 - Sphere of Safety
 - Supreme Verdict
+- Vandalblast
 - Wild Beastmaster
 
 </details>
@@ -264,7 +264,6 @@
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
 | unleash | 11 | Bloodfray Giant, Carnival Hellsteed, Chaos Imps, Dead Reveler, Gore-House Chainwalker | rtr |
-| overload | 10 | Blustersquall, Counterflux, Cyclonic Rift, Downsize, Dynacharge | rtr |
 | when ~ enters, detain target creature an opponent controls. | 3 | Azorius Arrester, Isperia's Skywatch, Soulsworn Spirit | rtr |
 | Choose one | 1 | Rakdos Charm | rtr |
 | +N: until your next turn, whenever a creature an opponent controls attacks, it gets -N/-N until end of turn. | 1 | Jace, Architect of Thought | rtr |
@@ -280,7 +279,6 @@
 | create a N/N white bird creature token with flying, then populate. (create a token that's a copy of a creature token you control.) | 1 | Eyes in the Skies | rtr |
 | destroy target artifact or enchantment, then populate. (create a token that's a copy of a creature token you control.) | 1 | Sundering Growth | rtr |
 | destroy target creature. its controller discards a card. | 1 | Assassin's Strike | rtr |
-| destroy target land. its controller reveals cards from the top of their library until they reveal a land card, then puts those cards into their graveyard. | 1 | Destroy the Evidence | rtr |
 | detain target creature an opponent controls. (until your next turn, that creature can"..."t be activated.) draw a card. | 1 | Inaction Injunction | rtr |
 | enchanted creature gets +N/+N for each card in its controller's hand. | 1 | Righteous Authority | rtr |
 | equipped creature gets +N/+N for each of its colors. | 1 | Civic Saber | rtr |
@@ -291,7 +289,7 @@
 | search your library for an instant card with mana value N, reveal it, and put it into your hand. then repeat ~ for instant cards with mana values N and N. then  | 1 | Firemind's Foresight | rtr |
 | search your library for up to two creature cards and reveal them. put one into your hand and the other into your graveyard. then shuffle. | 1 | Jarad's Orders | rtr |
 | shuffle all cards from your graveyard into your library. target player mills that many cards. | 1 | Psychic Spiral | rtr |
-| target creature you don't control gets -N/-N until end of turn and attacks ~ if able. overload {M}{M}{M} (you may cast ~ for its overload cost. if you do, chang | 1 | Chemister's Trick | rtr |
+| target creature you control gets +N/+N until end of turn and can't be blocked ~. overload {M}{M}{M} (you may cast ~ for its overload cost. if you do, change ".. | 1 | Teleportal | rtr |
 | target player reveals their hand. you gain life equal to the number of cards in that player's hand. | 1 | Search Warrant | rtr |
 | when ~ enters, detain target nonland permanent an opponent controls. | 1 | Lyev Skyknight | rtr |
 | when ~ enters, detain up to two target creatures your opponents control. | 1 | Azorius Justiciar | rtr |
@@ -306,14 +304,12 @@
 | whenever ~ deals combat damage to a player, populate. | 1 | Wayfaring Temple | rtr |
 | whenever ~ deals combat damage to a player, that player discards a card at random. | 1 | Rakdos Ringleader | rtr |
 | {M}, pay N life: flip a coin. if you win the flip, you gain N life. | 1 | Tavern Swindler | rtr |
-| {M}, {M}, discard a card: ~ deals damage to target creature equal to the discarded card's mana value. | 1 | Mercurial Chemister | rtr |
 | {M}: exile target land card from a graveyard. add one mana of any color. | 1 | Deathrite Shaman | rtr |
 | {M}{M}: target player who lost life ~ loses N life. | 1 | Rix Maadi Guildmage | rtr |
 | {M}{M}{M}, {M}: populate. | 1 | Trostani, Selesnya's Voice | rtr |
 | {M}{M}{M}: detain target nonland permanent an opponent controls. | 1 | New Prahv Guildmage | rtr |
 | {M}{M}{M}: populate. | 1 | Vitu-Ghazi Guildmage | rtr |
 | ~ can attack as though it didn't have defender as long as you control a gate. | 1 | Ogre Jailbreaker | rtr |
-| ~ can"..."s graveyard, hand, and library for any number of cards with that name and exile them. then that player shuffles. | 1 | Slaughter Games | rtr |
 | ~ deals N damage to each opponent. those players each discard two cards at random. | 1 | Skull Rend | rtr |
 
 ## Notes

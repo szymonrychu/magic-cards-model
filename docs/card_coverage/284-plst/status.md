@@ -27,7 +27,7 @@
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
 | Cursed Mirror | silent | As this artifact enters, you may have it become a copy of any creature on the battlefield until end of turn, except it has haste. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| The Haunt of Hightower | silent | Whenever The Haunt of Hightower attacks, defending player discards a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
+| The Haunt of Hightower | silent | Whenever a card is put into an opponent's graveyard from anywhere, put a +1/+1 counter on The Haunt of Hightower. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Jazal Goldmane | handled | {3}{W}{W}: Attacking creatures you control get +X/+X until end of turn, where X is the number of attacking creatures. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 
 ## Fully supported
@@ -44,7 +44,7 @@
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
 | as ~ enters, you may have it become a copy of any creature on the battlefield until end of turn, except it has haste. | 1 | Cursed Mirror | plst |
-| whenever ~ attacks, defending player discards a card. | 1 | The Haunt of Hightower | plst |
+| whenever a card is put into an opponent's graveyard from anywhere, put a +N/+N counter on ~. | 1 | The Haunt of Hightower | plst |
 
 ## Notes
 

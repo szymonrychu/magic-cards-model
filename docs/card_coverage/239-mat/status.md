@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 15 | 30.6% |
+| Tested | 18 | 36.7% |
 | Works (untested) | 13 | 26.5% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 21 | 42.9% |
+| Not working | 18 | 36.7% |
 
 ## Cards needing work
 
@@ -32,15 +32,12 @@
 | Feast of the Victorious Dead | silent | At the beginning of your end step, if one or more creatures died this turn, you gain that much life and distribute that many +1/+1 counters among any number of  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Filter Out | silent | Return all noncreature, nonland permanents to their owners' hands. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Karn, Legacy Reforged | silent | At the beginning of your upkeep, add {C} for each artifact you control. This mana can't be spent to cast nonartifact spells. Until end of turn, you don't lose t | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Kiora, Sovereign of the Deep | silent | Whenever you cast a Kraken, Leviathan, Octopus, or Serpent spell from your hand, look at the top X cards of your library, where X is that spell's mana value. Yo | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Metropolis Reformer | silent | Whenever this creature is dealt damage, you gain that much life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ob Nixilis, Captive Kingpin | silent | Whenever one or more opponents each lose exactly 1 life, put a +1/+1 counter on Ob Nixilis. Exile the top card of your library. Until your next end step, you ma | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Plargg and Nassari | silent | At the beginning of your upkeep, each player exiles cards from the top of their library until they exile a nonland card. An opponent chooses a nonland card exil | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Rocco, Street Chef | silent | At the beginning of your end step, each player exiles the top card of their library. Until your next end step, each player may play the card they exiled this wa | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sarkhan, Soul Aflame | silent | Whenever a Dragon you control enters, you may have Sarkhan become a copy of it until end of turn, except its name is Sarkhan, Soul Aflame and it's legendary in  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Spark Rupture | silent | Each planeswalker with one or more loyalty counters on it loses all abilities and is a creature with power and toughness each equal to the number of loyalty cou | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Tazri, Stalwart Survivor | silent | {W}{U}{B}{R}{G}, {T}: Mill five cards. Put all creature cards with activated abilities that aren't mana abilities from among the milled cards into your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| The Kenriths' Royal Funeral | silent | When The Kenriths' Royal Funeral enters, exile up to two target legendary creature cards from your graveyard. You draw X cards and you lose X life, where X is t | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Tolarian Contempt | silent | At the beginning of your end step, for each opponent, choose up to one target creature they control with a rejection counter on it. That creature's owner puts i | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Tranquil Frillback | silent | When this creature enters, you may pay {G} up to three times. When you pay this cost one or more times, choose up to that many — • Destroy target artifact or en | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Tyvar the Bellicose | silent | Whenever one or more Elves you control attack, they gain deathtouch until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -64,7 +61,7 @@
 ## Fully supported
 
 <details>
-<summary>15 cards</summary>
+<summary>18 cards</summary>
 
 - Ayara's Oathsworn
 - Blot Out
@@ -72,6 +69,7 @@
 - Deification
 - Gold-Forged Thopteryx
 - Jolrael, Voice of Zhalfir
+- Kiora, Sovereign of the Deep
 - Leyline Immersion
 - Narset, Enlightened Exile
 - Nashi, Moon's Legacy
@@ -80,6 +78,8 @@
 - Reckless Handling
 - Samut, Vizier of Naktamun
 - Sigarda, Font of Blessings
+- Spark Rupture
+- The Kenriths' Royal Funeral
 - Undercity Upheaval
 
 </details>
@@ -95,9 +95,7 @@
 | at the beginning of your upkeep, add {M} for each artifact you control. ~ can"..."t lose ~ as steps and phases end. | 1 | Karn, Legacy Reforged | mat |
 | at the beginning of your upkeep, each player exiles cards from the top of their library until they exile a nonland card. an opponent chooses a nonland card exil | 1 | Plargg and Nassari | mat |
 | choose target permanent card in your graveyard. if it has mana value N or less, you may put it onto the battlefield. if you don't put it onto the battlefield, p | 1 | Cosmic Rebirth | mat |
-| each planeswalker with one or more loyalty counters on it loses all abilities and is a creature with power and toughness each equal to the number of loyalty cou | 1 | Spark Rupture | mat |
 | return all noncreature, nonland permanents to their owners' hands. | 1 | Filter Out | mat |
-| when ~ enters, exile up to two target legendary creature cards from your graveyard. you draw N cards and you lose N life, where N is the greatest mana value amo | 1 | The Kenriths' Royal Funeral | mat |
 | when ~ enters, you may pay {M} up to three times. when you pay ~ one or more times, choose up to that many — • destroy target artifact or enchantment. • exile t | 1 | Tranquil Frillback | mat |
 | whenever a creature you control attacks or enters attacking, you may pay {M}{M}. if you do, you may put a creature card with mana value less than that creature' | 1 | Arni Metalbrow | mat |
 | whenever a dragon you control enters, you may have sarkhan become a copy of it until end of turn, except its name is ~ and it's legendary in addition to its oth | 1 | Sarkhan, Soul Aflame | mat |
@@ -105,7 +103,6 @@
 | whenever calix or an enchanted creature you control deals combat damage to a player, you may create a token that's a copy of a nonlegendary enchantment you cont | 1 | Calix, Guided by Fate | mat |
 | whenever one or more elves you control attack, they gain deathtouch until end of turn. | 1 | Tyvar the Bellicose | mat |
 | whenever one or more opponents each lose exactly N life, put a +N/+N counter on ob nixilis. exile the top card of your library. until your next end step, you ma | 1 | Ob Nixilis, Captive Kingpin | mat |
-| whenever you cast a kraken, leviathan, octopus, or serpent spell from your hand, look at the top N cards of your library, where N is that spell's mana value. yo | 1 | Kiora, Sovereign of the Deep | mat |
 | whenever ~ is dealt damage, you gain that much life. | 1 | Metropolis Reformer | mat |
 | {M}{M}{M}{M}{M}, {M}: mill five cards. put all creature cards with activated abilities that aren't mana abilities from among the milled cards into your hand. | 1 | Tazri, Stalwart Survivor | mat |
 | ~ has flying as long as a card exiled with it has flying. the same is true for first strike, double strike, deathtouch, haste, hexproof, indestructible, lifelin | 1 | Urborg Scavengers | mat |

@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 62 | 22.1% |
-| Works (untested) | 160 | 57.1% |
+| Tested | 65 | 23.2% |
+| Works (untested) | 163 | 58.2% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 58 | 20.7% |
+| Not working | 52 | 18.6% |
 
 ## Cards needing work
 
@@ -38,8 +38,6 @@
 | Dreamspoiler Witches | silent | Whenever you cast a spell during an opponent's turn, you may have target creature get -1/-1 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Ego Erasure | silent | Changeling (This card is every creature type.) Creatures target player controls get -2/-0 and lose all creature types until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Entangling Trap | silent | Whenever you clash, tap target creature an opponent controls. If you won, that creature doesn't untap during its controller's next untap step. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
-| Faerie Tauntings | silent | Whenever you cast a spell during an opponent's turn, you may have each opponent lose 1 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Fathom Trawl | silent | Reveal cards from the top of your library until you reveal three nonland cards. Put the nonland cards revealed this way into your hand, then put the rest of the | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Gilt-Leaf Ambush | silent | Create two 1/1 green Elf Warrior creature tokens. Clash with an opponent. If you win, those creatures gain deathtouch until end of turn. (Each clashing player r | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Glarewielder | silent | When this creature enters, up to two target creatures can't block this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Hoarder's Greed | silent | You lose 2 life and draw two cards, then clash with an opponent. If you win, repeat this process. (Each clashing player reveals the top card of their library, t | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -48,14 +46,12 @@
 | Hunt Down | silent | Target creature blocks target creature this turn if able. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Incremental Growth | silent | Put a +1/+1 counter on target creature, two +1/+1 counters on another target creature, and three +1/+1 counters on a third target creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Kinsbaile Balloonist | silent | Whenever this creature attacks, you may have target creature gain flying until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Lammastide Weave | silent | Choose a card name, then target player mills a card. If a card with the chosen name was milled this way, you gain life equal to its mana value. Draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Lash Out | silent | Lash Out deals 3 damage to target creature. Clash with an opponent. If you win, Lash Out deals 3 damage to that creature's controller. (Each clashing player rev | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Liliana Vess | silent | −8: Put all creature cards from all graveyards onto the battlefield under your control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Merrow Commerce | silent | At the beginning of your end step, untap all Merfolk you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Mistbind Clique | silent | When a Faerie is championed with this creature, tap all lands target player controls. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Nath of the Gilt-Leaf | silent | At the beginning of your upkeep, you may have target opponent discard a card at random. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Pollen Lullaby | silent | Prevent all combat damage that would be dealt this turn. Clash with an opponent. If you win, creatures that player controls don't untap during the player's next | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Quill-Slinger Boggart | silent | Whenever a player casts a Kithkin spell, you may have target player lose 1 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Rebellion of the Flamekin | silent | Whenever you clash, you may pay {1}. If you do, create a 3/1 red Elemental Shaman creature token. If you won, that token gains haste until end of turn. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Rings of Brighthearth | silent | Whenever you activate an ability, if it isn't a mana ability, you may pay {2}. If you do, copy that ability. You may choose new targets for the copy. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Ringskipper | silent | When this creature dies, clash with an opponent. If you win, return this card to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -70,8 +66,6 @@
 | Sylvan Echoes | silent | Whenever you clash and win, you may draw a card. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Thorntooth Witch | silent | Whenever you cast a Treefolk spell, you may have target creature get +3/-3 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Turtleshell Changeling | silent | {1}{U}: Switch this creature's power and toughness until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Twinning Glass | silent | {1}, {T}: You may cast a spell from your hand without paying its mana cost if it has the same name as a spell that was cast this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Weed Strangle | silent | Destroy target creature. Clash with an opponent. If you win, you gain life equal to that creature's toughness. (Each clashing player reveals the top card of the | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Wild Ricochet | silent | You may choose new targets for target instant or sorcery spell. Then copy that spell. You may choose new targets for the copy. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Windbrisk Heights | silent | {W}, {T}: You may play the exiled card without paying its mana cost if you attacked with three or more creatures this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Woodland Guidance | silent | Return target card from your graveyard to your hand. Clash with an opponent. If you win, untap all Forests you control. (Each clashing player reveals the top ca | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -128,6 +122,7 @@
 | Eyes of the Wisent | handled | Whenever an opponent casts a blue spell during your turn, you may create a 4/4 green Elemental creature token. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Facevaulter | handled | {B}, Sacrifice a Goblin: This creature gets +2/+2 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Faerie Harbinger | handled | When this creature enters, you may search your library for a Faerie card, reveal it, then shuffle and put that card on top. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Faerie Tauntings | handled | Whenever you cast a spell during an opponent's turn, you may have each opponent lose 1 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Fallowsage | handled | Whenever this creature becomes tapped, you may draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Familiar's Ruse | handled | As an additional cost to cast this spell, return a creature you control to its owner's hand. Counter target spell. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Faultgrinder | handled | When this creature enters, destroy target land. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -200,6 +195,7 @@
 | Primal Command | handled | Choose two — • Target player gains 7 life. • Put target noncreature permanent on top of its owner's library. • Target player shuffles their graveyard into their | the engine reads this text and performs it | Y/-/- | not_tested |
 | Profane Command | handled | Choose two — • Target player loses X life. • Return target creature card with mana value X or less from your graveyard to the battlefield. • Target creature get | the engine reads this text and performs it | Y/-/- | not_tested |
 | Prowess of the Fair | handled | Whenever another nontoken Elf is put into your graveyard from the battlefield, you may create a 1/1 green Elf Warrior creature token. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Quill-Slinger Boggart | handled | Whenever a player casts a Kithkin spell, you may have target player lose 1 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Rootgrapple | handled | Destroy target noncreature permanent. If you control a Treefolk, draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Scarred Vinebreeder | handled | {2}{B}, Exile an Elf card from your graveyard: This creature gets +3/+3 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Scion of Oona | handled | Other Faerie creatures you control get +1/+1. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -231,6 +227,7 @@
 | Timber Protector | handled | Other Treefolk creatures you control get +1/+1. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Treefolk Harbinger | handled | When this creature enters, you may search your library for a Treefolk or Forest card, reveal it, then shuffle and put that card on top. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Triclopean Sight | handled | When this Aura enters, untap enchanted creature. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Twinning Glass | handled | {1}, {T}: You may cast a spell from your hand without paying its mana cost if it has the same name as a spell that was cast this turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Veteran of the Depths | handled | Whenever this creature becomes tapped, you may put a +1/+1 counter on it. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Wanderer's Twig | handled | {1}, Sacrifice this artifact: Search your library for a basic land card, reveal it, put it into your hand, then shuffle. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Wanderwine Hub | handled | As this land enters, you may reveal a Merfolk card from your hand. If you don't, this land enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -248,7 +245,7 @@
 ## Fully supported
 
 <details>
-<summary>62 cards</summary>
+<summary>65 cards</summary>
 
 - Amoeboid Changeling
 - Aquitect's Will
@@ -267,6 +264,7 @@
 - Dolmen Gate
 - Doran, the Siege Tower
 - Ethereal Whiskergill
+- Fathom Trawl
 - Favor of the Mighty
 - Fire-Belly Changeling
 - Fodder Launch
@@ -282,6 +280,7 @@
 - Jace Beleren
 - Kinsbaile Skirmisher
 - Lairwatch Giant
+- Lammastide Weave
 - Lignify
 - Mirror Entity
 - Mosswort Bridge
@@ -311,6 +310,7 @@
 - Vivid Marsh
 - Vivid Meadow
 - Warren-Scourge Elf
+- Weed Strangle
 - Wings of Velis Vel
 
 </details>
@@ -329,13 +329,11 @@
 | changeling (~ is every creature type.) creatures target player controls get -N/-N and lose all creature types until end of turn. | 1 | Ego Erasure | lrw |
 | changeling (~ is every creature type.) target creature gets +N/-N and loses all creature types until end of turn. | 1 | Nameless Inversion | lrw |
 | changeling (~ is every creature type.) up to two target creatures each get +N/+N and gain all creature types until end of turn. | 1 | Blades of Velis Vel | lrw |
-| choose a card name, then target player mills a card. if a card with the chosen name was milled ~, you gain life equal to its mana value. draw a card. | 1 | Lammastide Weave | lrw |
 | clash with an opponent, then return target creature to its owner"..."s library instead. (each clashing player reveals the top card of their library, then puts t | 1 | Whirlpool Whelm | lrw |
 | counter target non-faerie spell. if that spell is countered ~, exile it instead of putting it into its owner's graveyard. | 1 | Faerie Trickery | lrw |
 | counter target spell unless its controller pays {M}. clash with an opponent. if you win, that spell's controller mills four cards. (each clashing player reveals | 1 | Broken Ambitions | lrw |
 | counter target spell. clash with an opponent. if you win, at the beginning of your next main phase, you may add an amount of {M} equal to that spell's mana valu | 1 | Scattering Stroke | lrw |
 | create two N/N green elf warrior creature tokens. clash with an opponent. if you win, those creatures gain deathtouch until end of turn. (each clashing player r | 1 | Gilt-Leaf Ambush | lrw |
-| destroy target creature. clash with an opponent. if you win, you gain life equal to that creature's toughness. (each clashing player reveals the top card of the | 1 | Weed Strangle | lrw |
 | destroy target enchantment. clash with an opponent. if you win, destroy all enchantments your opponents control. (each clashing player reveals the top card of t | 1 | Spring Cleaning | lrw |
 | equipped creature gets +N/+N and is every creature type. | 1 | Runed Stalactite | lrw |
 | goblins you control and elementals you control have menace. | 1 | Caterwauling Boggart | lrw |
@@ -343,7 +341,6 @@
 | put a +N/+N counter on target creature, two +N/+N counters on another target creature, and three +N/+N counters on a third target creature. | 1 | Incremental Growth | lrw |
 | return target card from your graveyard to your hand. clash with an opponent. if you win, untap all forests you control. (each clashing player reveals the top ca | 1 | Woodland Guidance | lrw |
 | return target creature card from your graveyard to the battlefield with a mannequin counter on it. for as long as that creature has a mannequin counter on it, i | 1 | Makeshift Mannequin | lrw |
-| reveal cards from the top of your library until you reveal three nonland cards. put the nonland cards revealed ~ into your hand, then put the rest of the reveal | 1 | Fathom Trawl | lrw |
 | sacrifice ~: prevent all damage a red source of your choice would deal ~. | 1 | Burrenton Forge-Tender | lrw |
 | target creature blocks target creature ~ if able. | 1 | Hunt Down | lrw |
 | target creature gets +N/+N until end of turn. clash with an opponent. if you win, that creature gets an additional +N/+N and gains trample until end of turn. (e | 1 | Fistful of Force | lrw |
@@ -352,10 +349,8 @@
 | when ~ enters, return target creature card from your graveyard to your hand. if that card is a goblin card, ~ gains haste until end of turn. | 1 | Warren Pilferers | lrw |
 | when ~ enters, untap target goat and gain control of it until end of turn. it gains haste until end of turn. | 1 | Goatnapper | lrw |
 | when ~ enters, up to two target creatures can't block ~. | 1 | Glarewielder | lrw |
-| whenever a player casts a kithkin spell, you may have target player lose N life. | 1 | Quill-Slinger Boggart | lrw |
 | whenever equipped creature dies, you may put a creature card from your hand onto the battlefield and attach ~ to it. | 1 | Deathrender | lrw |
 | whenever you activate an ability, if it isn't a mana ability, you may pay {M}. if you do, copy that ability. you may choose new targets for the copy. | 1 | Rings of Brighthearth | lrw |
-| whenever you cast a spell during an opponent's turn, you may have each opponent lose N life. | 1 | Faerie Tauntings | lrw |
 | whenever you cast a spell during an opponent's turn, you may have target creature get -N/-N until end of turn. | 1 | Dreamspoiler Witches | lrw |
 | whenever you cast a treefolk spell, you may have target creature get +N/-N until end of turn. | 1 | Thorntooth Witch | lrw |
 | whenever you clash and win, you may draw a card. | 1 | Sylvan Echoes | lrw |
@@ -364,7 +359,6 @@
 | whenever ~ attacks, you may have target creature gain flying until end of turn. | 1 | Kinsbaile Balloonist | lrw |
 | you lose N life and draw two cards, then clash with an opponent. if you win, repeat ~. (each clashing player reveals the top card of their library, then puts th | 1 | Hoarder's Greed | lrw |
 | you may choose new targets for target instant or sorcery spell. then copy that spell. you may choose new targets for the copy. | 1 | Wild Ricochet | lrw |
-| {M}, {M}: you may cast a spell from your hand without paying its mana cost if it has the same name as a spell that was cast ~. | 1 | Twinning Glass | lrw |
 | {M}, {M}: you may play the exiled card without paying its mana cost if a library has twenty or fewer cards in it. | 1 | Shelldock Isle | lrw |
 | {M}, {M}: you may play the exiled card without paying its mana cost if an opponent was dealt N or more damage ~. | 1 | Spinerock Knoll | lrw |
 | {M}, {M}: you may play the exiled card without paying its mana cost if each player has no cards in hand. | 1 | Howltooth Hollow | lrw |

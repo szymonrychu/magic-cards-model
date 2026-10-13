@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 66 | 24.6% |
-| Works (untested) | 140 | 52.2% |
+| Tested | 70 | 26.1% |
+| Works (untested) | 141 | 52.6% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 62 | 23.1% |
+| Not working | 57 | 21.3% |
 
 ## Cards needing work
 
@@ -36,16 +36,12 @@
 | Crookclaw Transmuter | silent | When this creature enters, switch target creature's power and toughness until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Curse of the Cabal | silent | Target player sacrifices half the permanents they control of their choice, rounded down. Suspend 2—{2}{B}{B} (Rather than cast this card from your hand, you may | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Demonic Collusion | silent | Buyback | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Durkwood Tracker | silent | {1}{G}, {T}: If this creature is on the battlefield, it deals damage equal to its power to target attacking creature. That creature deals damage equal to its po | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Endrek Sahr, Master Breeder | silent | Whenever you cast a creature spell, create X 1/1 black Thrull creature tokens, where X is that spell's mana value. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Evangelize | silent | Buyback {2}{W}{W} (You may pay an additional {2}{W}{W} as you cast this spell. If you do, put this card into your hand as it resolves.) Gain control of target c | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Foriysian Totem | silent | As long as this artifact is a creature, it can block an additional creature each combat. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Gauntlet of Power | silent | Creatures of the chosen color get +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Ghitu Firebreathing | silent | {R}: Enchanted creature gets +1/+0 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Glass Asp | silent | Whenever this creature deals combat damage to a player, that player loses 2 life at the beginning of their next draw step unless they pay {2} before that step. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Hypergenesis | silent | Suspend 3—{1}{G}{G} Starting with you, each player may put an artifact, creature, enchantment, or land card from their hand onto the battlefield. Repeat this pr | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Ib Halfheart, Goblin Tactician | silent | Whenever another Goblin you control becomes blocked, sacrifice it. If you do, it deals 4 damage to each creature blocking it. | this trigger's condition can never be satisfied - it never triggers | Y/-/- | not_working |
-| Ignite Memories | silent | Target player reveals a card at random from their hand. Ignite Memories deals damage to that player equal to that card's mana value. Storm (When you cast this s | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Jhoira's Timebug | silent | {T}: Choose target permanent you control or suspended card you own. If that permanent or card has a time counter on it, you may remove a time counter from it or | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Lim-Dûl the Necromancer | silent | Whenever a creature an opponent controls dies, you may pay {1}{B}. If you do, return that card to the battlefield under your control. If it's a creature, it's a | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Magus of the Scroll | silent | {3}, {T}: Choose a card name, then reveal a card at random from your hand. If that card has the chosen name, this creature deals 2 damage to any target. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -70,7 +66,6 @@
 | Spell Burst | silent | Buyback | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Spirit Loop | silent | Whenever enchanted creature deals damage, you gain that much life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Stronghold Overseer | silent | {B}{B}: Creatures with shadow get +1/+0 until end of turn and creatures without shadow get -1/-0 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Thelon of Havenwood | silent | Each Fungus creature gets +1/+1 for each spore counter on it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Truth or Tale | silent | Reveal the top five cards of your library and separate them into two piles. An opponent chooses one of those piles. Put a card from the chosen pile into your ha | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Walk the Aeons | silent | Buyback—Sacrifice three Islands. (You may sacrifice three Islands in addition to any other costs as you cast this spell. If you do, put this card into your hand | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Weatherseed Totem | silent | When this artifact is put into a graveyard from the battlefield, if it was a creature, return this card to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -142,6 +137,7 @@
 | Fury Sliver | handled | All Sliver creatures have double strike. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Gaze of Justice | handled | As an additional cost to cast this spell, tap three untapped white creatures you control. Exile target creature. Flashback {5}{W} (You may cast this card from y | the engine reads this text and performs it | Y/-/- | not_tested |
 | Gemhide Sliver | handled | All Slivers have "{T}: Add one mana of any color." | the engine reads this text and performs it | Y/-/- | not_tested |
+| Ghitu Firebreathing | handled | {R}: Enchanted creature gets +1/+0 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ghostflame Sliver | handled | All Slivers are colorless. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Goblin Skycutter | handled | Sacrifice this creature: It deals 2 damage to target creature with flying. That creature loses flying until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Greenseeker | handled | {G}, {T}, Discard a card: Search your library for a basic land card, reveal it, put it into your hand, then shuffle. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -232,7 +228,7 @@
 ## Fully supported
 
 <details>
-<summary>66 cards</summary>
+<summary>70 cards</summary>
 
 - Amrou Seekers
 - Ancestral Vision
@@ -247,7 +243,9 @@
 - Coal Stoker
 - Dralnu, Lich Lord
 - Dreadship Reef
+- Durkwood Tracker
 - Empty the Warrens
+- Endrek Sahr, Master Breeder
 - Evil Eye of Urborg
 - Flagstones of Trokair
 - Flamecore Elemental
@@ -259,6 +257,7 @@
 - Grapeshot
 - Greater Gargadon
 - Haunting Hymn
+- Ignite Memories
 - Ith, High Arcanist
 - Ixidron
 - Jaya Ballard, Task Mage
@@ -292,6 +291,7 @@
 - Sudden Spoiling
 - Teferi, Mage of Zhalfir
 - Temporal Isolation
+- Thelon of Havenwood
 - Thick-Skinned Goblin
 - Tromp the Domains
 - Urborg Syphon-Mage
@@ -316,7 +316,6 @@
 | buyback {M}{M}{M} (you may pay an additional {M}{M}{M} as you cast ~. if you do, put ~ into your hand as it resolves.) gain control of target creature of an opp | 1 | Evangelize | tsp |
 | buyback—sacrifice three islands. (you may sacrifice three islands in addition to any other costs as you cast ~. if you do, put ~ into your hand as it resolves.) | 1 | Walk the Aeons | tsp |
 | creatures of the chosen color get +N/+N. | 1 | Gauntlet of Power | tsp |
-| each fungus creature gets +N/+N for each spore counter on it. | 1 | Thelon of Havenwood | tsp |
 | each player loses N life, discards a card, sacrifices a creature of their choice, then sacrifices a land of their choice. | 1 | Smallpox | tsp |
 | enchanted creature gets +N/+N, has reach, and can block creatures with shadow as though they didn't have shadow. | 1 | Aether Web | tsp |
 | put target face-up exiled card into its owner's graveyard. | 1 | Pull from Eternity | tsp |
@@ -328,7 +327,6 @@
 | suspend N—{M} each player chooses a number of lands they control equal to the number of lands controlled by the player who controls the fewest, then sacrifices  | 1 | Restore Balance | tsp |
 | suspend N—{M}{M}{M} starting with you, each player may put an artifact, creature, enchantment, or land card from their hand onto the battlefield. repeat ~ until | 1 | Hypergenesis | tsp |
 | target creature gets +N/+N, becomes black, and gains shadow until end of turn. (it can block or be blocked by only creatures with shadow.) flashback {M}{M} (you | 1 | Traitor's Clutch | tsp |
-| target player reveals a card at random from their hand. ~ deals damage to that player equal to that card's mana value. storm (when you cast ~, copy it for each  | 1 | Ignite Memories | tsp |
 | target player reveals their hand and the top card of their library. you choose a card revealed ~. that player puts the chosen card on the bottom of their librar | 1 | Psychotic Episode | tsp |
 | target player sacrifices half the permanents they control of their choice, rounded down. suspend N—{M}{M}{M} (rather than cast ~ from your hand, you may pay {M} | 1 | Curse of the Cabal | tsp |
 | target spell or permanent becomes colorless. | 1 | Moonlace | tsp |
@@ -342,7 +340,6 @@
 | whenever an opponent casts a spell, if ~ is suspended, that player may put a time counter on ~. | 1 | Pardic Dragon | tsp |
 | whenever another goblin you control becomes blocked, sacrifice it. if you do, it deals N damage to each creature blocking it. | 1 | Ib Halfheart, Goblin Tactician | tsp |
 | whenever enchanted creature deals damage, you gain that much life. | 1 | Spirit Loop | tsp |
-| whenever you cast a creature spell, create N N/N black thrull creature tokens, where N is that spell's mana value. | 1 | Endrek Sahr, Master Breeder | tsp |
 | whenever you cast an artifact spell, you may search your graveyard, hand, and/or library for a card with the same name as that spell and put it onto the battlef | 1 | Mishra, Artificer Prodigy | tsp |
 | whenever ~ attacks and isn't blocked, you may have it deal N damage to target creature. if you do, prevent all combat damage ~ would deal ~. | 1 | Zealot il-Vec | tsp |
 | whenever ~ attacks, if defending player controls no black permanents, it doesn't untap during your next untap step. | 1 | Spectral Force | tsp |
@@ -356,13 +353,11 @@
 | {M}, {M}: reveal the top card of your library. if it has the same name as a card in your graveyard, put it into your graveyard. otherwise, draw a card. | 1 | Candles of Leng | tsp |
 | {M}: choose target permanent you control or suspended card you own. if that permanent or card has a time counter on it, you may remove a time counter from it or | 1 | Jhoira's Timebug | tsp |
 | {M}: each N/N creature you control gets +N/+N until end of turn. | 1 | Pendelhaven Elder | tsp |
-| {M}: enchanted creature gets +N/+N until end of turn. | 1 | Ghitu Firebreathing | tsp |
 | {M}: exile mangara and target permanent. | 1 | Mangara of Corondor | tsp |
 | {M}: search your library for a dragon permanent card and put it into your graveyard. if you do, ~ becomes a copy of that card until end of turn. then shuffle. | 1 | Scion of the Ur-Dragon | tsp |
 | {M}: the next N damage that would be dealt to ~ ~ is dealt to target creature you control instead. | 1 | Outrider en-Kor | tsp |
 | {M}: ~ gains forestwalk until end of turn and deals N damage to you. | 1 | Wormwood Dryad | tsp |
 | {M}: ~ gets +N/+N until end of turn. you skip your next turn. activate only once each turn and only if ~ is a creature. | 1 | Chronatog Totem | tsp |
-| {M}{M}, {M}: if ~ is on the battlefield, it deals damage equal to its power to target attacking creature. that creature deals damage equal to its power to ~. | 1 | Durkwood Tracker | tsp |
 | {M}{M}: creatures with shadow get +N/+N until end of turn and creatures without shadow get -N/-N until end of turn. | 1 | Stronghold Overseer | tsp |
 | {M}{M}: return ~ from your graveyard to the battlefield tapped. you skip your next turn. | 1 | Chronosavant | tsp |
 | ~ can block creatures with shadow as though they didn't have shadow. | 1 | Aetherflame Wall | tsp |

@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 73 | 27.2% |
+| Tested | 74 | 27.6% |
 | Works (untested) | 113 | 42.2% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 82 | 30.6% |
+| Not working | 81 | 30.2% |
 
 ## Cards needing work
 
@@ -76,7 +76,6 @@
 | Relive the Past | silent | Return up to one target artifact card, up to one target land card, and up to one target non-Aura enchantment card from your graveyard to the battlefield. They a | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Repulsive Mutation | silent | Put X +1/+1 counters on target creature you control. Then counter up to one target spell unless its controller pays mana equal to the greatest power among creat | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Rot Farm Mortipede | silent | Whenever one or more creature cards leave your graveyard, this creature gets +1/+0 and gains menace and lifelink until end of turn. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
-| Slime Against Humanity | silent | Create a 0/0 green Ooze creature token with trample. Put X +1/+1 counters on it, where X is two plus the total number of cards you own in exile and in your grav | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Soul Enervation | silent | Whenever one or more creature cards leave your graveyard, each opponent loses 1 life and you gain 1 life. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
 | Soul Search | silent | Target opponent reveals their hand. You choose a nonland card from it. Exile that card. If the card's mana value is 1 or less, create a 1/1 white and black Spir | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Steamcore Scholar | silent | When this creature enters, draw two cards. Then discard two cards unless you discard an instant or sorcery card or a creature card with flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -225,7 +224,7 @@
 ## Fully supported
 
 <details>
-<summary>73 cards</summary>
+<summary>74 cards</summary>
 
 - Absolving Lammasu
 - Aftermath Analyst
@@ -288,6 +287,7 @@
 - Rubblebelt Braggart
 - Shadowy Backstreet
 - Sharp-Eyed Rookie
+- Slime Against Humanity
 - Slimy Dualleech
 - Sudden Setback
 - Teysa, Opulent Oligarch
@@ -318,7 +318,6 @@
 | at the beginning of your end step, target opponent may sacrifice two nonland, nontoken permanents of their choice. if they don't, you draw two cards. | 1 | Rakdos, Patron of Chaos | mkm |
 | at the beginning of your upkeep, investigate once for each opponent who has more cards in hand than you. | 1 | Wojek Investigator | mkm |
 | cloak | 1 | Expose the Culprit | mkm |
-| create a N/N green ooze creature token with trample. put N +N/+N counters on it, where N is two plus the total number of cards you own in exile and in your grav | 1 | Slime Against Humanity | mkm |
 | create a N/N green plant creature token, then draw cards equal to the number of differently named creature tokens you control. | 1 | Audience with Trostani | mkm |
 | creatures you control get +N/+N and gain trample until end of turn. you may turn a creature you control face up. | 1 | Hustle // Bustle | mkm |
 | destroy all artifacts you don't control, then exile the top N cards of your library, where N is the number of artifacts that were put into graveyards from the b | 1 | Anzrag's Rampage | mkm |

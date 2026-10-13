@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 17 | 15.9% |
-| Works (untested) | 68 | 63.6% |
+| Works (untested) | 69 | 64.5% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 22 | 20.6% |
+| Not working | 21 | 19.6% |
 
 ## Cards needing work
 
@@ -46,7 +46,6 @@
 | Spelltwine | silent | Exile target instant or sorcery card from your graveyard and target instant or sorcery card from an opponent's graveyard. Copy those cards. Cast the copies if a | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sublime Archangel | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Void Stalker | silent | {2}{U}, {T}: Put this creature and target creature on top of their owners' libraries, then those players shuffle their libraries. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Timberpack Wolf | notice | This creature gets +1/+1 for each other creature you control named Timberpack Wolf. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Xathrid Gorgon | notice | {2}{B}, {T}: Put a petrification counter on target creature. It gains defender and becomes a colorless artifact in addition to its other types. Its activated ab | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Ajani's Sunstriker | handled | Lifelink | machines/combat.py | Y/-/- | not_tested |
 | Ajani, Caller of the Pride | handled | +1: Put a +1/+1 counter on up to one target creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -107,6 +106,7 @@
 | Talrand's Invocation | handled | Create two 2/2 blue Drake creature tokens with flying. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Talrand, Sky Summoner | handled | Whenever you cast an instant or sorcery spell, create a 2/2 blue Drake creature token with flying. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Thragtusk | handled | When this creature enters, you gain 5 life. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Timberpack Wolf | handled | This creature gets +1/+1 for each other creature you control named Timberpack Wolf. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Trading Post | handled | {1}, {T}, Discard a card: You gain 4 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Tricks of the Trade | handled | Enchanted creature gets +2/+0 and can't be blocked. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Veilborn Ghoul | handled | This creature can't block. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -161,7 +161,6 @@
 | {M}: regenerate equipped creature. | 1 | Ring of Xathrid | m13 |
 | {M}{M}, {M}: put a petrification counter on target creature. it gains defender and becomes a colorless artifact in addition to its other types. its activated ab | 1 | Xathrid Gorgon | m13 |
 | {M}{M}, {M}: put ~ and target creature on top of their owners' libraries, then those players shuffle their libraries. | 1 | Void Stalker | m13 |
-| ~ gets +N/+N for each other creature you control named ~. | 1 | Timberpack Wolf | m13 |
 
 ## Notes
 

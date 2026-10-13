@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 27 | 18.9% |
-| Works (untested) | 80 | 55.9% |
+| Tested | 29 | 20.3% |
+| Works (untested) | 83 | 58.0% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 36 | 25.2% |
+| Not working | 31 | 21.7% |
 
 ## Cards needing work
 
@@ -29,7 +29,6 @@
 | Ardent Plea | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Bant Sureblade | silent | As long as you control another multicolored permanent, this creature gets +1/+1 and has first strike. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Crystallization | silent | When enchanted creature becomes the target of a spell or ability, exile that creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Demonspine Whip | silent | {X}: Equipped creature gets +X/+0 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Double Negative | silent | Counter up to two target spells. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Dragon Broodmother | silent | At the beginning of each upkeep, create a 1/1 red and green Dragon creature token with flying and devour 2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Drastic Revelation | silent | Discard your hand. Draw seven cards, then discard three cards at random. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -44,21 +43,17 @@
 | Jund Hackblade | silent | As long as you control another multicolored permanent, this creature gets +1/+1 and has haste. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Karrthus, Tyrant of Jund | silent | When Karrthus enters, gain control of all Dragons, then untap all Dragons. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Knight of New Alara | silent | Each other multicolored creature you control gets +1/+1 for each of its colors. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Mind Funeral | silent | Target opponent reveals cards from the top of their library until four land cards are revealed. That player puts all cards revealed this way into their graveyar | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Naya Hushblade | silent | As long as you control another multicolored permanent, this creature gets +1/+1 and has shroud. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Nemesis of Reason | silent | Whenever this creature attacks, defending player mills ten cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Nulltread Gargantuan | silent | When this creature enters, put a creature you control on top of its owner's library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Qasali Pridemage | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Sanity Gnawers | silent | When this creature enters, target player discards a card at random. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sen Triplets | silent | At the beginning of your upkeep, choose target opponent. This turn, that player can't cast spells or activate abilities and plays with their hand revealed. You  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sigiled Behemoth | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Singe-Mind Ogre | silent | When this creature enters, target player reveals a card at random from their hand, then loses life equal to that card's mana value. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Skyclaw Thrash | silent | Whenever this creature attacks, flip a coin. If you win the flip, this creature gets +1/+1 and gains flying until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Soulquake | silent | Return all creatures on the battlefield and all creature cards in graveyards to their owners' hands. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sovereigns of Lost Alara | silent | Whenever a creature you control attacks alone, you may search your library for an Aura card that could enchant that creature, put it onto the battlefield attach | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Thought Hemorrhage | silent | Choose a nonland card name. Target player reveals their hand. Thought Hemorrhage deals 3 damage to that player for each card with the chosen name revealed this  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Thraximundar | silent | Whenever Thraximundar attacks, defending player sacrifices a creature of their choice. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Vedalken Ghoul | silent | Whenever this creature becomes blocked, defending player loses 4 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Aven Mimeomancer | notice | At the beginning of your upkeep, you may put a feather counter on target creature. If you do, that creature has base power and toughness 3/1 and has flying for  | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Slave of Bolas | notice | Gain control of target creature. Untap that creature. It gains haste until end of turn. Sacrifice it at the beginning of the next end step. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Zealous Persecution | notice | Until end of turn, creatures you control get +1/+1 and creatures your opponents control get -1/-1. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
@@ -77,6 +72,7 @@
 | Deathbringer Thoctar | handled | Whenever another creature dies, you may put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Defiler of Souls | handled | At the beginning of each player's upkeep, that player sacrifices a monocolored creature of their choice. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Demonic Dread | handled | Cascade (When you cast this spell, exile cards from the top of your library until you exile a nonland card that costs less. You may cast it without paying its m | the engine reads this text and performs it | Y/-/- | not_tested |
+| Demonspine Whip | handled | {X}: Equipped creature gets +X/+0 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Deny Reality | handled | Cascade (When you cast this spell, exile cards from the top of your library until you exile a nonland card that costs less. You may cast it without paying its m | the engine reads this text and performs it | Y/-/- | not_tested |
 | Enigma Sphinx | handled | When this creature is put into your graveyard from the battlefield, put it into your library third from the top. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Enlisted Wurm | handled | Cascade | machines/keywords.py | Y/-/- | not_tested |
@@ -113,6 +109,7 @@
 | Monstrous Carabid | handled | This creature attacks each combat if able. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Mycoid Shepherd | handled | Whenever this creature or another creature you control with power 5 or greater dies, you may gain 5 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Naya Sojourners | handled | When you cycle this card and when this creature dies, you may put a +1/+1 counter on target creature. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Nemesis of Reason | handled | Whenever this creature attacks, defending player mills ten cards. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Offering to Asha | handled | Counter target spell unless its controller pays {4}. You gain 4 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Pale Recluse | handled | Reach | machines/combat.py | Y/-/- | not_tested |
 | Reborn Hope | handled | Return target multicolored card from your graveyard to your hand. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -135,6 +132,7 @@
 | Uril, the Miststalker | handled | Uril gets +2/+2 for each Aura attached to it. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Valley Rannet | handled | Mountaincycling | machines/keywords.py (off_zone_abilities: cycling) | Y/-/- | not_tested |
 | Vectis Dominator | handled | {T}: Tap target creature unless its controller pays 2 life. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Vedalken Ghoul | handled | Whenever this creature becomes blocked, defending player loses 4 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Vedalken Heretic | handled | Whenever this creature deals damage to an opponent, you may draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Veinfire Borderpost | handled | You may pay {1} and return a basic land you control to its owner's hand rather than pay this spell's mana cost. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Vithian Renegades | handled | When this creature enters, destroy target artifact. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -146,7 +144,7 @@
 ## Fully supported
 
 <details>
-<summary>27 cards</summary>
+<summary>29 cards</summary>
 
 - Anathemancer
 - Architects of Will
@@ -163,12 +161,14 @@
 - Maelstrom Pulse
 - Mage Slayer
 - Marrow Chomper
+- Mind Funeral
 - Morbid Bloom
 - Necromancer's Covenant
 - Predatory Advantage
 - Putrid Leech
 - Sages of the Anima
 - Sigil Captain
+- Singe-Mind Ogre
 - Spellbound Dragon
 - Spellbreaker Behemoth
 - Tainted Sigil
@@ -199,22 +199,17 @@
 | each other multicolored creature you control gets +N/+N for each of its colors. | 1 | Knight of New Alara | arb |
 | gain control of target creature. untap that creature. it gains haste until end of turn. sacrifice it at the beginning of the next end step. | 1 | Slave of Bolas | arb |
 | return all creatures on the battlefield and all creature cards in graveyards to their owners' hands. | 1 | Soulquake | arb |
-| target opponent reveals cards from the top of their library until four land cards are revealed. that player puts all cards revealed ~ into their graveyard. | 1 | Mind Funeral | arb |
 | until end of turn, creatures you control get +N/+N and creatures your opponents control get -N/-N. | 1 | Zealous Persecution | arb |
 | when enchanted creature becomes the target of a spell or ability, exile that creature. | 1 | Crystallization | arb |
 | when karrthus enters, gain control of all dragons, then untap all dragons. | 1 | Karrthus, Tyrant of Jund | arb |
 | when ~ enters, put a creature you control on top of its owner's library. | 1 | Nulltread Gargantuan | arb |
 | when ~ enters, target player discards a card at random. | 1 | Sanity Gnawers | arb |
-| when ~ enters, target player reveals a card at random from their hand, then loses life equal to that card's mana value. | 1 | Singe-Mind Ogre | arb |
 | when ~ enters, you may have target creature block it ~ if able. | 1 | Giant Ambush Beetle | arb |
 | whenever a creature you control attacks alone, if it's the first combat phase of the turn, untap that creature. after ~, there is an additional combat phase. | 1 | Finest Hour | arb |
 | whenever a creature you control attacks alone, you may search your library for an aura card that could enchant that creature, put it onto the battlefield attach | 1 | Sovereigns of Lost Alara | arb |
 | whenever another artifact you control enters, ~ gets +N/+N until end of turn and can't be blocked ~. | 1 | Glassdust Hulk | arb |
-| whenever ~ attacks, defending player mills ten cards. | 1 | Nemesis of Reason | arb |
 | whenever ~ attacks, defending player sacrifices a creature of their choice. | 1 | Thraximundar | arb |
 | whenever ~ attacks, flip a coin. if you win the flip, ~ gets +N/+N and gains flying until end of turn. | 1 | Skyclaw Thrash | arb |
-| whenever ~ becomes blocked, defending player loses N life. | 1 | Vedalken Ghoul | arb |
-| {M}: equipped creature gets +N/+N until end of turn. | 1 | Demonspine Whip | arb |
 
 ## Notes
 

@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 43 | 17.6% |
+| Tested | 46 | 18.9% |
 | Works (untested) | 150 | 61.5% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 51 | 20.9% |
+| Not working | 48 | 19.7% |
 
 ## Cards needing work
 
@@ -42,13 +42,11 @@
 | Gideon's Sacrifice | silent | Choose a creature or planeswalker you control. All damage that would be dealt this turn to you and permanents you control is dealt to the chosen permanent inste | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Gideon's Triumph | silent | Target opponent sacrifices a creature of their choice that attacked or blocked this turn. If you control a Gideon planeswalker, that player sacrifices two of th | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Gideon, the Oathsworn | silent | Whenever you attack with two or more non-Gideon creatures, put a +1/+1 counter on each of those creatures. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| God-Eternal Bontu | silent | When God-Eternal Bontu enters, sacrifice any number of other permanents, then draw that many cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | God-Eternal Rhonas | silent | When God-Eternal Rhonas enters, double the power of each other creature you control until end of turn. Those creatures gain vigilance until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Guild Globe | silent | {2}, {T}, Sacrifice this artifact: Add two mana of different colors. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Interplanar Beacon | silent | {1}, {T}: Add two mana of different colors. Spend this mana only to cast planeswalker spells. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Jace's Ruse | silent | Return up to two target creatures to their owner's hand. You may search your library and/or graveyard for a card named Jace, Arcane Strategist, reveal it, and p | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Jace, Arcane Strategist | silent | −7: Creatures you control can't be blocked this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Krenko, Tin Street Kingpin | silent | Whenever Krenko attacks, put a +1/+1 counter on it, then create a number of 1/1 red Goblin creature tokens equal to Krenko's power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Liliana's Triumph | silent | Each opponent sacrifices a creature of their choice. If you control a Liliana planeswalker, each opponent also discards a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Liliana, Dreadhorde General | silent | −9: Each opponent chooses a permanent they control of each permanent type and sacrifices the rest. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Living Twister | silent | {G}: Return a tapped land you control to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -66,7 +64,6 @@
 | Sarkhan the Masterless | silent | Whenever a creature attacks you or a planeswalker you control, each Dragon you control deals 1 damage to that creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Single Combat | silent | Each player chooses a creature or planeswalker they control, then sacrifices the rest. Players can't cast creature or planeswalker spells until the end of your  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Storrev, Devkarin Lich | silent | Whenever Storrev deals combat damage to a player or planeswalker, return to your hand target creature or planeswalker card in your graveyard that wasn't put the | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| The Elderspell | silent | Destroy any number of target planeswalkers. Choose a planeswalker you control. Put two loyalty counters on it for each planeswalker destroyed this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Time Wipe | silent | Return a creature you control to its owner's hand, then destroy all creatures. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Tolsimir, Friend to Wolves | silent | When Tolsimir enters, create Voja, Friend to Elves, a legendary 3/3 green and white Wolf creature token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ugin, the Ineffable | silent | +1: Exile the top card of your library face down and look at it. Create a 2/2 colorless Spirit creature token. When that token leaves the battlefield, put the e | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -231,7 +228,7 @@
 ## Fully supported
 
 <details>
-<summary>43 cards</summary>
+<summary>46 cards</summary>
 
 - Arboreal Grazer
 - Arlinn, Voice of the Pack
@@ -247,6 +244,7 @@
 - Feather, the Redeemed
 - Finale of Eternity
 - Gleaming Overseer
+- God-Eternal Bontu
 - God-Eternal Kefnet
 - Heartwarming Redemption
 - Huatli, the Sun's Heart
@@ -256,6 +254,7 @@
 - Jiang Yanggu, Wildcrafter
 - Karn, the Great Creator
 - Kasmina's Transmutation
+- Krenko, Tin Street Kingpin
 - Kronch Wrangler
 - Mayhem Devil
 - Mowu, Loyal Companion
@@ -272,6 +271,7 @@
 - Storm the Citadel
 - Tamiyo, Collector of Tales
 - Teferi, Time Raveler
+- The Elderspell
 - Tomik, Distinguished Advokist
 - Turret Ogre
 - Ugin's Conjurant
@@ -290,7 +290,6 @@
 | choose four. you may choose the same mode more than once. • create a N/N citizen creature token that's all colors. • return target permanent card from your grav | 1 | Planewide Celebration | war |
 | choose up to four target cards in your graveyard. if you control a bolas planeswalker, return those cards to your hand. otherwise, an opponent chooses two of th | 1 | Deliver Unto Evil | war |
 | copy target instant or sorcery spell, then return it to its owner's hand. you may choose new targets for the copy. | 1 | Narset's Reversal | war |
-| destroy any number of target planeswalkers. choose a planeswalker you control. put two loyalty counters on it for each planeswalker destroyed ~. | 1 | The Elderspell | war |
 | draw N cards. if N is N or more, instead shuffle your graveyard into your library, draw N cards, untap up to five lands, and you have no maximum hand size for t | 1 | Finale of Revelation | war |
 | during your turn, creatures you control have first strike and equip abilities you activate cost {M} less to activate. | 1 | Nahiri, Storm of Stone | war |
 | each opponent sacrifices a creature of their choice. if you control a liliana planeswalker, each opponent also discards a card. | 1 | Liliana's Triumph | war |
@@ -314,9 +313,7 @@
 | when ~ enters, double the power of each other creature you control until end of turn. those creatures gain vigilance until end of turn. | 1 | God-Eternal Rhonas | war |
 | when ~ enters, each other creature gets -N/-N until end of turn. whenever a creature dies ~, each creature other than ~ gets -N/-N until end of turn. | 1 | Massacre Girl | war |
 | when ~ enters, look at the top card of target opponent's library. | 1 | Saheeli's Silverwing | war |
-| when ~ enters, sacrifice any number of other permanents, then draw that many cards. | 1 | God-Eternal Bontu | war |
 | whenever a creature attacks you or a planeswalker you control, each dragon you control deals N damage to that creature. | 1 | Sarkhan the Masterless | war |
-| whenever krenko attacks, put a +N/+N counter on it, then create a number of N/N red goblin creature tokens equal to krenko's power. | 1 | Krenko, Tin Street Kingpin | war |
 | whenever neheb deals combat damage to a player or planeswalker, you may discard any number of cards. if you do, draw that many cards and add that much {M}. unti | 1 | Neheb, Dreadhorde Champion | war |
 | whenever storrev deals combat damage to a player or planeswalker, return to your hand target creature or planeswalker card in your graveyard that wasn't put the | 1 | Storrev, Devkarin Lich | war |
 | whenever you attack with two or more non-gideon creatures, put a +N/+N counter on each of those creatures. | 1 | Gideon, the Oathsworn | war |

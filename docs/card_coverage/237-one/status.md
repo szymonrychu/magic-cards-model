@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 62 | 24.6% |
-| Works (untested) | 124 | 49.2% |
+| Tested | 63 | 25.0% |
+| Works (untested) | 125 | 49.6% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 66 | 26.2% |
+| Not working | 64 | 25.4% |
 
 ## Cards needing work
 
@@ -59,7 +59,6 @@
 | Monument to Perfection | silent | {3}: This artifact becomes a 9/9 Phyrexian Construct artifact creature, loses all abilities, and gains indestructible and toxic 9. Activate only if there are ni | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Myr Custodian | silent | When this creature enters, scry 2. Then each opponent may scry 1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Necrogen Rotpriest | silent | Whenever a creature you control with toxic deals combat damage to a player, that player gets an additional poison counter. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Ovika, Enigma Goliath | silent | Whenever you cast a noncreature spell, create X 1/1 red Phyrexian Goblin creature tokens, where X is the mana value of that spell. They gain haste until end of  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Phyrexian Atlas | silent | Corrupted — Whenever this artifact becomes tapped, each opponent who has three or more poison counters loses 1 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Reject Imperfection | silent | Counter target spell. If that spell's mana value was 3 or less, proliferate. (Choose any number of permanents and/or players, then give each another counter of  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Rhuk, Hexgold Nabber | silent | Whenever an equipped creature you control other than Rhuk attacks or dies, you may attach all Equipment attached to that creature to Rhuk. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -91,7 +90,6 @@
 | Red Sun's Twilight | notice | Destroy up to X target artifacts. If X is 5 or more, for each artifact destroyed this way, create a token that's a copy of it. Those tokens gain haste. Exile th | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Resistance Reunited | notice | Target creature gets +2/+2 until end of turn. Equipped creatures you control gain indestructible until end of turn. (Damage and effects that say "destroy" don't | unparsed remainder: Equipped creatures you control gain indestructible until end of turn. | Y/Y/- | not_working |
 | Serum Snare | notice | Return target nonland permanent to its owner's hand. If that permanent had mana value 3 or less, proliferate. (Choose any number of permanents and/or players, t | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Urabrask's Forge | notice | At the beginning of combat on your turn, put an oil counter on this artifact, then create an X/1 red Phyrexian Horror creature token with trample and haste, whe | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Adaptive Sporesinger | handled | When this creature enters, choose one — • Target creature gets +2/+2 and gains vigilance until end of turn. • Proliferate. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Against All Odds | handled | Choose one or both — • Exile target artifact or creature you control, then return it to the battlefield under its owner's control. • Return target artifact or c | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Annex Sentry | handled | When this creature enters, exile target artifact or creature an opponent controls with mana value 3 or less until this creature leaves the battlefield. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -166,6 +164,7 @@
 | Oil-Gorger Troll | handled | When this creature enters, you gain 3 life. Then if you control a permanent with an oil counter on it, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Orthodoxy Enforcer | handled | This creature gets +2/+0 as long as you control two or more artifacts. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ossification | handled | When this Aura enters, exile target creature or planeswalker an opponent controls until this Aura leaves the battlefield. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Ovika, Enigma Goliath | handled | Whenever you cast a noncreature spell, create X 1/1 red Phyrexian Goblin creature tokens, where X is the mana value of that spell. They gain haste until end of  | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Oxidda Finisher | handled | Affinity | models/game.py (Game.cost_reduction_for, CR 702.41a) | Y/Y/- | not_tested |
 | Paladin of Predation | handled | This creature can't be blocked by creatures with power 2 or less. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Pestilent Syphoner | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
@@ -220,7 +219,7 @@
 ## Fully supported
 
 <details>
-<summary>62 cards</summary>
+<summary>63 cards</summary>
 
 - Ambulatory Edifice
 - Annihilating Glare
@@ -281,6 +280,7 @@
 - Tyvar, Jubilant Brawler
 - Unctus, Grand Metatect
 - Urabrask's Anointer
+- Urabrask's Forge
 - Venerated Rotpriest
 - Vindictive Flamestoker
 - Vivisection Evangelist
@@ -295,7 +295,6 @@
 | +N: until your next turn, up to one target creature gets -N/-N. | 1 | Jace, the Perfected Mind | one |
 | N: you draw two cards. then each opponent may scry N. | 1 | Kaya, Intangible Slayer | one |
 | as long as ~ has four or more oil counters on it, it gets +N/+N and can't be blocked. | 1 | Ichor Synthesizer | one |
-| at the beginning of combat on your turn, put an oil counter on ~, then create an N/N red phyrexian horror creature token with trample and haste, where N is the  | 1 | Urabrask's Forge | one |
 | at the beginning of combat on your turn, target creature you control gets +N/+N until end of turn. if that creature has toxic, instead it gets +N/+N until end o | 1 | Porcelain Zealot | one |
 | at the beginning of combat on your turn, the next time target creature would deal combat damage to one or more players ~, prevent that damage. if damage is prev | 1 | Ria Ivor, Bane of Bladehold | one |
 | at the beginning of combat on your turn, you may remove an oil counter from ~. when you do, target creature you control gains your choice of flying, vigilance,  | 1 | Atraxa's Skitterfang | one |
@@ -337,7 +336,6 @@
 | whenever kemba or another cat you control enters, attach up to one target equipment you control to that creature. | 1 | Kemba, Kha Enduring | one |
 | whenever one or more creatures you control deal combat damage to a player, you may return one of them to its owner's hand. if you do, you may activate loyalty a | 1 | Kaito, Dancing Shadow | one |
 | whenever you cast a noncreature spell, choose a counter on target permanent. put an additional counter of that kind on that permanent. | 1 | Ichormoon Gauntlet | one |
-| whenever you cast a noncreature spell, create N N/N red phyrexian goblin creature tokens, where N is the mana value of that spell. they gain haste until end of  | 1 | Ovika, Enigma Goliath | one |
 | whenever you proliferate, choose one — • if you don't control a creature named the hollow sentinel, create the hollow sentinel, a legendary N/N colorless phyrex | 1 | Venser, Corpse Puppet | one |
 | whenever you proliferate, each opponent loses N life and you gain N life. | 1 | Scheming Aspirant | one |
 | whenever you put one or more counters on a permanent or player, ~ deals that much damage to target opponent, creature an opponent controls, or planeswalker an o | 1 | All Will Be One | one |

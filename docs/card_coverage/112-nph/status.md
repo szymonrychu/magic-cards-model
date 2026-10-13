@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 44 | 27.2% |
-| Works (untested) | 88 | 54.3% |
+| Tested | 45 | 27.8% |
+| Works (untested) | 89 | 54.9% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 30 | 18.5% |
+| Not working | 28 | 17.3% |
 
 ## Cards needing work
 
@@ -43,8 +43,6 @@
 | Reaper of Sheoldred | silent | Whenever a source deals damage to this creature, that source's controller gets a poison counter. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Ruthless Invasion | silent | ({R/P} can be paid with either {R} or 2 life.) Nonartifact creatures can't block this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Soul Conduit | silent | {6}, {T}: Two target players exchange life totals. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Suture Priest | silent | Whenever a creature an opponent controls enters, you may have that player lose 1 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Sword of War and Peace | silent | Whenever equipped creature deals combat damage to a player, this Equipment deals damage to that player equal to the number of cards in their hand and you gain 1 | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Vapor Snag | silent | Return target creature to its owner's hand. Its controller loses 1 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Viridian Harvest | silent | When enchanted artifact is put into a graveyard, you gain 6 life. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Xenograft | silent | Each creature you control is the chosen type in addition to its other types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -130,6 +128,7 @@
 | Spined Thopter | handled | Flying | machines/combat.py | Y/-/- | not_tested |
 | Spire Monitor | handled | Flying | machines/combat.py | Y/-/- | not_tested |
 | Surge Node | handled | This artifact enters with six charge counters on it. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Suture Priest | handled | Whenever another creature you control enters, you may gain 1 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Tezzeret's Gambit | handled | ({U/P} can be paid with either {U} or 2 life.) Draw two cards, then proliferate. (Choose any number of permanents and/or players, then give each another counter | the engine reads this text and performs it | Y/-/- | not_tested |
 | Thundering Tanadon | handled | Trample | machines/combat.py | Y/-/- | not_tested |
 | Tormentor Exarch | handled | When this creature enters, choose one — • Target creature gets +2/+0 until end of turn. • Target creature gets -0/-2 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -148,7 +147,7 @@
 ## Fully supported
 
 <details>
-<summary>44 cards</summary>
+<summary>45 cards</summary>
 
 - Argent Mutation
 - Arm with Aether
@@ -188,6 +187,7 @@
 - Spellskite
 - Spinebiter
 - Surgical Extraction
+- Sword of War and Peace
 - Torpor Orb
 - Unwinding Clock
 - Vorinclex, Voice of Hunger
@@ -218,13 +218,11 @@
 | when ~ enters, choose one — • search your library for a creature card, reveal it, then shuffle and put that card on top. • put target noncreature permanent on t | 1 | Brutalizer Exarch | nph |
 | when ~ enters, you may cast target instant or sorcery card from an opponent's graveyard without paying its mana cost. | 1 | Chancellor of the Spires | nph |
 | when ~ enters, you may return target equipment card from your graveyard to the battlefield. if you do, you may attach it to ~. | 1 | Auriok Survivors | nph |
-| whenever a creature an opponent controls enters, you may have that player lose N life. | 1 | Suture Priest | nph |
 | whenever a source deals damage to ~, that source's controller gets a poison counter. | 1 | Reaper of Sheoldred | nph |
 | whenever a source deals damage to ~, that source's controller sacrifices that many permanents of their choice. | 1 | Phyrexian Obliterator | nph |
 | whenever an opponent casts a creature spell, that player loses N life unless they pay {M}. | 1 | Isolation Cell | nph |
 | whenever an opponent casts a spell, counter it unless that player pays {M}. | 1 | Chancellor of the Annex | nph |
 | whenever an opponent shuffles their library, you may look at the top two cards of that library. you may exile one of those cards. then put the rest on top of th | 1 | Psychic Surgery | nph |
-| whenever equipped creature deals combat damage to a player, ~ deals damage to that player equal to the number of cards in their hand and you gain N life for eac | 1 | Sword of War and Peace | nph |
 | you may have ~ enter as a copy of any artifact or creature on the battlefield, except it's an artifact in addition to its other types. | 1 | Phyrexian Metamorph | nph |
 | you may reveal ~ from your opening hand. if you do, at the beginning of your first main phase of the game, add {M}. | 1 | Chancellor of the Tangle | nph |
 | {M}, {M}, sacrifice ~: remove up to four charge counters from target noncreature artifact. | 1 | Gremlin Mine | nph |

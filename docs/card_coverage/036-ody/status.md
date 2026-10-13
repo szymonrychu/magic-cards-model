@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 12 | 23.5% |
+| Tested | 13 | 25.5% |
 | Works (untested) | 32 | 62.7% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 7 | 13.7% |
+| Not working | 6 | 11.8% |
 
 ## Cards needing work
 
@@ -30,7 +30,6 @@
 | Aven Windreader | silent | {1}{U}: Target player reveals the top card of their library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Chance Encounter | silent | Whenever you win a coin flip, put a luck counter on this enchantment. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Deluge | silent | Tap all creatures without flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Haunting Echoes | silent | Exile all cards from target player's graveyard other than basic land cards. For each card exiled this way, search that player's library for all cards with the s | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Time Stretch | silent | Target player takes two extra turns after this one. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Squirrel Mob | notice | This creature gets +1/+1 for each other Squirrel on the battlefield. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Afflict | handled | Target creature gets -1/-1 until end of turn. Draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -69,13 +68,14 @@
 ## Fully supported
 
 <details>
-<summary>12 cards</summary>
+<summary>13 cards</summary>
 
 - Barbarian Ring
 - Battle of Wits
 - Diabolic Tutor
 - Ember Beast
 - Ground Seal
+- Haunting Echoes
 - Magnivore
 - Millikin
 - Mindslicer
@@ -90,7 +90,6 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| exile all cards from target player"..."s library for all cards with the same name as that card and exile them. then that player shuffles. | 1 | Haunting Echoes | ody |
 | gain control of target aura that's attached to a permanent. attach it to another permanent it can enchant. | 1 | Aura Graft | ody |
 | tap all creatures without flying. | 1 | Deluge | ody |
 | target player takes two extra turns after ~. | 1 | Time Stretch | ody |

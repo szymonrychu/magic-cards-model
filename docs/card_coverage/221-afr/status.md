@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 64 | 24.9% |
-| Works (untested) | 137 | 53.3% |
+| Tested | 67 | 26.1% |
+| Works (untested) | 138 | 53.7% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 56 | 21.8% |
+| Not working | 52 | 20.2% |
 
 ## Cards needing work
 
@@ -45,7 +45,6 @@
 | Grand Master of Flowers | silent | +1: Search your library and/or graveyard for a card named Monk of the Open Hand, reveal it, and put it into your hand. If you search your library this way, shuf | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Grazilaxx, Illithid Scholar | silent | Whenever a creature you control becomes blocked, you may return it to its owner's hand. | this trigger's condition can never be satisfied - it never triggers | Y/Y/- | not_working |
 | Guardian of Faith | silent | When this creature enters, any number of other target creatures you control phase out. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Hand of Vecna | silent | At the beginning of combat on your turn, equipped creature or a creature you control named Vecna gets +X/+X until end of turn, where X is the number of cards in | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Hobgoblin Bandit Lord | silent | {R}, {T}: This creature deals damage equal to the number of Goblins that entered the battlefield under your control this turn to any target. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Icingdeath, Frost Tyrant | silent | When Icingdeath, Frost Tyrant dies, create Icingdeath, Frost Tongue, a legendary white Equipment artifact token with "Equipped creature gets +2/+0," "Whenever e | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Kick in the Door | silent | Put a +1/+1 counter on target creature. That creature gains haste until end of turn and can't be blocked by Walls this turn. Venture into the dungeon. (Enter th | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -54,10 +53,7 @@
 | Mordenkainen | silent | −10: Exchange your hand and library, then shuffle. You get an emblem with "You have no maximum hand size." | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Power Word Kill | silent | Destroy target non-Angel, non-Demon, non-Devil, non-Dragon creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Power of Persuasion | silent | Choose target creature an opponent controls, then roll a d20. 1—9 \| Return it to its owner's hand. 10—19 \| Its owner puts it on their choice of the top or bot | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Reaper's Talisman | silent | Whenever equipped creature attacks alone, defending player loses 2 life and you gain 2 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Skeletal Swarming | silent | Each Skeleton you control has trample, attacks each combat if able, and gets +X/+0, where X is the number of other Skeletons you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Sphere of Annihilation | silent | At the beginning of your upkeep, exile this artifact, all creatures and planeswalkers with mana value less than or equal to the number of void counters on it, a | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Split the Party | silent | Choose target player. Return half the creatures they control to their owner's hand, rounded up. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Targ Nar, Demon-Fang Gnoll | silent | {2}{R}{G}: Double Targ Nar's power and toughness until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | The Book of Vile Darkness | silent | {T}, Exile The Book of Vile Darkness and artifacts you control named Eye of Vecna and Hand of Vecna: Create Vecna, a legendary 8/8 black Zombie God creature tok | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Tiamat | silent | When Tiamat enters, if you cast it, search your library for up to five Dragon cards not named Tiamat that each have different names, reveal them, put them into  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -178,6 +174,7 @@
 | Ranger Class | handled | When this Class enters, create a 2/2 green Wolf creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ranger's Hawk | handled | {3}, {T}, Tap another untapped creature you control: Venture into the dungeon. Activate only as a sorcery. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ranger's Longbow | handled | Equipped creature gets +2/+1 and has reach. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Reaper's Talisman | handled | Whenever equipped creature attacks, it gains deathtouch until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Red Dragon | handled | Fire Breath — When this creature enters, it deals 4 damage to each opponent. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Rimeshield Frost Giant | handled | Ward | machines/keywords.py | Y/Y/- | not_tested |
 | Rust Monster | handled | Sacrifice an artifact: This creature gets +2/+0 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -223,7 +220,7 @@
 ## Fully supported
 
 <details>
-<summary>64 cards</summary>
+<summary>67 cards</summary>
 
 - Aberrant Mind Sorcerer
 - Asmodeus the Archfiend
@@ -250,6 +247,7 @@
 - Grim Wanderer
 - Hall of Storm Giants
 - Hama Pashar, Ruin Seeker
+- Hand of Vecna
 - Hired Hexblade
 - Hive of the Eye Tyrant
 - Instrument of the Bards
@@ -270,7 +268,9 @@
 - Rogue Class
 - Scion of Stygia
 - Sorcerer Class
+- Sphere of Annihilation
 - Spiked Pit Trap
+- Split the Party
 - Spoils of the Hunt
 - Sudden Insight
 - Swarming Goblins
@@ -310,12 +310,9 @@
 | as an additional cost to cast ~, you may reveal a dragon card from your hand or choose a dragon you control. ~ deals N damage to target creature or planeswalker | 1 | Dragon's Fire | afr |
 | as long as you've completed a dungeon, ~ gets +N/+N and has flying. | 1 | Cloister Gargoyle | afr |
 | as long as you've completed a dungeon, ~ has double strike. | 1 | Gloom Stalker | afr |
-| at the beginning of combat on your turn, equipped creature or a creature you control named vecna gets +N/+N until end of turn, where N is the number of cards in | 1 | Hand of Vecna | afr |
 | at the beginning of your upkeep, choose target opponent. until end of turn, that player can't cast spells, you may look at the top card of their library any tim | 1 | Xanathar, Guild Kingpin | afr |
-| at the beginning of your upkeep, exile ~, all creatures and planeswalkers with mana value less than or equal to the number of void counters on it, and all creat | 1 | Sphere of Annihilation | afr |
 | choose one. until end of turn, target creature you control has that base power and toughness, becomes that creature type, and gains that ability. • N/N turtle w | 1 | Wild Shape | afr |
 | choose target creature an opponent controls, then roll a dN. N—N \| return it to its owner's hand. N—N \| its owner puts it on their choice of the top or bottom | 1 | Power of Persuasion | afr |
-| choose target player. return half the creatures they control to their owner's hand, rounded up. | 1 | Split the Party | afr |
 | destroy target non-angel, non-demon, non-devil, non-dragon creature. | 1 | Power Word Kill | afr |
 | each creature you control gets +N/+N for each equipment attached to it. | 1 | Bruenor Battlehammer | afr |
 | each skeleton you control has trample, attacks each combat if able, and gets +N/+N, where N is the number of other skeletons you control. | 1 | Skeletal Swarming | afr |
@@ -337,7 +334,6 @@
 | whenever a creature you control becomes blocked, you may return it to its owner's hand. | 1 | Grazilaxx, Illithid Scholar | afr |
 | whenever acererak attacks, for each opponent, you create a N/N black zombie creature token unless that player sacrifices a creature of their choice. | 1 | Acererak the Archlich | afr |
 | whenever barrowin attacks, return up to one creature card with mana value N or less from your graveyard to the battlefield if you've completed a dungeon. | 1 | Barrowin of Clan Undurr | afr |
-| whenever equipped creature attacks alone, defending player loses N life and you gain N life. | 1 | Reaper's Talisman | afr |
 | whenever you complete a dungeon, create a N/N green wolf creature token. | 1 | Varis, Silverymoon Ranger | afr |
 | whenever you complete a dungeon, you may return ~ from your graveyard to your hand. | 1 | Dungeon Crawler | afr |
 | {M}, exile ~ and artifacts you control named eye of vecna and hand of vecna: create vecna, a legendary N/N black zombie god creature token with indestructible a | 1 | The Book of Vile Darkness | afr |

@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 71 | 28.5% |
-| Works (untested) | 130 | 52.2% |
+| Tested | 78 | 31.3% |
+| Works (untested) | 131 | 52.6% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 48 | 19.3% |
+| Not working | 40 | 16.1% |
 
 ## Cards needing work
 
@@ -35,33 +35,25 @@
 | Curse of Surveillance | silent | At the beginning of enchanted player's upkeep, any number of target players other than that player each draw cards equal to the number of Curses attached to tha | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Deathbonnet Sprout // Deathbonnet Hulk | silent | At the beginning of your upkeep, you may exile a card from a graveyard. If a creature card was exiled this way, put a +1/+1 counter on this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Fading Hope | silent | Return target creature to its owner's hand. If its mana value was 3 or less, scry 1. (Look at the top card of your library. You may put that card on the bottom. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Florian, Voldaren Scion | silent | At the beginning of each of your postcombat main phases, look at the top X cards of your library, where X is the total amount of life your opponents lost this t | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Gisa, Glorious Resurrector | silent | At the beginning of your upkeep, put all creature cards exiled with Gisa onto the battlefield under your control. They gain decayed. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Harvesttide Sentry | silent | Coven — At the beginning of combat on your turn, if you control three or more creatures with different powers, this creature can't be blocked by creatures with  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Hostile Hostel // Creeping Inn | silent | Whenever this creature attacks, you may exile a creature card from your graveyard. If you do, each opponent loses X life and you gain X life, where X is the num | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Howl of the Hunt | silent | When this Aura enters, if enchanted creature is a Wolf or Werewolf, untap that creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Intrepid Adversary | silent | When this creature enters, you may pay {1}{W} any number of times. When you pay this cost one or more times, put that many valor counters on this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Kessig Naturalist // Lord of the Ulvenwald | silent | Whenever this creature attacks, add {R} or {G}. Until end of turn, you don't lose this mana as steps and phases end. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Loyal Gryff | silent | When this creature enters, you may return another creature you control to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ludevic, Necrogenius // Olag, Ludevic's Hubris | silent | As this creature transforms into Olag, Ludevic's Hubris, it becomes a copy of a creature card exiled with it, except its name is Olag, Ludevic's Hubris, it's 4/ | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Mask of Griselbrand | silent | Whenever equipped creature dies, you may pay X life, where X is its power. If you do, draw X cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Moonveil Regent | silent | Whenever you cast a spell, you may discard your hand. If you do, draw a card for each of that spell's colors. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Path to the Festival | silent | Search your library for a basic land card, put that card onto the battlefield tapped, then shuffle. Then if there are three or more basic land types among lands | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Primal Adversary | silent | When this creature enters, you may pay {1}{G} any number of times. When you pay this cost one or more times, put that many +1/+1 counters on this creature, then | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Siphon Insight | silent | Look at the top two cards of target opponent's library. Exile one of them face down and put the other on the bottom of that library. You may play the exiled car | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Spectral Adversary | silent | When this creature enters, you may pay {1}{U} any number of times. When you pay this cost one or more times, put that many +1/+1 counters on this creature, then | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sungold Sentinel | silent | Coven — {1}{W}: Choose a color. This creature gains hexproof from that color until end of turn and can't be blocked by creatures of that color this turn. Activa | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Tainted Adversary | silent | When this creature enters, you may pay {2}{B} any number of times. When you pay this cost one or more times, put that many +1/+1 counters on this creature, then | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Tapping at the Window | silent | Look at the top three cards of your library. You may reveal a creature card from among them and put it into your hand. Put the rest into your graveyard. Flashba | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Teferi, Who Slows the Sunset | silent | +1: Choose up to one target artifact, up to one target creature, and up to one target land. Untap the chosen permanents you control. Tap the chosen permanents y | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | The Celestus | silent | {3}, {T}: If it's night, it becomes day. Otherwise, it becomes night. Activate only as a sorcery. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| The Meathook Massacre | silent | When The Meathook Massacre enters, each creature gets -X/-X until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Tovolar, Dire Overlord // Tovolar, the Midnight Scourge | silent | At the beginning of your upkeep, if you control three or more Wolves and/or Werewolves, it becomes night. Then transform any number of Human Werewolves you cont | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Turn the Earth | silent | Choose up to three target cards in graveyards. The owners of those cards shuffle them into their libraries. You gain 2 life. Flashback {1}{G} (You may cast this | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Unnatural Growth | silent | At the beginning of each combat, double the power and toughness of each creature you control until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Village Watch // Village Reavers | silent | Wolves and Werewolves you control have haste. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Bloodline Culling | notice | Choose one — • Target creature gets -5/-5 until end of turn. • Creature tokens get -2/-2 until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Bloodthirsty Adversary | notice | When this creature enters, you may pay {2}{R} any number of times. When you pay this cost one or more times, put that many +1/+1 counters on this creature, then | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Dire-Strain Rampage | notice | Destroy target artifact, enchantment, or land. If a land was destroyed this way, its controller may search their library for up to two basic land cards, put the | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Diregraf Horde | notice | When this creature enters, create two 2/2 black Zombie creature tokens with decayed. When you do, exile up to two target cards from graveyards. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Fateful Absence | notice | Destroy target creature or planeswalker. Its controller investigates. (They create a Clue token. It's an artifact with "{2}, Sacrifice this token: Draw a card." | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -196,6 +188,7 @@
 | Sunrise Cavalier | handled | If it's neither day nor night, it becomes day as this creature enters. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Sunstreak Phoenix | handled | If it's neither day nor night, it becomes day as this creature enters. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Suspicious Stowaway // Seafaring Werewolf | handled | This creature can't be blocked. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| The Meathook Massacre | handled | When The Meathook Massacre enters, each creature gets -X/-X until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Thraben Exorcism | handled | Exile target Spirit, creature with disturb, or enchantment. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Tireless Hauler // Dire-Strain Brawler | handled | Vigilance | machines/combat.py | Y/Y/- | not_tested |
 | Tovolar's Huntmaster // Tovolar's Packleader | handled | When this creature enters, create two 2/2 green Wolf creature tokens. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -208,12 +201,13 @@
 ## Fully supported
 
 <details>
-<summary>71 cards</summary>
+<summary>78 cards</summary>
 
 - Augur of Autumn
 - Baithook Angler // Hook-Haunt Drifter
 - Beloved Beggar // Generous Soul
 - Blood Pact
+- Bloodthirsty Adversary
 - Bounding Wolf
 - Brimstone Vandal
 - Brutal Cathar // Moonrage Brute
@@ -237,6 +231,7 @@
 - Faithful Mending
 - Falkenrath Perforator
 - Falkenrath Pit Fighter
+- Florian, Voldaren Scion
 - Galedrifter // Waildrifter
 - Gavony Dawnguard
 - Geistflame Reservoir
@@ -246,6 +241,7 @@
 - Haunted Ridge
 - Hedgewitch's Mask
 - Hungry for More
+- Intrepid Adversary
 - Jadar, Ghoulcaller of Nephalia
 - Katilda, Dawnhart Prime
 - Lier, Disciple of the Drowned
@@ -253,6 +249,7 @@
 - Malevolent Hermit // Benevolent Geist
 - Moonrager's Slash
 - Moonsilver Key
+- Moonveil Regent
 - Mounted Dreadknight
 - Mourning Patrol // Morning Apparition
 - Neonate's Rush
@@ -263,6 +260,7 @@
 - Overwhelmed Archivist // Archive Haunt
 - Play with Fire
 - Poppet Stitcher // Poppet Factory
+- Primal Adversary
 - Purifying Dragon
 - Reckless Stormseeker // Storm-Charged Slasher
 - Rem Karolus, Stalwart Slayer
@@ -275,7 +273,9 @@
 - Sigarda's Splendor
 - Silver Bolt
 - Sludge Monster
+- Spectral Adversary
 - Sunset Revelry
+- Tainted Adversary
 - Tavern Ruffian // Tavern Smasher
 - Vampire Socialite
 - Vengeful Strangler // Strangling Grasp
@@ -294,7 +294,6 @@
 | +N: until your next turn, you may cast creature spells as though they had flash, and each creature you control enters with an additional +N/+N counter on it. | 1 | Arlinn, the Pack's Hope // Arlinn, the Moon's Fury | mid |
 | as ~ transforms into olag, ludevic"..."s hubris, it"..."s a legendary blue and black zombie in addition to its other colors and types. put a number of +N/+N cou | 1 | Ludevic, Necrogenius // Olag, Ludevic's Hubris | mid |
 | at the beginning of each combat, double the power and toughness of each creature you control until end of turn. | 1 | Unnatural Growth | mid |
-| at the beginning of each of your postcombat main phases, look at the top N cards of your library, where N is the total amount of life your opponents lost ~. exi | 1 | Florian, Voldaren Scion | mid |
 | at the beginning of enchanted player's upkeep, any number of target players other than that player each draw cards equal to the number of curses attached to tha | 1 | Curse of Surveillance | mid |
 | at the beginning of your upkeep, if you control three or more wolves and/or werewolves, it becomes night. then transform any number of human werewolves you cont | 1 | Tovolar, Dire Overlord // Tovolar, the Midnight Scourge | mid |
 | at the beginning of your upkeep, put all creature cards exiled with gisa onto the battlefield under your control. they gain decayed. | 1 | Gisa, Glorious Resurrector | mid |
@@ -315,17 +314,10 @@
 | target creature you control gets +N/+N and gains lifelink until end of turn. when that creature dies ~, create a N/N white spirit creature token with flying. | 1 | Blessed Defiance | mid |
 | up to two target creatures can't block ~. flashback {M}{M} (you may cast ~ from your graveyard for its flashback cost. then exile it.) | 1 | Abandon the Post | mid |
 | when ~ enters, create two N/N black zombie creature tokens with decayed. when you do, exile up to two target cards from graveyards. | 1 | Diregraf Horde | mid |
-| when ~ enters, each creature gets -N/-N until end of turn. | 1 | The Meathook Massacre | mid |
 | when ~ enters, if enchanted creature is a wolf or werewolf, untap that creature. | 1 | Howl of the Hunt | mid |
-| when ~ enters, you may pay {M}{M} any number of times. when you pay ~ one or more times, put that many +N/+N counters on ~, then create twice that many N/N blac | 1 | Tainted Adversary | mid |
-| when ~ enters, you may pay {M}{M} any number of times. when you pay ~ one or more times, put that many +N/+N counters on ~, then exile up to that many target in | 1 | Bloodthirsty Adversary | mid |
-| when ~ enters, you may pay {M}{M} any number of times. when you pay ~ one or more times, put that many +N/+N counters on ~, then up to that many other target ar | 1 | Spectral Adversary | mid |
-| when ~ enters, you may pay {M}{M} any number of times. when you pay ~ one or more times, put that many +N/+N counters on ~, then up to that many target lands yo | 1 | Primal Adversary | mid |
-| when ~ enters, you may pay {M}{M} any number of times. when you pay ~ one or more times, put that many valor counters on ~. | 1 | Intrepid Adversary | mid |
 | when ~ enters, you may return another creature you control to its owner's hand. | 1 | Loyal Gryff | mid |
 | whenever equipped creature dies, you may pay N life, where N is its power. if you do, draw N cards. | 1 | Mask of Griselbrand | mid |
 | whenever you attack, for each opponent, create a N/N white human creature token that's tapped and attacking that player or a planeswalker they control. | 1 | Adeline, Resplendent Cathar | mid |
-| whenever you cast a spell, you may discard your hand. if you do, draw a card for each of that spell's colors. | 1 | Moonveil Regent | mid |
 | whenever ~ attacks, add {M} or {M}. until end of turn, you don't lose ~ as steps and phases end. | 1 | Kessig Naturalist // Lord of the Ulvenwald | mid |
 | whenever ~ attacks, return target creature card with mana value N or less from your graveyard to the battlefield tapped and attacking. | 1 | Bereaved Survivor // Dauntless Avenger | mid |
 | whenever ~ attacks, you may exile a creature card from your graveyard. if you do, each opponent loses N life and you gain N life, where N is the number of creat | 1 | Hostile Hostel // Creeping Inn | mid |

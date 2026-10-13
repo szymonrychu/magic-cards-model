@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 39 | 16.7% |
-| Works (untested) | 145 | 62.2% |
+| Tested | 43 | 18.5% |
+| Works (untested) | 146 | 62.7% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 49 | 21.0% |
+| Not working | 44 | 18.9% |
 
 ## Cards needing work
 
@@ -38,19 +38,16 @@
 | Darkblade Agent | silent | As long as you've surveilled this turn, this creature has deathtouch and "Whenever this creature deals combat damage to a player, you draw a card." | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Direct Current | silent | Jump | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Discovery // Dispersal | silent | Each opponent returns a nonland permanent they control with the greatest mana value among permanents they control to its owner's hand, then discards a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Erratic Cyclops | silent | Whenever you cast an instant or sorcery spell, this creature gets +X/+0 until end of turn, where X is that spell's mana value. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Expansion // Explosion | silent | Copy target instant or sorcery spell with mana value 4 or less. You may choose new targets for the copy. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Gateway Plaza | silent | When this land enters, sacrifice it unless you pay {1}. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Glowspore Shaman | silent | When this creature enters, mill three cards. You may put a land card from your graveyard on top of your library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Goblin Locksmith | silent | Whenever this creature attacks, creatures with defender can't block this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Gravitic Punch | silent | Jump | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Gruesome Menagerie | silent | Choose a creature card with mana value 1 in your graveyard, then do the same for creature cards with mana value 2 and 3. Return those cards to the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Guild Summit | silent | When this enchantment enters, you may tap any number of untapped Gates you control. Draw a card for each Gate tapped this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | House Guildmage | silent | {1}{U}, {T}: Target creature doesn't untap during its controller's next untap step. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Invert // Invent | silent | Switch the power and toughness of each of up to two target creatures until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ionize | silent | Counter target spell. Ionize deals 2 damage to that spell's controller. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | League Guildmage | silent | {X}{R}, {T}: Copy target instant or sorcery spell you control with mana value X. You may choose new targets for the copy. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Ledev Champion | silent | Whenever this creature attacks, you may tap any number of untapped creatures you control. This creature gets +1/+1 until end of turn for each creature tapped th | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Legion Warboss | silent | At the beginning of combat on your turn, create a 1/1 red Goblin creature token. That token gains haste until end of turn and attacks this combat if able. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Maximize Altitude | silent | Jump | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Maximize Velocity | silent | Jump | no machine in the engine executes this keyword | Y/Y/- | not_working |
@@ -60,13 +57,11 @@
 | Plaguecrafter | silent | When this creature enters, each player sacrifices a creature or planeswalker of their choice. Each player who can't discards a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Quasiduplicate | silent | Jump | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Radical Idea | silent | Jump | no machine in the engine executes this keyword | Y/Y/- | not_working |
-| Ral's Staticaster | silent | Whenever this creature attacks, if you control a Ral planeswalker, this creature gets +1/+0 for each card in your hand until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Risk Factor | silent | Target opponent may have Risk Factor deal 4 damage to them. If that player doesn't, you draw three cards. Jump-start (You may cast this card from your graveyard | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Selective Snare | silent | Return X target creatures of the creature type of your choice to their owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sonic Assault | silent | Jump | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Thousand-Year Storm | silent | Whenever you cast an instant or sorcery spell, copy it for each other instant and sorcery spell you've cast before it this turn. You may choose new targets for  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Trostani Discordant | silent | At the beginning of your end step, each player gains control of all creatures they own. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Unmoored Ego | silent | Choose a card name. Search target opponent's graveyard, hand, and library for up to four cards with that name and exile them. That player shuffles, then draws a | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Venerated Loxodon | silent | When this creature enters, put a +1/+1 counter on each creature that convoked it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Circuitous Route | notice | Search your library for up to two basic land cards and/or Gate cards, put them onto the battlefield tapped, then shuffle. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | District Guide | notice | When this creature enters, you may search your library for a basic land card or Gate card, reveal it, put it into your hand, then shuffle. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -130,6 +125,7 @@
 | Golgari Findbroker | handled | When this creature enters, return target permanent card from your graveyard to your hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Golgari Locket | handled | {B/G}{B/G}{B/G}{B/G}, {T}, Sacrifice this artifact: Draw two cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Grappling Sundew | handled | {4}{G}: This creature gains indestructible until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Guild Summit | handled | When this enchantment enters, you may tap any number of untapped Gates you control. Draw a card for each Gate tapped this way. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Guildmages' Forum | handled |  |  | Y/Y/- | not_tested |
 | Haazda Marshal | handled | Whenever this creature and at least two other creatures attack, create a 1/1 white Soldier creature token with lifelink. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Hammer Dropper | handled | Mentor | machines/keywords.py | Y/Y/- | not_tested |
@@ -224,7 +220,7 @@
 ## Fully supported
 
 <details>
-<summary>39 cards</summary>
+<summary>43 cards</summary>
 
 - Affectionate Indrik
 - Arclight Phoenix
@@ -238,6 +234,7 @@
 - Deafening Clarion
 - Divine Visitation
 - Enhanced Surveillance
+- Erratic Cyclops
 - Experimental Frenzy
 - Gatekeeper Gargoyle
 - Golgari Raiders
@@ -249,12 +246,14 @@
 - Kraul Foragers
 - Kraul Harpooner
 - Lazav, the Multifarious
+- Ledev Champion
 - Lotleth Giant
 - Mausoleum Secrets
 - Nullhide Ferox
 - Ochran Assassin
 - Ornery Goblin
 - Pelt Collector
+- Ral's Staticaster
 - Ral, Izzet Viceroy
 - Rhizome Lurcher
 - Skyline Scout
@@ -262,6 +261,7 @@
 - Thief of Sanity
 - Thoughtbound Phantasm
 - Underrealm Lich
+- Unmoored Ego
 - Vraska, Regal Gorgon
 - Wand of Vertebrae
 - Wojek Bodyguard
@@ -279,7 +279,6 @@
 | at the beginning of combat on your turn, create a N/N red goblin creature token. that token gains haste until end of turn and attacks ~ if able. | 1 | Legion Warboss | grn |
 | at the beginning of your end step, each player gains control of all creatures they own. | 1 | Trostani Discordant | grn |
 | at the beginning of your upkeep, exile a creature card from your graveyard. if you do, put a +N/+N counter on ~. otherwise, sacrifice it. | 1 | Charnel Troll | grn |
-| choose a card name. search target opponent's graveyard, hand, and library for up to four cards with that name and exile them. that player shuffles, then draws a | 1 | Unmoored Ego | grn |
 | choose a creature card with mana value N in your graveyard, then do the same for creature cards with mana value N and N. return those cards to the battlefield. | 1 | Gruesome Menagerie | grn |
 | copy target instant or sorcery spell with mana value N or less. you may choose new targets for the copy. | 1 | Expansion // Explosion | grn |
 | counter target spell. ~ deals N damage to that spell's controller. | 1 | Ionize | grn |
@@ -299,15 +298,11 @@
 | when ~ enters, sacrifice it unless you pay {M}. | 1 | Gateway Plaza | grn |
 | when ~ enters, surveil N. when you do, you may return target nonland permanent an opponent controls to its owner's hand. | 1 | Dream Eater | grn |
 | when ~ enters, you may search your library for a basic land card or gate card, reveal it, put it into your hand, then shuffle. | 1 | District Guide | grn |
-| when ~ enters, you may tap any number of untapped gates you control. draw a card for each gate tapped ~. | 1 | Guild Summit | grn |
 | whenever etrata deals combat damage to a player, exile target creature that player controls and put a hit counter on that card. that player loses the game if th | 1 | Etrata, the Silencer | grn |
 | whenever you cast an instant or sorcery spell that targets only ~, if you control one or more other creatures that spell could target, choose one of those creat | 1 | Beamsplitter Mage | grn |
 | whenever you cast an instant or sorcery spell, copy it for each other instant and sorcery spell you've cast before it ~. you may choose new targets for the copi | 1 | Thousand-Year Storm | grn |
-| whenever you cast an instant or sorcery spell, ~ gets +N/+N until end of turn, where N is that spell's mana value. | 1 | Erratic Cyclops | grn |
 | whenever you surveil, if ~ is in your graveyard, you may pay N life. if you do, return ~ to your hand. | 1 | Blood Operative | grn |
 | whenever ~ attacks, creatures with defender can't block ~. | 1 | Goblin Locksmith | grn |
-| whenever ~ attacks, if you control a ral planeswalker, ~ gets +N/+N for each card in your hand until end of turn. | 1 | Ral's Staticaster | grn |
-| whenever ~ attacks, you may tap any number of untapped creatures you control. ~ gets +N/+N until end of turn for each creature tapped ~. | 1 | Ledev Champion | grn |
 | you may put two +N/+N counters on a creature you control. then all creatures get -N/-N until end of turn. | 1 | Find // Finality | grn |
 | {M}{M}, {M}: copy target instant or sorcery spell you control with mana value N. you may choose new targets for the copy. | 1 | League Guildmage | grn |
 | {M}{M}, {M}: target creature doesn"..."s next untap step. | 1 | House Guildmage | grn |

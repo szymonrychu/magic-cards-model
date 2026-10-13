@@ -17,34 +17,29 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 40 | 19.0% |
+| Tested | 44 | 20.9% |
 | Works (untested) | 138 | 65.4% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 33 | 15.6% |
+| Not working | 29 | 13.7% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
-| Abhorrent Overlord | silent | When this creature enters, create a number of 1/1 black Harpy creature tokens with flying equal to your devotion to black. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Akroan Horse | silent | When this creature enters, an opponent gains control of it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Anthousa, Setessan Hero | silent | Heroic — Whenever you cast a spell that targets Anthousa, up to three target lands you control each become 2/2 Warrior creatures until end of turn. They're stil | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Artisan of Forms | silent | Heroic — Whenever you cast a spell that targets this creature, you may have this creature become a copy of target creature, except it has this ability. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ashiok, Nightmare Weaver | silent | −X: Put a creature card with mana value X exiled with Ashiok onto the battlefield under your control. That creature is a Nightmare in addition to its other type | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Bident of Thassa | silent | {1}{U}, {T}: Creatures your opponents control attack this turn if able. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Coastline Chimera | silent | {1}{W}: This creature can block an additional creature this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Colossus of Akros | silent | As long as this creature is monstrous, it has trample and can attack as though it didn't have defender. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Decorated Griffin | silent | {1}{W}: Prevent the next 1 combat damage that would be dealt to you this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Evangel of Heliod | silent | When this creature enters, create a number of 1/1 white Soldier creature tokens equal to your devotion to white. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Fate Foretold | silent | When enchanted creature dies, its controller draws a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Fleshmad Steed | silent | Whenever another creature dies, tap this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Hammer of Purphoros | silent | {2}{R}, {T}, Sacrifice a land: Create a 3/3 colorless Golem enchantment artifact creature token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Heliod, God of the Sun | silent | {2}{W}{W}: Create a 2/1 white Cleric enchantment creature token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Hundred-Handed One | silent | As long as this creature is monstrous, it has reach and can block an additional ninety-nine creatures each combat. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Hythonia the Cruel | silent | When Hythonia becomes monstrous, destroy all non-Gorgon creatures. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Master of Waves | silent | When this creature enters, create a number of 1/0 blue Elemental creature tokens equal to your devotion to blue. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Meletis Charlatan | silent | {2}{U}, {T}: The controller of target instant or sorcery spell copies it. That player may choose new targets for the copy. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Mogis's Marauder | silent | When this creature enters, up to X target creatures each gain intimidate and haste until end of turn, where X is your devotion to black. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Nylea's Presence | silent | Enchanted land is every basic land type in addition to its other types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Psychic Intrusion | silent | Target opponent reveals their hand. You choose a nonland card from that player's graveyard or hand and exile it. You may cast that card for as long as it remain | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Returned Phalanx | silent | {1}{U}: This creature can attack this turn as though it didn't have defender. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -53,6 +48,7 @@
 | Stoneshock Giant | silent | When this creature becomes monstrous, creatures without flying your opponents control can't block this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Triton Tactics | silent | Up to two target creatures each get +0/+3 until end of turn. Untap those creatures. At this turn's next end of combat, tap each creature that was blocked by one | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Viper's Kiss | silent | Enchanted creature gets -1/-1, and its activated abilities can't be activated. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
+| Anthousa, Setessan Hero | notice | Heroic — Whenever you cast a spell that targets Anthousa, up to three target lands you control each become 2/2 Warrior creatures until end of turn. They're stil | unparsed remainder: They're still lands. | Y/Y/- | not_working |
 | Boon of Erebos | notice | Target creature gets +2/+0 until end of turn. Regenerate it. You lose 2 life. | unparsed remainder: Regenerate it. You lose 2 life. | Y/Y/- | not_working |
 | Daxos of Meletis | notice | Whenever Daxos deals combat damage to a player, exile the top card of that player's library. You gain life equal to that card's mana value. Until end of turn, y | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Erebos's Emissary | notice | Discard a creature card: This creature gets +2/+2 until end of turn. If this permanent is an Aura, enchanted creature gets +2/+2 until end of turn instead. | unparsed remainder: If this permanent is an Aura, enchanted creature gets +2/+2 until end of turn instead. | Y/Y/- | not_working |
@@ -201,8 +197,9 @@
 ## Fully supported
 
 <details>
-<summary>40 cards</summary>
+<summary>44 cards</summary>
 
+- Abhorrent Overlord
 - Akroan Hoplite
 - Anger of the Gods
 - Arbor Colossus
@@ -211,6 +208,7 @@
 - Dauntless Onslaught
 - Defend the Hearth
 - Elspeth, Sun's Champion
+- Evangel of Heliod
 - Fanatic of Mogis
 - Favored Hoplite
 - Fleecemane Lion
@@ -220,7 +218,9 @@
 - Hunt the Hunter
 - Karametra's Acolyte
 - Lagonna-Band Elder
+- Master of Waves
 - Medomai the Ageless
+- Mogis's Marauder
 - Nemesis of Mortals
 - Nessian Asp
 - Nighthowler
@@ -266,10 +266,6 @@
 | when hythonia becomes monstrous, destroy all non-gorgon creatures. | 1 | Hythonia the Cruel | ths |
 | when ~ becomes monstrous, creatures without flying your opponents control can't block ~. | 1 | Stoneshock Giant | ths |
 | when ~ enters, an opponent gains control of it. | 1 | Akroan Horse | ths |
-| when ~ enters, create a number of N/N black harpy creature tokens with flying equal to your devotion to black. | 1 | Abhorrent Overlord | ths |
-| when ~ enters, create a number of N/N blue elemental creature tokens equal to your devotion to blue. | 1 | Master of Waves | ths |
-| when ~ enters, create a number of N/N white soldier creature tokens equal to your devotion to white. | 1 | Evangel of Heliod | ths |
-| when ~ enters, up to N target creatures each gain intimidate and haste until end of turn, where N is your devotion to black. | 1 | Mogis's Marauder | ths |
 | whenever another creature dies, tap ~. | 1 | Fleshmad Steed | ths |
 | whenever daxos deals combat damage to a player, exile the top card of that player"..."s mana value. until end of turn, you may cast that card and you may spend  | 1 | Daxos of Meletis | ths |
 | {M}{M}, {M}, sacrifice a land: create a N/N colorless golem enchantment artifact creature token. | 1 | Hammer of Purphoros | ths |

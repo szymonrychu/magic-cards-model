@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 53 | 24.4% |
+| Tested | 54 | 24.9% |
 | Works (untested) | 131 | 60.4% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 33 | 15.2% |
+| Not working | 32 | 14.7% |
 
 ## Cards needing work
 
@@ -54,7 +54,6 @@
 | Vanguard's Shield | silent | Equipped creature gets +0/+3 and can block an additional creature each combat. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Vexing Devil | silent | When this creature enters, any opponent may have it deal 4 damage to them. If a player does, sacrifice this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Defy Death | notice | Return target creature card from your graveyard to the battlefield. If it's an Angel, put two +1/+1 counters on it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Descent into Madness | notice | At the beginning of your upkeep, put a despair counter on this enchantment, then each player exiles X permanents they control and/or cards from their hand, wher | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Eaten by Spiders | notice | Destroy target creature with flying and all Equipment attached to that creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Joint Assault | notice | Target creature gets +2/+2 until end of turn. If it's paired with a creature, that creature also gets +2/+2 until end of turn. | unparsed remainder: If it's paired with a creature, that creature also gets +2/+2 until end of turn. | Y/-/- | not_working |
 | Necrobite | notice | Target creature gains deathtouch until end of turn. Regenerate it. (The next time that creature would be destroyed this turn, instead tap it, remove it from com | unparsed remainder: Regenerate it. | Y/Y/- | not_working |
@@ -194,7 +193,7 @@
 ## Fully supported
 
 <details>
-<summary>53 cards</summary>
+<summary>54 cards</summary>
 
 - Aggravate
 - Angel of Jubilation
@@ -212,6 +211,7 @@
 - Defang
 - Demonic Rising
 - Demonic Taskmaster
+- Descent into Madness
 - Diregraf Escort
 - Divine Deflection
 - Dreadwaters
@@ -259,7 +259,6 @@
 | +N: draw a card, then discard a card at random. | 1 | Tibalt, the Fiend-Blooded | avr |
 | as long as equipped creature is a human or an angel, it has vigilance. | 1 | Bladed Bracers | avr |
 | as long as you control exactly one creature, that creature gets +N/+N and has lifelink. | 1 | Homicidal Seclusion | avr |
-| at the beginning of your upkeep, put a despair counter on ~, then each player exiles N permanents they control and/or cards from their hand, where N is the numb | 1 | Descent into Madness | avr |
 | at the beginning of your upkeep, reveal the top card of your library. if it"..."t cast it, put it on the bottom of your library. | 1 | Descendants' Path | avr |
 | at the beginning of your upkeep, sacrifice ~ unless you pay {M} for each other creature you control. | 1 | Fettergeist | avr |
 | choose an order for artifacts, creatures, and lands. each player sacrifices one permanent of their choice of the first type, sacrifices two of their choice of t | 1 | Rite of Ruin | avr |

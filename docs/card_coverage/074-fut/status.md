@@ -17,29 +17,26 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 54 | 30.3% |
-| Works (untested) | 81 | 45.5% |
+| Tested | 59 | 33.1% |
+| Works (untested) | 82 | 46.1% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 43 | 24.2% |
+| Not working | 37 | 20.8% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
 | Arcanum Wings | silent | Aura Swap | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Bitter Ordeal | silent | Search target player's library for a card and exile it. Then that player shuffles. Gravestorm (When you cast this spell, copy it for each permanent put into a g | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Bitter Ordeal | silent | Gravestorm | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Bridge from Below | silent | When a creature is put into an opponent's graveyard from the battlefield, if this card is in your graveyard, exile this card. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Chronomantic Escape | silent | Until your next turn, creatures can't attack you. Exile Chronomantic Escape with three time counters on it. Suspend 3—{2}{W} (Rather than cast this card from yo | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Cloudseeder | silent | {U}, {T}, Discard a card: Create a 1/1 blue Faerie creature token named Cloud Sprite. It has flying and "This token can block only creatures with flying." | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Coalition Relic | silent | At the beginning of your first main phase, remove all charge counters from this artifact. Add one mana of any color for each charge counter removed this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Fleshwrither | silent | Transfigure | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Flowstone Embrace | silent | {T}: Enchanted creature gets +2/-2 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Goldmeadow Lookout | silent | {W}, {T}, Discard a card: Create a 1/1 white Kithkin Soldier creature token named Goldmeadow Harrier. It has "{W}, {T}: Tap target creature." | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Haze of Rage | silent | Buyback | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Heartwood Storyteller | silent | Whenever a player casts a noncreature spell, each of that player's opponents may draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Imperial Mask | silent | When this enchantment enters, if it's not a token, each of your teammates creates a token that's a copy of this enchantment. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Jhoira of the Ghitu | silent | {2}, Exile a nonland card from your hand: Put four time counters on the exiled card. If it doesn't have suspend, it gains suspend. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Judge Unworthy | silent | Choose target attacking or blocking creature. Scry 3, then reveal the top card of your library. Judge Unworthy deals damage equal to that card's mana value to t | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Linessa, Zephyr Mage | silent | Grandeur — Discard another card named Linessa, Zephyr Mage: Target player returns a creature they control to its owner's hand, then repeats this process for an  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Llanowar Mentor | silent | {G}, {T}, Discard a card: Create a 1/1 green Elf Druid creature token named Llanowar Elves. It has "{T}: Add {G}." | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Lost Hours | silent | Target player reveals their hand. You choose a nonland card from it. That player puts that card into their library third from the top. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -50,9 +47,6 @@
 | Nihilith | silent | Whenever a card is put into an opponent's graveyard from anywhere, if this card is suspended, you may remove a time counter from this card. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Nix | silent | Counter target spell if no mana was spent to cast it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Oriss, Samite Guardian | silent | Grandeur — Discard another card named Oriss, Samite Guardian: Target player can't cast spells this turn, and creatures that player controls can't attack this tu | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Phosphorescent Feast | silent | Chroma — Reveal any number of cards in your hand. You gain 2 life for each green mana symbol in those cards' mana costs. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Putrid Cyclops | silent | When this creature enters, scry 1, then reveal the top card of your library. This creature gets -X/-X until end of turn, where X is that card's mana value. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Riddle of Lightning | silent | Choose any target. Scry 3, then reveal the top card of your library. Riddle of Lightning deals damage equal to that card's mana value to that permanent or playe | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Riftsweeper | silent | When this creature enters, choose target face-up exiled card. Its owner shuffles it into their library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Samite Censer-Bearer | silent | {W}, Sacrifice this creature: Prevent the next 1 damage that would be dealt to each creature you control this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Scout's Warning | silent | The next creature card you play this turn can be played as though it had flash. Draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -90,6 +84,7 @@
 | Emberwilde Augur | handled | Sacrifice this creature: It deals 3 damage to target player or planeswalker. Activate only during your upkeep. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Emblem of the Warmind | handled | Creatures you control have haste. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Even the Odds | handled | Cast this spell only if you control fewer creatures than each opponent. Create three 1/1 white Soldier creature tokens. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Flowstone Embrace | handled | {T}: Enchanted creature gets +2/-2 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Fomori Nomad | handled |  |  | Y/-/- | not_tested |
 | Force of Savagery | handled | Trample | machines/combat.py | Y/-/- | not_tested |
 | Foresee | handled | Scry 4, then draw two cards. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -154,7 +149,7 @@
 ## Fully supported
 
 <details>
-<summary>54 cards</summary>
+<summary>59 cards</summary>
 
 - Akroma's Memorial
 - Angel of Salvation
@@ -164,6 +159,7 @@
 - Bloodshot Trainee
 - Boldwyr Intimidator
 - Cloud Key
+- Coalition Relic
 - Dakmor Salvage
 - Darksteel Garrison
 - Delay
@@ -181,6 +177,7 @@
 - Horizon Canopy
 - Imperiosaur
 - Intervention Pact
+- Judge Unworthy
 - Kavu Primarch
 - Keldon Megaliths
 - Llanowar Empath
@@ -192,9 +189,12 @@
 - Mistmeadow Skulk
 - Molten Disaster
 - Pact of Negation
+- Phosphorescent Feast
 - Pooling Venom
+- Putrid Cyclops
 - Pyromancer's Swath
 - Ravaging Riftwurm
+- Riddle of Lightning
 - Rites of Flourishing
 - Scourge of Kher Ridges
 - Snake Cult Initiation
@@ -220,16 +220,12 @@
 | buyback | 3 | Haze of Rage, Mystic Speculation, Sprout Swarm | fut |
 | Grandeur | 2 | Linessa, Zephyr Mage, Oriss, Samite Guardian | fut |
 | Choose one | 1 | Dust of Moments | fut |
-| Chroma | 1 | Phosphorescent Feast | fut |
 | all sliver creatures get +N/+N for each other sliver on the battlefield. | 1 | Sliver Legion | fut |
 | at the beginning of each opponent"..."s a creature card, the player puts the card into their graveyard and ~ becomes a copy of that card. | 1 | Shapeshifter's Marrow | fut |
-| at the beginning of your first main phase, remove all charge counters from ~. add one mana of any color for each charge counter removed ~. | 1 | Coalition Relic | fut |
 | aura swap | 1 | Arcanum Wings | fut |
-| choose any target. scry N, then reveal the top card of your library. ~ deals damage equal to that card's mana value to that permanent or player. | 1 | Riddle of Lightning | fut |
-| choose target attacking or blocking creature. scry N, then reveal the top card of your library. ~ deals damage equal to that card's mana value to that creature. | 1 | Judge Unworthy | fut |
 | counter target spell if no mana was spent to cast it. | 1 | Nix | fut |
 | creatures with no abilities get +N/+N. | 1 | Muraganda Petroglyphs | fut |
-| search target player's library for a card and exile it. then that player shuffles. gravestorm (when you cast ~, copy it for each permanent put into a graveyard  | 1 | Bitter Ordeal | fut |
+| gravestorm | 1 | Bitter Ordeal | fut |
 | target player reveals their hand. you choose a nonland card from it. that player puts that card into their library third from the top. | 1 | Lost Hours | fut |
 | the next creature card you play ~ can be played as though it had flash. draw a card. | 1 | Scout's Warning | fut |
 | transfigure | 1 | Fleshwrither | fut |
@@ -238,7 +234,6 @@
 | when ~ echo cost is paid, each opponent may draw up to three cards. | 1 | Shah of Naar Isle | fut |
 | when ~ enters, choose target face-up exiled card. its owner shuffles it into their library. | 1 | Riftsweeper | fut |
 | when ~ enters, if it"..."s a copy of ~. | 1 | Imperial Mask | fut |
-| when ~ enters, scry N, then reveal the top card of your library. ~ gets -N/-N until end of turn, where N is that card's mana value. | 1 | Putrid Cyclops | fut |
 | when ~ is put into your graveyard from your library, you may put it onto the battlefield. | 1 | Narcomoeba | fut |
 | when ~ is turned face up, put two time counters on it and it gains vanishing. | 1 | Maelstrom Djinn | fut |
 | whenever a N/N creature you control enters, you may return ~ from your graveyard to the battlefield, then attach it to that creature. | 1 | Sword of the Meek | fut |
@@ -255,7 +250,6 @@
 | {M}, {M}, discard a card: create a N/N green elf druid creature token named llanowar elves. it has "..." | 1 | Llanowar Mentor | fut |
 | {M}, {M}, discard a card: create a N/N red elemental creature token named spark elemental. it has trample, haste, and "..." | 1 | Sparkspitter | fut |
 | {M}, {M}, discard a card: create a N/N white kithkin soldier creature token named goldmeadow harrier. it has "..." | 1 | Goldmeadow Lookout | fut |
-| {M}: enchanted creature gets +N/-N until end of turn. | 1 | Flowstone Embrace | fut |
 | ~ deals N damage to any target. whenever one or more creatures you control deal combat damage to a player, if ~ is in your graveyard, you may pay {M}{M}{M}{M}.  | 1 | Thunderblade Charge | fut |
 
 ## Notes

@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 51 | 21.3% |
+| Tested | 53 | 22.2% |
 | Works (untested) | 157 | 65.7% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 31 | 13.0% |
+| Not working | 29 | 12.1% |
 
 ## Cards needing work
 
@@ -38,7 +38,6 @@
 | Eyes Everywhere | silent | {5}{U}: Exchange control of this enchantment and target nonland permanent. Activate only as a sorcery. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Font of Agonies | silent | Whenever you pay life, put that many blood counters on this enchantment. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Forbidding Spirit | silent | When this creature enters, until your next turn, creatures can't attack you or planeswalkers you control unless their controller pays {2} for each of those crea | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Galloping Lizrog | silent | When this creature enters, you may remove any number of +1/+1 counters from among creatures you control. If you do, put twice that many +1/+1 counters on this c | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Glass of the Guildpact | silent | Multicolored creatures you control get +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Lumbering Battlement | silent | When this creature enters, exile any number of other nontoken creatures you control until it leaves the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Mass Manipulation | silent | Gain control of X target creatures and/or planeswalkers. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -47,7 +46,6 @@
 | Plaza of Harmony | silent | {T}: Add one mana of any type that a Gate you control could produce. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Priest of Forgotten Gods | silent | {T}, Sacrifice two other creatures: Any number of target players each lose 2 life and sacrifice a creature of their choice. You add {B}{B} and draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Rakdos, the Showstopper | silent | When Rakdos enters, flip a coin for each creature that isn't a Demon, Devil, or Imp. Destroy each creature whose coin comes up tails. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Rumbling Ruin | silent | When this creature enters, count the number of +1/+1 counters on creatures you control. Creatures your opponents control with power less than or equal to that n | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Silhana Wayfinder | silent | When this creature enters, look at the top four cards of your library. You may reveal a creature or land card from among them and put it on top of your library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Smothering Tithe | silent | Whenever an opponent draws a card, that player may pay {2}. If the player doesn't, you create a Treasure token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Tin Street Dodger | silent | {R}: This creature can't be blocked this turn except by creatures with defender. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -218,7 +216,7 @@
 ## Fully supported
 
 <details>
-<summary>51 cards</summary>
+<summary>53 cards</summary>
 
 - Angel of Grace
 - Awaken the Erstwhile
@@ -231,6 +229,7 @@
 - Dovin, Grand Arbiter
 - Flames of the Raze-Boar
 - Footlight Fiend
+- Galloping Lizrog
 - Gates Ablaze
 - Goblin Gathering
 - Gruul Spellbreaker
@@ -257,6 +256,7 @@
 - Repudiate // Replicate
 - Rix Maadi Reveler
 - Rubblebelt Runner
+- Rumbling Ruin
 - Sagittars' Volley
 - Scuttlegator
 - Sentinel's Mark
@@ -289,12 +289,10 @@
 | search your library for a basic land card or gate card, reveal it, put it into your hand, then shuffle. | 1 | Open the Gates | rna |
 | target creature gets -N/-N until end of turn. draw a card. addendum — if you cast ~ during your main phase, tap that creature and it doesn"..."s next untap step | 1 | Code of Constraint | rna |
 | when rakdos enters, flip a coin for each creature that isn't a demon, devil, or imp. destroy each creature whose coin comes up tails. | 1 | Rakdos, the Showstopper | rna |
-| when ~ enters, count the number of +N/+N counters on creatures you control. creatures your opponents control with power less than or equal to that number can't  | 1 | Rumbling Ruin | rna |
 | when ~ enters, exile any number of other nontoken creatures you control until it leaves the battlefield. | 1 | Lumbering Battlement | rna |
 | when ~ enters, exile target nonland permanent an opponent controls and all other nonland permanents that player controls with the same name as that permanent un | 1 | Deputy of Detention | rna |
 | when ~ enters, look at the top four cards of your library. you may reveal a creature or land card from among them and put it on top of your library. put the res | 1 | Silhana Wayfinder | rna |
 | when ~ enters, until your next turn, creatures can't attack you or planeswalkers you control unless their controller pays {M} for each of those creatures. | 1 | Forbidding Spirit | rna |
-| when ~ enters, you may remove any number of +N/+N counters from among creatures you control. if you do, put twice that many +N/+N counters on ~. | 1 | Galloping Lizrog | rna |
 | when ~ enters, you may search your library and/or graveyard for a card named domri, city smasher, reveal it, and put it into your hand. if you search your libra | 1 | Domri's Nodorog | rna |
 | whenever a creature you control with power N or less attacks, ~ deals N damage to the player or planeswalker that creature is attacking. | 1 | Cavalcade of Calamity | rna |
 | whenever a nontoken creature you control enters, flip a coin until you lose a flip. for each flip you won, create a token that's a copy of that creature. those  | 1 | Mirror March | rna |

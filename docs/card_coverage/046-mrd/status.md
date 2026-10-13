@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 43 | 16.0% |
-| Works (untested) | 168 | 62.5% |
+| Tested | 46 | 17.1% |
+| Works (untested) | 169 | 62.8% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 58 | 21.6% |
+| Not working | 54 | 20.1% |
 
 ## Cards needing work
 
@@ -34,10 +34,8 @@
 | Crystal Shard | silent | {3}, {T} or {U}, {T}: Return target creature to its owner's hand unless its controller pays {1}. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Dead-Iron Sledge | silent | Whenever equipped creature blocks or becomes blocked by a creature, destroy both creatures. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Disarm | silent | Unattach all Equipment from target creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Disciple of the Vault | silent | Whenever an artifact is put into a graveyard from the battlefield, you may have target opponent lose 1 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Duplicant | silent | As long as a card exiled with this creature is a creature card, this creature has the power, toughness, and creature types of the last creature card exiled with | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Duskworker | silent | Whenever this creature becomes blocked, regenerate it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Empyrial Plate | silent | Equipped creature gets +1/+1 for each card in your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Fatespinner | silent | At the beginning of each opponent's upkeep, that player chooses draw step, main phase, or combat phase. The player skips each instance of the chosen step or pha | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Fiery Gambit | silent | Flip a coin until you lose a flip or choose to stop flipping. If you lose a flip, Fiery Gambit has no effect. If you win one or more flips, Fiery Gambit deals 3 | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Fractured Loyalty | silent | Whenever enchanted creature becomes the target of a spell or ability, that spell or ability's controller gains control of that creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -59,7 +57,6 @@
 | Second Sunrise | silent | Each player returns to the battlefield all artifact, creature, enchantment, and land cards in their graveyard that were put there from the battlefield this turn | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Soul Foundry | silent | {X}, {T}: Create a token that's a copy of the exiled card. X is the mana value of that card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Spellweaver Helix | silent | Whenever a player casts a card, if it has the same name as one of the cards exiled with this artifact, you may copy the other. If you do, you may cast the copy  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Spoils of the Vault | silent | Choose a card name. Reveal cards from the top of your library until you reveal a card with that name, then put that card into your hand. Exile all other cards r | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sun Droplet | silent | Whenever you're dealt damage, put that many charge counters on this artifact. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Sword of Kaldra | silent | Whenever equipped creature deals damage to a creature, exile that creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Synod Sanctum | silent | {2}, Sacrifice this artifact: Return all cards exiled with this artifact to the battlefield under your control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -77,7 +74,6 @@
 | Clockwork Dragon | notice | Whenever this creature attacks or blocks, remove a +1/+1 counter from it at end of combat. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Clockwork Vorrac | notice | Whenever this creature attacks or blocks, remove a +1/+1 counter from it at end of combat. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Copperhoof Vorrac | notice | This creature gets +1/+1 for each untapped permanent your opponents control. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Grab the Reins | notice | Choose one — • Until end of turn, you gain control of target creature and it gains haste. • Sacrifice a creature. Grab the Reins deals damage equal to that crea | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Hum of the Radix | notice | Each artifact spell costs {1} more to cast for each artifact its controller controls. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Incite War | notice | Choose one — • Creatures target player controls attack this turn if able. • Creatures you control gain first strike until end of turn. Entwine {2} (Choose both  | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Journey of Discovery | notice | Choose one — • Search your library for up to two basic land cards, reveal them, put them into your hand, then shuffle. • You may play up to two additional lands | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
@@ -103,6 +99,7 @@
 | Copper Myr | handled |  |  | Y/-/- | not_tested |
 | Culling Scales | handled | At the beginning of your upkeep, destroy target nonland permanent with the lowest mana value. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Deconstruct | handled | Destroy target artifact. Add {G}{G}{G}. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Disciple of the Vault | handled | Whenever an artifact is put into a graveyard from the battlefield, you may have target opponent lose 1 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Dream's Grip | handled | Choose one — • Tap target permanent. • Untap target permanent. Entwine {1} (Choose both if you pay the entwine cost.) | the engine reads this text and performs it | Y/-/- | not_tested |
 | Dross Harvester | handled | At the beginning of your end step, you lose 4 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Dross Prowler | handled | Fear | machines/keywords.py | Y/-/- | not_tested |
@@ -256,7 +253,7 @@
 ## Fully supported
 
 <details>
-<summary>43 cards</summary>
+<summary>46 cards</summary>
 
 - Aether Spellbomb
 - Auriok Steelshaper
@@ -269,9 +266,11 @@
 - Damping Matrix
 - Domineer
 - Electrostatic Bolt
+- Empyrial Plate
 - Frogmite
 - Glimmervoid
 - Goblin Charbelcher
+- Grab the Reins
 - Great Furnace
 - Grid Monitor
 - Groffskithur
@@ -296,6 +295,7 @@
 - Shared Fate
 - Solemn Simulacrum
 - Sphere of Purity
+- Spoils of the Vault
 - Sylvan Scrying
 - Tooth and Nail
 - Viridian Joiner
@@ -308,8 +308,8 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| Choose one | 4 | Blinding Beam, Grab the Reins, Incite War, Journey of Discovery | mrd |
 | whenever ~ attacks or blocks, remove a +N/+N counter from it at end of combat. | 4 | Clockwork Beetle, Clockwork Condor, Clockwork Dragon, Clockwork Vorrac | mrd |
+| Choose one | 3 | Blinding Beam, Incite War, Journey of Discovery | mrd |
 | Imprint | 1 | Thought Prison | mrd |
 | as long as a card exiled with ~ is a creature card, ~ has the power, toughness, and creature types of the last creature card exiled with it. it's still a shapes | 1 | Duplicant | mrd |
 | at the beginning of each opponent's upkeep, that player chooses draw step, main phase, or combat phase. the player skips each instance of the chosen step or pha | 1 | Fatespinner | mrd |
@@ -318,13 +318,11 @@
 | at the beginning of each player's upkeep, that player puts a flood counter on target non-island land they control of their choice. that land is an island for as | 1 | Quicksilver Fountain | mrd |
 | at the beginning of each upkeep, each player exiles the top card of their library. the player who exiled the card with the greatest mana value takes an extra tu | 1 | Timesifter | mrd |
 | at the beginning of your end step, target opponent gains control of ~ and puts a charge counter on it. | 1 | Jinxed Choker | mrd |
-| choose a card name. reveal cards from the top of your library until you reveal a card with that name, then put that card into your hand. exile all other cards r | 1 | Spoils of the Vault | mrd |
 | counter target spell unless its controller pays {M} for each artifact you control. | 1 | Override | mrd |
 | destroy target land. if that land was nonbasic, ~ deals N damage to the land's controller. | 1 | Molten Rain | mrd |
 | each artifact spell costs {M} more to cast for each artifact its controller controls. | 1 | Hum of the Radix | mrd |
 | each noncreature artifact is an artifact creature with power and toughness each equal to its mana value. | 1 | March of the Machines | mrd |
 | each player returns to the battlefield all artifact, creature, enchantment, and land cards in their graveyard that were put there from the battlefield ~. | 1 | Second Sunrise | mrd |
-| equipped creature gets +N/+N for each card in your hand. | 1 | Empyrial Plate | mrd |
 | equipped creature gets +N/+N for each charge counter on ~. | 1 | Banshee's Blade | mrd |
 | exile target attacking creature and all equipment attached to it. | 1 | Soul Nova | mrd |
 | flip a coin until you lose a flip or choose to stop flipping. if you lose a flip, ~ has no effect. if you win one or more flips, ~ deals N damage to target crea | 1 | Fiery Gambit | mrd |
@@ -340,7 +338,6 @@
 | whenever a creature dealt damage by equipped creature ~ dies, return that card to the battlefield under your control. attach ~ to that creature. | 1 | Scythe of the Wretched | mrd |
 | whenever a player casts a card, if it has the same name as one of the cards exiled with ~, you may copy the other. if you do, you may cast the copy without payi | 1 | Spellweaver Helix | mrd |
 | whenever a spell or ability causes a player to shuffle their library, ~ deals N damage to that player. | 1 | Psychogenic Probe | mrd |
-| whenever an artifact is put into a graveyard from the battlefield, you may have target opponent lose N life. | 1 | Disciple of the Vault | mrd |
 | whenever an artifact, creature, or enchantment enters, its controller chooses target permanent another player controls that shares a card type with it. exchange | 1 | Confusion in the Ranks | mrd |
 | whenever enchanted creature becomes the target of a spell or ability, that spell or ability's controller gains control of that creature. | 1 | Fractured Loyalty | mrd |
 | whenever equipped creature blocks or becomes blocked by a creature, destroy both creatures. | 1 | Dead-Iron Sledge | mrd |

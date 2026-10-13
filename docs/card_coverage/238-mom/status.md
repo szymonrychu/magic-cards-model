@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 79 | 29.0% |
+| Tested | 83 | 30.5% |
 | Works (untested) | 113 | 41.5% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 80 | 29.4% |
+| Not working | 76 | 27.9% |
 
 ## Cards needing work
 
@@ -52,11 +52,9 @@
 | Glissa, Herald of Predation | silent | Incubate | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Glistening Dawn | silent | Incubate X twice, where X is the number of lands you control. (To incubate X, create an Incubator token with X +1/+1 counters on it and "{2}: Transform this tok | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Halo-Charged Skaab | silent | When this creature enters, each player mills two cards. Then you may put an instant, sorcery, or battle card from your graveyard on top of your library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Hidetsugu and Kairi | silent | When Hidetsugu and Kairi dies, exile the top card of your library. Target opponent loses life equal to its mana value. If it's an instant or sorcery card, you m | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ichor Drinker | silent | {B}, Exile this card from your graveyard: Incubate 2. Activate only as a sorcery. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Infected Defector | silent | When this creature dies, incubate 3. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Injector Crocodile | silent | When this creature dies, incubate 3. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Jin-Gitaxias // The Great Synthesis | silent | I — Draw cards equal to the number of cards in your hand. You have no maximum hand size for as long as you control this Saga. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Karsus Depthguard | silent | As long as this creature's power is 5 or greater, it can attack as though it didn't have defender. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Knight-Errant of Eos | silent | When this creature enters, look at the top six cards of your library. You may reveal up to two creature cards with mana value X or less from among them, where X | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Kogla and Yidaro | silent | {2}{R}{G}, Discard this card: Destroy up to one target artifact or enchantment. Shuffle this card into your library from your graveyard, then draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -64,7 +62,6 @@
 | Merciless Repurposing | silent | Exile target creature. Incubate 3. (Create an Incubator token with three +1/+1 counters on it and "{2}: Transform this token." It transforms into a 0/0 Phyrexia | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Mirror-Shield Hoplite | silent | Whenever a creature you control becomes the target of a backup ability, copy that ability. You may choose new targets for the copy. This ability triggers only o | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Moment of Truth | silent | Look at the top three cards of your library. Put one of those cards into your hand, one into your graveyard, and one on the bottom of your library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Nahiri's Warcrafting | silent | Nahiri's Warcrafting deals 5 damage to target creature, planeswalker, or battle. Look at the top X cards of your library, where X is the excess damage dealt thi | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Norn's Inquisitor | silent | When this creature enters, incubate 2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Phyrexian Awakening | silent | When this enchantment enters, incubate 4. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Portent Tracker | silent | {T}: Choose target battle. If an opponent protects it, remove a defense counter from it. Otherwise, put a defense counter on it. Activate only as a sorcery. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -89,7 +86,6 @@
 | Zephyr Singer | silent | When this creature enters, put a flying counter on each creature that convoked it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Zimone and Dina | silent | {T}, Sacrifice another creature: Draw a card. You may put a land card from your hand onto the battlefield tapped. If you control eight or more lands, repeat thi | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Zurgo and Ojutai | silent | Whenever one or more Dragons you control deal combat damage to a player or battle, look at the top three cards of your library. Put one of them into your hand a | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
-| Ayara, Widow of the Realm // Ayara, Furnace Queen | notice | {T}, Sacrifice another creature or artifact: Ayara deals X damage to target opponent or battle and you gain X life, where X is the sacrificed permanent's mana v | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Etched Host Doombringer | notice | When this creature enters, choose one — • Target opponent loses 2 life and you gain 2 life. • Choose target battle. If an opponent protects it, remove three def | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Flitting Guerrilla | notice | When this creature dies, each player mills two cards. Then you may exile this card. When you do, put target creature or battle card from your graveyard on top o | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Ghalta and Mavren | notice | Whenever you attack, choose one — • Create a tapped and attacking X/X green Dinosaur creature token with trample, where X is the greatest power among other atta | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -223,11 +219,12 @@
 ## Fully supported
 
 <details>
-<summary>79 cards</summary>
+<summary>83 cards</summary>
 
 - Ancient Imperiosaur
 - Angelic Intervention
 - Archangel Elspeth
+- Ayara, Widow of the Realm // Ayara, Furnace Queen
 - Borborygmos and Fblthp
 - Botanical Brawler
 - Cosmic Hunger
@@ -240,6 +237,7 @@
 - Flywheel Racer
 - Furnace Reins
 - Glistening Deluge
+- Hidetsugu and Kairi
 - Hoarding Broodlord
 - Ichor Shade
 - Inga and Esika
@@ -279,9 +277,11 @@
 - Invasion of Vryn // Overloaded Mage-Ring
 - Invasion of Xerex // Vertex Paladin
 - Invasion of Zendikar // Awakened Skyclave
+- Jin-Gitaxias // The Great Synthesis
 - Kami of Whispered Hopes
 - Kithkin Billyrider
 - Lithomantic Barrage
+- Nahiri's Warcrafting
 - Oculus Whelp
 - Omnath, Locus of All
 - Orthion, Hero of Lavabrink
@@ -323,7 +323,6 @@
 | as long as ~ power is N or greater, it can attack as though it didn't have defender. | 1 | Karsus Depthguard | mom |
 | convoke (your creatures can help cast ~. each creature you tap while casting ~ pays for {M} or one mana of that creature's color.) tap up to two target creature | 1 | Wicked Slumber | mom |
 | convoke (your creatures can help cast ~. each creature you tap while casting ~ pays for {M} or one mana of that creature's color.) you may cast sorcery spells ~ | 1 | Complete the Circuit | mom |
-| draw cards equal to the number of cards in your hand. you have no maximum hand size for as long as you control ~. | 1 | Jin-Gitaxias // The Great Synthesis | mom |
 | each player mills ten cards. for each player, choose a creature or planeswalker card in that player's graveyard. put those cards onto the battlefield under your | 1 | Breach the Multiverse | mom |
 | each player mills three cards. then you return up to two creature cards from your graveyard to your hand. (to mill three cards, a player puts the top three card | 1 | Unseal the Necropolis | mom |
 | enchanted creature has base power and toughness N/N, has defender, and loses all other abilities. | 1 | Stasis Field | mom |
@@ -339,7 +338,6 @@
 | target player searches their library for a basic land card, puts it onto the battlefield tapped, then shuffles. put two +N/+N counters on up to one target artif | 1 | Fertilid's Favor | mom |
 | triple | 1 | City on Fire | mom |
 | when ~ dies, each player mills two cards. then you may exile ~. when you do, put target creature or battle card from your graveyard on top of your library. | 1 | Flitting Guerrilla | mom |
-| when ~ dies, exile the top card of your library. target opponent loses life equal to its mana value. if it's an instant or sorcery card, you may cast it without | 1 | Hidetsugu and Kairi | mom |
 | when ~ enters or dies, choose one — • draw a card, then discard a card. • shuffle up to four target cards with mana value N or greater from your graveyard into  | 1 | Oracle of Tragedy | mom |
 | when ~ enters, choose one — • put a +N/+N counter on target artifact or creature you control. • transform target incubator token you control. | 1 | Seedpod Caretaker | mom |
 | when ~ enters, choose one — • target opponent loses N life and you gain N life. • choose target battle. if an opponent protects it, remove three defense counter | 1 | Etched Host Doombringer | mom |
@@ -367,14 +365,12 @@
 | whenever ~ enters or attacks, you may exile five cards from your graveyard. when you do, return target creature card from your graveyard to the battlefield. | 1 | Kroxa and Kunoros | mom |
 | whenever ~ or another phyrexian you control enters, incubate N. | 1 | Essence of Orthodoxy | mom |
 | {M}, exile ~ from your graveyard: incubate N. activate only as a sorcery. | 1 | Ichor Drinker | mom |
-| {M}, sacrifice another creature or artifact: ayara deals N damage to target opponent or battle and you gain N life, where N is the sacrificed permanent's mana v | 1 | Ayara, Widow of the Realm // Ayara, Furnace Queen | mom |
 | {M}, sacrifice another creature: draw a card. you may put a land card from your hand onto the battlefield tapped. if you control eight or more lands, repeat ~ o | 1 | Zimone and Dina | mom |
 | {M}, {M}, sacrifice another creature or artifact: incubate N. | 1 | Compleated Huntmaster | mom |
 | {M}, {M}: target opponent mills three cards. put a land card from their graveyard onto the battlefield tapped under your control. it gains "..." | 1 | Realmbreaker, the Invasion Tree | mom |
 | {M}: choose target battle. if an opponent protects it, remove a defense counter from it. otherwise, put a defense counter on it. activate only as a sorcery. | 1 | Portent Tracker | mom |
 | {M}{M}{M}, discard ~: destroy up to one target artifact or enchantment. shuffle ~ into your library from your graveyard, then draw a card. | 1 | Kogla and Yidaro | mom |
 | {M}{M}{M}, {M}, sacrifice a spirit: choose target card exiled with quintorius. you may cast that card ~ without paying its mana cost. if that spell would be put | 1 | Quintorius, Loremaster | mom |
-| ~ deals N damage to target creature, planeswalker, or battle. look at the top N cards of your library, where N is the excess damage dealt ~. you may exile one o | 1 | Nahiri's Warcrafting | mom |
 | ~ gets +N/+N for each transformed permanent you control. | 1 | Mutagen Connoisseur | mom |
 | ~ has first strike as long as another knight entered the battlefield under your control ~. | 1 | Swordsworn Cavalier | mom |
 | ~ has indestructible as long as it attacked a battle ~. | 1 | War Historian | mom |

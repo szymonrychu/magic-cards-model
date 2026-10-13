@@ -17,16 +17,15 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 47 | 23.6% |
-| Works (untested) | 120 | 60.3% |
+| Tested | 48 | 24.1% |
+| Works (untested) | 121 | 60.8% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 32 | 16.1% |
+| Not working | 30 | 15.1% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
-| Campaign of Vengeance | silent | Whenever a creature you control attacks, defending player loses 1 life and you gain 1 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Coax from the Blind Eternities | silent | You may reveal an Eldrazi card you own from outside the game or choose a face-up Eldrazi card you own in exile. Put that card into your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Conduit of Storms // Conduit of Emrakul | silent | Whenever this creature attacks, add {R} at the beginning of your next main phase this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Crop Sigil | silent | Delirium — {2}{G}, Sacrifice this enchantment: Return up to one target creature card and up to one target land card from your graveyard to your hand. Activate o | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -56,7 +55,6 @@
 | Give No Ground | notice | Target creature gets +2/+6 until end of turn and can block any number of creatures this turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Identity Thief | notice | Whenever this creature attacks, you may exile another target nontoken creature. If you do, this creature becomes a copy of that creature until end of turn. Retu | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Long Road Home | notice | Exile target creature. At the beginning of the next end step, return that card to the battlefield under its owner's control with a +1/+1 counter on it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Soul Separator | notice | {5}, {T}, Sacrifice this artifact: Exile target creature card from your graveyard. Create a token that's a copy of that card, except it's 1/1, it's a Spirit in  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Waxing Moon | notice | Transform up to one target Werewolf you control. Creatures you control gain trample until end of turn. | unparsed remainder: Transform up to one target Werewolf you control. | Y/Y/- | not_working |
 | Abandon Reason | handled | Up to two target creatures each get +1/+0 and gain first strike until end of turn. (They deal combat damage before creatures without first strike.) Madness {1}{ | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Abundant Maw | handled | When you cast this spell, target opponent loses 3 life and you gain 3 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -74,6 +72,7 @@
 | Borrowed Malevolence | handled | Escalate {2} (Pay this cost for each mode chosen beyond the first.) Choose one or both — • Target creature gets +1/+1 until end of turn. • Target creature gets  | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Brazen Wolves | handled | Whenever this creature attacks, it gets +2/+0 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Bruna, the Fading Light | handled | When you cast this spell, you may return target Angel or Human creature card from your graveyard to the battlefield. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Campaign of Vengeance | handled | Whenever a creature you control attacks, defending player loses 1 life and you gain 1 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Cathar's Shield | handled | Equipped creature gets +0/+3 and has vigilance. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Chilling Grasp | handled | Tap up to two target creatures. Those creatures don't untap during their controller's next untap step. Madness {3}{U} (If you discard this card, discard it into | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Choking Restraints | handled | Enchanted creature can't attack or block. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -182,7 +181,7 @@
 ## Fully supported
 
 <details>
-<summary>47 cards</summary>
+<summary>48 cards</summary>
 
 - Assembled Alphas
 - Blessed Alliance
@@ -218,6 +217,7 @@
 - Savage Alliance
 - Shrill Howler // Howling Chorus
 - Sigarda's Aid
+- Soul Separator
 - Spontaneous Mutation
 - Stensia Innkeeper
 - Strange Augmentation
@@ -257,7 +257,6 @@
 | when ~ enters, other humans you control get +N/+N and gain lifelink until end of turn. | 1 | Heron's Grace Champion | emn |
 | when ~ enters, target creature an opponent controls doesn"..."s next untap step. | 1 | Fogwalker | emn |
 | when ~ leaves the battlefield, the exiled card's owner may cast that card without paying its mana cost. | 1 | Spell Queller | emn |
-| whenever a creature you control attacks, defending player loses N life and you gain N life. | 1 | Campaign of Vengeance | emn |
 | whenever a player casts an instant or sorcery spell that targets only ~, that player copies that spell for each other creature they control that the spell could | 1 | Mirrorwing Dragon | emn |
 | whenever an opponent casts their first spell each turn, that player exiles the top card of their library. if it's a nonland card, you may cast it without paying | 1 | Mind's Dilation | emn |
 | whenever equipped creature attacks, it doesn"..."s next untap step. | 1 | Stitcher's Graft | emn |
@@ -265,7 +264,6 @@
 | whenever ~ attacks, you may exile another target nontoken creature. if you do, ~ becomes a copy of that creature until end of turn. return the exiled card to th | 1 | Identity Thief | emn |
 | whenever ~ deals combat damage to a creature, that creature becomes a copy of ~. | 1 | Permeating Mass | emn |
 | you may reveal an eldrazi card you own from outside the game or choose a face-up eldrazi card you own in exile. put that card into your hand. | 1 | Coax from the Blind Eternities | emn |
-| {M}, {M}, sacrifice ~: exile target creature card from your graveyard. create a token that"..."s N/N, it"..."s power and toughness equal to that card's toughnes | 1 | Soul Separator | emn |
 | {M}: creatures your opponents control attack ~ if able. | 1 | Grizzled Angler // Grisly Anglerfish | emn |
 | {M}: exchange target opponent's life total with ~ toughness. | 1 | Tree of Perdition | emn |
 

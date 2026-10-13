@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 56 | 21.0% |
-| Works (untested) | 139 | 52.1% |
+| Tested | 60 | 22.5% |
+| Works (untested) | 140 | 52.4% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 72 | 27.0% |
+| Not working | 67 | 25.1% |
 
 ## Cards needing work
 
@@ -33,9 +33,7 @@
 | Blossom Prancer | silent | When this creature enters, look at the top five cards of your library. You may reveal a creature or enchantment card from among them and put it into your hand.  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Born to Drive | silent | As long as enchanted permanent is a creature, it gets +1/+1 for each creature and/or Vehicle you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Bronze Cudgels | silent | {2}: Until end of turn, equipped creature gets +X/+0, where X is the number of times this ability has resolved this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Covert Technician | silent | Whenever this creature deals combat damage to a player, you may put an artifact card with mana value less than or equal to that damage from your hand onto the b | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Discover the Impossible | silent | Look at the top five cards of your library. Exile one of them face down and put the rest on the bottom of your library in a random order. You may cast the exile | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Dramatist's Puppet | silent | When this creature enters, for each kind of counter on target permanent, put another counter of that kind on it or remove one from it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Eater of Virtue | silent | As long as a card exiled with Eater of Virtue has flying, equipped creature has flying. The same is true for first strike, double strike, deathtouch, haste, hex | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Eiganjo Uprising | silent | Create X 2/2 white Samurai creature tokens with vigilance. They gain menace and haste until end of turn. Each opponent creates X minus one 2/2 white Samurai cre | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Enormous Energy Blade | silent | Whenever this Equipment becomes attached to a creature, tap that creature. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
@@ -83,8 +81,6 @@
 | Boon of Boseiju | notice | Target creature gets +X/+X until end of turn, where X is the greatest mana value among permanents you control. Untap it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Debt to the Kami | notice | Choose one — • Target opponent exiles a creature they control. • Target opponent exiles an enchantment they control. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Dokuchi Silencer | notice | Whenever this creature deals combat damage to a player, you may discard a creature card. When you do, destroy target creature or planeswalker that player contro | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Go-Shintai of Lost Wisdom | notice | At the beginning of your end step, you may pay {1}. When you do, target player mills X cards, where X is the number of Shrines you control. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Hidetsugu, Devouring Chaos | notice | {2}{R}, {T}: Exile the top card of your library. You may play that card this turn. When you exile a nonland card this way, Hidetsugu deals damage equal to the e | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Hinata, Dawn-Crowned | notice | Spells you cast cost {1} less to cast for each target. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Invoke Despair | notice | Target opponent sacrifices a creature of their choice. If they can't, they lose 2 life and you draw a card. Then repeat this process for an enchantment and a pl | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Kairi, the Swirling Sky | notice | When Kairi dies, choose one — • Return any number of target nonland permanents with total mana value 6 or less to their owners' hands. • Mill six cards, then re | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -93,7 +89,6 @@
 | Lethal Exploit | notice | Target creature gets -2/-2 until end of turn. It gets an additional -1/-1 until end of turn for each modified creature you controlled as you cast this spell. (E | unparsed remainder: It gets an additional -1/-1 until end of turn for each modified creature you controlled as you cast this spell. | Y/Y/- | not_working |
 | Okiba Salvage | notice | Return target creature or Vehicle card from your graveyard to the battlefield. Then put two +1/+1 counters on that permanent if you control an artifact and an e | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Regent's Authority | notice | Target creature gets +2/+2 until end of turn. If it's an enchantment creature or legendary creature, instead put a +1/+1 counter on it and it gets +1/+1 until e | unparsed remainder: If it's an enchantment creature or legendary creature, instead put a +1/+1 counter on it and it gets +1/+1 until end of turn. | Y/Y/- | not_working |
-| Runaway Trash-Bot | notice | This creature gets +1/+0 for each artifact and/or enchantment card in your graveyard. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Storyweave | notice | Choose one — • Put two +1/+1 counters on target creature you control. • Put two lore counters on target Saga you control. The next time one or more enchantment  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Teachings of the Kirin // Kirin-Touched Orochi | notice | Whenever this creature attacks, choose one — • Exile target creature card from a graveyard. When you do, create a 1/1 colorless Spirit creature token. • Exile t | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | The Kami War // O-Kagachi Made Manifest | notice | Whenever this creature attacks, defending player chooses a nonland card in your graveyard. Return that card to your hand. This creature gets +X/+0 until end of  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -140,6 +135,7 @@
 | Gloomshrieker | handled | When this creature enters, return target permanent card from your graveyard to your hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Go-Shintai of Ancient Wars | handled | At the beginning of your end step, you may pay {1}. When you do, Go-Shintai of Ancient Wars deals X damage to target player or planeswalker, where X is the numb | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Go-Shintai of Hidden Cruelty | handled | At the beginning of your end step, you may pay {1}. When you do, destroy target creature with toughness X or less, where X is the number of Shrines you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Go-Shintai of Lost Wisdom | handled | At the beginning of your end step, you may pay {1}. When you do, target player mills X cards, where X is the number of Shrines you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Go-Shintai of Shared Purpose | handled | At the beginning of your end step, you may pay {1}. If you do, create a 1/1 colorless Spirit creature token for each Shrine you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Golden-Tail Disciple | handled | Lifelink | machines/combat.py | Y/Y/- | not_tested |
 | Grafted Growth | handled | When this Aura enters, put a +1/+1 counter on target creature or Vehicle you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -241,7 +237,7 @@
 ## Fully supported
 
 <details>
-<summary>56 cards</summary>
+<summary>60 cards</summary>
 
 - Boseiju, Who Endures
 - Brilliant Restoration
@@ -249,8 +245,10 @@
 - Clawing Torment
 - Colossal Skyturtle
 - Containment Construct
+- Covert Technician
 - Crackling Emergence
 - Dragonspark Reactor
+- Dramatist's Puppet
 - Eiganjo, Seat of the Empire
 - Experimental Synthesizer
 - Fable of the Mirror-Breaker // Reflection of Kiki-Jiki
@@ -262,6 +260,7 @@
 - Harmonious Emergence
 - Heir of the Ancient Fang
 - Hidetsugu Consumes All // Vessel of the All-Consuming
+- Hidetsugu, Devouring Chaos
 - Historian's Wisdom
 - Hotshot Mechanic
 - Intercessor's Arrest
@@ -284,6 +283,7 @@
 - Otawara, Soaring City
 - Reality Heist
 - Roaring Earth
+- Runaway Trash-Bot
 - Satoru Umezawa
 - Silver-Fur Master
 - Simian Sling
@@ -317,7 +317,6 @@
 | at the beginning of combat on your turn, you may pay {M} and sacrifice an artifact. if you do, create a N/N red construct artifact creature token with haste. | 1 | Sokenzan Smelter | neo |
 | at the beginning of your end step, choose target permanent card in your graveyard. you may sacrifice a permanent that shares a card type with the chosen card. i | 1 | Spirit-Sister's Call | neo |
 | at the beginning of your end step, if kaito entered ~, he phases out. | 1 | Kaito Shizuki | neo |
-| at the beginning of your end step, you may pay {M}. when you do, target player mills N cards, where N is the number of shrines you control. | 1 | Go-Shintai of Lost Wisdom | neo |
 | create N N/N white samurai creature tokens with vigilance. they gain menace and haste until end of turn. each opponent creates N minus one N/N white samurai cre | 1 | Eiganjo Uprising | neo |
 | create two N/N green spirit creature tokens. for each of them, put your choice of a reach counter, a vigilance counter, or a trample counter on it. | 1 | Invoke the Ancients | neo |
 | creatures you don't control get -N/-N until your next turn. | 1 | Behold the Unspeakable // Vision of the Unspeakable | neo |
@@ -345,7 +344,6 @@
 | when ao dies, choose one — • look at the top seven cards of your library. put any number of nonland permanent cards with total mana value N or less from among t | 1 | Ao, the Dawn Sky | neo |
 | when kairi dies, choose one — • return any number of target nonland permanents with total mana value N or less to their owners' hands. • mill six cards, then re | 1 | Kairi, the Swirling Sky | neo |
 | when kotose enters, exile target card other than a basic land card from an opponent"..."s graveyard, hand, and library for any number of cards with the same nam | 1 | Kotose, the Silent Spider | neo |
-| when ~ enters, for each kind of counter on target permanent, put another counter of that kind on it or remove one from it. | 1 | Dramatist's Puppet | neo |
 | when ~ enters, gain control of all rat tokens. | 1 | Tribute to Horobi // Echo of Death's Wail | neo |
 | when ~ enters, look at the top five cards of your library. you may reveal a creature or enchantment card from among them and put it into your hand. put the rest | 1 | Blossom Prancer | neo |
 | when ~ enters, you may return an enchantment you control to its owner's hand. if you do, you gain N life. | 1 | Geothermal Kami | neo |
@@ -364,7 +362,6 @@
 | whenever ~ becomes crewed for the first time each turn, until end of turn, ~ becomes a copy of target nonlegendary creature that crewed it ~, except it"..."s a  | 1 | Mindlink Mech | neo |
 | whenever ~ becomes crewed, up to one other target vehicle you control becomes an artifact creature until end of turn. | 1 | Mobilizer Mech | neo |
 | whenever ~ deals combat damage to a player, you may discard a creature card. when you do, destroy target creature or planeswalker that player controls. | 1 | Dokuchi Silencer | neo |
-| whenever ~ deals combat damage to a player, you may put an artifact card with mana value less than or equal to that damage from your hand onto the battlefield. | 1 | Covert Technician | neo |
 | whenever ~ deals combat damage to a player, you may remove a deathtouch counter from it. when you do, exile target artifact or enchantment that player controls. | 1 | Kappa Tech-Wrecker | neo |
 | whenever ~ deals combat damage to a player, you may remove a menace counter from it. when you do, that player reveals their hand and you choose a nonland card f | 1 | Biting-Palm Ninja | neo |
 | you gain N life. look at the top three cards of your library. exile one of them face down with a hatching counter on it, then put the rest on the bottom of your | 1 | The Dragon-Kami Reborn // Dragon-Kami's Egg | neo |
@@ -373,9 +370,7 @@
 | {M}, sacrifice an artifact with mana value N: return target artifact card with mana value less than N from your graveyard to the battlefield. it gains haste unt | 1 | Scrap Welder | neo |
 | {M}: until end of turn, equipped creature gets +N/+N, where N is the number of times ~ has resolved ~. | 1 | Bronze Cudgels | neo |
 | {M}{M}, {M}, return shigeki to its owner's hand: reveal the top four cards of your library. you may put a land card from among them onto the battlefield tapped. | 1 | Shigeki, Jukai Visionary | neo |
-| {M}{M}, {M}: exile the top card of your library. you may play that card ~. when you exile a nonland card ~, hidetsugu deals damage equal to the exiled card's ma | 1 | Hidetsugu, Devouring Chaos | neo |
 | {M}{M}: tatsunari and target frog you control can't be blocked ~ except by creatures with flying or reach. | 1 | Tatsunari, Toad Rider | neo |
-| ~ gets +N/+N for each artifact and/or enchantment card in your graveyard. | 1 | Runaway Trash-Bot | neo |
 | ~ gets +N/+N for each other modified creature you control. | 1 | Upriser Renegade | neo |
 
 ## Notes

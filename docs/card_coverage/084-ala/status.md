@@ -17,16 +17,15 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 35 | 15.7% |
+| Tested | 39 | 17.5% |
 | Works (untested) | 149 | 66.8% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 39 | 17.5% |
+| Not working | 35 | 15.7% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
-| Ad Nauseam | silent | Reveal the top card of your library and put that card into your hand. You lose life equal to its mana value. You may repeat this process any number of times. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Ajani Vengeant | silent | +1: Target permanent doesn't untap during its controller's next untap step. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Akrasan Squire | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Angelic Benediction | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
@@ -36,7 +35,6 @@
 | Clarion Ultimatum | silent | Choose five permanents you control. For each of those permanents, you may search your library for a card with the same name as that permanent. Put those cards o | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Court Archers | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Covenant of Minds | silent | Reveal the top three cards of your library. Target opponent may choose to put those cards into your hand. If they don't, put those cards into your graveyard and | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Cradle of Vitality | silent | Whenever you gain life, you may pay {1}{W}. If you do, put a +1/+1 counter on target creature for each 1 life you gained. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Cruel Ultimatum | silent | Target opponent sacrifices a creature of their choice, discards three cards, then loses 5 life. You return a creature card from your graveyard to your hand, dra | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Dawnray Archer | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Death Baron | silent | Skeletons you control and other Zombies you control get +1/+1 and have deathtouch. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -46,7 +44,6 @@
 | Kederekt Leviathan | silent | When this creature enters, return all other nonland permanents to their owners' hands. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Keeper of Progenitus | silent | Whenever a player taps a Mountain, Forest, or Plains for mana, that player adds one mana of any type that land produced. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Lush Growth | silent | Enchanted land is a Mountain, Forest, and Plains. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Manaplasm | silent | Whenever you cast a spell, this creature gets +X/+X until end of turn, where X is that spell's mana value. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Mayael the Anima | silent | {3}{R}{G}{W}, {T}: Look at the top five cards of your library. You may put a creature card with power 5 or greater from among them onto the battlefield. Put the | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Minion Reflector | silent | Whenever a nontoken creature you control enters, you may pay {2}. If you do, create a token that's a copy of that creature, except it has haste and "At the begi | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Outrider of Jhess | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
@@ -55,7 +52,6 @@
 | Realm Razer | silent | When this creature leaves the battlefield, return the exiled cards to the battlefield tapped under their owners' control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Resounding Scream | silent | Target player discards a card at random. Cycling {5}{U}{B}{R} ({5}{U}{B}{R}, Discard this card: Draw a card.) When you cycle this card, target player discards t | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Rhox Charger | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Sacellum Godspeaker | silent | {T}: Reveal any number of creature cards with power 5 or greater from your hand. Add {G} for each card revealed this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Scourglass | silent | {T}, Sacrifice this artifact: Destroy all permanents except for artifacts and lands. Activate only during your upkeep. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sighted-Caste Sorcerer | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Sigil of Distinction | silent | Equipped creature gets +1/+1 for each charge counter on this Equipment. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -218,12 +214,14 @@
 ## Fully supported
 
 <details>
-<summary>35 cards</summary>
+<summary>39 cards</summary>
 
+- Ad Nauseam
 - Angelsong
 - Banewasp Affliction
 - Blightning
 - Bone Splinters
+- Cradle of Vitality
 - Deft Duelist
 - Empyrial Archangel
 - Esper Battlemage
@@ -236,12 +234,14 @@
 - Immortal Coil
 - Invincible Hymn
 - Lich's Mirror
+- Manaplasm
 - Mindlock Orb
 - Ooze Garden
 - Punish Ignorance
 - Qasali Ambusher
 - Relic of Progenitus
 - Rockcaster Platoon
+- Sacellum Godspeaker
 - Salvage Titan
 - Sedris, the Traitor King
 - Skeletonize
@@ -271,7 +271,6 @@
 | equipped creature gets +N/+N for each charge counter on ~. | 1 | Sigil of Distinction | ala |
 | exile the top five cards of your library. an opponent separates those cards into two piles. you may play lands and cast spells from one of those piles. if you c | 1 | Brilliant Ultimatum | ala |
 | return target creature to its owner's hand. its controller draws a card. | 1 | Call to Heel | ala |
-| reveal the top card of your library and put that card into your hand. you lose life equal to its mana value. you may repeat ~ any number of times. | 1 | Ad Nauseam | ala |
 | reveal the top three cards of your library. target opponent may choose to put those cards into your hand. if they don't, put those cards into your graveyard and | 1 | Covenant of Minds | ala |
 | skeletons you control and other zombies you control get +N/+N and have deathtouch. | 1 | Death Baron | ala |
 | target opponent sacrifices a creature of their choice, discards three cards, then loses N life. you return a creature card from your graveyard to your hand, dra | 1 | Cruel Ultimatum | ala |
@@ -282,11 +281,8 @@
 | whenever a nontoken creature you control enters, you may pay {M}. if you do, create a token that's a copy of that creature, except it has haste and "..." | 1 | Minion Reflector | ala |
 | whenever a permanent an opponent controls is put into a graveyard, put that card onto the battlefield under your control unless that opponent pays N life. | 1 | Prince of Thralls | ala |
 | whenever a player taps a mountain, forest, or plains for mana, that player adds one mana of any type that land produced. | 1 | Keeper of Progenitus | ala |
-| whenever you cast a spell, ~ gets +N/+N until end of turn, where N is that spell's mana value. | 1 | Manaplasm | ala |
-| whenever you gain life, you may pay {M}{M}. if you do, put a +N/+N counter on target creature for each N life you gained. | 1 | Cradle of Vitality | ala |
 | {M}, sacrifice ~: destroy all permanents except for artifacts and lands. activate only during your upkeep. | 1 | Scourglass | ala |
 | {M}: create an N/N beast creature token that's red, green, and white. | 1 | Godsire | ala |
-| {M}: reveal any number of creature cards with power N or greater from your hand. add {M} for each card revealed ~. | 1 | Sacellum Godspeaker | ala |
 | {M}{M}, {M}: target player loses N life and reveals their hand. | 1 | Thoughtcutter Agent | ala |
 | {M}{M}{M}{M}, {M}: look at the top five cards of your library. you may put a creature card with power N or greater from among them onto the battlefield. put the | 1 | Mayael the Anima | ala |
 | ~ has flying as long as an artifact card is in your graveyard. | 1 | Windwright Mage | ala |

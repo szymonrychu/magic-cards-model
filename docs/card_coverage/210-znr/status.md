@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 74 | 29.0% |
-| Works (untested) | 135 | 52.9% |
+| Tested | 78 | 30.6% |
+| Works (untested) | 138 | 54.1% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 46 | 18.0% |
+| Not working | 39 | 15.3% |
 
 ## Cards needing work
 
@@ -33,13 +33,10 @@
 | Concerted Defense | silent | Counter target noncreature spell unless its controller pays {1} plus an additional {1} for each creature in your party. (Your party consists of up to one each o | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Confounding Conundrum | silent | Whenever a land an opponent controls enters, if that player had another land enter the battlefield under their control this turn, they return a land they contro | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Coralhelm Chronicler | silent | When this creature enters, look at the top five cards of your library. You may reveal a card with a kicker ability from among them and put it into your hand. Pu | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Coveted Prize | silent | This spell costs {1} less to cast for each creature in your party. (Your party consists of up to one each of Cleric, Rogue, Warrior, and Wizard.) Search your li | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Drana, the Last Bloodchief | silent | Whenever Drana attacks, defending player chooses a nonlegendary creature card in your graveyard. You return that card to the battlefield with an additional +1/+ | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Emeria Captain | silent | When this creature enters, put a +1/+1 counter on it for each creature in your party. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Emeria's Call // Emeria, Shattered Skyclave | silent | Create two 4/4 white Angel Warrior creature tokens with flying. Non-Angel creatures you control gain indestructible until your next turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Forsaken Monument | silent | Whenever you tap a permanent for {C}, add an additional {C}. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Jace, Mirror Mage | silent | When Jace enters, if Jace was kicked, create a token that's a copy of Jace, except it's not legendary and its starting loyalty is 1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Kaza, Roil Chaser | silent | {T}: The next instant or sorcery spell you cast this turn costs {X} less to cast, where X is the number of Wizards you control as this ability resolves. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Kor Blademaster | silent | Equipped Warriors you control have double strike. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Linvala, Shield of Sea Gate | silent | At the beginning of combat on your turn, if you have a full party, choose target nonland permanent an opponent controls. Until your next turn, it can't attack o | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Lithoform Engine | silent | {4}, {T}: Copy target permanent spell you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -49,7 +46,6 @@
 | Master of Winds | silent | Whenever you cast an instant, sorcery, or Wizard spell, you may have this creature's base power and toughness become 4/1 or 1/4 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Mesa Lynx | silent | During turns other than yours, this creature gets +0/+2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Moraug, Fury of Akoum | silent | Landfall — Whenever a land you control enters, if it's your main phase, there's an additional combat phase after this phase. At the beginning of that combat, un | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Nahiri's Lithoforming | silent | Sacrifice X lands. For each land sacrificed this way, draw a card. You may play X additional lands this turn. Lands you control enter tapped this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Nahiri, Heir of the Ancients | silent | +1: Create a 1/1 white Kor Warrior creature token. You may attach an Equipment you control to it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Nissa of Shadowed Boughs | silent | −5: You may put a creature card with mana value less than or equal to the number of lands you control onto the battlefield from your hand or graveyard with two  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Oran-Rief Ooze | silent | Whenever this creature attacks, put a +1/+1 counter on each attacking creature with a +1/+1 counter on it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -60,16 +56,13 @@
 | Sea Gate Stormcaller | silent | When this creature enters, copy the next instant or sorcery spell with mana value 2 or less you cast this turn when you cast it. If this creature was kicked, co | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Seafloor Stalker | silent | {4}{U}: This creature gets +1/+0 until end of turn and can't be blocked this turn. This ability costs {1} less to activate for each creature in your party. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Shadows' Verdict | silent | Exile all creatures and planeswalkers with mana value 3 or less from the battlefield and all creature and planeswalker cards with mana value 3 or less from all  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Skyclave Pick-Axe | silent | Landfall — Whenever a land you control enters, equipped creature gets +2/+2 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Skyclave Relic | silent | When this artifact enters, if it was kicked, create two tapped tokens that are copies of this artifact. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Skyclave Squid | silent | Landfall — Whenever a land you control enters, this creature can attack this turn as though it didn't have defender. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Strength of Solidarity | silent | Choose target creature you control. Put a +1/+1 counter on it for each creature in your party. (Your party consists of up to one each of Cleric, Rogue, Warrior, | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Thwart the Grave | silent | This spell costs {1} less to cast for each creature in your party. (Your party consists of up to one each of Cleric, Rogue, Warrior, and Wizard.) Return target  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Zareth San, the Trickster | silent | {2}{U}{B}, Return an unblocked attacking Rogue you control to its owner's hand: Put this card from your hand onto the battlefield tapped and attacking. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Charix, the Raging Isle | notice | Spells your opponents cast that target Charix cost {2} more to cast. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Crawling Barrens | notice | {4}: Put two +1/+1 counters on this land. Then you may have it become a 0/0 Elemental creature until end of turn. It's still a land. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Felidar Retreat | notice | Landfall — Whenever a land you control enters, choose one — • Create a 2/2 white Cat Beast creature token. • Put a +1/+1 counter on each creature you control. T | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Inscription of Insight | notice | Kicker {2}{U}{U} Choose one. If this spell was kicked, choose any number instead. • Return up to two target creatures to their owners' hands. • Scry 2, then dra | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Leyline Tyrant | notice | When this creature dies, you may pay any amount of {R}. When you do, it deals that much damage to any target. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Oblivion's Hunger | notice | Target creature you control gains indestructible until end of turn. Draw a card if that creature has a +1/+1 counter on it. (Damage and effects that say "destro | unparsed remainder: Draw a card if that creature has a +1/+1 counter on it. | Y/Y/- | not_working |
 | Acquisitions Expert | handled | When this creature enters, target opponent reveals a number of cards from their hand equal to the number of creatures in your party. You choose one of those car | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -93,6 +86,7 @@
 | Cleric of Life's Bond | handled | Whenever another Cleric you control enters, you gain 1 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Cliffhaven Kitesail | handled | When this Equipment enters, attach it to target creature you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Cliffhaven Sell-Sword | handled |  |  | Y/Y/- | not_tested |
+| Coveted Prize | handled | This spell costs {1} less to cast for each creature in your party. (Your party consists of up to one each of Cleric, Rogue, Warrior, and Wizard.) Search your li | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Cragcrown Pathway // Timbercrown Pathway | handled |  |  | Y/Y/- | not_tested |
 | Cunning Geysermage | handled | When this creature enters, if it was kicked, return up to one other target creature to its owner's hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Dauntless Survivor | handled | When this creature enters, put a +1/+1 counter on target creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -119,6 +113,7 @@
 | Hagra Mauling // Hagra Broodpit | handled | This spell costs {1} less to cast if an opponent controls no basic lands. Destroy target creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Highborn Vampire | handled |  |  | Y/Y/Y | not_tested |
 | Inordinate Rage | handled | Target creature gets +3/+2 until end of turn. Scry 1. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Inscription of Insight | handled | Kicker {2}{U}{U} Choose one. If this spell was kicked, choose any number instead. • Return up to two target creatures to their owners' hands. • Scry 2, then dra | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Joraga Visionary | handled | When this creature enters, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Kabira Takedown // Kabira Plateau | handled | Kabira Takedown deals damage equal to the number of creatures you control to target creature or planeswalker. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Kargan Warleader | handled | Other Warriors you control get +1/+1. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -173,6 +168,7 @@
 | Sizzling Barrage | handled | Sizzling Barrage deals 4 damage to target creature that blocked this turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Skyclave Cleric // Skyclave Basilica | handled | When this creature enters, you gain 2 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Skyclave Geopede | handled | Landfall — Whenever a land you control enters, this creature gets +2/+2 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Skyclave Pick-Axe | handled | When this Equipment enters, attach it to target creature you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Skyclave Plunder | handled | Look at the top X cards of your library, where X is three plus the number of creatures in your party. Put three of those cards into your hand and the rest on th | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Skyclave Shadowcat | handled | {1}{B}, Sacrifice another creature: Put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Sneaking Guide | handled | {2}, {T}: Target creature with power 2 or less can't be blocked this turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -211,7 +207,7 @@
 ## Fully supported
 
 <details>
-<summary>74 cards</summary>
+<summary>78 cards</summary>
 
 - Agadeem's Awakening // Agadeem, the Undercrypt
 - Akoum Hellhound
@@ -229,6 +225,7 @@
 - Clearwater Pathway // Murkwater Pathway
 - Cragplate Baloth
 - Dauntless Unity
+- Emeria Captain
 - Expedition Diviner
 - Farsight Adept
 - Ghastly Gloomhunter
@@ -241,6 +238,7 @@
 - Jwari Disruption // Jwari Ruins
 - Kabira Outrider
 - Kargan Intimidator
+- Kaza, Roil Chaser
 - Legion Angel
 - Lithoform Blight
 - Malakir Blood-Priest
@@ -249,6 +247,7 @@
 - Murasa Sproutling
 - Myriad Construct
 - Nahiri's Binding
+- Nahiri's Lithoforming
 - Nighthawk Scavenger
 - Nimana Skitter-Sneak
 - Nimble Trapfinder
@@ -275,6 +274,7 @@
 - Springmantle Cleric
 - Squad Commander
 - Stonework Packbeast
+- Strength of Solidarity
 - Synchronized Spellcraft
 - Tajuru Paragon
 - Tazri, Beacon of Unity
@@ -294,11 +294,10 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| Landfall | 4 | Felidar Retreat, Moraug, Fury of Akoum, Skyclave Pick-Axe, Skyclave Squid | znr |
+| Landfall | 3 | Felidar Retreat, Moraug, Fury of Akoum, Skyclave Squid | znr |
 | +N: create a N/N white kor warrior creature token. you may attach an equipment you control to it. | 1 | Nahiri, Heir of the Ancients | znr |
 | as long as there are four or more instant and/or sorcery cards in your graveyard, ~ gets +N/+N. | 1 | Magmatic Channeler | znr |
 | at the beginning of combat on your turn, if you have a full party, choose target nonland permanent an opponent controls. until your next turn, it can"..."t be a | 1 | Linvala, Shield of Sea Gate | znr |
-| choose target creature you control. put a +N/+N counter on it for each creature in your party. (your party consists of up to one each of cleric, rogue, warrior, | 1 | Strength of Solidarity | znr |
 | choose target creature. you lose N life. until end of turn, that creature gains "..." | 1 | Malakir Rebirth // Malakir Mire | znr |
 | counter target creature or planeswalker spell unless its controller pays {M}. if an opponent has eight or more cards in their graveyard, instead counter that sp | 1 | Anticognition | znr |
 | counter target noncreature spell unless its controller pays {M} plus an additional {M} for each creature in your party. (your party consists of up to one each o | 1 | Concerted Defense | znr |
@@ -308,10 +307,8 @@
 | equipped warriors you control have double strike. | 1 | Kor Blademaster | znr |
 | exile all creatures and planeswalkers with mana value N or less from the battlefield and all creature and planeswalker cards with mana value N or less from all  | 1 | Shadows' Verdict | znr |
 | kicker {M} (you may pay an additional {M} as you cast ~.) search your library for a basic land card, reveal it, put it into your hand, then shuffle. if ~ was ki | 1 | Reclaim the Wastes | znr |
-| kicker {M}{M}{M} choose one. if ~ was kicked, choose any number instead. • return up to two target creatures to their owners' hands. • scry N, then draw two car | 1 | Inscription of Insight | znr |
 | look at the top five cards of your library. you may reveal a creature card from among them and put it into your hand. put the rest on the bottom of your library | 1 | Adventure Awaits | znr |
 | nontoken creatures you control are forest lands in addition to their other types. | 1 | Ashaya, Soul of the Wild | znr |
-| sacrifice N lands. for each land sacrificed ~, draw a card. you may play N additional lands ~. lands you control enter tapped ~. | 1 | Nahiri's Lithoforming | znr |
 | spells your opponents cast that target charix cost {M} more to cast. | 1 | Charix, the Raging Isle | znr |
 | target creature you control gains indestructible until end of turn. draw a card if that creature has a +N/+N counter on it. (damage and effects that say "..." d | 1 | Oblivion's Hunger | znr |
 | target opponent reveals their hand. you choose a card from it with mana value N or greater. that player discards that card. | 1 | Pelakka Predation // Pelakka Caverns | znr |
@@ -320,7 +317,6 @@
 | when ~ enters, copy the next instant or sorcery spell with mana value N or less you cast ~ when you cast it. if ~ was kicked, copy that spell twice instead. you | 1 | Sea Gate Stormcaller | znr |
 | when ~ enters, if it was kicked, create two tapped tokens that are copies of ~. | 1 | Skyclave Relic | znr |
 | when ~ enters, look at the top five cards of your library. you may reveal a card with a kicker ability from among them and put it into your hand. put the rest o | 1 | Coralhelm Chronicler | znr |
-| when ~ enters, put a +N/+N counter on it for each creature in your party. | 1 | Emeria Captain | znr |
 | whenever a land an opponent controls enters, if that player had another land enter the battlefield under their control ~, they return a land they control to its | 1 | Confounding Conundrum | znr |
 | whenever drana attacks, defending player chooses a nonlegendary creature card in your graveyard. you return that card to the battlefield with an additional +N/+ | 1 | Drana, the Last Bloodchief | znr |
 | whenever you cast an instant, sorcery, or wizard spell, you may have ~ base power and toughness become N/N or N/N until end of turn. | 1 | Master of Winds | znr |
@@ -328,12 +324,10 @@
 | whenever ~ attacks, put a +N/+N counter on each attacking creature with a +N/+N counter on it. | 1 | Oran-Rief Ooze | znr |
 | {M}, {M}: copy target permanent spell you control. | 1 | Lithoform Engine | znr |
 | {M}: put two +N/+N counters on ~. then you may have it become a N/N elemental creature until end of turn. it's still a land. | 1 | Crawling Barrens | znr |
-| {M}: the next instant or sorcery spell you cast ~ costs {M} less to cast, where N is the number of wizards you control as ~ resolves. | 1 | Kaza, Roil Chaser | znr |
 | {M}: you may unattach an equipment from a creature you control. if you do, tap that creature and it gains indestructible until end of turn. | 1 | Akiri, Fearless Voyager | znr |
 | {M}{M}: ~ gets +N/+N until end of turn and can't be blocked ~. ~ costs {M} less to activate for each creature in your party. | 1 | Seafloor Stalker | znr |
 | {M}{M}{M}, return an unblocked attacking rogue you control to its owner's hand: put ~ from your hand onto the battlefield tapped and attacking. | 1 | Zareth San, the Trickster | znr |
 | ~ costs {M} less to cast for each creature in your party. (your party consists of up to one each of cleric, rogue, warrior, and wizard.) return target creature  | 1 | Thwart the Grave | znr |
-| ~ costs {M} less to cast for each creature in your party. (your party consists of up to one each of cleric, rogue, warrior, and wizard.) search your library for | 1 | Coveted Prize | znr |
 | ~ costs {M} less to cast if it targets a creature whose controller has eight or more cards in their graveyard. gain control of target creature with mana value N | 1 | Lullmage's Domination | znr |
 | ~'s power and toughness are each equal to N minus the highest life total among players. | 1 | Scourge of the Skyclaves | znr |
 | −N: you may put a creature card with mana value less than or equal to the number of lands you control onto the battlefield from your hand or graveyard with two  | 1 | Nissa of Shadowed Boughs | znr |

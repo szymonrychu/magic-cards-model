@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 34 | 18.8% |
+| Tested | 36 | 19.9% |
 | Works (untested) | 108 | 59.7% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 39 | 21.5% |
+| Not working | 37 | 20.4% |
 
 ## Cards needing work
 
@@ -29,7 +29,6 @@
 | Animist's Awakening | silent | Reveal the top X cards of your library. Put all land cards from among them onto the battlefield tapped and the rest on the bottom of your library in a random or | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Chandra, Fire of Kaladesh // Chandra, Roaring Flame | silent | −7: Chandra deals 6 damage to each opponent. Each player dealt damage this way gets an emblem with "At the beginning of your upkeep, this emblem deals 3 damage  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Dark Dabbling | silent | Regenerate target creature. Draw a card. (The next time the creature would be destroyed this turn, instead tap it, remove it from combat, and heal all damage on | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Displacement Wave | silent | Return all nonland permanents with mana value X or less to their owners' hands. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Eyeblight Massacre | silent | Non-Elf creatures get -2/-2 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Gather the Pack | silent | Reveal the top five cards of your library. You may put a creature card from among them into your hand. Put the rest into your graveyard. Spell mastery — If ther | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Gilt-Leaf Winnower | silent | When this creature enters, you may destroy target non-Elf creature whose power and toughness aren't equal. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -37,7 +36,6 @@
 | Hixus, Prison Warden | silent | Whenever a creature deals combat damage to you, if Hixus entered this turn, exile that creature until Hixus leaves the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Honored Hierarch | silent | As long as this creature is renowned, it has vigilance and "{T}: Add one mana of any color." | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Infectious Bloodlust | silent | Enchanted creature gets +2/+1, has haste, and attacks each combat if able. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Infinite Obliteration | silent | Choose a creature card name. Search target opponent's graveyard, hand, and library for any number of cards with that name and exile them. Then that player shuff | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Kytheon, Hero of Akros // Gideon, Battle-Forged | silent | +2: Up to one target creature an opponent controls attacks Gideon during its controller's next turn if able. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Liliana, Heretical Healer // Liliana, Defiant Necromancer | silent | Whenever another nontoken creature you control dies, exile Liliana, Heretical Healer, then return her to the battlefield transformed under her owner's control.  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Nightsnare | silent | Target opponent reveals their hand. You may choose a nonland card from it. If you do, that player discards that card. If you don't, that player discards two car | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -87,13 +85,13 @@
 | Chief of the Foundry | handled | Other artifact creatures you control get +1/+1. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Citadel Castellan | handled | Renown | machines/keywords.py | Y/Y/- | not_tested |
 | Clash of Wills | handled | Counter target spell unless its controller pays {X}. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Cleric of the Forward Order | handled | When this creature enters, you gain 2 life for each creature you control named Cleric of the Forward Order. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Conclave Naturalists | handled | When this creature enters, you may destroy target artifact or enchantment. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Consecrated by Blood | handled | Enchanted creature gets +2/+2 and has flying and "Sacrifice two other creatures: Regenerate this creature." | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Dark Petition | handled | Search your library for a card, put that card into your hand, then shuffle. Spell mastery — If there are two or more instant and/or sorcery cards in your gravey | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Deadbridge Shaman | handled | When this creature dies, target opponent discards a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Despoiler of Souls | handled | This creature can't block. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Disciple of the Ring | handled | {1}, Exile an instant or sorcery card from your graveyard: Choose one — • Counter target noncreature spell unless its controller pays {2}. • This creature gets  | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Displacement Wave | handled | Return all nonland permanents with mana value X or less to their owners' hands. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Dwynen's Elite | handled | When this creature enters, if you control another Elf, create a 1/1 green Elf Warrior creature token. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Dwynen, Gilt-Leaf Daen | handled | Other Elf creatures you control get +1/+1. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Elemental Bond | handled | Whenever a creature you control with power 3 or greater enters, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -177,7 +175,7 @@
 ## Fully supported
 
 <details>
-<summary>34 cards</summary>
+<summary>36 cards</summary>
 
 - Acolyte of the Inferno
 - Alhammarret's Archive
@@ -186,6 +184,7 @@
 - Boggart Brute
 - Bonded Construct
 - Chandra's Ignition
+- Cleric of the Forward Order
 - Consul's Lieutenant
 - Day's Undoing
 - Deep-Sea Terror
@@ -199,6 +198,7 @@
 - Graveblade Marauder
 - Hallowed Moonlight
 - Hangarback Walker
+- Infinite Obliteration
 - Jace, Vryn's Prodigy // Jace, Telepath Unbound
 - Kytheon's Tactics
 - Mage-Ring Network
@@ -227,7 +227,6 @@
 | as long as ~ is renowned, it has vigilance and "..." | 1 | Honored Hierarch | ori |
 | at the beginning of your upkeep, choose one that hasn't been chosen — • ~ deals N damage to any target and you gain N life. • target opponent discards two cards | 1 | Demonic Pact | ori |
 | attacking creatures you control get +N/+N. | 1 | War Horn | ori |
-| choose a creature card name. search target opponent's graveyard, hand, and library for any number of cards with that name and exile them. then that player shuff | 1 | Infinite Obliteration | ori |
 | counter target instant or sorcery spell that targets you. spell mastery — if there are two or more instant and/or sorcery cards in your graveyard, you may copy  | 1 | Psychic Rebuttal | ori |
 | each player shuffles all cards from their hand and all permanents they own into their library, then draws that many cards. each player may put any number of lan | 1 | The Great Aurora | ori |
 | enchanted creature gets +N/+N, has haste, and attacks each combat if able. | 1 | Infectious Bloodlust | ori |
@@ -235,7 +234,6 @@
 | non-elf creatures get -N/-N until end of turn. | 1 | Eyeblight Massacre | ori |
 | put target creature card from a graveyard onto the battlefield under your control. spell mastery — if there are two or more instant and/or sorcery cards in your | 1 | Necromantic Summons | ori |
 | regenerate target creature. draw a card. (the next time the creature would be destroyed ~, instead tap it, remove it from combat, and heal all damage on it.) sp | 1 | Dark Dabbling | ori |
-| return all nonland permanents with mana value N or less to their owners' hands. | 1 | Displacement Wave | ori |
 | reveal the top N cards of your library. put all land cards from among them onto the battlefield tapped and the rest on the bottom of your library in a random or | 1 | Animist's Awakening | ori |
 | reveal the top five cards of your library. you may put a creature card from among them into your hand. put the rest into your graveyard. spell mastery — if ther | 1 | Gather the Pack | ori |
 | scry N, then reveal the top card of your library. if it's a creature card, you draw cards equal to its power and you gain life equal to its toughness. | 1 | Nissa's Revelation | ori |

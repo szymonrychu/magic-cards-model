@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 58 | 21.2% |
-| Works (untested) | 149 | 54.4% |
+| Tested | 62 | 22.6% |
+| Works (untested) | 150 | 54.7% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 67 | 24.5% |
+| Not working | 62 | 22.6% |
 
 ## Cards needing work
 
@@ -28,16 +28,14 @@
 |---|---|---|---|---|---|
 | Advice from the Fae | silent | ({2/U} can be paid with any two mana or with {U}. This card's mana value is 6.) Look at the top five cards of your library. If you control more creatures than e | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Aphotic Wisps | silent | Target creature becomes black and gains fear until end of turn. (It can't be blocked except by artifact creatures and/or black creatures.) Draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Augury Adept | silent | Whenever this creature deals combat damage to a player, reveal the top card of your library and put that card into your hand. You gain life equal to its mana va | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Cauldron of Souls | silent | {T}: Choose any number of target creatures. Each of those creatures gains persist until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Cemetery Puca | silent | Whenever a creature dies, you may pay {1}. If you do, this creature becomes a copy of that creature, except it has this ability. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Counterbore | silent | Counter target spell. Search its controller's graveyard, hand, and library for all cards with the same name as that spell and exile them. Then that player shuff | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Cragganwick Cremator | silent | When this creature enters, discard a card at random. If you discard a creature card this way, this creature deals damage equal to that card's power to target pl | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Crimson Wisps | silent | Target creature becomes red and gains haste until end of turn. (It can attack and {T} this turn.) Draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Crowd of Cinders | silent | Crowd of Cinders's power and toughness are each equal to the number of black permanents you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Deus of Calamity | silent | Whenever this creature deals 6 or more damage to an opponent, destroy target land that player controls. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Din of the Fireherd | silent | Create a 5/5 black and red Elemental creature token. Target opponent sacrifices a creature of their choice for each black creature you control, then sacrifices  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Dire Undercurrents | silent | Whenever a blue creature you control enters, you may have target player draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Dire Undercurrents | silent | Whenever a black creature you control enters, you may have target player discard a card. | this trigger's condition can never be satisfied - it never triggers | Y/-/- | not_working |
 | Dream Salvage | silent | Draw cards equal to the number of cards target opponent discarded this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Drove of Elves | silent | Drove of Elves's power and toughness are each equal to the number of green permanents you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Elsewhere Flask | silent | Sacrifice this artifact: Choose a basic land type. Each land you control becomes that type until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -47,14 +45,12 @@
 | Ghastlord of Fugue | silent | Whenever this creature deals combat damage to a player, that player reveals their hand. You choose a card from it. That player exiles that card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Glamer Spinners | silent | When this creature enters, attach all Auras enchanting target permanent to another permanent with the same controller. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Heartmender | silent | At the beginning of your upkeep, remove a -1/-1 counter from each creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Hollowsage | silent | Whenever this creature becomes untapped, you may have target player discard a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Horde of Boggarts | silent | Horde of Boggarts's power and toughness are each equal to the number of red permanents you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Incremental Blight | silent | Put a -1/-1 counter on target creature, two -1/-1 counters on another target creature, and three -1/-1 counters on a third target creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Inkfathom Witch | silent | {2}{U}{B}: Each unblocked creature has base power and toughness 4/1 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Inquisitor's Snare | silent | Prevent all damage target attacking or blocking creature would deal this turn. If that creature is black or red, destroy it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Kinscaer Harpoonist | silent | Whenever this creature attacks, you may have target creature lose flying until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Kithkin Rabble | silent | Kithkin Rabble's power and toughness are each equal to the number of white permanents you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Knollspine Dragon | silent | When this creature enters, you may discard your hand and draw cards equal to the damage dealt to target opponent this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Leech Bonder | silent | {U}, {Q}: Move a counter from target creature onto a second target creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Lockjaw Snapper | silent | When this creature dies, put a -1/-1 counter on each creature with a -1/-1 counter on it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Medicine Runner | silent | When this creature enters, you may remove a counter from target permanent. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -64,7 +60,6 @@
 | Oversoul of Dusk | silent | Protection from blue, from black, and from red | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Painter's Servant | silent | All cards that aren't on the battlefield, spells, and permanents are the chosen color in addition to their other colors. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Pale Wayfarer | silent | {2}{W}{W}, {Q}: Target creature gains protection from the color of its controller's choice until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Plague of Vermin | silent | Starting with you, each player may pay any amount of life. Repeat this process until no one pays life. Each player creates a 1/1 black Rat creature token for ea | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Prismwake Merrow | silent | When this creature enters, target permanent becomes the color or colors of your choice until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Puca's Mischief | silent | At the beginning of your upkeep, you may exchange control of target nonland permanent you control and target nonland permanent an opponent controls with equal o | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Puresight Merrow | silent | {W/U}, {Q}: Look at the top card of your library. You may exile that card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -146,6 +141,7 @@
 | Guttural Response | handled | Counter target blue instant spell. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Heap Doll | handled | Sacrifice this creature: Exile target card from a graveyard. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Helm of the Ghastlord | handled | As long as enchanted creature is blue, it gets +1/+1 and has "Whenever this creature deals damage to an opponent, draw a card." | the engine reads this text and performs it | Y/-/- | not_tested |
+| Hollowsage | handled | Whenever this creature becomes untapped, you may have target player discard a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Howl of the Night Pack | handled | Create a 2/2 green Wolf creature token for each Forest you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Hungry Spriggan | handled | Whenever this creature attacks, it gets +3/+3 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Inescapable Brute | handled | This creature must be blocked if able. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -246,8 +242,9 @@
 ## Fully supported
 
 <details>
-<summary>58 cards</summary>
+<summary>62 cards</summary>
 
+- Augury Adept
 - Beseech the Queen
 - Bloodshed Fever
 - Blowfly Infestation
@@ -255,6 +252,7 @@
 - Boon Reflection
 - Burn Trail
 - Chainbreaker
+- Cragganwick Cremator
 - Cursecatcher
 - Dawnglow Infusion
 - Deepchannel Mentor
@@ -274,6 +272,7 @@
 - Illuminated Folio
 - Jaws of Stone
 - Kitchen Finks
+- Knollspine Dragon
 - Kulrath Knight
 - Lurebound Scarecrow
 - Manamorphose
@@ -282,6 +281,7 @@
 - Mistveil Plains
 - Mossbridge Troll
 - Mystic Gate
+- Plague of Vermin
 - Prison Term
 - Resplendent Mentor
 - Rite of Consumption
@@ -338,26 +338,21 @@
 | return target permanent to its owner"..."s library instead. | 1 | Consign to Dream | shm |
 | return up to one target creature card from your graveyard to the battlefield if {M} was spent to cast ~. creatures target player controls get +N/+N and gain has | 1 | Torrent of Souls | shm |
 | sacrifice ~: choose a basic land type. each land you control becomes that type until end of turn. | 1 | Elsewhere Flask | shm |
-| starting with you, each player may pay any amount of life. repeat ~ until no one pays life. each player creates a N/N black rat creature token for each N life t | 1 | Plague of Vermin | shm |
 | target creature becomes black and gains fear until end of turn. (it can't be blocked except by artifact creatures and/or black creatures.) draw a card. | 1 | Aphotic Wisps | shm |
 | target creature becomes green and gets +N/+N until end of turn. draw a card. | 1 | Viridescent Wisps | shm |
 | target creature becomes red and gains haste until end of turn. (it can attack and {M} ~.) draw a card. | 1 | Crimson Wisps | shm |
 | target player discards their hand unless they pay N life. | 1 | Tyrannize | shm |
 | when ~ dies, put a -N/-N counter on each creature with a -N/-N counter on it. | 1 | Lockjaw Snapper | shm |
 | when ~ enters, attach all auras enchanting target permanent to another permanent with the same controller. | 1 | Glamer Spinners | shm |
-| when ~ enters, discard a card at random. if you discard a creature card ~, ~ deals damage equal to that card's power to target player or planeswalker. | 1 | Cragganwick Cremator | shm |
 | when ~ enters, put target creature card from an opponent's graveyard onto the battlefield under your control. it gains haste. at the beginning of your next end  | 1 | Puppeteer Clique | shm |
 | when ~ enters, return to your hand all cards in your graveyard that were put there from the battlefield ~. | 1 | Twilight Shepherd | shm |
 | when ~ enters, target permanent becomes the color or colors of your choice until end of turn. | 1 | Prismwake Merrow | shm |
-| when ~ enters, you may discard your hand and draw cards equal to the damage dealt to target opponent ~. | 1 | Knollspine Dragon | shm |
 | when ~ enters, you may remove a counter from target permanent. | 1 | Medicine Runner | shm |
-| whenever a blue creature you control enters, you may have target player draw a card. | 1 | Dire Undercurrents | shm |
+| whenever a black creature you control enters, you may have target player discard a card. | 1 | Dire Undercurrents | shm |
 | whenever a creature dies, you may pay {M}. if you do, ~ becomes a copy of that creature, except it has ~. | 1 | Cemetery Puca | shm |
 | whenever a creature with flying attacks you, ~ deals N damage to it. | 1 | Raking Canopy | shm |
 | whenever ~ attacks, you may have target creature lose flying until end of turn. | 1 | Kinscaer Harpoonist | shm |
-| whenever ~ becomes untapped, you may have target player discard a card. | 1 | Hollowsage | shm |
 | whenever ~ deals N or more damage to an opponent, destroy target land that player controls. | 1 | Deus of Calamity | shm |
-| whenever ~ deals combat damage to a player, reveal the top card of your library and put that card into your hand. you gain life equal to its mana value. | 1 | Augury Adept | shm |
 | whenever ~ deals combat damage to a player, that player reveals their hand. you choose a card from it. that player exiles that card. | 1 | Ghastlord of Fugue | shm |
 | whenever ~ deals damage to an opponent, remove all -N/-N counters from it. | 1 | Witherscale Wurm | shm |
 | you may cast target instant or sorcery card from an opponent's graveyard without paying its mana cost. | 1 | Memory Plunder | shm |

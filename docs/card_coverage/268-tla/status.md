@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 82 | 29.6% |
-| Works (untested) | 132 | 47.7% |
+| Tested | 87 | 31.4% |
+| Works (untested) | 133 | 48.0% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 63 | 22.7% |
+| Not working | 57 | 20.6% |
 
 ## Cards needing work
 
@@ -28,7 +28,6 @@
 |---|---|---|---|---|---|
 | Aang's Journey | silent | Kicker {2} (You may pay an additional {2} as you cast this spell.) Search your library for a basic land card. If this spell was kicked, instead search your libr | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Accumulate Wisdom | silent | Look at the top three cards of your library. Put one of those cards into your hand and the rest on the bottom of your library in any order. Put each of those ca | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Avatar Destiny | silent | Enchanted creature gets +1/+1 for each creature card in your graveyard and is an Avatar in addition to its other types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Avatar's Wrath | silent | Choose up to one target creature, then airbend all other creatures. (Exile them. While each one is exiled, its owner may cast it for {2} rather than its mana co | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Beifong's Bounty Hunters | silent | Whenever a nonland creature you control dies, earthbend X, where X is that creature's power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Benevolent River Spirit | silent | Waterbend | no machine in the engine executes this keyword | Y/Y/Y | not_working |
@@ -36,8 +35,6 @@
 | Bumi, Unleashed | silent | Whenever Bumi deals combat damage to a player, untap all lands you control. After this phase, there is an additional combat phase. Only land creatures can attac | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Buzzard-Wasp Colony | silent | Whenever another creature you control dies, if it had counters on it, put its counters on this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Crashing Wave | silent | As an additional cost to cast this spell, waterbend {X}. (While paying a waterbend cost, you can tap your artifacts and creatures to help. Each one pays for {1} | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Crescent Island Temple | silent | When Crescent Island Temple enters, for each Shrine you control, create a 1/1 red Monk creature token with prowess. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Dai Li Agents | silent | Whenever this creature attacks, each opponent loses X life and you gain X life, where X is the number of creatures you control with +1/+1 counters on them. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Destined Confrontation | silent | Each player chooses any number of creatures they control with total power 4 or less, then sacrifices all other creatures they control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Diligent Zookeeper | silent | Each non-Human creature you control gets +1/+1 for each of its creature types, to a maximum of 10. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Earth King's Lieutenant | silent | When this creature enters, put a +1/+1 counter on each other Ally creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -50,7 +47,6 @@
 | Foggy Swamp Visions | silent | Waterbend | no machine in the engine executes this keyword | Y/Y/Y | not_working |
 | Hama, the Bloodbender | silent | When Hama enters, target opponent mills three cards. Exile up to one noncreature, nonland card from that player's graveyard. For as long as you control Hama, yo | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Koh, the Face Stealer | silent | Pay 1 life: Choose a creature card exiled with Koh. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Kyoshi Island Plaza | silent | When Kyoshi Island Plaza enters, search your library for up to X basic land cards, where X is the number of Shrines you control. Put those cards onto the battle | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Leaves from the Vine | silent | III — Draw a card if there's a creature or Lesson card in your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Lo and Li, Twin Tutors | silent | Noble creatures you control and Lesson spells you control have lifelink. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Mai, Jaded Edge | silent | Exhaust — {3}: Put a double strike counter on Mai. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -59,14 +55,11 @@
 | Platypus-Bear | silent | As long as there is a Lesson card in your graveyard, this creature can attack as though it didn't have defender. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Rabaroo Troop | silent | Landfall — Whenever a land you control enters, this creature gains flying until end of turn and you gain 1 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Ran and Shaw | silent | When Ran and Shaw enter, if you cast them and there are three or more Dragon and/or Lesson cards in your graveyard, create a token that's a copy of Ran and Shaw | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Raven Eagle | silent | Whenever this creature enters or attacks, exile up to one target card from a graveyard. If a creature card is exiled this way, create a Clue token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Secret of Bloodbending | silent | As an additional cost to cast this spell, you may waterbend {10}. You control target opponent during their next combat phase. If this spell's additional cost wa | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Seismic Sense | silent | Look at the top X cards of your library, where X is the number of lands you control. You may reveal a creature or land card from among them and put it into your | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Sokka, Lateral Strategist | silent | Whenever Sokka and at least one other creature attack, draw a card. | this trigger's condition can never be satisfied - it never triggers | Y/Y/Y | not_working |
 | Sparring Dummy | silent | {T}: Mill a card. You may put a land card milled this way into your hand. You gain 2 life if a Lesson card is milled this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | The Legend of Kyoshi // Avatar Kyoshi | silent | II — Earthbend X, where X is the number of cards in your hand. That land becomes an Island in addition to its other types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | The Legend of Yangchen // Avatar Yangchen | silent | I — Starting with you, each player chooses up to one permanent with mana value 3 or greater from among permanents your opponents control. Exile those permanents | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| The Rise of Sozin // Fire Lord Sozin | silent | II — Choose a card name. Search target opponent's graveyard, hand, and library for up to four cards with that name and exile them. Then that player shuffles. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Tiger-Seal | silent | At the beginning of your upkeep, tap this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Toph, Hardheaded Teacher | silent | Whenever you cast a spell, earthbend 1. If that spell is a Lesson, put an additional +1/+1 counter on that land. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Turtle-Duck | silent | {3}: Until end of turn, this creature has base power 4 and gains trample. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -86,6 +79,7 @@
 | Messenger Hawk | notice | This creature gets +2/+0 as long as you've drawn two or more cards this turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Planetarium of Wan Shi Tong | notice | Whenever you scry or surveil, look at the top card of your library. You may cast that card without paying its mana cost. Do this only once each turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Sold Out | notice | Exile target creature. If it was dealt damage this turn, create a Clue token. (It's an artifact with "{2}, Sacrifice this token: Draw a card.") | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
+| The Rise of Sozin // Fire Lord Sozin | notice | Whenever Fire Lord Sozin deals combat damage to a player, you may pay {X}. When you do, put any number of target creature cards with total mana value X or less  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Yip Yip! | notice | Target creature you control gets +2/+2 until end of turn. If that creature is an Ally, it also gains flying until end of turn. | unparsed remainder: If that creature is an Ally, it also gains flying until end of turn. | Y/Y/Y | not_working |
 | Zuko's Conviction | notice | Kicker {4} (You may pay an additional {4} as you cast this spell.) Return target creature card from your graveyard to your hand. If this spell was kicked, inste | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Zuko, Conflicted | notice | At the beginning of your first main phase, choose one that hasn't been chosen and you lose 2 life — • Draw a card. • Put a +1/+1 counter on Zuko. • Add {R}. • E | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
@@ -173,6 +167,7 @@
 | Pretending Poxbearers | handled | When this creature dies, create a 1/1 white Ally creature token. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Professor Zei, Anthropologist | handled | {T}, Discard a card: Draw a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Raucous Audience | handled |  |  | Y/Y/Y | not_tested |
+| Raven Eagle | handled | Whenever this creature enters or attacks, exile up to one target card from a graveyard. If a creature card is exiled this way, create a Clue token. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Rebellious Captives | handled | Exhaust — {6}: Put two +1/+1 counters on this creature, then earthbend 2. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Rocky Rebuke | handled | Target creature you control deals damage equal to its power to target creature an opponent controls. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Rough Rhino Cavalry | handled | Exhaust — {8}: Put two +1/+1 counters on this creature. It gains trample until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -225,7 +220,7 @@
 ## Fully supported
 
 <details>
-<summary>82 cards</summary>
+<summary>87 cards</summary>
 
 - Aang's Iceberg
 - Aang, Swift Savior // Aang and La, Ocean's Fury
@@ -236,6 +231,7 @@
 - Allies at Last
 - Appa, Steadfast Guardian
 - Avatar Aang // Aang, Master of Elements
+- Avatar Destiny
 - Azula, Cunning Usurper
 - Ba Sing Se
 - Badgermole
@@ -245,8 +241,10 @@
 - Boomerang Basics
 - Callous Inspector
 - Combustion Technique
+- Crescent Island Temple
 - Cruel Administrator
 - Curious Farm Animals
+- Dai Li Agents
 - Day of Black Sun
 - Deadly Precision
 - Dragonfly Swarm
@@ -272,6 +270,7 @@
 - It'll Quench Ya!
 - Katara, Water Tribe's Hope
 - Kyoshi Battle Fan
+- Kyoshi Island Plaza
 - Master Pakku
 - Momo, Friendly Flier
 - Momo, Playful Pet
@@ -288,6 +287,7 @@
 - Rockalanche
 - Ruinous Waterbending
 - Secret Tunnel
+- Seismic Sense
 - Serpent of the Pass
 - Shared Roots
 - Solstice Revelations
@@ -326,7 +326,6 @@
 | at the beginning of combat on your turn, you may have target opponent gain control of target permanent you control. when you do, create a N/N white ally creatur | 1 | Iroh, Tea Master | tla |
 | at the beginning of your first main phase, choose one that hasn"..."s control. | 1 | Zuko, Conflicted | tla |
 | at the beginning of your upkeep, tap ~. | 1 | Tiger-Seal | tla |
-| choose a card name. search target opponent's graveyard, hand, and library for up to four cards with that name and exile them. then that player shuffles. | 1 | The Rise of Sozin // Fire Lord Sozin | tla |
 | choose up to one target creature, then airbend all other creatures. (exile them. while each one is exiled, its owner may cast it for {M} rather than its mana co | 1 | Avatar's Wrath | tla |
 | draw a card if there's a creature or lesson card in your graveyard. | 1 | Leaves from the Vine | tla |
 | draw three cards. then discard a card unless you waterbend {M}. (while paying a waterbend cost, you can tap your artifacts and creatures to help. each one pays  | 1 | Waterbending Lesson | tla |
@@ -334,12 +333,10 @@
 | each player chooses any number of creatures they control with total power N or less, then sacrifices all other creatures they control. | 1 | Destined Confrontation | tla |
 | earthbend N, where N is the number of cards in your hand. that land becomes an island in addition to its other types. | 1 | The Legend of Kyoshi // Avatar Kyoshi | tla |
 | earthbend N. when you do, up to one target creature you control fights target creature an opponent controls. (to earthbend N, target land you control becomes a  | 1 | Earth Rumble | tla |
-| enchanted creature gets +N/+N for each creature card in your graveyard and is an avatar in addition to its other types. | 1 | Avatar Destiny | tla |
 | exile target creature. if it was dealt damage ~, create a clue token. (it's an artifact with "...") | 1 | Sold Out | tla |
 | kicker {M} (you may pay an additional {M} as you cast ~.) return target creature card from your graveyard to your hand. if ~ was kicked, instead put that card o | 1 | Zuko's Conviction | tla |
 | kicker {M} (you may pay an additional {M} as you cast ~.) search your library for a basic land card. if ~ was kicked, instead search your library for a basic la | 1 | Aang's Journey | tla |
 | kicker {M} (you may pay an additional {M} as you cast ~.) target creature can"..."s an artifact with "...") | 1 | Jet's Brainwashing | tla |
-| look at the top N cards of your library, where N is the number of lands you control. you may reveal a creature or land card from among them and put it into your | 1 | Seismic Sense | tla |
 | look at the top three cards of your library. put one of those cards into your hand and the rest on the bottom of your library in any order. put each of those ca | 1 | Accumulate Wisdom | tla |
 | noble creatures you control and lesson spells you control have lifelink. | 1 | Lo and Li, Twin Tutors | tla |
 | pay N life: choose a creature card exiled with koh. | 1 | Koh, the Face Stealer | tla |
@@ -352,13 +349,12 @@
 | when bumi enters, choose up to N, where N is the number of lesson cards in your graveyard — • put three +N/+N counters on bumi. • target player scries N. • eart | 1 | Bumi, King of Three Trials | tla |
 | when hama enters, target opponent mills three cards. exile up to one noncreature, nonland card from that player's graveyard. for as long as you control hama, yo | 1 | Hama, the Bloodbender | tla |
 | when ~ enter, if you cast them and there are three or more dragon and/or lesson cards in your graveyard, create a token that"..."s not legendary. | 1 | Ran and Shaw | tla |
-| when ~ enters, for each shrine you control, create a N/N red monk creature token with prowess. | 1 | Crescent Island Temple | tla |
 | when ~ enters, put a +N/+N counter on each other ally creature you control. | 1 | Earth King's Lieutenant | tla |
-| when ~ enters, search your library for up to N basic land cards, where N is the number of shrines you control. put those cards onto the battlefield tapped, then | 1 | Kyoshi Island Plaza | tla |
 | whenever a creature you control attacking causes a triggered ability of that creature to trigger, put a quest counter on ~. then if it has four or more quest co | 1 | Firebender Ascension | tla |
 | whenever a nonland creature you control dies, earthbend N, where N is that creature's power. | 1 | Beifong's Bounty Hunters | tla |
 | whenever another creature you control dies, if it had counters on it, put its counters on ~. | 1 | Buzzard-Wasp Colony | tla |
 | whenever bumi deals combat damage to a player, untap all lands you control. after ~, there is an additional combat phase. only land creatures can attack during  | 1 | Bumi, Unleashed | tla |
+| whenever fire lord sozin deals combat damage to a player, you may pay {M}. when you do, put any number of target creature cards with total mana value N or less  | 1 | The Rise of Sozin // Fire Lord Sozin | tla |
 | whenever hei bai enters or attacks, you may sacrifice another creature or artifact. if you do, put two +N/+N counters on hei bai. | 1 | Hei Bai, Spirit of Balance | tla |
 | whenever sokka and at least one other creature attack, draw a card. | 1 | Sokka, Lateral Strategist | tla |
 | whenever you cast a spell, earthbend N. if that spell is a lesson, put an additional +N/+N counter on that land. | 1 | Toph, Hardheaded Teacher | tla |
@@ -367,8 +363,6 @@
 | whenever you sacrifice a food, you may search your library for a basic land card and put it onto the battlefield tapped. if you search your library ~, put ~ on  | 1 | Unlucky Cabbage Merchant | tla |
 | whenever you scry or surveil, look at the top card of your library. you may cast that card without paying its mana cost. do ~ once each turn. | 1 | Planetarium of Wan Shi Tong | tla |
 | whenever ~ attacks, choose target creature an opponent controls. tap it, then you may sacrifice an artifact or creature. if you do, put a stun counter on the ch | 1 | Vengeful Villagers | tla |
-| whenever ~ attacks, each opponent loses N life and you gain N life, where N is the number of creatures you control with +N/+N counters on them. | 1 | Dai Li Agents | tla |
-| whenever ~ enters or attacks, exile up to one target card from a graveyard. if a creature card is exiled ~, create a clue token. | 1 | Raven Eagle | tla |
 | {M}: mill a card. you may put a land card milled ~ into your hand. you gain N life if a lesson card is milled ~. | 1 | Sparring Dummy | tla |
 | {M}: until end of turn, ~ has base power N and gains trample. | 1 | Turtle-Duck | tla |
 | ~ gets +N/+N and has trample as long as you control a land creature or a land entered the battlefield under your control ~. | 1 | Earth Rumble Wrestlers | tla |

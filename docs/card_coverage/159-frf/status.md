@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 34 | 21.1% |
-| Works (untested) | 82 | 50.9% |
+| Tested | 35 | 21.7% |
+| Works (untested) | 81 | 50.3% |
 | Partial (unaudited) | 0 | 0.0% |
 | Not working | 45 | 28.0% |
 
@@ -31,7 +31,7 @@
 | Alesha, Who Smiles at Death | silent | Whenever Alesha attacks, you may pay {W/B}{W/B}. If you do, return target creature card with power 2 or less from your graveyard to the battlefield tapped and a | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ambush Krotiq | silent | When this creature enters, return another creature you control to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Archfiend of Depravity | silent | At the beginning of each opponent's end step, that player chooses up to two creatures they control, then sacrifices the rest. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Brutal Hordechief | silent | Whenever a creature you control attacks, defending player loses 1 life and you gain 1 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
+| Brutal Hordechief | silent | {3}{R/W}{R/W}: Creatures your opponents control block this turn if able, and you choose how those creatures block. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Cached Defenses | silent | Bolster 3. (Choose a creature with the least toughness among creatures you control and put three +1/+1 counters on it.) | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Cloudform | silent | When this enchantment enters, it becomes an Aura with enchant creature. Manifest the top card of your library and attach this enchantment to it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Daghatar the Adamant | silent | {1}{B/G}{B/G}: Move a +1/+1 counter from target creature onto a second target creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -133,7 +133,6 @@
 | Sage-Eye Avengers | handled | Whenever this creature attacks, you may return target creature to its owner's hand if its power is less than this creature's power. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Sandblast | handled | Sandblast deals 5 damage to target attacking or blocking creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Sandsteppe Outcast | handled | When this creature enters, choose one — • Put a +1/+1 counter on this creature. • Create a 1/1 white Spirit creature token with flying. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Shaman of the Great Hunt | handled | Whenever a creature you control deals combat damage to a player, put a +1/+1 counter on it. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Shamanic Revelation | handled | Draw a card for each creature you control. Ferocious — You gain 4 life for each creature you control with power 4 or greater. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Shu Yun, the Silent Tempest | handled | Whenever you cast a noncreature spell, you may pay {R/W}{R/W}. If you do, target creature gains double strike until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Sibsig Host | handled | When this creature enters, each player mills three cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -157,7 +156,7 @@
 ## Fully supported
 
 <details>
-<summary>34 cards</summary>
+<summary>35 cards</summary>
 
 - Ainok Guide
 - Arcbond
@@ -183,6 +182,7 @@
 - Outpost Siege
 - Palace Siege
 - Scroll of the Masters
+- Shaman of the Great Hunt
 - Shifting Loyalties
 - Shockmaw Dragon
 - Temur Battle Rage
@@ -230,7 +230,6 @@
 | when ~ dies, bolster N. | 1 | Abzan Skycaptain | frf |
 | when ~ enters, draw a card for each aura you control that's attached to a creature. | 1 | Sage's Reverie | frf |
 | when ~ enters, return another creature you control to its owner's hand. | 1 | Ambush Krotiq | frf |
-| whenever a creature you control attacks, defending player loses N life and you gain N life. | 1 | Brutal Hordechief | frf |
 | whenever a dragon you control attacks, bolster N. | 1 | Dromoka, the Eternal | frf |
 | whenever a dragon you control attacks, creatures defending player controls get -N/-N until end of turn. | 1 | Silumgar, the Drifting Death | frf |
 | whenever alesha attacks, you may pay {M}{M}. if you do, return target creature card with power N or less from your graveyard to the battlefield tapped and attac | 1 | Alesha, Who Smiles at Death | frf |
@@ -238,6 +237,7 @@
 | you gain N life. bolster N. (choose a creature with the least toughness among creatures you control and put two +N/+N counters on it.) | 1 | Honor's Reward | frf |
 | {M}: draw two cards. target opponent gains control of ~. activate only during your turn. | 1 | Humble Defector | frf |
 | {M}{M}: you may return another creature you control to its owner's hand. if you do, ~ gains indestructible until end of turn. | 1 | Temur Sabertooth | frf |
+| {M}{M}{M}: creatures your opponents control block ~ if able, and you choose how those creatures block. | 1 | Brutal Hordechief | frf |
 | {M}{M}{M}: mill two cards, then return a nonland card of an opponent's choice from your graveyard to your hand. | 1 | Tasigur, the Golden Fang | frf |
 | {M}{M}{M}: move a +N/+N counter from target creature onto a second target creature. | 1 | Daghatar the Adamant | frf |
 | ~ has first strike and trample as long as an instant card and a sorcery card are in your graveyard. | 1 | Bloodfire Enforcers | frf |

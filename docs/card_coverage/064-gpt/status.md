@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 25 | 16.8% |
+| Tested | 26 | 17.4% |
 | Works (untested) | 86 | 57.7% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 38 | 25.5% |
+| Not working | 37 | 24.8% |
 
 ## Cards needing work
 
@@ -53,7 +53,6 @@
 | Rabble-Rouser | silent | {R}, {T}: Attacking creatures get +X/+0 until end of turn, where X is this creature's power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Revenant Patriarch | silent | When this creature enters, if {W} was spent to cast it, target player skips their next combat phase. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Seize the Soul | silent | Destroy target nonwhite, nonblack creature. Create a 1/1 white Spirit creature token with flying. Haunt (When this spell card is put into a graveyard after reso | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Shadow Lance | silent | {1}{B}: Enchanted creature gets +2/+2 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sky Swallower | silent | When this creature enters, target opponent gains control of all other permanents you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Smogsteed Rider | silent | Whenever this creature attacks, each other attacking creature gains fear until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Souls of the Faultless | silent | Whenever this creature is dealt combat damage, you gain that much life and attacking player loses that much life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -114,7 +113,6 @@
 | Orzhova, the Church of Deals | handled | {3}{W}{B}, {T}: Target player loses 1 life and you gain 1 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ostiary Thrull | handled | {W}, {T}: Tap target creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Petrahydrox | handled | When this creature becomes the target of a spell or ability, return this creature to its owner's hand. | the engine reads this text and performs it | Y/-/- | not_tested |
-| Petrified Wood-Kin | handled | This spell can't be countered. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Pillory of the Sleepless | handled | Enchanted creature can't attack or block. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Poisonbelly Ogre | handled | Whenever another creature enters, its controller loses 1 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Pyromatics | handled | Replicate {1}{R} (When you cast this spell, copy it for each time you paid its replicate cost. You may choose new targets for the copies.) Pyromatics deals 1 da | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -124,6 +122,7 @@
 | Runeboggle | handled | Counter target spell unless its controller pays {1}. Draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Schismotivate | handled | Target creature gets +4/+0 until end of turn. Another target creature gets -4/-0 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Scorched Rusalka | handled | {R}, Sacrifice a creature: This creature deals 1 damage to target player or planeswalker. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Shadow Lance | handled | Enchanted creature has first strike. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Shattering Spree | handled | Replicate {R} (When you cast this spell, copy it for each time you paid its replicate cost. You may choose new targets for the copies.) Destroy target artifact. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Shrieking Grotesque | handled | When this creature enters, if {B} was spent to cast it, target player discards a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Siege of Towers | handled | Replicate {1}{R} (When you cast this spell, copy it for each time you paid its replicate cost. You may choose new targets for the copies.) Target Mountain becom | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -154,7 +153,7 @@
 ## Fully supported
 
 <details>
-<summary>25 cards</summary>
+<summary>26 cards</summary>
 
 - Agent of Masks
 - Battering Wurm
@@ -174,6 +173,7 @@
 - Necromancer's Magemark
 - Order of the Stars
 - Parallectric Feedback
+- Petrified Wood-Kin
 - Predatory Focus
 - Skarrgan Firebird
 - Skarrgan Pit-Skulk
@@ -218,7 +218,6 @@
 | {M}, {M}: each creature with mana value N can't attack or block ~. | 1 | Droning Bureaucrats | gpt |
 | {M}: ~ deals damage equal to its power divided as you choose among any number of target creatures. each of those creatures deals damage equal to its power to ~. | 1 | Living Inferno | gpt |
 | {M}{M}: copy target instant spell you control with mana value N or less. you may choose new targets for the copy. | 1 | Izzet Guildmage | gpt |
-| {M}{M}: enchanted creature gets +N/+N until end of turn. | 1 | Shadow Lance | gpt |
 | {M}{M}{M}, {M}, sacrifice ~: exile target nonland card from a graveyard, all other cards from graveyards with the same name as that card, and all permanents wit | 1 | Moratorium Stone | gpt |
 | {M}{M}{M}, {M}: exile the top card of your library. until your next turn, you may cast it if it's an instant or sorcery spell. | 1 | Nivix, Aerie of the Firemind | gpt |
 

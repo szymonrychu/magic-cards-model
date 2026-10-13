@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 42 | 18.0% |
-| Works (untested) | 139 | 59.7% |
+| Works (untested) | 141 | 60.5% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 52 | 22.3% |
+| Not working | 50 | 21.5% |
 
 ## Cards needing work
 
@@ -32,7 +32,6 @@
 | Aven Tactician | silent | When this creature enters, bolster 1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Belltoll Dragon | silent | When this creature is turned face up, put a +1/+1 counter on each other Dragon creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Crater Elemental | silent | Formidable — {2}{R}: This creature has base power 8 until end of turn. Activate only if creatures you control have total power 8 or greater. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Dance of the Skywise | silent | Until end of turn, target creature you control becomes a blue Dragon Illusion with base power and toughness 4/4, loses all abilities, and gains flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Deadly Wanderings | silent | As long as you control exactly one creature, that creature gets +2/+0 and has deathtouch and lifelink. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Deathmist Raptor | silent | Whenever a permanent you control is turned face up, you may return this card from your graveyard to the battlefield face up or face down. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Dromoka Captain | silent | Whenever this creature attacks, bolster 1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -69,7 +68,6 @@
 | Stormwing Dragon | silent | When this creature is turned face up, put a +1/+1 counter on each other Dragon creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sunbringer's Touch | silent | Bolster | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Vulturous Aven | silent | When this creature exploits a creature, you draw two cards and you lose 2 life. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
-| Blessed Reincarnation | notice | Exile target creature an opponent controls. That player reveals cards from the top of their library until a creature card is revealed. The player puts that card | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Butcher's Glee | notice | Target creature gets +3/+0 and gains lifelink until end of turn. Regenerate it. (Damage dealt by a creature with lifelink also causes its controller to gain tha | unparsed remainder: Regenerate it. | Y/Y/- | not_working |
 | Display of Dominance | notice | Choose one — • Destroy target blue or black noncreature permanent. • Permanents you control can't be the targets of blue or black spells your opponents control  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Mirror Mockery | notice | Whenever enchanted creature attacks, you may create a token that's a copy of that creature. Exile that token at end of combat. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -90,6 +88,7 @@
 | Atarka Pummeler | handled | Formidable — {3}{R}{R}: Creatures you control gain menace until end of turn. Activate only if creatures you control have total power 8 or greater. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Aven Sunstriker | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
 | Berserkers' Onslaught | handled | Attacking creatures you control have double strike. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Blessed Reincarnation | handled | Exile target creature an opponent controls. That player reveals cards from the top of their library until a creature card is revealed. The player puts that card | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Blood-Chin Rager | handled | Whenever this creature attacks, Warrior creatures you control gain menace until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Boltwing Marauder | handled | Whenever another creature you control enters, target creature gets +2/+0 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Champion of Arashin | handled | Lifelink | machines/combat.py | Y/Y/- | not_tested |
@@ -102,6 +101,7 @@
 | Cunning Breezedancer | handled | Whenever you cast a noncreature spell, this creature gets +2/+2 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Custodian of the Trove | handled | This creature enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Damnable Pact | handled | Target player draws X cards and loses X life. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Dance of the Skywise | handled | Until end of turn, target creature you control becomes a blue Dragon Illusion with base power and toughness 4/4, loses all abilities, and gains flying. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Deathbringer Regent | handled | When this creature enters, if you cast it from your hand and there are five or more other creatures on the battlefield, destroy all other creatures. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Defeat | handled | Destroy target creature with power 2 or less. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Dirgur Nemesis | handled | Defender | machines/combat.py | Y/Y/- | not_tested |
@@ -286,13 +286,11 @@
 | destroy target attacking or blocking creature. bolster N. (choose a creature with the least toughness among creatures you control and put a +N/+N counter on it. | 1 | Enduring Victory | dtk |
 | destroy target creature with flying. bolster N. (choose a creature with the least toughness among creatures you control and put two +N/+N counters on it.) | 1 | Pinion Feast | dtk |
 | enchanted creature gets +N/+N for each +N/+N counter on other creatures you control. | 1 | Gleam of Authority | dtk |
-| exile target creature an opponent controls. that player reveals cards from the top of their library until a creature card is revealed. the player puts that card | 1 | Blessed Reincarnation | dtk |
 | prevent all combat damage that would be dealt ~. you may look at each face-down creature that's attacking or blocking. | 1 | Revealing Wind | dtk |
 | target creature gets +N/+N and gains lifelink until end of turn. regenerate it. (damage dealt by a creature with lifelink also causes its controller to gain tha | 1 | Butcher's Glee | dtk |
 | target creature gets +N/+N until end of turn and can't be blocked ~. rebound (if you cast ~ from your hand, exile it as it resolves. at the beginning of your ne | 1 | Taigam's Strike | dtk |
 | target opponent loses N life for each attacking creature you control. you gain that much life. | 1 | Foul-Tongue Shriek | dtk |
 | target opponent sacrifices a green or white creature of their choice. if that player does, they lose N life. | 1 | Self-Inflicted Wound | dtk |
-| until end of turn, target creature you control becomes a blue dragon illusion with base power and toughness N/N, loses all abilities, and gains flying. | 1 | Dance of the Skywise | dtk |
 | when sidisi exploits a creature, you may search your library for a card, put it into your hand, then shuffle. | 1 | Sidisi, Undead Vizier | dtk |
 | when ~ dies, you may put it on your choice of the top or bottom of its owner's library. | 1 | Arashin Sovereign | dtk |
 | when ~ enters, you may put a creature card with mana value N or less from your hand or graveyard onto the battlefield. that creature gains haste. return it to y | 1 | Swift Warkite | dtk |

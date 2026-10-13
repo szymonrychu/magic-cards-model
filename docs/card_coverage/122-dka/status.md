@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 41 | 26.6% |
-| Works (untested) | 87 | 56.5% |
+| Works (untested) | 89 | 57.8% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 26 | 16.9% |
+| Not working | 24 | 15.6% |
 
 ## Cards needing work
 
@@ -32,13 +32,11 @@
 | Curse of Misfortunes | silent | At the beginning of your upkeep, you may search your library for a Curse card that doesn't have the same name as a Curse attached to enchanted player, put it on | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Curse of Thirst | silent | At the beginning of enchanted player's upkeep, this Aura deals damage to that player equal to the number of Curses attached to them. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Fiend of the Shadows | silent | Whenever this creature deals combat damage to a player, that player exiles a card from their hand. You may play that card for as long as it remains exiled. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Gather the Townsfolk | silent | Create two 1/1 white Human creature tokens. Fateful hour — If you have 5 or less life, create five of those tokens instead. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Havengul Lich | silent | {1}: You may cast target creature card in a graveyard this turn. When you cast it this turn, this creature gains all activated abilities of that card until end  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Havengul Runebinder | silent | {2}{U}, {T}, Exile a creature card from your graveyard: Create a 2/2 black Zombie creature token, then put a +1/+1 counter on each Zombie creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Helvault | silent | When Helvault is put into a graveyard from the battlefield, return all cards exiled with it to the battlefield under their owners' control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Increasing Ambition | silent | Search your library for a card and put that card into your hand. If this spell was cast from a graveyard, instead search your library for two cards and put thos | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Increasing Confusion | silent | Target player mills X cards. If this spell was cast from a graveyard, that player mills twice that many cards instead. Flashback {X}{U} (You may cast this card  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Increasing Devotion | silent | Create five 1/1 white Human creature tokens. If this spell was cast from a graveyard, create ten of those tokens instead. Flashback {7}{W}{W} (You may cast this | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Lost in the Woods | silent | Whenever a creature attacks you or a planeswalker you control, reveal the top card of your library. If it's a Forest card, remove that creature from combat. The | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Markov Warlord | silent | When this creature enters, up to two target creatures can't block this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Scorch the Fields | silent | Destroy target land. Scorch the Fields deals 1 damage to each Human creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -78,6 +76,7 @@
 | Farbog Boneflinger | handled | When this creature enters, target creature gets -2/-2 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Favor of the Woods | handled | Whenever enchanted creature blocks, you gain 3 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Fires of Undeath | handled | Fires of Undeath deals 2 damage to any target. Flashback {5}{B} (You may cast this card from your graveyard for its flashback cost. Then exile it.) | the engine reads this text and performs it | Y/-/- | not_tested |
+| Gather the Townsfolk | handled | Create two 1/1 white Human creature tokens. Fateful hour — If you have 5 or less life, create five of those tokens instead. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Gavony Ironwright | handled | Fateful hour — As long as you have 5 or less life, other creatures you control get +1/+4. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Geralf's Mindcrusher | handled | When this creature enters, target player mills five cards. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ghoultree | handled | This spell costs {1} less to cast for each creature card in your graveyard. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -91,6 +90,7 @@
 | Hinterland Hermit // Hinterland Scourge | handled | At the beginning of each upkeep, if no spells were cast last turn, transform this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Hollowhenge Beast | handled |  |  | Y/-/- | not_tested |
 | Hunger of the Howlpack | handled | Put a +1/+1 counter on target creature. Morbid — Put three +1/+1 counters on that creature instead if a creature died this turn. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Increasing Devotion | handled | Create five 1/1 white Human creature tokens. If this spell was cast from a graveyard, create ten of those tokens instead. Flashback {7}{W}{W} (You may cast this | the engine reads this text and performs it | Y/-/- | not_tested |
 | Increasing Savagery | handled | Put five +1/+1 counters on target creature. If this spell was cast from a graveyard, put ten +1/+1 counters on that creature instead. Flashback {5}{G}{G} (You m | the engine reads this text and performs it | Y/-/- | not_tested |
 | Jar of Eyeballs | handled | Whenever a creature you control dies, put two eyeball counters on this artifact. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Kessig Recluse | handled | Reach | machines/combat.py | Y/-/- | not_tested |
@@ -198,8 +198,6 @@
 | at the beginning of your upkeep, you may look at the top five cards of your library. if you do, you may put a creature card that shares a creature type with enc | 1 | Call to the Kindred | dka |
 | at the beginning of your upkeep, you may search your library for a curse card that doesn't have the same name as a curse attached to enchanted player, put it on | 1 | Curse of Misfortunes | dka |
 | counter target spell. you may cast a spell that shares a card type with it from your hand without paying its mana cost. | 1 | Counterlash | dka |
-| create five N/N white human creature tokens. if ~ was cast from a graveyard, create ten of those tokens instead. flashback {M}{M}{M} (you may cast ~ from your g | 1 | Increasing Devotion | dka |
-| create two N/N white human creature tokens. fateful hour — if you have N or less life, create five of those tokens instead. | 1 | Gather the Townsfolk | dka |
 | destroy target land. ~ deals N damage to each human creature. | 1 | Scorch the Fields | dka |
 | exile all nonland permanents target player controls. return the exiled cards to the battlefield under their owner's control at the beginning of the next end ste | 1 | Sudden Disappearance | dka |
 | return all zombie creature cards from your graveyard to the battlefield tapped, then destroy all humans. | 1 | Zombie Apocalypse | dka |

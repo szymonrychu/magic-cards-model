@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 44 | 24.7% |
+| Tested | 46 | 25.8% |
 | Works (untested) | 98 | 55.1% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 36 | 20.2% |
+| Not working | 34 | 19.1% |
 
 ## Cards needing work
 
@@ -33,7 +33,6 @@
 | Azor, the Lawbringer | silent | When Azor enters, each opponent can't cast instant or sorcery spells during that player's next turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Bishop of Binding | silent | Whenever this creature attacks, target Vampire gets +X/+X until end of turn, where X is the power of the exiled card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Blazing Hope | silent | Exile target creature with power greater than or equal to your life total. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Brass's Bounty | silent | For each land you control, create a Treasure token. (It's an artifact with "{T}, Sacrifice this token: Add one mana of any color.") | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Captain's Hook | silent | Equipped creature gets +2/+0, has menace, and is a Pirate in addition to its other creature types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Cherished Hatchling | silent | When this creature dies, you may cast Dinosaur spells this turn as though they had flash, and whenever you cast a Dinosaur spell this turn, it gains "When this  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Crashing Tide | silent | This spell has flash as long as you control a Merfolk. Return target creature to its owner's hand. Draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -49,7 +48,6 @@
 | Sphinx's Decree | silent | Each opponent can't cast instant or sorcery spells during that player's next turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Tendershoot Dryad | silent | Saprolings you control get +2/+2 as long as you have the city's blessing. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Tetzimoc, Primal Death | silent | When Tetzimoc enters, destroy each creature your opponents control with a prey counter on it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Twilight Prophet | silent | At the beginning of your upkeep, if you have the city's blessing, reveal the top card of your library and put it into your hand. Each opponent loses X life and  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Vona's Hunger | silent | Ascend (If you control ten or more permanents, you get the city's blessing for the rest of the game.) Each opponent sacrifices a creature of their choice. If yo | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Warkite Marauder | silent | Whenever this creature attacks, target creature defending player controls loses all abilities and has base power and toughness 0/1 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Angrath, the Flame-Chained | notice | −3: Gain control of target creature until end of turn. Untap it. It gains haste until end of turn. Sacrifice it at the beginning of the next end step if it has  | unparsed remainder: Untap it. It gains haste until end of turn. Sacrifice it at the beginning of the next end step if it has mana value 3 or less. | Y/Y/- | not_working |
@@ -164,10 +162,11 @@
 ## Fully supported
 
 <details>
-<summary>44 cards</summary>
+<summary>46 cards</summary>
 
 - Arch of Orazca
 - Blood Sun
+- Brass's Bounty
 - Charging Tuskodon
 - Crafty Cutpurse
 - Curious Obsession
@@ -208,6 +207,7 @@
 - Temple Altisaur
 - The Immortal Sun
 - Tilonalli's Crown
+- Twilight Prophet
 - Vraska, Scheming Gorgon
 - Wayward Swordtooth
 
@@ -223,14 +223,12 @@
 | ascend (if you control ten or more permanents, you get the city"..."s hand. if you have the city"..."s library instead. | 1 | Expel from Orazca | rix |
 | at the beginning of combat on your turn, put a +N/+N counter on target creature you control. then if that creature has three or more +N/+N counters on it, trans | 1 | Hadana's Climb // Winged Temple of Orazca | rix |
 | at the beginning of your upkeep, each player draws a card. if you have the city's blessing, instead only you draw a card. | 1 | Kumena's Awakening | rix |
-| at the beginning of your upkeep, if you have the city"..."s mana value. | 1 | Twilight Prophet | rix |
 | attacking pirates you control get +N/+N. | 1 | Dire Fleet Neckbreaker | rix |
 | each opponent can"..."s next turn. | 1 | Sphinx's Decree | rix |
 | each player chooses any number of creatures they control with total power N or less, then sacrifices all other creatures they control. | 1 | Slaughter the Strong | rix |
 | enchanted creature gets +N/+N as long as it's a pirate. otherwise, it gets -N/-N. | 1 | Sea Legs | rix |
 | equipped creature gets +N/+N, has menace, and is a pirate in addition to its other creature types. | 1 | Captain's Hook | rix |
 | exile target creature with power greater than or equal to your life total. | 1 | Blazing Hope | rix |
-| for each land you control, create a treasure token. (it's an artifact with "...") | 1 | Brass's Bounty | rix |
 | saprolings you control get +N/+N as long as you have the city's blessing. | 1 | Tendershoot Dryad | rix |
 | when azor enters, each opponent can"..."s next turn. | 1 | Azor, the Lawbringer | rix |
 | when enchanted creature dies, exile cards equal to its power from the top of its owner's library. you may cast spells from among those cards for as long as they | 1 | Dead Man's Chest | rix |

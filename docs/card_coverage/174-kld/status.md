@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 42 | 17.1% |
+| Tested | 47 | 19.1% |
 | Works (untested) | 156 | 63.4% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 48 | 19.5% |
+| Not working | 43 | 17.5% |
 
 ## Cards needing work
 
@@ -41,7 +41,6 @@
 | Cultivator of Blades | silent | Whenever this creature attacks, you may have other attacking creatures get +X/+X until end of turn, where X is this creature's power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Deadlock Trap | silent | {T}, Pay {E}: Tap target creature or planeswalker. Its activated abilities can't be activated this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Depala, Pilot Exemplar | silent | Each Vehicle you control gets +1/+1 as long as it's a creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Die Young | silent | Choose target creature. You get {E}{E} (two energy counters), then you may pay any amount of {E}. The creature gets -1/-1 until end of turn for each {E} paid th | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Dovin Baan | silent | +1: Until your next turn, up to one target creature gets -3/-0 and its activated abilities can't be activated. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Dubious Challenge | silent | Look at the top ten cards of your library, exile up to two creature cards from among them, then shuffle. Target opponent may choose one of the exiled cards and  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Eager Construct | silent | When this creature enters, each player may scry 1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -54,18 +53,14 @@
 | Highspire Artisan | silent | Fabricate | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Hightide Hermit | silent | Pay {E}{E}: This creature can attack this turn as though it didn't have defender. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Iron League Steed | silent | Fabricate | no machine in the engine executes this keyword | Y/Y/- | not_working |
-| Lost Legacy | silent | Choose a nonartifact, nonland card name. Search target player's graveyard, hand, and library for any number of cards with that name and exile them. That player  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Madcap Experiment | silent | Reveal cards from the top of your library until you reveal an artifact card. Put that card onto the battlefield and the rest on the bottom of your library in a  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Marionette Master | silent | Fabricate | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Maulfist Squad | silent | Fabricate | no machine in the engine executes this keyword | Y/Y/- | not_working |
-| Metallurgic Summonings | silent | Whenever you cast an instant or sorcery spell, create an X/X colorless Construct artifact creature token, where X is that spell's mana value. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Multiform Wonder | silent | Pay {E}: This creature gets +2/-2 or -2/+2 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Nissa, Nature's Artisan | silent | −4: Reveal the top two cards of your library. Put all land cards from among them onto the battlefield and the rest into your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Peema Outrider | silent | Fabricate | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Propeller Pioneer | silent | Fabricate | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Rashmi, Eternities Crafter | silent | Whenever you cast your first spell each turn, reveal the top card of your library. You may cast it without paying its mana cost if it's a spell with lesser mana | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Shrewd Negotiation | silent | Exchange control of target artifact you control and target artifact or creature you don't control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Spark of Creativity | silent | Choose target creature. Exile the top card of your library. You may have Spark of Creativity deal damage to that creature equal to the exiled card's mana value. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Speedway Fanatic | silent | Whenever this creature crews a Vehicle, that Vehicle gains haste until end of turn. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Verdant Crescendo | silent | Search your library for a basic land card and put it onto the battlefield tapped. Search your library and graveyard for a card named Nissa, Nature's Artisan, re | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Veteran Motorist | silent | Whenever this creature crews a Vehicle, that Vehicle gets +1/+1 until end of turn. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
@@ -234,7 +229,7 @@
 ## Fully supported
 
 <details>
-<summary>42 cards</summary>
+<summary>47 cards</summary>
 
 - Aetherstorm Roc
 - Armorcraft Judge
@@ -249,6 +244,7 @@
 - Consul's Shieldguard
 - Cultivator's Caravan
 - Demolition Stomper
+- Die Young
 - Dramatic Reversal
 - Eddytrail Hawk
 - Fabrication Module
@@ -261,7 +257,10 @@
 - Hijack
 - Inspiring Vantage
 - Long-Finned Skywhale
+- Lost Legacy
+- Madcap Experiment
 - Maulfist Doorbuster
+- Metallurgic Summonings
 - Metalwork Colossus
 - Midnight Oil
 - Noxious Gearhulk
@@ -274,6 +273,7 @@
 - Sequestered Stash
 - Servant of the Conduit
 - Smuggler's Copter
+- Spark of Creativity
 - Spirebluff Canal
 - Territorial Gorger
 - Trusty Companion
@@ -288,10 +288,7 @@
 | fabricate | 13 | Accomplished Automaton, Ambitious Aetherborn, Angel of Invention, Elegant Edgecrafters, Glint-Sleeve Artisan | kld |
 | Choose one | 1 | Insidious Will | kld |
 | +N: until your next turn, up to one target creature gets -N/-N and its activated abilities can't be activated. | 1 | Dovin Baan | kld |
-| choose a nonartifact, nonland card name. search target player's graveyard, hand, and library for any number of cards with that name and exile them. that player  | 1 | Lost Legacy | kld |
 | choose target artifact or creature. you get {M}{M}{M}{M} (four energy counters), then you may pay an amount of {M} equal to that permanent's mana value. if you  | 1 | Confiscation Coup | kld |
-| choose target creature. exile the top card of your library. you may have ~ deal damage to that creature equal to the exiled card"..."t, you may play that card u | 1 | Spark of Creativity | kld |
-| choose target creature. you get {M}{M} (two energy counters), then you may pay any amount of {M}. the creature gets -N/-N until end of turn for each {M} paid ~. | 1 | Die Young | kld |
 | creatures with no counters on them get -N/-N until end of turn. | 1 | Hazardous Conditions | kld |
 | each vehicle you control gets +N/+N as long as it's a creature. | 1 | Depala, Pilot Exemplar | kld |
 | exchange control of target artifact you control and target artifact or creature you don't control. | 1 | Shrewd Negotiation | kld |
@@ -300,7 +297,6 @@
 | pay {M}: ~ gets +N/-N or -N/+N until end of turn. | 1 | Multiform Wonder | kld |
 | pay {M}{M}: prevent all damage that would be dealt to you ~ by a source of your choice. | 1 | Consulate Surveillance | kld |
 | pay {M}{M}: ~ can attack ~ as though it didn't have defender. | 1 | Hightide Hermit | kld |
-| reveal cards from the top of your library until you reveal an artifact card. put that card onto the battlefield and the rest on the bottom of your library in a  | 1 | Madcap Experiment | kld |
 | search your library for a basic land card and put it onto the battlefield tapped. search your library and graveyard for a card named nissa, nature's artisan, re | 1 | Verdant Crescendo | kld |
 | target attacking creature gets +N/+N until end of turn. if it's an artifact creature, it gains trample until end of turn. | 1 | Built to Smash | kld |
 | target creature gets +N/+N until end of turn. if it"..."t destroy it.) | 1 | Built to Last | kld |
@@ -310,7 +306,6 @@
 | when ~ enters, target opponent may have you draw three cards. if the player doesn't, you mill three cards, then ~ deals damage to that player equal to the total | 1 | Combustible Gearhulk | kld |
 | when ~ enters, you may return another permanent you control to its owner's hand. | 1 | Aviary Mechanic | kld |
 | whenever a permanent you control is put into a graveyard, you get {M} . | 1 | Aetherworks Marvel | kld |
-| whenever you cast an instant or sorcery spell, create an N/N colorless construct artifact creature token, where N is that spell's mana value. | 1 | Metallurgic Summonings | kld |
 | whenever you cast your first spell each turn, reveal the top card of your library. you may cast it without paying its mana cost if it"..."t cast it, put it into | 1 | Rashmi, Eternities Crafter | kld |
 | whenever ~ attacks, you may have other attacking creatures get +N/+N until end of turn, where N is ~ power. | 1 | Cultivator of Blades | kld |
 | whenever ~ crews a vehicle, that vehicle gains first strike until end of turn. | 1 | Gearshift Ace | kld |

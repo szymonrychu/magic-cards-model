@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 56 | 19.8% |
+| Tested | 58 | 20.5% |
 | Works (untested) | 159 | 56.2% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 68 | 24.0% |
+| Not working | 66 | 23.3% |
 
 ## Cards needing work
 
@@ -31,7 +31,6 @@
 | Budoka Gardener // Dokai, Weaver of Life | silent | {T}: You may put a land card from your hand onto the battlefield. If you control ten or more lands, flip this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Burr Grafter | silent | Soulshift | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Callous Deceiver | silent | {2}: Reveal the top card of your library. If it's a land card, this creature gets +1/+0 and gains flying until end of turn. Activate only once each turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Cranial Extraction | silent | Choose a nonland card name. Search target player's graveyard, hand, and library for all cards with that name and exile them. Then that player shuffles. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Cut the Tethers | silent | For each Spirit, return it to its owner's hand unless that player pays {3}. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Devouring Greed | silent | As an additional cost to cast this spell, you may sacrifice any number of Spirits. Target player loses 2 life plus 2 life for each Spirit sacrificed this way. Y | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Dripping-Tongue Zubera | silent | When this creature dies, create a 1/1 colorless Spirit creature token for each Zubera that died this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -89,7 +88,6 @@
 | Feast of Worms | notice | Destroy target land. If that land was legendary, its controller sacrifices another land of their choice. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Hikari, Twilight Guardian | notice | Whenever you cast a Spirit or Arcane spell, you may exile Hikari. If you do, return it to the battlefield under its owner's control at the beginning of the next | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Hinder | notice | Counter target spell. If that spell is countered this way, put that card on your choice of the top or bottom of its owner's library instead of into that player' | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Junkyo Bell | notice | At the beginning of your upkeep, you may have target creature you control get +X/+X until end of turn, where X is the number of creatures you control. If you do | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Otherworldly Journey | notice | Exile target creature. At the beginning of the next end step, return that card to the battlefield under its owner's control with a +1/+1 counter on it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Sensei Golden-Tail | notice | {1}{W}, {T}: Put a training counter on target creature. That creature gains bushido 1 and becomes a Samurai in addition to its other creature types. Activate on | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Sosuke, Son of Seshiro | notice | Whenever a Warrior you control deals combat damage to a creature, destroy that creature at end of combat. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
@@ -257,7 +255,7 @@
 ## Fully supported
 
 <details>
-<summary>56 cards</summary>
+<summary>58 cards</summary>
 
 - Akki Lavarunner // Tok-Tok, Volcano Born
 - Azusa, Lost but Seeking
@@ -265,6 +263,7 @@
 - Brothers Yamazaki
 - Candles' Glow
 - Commune with Nature
+- Cranial Extraction
 - Desperate Ritual
 - Devoted Retainer
 - Distress
@@ -286,6 +285,7 @@
 - Iname, Death Aspect
 - Initiate of Blood // Goka the Unjust
 - Isamaru, Hound of Konda
+- Junkyo Bell
 - Kashi-Tribe Warriors
 - Keiga, the Tide Star
 - Kiki-Jiki, Mirror Breaker
@@ -327,9 +327,7 @@
 | as an additional cost to cast ~, you may sacrifice any number of spirits. target player loses N life plus N life for each spirit sacrificed ~. you gain that muc | 1 | Devouring Greed | chk |
 | at the beginning of your upkeep, put a devotion counter on ~. then if a creature named eight-and-a-half-tails is on the battlefield, you gain N life for each de | 1 | Pious Kitsune | chk |
 | at the beginning of your upkeep, you may exile all cards from your hand face down. if you do, put all other cards you own exiled with ~ into your hand. | 1 | Moonring Mirror | chk |
-| at the beginning of your upkeep, you may have target creature you control get +N/+N until end of turn, where N is the number of creatures you control. if you do | 1 | Junkyo Bell | chk |
 | choose a nonland card name and a number greater than N. target player reveals their library. if that library contains exactly the chosen number of cards with th | 1 | Mindblaze | chk |
-| choose a nonland card name. search target player's graveyard, hand, and library for all cards with that name and exile them. then that player shuffles. | 1 | Cranial Extraction | chk |
 | counter target spell. if that spell is countered ~, put that card on your choice of the top or bottom of its owner"..."s graveyard. | 1 | Hinder | chk |
 | destroy target land. if that land was legendary, its controller sacrifices another land of their choice. | 1 | Feast of Worms | chk |
 | draw two cards, then discard a card. if you've cast a spell named peer through depths and a spell named reach through mists ~, you may search your library for a | 1 | Sift Through Sands | chk |

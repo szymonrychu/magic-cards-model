@@ -18,16 +18,15 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 64 | 25.4% |
-| Works (untested) | 142 | 56.3% |
+| Works (untested) | 144 | 57.1% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 46 | 18.3% |
+| Not working | 44 | 17.5% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
 | Adagia, Windswept Bastion | silent | {3}{W}, {T}: Create a token that's a copy of target artifact or enchantment you control, except it's legendary. Activate only as a sorcery. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Alpharael, Stonechosen | silent | Void — Whenever Alpharael attacks, if a nonland permanent left the battlefield this turn or a spell was warped this turn, defending player loses half their life | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Anticausal Vestige | silent | When this creature leaves the battlefield, draw a card, then you may put a permanent card with mana value less than or equal to the number of lands you control  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Atomic Microsizer | silent | Whenever equipped creature attacks, choose up to one target creature. That creature can't be blocked this turn and has base power and toughness 1/1 until end of | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Auxiliary Boosters | silent | When this Equipment enters, create a 2/2 colorless Robot artifact creature token and attach this Equipment to it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -52,7 +51,6 @@
 | Singularity Rupture | silent | Destroy all creatures, then any number of target players each mill half their library, rounded down. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Sothera, the Supervoid | silent | Whenever a creature you control dies, each opponent chooses a creature they control and exiles it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Space-Time Anomaly | silent | Target player mills cards equal to your life total. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Specimen Freighter | silent | Whenever this Spacecraft attacks, defending player mills four cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Survey Mechan | silent | {10}, Sacrifice this creature: It deals 3 damage to any target. Target player draws three cards and gains 3 life. This ability costs {X} less to activate, where | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Synthesizer Labship | silent | At the beginning of combat on your turn, up to one other target artifact you control becomes an artifact creature with base power and toughness 2/2 and gains fl | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Terrapact Intimidator | silent | When this creature enters, target opponent may have you create two Lander tokens. If they don't, put two +1/+1 counters on this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -75,6 +73,7 @@
 | All-Fates Scroll | handled | {7}, {T}, Sacrifice this artifact: Draw X cards, where X is the number of differently named lands you control. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | All-Fates Stalker | handled | When this creature enters, exile up to one target non-Assassin creature until this creature leaves the battlefield. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Alpharael, Dreaming Acolyte | handled | When Alpharael enters, draw two cards. Then discard two cards unless you discard an artifact card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Alpharael, Stonechosen | handled | Void — Whenever Alpharael attacks, if a nonland permanent left the battlefield this turn or a spell was warped this turn, defending player loses half their life | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Astelli Reclaimer | handled | When this creature enters, return target noncreature, nonland permanent card with mana value X or less from your graveyard to the battlefield, where X is the am | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Atmospheric Greenhouse | handled | When this Spacecraft enters, put a +1/+1 counter on each creature you control. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Beamsaw Prospector | handled | When this creature dies, create a Lander token. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -181,6 +180,7 @@
 | Skystinger | handled | Whenever this creature blocks a creature with flying, this creature gets +5/+0 until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Slagdrill Scrapper | handled | {2}, {T}, Sacrifice another artifact or land: Draw a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Sledge-Class Seedship | handled | Whenever this Spacecraft attacks, you may put a creature card from your hand onto the battlefield. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Specimen Freighter | handled | When this Spacecraft enters, return up to two target non-Spacecraft creatures to their owners' hands. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Squire's Lightblade | handled | When this Equipment enters, attach it to target creature you control. That creature gains first strike until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Starbreach Whale | handled | When this creature enters, surveil 2. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Starfighter Pilot | handled | Whenever this creature becomes tapped, surveil 1. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -291,7 +291,6 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| Void | 1 | Alpharael, Stonechosen | eoe |
 | N: untap target artifact or creature. if it's an artifact creature, put a +N/+N counter on it. | 1 | Tezzeret, Cruel Captain | eoe |
 | artifacts you control are foods in addition to their other types and have "..." | 1 | Ragost, Deft Gastronaut | eoe |
 | as an additional cost to cast ~, choose a creature you control or a warped creature card you own in exile. ~ deals damage equal to the power of the chosen creat | 1 | Close Encounter | eoe |
@@ -324,7 +323,6 @@
 | whenever a creature you control dies, each opponent chooses a creature they control and exiles it. | 1 | Sothera, the Supervoid | eoe |
 | whenever enchanted creature attacks, put target creature card from defending player's graveyard onto the battlefield under your control tapped and attacking. | 1 | Chorale of the Void | eoe |
 | whenever equipped creature attacks, choose up to one target creature. that creature can't be blocked ~ and has base power and toughness N/N until end of turn. | 1 | Atomic Microsizer | eoe |
-| whenever ~ attacks, defending player mills four cards. | 1 | Specimen Freighter | eoe |
 | whenever ~ or another kavu you control enters, exile the top card of your library. for as long as that card remains exiled, you may play it if you control a kav | 1 | Possibility Technician | eoe |
 | {M}, sacrifice another artifact: exile the top N cards of your library, where N is one plus the mana value of the sacrificed artifact. you may play those cards  | 1 | Memorial Vault | eoe |
 | {M}, sacrifice ~: it deals N damage to any target. target player draws three cards and gains N life. ~ costs {M} less to activate, where N is the number of diff | 1 | Survey Mechan | eoe |

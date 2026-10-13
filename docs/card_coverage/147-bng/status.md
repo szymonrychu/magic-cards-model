@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 32 | 20.0% |
-| Works (untested) | 92 | 57.5% |
+| Tested | 36 | 22.5% |
+| Works (untested) | 93 | 58.1% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 36 | 22.5% |
+| Not working | 31 | 19.4% |
 
 ## Cards needing work
 
@@ -47,16 +47,11 @@
 | Perplexing Chimera | silent | Whenever an opponent casts a spell, you may exchange control of this creature and that spell. If you do, you may choose new targets for the spell. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Pheres-Band Raiders | silent | Inspired — Whenever this creature becomes untapped, you may pay {2}{G}. If you do, create a 3/3 green Centaur enchantment creature token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Pillar of War | silent | As long as this creature is enchanted, it can attack as though it didn't have defender. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Sanguimancy | silent | You draw X cards and you lose X life, where X is your devotion to black. (Each {B} in the mana costs of permanents you control counts toward your devotion to bl | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Satyr Nyx-Smith | silent | Inspired — Whenever this creature becomes untapped, you may pay {2}{R}. If you do, create a 3/1 red Elemental enchantment creature token with haste. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Spiteful Returned | silent | Whenever this creature or enchanted creature attacks, defending player loses 2 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sudden Storm | silent | Tap up to two target creatures. Those creatures don't untap during their controllers' next untap steps. Scry 1. (Look at the top card of your library. You may p | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Thassa's Rebuff | silent | Counter target spell unless its controller pays {X}, where X is your devotion to blue. (Each {U} in the mana costs of permanents you control counts toward your  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Thunderous Might | silent | Whenever enchanted creature attacks, it gets +X/+0 until end of turn, where X is your devotion to red. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Vortex Elemental | silent | {U}: Put this creature and each creature blocking or blocked by it on top of their owners' libraries, then those players shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Whelming Wave | silent | Return all creatures to their owners' hands except for Krakens, Leviathans, Octopuses, and Serpents. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Whims of the Fates | silent | Starting with you, each player separates all permanents they control into three piles. Then each player chooses one of their piles at random and sacrifices thos | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Aspect of Hydra | notice | Target creature gets +X/+X until end of turn, where X is your devotion to green. (Each {G} in the mana costs of permanents you control counts toward your devoti | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Crypsis | notice | Target creature you control gains protection from creatures your opponents control until end of turn. Untap it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Everflame Eidolon | notice | {R}: This creature gets +1/+0 until end of turn. If it's an Aura, enchanted creature gets +1/+0 until end of turn instead. | unparsed remainder: If it's an Aura, enchanted creature gets +1/+0 until end of turn instead. | Y/Y/- | not_working |
 | Eye Gouge | notice | Target creature gets -1/-1 until end of turn. If it's a Cyclops, destroy it. | unparsed remainder: If it's a Cyclops, destroy it. | Y/Y/- | not_working |
@@ -144,6 +139,7 @@
 | Siren of the Fanged Coast | handled | When this creature enters, if tribute wasn't paid, gain control of target creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Siren of the Silent Song | handled | Inspired — Whenever this creature becomes untapped, each opponent discards a card, then each opponent mills a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Sphinx's Disciple | handled | Inspired — Whenever this creature becomes untapped, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Spiteful Returned | handled | Whenever this creature or enchanted creature attacks, defending player loses 2 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Stormcaller of Keranos | handled | {1}{U}: Scry 1. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Sunbond | handled | Enchanted creature has "Whenever you gain life, put that many +1/+1 counters on this creature." | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Swordwise Centaur | handled |  |  | Y/Y/- | not_tested |
@@ -158,10 +154,11 @@
 ## Fully supported
 
 <details>
-<summary>32 cards</summary>
+<summary>36 cards</summary>
 
 - Acolyte's Reward
 - Archetype of Endurance
+- Aspect of Hydra
 - Courser of Kruphix
 - Deepwater Hypnotist
 - Ephara's Enlightenment
@@ -181,6 +178,7 @@
 - Ornitharch
 - Pain Seer
 - Ragemonger
+- Sanguimancy
 - Satyr Firedancer
 - Satyr Wayfinder
 - Searing Blood
@@ -190,6 +188,8 @@
 - Spirit of the Labyrinth
 - Stratus Walk
 - Temple of Enlightenment
+- Thassa's Rebuff
+- Thunderous Might
 - Tromokratis
 - Xenagos, God of Revels
 
@@ -204,7 +204,6 @@
 | +N: until your next turn, prevent all damage that would be dealt to and dealt by target permanent an opponent controls. | 1 | Kiora, the Crashing Wave | bng |
 | as long as ~ is enchanted, it can attack as though it didn't have defender. | 1 | Pillar of War | bng |
 | at the beginning of each opponent's upkeep, mogis deals N damage to that player unless they sacrifice a creature of their choice. | 1 | Mogis, God of Slaughter | bng |
-| counter target spell unless its controller pays {M}, where N is your devotion to blue. (each {M} in the mana costs of permanents you control counts toward your  | 1 | Thassa's Rebuff | bng |
 | create two N/N green centaur enchantment creature tokens. if it's your turn, scry N. | 1 | Fated Intervention | bng |
 | creatures your opponents control lose deathtouch and can't have or gain deathtouch. | 1 | Archetype of Finality | bng |
 | creatures your opponents control lose first strike and can't have or gain first strike. | 1 | Archetype of Courage | bng |
@@ -217,16 +216,12 @@
 | search your library for up to two basic land cards, reveal those cards, and put one onto the battlefield tapped and the other into your hand. shuffle, then scry | 1 | Peregrination | bng |
 | starting with you, each player separates all permanents they control into three piles. then each player chooses one of their piles at random and sacrifices thos | 1 | Whims of the Fates | bng |
 | tap up to two target creatures. those creatures don"..." next untap steps. scry N. (look at the top card of your library. you may put that card on the bottom.) | 1 | Sudden Storm | bng |
-| target creature gets +N/+N until end of turn, where N is your devotion to green. (each {M} in the mana costs of permanents you control counts toward your devoti | 1 | Aspect of Hydra | bng |
 | target creature gets -N/-N until end of turn. if it's a cyclops, destroy it. | 1 | Eye Gouge | bng |
 | target creature you control gains protection from creatures your opponents control until end of turn. untap it. | 1 | Crypsis | bng |
 | until end of turn, target creature gains "..." | 1 | Retraction Helix | bng |
 | when ~ enters, if tribute wasn"..."s hand." | 1 | Flame-Wreathed Phoenix | bng |
 | whenever an opponent casts a spell, you may exchange control of ~ and that spell. if you do, you may choose new targets for the spell. | 1 | Perplexing Chimera | bng |
 | whenever brimaz attacks, create a N/N white cat soldier creature token with vigilance that's attacking. | 1 | Brimaz, King of Oreskos | bng |
-| whenever enchanted creature attacks, it gets +N/+N until end of turn, where N is your devotion to red. | 1 | Thunderous Might | bng |
-| whenever ~ or enchanted creature attacks, defending player loses N life. | 1 | Spiteful Returned | bng |
-| you draw N cards and you lose N life, where N is your devotion to black. (each {M} in the mana costs of permanents you control counts toward your devotion to bl | 1 | Sanguimancy | bng |
 | {M}: put ~ and each creature blocking or blocked by it on top of their owners' libraries, then those players shuffle. | 1 | Vortex Elemental | bng |
 | {M}: ~ gets +N/+N until end of turn. if it's an aura, enchanted creature gets +N/+N until end of turn instead. | 1 | Everflame Eidolon | bng |
 | ~ and enchanted creature each get +N/+N for each creature you control and +N/+N for each aura you control. | 1 | Eidolon of Countless Battles | bng |

@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 55 | 20.1% |
-| Works (untested) | 156 | 56.9% |
+| Tested | 57 | 20.8% |
+| Works (untested) | 157 | 57.3% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 63 | 23.0% |
+| Not working | 60 | 21.9% |
 
 ## Cards needing work
 
@@ -32,7 +32,6 @@
 | Blex, Vexing Pest // Search for Blex | silent | Look at the top five cards of your library. You may put any number of them into your hand and the rest into your graveyard. You lose 3 life for each card you pu | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Blood Age General | silent | {T}: Attacking Spirits get +1/+0 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Blot Out the Sky | silent | Create X tapped 2/1 white and black Inkling creature tokens with flying. If X is 6 or more, destroy all noncreature, nonland permanents. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Bury in Books | silent | This spell costs {2} less to cast if it targets an attacking creature. Put target creature into its owner's library second from the top. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Conspiracy Theorist | silent | Whenever this creature attacks, you may pay {1} and discard a card. If you do, draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Containment Breach | silent | Destroy target artifact or enchantment. If its mana value is 2 or less, create a 1/1 black and green Pest creature token with "When this token dies, you gain 1  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Deadly Brew | silent | Each player sacrifices a creature or planeswalker of their choice. If you sacrificed a permanent this way, you may return another permanent card from your grave | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -68,7 +67,6 @@
 | Shaile, Dean of Radiance // Embrose, Dean of Shadow | silent | {T}: Put a +1/+1 counter on each creature that entered the battlefield under your control this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Stonebinder's Familiar | silent | Whenever one or more cards are put into exile during your turn, put a +1/+1 counter on this creature. This ability triggers only once each turn. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Strict Proctor | silent | Whenever a permanent entering causes a triggered ability to trigger, counter that ability unless its controller pays {2}. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
-| Tanazir Quandrix | silent | When Tanazir Quandrix enters, double the number of +1/+1 counters on target creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Teachings of the Archaics | silent | If an opponent has more cards in hand than you, draw two cards. Draw three cards instead if an opponent has at least four more cards in hand than you. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Tempted by the Oriq | silent | For each opponent, gain control of up to one target creature or planeswalker that player controls with mana value 3 or less. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Test of Talents | silent | Counter target instant or sorcery spell. Search its controller's graveyard, hand, and library for any number of cards with the same name as that spell and exile | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -81,7 +79,6 @@
 | Wandering Archaic // Explore the Vastlands | silent | Each player looks at the top five cards of their library and may reveal a land card and/or an instant or sorcery card from among them. Each player puts the card | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Academic Probation | notice | Choose one — • Choose a nonland card name. Opponents can't cast spells with the chosen name until your next turn. • Choose target nonland permanent. Until your  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Ardent Dustspeaker | notice | Whenever this creature attacks, you may put an instant or sorcery card from your graveyard on the bottom of your library. If you do, exile the top two cards of  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Confront the Past | notice | Choose one — • Return target planeswalker card with mana value X or less from your graveyard to the battlefield. • Remove twice X loyalty counters from target p | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Emergent Sequence | notice | Search your library for a basic land card, put it onto the battlefield tapped, then shuffle. That land becomes a 0/0 green and blue Fractal creature that's stil | unparsed remainder: Search your library for a basic land card, put it onto the battlefield tapped, then shuffle. Put a +1/+1 counter on it for each land you had enter the battlefield under your control this turn. | Y/Y/- | not_working |
 | Flunk | notice | Target creature gets -X/-X until end of turn, where X is 7 minus the number of cards in that creature's controller's hand. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Prismari Apprentice | notice | Magecraft — Whenever you cast or copy an instant or sorcery spell, this creature can't be blocked this turn. If that spell has mana value 5 or greater, put a +1 | unparsed remainder: If that spell has mana value 5 or greater, put a +1/+1 counter on this creature. | Y/Y/- | not_working |
@@ -105,6 +102,7 @@
 | Blade Historian | handled | Attacking creatures you control have double strike. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Blood Researcher | handled | Whenever you gain life, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Bookwurm | handled | When this creature enters, you gain 3 life and draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Bury in Books | handled | This spell costs {2} less to cast if it targets an attacking creature. Put target creature into its owner's library second from the top. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Callous Bloodmage | handled | When this creature enters, choose one — • Create a 1/1 black and green Pest creature token with "When this token dies, you gain 1 life." • You draw a card and y | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Campus Guide | handled | When this creature enters, you may search your library for a basic land card, reveal it, then shuffle and put that card on top. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Charge Through | handled | Target creature gains trample until end of turn. Draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -249,7 +247,7 @@
 ## Fully supported
 
 <details>
-<summary>55 cards</summary>
+<summary>57 cards</summary>
 
 - Academic Dispute
 - Bayou Groff
@@ -259,6 +257,7 @@
 - Closing Statement
 - Codie, Vociferous Codex
 - Cogwork Archivist
+- Confront the Past
 - Crackle with Power
 - Culling Ritual
 - Culmination of Studies
@@ -299,6 +298,7 @@
 - Show of Confidence
 - Snow Day
 - Spectacle Mage
+- Tanazir Quandrix
 - Tend the Pests
 - Thrilling Discovery
 - Torrent Sculptor // Flamethrower Sonata
@@ -314,7 +314,7 @@
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
 | Magecraft | 3 | Elemental Expressionist, Prismari Apprentice, Prismari Pledgemage | stx |
-| Choose one | 2 | Academic Probation, Confront the Past | stx |
+| Choose one | 1 | Academic Probation | stx |
 | Choose two | 1 | Quandrix Command | stx |
 | +N: up to one target creature has base power and toughness N/N until your next turn. | 1 | Rowan, Scholar of Sparks // Will, Scholar of Frost | stx |
 | +N: you may discard a card. if you do, draw a card. if a creature card was discarded ~, draw two cards instead. | 1 | Mila, Crafty Companion // Lukka, Wayward Bonder | stx |
@@ -347,7 +347,6 @@
 | target opponent reveals their hand. you choose a nonland card from it. that player discards that card. put a +N/+N counter on a creature you control. | 1 | Humiliate | stx |
 | until end of turn, double target creature's power N times. | 1 | Exponential Growth | stx |
 | until end of turn, target nonland permanent loses all abilities and becomes your choice of a blue frog creature with base power and toughness N/N or a blue octo | 1 | Mercurial Transformation | stx |
-| when ~ enters, double the number of +N/+N counters on target creature you control. | 1 | Tanazir Quandrix | stx |
 | when ~ enters, sacrifice it unless you pay {M}. | 1 | Archway Commons | stx |
 | whenever a creature you control deals combat damage to an opponent, put a point counter on ~. then if it has ten or more point counters on it, remove them all a | 1 | Strixhaven Stadium | stx |
 | whenever a permanent entering causes a triggered ability to trigger, counter that ability unless its controller pays {M}. | 1 | Strict Proctor | stx |
@@ -371,7 +370,6 @@
 | {M}: search your library for a card, put it into your graveyard, then shuffle. if it's an instant or sorcery card, put a +N/+N counter on ~. | 1 | Oriq Loremage | stx |
 | {M}: you may cast target instant or sorcery card from your graveyard ~. if that spell doesn't target a creature you control, it costs {M} more to cast ~. if tha | 1 | Mavinda, Students' Advocate | stx |
 | {M}{M}: double ~ power and toughness until end of turn. | 1 | Reckless Amplimancer | stx |
-| ~ costs {M} less to cast if it targets an attacking creature. put target creature into its owner's library second from the top. | 1 | Bury in Books | stx |
 | −N: each opponent may discard a card. if they don't, they lose N life. repeat ~ six more times. | 1 | Professor Onyx | stx |
 
 ## Notes

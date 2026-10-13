@@ -17,17 +17,16 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 56 | 21.9% |
+| Tested | 59 | 23.0% |
 | Works (untested) | 145 | 56.6% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 55 | 21.5% |
+| Not working | 52 | 20.3% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
 | Alacrian Armory | silent | At the beginning of combat on your turn, choose up to one target Mount or Vehicle you control. Until end of turn, that permanent becomes saddled if it's a Mount | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Ancient Vendetta | silent | Choose a card name. Search target opponent's graveyard, hand, and library for up to four cards with that name and exile them. Then that player shuffles. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Brightfield Mustang | silent | Whenever this creature attacks while saddled, untap it and put a +1/+1 counter on it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Canyon Vaulter | silent | Whenever this creature saddles a Mount or crews a Vehicle during your main phase, that Mount or Vehicle gains flying until end of turn. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
 | Carrion Cruiser | silent | When this Vehicle enters, mill two cards. Then return a creature or Vehicle card from your graveyard to your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -58,7 +57,6 @@
 | Reckless Velocitaur | silent | Whenever this creature saddles a Mount or crews a Vehicle during your main phase, that Mount or Vehicle gets +2/+0 and gains trample until end of turn. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
 | Rise from the Wreck | silent | Return up to one target creature card, up to one target Mount card, up to one target Vehicle card, and up to one target creature card with no abilities from you | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Riverchurn Monument | silent | {1}, {T}: Any number of target players each mill two cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Sita Varma, Masked Racer | silent | Exhaust — {X}{G}{G}{U}: Put X +1/+1 counters on Sita Varma. Then you may have the base power and toughness of each other creature you control become equal to Si | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Spectacular Pileup | silent | All creatures and Vehicles lose indestructible until end of turn, then destroy all creatures and Vehicles. Cycling {2} ({2}, Discard this card: Draw a card.) | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Spikeshell Harrier | silent | When this creature enters, return target creature or Vehicle an opponent controls to its owner's hand. If that opponent's speed is greater than each other playe | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | The Speed Demon | silent | At the beginning of your end step, you draw X cards and lose X life, where X is your speed. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -71,7 +69,6 @@
 | Winter, Cursed Rider | silent | Exhaust — {2}{U}{B}, {T}, Exile X artifact cards from your graveyard: Each other nonartifact creature gets -X/-X until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Brightglass Gearhulk | notice | When this creature enters, you may search your library for up to two artifact, creature, and/or enchantment cards with mana value 1 or less, reveal them, put th | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Crash and Burn | notice | Choose one — • Destroy target Vehicle. • Crash and Burn deals 6 damage to target creature or planeswalker. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Demonic Junker | notice | When this Vehicle enters, for each player, destroy up to one target creature that player controls. If a creature you controlled was destroyed this way, put two  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Gastal Blockbuster | notice | When this creature enters, you may sacrifice a creature or Vehicle. When you do, destroy target artifact an opponent controls. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Grim Javelineer | notice | Whenever you attack, target attacking creature gets +1/+0 until end of turn. When that creature dies this turn, surveil 1. | unparsed remainder: When that creature dies this turn, surveil 1. | Y/Y/Y | not_working |
 | Oildeep Gearhulk | notice | When this creature enters, look at target player's hand. You may choose a card from it. If you do, that player discards that card, then draws a card. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
@@ -230,9 +227,10 @@
 ## Fully supported
 
 <details>
-<summary>56 cards</summary>
+<summary>59 cards</summary>
 
 - Aatchik, Emerald Radian
+- Ancient Vendetta
 - Bleachbone Verge
 - Boom Scholar
 - Boommobile
@@ -245,6 +243,7 @@
 - Country Roads
 - Daretti, Rocketeer Engineer
 - Deathless Pilot
+- Demonic Junker
 - Dynamite Diver
 - Elvish Refueler
 - Endrider Catalyzer
@@ -276,6 +275,7 @@
 - Sab-Sunen, Luxa Embodied
 - Samut, the Driving Force
 - Shefet Archfiend
+- Sita Varma, Masked Racer
 - Skyseer's Chariot
 - Skyserpent Seeker
 - Stock Up
@@ -295,7 +295,7 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| Exhaust | 4 | Mindspring Merfolk, Sita Varma, Masked Racer, Spire Mechcycle, Winter, Cursed Rider | dft |
+| Exhaust | 3 | Mindspring Merfolk, Spire Mechcycle, Winter, Cursed Rider | dft |
 | Choose one | 1 | Crash and Burn | dft |
 | Max speed | 1 | Racers' Scoreboard | dft |
 | after ~ phase, there are two additional combat phases. at the beginning of each combat ~, untap all creatures that attacked ~. | 1 | Full Throttle | dft |
@@ -305,7 +305,6 @@
 | at the beginning of combat on your turn, create a N/N red goblin creature token. that token attacks ~ if able. | 1 | Howlsquad Heavy | dft |
 | at the beginning of your end step, untap each creature you control. | 1 | Veteran Beastrider | dft |
 | at the beginning of your end step, you draw N cards and lose N life, where N is your speed. | 1 | The Speed Demon | dft |
-| choose a card name. search target opponent's graveyard, hand, and library for up to four cards with that name and exile them. then that player shuffles. | 1 | Ancient Vendetta | dft |
 | choose target creature, planeswalker, or vehicle. mill two cards, then destroy the chosen permanent if its mana value is less than or equal to the number of car | 1 | Quag Feast | dft |
 | during turns other than yours, ~ is an artifact creature. | 1 | Midnight Mangler | dft |
 | each creature that's attacking one of your opponents has trample. | 1 | Oviya, Automech Artisan | dft |
@@ -321,7 +320,6 @@
 | when ~ enters, each opponent sacrifices a creature or vehicle of their choice. each opponent who can't discards a card. | 1 | Momentum Breaker | dft |
 | when ~ enters, exile target artifact or creature an opponent controls until ~ leaves the battlefield. | 1 | Detention Chariot | dft |
 | when ~ enters, for each opponent, put up to one target nonland permanent that player controls into its owner's library third from the top. | 1 | Riptide Gearhulk | dft |
-| when ~ enters, for each player, destroy up to one target creature that player controls. if a creature you controlled was destroyed ~, put two +N/+N counters on  | 1 | Demonic Junker | dft |
 | when ~ enters, gain control of target creature an opponent controls for as long as you control ~. that creature can't attack or block for as long as you control | 1 | Possession Engine | dft |
 | when ~ enters, look at target player's hand. you may choose a card from it. if you do, that player discards that card, then draws a card. | 1 | Oildeep Gearhulk | dft |
 | when ~ enters, mill two cards. then return a creature or vehicle card from your graveyard to your hand. | 1 | Carrion Cruiser | dft |

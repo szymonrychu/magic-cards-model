@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 34 | 21.0% |
-| Works (untested) | 87 | 53.7% |
+| Tested | 38 | 23.5% |
+| Works (untested) | 88 | 54.3% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 41 | 25.3% |
+| Not working | 36 | 22.2% |
 
 ## Cards needing work
 
@@ -29,15 +29,12 @@
 | Braids, Conjurer Adept | silent | At the beginning of each player's upkeep, that player may put an artifact, creature, or land card from their hand onto the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Dichotomancy | silent | For each tapped nonland permanent target opponent controls, search that player's library for a card with the same name as that permanent. Put those cards onto t | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Dismal Failure | silent | Counter target spell. Its controller discards a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Erratic Mutation | silent | Choose target creature. Reveal cards from the top of your library until you reveal a nonland card. That creature gets +X/-X until end of turn, where X is that c | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Extirpate | silent | Split second (As long as this spell is on the stack, players can't cast spells or activate abilities that aren't mana abilities.) Choose target card in a gravey | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Fa'adiyah Seer | silent | {T}: Draw a card and reveal it. If it isn't a land card, discard it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Hunting Wilds | silent | Kicker {3}{G} (You may pay an additional {3}{G} as you cast this spell.) Search your library for up to two Forest cards, put them onto the battlefield tapped, t | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Imp's Mischief | silent | Change the target of target spell with a single target. You lose life equal to that spell's mana value. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Intet, the Dreamer | silent | Whenever Intet deals combat damage to a player, you may pay {2}{U}. If you do, exile the top card of your library face down. You may look at that card for as lo | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Jodah's Avenger | silent | {0}: Until end of turn, this creature gets -1/-1 and gains your choice of double strike, protection from red, vigilance, or shadow. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Life and Limb | silent | All Forests and all Saprolings are 1/1 green Saproling creatures and Forest lands in addition to their other types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Mantle of Leadership | silent | Whenever a creature enters, enchanted creature gets +2/+2 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Melancholy | silent | At the beginning of your upkeep, sacrifice this Aura unless you pay {B}. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Merfolk Thaumaturgist | silent | {T}: Switch target creature's power and toughness until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Null Profusion | silent | Whenever you play a card, draw a card. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
@@ -52,7 +49,6 @@
 | Shaper Parasite | silent | When this creature is turned face up, target creature gets +2/-2 or -2/+2 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Shivan Wumpus | silent | When this creature enters, any player may sacrifice a land of their choice. If a player does, put this creature on top of its owner's library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Shrouded Lore | silent | Target opponent chooses a card in your graveyard. You may pay {B}. If you do, repeat this process except that opponent can't choose a card already chosen for Sh | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Sophic Centaur | silent | {2}{G}{G}, {T}, Discard a card: You gain 2 life for each card in your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Spellshift | silent | Counter target instant or sorcery spell. Its controller reveals cards from the top of their library until they reveal an instant or sorcery card. That player ma | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Stormfront Riders | silent | Whenever this creature or another creature is returned to your hand from the battlefield, create a 1/1 white Soldier creature token. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Tidewalker | silent | Tidewalker's power and toughness are each equal to the number of time counters on it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -61,7 +57,6 @@
 | Veiling Oddity | silent | When the last time counter is removed from this card while it's exiled, creatures can't be blocked this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Venarian Glimmer | silent | Target player reveals their hand. You choose a nonland card with mana value X or less from it. That player discards that card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Wild Pair | silent | Whenever a creature enters, if you cast it from your hand, you may search your library for a creature card with the same total power and toughness, put it onto  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Fatal Frenzy | notice | Until end of turn, target creature you control gains trample and gets +X/+0, where X is its power. Sacrifice it at the beginning of the next end step. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Magus of the Arena | notice | {3}, {T}: Tap target creature you control and target creature of an opponent's choice they control. Those creatures fight each other. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Molten Firebird | notice | When this creature dies, return it to the battlefield under its owner's control at the beginning of the next end step and you skip your next draw step. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Pongify | notice | Destroy target creature. It can't be regenerated. Its controller creates a 3/3 green Ape creature token. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
@@ -111,6 +106,7 @@
 | Magus of the Bazaar | handled | {T}: Draw two cards, then discard three cards. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Magus of the Coffers | handled |  |  | Y/-/- | not_tested |
 | Malach of the Dawn | handled | {W}{W}{W}: Regenerate this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Mantle of Leadership | handled | Whenever a creature enters, enchanted creature gets +2/+2 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Mesa Enchantress | handled | Whenever you cast an enchantment spell, you may draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Midnight Charm | handled | Choose one — • Midnight Charm deals 1 damage to target creature and you gain 1 life. • Target creature gains first strike until end of turn. • Tap target creatu | the engine reads this text and performs it | Y/-/- | not_tested |
 | Mire Boa | handled | {G}: Regenerate this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -158,7 +154,7 @@
 ## Fully supported
 
 <details>
-<summary>34 cards</summary>
+<summary>38 cards</summary>
 
 - Aeon Chronicler
 - Aether Membrane
@@ -175,9 +171,12 @@
 - Detritivore
 - Dunerider Outlaw
 - Enslave
+- Erratic Mutation
+- Fatal Frenzy
 - Frozen Aether
 - Fungal Behemoth
 - Harmonize
+- Imp's Mischief
 - Kor Dirge
 - Magus of the Library
 - Magus of the Tabernacle
@@ -189,6 +188,7 @@
 - Roiling Horror
 - Rough // Tumble
 - Skirk Shaman
+- Sophic Centaur
 - Sunlance
 - Temporal Extortion
 - Urborg, Tomb of Yawgmoth
@@ -206,8 +206,6 @@
 | at the beginning of each player's upkeep, that player may put an artifact, creature, or land card from their hand onto the battlefield. | 1 | Braids, Conjurer Adept | plc |
 | at the beginning of your upkeep, destroy the creature with the least power. it can't be regenerated. if two or more creatures are tied for least power, you choo | 1 | Porphyry Nodes | plc |
 | at the beginning of your upkeep, sacrifice ~ unless you pay {M}. | 1 | Melancholy | plc |
-| change the target of target spell with a single target. you lose life equal to that spell's mana value. | 1 | Imp's Mischief | plc |
-| choose target creature. reveal cards from the top of your library until you reveal a nonland card. that creature gets +N/-N until end of turn, where N is that c | 1 | Erratic Mutation | plc |
 | counter target instant or sorcery spell. its controller reveals cards from the top of their library until they reveal an instant or sorcery card. that player ma | 1 | Spellshift | plc |
 | counter target spell that targets a permanent you control. | 1 | Rebuff the Wicked | plc |
 | counter target spell. its controller discards a card. | 1 | Dismal Failure | plc |
@@ -222,7 +220,6 @@
 | target opponent reveals their hand. you may put a creature card from it onto the battlefield under your control. that creature gains haste. sacrifice it at the  | 1 | Treacherous Urge | plc |
 | target player reveals their hand. you choose a nonland card with mana value N or less from it. that player discards that card. | 1 | Venarian Glimmer | plc |
 | until end of turn, target creature loses all abilities and has base power and toughness N/N. | 1 | Ovinize | plc |
-| until end of turn, target creature you control gains trample and gets +N/+N, where N is its power. sacrifice it at the beginning of the next end step. | 1 | Fatal Frenzy | plc |
 | when the last time counter is removed from ~ while it"..."t be blocked ~. | 1 | Veiling Oddity | plc |
 | when the last time counter is removed from ~ while it's exiled, create a N/N black knight creature token with flanking, protection from white, and haste. | 1 | Riftmarked Knight | plc |
 | when ~ dies, return it to the battlefield under its owner's control at the beginning of the next end step and you skip your next draw step. | 1 | Molten Firebird | plc |
@@ -230,7 +227,6 @@
 | when ~ enters, tap all other creatures. | 1 | Timbermare | plc |
 | when ~ is turned face up, target creature gets +N/-N or -N/+N until end of turn. | 1 | Shaper Parasite | plc |
 | when ~ leaves the battlefield, enchanted permanent's controller sacrifices it. | 1 | Reality Acid | plc |
-| whenever a creature enters, enchanted creature gets +N/+N until end of turn. | 1 | Mantle of Leadership | plc |
 | whenever a creature enters, if you cast it from your hand, you may search your library for a creature card with the same total power and toughness, put it onto  | 1 | Wild Pair | plc |
 | whenever enchanted creature deals damage, you gain that much life. | 1 | Vampiric Link | plc |
 | whenever intet deals combat damage to a player, you may pay {M}{M}. if you do, exile the top card of your library face down. you may look at that card for as lo | 1 | Intet, the Dreamer | plc |
@@ -240,7 +236,6 @@
 | {M}: draw a card and reveal it. if it isn't a land card, discard it. | 1 | Fa'adiyah Seer | plc |
 | {M}: switch target creature's power and toughness until end of turn. | 1 | Merfolk Thaumaturgist | plc |
 | {M}: until end of turn, ~ gets -N/-N and gains your choice of double strike, protection from red, vigilance, or shadow. | 1 | Jodah's Avenger | plc |
-| {M}{M}{M}, {M}, discard a card: you gain N life for each card in your hand. | 1 | Sophic Centaur | plc |
 | ~'s power and toughness are each equal to the number of time counters on it. | 1 | Tidewalker | plc |
 
 ## Notes

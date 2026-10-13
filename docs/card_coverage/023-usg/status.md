@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 23 | 34.8% |
-| Works (untested) | 35 | 53.0% |
+| Works (untested) | 36 | 54.5% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 8 | 12.1% |
+| Not working | 7 | 10.6% |
 
 ## Cards needing work
 
@@ -31,7 +31,6 @@
 | No Rest for the Wicked | silent | Sacrifice this enchantment: Return to your hand all creature cards in your graveyard that were put there from the battlefield this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Persecute | silent | Choose a color. Target player reveals their hand and discards all cards of that color. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Rewind | silent | Counter target spell. Untap up to four lands. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Shiv's Embrace | silent | {R}: Enchanted creature gets +1/+0 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sleeper Agent | silent | When this creature enters, target opponent gains control of it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Victimize | silent | Choose two target creature cards in your graveyard. Sacrifice a creature. If you do, return the chosen cards to the battlefield tapped. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Angelic Chorus | handled | Whenever a creature you control enters, you gain life equal to its toughness. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -62,6 +61,7 @@
 | Scoria Wurm | handled | At the beginning of your upkeep, flip a coin. If you lose the flip, return this creature to its owner's hand. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Serra Avatar | handled | Serra Avatar's power and toughness are each equal to your life total. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Serra's Embrace | handled | Enchanted creature gets +2/+2 and has flying and vigilance. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Shiv's Embrace | handled | Enchanted creature gets +2/+2 and has flying. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Shivan Hellkite | handled | {1}{R}: This creature deals 1 damage to any target. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Skirge Familiar | handled | Flying | machines/combat.py | Y/-/- | not_tested |
 | Thundering Giant | handled | Haste | machines/combat.py | Y/Y/- | not_tested |
@@ -112,7 +112,6 @@
 | when ~ enters, target opponent gains control of it. | 1 | Sleeper Agent | usg |
 | when ~ enters, you may put an aura card from your hand onto the battlefield attached to ~. | 1 | Academy Researchers | usg |
 | whenever a creature dies, that creature's controller may draw a card. | 1 | Fecundity | usg |
-| {M}: enchanted creature gets +N/+N until end of turn. | 1 | Shiv's Embrace | usg |
 
 ## Notes
 

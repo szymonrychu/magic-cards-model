@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 22 | 12.2% |
-| Works (untested) | 134 | 74.4% |
+| Works (untested) | 135 | 75.0% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 24 | 13.3% |
+| Not working | 23 | 12.8% |
 
 ## Cards needing work
 
@@ -29,7 +29,6 @@
 | Amulet of Safekeeping | silent | Whenever you become the target of a spell or ability an opponent controls, counter that spell or ability unless its controller pays {1}. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Apex of Power | silent | Exile the top seven cards of your library. Until end of turn, you may cast spells from among them. If this spell was cast from your hand, add ten mana of any on | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Arcades, the Strategist | silent | Whenever a creature you control with defender enters, draw a card. | this trigger's condition can never be satisfied - it never triggers | Y/Y/- | not_working |
-| Chromium, the Mutable | silent | Discard a card: Until end of turn, Chromium becomes a Human with base power and toughness 1/1, loses all abilities, and gains hexproof. It can't be blocked this | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Desecrated Tomb | silent | Whenever one or more creature cards leave your graveyard, create a 1/1 black Bat creature token with flying. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Detection Tower | silent | {1}, {T}: Until end of turn, your opponents and creatures your opponents control with hexproof can be the targets of spells and abilities you control as though  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Dryad Greenseeker | silent | {T}: Look at the top card of your library. If it's a land card, you may reveal it and put it into your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -72,6 +71,7 @@
 | Bristling Boar | handled | This creature can't be blocked by more than one creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Catalyst Elemental | handled |  |  | Y/Y/- | not_tested |
 | Cavalry Drillmaster | handled | When this creature enters, target creature gets +2/+0 and gains first strike until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Chromium, the Mutable | handled | This spell can't be countered. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Colossal Majesty | handled | At the beginning of your upkeep, if you control a creature with power 4 or greater, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Court Cleric | handled | This creature gets +1/+1 as long as you control an Ajani planeswalker. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Dark-Dweller Oracle | handled | {1}, Sacrifice a creature: Exile the top card of your library. You may play that card this turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -224,7 +224,6 @@
 | N: until your next turn, target artifact you control becomes a N/N creature in addition to its other types. | 1 | Tezzeret, Cruel Machinist | m19 |
 | as long as ~ is enchanted or equipped, it can attack as though it didn't have defender. | 1 | Novice Knight | m19 |
 | at the beginning of each end step, if ~ attacked or blocked ~, its owner shuffles it into their library. | 1 | Inferno Hellion | m19 |
-| discard a card: until end of turn, chromium becomes a human with base power and toughness N/N, loses all abilities, and gains hexproof. it can't be blocked ~. | 1 | Chromium, the Mutable | m19 |
 | each player loses half their life, then discards half the cards in their hand, then sacrifices half the creatures they control of their choice. round up each ti | 1 | Fraying Omnipotence | m19 |
 | exile the top seven cards of your library. until end of turn, you may cast spells from among them. if ~ was cast from your hand, add ten mana of any one color. | 1 | Apex of Power | m19 |
 | look at the top seven cards of your library. you may put a creature card from among them onto the battlefield. put the rest on the bottom of your library in a r | 1 | Vivien's Invocation | m19 |

@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 37 | 16.4% |
-| Works (untested) | 163 | 72.4% |
+| Works (untested) | 164 | 72.9% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 25 | 11.1% |
+| Not working | 24 | 10.7% |
 
 ## Cards needing work
 
@@ -50,7 +50,6 @@
 | Ride Down | notice | Destroy target blocking creature. Creatures that were blocked by that creature this combat gain trample until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Rite of the Serpent | notice | Destroy target creature. If that creature had a +1/+1 counter on it, create a 1/1 green Snake creature token. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Temur Charm | notice | Choose one — • Target creature you control gets +1/+1 until end of turn. It fights target creature you don't control. • Counter target spell unless its controll | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Villainous Wealth | notice | Target opponent exiles the top X cards of their library. You may cast any number of spells with mana value X or less from among them without paying their mana c | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Abomination of Gudul | handled | Whenever this creature deals combat damage to a player, you may draw a card. If you do, discard a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Abzan Ascendancy | handled | When this enchantment enters, put a +1/+1 counter on each creature you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Abzan Banner | handled | {W}{B}{G}, {T}, Sacrifice this artifact: Draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -202,6 +201,7 @@
 | Unyielding Krumar | handled | {1}{W}: This creature gains first strike until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Valley Dasher | handled | This creature attacks each combat if able. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Venerable Lammasu | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
+| Villainous Wealth | handled | Target opponent exiles the top X cards of their library. You may cast any number of spells with mana value X or less from among them without paying their mana c | the engine reads this text and performs it | Y/Y/- | not_tested |
 | War Behemoth | handled | Morph | machines/casting.py | Y/Y/- | not_tested |
 | Warden of the Eye | handled | When this creature enters, return target noncreature, nonland card from your graveyard to your hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Watcher of the Roost | handled | When this creature is turned face up, you gain 2 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -279,7 +279,6 @@
 | return target creature to its owner's hand. ferocious — if you control a creature with power N or greater, you may draw a card. if you do, discard a card. | 1 | Force Away | ktk |
 | reveal the top eight cards of your library. you may put a creature card from among them onto the battlefield. put the rest into your graveyard. ferocious — if y | 1 | See the Unwritten | ktk |
 | tap N target creatures. ferocious — if you control a creature with power N or greater, those creatures don"..." next untap steps. | 1 | Icy Blast | ktk |
-| target opponent exiles the top N cards of their library. you may cast any number of spells with mana value N or less from among them without paying their mana c | 1 | Villainous Wealth | ktk |
 | when you next cast an instant or sorcery spell ~, copy that spell. you may choose new targets for the copy. raid — if you attacked ~, when you next cast an inst | 1 | Howl of the Horde | ktk |
 | when ~ dies, return it to the battlefield face down under your control. | 1 | Ashcloud Phoenix | ktk |
 | when ~ is turned face up, look at target opponent's hand. | 1 | Dragon's Eye Savants | ktk |

@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 76 | 28.3% |
+| Tested | 77 | 28.6% |
 | Works (untested) | 146 | 54.3% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 47 | 17.5% |
+| Not working | 46 | 17.1% |
 
 ## Cards needing work
 
@@ -37,7 +37,6 @@
 | Dance of the Manse | silent | Return up to X target artifact and/or non-Aura enchantment cards each with mana value X or less from your graveyard to the battlefield. If X is 6 or more, those | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Doom Foretold | silent | At the beginning of each player's upkeep, that player sacrifices a nonland, nontoken permanent of their choice. If that player can't, they discard a card, they  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Escape to the Wilds | silent | Exile the top five cards of your library. You may play cards exiled this way until the end of your next turn. You may play an additional land this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Faeburrow Elder | silent | {T}: For each color among permanents you control, add one mana of that color. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ferocity of the Wilds | silent | Attacking non-Human creatures you control get +1/+0 and have trample. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Gingerbrute | silent | {1}: This creature can't be blocked this turn except by creatures with haste. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Gluttonous Troll | silent | When this creature enters, create a number of Food tokens equal to the number of opponents you have. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -223,7 +222,7 @@
 ## Fully supported
 
 <details>
-<summary>76 cards</summary>
+<summary>77 cards</summary>
 
 - Archon of Absolution
 - Ardenvale Paladin
@@ -246,6 +245,7 @@
 - Emry, Lurker of the Loch
 - Fabled Passage
 - Fae of Wishes // Granted
+- Faeburrow Elder
 - Faerie Vandal
 - Fervent Champion
 - Fires of Invention
@@ -349,7 +349,6 @@
 | you may sacrifice a food. if you do, target creature gets +N/+N until end of turn. otherwise, that creature gets +N/+N until end of turn. | 1 | Insatiable Appetite | eld |
 | you may sacrifice two foods. if you do, create a N/N green giant creature token. otherwise, create three food tokens. (they're artifacts with "...") | 1 | Giant Opportunity | eld |
 | {M}, {M}, remove a wish counter from ~: search your library for a card, put it into your hand, then shuffle. an opponent gains control of ~. activate only durin | 1 | Wishclaw Talisman | eld |
-| {M}: for each color among permanents you control, add one mana of that color. | 1 | Faeburrow Elder | eld |
 | {M}: ~ can't be blocked ~ except by creatures with haste. | 1 | Gingerbrute | eld |
 | {M}: ~ gets +N/+N and gains trample until end of turn. it can attack ~ as though it didn't have defender. | 1 | Roving Keep | eld |
 | {M}{M}: ~ loses defender and becomes a human until end of turn. | 1 | Wishful Merfolk | eld |

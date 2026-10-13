@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 20 | 20.4% |
-| Works (untested) | 61 | 62.2% |
+| Works (untested) | 62 | 63.3% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 17 | 17.3% |
+| Not working | 16 | 16.3% |
 
 ## Cards needing work
 
@@ -37,7 +37,6 @@
 | Jace, Memory Adept | silent | −7: Any number of target players each draw twenty cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Monomania | silent | Target player chooses a card in their hand and discards the rest. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Scrambleverse | silent | For each nonland permanent, choose a player at random. Then each player gains control of each permanent for which they were chosen. Untap those permanents. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Sphinx of Uthuun | silent | When this creature enters, reveal the top five cards of your library. An opponent separates those cards into two piles. Put one pile into your hand and the othe | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Stonehorn Dignitary | silent | When this creature enters, target opponent skips their next combat phase. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Tectonic Rift | silent | Destroy target land. Creatures without flying can't block this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Timely Reinforcements | silent | If you have less life than an opponent, you gain 6 life. If you control fewer creatures than an opponent, create three 1/1 white Soldier creature tokens. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -92,6 +91,7 @@
 | Rusted Sentinel | handled | This creature enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Sorin's Thirst | handled | Sorin's Thirst deals 2 damage to target creature and you gain 2 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Sorin's Vengeance | handled | Sorin's Vengeance deals 10 damage to target player or planeswalker and you gain 10 life. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Sphinx of Uthuun | handled | When this creature enters, reveal the top five cards of your library. An opponent separates those cards into two piles. Put one pile into your hand and the othe | the engine reads this text and performs it | Y/-/- | not_tested |
 | Spirit Mantle | handled | Enchanted creature gets +1/+1 and has protection from creatures. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Stave Off | handled | Target creature gains protection from the color of your choice until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Stingerfling Spider | handled | When this creature enters, you may destroy target creature with flying. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -145,7 +145,6 @@
 | tap an untapped spider you control: search your graveyard and/or library for a card named arachnus web and put it onto the battlefield attached to target creatu | 1 | Arachnus Spinner | m12 |
 | target player chooses a card in their hand and discards the rest. | 1 | Monomania | m12 |
 | when enchanted creature dies, return ~ to its owner's hand. | 1 | Angelic Destiny | m12 |
-| when ~ enters, reveal the top five cards of your library. an opponent separates those cards into two piles. put one pile into your hand and the other into your  | 1 | Sphinx of Uthuun | m12 |
 | when ~ enters, target opponent skips their next combat phase. | 1 | Stonehorn Dignitary | m12 |
 | whenever a creature without flying attacks you or a planeswalker you control, ~ deals N damage to that creature. | 1 | Circle of Flame | m12 |
 | whenever combat damage is dealt to you or a planeswalker you control, if ~ is in your graveyard, destroy target attacking creature, then put ~ on top of your li | 1 | Vengeful Pharaoh | m12 |

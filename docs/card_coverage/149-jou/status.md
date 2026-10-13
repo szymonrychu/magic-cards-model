@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 24 | 14.9% |
+| Tested | 29 | 18.0% |
 | Works (untested) | 103 | 64.0% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 34 | 21.1% |
+| Not working | 29 | 18.0% |
 
 ## Cards needing work
 
@@ -38,22 +38,17 @@
 | Harness by Force | silent | Strive — This spell costs {2}{R} more to cast for each target beyond the first. Gain control of any number of target creatures until end of turn. Untap those cr | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Hubris | silent | Return target creature and all Auras attached to it to their owners' hands. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Hydra Broodmaster | silent | When this creature becomes monstrous, create X X/X green Hydra creature tokens. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Interpret the Signs | silent | Scry 3, then reveal the top card of your library. Draw cards equal to that card's mana value. (To scry 3, look at the top three cards of your library, then put  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | King Macar, the Gold-Cursed | silent | Inspired — Whenever King Macar becomes untapped, you may exile target creature. If you do, create a Gold token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Kruphix's Insight | silent | Reveal the top six cards of your library. Put up to three enchantment cards from among them into your hand and the rest of the revealed cards into your graveyar | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Nature's Panoply | silent | Strive — This spell costs {2}{G} more to cast for each target beyond the first. Choose any number of target creatures. Put a +1/+1 counter on each of them. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Nessian Game Warden | silent | When this creature enters, look at the top X cards of your library, where X is the number of Forests you control. You may reveal a creature card from among them | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Nyx Infusion | silent | Enchanted creature gets +2/+2 as long as it's an enchantment. Otherwise, it gets -2/-2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Pharika, God of Affliction | silent | {B}{G}: Exile target creature card from a graveyard. Its owner creates a 1/1 black and green Snake enchantment creature token with deathtouch. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Polymorphous Rush | silent | Strive — This spell costs {1}{U} more to cast for each target beyond the first. Choose a creature on the battlefield. Any number of target creatures you control | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Pull from the Deep | silent | Return up to one target instant card and up to one target sorcery card from your graveyard to your hand. Exile Pull from the Deep. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Quarry Colossus | silent | When this creature enters, put target creature into its owner's library just beneath the top X cards of that library, where X is the number of Plains you contro | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Renowned Weaver | silent | {1}{G}, Sacrifice this creature: Create a 1/3 green Spider enchantment creature token with reach. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Rise of Eagles | silent | Create two 2/2 blue Bird enchantment creature tokens with flying. Scry 1. (Look at the top card of your library. You may put that card on the bottom.) | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sage of Hours | silent | Remove all +1/+1 counters from this creature: For each five counters removed this way, take an extra turn after this one. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Scourge of Fleets | silent | When this creature enters, return each creature your opponents control with toughness X or less to its owner's hand, where X is the number of Islands you contro | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Stonewise Fortifier | silent | {4}{W}: Prevent all damage that would be dealt to this creature by target creature this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Stormchaser Chimera | silent | {2}{U}{R}: Scry 1, then reveal the top card of your library. This creature gets +X/+0 until end of turn, where X is that card's mana value. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Swarmborn Giant | silent | When you're dealt combat damage, sacrifice this creature. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Bearer of the Heavens | notice | When this creature dies, destroy all permanents at the beginning of the next end step. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Colossal Heroics | notice | Strive — This spell costs {1}{G} more to cast for each target beyond the first. Any number of target creatures each get +2/+2 until end of turn. Untap those cre | unparsed remainder: Untap those creatures. | Y/Y/- | not_working |
@@ -167,7 +162,7 @@
 ## Fully supported
 
 <details>
-<summary>24 cards</summary>
+<summary>29 cards</summary>
 
 - Aegis of the Gods
 - Aerial Formation
@@ -180,18 +175,23 @@
 - Hall of Triumph
 - Heroes' Bane
 - Hour of Need
+- Interpret the Signs
 - Iroas, God of Victory
 - Keranos, God of Storms
 - Kruphix, God of Horizons
 - Launch the Fleet
 - Mana Confluence
 - Master of the Feast
+- Nessian Game Warden
 - Oppressive Rays
+- Quarry Colossus
 - Ritual of the Returned
+- Scourge of Fleets
 - Setessan Tactics
 - Sightless Brawler
 - Solidarity of Heroes
 - Spirespine
+- Stormchaser Chimera
 - Temple of Epiphany
 
 </details>
@@ -212,20 +212,15 @@
 | return target creature and all auras attached to it to their owners' hands. | 1 | Hubris | jou |
 | return up to one target instant card and up to one target sorcery card from your graveyard to your hand. exile ~. | 1 | Pull from the Deep | jou |
 | reveal the top six cards of your library. put up to three enchantment cards from among them into your hand and the rest of the revealed cards into your graveyar | 1 | Kruphix's Insight | jou |
-| scry N, then reveal the top card of your library. draw cards equal to that card's mana value. (to scry N, look at the top three cards of your library, then put  | 1 | Interpret the Signs | jou |
 | when you're dealt combat damage, sacrifice ~. | 1 | Swarmborn Giant | jou |
 | when ~ becomes monstrous, create N N/N green hydra creature tokens. | 1 | Hydra Broodmaster | jou |
 | when ~ dies, destroy all permanents at the beginning of the next end step. | 1 | Bearer of the Heavens | jou |
-| when ~ enters, look at the top N cards of your library, where N is the number of forests you control. you may reveal a creature card from among them and put it  | 1 | Nessian Game Warden | jou |
-| when ~ enters, put target creature into its owner's library just beneath the top N cards of that library, where N is the number of plains you control. | 1 | Quarry Colossus | jou |
-| when ~ enters, return each creature your opponents control with toughness N or less to its owner's hand, where N is the number of islands you control. | 1 | Scourge of Fleets | jou |
 | when ~ enters, target opponent reveals their hand and you choose a nonland card from it. exile that card until ~ leaves the battlefield. | 1 | Brain Maggot | jou |
 | whenever another creature you own dies, return it to your hand unless target opponent pays N life. | 1 | Athreos, God of Passage | jou |
 | {M}, {M}: each player reveals the top card of their library. you may put the revealed cards into their owners"..."t, each player draws a card. | 1 | Dakra Mystic | jou |
 | {M}{M}, sacrifice ~: create a N/N green spider enchantment creature token with reach. | 1 | Renowned Weaver | jou |
 | {M}{M}: exile target creature card from a graveyard. its owner creates a N/N black and green snake enchantment creature token with deathtouch. | 1 | Pharika, God of Affliction | jou |
 | {M}{M}: prevent all damage that would be dealt to ~ by target creature ~. | 1 | Stonewise Fortifier | jou |
-| {M}{M}{M}: scry N, then reveal the top card of your library. ~ gets +N/+N until end of turn, where N is that card's mana value. | 1 | Stormchaser Chimera | jou |
 
 ## Notes
 

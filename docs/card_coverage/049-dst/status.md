@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 28 | 17.3% |
-| Works (untested) | 97 | 59.9% |
+| Tested | 29 | 17.9% |
+| Works (untested) | 96 | 59.3% |
 | Partial (unaudited) | 0 | 0.0% |
 | Not working | 37 | 22.8% |
 
@@ -83,7 +83,6 @@
 | Crazed Goblin | handled | This creature attacks each combat if able. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Darksteel Brute | handled | {3}: This artifact becomes a 2/2 Beast artifact creature until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Darksteel Citadel | handled | Indestructible | machines/keywords.py | Y/Y/- | not_tested |
-| Darksteel Colossus | handled | If Darksteel Colossus would be put into a graveyard from anywhere, reveal Darksteel Colossus and shuffle it into its owner's library instead. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Darksteel Ingot | handled | Indestructible | machines/keywords.py | Y/Y/- | not_tested |
 | Darksteel Pendant | handled | {1}, {T}: Scry 1. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Demon's Horn | handled | Whenever a player casts a black spell, you may gain 1 life. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -164,13 +163,14 @@
 ## Fully supported
 
 <details>
-<summary>28 cards</summary>
+<summary>29 cards</summary>
 
 - Aether Snap
 - Aether Vial
 - Arcbound Ravager
 - Arcbound Worker
 - Carry Away
+- Darksteel Colossus
 - Darksteel Forge
 - Darksteel Gargoyle
 - Echoing Courage

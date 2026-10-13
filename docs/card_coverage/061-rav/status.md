@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 58 | 23.5% |
+| Tested | 60 | 24.3% |
 | Works (untested) | 130 | 52.6% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 59 | 23.9% |
+| Not working | 57 | 23.1% |
 
 ## Cards needing work
 
@@ -41,7 +41,6 @@
 | Golgari Brownscale | silent | When this card is put into your hand from your graveyard, you gain 2 life. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Grozoth | silent | When this creature enters, you may search your library for any number of cards that have mana value 9, reveal them, put them into your hand, then shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Incite Hysteria | silent | Radiance — Until end of turn, target creature and each other creature that shares a color with it gain "This creature can't block." | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Induce Paranoia | silent | Counter target spell. If {B} was spent to cast this spell, that spell's controller mills X cards, where X is the spell's mana value. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Mark of Eviction | silent | At the beginning of your upkeep, return enchanted creature and all Auras attached to that creature to their owners' hands. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Master Warcraft | silent | Cast this spell only before attackers are declared. You choose which creatures attack this turn. You choose which creatures block this turn and how those creatu | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Mindleech Mass | silent | Whenever this creature deals combat damage to a player, you may look at that player's hand. If you do, you may cast a spell from among those cards without payin | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -66,7 +65,6 @@
 | Sunforger | silent | {R}{W}, Unattach this Equipment: Search your library for a red or white instant card with mana value 4 or less and cast that card without paying its mana cost.  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sunhome Enforcer | silent | Whenever this creature deals combat damage, you gain that much life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Surge of Zeal | silent | Radiance — Target creature and each other creature that shares a color with it gain haste until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Svogthos, the Restless Tomb | silent | {3}{B}{G}: Until end of turn, this land becomes a black and green Plant Zombie creature with "This creature's power and toughness are each equal to the number o | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Telling Time | silent | Look at the top three cards of your library. Put one of those cards into your hand, one on top of your library, and one on the bottom of your library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Terraformer | silent | {1}: Choose a basic land type. Each land you control becomes that type until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Thoughtpicker Witch | silent | {1}, Sacrifice a creature: Look at the top two cards of target opponent's library, then exile one of them. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -219,7 +217,7 @@
 ## Fully supported
 
 <details>
-<summary>58 cards</summary>
+<summary>60 cards</summary>
 
 - Blazing Archon
 - Boros Fury-Shield
@@ -249,6 +247,7 @@
 - Hammerfist Giant
 - Hunted Horror
 - Indentured Oaf
+- Induce Paranoia
 - Instill Furor
 - Life from the Loam
 - Light of Sanction
@@ -272,6 +271,7 @@
 - Selesnya Sagittars
 - Sisters of Stone Death
 - Suppression Field
+- Svogthos, the Restless Tomb
 - Szadek, Lord of Secrets
 - Temple Garden
 - Twisted Justice
@@ -297,7 +297,6 @@
 | choose a card name. target player reveals cards from the top of their library until a card with that name is revealed. if it is, that player puts the rest of th | 1 | Tunnel Vision | rav |
 | counter target spell unless its controller discards their hand. transmute {M}{M}{M} ({M}{M}{M}, discard ~: search your library for a card with the same mana val | 1 | Perplex | rav |
 | counter target spell. if that spell is countered ~, put it into its owner"..."s graveyard. draw a card. | 1 | Remand | rav |
-| counter target spell. if {M} was spent to cast ~, that spell"..."s mana value. | 1 | Induce Paranoia | rav |
 | each player chooses three permanents they control, then sacrifices the rest. | 1 | Razia's Purification | rav |
 | each player shuffles all permanents they own into their library, then reveals that many cards from the top of their library. each player puts all artifact, crea | 1 | Warp World | rav |
 | look at the top five cards of your library. for each card, put that card into your graveyard unless you pay N life. then put the rest into your hand. | 1 | Moonlight Bargain | rav |
@@ -339,7 +338,6 @@
 | {M}{M}{M}: exile enchanted creature and all auras attached to it. at the beginning of the next end step, return that card to the battlefield under its owner"... | 1 | Flickerform | rav |
 | {M}{M}{M}: exile target creature card from a graveyard. ~ becomes a copy of that card, except it has ~. | 1 | Dimir Doppelganger | rav |
 | {M}{M}{M}: put a plague counter on ~ or remove a plague counter from it. | 1 | Plague Boiler | rav |
-| {M}{M}{M}: until end of turn, ~ becomes a black and green plant zombie creature with "..." it's still a land. | 1 | Svogthos, the Restless Tomb | rav |
 
 ## Notes
 

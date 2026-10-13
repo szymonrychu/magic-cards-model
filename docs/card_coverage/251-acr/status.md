@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 21 | 19.8% |
+| Tested | 22 | 20.8% |
 | Works (untested) | 47 | 44.3% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 38 | 35.8% |
+| Not working | 37 | 34.9% |
 
 ## Cards needing work
 
@@ -54,7 +54,6 @@
 | Shaun & Rebecca, Agents | silent | When Shaun & Rebecca enters, search your graveyard, hand, and library for a card named The Animus and put it onto the battlefield, then shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Staff of Eden, Vault's Key | silent | When Staff of Eden enters, put target legendary permanent card not named Staff of Eden, Vault's Key from a graveyard onto the battlefield under your control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Tax Collector | silent | Detain | no machine in the engine executes this keyword | Y/-/- | not_working |
-| The Aesir Escape Valhalla | silent | I — Exile a permanent card from your graveyard. You gain life equal to its mana value. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Viewpoint Synchronization | silent | Freerunning {2}{G} (You may cast this spell for its freerunning cost if you dealt combat damage to a player this turn with an Assassin or commander.) Search you | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Yggdrasil, Rebirth Engine | silent | When Yggdrasil enters, exile all creature cards from your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Altaïr Ibn-La'Ahad | notice | Whenever Altaïr attacks, exile up to one target Assassin creature card from your graveyard with a memory counter on it. Then for each creature card you own in e | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
@@ -115,7 +114,7 @@
 ## Fully supported
 
 <details>
-<summary>21 cards</summary>
+<summary>22 cards</summary>
 
 - Abstergo Entertainment
 - Adrestia
@@ -138,6 +137,7 @@
 - Ratonhnhaké꞉ton
 - Smoke Bomb
 - Templar Knight
+- The Aesir Escape Valhalla
 
 </details>
 
@@ -153,7 +153,6 @@
 | during your turn, other historic creatures you control have double strike. | 1 | Bayek of Siwa | acr |
 | each player chooses three nonland permanents they control. destroy all other nonland permanents. | 1 | Fall of the First Civilization | acr |
 | equipped creature has ward {M}, is an assassin in addition to its other types, and can't be blocked. | 1 | Brotherhood Regalia | acr |
-| exile a permanent card from your graveyard. you gain life equal to its mana value. | 1 | The Aesir Escape Valhalla | acr |
 | exile target nontoken creature you own and the top two cards of your library in a face-down pile, shuffle that pile, then cloak those cards. they enter tapped.  | 1 | Become Anonymous | acr |
 | face-down creatures you control have menace. | 1 | Roshan, Hidden Magister | acr |
 | freerunning {M}{M} (you may cast ~ for its freerunning cost if you dealt combat damage to a player ~ with an assassin or commander.) destroy target creature. if | 1 | Chain Assassination | acr |

@@ -17,16 +17,15 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 6 | 15.4% |
+| Tested | 7 | 17.9% |
 | Works (untested) | 25 | 64.1% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 8 | 20.5% |
+| Not working | 7 | 17.9% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
-| Balance of Power | silent | If target opponent has more cards in hand than you, draw cards equal to the difference. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Baleful Stare | silent | Target opponent reveals their hand. You draw a card for each Mountain and red card in it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Blessed Reversal | silent | You gain 3 life for each creature attacking you. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Boiling Seas | silent | Destroy all Islands. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -63,9 +62,10 @@
 ## Fully supported
 
 <details>
-<summary>6 cards</summary>
+<summary>7 cards</summary>
 
 - Angelic Blessing
+- Balance of Power
 - Charging Rhino
 - Mind Rot
 - Raging Goblin
@@ -80,7 +80,6 @@
 |---|---|---|---|
 | creatures and lands target opponent controls don't untap during their next untap step. | 1 | Exhaustion | por |
 | destroy all islands. | 1 | Boiling Seas | por |
-| if target opponent has more cards in hand than you, draw cards equal to the difference. | 1 | Balance of Power | por |
 | target opponent reveals their hand. you draw a card for each forest and green card in it. | 1 | Withering Gaze | por |
 | target opponent reveals their hand. you draw a card for each mountain and red card in it. | 1 | Baleful Stare | por |
 | when ~ enters, sacrifice it unless you sacrifice three forests. | 1 | Primeval Force | por |

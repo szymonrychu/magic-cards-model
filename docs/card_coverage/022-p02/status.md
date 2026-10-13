@@ -18,21 +18,21 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 3 | 11.5% |
-| Works (untested) | 20 | 76.9% |
+| Works (untested) | 21 | 80.8% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 3 | 11.5% |
+| Not working | 2 | 7.7% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
-| Denizen of the Deep | silent | When this creature enters, return each other creature you control to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Goblin Lore | silent | Draw four cards, then discard three cards at random. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sea Drake | silent | When this creature enters, return two target lands you control to their owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Angel of Mercy | handled | When this creature enters, you gain 3 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Angelic Wall | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
 | Bear Cub | handled |  |  | Y/Y/Y | not_tested |
 | Cruel Edict | handled | Target opponent sacrifices a creature of their choice. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Denizen of the Deep | handled | When this creature enters, return each other creature you control to its owner's hand. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Goblin Glider | handled | This creature can't block. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Goblin Matron | handled | When this creature enters, you may search your library for a Goblin card, reveal that card, put it into your hand, then shuffle. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Goblin Mountaineer | handled | Landwalk | no code needed | Y/-/- | not_tested |
@@ -66,7 +66,6 @@
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
 | draw four cards, then discard three cards at random. | 1 | Goblin Lore | p02 |
-| when ~ enters, return each other creature you control to its owner's hand. | 1 | Denizen of the Deep | p02 |
 | when ~ enters, return two target lands you control to their owner's hand. | 1 | Sea Drake | p02 |
 
 ## Notes

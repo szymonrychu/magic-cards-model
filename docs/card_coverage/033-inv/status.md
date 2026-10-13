@@ -18,15 +18,14 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 7 | 15.9% |
-| Works (untested) | 33 | 75.0% |
+| Works (untested) | 34 | 77.3% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 4 | 9.1% |
+| Not working | 3 | 6.8% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
-| Fact or Fiction | silent | Reveal the top five cards of your library. An opponent separates those cards into two piles. Put one pile into your hand and the other into your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Obliterate | silent | This spell can't be countered. Destroy all artifacts, creatures, and lands. They can't be regenerated. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Verdeloth the Ancient | silent | Saproling creatures and other Treefolk creatures get +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Void | silent | Choose a number. Destroy all artifacts and creatures with mana value equal to that number. Then target player reveals their hand and discards all nonland cards  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -39,6 +38,7 @@
 | Elfhame Palace | handled | This land enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Elvish Champion | handled | Other Elf creatures get +1/+1 and have forestwalk. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Exclude | handled | Counter target creature spell. Draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Fact or Fiction | handled | Reveal the top five cards of your library. An opponent separates those cards into two piles. Put one pile into your hand and the other into your graveyard. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Frenzied Tilling | handled | Destroy target land. Search your library for a basic land card, put that card onto the battlefield tapped, then shuffle. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Hate Weaver | handled | {2}: Target blue or red creature gets +1/+0 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Heroes' Reunion | handled | Target player gains 7 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -84,7 +84,6 @@
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
 | choose a number. destroy all artifacts and creatures with mana value equal to that number. then target player reveals their hand and discards all nonland cards  | 1 | Void | inv |
-| reveal the top five cards of your library. an opponent separates those cards into two piles. put one pile into your hand and the other into your graveyard. | 1 | Fact or Fiction | inv |
 | saproling creatures and other treefolk creatures get +N/+N. | 1 | Verdeloth the Ancient | inv |
 | ~ can"..."t be regenerated. | 1 | Obliterate | inv |
 

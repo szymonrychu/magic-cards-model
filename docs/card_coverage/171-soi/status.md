@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 37 | 14.2% |
+| Tested | 42 | 16.1% |
 | Works (untested) | 188 | 72.0% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 36 | 13.8% |
+| Not working | 31 | 11.9% |
 
 ## Cards needing work
 
@@ -48,18 +48,13 @@
 | Sage of Ancient Lore // Werewolf of Ancient Hunger | silent | Werewolf of Ancient Hunger's power and toughness are each equal to the total number of cards in all players' hands. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Seasons Past | silent | Return any number of cards with different mana values from your graveyard to your hand. Put Seasons Past on the bottom of its owner's library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Second Harvest | silent | For each token you control, create a token that's a copy of that permanent. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Sin Prodder | silent | At the beginning of your upkeep, reveal the top card of your library. Any opponent may have you put that card into your graveyard. If a player does, this creatu | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Sorin, Grim Nemesis | silent | +1: Reveal the top card of your library and put that card into your hand. Each opponent loses life equal to its mana value. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Startled Awake // Persistent Nightmare | silent | {3}{U}{U}: Put this card from your graveyard onto the battlefield transformed. Activate only as a sorcery. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | The Gitrog Monster | silent | At the beginning of your upkeep, sacrifice The Gitrog Monster unless you sacrifice a land. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Vessel of Nascency | silent | {1}{G}, Sacrifice this enchantment: Reveal the top four cards of your library. You may put an artifact, creature, enchantment, land, or planeswalker card from a | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Welcome to the Fold | silent | Madness {X}{U}{U} (If you discard this card, discard it into exile. When you do, cast it for its madness cost or put it into your graveyard.) Gain control of ta | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Wolf of Devil's Breach | silent | Whenever this creature attacks, you may pay {1}{R} and discard a card. If you do, this creature deals damage to target creature or planeswalker equal to the dis | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Altered Ego | notice | You may have this creature enter as a copy of any creature on the battlefield, except it enters with X additional +1/+1 counters on it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Avacyn's Judgment | notice | Madness {X}{R} (If you discard this card, discard it into exile. When you do, cast it for its madness cost or put it into your graveyard.) Avacyn's Judgment dea | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Declaration in Stone | notice | Exile target creature and all other creatures its controller controls with the same name as that creature. That player investigates for each nontoken creature e | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Essence Flux | notice | Exile target creature you control, then return that card to the battlefield under its owner's control. If it's a Spirit, put a +1/+1 counter on it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Geralf's Masterpiece | notice | This creature gets -1/-1 for each card in your hand. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Malevolent Whispers | notice | Gain control of target creature until end of turn. Untap that creature. It gets +2/+0 and gains haste until end of turn. Madness {3}{R} (If you discard this car | unparsed remainder: Untap that creature. It gets +2/+0 and gains haste until end of turn. | Y/Y/- | not_working |
 | Triskaidekaphobia | notice | At the beginning of your upkeep, choose one — • Each player with exactly 13 life loses the game, then each player gains 1 life. • Each player with exactly 13 li | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Aberrant Researcher // Perfected Form | handled | At the beginning of your upkeep, mill a card. If an instant or sorcery card was milled this way, transform this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -254,7 +249,7 @@
 ## Fully supported
 
 <details>
-<summary>37 cards</summary>
+<summary>42 cards</summary>
 
 - Accursed Witch // Infectious Curse
 - Always Watching
@@ -267,11 +262,13 @@
 - Burn from Within
 - Clip Wings
 - Cryptolith Rite
+- Declaration in Stone
 - Diregraf Colossus
 - Dual Shot
 - Duskwatch Recruiter // Krallenhorde Howler
 - Falkenrath Gorger
 - Fevered Visions
+- Geralf's Masterpiece
 - Goldnight Castigator
 - Gryff's Boon
 - Lambholt Pacifist // Lambholt Butcher
@@ -285,14 +282,17 @@
 - Rattlechains
 - Sigarda, Heron's Grace
 - Silburlind Snapper
+- Sin Prodder
 - Skin Invasion // Skin Shedder
 - Slayer's Plate
+- Sorin, Grim Nemesis
 - Tenacity
 - Thing in the Ice // Awoken Horror
 - Thraben Inspector
 - To the Slaughter
 - True-Faith Censer
 - Watcher in the Web
+- Wolf of Devil's Breach
 
 </details>
 
@@ -300,14 +300,11 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| +N: reveal the top card of your library and put that card into your hand. each opponent loses life equal to its mana value. | 1 | Sorin, Grim Nemesis | soi |
 | at the beginning of your upkeep, choose one — • each player with exactly N life loses the game, then each player gains N life. • each player with exactly N life | 1 | Triskaidekaphobia | soi |
 | at the beginning of your upkeep, each player discards a card. each opponent who discarded a card that shares a card type with the card you discarded loses N lif | 1 | Creeping Dread | soi |
-| at the beginning of your upkeep, reveal the top card of your library. any opponent may have you put that card into your graveyard. if a player does, ~ deals dam | 1 | Sin Prodder | soi |
 | at the beginning of your upkeep, sacrifice ~ unless you sacrifice a land. | 1 | The Gitrog Monster | soi |
 | attacking creatures you control get +N/+N and have trample. | 1 | Breakneck Rider // Neck Breaker | soi |
 | counter target sorcery spell. delirium — if there are four or more card types among cards in your graveyard, search the graveyard, hand, and library of that spe | 1 | Invasive Surgery | soi |
-| exile target creature and all other creatures its controller controls with the same name as that creature. that player investigates for each nontoken creature e | 1 | Declaration in Stone | soi |
 | exile target creature you control, then return that card to the battlefield under its owner"..."s a spirit, put a +N/+N counter on it. | 1 | Essence Flux | soi |
 | for each token you control, create a token that's a copy of that permanent. | 1 | Second Harvest | soi |
 | gain control of target creature until end of turn. untap that creature. it gets +N/+N and gains haste until end of turn. madness {M}{M} (if you discard ~, disca | 1 | Malevolent Whispers | soi |
@@ -330,12 +327,10 @@
 | whenever another creature you control enters, you may discard a card. if you do, put a +N/+N counter on that creature, it gains haste until end of turn, and it  | 1 | Olivia, Mobilized for War | soi |
 | whenever you cast an instant or sorcery spell from your hand, you may cast target card with the same name as that spell from your graveyard. | 1 | Harness the Storm | soi |
 | whenever you investigate for the first time each turn, investigate an additional time. | 1 | Erdwal Illuminator | soi |
-| whenever ~ attacks, you may pay {M}{M} and discard a card. if you do, ~ deals damage to target creature or planeswalker equal to the discarded card's mana value | 1 | Wolf of Devil's Breach | soi |
 | you may have ~ enter as a copy of any creature on the battlefield, except it enters with N additional +N/+N counters on it. | 1 | Altered Ego | soi |
 | {M}: choose a color of a card in your graveyard. add one mana of that color. | 1 | Corrupted Grafstone | soi |
 | {M}{M}, sacrifice ~: reveal the top four cards of your library. you may put an artifact, creature, enchantment, land, or planeswalker card from among them into  | 1 | Vessel of Nascency | soi |
 | {M}{M}{M}: put ~ from your graveyard onto the battlefield transformed. activate only as a sorcery. | 1 | Startled Awake // Persistent Nightmare | soi |
-| ~ gets -N/-N for each card in your hand. | 1 | Geralf's Masterpiece | soi |
 
 ## Notes
 

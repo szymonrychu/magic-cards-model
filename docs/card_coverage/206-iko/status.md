@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 50 | 21.9% |
-| Works (untested) | 128 | 56.1% |
+| Tested | 51 | 22.4% |
+| Works (untested) | 129 | 56.6% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 50 | 21.9% |
+| Not working | 48 | 21.1% |
 
 ## Cards needing work
 
@@ -59,7 +59,6 @@
 | Primal Empathy | silent | At the beginning of your upkeep, draw a card if you control a creature with the greatest power among creatures on the battlefield. Otherwise, put a +1/+1 counte | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Reptilian Reflection | silent | Whenever you cycle a card, you may have this enchantment become a 5/4 Dinosaur creature with trample and haste in addition to its other types until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sanctuary Smasher | silent | When you cycle this card, put a first strike counter on target creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Shark Typhoon | silent | Whenever you cast a noncreature spell, create an X/X blue Shark creature token with flying, where X is that spell's mana value. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sleeper Dart | silent | {T}, Sacrifice this artifact: Target creature doesn't untap during its controller's next untap step. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Solid Footing | silent | As long as enchanted creature has vigilance, it assigns combat damage equal to its toughness rather than its power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | The Ozolith | silent | Whenever a creature you control leaves the battlefield, if it had counters on it, put those counters on The Ozolith. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -68,7 +67,6 @@
 | Wingspan Mentor | silent | {2}{U}, {T}: Put a +1/+1 counter on each creature you control with flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Winota, Joiner of Forces | silent | Whenever a non-Human creature you control attacks, look at the top six cards of your library. You may put a Human creature card from among them onto the battlef | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Yidaro, Wandering Monster | silent | When you cycle this card, shuffle it into your library from your graveyard. If you've cycled a card named Yidaro, Wandering Monster four or more times this game | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Bushmeat Poacher | notice | {1}, {T}, Sacrifice another creature: You gain life equal to the sacrificed creature's toughness. Draw a card. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Call of the Death-Dweller | notice | Return up to two target creature cards with total mana value 3 or less from your graveyard to the battlefield. Put a deathtouch counter on either of them. Then  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Heightened Reflexes | notice | Target creature gets +1/+0 until end of turn. Put a first strike counter on it. | unparsed remainder: Put a first strike counter on it. | Y/Y/- | not_working |
 | Monstrous Step | notice | Target creature gets +7/+7 until end of turn. Up to one other target creature blocks it this turn if able. Cycling {2} ({2}, Discard this card: Draw a card.) | unparsed remainder: Up to one other target creature blocks it this turn if able. | Y/Y/- | not_working |
@@ -88,6 +86,7 @@
 | Bonders' Enclave | handled | {3}, {T}: Draw a card. Activate only if you control a creature with power 4 or greater. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Boneyard Lurker | handled | Whenever this creature mutates, return target permanent card from your graveyard to your hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Boon of the Wish-Giver | handled | Draw four cards. Cycling {1} ({1}, Discard this card: Draw a card.) | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Bushmeat Poacher | handled | {1}, {T}, Sacrifice another creature: You gain life equal to the sacrificed creature's toughness. Draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Cavern Whisperer | handled | Whenever this creature mutates, each opponent discards a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Channeled Force | handled | As an additional cost to cast this spell, discard X cards. Target player draws X cards. Channeled Force deals X damage to up to one target creature or planeswal | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Checkpoint Officer | handled | {1}{W}, {T}: Tap target creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -208,7 +207,7 @@
 ## Fully supported
 
 <details>
-<summary>50 cards</summary>
+<summary>51 cards</summary>
 
 - Back for More
 - Blade Banish
@@ -246,6 +245,7 @@
 - Quartzwood Crasher
 - Ram Through
 - Raugrin Triome
+- Shark Typhoon
 - Sonorous Howlbonder
 - Startling Development
 - Stormwild Capridor
@@ -296,7 +296,6 @@
 | whenever a creature you control with menace becomes blocked, defending player sacrifices a creature of their choice that's blocking it. | 1 | Labyrinth Raptor | iko |
 | whenever a non-human creature you control attacks, look at the top six cards of your library. you may put a human creature card from among them onto the battlef | 1 | Winota, Joiner of Forces | iko |
 | whenever a nontoken creature you control dies, mill two cards. then return a creature card with lesser mana value than the creature that died from your graveyar | 1 | Death's Oasis | iko |
-| whenever you cast a noncreature spell, create an N/N blue shark creature token with flying, where N is that spell's mana value. | 1 | Shark Typhoon | iko |
 | whenever you cycle a card, you may have ~ become a N/N dinosaur creature with trample and haste in addition to its other types until end of turn. | 1 | Reptilian Reflection | iko |
 | whenever ~ attacks, if it doesn't have first strike, put a first strike counter on it. | 1 | Momentum Rumbler | iko |
 | whenever ~ attacks, other humans you control get +N/+N until end of turn. | 1 | Perimeter Sergeant | iko |
@@ -308,7 +307,6 @@
 | whenever ~ mutates, tap up to N target creatures, where N is the number of times ~ has mutated. those creatures don"..."s next untap step. | 1 | Archipelagore | iko |
 | whenever ~ mutates, you may cast target noncreature card with mana value N or less from your graveyard without paying its mana cost. | 1 | Vadrok, Apex of Thunder | iko |
 | {M}, sacrifice ~: target creature doesn"..."s next untap step. | 1 | Sleeper Dart | iko |
-| {M}, {M}, sacrifice another creature: you gain life equal to the sacrificed creature's toughness. draw a card. | 1 | Bushmeat Poacher | iko |
 | {M}: ~ deals N damage to any target, where N is the number of times ~ has mutated. | 1 | Porcuparrot | iko |
 | {M}{M}, {M}: put a +N/+N counter on each creature you control with flying. | 1 | Wingspan Mentor | iko |
 | {M}{M}, {M}: put a +N/+N counter on each creature you control with lifelink. | 1 | Duskfang Mentor | iko |

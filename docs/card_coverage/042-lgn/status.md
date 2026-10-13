@@ -17,16 +17,15 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 5 | 29.4% |
+| Tested | 6 | 35.3% |
 | Works (untested) | 10 | 58.8% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 2 | 11.8% |
+| Not working | 1 | 5.9% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
-| Dreamborn Muse | silent | At the beginning of each player's upkeep, that player mills X cards, where X is the number of cards in their hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Phage the Untouchable | silent | Whenever Phage deals combat damage to a creature, destroy that creature. It can't be regenerated. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Akroma, Angel of Wrath | handled | Flying | machines/combat.py | Y/-/- | not_tested |
 | Enormous Baloth | handled |  |  | Y/-/- | not_tested |
@@ -42,8 +41,9 @@
 ## Fully supported
 
 <details>
-<summary>5 cards</summary>
+<summary>6 cards</summary>
 
+- Dreamborn Muse
 - Fugitive Wizard
 - Graveborn Muse
 - Lavaborn Muse
@@ -56,7 +56,6 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| at the beginning of each player's upkeep, that player mills N cards, where N is the number of cards in their hand. | 1 | Dreamborn Muse | lgn |
 | whenever phage deals combat damage to a creature, destroy that creature. it can't be regenerated. | 1 | Phage the Untouchable | lgn |
 
 ## Notes

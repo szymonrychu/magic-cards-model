@@ -17,18 +17,16 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 42 | 36.2% |
-| Works (untested) | 62 | 53.4% |
+| Tested | 43 | 37.1% |
+| Works (untested) | 63 | 54.3% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 12 | 10.3% |
+| Not working | 10 | 8.6% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
-| Blessing | silent | {W}: Enchanted creature gets +1/+1 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Dingus Egg | silent | Whenever a land is put into a graveyard from the battlefield, this artifact deals 2 damage to that land's controller. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Firebreathing | silent | {R}: Enchanted creature gets +1/+0 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Flashfires | silent | Destroy all Plains. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Force of Nature | silent | At the beginning of your upkeep, this creature deals 8 damage to you unless you pay {G}{G}{G}{G}. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Gaea's Liege | silent | As long as Gaea's Liege isn't attacking, its power and toughness are each equal to the number of Forests you control. As long as Gaea's Liege is attacking, its  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -40,18 +38,19 @@
 | Dragon Whelp | notice | {R}: This creature gets +1/+0 until end of turn. If this ability has been activated four or more times this turn, sacrifice this creature at the beginning of th | unparsed remainder: If this ability has been activated four or more times this turn, sacrifice this creature at the beginning of the next end step. | Y/Y/- | not_working |
 | Air Elemental | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
 | Bad Moon | handled | Black creatures get +1/+1. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Blessing | handled | {W}: Enchanted creature gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Bog Wraith | handled | Landwalk | no code needed | Y/-/- | not_tested |
 | Circle of Protection: Blue | handled | {1}: The next time a blue source of your choice would deal damage to you this turn, prevent that damage. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Circle of Protection: Green | handled | {1}: The next time a green source of your choice would deal damage to you this turn, prevent that damage. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Circle of Protection: White | handled | {1}: The next time a white source of your choice would deal damage to you this turn, prevent that damage. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Crystal Rod | handled | Whenever a player casts a blue spell, you may pay {1}. If you do, you gain 1 life. | the engine reads this text and performs it | Y/-/- | not_tested |
-| Disenchant | handled | Destroy target artifact or enchantment. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Drudge Skeletons | handled | {B}: Regenerate this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Dwarven Demolition Team | handled | {T}: Destroy target Wall. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Earth Elemental | handled |  |  | Y/-/- | not_tested |
 | Evil Presence | handled | Enchanted land is a Swamp. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Fear | handled | Enchanted creature has fear. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Fire Elemental | handled |  |  | Y/Y/Y | not_tested |
+| Firebreathing | handled | {R}: Enchanted creature gets +1/+0 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Flight | handled | Enchanted creature has flying. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Fungusaur | handled | Whenever this creature is dealt damage, put a +1/+1 counter on it. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Goblin Balloon Brigade | handled | {R}: This creature gains flying until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -104,7 +103,7 @@
 ## Fully supported
 
 <details>
-<summary>42 cards</summary>
+<summary>43 cards</summary>
 
 - Birds of Paradise
 - Black Knight
@@ -113,6 +112,7 @@
 - Consecrate Land
 - Counterspell
 - Craw Wurm
+- Disenchant
 - Disrupting Scepter
 - Earthquake
 - Fireball
@@ -155,7 +155,6 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| {M}: enchanted creature gets +N/+N until end of turn. | 2 | Blessing, Firebreathing | lea |
 | as long as ~ isn't attacking, its power and toughness are each equal to the number of forests you control. as long as ~ is attacking, its power and toughness ar | 1 | Gaea's Liege | lea |
 | at the beginning of your upkeep, ~ deals N damage to you unless you pay {M}{M}{M}{M}. | 1 | Force of Nature | lea |
 | destroy all plains. | 1 | Flashfires | lea |

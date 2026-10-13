@@ -17,23 +17,21 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 7 | 25.9% |
+| Tested | 9 | 33.3% |
 | Works (untested) | 7 | 25.9% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 13 | 48.1% |
+| Not working | 11 | 40.7% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
-| Ancient Cornucopia | silent | Whenever you cast a spell that's one or more colors, you may gain 1 life for each of that spell's colors. Do this only once each turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Collector's Cage | silent | {1}, {T}: Put a +1/+1 counter on target creature you control. Then if you control three or more creatures with different powers, you may play the exiled card wi | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Esoteric Duplicator | silent | Whenever you sacrifice this artifact or another artifact, you may pay {2}. If you do, at the beginning of the next end step, create a token that's a copy of tha | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Memory Vessel | silent | {T}, Exile this artifact: Each player exiles the top seven cards of their library. Until your next turn, players may play cards they exiled this way, and they c | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Omenpath Journey | silent | When this enchantment enters, search your library for up to five land cards that have different names, exile them, then shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Sandstorm Salvager | silent | {2}, {T}: Put a +1/+1 counter on each creature token you control. They gain trample until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Sword of Wealth and Power | silent | Whenever equipped creature deals combat damage to a player, create a Treasure token. When you next cast an instant or sorcery spell this turn, copy that spell.  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Tarnation Vista | silent | {1}, {T}: For each color among monocolored permanents you control, add one mana of that color. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Transmutation Font | silent | {T}: Create your choice of a Blood token, a Clue token, or a Food token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Vaultborn Tyrant | silent | When this creature dies, if it's not a token, create a token that's a copy of it, except it's an artifact in addition to its other types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Generous Plunderer | notice | At the beginning of your upkeep, you may create a Treasure token. When you do, target opponent creates a tapped Treasure token. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
@@ -50,13 +48,15 @@
 ## Fully supported
 
 <details>
-<summary>7 cards</summary>
+<summary>9 cards</summary>
 
+- Ancient Cornucopia
 - Bristlebud Farmer
 - Harvester of Misery
 - Molten Duplication
 - Pest Control
 - Simulacrum Synthesizer
+- Tarnation Vista
 - Territory Forge
 - Worldwalker Helm
 
@@ -72,10 +72,8 @@
 | when ~ dies, if it"..."s a copy of it, except it's an artifact in addition to its other types. | 1 | Vaultborn Tyrant | big |
 | when ~ enters, search your library for up to five land cards that have different names, exile them, then shuffle. | 1 | Omenpath Journey | big |
 | whenever equipped creature deals combat damage to a player, create a treasure token. when you next cast an instant or sorcery spell ~, copy that spell. you may  | 1 | Sword of Wealth and Power | big |
-| whenever you cast a spell that"..."s colors. do ~ once each turn. | 1 | Ancient Cornucopia | big |
 | whenever you sacrifice ~ or another artifact, you may pay {M}. if you do, at the beginning of the next end step, create a token that's a copy of that artifact. | 1 | Esoteric Duplicator | big |
 | {M}, exile ~: each player exiles the top seven cards of their library. until your next turn, players may play cards they exiled ~, and they can't play cards fro | 1 | Memory Vessel | big |
-| {M}, {M}: for each color among monocolored permanents you control, add one mana of that color. | 1 | Tarnation Vista | big |
 | {M}, {M}: put a +N/+N counter on each creature token you control. they gain trample until end of turn. | 1 | Sandstorm Salvager | big |
 | {M}, {M}: put a +N/+N counter on target creature you control. then if you control three or more creatures with different powers, you may play the exiled card wi | 1 | Collector's Cage | big |
 | {M}: create your choice of a blood token, a clue token, or a food token. | 1 | Transmutation Font | big |
