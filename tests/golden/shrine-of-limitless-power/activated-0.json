@@ -35,24 +35,10 @@
   "card": "Shrine of Limitless Power",
   "delta": {
     "created": {},
-    "decisions": [
-      {
-        "amount": 1,
-        "cards": ["Forest@alice#4", "Grizzly Bears@alice#1", "Lightning Bolt@alice#1", "Opt@alice#1"],
-        "kind": "choose_cards",
-        "player": "alice",
-        "players": [],
-        "prompt": "discard 1 card(s)",
-        "source": "Shrine of Limitless Power"
-      }
-    ],
-    "fields_changed": ["cards_discarded_this_turn", "graveyard_arrivals_announced", "graveyard_arrivals_this_turn"],
+    "decisions": [],
+    "fields_changed": [],
     "notices": {},
-    "objects": {
-      "Opt@alice#1": {
-        "zone": ["hand", "graveyard"]
-      }
-    },
+    "objects": {},
     "players": {},
     "stack": []
   },

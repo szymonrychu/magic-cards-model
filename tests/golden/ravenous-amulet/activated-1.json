@@ -39,11 +39,7 @@
     "fields_changed": [],
     "notices": {},
     "objects": {},
-    "players": {
-      "bob": {
-        "life": [20, 19]
-      }
-    },
+    "players": {},
     "stack": []
   },
   "family": "activated",

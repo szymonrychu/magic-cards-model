@@ -42,16 +42,86 @@
         "kind": "may",
         "player": "alice",
         "players": [],
-        "prompt": "have your life total become 1",
+        "prompt": "have your life total become 0",
         "source": "Eternity Vessel"
       }
     ],
-    "fields_changed": [],
+    "fields_changed": ["losers", "turn", "winner"],
     "notices": {},
-    "objects": {},
+    "objects": {
+      "Abstergo Entertainment@alice#1": {
+        "zone": ["battlefield", null]
+      },
+      "Bonesplitter@alice#1": {
+        "zone": ["battlefield", null]
+      },
+      "Eternity Vessel@alice#1": {
+        "zone": ["battlefield", null]
+      },
+      "Forest@alice#1": {
+        "zone": ["battlefield", null]
+      },
+      "Forest@alice#2": {
+        "zone": ["battlefield", null]
+      },
+      "Forest@alice#3": {
+        "zone": ["battlefield", null]
+      },
+      "Icehide Golem@alice#1": {
+        "zone": ["battlefield", null]
+      },
+      "Icy Manipulator@alice#1": {
+        "zone": ["battlefield", null]
+      },
+      "Island@alice#1": {
+        "zone": ["battlefield", null]
+      },
+      "Island@alice#2": {
+        "zone": ["battlefield", null]
+      },
+      "Island@alice#3": {
+        "zone": ["battlefield", null]
+      },
+      "Memnite@alice#1": {
+        "zone": ["battlefield", null]
+      },
+      "Mountain@alice#1": {
+        "zone": ["battlefield", null]
+      },
+      "Mountain@alice#2": {
+        "zone": ["battlefield", null]
+      },
+      "Mountain@alice#3": {
+        "zone": ["battlefield", null]
+      },
+      "Plains@alice#1": {
+        "zone": ["battlefield", null]
+      },
+      "Plains@alice#2": {
+        "zone": ["battlefield", null]
+      },
+      "Plains@alice#3": {
+        "zone": ["battlefield", null]
+      },
+      "Swamp@alice#1": {
+        "zone": ["battlefield", null]
+      },
+      "Swamp@alice#2": {
+        "zone": ["battlefield", null]
+      },
+      "Swamp@alice#3": {
+        "zone": ["battlefield", null]
+      },
+      "Wastes@alice#1": {
+        "zone": ["battlefield", null]
+      },
+      "Wastes@alice#2": {
+        "zone": ["battlefield", null]
+      }
+    },
     "players": {
       "alice": {
-        "life": [20, 1]
+        "life": [20, 0]
       }
     },
     "stack": []

@@ -38,12 +38,7 @@
     "decisions": [],
     "fields_changed": ["continuous_effects"],
     "notices": {},
-    "objects": {
-      "Memnite@alice#1": {
-        "power": [1, 2],
-        "toughness": [1, 2]
-      }
-    },
+    "objects": {},
     "players": {},
     "stack": []
   },

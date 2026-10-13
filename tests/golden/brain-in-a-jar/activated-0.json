@@ -35,23 +35,52 @@
   "card": "Brain in a Jar",
   "delta": {
     "created": {},
-    "decisions": [],
-    "fields_changed": ["counters_put_this_turn"],
+    "decisions": [
+      {
+        "amount": 0,
+        "cards": ["Lightning Bolt@alice#1", "Opt@alice#1"],
+        "kind": "may",
+        "player": "alice",
+        "players": [],
+        "prompt": "cast an instant or sorcery spell with mana value equal to 1 from your hand without paying its mana cost",
+        "source": "Brain in a Jar"
+      },
+      {
+        "amount": 1,
+        "cards": ["Lightning Bolt@alice#1", "Opt@alice#1"],
+        "kind": "choose_cards",
+        "player": "alice",
+        "players": [],
+        "prompt": "choose a spell to cast without paying its mana cost",
+        "source": "Brain in a Jar"
+      },
+      {
+        "amount": 0,
+        "cards": [],
+        "kind": "choose_targets",
+        "player": "alice",
+        "players": [],
+        "prompt": "choose targets for Lightning Bolt",
+        "source": "Lightning Bolt"
+      }
+    ],
+    "fields_changed": ["cast_records", "counters_put_this_turn", "spells_cast_this_turn", "turn_facts"],
     "notices": {},
     "objects": {
       "Brain in a Jar@alice#1": {
         "counters": [
+          {},
           {
             "charge": 1
-          },
-          {
-            "charge": 2
           }
         ]
+      },
+      "Lightning Bolt@alice#1": {
+        "zone": ["hand", "stack"]
       }
     },
     "players": {},
-    "stack": []
+    "stack": ["Lightning Bolt@alice#1"]
   },
   "family": "activated",
   "format": 1,

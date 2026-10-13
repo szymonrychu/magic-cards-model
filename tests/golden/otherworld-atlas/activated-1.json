@@ -36,16 +36,9 @@
   "delta": {
     "created": {},
     "decisions": [],
-    "fields_changed": ["cards_drawn_this_turn"],
+    "fields_changed": [],
     "notices": {},
-    "objects": {
-      "Forest@alice#6": {
-        "zone": ["library", "hand"]
-      },
-      "Forest@bob#4": {
-        "zone": ["library", "hand"]
-      }
-    },
+    "objects": {},
     "players": {},
     "stack": []
   },

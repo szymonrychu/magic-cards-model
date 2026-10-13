@@ -42,17 +42,13 @@
         "kind": "may",
         "player": "alice",
         "players": [],
-        "prompt": "draw 1 cards",
+        "prompt": "draw 0 cards",
         "source": "Surrakar Spellblade"
       }
     ],
-    "fields_changed": ["cards_drawn_this_turn"],
+    "fields_changed": [],
     "notices": {},
-    "objects": {
-      "Forest@alice#6": {
-        "zone": ["library", "hand"]
-      }
-    },
+    "objects": {},
     "players": {},
     "stack": []
   },

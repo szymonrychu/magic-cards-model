@@ -36,13 +36,9 @@
   "delta": {
     "created": {},
     "decisions": [],
-    "fields_changed": ["graveyard_arrivals_announced", "graveyard_arrivals_this_turn"],
+    "fields_changed": [],
     "notices": {},
-    "objects": {
-      "Forest@alice#6": {
-        "zone": ["library", "graveyard"]
-      }
-    },
+    "objects": {},
     "players": {},
     "stack": []
   },

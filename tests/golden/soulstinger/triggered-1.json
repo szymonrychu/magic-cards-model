@@ -42,17 +42,13 @@
         "kind": "may",
         "player": "alice",
         "players": [],
-        "prompt": "put a -1/-1 counter on target creature",
+        "prompt": "put 0 -1/-1 counters on target creature",
         "source": "Soulstinger"
       }
     ],
-    "fields_changed": ["counters_put_this_turn", "creatures_died_this_turn", "graveyard_arrivals_announced", "graveyard_arrivals_this_turn", "nontoken_creatures_died_under_control_this_turn", "permanents_left_battlefield_this_turn", "turn_counts", "turn_history"],
+    "fields_changed": [],
     "notices": {},
-    "objects": {
-      "Memnite@alice#1": {
-        "zone": ["battlefield", "graveyard"]
-      }
-    },
+    "objects": {},
     "players": {},
     "stack": []
   },
