@@ -6575,10 +6575,14 @@ def _parse_look_top_cast_le_greatest_attacking_power_whole_text(
 #: 202.3 gives the mana value compared). CR 118.9 and CR 608.2g: cast during
 #: resolution, no mana paid; CR 608.2d: only a spell that can really be cast
 #: is offered, so a hand with none asks nothing.
+#: Buster Sword's "a spell from your hand with mana value N or less" (its N
+#: read in from the combat damage dealt) is the same instruction with no
+#: quality and an upper bound.
 _MAY_CAST_FROM_HAND_FREE_RE = re.compile(
-    r"^you may cast an? (?P<quality>[^.]+?) spell"
-    r"(?: with mana value equal to (?P<n>\d+))?"
-    r" from your hand without paying its mana cost\.?$",
+    r"^you may cast an? (?:(?P<quality>[^.]+?) )?spell"
+    r"(?: with mana value (?:equal to (?P<n>\d+)|(?P<most>\d+) or less))?"
+    r" from your hand(?: with mana value (?P<most_after>\d+) or less)?"
+    r" without paying its mana cost\.?$",
     re.IGNORECASE,
 )
 
@@ -6587,13 +6591,18 @@ _MAY_CAST_FROM_HAND_FREE_RE = re.compile(
 def _parse_may_cast_from_hand_free_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
     """`_MAY_CAST_FROM_HAND_FREE_RE`'s shape, or `None`."""
     match = _MAY_CAST_FROM_HAND_FREE_RE.fullmatch(" ".join(clause.strip().split()))
-    if match is None or not _card_description_is_readable(match.group("quality")):
+    if match is None:
         return None
-    quality = _quality_matcher(match.group("quality"))
+    described = match.group("quality")
+    if described is not None and not _card_description_is_readable(described):
+        return None
+    quality = _quality_matcher(described) if described is not None else (lambda _card: True)
     value = int(match.group("n")) if match.group("n") else None
-    phrase = f"{match.group('quality')} spell" + (
+    raw_most = match.group("most") or match.group("most_after")
+    most = int(raw_most) if raw_most else None
+    phrase = (f"{described} spell" if described else "spell") + (
         f" with mana value equal to {value}" if value is not None else ""
-    )
+    ) + (f" with mana value {most} or less" if most is not None else "")
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
         player = game.controller_of(stack_object)
@@ -6605,6 +6614,7 @@ def _parse_may_cast_from_hand_free_clause(clause: str, *, for_spell: bool) -> Ta
             if not card.card.is_land
             and quality(card)
             and (value is None or card.mana_value == value)
+            and (most is None or card.mana_value <= most)
             and game.can_cast_during_resolution(card, player.username)
         ]
         if not legal or not game.may(

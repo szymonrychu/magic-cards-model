@@ -2814,7 +2814,8 @@ def _merge_exile_until_quality_then_counter_or_cast_clauses(
 #: cards without paying their mana costs." is the same instruction with an
 #: "up to" maximum and the antecedent named rather than pronouned.
 _CAST_ANY_NUMBER_FROM_AMONG_THEM_FREE_RE = re.compile(
-    rf"^you may cast (?:any number of|up to {count_pattern('limit')}) spells from among"
+    rf"^you may cast (?:any number of|up to {count_pattern('limit')}) spells"
+    r"(?: with mana value (?P<most>\d+) or less)? from among"
     r" (?:them|the exiled cards|the (?P<this_way>[\w' -]+?) cards exiled this way)"
     r" without paying their mana costs\.?$",
     re.IGNORECASE,
@@ -2833,6 +2834,9 @@ def _merge_exile_then_cast_any_number_free_clauses(
     if cast_match is None:
         return None
     limit = parse_count(cast_match.group("limit")) if cast_match.group("limit") else None
+    # Kotis, the Fangkeeper's "spells with mana value X or less", its X read in
+    # (CR 202.3): a card over it is never offered.
+    most = int(cast_match.group("most")) if cast_match.group("most") else None
     this_way = cast_match.group("this_way")
     each_player = _each_player_exile_until(clauses[index])
     if each_player is not None:
@@ -2871,7 +2875,7 @@ def _merge_exile_then_cast_any_number_free_clauses(
         found = exile(game, stack_object)
         _offer_free_casts_from_among(
             game,
-            found,
+            [card for card in found if most is None or card.mana_value <= most],
             caster,
             source_name=source_name,
             source_id=source_id_of(stack_object),

@@ -28,11 +28,12 @@ Rules, each read in full with `mise run rules:find` in this session:
 import pytest
 
 from magic_cards_model.machines import Step
+from magic_cards_model.machines.keywords import equip_activation
 from magic_cards_model.models import Color, Zone
 from magic_cards_model.support import card_support
 from tests.cards import card
 
-from .harness import Scenario
+from .harness import Scenario, mana_from
 
 LISTED = [
     "Barrel Down Sokenzan",
@@ -126,6 +127,14 @@ def _resolve_all(scenario):
     while scenario.stack_names() or scenario.pending_triggers:
         scenario.game.put_triggers_on_stack()
         scenario.pass_until_resolved()
+
+
+def _advance_to(scenario, step):
+    """Walk the turn through `Game.advance`, so beginning-of-step triggers
+    fire (CR 503.1a-style "at the beginning of"), then resolve them."""
+    while scenario.turn.step is not step:
+        scenario.advance()
+    _resolve_all(scenario)
 
 
 def _on_battlefield(scenario, name, username="alice"):
@@ -600,8 +609,7 @@ def test_shanna_draws_x_capped_by_life_gained_this_turn():
     scenario.game.gain_life(scenario.player("alice"), 2)
     hand = len(scenario.player("alice").hand)
     scenario.will_choose_an_amount(2, source="Shanna, Purifying Blade")
-    scenario.turn.advance_to(Step.END)
-    _resolve_all(scenario)
+    _advance_to(scenario, Step.END_STEP)
     assert len(scenario.player("alice").hand) == hand + 2
 
 
@@ -610,8 +618,7 @@ def test_shanna_refuses_x_above_life_gained():
     scenario.game.gain_life(scenario.player("alice"), 1)
     scenario.will_choose_an_amount(3, source="Shanna, Purifying Blade")
     with pytest.raises(ValueError, match="at most 1"):
-        scenario.turn.advance_to(Step.END)
-        _resolve_all(scenario)
+        _advance_to(scenario, Step.END_STEP)
 
 
 def test_florian_looks_at_the_life_opponents_lost_this_turn():
@@ -622,8 +629,7 @@ def test_florian_looks_at_the_life_opponents_lost_this_turn():
     scenario.game.lose_life(scenario.player("bob"), 2)
     ring = scenario.find("Sol Ring", Zone.LIBRARY, "alice")
     scenario.will_choose_cards(ring, source="Florian, Voldaren Scion")
-    scenario.turn.advance_to(Step.POSTCOMBAT_MAIN)
-    _resolve_all(scenario)
+    _advance_to(scenario, Step.POSTCOMBAT_MAIN)
     assert ring.zone is Zone.EXILE
 
 
@@ -639,3 +645,49 @@ def test_blood_tribute_kicked_gains_the_life_lost_this_way():
     )
     assert scenario.player("bob").life == 10
     assert scenario.player("alice").life == 30
+
+
+def test_buster_sword_draws_then_casts_a_spell_up_to_the_damage_free():
+    scenario = _board(
+        alice_battlefield=["Buster Sword", "Grizzly Bears"],
+        alice_hand=["Colossal Dreadmaw", "Llanowar Elves"],
+        alice_library=["Forest"] * 5,
+    )
+    sword = scenario.find("Buster Sword", Zone.BATTLEFIELD, "alice")
+    bears = scenario.creature("Grizzly Bears", "alice")
+    activation = equip_activation(scenario.game, sword, bears, "alice")
+    payment = activation.begin_paying()
+    for source in scenario.untapped_sources("Plains", "Plains", username="alice"):
+        payment.tap_for_mana(source, mana_from(source))
+    payment.pay()
+    activation.activate()
+    scenario.pass_until_resolved()
+    elves = scenario.find("Llanowar Elves", Zone.HAND, "alice")
+    dreadmaw = scenario.find("Colossal Dreadmaw", Zone.HAND, "alice")
+    hand = len(scenario.player("alice").hand)
+    scenario.will_take_the_may(True, source="Buster Sword")
+    scenario.will_choose_cards(elves, source="Buster Sword")
+    _hit(scenario, "Grizzly Bears")
+    _resolve_all(scenario)
+    # 5 damage: the 6-mana Dreadmaw is never offered, the Elves are cast free.
+    assert elves.zone is Zone.BATTLEFIELD or any(
+        s.name == "Llanowar Elves" for s in scenario.game.battlefield
+    )
+    assert dreadmaw.zone is Zone.HAND
+    assert len(scenario.player("alice").hand) == hand  # drew one, cast one
+
+
+@pytest.mark.parametrize(
+    ("top", "where"), [("Grizzly Bears", Zone.BATTLEFIELD), ("Colossal Dreadmaw", Zone.HAND)]
+)
+def test_ziatoras_envoy_casts_the_top_card_up_to_the_damage_else_takes_it(top, where):
+    scenario = _board(alice_battlefield=["Ziatora's Envoy"], alice_library=[top, "Forest"])
+    card_on_top = scenario.find(top, Zone.LIBRARY, "alice")
+    if where is Zone.BATTLEFIELD:
+        scenario.will_take_the_may(True, source="Ziatora's Envoy")
+    _hit(scenario, "Ziatora's Envoy")
+    landed = [s for s in scenario.game.battlefield if s.name == top]
+    if where is Zone.BATTLEFIELD:
+        assert landed
+    else:
+        assert card_on_top.zone is Zone.HAND and not landed

@@ -5895,9 +5895,31 @@ def _parse_exile_any_number_of_your_permanents_then_delayed_return_clauses(
 #: (CR 601.2c never runs for it), so this reads `ability.event.player` rather
 #: than `stack_object.targets` the way `_LOOK_AT_TOP_CARD_RE`'s "target
 #: player's library" reads an actual target.
+#: "exile the top card of that player's library" (Ragavan); "exile the top X
+#: cards of their library" (Kotis, the Fangkeeper, its X already read in from
+#: the damage dealt) - "that player" / "their" is the trigger's own player.
 _EXILE_TOP_OF_THAT_PLAYERS_LIBRARY_RE = re.compile(
-    r"^exile the top card of that player's library$", re.IGNORECASE
+    rf"^exile the top (?:card|(?P<n>{COUNT}) cards) of (?:that player's|their) library$",
+    re.IGNORECASE,
 )
+
+
+def _exile_top_of_event_players_library(game: "Game", ability: Any, count: int) -> list[CardState]:
+    """The top `count` cards of the trigger event's player's library, exiled
+    one at a time (CR 406.1); fewer when the library runs short."""
+    event = getattr(ability, "event", None)
+    username = event.player if event is not None else None
+    if username is None:
+        return []
+    player = game.player(username)
+    return [game.exile_permanent(player.library[0]) for _ in range(count) if player.library]
+
+
+def _that_players_top_count(clause: str) -> int | None:
+    match = _EXILE_TOP_OF_THAT_PLAYERS_LIBRARY_RE.fullmatch(clause.strip())
+    if match is None:
+        return None
+    return parse_count(match.group("n")) if match.group("n") else 1
 
 
 @MIXED_CLAUSE.rung("s26", for_spell=FORWARD)
@@ -5910,19 +5932,13 @@ def _parse_exile_that_players_library_clause(
     """
     if for_spell:
         return None
-    if not _EXILE_TOP_OF_THAT_PLAYERS_LIBRARY_RE.fullmatch(clause.strip()):
+    count = _that_players_top_count(clause)
+    if count is None:
         return None
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
-        ability = stack_object
-        assert isinstance(ability, AbilityOnStack)
-        event = ability.event
-        username = event.player if event is not None else None
-        if username is None:
-            return
-        player = game.player(username)
-        if player.library:
-            game.exile_permanent(player.library[0])
+        assert isinstance(stack_object, AbilityOnStack)
+        _exile_top_of_event_players_library(game, stack_object, count)
 
     return effect
 
@@ -6164,19 +6180,13 @@ def _parse_exile_antecedent(clause: str) -> tuple[ExileAntecedent, bool] | None:
 
         return exile_own_top, carried or x_expression is not None or n > 1
 
-    if _EXILE_TOP_OF_THAT_PLAYERS_LIBRARY_RE.fullmatch(stripped):
+    if (that_count := _that_players_top_count(stripped)) is not None:
 
         def exile_top(game: "Game", ability: AbilityOnStack) -> list[CardState]:
-            event = ability.event
-            username = event.player if event is not None else None
-            if username is None:
-                return []
-            player = game.player(username)
-            if not player.library:
-                return []
-            return [game.exile_permanent(player.library[0])]
+            return _exile_top_of_event_players_library(game, ability, that_count)
 
-        return exile_top, False
+        # A plural "cards" names a group, whatever number was read in.
+        return exile_top, " cards of " in stripped.lower()
 
     match = _SEARCH_AND_EXILE_ANY_NUMBER_RE.fullmatch(stripped)
     if match is not None:
