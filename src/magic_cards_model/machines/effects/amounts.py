@@ -67,9 +67,11 @@ from ..ep02_r1_life_amounts import life_this_turn_count
 from ..ep02_r2_cards_in_zone_counts import (
     hand_count_expression,
     parse_attached_pump_until_end_of_turn_clause,
+    parse_cast_any_number_from_hand_free_clause,
     parse_defending_player_clause,
     parse_hand_difference_spell,
     parse_mill_by_stat_then_return_self_and_milled,
+    parse_no_maximum_hand_size_while_controlling_clause,
 )
 from ..layers import (
     BASIC_LAND_TYPES,
@@ -5847,3 +5849,12 @@ def _parse_attached_pump_until_end_of_turn_instruction_clause(
 ) -> TargetedClause | None:
     """`parse_attached_pump_until_end_of_turn_clause`'s shape, on an ability."""
     return parse_attached_pump_until_end_of_turn_clause(clause, for_spell=for_spell)
+
+
+@MIXED_CLAUSE.rung("s37", for_spell=FORWARD)
+def _parse_hand_rule_instruction_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
+    """A hand-size rider or a free cast of any number of spells from the hand
+    (Jin-Gitaxias // The Great Synthesis' chapters I and III)."""
+    return parse_no_maximum_hand_size_while_controlling_clause(
+        clause, for_spell=for_spell
+    ) or parse_cast_any_number_from_hand_free_clause(clause, for_spell=for_spell)

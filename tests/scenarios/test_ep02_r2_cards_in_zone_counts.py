@@ -914,3 +914,77 @@ def test_season_of_loss_refuses_a_repeat_total_over_budget():
     scenario, casting = _season_of_loss([])
     with pytest.raises(ValueError, match="pawprint"):
         casting.choose_modes([2, 2, 2])
+
+
+# -- a Saga counting the hand, dropping the hand limit, then casting for free ----------
+
+
+def _great_synthesis():
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=["Jin-Gitaxias", "Island", "Island", "Island", "Island", "Grizzly Bears"],
+            hand=[CARD] * 5 + ["Divination"] * 2,
+            library=[CARD] * 30,
+        )
+        .player("bob", battlefield=["Hill Giant"], library=[CARD] * 30)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    jin = scenario.creature("Jin-Gitaxias", "alice")
+    scenario.activate(jin, *scenario.untapped_sources("Island", "Island", "Island", "Island"))
+    scenario.resolve_top()
+    return scenario
+
+
+def _to_main_of(scenario, username):
+    scenario.advance()
+    while not (
+        scenario.step is Step.PRECOMBAT_MAIN and scenario.game.active_player.username == username
+    ):
+        scenario.advance()
+        scenario.game.put_triggers_on_stack()
+        while scenario.stack_names():
+            scenario.pass_until_resolved()
+
+
+def test_jin_gitaxias_transforms_into_a_saga_whose_first_chapter_draws_a_hand_and_lifts_the_limit():
+    scenario = _great_synthesis()
+    _settle(scenario)
+    names = [c.name for c in scenario.game.permanents_controlled_by("alice")]
+    assert "The Great Synthesis" in names
+    assert len(scenario.player("alice").hand) == 14
+    assert scenario.player("alice").has_no_maximum_hand_size
+
+
+def test_the_great_synthesis_second_chapter_returns_every_non_phyrexian_creature():
+    scenario = _great_synthesis()
+    _settle(scenario)
+    _to_main_of(scenario, "bob")
+    _to_main_of(scenario, "alice")
+    _settle(scenario)
+    assert _count_named(scenario, "Grizzly Bears", "alice") == 0
+    assert _count_named(scenario, "Hill Giant", "bob") == 0
+    assert "Hill Giant" in [c.name for c in scenario.player("bob").hand]
+
+
+def test_the_great_synthesis_third_chapter_casts_spells_free_and_returns_front_face_up():
+    scenario = _great_synthesis()
+    _settle(scenario)
+    _to_main_of(scenario, "bob")
+    _to_main_of(scenario, "alice")
+    _settle(scenario)
+    _to_main_of(scenario, "bob")
+    divinations = [c for c in scenario.player("alice").hand if c.name == "Divination"]
+    scenario.will_choose_cards(divinations[0], username="alice")
+    scenario.will_choose_cards(divinations[1], username="alice")
+    scenario.will_choose_cards(username="alice")
+    hand_before = len(scenario.player("alice").hand)
+    _to_main_of(scenario, "alice")
+    _settle(scenario)
+    # two Divinations cast free: out of the hand, each drawing two (plus the turn's draw)
+    assert len([c for c in scenario.player("alice").hand if c.name == "Divination"]) == 0
+    assert len(scenario.player("alice").hand) == hand_before + 1 - 2 + 4
+    names = [c.name for c in scenario.game.permanents_controlled_by("alice")]
+    assert "Jin-Gitaxias" in names and "The Great Synthesis" not in names

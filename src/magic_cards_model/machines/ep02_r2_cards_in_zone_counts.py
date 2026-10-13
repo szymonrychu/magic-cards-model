@@ -589,3 +589,123 @@ def parse_mill_by_stat_then_return_self_and_milled(text: str):
                 game.put_onto_battlefield(card, controller.username)
 
     return effect
+
+
+# --------------------------------------------------------------------------
+# "You have no maximum hand size for as long as you control this Saga."
+# --------------------------------------------------------------------------
+
+_NO_MAX_HAND_WHILE_CONTROLLING_RE = re.compile(
+    r"^you have no maximum hand size for as long as you control (?:this [a-z]+|it)$",
+    re.IGNORECASE,
+)
+
+
+def parse_no_maximum_hand_size_while_controlling_clause(clause: str, *, for_spell: bool):
+    """Jin-Gitaxias // The Great Synthesis' chapter I rider. A layer 6 grant
+    (CR 613.1f) of the static "You have no maximum hand size." to the source,
+    which `Player.has_no_maximum_hand_size` already reads off a permanent's
+    lines (CR 402.2, CR 613.11). Duration is CR 611.2b's "for as long as you
+    control this", `YouStillControl`: it ends the moment the source leaves or
+    changes controller and does not come back (CR 400.7). Ability-only."""
+    if (
+        for_spell
+        or _NO_MAX_HAND_WHILE_CONTROLLING_RE.fullmatch(" ".join(clause.split()).rstrip(".")) is None
+    ):
+        return None
+
+    def effect(game, ability):
+        from ..models.zone import Zone
+        from .effects.continuous import continuous_effects
+        from .layers import ContinuousEffect, Duration, Layer, grant_ability
+        from .layers.model import YouStillControl, only_this_incarnation
+
+        source = ability.source(game)
+        if (
+            source is None
+            or source.zone is not Zone.BATTLEFIELD
+            or source.zone_change_stamp is None
+            or source.controller is None
+            or (
+                ability.source_stamp is not None
+                and source.zone_change_stamp != ability.source_stamp
+            )
+        ):
+            return
+        store = continuous_effects(game)
+        store.add(
+            ContinuousEffect(
+                description=f"{source.name}: its controller has no maximum hand size",
+                layer=Layer.ABILITY,
+                timestamp=store.tick(),
+                duration=Duration.FOR_AS_LONG_AS,
+                condition=YouStillControl(
+                    card_id=source.id,
+                    stamp=source.zone_change_stamp,
+                    controller=source.controller,
+                ),
+                selector=only_this_incarnation(source, source.zone_change_stamp),
+                modification=grant_ability("You have no maximum hand size."),
+            ),
+            game,
+        )
+
+    return effect
+
+
+# --------------------------------------------------------------------------
+# "You may cast any number of spells from your hand without paying their mana costs."
+# --------------------------------------------------------------------------
+
+_CAST_ANY_NUMBER_FROM_HAND_FREE_RE = re.compile(
+    r"^you may cast any number of spells from your hand without paying their mana costs$",
+    re.IGNORECASE,
+)
+
+
+def parse_cast_any_number_from_hand_free_clause(clause: str, *, for_spell: bool):
+    """Jin-Gitaxias // The Great Synthesis' chapter III. Spells are cast one at
+    a time during resolution (CR 608.2g: each follows CR 601.2a-i with no
+    priority, and lands as the topmost object of the stack), choosing among
+    the cards that can really be cast now (CR 608.2d) until the controller
+    stops or none is left. Casting one first can empty or change the hand, so
+    the choice is offered again afterwards."""
+    if _CAST_ANY_NUMBER_FROM_HAND_FREE_RE.fullmatch(" ".join(clause.split()).rstrip(".")) is None:
+        return None
+
+    def effect(game, stack_object):
+        from .decisions import Decision, DecisionKind, source_id_of
+
+        player = game.controller_of(stack_object)
+        source = getattr(stack_object, "source_name", None) or stack_object.name
+        while True:
+            legal = [
+                card
+                for card in player.hand
+                if not card.card.is_land and game.can_cast_during_resolution(card, player.username)
+            ]
+            if not legal:
+                return
+            chosen_ids = game.ask(
+                Decision(
+                    kind=DecisionKind.CHOOSE_CARDS,
+                    player=player.username,
+                    prompt="choose a spell to cast without paying its mana cost",
+                    source=source,
+                    source_id=source_id_of(stack_object),
+                    amount=1,
+                    exact=False,
+                    cards=tuple(card.id for card in legal),
+                )
+            )
+            by_id = {card.id: card for card in legal}
+            picked = [by_id[card_id] for card_id in chosen_ids if card_id in by_id]
+            if not picked:
+                return
+            game.cast_during_resolution(
+                picked[0], player.username, source_name=source, rule="CR 608.2g"
+            )
+            if picked[0] in player.hand:
+                return  # the cast was not made; offering it again would loop
+
+    return effect
