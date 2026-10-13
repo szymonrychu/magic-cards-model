@@ -40,6 +40,7 @@ from ...machines.decisions import (
     source_id_of,
 )
 from ...machines.delayed import (
+    CopyEpicSpell,
     DelayedEffectSpec,
     DelayedTrigger,
     ParadigmCopyAndCast,
@@ -258,7 +259,14 @@ class TriggersDecisionsMixin:
                 source_id=spell.id,
                 source_name=spell.name,
                 subject_id=spell.id,
-                effect=copy_epic_spell,
+                effect=(
+                    CopyEpicSpell(
+                        copy_of=spell.model_copy(deep=True),
+                        cast_record=self.cast_record(spell).model_dump(mode="json"),
+                    )
+                    if spell.is_copy
+                    else copy_epic_spell
+                ),
             )
         )
 

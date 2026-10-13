@@ -519,13 +519,33 @@ class CopyEpicSpell(DelayedEffectSpecBase):
 
     kind: Literal["epic_copy_spell"] = "epic_copy_spell"
 
+    copy_of: CardState | None = None
+    """Set only when the epic spell was itself a copy (Reverberate on it): a
+    copy ceases to exist as it leaves the stack (CR 707.10a), so nothing could
+    be looked up by id at the upkeep. This is the copy as it last existed on
+    the stack, with its targets and `cast_record` (its modes and X, dumped as
+    JSON), and the upkeep copies it from there (CR 608.2h)."""
+
+    cast_record: dict | None = None
+
     def __call__(self, game: "Game", ability: AbilityOnStack, trigger: "DelayedTrigger") -> None:
         if trigger.subject_id is None or not game.is_in_game(trigger.controller):
             return
-        spell = game.find_by_id(trigger.subject_id)
-        if not isinstance(spell, CardState):
-            return
-        copy = game.copy_spell_as_last_known(spell, controller=trigger.controller)
+        if self.copy_of is not None:
+            from ..models.game.records import CastRecord
+
+            copy = game._put_spell_copy(
+                self.copy_of,
+                trigger.controller,
+                original_record=CastRecord.model_validate(self.cast_record or {}),
+                targets=list(self.copy_of.targets),
+                division=self.copy_of.division,
+            )
+        else:
+            spell = game.find_by_id(trigger.subject_id)
+            if not isinstance(spell, CardState):
+                return
+            copy = game.copy_spell_as_last_known(spell, controller=trigger.controller)
         if copy is None:
             return
         copy.epic_suppressed = True

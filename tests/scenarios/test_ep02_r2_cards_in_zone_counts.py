@@ -1052,6 +1052,38 @@ def test_epic_copies_the_spell_at_each_of_your_upkeeps_without_epic_itself():
     assert _snakes(scenario) == 6 + len(scenario.player("alice").hand)
 
 
+def test_a_copy_of_an_epic_spell_keeps_copying_after_it_ceases_to_exist():
+    """CR 702.50a, CR 707.10a: a copy of an epic spell (Reverberate on it) has
+    epic too, so when it resolves it makes its own upkeep trigger, and that
+    trigger outlives the copy, which ceases to exist as it leaves the stack."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Endless Swarm", CARD, CARD],
+            battlefield=["Forest"] * 8,
+            library=[CARD] * 12,
+        )
+        .player("bob", library=[CARD] * 12)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    swarm = scenario.cast_onto_stack(
+        "Endless Swarm", *scenario.untapped_sources(*(["Forest"] * 8)), username="alice"
+    )
+    copy = scenario.game.copy_spell(swarm, controller="alice")
+    scenario.resolve_top()  # the copy: two cards in hand, two snakes
+    scenario.resolve_top()  # the original
+    assert _snakes(scenario) == 4
+    assert copy not in scenario.game.stack
+    hand_before = len(scenario.player("alice").hand)
+    _advance_to_upkeep_of(scenario, "bob")
+    _advance_to_upkeep_of(scenario, "alice")
+    _settle(scenario)
+    # two delayed triggers (one per resolved epic spell), each copy counting the hand
+    assert _snakes(scenario) == 4 + 2 * hand_before  # upkeep is before the draw
+
+
 def _epic_torment():
     scenario = (
         Scenario()
