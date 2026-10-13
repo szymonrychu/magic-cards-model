@@ -487,3 +487,122 @@ def test_sphinx_of_clear_skies_splits_into_piles():
         scenario.game.put_triggers_on_stack()
     assert bears.zone is Zone.HAND
     assert giant.zone is Zone.GRAVEYARD
+
+
+# --------------------------------------------------------------------------
+# Domain as -X/-X, as a counter threshold, as a mana value ceiling
+# --------------------------------------------------------------------------
+
+
+def test_drag_to_the_bottom_shrinks_every_creature_by_one_plus_domain():
+    scenario = _main(
+        _build(
+            ["Swamp", "Swamp", "Forest", "Island", "Hill Giant", "Kraken of the Straits"],
+            bob=["Grizzly Bears", "Serra Angel"],
+            hand=["Drag to the Bottom"],
+        )
+    )
+    scenario.cast_and_resolve("Drag to the Bottom", auto=True, username="alice")
+    # three basic land types: -4/-4 for everyone, the Kraken (6/6) survives as 2/2
+    kraken = scenario.creature("Kraken of the Straits", "alice")
+    assert _pt(scenario, kraken) == (2, 2)
+    scenario.state_based_actions()
+    assert "Hill Giant" in _names(scenario.player("alice").graveyard)
+    assert "Grizzly Bears" in _names(scenario.player("bob").graveyard)
+    assert "Serra Angel" in _names(scenario.player("bob").graveyard)
+
+
+def test_drag_to_the_bottom_with_no_lands_but_its_own_cost_is_minus_one():
+    scenario = _main(
+        _build(["Swamp", "Swamp", "Swamp", "Swamp", "Grizzly Bears"], hand=["Drag to the Bottom"])
+    )
+    scenario.cast_and_resolve("Drag to the Bottom", auto=True, username="alice")
+    scenario.state_based_actions()
+    # one basic land type (Swamp): -2/-2 kills the 2/2
+    assert "Grizzly Bears" in _names(scenario.player("alice").graveyard)
+
+
+def test_zar_ojanen_counters_only_the_small_creatures_when_it_becomes_tapped():
+    scenario = _main(
+        _build(
+            ["Plains", "Forest", "Island", "Zar Ojanen, Scion of Efrava", "Grizzly Bears", "Hill Giant"],
+            bob=["Grizzly Bears"],
+        )
+    )
+    zar = scenario.creature("Zar Ojanen, Scion of Efrava", "alice")
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    scenario.attack_with(zar)
+    scenario.game.put_triggers_on_stack()
+    while scenario.game.stack:
+        scenario.resolve_top()
+        scenario.game.put_triggers_on_stack()
+    # three basic land types: toughness less than 3 gets a counter
+    assert scenario.creature("Grizzly Bears", "alice").counter_count(Counter.PLUS_ONE) == 1
+    assert scenario.creature("Hill Giant", "alice").counter_count(Counter.PLUS_ONE) == 0
+    assert scenario.creature("Grizzly Bears", "bob").counter_count(Counter.PLUS_ONE) == 0
+
+
+# --------------------------------------------------------------------------
+# Party - Emeria Captain and Strength of Solidarity (CR 700.8)
+# --------------------------------------------------------------------------
+
+PARTY = ["Codespell Cleric", "Deathcult Rogue", "Fugitive Wizard"]
+
+
+def test_emeria_captain_gets_a_counter_for_each_party_member_including_itself():
+    scenario = _main(_build(["Plains"] * 4 + PARTY, hand=["Emeria Captain"]))
+    _creature_etb(scenario, "Emeria Captain")
+    # Cleric, Rogue, Wizard and the Captain itself (an Angel Warrior): a full party of four
+    assert scenario.creature("Emeria Captain", "alice").counter_count(Counter.PLUS_ONE) == 4
+
+
+def test_emeria_captain_alone_is_a_party_of_one():
+    scenario = _main(_build(["Plains"] * 4, hand=["Emeria Captain"]))
+    _creature_etb(scenario, "Emeria Captain")
+    assert scenario.creature("Emeria Captain", "alice").counter_count(Counter.PLUS_ONE) == 1
+
+
+def test_the_party_counts_only_your_own_creatures():
+    scenario = _main(_build(["Plains"] * 4, bob=PARTY, hand=["Emeria Captain"]))
+    _creature_etb(scenario, "Emeria Captain")
+    assert scenario.creature("Emeria Captain", "alice").counter_count(Counter.PLUS_ONE) == 1
+
+
+def test_strength_of_solidarity_counts_the_party_onto_the_chosen_creature():
+    scenario = _main(
+        _build(["Forest", "Codespell Cleric", "Deathcult Rogue", "Grizzly Bears"], hand=["Strength of Solidarity"])
+    )
+    bears = scenario.creature("Grizzly Bears", "alice")
+    scenario.cast_and_resolve("Strength of Solidarity", auto=True, username="alice", targets=[bears])
+    assert bears.counter_count(Counter.PLUS_ONE) == 2
+
+
+# --------------------------------------------------------------------------
+# Domain as a mana value ceiling - Bortuk Bonerattle
+# --------------------------------------------------------------------------
+
+BORTUK_LANDS = ["Swamp", "Swamp", "Swamp", "Forest", "Forest", "Forest"]
+
+
+def test_bortuk_returns_a_cheap_creature_to_the_battlefield():
+    scenario = _main(_build(BORTUK_LANDS, hand=["Bortuk Bonerattle"], graveyard=["Grizzly Bears"]))
+    bears = scenario.find("Grizzly Bears", Zone.GRAVEYARD, "alice")
+    _creature_etb(scenario, "Bortuk Bonerattle", targets=[bears])
+    assert bears.zone is Zone.BATTLEFIELD  # mana value 2 <= 2 basic land types
+
+
+def test_bortuk_puts_an_expensive_creature_into_the_hand():
+    scenario = _main(_build(BORTUK_LANDS, hand=["Bortuk Bonerattle"], graveyard=["Hill Giant"]))
+    giant = scenario.find("Hill Giant", Zone.GRAVEYARD, "alice")
+    _creature_etb(scenario, "Bortuk Bonerattle", targets=[giant])
+    assert giant.zone is Zone.HAND  # mana value 4 > 2 basic land types
+
+
+def test_bortuk_does_nothing_when_it_was_not_cast():
+    scenario = _main(_build(BORTUK_LANDS, hand=["Bortuk Bonerattle"], graveyard=["Grizzly Bears"]))
+    bears = scenario.find("Grizzly Bears", Zone.GRAVEYARD, "alice")
+    scenario.choose_trigger_targets("Bortuk Bonerattle", [bears])
+    scenario.put_onto_battlefield("Bortuk Bonerattle", "alice")
+    scenario.game.put_triggers_on_stack()
+    assert scenario.game.stack == []
+    assert bears.zone is Zone.GRAVEYARD

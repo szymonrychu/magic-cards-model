@@ -35,6 +35,7 @@ from ..chosen_type import (
     shares_creature_type,
 )
 from ..decisions import Decision, DecisionKind, source_id_of
+from ..ep02_r2_devotion_domain_party import counters_amount_effect
 from ..delayed import (
     ANAPHORIC_TIMING_STEPS,
     AddManaAmountForController,
@@ -4883,3 +4884,10 @@ def _parse_may_remove_from_each_then_put_per_removed(text: str) -> AbilityEffect
             game.add_counters(source, put_kind, removed)
 
     return effect
+
+
+@ABILITY_TEXT.rung("s1", for_spell=False)
+@SPELL_TEXT.rung("s1", for_spell=True)
+def _parse_counters_amount_text(text: str, *, for_spell: bool) -> Effect | AbilityEffect | None:
+    """"Put a +1/+1 counter on it for each creature in your party", "Choose target creature you control. Put ... on it for each ...", "Put a +1/+1 counter on each creature you control with toughness less than <amount>" (`ep02_r2_devotion_domain_party`)."""
+    return counters_amount_effect(text)

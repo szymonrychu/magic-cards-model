@@ -24,15 +24,19 @@ import functools
 import re
 from typing import TYPE_CHECKING, Any
 
+from ..models.card import Type
 from ..models.card_state import CardState
 from ..models.zone import Zone
 from ..numbers import COUNT, parse_count
 from .amount_sentences import (
     Amount,
     apply_life,
+    clean,
     life_clause_amount,
     parse_life_clause,
+    parse_put_counters,
     recipient_amount,
+    recipient_for_each,
 )
 from .decisions import Decision, DecisionKind, source_id_of
 
@@ -230,6 +234,139 @@ def _build(reveal, depth, kept_kind, k, rest_to, win, draw_at, life_tails):  # n
     return effect
 
 
+# --------------------------------------------------------------------------
+# Counters sized by a count: "Put a +1/+1 counter on it for each creature in your
+# party" (Emeria Captain), "Choose target creature you control. Put a +1/+1 counter
+# on it for each creature in your party." (Strength of Solidarity), "Put a +1/+1
+# counter on each creature you control with toughness less than the number of basic
+# land types among lands you control." (Zar Ojanen)
+# --------------------------------------------------------------------------
+
+_CHOOSE_TARGET_RE = re.compile(r"^choose (?P<target>target [^.]+?)\.\s+(?P<rest>.+)$", re.IGNORECASE)
+_EACH_WITH_STAT_RE = re.compile(
+    rf"^put (?P<n>{COUNT}) (?P<kind>\+1/\+1|-1/-1|[a-z]+) counters? on each "
+    r"(?P<group>creature you control) with (?P<stat>power|toughness) "
+    r"(?P<cmp>less than or equal to|less than|greater than or equal to|greater than) "
+    r"(?P<expr>.+)$",
+    re.IGNORECASE,
+)
+_COMPARE = {
+    "less than": lambda stat, bound: stat < bound,
+    "less than or equal to": lambda stat, bound: stat <= bound,
+    "greater than": lambda stat, bound: stat > bound,
+    "greater than or equal to": lambda stat, bound: stat >= bound,
+}
+
+
+def _it_subject(game: "Game", stack_object: Any, chosen: bool) -> CardState | None:
+    """What "it" names: the target a "Choose target ..." lead-in picked, else the object the
+    trigger's event is about, else the ability's own source (CR 608.2c)."""
+    if chosen:
+        targets = [t for t in game.resolve_card_targets(stack_object) if isinstance(t, CardState)]
+        return targets[0] if targets else None
+    event = getattr(stack_object, "event", None)
+    if event is not None and event.subject_id is not None:
+        return game.find_by_id(event.subject_id)
+    return stack_object.source(game) if hasattr(stack_object, "source") else stack_object
+
+
+@functools.cache
+def counters_amount_effect(text: str) -> "Any | None":
+    """The two counter readers described above, or `None`."""
+    from .effects.counters import _counter_kind
+    from .effects.text import _strip_non_effect_preamble
+
+    lowered = text.lower()
+    if "counter" not in lowered or not ("for each " in lowered or " with " in lowered):
+        return None
+    whole = " ".join(_strip_non_effect_preamble(text).split())
+    chosen = _CHOOSE_TARGET_RE.match(whole)
+    body = chosen.group("rest") if chosen is not None else whole
+    each_with = _EACH_WITH_STAT_RE.match(clean(body))
+    if each_with is not None and chosen is None:
+        unit = parse_count(each_with.group("n"))
+        bound_of = recipient_amount(each_with.group("expr"))
+        if unit is None or bound_of is None:
+            return None
+        kind = _counter_kind(each_with.group("kind"))
+        compare = _COMPARE[each_with.group("cmp").lower()]
+        stat = each_with.group("stat").lower()
+
+        def each_effect(game: "Game", stack_object: Any) -> None:
+            controller = game.controller_of(stack_object)
+            bound = bound_of(game, stack_object, controller)
+            for permanent in list(game.battlefield):
+                chars = game.computed_board().of(permanent)
+                if chars.controller != controller.username or Type.CREATURE not in chars.types:
+                    continue
+                value = game.power_of(permanent) if stat == "power" else game.toughness_of(permanent)
+                if value is not None and compare(value, bound):
+                    game.add_counters(permanent, kind, unit)
+
+        return each_effect
+    put = parse_put_counters(body)
+    if put is None or put.x or put.each is None or put.on.lower() != "it":
+        return None
+    per = recipient_for_each(put.each)
+    if per is None:
+        return None
+    unit, kind = put.n, _counter_kind(put.kind)
+    lead_in = chosen is not None
+
+    def it_effect(game: "Game", stack_object: Any) -> None:
+        amount = unit * per(game, stack_object, game.controller_of(stack_object))
+        subject = _it_subject(game, stack_object, lead_in)
+        if subject is not None and subject.zone is Zone.BATTLEFIELD and amount > 0:
+            game.add_counters(subject, kind, amount)
+
+    return it_effect
+
+
+# --------------------------------------------------------------------------
+# "Choose target creature card in your graveyard. Return that card to the battlefield
+# if its mana value is less than or equal to <amount>. Otherwise, put it into your hand."
+# (Bortuk Bonerattle)
+# --------------------------------------------------------------------------
+
+_RETURN_IF_MV_RE = re.compile(
+    r"^return that card to the battlefield if its mana value is "
+    r"(?P<cmp>less than or equal to|less than|greater than or equal to|greater than) "
+    r"(?P<expr>.+?)\.\s+otherwise, put it into your hand$",
+    re.IGNORECASE,
+)
+
+
+@functools.cache
+def return_if_mana_value_effect(text: str) -> "Any | None":
+    """The two-sentence reader above, or `None`. The target is the lead-in's."""
+    from .effects.text import _strip_non_effect_preamble
+
+    if "if its mana value is" not in text.lower():
+        return None
+    whole = " ".join(_strip_non_effect_preamble(text).split())
+    chosen = _CHOOSE_TARGET_RE.match(whole)
+    if chosen is None:
+        return None
+    match = _RETURN_IF_MV_RE.fullmatch(clean(chosen.group("rest")))
+    bound_of = recipient_amount(match.group("expr")) if match is not None else None
+    if match is None or bound_of is None:
+        return None
+    compare = _COMPARE[match.group("cmp").lower()]
+
+    def effect(game: "Game", stack_object: Any) -> None:
+        targets = [t for t in game.resolve_card_targets(stack_object) if isinstance(t, CardState)]
+        if not targets or targets[0].zone is not Zone.GRAVEYARD:
+            return
+        card = targets[0]
+        controller = game.controller_of(stack_object)
+        if compare(card.mana_value, bound_of(game, stack_object, controller)):
+            game.put_onto_battlefield(card, controller.username)
+        else:
+            controller.move(card, Zone.HAND)
+
+    return effect
+
+
 _EACH_CREATURE_GETS_RE = re.compile(r"^each creature gets\b", re.IGNORECASE)
 _TARGETS_EACH_RE = re.compile(r"\b(target creatures) each (gain|get)\b", re.IGNORECASE)
 _UP_TO_X_TARGET_RE = re.compile(r"^up to x target\b", re.IGNORECASE)
@@ -262,4 +399,4 @@ def _domain(game: "Game", controller: str) -> int:
     return 0 if reader is None else reader(game, controller)
 
 
-__all__ = ["look_top_effect", "up_to_x_targets", "where_x_pump_text_normalised"]
+__all__ = ["counters_amount_effect", "look_top_effect", "return_if_mana_value_effect", "up_to_x_targets", "where_x_pump_text_normalised"]
