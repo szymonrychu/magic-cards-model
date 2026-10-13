@@ -21,7 +21,7 @@ from .effects._chains import ABILITY_TEXT, FORWARD, MIXED_CLAUSE, SPELL_TEXT
 from .effects.amounts import amount_expression
 from .effects.continuous import continuous_effects
 from .effects.counters import _counter_kind
-from .effects.dispatch import parse_mixed_effect
+from .effects.dispatch import parse_mixed_effect, parse_mixed_effect_for_spell
 from .effects.draw_discard import _source_characteristic
 from .effects.mana import read_add_mana_instruction
 from .effects.tokens import _token_creator_for_count
@@ -1018,3 +1018,25 @@ def _parse_remove_x_counters_where_x(text: str):
         _removed_amount(game, ability, spec, x_reader)
 
     return effect
+
+
+_TWICE_N_COUNTERS_RE = re.compile(
+    r"^(?P<verb>remove|put) twice (?P<n>\d+) (?P<rest>.+?)\.?$", re.IGNORECASE
+)
+
+
+@MIXED_CLAUSE.rung("s26", for_spell=FORWARD)
+def _parse_twice_n_counters_clause(text: str, *, for_spell: bool):
+    """ "Remove twice X loyalty counters from target planeswalker" once X is a number
+    ("twice 2"): the product, then the clause reader that knows the plain count. Twice
+    zero is nothing to remove or put, so it is a clause that does nothing (CR 122.1)."""
+    if " twice " not in f" {text.lower()}":
+        return None
+    match = _TWICE_N_COUNTERS_RE.fullmatch(" ".join(text.split()))
+    if match is None:
+        return None
+    count = 2 * int(match.group("n"))
+    if count == 0:
+        return lambda game, ability: None
+    rewritten = f"{match.group('verb')} {count} {match.group('rest')}."
+    return parse_mixed_effect_for_spell(rewritten) if for_spell else parse_mixed_effect(rewritten)
