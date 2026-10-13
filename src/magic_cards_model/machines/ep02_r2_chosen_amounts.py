@@ -631,7 +631,7 @@ def _written_template(text: str) -> tuple[Measure, Callable[[int], str]] | None:
     def template(n: int) -> str:
         written = text
         for pattern, write in _EVENT_REWRITES:
-            written = pattern.sub(lambda m: write(m, n), written)
+            written = pattern.sub(lambda m, w=write: w(m, n), written)
         return written
 
     return _event_amount, template
@@ -727,9 +727,7 @@ def pay_x_capped_effect(text: str, for_spell: bool) -> Any:
         return None
     cap = amount_measure(match.group("cap"))
     body = match.group("body") + "."
-    if cap is None or not _readable_for_numbers(
-        tuple(write_x(body, n) for n in (1, 2)), for_spell
-    ):
+    if cap is None or not _readable_for_numbers(tuple(write_x(body, n) for n in (1, 2)), for_spell):
         return None
 
     def effect(game: "Game", stack_object: Any) -> None:
@@ -801,9 +799,8 @@ def _parse_look_top_play_or_cast_else_hand(text: str) -> Any:
             taken = game.may_cast_during_resolution(
                 top,
                 player.username,
-                prompt=(
-                    "play that land" if top.card.is_land else "cast that spell"
-                ) + " from the top of your library without paying its mana cost",
+                prompt=("play that land" if top.card.is_land else "cast that spell")
+                + " from the top of your library without paying its mana cost",
                 source=name,
                 source_id=source_id_of(stack_object),
                 source_name=name,

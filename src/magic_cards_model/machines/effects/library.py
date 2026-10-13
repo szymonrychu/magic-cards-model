@@ -6600,9 +6600,11 @@ def _parse_may_cast_from_hand_free_clause(clause: str, *, for_spell: bool) -> Ta
     value = int(match.group("n")) if match.group("n") else None
     raw_most = match.group("most") or match.group("most_after")
     most = int(raw_most) if raw_most else None
-    phrase = (f"{described} spell" if described else "spell") + (
-        f" with mana value equal to {value}" if value is not None else ""
-    ) + (f" with mana value {most} or less" if most is not None else "")
+    phrase = (
+        (f"{described} spell" if described else "spell")
+        + (f" with mana value equal to {value}" if value is not None else "")
+        + (f" with mana value {most} or less" if most is not None else "")
+    )
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
         player = game.controller_of(stack_object)
