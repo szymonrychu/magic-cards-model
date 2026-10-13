@@ -1,0 +1,142 @@
+{
+  "object": "card",
+  "id": "a440bbd6-8e51-4db1-90d9-7fa9fc327ad5",
+  "oracle_id": "75ffebc4-8db9-4de6-a330-e3f41cdccecc",
+  "multiverse_ids": [
+    654980
+  ],
+  "mtgo_id": 123989,
+  "arena_id": 90385,
+  "tcgplayer_id": 544646,
+  "cardmarket_id": 763996,
+  "name": "Archmage's Newt",
+  "lang": "en",
+  "released_at": "2024-04-19",
+  "uri": "https://api.scryfall.com/cards/a440bbd6-8e51-4db1-90d9-7fa9fc327ad5",
+  "scryfall_uri": "https://scryfall.com/card/otj/39/archmages-newt?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T03:04:10Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/a/4/a440bbd6-8e51-4db1-90d9-7fa9fc327ad5.jpg?1783911850",
+    "normal": "https://cards.scryfall.io/normal/front/a/4/a440bbd6-8e51-4db1-90d9-7fa9fc327ad5.jpg?1783911850",
+    "large": "https://cards.scryfall.io/large/front/a/4/a440bbd6-8e51-4db1-90d9-7fa9fc327ad5.jpg?1783911850",
+    "png": "https://cards.scryfall.io/png/front/a/4/a440bbd6-8e51-4db1-90d9-7fa9fc327ad5.png?1783911850",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/a/4/a440bbd6-8e51-4db1-90d9-7fa9fc327ad5.jpg?1783911850",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/a/4/a440bbd6-8e51-4db1-90d9-7fa9fc327ad5.jpg?1783911850",
+    "thumb": "https://cards.scryfall.io/thumb/front/a/4/a440bbd6-8e51-4db1-90d9-7fa9fc327ad5.webp?1783911850",
+    "grid": "https://cards.scryfall.io/grid/front/a/4/a440bbd6-8e51-4db1-90d9-7fa9fc327ad5.webp?1783911850",
+    "display": "https://cards.scryfall.io/display/front/a/4/a440bbd6-8e51-4db1-90d9-7fa9fc327ad5.webp?1783911850",
+    "art": "https://cards.scryfall.io/art/front/a/4/a440bbd6-8e51-4db1-90d9-7fa9fc327ad5.webp?1783911850",
+    "crop": "https://cards.scryfall.io/crop/front/a/4/a440bbd6-8e51-4db1-90d9-7fa9fc327ad5.webp?1783911850"
+  },
+  "mana_cost": "{1}{U}",
+  "cmc": 2.0,
+  "type_line": "Creature \u2014 Salamander Mount",
+  "oracle_text": "Whenever this creature deals combat damage to a player, target instant or sorcery card in your graveyard gains flashback until end of turn. The flashback cost is equal to its mana cost. That card gains flashback {0} until end of turn instead if this creature is saddled. (You may cast that card from your graveyard for its flashback cost. Then exile it.)\nSaddle 3",
+  "power": "2",
+  "toughness": "2",
+  "colors": [
+    "U"
+  ],
+  "color_identity": [
+    "U"
+  ],
+  "keywords": [
+    "Saddle"
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "55a85ebe-644e-4bef-8be8-5290408be3d1",
+  "set": "otj",
+  "set_name": "Outlaws of Thunder Junction",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/55a85ebe-644e-4bef-8be8-5290408be3d1",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Aotj&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/otj?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/a440bbd6-8e51-4db1-90d9-7fa9fc327ad5/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A75ffebc4-8db9-4de6-a330-e3f41cdccecc&unique=prints",
+  "collector_number": "39",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Edgar S\u00e1nchez Hidalgo",
+  "artist_ids": [
+    "cd897b75-a7b0-4902-8dc4-b1fda5303ec8"
+  ],
+  "illustration_id": "0a621423-6c08-4554-ab2f-e5e1ca4a5caa",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 13625,
+  "penny_rank": 6592,
+  "preview": {
+    "source": "Valerie Fatality",
+    "source_uri": "https://twitter.com/ValerieFatality/status/1773745238663659992",
+    "previewed_at": "2024-03-29"
+  },
+  "prices": {
+    "usd": "0.19",
+    "usd_foil": "0.32",
+    "usd_etched": null,
+    "eur": "0.16",
+    "eur_foil": "0.16",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=654980&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DArchmage%2527s%2BNewt",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DArchmage%2527s%2BNewt",
+    "edhrec": "https://edhrec.com/route/?cc=Archmage%27s+Newt"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F544646%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=763996&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/123989?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

@@ -1,0 +1,141 @@
+{
+  "object": "card",
+  "id": "3d3e926a-74af-4996-849f-d31e0fdedeae",
+  "oracle_id": "eab5eef8-d180-4b08-a770-6b3a1df03745",
+  "multiverse_ids": [],
+  "resource_id": "927A011546212AB2B39DE2FCDA1F05EA92D6655E43E7724243E699623CD95EBD",
+  "mtgo_id": 141229,
+  "arena_id": 96011,
+  "tcgplayer_id": 632696,
+  "cardmarket_id": 826190,
+  "name": "Nibelheim Aflame",
+  "lang": "en",
+  "released_at": "2025-06-13",
+  "uri": "https://api.scryfall.com/cards/3d3e926a-74af-4996-849f-d31e0fdedeae",
+  "scryfall_uri": "https://scryfall.com/card/fin/146/nibelheim-aflame?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T01:36:41Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/3/d/3d3e926a-74af-4996-849f-d31e0fdedeae.jpg?1783906601",
+    "normal": "https://cards.scryfall.io/normal/front/3/d/3d3e926a-74af-4996-849f-d31e0fdedeae.jpg?1783906601",
+    "large": "https://cards.scryfall.io/large/front/3/d/3d3e926a-74af-4996-849f-d31e0fdedeae.jpg?1783906601",
+    "png": "https://cards.scryfall.io/png/front/3/d/3d3e926a-74af-4996-849f-d31e0fdedeae.png?1783906601",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/3/d/3d3e926a-74af-4996-849f-d31e0fdedeae.jpg?1783906601",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/3/d/3d3e926a-74af-4996-849f-d31e0fdedeae.jpg?1783906601",
+    "thumb": "https://cards.scryfall.io/thumb/front/3/d/3d3e926a-74af-4996-849f-d31e0fdedeae.webp?1783906601",
+    "grid": "https://cards.scryfall.io/grid/front/3/d/3d3e926a-74af-4996-849f-d31e0fdedeae.webp?1783906601",
+    "display": "https://cards.scryfall.io/display/front/3/d/3d3e926a-74af-4996-849f-d31e0fdedeae.webp?1783906601",
+    "art": "https://cards.scryfall.io/art/front/3/d/3d3e926a-74af-4996-849f-d31e0fdedeae.webp?1783906601",
+    "crop": "https://cards.scryfall.io/crop/front/3/d/3d3e926a-74af-4996-849f-d31e0fdedeae.webp?1783906601"
+  },
+  "mana_cost": "{2}{R}{R}",
+  "cmc": 4.0,
+  "type_line": "Sorcery",
+  "oracle_text": "Choose target creature you control. It deals damage equal to its power to each other creature. If this spell was cast from a graveyard, discard your hand and draw four cards.\nFlashback {5}{R}{R} (You may cast this card from your graveyard for its flashback cost. Then exile it.)",
+  "colors": [
+    "R"
+  ],
+  "color_identity": [
+    "R"
+  ],
+  "keywords": [
+    "Flashback"
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "arena",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "d7beb4b7-e1ff-4d35-ab07-5700f17ea1ea",
+  "set": "fin",
+  "set_name": "Final Fantasy",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/d7beb4b7-e1ff-4d35-ab07-5700f17ea1ea",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Afin&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/fin?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/3d3e926a-74af-4996-849f-d31e0fdedeae/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Aeab5eef8-d180-4b08-a770-6b3a1df03745&unique=prints",
+  "collector_number": "146",
+  "digital": false,
+  "rarity": "mythic",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Arou",
+  "artist_ids": [
+    "4403894d-382c-40eb-9e3e-81b4db2ecf78"
+  ],
+  "illustration_id": "315979cb-9038-4ad7-99e7-74841d9a0d0e",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "triangle",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "promo_types": [
+    "universesbeyond",
+    "ffvii"
+  ],
+  "edhrec_rank": 3834,
+  "preview": {
+    "source": "Final Fantasy Website",
+    "source_uri": "https://na.finalfantasy.com/topics/589",
+    "previewed_at": "2025-05-16"
+  },
+  "prices": {
+    "usd": "3.20",
+    "usd_foil": "5.81",
+    "usd_etched": null,
+    "eur": "3.94",
+    "eur_foil": "5.46",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DNibelheim%2BAflame",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DNibelheim%2BAflame",
+    "edhrec": "https://edhrec.com/route/?cc=Nibelheim+Aflame"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F632696%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=826190&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/141229?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}
