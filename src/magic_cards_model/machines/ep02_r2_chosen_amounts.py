@@ -732,7 +732,10 @@ def amount_written_effect(text: str, for_spell: bool) -> Any:
     refuses here instead of failing on resolution."""
     from .amount_sentences import find_where_x
     from .effects.text import _strip_non_effect_preamble
+    from .ep02_r2_counted_permanents import parse_where_x_whole_text
 
+    if (counted := parse_where_x_whole_text(text, for_spell=for_spell)) is not None:
+        return counted  # a counted group is that reader's; the rest is measured here
     lowered = text.lower()
     if "where x is" not in lowered and not any(
         word in lowered
@@ -1179,7 +1182,7 @@ def _parse_look_top_one_to_hand_exile_rest_ability(text: str) -> Any:
     return look_top_one_to_hand_exile_rest(text)
 
 
-@SPELL_TEXT.rung("s23")
+@SPELL_TEXT.rung("s23", before=("parse_mixed_effect_for_spell",))
 def _parse_then_that_many_spell(text: str) -> Any:
     """`then_that_many_effect` as a spell's whole text."""
     return then_that_many_effect(text, True)
