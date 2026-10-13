@@ -639,3 +639,34 @@ def test_mire_s_toll_with_a_hand_no_bigger_than_the_swamps_reveals_it_all():
     _cast(scenario, "Mire's Toll", targets=["bob"])
     assert island.zone is Zone.GRAVEYARD
     assert len(scenario.player("bob").hand) == 1
+
+
+# --------------------------------------------------------------------------
+# "Search target player's library for up to X cards, where X is the number of
+# Swamps you control, and exile them. Then that player shuffles." (Nightmare
+# Incursion). CR 701.23a/b: the searcher is the caster, who finds up to X; CR
+# 701.24b: the library's owner shuffles; CR 406.2 (exile).
+# --------------------------------------------------------------------------
+
+TARGET_LIBRARY = ["Island", "Forest", "Mountain", "Plains", "Grizzly Bears", "Craw Wurm"]
+
+
+@pytest.mark.parametrize("swamps", [1, 2, 3])
+def test_nightmare_incursion_exiles_up_to_the_swamp_count_from_the_targets_library(swamps):
+    """The caster picks which cards (the library's owner is not asked); Swamps the
+    opponent controls are not counted."""
+    scenario = _main(
+        _build(
+            ["Swamp"] * swamps + ["Island"] * (6 - swamps),
+            ["Swamp"] * 4,
+            hand=["Nightmare Incursion"],
+            bob_library=TARGET_LIBRARY,
+        )
+    )
+    picked = [scenario.find(name, Zone.LIBRARY, "bob") for name in TARGET_LIBRARY[-swamps:]]
+    scenario.will_choose_cards(*picked, username="alice", times=None)
+    _cast(scenario, "Nightmare Incursion", targets=["bob"])
+    assert len(scenario.player("bob").library) == 6 - swamps
+    for card in picked:
+        assert card.zone is Zone.EXILE
+    assert len(scenario.player("alice").library) == 12

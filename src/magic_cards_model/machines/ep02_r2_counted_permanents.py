@@ -161,6 +161,7 @@ _WHERE_X_TAIL_RE = re.compile(
     r"(?: as (?:this (?:ability|spell) resolves|it resolves))?(?=\.(?:\s|$)|$)",
     re.IGNORECASE,
 )
+_CONTINUATION_RE = re.compile(r",\s+(?:and|then)\s", re.IGNORECASE)
 _MULTIPLIERS = {"twice ": 2, "three times ": 3}
 #: "Search ... for up to X basic land cards. Put those cards onto the battlefield
 #: tapped, then shuffle." (Kyoshi Island Plaza) is the older "..., put them onto
@@ -198,11 +199,18 @@ def parse_where_x_whole_text(text: str, *, for_spell: bool):
     match = _WHERE_X_TAIL_RE.search(body)
     if match is None:
         return None
-    rest = body[: match.start()] + body[match.end() :]
-    if re.search(r"\bX\b", rest, re.IGNORECASE) is None:
-        return None
-    reader = _expression_reader(match.group("expr").strip())
+    expr = match.group("expr").strip()
+    reader = _expression_reader(expr)
+    spill = ""
+    if reader is None and (cut := _CONTINUATION_RE.search(expr)) is not None:
+        # "..., where X is the number of Swamps you control, and exile them": the
+        # definition ends at the comma, the rest continues the instruction.
+        expr, spill = expr[: cut.start()], expr[cut.start() :]
+        reader = _expression_reader(expr)
     if reader is None:
+        return None
+    rest = body[: match.start()] + spill + body[match.end() :]
+    if re.search(r"\bX\b", rest, re.IGNORECASE) is None:
         return None
     multiplier = _MULTIPLIERS.get((match.group("mult") or "").lower(), 1)
     parse = _spell_effect_or_notice if for_spell else _ability_effect_or_notice
