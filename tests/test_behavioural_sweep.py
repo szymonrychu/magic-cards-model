@@ -6102,13 +6102,15 @@ def _cost_card(component: Any) -> Material | None:
         # "Sacrifice a creature named Festering Newt" (Bubbling Cauldron),
         # CR 201.2: only a card of that name pays it.
         return Material(requirement.named, ALICE, zone)
-    if requirement is not None and requirement.token and zone is Zone.BATTLEFIELD:
-        # "Sacrifice a token" (Fountainport): any predefined token (CR 111.10).
-        return Material("Treasure", ALICE, Zone.BATTLEFIELD)
     if requirement is not None and zone is Zone.BATTLEFIELD:
+        # "Sacrifice six Blood tokens" (Shilgengar): the predefined token the
+        # cost names, which a bare "token" must not shadow with a Treasure.
         for token in PREDEFINED:
             if token.lower() in _subtype_stems(requirement.subtypes):
                 return Material(token, ALICE, Zone.BATTLEFIELD)
+    if requirement is not None and requirement.token and zone is Zone.BATTLEFIELD:
+        # "Sacrifice a token" (Fountainport): any predefined token (CR 111.10).
+        return Material("Treasure", ALICE, Zone.BATTLEFIELD)
     tried = 0
     for card in _format_pool():
         if card.card_faces:

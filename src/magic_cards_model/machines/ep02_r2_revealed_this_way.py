@@ -29,6 +29,23 @@ whoever reveals (you, a target opponent, the defending player, each player).
 A clause no step here reads is handed back to the ordinary clause parsers; a
 text with a clause nothing reads is refused whole (never half-read).
 
+The same vocabulary serves the R1 ledger (`ep02_r1_this_way_counts.snapshot` /
+`affected`): "For each permanent exiled this way, its controller searches ... /
+reveals cards until ... / puts that card onto the battlefield, then shuffles",
+"if a creature card was exiled this way, ...", "..., where X is the greatest
+mana value among cards exiled this way". Each affected object's last known
+characteristics (CR 608.2h) are the referent of "it" / "shares a card type with
+it"; the players who each own a share act in APNAP order (CR 101.4). A search
+for a stated quality may find fewer (CR 701.23b) and its shuffle is its own
+later instruction (CR 701.24b); a counter step counts only what really left the
+stack (CR 701.6a; CR 113.6g keeps an uncounterable spell on it); a cost's
+tapped or sacrificed object is read from what the activation recorded
+(CR 602.2b, CR 608.2h); a permanent held phased out "until" its source leaves
+(CR 702.26c, CR 610.3) phases in again when it does.
+
+The plan only takes a text no older reader reads whole, so a card an older,
+tested reader handles keeps that reader's behaviour.
+
 Registered as one SPELL_TEXT and one ABILITY_TEXT rung behind a cheap
 lowercase gate, with memoised parsers, to stay inside the classify budget.
 """
