@@ -231,6 +231,7 @@ FAMILIES = (
     "ep02_r1_this_way_counts",
     "ep02_r2_counter_amounts",
     "ep02_r2_revealed_this_way",
+    "ep02_r2_chosen_amounts",
 )
 
 ABILITY_TEXT = Chain(

@@ -3151,6 +3151,7 @@ class ActivationMixin:
                         # sacrificed artifact" - what this activation paid.
                         x_value,
                         _cost_moved(paid, ComponentKind.SACRIFICE) if paid is not None else (),
+                        choosing=True,
                     )
                     if count_expression is not None
                     else None

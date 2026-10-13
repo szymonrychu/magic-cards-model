@@ -1556,7 +1556,10 @@ _SELECT_FROM_TOP_RE = re.compile(
     r"planeswalker) |(?P<negated>non[a-z]+(?:, ?non[a-z]+)*) )?"
     # "from among them" and "from among the cards milled this way" name the
     # same set - the cards this clause's own first sentence just saw.
-    r"cards? from among (?:them|the cards milled this way) "
+    # Rosheen, Roaring Prophet's "a card with {X} in its mana cost" (CR 107.3,
+    # CR 202.1) narrows whichever kind is named.
+    r"cards?(?P<with_x> with \{x\} in (?:its|their) mana costs?)? "
+    r"from among (?:them|the cards milled this way) "
     r"(?P<dest>into your hand|onto the battlefield tapped|onto the battlefield"
     r"|into your graveyard)\.\s*"
     r"(?:(?P<decline_counter>if you don't, put a \+1/\+1 counter on this creature\.\s*)"
@@ -1620,6 +1623,12 @@ def _select_from_top_runner(
         if found is None:
             return None
         predicate = found
+    if match.group("with_x") is not None:
+        kind_predicate = predicate
+
+        def predicate(state: CardState) -> bool:
+            return "{X}" in (state.card.mana_cost or "").upper() and kind_predicate(state)
+
     destination = match.group("dest").lower()
     counter_when_declined = match.group("decline_counter") is not None
     decline_dest = (match.group("decline_dest") or "").lower()
@@ -4619,14 +4628,15 @@ def _dead_self_found(game: "Game", ability: "AbilityOnStack") -> CardState | Non
 _DEAD_OBJECT_TO_LIBRARY_RE = re.compile(
     r"^(?:you may )?"
     r"(?:"
-    r"put (?:it|this (?:permanent|creature|card|artifact))(?: from your graveyard)? "
-    r"on (?:the )?(?P<side>top|bottom) of (?:its owner'?s|your) library"
+    r"put (?:it|her|him|this (?:permanent|creature|card|artifact))(?: from your graveyard)? "
+    r"on (?:the )?(?P<side>top|bottom) of (?:its owner'?s|her owner'?s|his owner'?s|your) library"
     r"|"
-    rf"put (?:it|this (?:permanent|creature|card|artifact))(?: from your graveyard)? "
-    rf"into (?:its owner'?s|your) library (?P<ordinal>{ORDINAL}) from the top"
+    rf"put (?:it|her|him|this (?:permanent|creature|card|artifact))(?: from your graveyard)? "
+    rf"into (?:its owner'?s|her owner'?s|his owner'?s|your) library "
+    rf"(?P<ordinal>{ORDINAL}) from the top"
     r"|"
-    r"shuffle (?:it|this (?:permanent|creature|card|artifact))(?: from your graveyard)? "
-    r"into (?:its owner'?s|your) library"
+    r"shuffle (?:it|her|him|this (?:permanent|creature|card|artifact))(?: from your graveyard)? "
+    r"into (?:its owner'?s|her owner'?s|his owner'?s|your) library"
     r")\.?$",
     re.IGNORECASE,
 )
@@ -6644,8 +6654,11 @@ def _parse_look_top_cast_le_greatest_attacking_power_whole_text(
 #: 202.3 gives the mana value compared). CR 118.9 and CR 608.2g: cast during
 #: resolution, no mana paid; CR 608.2d: only a spell that can really be cast
 #: is offered, so a hand with none asks nothing.
+#: Buster Sword's "a spell from your hand with mana value N or less" (its N
+#: read in from the combat damage dealt) is the same instruction with no
+#: quality and an upper bound.
 _MAY_CAST_FROM_HAND_FREE_RE = re.compile(
-    r"^you may cast an? (?P<quality>[^.]+?) spell"
+    r"^you may cast an? (?:(?P<quality>[^.]+?) )?spell"
     r"(?: with mana value (?:equal to (?P<n>\d+)|(?P<at_most>\d+) or less"
     r"|(?P<damage>less than or equal to that damage)))?"
     r" from your hand without paying its mana cost\.?$",
@@ -6657,7 +6670,8 @@ _MAY_CAST_FROM_HAND_FREE_RE = re.compile(
 def _parse_may_cast_from_hand_free_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
     """`_MAY_CAST_FROM_HAND_FREE_RE`'s shape, or `None`."""
     # "... from your hand with mana value less than or equal to that damage
-    # without ..." (Glamdring) puts the bound after the zone; read it as the
+    # without ..." (Glamdring) and "... from your hand with mana value 4 or less
+    # without ..." (Buster Sword) put the bound after the zone; read it as the
     # same bound printed before it (Brain in a Jar).
     text = re.sub(
         r" from your hand( with mana value .+?) without paying",
@@ -6666,12 +6680,15 @@ def _parse_may_cast_from_hand_free_clause(clause: str, *, for_spell: bool) -> Ta
         flags=re.IGNORECASE,
     )
     match = _MAY_CAST_FROM_HAND_FREE_RE.fullmatch(text)
-    if match is None or not _card_description_is_readable(match.group("quality")):
+    if match is None:
         return None
-    quality = _quality_matcher(match.group("quality"))
+    described = match.group("quality")
+    if described is not None and not _card_description_is_readable(described):
+        return None
+    quality = _quality_matcher(described) if described is not None else (lambda _card: True)
     value = int(match.group("n")) if match.group("n") else None
     at_most = int(match.group("at_most")) if match.group("at_most") else None
-    phrase = f"{match.group('quality')} spell" + (
+    phrase = (f"{described} spell" if described else "spell") + (
         f" with mana value equal to {value}" if value is not None else ""
     )
     if at_most is not None:

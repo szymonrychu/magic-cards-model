@@ -4191,21 +4191,24 @@ def _up_to_one_of_each_card_type_profile() -> TargetingProfile:
 #: reflexive ability whose trigger event is the resolution itself. A fourth:
 #: "When you win the flip, ..." / "When you lose the flip, ..." (Breeches, the
 #: Blastmaker), a reflexive ability per result of the coin flip the outer
-#: ability just made (CR 705.1).
+#: ability just made (CR 705.1). A fifth: "When you pay this cost one or more
+#: times, ..." (the Adversary cycle).
 _REFLEXIVE_CLAUSE_TAIL = re.compile(
     r"\bwhen you do,.*$|\bwhen [^,]+ this way,.*$"
     r"|\bwhen this ability resolves for the [a-z]+ time this turn,.*$"
-    r"|\bwhen you (?:win|lose) the flip,.*$",
+    r"|\bwhen you (?:win|lose) the flip,.*$"
+    r"|\bwhen you pay this cost one or more times,.*$",
     re.IGNORECASE | re.DOTALL,
 )
 
-#: The same two CR 603.12 templates as `_REFLEXIVE_CLAUSE_TAIL`, but capturing
+#: The same CR 603.12 templates as `_REFLEXIVE_CLAUSE_TAIL`, but capturing
 #: what comes *after* the comma instead of cutting it - the reflexively
 #: created ability's own words, read by `reflexive_consequence_text` below.
 _REFLEXIVE_CLAUSE_CONSEQUENCE_RE = re.compile(
     r"\bwhen you do,\s*(?P<consequence>.*)$|\bwhen [^,]+ this way,\s*(?P<consequence2>.*)$"
     r"|\bwhen this ability resolves for the [a-z]+ time this turn,\s*(?P<consequence3>.*)$"
-    r"|\bwhen you (?:win|lose) the flip,\s*(?P<consequence4>.*)$",
+    r"|\bwhen you (?:win|lose) the flip,\s*(?P<consequence4>.*)$"
+    r"|\bwhen you pay this cost one or more times,\s*(?P<consequence5>.*)$",
     re.IGNORECASE | re.DOTALL,
 )
 
@@ -4257,6 +4260,7 @@ def reflexive_consequence_text(text: str) -> str | None:
         or match.group("consequence2")
         or match.group("consequence3")
         or match.group("consequence4")
+        or match.group("consequence5")
         or ""
     )
     return consequence.strip()

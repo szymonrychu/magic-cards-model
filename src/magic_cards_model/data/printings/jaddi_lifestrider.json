@@ -1,0 +1,130 @@
+{
+  "object": "card",
+  "id": "2dff438a-925c-4fca-a2e3-3e9519b7afed",
+  "oracle_id": "9c8027b7-b823-4214-936c-91b7a8986228",
+  "multiverse_ids": [
+    417435
+  ],
+  "tcgplayer_id": 122244,
+  "cardmarket_id": 292388,
+  "name": "Jaddi Lifestrider",
+  "lang": "en",
+  "released_at": "2016-09-02",
+  "uri": "https://api.scryfall.com/cards/2dff438a-925c-4fca-a2e3-3e9519b7afed",
+  "scryfall_uri": "https://scryfall.com/card/ddr/12/jaddi-lifestrider?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T10:07:51Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/2/d/2dff438a-925c-4fca-a2e3-3e9519b7afed.jpg?1783937271",
+    "normal": "https://cards.scryfall.io/normal/front/2/d/2dff438a-925c-4fca-a2e3-3e9519b7afed.jpg?1783937271",
+    "large": "https://cards.scryfall.io/large/front/2/d/2dff438a-925c-4fca-a2e3-3e9519b7afed.jpg?1783937271",
+    "png": "https://cards.scryfall.io/png/front/2/d/2dff438a-925c-4fca-a2e3-3e9519b7afed.png?1783937271",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/2/d/2dff438a-925c-4fca-a2e3-3e9519b7afed.jpg?1783937271",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/2/d/2dff438a-925c-4fca-a2e3-3e9519b7afed.jpg?1783937271",
+    "thumb": "https://cards.scryfall.io/thumb/front/2/d/2dff438a-925c-4fca-a2e3-3e9519b7afed.webp?1783937271",
+    "grid": "https://cards.scryfall.io/grid/front/2/d/2dff438a-925c-4fca-a2e3-3e9519b7afed.webp?1783937271",
+    "display": "https://cards.scryfall.io/display/front/2/d/2dff438a-925c-4fca-a2e3-3e9519b7afed.webp?1783937271",
+    "art": "https://cards.scryfall.io/art/front/2/d/2dff438a-925c-4fca-a2e3-3e9519b7afed.webp?1783937271",
+    "crop": "https://cards.scryfall.io/crop/front/2/d/2dff438a-925c-4fca-a2e3-3e9519b7afed.webp?1783937271"
+  },
+  "mana_cost": "{4}{G}",
+  "cmc": 5.0,
+  "type_line": "Creature \u2014 Elemental",
+  "oracle_text": "When this creature enters, you may tap any number of untapped creatures you control. You gain 2 life for each creature tapped this way.",
+  "power": "2",
+  "toughness": "8",
+  "colors": [
+    "G"
+  ],
+  "color_identity": [
+    "G"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": false,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "20e10d8d-c2b0-4d3f-942d-28ae9e137c6e",
+  "set": "ddr",
+  "set_name": "Duel Decks: Nissa vs. Ob Nixilis",
+  "set_type": "duel_deck",
+  "set_uri": "https://api.scryfall.com/sets/20e10d8d-c2b0-4d3f-942d-28ae9e137c6e",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Addr&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/ddr?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/2dff438a-925c-4fca-a2e3-3e9519b7afed/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A9c8027b7-b823-4214-936c-91b7a8986228&unique=prints",
+  "collector_number": "12",
+  "digital": false,
+  "rarity": "uncommon",
+  "flavor_text": "Nature's arms encircle all who are willing to draw close.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Vincent Proce",
+  "artist_ids": [
+    "d82b1138-76d3-49f7-9d8c-bc2e2d3e0b0a"
+  ],
+  "illustration_id": "0d71d5eb-0c46-44a2-9e53-d1a06b1b51cb",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "edhrec_rank": 26414,
+  "penny_rank": 17201,
+  "prices": {
+    "usd": "0.10",
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": "0.05",
+    "eur_foil": null,
+    "tix": null
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=417435&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DJaddi%2BLifestrider",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DJaddi%2BLifestrider",
+    "edhrec": "https://edhrec.com/route/?cc=Jaddi+Lifestrider"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F122244%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=292388&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards?affiliate_id=scryfall&data%5Bsearch%5D=Jaddi+Lifestrider&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

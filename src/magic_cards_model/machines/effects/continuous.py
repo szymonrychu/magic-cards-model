@@ -1388,6 +1388,13 @@ _MASS_PUMP_FOR_EACH_RE = re.compile(
     r"(?= and gain | until end of turn)",
     re.IGNORECASE,
 )
+#: "get +1/+1 until end of turn for each Plains returned this way" (Charge
+#: Across the Araba) - the same scaled pump with its count printed after the
+#: duration; rewritten to `_MASS_PUMP_FOR_EACH_RE`'s order before it is read.
+_MASS_PUMP_TRAILING_FOR_EACH_RE = re.compile(
+    r"\bget (?P<pt>[+-]\d+/[+-]\d+) until end of turn for each (?P<each>[^.]+?)\.?$",
+    re.IGNORECASE,
+)
 #: The scaled placeholder `_MASS_PUMP_FOR_EACH_RE` leaves in a template -
 #: "+1*X" - substituted with the per-unit amount times the count.
 _SCALED_X_RE = re.compile(r"(?P<unit>[+-]\d+)\*x", re.IGNORECASE)
@@ -1443,6 +1450,11 @@ def _parse_mass_pump_clause(
     # belongs to the quoted-grant reader, not here.
     if duration_first := _MASS_PUMP_DURATION_FIRST_RE.fullmatch(text):
         text = f"{duration_first.group('rest')} until end of turn."
+    if trailing := _MASS_PUMP_TRAILING_FOR_EACH_RE.search(text):
+        text = (
+            text[: trailing.start()]
+            + f"get {trailing.group('pt')} for each {trailing.group('each')} until end of turn."
+        )
     if (
         _MASS_SUBJECT_RE.match(text) is None
         and _MASS_SUBTYPE_SUBJECT_RE.match(text) is None

@@ -4034,7 +4034,7 @@ _CHOOSE_TARGET_PRELUDE_RE = re.compile(
 #: The anaphors a "Choose <target>." opener's later sentences refer back with.
 _PRELUDE_REFERENT_RE = re.compile(
     r"\b(?:that|the chosen|the) (?P<noun>permanent or player|creature or planeswalker|"
-    r"creature|permanent|player|planeswalker|artifact|enchantment|land|card)\b"
+    r"creature|permanent|player|planeswalker|artifact|enchantment|land|card|spell)\b"
     r"|\bthose (?P<plural>cards|creatures|permanents)\b",
     re.IGNORECASE,
 )
@@ -4070,9 +4070,13 @@ def _prelude_readings(phrase: str, rest: str) -> list[str]:
     referents = [
         found
         for found in _PRELUDE_REFERENT_RE.finditer(rest)
-        if found.group(0).lower().startswith(("that", "the chosen", "those"))
-        or found.start() == 0
-        or rest[: found.start()].rstrip().endswith(".")
+        if (
+            found.group(0).lower().startswith(("that", "the chosen", "those"))
+            or found.start() == 0
+            or rest[: found.start()].rstrip().endswith(".")
+        )
+        # "that spell" can only refer back to a chosen spell (CR 115.1).
+        and ((found.group("noun") or "").lower() != "spell" or "spell" in phrase.lower())
     ]
     sentence_start = rest.rfind(".", 0, referents[0].start()) + 1 if len(referents) == 1 else 0
     in_trigger_condition = len(referents) == 1 and re.match(

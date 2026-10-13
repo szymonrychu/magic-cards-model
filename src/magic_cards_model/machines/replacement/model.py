@@ -1730,6 +1730,30 @@ class EnterUnderYourControl(EngineModel):
             event.card.controller = controller
 
 
+class EntersTappedThisTurn(EngineModel):
+    """ "Lands you control enter tapped this turn." (Nahiri's Lithoforming) -
+    a resolution-created replacement (CR 614.1a, CR 614.12: read off the
+    object as it would exist on the battlefield) on each matching permanent
+    entering under the creator's control for the rest of the turn
+    (CR 611.2a). `types` is what the sentence names; empty is "permanents"."""
+
+    model_config = ConfigDict(frozen=True)
+
+    kind: Literal["enters_tapped_this_turn"] = "enters_tapped_this_turn"
+    types: tuple[Type, ...] = ()
+
+    def applies(self, game: "Game", controller: str, event: "ReplaceableEvent") -> bool:
+        card = event.card
+        if event.kind is not EventKind.ENTERS_BATTLEFIELD or card is None:
+            return False
+        if card.controller != controller:
+            return False
+        return not self.types or any(wanted in card.types for wanted in self.types)
+
+    def apply(self, game: "Game", controller: str, event: "ReplaceableEvent") -> None:
+        event.tapped = True
+
+
 class EnterUncastExile(EngineModel):
     """ "If a [nontoken] creature would enter and it wasn't cast, exile it
     instead." - Containment Priest's static line, Mistcaller's and Hallowed
@@ -1891,6 +1915,7 @@ CreatedReplacementSpec = Annotated[
     DrawSkipReplacement
     | CounterAmountReplacement
     | EnterUnderYourControl
+    | EntersTappedThisTurn
     | EnterUncastExile
     | LeaveBattlefieldExile
     | DamageLifeFloorReplacement

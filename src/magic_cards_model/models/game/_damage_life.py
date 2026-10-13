@@ -625,6 +625,13 @@ class DamageLifeMixin:
                 )
             )
             self._pending_damage_excess = 0
+            if damaged_player is not None and event.amount > 0:
+                # CR 120.3a: combat or not, the damage a player was dealt this
+                # turn - Knollspine Dragon's "the damage dealt to target
+                # opponent this turn" (`ep02_r2_chosen_amounts`).
+                self.note_turn_count(
+                    "damage_dealt_to_player", damaged_player.username, event.amount
+                )
             if damaged_player is not None and not event.combat:
                 # Master of Barbs' and Massacre Girl, Most Wanted's own
                 # "whenever [an/one or more] opponent[s] [is/are] dealt

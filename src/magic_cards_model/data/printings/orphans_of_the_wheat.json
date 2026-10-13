@@ -1,0 +1,139 @@
+{
+  "object": "card",
+  "id": "8ef4aab1-8bc0-4652-91d7-3e8b20b411ad",
+  "oracle_id": "f758bad0-8f36-4985-ad1d-66b695f3bbb6",
+  "multiverse_ids": [
+    673427
+  ],
+  "mtgo_id": 130175,
+  "arena_id": 92082,
+  "tcgplayer_id": 576870,
+  "cardmarket_id": 786821,
+  "name": "Orphans of the Wheat",
+  "lang": "en",
+  "released_at": "2024-09-27",
+  "uri": "https://api.scryfall.com/cards/8ef4aab1-8bc0-4652-91d7-3e8b20b411ad",
+  "scryfall_uri": "https://scryfall.com/card/dsk/22/orphans-of-the-wheat?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T02:25:07Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/8/e/8ef4aab1-8bc0-4652-91d7-3e8b20b411ad.jpg?1783909507",
+    "normal": "https://cards.scryfall.io/normal/front/8/e/8ef4aab1-8bc0-4652-91d7-3e8b20b411ad.jpg?1783909507",
+    "large": "https://cards.scryfall.io/large/front/8/e/8ef4aab1-8bc0-4652-91d7-3e8b20b411ad.jpg?1783909507",
+    "png": "https://cards.scryfall.io/png/front/8/e/8ef4aab1-8bc0-4652-91d7-3e8b20b411ad.png?1783909507",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/8/e/8ef4aab1-8bc0-4652-91d7-3e8b20b411ad.jpg?1783909507",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/8/e/8ef4aab1-8bc0-4652-91d7-3e8b20b411ad.jpg?1783909507",
+    "thumb": "https://cards.scryfall.io/thumb/front/8/e/8ef4aab1-8bc0-4652-91d7-3e8b20b411ad.webp?1783909507",
+    "grid": "https://cards.scryfall.io/grid/front/8/e/8ef4aab1-8bc0-4652-91d7-3e8b20b411ad.webp?1783909507",
+    "display": "https://cards.scryfall.io/display/front/8/e/8ef4aab1-8bc0-4652-91d7-3e8b20b411ad.webp?1783909507",
+    "art": "https://cards.scryfall.io/art/front/8/e/8ef4aab1-8bc0-4652-91d7-3e8b20b411ad.webp?1783909507",
+    "crop": "https://cards.scryfall.io/crop/front/8/e/8ef4aab1-8bc0-4652-91d7-3e8b20b411ad.webp?1783909507"
+  },
+  "mana_cost": "{1}{W}",
+  "cmc": 2.0,
+  "type_line": "Creature \u2014 Human",
+  "oracle_text": "Whenever this creature attacks, tap any number of untapped creatures you control. This creature gets +1/+1 until end of turn for each creature tapped this way.",
+  "power": "2",
+  "toughness": "1",
+  "colors": [
+    "W"
+  ],
+  "color_identity": [
+    "W"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "a111d8a9-b647-48ec-afab-2b78f92173f5",
+  "set": "dsk",
+  "set_name": "Duskmourn: House of Horror",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/a111d8a9-b647-48ec-afab-2b78f92173f5",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Adsk&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/dsk?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/8ef4aab1-8bc0-4652-91d7-3e8b20b411ad/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Af758bad0-8f36-4985-ad1d-66b695f3bbb6&unique=prints",
+  "collector_number": "22",
+  "digital": false,
+  "rarity": "uncommon",
+  "flavor_text": "Their only family is each other, and their only toys are those who wander too far into the fields.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Julie Dillon",
+  "artist_ids": [
+    "ce8605ad-6d5a-45a3-a7b6-84be4f5209cd"
+  ],
+  "illustration_id": "32a43b65-e002-46f4-a484-4aeb2be50045",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 22884,
+  "preview": {
+    "source": "bilibili",
+    "source_uri": "https://www.bilibili.com/opus/973586206053892101",
+    "previewed_at": "2024-09-05"
+  },
+  "prices": {
+    "usd": "0.13",
+    "usd_foil": "0.20",
+    "usd_etched": null,
+    "eur": "0.05",
+    "eur_foil": "0.16",
+    "tix": "0.03"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=673427&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DOrphans%2Bof%2Bthe%2BWheat",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DOrphans%2Bof%2Bthe%2BWheat",
+    "edhrec": "https://edhrec.com/route/?cc=Orphans+of+the+Wheat"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F576870%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=786821&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/130175?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}
