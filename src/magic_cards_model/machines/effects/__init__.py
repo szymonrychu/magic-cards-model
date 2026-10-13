@@ -2803,6 +2803,7 @@ from .amounts import (
 
 # Registers its rungs into the dispatch ladders; needs every family loaded first.
 from .. import ep02_r1_this_way_counts as ep02_r1_this_way_counts  # noqa: E402
+from .. import ep02_r2_counter_amounts as ep02_r2_counter_amounts  # noqa: E402
 
 __all__ = [
     "ACTIVATED_EFFECTS",

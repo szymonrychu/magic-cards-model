@@ -832,6 +832,20 @@ _YOU_AND_TARGET_PLAYER_SUBJECT_AND_RE = re.compile(
 #: unrelated later instruction.
 _QUALITY_LIST_AND_FROM_RE = re.compile(r"\bfrom\s+[^.\n]*?\s+and\s+from\b", re.IGNORECASE)
 
+#: "create a 3/1 ... creature token with trample and haste" / "create two 1/1
+#: Gnome tokens that are tapped and attacking" - the "and" joins two keywords
+#: (or "tapped" and "attacking") of the one token the clause creates, not two
+#: instructions. Bounded to a create clause, no comma and no sentence end, and
+#: to an "and" followed by a keyword or "attacking", so "create a Treasure
+#: token and sacrifice it" still splits. The clause read alone is rejoined by
+#: the token readers; this keeps it whole after a ", then" as well (CR 608.2c).
+_TOKEN_KEYWORD_AND_RE = re.compile(
+    r"\bcreates? [^.,\x00]*?\btokens?\b[^.,\x00]*?\band (?=(?:flying|first strike|double strike"
+    r"|deathtouch|haste|hexproof|indestructible|lifelink|menace|reach|trample|vigilance"
+    r"|attacking)\b)",
+    re.IGNORECASE,
+)
+
 #: "all hands and graveyards" (Worldfire's "Exile all cards from all hands and
 #: graveyards.") / "target player's hand and graveyard" (Identity Crisis) - a
 #: list of zones one instruction acts on (CR 400.1), not two instructions.
@@ -1009,6 +1023,7 @@ def _split_effect_clauses(text: str) -> list[str]:
     masked = _QUALITY_LIST_AND_FROM_RE.sub(
         lambda m: m.group(0).replace(" and ", _AND_SENTINEL), masked
     )
+    masked = _TOKEN_KEYWORD_AND_RE.sub(lambda m: m.group(0).replace(" and ", _AND_SENTINEL), masked)
     masked = _ZONE_PAIR_AND_RE.sub(lambda m: m.group(0).replace(" and ", _AND_SENTINEL), masked)
     masked = _IN_EXILE_AND_IN_GRAVEYARD_RE.sub(
         lambda m: m.group(0).replace(" and ", _AND_SENTINEL), masked

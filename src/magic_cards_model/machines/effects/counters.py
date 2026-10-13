@@ -6,7 +6,7 @@ from uuid import UUID
 
 from magic_cards_model.phrases import with_indefinite_article
 
-from ...models.card import Color, Layout, Type
+from ...models.card import Color, Layout, Supertype, Type
 from ...models.card_state import (
     CardState,
     Counter,
@@ -644,8 +644,9 @@ _COUNTER_EACH_GROUP_RE = re.compile(
     rf"(?P<other>other )?"
     r"(?:(?P<tap_state>tapped|untapped) )?"
     r"(?:(?P<color>white|blue|black|red|green|colorless|monocolored|multicolored) )?"
+    r"(?:(?P<supertype>legendary|nonlegendary) )?"
     r"(?P<group>[a-z]+(?:,\s*[a-z]+)*(?:,?\s+(?:and|or)\s+[a-z]+)?) "
-    rf"(?P<whose>you control|your opponents control|an opponent controls)"
+    rf"(?P<whose>you control|you don't control|your opponents control|an opponent controls)"
     rf"{where_x_pattern('expr')}\.?$",
     re.IGNORECASE,
 )
@@ -906,7 +907,8 @@ def _parse_put_counters_on_group_clause(
     # Archfiend of Ifnir's "each creature your opponents control": the
     # opponents of the resolving object's controller (CR 102.3: every
     # player not on that player's team), not that controller.
-    opponents = not match.group("whose").lower().startswith("you ")
+    opponents = not match.group("whose").lower().startswith("you control")
+    supertype_word = (match.group("supertype") or "").lower()
 
     def color_matches(colors: tuple[Color, ...]) -> bool:
         if not color_word:
@@ -943,6 +945,10 @@ def _parse_put_counters_on_group_clause(
             # creature you control"), or a color / CR 105.2a-b color count,
             # read off the computed board like the type below.
             if not color_matches(chars.colors):
+                continue
+            if supertype_word and (Supertype.LEGENDARY in chars.supertypes) != (
+                supertype_word == "legendary"
+            ):
                 continue
             if len(group_words) == 1 and group_words[0].lower() == "creature":
                 if not chars.is_creature:

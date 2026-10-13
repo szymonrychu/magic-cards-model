@@ -1063,6 +1063,16 @@ def _parse_create_named_permanent_token_clause(text: str) -> TargetedClause | No
     return _token_creation_clause(definition, 1, tapped=tapped)
 
 
+#: "create two 1/1 Gnome tokens that are tapped and attacking" - the relative
+#: clause form of the "tapped and attacking" the descriptor reader below takes
+#: in front of the token's description (CR 508.4).
+_TOKENS_THAT_ARE_TAPPED_AND_ATTACKING_RE = re.compile(
+    r"^(?P<head>creates? (?:an? |\d+ |x |[a-z]+ )?)(?P<desc>.+?) (?P<noun>tokens?) "
+    r"that(?:'s| is| are) tapped and attacking$",
+    re.IGNORECASE,
+)
+
+
 @MIXED_CLAUSE.rung("s10", for_spell=FORWARD)
 def _parse_token_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
     """One clause of "create ... token(s)" (CR 701.7a), read off the card's
@@ -1070,6 +1080,10 @@ def _parse_token_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     what it refuses.
     """
     clause = clause.strip()
+    if "tapped and attacking" in clause:
+        clause = _TOKENS_THAT_ARE_TAPPED_AND_ATTACKING_RE.sub(
+            r"\g<head>tapped and attacking \g<desc> \g<noun>", clause
+        )
 
     if match := _YOU_MAY_RE.match(clause):
         inner_text = match.group("clause").strip()

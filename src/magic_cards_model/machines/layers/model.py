@@ -1207,6 +1207,29 @@ class CreaturesControlledByOpponentsOf(SelectorBase):
         )
 
 
+class CreaturesControlledByOpponentsOfWithPowerAtMost(SelectorBase):
+    """ "Creatures your opponents control with power N or less" (Rumbling Ruin's
+    "can't block this turn"): a restriction changes no characteristic, so CR
+    611.2c leaves the set live - a creature that grows past N stops being
+    caught, and one that shrinks to N is. N is fixed when the effect begins
+    (CR 608.2h: the count was taken once as the ability resolved)."""
+
+    kind: Literal["creatures_controlled_by_opponents_of_with_power_at_most"] = (
+        "creatures_controlled_by_opponents_of_with_power_at_most"
+    )
+    username: str | None = None
+    threshold: int = 0
+
+    def __call__(self, chars: Characteristics, board: Board) -> bool:
+        return (
+            chars.is_creature
+            and chars.controller is not None
+            and chars.controller != self.username
+            and chars.power is not None
+            and chars.power <= self.threshold
+        )
+
+
 class LandsControlledBy(SelectorBase):
     kind: Literal["lands_controlled_by"] = "lands_controlled_by"
     username: str | None = None
@@ -2595,6 +2618,7 @@ Selector = Annotated[
     | OtherCreaturesControlledBy
     | OtherCreatures
     | CreaturesControlledByOpponentsOf
+    | CreaturesControlledByOpponentsOfWithPowerAtMost
     | LandsControlledBy
     | NonbasicLands
     | CreaturesOfManaValueParity
@@ -3901,6 +3925,13 @@ def creatures_controlled_by_opponents_of(username: str | None) -> Selector:
     A permanent with no controller at all is nobody's, so it is not caught.
     """
     return CreaturesControlledByOpponentsOf(username=username)
+
+
+def creatures_controlled_by_opponents_of_with_power_at_most(
+    username: str | None, threshold: int
+) -> Selector:
+    """ "Creatures your opponents control with power `threshold` or less"."""
+    return CreaturesControlledByOpponentsOfWithPowerAtMost(username=username, threshold=threshold)
 
 
 def lands_controlled_by(username: str | None) -> Selector:

@@ -1,0 +1,141 @@
+{
+  "object": "card",
+  "id": "eb523c06-6f3e-4e19-b777-19aefc4a4e02",
+  "oracle_id": "3b9bc41a-a43f-4be7-9452-f61f5ad5b482",
+  "multiverse_ids": [
+    690660
+  ],
+  "mtgo_id": 136569,
+  "arena_id": 95025,
+  "tcgplayer_id": 614177,
+  "cardmarket_id": 807210,
+  "name": "Sita Varma, Masked Racer",
+  "lang": "en",
+  "released_at": "2025-02-14",
+  "uri": "https://api.scryfall.com/cards/eb523c06-6f3e-4e19-b777-19aefc4a4e02",
+  "scryfall_uri": "https://scryfall.com/card/dft/223/sita-varma-masked-racer?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T01:57:31Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/e/b/eb523c06-6f3e-4e19-b777-19aefc4a4e02.jpg?1783907851",
+    "normal": "https://cards.scryfall.io/normal/front/e/b/eb523c06-6f3e-4e19-b777-19aefc4a4e02.jpg?1783907851",
+    "large": "https://cards.scryfall.io/large/front/e/b/eb523c06-6f3e-4e19-b777-19aefc4a4e02.jpg?1783907851",
+    "png": "https://cards.scryfall.io/png/front/e/b/eb523c06-6f3e-4e19-b777-19aefc4a4e02.png?1783907851",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/e/b/eb523c06-6f3e-4e19-b777-19aefc4a4e02.jpg?1783907851",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/e/b/eb523c06-6f3e-4e19-b777-19aefc4a4e02.jpg?1783907851",
+    "thumb": "https://cards.scryfall.io/thumb/front/e/b/eb523c06-6f3e-4e19-b777-19aefc4a4e02.webp?1783907851",
+    "grid": "https://cards.scryfall.io/grid/front/e/b/eb523c06-6f3e-4e19-b777-19aefc4a4e02.webp?1783907851",
+    "display": "https://cards.scryfall.io/display/front/e/b/eb523c06-6f3e-4e19-b777-19aefc4a4e02.webp?1783907851",
+    "art": "https://cards.scryfall.io/art/front/e/b/eb523c06-6f3e-4e19-b777-19aefc4a4e02.webp?1783907851",
+    "crop": "https://cards.scryfall.io/crop/front/e/b/eb523c06-6f3e-4e19-b777-19aefc4a4e02.webp?1783907851"
+  },
+  "mana_cost": "{G}{U}",
+  "cmc": 2.0,
+  "type_line": "Legendary Creature \u2014 Human Rogue",
+  "oracle_text": "Exhaust \u2014 {X}{G}{G}{U}: Put X +1/+1 counters on Sita Varma. Then you may have the base power and toughness of each other creature you control become equal to Sita Varma's power until end of turn. (Activate each exhaust ability only once.)",
+  "power": "2",
+  "toughness": "3",
+  "colors": [
+    "G",
+    "U"
+  ],
+  "color_identity": [
+    "G",
+    "U"
+  ],
+  "keywords": [
+    "Exhaust"
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "arena",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "23464cc2-a69c-427d-b8a7-08e5d80235d7",
+  "set": "dft",
+  "set_name": "Aetherdrift",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/23464cc2-a69c-427d-b8a7-08e5d80235d7",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Adft&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/dft?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/eb523c06-6f3e-4e19-b777-19aefc4a4e02/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A3b9bc41a-a43f-4be7-9452-f61f5ad5b482&unique=prints",
+  "collector_number": "223",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Kai Carpenter",
+  "artist_ids": [
+    "dcd3cf0d-67b7-4b73-8e62-1d318bf6209c"
+  ],
+  "illustration_id": "35a57a59-919d-41a9-ae01-209e3fa2b141",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 17159,
+  "prices": {
+    "usd": "0.19",
+    "usd_foil": "0.25",
+    "usd_etched": null,
+    "eur": "0.09",
+    "eur_foil": "0.13",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=690660&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DSita%2BVarma%252C%2BMasked%2BRacer",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DSita%2BVarma%252C%2BMasked%2BRacer",
+    "edhrec": "https://edhrec.com/route/?cc=Sita+Varma%2C+Masked+Racer"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F614177%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=807210&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/136569?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

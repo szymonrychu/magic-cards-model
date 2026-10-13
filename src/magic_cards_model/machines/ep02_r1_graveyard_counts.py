@@ -154,7 +154,9 @@ def graveyard_count_expression(phrase: str) -> Reader | None:
         return _put_into_your_graveyard_this_turn(text)
     match = _CARDS_RE.fullmatch(text)
     if match is None:
-        return None
+        from .ep02_r2_counter_amounts import owned_cards_that_are
+
+        return owned_cards_that_are(text)
     where = match.group("where")
     owned = match.group("owned") is not None
     if owned != where.lower().startswith("exile and"):

@@ -601,7 +601,8 @@ _FILTERED_PERMANENT_COUNT_RE = re.compile(
     r"(?P<qualifier>[a-z]+) you control(?: named (?P<named>[^.]+?))?"
     r"(?P<other_than> other than (?:this (?:creature|permanent|artifact|enchantment)|it))?"
     r"(?: with (?:(?P<stat>power|toughness|mana value) (?P<bound>\d+) or "
-    r"(?P<direction>less|greater|more)|(?P<counter>[a-z+/-]+) counters? on (?:them|it)))?$",
+    r"(?P<direction>less|greater|more)|(?:(?:a|an|one or more) )?"
+    r"(?P<counter>[a-z0-9+/-]+) counters? on (?:them|it)))?$",
     re.IGNORECASE,
 )
 #: The cheap literal gate in front of `_FILTERED_PERMANENT_COUNT_RE`: the full
