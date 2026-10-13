@@ -790,3 +790,38 @@ def test_junkyo_bell_declined_neither_pumps_nor_sacrifices():
     assert (chars.power, chars.toughness) == (2, 2)
     _advance_to(scenario, Step.END_STEP)
     assert bears.zone is Zone.BATTLEFIELD
+
+
+# --------------------------------------------------------------------------
+# "{3}: Until end of turn, this creature's base power becomes equal to the number
+# of Towns you control." (PuPu UFO). CR 613.4b (base power is set in sublayer 7b,
+# beneath counters and pumps in 7c), CR 608.2h (the Towns are counted once, as the
+# ability resolves), CR 611.2a (it lasts until end of turn).
+# --------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize("towns", [0, 1, 3])
+def test_pupu_ufo_base_power_becomes_the_number_of_towns_you_control(towns):
+    scenario = _main(
+        _build(["Forest"] * 3 + ["Starting Town"] * towns + ["PuPu UFO"], ["Starting Town"] * 2)
+    )
+    ufo = scenario.find("PuPu UFO", Zone.BATTLEFIELD, "alice")
+    ufo.summoning_sick = False
+    assert scenario.game.characteristics_of(ufo).power == 0
+    scenario.activate(ufo, index=1, auto=True)
+    scenario.pass_until_resolved()
+    chars = scenario.game.characteristics_of(ufo)
+    assert (chars.power, chars.toughness) == (towns, 4)  # bob's Towns are not counted
+
+
+def test_pupu_ufo_base_power_sits_under_a_counter_and_ends_with_the_turn():
+    scenario = _main(_build(["Forest"] * 3 + ["Starting Town"] * 2 + ["PuPu UFO"], []))
+    ufo = scenario.find("PuPu UFO", Zone.BATTLEFIELD, "alice")
+    ufo.summoning_sick = False
+    scenario.game.add_counters(ufo, "+1/+1", 1)
+    scenario.activate(ufo, index=1, auto=True)
+    scenario.pass_until_resolved()
+    assert scenario.game.characteristics_of(ufo).power == 2 + 1
+    _advance_to(scenario, Step.END_STEP)
+    scenario.advance()  # cleanup: "until end of turn" effects end
+    assert scenario.game.characteristics_of(ufo).power == 0 + 1

@@ -5648,6 +5648,23 @@ def _parse_pump_then_delayed_ability_text(text: str) -> AbilityEffect | None:
     return parse_pump_then_delayed_text(text, for_spell=False)
 
 
+@SPELL_TEXT.rung("s23", after=["amounts._parse_counted_amount_spell_text"])
+def _parse_base_stat_becomes_spell_text(text: str) -> Effect | None:
+    """A creature's base power set until end of turn, see
+    `ep02_r2_counted_permanents.parse_base_stat_becomes_text`."""
+    from ..ep02_r2_counted_permanents import parse_base_stat_becomes_text
+
+    return parse_base_stat_becomes_text(text, for_spell=True)
+
+
+@ABILITY_TEXT.rung("s40", after=["amounts._parse_counted_amount_ability_text"])
+def _parse_base_stat_becomes_ability_text(text: str) -> AbilityEffect | None:
+    """The ability side of the reader above."""
+    from ..ep02_r2_counted_permanents import parse_base_stat_becomes_text
+
+    return parse_base_stat_becomes_text(text, for_spell=False)
+
+
 @SPELL_TEXT.rung("s21")
 def _parse_discarded_card_value_spell_text(text: str) -> Effect | None:
     """The spell side of the banner above."""

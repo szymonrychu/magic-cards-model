@@ -370,3 +370,94 @@ def parse_pump_then_delayed_text(text: str, *, for_spell: bool):
                 game.create_delayed_trigger(trigger)
 
     return effect
+
+
+# --------------------------------------------------------------------------
+# "Until end of turn, this creature's base power becomes equal to <count>." (PuPu UFO)
+# --------------------------------------------------------------------------
+
+_BASE_STAT_RE = re.compile(
+    r"^(?:(?P<lead>until end of turn), )?(?P<subject>this (?:creature|permanent)|"
+    r"target creature(?: you control)?)['’]s base (?P<stat>power and toughness|power) "
+    r"(?:becomes?|become) (?:(?P<n>\d+)|equal to (?P<expr>.+?))(?P<tail> until end of turn)?\.?$",
+    re.IGNORECASE,
+)
+
+
+def parse_base_stat_becomes_text(text: str, *, for_spell: bool):
+    """A creature's base power (or base power and toughness) set until end of turn
+    to a number or to a counted amount. CR 613.4b puts it in sublayer 7b - under
+    counters and pumps (7c) - and CR 608.2h has the amount read once, as the
+    ability resolves, so it is written into the effect as a plain number.
+    The duration has to be stated (CR 611.2a), as a lead or a tail; the toughness
+    alone is not set by any text this reads."""
+    match = _BASE_STAT_RE.match(" ".join(text.split()))
+    if match is None or (match.group("lead") is None) == (match.group("tail") is None):
+        return None
+    from ..models.card_state import CardState
+    from ..models.zone import Zone
+    from .effects._common import _targets_understood
+    from .effects.amounts import amount_expression
+    from .layers.model import (
+        ContinuousEffect,
+        Duration,
+        Layer,
+        SetPower,
+        Sublayer,
+        only_this_incarnation,
+        set_power_toughness,
+    )
+
+    subject = match.group("subject").lower()
+    targeted = subject.startswith("target")
+    if targeted and not _targets_understood(subject):
+        return None
+    reader = amount_expression(match.group("expr")) if match.group("expr") else None
+    if match.group("expr") and reader is None:
+        return None
+    constant = int(match.group("n")) if match.group("n") else None
+    both = match.group("stat").lower() != "power"
+
+    def effect(game, stack_object) -> None:
+        spell = isinstance(stack_object, CardState)
+        source = stack_object if spell else stack_object.source(game)
+        name = stack_object.name if spell else stack_object.source_name
+        controller = game.controller_of(stack_object)
+        affected = (
+            game.resolve_card_targets(stack_object)
+            if targeted
+            else ([source] if source is not None else [])
+        )
+        value = (
+            constant
+            if reader is None
+            else max(
+                reader(
+                    game,
+                    controller.username,
+                    source,
+                    getattr(stack_object, "x_value", None),
+                ),
+                0,
+            )
+        )
+        store = game.continuous_effects
+        for creature in affected:
+            if creature.zone is not Zone.BATTLEFIELD:
+                continue
+            store.add(
+                ContinuousEffect(
+                    description=f"{name}: {creature.name}'s base power becomes {value}",
+                    layer=Layer.POWER_TOUGHNESS,
+                    sublayer=Sublayer.SET,
+                    timestamp=store.tick(),
+                    duration=Duration.UNTIL_END_OF_TURN,
+                    selector=only_this_incarnation(creature, creature.zone_change_stamp),
+                    modification=(
+                        set_power_toughness(value, value) if both else SetPower(power=value)
+                    ),
+                ),
+                game,
+            )
+
+    return effect
