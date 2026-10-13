@@ -3533,10 +3533,18 @@ class CardState(EngineModel):
 
         if not text or not any(STATION_SYMBOL_RE.match(line.strip()) for line in text.splitlines()):
             return text or ""
-        return "\n".join(
+        from ..machines.abilities import self_reference_names
+        from ..machines.ep02_r1_counter_amounts import counters_self_reference_normalised
+
+        live = "\n".join(
             line
             for line, threshold in station_striations(text.splitlines())
             if self.station_threshold_met(threshold)
+        )
+        # CR 201.5: "counters on The Eternity Elevator" is "counters on this permanent".
+        return counters_self_reference_normalised(
+            live,
+            self_reference_names(self.card.name, legendary=Supertype.LEGENDARY in self.supertypes),
         )
 
     @property

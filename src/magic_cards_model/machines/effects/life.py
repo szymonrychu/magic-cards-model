@@ -210,7 +210,7 @@ def _parse_pay_any_life_then_draw_that_many_clause(text: str) -> AbilityEffect |
 #: `Game.set_life_total`, which is where CR 119.5's gain-or-loss is worked
 #: out.
 _YOUR_LIFE_TOTAL_BECOMES_RE = re.compile(
-    r"^(?:your life total|it) becomes (?P<amount>.+)$", re.IGNORECASE
+    r"^(?:(?:have )?your life total becomes?|it becomes) (?P<amount>.+)$", re.IGNORECASE
 )
 
 

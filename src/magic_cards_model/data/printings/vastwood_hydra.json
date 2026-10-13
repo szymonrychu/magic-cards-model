@@ -1,0 +1,131 @@
+{
+  "object": "card",
+  "id": "bfe7139a-3fd5-4574-a26b-75b1b17b2c2f",
+  "oracle_id": "7f10540f-eaba-4e06-a79e-101f7409ac6c",
+  "multiverse_ids": [
+    482822
+  ],
+  "tcgplayer_id": 212517,
+  "cardmarket_id": 454118,
+  "name": "Vastwood Hydra",
+  "lang": "en",
+  "released_at": "2020-04-17",
+  "uri": "https://api.scryfall.com/cards/bfe7139a-3fd5-4574-a26b-75b1b17b2c2f",
+  "scryfall_uri": "https://scryfall.com/card/c20/194/vastwood-hydra?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T08:25:56Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/b/f/bfe7139a-3fd5-4574-a26b-75b1b17b2c2f.jpg?1783931156",
+    "normal": "https://cards.scryfall.io/normal/front/b/f/bfe7139a-3fd5-4574-a26b-75b1b17b2c2f.jpg?1783931156",
+    "large": "https://cards.scryfall.io/large/front/b/f/bfe7139a-3fd5-4574-a26b-75b1b17b2c2f.jpg?1783931156",
+    "png": "https://cards.scryfall.io/png/front/b/f/bfe7139a-3fd5-4574-a26b-75b1b17b2c2f.png?1783931156",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/b/f/bfe7139a-3fd5-4574-a26b-75b1b17b2c2f.jpg?1783931156",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/b/f/bfe7139a-3fd5-4574-a26b-75b1b17b2c2f.jpg?1783931156",
+    "thumb": "https://cards.scryfall.io/thumb/front/b/f/bfe7139a-3fd5-4574-a26b-75b1b17b2c2f.webp?1783931156",
+    "grid": "https://cards.scryfall.io/grid/front/b/f/bfe7139a-3fd5-4574-a26b-75b1b17b2c2f.webp?1783931156",
+    "display": "https://cards.scryfall.io/display/front/b/f/bfe7139a-3fd5-4574-a26b-75b1b17b2c2f.webp?1783931156",
+    "art": "https://cards.scryfall.io/art/front/b/f/bfe7139a-3fd5-4574-a26b-75b1b17b2c2f.webp?1783931156",
+    "crop": "https://cards.scryfall.io/crop/front/b/f/bfe7139a-3fd5-4574-a26b-75b1b17b2c2f.webp?1783931156"
+  },
+  "mana_cost": "{X}{G}{G}",
+  "cmc": 2.0,
+  "type_line": "Creature \u2014 Hydra",
+  "oracle_text": "This creature enters with X +1/+1 counters on it.\nWhen this creature dies, you may distribute a number of +1/+1 counters equal to the number of +1/+1 counters on this creature among any number of creatures you control.",
+  "power": "0",
+  "toughness": "0",
+  "colors": [
+    "G"
+  ],
+  "color_identity": [
+    "G"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": false,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "f60ec786-1f8d-42f7-9abc-0d880fe243f6",
+  "set": "c20",
+  "set_name": "Commander 2020",
+  "set_type": "commander",
+  "set_uri": "https://api.scryfall.com/sets/f60ec786-1f8d-42f7-9abc-0d880fe243f6",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Ac20&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/c20?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/bfe7139a-3fd5-4574-a26b-75b1b17b2c2f/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A7f10540f-eaba-4e06-a79e-101f7409ac6c&unique=prints",
+  "collector_number": "194",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Slawomir Maniak",
+  "artist_ids": [
+    "d887bc66-2779-416c-a1ff-d8720242063e"
+  ],
+  "illustration_id": "57056238-cd4f-48ed-9b9b-ff2fc5d2e881",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "edhrec_rank": 5516,
+  "penny_rank": 13318,
+  "prices": {
+    "usd": "1.30",
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": "1.00",
+    "eur_foil": null,
+    "tix": null
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=482822&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DVastwood%2BHydra",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DVastwood%2BHydra",
+    "edhrec": "https://edhrec.com/route/?cc=Vastwood+Hydra"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F212517%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=454118&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards?affiliate_id=scryfall&data%5Bsearch%5D=Vastwood+Hydra&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

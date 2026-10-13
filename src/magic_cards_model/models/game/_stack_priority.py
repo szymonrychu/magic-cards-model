@@ -11,6 +11,7 @@ from ...machines.abilities import (
     parse_abilities,
     parse_triggered_mana,
     self_normalized_effect_text,
+    self_reference_names,
 )
 from ...machines.blitz import create_blitz_delayed_trigger
 from ...machines.casting import (
@@ -33,6 +34,7 @@ from ...machines.combat import (
 from ...machines.cost import (
     additional_cost_phrases,
     cost_announces_x,
+    removes_announced_number_of_counters,
     total_cost_for_phrase,
 )
 from ...machines.counter_effects import event_count_target_text
@@ -57,6 +59,7 @@ from ...machines.effects import (
     modal_trigger_profile,
     trigger_effect_for,
 )
+from ...machines.ep02_r1_counter_amounts import counters_counted_for, counters_read_from
 from ...machines.keywords import (
     ascend_as_a_spell_resolves,
     awaken_as_the_spell_resolves,
@@ -1876,9 +1879,15 @@ class StackPriorityMixin:
             legendary = trigger_source_card is not None and (
                 Supertype.LEGENDARY in trigger_source_card.supertypes
             )
-            return trigger_effect_for(
-                ability.source_name, ability.ability.event, effect_text, legendary=legendary
-            )
+            # CR 122.1/CR 603.10a: "the number of <kind> counters on it" is
+            # read off this ability's source (last known when it has left).
+            with counters_read_from(
+                ability.source_or_last_known(self),
+                None if ability.event is None else ability.event.amount,
+            ):
+                return trigger_effect_for(
+                    ability.source_name, ability.ability.event, effect_text, legendary=legendary
+                )
         if isinstance(ability.ability, ActivatedAbility):
             if ability.ability.class_level_target is not None:
                 # CR 716.2a's own mechanical half - "This Class's level
@@ -1934,13 +1943,19 @@ class StackPriorityMixin:
                 legendary = activated_source_card is not None and (
                     Supertype.LEGENDARY in activated_source_card.supertypes
                 )
-                return activated_effect_for(
-                    ability.source_name,
-                    index,
-                    ability.ability.effect,
-                    x_value=x_value,
-                    legendary=legendary,
+                removed = (
+                    ability.x_value
+                    if removes_announced_number_of_counters(ability.ability.cost)
+                    else None
                 )
+                with counters_read_from(ability.source_or_last_known(self), removed=removed):
+                    return activated_effect_for(
+                        ability.source_name,
+                        index,
+                        ability.ability.effect,
+                        x_value=x_value,
+                        legendary=legendary,
+                    )
         return None
 
     def _intervening_if_still_true(self: "Game", ability: AbilityOnStack) -> bool:
@@ -2325,9 +2340,20 @@ class StackPriorityMixin:
             if isinstance(ability, ActivatedAbility)
         ]
         reasons: list[str] = []
+        names = self_reference_names(
+            source.name, legendary=Supertype.LEGENDARY in source.supertypes
+        )
         for ability in printed:
+            counted = counters_counted_for(ability.text, source, names)
+            if counted != ability.text and source.zone not in (Zone.BATTLEFIELD, Zone.GRAVEYARD):
+                # The number of targets is a count of counters the card does not
+                # have yet (CR 601.2c reads it as the trigger goes on the stack),
+                # so a choice scripted ahead of the cast cannot be judged here. A
+                # card in the graveyard is a permanent that died: its last known
+                # counters (CR 603.10a) are what the count reads.
+                continue
             profile = profile_for_text(
-                event_count_target_text(ability.text, event, unscoped_any=True)
+                event_count_target_text(counted, event, unscoped_any=True)
             )
             if profile.understood and profile.requirements:
                 try:

@@ -364,7 +364,9 @@ def resolve_mana_count_expression(
         return max(value, 0) if value is not None else 0
     counters = _SELF_COUNTERS_ON_RE.fullmatch(stripped)
     if counters is not None:
-        return max(source.counter_count(counters.group("kind").lower()), 0)
+        # CR 603.10a / CR 608.2h: a source sacrificed to pay for the ability is
+        # read as it last existed (Glittering Stockpile).
+        return max(counters_on_it_total(source, counters.group("kind").lower()), 0)
     if _COUNTERS_REMOVED_THIS_WAY_RE.fullmatch(stripped):
         # The X announced for "Remove any number of ... counters" (CR 107.3a);
         # a caller with no activation in hand (an auto-tap plan) removed none.
@@ -559,8 +561,11 @@ class ManaAbilityRider(EngineModel):
         "gain_life",
         "opponents_gain_life",
         "opponents_lose_life",
+        "put_counter",
     ]
     amount: int
+    #: The counter kind a "put_counter" rider puts on the ability's own source.
+    counter_kind: str | None = None
 
 
 #: "This artifact/land/creature deals N damage to you." - the shape every
@@ -570,6 +575,11 @@ class ManaAbilityRider(EngineModel):
 #: carries no information a caller needs.
 _RIDER_DAMAGE_TO_YOU = re.compile(r"^this \S+ deals (?P<n>\d+) damage to you\.?$", re.IGNORECASE)
 _RIDER_LOSE_LIFE = re.compile(r"^you lose (?P<n>\d+) life\.?$", re.IGNORECASE)
+#: Glittering Stockpile's "Put a stash counter on this artifact." - the
+#: source marks itself as the mana is made (CR 405.6c, CR 122.1).
+_RIDER_PUT_COUNTER = re.compile(
+    r"^put (?:a|one) (?P<kind>\+1/\+1|-1/-1|[a-z]+) counter on this \S+\.?$", re.IGNORECASE
+)
 _RIDER_GAIN_LIFE = re.compile(r"^you gain (?P<n>\d+) life\.?$", re.IGNORECASE)
 #: Grove of the Burnwillows' "Each opponent gains 1 life." - the same side
 #: effect aimed at every opponent instead of the controller (CR 405.6c).
@@ -651,6 +661,12 @@ def _parse_mana_rider(rest: str) -> tuple[ManaAbilityRider | None, str | None, s
         gain = _RIDER_GAIN_LIFE.match(sentence)
         if gain:
             rider = ManaAbilityRider(kind="gain_life", amount=int(gain.group("n")))
+            continue
+        marked = _RIDER_PUT_COUNTER.match(sentence)
+        if marked:
+            rider = ManaAbilityRider(
+                kind="put_counter", amount=1, counter_kind=marked.group("kind").lower()
+            )
             continue
         opponents = _RIDER_OPPONENTS_LIFE.match(sentence)
         if opponents:
@@ -5443,4 +5459,5 @@ def _is_triggered_mana_ability(ability: TriggeredAbility) -> bool:
     )
 
 
+from .ep01_r3_amounts import counters_on_it_total  # noqa: E402
 from .named_choice_rows import fold_choice_rows  # noqa: E402

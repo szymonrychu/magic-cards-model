@@ -1,0 +1,133 @@
+{
+  "object": "card",
+  "id": "1f5f3202-fee4-4336-998f-f6710984f6d2",
+  "oracle_id": "aa1c40fb-c230-4e7f-99b1-4e2e8c39a168",
+  "multiverse_ids": [
+    446806
+  ],
+  "tcgplayer_id": 166892,
+  "cardmarket_id": 358723,
+  "name": "Necroplasm",
+  "lang": "en",
+  "released_at": "2018-06-08",
+  "uri": "https://api.scryfall.com/cards/1f5f3202-fee4-4336-998f-f6710984f6d2",
+  "scryfall_uri": "https://scryfall.com/card/cm2/70/necroplasm?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T09:25:55Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/1/f/1f5f3202-fee4-4336-998f-f6710984f6d2.jpg?1783934755",
+    "normal": "https://cards.scryfall.io/normal/front/1/f/1f5f3202-fee4-4336-998f-f6710984f6d2.jpg?1783934755",
+    "large": "https://cards.scryfall.io/large/front/1/f/1f5f3202-fee4-4336-998f-f6710984f6d2.jpg?1783934755",
+    "png": "https://cards.scryfall.io/png/front/1/f/1f5f3202-fee4-4336-998f-f6710984f6d2.png?1783934755",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/1/f/1f5f3202-fee4-4336-998f-f6710984f6d2.jpg?1783934755",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/1/f/1f5f3202-fee4-4336-998f-f6710984f6d2.jpg?1783934755",
+    "thumb": "https://cards.scryfall.io/thumb/front/1/f/1f5f3202-fee4-4336-998f-f6710984f6d2.webp?1783934755",
+    "grid": "https://cards.scryfall.io/grid/front/1/f/1f5f3202-fee4-4336-998f-f6710984f6d2.webp?1783934755",
+    "display": "https://cards.scryfall.io/display/front/1/f/1f5f3202-fee4-4336-998f-f6710984f6d2.webp?1783934755",
+    "art": "https://cards.scryfall.io/art/front/1/f/1f5f3202-fee4-4336-998f-f6710984f6d2.webp?1783934755",
+    "crop": "https://cards.scryfall.io/crop/front/1/f/1f5f3202-fee4-4336-998f-f6710984f6d2.webp?1783934755"
+  },
+  "mana_cost": "{1}{B}{B}",
+  "cmc": 3.0,
+  "type_line": "Creature \u2014 Ooze",
+  "oracle_text": "At the beginning of your upkeep, put a +1/+1 counter on this creature.\nAt the beginning of your end step, destroy each creature with mana value equal to the number of +1/+1 counters on this creature.\nDredge 2 (If you would draw a card, you may mill two cards instead. If you do, return this card from your graveyard to your hand.)",
+  "power": "1",
+  "toughness": "1",
+  "colors": [
+    "B"
+  ],
+  "color_identity": [
+    "B"
+  ],
+  "keywords": [
+    "Dredge",
+    "Mill"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": false,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "2ba5b1a3-40ed-422e-981d-56753004dfc6",
+  "set": "cm2",
+  "set_name": "Commander Anthology Volume II",
+  "set_type": "commander",
+  "set_uri": "https://api.scryfall.com/sets/2ba5b1a3-40ed-422e-981d-56753004dfc6",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Acm2&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/cm2?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/1f5f3202-fee4-4336-998f-f6710984f6d2/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Aaa1c40fb-c230-4e7f-99b1-4e2e8c39a168&unique=prints",
+  "collector_number": "70",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "rk post",
+  "artist_ids": [
+    "81ae0f3f-1d88-4125-9aeb-b15b4c734c82"
+  ],
+  "illustration_id": "b49fdbec-9132-49b5-8afe-2a08d757d7a3",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "edhrec_rank": 15447,
+  "penny_rank": 7404,
+  "prices": {
+    "usd": "1.06",
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": "0.51",
+    "eur_foil": null,
+    "tix": null
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=446806&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DNecroplasm",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DNecroplasm",
+    "edhrec": "https://edhrec.com/route/?cc=Necroplasm"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F166892%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=358723&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards?affiliate_id=scryfall&data%5Bsearch%5D=Necroplasm&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

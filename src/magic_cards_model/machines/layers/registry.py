@@ -796,10 +796,12 @@ def _station_symbol_effects(source: CardState, timestamp: int) -> list[Continuou
     own timestamp (CR 613.7a). Read off the printing (the up face), like
     `_impending_not_a_creature`.
     """
-    from ..abilities import station_creature_threshold, station_striations
+    from ..abilities import self_reference_names, station_creature_threshold, station_striations
+    from ..ep02_r1_counter_amounts import counters_self_reference_normalised
 
     if source.zone is not Zone.BATTLEFIELD:
         return []
+    own_names = self_reference_names(source.card.name, legendary=True)
     text = source.oracle_text or ""
     striations = station_striations(text.splitlines())
     if not any(threshold is not None for _, threshold in striations):
@@ -844,7 +846,8 @@ def _station_symbol_effects(source: CardState, timestamp: int) -> list[Continuou
                 timestamp=timestamp,
                 source_id=source.id,
                 selector=_only(source.id),
-                modification=grant_ability(line),
+                # CR 201.5: "counters on The Eternity Elevator" is the permanent itself.
+                modification=grant_ability(counters_self_reference_normalised(line, own_names)),
             )
         )
     return effects

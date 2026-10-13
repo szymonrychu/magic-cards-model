@@ -39,6 +39,7 @@ from ..abilities import (
     TriggeredAbility,
     TriggerEvent,
     parse_triggered_mana,
+    self_reference_names,
 )
 from ..cost import (
     cost_announces_x,
@@ -55,6 +56,7 @@ from ..delayed import (
     anaphoric_delayed_trigger,
     parse_anaphoric_delayed_clause,
 )
+from ..ep02_r1_counter_amounts import counters_counted_text, counters_read_from
 from ..layers import (
     ContinuousEffect,
     Duration,
@@ -204,6 +206,12 @@ def create_continuous_effect_of_ability(game: "Game", ability: AbilityOnStack) -
         if isinstance(ability.ability, ActivatedAbility) and cost_announces_x(ability.ability.cost)
         else ability.ability.text
     )
+    # CR 122.1/CR 603.10a: "for each <kind> counter on this artifact" is the
+    # count on the ability's source as it resolves.
+    with counters_read_from(source):
+        ability_text = counters_counted_text(
+            ability_text, self_reference_names(source.name, legendary=True)
+        )
     profile = profile_for_text(ability_text)
     requires_target = profile.understood and bool(profile.requirements)
     # CR 113.7a: "Once activated or triggered, an ability exists on the stack

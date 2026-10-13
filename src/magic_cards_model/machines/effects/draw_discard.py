@@ -369,7 +369,8 @@ def _parse_put_land_from_hand_clause(clause: str, *, for_spell: bool) -> Targete
 #: only once every other reader has passed, so it never takes a sentence one
 #: of them already reads.
 _MAY_PUT_CARD_FROM_HAND_RE = re.compile(
-    r"^you may put an? (?P<desc>[^.]+?) card(?: with mana value (?P<mv>\d+) or less)?"
+    r"^you may put an? (?P<desc>[^.]+?) card"
+    r"(?: with mana value (?:(?P<mv>\d+) or less|equal to (?P<mv_eq>\d+)))?"
     r" from your hand onto the battlefield(?P<tapped> tapped)?"
     r"(?:\.\s*if you don'?t, (?P<otherwise>.+?))?\.?$",
     re.IGNORECASE | re.DOTALL,
@@ -389,6 +390,9 @@ def _parse_may_put_card_from_hand_clause(text: str, *, for_spell: bool) -> Targe
         return None
     matches = _quality_matcher(match.group("desc"))
     cap = int(match.group("mv")) if match.group("mv") else None
+    # Aether Vial's "mana value equal to the number of charge counters" (CR 202.3),
+    # the number already read in by `ep02_r1_counter_amounts`.
+    exact = int(match.group("mv_eq")) if match.group("mv_eq") else None
     tapped = match.group("tapped") is not None
     otherwise_text = match.group("otherwise")
     otherwise = (
@@ -399,11 +403,19 @@ def _parse_may_put_card_from_hand_clause(text: str, *, for_spell: bool) -> Targe
     if otherwise is None:
         return None
     phrase = f"{match.group('desc')} card" + (
-        f" with mana value {cap} or less" if cap is not None else ""
+        f" with mana value {cap} or less"
+        if cap is not None
+        else f" with mana value equal to {exact}"
+        if exact is not None
+        else ""
     )
 
     def qualifies(card: CardState) -> bool:
-        return matches(card) and (cap is None or card.mana_value <= cap)
+        return (
+            matches(card)
+            and (cap is None or card.mana_value <= cap)
+            and (exact is None or card.mana_value == exact)
+        )
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
         player = game.controller_of(stack_object)

@@ -701,6 +701,31 @@ class CountCountersOnObject(CountBase):
         return holder.counters.get(self.counter, 0) if holder is not None else 0
 
 
+class CountOtherPermanentsWithCounter(CountBase):
+    """How many other permanents of a type the asking object's controller has
+    with at least one counter of one kind on them (CR 122.1) - High Sentinels
+    of Arashin's "+1/+1 for each other creature you control with a +1/+1
+    counter on it". The source itself is excluded (it is the "other"), and the
+    counters are read off the board as the asking sublayer sees it, so a
+    counter added to or removed from a creature moves the count on the next
+    computation (CR 611.3a)."""
+
+    kind: Literal["other_permanents_with_counter"] = "other_permanents_with_counter"
+    source_id: UUID
+    card_type: Type | None = None
+    counter: str
+
+    def __call__(self, chars: Characteristics, board: Board) -> int:
+        return sum(
+            1
+            for other in board.values()
+            if other.card_id != self.source_id
+            and other.controller == chars.controller
+            and (self.card_type is None or self.card_type in other.types)
+            and other.counters.get(self.counter, 0) > 0
+        )
+
+
 class CountControlledAndGraveyardCards(CountBase):
     """ "the number of `<X>` you control and each `<X>` card in your
     graveyard" - Moon-Vigil Adherents' own double count. A live board scan
@@ -938,6 +963,7 @@ Count = Annotated[
     | CountPermanentsControlledByItsController
     | CountCountersOnIt
     | CountCountersOnObject
+    | CountOtherPermanentsWithCounter
     | CountControlledAndGraveyardCards
     | CountOtherCreaturesLikeThatOne
     | CountOtherCreaturesNamed

@@ -2155,16 +2155,9 @@ def _parse_remove_up_to_n_counters_from_target_clause(text: str) -> AbilityEffec
         for target in game.resolve_targets(ability):
             if not isinstance(target, CardState) or target.zone is not Zone.BATTLEFIELD:
                 continue
-            remaining = limit
-            kinds = sorted(target.counters, key=lambda kind: -target.counter_count(kind))
-            for kind in kinds:
-                if remaining <= 0:
-                    break
-                present = target.counter_count(kind)
-                take = min(remaining, present)
-                if take:
-                    target.remove_counters(kind, take)
-                    remaining -= take
+            from ..ep02_r1_counter_amounts import choose_counters_to_remove
+
+            choose_counters_to_remove(game, ability, target, limit)
 
     return effect
 
@@ -4750,3 +4743,133 @@ def _parse_remove_counter_from_each_of_n_clause(
     from ..if_you_do_chains import parse_remove_counter_from_each_of_n
 
     return parse_remove_counter_from_each_of_n(text)
+
+
+#: "Remove up to `<n>` counters from target `<permanent>`. For each counter
+#: removed this way, `<it>` gets +`<a>`/+`<b>` until end of turn." - Hex Parasite
+#: (`{X}{B/P}`, with X already read into `<n>` by `activated_effect_for`). The
+#: removal is `_parse_remove_up_to_n_counters_from_target_clause`'s own (CR 122.1,
+#: CR 608.2d: up to N, as many as are there); the second sentence is CR 608.2c
+#: reading the number of counters actually removed (CR 122.5), so a target with
+#: fewer pumps by fewer, and a target that is gone (CR 608.2b) pumps nothing.
+_REMOVE_UP_TO_THEN_PUMP_PER_REMOVED_RE = re.compile(
+    rf"^(?P<remove>remove up to {COUNT} counters from (?:another )?target [^.]+?)\.\s*"
+    r"for each counter removed this way, (?P<who>[^.]+?) gets "
+    r"(?P<p>[+-]\d+)/(?P<t>[+-]\d+) until end of turn\.?$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s28")
+def _parse_remove_up_to_then_pump_per_removed(text: str) -> AbilityEffect | None:
+    """`_REMOVE_UP_TO_THEN_PUMP_PER_REMOVED_RE`'s shape; see the banner above."""
+    from .dispatch import _parse_mixed_clauses
+
+    match = _REMOVE_UP_TO_THEN_PUMP_PER_REMOVED_RE.fullmatch(" ".join(text.split()))
+    if match is None:
+        return None
+    removal = _parse_remove_up_to_n_counters_from_target_clause(match.group("remove") + ".")
+    if removal is None:
+        return None
+    power, toughness, who = int(match.group("p")), int(match.group("t")), match.group("who")
+    if (
+        _parse_mixed_clauses(
+            f"{who} gets {power:+d}/{toughness:+d} until end of turn.", for_spell=False
+        )
+        is None
+    ):
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        targets = [
+            t
+            for t in game.resolve_targets(ability)
+            if isinstance(t, CardState) and t.zone is Zone.BATTLEFIELD
+        ]
+
+        def held() -> int:
+            return sum(count for t in targets for _kind, count in t.counters.items())
+
+        before = held()
+        removal(game, ability)
+        removed = before - held()
+        if removed <= 0:
+            return
+        clauses = _parse_mixed_clauses(
+            f"{who} gets {power * removed:+d}/{toughness * removed:+d} until end of turn.",
+            for_spell=False,
+        )
+        for clause in clauses or ():
+            clause(game, ability)
+
+    return effect
+
+
+#: "You may remove a `<kind>` counter from each of any number of `<Saga>`s you
+#: control. Put a `<kind>` counter on `<this>` for each `<kind>` counter removed
+#: this way." - Garnet, Princess of Alexandria. CR 608.2d: the controller chooses
+#: whether, then which of the permanents that really have one (CR 107.1c: any
+#: number, none included); CR 122.5 each loses one, and CR 608.2c's second
+#: sentence counts the ones removed.
+_MAY_REMOVE_FROM_EACH_THEN_PUT_PER_REMOVED_RE = re.compile(
+    r"^you may remove an? (?P<kind>[+\-/\d]+|[a-z]+) counter from each of any number of "
+    r"(?P<noun>[a-z]+)s you control\.\s*"
+    r"put an? (?P<ck>\+1/\+1|-1/-1|[a-z]+) counter on (?:this \w+|it) "
+    r"for each (?P=kind) counter removed this way\.?$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s28")
+def _parse_may_remove_from_each_then_put_per_removed(text: str) -> AbilityEffect | None:
+    """`_MAY_REMOVE_FROM_EACH_THEN_PUT_PER_REMOVED_RE`'s shape; see the banner above."""
+    match = _MAY_REMOVE_FROM_EACH_THEN_PUT_PER_REMOVED_RE.fullmatch(" ".join(text.split()))
+    if match is None or not _search_quality_is_readable(match.group("noun")):
+        return None
+    kind = match.group("kind").lower()
+    put_kind = match.group("ck").lower()
+    quality = _quality_matcher(match.group("noun"))
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        source = ability.source(game)
+        if source is None or source.zone is not Zone.BATTLEFIELD:
+            return
+        controller = game.controller_of(ability)
+        candidates = [
+            permanent
+            for permanent in game.permanents_controlled_by(controller.username)
+            if quality(permanent) and permanent.counter_count(kind) >= 1
+        ]
+        if not candidates:
+            return
+        if not game.may(
+            controller,
+            f"remove a {kind} counter from each of any number of "
+            f"{match.group('noun')}s you control",
+            source=ability.source_name,
+            source_id=source_id_of(ability),
+            cards=tuple(candidates),
+        ):
+            return
+        chosen_ids = game.ask(
+            Decision(
+                kind=DecisionKind.CHOOSE_CARDS,
+                player=controller.username,
+                prompt=f"choose any number of {match.group('noun')}s to lose a {kind} counter",
+                source=ability.source_name,
+                source_id=source_id_of(ability),
+                amount=len(candidates),
+                exact=False,
+                cards=tuple(card.id for card in candidates),
+            )
+        )
+        assert isinstance(chosen_ids, tuple)
+        removed = 0
+        for card in candidates:
+            if card.id in chosen_ids and card.can_remove_counters(kind, 1):
+                card.remove_counters(kind, 1)
+                removed += 1
+        if removed:
+            game.add_counters(source, put_kind, removed)
+
+    return effect

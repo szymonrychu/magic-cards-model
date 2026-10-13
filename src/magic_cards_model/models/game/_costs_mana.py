@@ -2037,6 +2037,9 @@ class CostsManaMixin:
             self.lose_life(self.player(controller), rider.amount)
         elif rider.kind == "gain_life":
             self.gain_life(controller, rider.amount)
+        elif rider.kind == "put_counter":
+            # CR 122.1: the source marks itself as the mana is made.
+            self.add_counters(source, rider.counter_kind or "", rider.amount, putter=controller)
         else:
             # CR 405.6c, aimed at "each opponent" (CR 102.2): everyone still
             # in the game who is not the controller, in turn order.

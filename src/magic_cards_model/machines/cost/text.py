@@ -1407,7 +1407,7 @@ def cost_component_for_phrase(phrase: str, payer: str | None = None) -> CostComp
     from_among = _PHRASE_REMOVE_COUNTERS_FROM_AMONG.match(text)
     if from_among is not None:
         read = _cost_count(from_among.group("count"))
-        if read is None or read[1]:
+        if read is None:
             return None
         kind_word = from_among.group("kind")
         # "other artifacts, creatures, and planeswalkers" (Tekuthal): each
@@ -1426,6 +1426,9 @@ def cost_component_for_phrase(phrase: str, payer: str | None = None) -> CostComp
         component.from_among = True
         component.required = 0
         component.requirement = requirement
+        # "Remove one or more +1/+1 counters from among creatures you control"
+        # (Ooze Flux): the payer announces how many (CR 107.3a, `announce_count`).
+        component.variable_count = read[1]
         return component
     remove_any = _PHRASE_REMOVE_ANY_COUNTERS.match(text)
     if remove_any is not None:

@@ -550,6 +550,10 @@ class CostComponent(EngineModel):
     Greatwurm, Hopeful Initiate) - `amount` is the total taken across every
     chosen permanent (`cards`), not a count taken from each (CR 118.3: the
     counters have to be there, summed over the chosen permanents)."""
+    take_from: dict[UUID, int] = Field(default_factory=dict)
+    """`from_among` only: how many counters the payer chose to take off each
+    permanent in `cards` (CR 601.2b/h). Empty means the default order - each
+    permanent in `cards` gives all it has until `amount` is reached."""
     every_matching: bool = False
     """`ComponentKind.SACRIFICE` and `ComponentKind.DISCARD` only: "Discard your
     hand" (Bomat Courier's activation cost) takes every card in the hand when
@@ -855,6 +859,12 @@ class CostComponent(EngineModel):
         checked before anything is spent.
         """
         if self.from_among:
+            if (
+                self.variable_count
+                and self.amount < 1
+                and "one or more" in self.description.lower()
+            ):
+                return "the cost removes one or more counters, and none were announced (CR 118.3)"
             total = 0
             for card in self.cards:
                 if card.zone is not Zone.BATTLEFIELD:
@@ -862,6 +872,8 @@ class CostComponent(EngineModel):
                         f"{card.name} is not on the battlefield, so its counters cannot be removed"
                     )
                 total += _removable_counters(card, self.counter_kind)
+                if self.take_from.get(card.id, 0) > _removable_counters(card, self.counter_kind):
+                    return f"{card.name} does not have the counters chosen to come off it"
             if total < self.amount:
                 return (
                     f"the chosen permanents have {total} counter(s) between them, not the "
@@ -1228,11 +1240,12 @@ class CostComponent(EngineModel):
             left = self.amount
             for card in self.cards:
                 self._remember_counters(card)
-                take = (
-                    min(left, _removable_counters(card, self.counter_kind))
-                    if self.from_among
-                    else self.amount
-                )
+                if self.from_among and self.take_from:
+                    take = self.take_from.get(card.id, 0)
+                elif self.from_among:
+                    take = min(left, _removable_counters(card, self.counter_kind))
+                else:
+                    take = self.amount
                 left -= take
                 if self.counter_kind == ANY_COUNTER_KIND:
                     for kind, count in any_counters_to_remove(card, take):
@@ -1738,9 +1751,12 @@ def cost_announces_x(cost_text: str) -> bool:
     )
 
 
-#: "Remove any number of `<kind>` counters" inside a printed cost.
+#: "Remove any number of `<kind>` counters" inside a printed cost, and Ooze
+#: Flux's "Remove one or more `<kind>` counters from among creatures you control"
+#: - both announce how many.
 _REMOVE_ANY_NUMBER_OF_COUNTERS = re.compile(
-    r"\bremove any number of [\w+/−-]+ counters\b", re.IGNORECASE
+    r"\bremove (?:any number of [\w+/−-]+ counters\b|one or more [\w+/−-]+ counters from among\b)",
+    re.IGNORECASE,
 )
 
 
@@ -1941,32 +1957,55 @@ def _removable_counters(card: CardState, counter_kind: str) -> int:
 
 
 def fill_from_among(
-    component: "CostComponent", game: Any, payer: str, chosen: list[CardState] | None
+    component: "CostComponent",
+    game: Any,
+    payer: str,
+    chosen: list[CardState] | None,
+    *,
+    source: str | None = None,
+    source_id: str | None = None,
 ) -> None:
     """Choose the permanents a `from_among` counter-removal cost takes its
     counters from (CR 601.2b's choice, CR 601.2h's payment): the ones the
-    payer named, in order, or - named none - every permanent the payer
-    controls that meets the requirement and has such a counter, in
-    battlefield order, until the total is reached."""
+    payer named, in order, or - named none - the payer is asked, counter by
+    counter, which permanent they control that meets the requirement gives
+    the next one (`choose_removal_allocation`); unanswered, battlefield order
+    until the total is reached."""
     if not component.from_among or component.cards:
         return
     if chosen:
         component.cards = list(chosen)
     elif game is not None:
-        picked: list[CardState] = []
-        total = 0
-        for permanent in game.permanents_controlled_by(payer):
-            if total >= component.amount:
-                break
-            if component.requirement is not None and (
-                component.requirement.why_not(permanent, game, payer) is not None
-            ):
-                continue
-            have = _removable_counters(permanent, component.counter_kind)
-            if have:
-                picked.append(permanent)
-                total += have
-        component.cards = picked
+        from ..ep02_r1_counter_amounts import choose_removal_allocation
+
+        candidates = [
+            permanent
+            for permanent in game.permanents_controlled_by(payer)
+            if _removable_counters(permanent, component.counter_kind)
+            and (
+                component.requirement is None
+                or component.requirement.why_not(permanent, game, payer) is None
+            )
+        ]
+        if (
+            sum(_removable_counters(c, component.counter_kind) for c in candidates)
+            >= component.amount
+        ):
+            picks = choose_removal_allocation(
+                game,
+                payer,
+                candidates,
+                lambda card: _removable_counters(card, component.counter_kind),
+                component.amount,
+                source=source,
+                source_id=source_id,
+            )
+            component.take_from = {}
+            for card in picks:
+                component.take_from[card.id] = component.take_from.get(card.id, 0) + 1
+            component.cards = [c for c in candidates if c.id in component.take_from]
+        else:
+            component.cards = candidates
     component.required = len(component.cards)
 
 

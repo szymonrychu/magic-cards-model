@@ -109,6 +109,7 @@ from magic_cards_model.machines.counter_effects import singular_subtype
 from magic_cards_model.machines.decisions import Decision, DecisionKind, ScriptedAnswer
 from magic_cards_model.machines.effects import transform_permanent
 from magic_cards_model.machines.enlist import eligible_enlist_creatures
+from magic_cards_model.machines.ep02_r1_counter_amounts import counters_self_reference_normalised
 from magic_cards_model.machines.exert_triggers import exert_permanent
 from magic_cards_model.machines.keywords import (
     craft_abilities,
@@ -150,7 +151,7 @@ from magic_cards_model.machines.triggers import (
 )
 from magic_cards_model.models import Card, CardState, Color, Type, Zone
 from magic_cards_model.models.action import ActionKind
-from magic_cards_model.models.card import Layout
+from magic_cards_model.models.card import Layout, Supertype
 from magic_cards_model.models.card_state import (
     Choice,
     ChoiceKind,
@@ -1753,6 +1754,11 @@ def _prime(scenario: PlayedScenario, source: CardState, ability: Any) -> CardSta
         # A leveler striation's ability exists only while the level counters
         # are in its band (CR 711.2a/b) - staged at the band's lowest level.
         source.counters.set("level", band[0])
+    threshold = getattr(ability, "station_threshold", None)
+    if threshold is not None and source.zone is Zone.BATTLEFIELD:
+        # CR 721.2a: a station striation's ability is there only at N or more
+        # charge counters - staged at its threshold.
+        source.counters.set("charge", threshold)
     _attach(scenario, source)
     _exiled_as_it_entered(scenario, source)
     if getattr(ability, "ability_word", None) == "∞":
@@ -1771,6 +1777,7 @@ def _prime(scenario: PlayedScenario, source: CardState, ability: Any) -> CardSta
         increase_speed(player, by=4 - effective_speed(player))
     _counter_threshold(scenario, source, getattr(ability, "intervening_if", None))
     _counter_to_remove(scenario, source, getattr(ability, "text", None))
+    _counters_to_count(scenario, source, getattr(ability, "text", None))
     _above_board_power(scenario, source, getattr(ability, "text", None))
     _history_threshold(scenario, source, getattr(ability, "intervening_if", None))
     _target_damage_history(scenario, source, getattr(ability, "text", None))
@@ -1824,6 +1831,28 @@ def _counter_to_remove(scenario: PlayedScenario, source: CardState, text: str | 
     if found is None or source.zone is not Zone.BATTLEFIELD:
         return
     kind = found.group("kind")
+    if source.counters[kind] == 0:
+        scenario.game.add_counters(source, kind, 1)
+
+
+_COUNTS_OWN_COUNTERS = re.compile(
+    r"(?:for each (?P<each>\+1/\+1|-1/-1|[a-z]+) counters? on (?:this|it)\b[^.]*?\bup to one target"
+    r"|distribute [^.]*?(?:number of|equal to) (?P<dist>\+1/\+1|-1/-1|[a-z]+) counters? on "
+    r"(?:this|it)\b)",
+    re.IGNORECASE,
+)
+
+
+def _counters_to_count(scenario: PlayedScenario, source: CardState, text: str | None) -> None:
+    """A target count or a distribution read off the source's own counters
+    ("for each isolation counter on it, exile up to one target ..."; "distribute
+    a number of +1/+1 counters equal to the number on this creature among ...";
+    CR 122.1, 601.2c, 608.2h): a source that carries none announces 0 targets or
+    has nothing to give - so it is staged carrying one."""
+    found = _COUNTS_OWN_COUNTERS.search(text or "")
+    if found is None or source.zone is not Zone.BATTLEFIELD:
+        return
+    kind = (found.group("each") or found.group("dist")).lower()
     if source.counters[kind] == 0:
         scenario.game.add_counters(source, kind, 1)
 
@@ -5725,6 +5754,7 @@ def _x_for(ability: ActivatedAbility) -> int:
         if "{x}" in cost
         or " x " in f" {cost} "
         or "remove any number of" in cost
+        or "remove one or more" in cost
         or _LOYALTY_X_RE.match(cost.strip())
         else 0
     )
@@ -6145,8 +6175,19 @@ def _activation_board(
             active=BOB if opponent_sorcery else ALICE,
         )
         source = _source(scenario, case, ability)
+    # A station striation's granted ability reads CR 201.5's "counters on <its
+    # own name>" as "counters on this permanent" (CR 721.2a).
+    wanted = {
+        case.text,
+        counters_self_reference_normalised(
+            case.text,
+            self_reference_names(
+                case.printing.name, legendary=Supertype.LEGENDARY in case.printing.supertypes
+            ),
+        ),
+    }
     indexes = [
-        i for i, a in enumerate(scenario.game.activated_abilities(source)) if a.text == case.text
+        i for i, a in enumerate(scenario.game.activated_abilities(source)) if a.text in wanted
     ]
     return scenario, source, indexes[0] if indexes else None
 
@@ -6209,6 +6250,8 @@ def _activate(
             x_value=x_value,
             exiled_for_cost=(choices.get("exiling") or [None])[0],
             sacrificed_for_cost=sacrificing,
+            # An "any one color" mana ability is told the color it adds.
+            color=Color.GREEN if re.search(r"\bany (?:one )?colou?r\b", ability.effect) else None,
         )
         game.retain_priority(activator)
         return on_stack

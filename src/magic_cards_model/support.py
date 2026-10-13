@@ -48,6 +48,7 @@ from magic_cards_model.machines.abilities import (
     keyword_abilities,
     parse_abilities,
     parse_mana_abilities,
+    self_reference_names,
 )
 from magic_cards_model.machines.abilities import (
     self_normalized_effect_text as _self_normalized_effect_text,
@@ -154,6 +155,7 @@ from magic_cards_model.machines.effects import (
     trigger_effect_for,
 )
 from magic_cards_model.machines.effects.counters import _SUPPORT_RE
+from magic_cards_model.machines.ep02_r1_counter_amounts import counters_counted_text
 from magic_cards_model.machines.exert_on_attack import reads_exert_as_it_attacks_line
 from magic_cards_model.machines.face_down_keywords import (
     prints_cloak_clause,
@@ -2536,6 +2538,13 @@ def _dispatch_category(effect: object, printing: Card, ability_text: str | None 
         # path - `looks_like_unparsed_layer_effect`'s own regex is a superset
         # of the one that routed here in the first place - but SILENT is the
         # right default if it ever did, not an optimistic HANDLED.
+        if ability_text is not None:
+            ability_text = counters_counted_text(
+                ability_text,
+                self_reference_names(
+                    printing.name, legendary=Supertype.LEGENDARY in printing.supertypes
+                ),
+            )
         return _layer_category(printing, ability_text) or SILENT
     if effect is resolve_modal_spell:
         return _modal_category(printing)
@@ -4241,7 +4250,11 @@ def classify_clauses(printing: Card) -> list[ClauseOutcome]:
             ability_texts = [
                 substitute_x(ability.text, x_value)
                 if x_value is not None
-                else (ability.text if other_face else None)
+                else (
+                    ability.text
+                    if other_face or counters_counted_text(ability.text) != ability.text
+                    else None
+                )
                 for x_value in x_candidates
             ]
             categories = [
@@ -4353,7 +4366,11 @@ def classify_clauses(printing: Card) -> list[ClauseOutcome]:
             if modal_category is not None:
                 category = modal_category
             else:
-                own_text = ability.text if other_face else None
+                own_text = (
+                    ability.text
+                    if other_face or counters_counted_text(ability.text) != ability.text
+                    else None
+                )
                 categories = [_dispatch_category(e, printing, own_text) for e in trigger_effects]
                 category = _best(categories)
             # As with the spell face above: a trigger carrying both CR

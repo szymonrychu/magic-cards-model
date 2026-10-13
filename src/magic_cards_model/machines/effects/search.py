@@ -5,11 +5,12 @@ from typing import TYPE_CHECKING
 from magic_cards_model.phrases import with_indefinite_article
 
 from ...data.subtypes import subtype_vocabulary
-from ...models.card import Type
+from ...models.card import Supertype, Type
 from ...models.card_state import (
     CardState,
 )
 from ...models.player import Player
+from ...models.token import PREDEFINED, create_tokens
 from ...models.zone import Zone
 from ...numbers import (
     COUNT,
@@ -2337,3 +2338,49 @@ from .text import (  # noqa: E402
     _strip_non_effect_preamble,
     _type_word_is_readable,
 )
+
+#: "Search your library for a `<quality>` card with mana value equal to `<n>`,
+#: [reveal it, and ]put it into your hand | onto the battlefield[. If that card
+#: is legendary, create a Treasure token][,] [then shuffle]." - Instrument of
+#: the Bards and Yisan, the Wanderer Bard, whose count of counters
+#: (`ep02_r1_counter_amounts`) has already been read into `<n>`. CR 202.3 gives
+#: the number to compare and CR 701.23b leaves the find optional (a stated
+#: quality); the rider is CR 608.2c's "that card" - the card the search found.
+_SEARCH_EXACT_MANA_VALUE_RE = re.compile(
+    r"^search your library for an? (?P<quality>.+?) card with mana value equal to (?P<n>\d+)"
+    r"(?P<reveal>,? reveal it,?)?(?:,| and)? put it (?P<dest>into your hand|onto the battlefield)"
+    r"(?P<treasure>\.\s*if that card is legendary, create a treasure token)?"
+    r"(?:,? then shuffle|\.\s*then shuffle)\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+@ABILITY_TEXT.rung("s16")
+def _parse_search_exact_mana_value_ability(text: str) -> AbilityEffect | None:
+    """`_SEARCH_EXACT_MANA_VALUE_RE`'s shape, or `None`."""
+    match = _SEARCH_EXACT_MANA_VALUE_RE.fullmatch(" ".join(text.strip().split()))
+    if match is None or not _search_quality_is_readable(match.group("quality")):
+        return None
+    quality = _quality_matcher(match.group("quality"))
+    value = int(match.group("n"))
+    destination = Zone.HAND if match.group("dest").lower() == "into your hand" else Zone.BATTLEFIELD
+    reveal = match.group("reveal") is not None
+    treasure = match.group("treasure") is not None
+
+    def matches(state: CardState) -> bool:
+        return quality(state) and state.mana_value == value
+
+    def effect(game: "Game", ability: "StackObject") -> None:
+        controller = game.controller_of(ability)
+        found = game.search_and_put(
+            controller,
+            matches,
+            destination=destination,
+            reveal=reveal,
+            source=ability.source_name,  # type: ignore[union-attr]
+            source_id=source_id_of(ability),
+        )
+        if treasure and any(Supertype.LEGENDARY in card.supertypes for card in found):
+            create_tokens(game, PREDEFINED["Treasure"], controller.username)
+
+    return effect
