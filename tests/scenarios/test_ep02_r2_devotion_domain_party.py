@@ -1008,3 +1008,24 @@ def test_moonveil_regent_may_decline_and_keeps_its_hand():
     scenario.will_take_the_may(False, username="alice")
     _cast_and_settle(scenario, "Grizzly Bears")
     assert _names(scenario.player("alice").hand) == ["Hill Giant"]
+
+
+# --------------------------------------------------------------------------
+# Once only: a "Choose target ..." lead-in targets once and the body resolves once
+# --------------------------------------------------------------------------
+
+
+def test_choose_target_lead_in_targets_and_resolves_once():
+    scenario = _main(
+        _build(
+            ["Forest", "Codespell Cleric", "Deathcult Rogue", "Grizzly Bears"],
+            hand=["Strength of Solidarity"],
+        )
+    )
+    bears = scenario.creature("Grizzly Bears", "alice")
+    scenario.cast_and_resolve(
+        "Strength of Solidarity", auto=True, username="alice", targets=[bears]
+    )
+    assert bears.counter_count(Counter.PLUS_ONE) == 2  # one party count, applied once
+    assert not scenario.game.stack
+    assert [c.name for c in scenario.player("alice").graveyard] == ["Strength of Solidarity"]

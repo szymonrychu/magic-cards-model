@@ -55,6 +55,7 @@ from .ep02_r1_moved_card_stat import (
     card_snapshot,
     parse_moved_phrase,
 )
+from .ep02_r2_devotion_domain_party import CHOOSE_TARGET_RE
 
 if TYPE_CHECKING:
     from ..models.game import Game
@@ -148,7 +149,6 @@ _REVEAL_UNTIL_NONLAND_RE = re.compile(
     r"^reveal cards from the top of your library until you reveal a nonland card$",
     re.IGNORECASE,
 )
-_CHOOSE_TARGET_RE = re.compile(r"^choose (?:any target|target [a-z, ]+)$", re.IGNORECASE)
 _COUNTER_THAT_SPELL_RE = re.compile(r"^counter that spell$", re.IGNORECASE)
 _CHANGE_TARGET_RE = re.compile(
     r"^change the target of target spell with a single target$", re.IGNORECASE
@@ -158,6 +158,36 @@ _EACH_PLAYER_REVEAL_RE = re.compile(
     r"mana value, then puts it into their hand$",
     re.IGNORECASE,
 )
+
+
+@functools.cache
+def _shared_step(which: str, sentence: str) -> Any:
+    """The step `ep02_r2_revealed_this_way` builds for `sentence`: the one
+    interpreter of "reveal the top card", "reveal cards until ...", "discard a
+    card at random" and "mill a card" (it is imported here, not the reverse)."""
+    from . import ep02_r2_revealed_this_way as plan
+
+    regex, build = {
+        "top": (plan._REVEAL_TOP_RE, plan._reveal_top),
+        "until": (plan._REVEAL_UNTIL_RE, plan._reveal_until),
+        "discard": (plan._DISCARD_RANDOM_RE, plan._discard_random),
+        "mill": (plan._MILL_RE, plan._mill_step),
+    }[which]
+    match = regex.fullmatch(sentence)
+    assert match is not None
+    step = build(match)
+    assert step is not None
+    return step
+
+
+def _run_shared(which: str, sentence: str, game: "Game", stack_object: Any, player: Player) -> Any:
+    """Run the shared step as `player` (the one who reveals, mills or discards) and return
+    the plan context it filled in."""
+    from .ep02_r2_revealed_this_way import _Ctx
+
+    ctx = _Ctx(actor=player, controller=player)
+    _shared_step(which, sentence)(game, stack_object, ctx)
+    return ctx
 
 
 def _step_reveal_top(*, hand: bool, may: bool) -> ResolutionStep:
@@ -171,8 +201,8 @@ def _step_reveal_top(*, hand: bool, may: bool) -> ResolutionStep:
             player, "reveal the top card of your library", source=name, source_id=source_id
         ):
             return False
-        top = player.library[0]
-        game.reveal(top, source=name)
+        ctx = _run_shared("top", "reveal the top card of your library", game, stack_object, player)
+        top = ctx.revealed[0]
         state.referent = card_snapshot(game, top)  # CR 608.2h: before it moves
         state.card = top
         state.did = True
@@ -200,8 +230,6 @@ def _chain(first: ResolutionStep, second: ResolutionStep) -> ResolutionStep:
 
 
 def _step_mill_one(who: str | None) -> ResolutionStep:
-    from .effects.library import _mill
-
     def step(game: "Game", stack_object: Any, state: State) -> bool:
         assert isinstance(state, RunState)
         if who:
@@ -211,8 +239,9 @@ def _step_mill_one(who: str | None) -> ResolutionStep:
             player = target
         else:
             player = game.controller_of(stack_object)
-        milled = _mill(game, player, 1)
+        ctx = _run_shared("mill", "you mill a card", game, stack_object, player)
         state.player = player.username
+        milled = ctx.moved.get("milled", [])
         if milled:
             state.card = milled[0]
             state.referent = card_snapshot(game, milled[0])
@@ -225,16 +254,13 @@ def _step_mill_one(who: str | None) -> ResolutionStep:
 def _step_discard_random(game: "Game", stack_object: Any, state: State) -> bool:
     assert isinstance(state, RunState)
     player = game.controller_of(stack_object)
-    hand = list(player.hand)
-    if not hand:
-        return True
-    name, _ = _name_and_id(stack_object)
-    card = _random_pick(game, hand, "discard-at-random")
-    state.referent = card_snapshot(game, card)
-    state.card = card
-    game.discard_cards(player.username, [card], source=name)
-    state.did = card.zone is not Zone.HAND
+    ctx = _run_shared("discard", "discard a card at random", game, stack_object, player)
     state.player = player.username
+    discarded = ctx.moved.get("discarded", [])
+    if discarded:
+        state.referent = card_snapshot(game, discarded[0])
+        state.card = discarded[0]
+        state.did = discarded[0].zone is not Zone.HAND
     return True
 
 
@@ -259,15 +285,18 @@ def _step_reveal_random_from_hand(game: "Game", stack_object: Any, state: State)
 def _step_reveal_until_nonland(game: "Game", stack_object: Any, state: State) -> bool:
     assert isinstance(state, RunState)
     player = game.controller_of(stack_object)
-    name, _ = _name_and_id(stack_object)
-    for card in list(player.library):
-        game.reveal(card, source=name)
-        state.revealed.append(card)
-        if not card.card.is_land:
-            state.card = card
-            state.referent = card_snapshot(game, card)
-            state.did = True
-            break
+    ctx = _run_shared(
+        "until",
+        "reveal cards from the top of your library until you reveal a nonland card",
+        game,
+        stack_object,
+        player,
+    )
+    state.revealed.extend(ctx.revealed)
+    if ctx.stoppers:
+        state.card = ctx.stoppers[0]
+        state.referent = card_snapshot(game, ctx.stoppers[0])
+        state.did = True
     return True
 
 
@@ -329,7 +358,7 @@ def _opener(sentence: str, *, for_spell: bool) -> tuple[ResolutionStep, str | No
         return _step_reveal_random_from_hand, m.group("rest"), "that player"
     if _REVEAL_UNTIL_NONLAND_RE.fullmatch(sentence):
         return _step_reveal_until_nonland, None, ""
-    if _CHOOSE_TARGET_RE.fullmatch(sentence):
+    if CHOOSE_TARGET_RE.fullmatch(sentence):
         return _step_noop, None, ""
     if _COUNTER_THAT_SPELL_RE.fullmatch(sentence):
         return _step_counter_that_spell, None, ""

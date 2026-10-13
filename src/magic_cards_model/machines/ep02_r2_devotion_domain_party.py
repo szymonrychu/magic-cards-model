@@ -263,8 +263,10 @@ def _build(reveal, depth, kept_kind, k, rest_to, win, draw_at, life_tails):  # n
 # land types among lands you control." (Zar Ojanen)
 # --------------------------------------------------------------------------
 
-_CHOOSE_TARGET_RE = re.compile(
-    r"^choose (?P<target>target [^.]+?)\.\s+(?P<rest>.+)$", re.IGNORECASE
+#: The one reader of a leading "Choose target X." sentence; `rest` is the effect body that
+#: follows it, absent when the sentence stands alone. `ep02_r2_card_mana_value` reuses it.
+CHOOSE_TARGET_RE = re.compile(
+    r"^choose (?P<target>any target|target [^.]+?)(?:\.\s+(?P<rest>.+)|\.?)$", re.IGNORECASE
 )
 _EACH_WITH_STAT_RE = re.compile(
     rf"^put (?P<n>{COUNT}) (?P<kind>\+1/\+1|-1/-1|[a-z]+) counters? on each "
@@ -303,7 +305,9 @@ def counters_amount_effect(text: str) -> "Any | None":
     if "counter" not in lowered or not ("for each " in lowered or " with " in lowered):
         return None
     whole = " ".join(_strip_non_effect_preamble(text).split())
-    chosen = _CHOOSE_TARGET_RE.match(whole)
+    chosen = CHOOSE_TARGET_RE.match(whole)
+    if chosen is not None and not chosen.group("rest"):
+        return None
     body = chosen.group("rest") if chosen is not None else whole
     each_with = _EACH_WITH_STAT_RE.match(clean(body))
     if each_with is not None and chosen is None:
@@ -374,8 +378,8 @@ def return_if_mana_value_effect(text: str) -> "Any | None":
     if "if its mana value is" not in text.lower():
         return None
     whole = " ".join(_strip_non_effect_preamble(text).split())
-    chosen = _CHOOSE_TARGET_RE.match(whole)
-    if chosen is None:
+    chosen = CHOOSE_TARGET_RE.match(whole)
+    if chosen is None or not chosen.group("rest"):
         return None
     match = _RETURN_IF_MV_RE.fullmatch(clean(chosen.group("rest")))
     bound_of = recipient_amount(match.group("expr")) if match is not None else None

@@ -1064,3 +1064,40 @@ def test_look_top_cast_free_has_a_single_resolution_body() -> None:
 
     source = Path(mod.__file__).read_text()
     assert "game.cast_during_resolution(" not in source
+
+
+# ---------------------------------------------------------------------------
+# Once only: one step interpreter, one choose-target lead-in
+# ---------------------------------------------------------------------------
+
+
+def test_a_milled_card_is_milled_once_and_its_mana_value_spent_once() -> None:
+    library = ["Serra Angel", *["Island"] * 7]
+    scenario = _scenario([], hand=["Heed the Mists"], library=library)
+    _cast_all(scenario, "Heed the Mists")
+    alice = scenario.player("alice")
+    assert [c.name for c in alice.graveyard if c.name == "Serra Angel"] == ["Serra Angel"]
+    assert len(_hand(scenario)) == 5  # Serra Angel is mana value 5: five draws, not ten
+    assert len(alice.library) == len(library) - 1 - 5  # one card milled, five drawn
+
+
+def test_a_card_discarded_at_random_is_discarded_once() -> None:
+    scenario = _scenario(
+        ["Memnite"],
+        ["Hill Giant"],
+        hand=["Kindle the Carnage", "Lightning Bolt", "Lightning Bolt"],
+    )
+    scenario.will_take_the_may(False, source="Kindle the Carnage")
+    _cast_all(scenario, "Kindle the Carnage")
+    assert len(scenario.player("alice").hand) == 1  # exactly one of the two Bolts went
+    hill_giant = [c for c in scenario.all_card_states() if c.name == "Hill Giant"]
+    assert hill_giant[0].zone is Zone.BATTLEFIELD and hill_giant[0].damage == 1
+
+
+def test_a_revealed_top_card_is_revealed_once_and_the_damage_dealt_once() -> None:
+    scenario = _scenario([], hand=["Riddle of Lightning"], library=["Serra Angel", "Island"])
+    scenario.scry_keeping_everything_on_top()
+    _cast_all(scenario, "Riddle of Lightning", targets=["bob"])
+    assert _life(scenario, "bob") == 15  # five damage once, not ten
+    assert [c.name for c in scenario.player("alice").library][:1] == ["Serra Angel"]
+    assert not scenario.game.stack
