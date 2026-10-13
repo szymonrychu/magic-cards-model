@@ -29,6 +29,10 @@ from .harness import Scenario, mana_from
 CARD = "Forest"
 
 
+def _count_named(scenario, name, username):
+    return len([c for c in scenario.game.permanents_controlled_by(username) if c.card.name == name])
+
+
 def _pt(scenario, card):
     chars = scenario.game.computed_board().of(card)
     return chars.power, chars.toughness
@@ -400,11 +404,8 @@ def test_lord_xander_dying_makes_the_opponent_sacrifice_half_their_nonland_perma
     scenario.game.destroy(xander)
     scenario.will_choose_targets("bob", username="alice", source="Lord Xander, the Collector")
     _settle(scenario)
-    assert len(scenario.creatures("Grizzly Bears", username="bob")) == 2
-    assert (
-        len([c for c in scenario.game.permanents_controlled_by("bob") if c.card.name == "Forest"])
-        == 2
-    )
+    assert _count_named(scenario, "Grizzly Bears", "bob") == 2
+    assert _count_named(scenario, "Forest", "bob") == 2
 
 
 def test_terisian_mindbreaker_attack_mills_half_the_library_rounded_up():
@@ -445,6 +446,6 @@ def test_rush_of_dread_spree_modes_halve_creatures_hand_and_life_rounded_up():
     scenario.put_on_stack(casting)
     while scenario.game.stack:
         scenario.resolve_top()
-    assert len(scenario.creatures("Grizzly Bears", username="bob")) == 1
+    assert _count_named(scenario, "Grizzly Bears", "bob") == 1
     assert len(scenario.player("bob").hand) == 1
     assert scenario.player("bob").life == 15 - 8
