@@ -7704,7 +7704,7 @@ def _parse_exile_top_then_play_during_resolution_whole_text(
 #: Distinct from `_EXILE_THAT_CARD_RE`, whose "that card" is a card an
 #: earlier clause in the *same* ability chose from a revealed hand, not the
 #: source itself.
-_EXILE_IT_RE = re.compile(r"^exile it$", re.IGNORECASE)
+_EXILE_IT_RE = re.compile(r"^exile (?:it|this card from your graveyard)$", re.IGNORECASE)
 
 
 @MIXED_CLAUSE.rung("s26", for_spell=FORWARD)

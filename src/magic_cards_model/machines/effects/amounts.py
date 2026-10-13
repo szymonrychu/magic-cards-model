@@ -72,6 +72,7 @@ from ..ep02_r2_cards_in_zone_counts import (
     parse_hand_difference_spell,
     parse_mill_by_stat_then_return_self_and_milled,
     parse_no_maximum_hand_size_while_controlling_clause,
+    parse_return_half_permanents_spell,
     parse_search_target_library_and_exile,
 )
 from ..layers import (
@@ -5815,6 +5816,7 @@ def _parse_graveyard_count_spell_text(effect_text: str) -> Effect | None:
         or parse_pump_then_additional_per_count_spell(effect_text)
         or parse_hand_difference_spell(effect_text)
         or parse_search_target_library_and_exile(effect_text)
+        or parse_return_half_permanents_spell(effect_text)
     )
 
 

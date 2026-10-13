@@ -4898,7 +4898,7 @@ def _resolve_instead_alternative(base_text: str, alternative_text: str) -> Effec
             return resolved
     # "instead create X of those tokens, where X is ..." (The Final Days): the
     # base's own token, a different number.
-    if (those := _ABILITY_THOSE_TOKENS_ALTERNATIVE_RE.fullmatch(alternative_text.strip())) and (
+    if _ABILITY_THOSE_TOKENS_ALTERNATIVE_RE.fullmatch(alternative_text.strip()) and (
         rewritten := _ability_instead_alternative_text(base_text, alternative_text)
     ):
         resolved = _instead_branch_effect(rewritten)

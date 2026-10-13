@@ -2467,3 +2467,28 @@ def test_a_snapshot_written_before_the_r3_t8_amount_readers_is_refused() -> None
         match=f"schema_version={_SCHEMA_VERSION_BEFORE_EP01_R3_T8_AMOUNTS}",
     ):
         Game.model_validate(dumped)
+
+
+#: The version stamped before EP02-R2-T2: `Player` gained
+#: `cannot_cast_spells_for_rest_of_game`, `CardState` gained `epic_suppressed`,
+#: and `DelayedEffectSpec` gained `epic_copy_spell` (epic, CR 702.50a/b). The
+#: last shape without them is main's 163.
+_SCHEMA_VERSION_BEFORE_EP02_R2_T2_EPIC = 163
+
+
+def test_a_snapshot_written_before_epic_is_refused() -> None:
+    """A version-163 dump has no record of a player who may no longer cast
+    spells, nor of a copy made without its epic ability: decoded as current, a
+    resolved epic spell's controller would cast again and its copies would
+    recur. Refused instead."""
+    assert "cannot_cast_spells_for_rest_of_game" in Player.model_fields
+    assert "epic_suppressed" in CardState.model_fields
+    assert Game.CURRENT_SCHEMA_VERSION > _SCHEMA_VERSION_BEFORE_EP02_R2_T2_EPIC
+    dumped = _a_played_game().model_dump(mode="json")
+    dumped["schema_version"] = _SCHEMA_VERSION_BEFORE_EP02_R2_T2_EPIC
+
+    with pytest.raises(
+        SchemaVersionMismatch,
+        match=f"schema_version={_SCHEMA_VERSION_BEFORE_EP02_R2_T2_EPIC}",
+    ):
+        Game.model_validate(dumped)

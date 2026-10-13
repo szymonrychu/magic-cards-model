@@ -1111,3 +1111,77 @@ def test_neverending_torment_copy_may_take_a_new_target():
     # each opponent drew a card on the way round; the copy exiled two from carol only
     assert len(scenario.player("carol").library) == 6 - 1 - 2
     assert len(scenario.player("bob").library) == 6 - 2 - 1
+
+
+# -- proof printings (not task cards): a graveyard count with an "if you do" self-exile ------
+
+
+def _spider_dies(*, take):
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=["Skyfisher Spider"],
+            graveyard=["Grizzly Bears", "Hill Giant", "Forest"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    spider = scenario.creature("Skyfisher Spider", "alice")
+    scenario.will_take_the_may(take, username="alice")
+    scenario.game.destroy(spider)
+    _settle(scenario)
+    return scenario, spider
+
+
+def test_skyfisher_spider_dies_gains_life_per_creature_card_in_graveyard_and_exiles_itself():
+    scenario, spider = _spider_dies(take=True)
+    # two creature cards already there, plus the Spider itself
+    assert scenario.player("alice").life == 20 + 3
+    assert spider.zone is Zone.EXILE
+
+
+def test_skyfisher_spider_declined_leaves_itself_in_the_graveyard():
+    scenario, spider = _spider_dies(take=False)
+    assert scenario.player("alice").life == 20
+    assert spider.zone is Zone.GRAVEYARD
+
+
+# -- proof printing (not a task card): half of a player's creatures returned, rounded up ---
+
+
+def _split_the_party(*, bob_creatures):
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Split the Party"], battlefield=["Island"] * 5)
+        .player("bob", battlefield=list(bob_creatures))
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    return scenario
+
+
+def test_split_the_party_returns_half_the_targets_creatures_rounded_up_your_choice():
+    scenario = _split_the_party(bob_creatures=["Grizzly Bears", "Hill Giant", "Craw Wurm"])
+    giant = scenario.creature("Hill Giant", "bob")
+    wurm = scenario.creature("Craw Wurm", "bob")
+    scenario.will_choose_cards(giant, wurm, username="alice")
+    scenario.cast_and_resolve(
+        "Split the Party", *scenario.untapped_sources(*(["Island"] * 5)), targets=["bob"]
+    )
+    assert sorted(card.name for card in scenario.player("bob").hand) == ["Craw Wurm", "Hill Giant"]
+    assert [c.name for c in scenario.game.permanents_controlled_by("bob")] == ["Grizzly Bears"]
+
+
+def test_split_the_party_with_one_creature_returns_it_and_with_none_does_nothing():
+    scenario = _split_the_party(bob_creatures=["Grizzly Bears"])
+    scenario.cast_and_resolve(
+        "Split the Party", *scenario.untapped_sources(*(["Island"] * 5)), targets=["bob"]
+    )
+    assert [card.name for card in scenario.player("bob").hand] == ["Grizzly Bears"]
+    scenario = _split_the_party(bob_creatures=[])
+    scenario.cast_and_resolve(
+        "Split the Party", *scenario.untapped_sources(*(["Island"] * 5)), targets=["bob"]
+    )
+    assert scenario.player("bob").hand == []

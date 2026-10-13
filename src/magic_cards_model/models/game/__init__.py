@@ -1972,7 +1972,7 @@ class Game(
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 163
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 164
     #: 67: `machines/cost.CostComponent` gained `link_to_permanent_id` (CR
     #: 607.2q), reachable from `Game` through a pending `AbilityOnStack.
     #: keyword_activation`/`.unless_payment`'s own `CostPayment.components`.
@@ -2327,6 +2327,16 @@ class Game(
     #: it hit, "Enchanted player can't gain life." and "Players have no maximum
     #: hand size." are read off the battlefield, and a Crew N ability is
     #: once-per-turn; an older dump would resolve each of these as a no-op.
+    #: 164 (EP02-R2-T2): `Player` gained `cannot_cast_spells_for_rest_of_game`
+    #: and `CardState` gained `epic_suppressed` (epic, CR 702.50a/b), and
+    #: `DelayedEffectSpec` gained the variant `epic_copy_spell`; a pending
+    #: `AbilityOnStack` can carry it. Also behavioural changes to dispatch a
+    #: decoded game could already point at: an animation sentence with no
+    #: printed stats whose quoted ability defines them (Svogthos), a pawprint
+    #: mode profile (CR 700.2i), "equipped creature gets +X/+X until end of turn"
+    #: off a trigger, an equip cost scaled by the hand, and the free cast of an
+    #: instant or sorcery bounded by "that damage"; an older dump would resolve
+    #: each of these as a no-op.
     #: 163 (EP02-R1-T6, reserved: 157 + task 6): a `DelayedEffectSpec` variant
     #: `return_subject_then_discard_its_stat` (Vanish into Memory's return with
     #: its "if you do, discard cards equal to that creature's toughness"), and

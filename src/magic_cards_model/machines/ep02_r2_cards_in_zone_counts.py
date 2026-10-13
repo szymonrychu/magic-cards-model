@@ -796,3 +796,80 @@ def parse_search_target_library_and_exile(text: str):
         game.shuffle_library(owner)
 
     return effect
+
+
+# --------------------------------------------------------------------------
+# "Choose target player. Return half the creatures they control to their
+# owner's hand, rounded up."
+# --------------------------------------------------------------------------
+
+_RETURN_HALF_PERMANENTS_RE = re.compile(
+    r"^choose target (?P<who>player|opponent)\.\s*return half the (?P<description>.+?) "
+    r"they control to their owner(?:'s|s')? hands?, rounded (?P<direction>up|down)$",
+    re.IGNORECASE,
+)
+
+
+def parse_return_half_permanents_spell(text: str):
+    """Split the Party's two sentences, read whole. The spell's controller
+    (the one the instruction is given to, CR 608.2c) chooses which of the
+    chosen player's permanents of the kind go back; how many is half of however
+    many that player controls as the spell resolves, rounded the printed way
+    (CR 107.1a, CR 608.2h), and nothing is asked when every one goes (CR 608.2d).
+    Returns an `Effect` `(game, spell)`, or `None`."""
+    from ..numbers import halve
+
+    if " half the " not in text.lower() or "choose target" not in text.lower():
+        return None
+    from .effects._common import _strip_non_effect_preamble
+
+    match = _RETURN_HALF_PERMANENTS_RE.fullmatch(
+        " ".join(_strip_non_effect_preamble(text).split()).rstrip(".")
+    )
+    if match is None:
+        return None
+    from .targeting import permanent_description
+
+    requirement = permanent_description(re.sub(r"s$", "", match.group("description").strip()))
+    if requirement is None:
+        return None
+    round_up = match.group("direction").lower() == "up"
+
+    def effect(game, spell):
+        from ..models.player import Player
+        from ..models.zone import Zone
+        from .decisions import Decision, DecisionKind
+
+        controller = game.controller_of(spell)
+        players = [t for t in game.resolve_targets(spell) if isinstance(t, Player)]
+        if not players:
+            return  # CR 608.2b
+        owner = players[0]
+        candidates = [
+            permanent
+            for permanent in game.permanents_controlled_by(owner.username)
+            if requirement.rejects(permanent, owner.username, game) is None
+        ]
+        count = halve(len(candidates), round_up=round_up)
+        if count <= 0:
+            return
+        chosen = candidates
+        if count < len(candidates):
+            ids = game.ask(
+                Decision(
+                    kind=DecisionKind.CHOOSE_CARDS,
+                    player=controller.username,
+                    prompt=f"choose {count} of {owner.username}'s {len(candidates)} permanents",
+                    source=spell.name,
+                    source_id=str(spell.id),
+                    amount=count,
+                    cards=tuple(permanent.id for permanent in candidates),
+                )
+            )
+            by_id = {permanent.id: permanent for permanent in candidates}
+            chosen = [by_id[card_id] for card_id in ids if card_id in by_id]
+        for permanent in chosen:
+            if permanent.zone is Zone.BATTLEFIELD:
+                game.return_to_hand(permanent)
+
+    return effect
