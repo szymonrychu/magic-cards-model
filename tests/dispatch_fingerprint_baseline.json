@@ -29043,7 +29043,6 @@
       "_parse_damage_target_and_group_of_its_controller_text",
       "_parse_choose_target_group_deals_text",
       "_parse_draw_x_from_target_graveyard_from_library_clause",
-      "_parse_search_target_library_and_exile_spell",
       "_parse_copy_next_instant_or_sorcery_you_cast_spell_clause",
       "_parse_cast_target_card_from_graveyard_clause",
       "_parse_each_creature_gift_instead_also_target_clause",
