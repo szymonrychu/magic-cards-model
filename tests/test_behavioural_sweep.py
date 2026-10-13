@@ -3920,6 +3920,16 @@ def _about_the_source(case: Case, ability: TriggeredAbility, action: str) -> Ite
     def happen() -> tuple[PlayedScenario, Any]:
         scenario, source_id = _home(case, ability)
         game = scenario.game
+        counted = _controlled_count(ability.condition) if action == "state" else None
+        if counted is not None:
+            from magic_cards_model.machines.effects.tokens import _token_definition_from_words
+            from magic_cards_model.models.token import create_tokens
+
+            count, subtype = counted
+            definition = _token_definition_from_words(
+                f"1/1 colorless {subtype.capitalize()} creature", None
+            )
+            create_tokens(game, definition, ALICE, count)
         source = game.find_by_id(source_id)
         if action == "dealt damage":
             victim = source
@@ -3949,7 +3959,8 @@ def _about_the_source(case: Case, ability: TriggeredAbility, action: str) -> Ite
             if match is None:
                 if not reads_state_condition(ability.condition):
                     raise _Unavailable("no counter threshold in the condition")
-                _make_the_state_true(game, source, ability.condition)
+                if counted is None:
+                    _make_the_state_true(game, source, ability.condition)
                 return scenario, source_id
             raw = match.group("count").replace(",", "")
             count = int(raw) if raw.isdigit() else parse_count(raw, article=False)
@@ -3959,6 +3970,24 @@ def _about_the_source(case: Case, ability: TriggeredAbility, action: str) -> Ite
         return scenario, source_id
 
     yield happen
+
+
+_CONTROLLED_COUNT_RE = re.compile(r"^you control (?P<count>[\w]+) or more (?P<kind>[A-Z][a-z]+)$")
+
+
+def _controlled_count(condition: str) -> tuple[int, str] | None:
+    """CR 603.8's "you control seven or more Thrulls": how many creatures of
+    which subtype the controller needs, to be staged as tokens (a subtype like
+    Thrull has no creature card in the formats); `None` for any other shape."""
+    match = _CONTROLLED_COUNT_RE.fullmatch(condition.strip().rstrip("."))
+    if match is None:
+        return None
+    raw = match.group("count")
+    count = int(raw) if raw.isdigit() else parse_count(raw, article=False)
+    subtype = _singular_subtype(match.group("kind"))
+    if count is None or subtype is None:
+        return None
+    return count, subtype
 
 
 def _make_the_state_true(game: Game, source: CardState, condition: str) -> None:
@@ -5243,6 +5272,16 @@ class DriverGap:
 
 
 SWEEP_DRIVER_GAPS: tuple[DriverGap, ...] = (
+    # EP02-R2-T3: Kiora, Sovereign of the Deep's cast trigger names a list of
+    # creature types (Kraken, Leviathan, Octopus or Serpent) for a spell cast
+    # from the hand, which the cast-probe finder (`support._probe_cards`) does
+    # not read for a cast condition; proven by
+    # tests/scenarios/test_ep02_r2_card_mana_value.py.
+    DriverGap(
+        kind="cast_spell",
+        event="a Kraken, Leviathan, Octopus or Serpent spell cast from its controller's hand",
+        precondition=r"kraken, leviathan, octopus, or serpent spell",
+    ),
     # EP01-R2-T1: Pearl-Ear needs an Aura cast at a modified permanent its
     # controller has, and Satoru Umezawa needs a ninjutsu activation by its
     # controller; proven by tests/scenarios/test_ep01_r2_spell_keyword_grants.py

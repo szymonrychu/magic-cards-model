@@ -20,8 +20,8 @@ from ..ep01_r3_amounts import event_player_username, event_terms
 from ..ep02_r1_controller_recipients import event_controller_clause, target_controller_effect
 from ..ep02_r1_life_amounts import parse_life_loss_text
 from ..ep02_r1_moved_card_stat import moved_card_stat_effect
-from ..ep02_r2_card_mana_value import card_mana_value_effect
 from ..ep02_r1_referenced_stat import referenced_stat_effect
+from ..ep02_r2_card_mana_value import card_mana_value_effect
 from ..targeting import (
     permanent_description,
 )

@@ -2687,7 +2687,7 @@ def cycling_activation(
     if game is not None and cycling_costs_nothing(game, player):
         # CR 118.9: "you may pay {0} rather than pay cycling costs".
         cost = TotalCost()
-    elif x_value and cost.mana is not None:
+    elif cost.mana is not None and cost.mana.x_count:
         cost = TotalCost(mana=cost.mana.with_x(x_value), components=list(cost.components))
     # CR 702.29a: discarding the card is part of the activation cost, not the
     # effect - which is what makes a cycled card findable in the graveyard by

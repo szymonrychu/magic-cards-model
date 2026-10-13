@@ -318,7 +318,11 @@ def _opener(sentence: str, *, for_spell: bool) -> tuple[ResolutionStep, str | No
         step = _step_reveal_top(hand=bool(m.group("hand")), may=bool(m.group("may")))
         return step, m.group("rest"), "you"
     if m := _MILL_ONE_RE.fullmatch(sentence):
-        return _step_mill_one(m.group("who")), m.group("rest"), "that player" if m.group("who") else "you"
+        return (
+            _step_mill_one(m.group("who")),
+            m.group("rest"),
+            "that player" if m.group("who") else "you",
+        )
     if m := _DISCARD_RANDOM_RE.fullmatch(sentence):
         return _step_discard_random, m.group("rest"), "you"
     if m := _REVEAL_RANDOM_HAND_RE.fullmatch(sentence):
@@ -427,9 +431,20 @@ def _step_put_revealed_bottom(game: "Game", stack_object: Any, state: State) -> 
     return True
 
 
+def _card_of(game: "Game", state: RunState) -> CardState | None:
+    """The card the text is about: the one an opener of this module fixed, else
+    the one a moved-card opener of `ep02_r1_moved_card_stat` snapshotted."""
+    if state.card is not None:
+        return state.card
+    if state.referent is None or state.referent.card_id is None:
+        return None
+    found = game.find_by_id(state.referent.card_id)
+    return found if isinstance(found, CardState) else None
+
+
 def _step_cast_free(game: "Game", stack_object: Any, state: State) -> bool:
     assert isinstance(state, RunState)
-    card = state.card
+    card = _card_of(game, state)
     if card is None:
         return True
     name, source_id = _name_and_id(stack_object)
@@ -475,9 +490,7 @@ def _step_opponent_puts_in_graveyard(game: "Game", stack_object: Any, state: Sta
     return True
 
 
-def _step_look_top_x_cast_free(
-    verb: str, *, strictly_less: bool
-) -> ResolutionStep:
+def _step_look_top_x_cast_free(verb: str, *, strictly_less: bool) -> ResolutionStep:
     """ "Look at / reveal the top X cards of your library, where X is that
     spell's mana value. You may cast a spell with mana value less than X /
     X or less from among them without paying its mana cost. Put the rest on the
@@ -537,9 +550,7 @@ def _step_look_top_x_cast_free(
     return step
 
 
-def _guarded(
-    step: ResolutionStep, test: Callable[["Game", Any, RunState], bool]
-) -> ResolutionStep:
+def _guarded(step: ResolutionStep, test: Callable[["Game", Any, RunState], bool]) -> ResolutionStep:
     """Run `step` only when `test` holds, remembering the verdict for a
     following "otherwise"."""
 
@@ -556,7 +567,9 @@ def _maybe(step: ResolutionStep) -> ResolutionStep:
 
     def asked(game: "Game", stack_object: Any, state: State) -> bool:
         name, source_id = _name_and_id(stack_object)
-        if not game.may(game.controller_of(stack_object), "do it", source=name, source_id=source_id):
+        if not game.may(
+            game.controller_of(stack_object), "do it", source=name, source_id=source_id
+        ):
             return True
         return step(game, stack_object, state)
 
@@ -625,7 +638,7 @@ def _compile(sentences: list[str], *, for_spell: bool) -> list[ResolutionStep] |
     while position < len(queue):
         sentence = queue[position]
         position += 1
-        guard: Callable[["Game", Any, RunState], bool] | None = None
+        guard: Callable[[Game, Any, RunState], bool] | None = None
 
         # Look/reveal the top X cards (Kiora, Sunbird's Invocation): three sentences.
         if (look := _LOOK_TOP_X_RE.fullmatch(sentence)) and position + 1 < len(queue) + 0:
@@ -653,9 +666,8 @@ def _compile(sentences: list[str], *, for_spell: bool) -> list[ResolutionStep] |
             steps.append(_step_repeat(list(steps)))
             continue
 
-        if m := _IF_YOU_DO_RE.fullmatch(sentence):
-            sentence, guard = m.group("rest"), lambda g, so, s: s.did  # noqa: E731
-        elif m := _IF_PLAYER_DOES_RE.fullmatch(sentence):
+        did_match = _IF_YOU_DO_RE.fullmatch(sentence) or _IF_PLAYER_DOES_RE.fullmatch(sentence)
+        if m := did_match:
             sentence, guard = m.group("rest"), lambda g, so, s: s.did  # noqa: E731
         elif m := _OTHERWISE_RE.fullmatch(sentence):
             sentence, guard = m.group("rest"), lambda g, so, s: not s.branch  # noqa: E731
@@ -689,13 +701,14 @@ def _compile(sentences: list[str], *, for_spell: bool) -> list[ResolutionStep] |
             steps.append(_step_reflexive_on_flip(consequence, win=flip_result["result"] == "win"))
             continue
         may = False
-        if _opener(sentence, for_spell=for_spell) is None and (
-            may_match := _MAY_PREFIX_RE.fullmatch(sentence)
-        ):
-            if not any(
+        if (
+            _opener(sentence, for_spell=for_spell) is None
+            and (may_match := _MAY_PREFIX_RE.fullmatch(sentence))
+            and not any(
                 own.fullmatch(sentence) for own in (_REVEAL_TOP_RE, _REPEAT_RE, _CAST_FREE_RE)
-            ):
-                sentence, may = may_match.group("rest"), True
+            )
+        ):
+            sentence, may = may_match.group("rest"), True
 
         if re.match(r"^(?:gain|lose) ", sentence, re.IGNORECASE):
             sentence = f"you {sentence}"
@@ -707,7 +720,9 @@ def _compile(sentences: list[str], *, for_spell: bool) -> list[ResolutionStep] |
             step, tail, subject = first
             opened = True
             uses_amount = uses_amount or step in _SPENDING_OPENERS
-            if event_spell_named and sentence.lower().startswith(("you may sacrifice", "sacrifice")):
+            if event_spell_named and sentence.lower().startswith(
+                ("you may sacrifice", "sacrifice")
+            ):
                 step = _keep_referent(step)
             steps.append(_guarded(step, guard) if guard is not None else step)
             if tail:

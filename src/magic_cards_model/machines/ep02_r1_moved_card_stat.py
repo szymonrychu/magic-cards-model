@@ -519,7 +519,14 @@ def _step_x_pair(parts: tuple[tuple[str, str, bool], ...], phrase: Phrase) -> Re
 
 #: The players a life clause may name; "that player" is the one the text just
 #: revealed a card of.
-_LIFE_WHO = ("you", "target player", "target opponent", "each opponent", "each player", "that player")
+_LIFE_WHO = (
+    "you",
+    "target player",
+    "target opponent",
+    "each opponent",
+    "each player",
+    "that player",
+)
 
 
 def _x_pair(body: str) -> tuple[tuple[str, str, bool], ...] | None:
