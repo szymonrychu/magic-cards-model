@@ -303,3 +303,86 @@ def test_slime_against_humanity_with_nothing_else_makes_a_two_two():
     scenario.resolve_top()
     (ooze,) = _named(scenario, "Ooze Token")
     assert _stats(scenario, ooze) == (2, 2)
+
+
+# -- Descendant of Masumaro: counters up per card in your hand, down per card in theirs
+
+
+def test_descendant_of_masumaro_nets_hand_sizes_into_counters():
+    scenario = _board(
+        ["Descendant of Masumaro"],
+        alice_hand=["Forest", "Forest", "Forest"],
+        bob_hand=["Island"],
+        step=Step.UNTAP,
+    )
+    descendant = scenario.creature("Descendant of Masumaro", "alice")
+    _to_step(scenario, Step.UPKEEP)
+    scenario.choose_trigger_targets("Descendant of Masumaro", ["bob"])
+    _settle(scenario)
+    assert descendant.counter_count(Counter.PLUS_ONE) == 2  # +3 for yours, -1 for theirs
+
+
+def test_descendant_of_masumaro_removes_only_counters_it_has():
+    scenario = _board(
+        ["Descendant of Masumaro"],
+        alice_hand=["Forest"],
+        bob_hand=["Island"] * 4,
+        step=Step.UNTAP,
+    )
+    descendant = scenario.creature("Descendant of Masumaro", "alice")
+    _to_step(scenario, Step.UPKEEP)
+    scenario.choose_trigger_targets("Descendant of Masumaro", ["bob"])
+    _settle(scenario)
+    assert descendant.counter_count(Counter.PLUS_ONE) == 0  # +1 then at most 1 removed
+
+
+# -- Sphere of Annihilation: exile everything with mana value up to its void counters
+
+
+def test_sphere_of_annihilation_exiles_by_mana_value_in_play_and_graveyards():
+    scenario = _board(
+        ["Sphere of Annihilation", "Grizzly Bears", "Hill Giant", "Forest"],
+        ["Craw Wurm", "Jace Beleren"],
+        alice_graveyard=["Grizzly Bears", "Lightning Bolt"],
+        bob_graveyard=["Grizzly Bears", "Hill Giant"],
+        step=Step.UNTAP,
+    )
+    sphere = scenario.find("Sphere of Annihilation", Zone.BATTLEFIELD, "alice")
+    sphere.add_counters("void", 3)
+    _to_step(scenario, Step.UPKEEP)
+    _settle(scenario)
+    names = scenario.battlefield_names()
+    assert "Sphere of Annihilation" not in names
+    assert "Grizzly Bears" not in names  # mana value 2
+    assert "Jace Beleren" not in names  # mana value 3
+    assert "Hill Giant" in names  # mana value 4
+    assert "Craw Wurm" in names  # mana value 6
+    assert "Forest" in names  # not a creature or planeswalker
+    exiled = {c.name for c in scenario.game.exile}
+    assert {"Sphere of Annihilation", "Grizzly Bears", "Jace Beleren"} <= exiled
+    assert [c.name for c in scenario.player("bob").graveyard] == ["Hill Giant"]
+    assert [c.name for c in scenario.player("alice").graveyard] == ["Lightning Bolt"]
+
+
+# -- Cheering Crowd: each player's first main phase, that player may grow it for mana
+
+
+def test_cheering_crowd_pays_the_active_player_mana_per_counter():
+    scenario = _board(["Cheering Crowd"], step=Step.UPKEEP)
+    crowd = scenario.creature("Cheering Crowd", "alice")
+    crowd.add_counters(Counter.PLUS_ONE, 2)
+    scenario.will_take_the_may(True)
+    _to_step(scenario, Step.PRECOMBAT_MAIN)
+    _settle(scenario)
+    assert crowd.counter_count(Counter.PLUS_ONE) == 3
+    assert scenario.player("alice").mana_pool.total == 3
+
+
+def test_cheering_crowd_declined_adds_nothing():
+    scenario = _board(["Cheering Crowd"], step=Step.UPKEEP)
+    crowd = scenario.creature("Cheering Crowd", "alice")
+    scenario.will_take_the_may(False)
+    _to_step(scenario, Step.PRECOMBAT_MAIN)
+    _settle(scenario)
+    assert crowd.counter_count(Counter.PLUS_ONE) == 0
+    assert scenario.player("alice").mana_pool.total == 0

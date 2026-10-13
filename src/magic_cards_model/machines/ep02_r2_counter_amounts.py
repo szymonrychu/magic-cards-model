@@ -15,11 +15,12 @@ from typing import TYPE_CHECKING
 from ..models.card_state import CardState
 from ..models.zone import Zone
 from ..numbers import COUNT, parse_count
-from .amount_sentences import split_where_x, write_x
+from .amount_sentences import add_mana_times, split_where_x, write_x
 from .decisions import Decision, DecisionKind, source_id_of
 from .effects._chains import ABILITY_TEXT, FORWARD, MIXED_CLAUSE
 from .effects.amounts import amount_expression
 from .effects.continuous import continuous_effects
+from .effects.counters import _counter_kind
 from .effects.dispatch import parse_mixed_effect
 from .effects.draw_discard import _source_characteristic
 from .effects.mana import read_add_mana_instruction
@@ -508,5 +509,210 @@ def _parse_count_the_number_then_rest(text: str):
         follow = _counted_number_then(rest, number)
         if follow is not None:
             follow(game, ability)
+
+    return effect
+
+
+# ---------------------------------------------------------------------------
+# "put/remove a <kind> counter on/from <it> for each card in <a hand>"
+# (Descendant of Masumaro). The cards-in-hand count itself is T2's shared part
+# (`cards-in-hand-count-amount`); this builds the minimum the counter pair needs
+# so the card reads in this tree, and is the one to drop at integration.
+# ---------------------------------------------------------------------------
+
+_COUNTERS_FOR_EACH_CARD_IN_HAND_RE = re.compile(
+    rf"^(?P<verb>put|remove) (?P<n>{COUNT}) (?P<kind>[+-]\d+/[+-]\d+|[a-z]+) counters? "
+    r"(?:on|from) (?:it|this [a-z]+) for each card in "
+    r"(?P<hand>your hand|target opponent's hand|that player's hand|target player's hand)$",
+    re.IGNORECASE,
+)
+
+
+def _hand_owner(game: "Game", ability, hand: str) -> str:
+    controller = game.controller_of(ability).username
+    if hand.lower() == "your hand":
+        return controller
+    from ..models.player import Player
+
+    for target in game.resolve_targets(ability):
+        if isinstance(target, Player):
+            return target.username
+    return controller
+
+
+@MIXED_CLAUSE.rung("s26", for_spell=FORWARD)
+def _parse_counters_for_each_card_in_hand_clause(clause: str, *, for_spell: bool):
+    """ "Put a +1/+1 counter on this creature for each card in your hand" / "remove
+    a +1/+1 counter from this creature for each card in target opponent's hand"
+    (CR 122.1): the count is the hand as the instruction is followed (CR 608.2h);
+    only counters that are there can come off."""
+    if for_spell or " for each card in " not in clause:
+        return None
+    match = _COUNTERS_FOR_EACH_CARD_IN_HAND_RE.fullmatch(" ".join(clause.split()).rstrip("."))
+    if match is None:
+        return None
+    unit = parse_count(match.group("n"))
+    if unit is None:
+        return None
+    kind = _counter_kind(match.group("kind").lower())
+    putting = match.group("verb").lower() == "put"
+    hand = match.group("hand")
+
+    def effect(game: "Game", ability) -> None:
+        source = ability.source_or_last_known(game)
+        if source is None or source.zone is not Zone.BATTLEFIELD:
+            return
+        amount = unit * len(game.player(_hand_owner(game, ability, hand)).hand)
+        if putting:
+            game.add_counters(source, kind, amount)
+        else:
+            amount = min(amount, source.counter_count(kind))
+            if amount:
+                source.remove_counters(kind, amount)
+
+    return effect
+
+
+# ---------------------------------------------------------------------------
+# "Exile this artifact, all creatures and planeswalkers with mana value N or
+# less, and all creature and planeswalker cards in graveyards with mana value N
+# or less" (Sphere of Annihilation; the count is already a number by the time
+# this reads, `ep02_r1_counter_amounts.counters_counted_text`). CR 202.3: mana
+# value; CR 406.2: exile; CR 400.1: the graveyard is a zone of cards.
+# ---------------------------------------------------------------------------
+
+_EXILE_ITEM_RE = re.compile(
+    r"^(?:(?P<self>this [a-z]+|it)"
+    r"|all (?P<types>[a-z]+(?: and [a-z]+)*) cards in graveyards"
+    r"|all (?P<ptypes>[a-z]+(?: and [a-z]+)*))"
+    r"(?: with mana value (?:less than or equal to (?P<le>\d+)|(?P<n>\d+) or less))?$",
+    re.IGNORECASE,
+)
+
+
+def _types_of(words: str):
+    from .effects.text import _singular_card_type
+
+    found = []
+    for word in re.split(r"\s+and\s+", words.lower()):
+        card_type = _singular_card_type(word)
+        if card_type is None:
+            return None
+        found.append(card_type)
+    return found
+
+
+@functools.cache
+def exile_group_list_effect(text: str):
+    """ "Exile <this permanent>, all <types> [with mana value <bound>], and all
+    <types> cards in graveyards [with mana value <bound>]" as one effect, or None."""
+    body = " ".join(text.split()).rstrip(".")
+    if not body.lower().startswith("exile ") or " all " not in body.lower():
+        return None
+    items = [
+        item.strip()
+        for item in re.split(r",\s*(?:and\s+)?|\s+and\s+(?=all\b)", body[len("exile ") :])
+        if item.strip()
+    ]
+    plan = []
+    for item in items:
+        match = _EXILE_ITEM_RE.fullmatch(item)
+        if match is None:
+            return None
+        bound = match.group("le") or match.group("n")
+        if match.group("self"):
+            plan.append(("self", None, None))
+            continue
+        words = match.group("types") or match.group("ptypes")
+        kinds = _types_of(words)
+        if kinds is None:
+            return None
+        zone = "graveyard" if match.group("types") else "battlefield"
+        plan.append((zone, kinds, None if bound is None else int(bound)))
+    if not plan:
+        return None
+
+    def effect(game: "Game", ability) -> None:
+        board = game.computed_board()
+        chosen: list = []
+        for zone, kinds, bound in plan:
+            if zone == "self":
+                source = ability.source(game)
+                if source is not None and source.zone is Zone.BATTLEFIELD:
+                    chosen.append(source)
+            elif zone == "battlefield":
+                chosen += [
+                    p
+                    for p in game.battlefield
+                    if any(kind in board.of(p).types for kind in kinds)
+                    and (bound is None or board.of(p).mana_value <= bound)
+                ]
+            else:
+                chosen += [
+                    c
+                    for player in game.players
+                    for c in player.graveyard
+                    if any(kind in c.card.types for kind in kinds)
+                    and (bound is None or c.mana_value <= bound)
+                ]
+        seen = set()
+        for card in [c for c in chosen if not (c.id in seen or seen.add(c.id))]:
+            if card.zone is Zone.BATTLEFIELD:
+                game.exile_permanent(card)
+            else:
+                game.exile_cards([card])
+
+    return effect
+
+
+@ABILITY_TEXT.rung("s40", before=("parse_mixed_effect",))
+def _parse_exile_group_list(text: str):
+    return exile_group_list_effect(text)
+
+
+# ---------------------------------------------------------------------------
+# "That player may put a +1/+1 counter on this creature. If they do, they add
+# {C} for each counter on it." (Cheering Crowd): the player whose phase it is
+# makes the choice, gets the counter and the mana (CR 608.2d, CR 106.4).
+# ---------------------------------------------------------------------------
+
+_THAT_PLAYER_MAY_PUT_THEN_ADD_RE = re.compile(
+    rf"^that player may put (?P<n>{COUNT}) (?P<kind>[+-]\d+/[+-]\d+|[a-z]+) counters? "
+    r"on (?:it|this [a-z]+)\.\s*if they do, they add (?P<symbol>\{[wubrgc]\}) for each "
+    r"(?:[+-]\d+/[+-]\d+ |[a-z]+ )?counter on (?:it|that [a-z]+|this [a-z]+)\.?$",
+    re.IGNORECASE,
+)
+
+
+@ABILITY_TEXT.rung("s40", before=("parse_mixed_effect",))
+def _parse_that_player_may_put_counter_then_add_mana(text: str):
+    if not text.lower().startswith("that player may put"):
+        return None
+    match = _THAT_PLAYER_MAY_PUT_THEN_ADD_RE.fullmatch(" ".join(text.split()))
+    if match is None:
+        return None
+    unit = parse_count(match.group("n"))
+    if unit is None:
+        return None
+    kind = _counter_kind(match.group("kind").lower())
+    symbol = match.group("symbol")
+
+    def effect(game: "Game", ability) -> None:
+        source = ability.source(game)
+        player = game.active_player.username
+        if source is None or source.zone is not Zone.BATTLEFIELD:
+            return
+        if not game.ask(
+            Decision(
+                kind=DecisionKind.MAY,
+                player=player,
+                prompt=f"put a {kind} counter on {source.name}?",
+                source=source.name,
+                source_id=source_id_of(ability),
+            )
+        ):
+            return
+        game.add_counters(source, kind, unit)
+        add_mana_times(game, player, symbol, source.counter_count(kind))
 
     return effect
