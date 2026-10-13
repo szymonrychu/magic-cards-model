@@ -2352,9 +2352,7 @@ class StackPriorityMixin:
                 # card in the graveyard is a permanent that died: its last known
                 # counters (CR 603.10a) are what the count reads.
                 continue
-            profile = profile_for_text(
-                event_count_target_text(counted, event, unscoped_any=True)
-            )
+            profile = profile_for_text(event_count_target_text(counted, event, unscoped_any=True))
             if profile.understood and profile.requirements:
                 try:
                     profile.check(list(targets), controller, self, source_id=source.id)
