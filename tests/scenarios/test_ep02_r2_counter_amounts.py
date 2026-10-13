@@ -386,3 +386,119 @@ def test_cheering_crowd_declined_adds_nothing():
     _settle(scenario)
     assert crowd.counter_count(Counter.PLUS_ONE) == 0
     assert scenario.player("alice").mana_pool.total == 0
+
+
+# -- Quarry Hauler / Dramatist's Puppet: for each kind of counter, one more or one fewer
+
+
+def _enter_with_kind_choice(name, answers):
+    scenario = _board(["Grizzly Bears"], bob=["Grizzly Bears"], alice_hand=[name])
+    bears = scenario.creature("Grizzly Bears", "alice")
+    bears.add_counters(Counter.PLUS_ONE, 1)
+    bears.add_counters("charge", 2)
+    for answer in answers:
+        scenario.will_choose(answer, source=name)
+    scenario.put_onto_battlefield(name, "alice")
+    scenario.choose_trigger_targets(name, [bears])
+    _settle(scenario)
+    return bears
+
+
+def test_quarry_hauler_adds_one_of_a_kind_and_removes_one_of_another():
+    bears = _enter_with_kind_choice("Quarry Hauler", ["put", "remove"])
+    assert bears.counter_count(Counter.PLUS_ONE) == 2
+    assert bears.counter_count("charge") == 1
+
+
+def test_dramatists_puppet_reads_the_same_text():
+    bears = _enter_with_kind_choice("Dramatist's Puppet", ["remove", "remove"])
+    assert bears.counter_count(Counter.PLUS_ONE) == 0
+    assert bears.counter_count("charge") == 1
+
+
+def test_quarry_hauler_on_a_permanent_with_no_counters_does_nothing():
+    scenario = _board(["Grizzly Bears"], alice_hand=["Quarry Hauler"])
+    bears = scenario.creature("Grizzly Bears", "alice")
+    scenario.put_onto_battlefield("Quarry Hauler", "alice")
+    scenario.choose_trigger_targets("Quarry Hauler", [bears])
+    _settle(scenario)
+    assert not bears.counters.counts
+
+
+# -- Exotic Pets: a counter of each kind among your creatures on either token
+
+
+def test_exotic_pets_puts_one_counter_per_kind_among_your_creatures_on_the_tokens():
+    scenario = _board(
+        ["Grizzly Bears", "Plains", "Island", "Plains"], alice_hand=["Exotic Pets"]
+    )
+    bears = scenario.creature("Grizzly Bears", "alice")
+    bears.add_counters(Counter.PLUS_ONE, 3)
+    bears.add_counters("charge", 1)
+    scenario.cast_and_resolve("Exotic Pets", *[p for p in scenario.game.permanents_controlled_by("alice") if p.name != "Grizzly Bears"])
+    fish = _named(scenario, "Fish Token")
+    assert len(fish) == 2
+    assert sum(f.counter_count(Counter.PLUS_ONE) for f in fish) == 1
+    assert sum(f.counter_count("charge") for f in fish) == 1
+
+
+def test_exotic_pets_without_counters_makes_plain_fish():
+    scenario = _board(["Plains", "Island", "Plains"], alice_hand=["Exotic Pets"])
+    scenario.cast_and_resolve("Exotic Pets", *scenario.game.permanents_controlled_by("alice"))
+    fish = _named(scenario, "Fish Token")
+    assert len(fish) == 2
+    assert all(not f.counters.counts for f in fish)
+
+
+# -- Tanazir Quandrix: double the +1/+1 counters; base P/T of the others becomes its own
+
+
+def test_tanazir_doubles_plus_one_counters_on_its_target():
+    scenario = _board(["Grizzly Bears"], alice_hand=["Tanazir Quandrix"])
+    bears = scenario.creature("Grizzly Bears", "alice")
+    bears.add_counters(Counter.PLUS_ONE, 3)
+    bears.add_counters("charge", 2)
+    scenario.put_onto_battlefield("Tanazir Quandrix", "alice")
+    scenario.choose_trigger_targets("Tanazir Quandrix", [bears])
+    _settle(scenario)
+    assert bears.counter_count(Counter.PLUS_ONE) == 6
+    assert bears.counter_count("charge") == 2
+
+
+def test_tanazir_attack_sets_the_other_creatures_base_stats_to_its_own():
+    scenario = _board(["Tanazir Quandrix", "Grizzly Bears"])
+    tanazir = scenario.creature("Tanazir Quandrix", "alice")
+    bears = scenario.creature("Grizzly Bears", "alice")
+    tanazir.add_counters(Counter.PLUS_ONE, 2)
+    bears.add_counters(Counter.PLUS_ONE, 1)
+    scenario.will_take_the_may(True)
+    _attack(scenario, tanazir)
+    assert _stats(scenario, tanazir) == (6, 6)
+    assert _stats(scenario, bears) == (7, 7)  # base 6/6, then its own counter
+
+
+def test_tanazir_attack_declined_leaves_the_others_alone():
+    scenario = _board(["Tanazir Quandrix", "Grizzly Bears"])
+    tanazir = scenario.creature("Tanazir Quandrix", "alice")
+    bears = scenario.creature("Grizzly Bears", "alice")
+    scenario.will_take_the_may(False)
+    _attack(scenario, tanazir)
+    assert _stats(scenario, bears) == (2, 2)
+
+
+# -- Sita Varma: X counters on herself, then the others take her power as base P/T
+
+
+def test_sita_varma_puts_x_counters_then_sets_the_others_to_her_power():
+    scenario = _board(
+        ["Sita Varma, Masked Racer", "Grizzly Bears"] + ["Forest"] * 4 + ["Island"],
+    )
+    sita = scenario.creature("Sita Varma, Masked Racer", "alice")
+    bears = scenario.creature("Grizzly Bears", "alice")
+    lands = [p for p in scenario.game.permanents_controlled_by("alice") if p.name in ("Forest", "Island")]
+    scenario.will_take_the_may(True)
+    scenario.activate(sita, *lands, x_value=2)
+    scenario.pass_until_resolved()
+    assert sita.counter_count(Counter.PLUS_ONE) == 2
+    assert _stats(scenario, sita) == (4, 4)  # base 2/2
+    assert _stats(scenario, bears) == (4, 4)
