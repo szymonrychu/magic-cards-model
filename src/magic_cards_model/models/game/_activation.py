@@ -256,7 +256,9 @@ def _activation_home_zone(card: CardState) -> Zone:
     that object is on the stack. Abilities of all other objects usually function
     only while that object is on the battlefield." (Lightning Storm's discard
     ability.)"""
-    if {Type.INSTANT, Type.SORCERY} & set(card.card.types):
+    if card.zone is not Zone.BATTLEFIELD and {Type.INSTANT, Type.SORCERY} & set(card.card.types):
+        # Off the battlefield only: a modal double-faced card's land face is a permanent
+        # whose printed front face is a sorcery (Shatterskull Smashings).
         return Zone.STACK
     return Zone.BATTLEFIELD
 

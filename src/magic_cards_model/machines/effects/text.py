@@ -837,10 +837,13 @@ _QUALITY_LIST_AND_FROM_RE = re.compile(r"\bfrom\s+[^.\n]*?\s+and\s+from\b", re.I
 #: (or "tapped" and "attacking") of the one token the clause creates, not two
 #: instructions. Bounded to a create clause, no comma and no sentence end, and
 #: to an "and" followed by a keyword or "attacking", so "create a Treasure
-#: token and sacrifice it" still splits. The clause read alone is rejoined by
-#: the token readers; this keeps it whole after a ", then" as well (CR 608.2c).
+#: token and sacrifice it" still splits, and never over a trailing condition ("... with
+#: trample and haste if you control a Devil" stays two unreadable halves). The clause
+#: read alone is rejoined by the token readers; this keeps it whole after a ", then" as
+#: well (CR 608.2c).
 _TOKEN_KEYWORD_AND_RE = re.compile(
-    r"\bcreates? [^.,\x00]*?\btokens?\b[^.,\x00]*?\band (?=(?:flying|first strike|double strike"
+    r"\bcreates? [^.,\x00]*?\btokens?\b[^.,\x00]*?\band (?![^.]*\b(?:if|unless|as long as)\b)"
+    r"(?=(?:flying|first strike|double strike"
     r"|deathtouch|haste|hexproof|indestructible|lifelink|menace|reach|trample|vigilance"
     r"|attacking)\b)",
     re.IGNORECASE,
