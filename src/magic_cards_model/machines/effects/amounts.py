@@ -69,6 +69,7 @@ from ..ep02_r2_cards_in_zone_counts import (
     parse_attached_pump_until_end_of_turn_clause,
     parse_defending_player_clause,
     parse_hand_difference_spell,
+    parse_mill_by_stat_then_return_self_and_milled,
 )
 from ..layers import (
     BASIC_LAND_TYPES,
@@ -5822,6 +5823,7 @@ def _parse_graveyard_count_ability_text(effect_text: str) -> AbilityEffect | Non
         or parse_damage_pair_where_x_ability(effect_text)
         or parse_pump_then_additional_per_count_ability(effect_text)
         or parse_tapped_attacking_tokens_for_each_ability(effect_text)
+        or parse_mill_by_stat_then_return_self_and_milled(effect_text)
     )
 
 

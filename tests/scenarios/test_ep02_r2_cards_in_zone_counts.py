@@ -804,3 +804,48 @@ def test_the_final_days_flashed_back_makes_one_horror_per_creature_card_in_your_
         c for c in scenario.game.permanents_controlled_by("alice") if c.name == "Horror Token"
     ]
     assert len(horrors) == 3 and all(c.tapped for c in horrors)
+
+
+# -- an Aura's dies trigger: mill by the power, return itself and a milled creature ----
+
+
+def _avatar_destiny_dies(*, take):
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Avatar Destiny"],
+            battlefield=["Grizzly Bears", "Forest", "Forest", "Forest", "Forest"],
+            graveyard=["Grizzly Bears"],
+            library=["Hill Giant", "Forest", "Craw Wurm", "Mountain", "Mountain"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.creature("Grizzly Bears", "alice")
+    scenario.cast_and_resolve(
+        "Avatar Destiny",
+        *scenario.untapped_sources("Forest", "Forest", "Forest", "Forest"),
+        targets=[bears],
+    )
+    # 2/2 plus one for the creature card in the graveyard: power 3
+    giant, _, wurm = scenario.top_of_library(3)
+    scenario.will_choose_cards(*([wurm] if take else []), username="alice")
+    scenario.game.destroy(bears)
+    _settle(scenario)
+    return scenario, giant, wurm
+
+
+def test_avatar_destiny_mills_by_the_creatures_power_returns_itself_and_a_milled_creature():
+    scenario, giant, wurm = _avatar_destiny_dies(take=True)
+    assert [c.name for c in scenario.player("alice").hand] == ["Avatar Destiny"]
+    assert wurm.zone is Zone.BATTLEFIELD and wurm.controller == "alice"
+    assert giant.zone is Zone.GRAVEYARD
+    assert [c.name for c in scenario.top_of_library(2)] == ["Mountain", "Mountain"]
+
+
+def test_avatar_destiny_may_take_no_milled_creature():
+    scenario, giant, wurm = _avatar_destiny_dies(take=False)
+    assert [c.name for c in scenario.player("alice").hand] == ["Avatar Destiny"]
+    assert wurm.zone is Zone.GRAVEYARD and giant.zone is Zone.GRAVEYARD

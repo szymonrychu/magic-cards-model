@@ -512,3 +512,80 @@ def hand_scaled_cost(phrase: str, game, payer: str):
     return TotalCost(components=[pay_life_cost(amount, payer, description=phrase)]).assign_payer(
         payer
     )
+
+
+# --------------------------------------------------------------------------
+# "Mill cards equal to its power. Return this card to its owner's hand and up
+# to one creature card milled this way to the battlefield under your control."
+# --------------------------------------------------------------------------
+
+_RETURN_SELF_AND_MILLED_RE = re.compile(
+    r"^return (?:this card|it) to its owner's hand and up to one (?P<group>[a-z]+) card "
+    r"milled this way to the battlefield under your control\.?$",
+    re.IGNORECASE,
+)
+
+
+def parse_mill_by_stat_then_return_self_and_milled(text: str):
+    """Avatar Destiny's dies trigger. Sentence one mills as many cards as the
+    object that died had power (CR 603.10a's last known information, the same
+    `StatRef` reader every "equal to its power" amount uses). Sentence two
+    returns the source to its owner's hand if it is still in the graveyard it
+    just went to (CR 400.7) and lets the controller put up to one qualifying
+    card among the milled ones onto the battlefield under their control
+    (CR 608.2d: only milled cards still in the graveyard are offered).
+    Returns an `AbilityEffect`, or `None`."""
+    from .amount_sentences import parse_mill_clause
+    from .ep02_r1_referenced_stat import (
+        default_referent,
+        normalize,
+        parse_stat_phrase,
+        stat_value,
+    )
+
+    sentences = [part.strip() for part in re.split(r"(?<=\.)\s+", " ".join(text.split()))]
+    if len(sentences) != 2 or "milled this way" not in text.lower():
+        return None
+    mill = parse_mill_clause(normalize(sentences[0]))
+    ref = parse_stat_phrase(mill.expr or "") if mill is not None and mill.kind == "equal" else None
+    second = _RETURN_SELF_AND_MILLED_RE.fullmatch(sentences[1])
+    if mill is None or ref is None or mill.who not in ("", "you") or second is None:
+        return None
+    from .effects.library import _card_description_is_readable, _mill, _quality_matcher
+
+    if not _card_description_is_readable(second.group("group")):
+        return None
+    wanted = _quality_matcher(second.group("group"))
+
+    def effect(game, ability):
+        from ..models.zone import Zone
+        from .decisions import Decision, DecisionKind, source_id_of
+
+        controller = game.controller_of(ability)
+        amount = stat_value(default_referent(game, ability, ref.anchor), ref.stat)
+        milled = _mill(game, controller, amount) if amount > 0 else []
+        source = game.find_by_id(ability.source_id)
+        if source is not None and source.zone is Zone.GRAVEYARD:
+            game.return_to_hand(source)
+        candidates = [card for card in milled if card.zone is Zone.GRAVEYARD and wanted(card)]
+        if not candidates:
+            return
+        chosen_ids = game.ask(
+            Decision(
+                kind=DecisionKind.CHOOSE_CARDS,
+                player=controller.username,
+                prompt=f"put up to one {second.group('group')} card milled this way "
+                "onto the battlefield",
+                source=ability.source_name,
+                source_id=source_id_of(ability),
+                amount=1,
+                exact=False,
+                cards=tuple(card.id for card in candidates),
+            )
+        )
+        by_id = {card.id: card for card in candidates}
+        for card_id in list(chosen_ids)[:1]:
+            if (card := by_id.get(card_id)) is not None and card.zone is Zone.GRAVEYARD:
+                game.put_onto_battlefield(card, controller.username)
+
+    return effect
