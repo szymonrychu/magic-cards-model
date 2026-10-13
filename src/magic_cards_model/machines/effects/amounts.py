@@ -5587,6 +5587,40 @@ def _parse_counted_amount_ability_text(text: str) -> AbilityEffect | None:
     return parse_counted_amount_text(text, for_spell=False)
 
 
+@SPELL_TEXT.rung("s23", after=["amounts._parse_counted_amount_spell_text"])
+def _parse_where_x_whole_spell_text(text: str) -> Effect | None:
+    """A spell whose X is a counted group, see
+    `ep02_r2_counted_permanents.parse_where_x_whole_text`."""
+    from ..ep02_r2_counted_permanents import parse_where_x_whole_text
+
+    return parse_where_x_whole_text(text, for_spell=True)
+
+
+@ABILITY_TEXT.rung("s40", after=["amounts._parse_counted_amount_ability_text"])
+def _parse_where_x_whole_ability_text(text: str) -> AbilityEffect | None:
+    """The ability side of the reader above."""
+    from ..ep02_r2_counted_permanents import parse_where_x_whole_text
+
+    return parse_where_x_whole_text(text, for_spell=False)
+
+
+@SPELL_TEXT.rung("s23", after=["amounts._parse_counted_amount_spell_text"])
+def _parse_for_each_create_spell_text(text: str) -> Effect | None:
+    """ "For each <group>, create <tokens>" on a spell, see
+    `ep02_r2_counted_permanents.for_each_create_as_tail_form`."""
+    from ..ep02_r2_counted_permanents import parse_for_each_create_text
+
+    return parse_for_each_create_text(text, for_spell=True)
+
+
+@ABILITY_TEXT.rung("s40", after=["amounts._parse_counted_amount_ability_text"])
+def _parse_for_each_create_ability_text(text: str) -> AbilityEffect | None:
+    """The ability side of the reader above."""
+    from ..ep02_r2_counted_permanents import parse_for_each_create_text
+
+    return parse_for_each_create_text(text, for_spell=False)
+
+
 @SPELL_TEXT.rung("s21")
 def _parse_discarded_card_value_spell_text(text: str) -> Effect | None:
     """The spell side of the banner above."""

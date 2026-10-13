@@ -147,3 +147,129 @@ def layer_group_count_factory(group: str):
         extras=extras,
         excludes_self=other,
     )
+
+
+# --------------------------------------------------------------------------
+# ", where X is <counted group>" over a whole multi-sentence text.
+# --------------------------------------------------------------------------
+
+_WHERE_X_TAIL_RE = re.compile(
+    r",\s*where X is (?P<mult>twice |three times )?(?P<expr>[^.]+?)"
+    r"(?: as (?:this (?:ability|spell) resolves|it resolves))?(?=\.(?:\s|$)|$)",
+    re.IGNORECASE,
+)
+_MULTIPLIERS = {"twice ": 2, "three times ": 3}
+#: "Search ... for up to X basic land cards. Put those cards onto the battlefield
+#: tapped, then shuffle." (Kyoshi Island Plaza) is the older "..., put them onto
+#: the battlefield tapped, then shuffle" with the sentence break moved.
+_THOSE_CARDS_RE = re.compile(r"\.\s+Put those cards onto\b")
+_WHOLE_TEXT_CONDITIONAL_RE = re.compile(r"^(?:if|unless|when|whenever|as long as)\b", re.IGNORECASE)
+
+
+def _normalised(rendered: str) -> str:
+    return _THOSE_CARDS_RE.sub(", put them onto", rendered)
+
+
+def parse_where_x_whole_text(text: str, *, for_spell: bool):
+    """A body whose X is defined by a trailing ", where X is <counted group>" in one
+    sentence and used anywhere in the text ("Look at the top X cards of your
+    library, where X is the number of lands you control. You may reveal a
+    creature or land card from among them ..."; "Search ... for up to X basic land
+    cards, where X is the number of Shrines you control. Put those cards ...").
+
+    The count is fixed once as the object resolves (CR 608.2h) - "as this ability
+    resolves" says the same - written into the text as a plain number (CR 107.3a
+    gives X its value for the whole object), and the numeric text is read by the
+    ordinary clause readers. `None` when the group is unread or the number left
+    the text unreadable: there is no half-run instruction (CR 608.2c)."""
+    if "where x is" not in text.lower():
+        return None
+    from .effects.dispatch import _ability_effect_or_notice, _spell_effect_or_notice
+    from .effects.text import _strip_non_effect_preamble
+    from .effects.tokens import _is_notice_only
+    from .ep02_r1_counted_permanents import _ABILITY_LINE_RE, _expression_reader
+
+    body = _strip_non_effect_preamble(text).strip()
+    if _WHOLE_TEXT_CONDITIONAL_RE.match(body) or (for_spell and _ABILITY_LINE_RE.match(body)):
+        return None
+    match = _WHERE_X_TAIL_RE.search(body)
+    if match is None:
+        return None
+    rest = body[: match.start()] + body[match.end() :]
+    if re.search(r"\bX\b", rest, re.IGNORECASE) is None:
+        return None
+    reader = _expression_reader(match.group("expr").strip())
+    if reader is None:
+        return None
+    multiplier = _MULTIPLIERS.get((match.group("mult") or "").lower(), 1)
+    parse = _spell_effect_or_notice if for_spell else _ability_effect_or_notice
+
+    @functools.cache
+    def parsed(rendered: str):
+        effect = parse(_normalised(rendered))
+        readable = (
+            effect is not None
+            and not _is_notice_only(effect)
+            and getattr(effect, "unparsed_remainder", None) is None
+        )
+        return effect if readable else None
+
+    from .amount_sentences import write_x
+
+    if parsed(write_x(rest, 2)) is None:
+        return None
+
+    def effect(game, obj) -> None:
+        count = max(reader(game, obj), 0) * multiplier
+        resolved = parsed(write_x(rest, count))
+        if resolved is not None:
+            resolved(game, obj)
+
+    return effect
+
+
+# --------------------------------------------------------------------------
+# "For each <group>, create <tokens>" - for-each-token-creation.
+# --------------------------------------------------------------------------
+
+_FOR_EACH_CREATE_RE = re.compile(
+    r"^for each (?P<each>.+?), (?P<create>create .+?)(?P<tail>\.(?:\s.*)?|)$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+@functools.cache
+def for_each_create_as_tail_form(text: str) -> str | None:
+    """"For each land you control, create a Treasure token." as the same instruction
+    with the count after the verb ("Create a Treasure token for each land you
+    control."), which the token readers already perform: the number of tokens is the
+    count of the group as the instruction is performed, once (CR 608.2h), and the
+    tokens are created together (CR 111.1). `None` for anything not led by a
+    "for each <group>, create ..." sentence."""
+    stripped = text.strip()
+    if not stripped[:9].lower() == "for each ":
+        return None
+    match = _FOR_EACH_CREATE_RE.match(stripped)
+    if match is None:
+        return None
+    create = match.group("create")
+    return f"{create[:1].upper()}{create[1:]} for each {match.group('each')}{match.group('tail')}"
+
+
+def parse_for_each_create_text(text: str, *, for_spell: bool):
+    """The effect of a "For each <group>, create <tokens>" body, read in its
+    tail form (see `for_each_create_as_tail_form`), or `None`."""
+    rewritten = for_each_create_as_tail_form(text)
+    if rewritten is None:
+        return None
+    from .effects.dispatch import _ability_effect_or_notice, _spell_effect_or_notice
+    from .effects.tokens import _is_notice_only
+
+    effect = (_spell_effect_or_notice if for_spell else _ability_effect_or_notice)(rewritten)
+    if (
+        effect is None
+        or _is_notice_only(effect)
+        or getattr(effect, "unparsed_remainder", None) is not None
+    ):
+        return None
+    return effect
