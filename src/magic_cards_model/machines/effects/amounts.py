@@ -957,6 +957,8 @@ def count_expression(phrase: str) -> Callable[["Game", str], int] | None:
         from ..designations import party_size
 
         return lambda game, controller: party_size(game, controller)
+    if "devotion to" in stripped.lower() and (devotion := _devotion_count(stripped)) is not None:
+        return devotion  # CR 700.5
     if _COUNT_BASIC_LAND_TYPES_RE.fullmatch(stripped):
         # Domain: Tribal Flames' own X definition. `BASIC_LAND_TYPES` names
         # CR 305.6's five; a land counts once per distinct basic type it

@@ -114,19 +114,19 @@
   "textless": false,
   "booster": true,
   "story_spotlight": false,
-  "edhrec_rank": 17532,
-  "penny_rank": 7920,
+  "edhrec_rank": 17700,
+  "penny_rank": 7935,
   "preview": {
     "source": "Brian Kibler",
     "source_uri": "https://www.twitch.tv/videos/1140939581?t=00h21m45s",
     "previewed_at": "2021-09-06"
   },
   "prices": {
-    "usd": "0.39",
-    "usd_foil": "0.84",
+    "usd": "0.42",
+    "usd_foil": "0.82",
     "usd_etched": null,
-    "eur": "0.67",
-    "eur_foil": "1.05",
+    "eur": "0.58",
+    "eur_foil": "1.26",
     "tix": "0.02"
   },
   "related_uris": {

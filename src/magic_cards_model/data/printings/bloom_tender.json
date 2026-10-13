@@ -1,0 +1,143 @@
+{
+  "object": "card",
+  "id": "ba86688d-18f0-4b5c-a797-42bf125a6c9f",
+  "oracle_id": "0c23fefe-9891-4dd8-9bb1-eebdb3274e31",
+  "multiverse_ids": [],
+  "resource_id": "043DD8E3B3101786F8D21C8B73EC4DAF1543C8F0891A5AC9CD98E1AA34BA28C0",
+  "mtgo_id": 146723,
+  "arena_id": 98487,
+  "tcgplayer_id": 671067,
+  "cardmarket_id": 864600,
+  "name": "Bloom Tender",
+  "lang": "en",
+  "released_at": "2026-01-23",
+  "uri": "https://api.scryfall.com/cards/ba86688d-18f0-4b5c-a797-42bf125a6c9f",
+  "scryfall_uri": "https://scryfall.com/card/ecl/166/bloom-tender?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T01:00:36Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/b/a/ba86688d-18f0-4b5c-a797-42bf125a6c9f.jpg?1783904436",
+    "normal": "https://cards.scryfall.io/normal/front/b/a/ba86688d-18f0-4b5c-a797-42bf125a6c9f.jpg?1783904436",
+    "large": "https://cards.scryfall.io/large/front/b/a/ba86688d-18f0-4b5c-a797-42bf125a6c9f.jpg?1783904436",
+    "png": "https://cards.scryfall.io/png/front/b/a/ba86688d-18f0-4b5c-a797-42bf125a6c9f.png?1783904436",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/b/a/ba86688d-18f0-4b5c-a797-42bf125a6c9f.jpg?1783904436",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/b/a/ba86688d-18f0-4b5c-a797-42bf125a6c9f.jpg?1783904436",
+    "thumb": "https://cards.scryfall.io/thumb/front/b/a/ba86688d-18f0-4b5c-a797-42bf125a6c9f.webp?1783904436",
+    "grid": "https://cards.scryfall.io/grid/front/b/a/ba86688d-18f0-4b5c-a797-42bf125a6c9f.webp?1783904436",
+    "display": "https://cards.scryfall.io/display/front/b/a/ba86688d-18f0-4b5c-a797-42bf125a6c9f.webp?1783904436",
+    "art": "https://cards.scryfall.io/art/front/b/a/ba86688d-18f0-4b5c-a797-42bf125a6c9f.webp?1783904436",
+    "crop": "https://cards.scryfall.io/crop/front/b/a/ba86688d-18f0-4b5c-a797-42bf125a6c9f.webp?1783904436"
+  },
+  "mana_cost": "{1}{G}",
+  "cmc": 2.0,
+  "type_line": "Creature \u2014 Elf Druid",
+  "oracle_text": "Vivid \u2014 {T}: For each color among permanents you control, add one mana of that color.",
+  "power": "1",
+  "toughness": "1",
+  "colors": [
+    "G"
+  ],
+  "color_identity": [
+    "G"
+  ],
+  "keywords": [
+    "Vivid"
+  ],
+  "produced_mana": [
+    "B",
+    "G",
+    "R",
+    "U",
+    "W"
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "arena",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "5d293ad8-a749-4725-bd5c-c4e1db828bd0",
+  "set": "ecl",
+  "set_name": "Lorwyn Eclipsed",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/5d293ad8-a749-4725-bd5c-c4e1db828bd0",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Aecl&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/ecl?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/ba86688d-18f0-4b5c-a797-42bf125a6c9f/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A0c23fefe-9891-4dd8-9bb1-eebdb3274e31&unique=prints",
+  "collector_number": "166",
+  "digital": false,
+  "rarity": "mythic",
+  "flavor_text": "Heart calmed by the beauty of the blossom, the dawnhand wondered who was actually protecting whom.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Nils Hamm",
+  "artist_ids": [
+    "c540d1fc-1500-457f-93cf-d6069ee66546"
+  ],
+  "illustration_id": "341d897d-a0b0-42b5-89da-62b3a60fd6ae",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 256,
+  "penny_rank": 4206,
+  "prices": {
+    "usd": "13.27",
+    "usd_foil": "13.80",
+    "usd_etched": null,
+    "eur": "13.30",
+    "eur_foil": "13.13",
+    "tix": "0.81"
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DBloom%2BTender",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DBloom%2BTender",
+    "edhrec": "https://edhrec.com/route/?cc=Bloom+Tender"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F671067%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=864600&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/146723?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}
