@@ -277,11 +277,11 @@ def parse_half_of_zone_clause(clause: str):
     discarding player's own choice (CR 701.9b); a sacrifice picks among the
     permanents that player controls (CR 701.21a) and asks nothing when every
     one of them goes (CR 608.2d: no impossible choice)."""
-    from ..numbers import halve
-
     text = clause.strip().rstrip(".")
     if not text.lower().startswith(("discard", "sacrifice")) or " half " not in text.lower():
         return None
+    from ..numbers import halve
+
     if match := _HALF_DISCARD_RE.fullmatch(text):
         round_up = match.group("direction").lower() == "up"
 
@@ -537,6 +537,11 @@ def parse_mill_by_stat_then_return_self_and_milled(text: str):
     card among the milled ones onto the battlefield under their control
     (CR 608.2d: only milled cards still in the graveyard are offered).
     Returns an `AbilityEffect`, or `None`."""
+    if "milled this way" not in text.lower():
+        return None
+    sentences = [part.strip() for part in re.split(r"(?<=\.)\s+", " ".join(text.split()))]
+    if len(sentences) != 2:
+        return None
     from .amount_sentences import parse_mill_clause
     from .ep02_r1_referenced_stat import (
         default_referent,
@@ -545,9 +550,6 @@ def parse_mill_by_stat_then_return_self_and_milled(text: str):
         stat_value,
     )
 
-    sentences = [part.strip() for part in re.split(r"(?<=\.)\s+", " ".join(text.split()))]
-    if len(sentences) != 2 or "milled this way" not in text.lower():
-        return None
     mill = parse_mill_clause(normalize(sentences[0]))
     ref = parse_stat_phrase(mill.expr or "") if mill is not None and mill.kind == "equal" else None
     second = _RETURN_SELF_AND_MILLED_RE.fullmatch(sentences[1])
@@ -736,10 +738,9 @@ def parse_search_target_library_and_exile(text: str):
     (CR 608.2h, CR 107.3c). A target gone by resolution, or a ban on searching
     libraries (CR 101.2), does nothing. Returns an `Effect`/`AbilityEffect`
     `(game, stack_object)`, or `None`."""
-    from ..numbers import parse_count
-
     if "search target" not in text.lower() or "exile" not in text.lower():
         return None
+    from ..numbers import parse_count
     from .effects._common import _strip_non_effect_preamble
 
     match = _SEARCH_TARGET_LIBRARY_EXILE_RE.fullmatch(
@@ -819,10 +820,9 @@ def parse_return_half_permanents_spell(text: str):
     many that player controls as the spell resolves, rounded the printed way
     (CR 107.1a, CR 608.2h), and nothing is asked when every one goes (CR 608.2d).
     Returns an `Effect` `(game, spell)`, or `None`."""
-    from ..numbers import halve
-
     if " half the " not in text.lower() or "choose target" not in text.lower():
         return None
+    from ..numbers import halve
     from .effects._common import _strip_non_effect_preamble
 
     match = _RETURN_HALF_PERMANENTS_RE.fullmatch(

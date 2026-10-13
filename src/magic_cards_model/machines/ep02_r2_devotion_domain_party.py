@@ -93,12 +93,12 @@ def look_top_effect(text: str, *, for_spell: bool = False) -> "Any | None":
     Sentences before the look or reveal are an ordinary instruction run first
     ("Search your library for up to two land cards ..., then shuffle." - Slimefoot's
     Survey)."""
-    from .effects.dispatch import parse_mixed_effect, parse_mixed_effect_for_spell
-    from .effects.text import _strip_non_effect_preamble
-
     lowered = text.lower()
     if "the top " not in lowered or " of your library" not in lowered:
         return None
+    from .effects.dispatch import parse_mixed_effect, parse_mixed_effect_for_spell
+    from .effects.text import _strip_non_effect_preamble
+
     whole = " ".join(_strip_non_effect_preamble(text).split())
     opening = _SENTENCE_END_RE.split(whole)
     at = next((i for i, part in enumerate(opening) if _LOOK_OPENING_RE.match(part)), None)
@@ -298,12 +298,12 @@ def _it_subject(game: "Game", stack_object: Any, chosen: bool) -> CardState | No
 @functools.cache
 def counters_amount_effect(text: str) -> "Any | None":
     """The two counter readers described above, or `None`."""
-    from .effects.counters import _counter_kind
-    from .effects.text import _strip_non_effect_preamble
-
     lowered = text.lower()
     if "counter" not in lowered or not ("for each " in lowered or " with " in lowered):
         return None
+    from .effects.counters import _counter_kind
+    from .effects.text import _strip_non_effect_preamble
+
     whole = " ".join(_strip_non_effect_preamble(text).split())
     chosen = CHOOSE_TARGET_RE.match(whole)
     if chosen is not None and not chosen.group("rest"):
@@ -373,10 +373,10 @@ _RETURN_IF_MV_RE = re.compile(
 @functools.cache
 def return_if_mana_value_effect(text: str) -> "Any | None":
     """The two-sentence reader above, or `None`. The target is the lead-in's."""
-    from .effects.text import _strip_non_effect_preamble
-
     if "if its mana value is" not in text.lower():
         return None
+    from .effects.text import _strip_non_effect_preamble
+
     whole = " ".join(_strip_non_effect_preamble(text).split())
     chosen = CHOOSE_TARGET_RE.match(whole)
     if chosen is None or not chosen.group("rest"):
@@ -453,11 +453,11 @@ def colors_of_reference(each: str) -> "Any | None":
 @functools.cache
 def life_per_color_effect(text: str, *, for_spell: bool) -> "Any | None":
     """The reader above (a leading instruction, if any, is read by the ordinary dispatcher)."""
+    if "life for each of " not in text.lower():
+        return None
     from .effects.dispatch import parse_mixed_effect, parse_mixed_effect_for_spell
     from .effects.text import _strip_non_effect_preamble
 
-    if "life for each of " not in text.lower():
-        return None
     whole = " ".join(_strip_non_effect_preamble(text).split())
     split = re.split(r"(?<=\.)\s+(?=you (?:may )?gain )", whole, maxsplit=1, flags=re.IGNORECASE)
     lead, last = (split[0], split[1]) if len(split) == 2 else ("", whole)
@@ -510,10 +510,10 @@ def discard_hand_draw_per_color_effect(text: str) -> "Any | None":
     """ "You may discard your hand. If you do, draw a card for each of that spell's colors."
     (Moonveil Regent): the colors are read first (CR 608.2h); the draw follows only if a hand
     was discarded (CR 701.9a)."""
-    from .effects.text import _strip_non_effect_preamble
-
     if "discard your hand" not in text.lower():
         return None
+    from .effects.text import _strip_non_effect_preamble
+
     whole = " ".join(_strip_non_effect_preamble(text).split())
     match = _DISCARD_HAND_DRAW_PER_COLOR_RE.fullmatch(whole.rstrip("."))
     count_colors = colors_of_reference(match.group("each")) if match is not None else None

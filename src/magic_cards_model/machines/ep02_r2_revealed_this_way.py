@@ -1832,6 +1832,8 @@ def _plan_uncached(text: str, for_spell: bool) -> _Plan | None:
         if re.match(r"^each player reveals", sentence.strip(), re.IGNORECASE):
             each_player = True
         clauses.extend(_clauses(sentence))
+    if not any(pattern.fullmatch(clause) for clause in clauses for pattern, _ in _READERS):
+        return None  # no clause is one of this module's: nothing here to plan
     read = _steps_of(clauses, for_spell)
     if read is None or read[1] == 0:
         return None
@@ -2178,11 +2180,16 @@ def _read_without_this_module(text: str, for_spell: bool) -> bool:
 
 
 def _effect(text: str, for_spell: bool) -> Any:
-    if _READING or not _gate(text) or _read_without_this_module(text, for_spell):
+    # The module's own readers first: they decline nearly every gated text, and
+    # only a text one of them reads needs the whole-chain re-read below.
+    if _READING or not _gate(text):
         return None
     plan = _plan(text, for_spell)
     if plan is None:
-        return _for_each_effect(text, for_spell)
+        each = _for_each_effect(text, for_spell)
+        return None if each is None or _read_without_this_module(text, for_spell) else each
+    if _read_without_this_module(text, for_spell):
+        return None
 
     def effect(game: "Game", obj: Any) -> None:
         controller = game.controller_of(obj)

@@ -496,7 +496,7 @@ def _parse(oracle_text: str, keywords: Iterable[str]) -> ModalProfile | None:
     bullets = [
         index
         for index, line in enumerate(lines)
-        if _BULLET_RE.match(line) or _PAWPRINT_MODE.match(line)
+        if _BULLET_RE.match(line) or (line.startswith("{P}") and _PAWPRINT_MODE.match(line))
     ]
     if not bullets:
         return None

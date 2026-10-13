@@ -1361,6 +1361,10 @@ def _expand(sentence: str) -> list[str]:
 
 def _compile(sentences: list[str], *, for_spell: bool) -> list[ResolutionStep] | None:
     steps: list[ResolutionStep] = []
+    # Plain sentences are handed to the established readers only once the
+    # whole text is known to be this module's (the checks after the loop):
+    # their index in `steps` and how to wrap them.
+    plain: list[tuple[int, str, str | None, Callable[[RunState], bool] | None]] = []
     queue = [piece for sentence in sentences for piece in _expand(sentence)]
     position = 0
     opened = False
@@ -1445,7 +1449,10 @@ def _compile(sentences: list[str], *, for_spell: bool) -> list[ResolutionStep] |
                     # later "target" here would read the wrong one (Spoils of
                     # the Hunt): such a text is the established readers'.
                     return None
-                step = _step_plain(sentence, for_spell=for_spell)
+                plain.append((len(steps), sentence, condition, guard))
+                steps.append(_step_tap_source)  # a placeholder, replaced below
+                uses_amount = uses_amount or _spends_amount(sentence)
+                continue
             if step is None:
                 return None
             uses_amount = uses_amount or _spends_amount(sentence)
@@ -1454,6 +1461,13 @@ def _compile(sentences: list[str], *, for_spell: bool) -> list[ResolutionStep] |
         steps.append(_gated(step, guard) if guard is not None else step)
     if not uses_amount or not (own or opened):
         return None
+    for index, sentence, condition, guard in plain:
+        step = _step_plain(sentence, for_spell=for_spell)
+        if step is None:
+            return None
+        if condition is not None:
+            step = _conditioned(step, condition)
+        steps[index] = _gated(step, guard) if guard is not None else step
     return steps
 
 

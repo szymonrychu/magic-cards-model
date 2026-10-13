@@ -730,18 +730,18 @@ def amount_written_effect(text: str, for_spell: bool) -> Any:
     number, and that text is read by the ordinary readers (CR 608.2c). The
     text is probed with sample numbers when read, so a shape no reader takes
     refuses here instead of failing on resolution."""
+    lowered = text.lower()
+    if "where x is" not in lowered and not any(
+        word in lowered
+        for word in ("damage", "life you gained", "life they gained", "less than or equal to the")
+    ):
+        return None  # (nor is it a counted "where X is" text)
     from .amount_sentences import find_where_x
     from .effects.text import _strip_non_effect_preamble
     from .ep02_r2_counted_permanents import parse_where_x_whole_text
 
     if (counted := parse_where_x_whole_text(text, for_spell=for_spell)) is not None:
         return counted  # a counted group is that reader's; the rest is measured here
-    lowered = text.lower()
-    if "where x is" not in lowered and not any(
-        word in lowered
-        for word in ("damage", "life you gained", "life they gained", "less than or equal to the")
-    ):
-        return None
     whole = " ".join(_strip_non_effect_preamble(text).strip().split())
     prefix, body = "", whole
     sentences = re.split(r"(?<=\.)\s+", whole)
@@ -818,10 +818,10 @@ def pay_x_capped_effect(text: str, for_spell: bool) -> Any:
     smaller of the cap and what can be paid (CR 118.3) - the limit is named
     in the question and an answer past it refused - then {X} is paid and the
     payoff read with X written in."""
-    from .amount_sentences import write_x
-
     if "can't be greater than" not in text.lower():
         return None
+    from .amount_sentences import write_x
+
     match = _PAY_X_CAPPED_RE.fullmatch(" ".join(text.strip().split()))
     if match is None:
         return None
@@ -1215,11 +1215,11 @@ def _parse_enters_tapped_this_turn_clause(clause: str, *, for_spell: bool) -> An
     instructions (Nahiri's Lithoforming): a replacement effect created as the
     instruction resolves (CR 614.1a) lasting the turn (CR 611.2a), ended by
     the cleanup step (CR 514.2)."""
+    if "enter tapped" not in clause.lower():
+        return None
     from .replacement import CreatedReplacement, EntersTappedThisTurn
     from .replacement.parse import created_replacement_spec
 
-    if "enter tapped" not in clause.lower():
-        return None
     spec = created_replacement_spec(clause)
     if not isinstance(spec, EntersTappedThisTurn):
         return None
@@ -1248,10 +1248,10 @@ _LEADING_FOR_EACH_RE = re.compile(r"^for each (?P<each>[^,]+), (?P<body>.+?)\.?$
 def _parse_leading_for_each_clause(clause: str, *, for_spell: bool) -> Any:
     """ "For each <counted thing>, <instruction>" is the same instruction as
     "<instruction> for each <counted thing>" (CR 608.2c), read that way."""
-    from .effects.dispatch import _parse_mixed_clause
-
     if not clause.lower().startswith("for each "):
         return None
+    from .effects.dispatch import _parse_mixed_clause
+
     match = _LEADING_FOR_EACH_RE.fullmatch(" ".join(clause.strip().split()))
     if match is None or "this way" not in match.group("each").lower():
         return None
