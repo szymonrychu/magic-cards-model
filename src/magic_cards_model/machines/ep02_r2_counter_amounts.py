@@ -1557,7 +1557,7 @@ def _parse_counters_on_spell_then_new_target(text: str):
 # counting counters on the spell itself (Lightning Storm: "3 plus the number of
 # charge counters on" it). The count is taken as the spell resolves (CR 608.2h),
 # so counters added while it waited on the stack are in it, and written in for
-# the ordinary damage reader (CR 107.3b: X is the value the effect defines).
+# the ordinary damage reader (CR 107.3f: X is the value the text itself defines).
 # ---------------------------------------------------------------------------
 
 
