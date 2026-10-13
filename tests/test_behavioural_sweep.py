@@ -1538,7 +1538,12 @@ def _board_material(card_name: str, condition: str) -> tuple[Material, ...]:
     if found is None:
         return ()
     kind, test, _amount = found
-    candidates = _board_candidates(legendary="legendary" in condition.lower())
+    # A planeswalker subtype ("if you control a Ral planeswalker", Ral's
+    # Staticaster) sits on printings whose type line is Legendary Planeswalker,
+    # so the legendary list is the one to look through, as it is for "legendary"
+    # itself.
+    lowered = condition.lower()
+    candidates = _board_candidates(legendary="legendary" in lowered or "planeswalker" in lowered)
     saved = _STAGING.variant, _STAGING.material
     _STAGING.variant = QUIET
 
