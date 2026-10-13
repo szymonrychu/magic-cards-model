@@ -855,6 +855,7 @@ _COLOR_NAME: dict[Color, str] = {
 #: every creature but the source, whoever controls it (`_MASS_OTHER_
 #: CREATURES_RE`), a whole-board subject like "all creatures".
 _MASS_OTHER_CREATURES_RE = re.compile(r"^(?:all )?other creatures (?=get |gain )", re.IGNORECASE)
+_CREATURES_NOT_CONTROLLED_RE = re.compile(r"^(other )?creatures you don't control", re.IGNORECASE)
 _MASS_SUBJECT_RE = re.compile(
     r"^(?:(?:all )?other creatures (?=get |gain )"
     r"|(?:other )?creatures (?:you control|your opponents control)"
@@ -1445,6 +1446,9 @@ def _parse_mass_pump_clause(
     sentences = _plain_resolution_sentences(effect_text)
     text = sentences[0].strip() if sentences else effect_text.strip()
     remainder = " ".join(sentences[1:]) if len(sentences) > 1 else ""
+    # "Creatures you don't control" names the same group as "creatures your
+    # opponents control": every other player is an opponent (CR 102.2, CR 102.3).
+    text = _CREATURES_NOT_CONTROLLED_RE.sub("creatures your opponents control", text)
     # A duration-first sentence is only claimed when the rest is a pump or
     # grant `machines/layers.py` reads (checked below) - "Until end of turn,
     # creatures you control gain "{1}: ..."" (Grand Evolution's chapter III)
@@ -1467,7 +1471,9 @@ def _parse_mass_pump_clause(
         and not _is_mass_state_subject(text)
     ):
         return None
-    if Duration.UNTIL_END_OF_TURN not in text.lower():
+    if Duration.UNTIL_END_OF_TURN not in text.lower() and (
+        Duration.UNTIL_YOUR_NEXT_TURN not in text.lower()
+    ):
         return None
     where_match = _WHERE_X_IS_RE.search(text)
     for_each = _MASS_PUMP_FOR_EACH_RE.search(text)

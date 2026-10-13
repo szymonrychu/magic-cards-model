@@ -4472,15 +4472,18 @@ def _parse_create_tokens_equal_to_amount_clause(
     return effect
 
 
-def _token_creator_for_count(desc: str) -> Callable[["Game", "StackObject", int], None] | None:
+def _token_creator_for_count(
+    desc: str, tail: str = ""
+) -> Callable[["Game", "StackObject", int], None] | None:
     """The token half of "create a number of `<desc>` tokens equal to ...":
     the same one-token reader `_parse_token_clause` already gives "create a
     `<desc>` token" (a 1/1 red Goblin creature, a tapped Treasure, a Blood
     token - CR 111.10a/111.10g's predefined rows), run `count` times, the
     count being whatever the caller read off the rest of the sentence.
-    CR 107.1b: a zero or negative count creates nothing.
+    CR 107.1b: a zero or negative count creates nothing. `tail` is what follows
+    "token" in the singular clause (" with vigilance").
     """
-    text = f"create a {desc.strip()} token"
+    text = f"create a {desc.strip()} token{tail}"
     template = _parse_token_clause(text, for_spell=True)
     if template is None:
         return None
