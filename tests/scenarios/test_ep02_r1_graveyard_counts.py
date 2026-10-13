@@ -1417,42 +1417,52 @@ def test_altar_of_the_goyf_counts_a_type_once_across_both_graveyards():
     assert _stats(scenario, bears) == (4, 4)
 
 
-# -- the templates below were already read before this task; they stay as
-# -- regression guards for the new reader, not as red-first proofs.
+# -- Ten templates below were already read correctly before this task, and the
+# -- dispatch fingerprint shows no parser change for these cards, so they are
+# -- green on base by construction: T5 cannot change what they do. They carry
+# -- the multi-type cards (artifact creature, land creature, adventurer) the
+# -- new reader must also count once, as regression guards for the new reader.
 
 
 def test_izoni_makes_an_insect_per_creature_card_in_my_graveyard():
     scenario = _board(
         hand=["Izoni, Thousand-Eyed"],
-        graveyard=[BEARS, BEARS, SOL_RING, BOLT],
+        graveyard=[BEARS, BEARS, SOL_RING, BOLT, "Walking Ballista", "Dryad Arbor"],
         bob_graveyard=[BEARS] * 3,
     )
     _enter(scenario, "Izoni, Thousand-Eyed")
-    assert len(_tokens(scenario, "Insect")) == 2
+    assert len(_tokens(scenario, "Insect")) == 4
 
 
 def test_kraul_foragers_gains_one_life_per_creature_card():
-    scenario = _board(hand=["Kraul Foragers"], graveyard=[BEARS, BEARS, BEARS, MOUNTAIN])
+    scenario = _board(
+        hand=["Kraul Foragers"],
+        graveyard=[BEARS, BEARS, BEARS, MOUNTAIN, "Walking Ballista", "Dryad Arbor"],
+    )
     _enter(scenario, "Kraul Foragers")
-    assert _life(scenario) == 23
+    assert _life(scenario) == 25
 
 
 def test_revenge_of_the_rats_makes_tapped_rats_per_creature_card():
     scenario = _board(
-        hand=["Revenge of the Rats"], battlefield=["Swamp"] * 4, graveyard=[BEARS, BEARS, BOLT]
+        hand=["Revenge of the Rats"],
+        battlefield=["Swamp"] * 4,
+        graveyard=[BEARS, BEARS, BOLT, "Walking Ballista"],
     )
     scenario.cast_and_resolve("Revenge of the Rats", auto=True)
     rats = _tokens(scenario, "Rat")
-    assert len(rats) == 2
+    assert len(rats) == 3
     assert all(rat.tapped for rat in rats)
 
 
 def test_grim_flowering_draws_a_card_per_creature_card():
     scenario = _board(
-        hand=["Grim Flowering"], battlefield=["Forest"] * 6, graveyard=[BEARS, BEARS, BEARS, BOLT]
+        hand=["Grim Flowering"],
+        battlefield=["Forest"] * 6,
+        graveyard=[BEARS, BEARS, BEARS, BOLT, "Dryad Arbor"],
     )
     scenario.cast_and_resolve("Grim Flowering", auto=True)
-    assert len(scenario.player("alice").hand) == 3
+    assert len(scenario.player("alice").hand) == 4
 
 
 # -- cards named like the spell, in your graveyard ---------------------------
@@ -1576,9 +1586,10 @@ def test_the_mouth_of_sauron_amasses_nothing_when_the_graveyard_has_none():
 
 def test_consuming_blob_is_as_big_as_the_card_types_in_my_graveyard():
     scenario = _board(
-        battlefield=["Consuming Blob"], graveyard=[BEARS, BEARS, BOLT, SOL_RING, MOUNTAIN]
+        battlefield=["Consuming Blob"],
+        graveyard=[BEARS, BEARS, BOLT, SOL_RING, MOUNTAIN, "Tribal Flames", "Walking Ballista"],
     )
-    assert _stats(scenario, scenario.creature("Consuming Blob", "alice")) == (4, 5)
+    assert _stats(scenario, scenario.creature("Consuming Blob", "alice")) == (5, 6)
 
 
 def test_consuming_blob_ignores_the_opponents_graveyard():
@@ -1587,15 +1598,18 @@ def test_consuming_blob_ignores_the_opponents_graveyard():
 
 
 def test_souls_of_the_lost_counts_permanent_cards_only():
-    scenario = _board(battlefield=["Souls of the Lost"], graveyard=PERMANENT_YARD)
-    assert _stats(scenario, scenario.creature("Souls of the Lost", "alice")) == (3, 4)
+    scenario = _board(
+        battlefield=["Souls of the Lost"],
+        graveyard=PERMANENT_YARD + ["Walking Ballista", "Bonecrusher Giant", "Tribal Flames"],
+    )
+    assert _stats(scenario, scenario.creature("Souls of the Lost", "alice")) == (5, 6)
 
 
 def test_crackling_drake_counts_instants_and_sorceries_across_exile_and_graveyard():
     scenario = _board(
         battlefield=["Crackling Drake"],
-        graveyard=[BOLT, "Divination", BEARS],
+        graveyard=[BOLT, "Divination", BEARS, "Tribal Flames", "Bonecrusher Giant"],
         exile=[BOLT],
         bob_graveyard=[BOLT] * 4,
     )
-    assert _stats(scenario, scenario.creature("Crackling Drake", "alice")) == (3, 4)
+    assert _stats(scenario, scenario.creature("Crackling Drake", "alice")) == (4, 4)
