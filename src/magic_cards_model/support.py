@@ -40,7 +40,6 @@ from magic_cards_model import __version__, static_audit
 from magic_cards_model.data.creature_types import creature_types
 from magic_cards_model.ids import install_id_allocator, reset_id_allocator
 from magic_cards_model.machines import keywords as keyword_machine
-from magic_cards_model.machines.cleave import cleaved_text, has_cleave, uncleaved_text
 from magic_cards_model.machines.abilities import (
     AbilityKind,
     ActivatedAbility,
@@ -89,6 +88,7 @@ from magic_cards_model.machines.casting_restrictions import (
     reads_static_spells_cant_be_countered_line,
 )
 from magic_cards_model.machines.chosen_type import RESTRICTED_TRIBAL_TYPES
+from magic_cards_model.machines.cleave import cleaved_text, has_cleave, uncleaved_text
 from magic_cards_model.machines.combat import (
     Keyword,
     is_attack_cost_line,

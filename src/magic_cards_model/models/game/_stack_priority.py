@@ -28,6 +28,12 @@ from ...machines.casting_restrictions import (
     conditionally_cannot_be_countered,
     spell_protected_from_countering,
 )
+from ...machines.cleave import (
+    cleave_cost_announces_x,
+    cleaved_text,
+    spell_text_as_cast,
+    was_cleaved,
+)
 from ...machines.combat import (
     has_keyword,
 )
@@ -60,12 +66,6 @@ from ...machines.effects import (
     trigger_effect_for,
 )
 from ...machines.ep02_r1_counter_amounts import counters_counted_for, counters_read_from
-from ...machines.cleave import (
-    cleave_cost_announces_x,
-    cleaved_text,
-    spell_text_as_cast,
-    was_cleaved,
-)
 from ...machines.keywords import (
     ascend_as_a_spell_resolves,
     awaken_as_the_spell_resolves,
@@ -459,9 +459,7 @@ class StackPriorityMixin:
             self.mana_spent_on_spells_this_turn[controller] = before + spent
             for threshold in range(before + 1, before + spent + 1):
                 self.emit(
-                    GameEvent(
-                        event=ExtraTriggerEvent.EXPEND, player=controller, amount=threshold
-                    )
+                    GameEvent(event=ExtraTriggerEvent.EXPEND, player=controller, amount=threshold)
                 )
         self.emit(
             GameEvent(

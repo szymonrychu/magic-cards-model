@@ -5437,6 +5437,13 @@ SWEEP_DRIVER_GAPS: tuple[DriverGap, ...] = (
         kind="rolls_dice",
         event="a player rolling one or more dice (CR 706.2)",
     ),
+    # EP02-R2-T7: the stock board casts one spell, so only "expend 4" is reached;
+    # expend 8 is proven by tests/scenarios/test_ep02_r2_counted_permanents.py.
+    DriverGap(
+        kind="expend",
+        event="eight mana spent on spells in one turn (CR 700.14)",
+        precondition=r"expend 8",
+    ),
     # NW06-T1: states the stock boards cannot stage; each is driven by its
     # own scenario file (tests/scenarios/test_nw06_*).
     DriverGap(

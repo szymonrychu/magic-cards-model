@@ -1211,7 +1211,9 @@ def _cleave_cast(scenario, name, *, cleave, targets=None):
 def test_winged_portent_counts_only_fliers_unless_cleaved(cleave, drawn):
     scenario = _main(
         _build(
-            ["Island"] * 3 + ["Forest"] * 3 + ["Grizzly Bears", "Grizzly Bears", "Birds of Paradise"],
+            ["Island"] * 3
+            + ["Forest"] * 3
+            + ["Grizzly Bears", "Grizzly Bears", "Birds of Paradise"],
             [],
             hand=["Winged Portent"],
         )

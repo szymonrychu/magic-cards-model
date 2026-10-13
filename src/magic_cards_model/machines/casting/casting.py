@@ -21,7 +21,6 @@ from ...models.zone import Zone
 from ...numbers import VariableX, parse_amount, parse_count
 from ...phrases import with_indefinite_article
 from ...snapshot import EngineModel
-from ..cleave import cleaved_text
 from ..abilities import (
     AbilityKind,
     TriggerEvent,
@@ -37,6 +36,7 @@ from ..casting_restrictions import (
     targeted_cant_cast_restriction,
     zone_cast_prohibition_source,
 )
+from ..cleave import cleaved_text
 from ..cost import (
     TEAMWORK_TAP,
     CardRequirement,
