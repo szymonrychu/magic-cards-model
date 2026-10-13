@@ -232,6 +232,11 @@ FAMILIES = (
     "ep02_r2_counter_amounts",
     "ep02_r2_revealed_this_way",
     "ep02_r2_chosen_amounts",
+    "ep02_r3_damage_cost_amounts_grants",
+    "ep02_r3_damage_cost_amounts_costs",
+    "ep02_r3_damage_cost_amounts_pumps",
+    "ep02_r3_damage_cost_amounts_damage",
+    "ep02_r3_damage_cost_amounts_casts",
 )
 
 ABILITY_TEXT = Chain(

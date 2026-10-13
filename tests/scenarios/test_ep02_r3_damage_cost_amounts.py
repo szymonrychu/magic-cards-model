@@ -1,0 +1,293 @@
+"""EP-02-R3 T8: damage, pump and cost amounts - "+X/+X where X is ...", "deals damage
+equal to ...", "costs {X} less ..." and the cards that grant, copy or cast from a
+graveyard.
+
+Rules, each looked up with `mise run rules:find` in the session that wrote this file:
+
+- **CR 608.2h** - information about an object is taken once, as the effect applies.
+- **CR 608.2c** - instructions are followed in order; later text refers to earlier text.
+- **CR 107.3a** - X on a spell or ability is defined by the text that gives it a value.
+- **CR 202.3** - mana value is the total amount of mana in the mana cost.
+- **CR 119.3** - life gain and loss adjust a player's life total.
+- **CR 122.1** - counters.
+"""
+
+import pytest
+
+from magic_cards_model.machines import Step
+from magic_cards_model.machines.combat import has_keyword
+from magic_cards_model.models import Zone
+from magic_cards_model.support import HANDLED, classify_clauses
+from tests.cards import card
+from tests.scenarios.harness import Scenario
+
+LISTED = [
+    "Arcane Proxy",
+    "Archmage's Newt",
+    "Beacon Bolt",
+    "Bishop of Binding",
+    "Boon of Boseiju",
+    "Bronze Cudgels",
+    "Cyclops Gladiator",
+    "Dreadhorde Arcanist",
+    "Flunk",
+    "Freelance Muscle",
+    "Friendly Fire",
+    "Invoke Calamity",
+    "Isildur's Fateful Strike",
+    "Jushi Apprentice // Tomoya the Revealer",
+    "Living Inferno",
+    "Maelstrom Muse",
+    "Nibelheim Aflame",
+    "Osseous Sticktwister",
+    "Porcuparrot",
+    "Resilient Khenra",
+    "Rowan, Scion of War",
+    "Songcrafter Mage",
+    "Sphinx of Forgotten Lore",
+    "Survey Mechan",
+    "Unleash the Inferno",
+    "Voyager Drake",
+    "Walking Bulwark",
+    "Whispering Madness",
+    "Will, Scion of Peace",
+    "Zur, Eternal Schemer",
+]
+
+#: Second printings of the readers added or widened here (see each section).
+# Rubblebelt Rioters (Pioneer, Modern; legalities checked 2026-10-14, not in the api decks):
+# "it gets +X/+0 until end of turn, where X is the greatest power among creatures you control".
+# No other Modern/Pioneer/Standard card prints "where X is the greatest mana value among
+# permanents you control", "7 minus ...", "you may have target creature get +X/+X, where X ...",
+# "the power of the exiled card" or "the number of times this ability has resolved" (bulk scan).
+PROOF: list[str] = ["Rubblebelt Rioters"]
+
+LANDS = ["Plains"] * 6 + ["Swamp"] * 4 + ["Island"] * 4 + ["Forest"] * 3 + ["Mountain"] * 4
+
+
+@pytest.mark.parametrize("name", LISTED + PROOF)
+def test_every_clause_of_a_listed_card_is_handled(name: str) -> None:
+    clauses = classify_clauses(card(name))
+    assert clauses
+    assert all(clause.category == HANDLED for clause in clauses), [
+        (clause.text, clause.category) for clause in clauses if clause.category != HANDLED
+    ]
+
+
+def _scenario(
+    alice: list[str],
+    bob: list[str] | None = None,
+    *,
+    hand: list[str] | None = None,
+    library: list[str] | None = None,
+    bob_hand: list[str] | None = None,
+    graveyard: list[str] | None = None,
+    bob_graveyard: list[str] | None = None,
+    step: Step = Step.PRECOMBAT_MAIN,
+):
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=[*alice, *LANDS],
+            hand=hand,
+            graveyard=graveyard,
+            library=library or ["Island"] * 12,
+        )
+        .player(
+            "bob",
+            battlefield=[*(bob or []), *LANDS],
+            hand=bob_hand,
+            graveyard=bob_graveyard,
+            library=["Island"] * 12,
+        )
+        .build()
+    )
+    scenario.start_at(step)
+    return scenario
+
+
+def _resolve_all(scenario) -> None:
+    scenario.game.put_triggers_on_stack()
+    while scenario.game.stack:
+        scenario.resolve_top()
+        scenario.game.put_triggers_on_stack()
+
+
+def _cast_all(scenario, name: str, *, user: str = "alice", targets=None) -> None:
+    scenario.cast_onto_stack(name, username=user, targets=targets, auto=True)
+    _resolve_all(scenario)
+
+
+def _activate_all(scenario, source, *, index: int = 0, **kwargs) -> None:
+    scenario.activate(source, index=index, auto=True, **kwargs)
+    _resolve_all(scenario)
+
+
+def _attack(scenario, *names: str) -> list:
+    attackers = scenario.creatures(*names, username=scenario.player().username)
+    scenario.advance()  # declare attackers
+    scenario.attack_with(*attackers)
+    return attackers
+
+
+def _cast_kicked(scenario, name: str, times: int, *, user: str = "alice") -> None:
+    casting = scenario.cast(name, username=user)
+    for _ in range(times):
+        casting.pay_kicker()
+    payment = casting.begin_paying()
+    scenario.auto_pay(payment, username=user)
+    scenario.put_on_stack(casting)
+    _resolve_all(scenario)
+
+
+def _stats(scenario, state) -> tuple[int, int]:
+    return scenario.game.power_of(state), scenario.game.toughness_of(state)
+
+
+# ---------------------------------------------------------------------------
+# Pumps: "+X/+X until end of turn, where X is ..."
+# ---------------------------------------------------------------------------
+
+
+def test_boon_of_boseiju_pumps_by_the_greatest_mana_value_and_untaps() -> None:
+    scenario = _scenario(["Grizzly Bears", "Serra Angel"], hand=["Boon of Boseiju"])
+    bears = scenario.creature("Grizzly Bears", "alice")
+    bears.tapped = True
+    _cast_all(scenario, "Boon of Boseiju", targets=[bears])
+    assert _stats(scenario, bears) == (2 + 5, 2 + 5)  # Serra Angel is mana value 5
+    assert not bears.tapped
+
+
+def test_boon_of_boseiju_counts_only_permanents_the_caster_controls() -> None:
+    scenario = _scenario(["Grizzly Bears"], ["Serra Angel"], hand=["Boon of Boseiju"])
+    bears = scenario.creature("Grizzly Bears", "alice")
+    _cast_all(scenario, "Boon of Boseiju", targets=[bears])
+    assert _stats(scenario, bears) == (2 + 2, 2 + 2)  # Bears itself (mana value 2)
+
+
+def test_boon_of_boseiju_ends_at_end_of_turn() -> None:
+    scenario = _scenario(["Grizzly Bears", "Serra Angel"], hand=["Boon of Boseiju"])
+    bears = scenario.creature("Grizzly Bears", "alice")
+    _cast_all(scenario, "Boon of Boseiju", targets=[bears])
+    while scenario.step is not Step.CLEANUP:
+        scenario.advance()
+    assert _stats(scenario, bears) == (2, 2)
+
+
+def test_flunk_shrinks_by_seven_minus_the_targets_controllers_hand() -> None:
+    scenario = _scenario(
+        [], ["Serra Angel"], hand=["Flunk"], bob_hand=["Island", "Island", "Island"]
+    )
+    angel = scenario.creature("Serra Angel", "bob")
+    _cast_all(scenario, "Flunk", targets=[angel])
+    assert angel.zone is Zone.GRAVEYARD  # 4/4 gets -4/-4
+
+
+def test_flunk_reads_the_hand_of_the_creatures_controller_not_the_casters() -> None:
+    scenario = _scenario(
+        ["Grizzly Bears"], [], hand=["Flunk", "Island", "Island", "Island", "Island", "Island"]
+    )
+    bears = scenario.creature("Grizzly Bears", "alice")
+    _cast_all(scenario, "Flunk", targets=[bears])
+    # alice holds 5 cards after casting Flunk: -2/-2 kills the 2/2
+    assert bears.zone is Zone.GRAVEYARD
+
+
+def test_flunk_with_a_full_hand_is_not_a_pump() -> None:
+    scenario = _scenario(
+        [],
+        ["Serra Angel"],
+        hand=["Flunk"],
+        bob_hand=["Island"] * 8,
+    )
+    angel = scenario.creature("Serra Angel", "bob")
+    _cast_all(scenario, "Flunk", targets=[angel])
+    # 7 - 8 = -1: the creature gets +1/+1 (CR 107.1b is about counts; X stays -1 here)
+    assert _stats(scenario, angel) == (5, 5)
+
+
+def test_resilient_khenra_pumps_a_creature_by_its_own_power() -> None:
+    scenario = _scenario(["Grizzly Bears"], hand=["Resilient Khenra"])
+    bears = scenario.creature("Grizzly Bears", "alice")
+    scenario.choose_trigger_targets("Resilient Khenra", [bears])
+    scenario.will_take_the_may(True, source="Resilient Khenra")
+    _cast_all(scenario, "Resilient Khenra")
+    assert _stats(scenario, bears) == (2 + 2, 2 + 2)  # Resilient Khenra is a 2/2
+
+
+def test_resilient_khenra_may_be_declined() -> None:
+    scenario = _scenario(["Grizzly Bears"], hand=["Resilient Khenra"])
+    bears = scenario.creature("Grizzly Bears", "alice")
+    scenario.choose_trigger_targets("Resilient Khenra", [bears])
+    scenario.will_take_the_may(False, source="Resilient Khenra")
+    _cast_all(scenario, "Resilient Khenra")
+    assert _stats(scenario, bears) == (2, 2)
+
+
+def test_freelance_muscle_gets_the_greatest_power_or_toughness_of_the_others() -> None:
+    scenario = _scenario(["Freelance Muscle", "Wall of Omens", "Grizzly Bears"])
+    (muscle,) = _attack(scenario, "Freelance Muscle")
+    _resolve_all(scenario)
+    # Freelance Muscle is a 4/4; Wall of Omens is 0/4: toughness 4 is the greatest figure
+    assert _stats(scenario, muscle) == (4 + 4, 4 + 4)
+
+
+def test_freelance_muscle_does_not_count_itself() -> None:
+    scenario = _scenario(["Freelance Muscle"])
+    (muscle,) = _attack(scenario, "Freelance Muscle")
+    _resolve_all(scenario)
+    assert _stats(scenario, muscle) == (4, 4)  # no other creature: X = 0
+
+
+def test_bishop_of_binding_pumps_a_vampire_by_the_power_of_the_exiled_card() -> None:
+    scenario = _scenario([], ["Serra Angel"], hand=["Bishop of Binding"])
+    angel = scenario.creature("Serra Angel", "bob")
+    scenario.choose_trigger_targets("Bishop of Binding", [angel])
+    _cast_all(scenario, "Bishop of Binding")
+    assert angel.zone is Zone.EXILE
+    bishop = scenario.find("Bishop of Binding", Zone.BATTLEFIELD, "alice")
+    bishop.summoning_sick = False
+    base = _stats(scenario, bishop)
+    scenario.choose_trigger_targets("Bishop of Binding", [bishop])
+    _attack(scenario, "Bishop of Binding")
+    _resolve_all(scenario)
+    assert _stats(scenario, bishop) == (base[0] + 4, base[1] + 4)  # Serra Angel's power is 4
+
+
+def test_bronze_cudgels_counts_the_resolutions_this_turn() -> None:
+    scenario = _scenario(["Bronze Cudgels", "Grizzly Bears"])
+    cudgels = scenario.find("Bronze Cudgels", Zone.BATTLEFIELD, "alice")
+    bears = scenario.creature("Grizzly Bears", "alice")
+    cudgels.attach_to(bears)
+    assert cudgels.attached_to == bears.id
+    _activate_all(scenario, cudgels, index=0)
+    assert scenario.game.power_of(bears) == 2 + 1
+    _activate_all(scenario, cudgels, index=0)
+    assert scenario.game.power_of(bears) == 2 + 1 + 2  # second resolution: +2
+
+
+def test_voyager_drake_gives_flying_to_up_to_x_creatures_for_x_kicks() -> None:
+    scenario = _scenario(["Grizzly Bears", "Hill Giant", "Runeclaw Bear"], hand=["Voyager Drake"])
+    bears, giant, runeclaw = (
+        scenario.creature(n, "alice") for n in ("Grizzly Bears", "Hill Giant", "Runeclaw Bear")
+    )
+    scenario.choose_trigger_targets("Voyager Drake", [bears, giant])
+    _cast_kicked(scenario, "Voyager Drake", 2)
+    assert has_keyword(bears, "Flying", scenario.game)
+    assert has_keyword(giant, "Flying", scenario.game)
+    assert not has_keyword(runeclaw, "Flying", scenario.game)
+
+
+def test_rubblebelt_rioters_gets_the_greatest_power_among_your_creatures() -> None:
+    scenario = _scenario(["Rubblebelt Rioters", "Serra Angel"])
+    (rioters,) = _attack(scenario, "Rubblebelt Rioters")
+    _resolve_all(scenario)
+    assert _stats(scenario, rioters) == (0 + 4, 4)  # Serra Angel's power 4 is the greatest
+
+
+def test_rubblebelt_rioters_ignores_an_opponents_bigger_creature() -> None:
+    scenario = _scenario(["Rubblebelt Rioters", "Grizzly Bears"], ["Serra Angel"])
+    (rioters,) = _attack(scenario, "Rubblebelt Rioters")
+    _resolve_all(scenario)
+    assert _stats(scenario, rioters) == (0 + 2, 4)
