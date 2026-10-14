@@ -19,8 +19,16 @@ when the instruction is applied (CR 608.2h), and the board facts it counts:
 - "the number of differently named creature tokens you control" (Audience with
   Trostani).
 
-Rules looked up this session with `mise run rules:find`: 608.2h, 700.4, 603.10a,
-301.5, 702.33d, 107.4, 111.1, 107.3a, 122.1, 202.3.
+Token paragraphs read in order (Adeline, Goblin Traprunner, Gemini Engine, Ghalta and
+Mavren, Kalitas, the Role makers, Reckless Crew, Twinflame, Leonardo da Vinci,
+Cloudspire Coordinator), Asinine Antics' flash for {2} more, Edward Kenway's
+peek-and-play exile, Kellan's reveal, Cursecloth Wrappings' granted embalm, and
+Rampaging Soulrager's unlocked-doors static are played below as well.
+
+Rules looked up with `mise run rules:find`: 608.2h, 608.2c, 608.2d, 700.4, 603.10a, 301.5a,
+702.33d, 107.4, 111.1, 111.3, 111.10, 107.3a, 122.1, 202.3, 201.2, 709.5c, 119.3, 508.4, 705.1,
+704.5z, 303.4b, 303.4h, 303.7a, 702.8a, 601.2f, 701.20e, 406.3, 601.3, 305.2a, 707.2, 707.9b,
+702.128a, 702.129a, 611.2, 613.1f, 514.2, 500.1, 513.1.
 """
 
 import pytest
@@ -1597,3 +1605,28 @@ def test_kheru_lich_lord_returns_a_creature_for_a_turn_and_exiles_it_at_its_next
     reach(scenario, Step.END_STEP)
     scenario.resolve_top()
     assert bears.zone is Zone.EXILE
+
+
+def test_leonardo_sets_thopters_base_size_to_the_cards_in_your_hand():
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Island", "Island", "Island", "Grizzly Bears"],
+            battlefield=["Leonardo da Vinci", "Ornithopter", *["Island"] * 5],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    thopter = scenario.creature("Ornithopter")
+    assert size(scenario, thopter) == (0, 2)
+    scenario.activate(
+        scenario.creature("Leonardo da Vinci"),
+        *scenario.untapped_sources(*(["Island"] * 5)),
+        index=0,
+    )
+    scenario.resolve_top()
+
+    assert size(scenario, thopter) == (4, 4)  # four cards in hand (CR 608.2h)
+    assert size(scenario, scenario.creature("Leonardo da Vinci")) == (3, 3)  # not a Thopter

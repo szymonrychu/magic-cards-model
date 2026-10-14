@@ -374,7 +374,7 @@ class _Ctx:
     known information): the permanent, its power and its toughness."""
 
 
-Step = Callable[["Game", Any, _Ctx], None]
+SequenceStep = Callable[["Game", Any, _Ctx], None]
 Amount = Callable[["Game", Any, _Ctx], int]
 
 
@@ -468,7 +468,7 @@ def _token_step(
     *,
     count: Amount | None = None,
     granted: str | None = None,
-) -> Step | None:
+) -> SequenceStep | None:
     """The step for one parsed token sentence (`_TOKEN_SENTENCE_RE`); `granted` is
     the quoted ability a following "The tokens have ..." sentence gives them
     (CR 111.3: part of the token's definition)."""
@@ -532,7 +532,9 @@ def _token_step(
     return step
 
 
-def _read_token(sentences: list[str], index: int, for_spell: bool) -> tuple[Step, int] | None:
+def _read_token(
+    sentences: list[str], index: int, for_spell: bool
+) -> tuple[SequenceStep, int] | None:
     """A token sentence the ordinary token reader does not take: one repeated for
     each opponent, one whose size the next sentence states, or one whose tokens
     "have" a quoted ability the next sentence gives them."""
@@ -558,7 +560,9 @@ def _read_token(sentences: list[str], index: int, for_spell: bool) -> tuple[Step
     return None if step is None else (step, 2 if (sized or granting) else 1)
 
 
-def _read_flips(sentences: list[str], index: int, for_spell: bool) -> tuple[Step, int] | None:
+def _read_flips(
+    sentences: list[str], index: int, for_spell: bool
+) -> tuple[SequenceStep, int] | None:
     """ "Flip N coins. For each flip you win, <instruction>." (CR 705.1): the
     instruction is applied once per flip won."""
     flips = _FLIPS_RE.fullmatch(sentences[index].strip())
@@ -570,7 +574,7 @@ def _read_flips(sentences: list[str], index: int, for_spell: bool) -> tuple[Step
         return None
     inner = each_win.group("inner")
     match = _TOKEN_SENTENCE_RE.fullmatch(inner)
-    inner_step: Step | None = None
+    inner_step: SequenceStep | None = None
     if match is not None and match.group("n").lower() in ("a", "an", "one"):
         # All the tokens one flip result asks for are created together (CR 701.7a).
         inner_step = _token_step(match, None, count=lambda _game, _so, ctx: ctx.wins)
@@ -596,7 +600,7 @@ def _read_flips(sentences: list[str], index: int, for_spell: bool) -> tuple[Step
 
 def _read_conditional_on_death(
     sentences: list[str], index: int, for_spell: bool
-) -> tuple[Step, int] | None:
+) -> tuple[SequenceStep, int] | None:
     """ "If that creature dies this way, <token sentence>" (CR 700.4: it dies when
     it is put into a graveyard from the battlefield - a creature that was
     regenerated or was indestructible did not die)."""
@@ -662,7 +666,7 @@ def _permanent_matcher(phrase: str) -> Callable[["Game", str, CardState], bool] 
 
 def _read_role_for_each(
     sentences: list[str], index: int, for_spell: bool
-) -> tuple[Step, int] | None:
+) -> tuple[SequenceStep, int] | None:
     """CR 111.10 Roles, one per permanent: the Role token is created attached to
     each (CR 303.4h: put onto the battlefield attached; CR 303.7a and CR 704.5z
     leave only the newest Role of one controller on a permanent). "For each of those
@@ -698,7 +702,7 @@ _CHOOSE_TARGETS_RE = re.compile(r"^choose (?P<phrase>.+?)\.?$", re.IGNORECASE)
 
 def _read_choose_targets(
     sentences: list[str], index: int, for_spell: bool
-) -> tuple[Step, int] | None:
+) -> tuple[SequenceStep, int] | None:
     """The opening sentence that only names the targets (CR 115.1a: announced with
     the object, CR 601.2c); the instructions after it act on them."""
     match = _CHOOSE_TARGETS_RE.fullmatch(sentences[index].strip())
@@ -721,7 +725,7 @@ _FOR_EACH_TARGET_COPY_RE = re.compile(
 
 def _read_for_each_target_copy(
     sentences: list[str], index: int, for_spell: bool
-) -> tuple[Step, int] | None:
+) -> tuple[SequenceStep, int] | None:
     """One token copy per chosen target. The ordinary copy-of-target reader already
     makes one copy of each target it resolves (CR 707.2's copiable values, CR 707.9b's
     exceptions), so the "that creature" anaphor is read as the target it names."""
@@ -751,7 +755,7 @@ _MAY_ATTACH_EACH_RE = re.compile(
 
 def _read_may_attach_each(
     sentences: list[str], index: int, for_spell: bool
-) -> tuple[Step, int] | None:
+) -> tuple[SequenceStep, int] | None:
     """CR 608.2d: each token in turn offers its controller an Equipment to attach
     (CR 701.3a); an Equipment moves from a token it was already on."""
     if _MAY_ATTACH_EACH_RE.fullmatch(sentences[index].strip()) is None:
@@ -784,7 +788,7 @@ _EXCEPT_TYPED_SIZE_RE = re.compile(
 
 def _read_discarded_exile(
     sentences: list[str], index: int, for_spell: bool
-) -> tuple[Step, int] | None:
+) -> tuple[SequenceStep, int] | None:
     """CR 608.2c: the card an earlier "discard" put into the graveyard, exiled from
     there if it has the named quality; `ctx.exiled` is what "if you do" means."""
     match = _IF_DISCARDED_EXILE_RE.fullmatch(sentences[index].strip())
@@ -805,7 +809,7 @@ def _read_discarded_exile(
 
 def _read_if_you_do_copy(
     sentences: list[str], index: int, for_spell: bool
-) -> tuple[Step, int] | None:
+) -> tuple[SequenceStep, int] | None:
     """ "If you do, create a token that's a copy of it, except it's a P/T `<Subtype>`
     artifact creature with `<keywords>` in addition to its other types": CR 707.9b's
     exceptions, folded into the copy's copiable values (`token_copy_of`)."""
@@ -877,7 +881,7 @@ def _sequence(text: str, for_spell: bool) -> Callable[["Game", Any], None] | Non
     if "token" not in lowered and "role" not in lowered:
         return None
     sentences = _sentences(text)
-    steps: list[Step] = []
+    steps: list[SequenceStep] = []
     used = False
     index = 0
     while index < len(sentences):

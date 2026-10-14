@@ -335,6 +335,7 @@
     "_turns_taken",
     "_type_decrease_candidate_matches",
     "_type_mv_threshold_cost_less_self_power",
+    "_unlocked_door_counts",
     "_untap_static_keeps_tapped",
     "_untap_step_choices",
     "_untap_step_impl",
