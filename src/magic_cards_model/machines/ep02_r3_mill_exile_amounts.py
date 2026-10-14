@@ -47,10 +47,17 @@ from .amount_sentences import (
     parse_mill_clause,
     recipient_amount,
 )
-from .decisions import source_id_of
+from .decisions import Decision, DecisionKind, source_id_of
 from .effects._chains import ABILITY_TEXT, FORWARD, MIXED_CLAUSE, SPELL_TEXT
 from .ep02_r1_referenced_stat import default_referent, parse_stat_phrase, stat_value
-from .layers import ContinuousEffect, Duration, Layer, Sublayer, only_this_incarnation
+from .layers import (
+    ContinuousEffect,
+    Duration,
+    Layer,
+    Sublayer,
+    grant_ability,
+    only_this_incarnation,
+)
 from .layers.model import SetPower
 
 if TYPE_CHECKING:
@@ -623,7 +630,9 @@ def _parse_discover_then_tokens_for_the_difference(
         if token not in PREDEFINED:
             return
         controller = controller_of(game, spell)
-        result = discover(game, controller, n, source_name=spell.name, source_id=source_id_of(spell))
+        result = discover(
+            game, controller, n, source_name=spell.name, source_id=source_id_of(spell)
+        )
         if result.hit is not None and result.hit.mana_value < n:
             create_predefined_tokens(
                 game, token, controller, n - int(result.hit.mana_value), tapped=True
@@ -759,5 +768,150 @@ def _parse_exile_until_nonland_to_hand_repeat_damage(effect_text: str) -> "Abili
                 break
         if taken:
             game.deal_damage(player, taken * per_card, source=ability.source_or_last_known(game))
+
+    return effect
+
+
+# --------------------------------------------------------------------------
+# Anzrag's Rampage
+# --------------------------------------------------------------------------
+
+
+def choose_one_card_optionally(
+    game: "Game", player: Player, candidates: list[CardState], what: str, obj: Any
+) -> CardState | None:
+    """CR 608.2d: "you may <do something with> a <card> exiled this way" - a
+    yes/no first (declined, or with nothing to pick, is no card), then which
+    card. Shared by every reader here that offers one card out of a pile."""
+    if not candidates:
+        return None
+    source = getattr(obj, "name", None) or obj.source_name
+    if not game.may(player, what, source=source, source_id=source_id_of(obj)):
+        return None
+    chosen = game.ask(
+        Decision(
+            kind=DecisionKind.CHOOSE_CARDS,
+            player=player.username,
+            prompt=f"choose a card to {what}",
+            source=source,
+            source_id=source_id_of(obj),
+            amount=1,
+            cards=tuple(state.id for state in candidates),
+            card_labels=tuple(state.name for state in candidates),
+        )
+    )
+    by_id = {state.id: state for state in candidates}
+    return by_id[chosen[0]] if chosen else None
+
+
+_DESTROY_ALL_NOT_YOURS_THEN_EXILE_RE = re.compile(
+    r"^destroy all (?P<group>[a-z]+) you don'?t control, then exile the top x cards of your "
+    r"library, where x is the number of (?P=group) that were put into graveyards from the "
+    r"battlefield this turn\. you may put an? (?P<kind>[a-z]+) card exiled this way onto the "
+    r"battlefield\. it gains (?P<keyword>[a-z]+)\. return it to your hand at the beginning of "
+    r"the next end step$",
+    re.IGNORECASE,
+)
+
+
+@SPELL_TEXT.rung("s14")
+def _parse_destroy_all_then_exile_top_x_put_one_onto_battlefield(
+    spell_text: str,
+) -> "Callable[[Game, CardState], None] | None":
+    """Destroy every permanent of a type the controller does not control
+    (CR 701.8a), exile the top X cards where X counts the permanents of that
+    type put into graveyards from the battlefield this turn (CR 400.6 -
+    `Game.graveyard_arrivals_this_turn`), optionally put one exiled card of a
+    type onto the battlefield with a keyword, and return it to hand at the
+    beginning of the next end step (CR 603.7a, CR 603.7c: only if it is still
+    the same object)."""
+    from ..models.card import Type
+    from .abilities import TriggerEvent
+    from .delayed import DelayedTrigger, return_subject_to_hand
+    from .effects.continuous import continuous_effects
+    from .layers.group_grants import parse_group
+    from .turn import Step
+
+    match = _DESTROY_ALL_NOT_YOURS_THEN_EXILE_RE.fullmatch(clean(spell_text))
+    if match is None:
+        return None
+    spec = parse_group(match.group("group"))
+    kind = parse_group(match.group("kind") + "s")
+    if (
+        spec is None
+        or kind is None
+        or len(spec["all_types"]) != 1
+        or len(kind["all_types"]) != 1
+        or any(spec[k] for k in ("any_types", "not_types", "any_subtypes", "any_colors"))
+    ):
+        return None
+    group_type: Type = spec["all_types"][0]
+    card_type: Type = kind["all_types"][0]
+    keyword = match.group("keyword")
+
+    def effect(game: "Game", spell: CardState) -> None:
+        from .keywords import exile_until
+
+        controller = controller_of(game, spell)
+        for permanent in list(game.battlefield):
+            if (
+                permanent.controller != controller
+                and group_type in game.characteristics_of(permanent).types
+                and permanent.zone is Zone.BATTLEFIELD
+            ):
+                game.destroy(permanent)
+        amount = sum(
+            1
+            for arrival in game.graveyard_arrivals_this_turn
+            if arrival.origin_zone is Zone.BATTLEFIELD
+            and arrival.permanent_types is not None
+            and group_type in arrival.permanent_types
+        )
+        player = game.player(controller)
+        exiled = (
+            exile_until(
+                game, player, lambda _state, taken: len(taken) >= amount, source_name=spell.name
+            )
+            if amount > 0
+            else []
+        )
+        candidates = [state for state in exiled if card_type in state.types]
+        chosen = choose_one_card_optionally(
+            game,
+            player,
+            candidates,
+            f"put a {card_type.value} card exiled this way onto the battlefield",
+            spell,
+        )
+        if chosen is None:
+            return
+        put = game.put_onto_battlefield(chosen, controller)
+        if put.zone is not Zone.BATTLEFIELD:
+            return
+        store = continuous_effects(game)
+        store.add(
+            ContinuousEffect(
+                description=f"{spell.name}: {put.name} gains {keyword}",
+                layer=Layer.ABILITY,
+                timestamp=store.tick(),
+                duration=Duration.INDEFINITE,
+                selector=only_this_incarnation(put, put.zone_change_stamp),
+                modification=grant_ability(keyword.title()),
+            )
+        )
+        game.create_delayed_trigger(
+            DelayedTrigger(
+                text="Return it to your hand at the beginning of the next end step.",
+                event=TriggerEvent.BEGINNING_OF_STEP,
+                step=Step.END_STEP,
+                controller=controller,
+                source_id=spell.id,
+                source_name=spell.name,
+                subject_id=put.id,
+                expected_zone=Zone.BATTLEFIELD,
+                expected_stamp=put.zone_change_stamp,
+                effect=return_subject_to_hand,
+            )
+        )
 
     return effect

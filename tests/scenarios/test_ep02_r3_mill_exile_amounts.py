@@ -18,6 +18,7 @@ wrote this file:
 import pytest
 
 from magic_cards_model.machines import Step
+from magic_cards_model.machines.combat import Keyword, has_keyword
 from magic_cards_model.models import Zone
 
 from .harness import Scenario
@@ -923,8 +924,12 @@ def test_rally_the_horde_repeats_while_the_last_exiled_card_is_not_a_land():
             hand=["Rally the Horde"],
             battlefield=["Mountain"] * 6,
             library=[
-                LIGHTNING_BOLT, FOREST, LIGHTNING_BOLT,  # last is a nonland: repeat
-                LIGHTNING_BOLT, LIGHTNING_BOLT, FOREST,  # last is a land: stop
+                LIGHTNING_BOLT,
+                FOREST,
+                LIGHTNING_BOLT,  # last is a nonland: repeat
+                LIGHTNING_BOLT,
+                LIGHTNING_BOLT,
+                FOREST,  # last is a land: stop
                 SWAMP,
             ],
         )
@@ -933,7 +938,9 @@ def test_rally_the_horde_repeats_while_the_last_exiled_card_is_not_a_land():
     )
     scenario.start_at(Step.PRECOMBAT_MAIN)
     scenario.cast_and_resolve("Rally the Horde", *scenario.untapped_sources(*["Mountain"] * 6))
-    warriors = [c for c in scenario.game.permanents_controlled_by("alice") if c.name == "Warrior Token"]
+    warriors = [
+        c for c in scenario.game.permanents_controlled_by("alice") if c.name == "Warrior Token"
+    ]
     assert len(warriors) == 4  # four nonland cards exiled
     assert len(scenario.player("alice").library) == 1
     assert len(scenario.game.exile) == 6
@@ -953,7 +960,9 @@ def test_rally_the_horde_stops_when_the_library_runs_out():
     )
     scenario.start_at(Step.PRECOMBAT_MAIN)
     scenario.cast_and_resolve("Rally the Horde", *scenario.untapped_sources(*["Mountain"] * 6))
-    warriors = [c for c in scenario.game.permanents_controlled_by("alice") if c.name == "Warrior Token"]
+    warriors = [
+        c for c in scenario.game.permanents_controlled_by("alice") if c.name == "Warrior Token"
+    ]
     assert len(warriors) == 2
 
 
@@ -994,3 +1003,96 @@ def test_demonlord_belzenlok_stops_after_a_cheap_card():
     _settle(scenario)
     assert _names(scenario.player("alice").hand) == ["Lightning Bolt"]
     assert scenario.player("alice").life == 19
+
+
+# --------------------------------------------------------------------------
+# Anzrag's Rampage: CR 701.8a (destroy), CR 400.6 (zone change), CR 406.2
+# (exile), CR 603.7a (delayed triggered ability).
+# --------------------------------------------------------------------------
+
+
+def _rampage(*, library, bob_battlefield=("Sol Ring", "Mind Stone"), alice_extra=()):
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Anzrag's Rampage"],
+            battlefield=["Mountain"] * 5 + list(alice_extra),
+            library=list(library),
+        )
+        .player("bob", battlefield=list(bob_battlefield))
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    return scenario
+
+
+def test_anzrags_rampage_destroys_only_artifacts_you_dont_control_and_exiles_that_many():
+    scenario = _rampage(
+        library=["Grizzly Bears", LIGHTNING_BOLT, FOREST], alice_extra=["Ornithopter"]
+    )
+    bears = scenario.find("Grizzly Bears", Zone.LIBRARY, "alice")
+    scenario.will_take_the_may(True, source="Anzrag's Rampage")
+    scenario.will_choose_cards(bears, source="Anzrag's Rampage")
+    scenario.cast_and_resolve("Anzrag's Rampage", *scenario.untapped_sources(*["Mountain"] * 5))
+    names = scenario.battlefield_names()
+    assert "Sol Ring" not in names and "Mind Stone" not in names
+    assert "Ornithopter" in names
+    assert "Grizzly Bears" in names
+    assert _names(scenario.game.exile) == [
+        LIGHTNING_BOLT
+    ]  # two exiled, one put onto the battlefield
+    assert len(scenario.player("alice").library) == 1
+    assert has_keyword(bears, Keyword.HASTE, scenario.game)
+
+
+def test_anzrags_rampage_returns_the_creature_to_hand_at_the_next_end_step():
+    scenario = _rampage(library=["Grizzly Bears", LIGHTNING_BOLT, FOREST])
+    bears = scenario.find("Grizzly Bears", Zone.LIBRARY, "alice")
+    scenario.will_take_the_may(True, source="Anzrag's Rampage")
+    scenario.will_choose_cards(bears, source="Anzrag's Rampage")
+    scenario.cast_and_resolve("Anzrag's Rampage", *scenario.untapped_sources(*["Mountain"] * 5))
+    assert "Grizzly Bears" in scenario.battlefield_names()
+    while scenario.step is not Step.END_STEP:
+        scenario.advance()
+    _settle(scenario)
+    assert "Grizzly Bears" not in scenario.battlefield_names()
+    assert "Grizzly Bears" in _names(scenario.player("alice").hand)
+
+
+def test_anzrags_rampage_counts_artifacts_that_died_earlier_this_turn():
+    """CR 400.6: the count is every artifact put into a graveyard from the
+    battlefield this turn, whoever's and however destroyed."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Anzrag's Rampage", "Smash to Smithereens"],
+            battlefield=["Mountain"] * 7 + ["Ornithopter"],
+            library=[LIGHTNING_BOLT, LIGHTNING_BOLT, LIGHTNING_BOLT, FOREST],
+        )
+        .player("bob", battlefield=["Sol Ring"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scenario.cast_and_resolve(
+        "Smash to Smithereens",
+        *scenario.untapped_sources("Mountain", "Mountain"),
+        targets=[scenario.find("Ornithopter", Zone.BATTLEFIELD, "alice")],
+    )
+    scenario.cast_and_resolve("Anzrag's Rampage", *scenario.untapped_sources(*["Mountain"] * 5))
+    assert len(scenario.game.exile) == 2  # Ornithopter earlier + Sol Ring now
+
+
+def test_anzrags_rampage_declined_leaves_the_exiled_cards_in_exile():
+    scenario = _rampage(library=["Grizzly Bears", LIGHTNING_BOLT, FOREST])
+    scenario.will_take_the_may(False, source="Anzrag's Rampage")
+    scenario.cast_and_resolve("Anzrag's Rampage", *scenario.untapped_sources(*["Mountain"] * 5))
+    assert "Grizzly Bears" not in scenario.battlefield_names()
+    assert len(scenario.game.exile) == 2
+
+
+def test_anzrags_rampage_with_no_creature_among_the_exiled_cards_asks_nothing():
+    scenario = _rampage(library=[LIGHTNING_BOLT, LIGHTNING_BOLT, FOREST])
+    scenario.cast_and_resolve("Anzrag's Rampage", *scenario.untapped_sources(*["Mountain"] * 5))
+    assert len(scenario.game.exile) == 2
