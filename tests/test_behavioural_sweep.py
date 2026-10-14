@@ -3227,8 +3227,20 @@ def _leaving(case: Case, ability: TriggeredAbility, kind: str) -> Iterator[Attem
                             if owner == ALICE
                             else {"bob_battlefield": (probe,)}
                         )
+                        enchanted_victim = re.search(r"\ban enchanted creature\b", lowered)
+                        if enchanted_victim:
+                            # Hateful Eidolon's "an enchanted creature dies": one
+                            # of the source controller's Auras is on the victim
+                            # as it dies (CR 603.10a looks back at it).
+                            extra["battlefield"] = (*extra.get("battlefield", ()), "Pacifism")
                         scenario, source_id = _home(case, ability, **extra)
                         victim = _staged(scenario, probe, owner)
+                        if enchanted_victim:
+                            next(
+                                state
+                                for state in scenario.game.battlefield
+                                if state.name == "Pacifism" and state.controller == ALICE
+                            ).attach_to(victim)
                         if "dealt damage by" in lowered and victim.id == source_id:
                             # A probe that shares the source's name (Vein
                             # Drinker probing itself): the other copy is the
