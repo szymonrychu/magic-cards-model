@@ -398,8 +398,7 @@ def number_of_cards_counts(phrase: str) -> NumberOf | None:
 
 _PLAYERS_EACH_DRAW_RE = re.compile(
     rf"^(?P<players>any number of|up to {COUNT}|{COUNT}) target players"
-    r"(?P<other> other than that player)? each draws? "
-    rf"(?:(?P<n>{COUNT}) cards?|cards equal to (?P<expr>.+))$",
+    r"(?P<other> other than that player)? each draws? cards equal to (?P<expr>.+)$",
     re.IGNORECASE,
 )
 
@@ -417,24 +416,17 @@ def _parse_target_players_each_draw_equal_clause(clause: str, *, for_spell: bool
     if " each draw" not in text.lower() or "target players" not in text.lower():
         return None
     match = _PLAYERS_EACH_DRAW_RE.fullmatch(text)
-    if match is None or (match.group("n") is None) == (match.group("expr") is None):
+    if match is None:
         return None
     from .effects._common import _targets_understood
+    from .effects.amounts import count_expression
 
     phrase = f"{match.group('players')} target players{match.group('other') or ''}"
     if not _targets_understood(phrase, allow_player_targets=True, count_agnostic=True):
         return None
-    if match.group("n") is not None:
-        fixed = parse_count(match.group("n"))
-        if fixed is None:
-            return None
-        amount_of = lambda _game, _controller: fixed  # noqa: E731
-    else:
-        from .effects.amounts import count_expression
-
-        amount_of = count_expression(match.group("expr"))
-        if amount_of is None:
-            return None
+    amount_of = count_expression(match.group("expr"))
+    if amount_of is None:
+        return None
 
     def effect(game: "Game", stack_object: Any) -> None:
         amount = amount_of(game, game.controller_of(stack_object).username)
