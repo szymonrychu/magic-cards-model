@@ -300,6 +300,7 @@ from ...machines.combat import keywords_as_it_exists as keywords_as_it_exists
 from ...machines.targeting import kicked_instead_target_text as kicked_instead_target_text
 from ...machines.decisions import legal_options as legal_options
 from ...machines.casting import life_or_mana_additional_costs as life_or_mana_additional_costs
+from ...machines.effects import link_cards_exiled_as_cost as link_cards_exiled_as_cost
 from ...machines.effects import link_cards_exiled_during as link_cards_exiled_during
 from ...machines.casting import linked_exile_play_source as linked_exile_play_source
 from ...machines.cost import looks_like_unparsed_cost_modifier as looks_like_unparsed_cost_modifier

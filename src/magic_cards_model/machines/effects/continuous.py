@@ -5142,6 +5142,10 @@ def transform_permanent(game: "Game", permanent: CardState, *, day_night: bool =
         if _AS_TRANSFORMS_CHOOSE_PLAYER_RE.fullmatch(instruction.strip()):
             _choose_player_as_it_transforms(game, permanent, instruction)
             continue
+        from ..ep02_r3_counter_amounts import copy_of_exiled_card_as_it_transforms
+
+        if copy_of_exiled_card_as_it_transforms(game, permanent, instruction):
+            continue
         run = _player_instruction(instruction)
         if run is None:
             game.unmodeled_trigger_effect_notices.append(
@@ -5517,8 +5521,11 @@ def reads_as_transforms_line(text: str) -> bool:
     if match is None:
         return False
     rest = match.group("rest")
+    from ..ep02_r3_counter_amounts import reads_copy_of_exiled_card_as_it_transforms
+
     return any(
-        _AS_TRANSFORMS_CHOOSE_PLAYER_RE.fullmatch(rest[index + 2 :].strip()) is not None
+        reads_copy_of_exiled_card_as_it_transforms(rest[index + 2 :].strip())
+        or _AS_TRANSFORMS_CHOOSE_PLAYER_RE.fullmatch(rest[index + 2 :].strip()) is not None
         or _player_instruction(rest[index + 2 :]) is not None
         for index in range(len(rest))
         if rest.startswith(", ", index)

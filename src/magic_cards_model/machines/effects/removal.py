@@ -348,6 +348,25 @@ def linked_exile_annotation(
     )
 
 
+def link_cards_exiled_as_cost(game: "Game", ability: AbilityOnStack) -> None:
+    """CR 607.2a for an activated ability whose *cost* exiled cards (Ludevic's
+    "Exile X creature cards from your graveyard: Transform Ludevic."): they are
+    "exiled with" the source for its other linked ability, and have to be
+    linked before the ability resolves, since its effect may read them."""
+    if ability.source_id is None or not ability.cost_exiled_card_ids:
+        return
+    if not _source_reads_its_exiled_cards(game, ability):
+        return
+    for card_id in ability.cost_exiled_card_ids:
+        card = game.find_by_id(card_id)
+        if (
+            isinstance(card, CardState)
+            and card.zone is Zone.EXILE
+            and card.exile_annotation is None
+        ):
+            card.exile_annotation = linked_exile_annotation(game, ability, card)
+
+
 #: An instruction to exile (CR 607.2a's "instructs a player to exile one or
 #: more cards") somewhere in an ability's own text.
 _EXILE_INSTRUCTION_RE = re.compile(r"\bexiles?\b", re.IGNORECASE)
@@ -469,7 +488,10 @@ def _source_reads_its_exiled_cards(game: "Game", ability: AbilityOnStack) -> boo
     if not isinstance(source, CardState):
         return False
     own = ability.ability.text
-    for line in (source.card.front_oracle_text or "").splitlines():
+    back = source.card.back_face
+    # A transforming card's other face may hold the reader (Ludevic's Olag).
+    text = f"{source.card.front_oracle_text or ''}\n{(back.oracle_text if back else '') or ''}"
+    for line in text.splitlines():
         if own and (own in line or line in own):
             continue
         if _LINKED_EXILE_READER_RE.search(line):

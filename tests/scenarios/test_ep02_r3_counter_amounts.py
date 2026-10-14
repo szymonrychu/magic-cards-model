@@ -1751,3 +1751,71 @@ class _FakeAbility:
     def __init__(self, source):
         self.source_id = source.id
         self.source_stamp = source.zone_change_stamp
+
+
+# -- Ludevic, Necrogenius // Olag, Ludevic's Hubris: transforming copies a creature
+# card exiled with it (name Olag, 4/4, legendary blue and black Zombie in addition)
+# and gets a +1/+1 counter per creature card exiled with it
+
+
+def _ludevic_transforms(copy_of):
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=[
+                "Ludevic, Necrogenius // Olag, Ludevic's Hubris",
+                *["Island"] * 3,
+                *["Swamp"] * 3,
+            ],
+            graveyard=["Grizzly Bears", "Savannah Lions"],
+            library=["Forest"] * 8,
+        )
+        .player("bob", library=["Forest"] * 8)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    ludevic = scenario.find(
+        "Ludevic, Necrogenius // Olag, Ludevic's Hubris", Zone.BATTLEFIELD, "alice"
+    )
+    exiled = [
+        scenario.find("Grizzly Bears", Zone.GRAVEYARD, "alice"),
+        scenario.find("Savannah Lions", Zone.GRAVEYARD, "alice"),
+    ]
+    scenario.will_choose_cards(next(c for c in exiled if c.name == copy_of))
+    scenario.activate(
+        ludevic,
+        *scenario.untapped_sources(*["Island"] * 3, *["Swamp"] * 3),
+        index=0,
+        x_value=2,
+        exiling=exiled,
+    )
+    _settle(scenario)
+    return scenario, ludevic
+
+
+def test_olag_is_a_four_four_copy_with_a_counter_per_exiled_creature_card():
+    scenario, ludevic = _ludevic_transforms("Grizzly Bears")
+    chars = scenario.game.characteristics_of(ludevic)
+    assert chars.name == "Olag, Ludevic's Hubris"
+    assert ludevic.counter_count(Counter.PLUS_ONE) == 2
+    assert chars.power_toughness == (6, 6)
+
+
+def test_olag_is_legendary_blue_and_black_zombie_in_addition_to_the_copied_colors():
+    from magic_cards_model.models.card import Color, Supertype
+
+    scenario, ludevic = _ludevic_transforms("Grizzly Bears")
+    chars = scenario.game.characteristics_of(ludevic)
+    assert Supertype.LEGENDARY in chars.supertypes
+    assert "Zombie" in chars.subtypes
+    assert {Color.BLUE, Color.BLACK, Color.GREEN} <= set(chars.colors)
+
+
+def test_olag_copies_the_exiled_card_the_controller_chose():
+    from magic_cards_model.models.card import Color
+
+    scenario, ludevic = _ludevic_transforms("Savannah Lions")
+    chars = scenario.game.characteristics_of(ludevic)
+    assert Color.WHITE in chars.colors
+    assert Color.GREEN not in chars.colors

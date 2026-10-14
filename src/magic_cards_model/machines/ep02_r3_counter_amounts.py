@@ -9,7 +9,7 @@ import re
 from typing import TYPE_CHECKING
 
 from ..models.card import Type
-from ..models.card_state import Counter
+from ..models.card_state import CardState, Counter
 from ..models.player import Player
 from ..models.zone import Zone
 from ..numbers import COUNT, parse_count
@@ -984,3 +984,96 @@ def _parse_self_phases_out(effect_text: str) -> AbilityEffect | None:
             game.phase_out(source)
 
     return effect
+
+
+# -- "As this creature transforms into Olag, it becomes a copy of a creature card
+# exiled with it, except its name is ..., it's 4/4, and it's a legendary blue and
+# black Zombie in addition to its other colors and types. Put a number of +1/+1
+# counters on Olag equal to the number of creature cards exiled with it."
+
+_COLOR_WORDS = {"white": "W", "blue": "U", "black": "B", "red": "R", "green": "G"}
+_COPY_OF_EXILED_AS_TRANSFORMS_RE = re.compile(
+    r"^it becomes a copy of an? (?P<type>[a-z]+) card exiled with it, except its name is "
+    r"(?P<name>.+?), it's (?P<power>\d+)/(?P<toughness>\d+), and it's a legendary "
+    r"(?P<first>[a-z]+) and (?P<second>[a-z]+) (?P<subtype>[A-Za-z]+) in addition to its "
+    r"other colors and types\.\s+put a number of \+1/\+1 counters on [^.]+? equal to the "
+    r"number of (?P=type) cards exiled with it\.?$",
+    re.IGNORECASE,
+)
+
+
+def _read_copy_of_exiled(instruction: str) -> "re.Match[str] | None":
+    match = _COPY_OF_EXILED_AS_TRANSFORMS_RE.fullmatch(" ".join(instruction.strip().split()))
+    if match is None or {match.group("first").lower(), match.group("second").lower()} - set(
+        _COLOR_WORDS
+    ):
+        return None
+    if next((t for t in Type if t.value.lower() == match.group("type").lower()), None) is None:
+        return None
+    return match
+
+
+def reads_copy_of_exiled_card_as_it_transforms(instruction: str) -> bool:
+    """Whether `copy_of_exiled_card_as_it_transforms` carries out `instruction`."""
+    return _read_copy_of_exiled(instruction) is not None
+
+
+def copy_of_exiled_card_as_it_transforms(
+    game: "Game", permanent: "CardState", instruction: str
+) -> bool:
+    """Ludevic's Olag face (CR 712.20): as the permanent transforms it becomes a
+    copy of a card exiled with it (CR 607.2a, the controller choosing among
+    several), with CR 707.9b's exceptions written into the one copy effect, then
+    gets a +1/+1 counter for each such card exiled with it, the copied one
+    included. True when `instruction` is this shape (whether or not a card was
+    there to copy)."""
+    match = _read_copy_of_exiled(instruction)
+    if match is None:
+        return False
+    from ..models.card import Color
+    from .copy_effects import CopyExceptions, _become_a_copy, _copiable_values_of
+    from .layers import Duration
+
+    wanted = next(t for t in Type if t.value.lower() == match.group("type").lower())
+    exiled = [
+        state
+        for state in game.cards_exiled_with(permanent.id, permanent.zone_change_stamp)
+        if wanted in state.card.types
+    ]
+    if not exiled:
+        return True
+    controller = game.controller_of(permanent).username
+    (chosen_id,) = game.ask(
+        Decision(
+            kind=DecisionKind.CHOOSE_CARDS,
+            player=controller,
+            prompt=f"choose a {wanted.value.lower()} card exiled with {permanent.name} to copy",
+            source=permanent.name,
+            source_id=source_id_of(permanent),
+            amount=1,
+            cards=tuple(state.id for state in exiled),
+        )
+    )
+    copied = next(state for state in exiled if state.id == chosen_id)
+    _become_a_copy(
+        game,
+        subject=permanent,
+        copied=_copiable_values_of(game, copied),
+        exceptions=CopyExceptions(
+            name=match.group("name"),
+            power=int(match.group("power")),
+            toughness=int(match.group("toughness")),
+            add_legendary=True,
+            subtypes=(match.group("subtype").title(),),
+            add_colors=tuple(
+                Color(_COLOR_WORDS[word.lower()])
+                for word in (match.group("first"), match.group("second"))
+            ),
+        ),
+        source_name=permanent.name,
+        own_name=permanent.name,
+        this_ability=None,
+        duration=Duration.INDEFINITE,
+    )
+    game.add_counters(permanent, Counter.PLUS_ONE, len(exiled))
+    return True

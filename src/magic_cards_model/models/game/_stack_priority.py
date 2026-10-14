@@ -61,6 +61,7 @@ from ...machines.effects import (
     apply_gift_if_promised,
     effect_for,
     effect_text_with_named_token_reminder,
+    link_cards_exiled_as_cost,
     link_cards_exiled_during,
     modal_trigger_profile,
     trigger_effect_for,
@@ -1803,6 +1804,7 @@ class StackPriorityMixin:
                     effect = self._effect_of(ability)
                     if effect is not None:
                         exiled_before = {card.id for card in self.exile}
+                        link_cards_exiled_as_cost(self, ability)
                         effect(self, ability)
                         # CR 607.2a: what this ability exiled is "exiled with"
                         # its source for the source's other linked ability.
