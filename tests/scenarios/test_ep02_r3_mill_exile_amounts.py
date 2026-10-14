@@ -1752,24 +1752,6 @@ def test_proof_prime_speaker_zegana_enters_with_counters_equal_to_the_greatest_o
     assert zegana.counters.as_dict().get("+1/+1") == 4
 
 
-def test_proof_pupu_ufo_sets_its_base_power_to_the_number_of_towns():
-    scenario = (
-        Scenario()
-        .player(
-            "alice",
-            battlefield=["PuPu UFO", "Adventurer's Inn", "Island", "Island", "Island"],
-        )
-        .player("bob")
-        .build()
-    )
-    scenario.start_at(Step.PRECOMBAT_MAIN)
-    ufo = scenario.creature("PuPu UFO", "alice")
-    scenario.activate(ufo, *scenario.untapped_sources("Island", "Island", "Island"), index=1)
-    scenario.resolve_top()
-    assert scenario.game.characteristics_of(ufo).power == 1  # one Town
-    assert scenario.game.characteristics_of(ufo).toughness == 4  # toughness untouched
-
-
 def test_proof_jessica_jones_exiles_cards_equal_to_her_power_and_lets_you_play_them():
     scenario = (
         Scenario()

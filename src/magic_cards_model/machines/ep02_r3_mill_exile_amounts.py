@@ -202,9 +202,8 @@ def _parse_destroy_if_mana_value_equals_unspent_mana(
 # --------------------------------------------------------------------------
 
 _BASE_POWER_BECOME_RE = re.compile(
-    r"^(?P<lead>until end of turn, )?(?P<may>you may have )?"
-    r"(?P<subject>this creature|this permanent)['\u2019]s base power "
-    r"becomes? (?:equal to )?(?P<amount>.+?)(?P<trail> until end of turn)?$",
+    r"^(?P<may>you may have )?(?P<subject>this creature|this permanent)['\u2019]s base power "
+    r"become (?:equal to )?(?P<amount>.+?) until end of turn$",
     re.IGNORECASE,
 )
 _THAT_CREATURES_POWER_RE = re.compile(r"^that creature['\u2019]s power$", re.IGNORECASE)
@@ -217,8 +216,8 @@ def _parse_base_power_become_clause(effect_text: str) -> "AbilityEffect | None":
     once as the ability resolves (CR 608.2h) - or to an amount expression such
     as "1 plus the greatest power among other creatures you control"."""
     match = _BASE_POWER_BECOME_RE.fullmatch(clean(effect_text))
-    if match is None or (match.group("lead") is None) == (match.group("trail") is None):
-        return None  # exactly one printed duration
+    if match is None:
+        return None
     amount_text = match.group("amount")
     optional = match.group("may") is not None
     from .effects.amounts import amount_expression
