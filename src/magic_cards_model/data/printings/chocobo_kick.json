@@ -1,0 +1,137 @@
+{
+  "object": "card",
+  "id": "ff8c8be0-8223-499c-8704-cb68e0a42ce2",
+  "oracle_id": "aa00c18b-8719-4095-940a-8e35a57b46c2",
+  "multiverse_ids": [],
+  "resource_id": "F493A666D2C7F86CD21071867C17BF80DA5DD894A2F539A5D3AC5FA1E6FC56D6",
+  "mtgo_id": 141295,
+  "arena_id": 96044,
+  "tcgplayer_id": 634139,
+  "cardmarket_id": 827764,
+  "name": "Chocobo Kick",
+  "lang": "en",
+  "released_at": "2025-06-13",
+  "uri": "https://api.scryfall.com/cards/ff8c8be0-8223-499c-8704-cb68e0a42ce2",
+  "scryfall_uri": "https://scryfall.com/card/fin/178/chocobo-kick?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T01:36:30Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/f/f/ff8c8be0-8223-499c-8704-cb68e0a42ce2.jpg?1783906590",
+    "normal": "https://cards.scryfall.io/normal/front/f/f/ff8c8be0-8223-499c-8704-cb68e0a42ce2.jpg?1783906590",
+    "large": "https://cards.scryfall.io/large/front/f/f/ff8c8be0-8223-499c-8704-cb68e0a42ce2.jpg?1783906590",
+    "png": "https://cards.scryfall.io/png/front/f/f/ff8c8be0-8223-499c-8704-cb68e0a42ce2.png?1783906590",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/f/f/ff8c8be0-8223-499c-8704-cb68e0a42ce2.jpg?1783906590",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/f/f/ff8c8be0-8223-499c-8704-cb68e0a42ce2.jpg?1783906590",
+    "thumb": "https://cards.scryfall.io/thumb/front/f/f/ff8c8be0-8223-499c-8704-cb68e0a42ce2.webp?1783906590",
+    "grid": "https://cards.scryfall.io/grid/front/f/f/ff8c8be0-8223-499c-8704-cb68e0a42ce2.webp?1783906590",
+    "display": "https://cards.scryfall.io/display/front/f/f/ff8c8be0-8223-499c-8704-cb68e0a42ce2.webp?1783906590",
+    "art": "https://cards.scryfall.io/art/front/f/f/ff8c8be0-8223-499c-8704-cb68e0a42ce2.webp?1783906590",
+    "crop": "https://cards.scryfall.io/crop/front/f/f/ff8c8be0-8223-499c-8704-cb68e0a42ce2.webp?1783906590"
+  },
+  "mana_cost": "{1}{G}",
+  "cmc": 2.0,
+  "type_line": "Sorcery",
+  "oracle_text": "Kicker\u2014Return a land you control to its owner's hand. (You may return a land you control to its owner's hand in addition to any other costs as you cast this spell.)\nTarget creature you control deals damage equal to its power to target creature an opponent controls. If this spell was kicked, the creature you control deals twice that much damage instead.",
+  "colors": [
+    "G"
+  ],
+  "color_identity": [
+    "G"
+  ],
+  "keywords": [
+    "Kicker"
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "arena",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "d7beb4b7-e1ff-4d35-ab07-5700f17ea1ea",
+  "set": "fin",
+  "set_name": "Final Fantasy",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/d7beb4b7-e1ff-4d35-ab07-5700f17ea1ea",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Afin&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/fin?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/ff8c8be0-8223-499c-8704-cb68e0a42ce2/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Aaa00c18b-8719-4095-940a-8e35a57b46c2&unique=prints",
+  "collector_number": "178",
+  "digital": false,
+  "rarity": "common",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Ben Wootten",
+  "artist_ids": [
+    "31cdca96-ecde-4245-bfb6-653929d57d9c"
+  ],
+  "illustration_id": "df8201ab-f1cf-4053-b42d-c29bd10afac2",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "triangle",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "promo_types": [
+    "ffiv",
+    "universesbeyond"
+  ],
+  "edhrec_rank": 6264,
+  "penny_rank": 8257,
+  "prices": {
+    "usd": "0.22",
+    "usd_foil": "0.29",
+    "usd_etched": null,
+    "eur": "0.04",
+    "eur_foil": "0.15",
+    "tix": "0.03"
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DChocobo%2BKick",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DChocobo%2BKick",
+    "edhrec": "https://edhrec.com/route/?cc=Chocobo+Kick"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F634139%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=827764&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/141295?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

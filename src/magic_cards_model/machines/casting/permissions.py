@@ -1125,7 +1125,12 @@ _STATIC_ZONE_CAST_LEADS = (
 _LOOK_AT_TOP_PREFIX_RE = re.compile(
     r"^you may look at the top card of your library any time, and (?=you may )", re.IGNORECASE
 )
-_PLAY_THE_TOP_CARD_RE = re.compile(r"\bplay the top card of your library", re.IGNORECASE)
+#: "play the top card of your library" (The Lunar Whale) and "play cards from the top of your
+#: library" (Gwenom, Remorseless) both open what "play" means: lands and spells (CR 601.3,
+#: CR 305.1).
+_PLAY_THE_TOP_CARD_RE = re.compile(
+    r"\bplay (?:the top card of|cards from the top of) your library", re.IGNORECASE
+)
 
 #: "If you cast a[ `<type>`] spell this way, that `<noun>` enters with a[n
 #: additional] `<kind>` counter on it." - the rider every printing above that

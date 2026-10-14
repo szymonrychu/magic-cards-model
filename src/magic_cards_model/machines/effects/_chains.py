@@ -238,6 +238,7 @@ FAMILIES = (
     "ep02_r3_mill_exile_amounts",
     "ep02_r3_library_amounts",
     "ep02_r3_board_amounts",
+    "ep02_r3_life_total_amounts",
 )
 
 ABILITY_TEXT = Chain(

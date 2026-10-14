@@ -874,6 +874,19 @@ def _shuffle_into_library_instead(game: "Game", source: CardState, event: Replac
     event.destination = Zone.LIBRARY
 
 
+def _put_on_bottom_instead(game: "Game", source: CardState, event: ReplaceableEvent) -> None:
+    """ "Put <name> on the bottom of its owner's library" - the card goes to the bottom of
+    its owner's library instead of a graveyard (CR 401.2: the owner's library; the
+    printed instruction names the bottom, so it is not shuffled)."""
+    event.destination = Zone.LIBRARY
+    event.library_position = "bottom"
+
+
+#: "Put <card's own name> on the bottom of its owner's library." (Sanguine Sacrament).
+_SELF_PUT_ON_BOTTOM_RE = re.compile(
+    r"put (?P<name>.+?) on the bottom of its owner'?s library", re.IGNORECASE
+)
+
 #: "Shuffle <card's own name> into its owner's library." (Green Sun's Zenith).
 #: Deliberately not one of `_parse_oracle_text`'s generic "instead" shapes:
 #: this sentence never says "instead", it is CR 304.2/307.2's own final
@@ -1397,6 +1410,19 @@ def _stack_replacements(game: "Game", event: ReplaceableEvent) -> list[Applicabl
                         "resolves (CR 304.2/307.2, 701.24c)"
                     ),
                     apply=_shuffle_into_library_instead,
+                )
+            )
+        bottom = _SELF_PUT_ON_BOTTOM_RE.search(card.oracle_text)
+        if bottom is not None and _refers_to_self(bottom.group("name"), _names_of(card.card)):
+            found.append(
+                ApplicableEffect(
+                    key=f"{card.id}:self_put_on_bottom",
+                    source=card,
+                    label=(
+                        "put on the bottom of its owner's library instead, as it "
+                        "resolves (CR 304.2/307.2, 401.2)"
+                    ),
+                    apply=_put_on_bottom_instead,
                 )
             )
     return found

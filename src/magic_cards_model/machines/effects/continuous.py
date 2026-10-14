@@ -6353,7 +6353,7 @@ def _parse_target_get_energy_pay_damage(text: str) -> Effect | None:
 #: Champion's and Combat Celebrant's exert consequence) - "other" leaves the
 #: ability's own source tapped.
 _UNTAP_ALL_YOU_CONTROL_RE = re.compile(
-    r"^untap all (?P<other>other )?(?P<qualifier>.+?) you control\.?$", re.IGNORECASE
+    r"^untap (?:all|each) (?P<other>other )?(?P<qualifier>.+?) you control\.?$", re.IGNORECASE
 )
 
 
@@ -10834,6 +10834,10 @@ def _parse_leading_duration_anaphor_whole_text(
     return effect  # type: ignore[return-value]
 
 
+#: A head that takes control of a target: the object the pronouns of the sentences after it
+#: name is that target, though nothing entered the battlefield (Angrath, the Flame-Chained -3).
+_GAIN_CONTROL_OF_TARGET_HEAD_RE = re.compile(r"^gain control of target ", re.IGNORECASE)
+
 #: "If it would leave the battlefield, exile it instead of putting it
 #: anywhere else." as a sentence of its own after the clause that put the
 #: object onto the battlefield - Whip of Erebos, Kheru Lich Lord, and CR
@@ -10940,6 +10944,7 @@ def _parse_put_then_grant_then_delayed_whole_text(
     if not _is_readable_head(head):
         return None
     assert head is not None
+    takes_control_of_target = _GAIN_CONTROL_OF_TARGET_HEAD_RE.match(head_text) is not None
     if delayed is not None and grant_keywords is not None and grant_plural != delayed.plural:
         return None
 
@@ -10955,6 +10960,14 @@ def _parse_put_then_grant_then_delayed_whole_text(
         before = {(state.id, state.zone_change_stamp) for state in game.battlefield}
         head(game, stack_object)
         entered = _entered_since(game, before)
+        if not entered and takes_control_of_target:
+            # "Gain control of target creature until end of turn. Untap it. It gains haste.
+            # Sacrifice it ...": nothing entered, the pronoun names the target (CR 608.2c).
+            entered = [
+                target
+                for target in game.resolve_targets(stack_object)
+                if isinstance(target, CardState) and target.zone is Zone.BATTLEFIELD
+            ][:1]
         if not entered:
             return  # CR 101.3: nothing was produced for the pronoun to name.
         if grant_keywords is not None and (grant_plural or len(entered) == 1):
@@ -12315,7 +12328,7 @@ _CANT_ATTACK_BLOCK_ACTIVATE_RE = re.compile(
     r"^(?:if (?P<gate>(?:\{[wubrgc]\})+) was spent to cast this spell, )?"
     r"(?:(?P<lead>until your next turn|until end of turn), )?"
     r"(?P<subject>those (?:permanents|creatures)|that (?:permanent|creature)|it|they"
-    r"|target [a-z' ]+?)"
+    r"|(?:up to \w+ )?target [a-z' ]+?)"
     r" can['’]?t attack or block"
     r"(?:,? and (?:its|their) activated abilities can['’]?t be activated)?"
     r"(?: (?P<trail>until your next turn|until end of turn))?\.?$",
@@ -12337,7 +12350,7 @@ def _cant_attack_block_activate_clause(clause: str, *, for_spell: bool) -> Targe
     if gate is not None and not for_spell:
         return None
     subject = match.group("subject")
-    own_phrase = subject if subject.lower().startswith("target ") else None
+    own_phrase = subject if "target " in subject.lower() else None
     if own_phrase is not None and not _targets_understood(own_phrase, count_agnostic=True):
         return None
     locks_activation = "activated abilities" in clause.lower()

@@ -4348,6 +4348,13 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
         return seg_hit
     player_clause = _parse_optional_player_clause(clause)
     if player_clause is None:
+        # The life-total sentences no reader above reads (EP-02-R3-T5): the amount-sentence
+        # reader `amount_sentences.parse_life_clause` run as a clause.
+        from ..ep02_r3_life_total_amounts import life_amount_clause
+
+        life_amount = life_amount_clause(clause, for_spell=for_spell)
+        if life_amount is not None:
+            return life_amount
         # Last resort: a "you may" over a board instruction rather than over
         # the plain-player vocabulary `_parse_optional_player_clause` covers.
         mixed_or_hand = _parse_optional_mixed_clause(

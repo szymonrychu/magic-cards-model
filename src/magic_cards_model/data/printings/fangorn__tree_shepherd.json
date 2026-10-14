@@ -121,14 +121,14 @@
   "promo_types": [
     "universesbeyond"
   ],
-  "edhrec_rank": 7289,
-  "penny_rank": 14048,
+  "edhrec_rank": 7292,
+  "penny_rank": 14056,
   "prices": {
-    "usd": "0.40",
-    "usd_foil": "0.35",
+    "usd": "0.37",
+    "usd_foil": "0.37",
     "usd_etched": null,
-    "eur": "0.30",
-    "eur_foil": "0.63",
+    "eur": "0.29",
+    "eur_foil": "0.59",
     "tix": "0.02"
   },
   "related_uris": {

@@ -7,10 +7,11 @@ from uuid import UUID
 
 from ...data.subtypes import subtype_vocabulary
 from ...models.card import Card, Color, Supertype, Type
-from ...models.card_state import CardState, ChoiceKind, Counter
+from ...models.card_state import CardState, ChoiceKind, Counter, ExileMarker
 from ...models.zone import Zone
 from ...numbers import COUNT, parse_count, parse_ordinal
 from ..abilities import (
+    HAUNTED_CREATURE_RE,
     TriggeredAbility,
     TriggerEvent,
     self_normalized_effect_text,
@@ -2055,6 +2056,18 @@ def _condition_matches(
         return True
 
     if ability.event is TriggerEvent.DIES:
+        if HAUNTED_CREATURE_RE.search(lowered):
+            # CR 702.55b-c: "the creature this card haunts" is the creature the haunt
+            # ability targeted, and the card triggers from exile (CR 603.10a: the
+            # creature has already left the battlefield when this is asked).
+            annotation = source.exile_annotation
+            return (
+                source.zone is Zone.EXILE
+                and annotation is not None
+                and annotation.marker is ExileMarker.HAUNTING
+                and event.subject_id is not None
+                and event.subject_id == annotation.linked_permanent_id
+            )
         if "enchanted" in lowered:
             # Ferocity of the Hunt's own "When enchanted creature dies, ..."
             # (CR 303.4b/303.4m's "enchanted [object]"), the DIES twin of
@@ -2689,6 +2702,10 @@ def _condition_matches(
             if not ops[comparator](event.amount, threshold):
                 return False
         return True
+
+    if ability.event is TriggerEvent.RESOLVED_INTO_GRAVEYARD:
+        # CR 702.55a: the haunt spell itself, as it leaves the stack for a graveyard.
+        return event.subject_id == source.id
 
     if ability.event is TriggerEvent.EXILED:
         # CR 702.35a: "When this card is exiled this way". Only the

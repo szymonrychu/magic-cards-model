@@ -31,7 +31,7 @@ from typing import TYPE_CHECKING, Any
 from ..models.card_state import CardState, TargetKind
 from ..models.player import Player
 from ..models.zone import Zone
-from ..numbers import COUNT, parse_count, parse_multiplier
+from ..numbers import COUNT, halve, parse_count, parse_multiplier
 
 if TYPE_CHECKING:
     from ..models.game import Game
@@ -208,8 +208,9 @@ class LifeClause:
     """ "<subject> gains/loses <amount>".
 
     `kind` is "fixed" (`n` life), "equal" (life equal to `expr`), "for_each"
-    (`n` life for each `expr`) or "x" (`n` times X life; `expr` is the
-    where-X expression, `None` for the announced X)."""
+    (`n` life for each `expr`), "x" (`n` times X life; `expr` is the
+    where-X expression, `None` for the announced X) or "half" (half of the recipient's own
+    life total, CR 107.1a: `n` is 1 when the card rounds up, 0 when it rounds down)."""
 
     subject: str | None
     verb: str
@@ -227,7 +228,9 @@ _LIFE_RE = re.compile(
     rf"^(?:(?P<subject>.+?) )?(?P<verb>gains?|loses?) "
     rf"(?:(?P<each_n>{COUNT}) life for each (?P<each>.+)"
     r"|life equal to (?P<expr>.+)"
+    r"|(?P<half>half (?:their|your)) life(?:, rounded (?P<direction>up|down))?"
     r"|(?P<mult>[a-z0-9]+ times |twice )?(?P<x>x) life"
+    rf"|(?P<fmult>[a-z0-9]+ times |twice )(?P<fn>{COUNT}) life"
     rf"|(?P<n>{COUNT}) life)$",
     re.IGNORECASE,
 )
@@ -256,6 +259,9 @@ def parse_life_clause(text: str) -> LifeClause | None:
         return LifeClause(subject, verb, gains, "for_each", unit, match.group("each"))
     if match.group("expr") is not None:
         return LifeClause(subject, verb, gains, "equal", 1, match.group("expr"))
+    if match.group("half") is not None:
+        rounds_up = (match.group("direction") or "").lower() == "up"
+        return LifeClause(subject, verb, gains, "half", int(rounds_up), None)
     if match.group("x") is not None:
         multiplier = 1
         if match.group("mult"):
@@ -264,6 +270,15 @@ def parse_life_clause(text: str) -> LifeClause | None:
                 return None
             multiplier = found
         return LifeClause(subject, verb, gains, "x", multiplier, where)
+    if match.group("fn") is not None:
+        # "twice 3 life": an X already written in as a number (a modal spell's mode text).
+        base, factor = (
+            parse_count(match.group("fn")),
+            parse_multiplier(match.group("fmult").strip()),
+        )
+        if base is None or factor is None:
+            return None
+        return LifeClause(subject, verb, gains, "fixed", base * factor, None)
     fixed = parse_count(match.group("n"))
     if fixed is None:
         return None
@@ -854,6 +869,9 @@ def life_clause_amount(clause: LifeClause, *, spell_x: bool) -> Amount | None:
         return lambda _game, _obj, _who: fixed
     if clause.kind == "equal":
         return recipient_amount(clause.expr or "")
+    if clause.kind == "half":
+        rounds_up = bool(clause.n)
+        return lambda _game, _obj, who: halve(max(who.life, 0), round_up=rounds_up)
     if clause.kind == "for_each":
         per = recipient_for_each(clause.expr or "")
         if per is None:

@@ -1,0 +1,99 @@
+{
+  "ability": "Whenever Rakdos attacks, sacrifice half the non-Demon permanents you control, rounded up.",
+  "action": {
+    "controller": "alice",
+    "modes": [],
+    "on_stack": true,
+    "source": "Rakdos the Defiler@alice#1",
+    "targets": [],
+    "x": 0
+  },
+  "board": {
+    "busy_turn": false,
+    "entering": [],
+    "order": ["alice", "bob"],
+    "players": {
+      "alice": {
+        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Wastes", "Memnite", "Icehide Golem", "Bonesplitter", "Icy Manipulator", "Rakdos the Defiler"],
+        "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel"],
+        "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt"],
+        "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
+      },
+      "bob": {
+        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Kaito, Bane of Nightmares", "Fleecemane Lion", "Icehide Golem", "Shadowspear", "Dragonfire Blade"],
+        "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel"],
+        "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt"],
+        "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
+      }
+    },
+    "step": "declare_attackers",
+    "tapped": [],
+    "tokens": [],
+    "variant": "quiet",
+    "war_turn": false
+  },
+  "card": "Rakdos the Defiler",
+  "delta": {
+    "created": {},
+    "decisions": [
+      {
+        "amount": 11,
+        "cards": ["Plains@alice#1", "Island@alice#1", "Swamp@alice#1", "Mountain@alice#1", "Forest@alice#1", "Plains@alice#2", "Island@alice#2", "Swamp@alice#2", "Mountain@alice#2", "Forest@alice#2", "Plains@alice#3", "Island@alice#3", "Swamp@alice#3", "Mountain@alice#3", "Forest@alice#3", "Wastes@alice#1", "Wastes@alice#2", "Memnite@alice#1", "Icehide Golem@alice#1", "Bonesplitter@alice#1", "Icy Manipulator@alice#1"],
+        "kind": "choose_cards",
+        "player": "alice",
+        "players": [],
+        "prompt": "sacrifice 11 of 21 permanents",
+        "source": "Rakdos the Defiler"
+      }
+    ],
+    "fields_changed": ["creatures_died_this_turn", "graveyard_arrivals_announced", "graveyard_arrivals_this_turn", "nontoken_creatures_died_under_control_this_turn", "permanents_left_battlefield_this_turn", "permanents_sacrificed_this_turn", "turn_facts", "turn_history"],
+    "notices": {},
+    "objects": {
+      "Bonesplitter@alice#1": {
+        "zone": ["battlefield", "graveyard"]
+      },
+      "Forest@alice#3": {
+        "zone": ["battlefield", "graveyard"]
+      },
+      "Icehide Golem@alice#1": {
+        "zone": ["battlefield", "graveyard"]
+      },
+      "Icy Manipulator@alice#1": {
+        "zone": ["battlefield", "graveyard"]
+      },
+      "Island@alice#3": {
+        "zone": ["battlefield", "graveyard"]
+      },
+      "Memnite@alice#1": {
+        "zone": ["battlefield", "graveyard"]
+      },
+      "Mountain@alice#3": {
+        "zone": ["battlefield", "graveyard"]
+      },
+      "Plains@alice#3": {
+        "zone": ["battlefield", "graveyard"]
+      },
+      "Swamp@alice#3": {
+        "zone": ["battlefield", "graveyard"]
+      },
+      "Wastes@alice#1": {
+        "zone": ["battlefield", "graveyard"]
+      },
+      "Wastes@alice#2": {
+        "zone": ["battlefield", "graveyard"]
+      }
+    },
+    "players": {},
+    "stack": []
+  },
+  "family": "triggered",
+  "format": 1,
+  "kind": "attacks",
+  "number": 0,
+  "recipe": {
+    "attempt": "combat",
+    "index": 0,
+    "params": {},
+    "variant": "quiet"
+  }
+}
