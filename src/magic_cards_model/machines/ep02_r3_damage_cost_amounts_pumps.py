@@ -3,14 +3,14 @@
 Extends the shared where-X pump reader (`effects.amounts._parse_where_x_is_continuous_effect`
 and its spell-side twin) additively:
 
-- `controller_amount`: an extremum or a difference the controller alone fixes
-  ("the greatest mana value among permanents you control", CR 202.3;
-  "7 minus the number of cards in your hand", CR 107.1b for a negative result).
+- `controller_amount`: a difference the controller alone fixes ("7 minus the number
+  of cards in your hand", CR 107.1b for a negative result).
 - `object_amount`: an amount that reads the resolving object (CR 608.2h, taken once
   as the effect applies): "the greatest power and/or toughness among other creatures
-  you control" (the source is not "other"), "7 minus the number of cards in that
-  creature's controller's hand" (the target's controller), "the power of the exiled
-  card" (the card the source exiled, CR 607.2a).
+  you control" and "the number of times this creature was kicked" (the shared
+  `effects.amounts.amount_expression` terms, read with the source as the object),
+  "7 minus the number of cards in that creature's controller's hand" (the target's
+  controller), "the power of the exiled card" (the card the source exiled, CR 607.2a).
 - `x_literal`: the sentence with its X written out, a negative X flipping the sign
   of a "-X" the way arithmetic does (CR 107.3f defines X in the text; "-X/-X" with X = -1 is +1/+1).
 - `may_have_pump`: "you may have target creature get +X/+X until end of turn, where X is ..."
@@ -31,20 +31,6 @@ if TYPE_CHECKING:
 
 _X_RE = re.compile(r"(?P<sign>[+-]?)\bX\b")
 
-_GROUP_TYPES = {
-    "permanents": None,
-    "creatures": Type.CREATURE,
-    "artifacts": Type.ARTIFACT,
-    "enchantments": Type.ENCHANTMENT,
-    "lands": Type.LAND,
-    "planeswalkers": Type.PLANESWALKER,
-}
-_GREATEST_RE = re.compile(
-    r"^(?:the )?greatest (?P<stat>power and/or toughness|power|toughness|mana value) among "
-    r"(?P<other>other )?(?P<group>permanents|creatures|artifacts|enchantments|lands|planeswalkers)"
-    r" you control$",
-    re.IGNORECASE,
-)
 _MINUS_RE = re.compile(r"^(?P<n>\d+) minus (?P<rest>.+)$", re.IGNORECASE)
 _HAND_OF_RE = re.compile(
     r"^(?:the )?number of cards in (?P<who>that (?:creature|permanent|player)'s controller's|"
@@ -70,44 +56,11 @@ def x_literal(sentence: str, magnitude: int) -> str:
     return _X_RE.sub(one, sentence)
 
 
-def _stat_of(game: "Game", permanent: Any, stat: str) -> int:
-    chars = game.computed_board().of(permanent)
-    if stat == "mana value":
-        return int(permanent.mana_value)  # CR 202.3
-    if stat == "power":
-        return chars.numeric_power
-    if stat == "toughness":
-        return chars.numeric_toughness
-    return max(chars.numeric_power, chars.numeric_toughness)
-
-
-def _greatest(stat: str, group: str, *, other: bool) -> Callable[["Game", str, Any], int]:
-    card_type = _GROUP_TYPES[group.lower()]
-
-    def read(game: "Game", controller: str, excluded: Any) -> int:
-        board = game.computed_board()
-        values = [
-            _stat_of(game, permanent, stat)
-            for permanent in game.battlefield
-            if board.of(permanent).controller == controller
-            and (card_type is None or card_type in board.of(permanent).types)
-            and not (other and excluded is not None and permanent.id == excluded)
-        ]
-        return max(values, default=0)  # CR 107.2: no value to find is 0
-
-    return read
-
-
 @functools.cache
 def controller_amount(phrase: str) -> Callable[["Game", str], int] | None:
     """`(game, controller) -> int` for the amounts the controller alone fixes, or None."""
     text = phrase.strip().rstrip(".")
     lowered = text.lower()
-    if "greatest" in lowered and (match := _GREATEST_RE.fullmatch(text)) is not None:
-        if match.group("other"):
-            return None  # needs the source: `object_amount`
-        read = _greatest(match.group("stat").lower(), match.group("group"), other=False)
-        return lambda game, controller: read(game, controller, None)
     if " minus " in lowered and (match := _MINUS_RE.fullmatch(text)) is not None:
         from .effects.amounts import count_expression
 
@@ -129,16 +82,8 @@ def object_amount(phrase: str) -> Callable[["Game", Any], int] | None:
     """`(game, resolving spell or ability) -> int`, or None."""
     text = phrase.strip().rstrip(".")
     lowered = text.lower()
-    if "greatest" in lowered and (match := _GREATEST_RE.fullmatch(text)) is not None:
-        if not match.group("other"):
-            return None
-        read = _greatest(match.group("stat").lower(), match.group("group"), other=True)
-
-        def greatest_of_others(game: "Game", obj: Any) -> int:
-            source = _source_of(game, obj)
-            return read(game, game.controller_of(obj).username, getattr(source, "id", None))
-
-        return greatest_of_others
+    if ("greatest" in lowered or "kicked" in lowered) and (shared := _shared_term(text)):
+        return shared
     if " minus " in lowered and (match := _MINUS_RE.fullmatch(text)) is not None:
         inner = _hand_of_target(match.group("rest"))
         if inner is None:
@@ -156,17 +101,28 @@ def object_amount(phrase: str) -> Callable[["Game", Any], int] | None:
     return None
 
 
+def _shared_term(text: str) -> Callable[["Game", Any], int] | None:
+    """An `effects.amounts.amount_expression` term ("the greatest power among other
+    creatures you control", "the number of times this creature was kicked") read for
+    the resolving object: its controller, and its source as the object (CR 608.2h)."""
+    from .effects.amounts import amount_expression
+
+    term = amount_expression(text)
+    if term is None:
+        return None
+    return lambda game, obj: term(game, game.controller_of(obj).username, _source_of(game, obj), 0)
+
+
 _TIMES_RE = re.compile(
     r"^(?:the )?number of times (?:this (?P<ability>ability) has resolved this turn|"
-    r"this (?:creature|permanent|spell) (?:(?P<kicked>was kicked)|(?P<mutated>has mutated)))$"
+    r"this (?:creature|permanent|spell) has mutated)$"
 )
 
 
 def _times_reader(lowered: str) -> Callable[["Game", Any], int] | None:
     """ "The number of times this ability has resolved this turn" (CR 608.2h: the
-    resolution in progress counts), "... this creature was kicked" (CR 702.33d: a
-    multikicker spell is kicked once per payment) and "... has mutated" (CR 702.140c:
-    each spell merged into it)."""
+    resolution in progress counts) and "... has mutated" (CR 702.140c: each spell
+    merged into it)."""
     match = _TIMES_RE.fullmatch(lowered)
     if match is None:
         return None
@@ -174,13 +130,6 @@ def _times_reader(lowered: str) -> Callable[["Game", Any], int] | None:
         from .triggers.events import resolution_key
 
         return lambda game, obj: game.ability_resolutions_this_turn.get(resolution_key(obj), 0)
-    if match.group("kicked"):
-
-        def kicked(game: "Game", obj: Any) -> int:
-            record = game.cast_record_of(_source_of(game, obj))
-            return record.kicked if record is not None else 0
-
-        return kicked
     return lambda game, obj: len(game.merged_components.get(_source_of(game, obj).id, []))
 
 

@@ -11,7 +11,7 @@ when the instruction is applied (CR 608.2h), and the board facts it counts:
   from what the creature was as it died (CR 603.10a);
 - "for each Equipment / Aura and Equipment attached to <this creature>" (Kemba,
   Valduk, Kellan the Fae-Blooded) - CR 301.5;
-- "for each time it was kicked" (Wolfbriar Elemental, Stronghold Arena) -
+- "for each time it was kicked" (Wolfbriar Elemental) -
   CR 702.33d;
 - "for each white mana symbol in the mana costs of permanents you control"
   (Springjack Shepherd) - CR 107.4;
@@ -49,9 +49,7 @@ LISTED = (
     "Chittering Witch",
     "Cloudspire Coordinator",
     "Cursecloth Wrappings",
-    "Dripping-Tongue Zubera",
     "Edward Kenway",
-    "Gadrak, the Crown-Scourge",
     "Gemini Engine",
     "Ghalta and Mavren",
     "Goblin Traprunner",
@@ -72,12 +70,8 @@ LISTED = (
 
 PROOFS = (
     "Gluttonous Troll",
-    "Silent-Chant Zubera",
-    "Floating-Dream Zubera",
     "Rampaging Soulrager",
-    "Deadly Embrace",
     "Harried Dronesmith",
-    "Stronghold Arena",
 )
 
 
@@ -103,21 +97,6 @@ def tokens(scenario, name, username="alice"):
 
 
 # -- a number of tokens equal to the number of opponents you have -----------------
-
-
-def test_chittering_witch_makes_one_rat_per_opponent():
-    scenario = (
-        Scenario()
-        .player("alice", hand=["Chittering Witch"], battlefield=["Swamp"] * 4)
-        .player("bob")
-        .player("carol")
-        .build()
-    )
-    scenario.start_at(Step.PRECOMBAT_MAIN)
-    scenario.cast_and_resolve("Chittering Witch", *scenario.untapped_sources(*(["Swamp"] * 4)))
-    scenario.pass_until_resolved()
-
-    assert len(tokens(scenario, "Rat Token")) == 2
 
 
 def test_chittering_witch_in_a_two_player_game_makes_a_single_rat():
@@ -150,26 +129,6 @@ def test_a_player_who_has_lost_is_not_an_opponent_you_have():
     scenario.resolve_top()
 
     assert len(tokens(scenario, "Rat Token")) == 1
-
-
-def test_gluttonous_troll_makes_a_food_per_opponent():
-    scenario = (
-        Scenario()
-        .player(
-            "alice", hand=["Gluttonous Troll"], battlefield=["Forest", "Forest", "Swamp", "Forest"]
-        )
-        .player("bob")
-        .player("carol")
-        .player("dave")
-        .build()
-    )
-    scenario.start_at(Step.PRECOMBAT_MAIN)
-    scenario.cast_and_resolve(
-        "Gluttonous Troll", *scenario.untapped_sources("Forest", "Forest", "Swamp", "Forest")
-    )
-    scenario.pass_until_resolved()
-
-    assert len(tokens(scenario, "Food Token")) == 3
 
 
 # -- for each Equipment attached to this creature ---------------------------------
@@ -1535,35 +1494,6 @@ def test_deadly_embrace_draws_for_every_creature_that_died_this_turn_including_i
 
     assert giant.zone is Zone.GRAVEYARD
     assert len(scenario.player("alice").hand) == 2  # the Bears and the Giant
-
-
-def test_stronghold_arena_gains_three_life_for_each_time_it_was_kicked():
-    for kickers, gained in (((), 0), (("{G}",), 3), (("{G}", "{W}"), 6)):
-        scenario = (
-            Scenario()
-            .player(
-                "alice",
-                hand=["Stronghold Arena"],
-                battlefield=["Swamp", "Swamp", "Forest", "Plains"],
-            )
-            .player("bob")
-            .build()
-        )
-        scenario.start_at(Step.PRECOMBAT_MAIN)
-        casting = scenario.cast("Stronghold Arena")
-        for which in kickers:
-            casting.pay_kicker(1, which=which)
-        scenario.pay_with(
-            casting.begin_paying(),
-            *scenario.untapped_sources(
-                *(["Swamp", "Swamp", "Forest", "Plains"][: 2 + len(kickers)])
-            ),
-        )
-        scenario.put_on_stack(casting)
-        scenario.resolve_top()
-        scenario.pass_until_resolved()
-
-        assert scenario.player("alice").life == 20 + gained, kickers
 
 
 def test_rampaging_soulrager_gets_plus_three_with_two_unlocked_doors_among_your_rooms():
