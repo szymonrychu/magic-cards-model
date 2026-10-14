@@ -304,10 +304,11 @@ def _unlocked_doors(game: "Game", controller: str) -> int:
 # A cast record: times kicked (CR 702.33d), mana spent (CR 601.2h)
 # --------------------------------------------------------------------------
 
-_TIMES_KICKED_RE = re.compile(
-    _N + r"times? (?P<whose>it|this (?:creature|permanent|artifact|enchantment|spell)|that spell) "
-    r"was kicked$",
-    re.IGNORECASE,
+_TIMES_KICKED_RE = re.compile(r"^(?:[Tt]he )?(?:number of )?times? (?P<whose>.+?) was kicked$")
+#: Who "was kicked" names: the source by pronoun, "this <type>" or its own name
+#: ("time Spell Contortion was kicked"), or the spell a cast trigger names.
+_KICKED_SOURCE_RE = re.compile(
+    r"^(?:it|this (?:creature|permanent|artifact|enchantment|spell)|[A-Z][\w',-]*(?: [\w',-]+)*)$"
 )
 _MANA_SPENT_THAT_SPELL_RE = re.compile(
     r"^(?:the )?(?:number|amount) of mana spent to cast (?:that|the) spell$", re.IGNORECASE
@@ -335,10 +336,12 @@ def _cast_record(text: str) -> _Term | None:
     spell" (CR 601.2h) read the spell a cast trigger names."""
     lowered = text.lower()
     if "kicked" in lowered and (kicked := _TIMES_KICKED_RE.fullmatch(text)) is not None:
-        if kicked.group("whose").lower() == "that spell":
+        if kicked.group("whose") == "that spell":
             return _sourceless(
                 lambda game, _controller: getattr(_triggering_spell_record(game), "kicked", 0)
             )
+        if _KICKED_SOURCE_RE.fullmatch(kicked.group("whose")) is None:
+            return None
 
         def times_kicked(game: "Game", _controller: str, source: CardState | None, _x: int) -> int:
             record = None if source is None else game.cast_record_of(source)
@@ -664,7 +667,13 @@ def for_each_count(phrase: str) -> ForEach | None:
         return None
 
     def count(game: "Game", controller: str, source_id: str | None) -> int:
-        found = None if source_id is None else game.find_by_id(UUID(str(source_id)))
+        # A resolving spell is `game.resolving`, not found on the stack, so it
+        # is asked before the board.
+        resolving = game.resolving
+        if isinstance(resolving, CardState) and str(resolving.id) == source_id:
+            found = resolving
+        else:
+            found = None if source_id is None else game.find_by_id(UUID(str(source_id)))
         source = found if isinstance(found, CardState) else None
         return int(reader(game, controller, source, 0))
 

@@ -3,7 +3,6 @@ from collections.abc import Callable, Sequence
 from typing import TYPE_CHECKING
 from uuid import UUID
 
-from ...data.subtypes import canonical_subtype
 from ...models.card import Color, Layout, Supertype, Type
 from ...models.card_state import (
     DEVOTION_BONUS_TEXT,
@@ -1698,17 +1697,6 @@ def _colors_spent_on_resolving(game: "Game", _controller: str) -> int:
     return colors_of_mana_spent(game, resolving)
 
 
-#: "the number of Equipment attached to him" (Whiplash, Vengeful Engineer;
-#: Shagrat, Loot Bearer's "... attached to Shagrat", its name already
-#: "this permanent") - a count of one subtype attached to the object the
-#: expression is evaluated for (CR 301.5a: an Equipment is attached to the
-#: creature it equips), read as the effect applies (CR 608.2h).
-_OBJECT_ATTACHED_COUNT_RE = re.compile(
-    r"^the number of (?P<subtype>[A-Za-z]+) attached to (?:it|him|her|this [a-z]+)$",
-    re.IGNORECASE,
-)
-
-
 #: "instant and sorcery card exiled with it" (Murktide Regent) - CR 607.2q's
 #: link, written by `machines/objects_as_costs.delve` onto every card a
 #: delve payment exiles as `ExileAnnotation.linked_permanent_id`. `types`
@@ -2098,25 +2086,6 @@ def _amount_term(term: str) -> AmountReader | None:
         # answers this once `Game._carry_cast_record` has re-keyed it from
         # the spell that resolved into it (CR 400.7a/400.7b).
         return lambda game, _controller, obj, _x: colors_of_mana_spent(game, obj)
-    if match := _OBJECT_ATTACHED_COUNT_RE.fullmatch(text):
-        attached_subtype = canonical_subtype(match.group("subtype"))
-        if attached_subtype is None:
-            return None
-
-        def read_attached_count(
-            game: "Game", _controller: str, obj: CardState | None, _x: int
-        ) -> int:
-            if obj is None:
-                return 0
-            board = game.computed_board()
-            return sum(
-                1
-                for permanent in game.battlefield
-                if permanent.attached_to == obj.id
-                and attached_subtype in {word.lower() for word in board.of(permanent).subtypes}
-            )
-
-        return read_attached_count
     if match := _AMOUNT_TWICE_RE.fullmatch(text):
         factor = parse_multiplier(match.group("multiplier"))
         inner = _amount_term(match.group("term"))
@@ -3347,7 +3316,6 @@ _FORETOLD_IN_EXILE_EACH_RE = re.compile(r"^foretold card you own in exile$", re.
 _CAVE_MANA_SPENT_EACH_RE = re.compile(
     r"^mana from an? (?P<kind>[A-Za-z]+) spent to cast (?:it|this spell)$", re.IGNORECASE
 )
-_TIME_KICKED_EACH_RE = re.compile(r"^time (?:it|this spell|[A-Z][^.]*?) was kicked$")
 _LEFT_UNDER_YOUR_CONTROL_EACH_RE = re.compile(
     r"^(?P<quality>[a-z -]+?) that left the battlefield under your control this turn$",
     re.IGNORECASE,
@@ -3435,21 +3403,6 @@ def _for_each_multiplier(phrase: str) -> Callable[["Game", str, str | None], int
             return 0 if record is None else record.cave_mana_spent
 
         return count_cave_mana
-    if _TIME_KICKED_EACH_RE.fullmatch(stripped):
-        # Spell Contortion: "Draw a card for each time Spell Contortion was
-        # kicked" - CR 702.33d's count of multikicker payments, read off the
-        # cast record of the spell (or the permanent it became, CR 400.7d)
-        # whose effect is resolving (CR 608.2h).
-        def count_kicks(game: "Game", _controller: str, source_id: str | None) -> int:
-            resolving = game.resolving
-            if isinstance(resolving, CardState) and str(resolving.id) == source_id:
-                obj = resolving
-            else:
-                obj = None if source_id is None else game.find_by_id(UUID(source_id))
-            record = None if obj is None else game.cast_record_of(obj)
-            return 0 if record is None else record.kicked
-
-        return count_kicks
     types_among = card_types_among_spells_cast_reader(stripped)
     if types_among is not None:
         # CR 608.2h: counted once, as the effect applies.
