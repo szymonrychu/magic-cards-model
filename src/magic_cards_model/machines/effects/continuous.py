@@ -5882,7 +5882,7 @@ def _parse_until_your_next_turn_group_attack_pump_clause(text: str) -> AbilityEf
     return effect
 
 
-#: "those creatures get `<P>`/`<T>`[ and gain `<keywords>`] until end of
+#: "those creatures|they get `<P>`/`<T>`[ and gain `<keywords>`] until end of
 #: turn." / "those creatures gain `<keywords>` until end of turn." - CR 400.7
 #: anaphora back to whichever attackers a "one or more `<description>`
 #: attack[ `<defender>`]" condition just counted
@@ -5894,7 +5894,7 @@ def _parse_until_your_next_turn_group_attack_pump_clause(text: str) -> AbilityEf
 #: tier `_parse_until_your_next_turn_attack_pump_clause` above already
 #: occupies for the identical family's delayed-trigger cousin.
 _BATCHED_ATTACK_GROUP_PUMP_RE = re.compile(
-    r"^those creatures"
+    r"^(?:those creatures|they)"
     r"(?:\s+get\s+(?P<power>[+-]\d+)/(?P<toughness>[+-]\d+))?"
     r"(?:\s+and)?(?:\s+gains?\s+(?P<keywords>[a-z][a-z ,]*?))?"
     r"\s+until end of turn\.?$",
@@ -7630,6 +7630,31 @@ def _parse_cant_be_regenerated_clause_pair(
                 game.destroy(target, regeneration_allowed=False)
 
     return destroy_targets
+
+
+def _merge_destroy_cant_regenerate_then_referent_clauses(
+    clauses: list[str], index: int, *, for_spell: bool
+) -> tuple[int, TargetedClause] | None:
+    """ "Destroy target X. It can't be regenerated. Its controller `<clause>`."
+    as one instruction (Pongify).
+
+    CR 608.2c's worked example again: the middle sentence modifies the
+    destruction, so the destroy runs with regeneration refused (CR 701.19c)
+    and the last sentence is the ordinary "its controller" referent clause
+    that `_parse_anaphoric_clause_pair` reads, run whether or not the
+    destruction happened (an indestructible target is still a legal target).
+    """
+    if index + 2 >= len(clauses):
+        return None
+    if (
+        _RIDER_CANT_BE_REGENERATED_RE.fullmatch(clauses[index + 1].strip().rstrip(".").strip())
+        is None
+    ):
+        return None
+    effect = _parse_anaphoric_clause_pair(
+        clauses[index], clauses[index + 2], for_spell=for_spell, regeneration_allowed=False
+    )
+    return None if effect is None else (3, effect)
 
 
 def grant_suspend(game: "Game", card: CardState, time_counters: int) -> None:
@@ -13183,6 +13208,7 @@ from .returns import (  # noqa: E402
 from .text import (  # noqa: E402
     _as_capitalized_sentence,
     _as_sentence,
+    _parse_anaphoric_clause_pair,
     _parse_object_anaphor_clause_series,
     _parse_referent_object_clause,
     _plain_resolution_sentences,

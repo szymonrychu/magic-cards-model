@@ -8686,3 +8686,5 @@ Tests: `tests/scenarios/test_ep02_r3_for_each_cards.py` (every listed card has a
 | Scryfall's `Jump` + `Jump-start` keyword pair (one jump-start); `card_support` now reads `Jump` as the alias of the executed `jump-start` | 702.133a | `support.executed_keywords` | Beacon Bolt (proof: Radical Idea) | same |
 
 Schema: `Game.CURRENT_SCHEMA_VERSION` 169 -> 170 (`PlayPermission.harmonize`, the `CipherCopyAndCast` delayed-effect variant).
+
+| "Destroy target X. It can't be regenerated. Its controller creates ..." as one instruction (destroy without regeneration, then the referent clause even if the target survived); batched-attack "they gain ... until end of turn"; "Target player discards a number of cards equal to the sacrificed creature's power" | 608.2c, 701.19c, 702.12b, 608.2h, 118.8a, 700.9 | `continuous._merge_destroy_cant_regenerate_then_referent_clauses`, `continuous._parse_batched_attack_group_pump_clause`, `amount_sentences._CARDS_RE`, `ep02_r1_referenced_stat` | `test_ep02_r3_t7_cards.py` (Pongify, Angelic Guardian, Tormented Thoughts, Stoneforge Masterwork, Lethal Exploit) |

@@ -5619,6 +5619,14 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
             index += consumed
             continue
         # -- end G1c multi-clause merge ---------------------------------------
+        merged = _merge_destroy_cant_regenerate_then_referent_clauses(
+            clauses, index, for_spell=for_spell
+        )
+        if merged is not None:
+            consumed, effect = merged
+            parsed.append(effect)
+            index += consumed
+            continue
         if index + 1 < len(clauses):
             merged = _parse_delayed_pay_or_lose_clauses(clauses, index, for_spell=for_spell)
             if merged is not None:
@@ -6429,6 +6437,7 @@ from .amounts import (  # noqa: E402
 )
 from .continuous import (  # noqa: E402
     _gains_and_cant_be_blocked_this_turn,
+    _merge_destroy_cant_regenerate_then_referent_clauses,
     _parse_attach_self_then_conditional_rider_clause,
     _parse_attach_self_then_that_creature,
     _parse_attach_target_equipment_to_self,
