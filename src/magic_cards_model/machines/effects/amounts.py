@@ -4395,11 +4395,17 @@ def _parse_variable_count_token_clause(clause: str, *, for_spell: bool) -> Targe
     if reader is None:
         # A count that reads the resolving object itself ("the number of other
         # attacking creatures": other than the source) is one of the token-count
-        # terms (`ep02_r3_token_counts.amount_term`) - CR 608.2h takes it once,
-        # as the instruction is applied.
+        # terms (`ep02_r3_token_counts.amount_term`), and a sum or difference of
+        # counts ("the number of Vehicles you control plus the number of Equipment
+        # you control") is an `amount_expression` - CR 608.2h takes it once, as the
+        # instruction is applied. A lone count stays with the readers after this
+        # one ("equal to its power" is the event subject's, not the source's).
         from ..ep02_r3_token_counts import amount_term
 
-        sourced = amount_term(match.group("expr"))
+        expression = match.group("expr")
+        sourced = amount_term(expression) or (
+            amount_expression(expression) if _AMOUNT_OPERATOR_RE.search(expression) else None
+        )
         if sourced is None:
             return None
 
