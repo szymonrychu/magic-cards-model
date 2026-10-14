@@ -979,6 +979,12 @@ class LayerContext(EngineModel):
     #: the effects are built, like `hand_size_by_player`.
     foretold_in_exile_by_player: Mapping[str, int] = Field(default_factory=dict)
 
+    #: How many unlocked doors (CR 709.5c) the Rooms each player controls have,
+    #: keyed by username - Rampaging Soulrager's "as long as there are two or more
+    #: unlocked doors among Rooms you control". A designation of the permanent, not
+    #: a characteristic, so it is carried here like `foretold_in_exile_by_player`.
+    unlocked_doors_by_player: Mapping[str, int] = Field(default_factory=dict)
+
     def foretold_in_exile_of(self, player: str | None) -> int:
         """How many foretold cards `player` owns in exile (0 when unknown)."""
         if player is None:

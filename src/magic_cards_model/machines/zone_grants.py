@@ -404,9 +404,7 @@ def _resolution_granted_lines(game: Game, card: CardState) -> tuple[str, ...]:
     if not effects:
         return ()
     chars = printed_characteristics(card)
-    return tuple(
-        effect.modification.text for effect in effects if effect.selector(chars, {})
-    )
+    return tuple(effect.modification.text for effect in effects if effect.selector(chars, {}))
 
 
 def _battlefield_granted_lines(game: Game, card: CardState) -> tuple[str, ...]:

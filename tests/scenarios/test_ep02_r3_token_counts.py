@@ -66,6 +66,7 @@ PROOFS = (
     "Gluttonous Troll",
     "Silent-Chant Zubera",
     "Floating-Dream Zubera",
+    "Rampaging Soulrager",
     "Deadly Embrace",
     "Harried Dronesmith",
     "Stronghold Arena",
@@ -89,9 +90,7 @@ def reach(scenario, step):
 
 def tokens(scenario, name, username="alice"):
     return [
-        state
-        for state in scenario.game.permanents_controlled_by(username)
-        if state.name == name
+        state for state in scenario.game.permanents_controlled_by(username) if state.name == name
     ]
 
 
@@ -148,7 +147,9 @@ def test_a_player_who_has_lost_is_not_an_opponent_you_have():
 def test_gluttonous_troll_makes_a_food_per_opponent():
     scenario = (
         Scenario()
-        .player("alice", hand=["Gluttonous Troll"], battlefield=["Forest", "Forest", "Swamp", "Forest"])
+        .player(
+            "alice", hand=["Gluttonous Troll"], battlefield=["Forest", "Forest", "Swamp", "Forest"]
+        )
         .player("bob")
         .player("carol")
         .player("dave")
@@ -247,7 +248,9 @@ def test_stone_idol_trap_costs_one_less_per_attacker_and_makes_a_6_12_that_leave
     scenario.start_at(Step.DECLARE_ATTACKERS)
     scenario.attack_with(*scenario.creatures("Grizzly Bears", "Grizzly Bears", "Grizzly Bears"))
     # {5}{R} less {1} for each of the three attacking creatures is {2}{R}.
-    scenario.cast_and_resolve("Stone Idol Trap", *scenario.untapped_sources("Mountain", "Mountain", "Mountain"))
+    scenario.cast_and_resolve(
+        "Stone Idol Trap", *scenario.untapped_sources("Mountain", "Mountain", "Mountain")
+    )
 
     (construct,) = tokens(scenario, "Construct Token")
     assert (scenario.game.power_of(construct), scenario.game.toughness_of(construct)) == (6, 12)
@@ -292,12 +295,7 @@ def test_a_construct_made_on_the_opponents_turn_waits_for_the_controllers_own_en
 
 
 def test_harried_dronesmith_sacrifices_its_thopter_at_its_controllers_next_end_step():
-    scenario = (
-        Scenario()
-        .player("alice", battlefield=["Harried Dronesmith"])
-        .player("bob")
-        .build()
-    )
+    scenario = Scenario().player("alice", battlefield=["Harried Dronesmith"]).player("bob").build()
     reach(scenario, Step.BEGINNING_OF_COMBAT)
     scenario.resolve_top()
     (thopter,) = tokens(scenario, "Thopter Token")
@@ -334,7 +332,10 @@ def test_adeline_makes_a_tapped_and_attacking_human_for_each_opponent_attacking_
 
 def test_adeline_in_a_two_player_game_makes_one_human():
     scenario = (
-        Scenario().player("alice", battlefield=["Adeline, Resplendent Cathar"]).player("bob").build()
+        Scenario()
+        .player("alice", battlefield=["Adeline, Resplendent Cathar"])
+        .player("bob")
+        .build()
     )
     scenario.start_at(Step.DECLARE_ATTACKERS)
     scenario.attack_with(scenario.creature("Adeline, Resplendent Cathar"))
@@ -348,17 +349,13 @@ def expected_wins(game, flips=3):
     from random import Random
 
     start = game.coin_flips_performed
-    return sum(
-        Random(f"{game.shuffle_seed}:{start + n}:coin").random() < 0.5 for n in range(flips)
-    )
+    return sum(Random(f"{game.shuffle_seed}:{start + n}:coin").random() < 0.5 for n in range(flips))
 
 
 #: Seeds whose three flips are won 0, 1, 2 and 3 times (flip n is `Random(f"{seed}:{n}:coin")`).
 @pytest.mark.parametrize("seed", [28, 0, 1, 12])
 def test_goblin_traprunner_makes_a_goblin_for_each_coin_flip_won(seed):
-    scenario = (
-        Scenario().player("alice", battlefield=["Goblin Traprunner"]).player("bob").build()
-    )
+    scenario = Scenario().player("alice", battlefield=["Goblin Traprunner"]).player("bob").build()
     scenario.game.shuffle_seed = seed
     wins = expected_wins(scenario.game)
     scenario.start_at(Step.DECLARE_ATTACKERS)
@@ -371,7 +368,7 @@ def test_goblin_traprunner_makes_a_goblin_for_each_coin_flip_won(seed):
     assert all(goblin.tapped and goblin in scenario.attackers() for goblin in goblins)
 
 
-def test_gemini_engine_attacks_with_a_twin_that_copies_its_size_and_is_sacrificed_at_end_of_combat():
+def test_gemini_engine_attacks_with_a_twin_of_its_size_that_is_sacrificed_at_end_of_combat():
     scenario = Scenario().player("alice", battlefield=["Gemini Engine"]).player("bob").build()
     scenario.start_at(Step.DECLARE_ATTACKERS)
     engine = scenario.creature("Gemini Engine")
@@ -406,9 +403,7 @@ def test_ghalta_and_mavren_dinosaur_mode_is_as_big_as_the_biggest_other_attacker
         "where X is the greatest power among other attacking creatures.",
         username="alice",
     )
-    scenario.attack_with(
-        *scenario.creatures("Ghalta and Mavren", "Grizzly Bears", "Hill Giant")
-    )
+    scenario.attack_with(*scenario.creatures("Ghalta and Mavren", "Grizzly Bears", "Hill Giant"))
     scenario.resolve_top()
 
     (dinosaur,) = tokens(scenario, "Dinosaur Token")
@@ -432,9 +427,7 @@ def test_ghalta_and_mavren_vampire_mode_makes_one_per_other_attacker():
         "where X is the number of other attacking creatures.",
         username="alice",
     )
-    scenario.attack_with(
-        *scenario.creatures("Ghalta and Mavren", "Grizzly Bears", "Hill Giant")
-    )
+    scenario.attack_with(*scenario.creatures("Ghalta and Mavren", "Grizzly Bears", "Hill Giant"))
     scenario.resolve_top()
 
     assert len(tokens(scenario, "Vampire Token")) == 2
@@ -447,7 +440,8 @@ def roles_on(scenario, creature):
     return [
         state
         for state in scenario.game.battlefield
-        if state.attached_to == creature.id and "Role" in scenario.game.computed_board().of(state).subtypes
+        if state.attached_to == creature.id
+        and "Role" in scenario.game.computed_board().of(state).subtypes
     ]
 
 
@@ -495,9 +489,7 @@ def test_a_second_cursed_role_from_the_same_player_replaces_the_first():
     )
     scenario.start_at(Step.PRECOMBAT_MAIN)
     for _ in range(2):
-        scenario.cast_and_resolve(
-            "Asinine Antics", *scenario.untapped_sources(*(["Island"] * 4))
-        )
+        scenario.cast_and_resolve("Asinine Antics", *scenario.untapped_sources(*(["Island"] * 4)))
         scenario.state_based_actions()
 
     assert len(roles_on(scenario, scenario.creature("Hill Giant", "bob"))) == 1  # CR 704.5z
@@ -528,7 +520,8 @@ def test_asinine_antics_can_be_cast_at_instant_speed_for_two_more():
     scenario.pass_priority("bob")
 
     scenario.cast_and_resolve(
-        "Asinine Antics", *scenario.untapped_sources(*(["Island"] * 6), username="alice"),
+        "Asinine Antics",
+        *scenario.untapped_sources(*(["Island"] * 6), username="alice"),
         username="alice",
     )
     assert size(scenario, scenario.creature("Hill Giant", "bob")) == (1, 1)
@@ -694,7 +687,8 @@ def test_reckless_crew_makes_a_dwarf_per_vehicle_and_equipment_and_attaches_on_r
         .player(
             "alice",
             hand=["Reckless Crew"],
-            battlefield=["Mountain"] * 4 + ["Smuggler's Copter", "Bonesplitter", "Lightning Greaves"],
+            battlefield=["Mountain"] * 4
+            + ["Smuggler's Copter", "Bonesplitter", "Lightning Greaves"],
         )
         .player("bob")
         .build()
@@ -799,7 +793,9 @@ def test_twinflame_with_no_targets_makes_no_copies():
         .build()
     )
     scenario.start_at(Step.PRECOMBAT_MAIN)
-    scenario.cast_and_resolve("Twinflame", *scenario.untapped_sources("Mountain", "Mountain"), targets=[])
+    scenario.cast_and_resolve(
+        "Twinflame", *scenario.untapped_sources("Mountain", "Mountain"), targets=[]
+    )
 
     assert len(tokens(scenario, "Grizzly Bears")) == 1  # only the original
 
@@ -876,7 +872,9 @@ def test_cloudspire_coordinator_makes_a_pilot_per_vehicle_that_entered_this_turn
         .build()
     )
     scenario.start_at(Step.PRECOMBAT_MAIN)
-    scenario.cast_and_resolve("Smuggler's Copter", *scenario.untapped_sources("Mountain", "Mountain"))
+    scenario.cast_and_resolve(
+        "Smuggler's Copter", *scenario.untapped_sources("Mountain", "Mountain")
+    )
     scenario.cast_and_resolve("Heart of Kiran", *scenario.untapped_sources("Mountain", "Mountain"))
     scenario.activate(scenario.creature("Cloudspire Coordinator"))
     scenario.resolve_top()
@@ -985,7 +983,7 @@ def test_the_exiled_card_cannot_be_played_by_its_owner():
     scenario.resolve_top()
 
     assert top.zone is Zone.EXILE
-    from magic_cards_model.machines.casting import usable_play_permission, PlayAction
+    from magic_cards_model.machines.casting import PlayAction, usable_play_permission
 
     assert usable_play_permission(scenario.game, top, "bob", PlayAction.PLAY) is None
     assert usable_play_permission(scenario.game, top, "alice", PlayAction.PLAY) is not None
@@ -1157,3 +1155,418 @@ def test_the_grant_is_for_that_one_card_only():
     off_zone_activation(scenario.game, giant, "alice", 0)  # the chosen card has embalm
     with pytest.raises(ValueError, match="no activated ability functioning off the battlefield"):
         off_zone_activation(scenario.game, bears, "alice", 0)
+
+
+# -- the token-count readers already handled, played ----------------------------------------
+
+
+def make_tokens(scenario, definition, count=1, username="alice"):
+    from magic_cards_model.models.token import create_tokens
+
+    return create_tokens(scenario.game, definition, username, count)
+
+
+SOLDIER = None
+
+
+def soldier_definition():
+    from magic_cards_model.models.token import TokenDefinition
+
+    return TokenDefinition(subtypes=("Soldier",), power=1, toughness=1)
+
+
+def spirit_definition():
+    from magic_cards_model.models.token import TokenDefinition
+
+    return TokenDefinition(subtypes=("Spirit",), power=1, toughness=1)
+
+
+def test_audience_with_trostani_draws_a_card_for_each_differently_named_creature_token():
+    from magic_cards_model.models.token import TokenDefinition
+
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Audience with Trostani"],
+            library=["Island"] * 6,
+            battlefield=["Forest"] * 3,
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    make_tokens(scenario, soldier_definition(), 2)  # same name: counts once
+    make_tokens(scenario, spirit_definition())
+    make_tokens(
+        scenario, TokenDefinition(types=(Type.ARTIFACT,), name="Treasure")
+    )  # not a creature
+    scenario.cast_and_resolve(
+        "Audience with Trostani", *scenario.untapped_sources("Forest", "Forest", "Forest")
+    )
+
+    assert len(tokens(scenario, "Plant Token")) == 1
+    assert len(scenario.player("alice").hand) == 3  # Plant, Soldier, Spirit
+
+
+def test_audience_with_trostani_with_no_other_tokens_draws_one_for_the_plant():
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Audience with Trostani"],
+            library=["Island"] * 6,
+            battlefield=["Forest"] * 3,
+        )
+        .player("bob", battlefield=["Grizzly Bears"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scenario.cast_and_resolve(
+        "Audience with Trostani", *scenario.untapped_sources("Forest", "Forest", "Forest")
+    )
+
+    assert len(scenario.player("alice").hand) == 1
+
+
+def test_valduk_makes_an_elemental_for_each_aura_and_equipment_attached_and_exiles_them():
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=["Valduk, Keeper of the Flame", "Bonesplitter", "Rancor", "Bonesplitter"],
+        )
+        .player("bob")
+        .build()
+    )
+    valduk = scenario.creature("Valduk, Keeper of the Flame")
+    attached = 0
+    for permanent in scenario.game.permanents_controlled_by("alice"):
+        if permanent.name in ("Bonesplitter", "Rancor") and attached < 2:
+            permanent.attach_to(valduk)
+            attached += 1
+    assert attached == 2
+
+    reach(scenario, Step.BEGINNING_OF_COMBAT)
+    scenario.resolve_top()
+
+    elementals = tokens(scenario, "Elemental Token")
+    assert len(elementals) == 2
+    assert all(size(scenario, elemental) == (3, 1) for elemental in elementals)
+    reach(scenario, Step.END_STEP)
+    scenario.resolve_top()
+    assert all(elemental.zone is Zone.EXILE for elemental in elementals)
+
+
+def test_valduk_with_nothing_attached_makes_no_elemental():
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Valduk, Keeper of the Flame", "Bonesplitter"])
+        .player("bob")
+        .build()
+    )
+    reach(scenario, Step.BEGINNING_OF_COMBAT)
+    scenario.resolve_top()
+
+    assert tokens(scenario, "Elemental Token") == []
+
+
+def test_springjack_shepherd_makes_a_goat_for_each_white_symbol_among_your_permanents():
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Springjack Shepherd"],
+            battlefield=["Plains"] * 4 + ["Serra Angel", "Grizzly Bears"],
+        )
+        .player("bob", battlefield=["Serra Angel"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scenario.cast_and_resolve("Springjack Shepherd", *scenario.untapped_sources(*(["Plains"] * 4)))
+    scenario.pass_until_resolved()
+
+    # Serra Angel {3}{W}{W} and the Shepherd {3}{W} are yours; the opponent's angel is not.
+    assert len(tokens(scenario, "Goat Token")) == 3
+
+
+def test_springjack_shepherd_alone_counts_its_own_white_symbol():
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Springjack Shepherd"], battlefield=["Plains"] * 4)
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scenario.cast_and_resolve("Springjack Shepherd", *scenario.untapped_sources(*(["Plains"] * 4)))
+    scenario.pass_until_resolved()
+
+    assert len(tokens(scenario, "Goat Token")) == 1
+
+
+def die_together(scenario, *permanents):
+    for permanent in permanents:
+        scenario.game.destroy(permanent)
+    scenario.game.put_triggers_on_stack()
+    while scenario.game.stack:
+        scenario.resolve_top()
+
+
+def test_dripping_tongue_zubera_counts_every_zubera_that_died_this_turn_in_any_graveyard():
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Dripping-Tongue Zubera", "Grizzly Bears"])
+        .player("bob", battlefield=["Silent-Chant Zubera"], library=["Island"] * 3)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    die_together(
+        scenario,
+        scenario.creature("Dripping-Tongue Zubera"),
+        scenario.creature("Silent-Chant Zubera", "bob"),
+        scenario.creature("Grizzly Bears"),
+    )
+
+    assert len(tokens(scenario, "Spirit Token")) == 2  # the two Zubera, not the Bears
+
+
+def test_dripping_tongue_zubera_alone_makes_one_spirit():
+    scenario = (
+        Scenario().player("alice", battlefield=["Dripping-Tongue Zubera"]).player("bob").build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    die_together(scenario, scenario.creature("Dripping-Tongue Zubera"))
+
+    assert len(tokens(scenario, "Spirit Token")) == 1
+
+
+def test_wolfbriar_elemental_makes_a_wolf_for_each_time_it_was_kicked():
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Wolfbriar Elemental"], battlefield=["Forest"] * 7)
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    casting = scenario.cast("Wolfbriar Elemental")
+    casting.pay_kicker(3)
+    scenario.pay_with(casting.begin_paying(), *scenario.untapped_sources(*(["Forest"] * 7)))
+    scenario.put_on_stack(casting)
+    scenario.resolve_top()
+    scenario.pass_until_resolved()
+
+    wolves = tokens(scenario, "Wolf Token")
+    assert len(wolves) == 3
+    assert all(size(scenario, wolf) == (2, 2) for wolf in wolves)
+
+
+def test_wolfbriar_elemental_unkicked_makes_no_wolf():
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Wolfbriar Elemental"], battlefield=["Forest"] * 4)
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scenario.cast_and_resolve("Wolfbriar Elemental", *scenario.untapped_sources(*(["Forest"] * 4)))
+    scenario.pass_until_resolved()
+
+    assert tokens(scenario, "Wolf Token") == []
+
+
+ROOM = "Smoky Lounge // Misty Salon"
+
+
+def room_of(scenario):
+    return next(
+        state
+        for state in scenario.game.permanents_controlled_by("alice")
+        if state.card.name == ROOM
+    )
+
+
+def test_unlocking_misty_salon_makes_a_spirit_as_big_as_the_unlocked_doors_you_have():
+    scenario = Scenario().player("alice", battlefield=[ROOM, *["Island"] * 4]).player("bob").build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scenario.game.unlock_door(room_of(scenario), "Smoky Lounge")
+    scenario.unlock_door(
+        room_of(scenario), "Misty Salon", *scenario.untapped_sources(*(["Island"] * 4))
+    )
+    scenario.game.put_triggers_on_stack()
+    scenario.resolve_top()
+
+    (spirit,) = tokens(scenario, "Spirit Token")
+    assert size(scenario, spirit) == (2, 2)  # both doors of the one Room are unlocked
+    assert Type.CREATURE in scenario.game.computed_board().of(spirit).types
+
+
+def test_a_lone_unlocked_misty_salon_makes_a_one_one_spirit():
+    scenario = Scenario().player("alice", battlefield=[ROOM, *["Island"] * 4]).player("bob").build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scenario.unlock_door(
+        room_of(scenario), "Misty Salon", *scenario.untapped_sources(*(["Island"] * 4))
+    )
+    scenario.game.put_triggers_on_stack()
+    scenario.resolve_top()
+
+    (spirit,) = tokens(scenario, "Spirit Token")
+    assert size(scenario, spirit) == (1, 1)
+
+
+def test_smoky_lounge_adds_two_red_at_the_beginning_of_your_first_main_phase():
+    scenario = Scenario().player("alice", battlefield=[ROOM]).player("bob").build()
+    scenario.game.unlock_door(room_of(scenario), "Smoky Lounge")
+    reach(scenario, Step.PRECOMBAT_MAIN)
+    scenario.resolve_top()
+
+    assert scenario.player("alice").mana_pool.floating.get(Color.RED, 0) == 2
+
+
+def test_manaform_hellkite_makes_a_dragon_as_big_as_the_mana_spent_and_exiles_it_at_end_step():
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Flame Wave", "Grizzly Bears"],
+            battlefield=["Manaform Hellkite", *["Mountain"] * 8],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scenario.cast_onto_stack(
+        "Flame Wave", *scenario.untapped_sources(*(["Mountain"] * 7)), targets=["bob"]
+    )
+    scenario.game.put_triggers_on_stack()
+    scenario.resolve_top()  # Manaform Hellkite's trigger, above the spell
+
+    (dragon,) = tokens(scenario, "Dragon Illusion Token")
+    assert size(scenario, dragon) == (7, 7)  # {3}{R}{R}{R}{R} was spent
+    assert scenario.can_attack(dragon)  # haste
+    scenario.resolve_top()  # Flame Wave
+
+    reach(scenario, Step.END_STEP)
+    scenario.resolve_top()
+    assert dragon.zone is Zone.EXILE
+
+
+def test_manaform_hellkite_ignores_a_creature_spell():
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Grizzly Bears"],
+            battlefield=["Manaform Hellkite", *["Forest"] * 2],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scenario.cast_onto_stack("Grizzly Bears", *scenario.untapped_sources("Forest", "Forest"))
+    scenario.game.put_triggers_on_stack()
+
+    assert tokens(scenario, "Dragon Illusion Token") == []
+
+
+# -- proof printings: the same readers on other legal cards -----------------------------------
+
+
+def test_silent_chant_zubera_gains_two_life_for_each_zubera_that_died_this_turn():
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Silent-Chant Zubera", "Grizzly Bears"])
+        .player("bob", battlefield=["Dripping-Tongue Zubera"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    die_together(
+        scenario,
+        scenario.creature("Silent-Chant Zubera"),
+        scenario.creature("Dripping-Tongue Zubera", "bob"),
+        scenario.creature("Grizzly Bears"),
+    )
+
+    assert scenario.player("alice").life == 24  # two Zubera died, 2 life each (CR 119.3)
+
+
+def test_floating_dream_zubera_draws_a_card_for_each_zubera_that_died_this_turn():
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Floating-Dream Zubera"], library=["Island"] * 5)
+        .player("bob", battlefield=["Dripping-Tongue Zubera"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    die_together(
+        scenario,
+        scenario.creature("Floating-Dream Zubera"),
+        scenario.creature("Dripping-Tongue Zubera", "bob"),
+    )
+
+    assert len(scenario.player("alice").hand) == 2
+
+
+def test_deadly_embrace_draws_for_every_creature_that_died_this_turn_including_its_target():
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Deadly Embrace"],
+            library=["Island"] * 5,
+            battlefield=["Swamp"] * 5 + ["Grizzly Bears"],
+        )
+        .player("bob", battlefield=["Hill Giant"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scenario.game.destroy(scenario.creature("Grizzly Bears"))  # died earlier this turn
+    giant = scenario.creature("Hill Giant", "bob")
+    scenario.cast_and_resolve(
+        "Deadly Embrace", *scenario.untapped_sources(*(["Swamp"] * 5)), targets=[giant]
+    )
+
+    assert giant.zone is Zone.GRAVEYARD
+    assert len(scenario.player("alice").hand) == 2  # the Bears and the Giant
+
+
+def test_stronghold_arena_gains_three_life_for_each_time_it_was_kicked():
+    for kickers, gained in (((), 0), (("{G}",), 3), (("{G}", "{W}"), 6)):
+        scenario = (
+            Scenario()
+            .player(
+                "alice",
+                hand=["Stronghold Arena"],
+                battlefield=["Swamp", "Swamp", "Forest", "Plains"],
+            )
+            .player("bob")
+            .build()
+        )
+        scenario.start_at(Step.PRECOMBAT_MAIN)
+        casting = scenario.cast("Stronghold Arena")
+        for which in kickers:
+            casting.pay_kicker(1, which=which)
+        scenario.pay_with(
+            casting.begin_paying(),
+            *scenario.untapped_sources(
+                *(["Swamp", "Swamp", "Forest", "Plains"][: 2 + len(kickers)])
+            ),
+        )
+        scenario.put_on_stack(casting)
+        scenario.resolve_top()
+        scenario.pass_until_resolved()
+
+        assert scenario.player("alice").life == 20 + gained, kickers
+
+
+def test_rampaging_soulrager_gets_plus_three_with_two_unlocked_doors_among_your_rooms():
+    scenario = (
+        Scenario().player("alice", battlefield=[ROOM, "Rampaging Soulrager"]).player("bob").build()
+    )
+    soulrager = scenario.creature("Rampaging Soulrager")
+    assert size(scenario, soulrager) == (1, 4)
+
+    scenario.game.unlock_door(room_of(scenario), "Smoky Lounge")
+    assert size(scenario, soulrager) == (1, 4)  # one unlocked door
+
+    scenario.game.unlock_door(room_of(scenario), "Misty Salon")
+    assert size(scenario, soulrager) == (4, 4)  # two unlocked doors

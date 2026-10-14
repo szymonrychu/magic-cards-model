@@ -3370,7 +3370,6 @@ def _for_each_multiplier(phrase: str) -> Callable[["Game", str, str | None], int
     if generic is not None:
         return lambda game, controller, _source_id: generic(game, controller)
     from ..ep02_r1_counted_permanents import counted_group_reader
-
     from ..ep02_r3_token_counts import for_each_count
 
     return (

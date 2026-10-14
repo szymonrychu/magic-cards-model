@@ -28,7 +28,6 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 from uuid import UUID
 
-from ..models.card import Type
 from ..models.card_state import CardState
 from ..models.token import PREDEFINED, create_tokens, token_copy_of
 from ..models.zone import Zone
@@ -41,13 +40,10 @@ from .effects.dispatch import _parse_mixed_clauses
 from .effects.text import _strip_non_effect_preamble
 from .effects.tokens import (
     _attack_target_of_source,
-    _counted_token_clause,
-    _parse_token_clause,
     _quote_aware_sentences,
     _read_token_rider,
-    apply_token_riders,
     _token_definition_from_words,
-    _token_rider_clause,
+    apply_token_riders,
 )
 from .targeting import permanent_description
 
@@ -103,9 +99,7 @@ def _opponents_who_control(match: re.Match[str]) -> Reader | None:
 
 # -- the turn ledger -------------------------------------------------------------
 
-_DIED_RE = re.compile(
-    r"^(?:the )?(?:number of )?(?P<what>.+?) that died this turn$", re.IGNORECASE
-)
+_DIED_RE = re.compile(r"^(?:the )?(?:number of )?(?P<what>.+?) that died this turn$", re.IGNORECASE)
 _ENTERED_RE = re.compile(
     r"^(?:the )?(?:number of )?(?P<what>.+?) that entered the battlefield under your "
     r"control this turn$",
@@ -150,9 +144,7 @@ def _ledger_count(kind: str, what: str, *, yours_only: bool) -> Reader | None:
 _DIFFERENTLY_NAMED_RE = re.compile(
     _PREFIX + r"differently named (?P<what>creature tokens?) you control$", re.IGNORECASE
 )
-_UNLOCKED_DOORS_RE = re.compile(
-    _PREFIX + r"unlocked doors among Rooms you control$", re.IGNORECASE
-)
+_UNLOCKED_DOORS_RE = re.compile(_PREFIX + r"unlocked doors among Rooms you control$", re.IGNORECASE)
 
 
 def _differently_named_tokens(_match: re.Match[str]) -> Reader:
@@ -161,9 +153,11 @@ def _differently_named_tokens(_match: re.Match[str]) -> Reader:
         names = set()
         for permanent in game.battlefield:
             chars = board.of(permanent)
-            if chars.controller == controller and chars.is_token and "creature" in {
-                str(kind).lower().rsplit(".", 1)[-1] for kind in chars.types
-            }:
+            if (
+                chars.controller == controller
+                and chars.is_token
+                and "creature" in {str(kind).lower().rsplit(".", 1)[-1] for kind in chars.types}
+            ):
                 names.add(chars.name)
         return len(names)
 
@@ -191,11 +185,13 @@ _ATTACHED_RE = re.compile(
     r"^(?:the )?(?:number of )?(?P<kinds>[A-Za-z ,/]+?) attached to "
     r"(?P<ref>it|him|her|this [a-z]+|[A-Z][\w',-]*(?: [A-Z][\w',-]*)*)$"
 )
-_KIND_SPLIT_RE = re.compile(r"\s*(?:,\s*(?:and/or\s+|or\s+|and\s+)?|\s+and/or\s+|\s+or\s+|\s+and\s+)")
+_KIND_SPLIT_RE = re.compile(
+    r"\s*(?:,\s*(?:and/or\s+|or\s+|and\s+)?|\s+and/or\s+|\s+or\s+|\s+and\s+)"
+)
 
 
 def _attached_count(match: re.Match[str]) -> Reader | None:
-    """CR 301.5a, CR 303.4: what is attached to the object the ability is on."""
+    """CR 301.5a, CR 303.4b: what is attached to the object the ability is on."""
     words = [word for word in _KIND_SPLIT_RE.split(match.group("kinds").strip()) if word]
     if not words:
         return None
@@ -224,7 +220,8 @@ _MANA_SPENT_THAT_SPELL_RE = re.compile(
     _PREFIX + r"mana spent to cast (?:that|the) spell$", re.IGNORECASE
 )
 _TIME_KICKED_RE = re.compile(
-    r"^(?:the )?(?:number of )?times? (?:it|this (?:creature|permanent|artifact|enchantment|spell)) "
+    r"^(?:the )?(?:number of )?times? "
+    r"(?:it|this (?:creature|permanent|artifact|enchantment|spell)) "
     r"was kicked$",
     re.IGNORECASE,
 )
@@ -265,8 +262,8 @@ _GREATEST_POWER_OTHER_ATTACKERS_RE = re.compile(
 
 
 def _other_attackers(game: "Game", obj: CardState | None) -> list[CardState]:
-    """Every attacking creature but the source (CR 506.4: a creature that has
-    been put onto the battlefield attacking is still an attacking creature)."""
+    """Every attacking creature but the source (CR 508.4: a creature put onto the
+    battlefield attacking is one as well)."""
     found = (game.find_by_id(attack.attacker_id) for attack in game.combat.attacks)
     return [
         creature
@@ -285,7 +282,9 @@ def _other_attackers_greatest_power(
     game: "Game", _controller: str, obj: CardState | None, _x: int
 ) -> int:
     """CR 107.1b: a negative greatest power counts as zero; no attackers is zero."""
-    return max((game.power_of(creature) or 0 for creature in _other_attackers(game, obj)), default=0)
+    return max(
+        (game.power_of(creature) or 0 for creature in _other_attackers(game, obj)), default=0
+    )
 
 
 @functools.cache
@@ -340,7 +339,6 @@ def for_each_count(phrase: str) -> Callable[["Game", str, str | None], int] | No
     return count
 
 
-
 # ====================================================================================
 # Token sentences read in order (CR 608.2c)
 # ====================================================================================
@@ -387,7 +385,8 @@ def _source_of(game: "Game", stack_object: Any) -> tuple[CardState | None, int]:
 
 
 _REFERENT_STAT_RE = re.compile(
-    r"^(?:that|the (?:destroyed|exiled|sacrificed)) (?:creature|permanent)'s (?P<stat>power|toughness)$",
+    r"^(?:that|the (?:destroyed|exiled|sacrificed)) (?:creature|permanent)'s "
+    r"(?P<stat>power|toughness)$",
     re.IGNORECASE,
 )
 
@@ -522,7 +521,9 @@ def _token_step(
                     attacking=opponent.username if attacking else None,
                 )
         else:
-            defender = _attack_target_of_source(game, stack_object, controller) if attacking else None
+            defender = (
+                _attack_target_of_source(game, stack_object, controller) if attacking else None
+            )
             created = create_tokens(
                 game, made, controller, number, tapped=tapped, attacking=defender
             )
@@ -665,8 +666,8 @@ def _read_role_for_each(
     sentences: list[str], index: int, for_spell: bool
 ) -> tuple[Step, int] | None:
     """CR 111.10 Roles, one per permanent: the Role token is created attached to
-    each (CR 303.7a puts it onto the battlefield attached; CR 704.5z leaves only
-    the newest Role of one controller on a permanent). "For each of those
+    each (CR 303.4h: put onto the battlefield attached; CR 303.7a and CR 704.5z
+    leave only the newest Role of one controller on a permanent). "For each of those
     creatures" is the resolving object's own targets."""
     match = _FOR_EACH_ROLE_RE.fullmatch(sentences[index].strip())
     if match is None:

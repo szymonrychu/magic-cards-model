@@ -1047,6 +1047,8 @@ class ContinuousMixin:
             # CR 702.143a: Alrund, God of the Cosmos' "each foretold card you own
             # in exile" - a shared zone's cards, counted per owner.
             foretold_in_exile_by_player=self._foretold_in_exile_counts(),
+            # CR 709.5c: the unlocked doors of the Rooms a player controls.
+            unlocked_doors_by_player=self._unlocked_door_counts(),
             # CR 401.1: Living Conundrum's "As long as there are no cards in
             # your library" reads a library size, no more a characteristic
             # than a hand size is.
@@ -1933,6 +1935,16 @@ class ContinuousMixin:
                 decreases.append(ManaCost.parse(f"{{{grant.amount}}}"))
 
         return increases, decreases, floor
+
+    def _unlocked_door_counts(self: "Game") -> dict[str, int]:
+        """Unlocked doors (CR 709.5c) on the Room permanents each player controls."""
+        counts: dict[str, int] = {}
+        for permanent in self.battlefield:
+            if permanent.unlocked_doors and permanent.controller is not None:
+                counts[permanent.controller] = counts.get(permanent.controller, 0) + len(
+                    permanent.unlocked_doors
+                )
+        return counts
 
     def _foretold_in_exile_counts(self: "Game") -> dict[str, int]:
         """Foretold cards (CR 702.143a) in exile, per owner."""

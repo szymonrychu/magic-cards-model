@@ -3148,8 +3148,8 @@ ANAPHORIC_TIMING_STEPS: dict[str, Step] = {
     "end of combat": Step.END_OF_COMBAT,
 }
 
-#: A step of the creating ability's controller's own turn (CR 500.1: each turn
-#: has one end step, and "your next end step" is the one of a turn that player
+#: A step of the creating ability's controller's own turn (CR 500.1, CR 513.1: each
+#: turn has one end step, and "your next end step" is the one of a turn that player
 #: is the active player of). Read only here, by the anaphoric clause, which then
 #: scopes its trigger to that player's turn (`DelayedTrigger.only_when_active`);
 #: kept out of `ANAPHORIC_TIMING_STEPS`, whose other readers would drop the scope.
