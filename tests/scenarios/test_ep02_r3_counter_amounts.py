@@ -1882,3 +1882,35 @@ def test_bat_colony_puts_a_counter_on_a_creature_when_a_cave_enters():
     scenario.play_land("Captivating Cave")
     _settle(scenario)
     assert bears.counter_count(Counter.PLUS_ONE) == 1
+
+
+# -- Second printings: the create-then-put template without a "for each"
+# (Fractal Tender) and the static_unaudited clauses' own proofs
+
+
+def test_fractal_tender_end_step_token_gets_three_counters():
+    scenario = _main_board("Fractal Tender")
+    tender = scenario.creature("Fractal Tender", "alice")
+    scenario.game.add_counters(tender, Counter.PLUS_ONE, 1)
+    for _ in range(12):
+        if scenario.step is Step.END_STEP:
+            break
+        scenario.advance()
+    _settle(scenario)
+    (fractal,) = [c for c in _tokens(scenario) if "Fractal" in c.name]
+    assert fractal.counter_count(Counter.PLUS_ONE) == 3
+
+
+def _rabble_enters(opponent_was_dealt_damage):
+    scenario = _main_board(hand=["Rabble-Rouser"])
+    if opponent_was_dealt_damage:
+        scenario.game.deal_damage(scenario.player("bob"), 1, source=None)
+    return scenario.put_onto_battlefield("Rabble-Rouser")
+
+
+def test_rabble_rouser_bloodthirst_enters_with_a_counter_after_damage_to_an_opponent():
+    assert _rabble_enters(True).counter_count(Counter.PLUS_ONE) == 1
+
+
+def test_rabble_rouser_bloodthirst_enters_bare_without_damage_to_an_opponent():
+    assert _rabble_enters(False).counter_count(Counter.PLUS_ONE) == 0
