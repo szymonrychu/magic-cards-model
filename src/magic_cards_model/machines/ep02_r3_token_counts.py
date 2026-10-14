@@ -813,11 +813,12 @@ def _read_if_you_do_copy(
     """ "If you do, create a token that's a copy of it, except it's a P/T `<Subtype>`
     artifact creature with `<keywords>` in addition to its other types": CR 707.9b's
     exceptions, folded into the copy's copiable values (`token_copy_of`)."""
-    from .layers.model import split_and_validate_keywords
-
     match = _IF_YOU_DO_COPY_RE.fullmatch(sentences[index].strip())
     if match is None:
         return None
+
+    from .layers.model import split_and_validate_keywords
+
     exception = _EXCEPT_TYPED_SIZE_RE.fullmatch(match.group("exception").strip())
     if exception is None:
         return None
@@ -881,6 +882,14 @@ def _sequence(text: str, for_spell: bool) -> Callable[["Game", Any], None] | Non
     if "token" not in lowered and "role" not in lowered:
         return None
     sentences = _sentences(text)
+    # No reader opens at any sentence: `used` would stay False, so skip the
+    # per-sentence clause parses the walk below would make before saying so.
+    if not any(
+        reader(sentences, index, for_spell) is not None
+        for index in range(len(sentences))
+        for reader in _READERS
+    ):
+        return None
     steps: list[SequenceStep] = []
     used = False
     index = 0

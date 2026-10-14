@@ -481,6 +481,10 @@ def _normalized_ability_word(word: str) -> str:
     return re.sub(r"\s+\d+$", "", normalized)
 
 
+#: `Keyword` values in declaration order (iterating the enum itself is slow).
+_KEYWORD_VALUES = tuple(keyword.value for keyword in Keyword)
+
+
 def executed_keywords(printing: Card) -> dict[str, str]:
     """Every keyword on this printing, mapped to the machine that acts on it.
 
@@ -489,9 +493,9 @@ def executed_keywords(printing: Card) -> dict[str, str]:
     found: dict[str, str] = {}
 
     printed = {k.lower() for k in printing.keywords}
-    for keyword in Keyword:
-        if keyword.value in printed:
-            found[keyword.value] = "machines/combat.py"
+    for value in _KEYWORD_VALUES:
+        if value in printed:
+            found[value] = "machines/combat.py"
 
     for option in keyword_cast_options(printing):
         where = "machines/casting.py" if option.understood else "machines/casting.py (unread cost)"
@@ -535,13 +539,13 @@ def executed_keywords(printing: Card) -> dict[str, str]:
 
     # Cloak (CR 701.58a): a keyword action the card's own clause performs
     # through `machines/effects/library._parse_cloak_clause`.
-    if any(k.lower() == "cloak" for k in printing.keywords) and prints_cloak_clause(printing):
+    if "cloak" in printed and prints_cloak_clause(printing):
         found["cloak"] = "machines/face_down_keywords.py (cloak, CR 701.58a)"
 
     # Plot granted to the top card of the library (CR 702.170f): the card's
     # own grant lines, read by `machines/face_down_keywords.
     # library_top_plot_cost`, which `MarkedExile.plot` consults.
-    if any(k.lower() == "plot" for k in printing.keywords) and any(
+    if "plot" in printed and any(
         reads_library_plot_grant_line(line) for line in (printing.oracle_text or "").splitlines()
     ):
         found["plot"] = "machines/face_down_keywords.py (library_top_plot_cost, CR 702.170f)"
@@ -584,7 +588,7 @@ def executed_keywords(printing: Card) -> dict[str, str]:
     # plotted.", Lilah, Undefeated Slickshot): CR 702.170c's "some spells
     # and abilities cause a card in exile to become plotted" - performed by
     # `machines/resolving_exile.apply_resolving_exile`.
-    if any(k.lower() == "plot" for k in printing.keywords) and re.search(
+    if "plot" in printed and re.search(
         r"\bit becomes plotted\b", printing.oracle_text or "", re.IGNORECASE
     ):
         found["plot"] = "machines/resolving_exile.py"
@@ -602,7 +606,7 @@ def executed_keywords(printing: Card) -> dict[str, str]:
     # Epic (CR 702.50a) is two spell abilities performed as the spell resolves:
     # `Game._resolve_epic` bars the controller from casting spells and creates
     # the upkeep `CopyEpicSpell` delayed trigger.
-    if any(k.lower() == "epic" for k in printing.keywords):
+    if "epic" in printed:
         found["epic"] = "models/game/_triggers_decisions.py (_resolve_epic, CR 702.50a)"
 
     # Tiered (CR 702.183a: "Choose one. As an additional cost to cast this
@@ -620,7 +624,7 @@ def executed_keywords(printing: Card) -> dict[str, str]:
         profile is not None
         and profile.understood
         and any(mode.cost is not None for mode in profile.modes)
-        and any(k.lower() == "tiered" for k in printing.keywords)
+        and "tiered" in printed
     ):
         found["tiered"] = "machines/modes.py (tiered modal profile, CR 702.183a)"
 
@@ -634,7 +638,7 @@ def executed_keywords(printing: Card) -> dict[str, str]:
         profile is not None
         and profile.understood
         and any(mode.cost is not None for mode in profile.modes)
-        and any(k.lower() == "spree" for k in printing.keywords)
+        and "spree" in printed
     ):
         found["spree"] = "machines/modes.py (spree modal profile, CR 702.172a)"
 
@@ -652,7 +656,7 @@ def executed_keywords(printing: Card) -> dict[str, str]:
     # including CR 701.67b's own bound and CR 701.67c's "whenever you
     # waterbend" trigger (`ExtraTriggerEvent.WATERBENDS`, `machines/
     # triggers.py`).
-    if any(k.lower() == "waterbend" for k in printing.keywords):
+    if "waterbend" in printed:
         for ability in parse_abilities(printing):
             cost = getattr(ability, "cost", None)
             if cost is not None and waterbend_mana_cost(cost) is not None:
@@ -670,7 +674,7 @@ def executed_keywords(printing: Card) -> dict[str, str]:
     # `tests/scenarios/test_optional_waterbend_additional_cost.py` proves it.
     if (
         "waterbend" not in found
-        and any(k.lower() == "waterbend" for k in printing.keywords)
+        and "waterbend" in printed
         and any(
             option.keyword == "waterbend" and option.understood
             for option in optional_additional_costs(printing)
@@ -687,7 +691,7 @@ def executed_keywords(printing: Card) -> dict[str, str]:
     # action and `remove_suspend_time_counter` is the upkeep trigger; none of
     # them show up in `keyword_cast_options` output, so they are named here
     # by hand instead of falling through to "ignored".
-    if any(k.lower() == "suspend" for k in printing.keywords):
+    if "suspend" in printed:
         found["suspend"] = "machines/casting.py (MarkedExile.suspend, finish_suspend)"
 
     # Fuse (CR 702.102a) is a choice made *before* announcing which half of a
@@ -695,14 +699,14 @@ def executed_keywords(printing: Card) -> dict[str, str]:
     # cost, just a different `Casting.cast_as_split_half` step -
     # `Casting.cast_fused`) - so it never shows up in `keyword_cast_options`
     # output either. Named here by hand, the same way suspend is above.
-    if any(k.lower() == "fuse" for k in printing.keywords):
+    if "fuse" in printed:
         found["fuse"] = "machines/casting.py (Casting.cast_fused, CR 702.102)"
 
     # Start your engines! (CR 702.179a) is a state-based action
     # (`machines/speed.players_starting_their_engines`), not a `KeywordCastOption`
     # or a combat keyword `machines/combat.Keyword` enumerates - named here
     # by hand for the same reason suspend and fuse are just above.
-    if any(k.lower() == "start your engines!" for k in printing.keywords):
+    if "start your engines!" in printed:
         found["start your engines!"] = (
             "machines/speed.py (players_starting_their_engines, CR 702.179a)"
         )
@@ -710,14 +714,14 @@ def executed_keywords(printing: Card) -> dict[str, str]:
     # Max speed (CR 702.178a) gates an activated ability's own activation on
     # the activator's speed (`Game.why_cannot_activate`'s own `ability_word`
     # check) rather than a keyword-cast option or a combat keyword.
-    if any(k.lower() == "max speed" for k in printing.keywords):
+    if "max speed" in printed:
         found["max speed"] = "models/game.py (why_cannot_activate, CR 702.178a)"
 
     # Enlist (CR 702.154a-c) is an attack-cost keyword, wired into
     # `Game.declare_attacker`/`declare_attackers` rather than a
     # `KeywordCastOption` or a combat keyword `machines/combat.Keyword`
     # enumerates.
-    if any(k.lower() == "enlist" for k in printing.keywords):
+    if "enlist" in printed:
         found["enlist"] = "machines/enlist.py (apply_enlist, CR 702.154a-c)"
 
     # Monstrosity (CR 701.37a: "'Monstrosity N' means 'If this permanent
@@ -731,7 +735,7 @@ def executed_keywords(printing: Card) -> dict[str, str]:
     # mirrors what `activated_effect_for` does with a real announced X at
     # runtime, so a "Monstrosity X" printing (Polukranos, World Eater) reads
     # as registered the same way a fixed "Monstrosity N" one does.
-    if any(k.lower() == "monstrosity" for k in printing.keywords):
+    if "monstrosity" in printed:
         for ability in parse_abilities(printing):
             effect_text = getattr(ability, "effect", None)
             if effect_text is None:
@@ -743,7 +747,7 @@ def executed_keywords(printing: Card) -> dict[str, str]:
     # Support N (CR 701.41a) is a keyword action, like Monstrosity: the clause
     # `counters._parse_support_clause` reads - the spell's own "Support N."
     # line or an enters trigger's "support N." effect - is what executes it.
-    if any(k.lower() == "support" for k in printing.keywords):
+    if "support" in printed:
         for ability in parse_abilities(printing):
             clause = getattr(ability, "effect", None) or ability.raw or ""
             clause = re.sub(r"\s*\([^()]*\)\s*$", "", clause).strip()
@@ -772,7 +776,7 @@ def executed_keywords(printing: Card) -> dict[str, str]:
     # `_self_enters_modifiers`/`_sunburst_modifier` alongside every other
     # CR 614.1c "enters with N counters" clause - a different module from
     # every other keyword this sweep already knows how to find.
-    if any(k.lower() == "sunburst" for k in printing.keywords):
+    if "sunburst" in printed:
         found["sunburst"] = "machines/replacement.py (_sunburst_modifier, CR 702.44a)"
 
     # Compleated (CR 702.150a) is the identical "read off the keyword, not a
@@ -782,7 +786,7 @@ def executed_keywords(printing: Card) -> dict[str, str]:
     # carry "Compleated" too (CR 207.2c's list does not - it is a keyword
     # ability, CR 702.150), which silently satisfied this same check for the
     # wrong reason; named here by hand now that it is a real one.
-    if any(k.lower() == "compleated" for k in printing.keywords):
+    if "compleated" in printed:
         found["compleated"] = "machines/replacement.py (_compleated_modifier, CR 702.150a)"
 
     # Devour (CR 702.82a/c) is spelled out by `machines/replacement.
@@ -790,7 +794,7 @@ def executed_keywords(printing: Card) -> dict[str, str]:
     # number of ... that many +1/+1 counters" pair and read as that
     # replacement - conditioned on the expansion actually producing a
     # sacrifice-then-counters effect, never on the bare keyword name.
-    if any(k.lower() == "devour" for k in printing.keywords) and any(
+    if "devour" in printed and any(
         effect.that_many_multiplier is not None for effect in parse_replacement_effects(printing)
     ):
         found["devour"] = "machines/replacement.py (_expand_devour, CR 702.82)"
@@ -799,7 +803,7 @@ def executed_keywords(printing: Card) -> dict[str, str]:
     # replacement as Sunburst and Compleated: `_tribute_modifier` asks the
     # chosen opponent and places the counters as theirs (CR 702.104b's "if
     # tribute wasn't paid" reads that back).
-    if any(k.lower() == "tribute" for k in printing.keywords):
+    if "tribute" in printed:
         found["tribute"] = "machines/replacement.py (_tribute_modifier, CR 702.104a)"
 
     # Affinity (CR 702.41a) is a cost *reduction* read off the spell's own
@@ -809,7 +813,7 @@ def executed_keywords(printing: Card) -> dict[str, str]:
     # (a *way to cast*, not a discount) or `ADDITIONAL_COST_KEYWORDS` (an
     # additional cost, not a reduction) was ever going to name it. Named here
     # by hand, the same way suspend is above.
-    if any(k.lower() == "affinity" for k in printing.keywords):
+    if "affinity" in printed:
         found["affinity"] = "models/game.py (Game.cost_reduction_for, CR 702.41a)"
 
     # Improvise (CR 702.126a) changes *what pays* {1} of an already-determined
@@ -828,7 +832,7 @@ def executed_keywords(printing: Card) -> dict[str, str]:
     # itself) and it is not an additional cost of the card that carries it
     # either. `Casting.splice`/`.splice_by_id` and `Game.cast(splice=...)`
     # are the real machinery; named here for the same reason suspend is.
-    if any(k.lower() == "splice" for k in printing.keywords):
+    if "splice" in printed:
         found["splice"] = "machines/casting.py (Casting.splice, splice_candidates)"
 
     # Companion (CR 702.139a) functions outside the game, not as a
@@ -838,7 +842,7 @@ def executed_keywords(printing: Card) -> dict[str, str]:
     # (`Game.why_cannot_bring_companion_to_hand`/`begin_bringing_companion_
     # to_hand`/`bring_companion_to_hand`), so neither shows up in
     # `keyword_cast_options` output and both are named here by hand.
-    if any(k.lower() == "companion" for k in printing.keywords):
+    if "companion" in printed:
         found["companion"] = "machines/companion.py, models/game.py (bring_companion_to_hand)"
 
     # fra-final-audit batch A item 2: four more keywords with real, named
@@ -850,7 +854,7 @@ def executed_keywords(printing: Card) -> dict[str, str]:
     # `become_unprepared` track the exile copy and the cast permission it
     # grants (CR 722.3d), off `machines/replacement.py`'s `ENTERS_PREPARED`
     # replacement effect. `tests/scenarios/test_prepare.py` proves it live.
-    if any(k.lower() == "prepared" for k in printing.keywords):
+    if "prepared" in printed:
         found["prepared"] = "models/game.py (become_prepared/become_unprepared, CR 722)"
 
     # Behold (CR 701.4a) is a keyword action used inside an additional
@@ -859,7 +863,7 @@ def executed_keywords(printing: Card) -> dict[str, str]:
     # real machinery, reached through `Casting`'s ordinary additional-cost
     # reading rather than through anything this sweep otherwise asks about.
     # `tests/scenarios/test_behold.py` proves it live.
-    if any(k.lower() == "behold" for k in printing.keywords):
+    if "behold" in printed:
         found["behold"] = "machines/cost.py (behold_cost, CR 701.4a)"
 
     # Exhaust (CR 702.177a) is "activate only once", enforced by
@@ -867,7 +871,7 @@ def executed_keywords(printing: Card) -> dict[str, str]:
     # `ActivatedAbility.exhaust` - a runtime restriction with no
     # `KeywordCastOption`/`ADDITIONAL_COST_KEYWORDS`/`TIMING_KEYWORDS` shape
     # at all. `tests/scenarios/test_exhaust.py` proves it live.
-    if any(k.lower() == "exhaust" for k in printing.keywords):
+    if "exhaust" in printed:
         found["exhaust"] = "models/game.py (Game.exhausted, ActivatedAbility.exhaust, CR 702.177a)"
 
     # Proliferate (CR 701.34a) is a keyword action read off a spell's,
@@ -880,7 +884,7 @@ def executed_keywords(printing: Card) -> dict[str, str]:
     # whose clause is otherwise fully read) still reported the keyword
     # itself as unexecuted. `tests/scenarios/test_proliferate.py` proves it
     # live.
-    if any(k.lower() == "proliferate" for k in printing.keywords):
+    if "proliferate" in printed:
         found["proliferate"] = "machines/effects.py (_parse_proliferate_clause, CR 701.34a)"
 
     # Shroud (CR 702.18a: "This permanent or player can't be the target of
@@ -894,7 +898,7 @@ def executed_keywords(printing: Card) -> dict[str, str]:
     # controller exception (CR 702.18b), so it is refused at the *target*
     # rather than at announcement, through a different function.
     # `tests/scenarios/test_shroud.py` proves it live.
-    if any(k.lower() == "shroud" for k in printing.keywords):
+    if "shroud" in printed:
         found["shroud"] = (
             "models/game.py (Game.shroud_refusal), "
             "machines/targeting.py (TargetingProfile._check_shroud, CR 702.18a)"
@@ -908,7 +912,7 @@ def executed_keywords(printing: Card) -> dict[str, str]:
     # registered only when the printed text really carries a quality the
     # reader splits out (`hexproof_abilities_in`), never on the keyword
     # alone. `tests/scenarios/test_hexproof_abilities.py` proves it live.
-    if any(k.lower() == "hexproof from" for k in printing.keywords):
+    if "hexproof from" in printed:
         _, qualities = hexproof_abilities_in(
             printing.front_oracle_text.splitlines(), keyword_lines_only=False
         )
@@ -935,7 +939,7 @@ def executed_keywords(printing: Card) -> dict[str, str]:
     # substitution `classify_clauses` already performs) mirrors what the real
     # engine does before ever trying the parser, and only a real match
     # registers the keyword. `tests/scenarios/test_endure.py` proves it live.
-    if any(k.lower() == "endure" for k in printing.keywords):
+    if "endure" in printed:
         for ability in parse_abilities(printing):
             text = getattr(ability, "effect", None) or ability.text
             if _parse_endure_clause(substitute_x(text, 1)) is not None:
@@ -954,7 +958,7 @@ def executed_keywords(printing: Card) -> dict[str, str]:
     # keyword action), read by `_parse_counter_then_recruit_by_mana_value_
     # pair` as a clause *pair* rather than a lone clause, so it needs its own
     # check. `tests/scenarios/test_recruit.py` proves both live.
-    if any(k.lower() == "recruit" for k in printing.keywords):
+    if "recruit" in printed:
         for ability in parse_abilities(printing):
             text = getattr(ability, "effect", None) or ability.text
             if _parse_recruit_clause(text, for_spell=False) is not None:
@@ -982,7 +986,7 @@ def executed_keywords(printing: Card) -> dict[str, str]:
     # reading one of *this* card's clauses, the same per-card discipline
     # endure/recruit above use. `tests/scenarios/test_goad.py` proves it live,
     # the CR 508.1d attack requirement included.
-    if any(k.lower() == "goad" for k in printing.keywords):
+    if "goad" in printed:
         for ability in parse_abilities(printing):
             text = getattr(ability, "effect", None) or ability.text
             for_spell = ability.kind is AbilityKind.STATIC
@@ -1016,7 +1020,7 @@ def executed_keywords(printing: Card) -> dict[str, str]:
     # other way: a stale table hid a real, already-built CR 702.131 keyword
     # ability instead of flagging a fake gap. `tests/scenarios/test_ascend.py`
     # proves it live.
-    if any(k.lower() == "ascend" for k in printing.keywords):
+    if "ascend" in printed:
         found["ascend"] = (
             "machines/keywords.py (has_ascend, _has_computed_ascend, "
             "ascend_as_a_spell_resolves, CR 702.131)"
@@ -1025,7 +1029,7 @@ def executed_keywords(printing: Card) -> dict[str, str]:
     # Storied (CR 702.195a) is ascend's twin: a static ability granting the
     # enduring story designation (CR 702.195b), which every "as long as you
     # have an enduring story" rider reads (`machines/designations.py`).
-    if any(k.lower() == "storied" for k in printing.keywords):
+    if "storied" in printed:
         found["storied"] = "machines/keywords.py (grant_enduring_stories, CR 702.195)"
 
     # Explore (CR 701.44a: "Certain spells and abilities instruct a
@@ -1039,7 +1043,7 @@ def executed_keywords(printing: Card) -> dict[str, str]:
     # matching *this* card's own text, the same per-card discipline
     # endure/recruit above use, not on the keyword name by itself.
     # `tests/scenarios/test_explore.py` proves it live.
-    if any(k.lower() == "explore" for k in printing.keywords):
+    if "explore" in printed:
         candidates: list[tuple[str, bool]] = [
             (
                 getattr(ability, "effect", None) or ability.text,
@@ -1099,7 +1103,7 @@ def executed_keywords(printing: Card) -> dict[str, str]:
     # explore: `machines/connive.parse_connive_clause`, registered once in
     # `_parse_mixed_clause`, gated on it matching this card's own text.
     # `tests/scenarios/test_connive.py` proves it live.
-    if any(k.lower() == "connive" for k in printing.keywords):
+    if "connive" in printed:
         texts = [
             getattr(ability, "effect", None) or ability.text
             for ability in parse_abilities(printing)
