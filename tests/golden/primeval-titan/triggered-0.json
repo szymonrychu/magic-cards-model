@@ -42,7 +42,7 @@
         "kind": "may",
         "player": "alice",
         "players": [],
-        "prompt": "search your library for a land card",
+        "prompt": "search your library for up to two land cards",
         "source": "Primeval Titan"
       },
       {

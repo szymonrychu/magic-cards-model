@@ -3680,6 +3680,11 @@ def _unread_condition_matches(
     if _PUT_INTO_LIBRARY_CONDITION.match(condition):
         return event.event is ExtraTriggerEvent.PUT_INTO_LIBRARY
 
+    if _CREATURES_OR_GRAVEYARD_CREATURE_CARDS_EXILED_CONDITION.match(condition):
+        if event.event is not ExtraTriggerEvent.PUT_INTO_EXILE or event.player != controller:
+            return False
+        return any(arrival.is_creature for arrival in game.exile_batch)
+
     if _EXILE_FROM_GRAVEYARD_OR_BATTLEFIELD_CONDITION.match(condition):
         if event.event not in (
             ExtraTriggerEvent.EXILED_FROM_GRAVEYARD,
@@ -6177,6 +6182,7 @@ from ._common import (  # noqa: E402
     _CLASS_BECOMES_LEVEL_CONDITION,
     _COUNTERS_PUT_CONDITION,
     _COUNTERS_PUT_ON_DESCRIPTION_CONDITION,
+    _CREATURES_OR_GRAVEYARD_CREATURE_CARDS_EXILED_CONDITION,
     _CRIME_COMMITTED_CONDITION,
     _CYCLE_CONDITION,
     _DOOR_UNLOCKED_CONDITION,

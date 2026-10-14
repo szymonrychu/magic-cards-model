@@ -246,6 +246,17 @@ def cost_count(phrase: str) -> Reader | None:
     if text in {"permanent sacrificed this turn", "permanents sacrificed this turn"}:
         # CR 701.21a: a sacrifice by any player, counted where `sacrifice` writes it.
         return lambda ctx: sum(ctx.game.permanents_sacrificed_this_turn.values())
+    if text in {
+        "1 life your opponents have lost this turn",
+        "life your opponents have lost this turn",
+    }:
+        # CR 119.3: life lost is tracked per player and turn; "your opponents"
+        # are every player but the spell's caster.
+        return lambda ctx: sum(
+            player.life_lost_this_turn
+            for player in ctx.game.players_in_game
+            if player.username != ctx.owner
+        )
     if text in {"creature in your party", "creatures in your party"}:
         from ..designations import party_size
 
@@ -403,6 +414,7 @@ _TOTAL_IN_GRAVEYARDS = re.compile(
     r"^there are (?P<n>\w+) or more (?P<q>.+?) cards? total in all graveyards$"
 )
 _BARGAINED = re.compile(r"^it(?:'s| is| was) bargained$")
+_LIFE_TOTAL = re.compile(r"^your life total is (?P<n>\w+) or (?P<dir>less|fewer|more|greater)$")
 
 
 def cost_condition(condition: str) -> Callable[[CostContext], bool] | None:
@@ -444,6 +456,18 @@ def cost_condition(condition: str) -> Callable[[CostContext], bool] | None:
         )
     if _BARGAINED.match(text):
         return lambda ctx: bool(getattr(ctx.casting, "bargained", False))
+    life = _LIFE_TOTAL.match(text)
+    if life is not None:
+        # The caster's life total as the cost is determined (CR 601.2f).
+        threshold = parse_count(life.group("n"))
+        if threshold is None:
+            return None
+        at_most = life.group("dir") in {"less", "fewer"}
+        return lambda ctx: (
+            ctx.game.player(ctx.owner).life <= threshold
+            if at_most
+            else ctx.game.player(ctx.owner).life >= threshold
+        )
     from ...models.game import condition_is_readable
 
     if not condition_is_readable(condition):

@@ -1,0 +1,175 @@
+{
+  "object": "card",
+  "id": "0a08e0d2-1e60-47f5-9228-4c11a127089d",
+  "oracle_id": "c52fc8a1-43c6-41f8-b010-03be7c89ef1d",
+  "multiverse_ids": [
+    661783
+  ],
+  "mtgo_id": 126553,
+  "arena_id": 90830,
+  "tcgplayer_id": 552650,
+  "cardmarket_id": 771550,
+  "name": "Bloodsoaked Insight // Sanguine Morass",
+  "lang": "en",
+  "released_at": "2024-06-14",
+  "uri": "https://api.scryfall.com/cards/0a08e0d2-1e60-47f5-9228-4c11a127089d",
+  "scryfall_uri": "https://scryfall.com/card/mh3/252/bloodsoaked-insight-sanguine-morass?utm_source=api",
+  "layout": "modal_dfc",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T02:53:45Z",
+  "cmc": 7.0,
+  "type_line": "Sorcery // Land",
+  "color_identity": [
+    "B",
+    "R"
+  ],
+  "keywords": [],
+  "produced_mana": [
+    "B",
+    "R"
+  ],
+  "card_faces": [
+    {
+      "object": "card_face",
+      "name": "Bloodsoaked Insight",
+      "mana_cost": "{5}{B/R}{B/R}",
+      "type_line": "Sorcery",
+      "oracle_text": "This spell costs {1} less to cast for each 1 life your opponents have lost this turn.\nTarget opponent exiles the top three cards of their library. Until the end of your next turn, you may play those cards. If you cast a spell this way, mana of any type can be spent to cast it.",
+      "colors": [
+        "B",
+        "R"
+      ],
+      "artist": "David \u00c1lvarez",
+      "artist_id": "c3004e2c-d372-4faa-90db-f1274e75ef41",
+      "illustration_id": "b6d8ee75-8cce-4da0-8b5f-482247745df8",
+      "image_uris": {
+        "small": "https://cards.scryfall.io/small/front/0/a/0a08e0d2-1e60-47f5-9228-4c11a127089d.jpg?1783911225",
+        "normal": "https://cards.scryfall.io/normal/front/0/a/0a08e0d2-1e60-47f5-9228-4c11a127089d.jpg?1783911225",
+        "large": "https://cards.scryfall.io/large/front/0/a/0a08e0d2-1e60-47f5-9228-4c11a127089d.jpg?1783911225",
+        "png": "https://cards.scryfall.io/png/front/0/a/0a08e0d2-1e60-47f5-9228-4c11a127089d.png?1783911225",
+        "art_crop": "https://cards.scryfall.io/art_crop/front/0/a/0a08e0d2-1e60-47f5-9228-4c11a127089d.jpg?1783911225",
+        "border_crop": "https://cards.scryfall.io/border_crop/front/0/a/0a08e0d2-1e60-47f5-9228-4c11a127089d.jpg?1783911225",
+        "thumb": "https://cards.scryfall.io/thumb/front/0/a/0a08e0d2-1e60-47f5-9228-4c11a127089d.webp?1783911225",
+        "grid": "https://cards.scryfall.io/grid/front/0/a/0a08e0d2-1e60-47f5-9228-4c11a127089d.webp?1783911225",
+        "display": "https://cards.scryfall.io/display/front/0/a/0a08e0d2-1e60-47f5-9228-4c11a127089d.webp?1783911225",
+        "art": "https://cards.scryfall.io/art/front/0/a/0a08e0d2-1e60-47f5-9228-4c11a127089d.webp?1783911225",
+        "crop": "https://cards.scryfall.io/crop/front/0/a/0a08e0d2-1e60-47f5-9228-4c11a127089d.webp?1783911225"
+      }
+    },
+    {
+      "object": "card_face",
+      "name": "Sanguine Morass",
+      "mana_cost": "",
+      "type_line": "Land",
+      "oracle_text": "This land enters tapped.\n{T}: Add {B} or {R}.",
+      "colors": [],
+      "flavor_text": "All who enter the bog despair, for the first thing it steals is hope.",
+      "artist": "David \u00c1lvarez",
+      "artist_id": "c3004e2c-d372-4faa-90db-f1274e75ef41",
+      "illustration_id": "ae684dbe-127e-4374-b362-73f5678f889b",
+      "image_uris": {
+        "small": "https://cards.scryfall.io/small/back/0/a/0a08e0d2-1e60-47f5-9228-4c11a127089d.jpg?1783911225",
+        "normal": "https://cards.scryfall.io/normal/back/0/a/0a08e0d2-1e60-47f5-9228-4c11a127089d.jpg?1783911225",
+        "large": "https://cards.scryfall.io/large/back/0/a/0a08e0d2-1e60-47f5-9228-4c11a127089d.jpg?1783911225",
+        "png": "https://cards.scryfall.io/png/back/0/a/0a08e0d2-1e60-47f5-9228-4c11a127089d.png?1783911225",
+        "art_crop": "https://cards.scryfall.io/art_crop/back/0/a/0a08e0d2-1e60-47f5-9228-4c11a127089d.jpg?1783911225",
+        "border_crop": "https://cards.scryfall.io/border_crop/back/0/a/0a08e0d2-1e60-47f5-9228-4c11a127089d.jpg?1783911225",
+        "thumb": "https://cards.scryfall.io/thumb/back/0/a/0a08e0d2-1e60-47f5-9228-4c11a127089d.webp?1783911225",
+        "grid": "https://cards.scryfall.io/grid/back/0/a/0a08e0d2-1e60-47f5-9228-4c11a127089d.webp?1783911225",
+        "display": "https://cards.scryfall.io/display/back/0/a/0a08e0d2-1e60-47f5-9228-4c11a127089d.webp?1783911225",
+        "art": "https://cards.scryfall.io/art/back/0/a/0a08e0d2-1e60-47f5-9228-4c11a127089d.webp?1783911225",
+        "crop": "https://cards.scryfall.io/crop/back/0/a/0a08e0d2-1e60-47f5-9228-4c11a127089d.webp?1783911225"
+      }
+    }
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "3ed80bb6-77e8-4aa7-8262-95377a38aba1",
+  "set": "mh3",
+  "set_name": "Modern Horizons 3",
+  "set_type": "draft_innovation",
+  "set_uri": "https://api.scryfall.com/sets/3ed80bb6-77e8-4aa7-8262-95377a38aba1",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Amh3&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/mh3?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/0a08e0d2-1e60-47f5-9228-4c11a127089d/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Ac52fc8a1-43c6-41f8-b010-03be7c89ef1d&unique=prints",
+  "collector_number": "252",
+  "digital": false,
+  "rarity": "uncommon",
+  "artist": "David \u00c1lvarez",
+  "artist_ids": [
+    "c3004e2c-d372-4faa-90db-f1274e75ef41"
+  ],
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 2722,
+  "preview": {
+    "source": "IGN",
+    "source_uri": "https://www.ign.com/articles/magic-the-gathering-modern-horizons-3-spoilers-mdfc-dual-land",
+    "previewed_at": "2024-05-22"
+  },
+  "prices": {
+    "usd": "0.30",
+    "usd_foil": "0.39",
+    "usd_etched": null,
+    "eur": "0.22",
+    "eur_foil": "0.37",
+    "tix": "0.03"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=661783&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DBloodsoaked%2BInsight%2B%252F%252F%2BSanguine%2BMorass",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DBloodsoaked%2BInsight%2B%252F%252F%2BSanguine%2BMorass",
+    "edhrec": "https://edhrec.com/route/?cc=Bloodsoaked+Insight"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F552650%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=771550&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/126553?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

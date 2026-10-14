@@ -1,0 +1,167 @@
+{
+  "object": "card",
+  "id": "43224e74-2c51-40bd-bc34-f66e990a3e33",
+  "oracle_id": "88939cb3-5f61-4857-95cb-9446c6c1f1aa",
+  "multiverse_ids": [
+    485538
+  ],
+  "mtgo_id": 81657,
+  "arena_id": 71997,
+  "tcgplayer_id": 215568,
+  "cardmarket_id": 468339,
+  "name": "Alpine Houndmaster",
+  "lang": "en",
+  "released_at": "2020-07-03",
+  "uri": "https://api.scryfall.com/cards/43224e74-2c51-40bd-bc34-f66e990a3e33",
+  "scryfall_uri": "https://scryfall.com/card/m21/215/alpine-houndmaster?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T08:17:43Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/4/3/43224e74-2c51-40bd-bc34-f66e990a3e33.jpg?1783930663",
+    "normal": "https://cards.scryfall.io/normal/front/4/3/43224e74-2c51-40bd-bc34-f66e990a3e33.jpg?1783930663",
+    "large": "https://cards.scryfall.io/large/front/4/3/43224e74-2c51-40bd-bc34-f66e990a3e33.jpg?1783930663",
+    "png": "https://cards.scryfall.io/png/front/4/3/43224e74-2c51-40bd-bc34-f66e990a3e33.png?1783930663",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/4/3/43224e74-2c51-40bd-bc34-f66e990a3e33.jpg?1783930663",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/4/3/43224e74-2c51-40bd-bc34-f66e990a3e33.jpg?1783930663",
+    "thumb": "https://cards.scryfall.io/thumb/front/4/3/43224e74-2c51-40bd-bc34-f66e990a3e33.webp?1783930663",
+    "grid": "https://cards.scryfall.io/grid/front/4/3/43224e74-2c51-40bd-bc34-f66e990a3e33.webp?1783930663",
+    "display": "https://cards.scryfall.io/display/front/4/3/43224e74-2c51-40bd-bc34-f66e990a3e33.webp?1783930663",
+    "art": "https://cards.scryfall.io/art/front/4/3/43224e74-2c51-40bd-bc34-f66e990a3e33.webp?1783930663",
+    "crop": "https://cards.scryfall.io/crop/front/4/3/43224e74-2c51-40bd-bc34-f66e990a3e33.webp?1783930663"
+  },
+  "mana_cost": "{R}{W}",
+  "cmc": 2.0,
+  "type_line": "Creature \u2014 Human Warrior",
+  "oracle_text": "When this creature enters, you may search your library for a card named Alpine Watchdog and/or a card named Igneous Cur, reveal them, put them into your hand, then shuffle.\nWhenever this creature attacks, it gets +X/+0 until end of turn, where X is the number of other attacking creatures.",
+  "power": "2",
+  "toughness": "2",
+  "colors": [
+    "R",
+    "W"
+  ],
+  "color_identity": [
+    "R",
+    "W"
+  ],
+  "keywords": [],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "d2bfec5d-3182-415a-afe8-0b5511cfd656",
+      "component": "combo_piece",
+      "name": "Igneous Cur",
+      "type_line": "Creature \u2014 Elemental Dog",
+      "uri": "https://api.scryfall.com/cards/d2bfec5d-3182-415a-afe8-0b5511cfd656"
+    },
+    {
+      "object": "related_card",
+      "id": "c392a7e5-6ff5-4c2f-9590-f8811a724f44",
+      "component": "combo_piece",
+      "name": "Alpine Watchdog",
+      "type_line": "Creature \u2014 Dog",
+      "uri": "https://api.scryfall.com/cards/c392a7e5-6ff5-4c2f-9590-f8811a724f44"
+    },
+    {
+      "object": "related_card",
+      "id": "43224e74-2c51-40bd-bc34-f66e990a3e33",
+      "component": "combo_piece",
+      "name": "Alpine Houndmaster",
+      "type_line": "Creature \u2014 Human Warrior",
+      "uri": "https://api.scryfall.com/cards/43224e74-2c51-40bd-bc34-f66e990a3e33"
+    }
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "arena",
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "bc94aba1-7376-4e02-a12d-3a2efb66ab0f",
+  "set": "m21",
+  "set_name": "Core Set 2021",
+  "set_type": "core",
+  "set_uri": "https://api.scryfall.com/sets/bc94aba1-7376-4e02-a12d-3a2efb66ab0f",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Am21&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/m21?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/43224e74-2c51-40bd-bc34-f66e990a3e33/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A88939cb3-5f61-4857-95cb-9446c6c1f1aa&unique=prints",
+  "collector_number": "215",
+  "digital": false,
+  "rarity": "uncommon",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Mark Behm",
+  "artist_ids": [
+    "ccf77963-723f-4137-b364-7417079e8ab9"
+  ],
+  "illustration_id": "3a9f1946-a18b-4f10-aff1-751405a543e8",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 23060,
+  "penny_rank": 11607,
+  "preview": {
+    "source": "Wizards of the Coast",
+    "source_uri": "",
+    "previewed_at": "2020-06-09"
+  },
+  "prices": {
+    "usd": "0.24",
+    "usd_foil": "0.38",
+    "usd_etched": null,
+    "eur": "0.08",
+    "eur_foil": "0.15",
+    "tix": "0.03"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=485538&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DAlpine%2BHoundmaster",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DAlpine%2BHoundmaster",
+    "edhrec": "https://edhrec.com/route/?cc=Alpine+Houndmaster"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F215568%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=468339&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/81657?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

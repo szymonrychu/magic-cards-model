@@ -824,7 +824,14 @@ def _sacrificed_mana_value_search(text: str) -> _SacrificedManaValueSearch | Non
     """
     match = _SEARCH_MV_EQUAL_TO_SACRIFICED_RE.fullmatch(" ".join(text.strip().split()))
     if match is None:
-        return None
+        # Venom's "draw X cards, then you may put a permanent card with mana
+        # value X or less from your hand onto the battlefield": the same
+        # sacrificed-mana-value channel, a different payoff.
+        if "draw x cards" not in text.lower():
+            return None
+        from ..ep02_r3_library_amounts import sacrificed_value_draw_and_put
+
+        return sacrificed_value_draw_and_put(text)
     quality = match.group("quality")
     if not _search_quality_is_readable(quality):
         return None
@@ -9922,7 +9929,8 @@ def _parse_face_down_exile_play_clause(effect_text: str) -> TargetedClause | Non
 #: per-opponent target is `machines/targeting._FOR_EACH_OPPONENT_TARGET_RE`'s
 #: (one "up to one" target per opponent, CR 115.6, distinct controllers).
 _FOR_EACH_OPPONENT_EXILE_RE = re.compile(
-    r"^for each opponent, exile up to one target (?P<desc>.+?) that player controls"
+    r"^for each (?:opponent|other player), exile up to one target (?P<desc>.+?) "
+    r"that player controls"
     r"(?:(?P<until> until this (?:permanent|enchantment|artifact|creature|planeswalker) leaves "
     r"the battlefield)|(?P<life> and that player gains life equal to its power))?\.?$",
     re.IGNORECASE,

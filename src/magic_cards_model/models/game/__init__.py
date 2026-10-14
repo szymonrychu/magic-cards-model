@@ -456,6 +456,7 @@ from .records import (
     CombatDamageToPlayer,
     CountersPutRecord,
     DamageDealt,
+    ExileArrival,
     GraveyardArrival,
     KnownCard,
     KnownCarry,
@@ -1150,6 +1151,15 @@ class Game(
     """The permanents `ExtraTriggerEvent.PERMANENTS_TAPPED` is being matched
     for right now (`tapped_batch`). Empty outside `announce_batched_events`.
     Not persisted: read only while that event is being raised."""
+    _exile_arrivals_pending: tuple["ExileArrival", ...] = PrivateAttr(default=())
+    """Cards and permanents put into exile from the battlefield or a graveyard
+    since `announce_batched_events` last ran, one entry per arrival. Drained
+    into one `ExtraTriggerEvent.PUT_INTO_EXILE` per player (CR 603.2c). Not
+    persisted: every instruction ends with an announce, so it is empty at any
+    point a snapshot is taken."""
+    _exile_batch: tuple["ExileArrival", ...] = PrivateAttr(default=())
+    """The arrivals `ExtraTriggerEvent.PUT_INTO_EXILE` is being matched for
+    right now. Empty outside `announce_batched_events`; not persisted."""
     _graveyard_batch: tuple["GraveyardArrival", ...] = PrivateAttr(default=())
     """The arrivals `ExtraTriggerEvent.PUT_INTO_GRAVEYARD` is being matched for
     right now (`graveyard_batch`). Empty outside `announce_batched_events`.
@@ -2366,6 +2376,16 @@ class Game(
     #: selector variant `CreaturesControlledButNotOwnedBy` (Laughing Jasper
     #: Flint's "creatures you control but don't own are Mercenaries"), reachable
     #: from `Game.continuous_effects`.
+    #: 170 (EP-02-R3-T4): `GameEvent` gained `batch_ids` (a pending
+    #: `AbilityOnStack.event`'s "from among them", for CR 603.2c's batched "put
+    #: into exile" event); an older dump has none, so a "put into exile" trigger
+    #: would never have seen the exiled cards. Also dispatch a decoded game could
+    #: already point at: "draw X cards, then you may put a permanent card with
+    #: mana value X or less from your hand onto the battlefield" off a
+    #: sacrifice, the per-colour graveyard return, the two-target graveyard
+    #: return, "return ... and all Auras attached to it", and the any-type-mana
+    #: rider on "If you cast a spell this way"; an older dump would resolve
+    #: each of these as a no-op.
     #: 169 (EP02-R2-T2): `Player` gained `cannot_cast_spells_for_rest_of_game`
     #: and `CardState` gained `epic_suppressed` (epic, CR 702.50a/b), and
     #: `DelayedEffectSpec` gained the variant `epic_copy_spell`; a pending
@@ -3842,6 +3862,7 @@ __all__ = [
     "CountersPutRecord",
     "DamageDealt",
     "ENERGY_PAID_OR_LOST",
+    "ExileArrival",
     "Game",
     "GraveyardArrival",
     "KnownCard",

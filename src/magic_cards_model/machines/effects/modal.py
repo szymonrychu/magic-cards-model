@@ -1577,6 +1577,13 @@ def parse_mode_effect(mode: Mode, x_value: int) -> Effect | None:
     gain_control_and_grant = until_eot_gain_control_and_grant_text(text)
     if gain_control_and_grant is not None:
         return parse_mixed_effect_for_spell(gain_control_and_grant)
+    # Orzhov Charm's modes: a whole-sentence reader a mode never reaches through
+    # the spell-text ladder.
+    from ..ep02_r3_library_amounts import aura_return_effect
+
+    aura_return = aura_return_effect(text, for_spell=True)
+    if aura_return is not None:
+        return aura_return
     return parse_mixed_effect_for_spell(text)
 
 

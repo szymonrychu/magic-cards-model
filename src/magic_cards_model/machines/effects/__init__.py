@@ -2811,6 +2811,8 @@ from .. import ep02_r3_static_pumps_events as ep02_r3_static_pumps_events  # noq
 from .. import ep02_r3_static_pumps_triggers as ep02_r3_static_pumps_triggers  # noqa: E402
 from .. import ep02_r3_counter_amounts as ep02_r3_counter_amounts  # noqa: E402
 from .. import ep02_r3_mill_exile_amounts as ep02_r3_mill_exile_amounts  # noqa: E402
+from .. import ep02_r3_board_amounts as ep02_r3_board_amounts  # noqa: E402
+from .. import ep02_r3_library_amounts as ep02_r3_library_amounts  # noqa: E402
 
 __all__ = [
     "ACTIVATED_EFFECTS",

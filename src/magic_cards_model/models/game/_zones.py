@@ -98,7 +98,7 @@ from ..token import (
 )
 from ..zone import Zone
 from ._common import Targetable
-from .records import GraveyardArrival, Reveal
+from .records import ExileArrival, GraveyardArrival, Reveal
 
 if TYPE_CHECKING:
     from . import Game
@@ -1480,9 +1480,16 @@ class ZonesMixin:
         zone: Zone = Zone.LIBRARY,
         caused_by: str | None = None,
         searcher: str | None = None,
+        total_mana_value: int | None = None,
     ) -> list[CardState]:
         """Search one of a player's zones, take what was found out of it, and
         (library only) shuffle.
+
+        `total_mana_value` is "any number of `<cards>` with total mana value N
+        or less" (Protean Hulk): the finds may be any number, but their mana
+        values (CR 202.3) must add up to at most N. A set over the total is
+        an illegal answer (CR 608.2d) and is refused; the default answer is
+        the zone-order prefix that fits.
 
         `searcher` is the player doing the searching when that is not the zone's
         owner ("Search target player's library ...", Nightmare Incursion): CR
@@ -1616,6 +1623,12 @@ class ZonesMixin:
             candidates = [state for state in searchable if matches(state)]
             limit = min(count, len(candidates))
             found: list[CardState] = candidates[:limit]
+            if total_mana_value is not None:
+                found, spent = [], 0
+                for state in candidates:
+                    if len(found) < limit and spent + state.mana_value <= total_mana_value:
+                        found.append(state)
+                        spent += state.mana_value
             if candidates and (optional or len(candidates) > limit):
                 chosen = self.ask(
                     Decision(
@@ -1642,6 +1655,13 @@ class ZonesMixin:
                 assert isinstance(chosen, tuple)
                 by_id = {state.id: state for state in candidates}
                 found = [by_id[card_id] for card_id in chosen]
+                if total_mana_value is not None and (
+                    sum(state.mana_value for state in found) > total_mana_value
+                ):
+                    raise ValueError(
+                        f"the chosen cards' total mana value exceeds {total_mana_value} "
+                        "(CR 608.2d: an illegal choice cannot be made)"
+                    )
 
             for state in found:
                 player.cards_in(zone).remove(state)
@@ -1696,6 +1716,7 @@ class ZonesMixin:
         source: str | None = None,
         source_id: str | None = None,
         caused_by: str | None = None,
+        total_mana_value: int | None = None,
     ) -> list[CardState]:
         """Search a library for a stated quality, reveal the finds if the text
         says so, put them into the hand, onto the battlefield, or into the
@@ -1749,6 +1770,7 @@ class ZonesMixin:
                 source=source,
                 source_id=source_id,
                 caused_by=caused_by,
+                total_mana_value=total_mana_value,
             )
             if reveal:
                 for state in found:
@@ -2374,6 +2396,11 @@ class ZonesMixin:
     def graveyard_batch(self: "Game") -> tuple[GraveyardArrival, ...]:
         """The arrivals of the `PUT_INTO_GRAVEYARD` event being matched."""
         return self._graveyard_batch
+
+    @property
+    def exile_batch(self: "Game") -> tuple[ExileArrival, ...]:
+        """The arrivals of the `PUT_INTO_EXILE` event being matched."""
+        return self._exile_batch
 
     def note_permanent_tapped(self: "Game", permanent: CardState) -> None:
         """`permanent` just became tapped (CR 701.26a) - `CardState.tap` and
@@ -3451,6 +3478,33 @@ class ZonesMixin:
         else:
             self._owner_of(card).add(card, destination)
 
+    def _exile_arrival_of(
+        self: "Game", card: CardState, from_battlefield: bool, graveyard_owner: str | None
+    ) -> "ExileArrival | None":
+        """The ledger entry for a battlefield or graveyard card about to be
+        exiled (CR 406.2), read before it moves: a permanent as it last
+        existed (CR 603.10a, so a borrowed creature counts for its controller
+        and an animated artifact as a creature), a graveyard card by its
+        printed types."""
+        if from_battlefield:
+            chars = self._left_battlefield_characteristics.get(card.id)
+            return ExileArrival(
+                card_id=card.id,
+                player=(chars.controller if chars is not None else None) or card.controller,
+                origin_zone=Zone.BATTLEFIELD,
+                is_creature=Type.CREATURE in (chars.types if chars is not None else card.types),
+                is_token=card.token,
+            )
+        if graveyard_owner is not None:
+            return ExileArrival(
+                card_id=card.id,
+                player=graveyard_owner,
+                origin_zone=Zone.GRAVEYARD,
+                is_creature=Type.CREATURE in card.types,
+                is_token=card.token,
+            )
+        return None
+
     def exile_permanent(self: "Game", permanent: CardState) -> CardState:
         """Move a permanent to the shared exile zone.
 
@@ -3486,13 +3540,17 @@ class ZonesMixin:
         if move_refused(permanent, Zone.EXILE) is not None:
             return permanent
         was_on_battlefield = permanent in self.battlefield
+        graveyard_owner = self._graveyard_owner_of(permanent)
         if was_on_battlefield:
             self._note_left_battlefield(permanent)
             self._detach_dependents(permanent)
+        arrival = self._exile_arrival_of(permanent, was_on_battlefield, graveyard_owner)
         self._take_out_of_every_zone(permanent)
         self.combat.remove(permanent.id)  # CR 506.4
         permanent.move_to(Zone.EXILE)
         self.exile.append(permanent)
+        if arrival is not None:
+            self._exile_arrivals_pending = (*self._exile_arrivals_pending, arrival)
         self._accompany_meld_partner(permanent, Zone.EXILE)
         if was_on_battlefield:
             self.emit(

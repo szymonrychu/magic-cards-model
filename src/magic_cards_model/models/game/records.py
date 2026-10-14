@@ -957,6 +957,23 @@ class ObjectCostOffer(EngineModel):
     rather than paying the crew cost (Heart of Kiran, CR 118.9)."""
 
 
+class ExileArrival(EngineModel):
+    """One card or permanent put into exile from the battlefield or a
+    graveyard, waiting for `Game.announce_batched_events` to raise CR 603.2c's
+    single "one or more ... are put into exile" event for the instruction that
+    moved it."""
+
+    card_id: UUID
+    player: str
+    """Who controlled it as it left the battlefield (CR 603.10a's last-known
+    information), or whose graveyard it left."""
+    origin_zone: Zone
+    is_creature: bool
+    """A creature as it last existed: layer-computed on the battlefield, the
+    printed types in a graveyard."""
+    is_token: bool = False
+
+
 class GraveyardArrival(EngineModel):
     """One card's arrival at a graveyard this turn (CR 400.6's "put into a
     graveyard").

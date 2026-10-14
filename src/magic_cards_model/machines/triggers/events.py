@@ -285,6 +285,15 @@ class ExtraTriggerEvent(StrEnum):
     #: this event is being matched. **Emitted by:** `Game.
     #: announce_batched_events`, off `Game.graveyard_arrivals_this_turn`.
     PUT_INTO_GRAVEYARD = "put_into_graveyard"
+    #: CR 406.2's "put into exile" from the battlefield or a graveyard, as
+    #: CR 603.2c's one event for the cards one instruction exiled together:
+    #: Kaya, Spirits' Justice's "Whenever one or more creatures you control
+    #: and/or creature cards in your graveyard are put into exile". One event
+    #: per player whose permanents / graveyard cards were exiled
+    #: (`GameEvent.player`), carrying every such card in `GameEvent.batch_ids`
+    #: so the ability can choose "from among them". **Emitted by:** `Game.
+    #: announce_batched_events`, off `Game._exile_arrivals_pending`.
+    PUT_INTO_EXILE = "put_into_exile"
     #: CR 700.13: "A player commits a crime as that player casts a spell,
     #: activates an ability, or puts a triggered ability on the stack and
     #: that spell or ability targets at least one opponent; at least one
@@ -460,6 +469,11 @@ class GameEvent(EngineModel):
     delayed trigger watching "whenever a creature attacks you or a
     planeswalker you control" (Jace, Reality Sculptor's own `-3`) needs this
     answered as the attack is declared, not at match time."""
+
+    batch_ids: tuple[UUID, ...] = ()
+    """Every object a batched event (CR 603.2c) covers, in the order they
+    arrived - what "from among them" in the triggered ability's text means.
+    Empty for an event about a single subject."""
 
     player: str | None = None
     """The player the event is "yours" for: who cast the spell, whose step
